@@ -109,14 +109,14 @@ namespace
 		fail(path, "bot difficulty must be easy, normal or hard");
 	}
 
-	void validate_roster(const MenuLevelSettings& settings, const std::filesystem::path& path)
+	void validate_roster(const MatchSetup& settings, const std::filesystem::path& path)
 	{
-		const std::vector<MenuPlayerSettings>& seats = settings.player_settings();
+		const std::vector<SeatSetup>& seats = settings.player_settings();
 		if (seats.empty() || seats.size() > 4) { fail(path, "settings must have 1-4 seats"); }
 		if (seats.front().controller != PlayerController::human || seats.front().num < 0)
 		{ fail(path, "seat 1 must be a human with a device"); }
 		std::array<bool, input_slots::count> used{};
-		for (const MenuPlayerSettings& seat : seats)
+		for (const SeatSetup& seat : seats)
 		{
 			if (seat.controller == PlayerController::bot)
 			{
@@ -324,11 +324,12 @@ namespace replay_codec
 {
 	std::string encode(const PlayerInputData& input)
 	{
+		// 64 and 256 were a seat's pause and intro-skip signals, which a seat
+		// no longer carries (SlotInput): never written, ignored when read.
 		const unsigned flags = (input.jump_pressed ? 1u : 0u) | (input.jump_held ? 2u : 0u) |
 			(input.shoot_direction_requested ? 4u : 0u) | (input.primary_shoot ? 8u : 0u) |
 			(input.drop_through ? 16u : 0u) | (input.toggle_debug ? 32u : 0u) |
-			(input.toggle_pause_menu ? 64u : 0u) | (input.connected ? 128u : 0u) |
-			(input.skip_intro ? 256u : 0u);
+			(input.connected ? 128u : 0u);
 		char buffer[8] = {};
 		std::snprintf(buffer, sizeof(buffer), "%02x", flags);
 		std::string text = buffer;
@@ -382,9 +383,7 @@ namespace replay_codec
 		input.primary_shoot = (flags & 8u) != 0;
 		input.drop_through = (flags & 16u) != 0;
 		input.toggle_debug = (flags & 32u) != 0;
-		input.toggle_pause_menu = (flags & 64u) != 0;
 		input.connected = (flags & 128u) != 0;
-		input.skip_intro = (flags & 256u) != 0;
 		input.x_movement = values[0];
 		input.shoot_direction = { values[1], values[2] };
 		input.shoot_angle = values[3];
@@ -507,7 +506,7 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	out << "  \"cheats\": { \"god\": " << (this->god ? "true" : "false") <<
 		", \"infinite_ammo\": " << (this->infinite_ammo ? "true" : "false") << " },\n";
 
-	const MenuLevelSettings& roster = this->settings;
+	const MatchSetup& roster = this->settings;
 	out << "  \"settings\": {\n";
 	out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
 	out << "    \"best_of\": " << roster.best_of() << ",\n";
@@ -518,7 +517,7 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	}
 	out << "    \"layout\": " << static_cast<int>(roster.screen_layout()) << ",\n";
 	out << "    \"seats\": [\n";
-	const std::vector<MenuPlayerSettings> seats = roster.player_settings();
+	const std::vector<SeatSetup> seats = roster.player_settings();
 	for (std::size_t i = 0; i < seats.size(); ++i)
 	{
 		out << "      { \"slot\": " << seats[i].num << ", \"team\": " <<
@@ -669,7 +668,7 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	{
 		fail(path, "it has " + std::to_string(count) + " seats; 1-4 expected");
 	}
-	MenuLevelSettings& rebuilt = file.settings;
+	MatchSetup& rebuilt = file.settings;
 	rebuilt.set_player_count(count);
 	std::vector<int> slots;
 	for (int seat = 0; seat < count; ++seat)
@@ -728,7 +727,7 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		}
 	}
 	for (const int slot : temporary_claims) { rebuilt.release_input_slot(slot); }
-	const std::vector<MenuPlayerSettings> claimed = rebuilt.player_settings();
+	const std::vector<SeatSetup> claimed = rebuilt.player_settings();
 	for (int seat = 0; seat < count; ++seat)
 	{
 		if (claimed[static_cast<std::size_t>(seat)].num != slots[static_cast<std::size_t>(seat)])

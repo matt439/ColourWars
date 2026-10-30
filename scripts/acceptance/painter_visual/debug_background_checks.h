@@ -107,7 +107,7 @@ namespace debug_background_acceptance
         return input.x_movement == 0.0f && !input.jump_pressed && !input.jump_held &&
             input.shoot_angle == 0.0f && input.shoot_direction == Vector2F::ZERO &&
             !input.shoot_direction_requested && !input.primary_shoot && !input.drop_through &&
-            !input.toggle_debug && !input.toggle_pause_menu && !input.pause_held && !input.skip_intro &&
+            !input.toggle_debug &&
             input.left_analog_stick == Vector2F::ZERO && input.right_analog_stick == Vector2F::ZERO;
     }
 }
@@ -119,9 +119,9 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     using namespace debug_background_acceptance;
     window_checks();
     const NestedSaveProfile profile(output / "debug-background-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial; initial.music_volume = 17; initial.sfx_volume = 23;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed private background preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed private background preferences");
     const auto save_path = output / "debug-background-profile" / "ColourWars" / "save_data.json";
     const auto save_bytes = [&]
     {
@@ -131,8 +131,8 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     };
     const std::string saved = save_bytes();
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugBackgroundState facts{ true, false, false };
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     DebugDirectorImpl& impl = *director.impl();
@@ -234,7 +234,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     const auto launch = [&]
     {
         stack.clear(); pads_neutral();
-        MenuLevelSettings settings; settings.set_stage("movement_course"); settings.set_duration(60.0f);
+        MatchSetup settings; settings.set_stage("movement_course"); settings.set_duration(60.0f);
         settings.set_player_count(3); settings.begin_input_claims(3);
         require(settings.claim_input_slot(1) && settings.claim_input_slot(input_slots::keyboard_and_mouse),
             "Cannot form sparse background roster");
@@ -272,7 +272,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     };
 
     stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
-    sound_groups::apply(*audio, preferences.play_settings());
+    sound_groups::apply(*audio, preferences_session.play_settings());
     launch(); live();
     require(!director.background_scripts(), "Background mode was not default Off");
     // Deliberately leave Mouse::focused() true across synthetic StateContext
@@ -371,7 +371,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     require(muted(), "Turning background mode off restored inactive audio"); note("off-inactive-freezes");
     // A current in-memory preference change is an independent restoration
     // witness. This fixture deliberately does not call a Save writer here.
-    auto& current = const_cast<PlaySettings&>(preferences.play_settings());
+    auto& current = const_cast<PlaySettings&>(preferences_session.play_settings());
     current.music_volume = 31; current.sfx_volume = 47;
     painter_scripted_pads::states[3].buttons = static_cast<std::uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
     app.gamepads()->poll();

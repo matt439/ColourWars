@@ -18,7 +18,7 @@ const DebugEntry* DebugMenuModel::entry(const std::string& name) const
 	return this->director_.registry().find(name);
 }
 
-std::vector<DebugMenuRow> DebugMenuModel::rows() const
+std::vector<DebugMenuRow> DebugMenuModel::rows()
 {
 	std::vector<DebugMenuRow> rows = this->collect();
 	if (rows.size() > max_rows)
@@ -32,7 +32,7 @@ std::vector<DebugMenuRow> DebugMenuModel::rows() const
 	return rows;
 }
 
-std::vector<DebugMenuRow> DebugMenuModel::collect() const
+std::vector<DebugMenuRow> DebugMenuModel::collect()
 {
 	std::vector<DebugMenuRow> rows;
 	const DebugRegistry& registry = this->director_.registry();
@@ -228,7 +228,7 @@ void DebugMenuModel::enter_tune_node(std::string node, const std::string& focus_
 	this->tune_page_ = 0;
 }
 
-const std::vector<std::string>& DebugMenuModel::tune_node_children() const
+const std::vector<std::string>& DebugMenuModel::tune_node_children()
 {
 	const std::array<int, 3> revision = this->director_.tune_revision();
 	if (!this->tune_children_valid_ || revision != this->tune_children_revision_ ||
@@ -242,7 +242,7 @@ const std::vector<std::string>& DebugMenuModel::tune_node_children() const
 	return this->tune_children_;
 }
 
-std::vector<DebugMenuRow> DebugMenuModel::tuning_rows() const
+std::vector<DebugMenuRow> DebugMenuModel::tuning_rows()
 {
 	std::vector<DebugMenuRow> rows;
 	const std::vector<std::string>& children = this->tune_node_children();
@@ -316,7 +316,7 @@ std::vector<DebugMenuRow> DebugMenuModel::tuning_rows() const
 	return rows;
 }
 
-std::size_t DebugMenuModel::row_of(const std::string& label) const
+std::size_t DebugMenuModel::row_of(const std::string& label)
 {
 	const std::vector<DebugMenuRow> rows = this->rows();
 	for (std::size_t i = 0; i < rows.size(); ++i)

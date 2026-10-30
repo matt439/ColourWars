@@ -2,7 +2,7 @@
 #include "game/last_match_setup.h"
 #include "engine/assets/json.h"
 #include "game/save.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <array>
 #include <cmath>
 #include <stdexcept>
@@ -169,10 +169,10 @@ namespace
 	}
 }
 
-LastMatchSetup LastMatchSetup::capture(const MenuLevelSettings& settings)
+LastMatchSetup LastMatchSetup::capture(const MatchSetup& settings)
 {
 	LastMatchSetup setup;
-	for (const MenuPlayerSettings& player : settings.player_settings())
+	for (const SeatSetup& player : settings.player_settings())
 	{
 		setup.players.push_back({ player.team, player.weapon, player.controller,
 			player.controller == PlayerController::bot ? player.difficulty : BotDifficulty::normal,
@@ -273,7 +273,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 	return setup;
 }
 
-MenuLevelSettings LastMatchSetup::restore(const StageList& stages) const
+MatchSetup LastMatchSetup::restore(const StageList& stages) const
 {
 	if (stages.empty())
 	{
@@ -282,7 +282,7 @@ MenuLevelSettings LastMatchSetup::restore(const StageList& stages) const
 	const LastMatchSetup setup = this->normalised();
 	const auto chosen_stage = std::find_if(stages.begin(), stages.end(),
 		[&setup](const Stage& candidate) { return candidate.name == setup.stage; });
-	MenuLevelSettings settings;
+	MatchSetup settings;
 	settings.set_player_count(static_cast<int>(setup.players.size()));
 	for (int index = 0; index < settings.player_count(); ++index)
 	{

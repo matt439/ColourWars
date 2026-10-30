@@ -73,6 +73,11 @@ namespace debug_console_acceptance
 			replay_codec::same(decoded, input), "An input encodes and decodes bit-exactly (-0.0, denormals)");
 		require(!replay_codec::decode("zz|0|0", decoded) && !replay_codec::decode("80|0|0|0|0|0|0|0|q", decoded),
 			"Malformed inputs do not decode");
+		// Files from before seats lost their pause and intro-skip signals still
+		// read; those two flags are dropped and never written again.
+		require(replay_codec::decode("1c0|0|0|0|0|0|0|0|0", decoded) && decoded.connected &&
+			replay_codec::encode(decoded).rfind("80|", 0) == 0,
+			"A recorded seat's old pause and skip flags read and are dropped");
 
 		std::vector<PlayerInputData> stream(5, input);
 		stream.push_back(PlayerInputData());
@@ -184,7 +189,7 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = false;
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
-		const std::vector<MenuPlayerSettings> seats = read.settings.player_settings();
+		const std::vector<SeatSetup> seats = read.settings.player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
 			read.settings.stage() == "x" &&
@@ -248,7 +253,7 @@ namespace debug_console_acceptance
 				match.suspend();
 				suspended = true;
 			}
-			director.update_match(match, keyboard_step(impl.level_updates()), dt);
+			update_match(director, match, keyboard_step(impl.level_updates()), dt);
 		}
 		return step;
 	}
@@ -262,8 +267,7 @@ namespace debug_console_acceptance
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
 		CpuWorld world(game_directory, tuning, presentation);
 		GameData data;
-		data.set_stages(&world.stages);
-		data.set_level_infos(&world.levels);
+		data.set_stage_catalog(&world.catalog);
 		DebugDirector director(&tuning, &presentation);
 		director.attach(nullptr, &data);
 		DebugDirectorImpl& impl = *director.impl();
@@ -586,7 +590,7 @@ namespace debug_console_acceptance
 		{
 			// What `step 1` (F7) does, without a log line per update.
 			impl.clock().request_steps(1);
-			director.update_match(match, keyboard_step(step), dt);
+			update_match(director, match, keyboard_step(step), dt);
 		}
 		require(count_of_lines(log, "replay cpu: MATCH") == matched + 1 &&
 			!log_contains(log, "which the recording was not", DebugSeverity::warning),
@@ -700,7 +704,7 @@ namespace debug_console_acceptance
 			"play with the wrong dt: " + log.lines().back().text);
 
 
-		director.update_match(match, keyboard_step(0), 0.0166666f);
+		update_match(director, match, keyboard_step(0), 0.0166666f);
 		require(!impl.playing() && log_contains(log, "refused: recorded at dt", DebugSeverity::error),
 			"A replay at another dt (the executable's StepTimer gives 0.0166666) is refused");
 		require(match.god && impl.status_strip().find("BOTS 3x paint") != std::string::npos,
@@ -713,7 +717,7 @@ namespace debug_console_acceptance
 		require(impl.execute("god off").ok && !match.god, "god off");
 		require(!impl.execute("play cpu").ok && log_contains(log, "a replay never matches across step sizes",
 			DebugSeverity::error), "and play itself refuses once the step is known");
-		director.update_match(match, keyboard_step(0), dt);
+		update_match(director, match, keyboard_step(0), dt);
 
 		// A replay armed and then left behind does not take over the next match.
 		require(impl.execute("play cpu").ok && impl.execute("menu").ok &&

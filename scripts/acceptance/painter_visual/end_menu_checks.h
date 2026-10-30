@@ -46,14 +46,14 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     constexpr std::array<MenuItem, 4> roles{ MenuItem::change_teams, MenuItem::change_weapons,
         MenuItem::change_level, MenuItem::exit_to_main_menu };
     const Presentation original = presentation;
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
@@ -89,7 +89,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     int results = 0;
     const auto open = [&](const EndMenuProbeCase& fixture)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter,
             Key::space, Key::escape }) { app.keyboard()->on_key_up(key); }
@@ -283,7 +283,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             // typed action must wait on that seam without accepting input or
             // rebasing text; this does not claim hardware/listening coverage.
             int music_updates = 0;
-            context.set_music_update([&](float) { ++music_updates; });
+            script_menu_music(context, [&](float) { ++music_updates; });
             tap(Key::enter);
             require(context.music_exit_pending() && !choice && stack.depth() == 2 && music_updates == 1,
                 "End action bypassed or failed to start its owner-controlled music exit");
@@ -352,16 +352,16 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
 void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     GameData data;
     data.set_application(&app);
-    data.set_save(&preferences);
+    data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
     MenuContext context(&data, &input, &settings);

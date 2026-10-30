@@ -242,41 +242,41 @@ namespace input_bindings_acceptance
     void check_keyboard_save(const IsolatedSaveDirectory& directory)
     {
         // Missing object: older saves keep the defaults and gain the object on write.
-        Save save = load(directory, "{\"keyboard_jump\":\"j\"}");
-        require(same_keyboard(save.input_bindings(), InputBindings{ Key::j }), "A save without the keyboard object lost the defaults");
+        Save save = load(directory, "{\"keyboard_jump\":\"j\"}"); SettingsSession save_session(save);
+        require(same_keyboard(save_session.input_bindings(), InputBindings{ Key::j }), "A save without the keyboard object lost the defaults");
         require(save.save_to_file(), "Cannot write the keyboard object");
         require_schema(directory.contents(), "j"); require_independent(save);
         // Round trip of every action moved, with pads untouched by the page's merge.
         InputBindings custom = custom_keyboard();
         custom.pads[2][PadAction::jump].primary = PadControl::b;
-        require(save.set_input_bindings_and_save(custom), "A valid custom keyboard set did not save");
+        require(save_session.set_input_bindings_and_save(custom), "A valid custom keyboard set did not save");
         auto custom_pads = default_pads; custom_pads[2][PadAction::jump].primary = PadControl::b;
         require_schema(directory.contents(), "a", custom_pads, { "j", "l", "k", "mouse_right", "p" });
-        { Save reread; reread.load_save_file(); require(reread.input_bindings() == custom, "Custom keyboard set did not round trip");
+        { Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings() == custom, "Custom keyboard set did not round trip");
           require_independent(reread); }
         for (const auto& expected : expected_mouse)
         {
             InputBindings value; value.keyboard_shoot = mouse_control(expected.button);
-            require(save.set_input_bindings_and_save(value), "A Shoot mouse button did not save");
+            require(save_session.set_input_bindings_and_save(value), "A Shoot mouse button did not save");
             require_schema(directory.contents(), "space", default_pads, { "a", "d", "s", expected.name, "none" });
-            Save reread; reread.load_save_file(); require(reread.input_bindings().keyboard_shoot == value.keyboard_shoot,
+            Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings().keyboard_shoot == value.keyboard_shoot,
                 "A Shoot mouse button did not round trip");
         }
         // Refused before mutation: the active choice and the disk survive.
-        const InputBindings before = save.input_bindings(); const std::string bytes = directory.contents();
+        const InputBindings before = save_session.input_bindings(); const std::string bytes = directory.contents();
         InputBindings conflict; conflict.keyboard_drop = Key::d;
-        rejects([&] { std::ignore = save.set_input_bindings_and_save(conflict); }, "A conflicting keyboard set was accepted");
-        require(save.input_bindings() == before && directory.contents() == bytes,
+        rejects([&] { std::ignore = save_session.set_input_bindings_and_save(conflict); }, "A conflicting keyboard set was accepted");
+        require(save_session.input_bindings() == before && directory.contents() == bytes,
             "A refused keyboard set mutated the active preference or the disk");
 
         const std::string valid_pads = ",\"pads\":[{\"jump\":[\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}]";
         const auto bindings = [&](const std::string& jump, const std::string& keyboard)
         { return "{\"keyboard_jump\":\"" + jump + "\"" + (keyboard.empty() ? "" : ",\"keyboard\":" + keyboard) + valid_pads + "}"; };
         const std::string good = "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}";
-        save = load(directory, bindings("a", good));
-        require(save.input_bindings().keyboard_move_left == Key::j && save.input_bindings().keyboard_jump == Key::a &&
-            save.input_bindings().keyboard_shoot == key_control(Key::f) && save.input_bindings().keyboard_pause == Key::p &&
-            save.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
+        save = load(directory, bindings("a", good)); save_session.load_save_file();
+        require(save_session.input_bindings().keyboard_move_left == Key::j && save_session.input_bindings().keyboard_jump == Key::a &&
+            save_session.input_bindings().keyboard_shoot == key_control(Key::f) && save_session.input_bindings().keyboard_pause == Key::p &&
+            save_session.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
             "A valid keyboard object with Jump on the freed A did not load");
         // Damage to the object recovers the five together; Jump survives unless it then clashes.
         for (const char* broken : { "null", "7", "\"j\"", "[]", "{}",
@@ -293,23 +293,23 @@ namespace input_bindings_acceptance
             for (const char* jump : { "e", "a" })
             {
                 directory.write(fixture(bindings(jump, broken))); const std::string disk = directory.contents();
-                save.load_save_file();
+                save_session.load_save_file();
                 InputBindings expected; expected.keyboard_jump = std::string_view(jump) == "e" ? Key::e : Key::space;
-                require(same_keyboard(save.input_bindings(), expected) && directory.contents() == disk,
+                require(same_keyboard(save_session.input_bindings(), expected) && directory.contents() == disk,
                     "A damaged keyboard object did not recover the five, kept a now-clashing Jump, or rewrote the bytes");
-                require(save.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
+                require(save_session.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
                     "A damaged keyboard object discarded a valid pad profile");
                 require_independent(save);
             }
         }
         // A well-formed object that clashes with Jump recovers the five first.
-        save = load(directory, bindings("j", good));
-        require(same_keyboard(save.input_bindings(), InputBindings{ Key::j }),
+        save = load(directory, bindings("j", good)); save_session.load_save_file();
+        require(same_keyboard(save_session.input_bindings(), InputBindings{ Key::j }),
             "A keyboard object clashing with Jump kept its keys or discarded Jump");
         // A damaged Jump keeps a valid object that does not need it.
-        save = load(directory, bindings("enter", good));
+        save = load(directory, bindings("enter", good)); save_session.load_save_file();
         InputBindings recovered = custom_keyboard(); recovered.keyboard_jump = Key::space; recovered.keyboard_shoot = key_control(Key::f);
-        require(same_keyboard(save.input_bindings(), recovered), "A damaged Jump discarded a valid keyboard object");
+        require(same_keyboard(save_session.input_bindings(), recovered), "A damaged Jump discarded a valid keyboard object");
         std::cout << "PASS keyboard actions save: missing-object defaults, schema/round trip of all six and every Shoot "
             "mouse button, refusal before mutation, 13 damaged objects x 2 Jump cases, Jump-clash and damaged-Jump recovery, "
             "pads and independent sections intact\n";

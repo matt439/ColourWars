@@ -1,4 +1,5 @@
 #include "editor/paint_mechanism_guide.h"
+#include "game/level_format.h"
 
 #include <algorithm>
 #include <initializer_list>
@@ -13,7 +14,7 @@ namespace colourwars_editor
             const auto found = properties.find(key);
             return found == properties.end() ? std::string() : found->second;
         };
-        if (value("type") != "StructurePaintable") { return std::nullopt; }
+        if (value(level_format::key::type) != level_format::object_type::structure_paintable) { return std::nullopt; }
         if (value("gate") == "paint")
         { return PaintMechanismGuide{ PaintMechanismKind::gate }; }
         if (value("motion/type") == "horizontal" && value("motion/drive") == "paint")

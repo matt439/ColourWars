@@ -83,8 +83,8 @@ namespace debug_console_acceptance
 				expected.inputs.size() == actual.inputs.size(), "Bot replay header or participant count changed");
 			for (std::size_t seat = 0; seat < expected.settings.player_settings().size(); ++seat)
 			{
-				const MenuPlayerSettings& source = expected.settings.player_settings()[seat];
-				const MenuPlayerSettings& read = actual.settings.player_settings()[seat];
+				const SeatSetup& source = expected.settings.player_settings()[seat];
+				const SeatSetup& read = actual.settings.player_settings()[seat];
 				require(source.controller == read.controller && source.num == read.num && source.team == read.team &&
 					source.weapon == read.weapon && read.difficulty == (source.controller == PlayerController::bot ?
 						source.difficulty : BotDifficulty::normal), "Bot replay changed seat identity/difficulty or choices");
@@ -200,7 +200,7 @@ namespace debug_console_acceptance
 		ReplayPlayer player("mixed", recorder.file());
 		for (std::size_t step = 0; step < 3; ++step)
 		{
-			for (PlayerInputData& input : seats) { input.toggle_pause_menu = true; input.primary_shoot = true; }
+			for (PlayerInputData& input : seats) { input.toggle_debug = true; input.primary_shoot = true; }
 			player.filter_seats(seats, level);
 			for (std::size_t seat = 0; seat < seats.size(); ++seat)
 			{

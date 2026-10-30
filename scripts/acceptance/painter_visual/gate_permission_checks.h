@@ -99,7 +99,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
         for (const int count : { 1, 2, 4 })
         {
             if (palette_index != 0 && count != 4) { continue; }
-            MenuLevelSettings settings; settings.set_stage("turbulence_gate_trial"); settings.set_player_count(count);
+            MatchSetup settings; settings.set_stage("turbulence_gate_trial"); settings.set_player_count(count);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
                 (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
             settings.begin_input_claims(3); constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
@@ -112,7 +112,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
             settings.set_duration(120.0f); app.viewport_manager()->set_layout(settings.screen_layout());
             std::srand(226); auto level = builder.build_level(settings, palette, OpeningMode::off); ++builds;
             const auto inputs = neutral_inputs();
-            const auto step = [&]() { level->update(inputs, dt); require(++updates <= 5000, "Gate native update budget exceeded"); };
+            const auto step = [&]() { level->update(acceptance::slot_seats(*level, inputs), dt); require(++updates <= 5000, "Gate native update budget exceeded"); };
             for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick) { step(); }
             require(level->state() == LevelState::active && level->team_gates().size() == 1,
                 "Gate native fixture did not reach active play with its authored gate");
@@ -236,8 +236,8 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
     }
     // The actual Stage Select widget owns an unpainted gate and chooses the
     // production miniature path. Its reference remains an authored initial pose.
-    Save preview_save; GameData data; data.set_application(&app); data.set_save(&preview_save);
-    data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    Save preview_save; SettingsSession preview_save_session(preview_save); GameData data; data.set_application(&app); data.set_save(&preview_save); data.set_settings_session(&preview_save_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_gate_trial" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     StagePreview preview("gate-permission-preview", preview_box, &data);
     preview.set_stage("turbulence_gate_trial");
     const auto preview_frame = [&]()

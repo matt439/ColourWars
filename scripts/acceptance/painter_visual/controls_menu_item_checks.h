@@ -21,13 +21,13 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         { defaults[static_cast<size_t>(controls_roles[row])] = controls_legacy[row]; }
     for (size_t row = 0; row < stick_roles.size(); ++row)
         { defaults[static_cast<size_t>(stick_roles[row])] = stick_legacy[row]; }
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     const auto reset_preferences = [&]
     {
         PlaySettings fresh;
         fresh.music_volume = fresh.sfx_volume = 0;
-        require(preferences.set_play_settings_and_save(fresh), "Cannot reset the isolated settings-label save");
+        require(preferences_session.set_play_settings_and_save(fresh), "Cannot reset the isolated settings-label save");
     };
     reset_preferences();
     const auto saved_bytes = [&]
@@ -37,10 +37,10 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct RestoreControlsItems
@@ -283,9 +283,9 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         tap(Key::enter);
         require(sticks ? play.sticks[0].movement_deadzone == std::stoi(values[1]) : play.music_volume == 10,
             "Custom Controls/Sticks Apply label changed which pending settings were committed");
-        Save reloaded; reloaded.load_save_file();
-        require(sticks ? reloaded.play_settings().sticks[0].movement_deadzone == std::stoi(values[1]) :
-            reloaded.play_settings().music_volume == 10, "Custom Controls/Sticks Apply did not survive save reload");
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+        require(sticks ? reloaded_session.play_settings().sticks[0].movement_deadzone == std::stoi(values[1]) :
+            reloaded_session.play_settings().music_volume == 10, "Custom Controls/Sticks Apply did not survive save reload");
         compare("applied-retained-old", sticks, apply_row, old, old_labels, values, true);
         const std::string applied = saved_bytes(); tap(Key::enter);
         require(saved_bytes() == applied, "Repeated custom Controls/Sticks Apply changed the selected preferences");

@@ -3,7 +3,948 @@
 This is the live owner for `HYG` rows in [TODO](../TODO.md). The author asked
 for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
-arena/tuning order.
+arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
+`CI#5`; `CI#1`, the foreground debug-console check, stays with
+[the debug console](debug-console-record.md#foreground-checks-ci1).
+
+## Architecture review (2026-10-30)
+
+On 2026-10-30 the author asked for an architecture review, since the project is
+read as an example, and then asked for every finding to go into TODO and be
+worked through. The findings are recorded, frozen, in
+[the review](review/2026-10-30-architecture-review.md); this section owns their
+status. Engine-side findings are ledger drafts `ENG#27` to `ENG#32` in
+[engine-reports.md](review/engine-reports.md).
+
+These rows are allowed to do what the [working rules](#scope-and-working-rules)
+below forbid for a source split: rename a type, add an abstraction, move files
+between directories and change a class's bases. They still preserve behaviour,
+the game's inheritance-first style (no T11 findings), save and content formats,
+and evaluation and RNG order unless the row says otherwise. Each row builds Debug
+and Release and runs the acceptance cases its files touch; a row that moves files
+across the tree runs the full default acceptance list. Work them in the order
+listed. Refresh line numbers before starting; they are from `96c65373`.
+
+### Match setup out of the menu layer (`HYG#28`)
+
+**Done 2026-10-30.** `MenuLevelSettings` is now `MatchSetup` in
+[game/match_setup.h](../game/match_setup.h) and `MenuPlayerSettings` is
+`SeatSetup` in [game/seat_setup.h](../game/seat_setup.h), with no other
+change to either type; `GameMenu`'s member followed as `match_setup_`. The seat
+label left the class as the free function `player_label(const MatchSetup&, int,
+const MenuText&)` in [game/states/player_label.h](../game/states/player_label.h).
+The two Mode-row validators left `MainMenuModeSelect` as
+`validate_mode_durations` and `validate_mode_stage_rules` in
+[game/states/menu_content_validation.h](../game/states/menu_content_validation.h),
+beside `validate_shell_content`, which runs `validate_game_content` and then
+those two, in the order startup ran them before. `wWinMain`, `reload`, the
+level-checking `tune` path and the probes that ran the startup checks call it
+instead. `game/objects`, `game/ai`, `round_tape`, `last_match_setup`,
+`series_stage_rule` and `content_validation` now include no `states/` header.
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74 cases) and in Debug without the four slow cases (71), and
+`debug_console` and `menu_text` also passed in Debug. The Debug compile gate
+(the sixteen opt-in cases, `check-painter.ps1 -CompileOnly` and
+`check-frame-pacing.ps1 -CompileOnly`) compiled, and `check-startup.ps1` passed
+on the Debug executable.
+
+### A game library for the executable and the probes (`HYG#29`)
+
+**Done 2026-10-30.** [game/CMakeLists.txt](../game/CMakeLists.txt) now builds
+every game source but `main.cpp` and the two platform adapters into the
+`colourwars_game` static library, `rumble_xinput.cpp` into
+`colourwars_rumble_xinput` and `display_awake.cpp` into
+`colourwars_display_awake` (each building against the game library's headers
+and reusing its precompiled header), and links all three into the thin
+`ColourWars` executable of `main.cpp`, `resource.rc` and the manifest.
+`run-acceptance.ps1`, `check-movement-feedback.ps1` and `check-paint-fx.ps1`
+link the game library and both adapters; `check-painter.ps1` and
+`check-frame-pacing.ps1` link the game and display adapters and supply their own
+rumble factory; `check-display-awake.ps1` links the game library alone, checks
+with `lib /list` that it holds `game_states.cpp` and neither the entry point nor
+an adapter, and records the three libraries in its receipt. No script globs
+`CMakeFiles/ColourWars.dir` or filters object filenames any more, and a retired
+source can no longer reach a probe. A link map showed every game-library member
+with code in the executable in Debug, and in Release every member but the
+Debug-only `game/debug` units, which compile to nothing there and carry no
+initializers, so the executable's contents are unchanged. "No CTest by design"
+stands; AGENTS.md and the README now say why the game's own probes are not
+CTest tests (the runner builds them on request and owns selection, deadlines,
+evidence and the timing summary). The Release ZIP's 72 entries are the same as
+before. Both presets build under `/W4 /WX`. The full default acceptance list
+passed in Release (74 cases) and in Debug without the four slow cases (71);
+the sixteen opt-in cases and `check-painter.ps1 -CompileOnly` compiled in both
+presets and `check-frame-pacing.ps1 -CompileOnly` in Debug;
+`check-display-awake.ps1`, `check-movement-feedback.ps1` and
+`check-startup.ps1` passed on Debug, and `check-acceptance-selection.ps1` and
+`check-painter-selection.ps1` passed. `check-paint-fx.ps1` links and runs but
+fails its "authored gameplay camera scale" check; HEAD's script on the
+unchanged pre-split objects fails the same way, so that is older than this row
+(its last pass on record is 2026-10-18).
+
+### One acceptance case list and a shared probe header (`HYG#30`)
+
+**Done 2026-10-30.** Every consumer acceptance case is declared once, in
+[scripts/acceptance/cases.psd1](../scripts/acceptance/cases.psd1): its name,
+group (default, `debug-only` for `balance_runner`, or `opt-in`), extra sources,
+arguments (`game`, `repo`), the start rank that replaced `$longestFirst`,
+`SlowInDebug` and `Utf8Output`. [run-acceptance.ps1](../scripts/run-acceptance.ps1)
+reads it with `Import-PowerShellDataFile`, refuses unknown keys, groups and
+arguments, and no longer names a case anywhere. Two switches replace the case
+lists CI pasted: `-OptIn` selects the opt-in group (refused with `-Cases`) and
+`-SkipSlowDebug` (refused outside `x64-debug`) leaves out the `SlowInDebug`
+cases. [ci.yml](../.github/workflows/ci.yml) uses them, and selects exactly what
+it did: the same sixteen opt-in cases in the same order (not fourteen, as
+AGENTS.md said; it now says sixteen) and the same four Debug pull-request
+exclusions. [check-acceptance-selection.ps1](../scripts/check-acceptance-selection.ps1)
+checks both switches against the declarations and their refusals, and hashes
+the declaration file.
+
+[scripts/acceptance/support/probe.h](../scripts/acceptance/support/probe.h)
+holds `acceptance::require` (both message types, throwing `std::runtime_error`
+as every copy did) and `acceptance::run_probe(name, body)`, which prints
+`FAIL <name>: <reason>` and returns 1 for any escaping exception. 80 files
+dropped their own `require` for a `using acceptance::require;` (fixture
+headers carry it for their folder), and 98 entry points, the runner's cases and
+the painter, frame-pacing, movement-feedback, paint-fx and editor probes, now
+return `run_probe`. Probes that printed a bare `FAIL:` or no label now name
+themselves. Two keep their own code on purpose: `display_awake_lifecycle`'s
+main writes failure evidence before returning, and `balance_runner`'s
+self-check `require` prefixes `Self-check:`. No probe's checks changed.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Debug without the four slow cases (71). In Release 73 of 74 passed first time;
+`debug_console` failed to compile because the script had put the new include
+inside its fixture header's `#if COLOURWARS_DEV_TOOLS`. After that and ten
+similar includes were moved out, `debug_console` and the ten bot probes passed
+in Release, and `debug_console`, `menu_text`, `crossfeed`, `press_tower`,
+`balance_runner` and those bot probes passed in Debug except the opt-in
+`bot_team_trials`, which stopped on `bad allocation` while the machine was
+short of resources (a shell started then could not fork); its checks are
+unchanged and it passed in Release. The sixteen opt-in cases (`-OptIn -CompileOnly`) and
+`check-painter.ps1 -CompileOnly` compiled in both presets and
+`check-frame-pacing.ps1 -CompileOnly` in Debug. `check-display-awake.ps1`,
+`check-movement-feedback.ps1` and `check-level-editor.ps1` passed (the editor
+check failed once in each preset during that load, on a clipboard paste and a
+locked file, and passed on rerun), and `check-acceptance-selection.ps1`
+passed under Windows PowerShell 5.1; pwsh is not installed here.
+`check-paint-fx.ps1` still fails its camera-scale check, as recorded under
+`HYG#29`.
+
+### A human architecture overview and accurate docs (`HYG#31`)
+
+**Done 2026-10-30.** [architecture.md](architecture.md) is the human overview:
+a directory map, the concerns mixed in the `game/` root, the intended
+dependency direction with what holds and what does not at `272ecb75` (measured
+from the include graph: `objects`/`ai` include each other, the root includes
+`objects` and `states`, nothing enforces the contracts), the nine engine-free
+contract headers, `game/carried`, `GameData`, every state-stack shape, `Level`
+and `Scene`, the builder chain, the four startup files and the class chains
+with every base. AGENTS.md's Architecture section is now a pointer and eight
+agent rules; its claim that `GameData` reaches every object is corrected (the
+shell's states, pages, `MenuContext`, `StagePreview` and `game/debug` hold it;
+`GameLevel` unpacks it into `LevelBuilder`), and its OOP chains gained their
+missing bases. The comment atop `game_states.h` now shows Options pushed over
+the pause menu and the between-round pages. The OOP guide documents `Player`'s
+two `DrawObject` subobjects and links the overview, as does the README (whose
+line counts were refreshed). [docs/README.md](README.md) and
+[scripts/README.md](../scripts/README.md) index both folders. The work record
+of `docs/debug-console.md` (`DBG#1`, `#6` and `#8` to `#18`, and `CI#1`) moved
+unchanged to [debug-console-record.md](debug-console-record.md), leaving a
+1,724-line reference that gained short `script.background` and `stage_hash`
+entries; inbound links were repointed. Both presets build under `/W4 /WX`;
+`display_awake`, `remembered_setup` and `ammo` passed in each, and
+`check_doc_links.py` passes.
+
+### The precompiled header stops claiming a backend (`HYG#32`)
+
+**Done 2026-10-30.** [game/pch.h](../game/pch.h) now carries the Windows
+version floor, the lean `<Windows.h>` and the standard library headers, and no
+backend: the WRL, D3D11, DXGI, DirectXMath, `dxgidebug` and 18 DirectXTK
+includes are gone. The 32 dead `using namespace DirectX` lines and the two
+"disambiguate from `DirectX::Mouse`" comments went with them.
+[game/CMakeLists.txt](../game/CMakeLists.txt) no longer finds `directxtk` or
+`xaudio2redist` or links `Microsoft::DirectXTK`; the engine finds and links its
+own backends' DirectXTK privately, the executable still imports `DirectXTK.dll`
+through it, and `vcpkg.json` keeps the port for the engine. `<wrl/client.h>` is
+now local to `debug_screenshot.cpp` and `movement_feedback_visual.cpp`, the two
+files that use `ComPtr`, and the latter includes `<dxgi1_3.h>` for
+`DXGIGetDebugInterface1`. Only `collision_object_type.cpp` in the game had
+compiled on the PCH's includes; it now includes `<stdexcept>` and `<string>`. Debug and Release
+build the game and editor under `/W4 /WX`; the full default acceptance list
+passes in Release and in Debug without the four slow cases; the opt-in, painter
+and frame-pacing compile gates, `check-movement-feedback.ps1`,
+`check-display-awake.ps1` in both presets and `check-startup.ps1` on the Debug
+executable pass. `check-paint-fx.ps1` compiles and runs but stops on "matrix no
+longer matches the authored gameplay camera scale", as its 06:36 run on the
+pre-`HYG#32` tree already did; that is not this row's.
+
+### The shipping match step out of debug code (`HYG#33`)
+
+**Done 2026-10-30.** The match step is now the private `GameLevel::step_match`
+in [game_states.cpp](../game/states/game_states.cpp), the old
+`debug_update_level` body unchanged (background audio, rumble, the shipping
+tape recorder around `Level::update`). `GameLevel::update` runs it in its own
+loop bounded by four director hooks in
+[debug_director.h](../game/debug/debug_director.h): `match_steps` (how many:
+the clock's 0..4, one in Release), `before_match_step` (stops at a finished
+round, else the step's latched or edge-free inputs and seat filter in a
+`MatchStep`), `after_match_step` (perf time, update counts, recording
+checkpoints, stops where a replay ended or a script waits) and
+`end_match_steps` (audio sync on the paused clock), which split the old
+`update_match` loop in the same order. In Release all four are inline and say
+one step with no filter, so the step is called once a frame directly; no
+director hook forwards it any more. `DebugMatchTarget` is now three interfaces
+by client in [debug_targets.h](../game/debug/debug_targets.h):
+`DebugMatchView` (read-only), `DebugMatchControl` (rebuild, adopt, leave,
+audio, background) and `DebugMatchEdits` (overlays, cheats, place, respawn,
+kill, seat labels), which it inherits; `seat_labels`, `rebuild_bots` and
+`replay_header` take a `DebugMatchView`. The `debug_console` fakes take the
+same loop through a fixture `update_match(director, match, ...)`, and
+`painter_visual`'s practice replay reaches `step_match`. The Release paragraph
+and hooks list of [the debug console](debug-console.md#release-behaviour) and
+[the architecture overview](architecture.md) now describe this.
+`director_checks.cpp` gained the `<objbase.h>` it needs for `CoInitializeEx`:
+after `HYG#32` trimmed the precompiled header it no longer compiled in Debug
+(the only build that compiles it), which `HYG#32`'s Debug run, made without
+the slow cases, did not reach.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74) and in Debug without the four slow cases (71); `debug_console`,
+`menu_text`, `instant_replay` and `practice_workshop` passed in Debug.
+`check-painter.ps1 -PracticeReplayOnly` passed in both presets,
+`check-display-awake.ps1` and `check-startup.ps1` on the Debug executable, and
+`check_doc_links.py` passes.
+
+### One bot ballistics and RNG module (`HYG#34`)
+
+**Done 2026-10-30.** `BotRandom` (splitmix64) and its seed/seat mix,
+`BotRandom::seat_seed`, moved out of `debug/bot.h` into
+[bot_random.h](../game/ai/bot_random.h); `MatchBot` keeps a `BotRandom` instead
+of its own copy of the generator, and `MatchBotDriver` and `Bot::make` both seed
+from `seat_seed`, so every bot draws the same sequence as before.
+`match_bot_ballistics::horizontal_reach` is now defined in
+[match_bot_ballistics.cpp](../game/ai/match_bot_ballistics.cpp) beside
+`aim_direction`, and the Debug `BotDriver`'s engagement distance calls it
+instead of its own uncapped copy. That is the one behavioural change: a
+skirmish developer bot with a gravity tool now engages at the shipping
+same-height ballistic cap, not from a full second of horizontal travel (said in
+the commit and in [the debug console](debug-console.md#skirmish-measurement-bot)).
+The bots' hard-coded `60` (step length, one-second loops, seconds-to-steps
+budgets, the one-step velocity look-ahead) now read `SIMULATION_HZ` or
+`SECONDS_PER_STEP` from [simulation.h](../game/simulation.h), each spelled to
+give the same value bit for bit; the Debug behaviours' step counts stay as
+written.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74) and in Debug without the four slow cases (71, `balance_runner`
+included); `debug_console` passed in Debug, and the opt-in `bot_trials`,
+`bot_combat_trials`, `bot_scan_cost` and `bot_team_trials` passed in Release.
+`check-startup.ps1` passed on the Debug executable and `check_doc_links.py`
+passes.
+
+### One record and replay model (`HYG#35`)
+
+Make `RoundTape` the in-memory capture and have the Debug `ReplayFile` serialise
+it plus its checkpoints, hashes and fingerprint, so `ReplayRecorder` and
+`ReplayPlayer` wrap the round-tape types. Existing `.replay` files may stop
+loading only if the format version says so.
+
+### One owner for weapon and projectile names (`HYG#36`)
+
+Give `WeaponType` (and `ProjectileType`) one constexpr name table with
+`to_string`/parse beside the enum, and make tuning, validation, presentation,
+`last_match_setup` and the Debug match plan use it.
+
+### Menu page geometry in one place (`HYG#37`)
+
+Make page geometry a pure function of the presentation records in one module
+that owns the design size, and have the reader, the validator and the pages call
+it; move `DESIGN_RESOLUTION` out of `states/menu_page.h`. Split presentation
+validation by page rather than by size where the shared geometry allows.
+
+### Presentation includes and the content layer (`HYG#38`)
+
+Trim the 24-line include block copied into 13 `presentation*.cpp` files to what
+each uses, so `build_info.h` and the `states/` badge header appear only where
+referenced. Move the badge geometry the roster validator needs beside
+`PlayerIdentityPresentation`, and stop `presentation.h` dragging the menu
+records into gameplay objects.
+
+### An explicit match random stream (`HYG#39`)
+
+Replace the global `srand`/`rand` seeding of a round with a `MatchRandom` value
+passed into `LevelBuilder::build_level`, with independent sub-streams for
+palette, bot seeds and the monitor persona; `RoundTape` stores the seed it
+hands in. Seeded team pairs and colours may change; record the new `+seed`
+mapping where the screenshot loop documents it.
+
+### `Level` composed of owned parts (`HYG#40`)
+
+Group the 28-parameter constructor into a few parameter records built by
+`LevelBuilder`; extract owned collaborators (the intro/opening presenter,
+horizontal motion, practice, the HUD/draw layer, match audio) with their own
+state; give `game/ai` a narrow world-query interface that `Level` implements,
+instead of `bot_*` members. Update the guide's description of `Level`.
+
+### `GameLevel`'s suspension rules in one object (`HYG#41`)
+
+Replace the four focus/pause booleans and their branches with one owned
+suspension object that answers whether audio may play and whether to count in,
+ask the director once per callback for its gate, and make the layout restore
+and Debug attachment scopes created in `init()`.
+
+### Structure queries instead of casts (`HYG#42`)
+
+**Done 2026-10-30.** Structures, players and projectiles now derive from the
+new abstract [Collider](../game/objects/collider.h), a game-side
+`labrador::CollisionObject`. Its final `on_contact` asks the other party to
+`touch` this one, and that party's `touch` calls `on_structure_contact`,
+`on_player_contact` or `on_projectile_contact`. `Player` and `Projectile` no
+longer decode the tag of what they touched, and the painted structures no longer
+cast it. `Collider` answers the roles `structure()`, `projectile()` and
+`paintable()`. `Collider::of` is the one conversion from the engine's type and
+refuses anything else. That cross-cast is now `ENG#29`'s exhibit in the
+[ledger](review/engine-reports.md). [Structure](../game/objects/structure.h)
+answers `jump_through`, `ramp`, `ramp_rises_right`, `flat`, `slab_geometry`,
+`top_paint_team`/`top_paint_colour`, `holds_flat_top_paint`, `passable_for` and
+`cover_point`, and the roles `mover()` and `gate()`. With those, `Player`,
+`Projectile`, `Level`, `LevelObjectBuilder`, content validation and the stage
+preview have no `dynamic_cast` to a structure leaf left. Of the 33 in
+`game/objects`, only `Collider::of`'s and a terrain-shape cast remain. The base
+tag tests are virtuals now. `Weapon::has_aim_marker`,
+`advance_travel_motion` and `motion_pose` are overridden by `WeaponRoller`.
+`Projectile::resolve_travel`, `launch_hits_players` and `duds_on_bare_cover`
+are overridden by `ProjectileRolling`, which also answers both contact handlers.
+The translating structure's redundant roller test is gone. Some tag tests
+remain: those for the sprayer and mister, which have no class of their own; the
+bucket and sniper ones beside them; `is_swept`, the tunnelling contract's table;
+and the tag-only classifications (`is_structure`/`is_projectile` in the bot
+queries, idle drips, the any-slab test in `resolve_sweep`). None of these casts,
+and they keep the per-step cost where it was. `lethal_provenance` now checks
+that a tag-only proxy is refused rather than damaging by tag. The OOP guide
+gained a double-dispatch row, and its projectile and scored-object recipes now
+say to answer these queries. Both presets build under `/W4 /WX`. The full
+default list passed in Release (74 cases), including the bot trials' fingerprints
+and the movement, paint, slab, gate and moving-structure cases. In Debug
+without the four slow cases, 68 passed in the working tree. `moving_structure`
+and `bot_runtime` did not compile there, and `balance_runner` did not run,
+because of `HYG#35`'s uncommitted `ReplayFile` work in that tree. All three,
+with `lethal_provenance`, passed in a scratch worktree holding only this
+change. `check-startup.ps1` passed on the Debug executable.
+
+### Menu page bases named by role (`HYG#43`)
+
+**Done 2026-10-30.** The five settings pages (Controls / audio, Pad sticks,
+Keyboard keys, Pad buttons, Profiles) now derive from `SettingsPanelPage` in
+[game/states/settings_panel_page.h](../game/states/settings_panel_page.h)
+instead of `PauseMenuPage`. It has no `finish()`: its only way out is `close()`,
+which pops like Back, and its `debug_dismiss` closes (Keyboard keys still
+refuses during a capture). It holds the panel scaffolding the five had copied:
+the opening slot and its input (`opening_slot`, `opening_slot_input`, formerly
+the pause page's `pausing_player`), the panel style and look, `build_panel`
+(grid, background, paper card and both widget trees), `add_text`, `fit_text`,
+the status-line box, `covers_screen` and the paper's own focus card.
+`PauseMenuPage` and its `finish` now serve only `PauseMenuInitial` and
+`PauseMenuConfirmation`. `MainMenuPage` is a thin main-menu-frame base (its
+look, `connected_slots` and starting a debug match), and `RosterSetupPage`
+under it holds the roster machinery (seat sounds, the missing-controller wait,
+host row cursor, profile Boost, the between-rounds series) for Player Count,
+Join, Team, Weapon and Stage Select; Title, Home, Credits, Options and Mode
+Select no longer inherit it. `MenuPage` lost `shows_brand`, which all 18 pages
+overrode to false, with the brand drawing and font it guarded, and
+`animates_focus_backing`, which none overrode. `menu_text.brand` and
+`menu_style.chrome.brand_font` and `brand_position` stay in the format and in
+validation; the painter menu-text probe, whose test page was the only thing
+that drew the brand, no longer compares a brand crop. The OOP guide,
+architecture overview, AGENTS.md, debug-console and menu-presentation docs
+follow. Both presets build under `/W4 /WX`. Release ran the full default list
+in the working tree (74 passed). Debug ran in a scratch worktree holding only
+this change, since `HYG#35`'s uncommitted replay work stops some probes
+compiling in the working tree: 71 passed without the four slow cases, and
+`menu_text` and `debug_console` passed. There, `check-painter.ps1 -CompileOnly`
+compiled in both presets, and the Release `-MenuTextOnly`, `-KeyboardJumpOnly`,
+`-PausedOptionsOnly`, `-StickReadoutsOnly`, `-RumbleOnly` and
+`-OptionsDefaultsOnly` matrices passed. `check-startup.ps1` passed on the
+Debug executable.
+
+### Menu owner and navigation (`HYG#44`)
+
+**Done 2026-10-30.** `MenuContext` borrows a `MenuOwner`
+([game/states/menu_owner.h](../game/states/menu_owner.h)) in place of its four
+owner slots: `update_menu_music`, and `suspend_menu_music`, `rescan_stages` and
+`stage_scan` with do-nothing defaults. `GameMenu` and `GameLevel` implement it
+privately and pass themselves to their context; `GameLevel` answers only the
+music clock, so a match still lends no stage folder. A context with no owner (the
+probes, the developer tools' detached context) stays silent and finishes a page
+exit at once, as an unset music slot did. The fifth slot, the pending page exit,
+stays a one-shot `std::function`: it is the page's continuation, not the owner's.
+Every page change inside the main menu's frame is now a `MainMenuRoute` followed
+by `MainMenuPage::go_to`, and `make_main_menu_page` in
+[game/states/main_menu_route.cpp](../game/states/main_menu_route.cpp), which
+replaces `GameMenu::build_page` and draws the setup flow as one graph, is the one
+place those pages are built. `MainMenuScreen` gained `join`; the End menu's
+between-rounds re-picks build through the same factory. Probes that set slots
+use stand-in owners: small local ones in `story_audio` and `user_stages`, and
+`ScriptedMenuOwner` in
+[scripted_menu_owner.h](../scripts/acceptance/painter_visual/scripted_menu_owner.h)
+for the painter checks, attached through `MenuContext::set_owner`. Both presets
+build under `/W4 /WX`. The full default acceptance list passed in Release (74
+cases) and in Debug without the four slow cases, except `bot_runtime` and
+`moving_structure`, which did not compile against uncommitted `ReplayFile`
+changes already in the working tree and touched by nothing here.
+`check-painter.ps1 -CompileOnly` compiled in Release (in Debug only
+`practice_replay_checks.h` failed, on the same `ReplayFile` changes), the
+Release `-HomeExitOnly`, `-HomeReturnFocusOnly`, `-StageScanOnly`,
+`-StagePaperOnly`, `-EndMenuOnly`, `-EndContinuationOnly`,
+`-JoinStageMotionOnly` and `-RememberedSetupOnly` matrices passed, and
+`check-startup.ps1` passed on the Debug executable.
+
+### Device-to-command in one place (`HYG#45`)
+
+**Done 2026-10-30.** `SeatCommandBuilder`
+([game/objects/seat_commands.h](../game/objects/seat_commands.h)), owned by
+`GameLevel`, is now the one place device slots become seats: each participant
+takes its `player_num()` slot's command, a seat with no slot gets neutral input,
+and a keyboard/mouse seat's aim is resolved there through its pane and camera.
+`GameLevel` refreshes the level's layout before building, so a resized window's
+camera is the one aimed through, as when `Level::update` did it. `Level::update`,
+`prepare_resume` and the round tape's resume gap take one command per
+participant; `Level` lost its `Mouse*`, `resolve_mouse_aim` and the slot reads,
+and `LevelBuilder` its mouse argument. A participant's intro skip reaches the
+level as `request_intro_skip`, honoured by the next stepping update exactly
+where the slot check ran, and `GameLevel::draw` hands the cursor marker the
+pointer through `set_pointer`. `PlayerInputData` is the seat command; the pause
+and intro-skip signals moved to `SlotInput`
+([slot_input.h](../game/objects/slot_input.h)), which derives from it and is
+what `PlayerInput`, the pause latch, the resume count-in and the Debug clock and
+filters read. The seat's F1 overlay toggle stays in the command, since
+`Player` applies it and tapes replay it. Debug replays no longer write a seat's
+pause (64) and skip (256) flags, which no player ever read, and still read
+files that have them; the format stays version 4. The keyboard defaults are now
+stated once in `player_input_consts`, which `InputBindings` reads, and the pad
+defaults once in `PadProfile`: `fixed_action_bindings` holds only the controls no
+save changes, and `default_action_bindings` is `effective_action_bindings` of a
+default `InputBindings`. Probes that script a level by slot map through
+`acceptance::slot_seats` or `update_from_slots`
+([slot_seats.h](../scripts/acceptance/support/slot_seats.h)), which use the
+builder without a mouse; a temporary audit of every default case found the five
+whose slots differed from their seats. The architecture overview and the OOP
+guide follow. Both presets build under `/W4 /WX`. The full default acceptance
+list passed in Release (74 cases) and in Debug without the four slow cases (71),
+and `debug_console`, `crossfeed` and `press_tower` also passed in Debug. The Debug
+opt-in, painter and frame-pacing compile gates and the Release painter compile
+passed. In Release the `-Countdown`, `-ResultPercentage`, `-PracticeReplay`,
+`-Monitor`, `-Identity`, `-LimbTuneColours`, `-ProgramLevelVisibility`,
+`-Resume`, `-CqBlockout`, `-CursorTuneColours`, `-Hud`, `-Supply`, `-Closing`,
+`-Drift`, `-Quiet`, `-Crossfeed`, `-PressTower`, `-TurbulenceBlockout`,
+`-GatePermission`, `-FerryDirection`, `-SurfaceFinish`, `-RouteWarning`,
+`-Landmark`, `-MiniatureTerrain` and `-RevealTuneColours` painter matrices
+passed (the resume matrix now hands the level the pointer before its raw
+render, as `GameLevel::draw` does), and `check-startup.ps1` passed on the Debug
+executable.
+
+### One owner for the level format (`HYG#46`)
+
+**Done 2026-10-30.** [game/level_format.h](../game/level_format.h), still
+engine-free and header-only, is now the level format's one owner: beside the
+version it holds the key names (`level_format::key`), the bounds keys, the
+object types (`object_type`), the collision tags as `level_format::Collision`
+with their spellings, which tags each object type may carry (`may_carry`), the
+material table (`materials`, `sits_on`, `allowed_materials`), the fixed slab's
+material and refused fields, the four-spawn minimum and the own-half spawn
+rule, and it names the station, gate, motion and slab contracts as the format's
+parts. The game reads it in `LevelLoadedInfo` (which `static_assert`s the spawn
+minimum against the pad count), `LevelObjectBuilder` (its tag table and
+per-type allowed lists are gone) and `TerrainMaterial::make`, which now only
+builds the look the table admits; the editor reads it in `level_json` (its
+copy of the material table and `allowed_materials` are gone), the slab,
+motion and blockout helpers, the document, the canvas and the mechanism
+guide. Each side keeps its own messages and check order, so no level is
+accepted or refused differently; the one wording change is that the editor
+now names a fixed slab's refused `slab` fields in the game's order when two
+are present. [level.schema.json](../game/level.schema.json) moved from `docs/`
+to beside it; the three schema checks and the live docs follow. Reading a
+level once into a typed record was considered and not done:
+`LevelLoadedInfo`'s reads go through `JsonValue`, which names the file and key
+path in every refusal, and its object entries must stay JSON for
+`LevelObjectBuilder`, the one path that both validates and builds them, so a
+record would add a second, unlocated reader rather than remove one. Both
+presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (74 cases). In Debug without the four slow cases, 69 passed and
+`moving_structure` and `bot_runtime` did not compile against the uncommitted
+`ReplayFile` changes already in the working tree, which nothing here touches.
+`check-level-editor.ps1` passed in Debug and Release (a first Debug run failed
+the DPI probe's thread keyboard-state check once and passed on a rerun), and
+`check-startup.ps1` passed on the Debug executable.
+
+### One stage catalog (`HYG#47`)
+
+**Done 2026-10-30.** [game/stage_catalog.h](../game/stage_catalog.h) owns the
+ordered stage list and the level registry and is their only writer:
+`StageDefinition` moved there from `stage_loading.h`, the manifest's `"level"`
+kind calls `add`, and `UserStageFolder` and `load_user_stages` take a
+`StageCatalog` in place of the registry and list pair. `GameData` holds one
+`const StageCatalog*` (`set_stage_catalog`) in place of the two pointers, and
+`stages()` and `level_infos()` now forward to it, read-only. The rescan is
+unchanged in what it does: it drops and rereads the user stages, a vanished
+stage's definition stays registered, and a read that throws puts the starting
+list back, as building beside the live list did. `StageCatalog::definition`
+answers by name from the list, and the Debug station lookup uses it. Probes
+that offer their own lists from one shared registry build a catalog per list
+with `acceptance::catalog_of` ([scripts/acceptance/support/stage_catalog.h](../scripts/acceptance/support/stage_catalog.h)),
+which rereads each definition from `LevelLoadedInfo::source_path`, since a
+definition cannot be copied. `ENG#26` in the ledger now asks only for the memory
+back. Both presets build under `/W4 /WX`. In a clean worktree of the tip plus
+this change, the full default acceptance list passed in Release (74 cases) and
+in Debug without the four slow cases (71), `debug_console` and `menu_text`
+passed in Debug, the Debug compile gate (the opt-in cases,
+`check-painter.ps1 -CompileOnly` and `check-frame-pacing.ps1 -CompileOnly`)
+compiled, and `check-startup.ps1` passed on the Debug executable.
+
+### Save and the active profile (`HYG#48`)
+
+**Done 2026-10-30.** [`SettingsSession`](../game/settings_session.h) now owns
+what belongs to the run: which pad wears which profile and the effective play
+settings and input bindings, the save's with each worn profile laid over its
+pad, rebuilt in place so borrowed references stay current. It borrows the
+`Save`; `wWinMain` declares it beside the save and `GameData` lends it as
+`settings_session()`, a seventh pointer. Every reader of the settings in effect
+and the Controls, Pad buttons, Profiles and setup pages moved to it, as did the
+writes that take effective values (`set_play_settings_and_save`,
+`set_input_bindings_and_save`), wearing, adding a profile from a pad, deleting
+one (the wearers follow the shift) and carrying Boosts back. The `Save` keeps
+the file: `saved_play_settings` and `saved_input_bindings` (each pad as
+itself), the profile list, rename and Boost, and memory-only setters the
+session writes through once. Write order, checks and the effective
+references' identity are unchanged, and the file format is not touched. A
+malformed section now prints one stderr line naming the save, the section's
+key and the reader's error before it resets; sections that recover field by
+field print nothing. [save_section.h](../game/save_section.h) states the
+migration rule: no migration pass, each section reads every older layout in
+place, a version only adds, a key whose meaning changes gets a new name, and
+no section reads `"save_version"`. `match_records` gained
+`check_section_reset_report`; probes that build a `GameData` hold a session
+beside their `Save`, and those that test the file alone read the `saved_`
+accessors. The architecture overview, the OOP guide and the roadmap follow.
+Both presets build under `/W4 /WX`. In a clean worktree of the tip plus this
+change, the full default acceptance list passed in Release (74 cases) and in
+Debug without the four slow cases (71), and `debug_console` and `menu_text`
+passed in Debug. A first `input_bindings` run failed on a probe that reassigns
+its `Save` under a live session; those probes now reload through the session.
+`moving_structure` once refused a stale temporary receipt folder whose name
+reused the process id and passed on a rerun. The opt-in and painter compile
+gates compiled in both presets, `check-frame-pacing.ps1 -CompileOnly`
+compiled in Debug, the Release `-ControlsMenuOnly`, `-KeyboardJumpOnly`,
+`-OptionsDefaultsOnly` and `-StickSettingsOnly` painter matrices passed, and
+`check-startup.ps1` passed on the Debug executable.
+
+### `const` means draw-safe (`HYG#49`)
+
+**Done 2026-10-30.** `game/` has no `mutable` member left. The methods that
+play, stop, pause or resume a sound are no longer const: `Weapon`'s and
+`Player`'s sound methods (with the redraw pen and fire-loop flags), `Level`'s
+`suspend`, `interrupt_players`, `pause_audio`, `resume_music` and player-sound
+fan-out, `MovementAudio::play`, `MenuPage::play_wave` and the carried
+`SoundBankObject`'s play and effect calls, as are `GameLevel::stop_rumble`
+and `leave_match`, `Player::update_weapon_position` and the Debug
+`filter_match_inputs`, which consumes the one-frame keyboard blank.
+`Level::prepare_resume` stops a tool's loop through the new
+`Player::stop_tool_sounds`, since `primary_weapon()` stays read-only, and Debug
+playback's injected suspend goes through `DebugMatchControl::debug_suspend_level`
+rather than the read-only `debug_level()`. `PlayerInput::player_inputs` and the
+Debug menu model's `rows` are non-const, because a read refreshes their copied
+mappings. `Projectile::note_paint_contact` is non-const; a surface reaches it
+through `Projectile::answer_paint_contact`, the one `const_cast` in `game/`,
+because the engine hands a contact's other party over const. That is engine
+report 33 in [the ledger](review/engine-reports.md#owed-from-the-architecture-review-2026-10-30).
+[The OOP guide](oop-guide.md#follow-one-shot-from-input-to-score) states the
+rule. Behaviour, evaluation order and formats are unchanged. Both presets
+build under `/W4 /WX`. In a clean worktree of the tip plus this change, the
+full default acceptance list passed in Release (74 cases; `moving_structure`
+first refused a stale receipt folder, as under `HYG#48`, and passed on a
+rerun) and in Debug without the four slow cases (71), `debug_console` and
+`menu_text` passed in Debug, and the opt-in and painter compile gates compiled
+in both presets, with `check-frame-pacing.ps1 -CompileOnly` in Debug.
+
+### One audio idiom (`HYG#50`)
+
+**Done 2026-10-30.** Everything in `game/` that makes a noise now reaches its
+bank as the carried `SoundBankObject`. `Level`, `Player` and `Weapon` gained it
+as a base, and `MovementAudio` and `PaintAudio` derive from it, so no game
+object holds a raw `labrador::SoundBank*` any more; `MovementAudio` now takes
+the resources and the bank name. A sound that keeps playing and has to stop is
+a `MatchVoice` ([match_voices.h](../game/objects/match_voices.h)): a small
+`SoundBankObject` owning one effect instance, which does nothing when built
+without a name. `Level` holds its sixteen voices as `MatchVoice` members. Its
+constructor registers them, then each player's tool loop and redraw pen
+(`Player::add_voices`, `Weapon::add_voices`), in one `MatchVoices` list, in the
+order the hand-written lists used. `~Level`, `pause_audio` and `resume` walk
+that list. The three sixteen-line lists are gone, and so are
+`Level::pause_player_sounds` and `resume_player_sounds`,
+`Player::pause_sounds` and `resume_sounds`, and the virtual
+`Weapon::pause_sounds` and `resume_sounds`. Two voices keep their own rule as
+overrides: `Player::RedrawVoice` pauses only while it sounds and, on resume,
+stops if the redraw has ended; `Level::MusicVoice` resumes only from a pause,
+at `music_gain()`. Each voice gets the same bank calls in the same order as
+before, on an audible bank or a silent one. The time-up `stop_player_sounds`,
+`Player::stop_sounds`, `stop_tool_sounds` and `Weapon::stop_sounds` stay,
+because they are gameplay stops. The menu layer's `ScreenMusic`,
+`ConnectionAudio` and `ResumeAudio` were already `SoundBankObject` components.
+`GameLevel`'s results music stays its own; its suspension rules belong to
+`HYG#41`. One order changes: `Level`, `Player` and `Weapon` now resolve their
+bank as that base is built, so a missing bank throws before their other
+resources do rather than after. Startup validation refuses such content
+either way. The six probes that called the removed pause and resume methods
+now register the object with a `MatchVoices` instead.
+[The OOP guide](oop-guide.md#inheritance-and-ownership-answer-different-questions)
+states the rule, and `docs/architecture.md` and `AGENTS.md` list the new bases.
+Both presets build under `/W4 /WX`. In a clean worktree of the tip plus this
+change, the full default acceptance list passed in Release (74 cases) and in
+Debug without the four slow cases (71), and `check-startup.ps1` passed on the
+Debug executable.
+
+### Directories by role (`HYG#51`)
+
+Last, because it moves files every other row touches. Give the `game/` root role
+folders (match types, configuration with a presentation subfolder, persistence,
+input, the engine-free shared contracts with an include check like the engine's
+`check_engine_includes`), give `game/debug` subsystem folders, and decide what
+`game/carried` becomes. Update `game/CMakeLists.txt`, the editor and the docs.
+
+### Release package rules runnable locally (`CI#6`)
+
+Move the Release ZIP inspection out of `ci.yml` into
+`scripts/check-release-package.ps1`, which CI calls, and set up the MSVC
+environment once per job.
+
+## Open shortlist (2026-10-29)
+
+The author approved adding every proposal from the 2026-10-29 verified
+brainstorm to the index. Each entry below is **open, not started**. Evidence
+was re-read against the tree on that date; refresh line numbers before
+starting. None of them closes a human gate, and any listening, feel, art or
+attended-play judgment it touches stays a `DECISION` row.
+
+### Unreadable save preservation (`HYG#22`)
+
+**Done 2026-10-29.** `Save::load_save_data` now hands a save that fails as a
+whole to `keep_unreadable_save` ([save.cpp](../game/save.cpp)) before keeping
+the defaults. It copies the file beside itself as
+`save_data.unreadable-<n>.json`, taking the first free `n` (up to 999), through
+`std::filesystem::copy_file` with no overwrite, so an earlier copy is never
+replaced. It prints one stderr line naming the save, the reader's error and the
+copy; a failed copy prints its own line instead and changes nothing else. The
+missing-file and legacy paths are unchanged. `match_records`'
+`check_unreadable_save` loads a truncated and an invalid save in turn. It
+checks that each leaves the defaults and the file untouched, prints exactly one
+line naming both paths, and leaves a byte-identical copy; that the second does
+not touch the first copy; and that a later `save_to_file` writes the real path
+as version 5 and leaves both copies. The check failed against the old `Save`
+before the change. The roadmap's save-layout record now says version 5 and
+lists versions 4 and 5 and the nested `profiles` section. Both presets pass the
+default acceptance suite. Still not decided: an in-game notice for a reset save,
+and whether copies are ever pruned.
+
+The record as filed:
+
+A save that exists but will not parse is silently
+replaced. `Save::load_save_data` catches the whole-file failure and keeps
+`SaveData()` with no message ([save.cpp](../game/save.cpp) lines 433-441), and
+the next match start writes that default state over the file:
+`GameLevel` calls `remember_match_setup_and_save` on every match start
+([game_states.cpp](../game/states/game_states.cpp) lines 237-239), which always
+writes. A recorded round writes again (`record_result_and_save`, save.cpp
+lines 568-579). The engine's `read_json_file` throws on open, read and parse
+failures alike (`external/labrador/engine/assets/json.cpp` lines 66-89). The
+existing protection is per section only: `load_from_json` resets one malformed
+section (save.cpp lines 367-379), which the `match_records` case's
+`check_section_isolation` covers; nothing covers a file that fails as a whole.
+
+Scope: when an existing save fails to load, copy it beside itself under a name
+that is never reused or overwritten, best effort, then print one stderr line
+naming both paths before keeping defaults. A failed copy prints its own line
+and changes nothing else. The missing-file and legacy-save paths are
+unchanged. In the same change, correct the save-layout record in
+[the roadmap](feature-roadmap.md#stage-records-and-the-sectioned-save-gap62),
+which still says `"save_version": 3` and lists versions up to 3, against
+[save.h](../game/save.h) lines 33-44: version 5, versions 4 (`"profiles"`) and
+5 (`"last_match.stage_rule"`) listed, `profiles` nested, and the display and
+play preferences flat.
+
+First step: add the failing case to an isolated-save acceptance case
+(`match_records` or `settings`) before touching `Save`.
+
+Acceptance, CPU only: an invalid-JSON save and a truncated one each leave
+defaults, one stderr line, and a byte-identical side copy; a
+second corrupt load does not overwrite the first copy; a later
+`save_to_file` writes the real path and leaves the copy. Both presets pass the
+default acceptance suite.
+
+Not decided here: any in-game notice or dialog for a reset save, and whether
+side copies are ever pruned.
+
+### Participant parameter names in `Level` (`HYG#26`)
+
+**Done (2026-10-29).** `HYG#8` corrected the comments about participants and
+panes but no identifiers (see [its record](#source-comment-contract-audit-hyg8)).
+This commit renamed the identifiers, and nothing else: every [level.h](../game/objects/level.h)
+parameter that indexes a roster participant in `players_` is now `participant`
+in declaration and definition: `player`, `view_camera`, `idle_drip`,
+`aim_marker_visible`, `player_identity_visible`, `player_identity_emphasis`,
+`player_identity_bounds` and their `_for` forms, and `place_player`,
+`respawn_player` and `kill_player`. The comment over the developer-tools block
+lost its "`view` here indexes roster participants" caveat. Three loop and
+buffer locals that walked `players_` under the name `view` (the death snapshot
+in `update_level_logic`, `refresh_identity_texts` and `apply_player_inputs`'s
+`by_view`) became `participant`/`by_participant`; a review follow-up renamed
+the fourth, the figure-act loop in `level_intro.cpp`'s `update_acting`.
+
+`view` is kept where it really is a human pane: `participant_for_view`,
+`teammate_markers`, `hud_scale`, `update_teammate_markers`' loop and the pane
+local in `refresh_player_cameras`. `draw_acting`'s unnamed `view` is the
+Scene's view index and stays. `view_camera` keeps its name: it is the
+cosmetic camera for that participant's pane, and its public name was out of
+scope.
+
+Verified: the diff changes identifiers and one comment only; both presets
+build under `/W4 /WX`; the review follow-up ran the default acceptance suite,
+which passes in Debug (73 cases) and Release. Release's `moving_structure`
+first failed on a temp folder left by an earlier run with the same process id
+and passed on rerun.
+
+Not decided here: any rename outside `Level`, or of the public accessors
+`view_count`, `participant_for_view` and `view_for_participant`.
+
+### Stale README and AGENTS structure facts (`HYG#27`)
+
+**Done (2026-10-29).** README now gives `game/` as ~69k lines with ~16k in
+`game/debug/` and `editor/` as ~5.5k (tracked `.cpp`/`.h`, blank lines and
+comments included, rounded), and lists the gate and ferry Turbulence Trials as
+explicit-only. AGENTS.md, with the author's approval, names the three audio
+backends and the `xinput`/`web` input axis and the Windows defaults this
+repository gets. The record below is the finding as filed.
+
+Two structural descriptions had drifted.
+[README.md](../README.md) lines 176-177 give `game/` as ~34k lines with ~14k of
+Debug tools and `editor/` as ~2k; tracked `.cpp`/`.h` files measured on
+2026-10-29 are about 69k in `game/`, 15.7k in `game/debug/` and 5.5k in
+`editor/`, counted with blank lines and comments. README lines 35-38 list the
+explicit-only stages but omit the Turbulence Ferry and Gate Trials, both
+`"include_in_random": false`
+([ferry](../game/content/levels/turbulence_ferry_trial.json) line 543,
+[gate](../game/content/levels/turbulence_gate_trial.json) line 507).
+[AGENTS.md](../AGENTS.md) says the engine has two audio backends, but the
+pinned engine offers `xaudio2`, `webaudio` and `null`
+(`external/labrador/engine/CMakeLists.txt` line 325), and a separate
+`LABRADOR_INPUT_BACKEND` axis, `xinput` or `web` (line 368), which AGENTS.md
+does not mention.
+
+Scope: correct those README lines and the AGENTS.md backend paragraph to what
+the pinned engine and the tree say, without new prose about the web build.
+Keep the counting rule stated or rounded so the figures do not need a refresh
+for every slice. The AGENTS.md edit is project instruction text, so the author
+approves it at commit time; the README edit can land without it.
+
+First step: recount with the same rule as the source-size snapshot below and
+re-read the backend `STRINGS` lines at the current pin.
+
+Acceptance: each corrected figure and list matches a command recorded in the
+commit message; the CI change-detection checks still classify the commit as
+docs-only.
+
+Not decided here: the AGENTS.md wording (the author's), and whether README
+keeps line counts at all.
+
+### Compile gate for opt-in probes (`CI#2`)
+
+**Done 2026-10-29.** CI used to compile only what it ran: the fourteen opt-in
+acceptance cases (`bot_trials` through `turbulence_slab_tools`, the entries of
+`$availableCases` in [run-acceptance.ps1](../scripts/run-acceptance.ps1) that
+are neither in the default list nor `balance_runner`), the painter and the
+frame-pacing harness were never built there, and probes kept off CI drift (the
+2026-10-28 painter run found stale fixtures nobody had noticed, the MattPC
+paragraph under [Player profiles](feature-roadmap.md#player-profiles-road21)).
+Those were runtime failures; this gate catches only the compile-breaking kind.
+
+The `Compile gate for opt-in probes` step in
+[ci.yml](../.github/workflows/ci.yml) runs in both preset jobs straight after
+Build, and uploads `out/validation/compile-gate/` JSON and logs as
+`compile-gate-<preset>`, `if: always()`. It runs:
+
+- `run-acceptance.ps1 -SkipBuild -CompileOnly -Parallel 4 -Cases <the
+  fourteen>`, with its own `-OutputDirectory` so its `acceptance-summary.json`
+  never stands in for the real acceptance run's (`CI#4`). The case list is
+  written out in the step; a new opt-in case must be added there too, as its
+  comment says.
+- `check-painter.ps1 -SkipBuild -CompileOnly`, new here. It compiles
+  `painter_visual.cpp` twice, the normal and then the scripted
+  (`COLOURWARS_PAINTER_SCRIPTED_PADS`) gamepad reader, to
+  `painter_visual-normal-pads.exe` and `painter_visual-scripted-pads.exe`, then
+  returns through the runner's `finally`, writing `result.json` with scope
+  `compile-only`, outcome `compiled` and one `compiled_variants` entry per
+  reader. That receipt keeps only the run's identity (preset, revisions,
+  worktree status, profile); a failed compile writes the same scope with
+  outcome `failed` and the readers it did compile. It launches nothing, so it
+  makes no capture or GPU claim.
+  `CompileOnly` ends in `Only` but is not a focused matrix: the one-leaf guard
+  skips it, it refuses a focused selector before any output is created, and a
+  normal run compiles its one reader under its old file names.
+- `check-frame-pacing.ps1 -SkipBuild -CompileOnly` in the Debug job only. The
+  harness accepts only `x64-debug` (its `ValidateSet`, `/MDd` and Debug
+  libraries), like `balance_runner`, so the Release job compiles sixteen
+  targets and the Debug job seventeen (fourteen cases, two painter readers,
+  frame pacing).
+
+[check-painter-selection.ps1](../scripts/check-painter-selection.ps1) keeps
+`CompileOnly` out of its focused-switch inventory and qualifies it: both
+presets route to the two readers (normal first) with no selector or native
+flag, a normal-reader and a scripted-reader matrix each keep their one
+compile, an explicit `-CompileOnly:$false` leaves routing alone, and
+`CompileOnly` with a selector is refused without output (two selectors still
+give the focus conflict first).
+
+Verified on MattPC in a vcvars64 shell under pwsh 7, the step's commands
+in both presets after an up-to-date build: all fourteen cases `compiled`, both
+painter readers compiled, frame pacing `compiled` (Debug), with no probe
+started. Then, with `bot_trials.cpp` given a `static_assert(false)`,
+`painter_visual.cpp` an `#error` only under the scripted-pad define and
+`frame_pacing.cpp` a `static_assert(false)`, each command exited 1 in both
+presets with the compiler's error; the painter compiled its normal reader and
+failed on the scripted one, showing both are built. The faults were made in
+place in tracked files and restored from scratch copies, with their SHA-256
+checked afterwards, because the runners only accept the checkout their
+configured build came from. `check-painter-selection` and
+`check-acceptance-selection` pass in Windows PowerShell 5.1 and pwsh 7, and
+`scripts/ci` unit tests pass. A hosted run waits for an authorised push.
+
+Not decided here: running any opt-in case in CI, a scheduled workflow, or a
+GPU runner.
+
+### Registration and failure-reporting checks in CI (`CI#3`)
+
+**Done 2026-10-29.** [ci.yml](../.github/workflows/ci.yml) runs both
+checkers after level-editor acceptance in both jobs, with `-SkipBuild` and an
+explicit `-OutputDirectory` under `out/validation/`. The registration step
+first builds `ColourWarsRegisterStage`, which is `EXCLUDE_FROM_ALL`. One
+upload, `registration-failure-reporting-<preset>` (`if: always()`, seven
+days), keeps the receipts, logs and dialog/stderr text by fixed-depth globs.
+It does not take the registration run's scratch repository, its junction or
+its staged game: those are about 150 MB a run, and `**` would walk the
+junction.
+
+Measured on MattPC under pwsh 7 in a vcvars64 shell, after an up-to-date
+build. A poller sampled the foreground window's owner every 50 ms for the
+whole of each run:
+
+| Checker | Preset | Seconds | Outcome | Foreground |
+|---|---|---|---|---|
+| `check-stage-registration` | Debug | 22.9 | passed, startup `passed` | unchanged (Notepad) |
+| `check-stage-registration` | Release | 20.6 | passed, startup `passed` | unchanged (Notepad) |
+| `check-failure-reporting` | Debug | 1.3 | passed, both cases | unchanged (Notepad) |
+| `check-failure-reporting` | Release | 1.0 | passed, both cases | unchanged (Notepad) |
+
+Neither checker depends on focus or input. Registration starts a game only
+through `check-startup.ps1`, hidden. CI already runs that script in both
+jobs, and Release keeps its no-hardware-adapter allowance. The failure
+checker finds its own process's `#32770` dialog, reads it with
+`WM_GETTEXT` and closes it with a posted `WM_CLOSE`, so it needs no
+keystroke or foreground window. Unlike the editor's Cancel check
+([level-editor.md](level-editor.md), runs 290 and 291), neither checker
+asserts focus or activation. Receipts:
+`out/validation/ci3-timing/`. The CI step commands, run as written in both
+presets afterwards, also passed and put their evidence under
+`out/validation/stage-registration/` and
+`out/validation/failure-reporting/`. The upload globs matched 102 files,
+about 200 KB in all. A hosted run waits for an authorised push.
+
+Not known until a hosted run: whether the runner's session shows the
+dialog of a hidden-start process the way MattPC does. If the step fails
+there, start with the failure checker's dialog search.
+
+### Acceptance timing summary (`CI#4`)
+
+**Done 2026-10-29.** [run-acceptance.ps1](../scripts/run-acceptance.ps1)
+times each case's compile and run separately inside `$runCase` and writes
+`acceptance-summary.json` beside the run's evidence
+(`out/acceptance/<preset>/` by default). It holds the preset,
+`compile_only`, `parallel`, the run's outcome, the shell, the wall seconds
+from the first case scheduled, and one entry per selected case with
+`compile_seconds`, `run_seconds`, `total_seconds` and `outcome`, sorted
+longest first. Outcomes are `passed`, `compiled` (`-CompileOnly`),
+`compile-failed`, `run-failed` (including a timeout), `cancelled`,
+`runner-failed`, and `not-run` for a case the run never reached, such as
+those after a serial failure; a serial case stopped mid-run is `cancelled`.
+An old file is deleted as soon as case selection passes, and a new one is
+written in the runner's `finally` once cases are scheduled, so a failed or
+interrupted run leaves a fresh summary and one that stops in tool checks or
+the build leaves none, never a stale one. Nothing is created before then,
+which keeps the selection checker's no-artifact rule. The per-case console line now also shows the compile/run
+split. [ci.yml](../.github/workflows/ci.yml) uploads it after consumer
+acceptance in both jobs, `if: always()`, as `acceptance-summary-<preset>`.
+
+Verified on MattPC: a Windows PowerShell 5.1 `-Parallel 4 -Cases
+ammo,text_wrap,settings,paint,rumble` run and a pwsh 7 `-Parallel 4
+-CompileOnly` run of the same five each wrote a valid summary with all five
+cases (`passed` and `compiled`). A serial `-RunTimeoutSeconds 1 -Cases
+movement_course,ammo` run recorded `run-failed` then `not-run` with outcome
+`failed`. `check-acceptance-selection` and `check-acceptance-process` pass in
+both shells. A hosted run waits for an authorised push.
+
+Still open and not this row's: re-ordering `$longestFirst` and changing the
+Debug pull-request exclusions follow from the uploaded data in a later change.
+
+### Local Markdown link check (`CI#5`)
+
+**Done 2026-10-29.** [check_doc_links.py](../scripts/ci/check_doc_links.py)
+runs in the always-on lint job after change selection. It reads tracked
+Markdown outside `external/` and checks inline links, images and reference
+definitions outside code. Each target must reach a file, and an anchor into a
+Markdown file must reach a GitHub heading slug (duplicates numbered) or an
+`<a id>`/`<a name>`. It allows targets under `out/`, `#` inside an existing
+file name, external schemes, and missing files named by a document that opens
+a line with "Historical" or "Frozen" in its first twelve. That rule matches
+the four retired workshop studies and nothing else; a passing mention of
+history is not a declaration. Those records' anchors into documents that still
+exist are still checked, which is how `polish-refine.md` line 131 was caught.
+Its first run on the tree found exactly the two stale `#retained-route-trials`
+anchors. Both now point at `#route-trials-2026-10-20-provisional-profile`, and
+the tree's 1,352 local links, 433 with anchors, resolve.
+[test_check_doc_links.py](../scripts/ci/test_check_doc_links.py) covers slugs,
+each allowance, a broken-anchor fixture, missing files, code spans and fences,
+the historical rule and the `external/` exclusion. All 24 tests in
+`scripts/ci` pass, and change selection is untouched, so a docs-only change
+still skips the Windows jobs. The first hosted run (PR #26) failed on
+five links into `external/labrador` that resolve at the pinned engine but
+not in the lint job, which had never checked the submodule out; the lint
+checkout now takes the pinned engine (`submodules: true`, not recursive).
+
+The record as filed: nothing checked relative links. `scripts/ci/` holds only
+`lint.py` and its tests, run by the always-on lint job
+([ci.yml](../.github/workflows/ci.yml) lines 21-36). A survey of tracked
+Markdown outside the engine on 2026-10-29 found nine unresolved local targets,
+two of them real: [polish-foundation.md](polish-foundation.md) line 94 and
+[polish-refine.md](polish-refine.md) line 131 link
+`polish-movement-course.md#retained-route-trials`, a heading now titled
+"Route trials (2026-10-20 provisional profile)" (line 208). The rest are
+evidence under `out/`, sources a historical document says were retired
+(`polish-style-kit.md`), and files with `#` in their names
+(`game/audio/paint_exe/PROVENANCE.md`).
+
+Scope: `scripts/ci/check_doc_links.py` with unit tests, run in the lint job
+over tracked Markdown outside `external/`. It resolves files and GitHub
+heading anchors; it allows targets under `out/`, documents that declare
+themselves historical, and `#` in file names. Repoint the two anchors in the
+same change.
+
+First step: the checker and tests against fixtures, then a clean run on the
+tree.
+
+Acceptance: `python3 -m unittest discover -s scripts/ci -p test_*.py` passes,
+including a broken-anchor fixture; the checker reports nothing on the tree
+after the two repoints; a docs-only change still skips the Windows jobs.
+
+Not decided here: checking external URLs, or links inside `external/labrador`.
 
 ## Startup-check evidence paths (`HYG#21`)
 
@@ -676,14 +1617,14 @@ Completion evidence, by edited declaration or claim:
 | comment location | verified implementation/caller |
 |---|---|
 | `PlayerBuilder::build_players` declaration and local identity comment | `player_builder.cpp` keeps roster order, increments `human_view` only for humans, passes participant to sound and `paint_owners::index(setting.num, participant_index)` to the weapon |
-| `MenuPlayerSettings::num`, `MenuLevelSettings::device_slot` and `Player::player_num` | `menu_level_settings.cpp` assigns human slots, gives bots `-1` and remaps only the device; `Level::apply_player_inputs` reads stable slots; `results_menu.cpp` maps participants through `paint_owners::index` |
+| `SeatSetup::num`, `MatchSetup::device_slot` and `Player::player_num` | `match_setup.cpp` assigns human slots, gives bots `-1` and remaps only the device; `Level::apply_player_inputs` reads stable slots; `results_menu.cpp` maps participants through `paint_owners::index` |
 | `paint_owners.h` owner-domain comment and `Player` constructor's sound comment | `PlayerBuilder` uses slot-based human paint credit and participant-derived bot credit; the constructor receives a separate participant sound index |
 | `Level` participant/pane, feedback and acting comments | `Level` constructs `view_participants_` only for humans; `take_rumble_events` retains `player_num()`; `level_dev_tools.cpp` indexes players by participant; `level_draw.cpp::refresh_identity_texts` falls back to bot difficulty or human device; `level_intro.cpp::update_acting` and `draw_acting` index `acts_` alongside `players_` |
 | `Level::update`, `DebugDirector::update_match`, `GameLevel` adapter declarations and `game_level_dev_tools.cpp` heading | `game_states.cpp::update` calls the director in both builds; the Release inline hook forwards to `debug_update_level`, which supplies `RoundTapeRecorder`; `game_level_replay.cpp::step_replay` supplies `RoundTapePlayer` |
 | `Level` shipping setup/replay adapter comment | `game_states.cpp` calls `set_pad_devices` during build and update; `game_level_replay.cpp::start_replay` restores pad mappings and cheats |
 | `DebugDirector` Release overview | `debug_director.h` retains ordinary update forwarding and `opening_mode` pass-through; `debug_director.cpp::run_launch_arguments` retains the Release argument warning |
 | `RoundTape` invalidation overview | `GameLevel::debug_place`, `debug_respawn` and `debug_kill` call `spoil`; `RoundTape::set_cheats` spoils after a recorded step; `tune_commands.cpp` applies live edits without tape invalidation; the `ROAD#19` owner records that exception and Debug-injected suspends |
-| `GameData::stages` and `MenuLevelSettings::set_stage` | `stage_loading.cpp` appends accepted user definitions after manifest stages in file-name order; `MainMenuStageSelect::set_level_settings` chooses the selected stage's registry name |
+| `GameData::stages` and `MatchSetup::set_stage` | `stage_loading.cpp` appends accepted user definitions after manifest stages in file-name order; `MainMenuStageSelect::set_level_settings` chooses the selected stage's registry name |
 | `LevelDocument::unresolved_resources` and `LevelLoadedInfo::validate_content` icon comments | both still check `icon_frame` in `sprite_sheet_1`; `MainMenuStageSelect::update_stage_select_visuals` selects `StagePreview`, not the legacy icon |
 
 The accurate `stage_loading.h` rescan, borrowed-registry and no-match lifetime

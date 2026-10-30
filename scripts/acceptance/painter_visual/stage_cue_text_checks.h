@@ -9,13 +9,13 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     const std::wstring close_navigation = L"<   ARENA 2 / 2   >", course_navigation = L"<   ARENA 1 / 2   >";
     const std::wstring random_hint = L"Random: 1 available arenas.\nConfirm to lock your choice.";
     const Presentation original = presentation;
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
     struct RestoreCuePads
@@ -33,7 +33,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreCues()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -47,7 +47,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto frame = [&]
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b)
     {
         return a.player_count() == b.player_count() && a.stage() == b.stage() && a.duration() == b.duration() &&
             a.best_of() == b.best_of() && a.screen_layout() == b.screen_layout() &&
@@ -56,7 +56,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto open = [&]
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
@@ -65,7 +65,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
 #endif
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(1);
+        settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_player_team(0, PlayerTeam::a);
         settings.set_player_weapon(0, WeaponType::bucket); settings.set_stage("close_quarters");
         settings.set_duration(91.0f);
@@ -76,7 +76,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto provisional = [&](Key key)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         std::srand(3581); const int next_random = std::rand(); std::srand(3581); tap(key);
         require(std::rand() == next_random && same_plan(settings, before) && stack.depth() == 2 &&
             !context.music_exit_pending(), "Stage cue browsing/lock/unlock changed the plan or consumed RNG");
@@ -90,10 +90,10 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         const auto& geometry = built.stage_select; const auto& live = fitted.main_menu().stage_select;
         const Vector2F hint_position = geometry.briefing.position + geometry.briefing_padding +
             geometry.briefing.spacing * 7.0f;
-        UiTextDropShadow expected_navigation("reference-stage-navigation", navigation, style.detail_font,
+        colourwars::UiTextDropShadow expected_navigation("reference-stage-navigation", navigation, style.detail_font,
             geometry.navigation_position, app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
             style.detail_shadow_offset);
-        UiTextDropShadow expected_hint("reference-stage-hint", hint, style.brand_font, hint_position,
+        colourwars::UiTextDropShadow expected_hint("reference-stage-hint", hint, style.brand_font, hint_position,
             app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), fitted.menu().detail_shadow_offset);
         const Vector2F shadow = fitted.menu().detail_shadow_offset;
         const RectangleF raw = RectangleF::union_of(expected_hint.text_bounds_at(Vector2F::ZERO, 1.0f),
@@ -123,7 +123,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
             navigation == snapshot.menu_text().stage.random_navigation, hint == snapshot.menu_text().stage.locked_hint);
         list.set_filter(TextureFilter::linear); expected_navigation.draw(list); expected_hint.draw(list);
         const Frame reference = read(renderer);
-        const std::array<const UiTextDropShadow*, 2> texts{ &expected_navigation, &expected_hint };
+        const std::array<const colourwars::UiTextDropShadow*, 2> texts{ &expected_navigation, &expected_hint };
         const std::array<const char*, 2> roles{ "navigation", "hint" };
         for (size_t index = 0; index < texts.size(); ++index)
         {

@@ -34,8 +34,6 @@ public:
 		bool replay = false);
 	void init() override;
 	void update_page(float dt) override;
-protected:
-	bool shows_brand() const override { return false; }
 private:
 	Session session_;
 	bool replay_ = false;

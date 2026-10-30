@@ -46,7 +46,7 @@ void Player::set_animation_state(PlayerAnimationState new_animation_state, bool 
 
     set_animation_strip_and_reset(clip.body);
     this->clothing_.select(clip.paint, info.frame_time);
-    AnimationObject::play();
+    colourwars::AnimationObject::play();
     if (info.frame_time.has_value())
     {
         set_frame_time(*info.frame_time);
@@ -99,7 +99,7 @@ void Player::update_action_frame()
 {
     if (!this->action_.has_value()) { return; }
     const int frame = this->action_frame();
-    AnimationObject::set_frame_index(frame);
+    colourwars::AnimationObject::set_frame_index(frame);
     this->clothing_.select_frame(frame);
 }
 
@@ -194,21 +194,21 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& body, bool idle)
     {
         // Respawn's pen and the story whole figure always use the traced idle,
         // even while the eliminated figure still acts at its death position.
-        const SpriteSheet* sheet = AnimationObject::render_resources()->sprite_sheet(this->idle_sheet_);
+        const SpriteSheet* sheet = colourwars::AnimationObject::render_resources()->sprite_sheet(this->idle_sheet_);
         sheet->draw(draw_list, this->idle_paint_, rectangle,
             this->grey_.value_or(this->TextureObject::colour()),
-            AnimationObject::draw_rotation(), AnimationObject::origin(), flip,
-            AnimationObject::layer_depth());
+            colourwars::AnimationObject::draw_rotation(), colourwars::AnimationObject::origin(), flip,
+            colourwars::AnimationObject::layer_depth());
         sheet->draw(draw_list, this->idle_body_, rectangle,
-            this->AnimationObject::colour(), AnimationObject::draw_rotation(),
-            AnimationObject::origin(), flip, AnimationObject::layer_depth());
+            this->colourwars::AnimationObject::colour(), colourwars::AnimationObject::draw_rotation(),
+            colourwars::AnimationObject::origin(), flip, colourwars::AnimationObject::layer_depth());
     }
     else
     {
         this->clothing_.draw(draw_list, rectangle,
             this->grey_.value_or(this->TextureObject::colour()), flip);
-        AnimationObject::draw_with(draw_list, rectangle,
-            this->AnimationObject::colour(), flip);
+        colourwars::AnimationObject::draw_with(draw_list, rectangle,
+            this->colourwars::AnimationObject::colour(), flip);
         if (!this->preferences_->reduce_effects && this->quiet_character_.state().blinking &&
             this->state_ == PlayerState::alive &&
             this->pose_.tool && !this->pose_.whole)

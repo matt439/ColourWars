@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // The defaults, keyed content, fonts and prompt bar every other check builds
 // on. check_text_and_fonts and check_inclusive_bounds register the core fonts
@@ -327,7 +328,7 @@ namespace menu_text_acceptance
         {
             const std::wstring& legend = look.menu_text().prompt(static_cast<MenuPrompt>(index));
             PromptBar bar("authored_prompt", legend, style, &world.render);
-            UiTextDropShadow reference("measured_prompt", legend, style.font, style.position, &world.render,
+            colourwars::UiTextDropShadow reference("measured_prompt", legend, style.font, style.position, &world.render,
                 style.colour, style.shadow_colour, style.shadow_offset);
             require(bar.text() == legend && bar.text_bounds() == reference.text_bounds() && bar.bounds() == reference.bounds(),
                 "Actual authored PromptBar changed the complete legend, font or measured geometry");

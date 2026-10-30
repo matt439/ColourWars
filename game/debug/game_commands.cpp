@@ -5,7 +5,7 @@
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/render/text_encoding.h"
-#include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/debug/bot.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_screenshot.h"
@@ -177,6 +177,41 @@ void DebugDirectorImpl::register_commands()
 					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
 				applies);
 		}, traits("match", Form::pick, true, 1, "all"));
+
+	// Console only: three words per seat do not fit one picker.
+	add("seat", "set a seat's team, shipping bot or Boost: seat <1-4> team a|b, "
+		"seat <2-4> bot easy|normal|hard, seat <2-4> human, seat <1-4> boost 0|1|2 "
+		"(bot <seat> <behaviour> only drives a seat's input)",
+		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } },
+			{ "team|bot|human|boost", false, [] { return MatchPlanner::seat_fields(); } },
+			{ "value", true, [] { return MatchPlanner::seat_values(); } } },
+		[this](Args args, DebugLog&)
+		{
+			MatchRequest::SeatChoice choice;
+			if (!DebugArgs::parse_int(args.text(0), choice.seat) || choice.seat < 1 || choice.seat > 4)
+			{
+				return DebugStatus::failure("seat: seat must be 1-4, got '" + args.text(0) + "'");
+			}
+			const std::string error = MatchPlanner::parse_seat_choice(args.text(1),
+				args.has(2) ? args.text(2) : std::string(), choice);
+			if (!error.empty())
+			{
+				return DebugStatus::failure("seat: " + error);
+			}
+			if (choice.seat == 1 && choice.field == MatchRequest::SeatChoice::Field::bot)
+			{
+				return DebugStatus::failure("seat: seat 1 stays human: it is the setup host");
+			}
+			--choice.seat;
+			this->request_.seats.push_back(choice);
+			const std::string line = "seat " + args.text(0) + " " + args.text(1) +
+				(choice.value.empty() ? std::string() : " " + choice.value);
+			const bool applies = this->match_ != nullptr || this->request_.stage.has_value();
+			return DebugStatus::success(line +
+				(this->match_ != nullptr ? this->rebuild_note() :
+					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
+				applies);
+		}, traits("match", Form::hidden, true));
 
 	registry.add(std::make_unique<ChoiceVariable>("intro",
 		"how the next match begins: auto (the game's choice), full, quick (from the "
@@ -367,9 +402,9 @@ DebugStatus DebugDirectorImpl::reload_content()
 	{
 		auto tuning = std::make_unique<GameTuning>(tuning_path.c_str());
 		auto presentation = std::make_unique<Presentation>(presentation_path.c_str());
-		validate_game_content(*tuning, *presentation, this->data_->render_resources(),
+		validate_shell_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
-			*this->data_->stages(), this->data_->save()->play_settings());
+			*this->data_->stages(), this->data_->settings_session()->play_settings());
 		// A sound the candidate names for the first time joins its group now.
 		sound_groups::assign(*this->data_->audio_resources(), *tuning, *presentation,
 			*this->data_->level_infos(), *this->data_->stages());

@@ -224,10 +224,14 @@ namespace balance_regions
             result.bands = { { "home_a", 0.0, 520.0 }, { "approach_a", 520.0, 1480.0 }, { "hoist_a", 1480.0, 1640.0 },
                 { "crown", 1640.0, 1960.0 }, { "hoist_b", 1960.0, 2120.0 }, { "approach_b", 2120.0, 3080.0 }, { "home_b", 3080.0, 3600.0 } };
         }
-        else if (stage == "turbulence_blockout")
+        else if (stage == "turbulence_blockout" || stage == "turbulence_mover_trial" || stage == "turbulence_gate_trial" ||
+            stage == "turbulence_ferry_trial" || stage == "turbulence_slab_trial")
         {
             // Geographic X bands, distinct from the candidate's object-role
             // budget (which keeps high crossover and lower contest separate).
+            // The four trials share the blockout's bounds, so they share its
+            // bands; the self-check pins both. The 6200-wide `turbulence`
+            // candidate keeps the whole-arena fallback until it has its own.
             result.name = "x_band";
             result.bands = { { "home_a", 0.0, 600.0 }, { "approach_a", 600.0, 1100.0 },
                 { "contest", 1100.0, 2900.0 }, { "approach_b", 2900.0, 3400.0 }, { "home_b", 3400.0, 4000.0 } };

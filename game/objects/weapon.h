@@ -13,6 +13,8 @@
 #include "engine/render/texture_object.h"
 #include "game/objects/projectile_builder.h"
 #include "game/objects/weapon_feedback.h"
+#include "game/objects/match_voices.h"
+#include "game/carried/sound_bank_object.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 
@@ -42,7 +44,8 @@ struct ToolMotionState
 
 // A concrete weapon with a shared firing workflow and overridable behaviour.
 // Player owns it through this interface; tuning selects assets and balance.
-class Weapon : public labrador::TextureObject
+class Weapon : public labrador::TextureObject,
+	public colourwars::SoundBankObject
 {
 public:
 	// Borrowed tuning must outlive the weapon; type selects its tuning record.
@@ -104,7 +107,9 @@ public:
 	// Player invokes it only while the player can act.
 	bool ready_to_shoot() const;
 	WeaponReadiness readiness() const;
-	// Direction only, never a predicted hit point. The roller has no marker.
+	// Direction only, never a predicted hit point, for a tool that aims.
+	// The roller has no marker.
+	virtual bool has_aim_marker() const { return true; }
 	void draw_aim_marker(labrador::DrawList& draw_list) const;
 	mattmath::RectangleF aim_marker_bounds() const;
 	// Infinite-ammo refills preserve the paid shot's cooldown notification.
@@ -131,11 +136,12 @@ public:
 		float dt);
 
 	// Never throws: weapons with no looping fire sound stop nothing.
-	virtual void stop_sounds() const;
+	virtual void stop_sounds();
 
-	// Pause loops while gameplay updates are suspended, preserving playback position.
-	virtual void pause_sounds() const;
-	virtual void resume_sounds() const;
+	// Registers the looping fire voice, so the match pauses it with everything
+	// else while gameplay updates are suspended, preserving its playback
+	// position, and stops it at teardown.
+	void add_voices(MatchVoices& voices);
 
 	// Visual bounds cover every rotated pose and any detached release haze.
 	// Player::bounds unions this with the body for scene culling.
@@ -151,15 +157,15 @@ public:
 	void draw_nozzle_debug(labrador::DrawList& draw_list) const;
 
 protected:
-	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
 	// Borrowed, never null: the tuning table and this weapon's resolved record.
 	const GameTuning* tuning_ = nullptr;
 	const WeaponTuning* weapon_tuning_ = nullptr;
 
-	// Loop handle resolved at construction; invalid for one-shot weapons.
-	labrador::SoundBank::EffectHandle loop_sound_;
+	// Loop voice resolved at construction; one that never sounds for one-shot
+	// weapons.
+	MatchVoice loop_voice_;
 
 	// Every weapon definition names a fire wave; resolve it at construction
 	// so a missing name is reported as a content error.
@@ -169,10 +175,24 @@ protected:
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 	void play_feedback_sound(labrador::SoundBank::WaveHandle sound,
-		const SoundTuning& tuning) const;
+		const SoundTuning& tuning);
 
 	// Tint only the paint overlay without mutating shared state during draw.
 	virtual labrador::Colour paint_colour() const;
+
+	// Resolved ground travel's share of the decorative tool motion, called
+	// only while motion presentation is enabled. The default swings a bucket's
+	// handle or a sprayer's hose; the roller turns its sleeve instead.
+	virtual void advance_travel_motion(bool supported, bool established_support,
+		float signed_distance, float dt);
+	// The pose the motion state shows now. The roller reads its lift and turn.
+	virtual ToolMotionPose motion_pose() const;
+	ToolMotionState& tool_motion();
+	const ToolMotionState& tool_motion() const;
+	// The borrowed record; only while motion presentation is set.
+	const ToolMotionPresentation& motion_look() const;
+	// Whether the last resolved travel was supported; cleared with the motion.
+	bool motion_supported_ = false;
 
 	const mattmath::Vector2F& player_center() const;
 
@@ -218,7 +238,7 @@ protected:
 		const mattmath::Vector2F& player_velocity) const;
 
 	static mattmath::Vector2F calculate_sprite_origin(
-		const mattmath::Vector2F& size, labrador::RotationOrigin origin);
+		const mattmath::Vector2F& size, colourwars::RotationOrigin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
@@ -243,9 +263,9 @@ private:
 	void select_motion_pose();
 	void draw_mist_tail(labrador::DrawList& draw_list) const;
 
-	static labrador::SoundBank::EffectHandle resolve_loop_sound(
-		const labrador::SoundBank& sound_bank,
-		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index);
+	// The effect name for this player's loop voice; empty for none.
+	static std::string loop_sound_name(const WeaponLoopSounds& loop_sounds,
+		PlayerTeam team, int sound_index);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
@@ -264,7 +284,6 @@ private:
 	labrador::RenderResources::SpriteSheetHandle mist_sheet_;
 	labrador::SpriteSheet::frame_handle mist_frame_;
 	bool motion_firing_ = false;
-	bool motion_supported_ = false;
 	mattmath::Vector2F mist_release_position_;
 	float mist_release_rotation_ = 0.0f;
 	labrador::SoundBank::WaveHandle empty_sound_;
@@ -283,8 +302,7 @@ private:
 	bool aim_requested_ = false;
 
 	float ammo_timer_ = 0.0f;
-	// stop_sounds() is const because it changes presentation, not gameplay.
-	mutable bool loop_playing_ = false;
+	bool loop_playing_ = false;
 	bool empty_warned_ = false;
 	RumbleEvents pending_rumble_;
 	float empty_repeat_remaining_ = 0.0f;

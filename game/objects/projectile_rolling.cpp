@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_rolling.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -35,12 +34,20 @@ void ProjectileRolling::update(float dt)
 	std::ignore = Projectile::update_movement(details.gravity,
 		details.wind_resistance, dt);
 }
-void ProjectileRolling::on_contact(const CollisionObject& /*other*/,
+void ProjectileRolling::on_structure_contact(const Structure& /*other*/,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	// A rolling volume paints and damages everything it touches in its one
-	// collision sweep. The floor must not consume it before a nearby player.
-	// Its short lifetime retires it on the following update.
+}
+void ProjectileRolling::on_player_contact(const Player& /*other*/,
+	const Vector2F& /*normal*/, float /*penetration*/)
+{
+}
+void ProjectileRolling::resolve_travel(std::span<CollisionObject* const> objects)
+{
+	if (this->moving_contact_ready())
+	{
+		this->resolve_rolling_translating_contacts(objects);
+	}
 }
 void ProjectileRolling::draw(DrawList& /*draw_list*/) const
 {

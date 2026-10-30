@@ -9,6 +9,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <bit>
 #include <cstdlib>
@@ -22,8 +23,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* reason)
-    { if (!condition) { throw std::runtime_error(reason); } }
+    using acceptance::require;
 
     std::uint64_t credited(const Player& player)
     {
@@ -157,10 +157,16 @@ namespace
             require(credited(*victim) == 0 && victim->lethal_projectiles().uncredited == 1,
                 "Invalid projectile owner was credited or lost instead of reported uncredited");
         }
+        // Contacts dispatch on the other party's class (Collider), never its
+        // tag: an engine object that only carries a projectile tag is refused.
         ProjectileTagProxy proxy;
-        auto tagged = world.player(); world.eliminate(*tagged, proxy);
-        require(credited(*tagged) == 0 && tagged->lethal_projectiles().uncredited == 1,
-            "A tag-only collision proxy changed damage behavior or fabricated a typed source");
+        auto tagged = world.player(); const float untouched = tagged->health();
+        bool refused = false;
+        try { tagged->on_contact(proxy, Vector2F::ZERO, 0.0f); }
+        catch (const std::logic_error&) { refused = true; }
+        require(refused && tagged->health() == untouched && credited(*tagged) == 0 &&
+            tagged->lethal_projectiles().uncredited == 0,
+            "A tag-only collision proxy was answered by its tag instead of refused");
         // Deliberately bypass masks here to preserve the pre-existing public
         // callback behavior while proving that friendly metadata never earns credit.
         auto forced = world.player(); auto friendly = world.shot(PlayerTeam::a, paint_owners::index(-1, 2));
@@ -298,7 +304,7 @@ namespace
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("lethal provenance", [&]
     {
         require(argc == 2, "usage: lethal_provenance <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -312,6 +318,5 @@ int wmain(int argc, wchar_t* argv[])
             "timed/forced respawn persistence, immunity/debug kill, invalid owners/tag proxy, actual self/friendly masks, "
             "real launch/movement sweeps, shared roller double elimination and read-only RNG/state invariance. No environmental or sampled-death kill inference.\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL lethal provenance: " << error.what() << '\n'; return 1; }
+    });
 }

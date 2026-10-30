@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
 #include "game/input_slots.h"
+#include "game/states/player_label.h"
 
 namespace menu_text_acceptance
 {
@@ -46,13 +47,13 @@ namespace menu_text_acceptance
         });
         authored.validate_resources(world.render, world.audio);
         constexpr std::array custom{ L"Calm", L"Steady", L"Sharp" };
-        MenuLevelSettings roster;
+        MatchSetup roster;
         roster.set_player_count(4);
         roster.begin_input_claims(input_slots::keyboard_and_mouse);
         for (int seat = 1; seat < 4; ++seat)
         {
             roster.set_player_bot(seat, difficulties[static_cast<size_t>(seat - 1)]);
-            require(roster.player_label(seat, authored.menu_text()) ==
+            require(player_label(roster, seat, authored.menu_text()) ==
                 std::wstring(custom[static_cast<size_t>(seat - 1)]) + L" AI / P" + std::to_wstring(seat + 1),
                 "The roster ignored captured bot copy or token order");
         }

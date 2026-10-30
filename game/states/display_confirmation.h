@@ -24,7 +24,6 @@ public:
 	bool debug_dismiss(bool leaving_match) override;
 	void debug_reset_input(int pad_slot) override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	void cancel_trial();

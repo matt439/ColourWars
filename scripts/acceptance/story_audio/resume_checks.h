@@ -84,7 +84,7 @@ void check_resume_weapon_audio(World& world)
 	world.until([&] { return world.level->state() == LevelState::active; });
 	auto firing = world.idle;
 	firing.at(static_cast<size_t>(world.level->player(0).player_num())).primary_shoot = true;
-	world.level->update(firing, 1.0f / 60.0f);
+	world.level->update(acceptance::slot_seats(*world.level, firing), 1.0f / 60.0f);
 	const std::string loop = world.tuning.weapon(WeaponType::sprayer).loop_sounds.sound_name(PlayerTeam::a, 0);
 	require(world.state(loop) == SoundState::playing, "Resume fixture did not start its weapon loop");
 	world.level->suspend();
@@ -95,7 +95,7 @@ void check_resume_weapon_audio(World& world)
 		"Completing count-in resurrected a stale firing loop before a fresh shot");
 	world.level->update(world.idle, 1.0f / 60.0f);
 	require(world.state(loop) == SoundState::stopped, "Neutral live input resurrected stale weapon audio");
-	world.level->update(firing, 1.0f / 60.0f);
+	world.level->update(acceptance::slot_seats(*world.level, firing), 1.0f / 60.0f);
 	require(world.state(loop) == SoundState::playing, "Fresh fire after count-in did not start its weapon loop");
 	world.level.reset();
 }

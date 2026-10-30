@@ -100,10 +100,12 @@ namespace
         player->update(-weapon_step);
         require(redraw_calls(world, name) == before && player->respawn_timer() == remaining,
             "Nonpositive player updates touched redraw audio or rewound its visible outline");
-        player->pause_sounds();
+        MatchVoices voices;
+        player->add_voices(voices);
+        voices.pause();
         require(world.state(name) == SoundState::paused, "Player pause left the redraw pen running");
         world.set_sfx_volume(25);
-        player->resume_sounds();
+        voices.resume();
         require(world.state(name) == SoundState::playing && world.plays(name) == 1 &&
             close_to(world.last_volume(name), tuning.player().redraw_sounds[0].volume * 0.25f),
             "Redraw resume restarted the pen or kept stale SFX gain");
@@ -153,9 +155,11 @@ namespace
         require(player->state() == PlayerState::alive && world.state(name) == SoundState::stopped,
             "Natural respawn left the pen running");
         start(*player);
-        player->pause_sounds();
+        MatchVoices voices;
+        player->add_voices(voices);
+        voices.pause();
         player->stop_sounds();
-        player->resume_sounds();
+        voices.resume();
         require(world.state(name) == SoundState::stopped, "Stopped paused pen restarted on resume");
         player->update(weapon_step);
         require(world.state(name) == SoundState::playing, "Progressing redraw did not rearm after an explicit stop");
@@ -175,7 +179,7 @@ namespace
         {
             world.level.reset();
             world.begin = recorded_sounds(world.device).size();
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("close_quarters");
             settings.set_player_count(count);
             for (int index = 0; index < count; ++index)

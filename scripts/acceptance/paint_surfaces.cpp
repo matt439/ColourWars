@@ -1,10 +1,11 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("paint surfaces", [&]
     {
         paint_surfaces_acceptance::require(argc == 2, "usage: paint_surfaces <content>");
         paint_surfaces_acceptance::World world(std::filesystem::absolute(argv[1]));
@@ -14,6 +15,5 @@ int wmain(int argc, wchar_t* argv[])
             "ownership, clipped/fractional/buried tiles, exact source-group score reconciliation, and active "
             "Crossfeed/Press Tower read-only state/fingerprint/RNG invariance. No rigid-motion or human-balance acceptance.\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL paint surfaces: " << error.what() << '\n'; return 1; }
+    });
 }

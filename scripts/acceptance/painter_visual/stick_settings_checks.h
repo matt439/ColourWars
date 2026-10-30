@@ -26,16 +26,16 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         require(stream.good(), "Pad sticks did not create its isolated save");
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Cannot seed the isolated Pad sticks save");
     GameData data;
-    data.set_application(&app); data.set_save(&preferences);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearStickStates
@@ -405,9 +405,9 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         "Pad sticks Apply lost its pending values or applied suspended parent edits");
     capture("applied", 7, values, L"Pad settings applied and saved.", art.focus_ink);
     const std::string child_saved = saved_bytes();
-    Save reloaded; reloaded.load_save_file();
-    require(reloaded.play_settings().sticks[0].movement_deadzone == 30 &&
-        reloaded.play_settings().sticks[0].aim_deadzone == 70 && reloaded.play_settings().music_volume == 0 &&
+    Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+    require(reloaded_session.play_settings().sticks[0].movement_deadzone == 30 &&
+        reloaded_session.play_settings().sticks[0].aim_deadzone == 70 && reloaded_session.play_settings().music_volume == 0 &&
         reloaded.resolution() == ScreenResolution::s_1920_1080 && reloaded.team_palette() == TeamColourPair::blue_yellow,
         "Pad sticks reload lost values or replaced other preferences");
     for (int row = 7; row > 0; --row) { tap(Key::up); }
@@ -429,9 +429,9 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         play.sticks[3].movement_deadzone == -1 && play.sticks[3].aim_deadzone == -1,
         "Suspended Controls/audio Apply reverted child stick settings");
     const std::string parent_saved = saved_bytes();
-    reloaded.load_save_file();
-    require(reloaded.play_settings().music_volume == 10 && reloaded.play_settings().sticks[0].movement_deadzone == 30 &&
-        reloaded.play_settings().sticks[0].aim_deadzone == 70,
+    reloaded_session.load_save_file();
+    require(reloaded_session.play_settings().music_volume == 10 && reloaded_session.play_settings().sticks[0].movement_deadzone == 30 &&
+        reloaded_session.play_settings().sticks[0].aim_deadzone == 70,
         "Parent Apply failed to persist both independent settings edits");
     for (int row = 0; row < 9; ++row) { tap(Key::up); }
     open_child(); values = { L"Pad 1", L"30%", L"70%", L"On", L"Shared (On)", L"Shared (On)", L"Shared (Off)" };

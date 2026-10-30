@@ -519,3 +519,167 @@ This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` remain attended
 decisions; the report neither authorizes retuning nor accepts a new bot opponent.
 `POL#36` remains its separately selected paint-underfoot prototype, using a future
 explicit switch-off comparison; no such mechanic was enabled in this baseline.
+
+## Shipping bots in the headless runner (`TOOL#2`, 2026-10-29)
+
+**Done 2026-10-29.** The runner and `scripts/run-balance.ps1` take a `match`
+policy: the shipping `MatchBotDriver` on every seat, with one
+`-Difficulty easy|normal|hard` per seat (all Normal by default). A roster cannot
+make P1 a bot, and a one-on-one bot match needs one, so the driver gained a
+second constructor taking one optional difficulty per participant; the roster
+constructor now delegates to it with the same per-seat seeds, so shipping
+matches are unchanged (`bot_runtime`, `bot_driver`, `bot_roster`,
+`bot_gate_routes` and `debug_console` pass in both presets). `MatchBot` gained a
+read-only `difficulty()`. The main CSV stays schema 2: the `bot` field names the
+policy, `match:<p1>:<p2>`, so no column was added, and the Debug policies' rows,
+including the Paint and Skirmish controls, keep their bytes (`skirmish_bot`
+passes). The `balance_runner` self-check runs three Crossfeed matches under the
+driver: one seeded Easy-v-Hard row repeats byte for byte, each seat reads back
+its requested difficulty from `MatchBotDriver::bot(participant)`, and swapping
+the difficulties changes the row.
+
+**Ladder, 2026-10-29 (Debug).** Easy v Normal, Normal v Hard and Easy v Hard,
+each in both seat orders, on Crossfeed and Press Tower at seeds 0, 1, 17, 42 and
+2026, 2P, 60 seconds, Sprayer v Sprayer: 60 matches. Each matchup pools both seat
+orders (ten matches per stage). "Share of painted" is the higher difficulty's
+held paint over both players' held paint at time-up; splats are credited enemy
+eliminations.
+
+| Matchup | Stage | Matches | Higher paints more | Higher share of painted, median (range) | Splats, median higher / lower |
+|---|---|---|---|---|---|
+| normal v easy | crossfeed | 10 | 7/10 | 0.527 (0.378-0.613) | 0 / 0 |
+| normal v easy | press_tower | 10 | 5/10 | 0.493 (0.352-0.574) | 0 / 0 |
+| hard v normal | crossfeed | 10 | 3/10 | 0.476 (0.362-0.541) | 0 / 0 |
+| hard v normal | press_tower | 10 | 4/10 | 0.482 (0.368-0.567) | 0 / 1 |
+| hard v easy | crossfeed | 10 | 2/10 | 0.421 (0.315-0.577) | 0 / 0 |
+| hard v easy | press_tower | 10 | 3/10 | 0.442 (0.360-0.543) | 0.5 / 0 |
+
+At this tool pair the shipping difficulties do not order by held paint: Normal
+edges Easy on Crossfeed and ties it on Press Tower, and Hard holds less than
+both Normal and Easy on both stages. Splats are nearly absent, so these matches
+measure painting, not fighting. One tool pair and five seeds are descriptive,
+not a strength ranking with confidence. Receipts, with each run's arguments,
+pins and both CSVs: `out/validation/tool2-ladder-20261029/<first>-v-<second>/`.
+
+Next concrete gap: why Hard paints less (its reaction, aim and territory values
+are in `tuning.json` `bots`), and whether other tool pairs agree, is evidence
+for the attended `ROAD#10` comparison. `TOOL#3` (below) ran the five-tool
+matrix with Hard on both sides; it does not compare difficulties.
+
+Not decided here: whether the difficulties are spaced well, whether any bot is
+fit to ship, and any tuning change. Those stay `ROAD#10` and `POL#27` attended
+decisions.
+
+## Turbulence bands and Hard five-tool rerun (`TOOL#3`, 2026-10-29)
+
+**Done 2026-10-30.** Before this, region bands existed only for `crossfeed`,
+`press_tower` and `turbulence_blockout`; every other stage fell back to one
+`whole_arena` band, and the first five-tool report covered the two arenas only
+([slice 3](#headless-balance-runner-tool1-2026-10-25)) under Skirmish, which has
+no line-of-sight, route or ballistic-intercept solver (see
+[Skirmish measurement bot](#skirmish-measurement-bot)).
+
+Scope: give the four Turbulence trials (`turbulence_mover_trial`,
+`turbulence_gate_trial`, `turbulence_ferry_trial`, `turbulence_slab_trial`) the
+blockout's five X bands, after a check that each stage's `level_bounds` matches
+the blockout's (all five currently share the 4200 x 1900 out-of-bounds rectangle).
+The full `turbulence` candidate is 6200 wide and keeps `whole_arena` until its
+own bands are scoped. Then rerun the 25 ordered pairs x five seeds matrix with
+`TOOL#2`'s `match` policy at Hard on both sides, on Crossfeed, Press Tower, the
+blockout and the four trials, and record per-band final held paint in the
+arena owners. A stage the match policy cannot route is reported with that limit,
+not dropped.
+
+Acceptance: `balance_regions` and `balance_runner` pass in Debug; the existing
+three partitions are unchanged; the matrix completes with receipts under
+`out/validation/`, and its summaries are filed as descriptive evidence in
+[Crossfeed](polish-crossfeed.md), [Press Tower](polish-press-tower.md) and
+[Turbulence](polish-turbulence.md), each stating that the bands are final held
+area, not route use, and naming the policy's limits.
+
+**Bands.** `stage_partition` resolves the four trials to the blockout's five
+`x_band` bands (`home_a` 0-600, `approach_a` 600-1100, `contest` 1100-2900,
+`approach_b` 2900-3400, `home_b` 3400-4000, full height). The `balance_regions`
+self-check now pins, per trial, that the out-of-bounds rectangle equals the
+blockout's and its camera X extent is the same 0-4000, that its bands equal the
+blockout's band for band, that the bands span that camera extent exactly (the
+100-unit out-of-bounds margins stay `outside_partition`, which held no paintable
+area in any match), and that the 6200-wide `turbulence` candidate still falls
+back to `whole_arena`. Dropping one trial from `stage_partition` fails the case.
+`balance_regions` passes in Debug and Release and `balance_runner` in Debug
+(it is Debug-only); the Crossfeed, Press Tower and blockout cut checks are unchanged.
+
+**Matrix, 2026-10-30 (Debug, clean `c2630ef1`).** All 25 ordered
+Sprayer/Sniper/Roller/Mister/Bucket pairs x seeds 0, 1, 17, 42, 2026 on seven
+stages: Crossfeed, Press Tower, the blockout and the four trials. Every match is
+2P A/B, 60 seconds, the shipping `MatchBotDriver` at Hard on both seats
+(`match:hard:hard`): **875 matches**, one `run-balance.ps1` job per ordered pair
+(35 matches each), all 25 exiting 0 with no failed or repeated job. Each
+`run-info.json` records a clean worktree, `ColourWars.exe` SHA256
+`B030E4A17F0F6973217576CC0C66B39E67D86107C07521BA431ECC194FD5E024` and
+`tuning.json` SHA256
+`691ED30550AC42A912F1948E50F7987471DDB88BA784D00C51079D1075893034`.
+
+| Stage | Team A share of painted, median [min, max] % | Painted / paintable, median % | Matches with a credited elimination | Credited eliminations |
+|---|---|---|---|---|
+| crossfeed | 50.9 [6.5, 92.8] | 57.3 | 90/125 | 156 |
+| press_tower | 51.4 [6.5, 94.5] | 54.8 | 99/125 | 214 |
+| turbulence_blockout | 49.2 [4.9, 94.2] | 53.1 | 115/125 | 243 |
+| turbulence_mover_trial | 51.2 [6.2, 90.3] | 51.1 | 98/125 | 160 |
+| turbulence_gate_trial | 49.9 [5.5, 93.6] | 51.4 | 81/125 | 126 |
+| turbulence_ferry_trial | 47.9 [4.0, 94.0] | 52.0 | 103/125 | 185 |
+| turbulence_slab_trial | 52.3 [8.6, 94.4] | 47.8 | 63/125 | 93 |
+
+Every seat held paint in every match, every band of every stage held paint in
+at least 124 of its 125 matches, and no match recorded an uncredited projectile
+lethal; observed death edges equal credited eliminations on every stage. So no
+stage was unroutable in the sense of a seat stuck at home with nothing painted;
+whether the bots *travel* each trial's route is `POL#42`'s measure, not this one.
+Unlike `TOOL#2`'s Sprayer-only ladder, Hard bots fight here: the blockout had a
+credited elimination in 115 of 125 matches.
+
+Each tool's own share of painted against every opponent, pooled over both seats
+(50 matches per cell, the mirror counted from both sides), median %:
+
+| Stage | Sprayer | Sniper | Roller | Mister | Bucket |
+|---|---|---|---|---|---|
+| crossfeed | 53.7 | 13.0 | 55.7 | 56.0 | 44.3 |
+| press_tower | 52.3 | 13.1 | 57.0 | 53.9 | 42.8 |
+| turbulence_blockout | 56.6 | 12.0 | 47.2 | 62.5 | 47.0 |
+| turbulence_mover_trial | 54.0 | 13.6 | 49.7 | 62.0 | 47.9 |
+| turbulence_gate_trial | 59.2 | 14.9 | 46.0 | 63.1 | 47.8 |
+| turbulence_ferry_trial | 55.7 | 13.0 | 51.5 | 59.7 | 45.5 |
+| turbulence_slab_trial | 52.2 | 13.6 | 51.8 | 59.2 | 48.7 |
+
+The Hard Sniper bot holds about an eighth of the painted area against any other
+tool on every stage, and two Hard Snipers together cover a median 9.8-14.3% of the arena;
+on the Turbulence family Mister holds the most and Roller less than on the two
+arenas. These describe this bot with these tools; whether a human Sniper's
+held-paint/elimination trade is acceptable is the existing `POL#27` question,
+and nothing here says a bot plays a tool the way a person does.
+
+Per-band final held paint is filed in the arena owners:
+[Crossfeed](polish-crossfeed.md#hard-five-tool-matrix-tool3-2026-10-30),
+[Press Tower](polish-press-tower.md#hard-five-tool-matrix-tool3-2026-10-30) and
+[Turbulence](polish-turbulence.md#hard-five-tool-matrix-tool3-2026-10-30).
+
+**Limits.** Bands are final held area at time-up: not route use, visits, time
+held, spawn pressure or hill control. A moving scored tile (mover, ferry, slab)
+is credited to the band its final position falls in, so the ferry trial's band
+denominators vary by match. Five chosen seeds are not population samples; ranges
+are observed minima/maxima. The `match` policy is the shipping Hard bot, one
+difficulty, 2P only; ordered swaps combine side, seat RNG, tool and conditional
+bot behaviour, so they do not isolate map-side fairness. No 1v1/2v2 human,
+uneven three-player or attended result follows.
+
+Receipts: `out/validation/tool3-hard-matrix-20261030/` - one `<p1>-v-<p2>/`
+folder per ordered pair (`run-info.json` with arguments, pins and CSV hashes,
+`matches.csv`, `matches.paint.csv`, logs), `driver.log`, the driver
+`tool3-matrix.ps1`, the analyzer `tool3_analyze.py` and its output `summary.md`
+(SHA256 `C804069F646B296AA297A4D2CE512C7F6DE57AFB86F5A6BE19FF1DCF1165C06C`), which has
+every table here plus per-band coverage for every equal-tool control.
+
+Not decided here: arena acceptance, route or geometry changes, tool tuning and
+bot difficulty. Those stay `POL#21`, `POL#27`, `POL#31` and `ROAD#10` attended
+decisions. The 6200-wide `turbulence` candidate still has no bands; scoping them
+is not open work until that candidate is chosen for review.

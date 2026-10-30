@@ -3,15 +3,18 @@
 #include "game/session.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/presentation.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/main_menu.h"
-#include "game/states/menu_level_settings.h"
+#include "game/states/menu_content_validation.h"
+#include "game/match_setup.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <objbase.h>
 #include <cstdlib>
@@ -34,10 +37,7 @@ using namespace labrador;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     // A fresh GUID directory is the only profile this process touches.
     class IsolatedSaveDirectory
@@ -100,9 +100,9 @@ namespace
     }
 
     // P1 (human) and P3 on A; P2 on B, human unless `bot_b`.
-    MenuLevelSettings series(SeriesStageRule rule, const std::string& stage, bool bot_b = false, int best_of = 3)
+    MatchSetup series(SeriesStageRule rule, const std::string& stage, bool bot_b = false, int best_of = 3)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(3);
         settings.set_player_team(0, PlayerTeam::a);
         settings.set_player_team(1, PlayerTeam::b);
@@ -133,14 +133,14 @@ namespace
         try { std::ignore = series_stage_rule_key(static_cast<SeriesStageRule>(9)); }
         catch (const std::invalid_argument&) { refused = true; }
         require(refused, "An invalid rule value has a key");
-        MenuLevelSettings settings;
+        MatchSetup settings;
         require(settings.series_stage_rule() == SeriesStageRule::same, "A new setup is not Same stage");
         refused = false;
         try { settings.set_series_stage_rule(static_cast<SeriesStageRule>(9)); }
         catch (const std::invalid_argument&) { refused = true; }
         require(refused && settings.series_stage_rule() == SeriesStageRule::same, "An invalid rule was stored");
         settings.set_series_stage_rule(SeriesStageRule::losers_pick);
-        const MenuLevelSettings copy = settings;
+        const MatchSetup copy = settings;
         require(copy.series_stage_rule() == SeriesStageRule::losers_pick, "A setup copy lost its rule");
     }
 
@@ -179,13 +179,13 @@ namespace
         // Same: the original behaviour, whatever happened.
         for (const Session* session : { &won, &drawn, &lost_by_a })
         {
-            const MenuLevelSettings same = series(SeriesStageRule::same, "arena", false, 5);
+            const MatchSetup same = series(SeriesStageRule::same, "arena", false, 5);
             require(series_next_stage(same, stages, *session, false) == "arena" &&
                 series_stage_picker(same, *session) == PlayerTeam::none, "Same stage moved or opened a pick");
         }
 
         // Rotate: the next pool stage after a decisive round, never a pick.
-        const MenuLevelSettings rotate = series(SeriesStageRule::rotate, "arena");
+        const MatchSetup rotate = series(SeriesStageRule::rotate, "arena");
         require(series_next_stage(rotate, stages, won, false) == "hill" &&
             series_stage_picker(rotate, won) == PlayerTeam::none, "Rotate did not move to the next pool stage");
         require(series_next_stage(series(SeriesStageRule::rotate, "trial"), stages, won, false) == "hill",
@@ -193,14 +193,14 @@ namespace
 
         // Loser's pick: B lost to A and has a human, so B picks on Stage Select
         // and the rule leaves the stage to that page; A losing hands it to A.
-        const MenuLevelSettings losers = series(SeriesStageRule::losers_pick, "arena");
+        const MatchSetup losers = series(SeriesStageRule::losers_pick, "arena");
         require(series_stage_picker(losers, won) == PlayerTeam::b, "The losing team B was not given the pick");
         require(series_next_stage(losers, stages, won, false) == "arena",
             "Loser's pick moved the stage before the loser chose");
-        const MenuLevelSettings losers_five = series(SeriesStageRule::losers_pick, "arena", false, 5);
+        const MatchSetup losers_five = series(SeriesStageRule::losers_pick, "arena", false, 5);
         require(series_stage_picker(losers_five, lost_by_a) == PlayerTeam::a, "The losing team A was not given the pick");
         // A bot-only loser cannot pick: the stage rotates instead.
-        const MenuLevelSettings bot_loser = series(SeriesStageRule::losers_pick, "arena", true);
+        const MatchSetup bot_loser = series(SeriesStageRule::losers_pick, "arena", true);
         require(series_stage_picker(bot_loser, won) == PlayerTeam::none &&
             series_next_stage(bot_loser, stages, won, false) == "hill",
             "A bot-only loser was given the pick or did not rotate");
@@ -208,7 +208,7 @@ namespace
         // Draws replay their stage under every rule, and nobody picks.
         for (const SeriesStageRule rule : { SeriesStageRule::rotate, SeriesStageRule::losers_pick })
         {
-            const MenuLevelSettings settings = series(rule, "hill");
+            const MatchSetup settings = series(rule, "hill");
             require(series_next_stage(settings, stages, drawn, false) == "hill" &&
                 series_stage_picker(settings, drawn) == PlayerTeam::none, "A draw moved the stage or opened a pick");
         }
@@ -218,7 +218,7 @@ namespace
         single.finish_round(round_won_by(PlayerTeam::a));
         for (const SeriesStageRule rule : { SeriesStageRule::rotate, SeriesStageRule::losers_pick })
         {
-            const MenuLevelSettings settings = series(rule, "arena", false, 1);
+            const MatchSetup settings = series(rule, "arena", false, 1);
             require(series_next_stage(settings, stages, single, false) == "arena" &&
                 series_stage_picker(settings, single) == PlayerTeam::none, "A single match's Rematch moved the stage");
         }
@@ -238,7 +238,7 @@ namespace
         {
             for (const bool bot_b : { false, true })
             {
-                const MenuLevelSettings chosen = series(rule, "trial", bot_b);
+                const MatchSetup chosen = series(rule, "trial", bot_b);
                 require(series_next_stage(chosen, stages, won, true) == "trial",
                     "A stage chosen by hand between rounds was overridden by the rule");
             }
@@ -255,8 +255,8 @@ namespace
     std::optional<LastMatchSetup> load(const IsolatedSaveDirectory& directory, const std::string& json)
     {
         directory.write(json);
-        Save save;
-        save.load_save_file();
+        Save save; SettingsSession save_session(save);
+        save_session.load_save_file();
         return save.last_match_setup();
     }
 
@@ -266,7 +266,7 @@ namespace
         // Every rule survives capture, the file and restore.
         for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
         {
-            MenuLevelSettings settings = series(rule, "hill");
+            MatchSetup settings = series(rule, "hill");
             settings.set_screen_layout(ScreenLayout::one_player);
             settings.set_player_human(2);
             settings.set_player_bot(1, BotDifficulty::hard);
@@ -275,8 +275,8 @@ namespace
             require(captured.stage_rule == rule, "Capture lost the series stage rule");
             std::filesystem::remove(directory.save_path());
             {
-                Save save;
-                save.load_save_file();
+                Save save; SettingsSession save_session(save);
+                save_session.load_save_file();
                 require(save.remember_match_setup_and_save(captured), "Cannot save the remembered setup");
             }
             const std::string bytes = directory.contents();
@@ -286,11 +286,11 @@ namespace
                     series_stage_rule_key(rule) + "\"") != std::string::npos),
                 "The rule was not written only when it differs from Same");
             require(bytes.rfind("{\"save_version\":5,", 0) == 0, "The save did not write version 5");
-            Save reloaded;
-            reloaded.load_save_file();
+            Save reloaded; SettingsSession reloaded_session(reloaded);
+            reloaded_session.load_save_file();
             require(reloaded.last_match_setup() && reloaded.last_match_setup()->stage_rule == rule,
                 "The remembered rule did not survive the file");
-            const MenuLevelSettings restored = reloaded.last_match_setup()->restore(stages);
+            const MatchSetup restored = reloaded.last_match_setup()->restore(stages);
             require(restored.series_stage_rule() == rule && restored.stage() == "hill" && restored.best_of() == 3,
                 "Restore lost the rule or changed the setup around it");
         }
@@ -372,7 +372,7 @@ namespace
             text.prompt(MenuPrompt::mode) == L"A/Enter Select    Left/Right Change    B/Esc Back",
             "The shipped series stage text changed");
         shipped.validate_resources(world.render, world.audio);
-        MainMenuModeSelect::validate_stage_rules(&world.render, shipped);
+        validate_mode_stage_rules(&world.render, shipped);
 
         const rapidjson::Document source = read_document(content / "presentation.json");
         int next = 0;
@@ -399,7 +399,7 @@ namespace
             {
                 const Presentation candidate(path_to_utf8(path).c_str());
                 if (resources) { candidate.validate_resources(world.render, world.audio); }
-                if (row) { MainMenuModeSelect::validate_stage_rules(&world.render, candidate); }
+                if (row) { validate_mode_stage_rules(&world.render, candidate); }
             }
             catch (const std::runtime_error& error) { diagnostic = error.what(); }
             require(diagnostic.find(key) != std::string::npos,
@@ -431,7 +431,7 @@ namespace
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("series stage rule", [&]
     {
         require(argc == 2, "usage: series_stage_rule <content>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -449,10 +449,5 @@ int wmain(int argc, wchar_t* argv[])
             "Same (save version 5), and old, unknown or wrong-typed rules read as Same without touching the rest; "
             "menu text read, mapped, fit-checked and refused when missing or too wide\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL series stage rule: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

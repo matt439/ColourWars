@@ -22,11 +22,10 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const NestedSaveProfile isolated(output / "stage-scan-profile");
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    Registry<LevelLoadedInfo> levels("stage-scan-inspection"); StageList stages;
-    auto shipped = read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course");
-    stages.push_back(shipped.stage); levels.add("movement_course", std::move(shipped.info));
+    StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
+    catalog.add(read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course"));
     const auto folder_path = output / "stage-scan-profile/ColourWars/stages";
     std::filesystem::create_directories(folder_path);
     const auto valid_path = folder_path / "my_course.json", broken_path = folder_path / "broken_stage.json";
@@ -37,7 +36,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     { std::ofstream file(path, std::ios::binary); file << value; file.close(); require(file.good(), "Cannot write isolated stage-scan fixture"); };
     write(valid_path, valid); write(broken_path, "{broken");
     UserStageFolder folder; folder.attach(folder_path, { &tuning, &presentation, app.render_resources(),
-        app.audio_resources(), &play }, app.audio_resources(), &levels, &stages);
+        app.audio_resources(), &play }, app.audio_resources(), &catalog);
     const auto diagnostic_path = output / "stage-scan-stderr.txt";
     StageScanStderrCapture captured_errors(diagnostic_path);
     int scans = 0; folder.scan(); ++scans;
@@ -45,15 +44,15 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         folder.latest_scan().refused.size() == 1 && stages.size() == 2 && stages.back().user,
         "One broken optional stage prevented the good stage from joining");
     const std::string first_refusal = folder.latest_scan().refused[0];
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
-    data.set_presentation(&presentation); data.set_level_infos(&levels); data.set_stages(&stages);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
+    data.set_presentation(&presentation); data.set_stage_catalog(&catalog);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_screen_layout(ScreenLayout::one_player); settings.set_stage("movement_course");
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer); settings.set_duration(73.0f);
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
-    context.set_stage_rescan([&] { folder.rescan(); ++scans; });
-    context.set_stage_scan([&]() -> const UserStageScan* { return &folder.latest_scan(); });
+    script_stage_rescan(context, [&] { folder.rescan(); ++scans; });
+    script_stage_scan(context, [&]() -> const UserStageScan* { return &folder.latest_scan(); });
     struct ClearStageScanStates { StateContext& stack; ~ClearStageScanStates() { this->stack.clear(); } } clear{ stack };
     int updates = 0, level_updates = 0, reads = 0, frames = 0, crops = 0, rows = 0, comparisons = 0;
     const auto tick = [&]
@@ -201,19 +200,19 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     tap(Key::enter); require(choice == MatchStart::menu && stack.depth() == 1 && settings.stage() == "my_course" && scans == before_scans,
         "The preserved good user stage did not reach the actual match-start callback");
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(), &play, &levels,
-        &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+        &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
     {
         std::srand(932); auto accepted = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         std::vector<PlayerInputData> neutral(input_slots::count); for (auto& action : neutral) { action.connected = true; }
-        for (int step = 0; step < 400 && accepted->state() != LevelState::active; ++step) { accepted->update(neutral, dt); ++level_updates; }
+        for (int step = 0; step < 400 && accepted->state() != LevelState::active; ++step) { accepted->update(acceptance::slot_seats(*accepted, neutral), dt); ++level_updates; }
         require(accepted->state() == LevelState::active && scans == before_scans, "A valid optional stage could not start without another scan");
     }
     prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context, Session(3))); tick(); tap(Key::down);
     require(stack.depth() == 2 && scans == before_scans, "Between-round Stage Select scanned or exposed diagnostics");
-    context.set_stage_scan({}); context.set_stage_rescan({}); prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tap(Key::down);
+    script_stage_scan(context, {}); script_stage_rescan(context, {}); prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tap(Key::down);
     require(stack.depth() == 2 && scans == before_scans, "An unattached scan context opened diagnostics or scanned");
-    context.set_stage_rescan([&] { folder.rescan(); ++scans; });
-    context.set_stage_scan([&]() -> const UserStageScan* { return &folder.latest_scan(); });
+    script_stage_rescan(context, [&] { folder.rescan(); ++scans; });
+    script_stage_scan(context, [&]() -> const UserStageScan* { return &folder.latest_scan(); });
     const auto reopen = [&]() { prepare(); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); };
     write(broken_path, "{}"); reopen(); require(folder.latest_scan().refused.size() == 1 && folder.latest_scan().refused[0] != first_refusal,
         "Changing a broken stage did not refresh its latest reason");

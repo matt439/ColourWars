@@ -2,6 +2,7 @@
 #include "scripts/acceptance/balance_regions/metrics.h"
 #include "game/objects/level_loaded_info.h"
 #include "engine/core/file_path.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -15,8 +16,7 @@ namespace balance_regions
 {
     namespace
     {
-        void require(bool condition, const char* reason)
-        { if (!condition) { throw std::runtime_error(reason); } }
+        using acceptance::require;
         void require_near(double actual, double expected, double tolerance = 1e-10)
         { require(std::abs(actual - expected) <= tolerance, "Clipped area disagrees with an independent analytical oracle"); }
         template<class Action> void rejected(Action action)
@@ -284,6 +284,47 @@ namespace balance_regions
             require_near(capacity(yard_split, 0), 200); require_near(capacity(yard_split, 1), 200);
             require_near(capacity(yard_split, 2), 200); require_near(capacity(yard_split, 3), 200);
             require_near(capacity(yard_split, 4), 200); require_near(capacity(yard_split, 5), 200);
+            // The bands cover the blockout's camera extent exactly; only the
+            // out-of-bounds margin outside it is `outside_partition`.
+            const mattmath::RectangleF yard_bounds = yard.out_of_bounds_rectangle();
+            const mattmath::RectangleF yard_camera = yard.camera_bounds_rectangle();
+            require_near(turbulence.bands.front().left, yard_camera.left(), 0);
+            require_near(turbulence.bands.back().right, yard_camera.right(), 0);
+            // The four trials keep the blockout's bounds, so they resolve to the
+            // same x_band partition, band for band.
+            const std::array<const char*, 4> trials{ "turbulence_mover_trial", "turbulence_gate_trial",
+                "turbulence_ferry_trial", "turbulence_slab_trial" };
+            for (const char* trial : trials)
+            {
+                const LevelLoadedInfo info(labrador::path_to_utf8(content / "levels" / (std::string(trial) + ".json")).c_str());
+                info.validate();
+                const mattmath::RectangleF bounds = info.out_of_bounds_rectangle();
+                const mattmath::RectangleF camera = info.camera_bounds_rectangle();
+                require(bounds.left() == yard_bounds.left() && bounds.right() == yard_bounds.right() &&
+                    bounds.top() == yard_bounds.top() && bounds.bottom() == yard_bounds.bottom(),
+                    "A Turbulence trial's out-of-bounds rectangle no longer matches the blockout's");
+                require(camera.left() == yard_camera.left() && camera.right() == yard_camera.right(),
+                    "A Turbulence trial's camera X extent no longer matches the blockout's");
+                const auto bands = stage_partition(trial, bounds);
+                require(bands.name == "x_band" && bands.bands.size() == turbulence.bands.size(),
+                    "A Turbulence trial lost the blockout's x_band partition");
+                require_near(bands.top, turbulence.top, 0); require_near(bands.bottom, turbulence.bottom, 0);
+                for (std::size_t index = 0; index < bands.bands.size(); ++index)
+                {
+                    require(bands.bands[index].name == turbulence.bands[index].name, "A Turbulence trial band name differs from the blockout's");
+                    require_near(bands.bands[index].left, turbulence.bands[index].left, 0);
+                    require_near(bands.bands[index].right, turbulence.bands[index].right, 0);
+                }
+                const Measurement trial_split(yard_edges, roster(), bands);
+                for (std::size_t region = 0; region <= bands.bands.size(); ++region)
+                { require_near(capacity(trial_split, region), capacity(yard_split, region)); }
+            }
+            // The 6200-wide candidate is not scoped yet and keeps the fallback.
+            const LevelLoadedInfo candidate(labrador::path_to_utf8(content / "levels/turbulence.json").c_str());
+            candidate.validate();
+            const auto whole_candidate = stage_partition("turbulence", candidate.out_of_bounds_rectangle());
+            require(whole_candidate.name == "whole_arena" && whole_candidate.bands.size() == 1,
+                "The Turbulence candidate gained bands before they were scoped");
         }
     }
     void self_tests(const std::filesystem::path& content)

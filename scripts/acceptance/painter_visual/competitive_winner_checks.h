@@ -42,9 +42,9 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     std::array<std::vector<int>, 4> ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { ledgers[index] = ledger(cases[index].session); }
     const NestedSaveProfile profile(output / "competitive-winner-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed competitive winner's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed competitive winner's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "competitive-winner-profile/ColourWars/save_data.json", std::ios::binary);
@@ -52,9 +52,9 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_duration(73.0f); settings.set_stage("movement_course");
     MenuContext context(&data, &input, &settings); StateContext stack;
     struct RestoreCompetitiveWinner
@@ -62,7 +62,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreCompetitiveWinner()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -84,7 +84,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
                 fixture.info.team_a_area + fixture.info.team_b_area == (fixture.players == 1 ? 72.0f : 100.0f),
                 "Competitive winner changed a frozen branch, ledger, solo coverage or input-owner credit");
         }
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(settings.player_count() == active_players && settings.best_of() == active_best_of &&
             settings.duration() == 73.0f && settings.stage() == "movement_course" &&
             settings.screen_layout() == (active_players == 1 ? ScreenLayout::one_player : ScreenLayout::two_player) &&
@@ -168,17 +168,17 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.results_menu();
         const bool rows_visible = fixture.session.is_series() && details_visible;
-        UiTextDropShadow heading("independent-winner-heading", fixture.heading, style.heading_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow heading("independent-winner-heading", fixture.heading, style.heading_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
-        UiTextDropShadow winner("independent-competitive-winner", literal,
+        colourwars::UiTextDropShadow winner("independent-competitive-winner", literal,
             wrong_font ? original.menu().item_font : style.item_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !winner_visible);
         winner.set_position({ (menu_consts::DESIGN_RESOLUTION.x - winner.bounds().width) / 2.0f, look.winner_y });
-        UiTextDropShadow score("independent-winner-score", fixture.score, style.detail_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow score("independent-winner-score", fixture.score, style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !rows_visible);
         score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
-        UiTextDropShadow outcome("independent-winner-outcome", fixture.outcome, style.detail_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow outcome("independent-winner-outcome", fixture.outcome, style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !rows_visible);
         outcome.set_position({ (menu_consts::DESIGN_RESOLUTION.x - outcome.bounds().width) / 2.0f, look.session_result_y });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);

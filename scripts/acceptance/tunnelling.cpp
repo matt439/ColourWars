@@ -7,6 +7,7 @@
 #include "game/objects/structure.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/collision/tunnelling.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -25,10 +26,7 @@ using namespace mattmath;
 // game is right to ignore it: a swept projectile.
 namespace
 {
-	void require(bool condition, const std::string& message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	struct World
 	{
@@ -292,7 +290,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("tunnelling", [&]
 	{
 		require(argc == 2, "Usage: tunnelling.exe <game/content directory>");
 		const std::filesystem::path content = argv[1];
@@ -305,10 +303,5 @@ int main(int argc, char** argv)
 		std::cout << "PASS tunnelling: shipped stages within the engine's bound, "
 			"rejections at load and per stage, and the swept projectile exemption.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL tunnelling: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

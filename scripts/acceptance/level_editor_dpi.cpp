@@ -4,6 +4,7 @@
 #include "editor/window_dpi.h"
 #include "editor/window_layout.h"
 #include "editor/win32_text.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <commctrl.h>
 #include <shellscalingapi.h>
@@ -22,10 +23,7 @@ namespace colourwars_editor
 {
     namespace
     {
-        void require(bool condition, const char* message)
-        {
-            if (!condition) { throw std::runtime_error(message); }
-        }
+        using acceptance::require;
 
         bool same_rectangle(const RECT& first, const RECT& second)
         {
@@ -89,6 +87,7 @@ namespace colourwars_editor
         static void check_overlap_selection(Editor& editor, const std::filesystem::path& scratch);
         static void check_align_origin(Editor& editor, const std::filesystem::path& scratch);
         static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
+        static void check_clipboard(Editor& editor, const std::filesystem::path& scratch);
         static void run_gestures(const std::filesystem::path& scratch);
         static void run_pending(const std::filesystem::path& scratch);
 
@@ -136,6 +135,7 @@ namespace colourwars_editor
             editor.create_window(SW_HIDE, stage);
             require(!IsWindowVisible(editor.window_), "Native DPI probe unexpectedly showed its editor");
             check_metadata(editor, scratch);
+            check_clipboard(editor, scratch);
             PROCESS_DPI_AWARENESS awareness = PROCESS_DPI_UNAWARE;
             require(SUCCEEDED(GetProcessDpiAwareness(nullptr, &awareness)) && awareness == PROCESS_PER_MONITOR_DPI_AWARE,
                 "Editor process is not per-monitor DPI aware");
@@ -258,10 +258,11 @@ namespace colourwars_editor
 #include "scripts/acceptance/level_editor_dpi/overlap_selection_checks.h"
 #include "scripts/acceptance/level_editor_dpi/button_chord_checks.h"
 #include "scripts/acceptance/level_editor_dpi/ramp_hit_checks.h"
+#include "scripts/acceptance/level_editor_dpi/clipboard_checks.h"
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("native editor DPI", [&]
     {
         const bool gestures = argc == 3 && std::wstring(argv[2]) == L"--gestures";
         const bool pending = argc == 3 && std::wstring(argv[2]) == L"--pending";
@@ -273,10 +274,5 @@ int wmain(int argc, wchar_t* argv[])
         else if (pending) { colourwars_editor::EditorDpiProbe::run_pending(scratch); }
         else { colourwars_editor::EditorDpiProbe::run(scratch); }
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL native editor DPI: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

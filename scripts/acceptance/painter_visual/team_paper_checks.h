@@ -29,10 +29,10 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, initial;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearTeamPaper { StateContext& stack; Presentation& presentation; Presentation original; ~ClearTeamPaper() { this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; } } clear{ stack, presentation, original };
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
@@ -59,7 +59,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (Key key : { Key::enter, Key::escape, Key::r, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Team paper fixture claim failed"); }
         teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = missing = false;
@@ -82,13 +82,13 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
         const float edge = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(edge), paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
-        const UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        const UiTextDropShadow message("independent-team-warning", L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
-        std::vector<std::unique_ptr<UiTextDropShadow>> labels; std::vector<RectangleF> rows, badges;
+        const colourwars::UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
+        const colourwars::UiTextDropShadow message("independent-team-warning", L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels; std::vector<RectangleF> rows, badges;
         const std::array<std::wstring, 4> devices{ L"Keyboard/mouse", L"Pad 4", L"Pad 1", L"Pad 3" };
         for (size_t i = 0; i < teams.size(); ++i)
         {
-            auto text = std::make_unique<UiTextDropShadow>("independent-team-label", L"P" + std::to_wstring(i + 1) + L" - " + devices[i], style.detail_font, position(0, static_cast<int>(i) + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
+            auto text = std::make_unique<colourwars::UiTextDropShadow>("independent-team-label", L"P" + std::to_wstring(i + 1) + L" - " + devices[i], style.detail_font, position(0, static_cast<int>(i) + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
             const RectangleF bounds = text->bounds(); const auto& identity = snapshot.player_identity();
             const RectangleF badge(bounds.x - identity.ui_size.x - identity.ui_gap, bounds.y + (bounds.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF row = RectangleF::union_of(bounds, badge); row = RectangleF::union_of(row,
@@ -125,7 +125,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         list.set_filter(TextureFilter::linear); title.draw(list); if (warning) { message.draw(list); } for (const auto& label : labels) { label->draw(list); }
         const auto& footer = snapshot.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : teams.size() < 2 ?
             L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" : L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams";
-        const UiTextDropShadow legend("independent-team-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
+        const colourwars::UiTextDropShadow legend("independent-team-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "team-paper-" + name + '-' + std::to_string(teams.size()) + "p-" + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "TEAM PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(actual.pixels == expected.pixels, "Actual Team paper differs from independent paper/card/text/icon/badge fixture");
@@ -142,7 +142,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const auto destination = [&](bool weapon)
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); if (weapon) { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); } else { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };
@@ -222,7 +222,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         auto& live = const_cast<MainMenuPresentation&>(presentation.main_menu());
         struct RestoreTeamWarning { Vector2F& position; Vector2F original; ~RestoreTeamWarning() { this->position = this->original; } } restore_warning{ live.team_warning_position, live.team_warning_position };
         live.team_warning_position.y = 930.0f;
-        MenuLevelSettings invalid_settings = settings; MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup invalid_settings = settings; MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext invalid_context(&data, &invalid_input, &invalid_settings); StateContext invalid_stack; bool rejected = false;
         try { invalid_stack.push(std::make_unique<MainMenuTeamSelect>(&invalid_context)); }
         catch (const std::runtime_error& error) { rejected = std::string(error.what()).find("Team Select warning must fit the paper") != std::string::npos; }

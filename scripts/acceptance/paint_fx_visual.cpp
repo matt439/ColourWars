@@ -7,20 +7,19 @@
 #include "game/objects/projectile_builder.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/structure_paintable.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
 using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -561,7 +560,7 @@ namespace
 
     std::unique_ptr<Level> level(Application& app, LevelBuilder& builder, TeamColourPair palette)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.set_stage("movement_course");
         settings.set_screen_layout(ScreenLayout::four_player);
@@ -583,7 +582,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("paint fx visual", [&]
     {
         require(argc == 3, "usage: paint_fx_visual <staged-content> <output>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
@@ -628,7 +627,7 @@ int wmain(int argc, wchar_t** argv)
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
             &preferences, &levels, &tuning, &presentation, app.resolution_manager(),
-            app.thread_pool(), app.partitioner(), app.mouse());
+            app.thread_pool(), app.partitioner());
         const Canvas canvas(app.render_resources());
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
         {
@@ -647,11 +646,11 @@ int wmain(int argc, wchar_t** argv)
                     input.shoot_direction_requested = true;
                 }
                 for (int tick = 0; tick < 600 && match->state() != LevelState::active; ++tick)
-                    match->update(inputs, dt);
+                    match->update(acceptance::slot_seats(*match, inputs), dt);
                 require(match->state() == LevelState::active, "real four-player match did not become active");
-                for (int tick = 0; tick < 60; ++tick) { match->update(inputs, dt); }
+                for (int tick = 0; tick < 60; ++tick) { match->update(acceptance::slot_seats(*match, inputs), dt); }
                 for (auto& input : inputs) { input.primary_shoot = true; }
-                for (int tick = 0; tick < 5; ++tick) { match->update(inputs, dt); }
+                for (int tick = 0; tick < 5; ++tick) { match->update(acceptance::slot_seats(*match, inputs), dt); }
                 const float scale = match->player(0).camera().scale;
                 require(std::fabs(scale - static_cast<float>(size.y) / 1080) < 0.0001f,
                     "matrix no longer matches the authored gameplay camera scale");
@@ -673,10 +672,5 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "PASS playing-size matrices use real builder dimensions and all palettes; "
             "roller is a contact effect, not a flying shot; no physical-device or listening acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

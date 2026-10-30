@@ -3,14 +3,13 @@
 #include "game/objects/player.h"
 #include "game/objects/projectile.h"
 #include "game/objects/paint_audio.h"
-#include "game/objects/structure_paintable.h"
-#include "game/objects/fixed_slab_paintable.h"
+#include "game/objects/structure.h"
+#include "game/objects/fixed_slab_geometry.h"
 
 #include "engine/collision/resolve.h"
 
 #include <limits>
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -56,13 +55,14 @@ Player::Player(const RectangleF& rectangle,
     int sound_index,
     const FigurePresentation* figure,
     const ViewShakePresentation* view_shake) :
-    MovingObject(velocity),
-    AnimationObject(tuning->player().idle.sheet,
+    colourwars::MovingObject(velocity),
+    colourwars::AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
                     render_resources, player_tint, rotation, origin, flip, layer_depth),
     TextureObject(tuning->player().idle.sheet,
                   tuning->player().idle.uniform_texture,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
+    colourwars::SoundBankObject(tuning->player().sound_bank, audio_resources),
     tuning_(tuning),
     figure_(figure),
     clothing_(tuning->player().idle, render_resources, team_colour,
@@ -72,9 +72,8 @@ Player::Player(const RectangleF& rectangle,
     movement_feedback_(movement_feedback, render_resources),
     combat_feedback_(combat_feedback, render_resources),
     view_shake_(view_shake),
-    movement_audio_(&tuning->player().movement_sounds,
-        audio_resources->sound_bank(tuning->player().sound_bank),
-        sound_index >= 0 ? sound_index : player_num),
+    movement_audio_(&tuning->player().movement_sounds, audio_resources,
+        tuning->player().sound_bank, sound_index >= 0 ? sound_index : player_num),
     respawn_redraw_(respawn_redraw, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
@@ -118,29 +117,27 @@ Player::Player(const RectangleF& rectangle,
     }
     if (player.idle.frame_time.has_value())
     {
-        AnimationObject::set_frame_time(*player.idle.frame_time);
+        colourwars::AnimationObject::set_frame_time(*player.idle.frame_time);
     }
 
     this->health_ = player.starting_health;
     this->respawn_timer_ = player.respawn_delay;
 
-    this->sound_bank_ = audio_resources->sound_bank(player.sound_bank);
-
     this->damage_sound_ =
-        this->sound_bank_->resolve_wave(player.damage_sound.name);
+        this->resolve_wave(player.damage_sound.name);
     this->death_sound_ =
-        this->sound_bank_->resolve_wave(player.death_sound.name);
+        this->resolve_wave(player.death_sound.name);
     this->jump_sound_ =
-        this->sound_bank_->resolve_wave(player.jump_sound.name);
+        this->resolve_wave(player.jump_sound.name);
     this->respawn_sound_ =
-        this->sound_bank_->resolve_wave(player.respawn_sound.name);
+        this->resolve_wave(player.respawn_sound.name);
     const int index = sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4;
     if (index >= static_cast<int>(player.redraw_sounds.size()))
     {
         throw std::runtime_error("Player redraw sound requires a roster index from 0 to 3");
     }
     this->redraw_index_ = static_cast<size_t>(index);
-    this->redraw_sound_ = this->sound_bank_->resolve_effect(
+    this->redraw_voice_ = RedrawVoice(this, player.sound_bank, audio_resources,
         player.redraw_sounds[this->redraw_index_].name);
 }
 
@@ -192,40 +189,38 @@ const RectangleF* Player::collision_rectangle() const
 	return &this->rectangle_;
 }
 
-void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
+void Player::touch(Collider& receiver, const Vector2F& normal, float penetration) const
+{
+    receiver.on_player_contact(*this, normal, penetration);
+}
+
+void Player::on_structure_contact(const Structure& other, const Vector2F& normal,
     float penetration)
 {
-    const CollisionObjectType other_type = to_collision_type(other.tag());
-
-    if (is_projectile(other_type))
-    {
-        this->on_projectile_contact(other_type, other);
-        return;
-    }
-
-    if (!is_structure(other_type))
-    {
-        // The collision mask must exclude all other types.
-        throw std::runtime_error(
-            "Player contacted an object its mask should have excluded");
-    }
-
-    if (other_type == CollisionObjectType::structure_jump_through)
+    if (other.jump_through())
     {
         this->on_jump_through_contact(other);
         return;
     }
-    if (other_type == CollisionObjectType::structure_fixed_slab)
+    if (const FixedSlabGeometry* slab = other.slab_geometry())
     {
-        this->on_fixed_slab_contact(dynamic_cast<const FixedSlabPaintable&>(other), normal, penetration);
+        this->on_fixed_slab_contact(other, *slab, normal, penetration);
         return;
     }
-    if (is_structure_ramp(other_type))
+    if (other.ramp())
     {
-        this->on_ramp_contact(other_type, other, normal, penetration);
+        this->on_ramp_contact(other, normal, penetration);
         return;
     }
-    this->on_structure_contact(other, normal, penetration);
+    this->on_solid_contact(other, normal, penetration);
+}
+
+void Player::on_player_contact(const Player& /*other*/, const Vector2F& /*normal*/,
+    float /*penetration*/)
+{
+    // The collision mask must exclude all other types.
+    throw std::runtime_error(
+        "Player contacted an object its mask should have excluded");
 }
 void Player::end_contacts(std::span<const Contact> contacts,
     std::span<const HorizontalSupportRef> supports)
@@ -290,26 +285,27 @@ void Player::end_contacts(std::span<const Contact> contacts,
             other = contact.a;
             normal = -contact.normal;
         }
-        if (other != nullptr && normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x))
+        // A player's contacts are with structures and projectiles only.
+        const Structure* surface = other != nullptr ? Collider::of(*other).structure() : nullptr;
+        if (surface != nullptr && normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x))
         {
-            if (const auto* paintable = dynamic_cast<const StructurePaintable*>(other))
+            if (surface->holds_flat_top_paint())
             {
-                this->paint_supports_.push_back(paintable);
+                this->paint_supports_.push_back(surface);
             }
         }
         // At either endpoint the initial manifold can be horizontal before
         // adjacent ground removes downward movement: entering uphill at the
         // toe, or downhill at the high crest. Recognize that exact endpoint
         // from the final grounded pose, regardless of pair dispatch order.
-        if (other != nullptr && this->supported_this_tick_ &&
+        if (surface != nullptr && this->supported_this_tick_ &&
             this->move_state() == PlayerMoveState::on_ground &&
             !this->hit_ceiling_this_tick_ && this->state_ == PlayerState::alive && this->health_ > 0.0f)
         {
-            const CollisionObjectType type = to_collision_type(other->tag());
-            if (is_structure_ramp(type))
+            if (surface->ramp())
             {
-                const RectangleF ramp = other->shape()->bounding_box();
-                const bool rises_right = type == CollisionObjectType::structure_ramp_right;
+                const RectangleF ramp = surface->shape()->bounding_box();
+                const bool rises_right = surface->ramp_rises_right();
                 const float toe = rises_right ? ramp.left() : ramp.right();
                 const float corner = rises_right ? this->rectangle_.right() : this->rectangle_.left();
                 const bool uphill = rises_right ? this->movement_requested_x_ > 0.0f :
@@ -325,18 +321,17 @@ void Player::end_contacts(std::span<const Contact> contacts,
                     coordinate_at(crest_corner, crest, this->rectangle_.width);
                 if (at_toe || at_crest)
                 {
-                    this->ramp_support_ = RampSupport{ ramp, type };
+                    this->ramp_support_ = RampSupport{ ramp, rises_right };
                     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
                         PlayerMoveState::on_ramp_left);
                     this->support_position_ = at_toe ? Vector2F(toe, ramp.bottom()) :
                         Vector2F(crest, ramp.top());
                 }
             }
-            else if (type == CollisionObjectType::structure_fixed_slab)
+            else if (const FixedSlabGeometry* slab = surface->slab_geometry())
             {
-                const auto& slab = dynamic_cast<const FixedSlabPaintable&>(*other);
-                const Vector2F start = slab.geometry().top_start();
-                const Vector2F end = slab.geometry().top_end();
+                const Vector2F start = slab->top_start();
+                const Vector2F end = slab->top_end();
                 const bool rises_right = end.y < start.y;
                 const Vector2F toe = rises_right ? start : end;
                 const Vector2F crest = rises_right ? end : start;
@@ -355,7 +350,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
                     this->rectangle_.left() <= crest.x && this->rectangle_.right() >= crest.x;
                 if (at_toe || at_crest)
                 {
-                    this->remember_fixed_slab_support(slab);
+                    this->remember_fixed_slab_support(*surface, *slab);
                     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right :
                         PlayerMoveState::on_ramp_left);
                     this->support_position_ = at_toe ? toe : crest;
@@ -502,10 +497,9 @@ void Player::end_contacts(std::span<const Contact> contacts,
     this->resolved_flat_supports_.clear();
 }
 
-void Player::remember_flat_support(const CollisionObject& other)
+void Player::remember_flat_support(const Structure& other)
 {
-    if (const auto* support = dynamic_cast<const Structure*>(&other))
-    { this->resolved_flat_supports_.push_back(support); }
+    this->resolved_flat_supports_.push_back(&other);
 }
 
 void Player::clear_carrier() noexcept
@@ -564,11 +558,7 @@ void Player::choose_carrier(std::span<const Contact> contacts,
     float best_overlap = -1.0f;
     for (const HorizontalSupportRef& candidate : supports)
     {
-        if (candidate.surface == nullptr) { continue; }
-        const CollisionObjectType type = to_collision_type(candidate.surface->tag());
-        if (type != CollisionObjectType::structure &&
-            type != CollisionObjectType::structure_paintable &&
-            type != CollisionObjectType::structure_jump_through) { continue; }
+        if (candidate.surface == nullptr || !candidate.surface->flat()) { continue; }
         bool measured_top = false;
         for (const Contact& contact : contacts)
         {
@@ -623,7 +613,7 @@ PlayerTeam Player::gameplay_support_team() const
     PlayerTeam answer = PlayerTeam::none;
     for (std::size_t index = 0; index < this->paint_supports_.size(); ++index)
     {
-        const StructurePaintable* support = this->paint_supports_[index];
+        const Structure* support = this->paint_supports_[index];
         bool duplicate = false;
         for (std::size_t previous = 0; previous < index; ++previous)
         { duplicate |= this->paint_supports_[previous] == support; }
@@ -693,7 +683,7 @@ std::optional<Player::PaintedSupport> Player::painted_support() const
             }
         }
     }
-    for (const StructurePaintable* support : this->paint_supports_)
+    for (const Structure* support : this->paint_supports_)
     {
         const RectangleF surface = support->shape()->bounding_box();
         const float left = std::max(this->rectangle_.left(), surface.left());
@@ -718,7 +708,7 @@ std::optional<Player::PaintedSupport> Player::painted_support() const
     return std::nullopt;
 }
 
-void Player::on_structure_contact(const CollisionObject& other,
+void Player::on_solid_contact(const Structure& other,
     const Vector2F& normal, float penetration)
 {
     if (this->projected_fixed_slab_support_ && normal.y < 0.0f &&
@@ -729,8 +719,8 @@ void Player::on_structure_contact(const CollisionObject& other,
         {
             const bool rises_right = this->fixed_slab_support_->end.y < this->fixed_slab_support_->start.y;
             this->rectangle_ = this->prev_rectangle_;
-            MovingObject::set_velocity_x(0.0f);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->support_position_ = *support;
             this->supported_this_tick_ = true;
             this->hit_ceiling_this_tick_ = true;
@@ -753,13 +743,12 @@ void Player::on_structure_contact(const CollisionObject& other,
             support && feet_at(this->prev_rectangle_, support->y))
         {
             this->rectangle_ = this->prev_rectangle_;
-            MovingObject::set_velocity_x(0.0f);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->support_position_ = *support;
             this->supported_this_tick_ = true;
             this->hit_ceiling_this_tick_ = true;
-            this->set_move_state(this->ramp_support_->type ==
-                CollisionObjectType::structure_ramp_right ?
+            this->set_move_state(this->ramp_support_->rises_right ?
                 PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
             return;
         }
@@ -778,13 +767,13 @@ void Player::on_structure_contact(const CollisionObject& other,
                 std::min(this->rectangle_.right(), surface.right())) / 2.0f,
                 this->rectangle_.bottom() };
         }
-        MovingObject::set_velocity_y(0.0f);
+        colourwars::MovingObject::set_velocity_y(0.0f);
         if (normal.y > 0.0f)
         {
             this->supported_this_tick_ = true;
-            if (const auto* paintable = dynamic_cast<const StructurePaintable*>(&other))
+            if (other.holds_flat_top_paint())
             {
-                this->paint_supports_.push_back(paintable);
+                this->paint_supports_.push_back(&other);
             }
         }
         else
@@ -800,16 +789,17 @@ void Player::on_structure_contact(const CollisionObject& other,
         this->set_velocity_x(0.0f);
     }
 }
-void Player::on_ramp_contact(CollisionObjectType other_type,
-    const CollisionObject& other, const Vector2F& normal, float penetration)
+void Player::on_ramp_contact(const Structure& other,
+    const Vector2F& normal, float penetration)
 {
     // A ramp's vertical face and flat underside resolve as walls; only its
     // hypotenuse needs slope handling.
     if (normal.y <= 0.0f)
     {
-        this->on_structure_contact(other, normal, penetration);
+        this->on_solid_contact(other, normal, penetration);
         return;
     }
+    const bool rises_right = other.ramp_rises_right();
 
     // Separate vertically on slopes; separation along the normal would slide
     // the player downhill and prevent climbing.
@@ -818,8 +808,8 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
 
     this->fixed_slab_support_.reset();
     this->projected_fixed_slab_support_ = false;
-    this->set_move_state(other_type == CollisionObjectType::structure_ramp_left ?
-        PlayerMoveState::on_ramp_left : PlayerMoveState::on_ramp_right);
+    this->set_move_state(rises_right ?
+        PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
     this->supported_this_tick_ = true;
 
     this->support_impact_speed_ = std::max(this->support_impact_speed_,
@@ -827,44 +817,44 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     // On a slope the lower supporting corner touches the surface; the centre
     // of the player's bottom edge floats above it.
     const RectangleF surface = other.shape()->bounding_box();
-    this->ramp_support_ = RampSupport{ surface, other_type };
-    const float support_x = other_type == CollisionObjectType::structure_ramp_right ?
+    this->ramp_support_ = RampSupport{ surface, rises_right };
+    const float support_x = rises_right ?
         this->rectangle_.right() : this->rectangle_.left();
     this->support_position_ = { std::clamp(support_x, surface.left(), surface.right()),
         this->rectangle_.bottom() };
 
-    MovingObject::set_velocity_y(0.0f);
+    colourwars::MovingObject::set_velocity_y(0.0f);
 }
 
-void Player::remember_fixed_slab_support(const FixedSlabPaintable& slab)
+void Player::remember_fixed_slab_support(const Structure& slab, const FixedSlabGeometry& geometry)
 {
     this->ramp_support_.reset();
     this->projected_ramp_support_ = false;
     this->fixed_slab_support_ = FixedSlabSupport{
-        slab.geometry().top_start(), slab.geometry().top_end(), &slab };
+        geometry.top_start(), geometry.top_end(), &slab };
     this->clear_carrier();
 }
 
-void Player::on_fixed_slab_contact(const FixedSlabPaintable& slab,
+void Player::on_fixed_slab_contact(const Structure& slab, const FixedSlabGeometry& geometry,
     const Vector2F& normal, float penetration)
 {
-    const Vector2F inward = slab.geometry().inward_normal();
+    const Vector2F inward = geometry.inward_normal();
     const float alignment = normal.x * inward.x + normal.y * inward.y;
     // SAT may select world Y at a top endpoint. Both that normal and the
     // slab's top normal qualify; either end cap and the underside do not.
     const bool top_contact = normal.y > 0.0f &&
         std::abs(normal.y) >= std::abs(normal.x) &&
         alignment >= inward.y - 4.0f * std::numeric_limits<float>::epsilon();
-    const Vector2F start = slab.geometry().top_start();
-    const Vector2F end = slab.geometry().top_end();
+    const Vector2F start = geometry.top_start();
+    const Vector2F end = geometry.top_end();
     if (!top_contact || this->rectangle_.right() < start.x || this->rectangle_.left() > end.x)
     {
-        this->on_structure_contact(slab, normal, penetration);
+        this->on_solid_contact(slab, normal, penetration);
         return;
     }
 
     this->rectangle_.offset(separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
-    this->remember_fixed_slab_support(slab);
+    this->remember_fixed_slab_support(slab, geometry);
     const bool rises_right = end.y < start.y;
     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
     this->supported_this_tick_ = true;
@@ -873,7 +863,7 @@ void Player::on_fixed_slab_contact(const FixedSlabPaintable& slab,
     {
         this->support_position_ = *point;
     }
-    MovingObject::set_velocity_y(0.0f);
+    colourwars::MovingObject::set_velocity_y(0.0f);
 }
 
 std::optional<Vector2F> Player::fixed_slab_support_at(const RectangleF& body) const
@@ -895,7 +885,7 @@ std::optional<Vector2F> Player::ramp_support_at(const RectangleF& body) const
     {
         return std::nullopt;
     }
-    const bool rises_right = ramp.type == CollisionObjectType::structure_ramp_right;
+    const bool rises_right = ramp.rises_right;
     const float x = std::clamp(rises_right ? body.right() : body.left(),
         ramp.bounds.left(), ramp.bounds.right());
     const float along = (x - ramp.bounds.left()) / ramp.bounds.width;
@@ -903,7 +893,7 @@ std::optional<Vector2F> Player::ramp_support_at(const RectangleF& body) const
         ramp.bounds.top() + along * ramp.bounds.height);
 }
 
-void Player::on_jump_through_contact(const CollisionObject& other)
+void Player::on_jump_through_contact(const Structure& other)
 {
     // Land only while moving down (+y) from above the platform on the previous tick.
     const bool moving_down = this->velocity().y > 0.0f;
@@ -916,7 +906,7 @@ void Player::on_jump_through_contact(const CollisionObject& other)
     {
         this->support_impact_speed_ = std::max(this->support_impact_speed_,
             this->velocity().y);
-        MovingObject::set_velocity_y(0.0f);
+        colourwars::MovingObject::set_velocity_y(0.0f);
         this->rectangle_.set_position_y_from_bottom(other_rect.top());
         this->support_position_ = { (std::max(this->rectangle_.left(), other_rect.left()) +
             std::min(this->rectangle_.right(), other_rect.right())) / 2.0f, other_rect.top() };
@@ -926,12 +916,12 @@ void Player::on_jump_through_contact(const CollisionObject& other)
     }
 }
 
-void Player::update_weapon_position() const
+void Player::update_weapon_position()
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_contact(CollisionObjectType other_type,
-    const CollisionObject& source)
+void Player::on_projectile_contact(const Projectile& source,
+    const Vector2F& /*normal*/, float /*penetration*/)
 {
     // The projectile side is unchanged: paint still lands.
     if (this->damage_immune_)
@@ -941,7 +931,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
 
     // Damage belongs to the projectile's tuning record.
     const float damage = this->tuning_->projectile(
-        to_projectile_type(other_type)).details.player_damage *
+        source.projectile_type()).details.player_damage *
         this->tuning_->handicap(this->handicap_).damage_taken;
     const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
     this->health_ -= damage;
@@ -955,12 +945,11 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
         // Capture the fatal contact now: the dead state arrives next update.
         // Later hits cannot replace credit. This metadata changes no damage,
         // contact, feedback, timer, or random-number decision.
-        const auto* projectile = dynamic_cast<const Projectile*>(&source);
         const CollisionLayer enemy_layer = this->team_ == PlayerTeam::a ?
             collision_layers::PROJECTILE_TEAM_B : this->team_ == PlayerTeam::b ?
             collision_layers::PROJECTILE_TEAM_A : CollisionLayer{ 0 };
-        const int owner = projectile != nullptr ? projectile->player_num() : -1;
-        if (projectile != nullptr && enemy_layer != 0 && source.layer() == enemy_layer &&
+        const int owner = source.player_num();
+        if (enemy_layer != 0 && source.layer() == enemy_layer &&
             owner >= 0 && owner < paint_owners::count)
         {
             ++this->lethal_projectiles_.enemy_by_owner[static_cast<size_t>(owner)];
@@ -980,7 +969,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type,
 
     if (this->damage_sound_timer_ >= this->player_tuning().damage_sound_delay)
 	{
-		this->sound_bank_->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume);
+		this->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume);
 		this->damage_sound_timer_ = 0.0f;
 	}
 }
@@ -1037,7 +1026,7 @@ void Player::update(float dt)
         this->pending_rumble_.elimination = true;
         this->combat_feedback_.eliminate(this->rectangle_);
         if (this->preferences_->view_shake_enabled(this->player_num_)) { this->view_shake_.eliminate(); }
-        this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
+        this->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
     }
 
     else if (this->state_ == PlayerState::alive)
@@ -1054,7 +1043,7 @@ void Player::update(float dt)
         }
         else
         {
-            AnimationObject::update(dt);
+            colourwars::AnimationObject::update(dt);
             this->clothing_.advance(dt);
         }
 
@@ -1128,7 +1117,7 @@ std::vector<std::unique_ptr<Projectile>>
     auto projectiles = this->primary_->update_and_get_projectiles(
         this->input(),
         this->center(),
-        MovingObject::velocity(),
+        colourwars::MovingObject::velocity(),
         this->facing_right(),
         dt, this->ammo_regen_multiplier());
     // A paid shot is still a shot when its muzzle immediately contacts cover.
@@ -1208,76 +1197,76 @@ void Player::update_movement(float dt)
     const bool jump_pressed = this->input_.jump_pressed &&
         !this->jump_waiting_for_release_;
 
-    if (are_equal(MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
+    if (are_equal(colourwars::MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
     {
-        MovingObject::set_velocity_x(initial * x_input);
+        colourwars::MovingObject::set_velocity_x(initial * x_input);
     }
-    else if (MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
+    else if (colourwars::MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
     {
-        MovingObject::alter_velocity_x(acceleration * dt * x_input);
-        if (MovingObject::velocity_x() > cap)
+        colourwars::MovingObject::alter_velocity_x(acceleration * dt * x_input);
+        if (colourwars::MovingObject::velocity_x() > cap)
         {
-            MovingObject::set_velocity_x(cap);
+            colourwars::MovingObject::set_velocity_x(cap);
         }
     }
-    else if (MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
+    else if (colourwars::MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
     {
-        MovingObject::alter_velocity_x(acceleration * dt * x_input);
-        if (MovingObject::velocity_x() < -cap)
+        colourwars::MovingObject::alter_velocity_x(acceleration * dt * x_input);
+        if (colourwars::MovingObject::velocity_x() < -cap)
         {
-            MovingObject::set_velocity_x(-cap);
+            colourwars::MovingObject::set_velocity_x(-cap);
         }
     }
-    else if ((MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
-        (MovingObject::velocity_x() < 0.0f && x_input > 0.0f))
+    else if ((colourwars::MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
+        (colourwars::MovingObject::velocity_x() < 0.0f && x_input > 0.0f))
     {
         // Opposing input always includes release braking. Small corrections
         // must not make stopping weaker than letting go of the stick.
 
         const float braking = braking_rate +
             acceleration * std::fabs(x_input);
-        const float time_to_stop = std::fabs(MovingObject::velocity_x()) / braking;
+        const float time_to_stop = std::fabs(colourwars::MovingObject::velocity_x()) / braking;
         if (dt <= time_to_stop)
         {
-            MovingObject::alter_velocity_x(std::copysign(braking * dt, x_input));
+            colourwars::MovingObject::alter_velocity_x(std::copysign(braking * dt, x_input));
         }
         else
         {
             // Spend only the remainder accelerating in the new direction;
             // braking itself cannot propel the player past zero.
-            MovingObject::set_velocity_x(std::clamp(
+            colourwars::MovingObject::set_velocity_x(std::clamp(
                 acceleration * x_input * (dt - time_to_stop),
                 -cap, cap));
         }
     }
-    else if (MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
+    else if (colourwars::MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(-braking_rate * dt);
-        if (MovingObject::velocity_x() < 0.0f)
+        colourwars::MovingObject::alter_velocity_x(-braking_rate * dt);
+        if (colourwars::MovingObject::velocity_x() < 0.0f)
         {
-            MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
         }
     }
-    else if (MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
+    else if (colourwars::MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(braking_rate * dt);
-        if (MovingObject::velocity_x() > 0.0f)
+        colourwars::MovingObject::alter_velocity_x(braking_rate * dt);
+        if (colourwars::MovingObject::velocity_x() > 0.0f)
         {
-            MovingObject::set_velocity_x(0.0f);
+            colourwars::MovingObject::set_velocity_x(0.0f);
         }
     }
     if (this->is_on_ramp())
     {
 		// increase gravity on ramp
-		MovingObject::alter_velocity_y(this->player_tuning().gravity * this->player_tuning().ramp_gravity_multiplier * dt);
+		colourwars::MovingObject::alter_velocity_y(this->player_tuning().gravity * this->player_tuning().ramp_gravity_multiplier * dt);
 	}
 	else
 	{
-		MovingObject::alter_velocity_y(this->player_tuning().gravity * dt);
+		colourwars::MovingObject::alter_velocity_y(this->player_tuning().gravity * dt);
     }
-    if (MovingObject::velocity_y() > this->player_tuning().max_velocity.y)
+    if (colourwars::MovingObject::velocity_y() > this->player_tuning().max_velocity.y)
     {
-        MovingObject::set_velocity_y(this->player_tuning().max_velocity.y);
+        colourwars::MovingObject::set_velocity_y(this->player_tuning().max_velocity.y);
     }
 
     // dropping_down lasts for one update.
@@ -1290,7 +1279,7 @@ void Player::update_movement(float dt)
         !jump_pressed)
     {
         this->reset_jump_input();
-        MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);
+        colourwars::MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);
         this->set_move_state(PlayerMoveState::dropping_down);
     }
 	else
@@ -1301,7 +1290,7 @@ void Player::update_movement(float dt)
     // Accepted jump/drop has already released support. A rider receives the
     // platform's world displacement before its own unchanged integration.
     this->apply_carrier(dt);
-    const Vector2F displacement = MovingObject::velocity() * dt;
+    const Vector2F displacement = colourwars::MovingObject::velocity() * dt;
     this->movement_requested_x_ = displacement.x;
     this->rectangle_.offset(displacement.x, displacement.y);
 
@@ -1317,7 +1306,7 @@ void Player::update_movement(float dt)
         if (const auto support = this->ramp_support_at(this->rectangle_))
         {
             this->rectangle_.set_position_y_from_bottom(support->y);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->projected_ramp_support_ = true;
         }
     }
@@ -1326,7 +1315,7 @@ void Player::update_movement(float dt)
         if (const auto support = this->fixed_slab_support_at(this->rectangle_))
         {
             this->rectangle_.set_position_y_from_bottom(support->y);
-            MovingObject::set_velocity_y(0.0f);
+            colourwars::MovingObject::set_velocity_y(0.0f);
             this->projected_fixed_slab_support_ = true;
         }
     }
@@ -1364,7 +1353,7 @@ void Player::do_jump(float dt)
 		{
 			if (this->air_time() <= this->player_tuning().jump_max_time)
 			{
-				MovingObject::alter_velocity_y(this->player_tuning().jump_acceleration * dt);
+				colourwars::MovingObject::alter_velocity_y(this->player_tuning().jump_acceleration * dt);
 			}
 			else
 			{
@@ -1403,11 +1392,11 @@ void Player::start_jump()
     this->had_ground_support_ = false;
     this->jump_buffer_remaining_ = 0.0f;
     this->ledge_grace_remaining_ = 0.0f;
-    MovingObject::set_velocity_y(std::max(this->player_tuning().jump_launch_velocity,
+    colourwars::MovingObject::set_velocity_y(std::max(this->player_tuning().jump_launch_velocity,
         -this->player_tuning().max_velocity.y));
     this->set_air_time(0.0f);
     this->set_move_state(PlayerMoveState::jumping);
-    this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume);
+    this->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume);
 }
 
 const MovementFeedback& Player::movement_feedback() const
@@ -1466,7 +1455,7 @@ Vector2F Player::center() const
 }
 const Vector2F& Player::velocity() const
 {
-    return MovingObject::velocity();
+    return colourwars::MovingObject::velocity();
 }
 const Camera& Player::camera() const
 {
@@ -1540,8 +1529,8 @@ void Player::place_at(const Vector2F& top_left)
     this->set_air_time(0.0f);
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
-    MovingObject::set_rotation(0.0f);
-    MovingObject::set_velocity(Vector2F::ZERO);
+    colourwars::MovingObject::set_rotation(0.0f);
+    colourwars::MovingObject::set_velocity(Vector2F::ZERO);
 }
 
 RumbleEvents Player::take_rumble_events() noexcept
@@ -1603,12 +1592,16 @@ void Player::respawn()
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
 	this->state_ = PlayerState::alive;
-    this->sound_bank_->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
+    this->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
 }
-void Player::stop_sounds() const
+void Player::stop_sounds()
 {
     this->primary_->stop_sounds();
     this->stop_redraw_sound();
+}
+void Player::stop_tool_sounds()
+{
+    this->primary_->stop_sounds();
 }
 void Player::reset_tool_motion()
 {
@@ -1616,30 +1609,59 @@ void Player::reset_tool_motion()
     this->primary_->reset_motion();
     this->quiet_character_.reset();
 }
-void Player::pause_sounds() const
+void Player::add_voices(MatchVoices& voices)
 {
-    this->primary_->pause_sounds();
-    if (this->redraw_playing_ && !this->redraw_paused_)
+    this->primary_->add_voices(voices);
+    voices.add(this->redraw_voice_);
+}
+
+Player::RedrawVoice::RedrawVoice(const Player* owner,
+    const std::string& sound_bank_name, const AudioResources* audio_resources,
+    const std::string& effect_name) :
+    MatchVoice(sound_bank_name, audio_resources, effect_name),
+    owner_(owner)
+{
+}
+bool Player::RedrawVoice::playing() const
+{
+    return this->playing_;
+}
+void Player::RedrawVoice::start(float volume)
+{
+    this->play(true, volume);
+    this->playing_ = true;
+}
+void Player::RedrawVoice::pause()
+{
+    if (this->playing_ && !this->paused_)
     {
-        this->sound_bank_->pause_effect(this->redraw_sound_);
-        this->redraw_paused_ = true;
+        MatchVoice::pause();
+        this->paused_ = true;
     }
 }
-void Player::resume_sounds() const
+void Player::RedrawVoice::resume()
 {
-    this->primary_->resume_sounds();
-    if (this->redraw_playing_)
+    if (this->playing_)
     {
-        if (!this->redrawing())
+        if (!this->owner_->redrawing())
         {
-            this->stop_redraw_sound();
+            this->stop();
             return;
         }
-        if (this->redraw_paused_)
+        if (this->paused_)
         {
-            this->sound_bank_->resume_effect(this->redraw_sound_);
-            this->redraw_paused_ = false;
+            MatchVoice::resume();
+            this->paused_ = false;
         }
+    }
+}
+void Player::RedrawVoice::stop()
+{
+    if (this->playing_)
+    {
+        MatchVoice::stop();
+        this->playing_ = false;
+        this->paused_ = false;
     }
 }
 
@@ -1654,7 +1676,7 @@ float Player::redraw_volume() const
     return this->player_tuning().redraw_sounds[this->redraw_index_].volume;
 }
 
-void Player::update_redraw_sound(float dt) const
+void Player::update_redraw_sound(float dt)
 {
     // Drawing can be culled or repeated for several views; only a progressing
     // simulation tick starts the pen, and a long tick never catches up a replay.
@@ -1667,25 +1689,19 @@ void Player::update_redraw_sound(float dt) const
         this->stop_redraw_sound();
         return;
     }
-    if (!this->redraw_playing_)
+    if (!this->redraw_voice_.playing())
     {
-        this->sound_bank_->play_effect(this->redraw_sound_, true, this->redraw_volume());
-        this->redraw_playing_ = true;
+        this->redraw_voice_.start(this->redraw_volume());
     }
     else
     {
-        this->sound_bank_->set_effect_volume(this->redraw_sound_, this->redraw_volume());
+        this->redraw_voice_.set_volume(this->redraw_volume());
     }
 }
 
-void Player::stop_redraw_sound() const
+void Player::stop_redraw_sound()
 {
-    if (this->redraw_playing_)
-    {
-        this->sound_bank_->stop_effect(this->redraw_sound_, true);
-        this->redraw_playing_ = false;
-        this->redraw_paused_ = false;
-    }
+    this->redraw_voice_.stop();
 }
 void Player::set_move_state(PlayerMoveState state)
 {

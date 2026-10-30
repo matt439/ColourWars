@@ -17,7 +17,7 @@ public:
             "Pen fixture requires the reviewed68x120/nib4 recipe");
         preferences_.music_volume = 0; preferences_.sfx_volume = 0;
         preferences_.view_shake = false; preferences_.reduce_effects = false;
-        MenuLevelSettings settings; settings.set_player_count(1); settings.set_stage("movement_course");
+        MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course");
         settings.set_screen_layout(ScreenLayout::one_player); settings.begin_input_claims(3);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);
         PlayerBuilder builder(&tuning, &presentation);
@@ -341,21 +341,21 @@ void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
     play.aim_sensitivity = 4; play.view_shake = false; play.aim_marker = true; play.reduce_effects = true;
     play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
     InputBindings bindings; bindings.keyboard_jump = Key::j;
-    require(preferences.set_play_settings_and_save(play) && preferences.set_input_bindings_and_save(bindings),
+    require(preferences_session.set_play_settings_and_save(play) && preferences_session.set_input_bindings_and_save(bindings),
         "Cannot seed private pen PlaySettings and JumpJ preferences");
     const auto save_path = root / "profile/ColourWars/save_data.json";
     const std::string saved_preferences = tune_colour_bytes(save_path);
     const auto preference_values = [&]
     {
-        const auto& p = preferences.play_settings();
+        const auto& p = preferences_session.play_settings();
         std::vector<int> v{ static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
             static_cast<int>(preferences.team_palette()), p.aim_sensitivity, p.music_volume, p.sfx_volume,
             p.view_shake ? 1 : 0, p.aim_marker ? 1 : 0, p.reduce_effects ? 1 : 0,
-            static_cast<int>(preferences.input_bindings().keyboard_jump) };
+            static_cast<int>(preferences_session.input_bindings().keyboard_jump) };
         for (const auto& stick : p.sticks) { v.push_back(stick.movement_deadzone); v.push_back(stick.aim_deadzone); }
         return v;
     };
@@ -363,8 +363,8 @@ void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels
     StageList stages;
     for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence" })
     { const auto* info = levels.get(name); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() }); }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director); auto& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);

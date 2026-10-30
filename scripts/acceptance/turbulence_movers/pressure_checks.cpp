@@ -179,7 +179,7 @@ namespace turbulence_movers_acceptance
 
         Measurement measure(Context& context, const Variant& variant, WeaponType tool)
         {
-            MenuLevelSettings setup = settings(2, variant.side_b ? PlayerTeam::b : PlayerTeam::a);
+            MatchSetup setup = settings(2, variant.side_b ? PlayerTeam::b : PlayerTeam::a);
             setup.set_player_team(1, variant.side_b ? PlayerTeam::a : PlayerTeam::b);
             setup.set_player_weapon(0, tool); setup.set_player_weapon(1, WeaponType::sprayer);
             Trial trial(context, variant.path, setup, seed);

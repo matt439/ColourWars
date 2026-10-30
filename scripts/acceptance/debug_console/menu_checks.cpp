@@ -82,8 +82,8 @@ namespace debug_console_acceptance
 		pads[0].back = pads[0].start = true;
 		test.impl.chord().update(pads, 1.0f / 60.0f);
 
-		std::vector<PlayerInputData> inputs(input_slots::count);
-		for (PlayerInputData& input : inputs)
+		std::vector<SlotInput> inputs(input_slots::count);
+		for (SlotInput& input : inputs)
 		{
 			input.toggle_debug = true;
 			input.toggle_pause_menu = true;

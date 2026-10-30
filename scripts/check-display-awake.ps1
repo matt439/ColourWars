@@ -33,7 +33,7 @@ function Save-LifecycleResult { $result|ConvertTo-Json -Depth 12|Set-Content -Li
 Save-LifecycleResult
 Write-Host "Display-awake evidence: $run"
 try {
-    foreach($tool in @('cmake','cl','git','dumpbin')){if(!(Get-Command $tool -ErrorAction SilentlyContinue)){throw "Missing $tool; use x64 VS Developer environment"}}
+    foreach($tool in @('cmake','cl','git','dumpbin','lib')){if(!(Get-Command $tool -ErrorAction SilentlyContinue)){throw "Missing $tool; use x64 VS Developer environment"}}
     if(!$env:INCLUDE -or !$env:LIB -or ($env:VSCMD_ARG_TGT_ARCH -and $env:VSCMD_ARG_TGT_ARCH -ne 'x64')){throw 'x64 VS Developer environment required'}
     $result.base_revision=(git -C $repo rev-parse HEAD).Trim()
     Push-Location -LiteralPath $repo
@@ -44,19 +44,14 @@ try {
         $debug=$Preset -eq 'x64-debug';$configuration=if($debug){'Debug'}else{'Release'}
         foreach($key in @('CMAKE_HOME_DIRECTORY','CMAKE_BUILD_TYPE','CMAKE_CXX_COMPILER','LABRADOR_RENDER_BACKEND','LABRADOR_AUDIO_BACKEND','VCPKG_INSTALLED_DIR','VCPKG_TARGET_TRIPLET')){if(!$cache.ContainsKey($key)){throw "Missing configured $key"}}
         if(![StringComparer]::OrdinalIgnoreCase.Equals([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY),$repo) -or $cache.CMAKE_BUILD_TYPE -ne $configuration -or $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows'){throw 'Wrong checkout/configuration/backend/triplet'}
-        $game=Join-Path $build 'game';$objectDirectory=Join-Path $game 'CMakeFiles/ColourWars.dir'
-        $objects=@(Get-ChildItem -LiteralPath $objectDirectory -Filter '*.obj' -File -Recurse|Where-Object{
-            if($_.Name -eq 'cmake_pch.cxx.obj'){return $true}
-            $relative=$_.FullName.Substring($objectDirectory.Length+1);$sourceRelative=$relative.Substring(0,$relative.Length-4)
-            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
-        }|Sort-Object FullName)
-        $entry=@($objects|Where-Object{$_.Name -ceq 'main.cpp.obj'});$platform=@($objects|Where-Object{$_.Name -ceq 'display_awake.cpp.obj'})
-        if($entry.Count -ne 1 -or $platform.Count -ne 1 -or $platform[0].FullName.Substring($objectDirectory.Length+1) -cne 'display_awake.cpp.obj'){throw 'Expected exactly the normal entrypoint and one thin display_awake.cpp.obj'}
-        $motors=@($objects|Where-Object{$_.Name -ceq 'rumble_xinput.cpp.obj'})
-        if($motors.Count -ne 1){throw 'Expected exactly one native rumble adapter to replace with the recording factory'}
-        $linked=@($objects|Where-Object{$_.FullName -cne $entry[0].FullName -and $_.FullName -cne $platform[0].FullName -and $_.FullName -cne $motors[0].FullName})
-        if(@($linked|Where-Object{$_.Name -ceq 'game_states.cpp.obj'}).Count -ne 1){throw 'Actual GameLevel object is absent'}
-        $result.object_partition=[ordered]@{ordinary_replaced_entrypoint=[ordered]@{path=$entry[0].FullName;sha256=(Get-FileHash $entry[0].FullName).Hash};display_request_adapter_omission=[ordered]@{path=$platform[0].FullName;sha256=(Get-FileHash $platform[0].FullName).Hash;source='game/display_awake.cpp';source_sha256=(Get-FileHash (Join-Path $repo 'game/display_awake.cpp')).Hash};motor_adapter_omission=[ordered]@{path=$motors[0].FullName;sha256=(Get-FileHash $motors[0].FullName).Hash;source='game/rumble_xinput.cpp';replacement='recording default factory; no native motor call'};linked_count=$linked.Count;linked=@($linked|ForEach-Object{[ordered]@{path=$_.FullName;sha256=(Get-FileHash $_.FullName).Hash}})}
+        $game=Join-Path $build 'game'
+        # The probe links the game library alone. Neither platform adapter library is linked: the probe defines DisplayAwake's default constructor and the recording rumble factory itself.
+        $gameLibrary=Join-Path $game 'colourwars_game.lib';$platform=Join-Path $game 'colourwars_display_awake.lib';$motors=Join-Path $game 'colourwars_rumble_xinput.lib'
+        foreach($path in @($gameLibrary,$platform,$motors)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "Missing game library: $path"}}
+        $members=@(& lib /nologo /list $gameLibrary);if($LASTEXITCODE -ne 0){throw 'Could not list the game library'}
+        if(@($members|Where-Object{$_ -match '(^|[\\/])states[\\/]game_states\.cpp\.obj$'}).Count -ne 1){throw 'Actual GameLevel object is absent from the game library'}
+        if(@($members|Where-Object{$_ -match '(^|[\\/])(main|display_awake|rumble_xinput)\.cpp\.obj$'}).Count -ne 0){throw 'The game library carries the entrypoint or a platform adapter'}
+        $result.library_partition=[ordered]@{linked_game_library=[ordered]@{path=$gameLibrary;sha256=(Get-FileHash $gameLibrary).Hash;member_count=$members.Count};entrypoint='game/main.cpp is built only into ColourWars.exe';display_request_adapter_omission=[ordered]@{path=$platform;sha256=(Get-FileHash $platform).Hash;source='game/display_awake.cpp';source_sha256=(Get-FileHash (Join-Path $repo 'game/display_awake.cpp')).Hash};motor_adapter_omission=[ordered]@{path=$motors;sha256=(Get-FileHash $motors).Hash;source='game/rumble_xinput.cpp';replacement='recording default factory; no native motor call'}}
         $installed=Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET;$dep=if($debug){Join-Path $installed 'debug/lib'}else{Join-Path $installed 'lib'}
         $libraries=@((Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),(Join-Path $build 'external/labrador/engine/math/MattMath.lib'),(Join-Path $dep 'DirectXTK.lib'),(Join-Path $dep 'xaudio2_9redist.lib'))
         $source=Join-Path $PSScriptRoot 'acceptance/display_awake_lifecycle.cpp';$exe=Join-Path $run 'display_awake_lifecycle.exe';$rsp=Join-Path $run 'compile.rsp'
@@ -70,7 +65,7 @@ try {
         foreach($include in @($repo,(Join-Path $repo 'external/labrador'),(Join-Path $build 'generated'))){$arguments+='/I'+(Quote-LiteralPath $include)}
         foreach($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),(Join-Path $installed 'include/directxtk'),(Join-Path $installed 'include/xaudio2redist'),(Join-Path $installed 'include'))){$arguments+='/external:I'+(Quote-LiteralPath $include)}
         $arguments+=@((Quote-LiteralPath $source),('/Fe:'+(Quote-LiteralPath $exe)),('/Fo:'+(Quote-LiteralPath (Join-Path $run 'display_awake_lifecycle.obj'))))
-        $arguments+=@($linked|ForEach-Object{Quote-LiteralPath $_.FullName});$arguments+=@($libraries|ForEach-Object{Quote-LiteralPath $_})
+        $arguments+=Quote-LiteralPath $gameLibrary;$arguments+=@($libraries|ForEach-Object{Quote-LiteralPath $_})
         $arguments+=@('d3d11.lib','dxgi.lib','dxguid.lib','kernel32.lib','user32.lib','gdi32.lib','winspool.lib','shell32.lib','ole32.lib','oleaut32.lib','uuid.lib','comdlg32.lib','advapi32.lib', 'comctl32.lib')
         $arguments|Out-File -LiteralPath $rsp -Encoding unicode
         Invoke-NativeLogged $cache.CMAKE_CXX_COMPILER @("@$rsp") (Join-Path $run 'compile.log')

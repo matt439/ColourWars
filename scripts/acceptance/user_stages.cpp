@@ -1,10 +1,12 @@
 #include "game/pch.h"
 #include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/directory_consts.h"
 #include "game/objects/stage.h"
 #include "game/play_settings.h"
 #include "game/presentation.h"
 #include "game/sound_groups.h"
+#include "game/stage_catalog.h"
 #include "game/stage_loading.h"
 #include "game/stage_scan_diagnostics.h"
 #include "game/states/menu_context.h"
@@ -15,6 +17,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <array>
@@ -39,10 +42,7 @@ using namespace labrador;
 
 namespace
 {
-	void require(bool condition, const std::string& message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	void check_name_contract()
 
@@ -123,8 +123,9 @@ namespace
 	// What wWinMain's "level" kind produces from the staged manifest.
 	struct Shipped
 	{
-		Registry<LevelLoadedInfo> levels{ "Level" };
-		StageList stages;
+		StageCatalog catalog;
+		const Registry<LevelLoadedInfo>& levels = catalog.level_infos();
+		const StageList& stages = catalog.stages();
 	};
 
 	void load_shipped(const std::filesystem::path& content, Shipped& shipped)
@@ -139,10 +140,8 @@ namespace
 			for (size_t index = 0; index < names.size(); ++index)
 			{
 				const std::string name = names.at(index).as_string();
-				StageDefinition definition = read_stage_definition(
-					(content / asset.string("directory") / (name + ".json")).string(), name);
-				shipped.stages.push_back(std::move(definition.stage));
-				shipped.levels.add(name, std::move(definition.info));
+				shipped.catalog.add(read_stage_definition(
+					(content / asset.string("directory") / (name + ".json")).string(), name));
 			}
 		}
 		require(shipped.stages.size() == 11, "User-stage acceptance expects the eleven shipped stages");
@@ -342,7 +341,7 @@ namespace
 		const std::filesystem::path& folder, Shipped& shipped)
 	{
 		load_shipped(content, shipped);
-		return load_user_stages(folder, fixture.checks(), shipped.levels, shipped.stages);
+		return load_user_stages(folder, fixture.checks(), shipped.catalog);
 	}
 
 	bool refused(const UserStageScan& result, const std::string& file, const std::string& reason)
@@ -512,7 +511,7 @@ namespace
 
 		// The startup path after the scan: the whole list, user stages
 		// included, passes the same checks and joins the sound groups.
-		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
+		validate_shell_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
 		AudioResources audio;
 		audio.add_sound_bank("paint_exe", SoundBank::silent());
@@ -534,7 +533,7 @@ namespace
 		write_level(base, second / "twin.json", [](rapidjson::Document&) {});
 		Shipped shipped;
 		const UserStageScan once = scan(fixture, content, first, shipped);
-		const UserStageScan twice = load_user_stages(second, fixture.checks(), shipped.levels, shipped.stages);
+		const UserStageScan twice = load_user_stages(second, fixture.checks(), shipped.catalog);
 		require(once.accepted == std::vector<std::string>{ "Twin" } && twice.accepted.empty() &&
 			refused(twice, "twin.json", "another user stage's ('Twin')") && shipped.stages.size() == 12,
 			"A user stage may not take another user stage's name");
@@ -565,7 +564,7 @@ namespace
 			"An unattached folder (every probe's GameMenu) must do nothing");
 
 		UserStageFolder session;
-		session.attach(folder, fixture.checks(), &fixture.world->audio, &shipped.levels, &shipped.stages);
+		session.attach(folder, fixture.checks(), &fixture.world->audio, &shipped.catalog);
 		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
 		{
 			set_string(d, d, "display_name", "B Arena");
@@ -621,11 +620,25 @@ namespace
 			"A rescan must not touch a shipped definition");
 		require(session.latest_scan().refused == third.refused, "Changed refusal details were not refreshed");
 
-		MenuContext menu(nullptr, nullptr, nullptr);
-		require(menu.stage_scan() == nullptr, "Unattached menu context gained scan details");
-		int rescans = 0;
-		menu.set_stage_rescan([&rescans] { ++rescans; });
-		menu.set_stage_scan([&session] { return &session.latest_scan(); });
+		const MenuContext ownerless(nullptr, nullptr, nullptr);
+		require(ownerless.stage_scan() == nullptr, "Unattached menu context gained scan details");
+		// The main menu's owner lends the folder; this one counts its rescans.
+		struct FolderOwner final : MenuOwner
+		{
+			explicit FolderOwner(UserStageFolder& stage_folder) : user_stages(&stage_folder) {}
+			UserStageFolder* user_stages;
+			int rescans = 0;
+			bool detached = false;
+			void update_menu_music(float) override {}
+			void rescan_stages() override { ++this->rescans; }
+			const UserStageScan* stage_scan() const override
+			{
+				return this->detached ? nullptr : &this->user_stages->latest_scan();
+			}
+		};
+		FolderOwner owner(session);
+		MenuContext menu(nullptr, nullptr, nullptr, &owner);
+		const int& rescans = owner.rescans;
 		require(menu.stage_scan() == &session.latest_scan() && menu.stage_scan()->refused == third.refused && rescans == 0,
 			"Reading scan details performed a rescan or lost the session result");
 		menu.rescan_stages();
@@ -644,10 +657,10 @@ namespace
 		const UserStageScan cleared = session.rescan();
 		require(cleared.accepted.empty() && cleared.refused.empty() && menu.stage_scan()->refused.empty() &&
 			names(shipped.stages) == manifest, "A clean rescan retained stale refusal details");
-		menu.set_stage_scan({});
-		require(menu.stage_scan() == nullptr, "Detaching scan details left a stale callback");
+		owner.detached = true;
+		require(menu.stage_scan() == nullptr, "Detaching scan details left a stale result");
 		// The whole list still passes what startup checks.
-		validate_game_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
+		validate_shell_content(*fixture.tuning, *fixture.presentation, &fixture.world->render,
 			&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
 		std::cout << "PASS a rescan adds a new user stage, rereads an edited one and drops a deleted or broken one, "
 			"keeping the shipped stages first\n";
@@ -791,7 +804,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("user stages", [&]
 	{
 		require(argc == 2, "Usage: user_stages.exe <staged game directory>");
 		check_name_contract();
@@ -816,10 +829,5 @@ int main(int argc, char** argv)
 		std::cout << "PASS user stages: per-user folder, per-file validation and refusal, "
 			"no shipped or user name collisions, Stage Select order and marker, outside Random.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL user stages: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

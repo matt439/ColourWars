@@ -213,7 +213,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
             for (std::size_t paint = 0; paint < 2; ++paint)
             {
                 require(++updates <= 6000, "Mover native matrix exceeded its finite Level-update budget");
-                fixtures[paint].level->update(neutral, dt); check_fixture(paint);
+                fixtures[paint].level->update(acceptance::slot_seats(*fixtures[paint].level, neutral), dt); check_fixture(paint);
             }
         };
         for (int tick = 0; tick < 600 && fixtures[0].level->state() != LevelState::active; ++tick) { tick_pair(); }
@@ -311,7 +311,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         capture_phase("outward-ride", "continuous-carrier-ride", false);
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&trial_levels);
+        Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_mover_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         const auto& look = presentation.main_menu().stage_select; const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("private-turbulence-mover-preview", box, &data); preview.set_stage("turbulence_mover_trial");

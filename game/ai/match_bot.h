@@ -5,6 +5,7 @@
 #include "game/objects/weapon_type.h"
 #include "game/tuning.h"
 #include "game/ai/match_bot_support.h"
+#include "game/ai/bot_random.h"
 #include "engine/math/rectanglef.h"
 #include <cstdint>
 #include <optional>
@@ -81,12 +82,14 @@ public:
 	// Grounded on a moving paintable support at the last step; the driver
 	// scans its top paint every step while the bot rides it.
 	bool riding() const;
+	// The difficulty it was built with. Read-only, for measurement.
+	BotDifficulty difficulty() const;
 	std::uint64_t random();
 
 private:
 	const GameTuning* tuning_;
 	BotDifficulty difficulty_;
-	std::uint64_t random_state_;
+	BotRandom random_;
 	int react_in_ = 0;
 	int replan_in_ = 0;
 	int blocked_steps_ = 0;

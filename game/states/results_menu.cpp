@@ -1,8 +1,9 @@
 #include "game/pch.h"
 #include "game/states/menu_panel.h"
 #include "game/states/results_menu.h"
+#include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
@@ -100,7 +101,7 @@ void ResultsMenuInitial::update_page(float dt)
 			// The reveal clicked the winner; a draw still needs its line.
 			this->winner_->set_hidden(this->revealed_ &&
 				this->level_end_info().winning_team() != PlayerTeam::none);
-			for (const std::unique_ptr<UiTextDropShadow>& detail : this->details_)
+			for (const std::unique_ptr<colourwars::UiTextDropShadow>& detail : this->details_)
 			{
 				detail->set_hidden(false);
 			}
@@ -138,12 +139,12 @@ void ResultsMenuInitial::init()
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(), &style, &look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
-	const auto center_text = [](UiTextDropShadow& text, float y)
+	const auto center_text = [](colourwars::UiTextDropShadow& text, float y)
 	{
 		text.set_position(Vector2F((DESIGN_RESOLUTION.x - text.bounds().width) / 2.0f, y));
 	};
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"title",
 		this->session_.is_series() ? this->text().results.round_title(this->session_.round()) :
 			this->text().results.single_match_heading,
@@ -193,7 +194,7 @@ void ResultsMenuInitial::init()
 		this->render_resources(),
 		this->level_end_info().team_colours.team_b);
 
-	this->team_a_percentage_ = std::make_unique<UiTextDropShadow>(
+	this->team_a_percentage_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"team_a_percentage",
 		end_info.team_a_percentage_string(this->text().results),
 		style.detail_font,
@@ -204,7 +205,7 @@ void ResultsMenuInitial::init()
 		Vector2F::ZERO,
 		true);
 
-	this->team_b_percentage_ = std::make_unique<UiTextDropShadow>(
+	this->team_b_percentage_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"team_b_percentage",
 		end_info.team_b_percentage_string(this->text().results),
 		style.detail_font,
@@ -232,7 +233,7 @@ void ResultsMenuInitial::init()
 		team_b_percentage_panel, this->render_resources(), &style, &look.art, &this->focus_);
 	this->team_b_percentage_panel_->set_hidden(true);
 
-	this->winner_ = std::make_unique<UiTextDropShadow>(
+	this->winner_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"winner",
 		end_info.winning_team_string(this->text().results),
 		style.item_font,
@@ -244,7 +245,7 @@ void ResultsMenuInitial::init()
 		true);
 	center_text(*this->winner_, look.winner_y);
 
-	this->proceed_ = std::make_unique<UiTextDropShadow>(
+	this->proceed_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"proceed",
 		this->text().results.proceed,
 		style.detail_font,
@@ -265,7 +266,7 @@ void ResultsMenuInitial::init()
 			fill_box_rect.position().x - look.team_mark_gap -
 				look.team_mark_size.x,
 			mark_y), look.team_mark_size);
-	this->team_a_mark_ = std::make_unique<UiTextDropShadow>(
+	this->team_a_mark_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"team_a_mark", L"A", style.item_font, Vector2F::ZERO,
 		this->render_resources(), look.art.ink,
 		Colour(), Vector2F::ZERO);
@@ -276,7 +277,7 @@ void ResultsMenuInitial::init()
 			fill_box_rect.position().x + fill_box_rect.width +
 				look.team_mark_gap,
 			mark_y), look.team_mark_size);
-	this->team_b_mark_ = std::make_unique<UiTextDropShadow>(
+	this->team_b_mark_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"team_b_mark", L"B", style.item_font, Vector2F::ZERO,
 		this->render_resources(), look.art.ink,
 		Colour(), Vector2F::ZERO);
@@ -312,7 +313,7 @@ void ResultsMenuInitial::init()
 	const auto add_detail = [this, &look](const std::wstring& text,
 		const Vector2F& position, const std::string& font)
 		{
-			this->details_.push_back(std::make_unique<UiTextDropShadow>(
+			this->details_.push_back(std::make_unique<colourwars::UiTextDropShadow>(
 				"detail_" + std::to_string(this->details_.size()), text, font,
 				position, this->render_resources(), look.art.ink,
 				Colour(), Vector2F::ZERO, true));
@@ -328,15 +329,15 @@ void ResultsMenuInitial::init()
 	}
 	add_detail(this->text().results.contribution_heading,
 		look.contribution_position, look.contribution_font);
-	const std::vector<MenuPlayerSettings> players =
+	const std::vector<SeatSetup> players =
 		this->level_settings()->player_settings();
 	std::vector<int> owners;
-	std::vector<const UiTextDropShadow*> rows;
+	std::vector<const colourwars::UiTextDropShadow*> rows;
 	for (size_t i = 0; i < players.size(); ++i)
 	{
-		const MenuPlayerSettings& player = players[i];
+		const SeatSetup& player = players[i];
 		owners.push_back(paint_owners::index(player.num, static_cast<int>(i)));
-		add_detail(this->level_settings()->player_label(static_cast<int>(i), this->text()) +
+		add_detail(player_label(*this->level_settings(), static_cast<int>(i), this->text()) +
 			(player.team == PlayerTeam::a ? this->text().results.contribution_team_a :
 				this->text().results.contribution_team_b) +
 			end_info.player_percentage_string(owners[i]),
@@ -359,7 +360,7 @@ void ResultsMenuInitial::init()
 		{
 			continue;
 		}
-		auto line = std::make_unique<UiTextDropShadow>("award_" + std::to_string(i + 1),
+		auto line = std::make_unique<colourwars::UiTextDropShadow>("award_" + std::to_string(i + 1),
 			this->text().results.award_line(*awards[i]), look.contribution_font, Vector2F::ZERO,
 			this->render_resources(), look.art.ink, Colour(), Vector2F::ZERO, true);
 		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
@@ -377,7 +378,7 @@ void ResultsMenuInitial::init()
 	const std::wstring record = record_text(this->record_, this->text().records);
 	if (!record.empty())
 	{
-		UiTextDropShadow* line = add_detail(record, Vector2F::ZERO, look.contribution_font);
+		colourwars::UiTextDropShadow* line = add_detail(record, Vector2F::ZERO, look.contribution_font);
 		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
 			line->bounds().width, look.record_y));
 	}

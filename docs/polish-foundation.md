@@ -91,7 +91,7 @@ with running held jumps and horizontal braking beyond the destination lip.
 Continuous full-speed input can overshoot a short landing and enter the next gap.
 That traversal ran in a scratch probe. Retained route trials, including recovery
 steps and staircases, have since replaced it; see
-[the course document](polish-movement-course.md#retained-route-trials).
+[the course document](polish-movement-course.md#route-trials-2026-10-20-provisional-profile).
 
 ## Playable course
 

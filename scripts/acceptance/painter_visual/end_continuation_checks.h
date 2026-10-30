@@ -36,9 +36,9 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         scores[index] = cases[index].session.score_string(original.menu_text().results); results_text[index] = cases[index].session.result_string(original.menu_text().results);
     }
     const NestedSaveProfile profile(output / "end-continuation-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed End continuation's private Play preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed End continuation's private Play preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "end-continuation-profile/ColourWars/save_data.json", std::ios::binary);
@@ -46,9 +46,9 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(3); settings.set_duration(73.0f);
     settings.set_stage("movement_course"); settings.set_screen_layout(ScreenLayout::two_player);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -60,7 +60,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreContinuation()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -75,7 +75,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
                 cases[index].session.score_string(original.menu_text().results) == scores[index] && cases[index].session.result_string(original.menu_text().results) == results_text[index],
                 "End continuation presentation or actions changed the Session ledger");
         }
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(settings.player_count() == 2 && settings.best_of() == 3 && settings.duration() == 73.0f &&
             settings.stage() == "movement_course" && settings.screen_layout() == ScreenLayout::two_player &&
             players.size() == 2 && players[0].num == input_slots::keyboard_and_mouse && players[1].num == -1 &&
@@ -108,7 +108,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); unchanged(); };
     const auto open = [&](const ContinuationCase& fixture)
     {
-        context.cancel_music_exit(); context.set_music_update({}); stack.clear();
+        context.cancel_music_exit(); script_menu_music(context, {}); stack.clear();
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::escape, Key::space })
             { app.keyboard()->on_key_up(key); }
@@ -314,7 +314,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         presentation = next;
         require(compare("retained-old", fixture, old, old_words[index]).pixels == retained.pixels,
             "End continuation assignment rebased a constructed page's plain copy or font");
-        int music_updates = 0; context.set_music_update([&](float) { ++music_updates; });
+        int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
         tap(Key::enter);
         require(context.music_exit_pending() && !choice && delivered == 0 && stack.depth() == 2 && music_updates == 1,
             "End continuation bypassed its owner-controlled music-exit seam");
@@ -329,7 +329,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         }
         context.complete_music_exit(); delivered_once(EndMenuAction::restart);
         context.complete_music_exit(); require(delivered == 1, "Repeated music completion duplicated an End continuation action");
-        context.set_music_update({}); presentation = next; open(fixture);
+        script_menu_music(context, {}); presentation = next; open(fixture);
         const Frame adopted = compare("reopened-new", fixture, next, next_words[index], 0,
             index == 0 ? "end-continuation-new.ppm" : "", index == 0);
         presentation = original;

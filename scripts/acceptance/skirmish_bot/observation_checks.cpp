@@ -67,12 +67,12 @@ namespace skirmish_acceptance
 					}
 				}
 				builder = std::make_unique<LevelBuilder>(&viewports, &render, &audio, &preferences,
-					&levels, &tuning, &presentation, &resolution, nullptr, &partitioner, &mouse);
+					&levels, &tuning, &presentation, &resolution, nullptr, &partitioner);
 			}
 
 			std::unique_ptr<Level> build(WeaponType tool)
 			{
-				MenuLevelSettings settings;
+				MatchSetup settings;
 				settings.set_stage("crossfeed"); settings.set_player_count(2);
 				settings.set_screen_layout(ScreenLayout::two_player); settings.set_duration(60.0f);
 				for (int view = 0; view < 2; ++view)

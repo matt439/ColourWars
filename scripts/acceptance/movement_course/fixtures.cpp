@@ -4,11 +4,6 @@
 // The shared helpers fixtures.h declares.
 namespace movement_course_acceptance
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
-
     [[noreturn]] void fail(const std::string& message)
     {
         throw std::runtime_error(message);

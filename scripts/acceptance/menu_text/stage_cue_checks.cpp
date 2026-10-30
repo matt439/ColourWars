@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // The arena picker's navigation cues and status.
 namespace menu_text_acceptance
@@ -67,7 +68,7 @@ namespace menu_text_acceptance
                 std::wstring source = look.menu_text().stage.*entry.field;
                 const auto retained = source;
                 const auto measured = world.render.measure_text(font, source);
-                UiTextDropShadow text(entry.key, L"", font_name, point, &world.render,
+                colourwars::UiTextDropShadow text(entry.key, L"", font_name, point, &world.render,
                     style.unhighlight, style.shadow_colour, captured_shadow);
                 text.set_text(source);
                 source = L"Changed after set_text";
@@ -246,7 +247,7 @@ namespace menu_text_acceptance
             };
             const auto footer_contact = variants.load(footer);
             const auto& footer_stage = footer_contact.main_menu().stage_select;
-            UiTextDropShadow hint("legacy_hint_footer", L"~", "menu_stage_hint_footer_edge",
+            colourwars::UiTextDropShadow hint("legacy_hint_footer", L"~", "menu_stage_hint_footer_edge",
                 footer_stage.briefing.position + footer_stage.briefing_padding + footer_stage.briefing.spacing * 7.0f,
                 &world.render, Colour::black, footer_contact.menu().shadow_colour,
                 footer_contact.menu().detail_shadow_offset);
@@ -364,7 +365,7 @@ namespace menu_text_acceptance
                 const auto measured = world.render.measure_text(font, source);
                 const auto point = stage.briefing.position + stage.briefing_padding + stage.briefing.spacing * 6.0f;
                 const auto shadow = style.detail_shadow_offset;
-                UiTextDropShadow status("arena_status", L"", style.detail_font, point, &world.render,
+                colourwars::UiTextDropShadow status("arena_status", L"", style.detail_font, point, &world.render,
                     style.heading_colour, style.shadow_colour, shadow);
                 status.set_text(source);
                 source = L"Changed after set_text";
@@ -521,7 +522,7 @@ namespace menu_text_acceptance
             };
             const auto old_contact = variants.load(contact);
             const auto& old_stage = old_contact.main_menu().stage_select;
-            UiTextDropShadow status("legacy_status_design", L"Fit", "menu_text_exact",
+            colourwars::UiTextDropShadow status("legacy_status_design", L"Fit", "menu_text_exact",
                 old_stage.briefing.position + old_stage.briefing_padding + old_stage.briefing.spacing * 6.0f,
                 &world.render, Colour::black, old_contact.menu().shadow_colour, old_contact.menu().detail_shadow_offset);
             require(edge.position == -32.0f ? status.bounds().x == 0.0f : status.bounds().right() == 1920.0f,

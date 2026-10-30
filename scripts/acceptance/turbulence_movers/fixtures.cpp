@@ -18,9 +18,9 @@ namespace turbulence_movers_acceptance
         return text;
     }
 
-    MenuLevelSettings settings(int count, PlayerTeam first_team)
+    MatchSetup settings(int count, PlayerTeam first_team)
     {
-        MenuLevelSettings setup;
+        MatchSetup setup;
         require(count == 1 || count == 2 || count == 4, "Unsupported mover trial roster count");
         setup.set_stage("turbulence_mover_trial"); setup.set_player_count(count);
         setup.set_screen_layout(count == 1 ? ScreenLayout::one_player :
@@ -109,7 +109,7 @@ namespace turbulence_movers_acceptance
 
     float mirrored(bool side_b, float x) { return side_b ? 4000.0f - x : x; }
 
-    Trial::Trial(Context& with, const fs::path& stage, const MenuLevelSettings& setup, unsigned int seed) : context(with)
+    Trial::Trial(Context& with, const fs::path& stage, const MatchSetup& setup, unsigned int seed) : context(with)
     {
         auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str());
         info->validate();
@@ -147,7 +147,7 @@ namespace turbulence_movers_acceptance
         infos.add(setup.stage(), std::move(info));
         viewports.set_layout(setup.screen_layout());
         LevelBuilder builder(&viewports, &with.world.render, &with.world.audio, &with.world.preferences, &infos,
-            &with.world.tuning, &with.world.presentation, &resolution, nullptr, &partitioner, &mouse);
+            &with.world.tuning, &with.world.presentation, &resolution, nullptr, &partitioner);
         std::srand(seed);
         level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::off);
         check();

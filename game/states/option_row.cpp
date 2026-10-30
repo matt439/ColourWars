@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/option_row.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -43,7 +44,7 @@ OptionRow::OptionRow(const std::string& name,
 	}
 	else
 	{
-		this->label_ = std::make_unique<UiTextDropShadow>(
+		this->label_ = std::make_unique<colourwars::UiTextDropShadow>(
 			name + "_label",
 			label,
 			style.item_font,
@@ -54,7 +55,7 @@ OptionRow::OptionRow(const std::string& name,
 			style.item_shadow_offset);
 
 		// The page must set the displayed value before the first draw.
-		auto value_text = std::make_unique<UiTextDropShadow>(
+		auto value_text = std::make_unique<colourwars::UiTextDropShadow>(
 			name + "_value",
 			L"null",
 			style.item_font,

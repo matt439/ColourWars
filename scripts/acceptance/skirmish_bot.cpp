@@ -1,12 +1,13 @@
 #include "game/pch.h"
 #include "scripts/acceptance/skirmish_bot/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <fstream>
 #include <iostream>
 #include <iterator>
 
 int wmain(int argc, wchar_t** argv)
 {
-	try
+	return acceptance::run_probe("skirmish bot", [&]
 	{
 		using namespace skirmish_acceptance;
 		require(argc == 2, "Usage: skirmish_bot <staged-content-directory>");
@@ -25,10 +26,5 @@ int wmain(int argc, wchar_t** argv)
 		std::cout << "PASS SkirmishBot absent from Release\n";
 #endif
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

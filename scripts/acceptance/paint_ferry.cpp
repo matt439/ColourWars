@@ -2,6 +2,7 @@
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/objects/horizontal_motion.h"
 #include "game/simulation.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>
 #include <iostream>
@@ -143,9 +144,9 @@ namespace
     };
 
     // Seat 0 is an idle human on team A; seats 1-3 are bots, two of them on B.
-    MenuLevelSettings roster(const Roster& variant)
+    MatchSetup roster(const Roster& variant)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_screen_layout(ScreenLayout::one_player);
@@ -262,7 +263,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("paint ferry", [&]
     {
         require(argc == 2, "usage: paint_ferry <content>");
         check_motion();
@@ -282,7 +283,5 @@ int main(int argc, char** argv)
         std::cout << "PASS paint ferry trial: two team-A-right ferries load and hold through the countdown; "
             "every step of three whole 3-bot matches follows the paint held before it; riding is a measurement\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL paint ferry: " << error.what() << '\n'; return 1; }
+    });
 }

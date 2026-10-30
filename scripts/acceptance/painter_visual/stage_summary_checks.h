@@ -44,9 +44,9 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     replacement_font(original.menu().detail_font, next_style.detail_font); replacement_font(original.menu().brand_font, next_style.brand_font);
     next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "stage-summary-profile"); Save preferences;
-    PlaySettings play = preferences.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(play), "Cannot seed private summary preferences");
+    const NestedSaveProfile isolated(output / "stage-summary-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    require(preferences_session.set_play_settings_and_save(play), "Cannot seed private summary preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "stage-summary-profile/ColourWars/save_data.json", std::ios::binary);
@@ -56,15 +56,15 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 }, "Summary refresh fixture needs an actual eligible Random slot");
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, expected;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageSummary
     {
         StateContext& stack; MenuContext& context; Presentation& look; Presentation original;
         ~RestoreStageSummary()
-        { this->context.cancel_music_exit(); this->context.set_music_update({}); this->stack.clear(); painter_scripted_pads::states = {}; this->look = this->original; }
+        { this->context.cancel_music_exit(); script_menu_music(this->context, {}); this->stack.clear(); painter_scripted_pads::states = {}; this->look = this->original; }
     } restore{ stack, context, presentation, original };
     constexpr std::array<int, 4> slots{ 4, 3, 0, 2 };
     constexpr std::array<WeaponType, 4> tools{ WeaponType::bucket, WeaponType::sniper, WeaponType::sprayer, WeaponType::mister };
@@ -96,10 +96,10 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     };
     const auto open = [&](const SummaryCase& fixture)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stack.notify_activation(true);
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stack.notify_activation(true);
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }
-        painter_scripted_pads::states = {}; settings = MenuLevelSettings(); settings.set_player_count(fixture.players);
+        painter_scripted_pads::states = {}; settings = MatchSetup(); settings.set_player_count(fixture.players);
         settings.begin_input_claims(slots[0]);
         for (int seat = 1; seat < fixture.players; ++seat)
         { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Cannot claim the connected summary fixture roster"); painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(seat)])].connected = true; }
@@ -117,16 +117,16 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         unchanged(); const auto& style = snapshot.menu(); const auto& main = snapshot.main_menu(); const auto& geometry = main.stage_select;
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding; const RectangleF authored(geometry.briefing.position, geometry.briefing.size);
         const Colour clear(0.0f, 0.0f, 0.0f, 0.0f);
-        const std::array<UiTextDropShadow, 2> texts{{
-            UiTextDropShadow("independent-summary-mode", mode, style.detail_font, info + geometry.briefing.spacing, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset),
-            UiTextDropShadow("independent-summary-roster", roster, style.brand_font, info + geometry.briefing.spacing * 2.0f, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset)
+        const std::array<colourwars::UiTextDropShadow, 2> texts{{
+            colourwars::UiTextDropShadow("independent-summary-mode", mode, style.detail_font, info + geometry.briefing.spacing, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset),
+            colourwars::UiTextDropShadow("independent-summary-roster", roster, style.brand_font, info + geometry.briefing.spacing * 2.0f, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset)
         }};
         // Delivery alone cannot prove a refresh: these two literal rasters
         // distinguish the actual slot and confirmation state after each tap.
-        const std::array<UiTextDropShadow, 2> state_texts{{
-            UiTextDropShadow("independent-summary-navigation", random ? L"<   SURPRISE ME   >" : L"<   ARENA 2 / 2   >",
+        const std::array<colourwars::UiTextDropShadow, 2> state_texts{{
+            colourwars::UiTextDropShadow("independent-summary-navigation", random ? L"<   SURPRISE ME   >" : L"<   ARENA 2 / 2   >",
                 style.detail_font, geometry.navigation_position, app.render_resources(), main.art.ink, clear, style.detail_shadow_offset),
-            UiTextDropShadow("independent-summary-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA",
+            colourwars::UiTextDropShadow("independent-summary-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA",
                 style.detail_font, info + geometry.briefing.spacing * 6.0f, app.render_resources(),
                 locked ? presentation.main_menu().stage_select.selected_ink : presentation.main_menu().stage_select.unselected,
                 clear, style.detail_shadow_offset)

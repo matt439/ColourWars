@@ -78,7 +78,7 @@
             compare_combat(app, level, canvas, presentation, true);
         }
         for (int tick = 0; tick < 30 && level.player(0).animation_state() == expected &&
-            level.player(0).action_frame() == 0; ++tick) { level.update(inputs, dt); }
+            level.player(0).action_frame() == 0; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         for (int view = 0; view < level.player_count(); ++view)
         {
             Player& player = const_cast<Player&>(level.player(view));
@@ -102,31 +102,31 @@
         settle(*level, inputs);
         resize(app, *level, { 1280, 720 });
         for (auto& input : inputs) { input.x_movement = right ? 1.0f : -1.0f; }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         for (auto& input : inputs) { input.x_movement = 0.0f; }
-        for (int tick = 0; tick < 20; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 20; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         const std::string prefix = std::to_string(count) + "p-action-" +
             TeamColourTools::palette_key(palette) + (right ? "-right-" : "-left-");
         for (auto& input : inputs) { input.jump_pressed = true; }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         for (auto& input : inputs) { input.jump_pressed = false; }
         action_frames(app, *level, canvas, output, prefix + "takeoff", records, inputs,
             PlayerAnimationState::taking_off, presentation);
         for (int tick = 0; tick < 150 &&
             level->player(0).animation_state() != PlayerAnimationState::landing; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         action_frames(app, *level, canvas, output, prefix + "land", records, inputs,
             PlayerAnimationState::landing, presentation);
-        for (int tick = 0; tick < 20; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 20; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         for (auto& input : inputs)
         {
             input.primary_shoot = true;
             input.shoot_angle = -PI / 2.0f;
             input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
         }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         for (auto& input : inputs) { input.primary_shoot = false; }
         action_frames(app, *level, canvas, output, prefix + "fire", records, inputs,
             PlayerAnimationState::firing, presentation);
@@ -144,7 +144,7 @@
         {
             require(level->kill_player(view), "could not request action-matrix elimination");
         }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         action_frames(app, *level, canvas, output, prefix + "elimination", records, inputs,
             PlayerAnimationState::elimination, presentation);
     }
@@ -177,18 +177,18 @@
         }
         phase("hurt-initial", true);
         while (level->player(0).combat_feedback().hurt_remaining() >
-            presentation.combat_feedback().hurt_duration * 0.5f) { level->update(inputs, dt); }
+            presentation.combat_feedback().hurt_duration * 0.5f) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(level->player(0).combat_feedback().hurt_remaining() > 0.0f,
             "hurt recovery fixture expired before its comparison");
         phase("hurt-recovery", true);
-        while (level->player(0).combat_feedback().hurt_remaining() > 0.0f) { level->update(inputs, dt); }
+        while (level->player(0).combat_feedback().hurt_remaining() > 0.0f) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         compare_combat(app, *level, canvas, presentation, false);
 
         for (int view = 0; view < level->player_count(); ++view)
         {
             require(level->kill_player(view), "could not request combat-matrix elimination");
         }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         phase("elimination-initial", true);
         for (int view = 0; view < level->player_count(); ++view)
         {
@@ -200,14 +200,14 @@
             const_cast<Player&>(level->player(view)).set_pose({});
         }
         while (level->player(0).combat_feedback().elimination_remaining() >
-            presentation.combat_feedback().elimination_duration * 0.5f) { level->update(inputs, dt); }
+            presentation.combat_feedback().elimination_duration * 0.5f) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         phase("elimination-middle", true);
         while (level->player(0).combat_feedback().elimination_remaining() >
-            presentation.combat_feedback().elimination_duration * 0.15f) { level->update(inputs, dt); }
+            presentation.combat_feedback().elimination_duration * 0.15f) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(level->player(0).combat_feedback().elimination_remaining() > 0.0f,
             "elimination late fixture expired before its comparison");
         phase("elimination-late", true);
-        while (level->player(0).combat_feedback().elimination_remaining() > 0.0f) { level->update(inputs, dt); }
+        while (level->player(0).combat_feedback().elimination_remaining() > 0.0f) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         phase("elimination-expired", false);
         std::cout << "PASS controlled 4P combat on/off rasters at 720p/1080p/QHD; "
             "hurt initial/recovery and expiry; elimination initial/middle/late and expiry; whole-story suppression\n";

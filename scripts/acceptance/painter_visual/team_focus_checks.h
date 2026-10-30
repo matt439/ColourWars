@@ -4,12 +4,12 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation; Presentation captured = original;
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, initial;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     bool closed = false, warning = false; int ticks = 0, captures = 0, records_written = 0;
     std::wstring expected_title = L"Team Select";
@@ -69,7 +69,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (int slot : { 3, 0, 2 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.begin_input_claims(slots[0]);
+        settings = MatchSetup(); settings.set_player_count(count); settings.begin_input_claims(slots[0]);
         for (int seat = 1; seat < count; ++seat) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Team focus claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
@@ -101,10 +101,10 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(
             look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const SpriteSheet* atlas = app.render_resources()->sprite_sheet(look.team_select_sheet);
-        std::vector<RectangleF> rows, strips; std::vector<std::unique_ptr<UiTextDropShadow>> labels;
+        std::vector<RectangleF> rows, strips; std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
         for (size_t seat = 0; seat < teams.size(); ++seat)
         {
-            labels.push_back(std::make_unique<UiTextDropShadow>("independent-team-focus-label", L"P" + std::to_wstring(seat + 1) + L" - " + devices[seat],
+            labels.push_back(std::make_unique<colourwars::UiTextDropShadow>("independent-team-focus-label", L"P" + std::to_wstring(seat + 1) + L" - " + devices[seat],
                 style.detail_font, position(0, static_cast<int>(seat) + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset));
             const RectangleF text = labels.back()->bounds(); const auto& identity = captured.player_identity();
             const RectangleF badge(text.x - identity.ui_size.x - identity.ui_gap,
@@ -145,9 +145,9 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
                     box, app.render_resources(), tint); icon.draw(list);
             }
         }
-        const UiTextDropShadow title("independent-team-focus-title", expected_title, style.heading_font,
+        const colourwars::UiTextDropShadow title("independent-team-focus-title", expected_title, style.heading_font,
             position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        const UiTextDropShadow message("independent-team-focus-warning", L"Both teams need a player", style.detail_font,
+        const colourwars::UiTextDropShadow message("independent-team-focus-warning", L"Both teams need a player", style.detail_font,
             look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
         list.set_filter(TextureFilter::linear); title.draw(list);
         for (const auto& label : labels) { label->draw(list); }
@@ -229,7 +229,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     require(std::rand() == after_shuffle, "Team focus shuffle changed its seeded RNG budget"); tick(); tick(settle); compare("shuffle-priority-clears-readiness");
     tap(1, GamepadButton::b); plan();
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuPlayerCount>(&other_context));
         const Frame actual = frame(); app.renderer()->begin_frame(); other.draw(*app.renderer());
@@ -242,7 +242,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     tap(3, GamepadButton::dpad_right); teams[3] = PlayerTeam::b; warning = false; tick(settle); compare("playable-clears-warning");
     const auto weapon = [&]
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuWeaponSelect>(&other_context));
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
@@ -336,24 +336,24 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     } restore{ tuning, presentation, original_tuning, original };
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; PlaySettings play = preferences.play_settings();
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings();
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(play), "Cannot seed the private Team tune profile");
+    require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private Team tune profile");
     const auto save_path = root / "profile/ColourWars/save_data.json"; const std::string saved = tune_colour_bytes(save_path);
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
     impl.log().set_mirror_to_debugger(false);
     require(impl.log().set_transcript((output / "team-tune-commands.log").string()), "Cannot retain Team tune transcript");
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot claim Team tune keyboard seat");
     settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3); settings.set_screen_layout(ScreenLayout::two_player);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
     settings.set_player_weapon(0, WeaponType::roller); settings.set_player_weapon(1, WeaponType::sniper);
-    const MenuLevelSettings before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
+    const MatchSetup before = settings; MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearTeamTuneStack
     {
         StateContext& stack;
@@ -414,7 +414,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const std::array<std::wstring, 2> labels{ L"P1 - Pad 4", L"P2 - Keyboard/mouse" };
         for (int seat = 0; seat < 2; ++seat)
         {
-            const UiTextDropShadow label("independent-team-tune-label", labels[static_cast<size_t>(seat)], style.detail_font,
+            const colourwars::UiTextDropShadow label("independent-team-tune-label", labels[static_cast<size_t>(seat)], style.detail_font,
                 position(0, seat + 2), app.render_resources(), art.ink, Colour{}, style.item_shadow_offset);
             const RectangleF text = label.bounds(); const auto& identity = original.player_identity();
             const RectangleF badge(text.x - identity.ui_size.x - identity.ui_gap,

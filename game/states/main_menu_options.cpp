@@ -7,7 +7,6 @@
 
 #include <stdexcept>
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
@@ -74,19 +73,18 @@ void MainMenuOptions::close()
 	}
 	else
 	{
-		this->context()->transition_to(std::make_unique<MainMenuHome>(
-			this->menu_context(), MainMenuHome::InitialFocus::options));
+		this->go_to(MainMenuRoute::home(MainMenuHome::InitialFocus::options));
 	}
 }
 
-bool MainMenuOptions::debug_start_match(const MenuLevelSettings& plan)
+bool MainMenuOptions::debug_start_match(const MatchSetup& plan)
 {
 	return !this->pausing_slot_ && MainMenuPage::debug_start_match(plan);
 }
 
 bool MainMenuOptions::debug_dismiss(bool leaving_match)
 {
-	if (!this->pausing_slot_) { return MainMenuPage::debug_dismiss(leaving_match); }
+	if (!this->pausing_slot_) { return MenuPage::debug_dismiss(leaving_match); }
 	this->close();
 	return true;
 }
@@ -315,7 +313,7 @@ void MainMenuOptions::init()
 
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings(), &this->options_art_);
+		&this->focus_motion_, &this->settings_session()->play_settings(), &this->options_art_);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

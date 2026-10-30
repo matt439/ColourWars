@@ -20,6 +20,8 @@
 #include "engine/math/triangle.h"
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/slot_seats.h"
 
 #include <filesystem>
 #include <fstream>
@@ -35,10 +37,7 @@ using namespace labrador;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	bool close_to(float a, float b)
 	{
@@ -176,7 +175,7 @@ namespace
 			sound_groups::apply(this->audio, this->preferences);
 			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
 				&this->preferences, &this->levels, &this->tuning, &this->presentation, &this->resolution,
-				nullptr, &this->partitioner, &this->mouse);
+				nullptr, &this->partitioner);
 		}
 
 		void set_sfx_volume(int volume)
@@ -196,7 +195,7 @@ namespace
 		{
 			this->level.reset();
 			this->begin = recorded_sounds(this->device).size();
-			MenuLevelSettings settings;
+			MatchSetup settings;
 			settings.set_stage(stage);
 			settings.set_player_count(players);
 			for (int index = 0; index < players; ++index)
@@ -309,11 +308,11 @@ namespace
 			require(done(), "Match did not reach the expected audio boundary");
 		}
 
+		// What A, B or Start from player 0 asks of the level (SeatCommandBuilder).
 		void skip(float dt)
 		{
-			auto inputs = this->idle;
-			inputs[static_cast<size_t>(this->level->player(0).player_num())].skip_intro = true;
-			this->level->update(inputs, dt);
+			this->level->request_intro_skip();
+			this->level->update(this->idle, dt);
 		}
 	};
 
@@ -341,10 +340,11 @@ namespace
 #include "scripts/acceptance/story_audio/match_checks.h"
 #include "scripts/acceptance/story_audio/results_music_checks.h"
 #include "scripts/acceptance/story_audio/music_mix_checks.h"
+#include "scripts/acceptance/story_audio/music_recovery_checks.h"
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("story audio", [&]
 	{
 		require(argc == 2, "Usage: story_audio.exe <content directory>");
 		World world{ std::filesystem::path(argv[1]) };
@@ -373,6 +373,8 @@ int main(int argc, char** argv)
 		check_music_mix_duck_and_suspend(world);
 		check_music_mix_ending(world, std::filesystem::path(argv[1]));
 		check_music_mix_silence(world);
+		check_screen_music_recovery(world);
+		check_arena_music_recovery(world);
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);
 		check_last_ten_boundaries(world);
@@ -416,6 +418,7 @@ int main(int argc, char** argv)
 			"resume content/beats/cancellation/gains/mute and stale-fire loop cleanup, "
 			"results coda one-shot/focus/gains/mute/completed-state guard/teardown and arena ending-sting content/selection/lifecycle, "
 			"arena music raw-clock fades/ducking/restore/preferences/suspension/ending/silent fallback, "
+			"outside-stopped menu/arena loops replayed once from silence (not leaving/ending/one-shot/silent), "
 			"opening/reveal content and atlas palette validation, swatch/undo/colour/glass/skip edges, "
 			"winner/draw click/close and per-team reactions, long-step cue order, off/solo, "
 			"countdown/GO/last-ten/time up, room-tone loop boundaries, gains/mute, suspension, destruction, weapon feedback validation, "
@@ -424,10 +427,5 @@ int main(int argc, char** argv)
 			"redraw pen boundaries/voices/lifecycle, painted support ownership and wet movement budgets, "
 			"paint content, tool impacts/capture/duds, swept/launch contacts, roller aggregation and shared limits\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL story audio: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

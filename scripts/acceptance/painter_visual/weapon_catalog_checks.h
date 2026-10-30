@@ -45,15 +45,15 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         WeaponChoicePresentation{ L"Bucket", "bucket", "bucket_paint", "" },
         WeaponChoicePresentation{ L"Random", "random", "", "" }
     };
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     auto& catalog = const_cast<MainMenuPresentation&>(presentation.main_menu()).weapon_select_art;
@@ -84,7 +84,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
     };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b, bool weapon = true)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b, bool weapon = true)
     {
         return a.player_count() == b.player_count() && a.stage() == b.stage() &&
             a.duration() == b.duration() && a.best_of() == b.best_of() &&
@@ -99,7 +99,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(1);
+        settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, type);
         settings.set_stage("movement_course"); settings.set_duration(123.0f); settings.set_best_of(5);
@@ -110,7 +110,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto reference_page = [&](bool stage)
     {
-        MenuLevelSettings copy = settings;
+        MatchSetup copy = settings;
         MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &copy);
         StateContext reference_stack;
@@ -133,7 +133,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             style.icon_padding.y + style.rule_height);
         WeaponSelectArtworkPresentation expected_catalog;
         expected_catalog.sheet = sheet; expected_catalog.fill_frame = fill;
-        const UiTextDropShadow name("expected-weapon-name", expected.name, look.weapon_description_font,
+        const colourwars::UiTextDropShadow name("expected-weapon-name", expected.name, look.weapon_description_font,
             name_position, app.render_resources(), look.art.ink,
             Colour{}, style.detail_shadow_offset);
         const UiTexture background("expected-weapon-background", style.sprite_sheet, style.fill_frame,
@@ -178,7 +178,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
     {
-        resize_page(size); open(); const MenuLevelSettings initial = settings;
+        resize_page(size); open(); const MatchSetup initial = settings;
         const Frame first = frame();
         for (size_t choice = 0; choice < historical.size(); ++choice)
         {
@@ -224,7 +224,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 
     for (size_t choice = 0; choice < historical.size(); ++choice)
     {
-        open(static_cast<WeaponType>(choice)); const MenuLevelSettings before = settings;
+        open(static_cast<WeaponType>(choice)); const MatchSetup before = settings;
         const Frame selecting = frame();
         constexpr unsigned int seed = 8763;
         std::srand(seed); const WeaponType random = static_cast<WeaponType>(std::rand() % 5); std::srand(seed);
@@ -236,7 +236,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(settings.player_weapon(0) == expected && same_plan(settings, before, false) &&
             stack.depth() == 2 && frame().pixels == reference_page(true).pixels,
             "Confirm did not commit the selected primary and enter actual Stage Select");
-        const MenuLevelSettings committed = settings;
+        const MatchSetup committed = settings;
         tap(Key::escape); tick(); compare("stage-back", static_cast<size_t>(expected),
             historical[static_cast<size_t>(expected)]);
         require(same_plan(settings, committed), "Stage Back changed the committed roster or match settings");

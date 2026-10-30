@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <cwchar>
 #include <iterator>
 #include <optional>
@@ -142,6 +143,9 @@ namespace colourwars_editor
         AppendMenuW(edit, MF_STRING, edit_undo, L"&Undo\tCtrl+Z");
         AppendMenuW(edit, MF_STRING, edit_redo, L"&Redo\tCtrl+Y");
         AppendMenuW(edit, MF_STRING, edit_duplicate, L"&Duplicate\tCtrl+D");
+        AppendMenuW(edit, MF_STRING, edit_mirror, L"&Mirror copy\tCtrl+Shift+D");
+        AppendMenuW(edit, MF_STRING, edit_copy, L"&Copy\tCtrl+C");
+        AppendMenuW(edit, MF_STRING, edit_paste, L"&Paste\tCtrl+V");
         AppendMenuW(edit, MF_STRING, edit_delete, L"&Delete\tDel");
         AppendMenuW(edit, MF_STRING, edit_align_origin, L"&Align origin to grid");
         AppendMenuW(menu_, MF_POPUP, reinterpret_cast<UINT_PTR>(edit), L"&Edit");
@@ -160,7 +164,9 @@ namespace colourwars_editor
             {FVIRTKEY | FCONTROL | FSHIFT, 'S', file_save_as},
             {FVIRTKEY | FCONTROL, 'M', file_save_user_stage},
             {FVIRTKEY | FCONTROL, 'Z', edit_undo}, {FVIRTKEY | FCONTROL, 'Y', edit_redo},
-            {FVIRTKEY | FCONTROL, 'D', edit_duplicate}
+            {FVIRTKEY | FCONTROL, 'D', edit_duplicate},
+            {FVIRTKEY | FCONTROL | FSHIFT, 'D', edit_mirror},
+            {FVIRTKEY | FCONTROL, 'C', edit_copy}, {FVIRTKEY | FCONTROL, 'V', edit_paste}
         };
         accelerators_ = CreateAcceleratorTableW(const_cast<ACCEL*>(keys), static_cast<int>(std::size(keys)));
     }
@@ -179,7 +185,7 @@ namespace colourwars_editor
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
             L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
             L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left",
-            L"Team gate"};
+            L"Team gate", L"Station (goto target)"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -288,11 +294,13 @@ namespace colourwars_editor
         draw_items_.clear();
         blockout_tuning_.reset();
         scoring_faces_.clear();
+        symmetry_.clear();
         try
         {
             blockout_tuning_ = load_blockout_tuning(std::filesystem::path(COLOURWARS_CONTENT_DIR) / "tuning.json",
                 std::filesystem::path(COLOURWARS_EDITOR_DIR) / "movement-baseline.json");
             scoring_faces_ = scoring_faces(document_, *blockout_tuning_);
+            symmetry_ = wide(symmetry_summary(document_, scoring_faces_));
             blockout_error_.clear();
         }
         catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
@@ -318,7 +326,8 @@ namespace colourwars_editor
                 try { item.motion = document_.motion_guide(entry); }
                 catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
                 item.slab = document_.slab_guide(entry);
-                if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b))
+                if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b ||
+                    entry.kind == EntryKind::station))
                 {
                     item.rectangle.width = blockout_tuning_->player_width;
                     item.rectangle.height = blockout_tuning_->player_height;
@@ -339,6 +348,10 @@ namespace colourwars_editor
         EnableMenuItem(menu_, edit_redo, MF_BYCOMMAND | (document_.can_redo() ? MF_ENABLED : MF_GRAYED));
         EnableMenuItem(menu_, edit_align_origin, MF_BYCOMMAND |
             (selection_ && selection_->kind != EntryKind::level ? MF_ENABLED : MF_GRAYED));
+        EnableMenuItem(menu_, edit_mirror, MF_BYCOMMAND | (selection_ && selection_->kind != EntryKind::level &&
+            selection_->kind != EntryKind::bounds && selection_->kind != EntryKind::station ? MF_ENABLED : MF_GRAYED));
+        EnableMenuItem(menu_, edit_copy, MF_BYCOMMAND | (selection_ && selection_->kind != EntryKind::level &&
+            selection_->kind != EntryKind::bounds ? MF_ENABLED : MF_GRAYED));
         EnableWindow(toolbar_[3], document_.can_undo()); EnableWindow(toolbar_[4], document_.can_redo());
         const std::vector<std::string> errors = document_.validate();
         const std::wstring ready = L"Ready  |  " + std::to_wstring(draw_items_.size()) + L" items  |  ";
@@ -587,7 +600,9 @@ namespace colourwars_editor
                 L"Ctrl+click cycles through overlapping objects without moving them. "
                 L"Select a property, edit its value and click Apply (or press Enter). Changes apply before selection/save; Escape or Revert discards an uncommitted value.\n\n"
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
-                L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Delete removes, Ctrl+Z/Y undo/redo. "
+                L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Ctrl+Shift+D mirror-copies across the out_of_bounds centre, "
+                L"Ctrl+C copies the selected object as text and Ctrl+V pastes a copied object into the open level at the same position "
+                L"(including from another level; the property field keeps its own Ctrl+C/V), Delete removes, Ctrl+Z/Y undo/redo. "
                 L"Edit > Align origin to grid rounds both origin coordinates to the current grid, regardless of Shift. "
                 L"For scored slabs it aligns the starting endpoint. "
                 L"New objects appear in the centre of the current view.\n\n"
@@ -596,6 +611,8 @@ namespace colourwars_editor
                 L"Duplicate places a copy below the complete corridor; blocked edits/copies are refused. Guides do not simulate riding or qualify runtime rate limits.\n\n"
                 L"Scored slabs have a fixed 160 by 80 slope and 24-unit normal thickness. Drag moves them; their slab/rise property selects left or right. They cannot be resized.\n\n"
                 L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
+                L"Green dashed boxes are stations (goto targets), at the character's top-left like a spawn: drag moves one, its name "
+                L"row renames it, and a move out of its lesson area is refused. Lessons are kept as written. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
                 L"and its relative path in cmake/runtime_assets.cmake. The opt-in ColourWarsRegisterStage helper previews both entries; --apply registers them. "
@@ -616,6 +633,10 @@ namespace colourwars_editor
         case edit_align_origin: document_.align_origin(*selection_, snap_); refresh(true); break;
         case edit_duplicate:
             if (selection_) { selection_ = document_.duplicate(*selection_); refresh(); } break;
+        case edit_mirror:
+            if (selection_) { selection_ = document_.mirror_copy(*selection_); refresh(); } break;
+        case edit_copy: copy_to_clipboard(); break;
+        case edit_paste: paste_from_clipboard(); break;
         case edit_delete:
             if (selection_) { document_.erase(*selection_); selection_.reset(); refresh(); } break;
         case view_fit: fit(document_.rectangle(Entry{EntryKind::bounds, 0, ""})); break;
@@ -647,7 +668,7 @@ namespace colourwars_editor
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
                 "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft",
-                "TeamGate"};
+                "TeamGate", "Station"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);
@@ -766,26 +787,92 @@ namespace colourwars_editor
     {
         create_window(show, initial_path);
         MSG message_data{};
-        while (GetMessageW(&message_data, nullptr, 0, 0) > 0)
-        {
-            const HWND focus = GetFocus();
-            if (message_data.message == WM_KEYDOWN && focus == value_edit_)
-            {
-                if (message_data.wParam == VK_RETURN) { apply_pending(); continue; }
-                if (message_data.wParam == VK_ESCAPE) { select_property(property_index_); continue; }
-                // Text fields keep native text undo/select/copy/delete behavior.
-                if ((GetKeyState(VK_CONTROL) & 0x8000) && (message_data.wParam == 'Z' || message_data.wParam == 'Y'))
-                { TranslateMessage(&message_data); DispatchMessageW(&message_data); continue; }
-            }
-            if (message_data.message == WM_KEYDOWN && focus == object_list_)
-            {
-                if (message_data.wParam == VK_DELETE) { SendMessageW(window_, WM_COMMAND, edit_delete, 0); continue; }
-                if (message_data.wParam == 'F') { SendMessageW(window_, WM_COMMAND, view_selection, 0); continue; }
-            }
-            if (!TranslateAcceleratorW(window_, accelerators_, &message_data)
-                && !(message_data.message == WM_KEYDOWN && message_data.wParam == VK_TAB && IsDialogMessageW(window_, &message_data)))
-            { TranslateMessage(&message_data); DispatchMessageW(&message_data); }
-        }
+        while (GetMessageW(&message_data, nullptr, 0, 0) > 0) { dispatch(message_data); }
         return static_cast<int>(message_data.wParam);
+    }
+
+    void Editor::dispatch(MSG& message_data)
+    {
+        const HWND focus = GetFocus();
+        if (message_data.message == WM_KEYDOWN && focus == value_edit_)
+        {
+            if (message_data.wParam == VK_RETURN) { apply_pending(); return; }
+            if (message_data.wParam == VK_ESCAPE) { select_property(property_index_); return; }
+            // Text fields keep native text undo/redo/copy/paste; the Edit menu's
+            // object Copy/Paste (ED#27) is for the canvas and Level Contents.
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && (message_data.wParam == 'Z' || message_data.wParam == 'Y' ||
+                message_data.wParam == 'C' || message_data.wParam == 'V'))
+            { TranslateMessage(&message_data); DispatchMessageW(&message_data); return; }
+        }
+        if (message_data.message == WM_KEYDOWN && focus == object_list_)
+        {
+            if (message_data.wParam == VK_DELETE) { SendMessageW(window_, WM_COMMAND, edit_delete, 0); return; }
+            if (message_data.wParam == 'F') { SendMessageW(window_, WM_COMMAND, view_selection, 0); return; }
+        }
+        if (!TranslateAcceleratorW(window_, accelerators_, &message_data)
+            && !(message_data.message == WM_KEYDOWN && message_data.wParam == VK_TAB && IsDialogMessageW(window_, &message_data)))
+        { TranslateMessage(&message_data); DispatchMessageW(&message_data); }
+    }
+
+    namespace
+    {
+        // Another program may hold the clipboard for a moment; try briefly.
+        class OpenedClipboard
+        {
+        public:
+            explicit OpenedClipboard(HWND owner)
+            {
+                for (int attempt = 0; attempt < 10 && !open_; ++attempt)
+                {
+                    open_ = OpenClipboard(owner) != 0;
+                    if (!open_) { Sleep(10); }
+                }
+                if (!open_) { throw std::runtime_error("Another program is using the clipboard. Try again."); }
+            }
+            ~OpenedClipboard() { if (open_) { CloseClipboard(); } }
+            OpenedClipboard(const OpenedClipboard&) = delete;
+            OpenedClipboard& operator=(const OpenedClipboard&) = delete;
+        private:
+            bool open_ = false;
+        };
+    }
+
+    void Editor::copy_to_clipboard()
+    {
+        if (!selection_) { return; }
+        const std::wstring text = wide(document_.copy_text(*selection_));
+        const std::size_t bytes = (text.size() + 1) * sizeof(wchar_t);
+        // Open first: a busy clipboard throws before anything is allocated.
+        OpenedClipboard clipboard(window_);
+        HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, bytes);
+        if (!memory) { throw std::runtime_error("Not enough memory to copy the object."); }
+        void* target = GlobalLock(memory);
+        if (!target) { GlobalFree(memory); throw std::runtime_error("Not enough memory to copy the object."); }
+        std::memcpy(target, text.c_str(), bytes);
+        GlobalUnlock(memory);
+        if (!EmptyClipboard() || !SetClipboardData(CF_UNICODETEXT, memory))
+        {
+            GlobalFree(memory);
+            throw std::runtime_error("Could not put the object on the clipboard.");
+        }
+        set_status(L"Copied " + wide(selection_->label) + L" to the clipboard.");
+    }
+
+    void Editor::paste_from_clipboard()
+    {
+        std::wstring text;
+        {
+            OpenedClipboard clipboard(window_);
+            HANDLE data = IsClipboardFormatAvailable(CF_UNICODETEXT) ? GetClipboardData(CF_UNICODETEXT) : nullptr;
+            if (!data) { throw std::runtime_error("The clipboard holds no text to paste. Copy an object with Edit > Copy first."); }
+            const auto* locked = static_cast<const wchar_t*>(GlobalLock(data));
+            if (!locked) { throw std::runtime_error("Could not read the clipboard text."); }
+            // CF_UNICODETEXT is NUL-terminated, but never read past its block.
+            const std::size_t limit = GlobalSize(data) / sizeof(wchar_t);
+            text.assign(locked, std::find(locked, locked + limit, wchar_t{}));
+            GlobalUnlock(data);
+        }
+        selection_ = document_.paste_text(narrow(text));
+        refresh();
     }
 }

@@ -31,13 +31,13 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         { 2, 3, "versus-best-three", L"BEST OF 3", L"2 PLAYERS / 2 TEAMS", &Words::versus, nullptr },
         { 2, 5, "versus-best-five", L"BEST OF 5", L"2 PLAYERS / 2 TEAMS", &Words::versus, nullptr } } };
     const Presentation original = presentation;
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
     struct RestoreBriefingPads
@@ -61,7 +61,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreBriefing()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -75,7 +75,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
     };
     const auto frame = [&]
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b)
     {
         if (a.player_count() != b.player_count() || a.stage() != b.stage() || a.duration() != b.duration() ||
             a.best_of() != b.best_of() || a.screen_layout() != b.screen_layout()) { return false; }
@@ -89,7 +89,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
     };
     const auto open = [&](const BriefingCase& fixture)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({});
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {});
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
@@ -99,7 +99,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
 #endif
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(fixture.players);
+        settings = MatchSetup(); settings.set_player_count(fixture.players);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         if (fixture.players == 2)
         {
@@ -145,11 +145,11 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
             { "roster", fixture.roster, style.brand_font, 2.0f, 3.0f, built.art.ink },
             { "goal", words.goal, style.brand_font, 3.0f, 4.0f, built.art.focus_ink },
             { "objective", words.*fixture.objective, style.brand_font, 4.0f, 6.0f, built.art.ink } } };
-        std::array<std::unique_ptr<UiTextDropShadow>, 5> expected{};
+        std::array<std::unique_ptr<colourwars::UiTextDropShadow>, 5> expected{};
         for (size_t index = 0; index < rows.size(); ++index)
         {
             const auto& reference = rows[index];
-            expected[index] = std::make_unique<UiTextDropShadow>("reference-briefing", reference.text, reference.font,
+            expected[index] = std::make_unique<colourwars::UiTextDropShadow>("reference-briefing", reference.text, reference.font,
                 info + row * reference.row, app.render_resources(), reference.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
                 style.detail_shadow_offset);
             const RectangleF bounds = expected[index]->bounds();
@@ -205,7 +205,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
     const auto cycle_and_lock = [&](const BriefingCase& fixture, const Presentation& snapshot,
         const Words& words, const std::string& name)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         std::srand(3169); const int next_random = std::rand(); std::srand(3169);
         tap(Key::right); tap(Key::enter); tap(Key::escape); tap(Key::left);
         require(std::rand() == next_random && same_plan(settings, before) && stack.depth() == 2 &&

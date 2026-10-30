@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/render/camera_tools.h"
+#include "game/carried/camera_tools.h"
 
 struct CameraPresentation;
 
@@ -27,5 +27,5 @@ public:
 		const mattmath::RectangleF& bounds);
 
 private:
-	labrador::CameraTools tools_;
+	colourwars::CameraTools tools_;
 };

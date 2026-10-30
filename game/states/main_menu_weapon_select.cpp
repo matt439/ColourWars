@@ -1,8 +1,9 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
+#include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
@@ -11,7 +12,7 @@ using namespace labrador;
 
 MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context,
 	std::optional<Session> between_rounds) :
-	MainMenuPage(context, std::move(between_rounds))
+	RosterSetupPage(context, std::move(between_rounds))
 {
 
 }
@@ -48,15 +49,11 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 				}
 				else if (this->player_count() == 1)
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuModeSelect>(
-							this->menu_context()));
+					this->go_to(MainMenuScreen::mode_select);
 				}
 				else
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuTeamSelect>(
-							this->menu_context()));
+					this->go_to(MainMenuScreen::team_select);
 				}
 				return;
 			}
@@ -113,8 +110,7 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 			}
 		}
 		this->set_level_settings();
-		this->context()->transition_to(
-			std::make_unique<MainMenuStageSelect>(this->menu_context(), this->between_rounds()));
+		this->go_to(MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->between_rounds()));
 		return;
 	}
 	this->update_weapon_select_visuals();
@@ -290,7 +286,7 @@ void MainMenuWeaponSelect::init()
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::weapons),
 		this->menu_style().heading_font,
@@ -316,9 +312,9 @@ void MainMenuWeaponSelect::init()
 		auto widgets = std::make_unique<Widgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = this->level_settings()->player_label(i, this->text());
+		std::wstring label_text = player_label(*this->level_settings(), i, this->text());
 
-		widgets->player = std::make_unique<UiTextDropShadow>(
+		widgets->player = std::make_unique<colourwars::UiTextDropShadow>(
 			name,
 			label_text,
 			this->menu_style().detail_font,
@@ -326,7 +322,7 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			this->paper_art_.ink,
 			clear_shadow);
-		widgets->handicap = std::make_unique<UiTextDropShadow>(
+		widgets->handicap = std::make_unique<colourwars::UiTextDropShadow>(
 			name + "_handicap",
 			this->text().handicap_label(state.handicap),
 			this->look().weapon_description_font,
@@ -345,14 +341,14 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			this->look().weapon_select.unselected, &this->menu_style(),
 			this->weapon_select_art_.sheet, this->weapon_select_art_.fill_frame,
-			&widgets->motion, &this->save()->play_settings(), &this->icon_art_);
+			&widgets->motion, &this->settings_session()->play_settings(), &this->icon_art_);
 		widgets->weapon_icon->set_sprite_frame(
 			choice.frame, choice.paint_frame, choice.supply_strip);
 		widgets->weapon_icon->set_paint_colour(preview_colours.team_colour(
 			this->level_settings()->player_team(i)));
 		widgets->motion.observe(widgets->weapon_icon.get());
 
-		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
+		widgets->weapon_name = std::make_unique<colourwars::UiTextDropShadow>(
 			name + "_wep_name",
 			choice.name,
 			this->look().weapon_description_font,

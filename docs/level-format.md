@@ -6,7 +6,11 @@ resources and supplies a closed grey room, a paintable floor and four spawns per
 team. It is an authoring example, outside the runtime asset list and manifest;
 copy it before editing. Its geometry is not an accepted arena design.
 
-[level.schema.json](level.schema.json) is a JSON Schema Draft-04 structural check,
+The format's key names, object and collision vocabulary and material table have
+one engine-free owner, [level_format.h](../game/level_format.h), which the game's
+loader and the editor both read; the stations, gates, movers and slabs keep their
+rules in the contracts it names.
+[level.schema.json](../game/level.schema.json), beside it, is a JSON Schema Draft-04 structural check,
 compatible with the repository's bundled RapidJSON `SchemaValidator`. The runtime
 still validates through [LevelLoadedInfo](../game/objects/level_loaded_info.cpp),
 [LevelObjectBuilder](../game/objects/level_object_builder.cpp) and loaded assets.
@@ -17,8 +21,8 @@ Passing the schema alone does not establish that a stage loads or plays correctl
 Write `"format": 1` on new files. An absent `format` is accepted as legacy format
 1. An explicit version must be the JSON integer `1`; a string, boolean, null,
 decimal representation such as `1.0`, or another integer is rejected before the
-level is decoded. The four shipped levels and newly created editor documents write the
-version. Opening a legacy file does not require rewriting unrelated fields.
+level is decoded. Every level registered in `game/content/manifest.json` and
+newly created editor documents write the version. Opening a legacy file does not require rewriting unrelated fields.
 
 Unknown keys are ignored by the runtime, including `_comment`, per-object `name`
 and metadata belonging to an authoring tool. The editor preserves unknown keys
@@ -78,7 +82,7 @@ checks and full Release qualification in
 | `sound` | Object | Bank identifier and independent optional music/sting pairs, below. |
 | `spawn_locations` | Object | `team_a` and `team_b` arrays of points, at least four entries each. |
 | `level_bounds` | Object | All four named rectangles, below. |
-| `stations` | Optional array | Named developer-console destinations; defaults to no authored stations. |
+| `stations` | Optional array | Named developer-console destinations, each with an optional practice `lesson`; defaults to no authored stations. |
 | `collision_objects` | Array | Structures, paintable structures and ramps; may be empty. |
 | `non_collision_objects` | Array | Decorative `Visual` entries; may be empty. |
 
@@ -459,6 +463,25 @@ check as spawns. After authored stations, the game appends `spawn_a` and
 `spawn_b` for each team's first spawn. Stations do not create geometry or
 affect normal gameplay.
 
+A station may carry a `lesson` object with `title`, `text` and `area` (a
+rectangle); other keys inside it are ignored. Untimed solo practice shows the
+lesson card while the player's centre is in its area
+([practice workshop](polish-movement-course.md#practice-workshop)); only the
+Movement Course authors lessons today. The runtime refuses an area with
+non-finite coordinates or a non-positive size, one that leaves
+`camera_bounds`, and one that does not contain its own station point, so
+`goto` always lands inside the lesson. `title` and `text` must contain
+something other than spaces and line breaks and must be drawable text; startup
+content validation also checks that the menu detail font can draw the title and
+the match controls font the text. The editor preserves lesson blocks unchanged
+and exposes no station or lesson controls.
+
+The editor applies the same station and lesson-geometry rules
+([station_contract.h](../game/station_contract.h)), so a bounds resize or a
+loaded file the game would refuse is refused in the editor too
+([`ED#23`](level-editor.md#station-validation-in-the-editor-ed23)). Only the
+lesson fonts stay a game-side check.
+
 The schema covers required keys, scalar/array types, positive rectangle sizes,
 spawn counts, type/collision combinations, material values and the collision
 types each allows, paint-face booleans, sound-pair
@@ -466,7 +489,9 @@ presence, sting gain and station-name syntax/reserved names. It leaves these
 checks to their owners:
 
 - Runtime: finite bounds/object rectangles after float conversion; TLBR ordering;
-  spawn/station containment and spawn halves; duplicate station names; grey
+  spawn/station containment and spawn halves; duplicate station names; lesson
+  area size, camera containment and station containment, nonblank lesson text
+  and its fonts; grey
   hex channel equality; assets and drawable text; and the engine's
   anti-tunnelling bound ([tunnelling_limits.h](../game/tunnelling_limits.h)):
   a stage is rejected when a player at its farthest step would travel at
@@ -479,8 +504,9 @@ checks to their owners:
   because each shot's whole path is tested against the geometry every step.
 - Editor: its additional nonempty-string, numeric and upright-ramp checks,
   and warnings, not refusals, for resource names that do not resolve.
-  Unknown metadata and stations remain preserved even when not exposed as
-  dedicated editor controls.
+  Unknown metadata, stations and their lessons remain preserved even when not
+  exposed as dedicated editor controls. The editor applies the runtime station
+  and lesson-geometry rules above through the shared contract (`ED#23`).
 - Play/review: supported spawns, routes, weapon roles, fair side swaps, paint
   budgets, readability, timing and frame pacing. Format validity supplies none
   of those acceptance results.
@@ -491,7 +517,7 @@ runtime validation in the authoring workflow even after a schema pass.
 
 ## Validation and authoring workflow
 
-Point a JSON editor at [level.schema.json](level.schema.json), then open the file
+Point a JSON editor at [level.schema.json](../game/level.schema.json), then open the file
 in ColourWarsEditor and save a copy. Register an intended runtime stage using
 the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
 Rebuild and run it in the game: the schema does not resolve its assets, the
@@ -509,8 +535,11 @@ From an x64 Visual Studio Developer shell at the repository root:
 
 Repeat with `x64-release`. The `level_format` consumer case uses bundled
 RapidJSON Draft-04 validation and the actual `LevelLoadedInfo`/`LevelObjectBuilder`
-paths with CPU resource metadata; it checks source and staged copies of all
-four shipped levels plus the template, with an untagged legacy clone of each.
+paths with CPU resource metadata; it checks source and staged copies of every
+level the manifest registers plus the template, with an untagged legacy clone of
+each. The case requires the exact registered count (eleven at 2026-10-29,
+[level_format.cpp](../scripts/acceptance/level_format.cpp)), so registering or
+retiring a stage updates that number.
 Its fixtures also exercise invalid
 versions, structural failures, unknown and mismatched materials, unknown metadata, rectangle precedence and
 runtime checks beyond the schema. It also holds the editor's resource-name

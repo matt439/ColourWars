@@ -68,16 +68,17 @@ namespace colourwars_editor
 
     void validate_slab(const Json& object)
     {
-        if (string(object, "collision_type") != "STRUCTURE_FIXED_SLAB")
+        if (level_format::collision_named(string(object, key::collision_type)) !=
+                level_format::Collision::structure_fixed_slab)
             fail("A fixed slab needs STRUCTURE_FIXED_SLAB collision.");
-        if (string(object, "material") != "eraser")
+        if (string(object, key::material) != level_format::fixed_slab_material)
             fail("A fixed slab uses the eraser material.");
-        for (const char* key : { "motion", "drift", "rotation", "rectangle", "rectangle_tlbr", "triangle" })
-            if (object.HasMember(key)) { fail(std::string("Fixed slab does not support '") + key + "'."); }
-        const Json& slab = member(object, "slab");
+        for (const char* field : level_format::fixed_slab_refused_keys)
+            if (object.HasMember(field)) { fail(std::string("Fixed slab does not support '") + field + "'."); }
+        const Json& slab = member(object, key::slab);
         if (!slab.IsObject()) { fail("slab must be an object."); }
-        for (const char* key : { "width", "height", "angle", "rotation", "thickness", "motion" })
-            if (slab.HasMember(key)) { fail(std::string("Fixed slab does not support slab.") + key + "."); }
+        for (const char* field : level_format::fixed_slab_refused_slab_keys)
+            if (slab.HasMember(field)) { fail(std::string("Fixed slab does not support slab.") + field + "."); }
         (void)decode_slab(object);
         const Json& faces = member(object, "paintable_faces");
         for (const char* face : { "left", "top", "right", "bottom" })
@@ -100,7 +101,7 @@ namespace colourwars_editor
         std::vector<SlabGeometry> earlier;
         for (const Json& object : array(document, "collision_objects").GetArray())
         {
-            if (string(object, "type") != "FixedSlabPaintable") { continue; }
+            if (string(object, key::type) != object_type::fixed_slab_paintable) { continue; }
             const SlabGeometry slab = decode_slab(object);
             for (const SlabGeometry& other : earlier)
             {

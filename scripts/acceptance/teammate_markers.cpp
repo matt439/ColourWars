@@ -5,6 +5,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -26,10 +27,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -77,7 +75,7 @@ namespace
             this->levels.add("movement_course", std::move(info));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         TeammateMarkerPresentation& look()
@@ -87,7 +85,7 @@ namespace
 
         std::unique_ptr<Level> build(const std::vector<SeatPlan>& plan)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(static_cast<int>(plan.size()));
             settings.set_duration(300.0f);
@@ -475,7 +473,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("teammate markers", [&]
     {
         // Unbuffered, so a crash still shows how far the case got.
         std::cout << std::unitbuf;
@@ -498,10 +496,5 @@ int main(int argc, char** argv)
         check_validation(content, std::filesystem::absolute(argv[0]).parent_path());
         std::cout << "PASS teammate markers: " << checked_markers << " placed markers checked\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL teammate markers: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

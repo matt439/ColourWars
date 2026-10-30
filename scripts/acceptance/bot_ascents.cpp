@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -70,9 +71,9 @@ namespace
         throw std::runtime_error("Unknown bot ascent endpoints");
     }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -122,7 +123,7 @@ namespace
 
     TrialResult run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const Endpoints route = endpoints(world, trial);
@@ -136,7 +137,7 @@ namespace
                 "Ascent trial escaped its finite active-step budget");
             require(tape.steps.back().size() == 2, "Ascent trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Ascent bot emitted a device/menu/pause action");
             require(tape.steps.back()[0].x_movement == 0.0f && !tape.steps.back()[0].primary_shoot,
                 "Ascent driver changed the stationary human's input");
@@ -186,7 +187,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot ascents", [&]
     {
         require(argc == 2, "usage: bot_ascents <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-ascents", "Bot ascent needs authored support '");
@@ -215,7 +216,5 @@ int main(int argc, char** argv)
             "contacts and ordinary jumps; six 900-step final-input replays; deck paint is measured, "
             "territory usefulness remains unqualified\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot ascents: " << error.what() << '\n'; return 1; }
+    });
 }

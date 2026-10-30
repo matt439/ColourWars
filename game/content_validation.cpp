@@ -5,7 +5,6 @@
 #include "game/resource_validation.h"
 #include "game/text_wrap.h"
 #include "game/tunnelling_limits.h"
-#include "game/states/main_menu.h"
 #include "game/team_gate_contract.h"
 #include "game/objects/team_gate_structure_paintable.h"
 
@@ -29,7 +28,8 @@ namespace
 		const auto built = builder.build_collision_objects(objects, TeamColour{});
 		for (size_t index = 0; index < built.size(); ++index)
 		{
-			const auto* gate = dynamic_cast<const TeamGateStructurePaintable*>(built[index].get());
+			const Structure* structure = Collider::of(*built[index]).structure();
+			const TeamGateStructurePaintable* gate = structure != nullptr ? structure->gate() : nullptr;
 			if (gate == nullptr) { continue; }
 			const mattmath::RectangleF bounds = gate->bounds();
 			for (const mattmath::Vector2F& spawn : spawns)
@@ -188,9 +188,4 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 				main_menu.weapon_select_art.choice(static_cast<WeaponType>(tool)).name),
 			"menu_text.practice_tool");
 	}
-	// Duration words depend on actual tuning, not a Presentation-only sample.
-	// Keep this after all established diagnostics, and retain the exact Mode
-	// row/shadow/card/shade/arrow geometry without fitting the value.
-	MainMenuModeSelect::validate_durations(render, tuning, presentation);
-	MainMenuModeSelect::validate_stage_rules(render, presentation);
 }

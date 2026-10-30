@@ -11,8 +11,9 @@
 using RumbleMotorRequest = bool(void* context, int pad_slot,
     std::uint16_t low_frequency, std::uint16_t high_frequency) noexcept;
 
-// Production factory; construction alone sends no request. The game links
-// Windows SDK Xinput.lib, the same XINPUT1_4 import used by DirectXTK here.
+// Production factory; construction alone sends no request. Its adapter library
+// (colourwars_rumble_xinput) links Windows SDK Xinput.lib, the same XINPUT1_4
+// import used by DirectXTK here.
 std::unique_ptr<RumbleSink> make_rumble_sink();
 
 // The same adapter/normalization/stop path with a supplied transport. CPU

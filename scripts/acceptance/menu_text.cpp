@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <iostream>
@@ -11,7 +12,7 @@ using namespace menu_text_acceptance;
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("shared menu text", [&]
     {
         require(argc == 2, "Usage: menu_text.exe <staged content directory>");
         const std::filesystem::path content(argv[1]);
@@ -117,10 +118,5 @@ int main(int argc, char** argv)
             "Pad Sticks exact-token/range/201-value/schema guards, multiline boundaries and adversarial pen/ink extrema, "
             "width-only arena hints and actual PromptBar measurement compatibility.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL shared menu text: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

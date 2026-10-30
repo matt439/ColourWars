@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/ai/match_bot_support.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <sstream>
 
@@ -28,9 +29,9 @@ namespace
         BotDifficulty difficulty;
     };
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -113,7 +114,7 @@ namespace
             level->update(physical, dt, &tape);
             require(level->state() == LevelState::active, "Mover-route trial escaped its finite active-step budget");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Mover-route bot emitted a device/menu/pause action");
             const Player& bot = level->player(1);
             require(bot.player_num() == -1 && bot.primary_weapon().type() == trial.tool &&
@@ -163,7 +164,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot mover routes", [&]
     {
         require(argc == 2, "usage: bot_mover_routes <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-mover-routes",
@@ -199,7 +200,5 @@ int main(int argc, char** argv)
             "difficulties, 2400 steps); every landing left the mover again (" << left << '/' << landed <<
             "); reaching and painting the mover are measurements (painted=" << painted << "/60)\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot mover routes: " << error.what() << '\n'; return 1; }
+    });
 }

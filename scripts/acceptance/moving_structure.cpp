@@ -1,11 +1,12 @@
 #include "game/pch.h"
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/moving_structure/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
 int wmain(int argc, wchar_t* argv[])
 {
-    try
+    return acceptance::run_probe("horizontal moving structure", [&]
     {
         if (argc != 2) { throw std::invalid_argument("moving_structure <content>"); }
         moving_structure_acceptance::World world(std::filesystem::absolute(argv[1]));
@@ -28,7 +29,5 @@ int wmain(int argc, wchar_t* argv[])
         std::cout << "Developer replay checks are Debug-only\n";
 #endif
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL horizontal moving structure: " << error.what() << '\n'; return 1; }
+    });
 }

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_runner/runner.h"
 #if COLOURWARS_DEV_TOOLS
+#include "game/ai/match_bot_driver.h"
 #include "game/debug/bot_driver.h"
 #include "game/debug/match_fingerprint.h"
 #include "game/input_slots.h"
@@ -81,7 +82,7 @@ namespace balance_runner
                 this->presentation_.validate_resources(this->render_, this->audio_);
                 this->builder_ = std::make_unique<LevelBuilder>(&this->viewports_, &this->render_, &this->audio_,
                     &this->preferences_, &this->levels_, &this->tuning_, &this->presentation_,
-                    &this->resolution_, nullptr, &this->partitioner_, &this->mouse_);
+                    &this->resolution_, nullptr, &this->partitioner_);
             }
 
             bool has_stage(const std::string& stage) const { return this->stages_.contains(stage); }
@@ -90,7 +91,7 @@ namespace balance_runner
             const GameTuning& tuning() const { return this->tuning_; }
             std::unique_ptr<Level> build(const Options& options, const std::string& stage, std::uint32_t seed)
             {
-                MenuLevelSettings settings;
+                MatchSetup settings;
                 settings.set_player_count(options.players);
                 settings.set_stage(stage);
                 settings.set_duration(options.duration);
@@ -136,14 +137,28 @@ namespace balance_runner
         class MetricsSeats final : public SeatInputFilter
         {
         public:
-            MetricsSeats(const GameTuning& tuning, std::uint32_t seed, const Options& options) :
-                bots_(&tuning, seed)
+            MetricsSeats(const GameTuning& tuning, std::uint32_t seed, const Options& options)
             {
-                for (int view = 0; view < options.players; ++view) { this->bots_.assign(view, options.bot); }
+                if (options.bot == "match")
+                {
+                    // Every seat is the shipping driver's bot, P1 included,
+                    // which a roster cannot express: P1 stays its human host.
+                    std::vector<std::optional<BotDifficulty>> seats(options.difficulties.begin(),
+                        options.difficulties.end());
+                    auto driver = std::make_unique<MatchBotDriver>(&tuning, seats, seed);
+                    this->match_ = driver.get();
+                    this->bots_ = std::move(driver);
+                }
+                else
+                {
+                    auto driver = std::make_unique<BotDriver>(&tuning, seed);
+                    for (int view = 0; view < options.players; ++view) { driver->assign(view, options.bot); }
+                    this->bots_ = std::move(driver);
+                }
             }
             void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override
             {
-                this->bots_.filter_seats(seats, level);
+                this->bots_->filter_seats(seats, level);
                 ++this->active_ticks_;
                 for (int view = 0; view < level.player_count(); ++view)
                 {
@@ -169,9 +184,12 @@ namespace balance_runner
             }
             std::uint64_t active_ticks() const { return this->active_ticks_; }
             const std::array<SeatResult, 4>& seats() const { return this->seats_; }
+            // The shipping driver, or null under a Debug behaviour.
+            const MatchBotDriver* match() const { return this->match_; }
 
         private:
-            BotDriver bots_;
+            std::unique_ptr<SeatInputFilter> bots_;
+            const MatchBotDriver* match_ = nullptr;
             std::uint64_t active_ticks_ = 0;
             std::array<SeatResult, 4> seats_{};
         };
@@ -225,7 +243,7 @@ namespace balance_runner
             const LevelEndInfo end = level->level_end_info();
             Result result;
             result.stage = stage; result.seed = seed; result.players = options.players;
-            result.bot = options.bot; result.duration = options.duration;
+            result.bot = policy_label(options); result.duration = options.duration;
             result.active_ticks = samples.active_ticks();
             result.team_a_area = end.team_a_area; result.team_b_area = end.team_b_area;
             result.paintable_area = end.total_area;
@@ -242,6 +260,12 @@ namespace balance_runner
                 { throw std::runtime_error("Actual player has no valid paint owner"); }
                 seat.paint_area = end.player_areas.at(static_cast<std::size_t>(seat.paint_owner));
                 seat.final_health = player.health(); seat.final_ammo = player.weapon_ammo();
+                if (samples.match() != nullptr)
+                {
+                    const MatchBot* bot = samples.match()->bot(view);
+                    if (bot == nullptr) { throw std::runtime_error("A match-policy seat has no shipping bot"); }
+                    seat.difficulty = bot->difficulty();
+                }
             }
             std::vector<PlayerLethalProjectiles> victims;
             victims.reserve(static_cast<std::size_t>(level->player_count()));

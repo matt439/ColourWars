@@ -40,16 +40,16 @@ struct ResultsMenuProbeCase
 void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     GameData data;
     data.set_application(&app);
-    data.set_save(&preferences);
+    data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearResultsStates
@@ -154,7 +154,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     const auto contribution = [&](const LevelEndInfo& info, int player)
     {
         const auto players = settings.player_settings();
-        const MenuPlayerSettings& entry = players.at(static_cast<size_t>(player));
+        const SeatSetup& entry = players.at(static_cast<size_t>(player));
         constexpr std::array<const wchar_t*, 5> devices{
             L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse" };
         const std::wstring device = entry.num < 0 ? L"Waiting to join" : devices.at(static_cast<size_t>(entry.num));

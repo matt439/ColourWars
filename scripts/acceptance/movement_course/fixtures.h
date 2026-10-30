@@ -28,6 +28,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/input/gamepad.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <functional>
@@ -42,7 +43,7 @@ namespace movement_course_acceptance
     using namespace labrador;
     using namespace mattmath;
 
-    void require(bool condition, const char* message);
+    using acceptance::require;
     [[noreturn]] void fail(const std::string& message);
 
     inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(

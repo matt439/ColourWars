@@ -264,10 +264,10 @@
             GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original;
             ~RestoreIdentityTuneContent() { this->tuning = this->original_tuning; this->presentation = this->original; }
         } restore{ tuning, presentation, original_tuning, original };
-        Save preferences; PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
+        Save preferences; SettingsSession preferences_session(preferences); PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
         play.aim_marker = true; play.reduce_effects = true;
-        require(preferences.set_play_settings_and_save(play), "Cannot seed private identity background preferences");
-        require(preferences.set_input_bindings_and_save(InputBindings{ Key::j }),
+        require(preferences_session.set_play_settings_and_save(play), "Cannot seed private identity background preferences");
+        require(preferences_session.set_input_bindings_and_save(InputBindings{ Key::j }),
             "Cannot seed the unrelated private identity background Jump preference");
         const auto save_path = root / "profile/ColourWars/save_data.json";
         const std::string saved_preferences = tune_colour_bytes(save_path);
@@ -277,8 +277,8 @@
             const auto* info = levels.get(name);
             stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
         }
-        GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-        data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+        GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+        const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
         impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
         impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
@@ -295,9 +295,9 @@
         {
             probe.unchanged();
             require(!impl.can_apply() && impl.request().empty() && !impl.in_match() &&
-                tune_colour_bytes(save_path) == saved_preferences && preferences.play_settings().music_volume == 17 &&
-                preferences.play_settings().sfx_volume == 83 && preferences.play_settings().aim_marker &&
-                preferences.play_settings().reduce_effects && preferences.input_bindings().keyboard_jump == Key::j,
+                tune_colour_bytes(save_path) == saved_preferences && preferences_session.play_settings().music_volume == 17 &&
+                preferences_session.play_settings().sfx_volume == 83 && preferences_session.play_settings().aim_marker &&
+                preferences_session.play_settings().reduce_effects && preferences_session.input_bindings().keyboard_jump == Key::j,
                 "Identity background commands changed play/input preferences or queued gameplay work");
             for (size_t index = 0; index < files.size(); ++index)
             {

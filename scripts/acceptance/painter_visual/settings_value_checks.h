@@ -30,13 +30,13 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     } isolated(profile);
     const auto save_path = profile / "ColourWars" / "save_data.json";
     const auto blocked = std::filesystem::path(save_path.wstring() + L".tmp");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]
     {
         // Save lends out an effective copy of its stored play settings, so a
         // reset goes through the setter: both copies, and the file, start over.
         PlaySettings play; play.music_volume = play.sfx_volume = 0;
-        require(preferences.set_play_settings_and_save(play) &&
+        require(preferences_session.set_play_settings_and_save(play) &&
             preferences.set_display_settings_and_save(ScreenResolution::s_1280_720,
             false, TeamColourPair::blue_yellow), "Cannot seed the isolated value save");
     };
@@ -46,9 +46,9 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
     reset();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreValues
     {
@@ -279,11 +279,11 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         compare_pending("after-save-failure", snapshot, words);
         require(std::filesystem::remove(blocked), "Cannot release isolated value save refusal"); apply();
         compare_pending("after-save-recovery", snapshot, words);
-        Save reloaded; reloaded.load_save_file();
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
         require(!reloaded.fullscreen() && reloaded.team_palette() == preferences.team_palette() &&
-            reloaded.play_settings().view_shake == preferences.play_settings().view_shake &&
-            reloaded.play_settings().aim_marker == preferences.play_settings().aim_marker &&
-            reloaded.play_settings().reduce_effects == preferences.play_settings().reduce_effects,
+            reloaded_session.play_settings().view_shake == preferences_session.play_settings().view_shake &&
+            reloaded_session.play_settings().aim_marker == preferences_session.play_settings().aim_marker &&
+            reloaded_session.play_settings().reduce_effects == preferences_session.play_settings().reduce_effects,
             "Setting-value callbacks lost independently reloaded preferences");
         for (bool escape : { false, true })
         {
@@ -303,13 +303,13 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         tap(Key::down); tap(Key::right);
         for (int row = 1; row < 7; ++row) { tap(Key::down); }
         tap(Key::enter);
-        const int cutoff = preferences.play_settings().sticks[0].movement_deadzone;
+        const int cutoff = preferences_session.play_settings().sticks[0].movement_deadzone;
         tap(Key::down); tap(Key::enter); tick(); require(stack.depth() == 2, "Value child Back lost the Controls parent");
         compare_pending("old-parent-after-child", old, long_words);
         for (int row = 0; row < 9; ++row) { tap(Key::down); } apply();
-        Save reloaded; reloaded.load_save_file();
-        require(!reloaded.play_settings().view_shake && !reloaded.play_settings().aim_marker && reloaded.play_settings().reduce_effects &&
-            reloaded.play_settings().sticks[0].movement_deadzone == cutoff, "Value parent Apply lost a newer child's committed cutoff");
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+        require(!reloaded_session.play_settings().view_shake && !reloaded_session.play_settings().aim_marker && reloaded_session.play_settings().reduce_effects &&
+            reloaded_session.play_settings().sticks[0].movement_deadzone == cutoff, "Value parent Apply lost a newer child's committed cutoff");
     }
     else
     {
@@ -319,7 +319,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         compare("new-child-off", true, 6, next_words.off, next, true); tap(Key::escape); tick();
         require(stack.depth() == 2, "Controls child Back lost its Options value parent");
         compare_pending("old-parent-after-child", old, long_words); tap(Key::down); tap(Key::down); apply();
-        Save reloaded; reloaded.load_save_file(); require(!reloaded.fullscreen() && reloaded.team_palette() == TeamColourPair::random,
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); require(!reloaded.fullscreen() && reloaded.team_palette() == TeamColourPair::random,
             "Value parent Apply lost the retained windowed or Random choice");
     }
     compare_pending("old-parent-applied-after-child", old, long_words);

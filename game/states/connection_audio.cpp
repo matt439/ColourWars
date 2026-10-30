@@ -3,7 +3,7 @@
 
 ConnectionAudio::ConnectionAudio(const labrador::AudioResources* resources,
 	const Presentation& presentation) :
-	SoundBankObject(presentation.menu().sound_bank, resources),
+	colourwars::SoundBankObject(presentation.menu().sound_bank, resources),
 	lost_(presentation.pause_menu().pad_lost_sound), back_(presentation.pause_menu().pad_back_sound)
 {
 	this->lost_wave_ = this->resolve_wave(this->lost_.name);

@@ -69,7 +69,7 @@ namespace turbulence_blockout_acceptance
             Mouse mouse;
             Partitioner partitioner;
             const InputBindings bindings;
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(count);
             settings.set_stage("turbulence_blockout");
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
@@ -84,7 +84,7 @@ namespace turbulence_blockout_acceptance
             }
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &render, &audio, &services.preferences, &levels,
-                &services.tuning, &services.presentation, &resolution, nullptr, &partitioner, &mouse, &bindings);
+                &services.tuning, &services.presentation, &resolution, nullptr, &partitioner, &bindings);
             std::srand(179u);
             auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
             require(level->player_count() == count && !level->has_horizontal_motion(),

@@ -1,11 +1,13 @@
 #include "game/pch.h"
 #include "game/last_match_setup.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/input_slots.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/stage.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "engine/assets/json.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <objbase.h>
 #include <array>
@@ -23,10 +25,7 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path);
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     template<class Action> void rejects(Action action, const char* message)
     {
@@ -114,14 +113,14 @@ namespace
     {
         directory.write("{" + (version.empty() ? "" : "\"save_version\":" + version + ",") +
             other_sections + (section.empty() ? "" : ",\"last_match\":" + section) + "}");
-        Save save;
-        save.load_save_file();
+        Save save; SettingsSession save_session(save);
+        save_session.load_save_file();
         return save;
     }
 
     void require_other_sections(const Save& save)
     {
-        const auto& play = save.play_settings();
+        const auto& play = save.saved_play_settings();
         require(save.resolution() == labrador::ScreenResolution::s_1280_720 && save.fullscreen() &&
             save.team_palette() == TeamColourPair::pink_green && play.aim_sensitivity == 4 &&
             play.music_volume == 23 && play.sfx_volume == 67 && !play.view_shake && !play.aim_marker &&
@@ -141,9 +140,9 @@ namespace
             record->best_coverage_percentage == 37.5f, "Remembered setup lost a removed stage's records");
     }
 
-    MenuLevelSettings settings(int count, size_t variant)
+    MatchSetup settings(int count, size_t variant)
     {
-        MenuLevelSettings result;
+        MatchSetup result;
         result.set_player_count(count);
         result.set_screen_layout(layouts[static_cast<size_t>(count - 1)]);
         result.set_stage(variant % 2 == 0 ? "arena" : "movement_course");
@@ -178,7 +177,7 @@ namespace
         return true;
     }
 
-    void require_choices(const LastMatchSetup& actual, const MenuLevelSettings& expected)
+    void require_choices(const LastMatchSetup& actual, const MatchSetup& expected)
     {
         require(actual.players.size() == static_cast<size_t>(expected.player_count()) &&
             actual.stage == expected.stage() && actual.layout == expected.screen_layout() &&
@@ -192,7 +191,7 @@ namespace
         }
     }
 
-    void require_fresh(const MenuLevelSettings& actual)
+    void require_fresh(const MatchSetup& actual)
     {
         require(!actual.input_roster_complete(), "Restored setup retained match readiness");
         for (const auto& player : actual.player_settings())
@@ -212,7 +211,7 @@ namespace
         {
             for (size_t variant = 0; variant < weapons.size(); ++variant)
             {
-                Save save = load(directory, "");
+                Save save = load(directory, ""); SettingsSession save_session(save);
                 const auto original = settings(count, variant);
                 const LastMatchSetup captured = LastMatchSetup::capture(original);
                 require_choices(captured, original);
@@ -250,8 +249,8 @@ namespace
                     require(!section.has(key), "Remembered choices included live session state or a second count");
                 }
 
-                Save reread;
-                reread.load_save_file();
+                Save reread; SettingsSession reread_session(reread);
+                reread_session.load_save_file();
                 require(reread.last_match_setup() && same(*reread.last_match_setup(), captured),
                     "Save reload changed remembered choices");
                 require_other_sections(reread);
@@ -302,15 +301,15 @@ namespace
             "{\"players\":null}", "{\"players\":{}}", "{\"players\":[]}",
             "{\"players\":[{},{},{},{},{}]}"})
         {
-            Save save = load(directory, broken);
+            Save save = load(directory, broken); SettingsSession save_session(save);
             require(!save.last_match_setup(), "Malformed whole remembered section produced a roster");
             require_other_sections(save);
         }
         // A bad independent section must not discard valid remembered choices.
         directory.write("{\"save_version\":2,\"records\":true,\"resolution\":false,"
             "\"aim_sensitivity\":\"bad\",\"last_match\":" + valid_section + "}");
-        Save independent;
-        independent.load_save_file();
+        Save independent; SettingsSession independent_session(independent);
+        independent_session.load_save_file();
         require(independent.last_match_setup() && independent.last_match_setup()->stage == "movement_course" &&
             independent.last_match_setup()->best_of == 5 && independent.records().stages().empty(),
             "Broken preferences or records discarded remembered setup");
@@ -321,7 +320,7 @@ namespace
         for (const char* team : {"\"b\"", "\"a\"", "\"missing\"", "null", "4"})
         {
             Save save = load(directory, std::string("{\"players\":[{\"team\":") + team +
-                ",\"weapon\":\"sniper\"}],\"stage\":\"retired\",\"layout\":\"four_player\",\"best_of\":5}");
+                ",\"weapon\":\"sniper\"}],\"stage\":\"retired\",\"layout\":\"four_player\",\"best_of\":5}"); SettingsSession save_session(save);
             require(save.last_match_setup().has_value(), "A bad individual field discarded a valid-size roster");
             const auto restored = save.last_match_setup()->restore(stages);
             require(restored.player_team(0) == (std::string(team) == "\"b\"" ? PlayerTeam::b : PlayerTeam::a) &&
@@ -335,7 +334,7 @@ namespace
             "{\"team\":\"a\",\"weapon\":\"none\"},{\"team\":\"a\",\"weapon\":999}"})
         {
             Save save = load(directory, std::string("{\"players\":[") + entries +
-                "],\"stage\":\"movement_course\",\"layout\":\"bogus\",\"best_of\":2,\"duration\":-1}");
+                "],\"stage\":\"movement_course\",\"layout\":\"bogus\",\"best_of\":2,\"duration\":-1}"); SettingsSession save_session(save);
             require(save.last_match_setup().has_value(), "Invalid seat fields discarded a recoverable roster");
             const auto restored = save.last_match_setup()->restore(stages);
             require(restored.player_count() == 4 && restored.screen_layout() == labrador::ScreenLayout::four_player &&
@@ -351,20 +350,20 @@ namespace
         }
         for (const char* duration : {"0", "-0.5", "1e100", "null", "\"45\"", "true", "[]"})
         {
-            Save save = load(directory, std::string("{\"players\":[{}],\"duration\":") + duration + "}");
+            Save save = load(directory, std::string("{\"players\":[{}],\"duration\":") + duration + "}"); SettingsSession save_session(save);
             require(save.last_match_setup() && !save.last_match_setup()->restore(stages).duration(),
                 "Invalid duration survived recovery or discarded the roster");
         }
         for (const char* best_of : {"0", "-1", "2", "7", "1.5", "null", "\"3\""})
         {
             Save save = load(directory, std::string("{\"players\":[{\"team\":\"a\"},{\"team\":\"b\"}],\"best_of\":") +
-                best_of + "}");
+                best_of + "}"); SettingsSession save_session(save);
             require(save.last_match_setup() && save.last_match_setup()->restore(stages).best_of() == 1,
                 "Invalid multiplayer series length survived recovery");
         }
         for (const char* stage : {"null", "7", "\"\"", "\"removed\""})
         {
-            Save save = load(directory, std::string("{\"players\":[{}],\"stage\":") + stage + "}");
+            Save save = load(directory, std::string("{\"players\":[{}],\"stage\":") + stage + "}"); SettingsSession save_session(save);
             require(save.last_match_setup() && save.last_match_setup()->restore(stages).stage() == "arena",
                 "Invalid stage did not select the manifest's first entry");
         }
@@ -404,7 +403,7 @@ namespace
 
     void check_validation(const IsolatedSaveDirectory& directory)
     {
-        Save save = load(directory, valid_section);
+        Save save = load(directory, valid_section); SettingsSession save_session(save);
         const LastMatchSetup before = *save.last_match_setup();
         const std::string bytes = directory.contents();
         const auto invalid = [&](LastMatchSetup candidate)
@@ -436,7 +435,7 @@ namespace
         {
             candidate = before; candidate.duration = duration; invalid(candidate);
         }
-        rejects([] { LastMatchSetup::capture(MenuLevelSettings{}); }, "An unresolved empty menu was captured");
+        rejects([] { LastMatchSetup::capture(MatchSetup{}); }, "An unresolved empty menu was captured");
         auto menu = settings(2, 1); menu.set_stage("");
         rejects([&] { LastMatchSetup::capture(menu); }, "An unresolved stage was captured");
         menu = settings(2, 1); menu.set_player_team(1, PlayerTeam::none);
@@ -466,7 +465,7 @@ namespace
     {
         for (bool replacement_failure : {false, true})
         {
-            Save save = load(directory, valid_section);
+            Save save = load(directory, valid_section); SettingsSession save_session(save);
             const auto old = *save.last_match_setup();
             const std::string bytes = directory.contents();
             const auto active = settings(4, 4);
@@ -488,32 +487,32 @@ namespace
             require_other_sections(save);
             require(active.input_roster_complete() && active.player_index_for_slot(2) == 1 &&
                 active.stage() == "arena", "Failed persistence mutated the active match setup");
-            Save old_disk;
-            old_disk.load_save_file();
+            Save old_disk; SettingsSession old_disk_session(old_disk);
+            old_disk_session.load_save_file();
             require(old_disk.last_match_setup() && same(*old_disk.last_match_setup(), old),
                 "Failed remembered write damaged the reloadable previous setup");
             require(save.remember_match_setup_and_save(proposed), "Remembered save did not recover after releasing blocker");
             require(save.last_match_setup() && same(*save.last_match_setup(), proposed), "Successful retry kept old memory");
-            Save retry;
-            retry.load_save_file();
+            Save retry; SettingsSession retry_session(retry);
+            retry_session.load_save_file();
             require(retry.last_match_setup() && same(*retry.last_match_setup(), proposed), "Successful retry did not persist");
             require_other_sections(retry);
         }
-        Save save = load(directory, valid_section);
+        Save save = load(directory, valid_section); SettingsSession save_session(save);
         const auto remembered = *save.last_match_setup();
-        auto play = save.play_settings(); play.music_volume = 81; play.sticks[2] = {35, 75};
-        require(save.set_play_settings_and_save(play) &&
+        auto play = save_session.play_settings(); play.music_volume = 81; play.sticks[2] = {35, 75};
+        require(save_session.set_play_settings_and_save(play) &&
             save.set_display_settings_and_save(labrador::ScreenResolution::s_3840_2160, false, TeamColourPair::blue_orange),
             "Cannot persist independent preference changes");
         LevelEndInfo result; result.total_area = 200.0f; result.team_a_area = 150.0f; result.team_b_area = 50.0f;
         require(save.record_result_and_save("new_stage", result).recorded, "Cannot add independent stage record");
-        Save reread;
-        reread.load_save_file();
+        Save reread; SettingsSession reread_session(reread);
+        reread_session.load_save_file();
         require(reread.last_match_setup() && same(*reread.last_match_setup(), remembered) &&
             reread.resolution() == labrador::ScreenResolution::s_3840_2160 && !reread.fullscreen() &&
-            reread.team_palette() == TeamColourPair::blue_orange && reread.play_settings().music_volume == 81 &&
-            reread.play_settings().sticks[2].movement_deadzone == 35 &&
-            reread.play_settings().sticks[2].aim_deadzone == 75 && reread.records().find("retired") != nullptr &&
+            reread.team_palette() == TeamColourPair::blue_orange && reread_session.play_settings().music_volume == 81 &&
+            reread_session.play_settings().sticks[2].movement_deadzone == 35 &&
+            reread_session.play_settings().sticks[2].aim_deadzone == 75 && reread.records().find("retired") != nullptr &&
             reread.records().find("new_stage") != nullptr && reread.records().find("new_stage")->team_a_wins == 1,
             "Independent section saves overwrote remembered setup or each other");
     }
@@ -521,7 +520,7 @@ namespace
 
 int main(int argc, char** /*argv*/)
 {
-    try
+    return acceptance::run_probe("remembered setup", [&]
     {
         require(argc == 2, "Usage: remembered_setup.exe <staged content directory>");
         const IsolatedSaveDirectory directory;
@@ -539,10 +538,5 @@ int main(int argc, char** /*argv*/)
             "per-seat handicaps round-trip, recover to none and are refused unresolved; "
             "GUID-isolated profile, no window/device\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL remembered setup: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

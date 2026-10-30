@@ -3,12 +3,15 @@
 # native argument below, check-painter/evidence-record.ps1 entry, guarded
 # check-painter/verify-<leaf>.ps1 dot-source (if it has post-run evidence),
 # check-painter/diagnostics.ps1 entry and contact-sheet selector for any new
-# capture family. The one-leaf guard discovers bound *Only switches automatically.
+# capture family. The one-leaf guard discovers bound *Only switches automatically;
+# CompileOnly is the one *Only switch that is not a focused matrix (CI#2).
 [CmdletBinding()]
 param(
     [ValidateSet('x64-debug', 'x64-release')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
+    # CI#2: compile the probe with both pad readers, then stop. No probe runs.
+    [switch] $CompileOnly,
     [switch] $OmitWorktreeStatus,
     [switch] $IdentityOnly,
     [switch] $QuietOnly,
@@ -146,12 +149,20 @@ if ($WeaponTuneColoursOnly -and $Preset -ne 'x64-debug') {
 $focusedSelectors = @(
     $PSBoundParameters.GetEnumerator() | Where-Object {
         $_.Key.EndsWith('Only', [StringComparison]::OrdinalIgnoreCase) -and
+        $_.Key -ine 'CompileOnly' -and
         $_.Value -is [System.Management.Automation.SwitchParameter] -and
         $_.Value.IsPresent
     } | ForEach-Object { $_.Key }
 )
 if ($focusedSelectors.Count -gt 1) {
     throw 'Choose only one focused painter matrix.'
+}
+if ($CompileOnly -and $focusedSelectors.Count -gt 0) {
+    throw 'CompileOnly compiles both pad readers and takes no focused painter selector.'
+}
+# Each entry is one compile: $true selects the scripted gamepad reader.
+$painterCompileVariants = if ($CompileOnly) { @($false, $true) } else {
+    @([bool]($RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly))
 }
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
@@ -318,6 +329,16 @@ $process = $null
 $failure = $null
 try {
     . (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
+    if ($CompileOnly) {
+        # CI#2: a compile-only receipt, passed or failed, keeps the run's
+        # identity but none of the full matrix's scope or check descriptions.
+        $compileRecord = [ordered]@{ outcome = 'failed'; scope = 'compile-only' }
+        foreach ($key in 'preset', 'game_revision', 'engine_revision', 'worktree_status',
+            'worktree_status_omitted', 'profile') { $compileRecord[$key] = $result[$key] }
+        $compileRecord.compiled_variants = @()
+        $compileRecord.diagnostic = ''
+        $result = $compileRecord
+    }
     if ($RumbleOnly -and $Preset -eq 'x64-debug') {
         $result.background_supplement = 'Debug-only actual GameLevel script.background checks: native private-HWND facts; synthetic StateContext activation and injected hard gates; neutral physical actions, truthful presence, script/bot/replay, Music/SFX group mute before shots, recording motors and unchanged private Save. No physical pad, listening, real OS focus/power-sleep, CI1 or performance acceptance.'
     }
@@ -357,22 +378,14 @@ try {
         throw 'The probe requires this checkout and the selected d3d11/xaudio2 x64-windows preset.'
     }
     $gameDirectory = Join-Path $build 'game'
-    $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
-    $objects = @(Get-ChildItem -LiteralPath $objectDirectory `
-        -Filter '*.obj' -File -Recurse | Where-Object {
-            # Every painter mode supplies a fake factory, so no existing or
-            # future GameLevel probe can contact physical rumble motors.
-            if ($_.Name -in @('main.cpp.obj', 'rumble_xinput.cpp.obj')) { return $false }
-            if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
-            # CMake may leave an old object behind after its source is retired.
-            $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
-            $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
-            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
-        } | Sort-Object FullName)
-    if ($objects.Count -eq 0) { throw 'Game objects are missing. Run without -SkipBuild first.' }
     $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
     $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else { Join-Path $installed 'lib' }
+    # Every painter mode supplies a fake factory and never links the motor
+    # adapter, so no existing or future GameLevel probe can contact physical
+    # rumble motors.
     $libraries = @(
+        (Join-Path $gameDirectory 'colourwars_game.lib'),
+        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
@@ -383,47 +396,65 @@ try {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing build output: $path" }
     }
     $source = Join-Path $PSScriptRoot 'acceptance/painter_visual.cpp'
-    $executable = Join-Path $run 'painter_visual.exe'
-    $responseFile = Join-Path $run 'compile.rsp'
-    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-',
-        '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
-        '/DUNICODE', '/D_UNICODE', '/external:W0')
-    if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
-    if ($StagePreviewBackgroundTuneColourOnly -and ($arguments -notcontains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
-        throw 'StagePreviewBackgroundTuneColourOnly requires the scripted gamepad reader.'
+    $compiledVariants = @()
+    foreach ($scriptedPads in $painterCompileVariants) {
+        # CompileOnly keeps each reader's outputs apart; a probe run keeps its names.
+        $variantSuffix = if (-not $CompileOnly) { '' } elseif ($scriptedPads) { '-scripted-pads' } else { '-normal-pads' }
+        $executable = Join-Path $run "painter_visual$variantSuffix.exe"
+        $responseFile = Join-Path $run "compile$variantSuffix.rsp"
+        $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-',
+            '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
+            '/DUNICODE', '/D_UNICODE', '/external:W0')
+        if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
+        if ($scriptedPads) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+        if ($StagePreviewBackgroundTuneColourOnly -and ($arguments -notcontains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
+            throw 'StagePreviewBackgroundTuneColourOnly requires the scripted gamepad reader.'
+        }
+        if ($HudLabelTuneColoursOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
+            throw 'HudLabelTuneColoursOnly requires the normal gamepad reader.'
+        }
+        if ($HudClosingMaterialsOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
+            throw 'HudClosingMaterialsOnly requires the normal gamepad reader.'
+        }
+        if ($HudClosingShadeOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
+            throw 'HudClosingShadeOnly requires the normal gamepad reader.'
+        }
+        if ($HudPaperTuneColoursOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
+            throw 'HudPaperTuneColoursOnly requires the normal gamepad reader.'
+        }
+        foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
+            $arguments += '/I' + (Quote-Path $include)
+        }
+        foreach ($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),
+            (Join-Path $installed 'include/directxtk'),
+            (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
+            $arguments += '/external:I' + (Quote-Path $include)
+        }
+        $arguments += @((Quote-Path $source), ('/Fe:' + (Quote-Path $executable)),
+            ('/Fo:' + (Quote-Path (Join-Path $run "painter_visual$variantSuffix.obj"))))
+        $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
+        $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
+            'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',
+            'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib')
+        $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
+        $reader = if ($scriptedPads) { 'scripted pads' } else { 'normal pads' }
+        Write-Host "Compile painter visual probe ($Preset, $reader)"
+        Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
+            -LogPath (Join-Path $run "compile$variantSuffix.log")
+        $compiledVariants += [ordered]@{
+            reader = $reader
+            executable = $executable
+            executable_sha256 = (Get-FileHash -LiteralPath $executable).Hash
+        }
+        # A failed second reader still records the first one it compiled.
+        if ($CompileOnly) { $result.compiled_variants = $compiledVariants }
     }
-    if ($HudLabelTuneColoursOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
-        throw 'HudLabelTuneColoursOnly requires the normal gamepad reader.'
+    if ($CompileOnly) {
+        # Return runs the finally below: it writes result.json and restores state.
+        $result.outcome = 'compiled'
+        $result.diagnostic = 'Probe compiled with both pad readers; no probe launched, no capture or GPU claim.'
+        return
     }
-    if ($HudClosingMaterialsOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
-        throw 'HudClosingMaterialsOnly requires the normal gamepad reader.'
-    }
-    if ($HudClosingShadeOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
-        throw 'HudClosingShadeOnly requires the normal gamepad reader.'
-    }
-    if ($HudPaperTuneColoursOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
-        throw 'HudPaperTuneColoursOnly requires the normal gamepad reader.'
-    }
-    foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
-        $arguments += '/I' + (Quote-Path $include)
-    }
-    foreach ($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),
-        (Join-Path $installed 'include/directxtk'),
-        (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
-        $arguments += '/external:I' + (Quote-Path $include)
-    }
-    $arguments += @((Quote-Path $source), ('/Fe:' + (Quote-Path $executable)),
-        ('/Fo:' + (Quote-Path (Join-Path $run 'painter_visual.obj'))))
-    $arguments += @($objects | ForEach-Object { Quote-Path $_.FullName })
-    $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
-    $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
-        'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',
-        'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib')
-    $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
-    Write-Host "Compile painter visual probe ($Preset)"
-    Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
-        -LogPath (Join-Path $run 'compile.log')
 
     $result.staged_content_hashes = @(
         'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',

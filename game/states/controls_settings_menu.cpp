@@ -4,7 +4,6 @@
 #include "game/states/keyboard_jump_menu.h"
 #include "game/states/pad_buttons_menu.h"
 #include "game/states/profiles_menu.h"
-#include "game/objects/crude_drawing.h"
 #include "game/controls_text.h"
 #include "game/sound_groups.h"
 #include <algorithm>
@@ -13,7 +12,7 @@ using namespace labrador;
 using namespace mattmath;
 
 ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
-	PauseMenuPage(context, player)
+	SettingsPanelPage(context, player)
 {
 	this->volume_preview_sound_ = this->resolve_wave(
 		this->presentation().controls_settings().volume_preview_sound.name);
@@ -22,39 +21,15 @@ ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
 void ControlsSettingsMenu::init()
 {
 	this->input()->reset_actions();
-	this->selection_ = this->save()->play_settings();
-	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	MenuStyle style = this->menu_style();
-	style.item_font = look.item_font;
-	this->set_widget_position(look.layout.position);
-	this->set_widget_spacing(look.layout.spacing);
+	this->selection_ = this->settings_session()->play_settings();
+	const ControlsSettingsPresentation& look = this->panel_look();
+	const MenuStyle style = this->panel_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
 	this->set_prompts(MenuPrompt::controls);
-	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
-		this->render_resources(), CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
-	const RectangleF paper_bounds(
-		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size);
-	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
-		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+	this->build_panel(style);
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
-	this->texture_container_ = std::make_unique<UiContainer>("textures");
-	this->texture_container_->add_child(this->background_.get());
-	this->texture_container_->add_child(this->paper_.get());
-	this->text_container_ = std::make_unique<UiContainer>("text");
-	const auto add_text = [this](const char* name, const std::wstring& value,
-		const std::string& font, const Vector2F& position, const Colour& colour)
-	{
-		this->text_.push_back(std::make_unique<UiText>(name, value, font,
-			position, this->render_resources(), colour));
-		UiText* widget = this->text_.back().get();
-		this->text_container_->add_child(widget);
-		return widget;
-	};
 	const auto fit_action = [&look](UiText* widget)
 	{
 		const RectangleF bounds = widget->bounds();
@@ -62,7 +37,7 @@ void ControlsSettingsMenu::init()
 			(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - bounds.x) / bounds.width,
 			(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / bounds.height }));
 	};
-	add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
+	this->add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
 		look.heading_position, look.art.ink);
 	const auto make_row = [this, &style, &look, &value_limit](const char* name, const std::wstring& label,
 		int row, int& value, int minimum, int maximum, int step)
@@ -79,40 +54,40 @@ void ControlsSettingsMenu::init()
 					this->presentation().controls_settings().art.focus_ink);
 			}, &look.art, value_limit);
 	};
-	UiText* sticks = add_text("sticks", this->text().item(MenuItem::pad_sticks), style.item_font,
+	UiText* sticks = this->add_text("sticks", this->text().item(MenuItem::pad_sticks), style.item_font,
 		this->calculate_widget_position(0, 0), look.art.ink);
 	this->focus_.add(sticks, [this]
 	{
 		this->play_wave(this->confirm_sound_);
 		this->input()->reset_actions();
-		this->context()->push(std::make_unique<StickSettingsMenu>(this->menu_context(), this->pausing_player()));
+		this->context()->push(std::make_unique<StickSettingsMenu>(this->menu_context(), this->opening_slot()));
 	});
-	UiText* keyboard = add_text("keyboard_jump", this->text().item(MenuItem::keyboard_jump), style.item_font,
+	UiText* keyboard = this->add_text("keyboard_jump", this->text().item(MenuItem::keyboard_jump), style.item_font,
 		this->calculate_widget_position(0, 1), look.art.ink);
 	fit_action(keyboard);
 	this->focus_.add(keyboard, [this]
 	{
 		this->play_wave(this->confirm_sound_);
 		this->input()->reset_actions();
-		this->context()->push(std::make_unique<KeyboardJumpMenu>(this->menu_context(), this->pausing_player()));
+		this->context()->push(std::make_unique<KeyboardJumpMenu>(this->menu_context(), this->opening_slot()));
 	});
-	UiText* pad_buttons = add_text("pad_buttons", this->text().item(MenuItem::pad_buttons), style.item_font,
+	UiText* pad_buttons = this->add_text("pad_buttons", this->text().item(MenuItem::pad_buttons), style.item_font,
 		this->calculate_widget_position(0, 2), look.art.ink);
 	fit_action(pad_buttons);
 	this->focus_.add(pad_buttons, [this]
 	{
 		this->play_wave(this->confirm_sound_);
 		this->input()->reset_actions();
-		this->context()->push(std::make_unique<PadButtonsMenu>(this->menu_context(), this->pausing_player()));
+		this->context()->push(std::make_unique<PadButtonsMenu>(this->menu_context(), this->opening_slot()));
 	});
-	UiText* profiles = add_text("profiles", this->text().item(MenuItem::profiles), style.item_font,
+	UiText* profiles = this->add_text("profiles", this->text().item(MenuItem::profiles), style.item_font,
 		this->calculate_widget_position(0, 3), look.art.ink);
 	fit_action(profiles);
 	this->focus_.add(profiles, [this]
 	{
 		this->play_wave(this->confirm_sound_);
 		this->input()->reset_actions();
-		this->context()->push(std::make_unique<ProfilesMenu>(this->menu_context(), this->pausing_player()));
+		this->context()->push(std::make_unique<ProfilesMenu>(this->menu_context(), this->opening_slot()));
 	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
 		4, this->selection_.music_volume, 0, 100, 10);
@@ -155,16 +130,16 @@ void ControlsSettingsMenu::init()
 		this->focus_.add(row);
 	}
 	this->refresh_values();
-	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
+	UiText* apply = this->add_text("apply", this->text().item(MenuItem::apply), style.item_font,
 		this->calculate_widget_position(0, 9), look.art.ink);
 	fit_action(apply);
-	UiText* back = add_text("back", this->text().item(MenuItem::back), style.item_font,
+	UiText* back = this->add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 10), look.art.ink);
-	this->status_ = add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
+	this->status_ = this->add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
 	this->set_status(this->text().status.controls_pending, look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
-	this->controls_ = add_text("controls", L"",
+	this->controls_ = this->add_text("controls", L"",
 		look.help_font, look.controls_position, look.art.ink);
 	this->controls_limit_ = RectangleF(look.controls_position, look.controls_size);
 	this->refresh_help();
@@ -175,7 +150,7 @@ void ControlsSettingsMenu::refresh_help()
 	// MenuPage captured this copy when it was constructed. Refresh only the
 	// effective keys, retaining the page's authored template, font and geometry.
 	this->controls_->set_text(controls_text::controls_help(this->text().help.controls,
-		this->save()->input_bindings()));
+		this->settings_session()->input_bindings()));
 	this->controls_->set_scale(1.0f);
 	const RectangleF bounds = this->controls_->bounds();
 	this->controls_->set_scale(std::min({ 1.0f, this->controls_limit_.width / bounds.width,
@@ -184,7 +159,7 @@ void ControlsSettingsMenu::refresh_help()
 
 void ControlsSettingsMenu::on_resume()
 {
-	PauseMenuPage::on_resume();
+	SettingsPanelPage::on_resume();
 	this->input()->reset_actions();
 	this->refresh_help();
 }
@@ -215,31 +190,18 @@ void ControlsSettingsMenu::refresh_values()
 void ControlsSettingsMenu::apply_settings()
 {
 	// The child commits pad profiles independently of these shared preferences.
-	this->selection_.sticks = this->save()->play_settings().sticks;
-	this->selection_.pad_rumble = this->save()->play_settings().pad_rumble;
-	this->selection_.pad_comfort = this->save()->play_settings().pad_comfort;
-	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
+	this->selection_.sticks = this->settings_session()->play_settings().sticks;
+	this->selection_.pad_rumble = this->settings_session()->play_settings().pad_rumble;
+	this->selection_.pad_comfort = this->settings_session()->play_settings().pad_comfort;
+	const bool saved = this->settings_session()->set_play_settings_and_save(this->selection_);
 	// The settings in memory changed whether or not the file did. The groups
 	// reach every playing and paused voice, so a music fade carries on.
-	sound_groups::apply(*this->data()->audio_resources(), this->save()->play_settings());
+	sound_groups::apply(*this->data()->audio_resources(), this->settings_session()->play_settings());
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? this->text().status.controls_saved :
 		this->text().status.active_save_failed,
 		saved ? this->presentation().controls_settings().art.focus_ink :
 		this->presentation().main_menu().options_warning_colour);
-}
-
-void ControlsSettingsMenu::close()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
-}
-
-bool ControlsSettingsMenu::debug_dismiss(bool /*leaving_match*/)
-{
-	this->close();
-	return true;
 }
 
 void ControlsSettingsMenu::update_page(float /*dt*/)
@@ -249,9 +211,9 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 		return;
 	}
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	if (this->pausing_player() >= 0)
+	if (this->opening_slot() >= 0)
 	{
-		inputs = { this->pausing_player_input(inputs) };
+		inputs = { this->opening_slot_input(inputs) };
 	}
 	for (const ProcessedMenuInput& input : inputs)
 	{
@@ -282,7 +244,7 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 						// Audition the pending value even when the saved setting is mute.
 						// The preview wave is in no sound group, because the SFX group
 						// still carries the applied value.
-						SoundBankObject::play_wave(this->volume_preview_sound_,
+						colourwars::SoundBankObject::play_wave(this->volume_preview_sound_,
 							this->presentation().controls_settings().volume_preview_sound.volume *
 							this->selection_.sfx_gain());
 					}

@@ -27,10 +27,23 @@ namespace turbulence_movers_acceptance
             "Mover trial must be an explicit-only two-object extension of the static skeleton");
         for (rapidjson::SizeType index = 0; index < 20; ++index)
         { require(candidate["collision_objects"][index] == baseline["collision_objects"][index], "Mover trial altered a static collision object"); }
+        // POL#40: the trial keeps the blockout's stations, in order, and adds
+        // only the two ends of each mover.
+        const auto& shared = baseline["stations"];
+        const auto& stations = candidate["stations"];
+        require(shared.Size() == 10 && stations.Size() == 14, "Mover trial must add four mover-end stations to the ten shared");
+        for (rapidjson::SizeType index = 0; index < shared.Size(); ++index)
+        { require(stations[index] == shared[index], "Mover trial altered a shared station"); }
+        for (rapidjson::SizeType index = shared.Size(); index < stations.Size(); ++index)
+        {
+            require(std::string(stations[index]["name"].GetString()).rfind("mover_", 0) == 0,
+                "Mover trial adds a station that is not a mover end");
+        }
         baseline.RemoveMember("display_name"); baseline.RemoveMember("include_in_random"); baseline.RemoveMember("collision_objects");
+        baseline.RemoveMember("stations");
         auto candidate_metadata = document(context.stage);
         candidate_metadata.RemoveMember("display_name"); candidate_metadata.RemoveMember("include_in_random");
-        candidate_metadata.RemoveMember("collision_objects");
+        candidate_metadata.RemoveMember("collision_objects"); candidate_metadata.RemoveMember("stations");
         require(candidate_metadata == baseline, "Mover trial altered static spawns, bounds, resources or unrelated metadata");
 
         Trial static_level(context, baseline_path, settings());

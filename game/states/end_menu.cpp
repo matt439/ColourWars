@@ -141,7 +141,7 @@ void EndMenuInitial::init()
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size), this->render_resources(),
 		&style, &look.art, &this->focus_, this->restart_.get(),
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
@@ -174,13 +174,13 @@ void EndMenuInitial::init()
 			this->play_wave(this->confirm_sound_);
 			if (tools)
 			{
-				this->context()->transition_to(std::make_unique<MainMenuWeaponSelect>(
-					this->menu_context(), this->session_));
+				this->context()->transition_to(make_main_menu_page(this->menu_context(),
+					MainMenuRoute::re_pick(MainMenuScreen::weapon_select, this->session_)));
 			}
 			else
 			{
-				this->context()->transition_to(std::make_unique<MainMenuStageSelect>(
-					this->menu_context(), this->session_));
+				this->context()->transition_to(make_main_menu_page(this->menu_context(),
+					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_)));
 			}
 		};
 
@@ -199,8 +199,8 @@ void EndMenuInitial::init()
 		this->focus_.add(this->restart_.get(), [this, picker]
 			{
 				this->play_wave(this->confirm_sound_);
-				this->context()->transition_to(std::make_unique<MainMenuStageSelect>(
-					this->menu_context(), this->session_, picker));
+				this->context()->transition_to(make_main_menu_page(this->menu_context(),
+					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_, picker)));
 			});
 	}
 	if (this->replay_)

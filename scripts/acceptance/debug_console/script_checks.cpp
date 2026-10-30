@@ -275,8 +275,8 @@ namespace debug_console_acceptance
 		match.settings = planned(1);
 		director.attach_match(match);
 		const auto hook = [&] { director.before_match_update(match, dt); };
-		const std::vector<PlayerInputData> none(input_slots::count);
-		const auto update = [&] { director.update_match(match, none, dt); };
+		const std::vector<SlotInput> none(input_slots::count);
+		const auto update = [&] { update_match(director, match, none, dt); };
 
 		require(impl.execute("exec waits a").ok, "exec typed at the console is accepted");
 		require(!impl.execute("exec hello").ok && any_line(log, "exec: waits.cfg is running ('exec.stop' first)"),
@@ -390,16 +390,30 @@ namespace debug_console_acceptance
 	// Every shipped script, followed from the top-level ones through their
 	// exec calls with the arguments they pass: every statement names an entry
 	// with an accepted word count, and every stage, bot and station
-	// exists. So names in scripts cannot drift.
+	// exists. A station belongs to the stage the walk last named (the Movement
+	// Course before any). So names in scripts cannot drift.
 	void check_shipped_scripts(GameTuning& tuning, Presentation& presentation,
 		const std::filesystem::path& game_directory)
 	{
 		const std::filesystem::path folder(labrador::widen(source_paths::scripts_directory));
 		TestDirector test(tuning, presentation);
 		const DebugRegistry& registry = test.impl.registry();
-		LevelLoadedInfo course((game_directory / L"levels" / L"movement_course.json").string().c_str());
-		std::vector<std::string> stations;
-		for (const LevelStation& station : course.stations()) { stations.push_back(station.name); }
+		std::map<std::string, std::vector<std::string>> stations;
+		const auto stations_of = [&](const std::string& stage) -> const std::vector<std::string>&
+			{
+				auto found = stations.find(stage);
+				if (found == stations.end())
+				{
+					LevelLoadedInfo level((game_directory / L"levels" /
+						(labrador::widen(stage) + L".json")).string().c_str());
+					std::vector<std::string> names;
+					for (const LevelStation& station : level.stations()) { names.push_back(station.name); }
+					found = stations.emplace(stage, std::move(names)).first;
+				}
+				return found->second;
+			};
+		std::string stage = "movement_course";
+		int players = 1;
 
 		std::vector<std::string> names;
 		for (const auto& entry : std::filesystem::directory_iterator(folder))
@@ -434,11 +448,13 @@ namespace debug_console_acceptance
 					{
 						require(std::filesystem::is_regular_file(game_directory / L"levels" /
 							(labrador::widen(word(1)) + L".json")), statement.where() + ": no stage " + word(1));
+						stage = word(1);
 					}
 					else if (w[0] == "goto")
 					{
-						require(std::find(stations.begin(), stations.end(), word(1)) != stations.end(),
-							statement.where() + ": no Movement Course station " + word(1));
+						const std::vector<std::string>& named = stations_of(stage);
+						require(std::find(named.begin(), named.end(), word(1)) != named.end(),
+							statement.where() + ": no " + stage + " station " + word(1));
 					}
 					else if (w[0] == "bot" && w.size() == 3)
 					{
@@ -449,6 +465,21 @@ namespace debug_console_acceptance
 					{
 						require(Bot::is_behaviour(word(2)), statement.where() + ": no bot " + word(2));
 					}
+					if (w[0] == "players")
+					{
+						require(DebugArgs::parse_int(word(1), players) && players >= 1 && players <= 4,
+							statement.where() + ": players " + word(1));
+					}
+					else if (w[0] == "seat")
+					{
+						int seat = 0;
+						MatchRequest::SeatChoice choice;
+						const std::string invalid = MatchPlanner::parse_seat_choice(word(2), word(3), choice);
+						require(DebugArgs::parse_int(word(1), seat) && seat >= 1 && seat <= players &&
+							invalid.empty() && (seat != 1 || choice.field != MatchRequest::SeatChoice::Field::bot),
+							statement.where() + ": seat " + word(1) + " in a " + std::to_string(players) +
+							"-player script: " + invalid);
+					}
 				}
 			};
 		for (const std::string& name : names)
@@ -457,6 +488,8 @@ namespace debug_console_acceptance
 			require(text.rfind("// ", 0) == 0, name + ".cfg starts with a // summary line");
 			if (text.find('$') == std::string::npos)
 			{
+				stage = "movement_course";
+				players = 1;
 				lint(name, {}, 0);
 			}
 		}

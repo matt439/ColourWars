@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -21,9 +22,9 @@ namespace
         BotDifficulty difficulty;
     };
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -77,7 +78,7 @@ namespace
 
     void run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const std::vector<PlayerInputData> physical = physical_inputs();
@@ -100,7 +101,7 @@ namespace
                 "Navigation trial escaped its finite active-step budget");
             require(tape.steps.back().size() == 2, "Navigation trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Navigation bot emitted a device/menu/pause action");
             require(tape.steps.back()[0].x_movement == 0.0f && !tape.steps.back()[0].primary_shoot,
                 "Navigation driver changed the stationary human's input");
@@ -150,7 +151,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot navigation", [&]
     {
         require(argc == 2, "usage: bot_navigation <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -171,7 +172,5 @@ int main(int argc, char** argv)
         std::cout << "PASS 30 bounded actual-driver CQ home drops, named lower/scoring landings and owned floor paint; "
             "two 600-step final-input replays; platform ascent and general navigation remain separate qualification\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot navigation: " << error.what() << '\n'; return 1; }
+    });
 }

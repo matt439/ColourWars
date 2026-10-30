@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // Connection copy, device and roster labels and the Join/Pause/Team bounds.
 namespace menu_text_acceptance
@@ -321,9 +322,9 @@ namespace menu_text_acceptance
         };
         const auto weapon_edge = variants.load([&](rapidjson::Document& d) { weapon(d, false); });
         weapon_edge.validate_resources(world.render, world.audio);
-        UiTextDropShadow weapon_label("weapon-label", L"P11~", weapon_edge.menu().detail_font,
+        colourwars::UiTextDropShadow weapon_label("weapon-label", L"P11~", weapon_edge.menu().detail_font,
             mattmath::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour());
-        UiTextDropShadow authored_shadow("team-label", L"P11~", weapon_edge.menu().detail_font,
+        colourwars::UiTextDropShadow authored_shadow("team-label", L"P11~", weapon_edge.menu().detail_font,
             mattmath::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour(), weapon_edge.menu().item_shadow_offset);
         // The weapon tile starts at 650 minus six units of icon padding and
         // the two-unit rule. Its implicit shadow differs from Team's 1.5.
@@ -386,7 +387,7 @@ namespace menu_text_acceptance
         };
         const auto fits = variants.load([&](rapidjson::Document& d) { edit(d, false); });
         fits.validate_resources(world.render, world.audio);
-        UiTextDropShadow row("results-row", attained, fits.results_menu().contribution_font,
+        colourwars::UiTextDropShadow row("results-row", attained, fits.results_menu().contribution_font,
             mattmath::Vector2F(x, 815.0f), &world.render, Colour::black, Colour(), mattmath::Vector2F::ZERO);
         require(row.bounds().right() == 1610.0f && row.bounds().height == 24.0f,
             "Complete Results row lost its unscaled zero-shadow bounds or inclusive full suffix width");
@@ -472,11 +473,11 @@ namespace menu_text_acceptance
                 const bool team = std::string(entry.key) == "teams_required";
                 const auto& style = width_edge.menu();
                 const mattmath::Vector2F position(150.0f, team ? 860.0f : 850.0f);
-                UiTextDropShadow text("connection", L"~", style.detail_font, position, &world.render,
+                colourwars::UiTextDropShadow text("connection", L"~", style.detail_font, position, &world.render,
                     Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.detail_shadow_offset);
                 require(text.bounds().x == 150.0f && text.bounds().right() == (team ? 1866.0f : 1826.0f),
                     "Join/Team connection text lost its retained transparent-shadow width at the inclusive inset edge");
-                UiTextDropShadow tall("connection-tall", L"~", height_edge.menu().detail_font, position, &world.render,
+                colourwars::UiTextDropShadow tall("connection-tall", L"~", height_edge.menu().detail_font, position, &world.render,
                     Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), height_edge.menu().detail_shadow_offset);
                 require(tall.bounds().bottom() == 926.0f,
                     "Join/Team actual glyph height and transparent shadow missed the inset paper bottom");
@@ -499,7 +500,7 @@ namespace menu_text_acceptance
         const auto suffix_edge = variants.load([&](rapidjson::Document& d)
             { suffix(d, "menu_connection_suffix_edge"); });
         suffix_edge.validate_resources(world.render, world.audio);
-        UiTextDropShadow reserved("reserved-pad", L"P4 - Pad 4~", suffix_edge.menu().item_font,
+        colourwars::UiTextDropShadow reserved("reserved-pad", L"P4 - Pad 4~", suffix_edge.menu().item_font,
             mattmath::Vector2F(150.0f, 650.0f), &world.render, Colour::black,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), suffix_edge.menu().item_shadow_offset);
         require(reserved.bounds() == mattmath::RectangleF(150.0f, 650.0f, 1676.0f, 100.0f),
@@ -515,9 +516,9 @@ namespace menu_text_acceptance
             d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(172.5f);
         };
         const auto touches_heading = variants.load(team_order);
-        UiTextDropShadow team_heading("team-heading", L"Fit", touches_heading.menu().heading_font,
+        colourwars::UiTextDropShadow team_heading("team-heading", L"Fit", touches_heading.menu().heading_font,
             mattmath::Vector2F(150.0f, 150.0f), &world.render, Colour::black, Colour(), touches_heading.menu().heading_shadow_offset);
-        UiTextDropShadow heading_warning("heading-warning", L"Fit", touches_heading.menu().detail_font,
+        colourwars::UiTextDropShadow heading_warning("heading-warning", L"Fit", touches_heading.menu().detail_font,
             mattmath::Vector2F(150.0f, 172.5f), &world.render, Colour::black, Colour(), touches_heading.menu().detail_shadow_offset);
         require(team_heading.bounds().bottom() == 172.5f && heading_warning.bounds().y == team_heading.bounds().bottom(),
             "Team warning lost its exact heading-contact geometry");
@@ -541,13 +542,13 @@ namespace menu_text_acceptance
             touches_final_card.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) &&
             touches_final_card.player_identity().ui_gap == 12.0f,
             "Team complete-row boundary fixture no longer matches the authored icons, spacing, focus or badge");
-        UiTextDropShadow final_label("final-label", L"P4 - Pad 4", touches_final_card.menu().detail_font,
+        colourwars::UiTextDropShadow final_label("final-label", L"P4 - Pad 4", touches_final_card.menu().detail_font,
             mattmath::Vector2F(150.0f, 775.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().item_shadow_offset);
         mattmath::RectangleF final_card = mattmath::RectangleF::union_of(final_label.bounds(),
             mattmath::RectangleF(84.0f, 764.75f, 54.0f, 42.0f));
         final_card = mattmath::RectangleF::union_of(final_card, mattmath::RectangleF(650.0f, 775.0f, 150.0f, 50.0f));
         final_card.inflate(mattmath::Vector2F(28.0f, 7.0f));
-        UiTextDropShadow final_warning("final-warning", L"Fit", touches_final_card.menu().detail_font,
+        colourwars::UiTextDropShadow final_warning("final-warning", L"Fit", touches_final_card.menu().detail_font,
             mattmath::Vector2F(150.0f, 832.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().detail_shadow_offset);
         require(final_card.bottom() == 832.0f && final_warning.bounds().y == final_card.bottom() &&
             final_warning.bounds().bottom() == 853.0f,

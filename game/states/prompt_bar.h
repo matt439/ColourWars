@@ -6,10 +6,11 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "game/carried/ui_text_drop_shadow.h"
 
 // Text legend for menu controls. Keeps button labels and actions separate
 // so pages do not depend on the legend's formatting.
-class PromptBar final : public labrador::UiTextDropShadow
+class PromptBar final : public colourwars::UiTextDropShadow
 {
 public:
 	struct Prompt

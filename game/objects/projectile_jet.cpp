@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_jet.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -48,11 +47,11 @@ void ProjectileJet::update(float dt)
 
 	this->rectangle_.offset(displacement.x, displacement.y);
 
-	AnimationObject::update(dt);
+	colourwars::AnimationObject::update(dt);
 }
 void ProjectileJet::draw(DrawList& draw_list) const
 {
-	this->AnimationObject::draw(draw_list,
+	this->colourwars::AnimationObject::draw(draw_list,
 		RectangleF(this->rectangle_.center(), this->details().size));
 }
 RectangleF ProjectileJet::bounds() const

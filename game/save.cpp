@@ -341,6 +341,30 @@ namespace
     private:
         Writer<FileWriteStream>& writer_;
     };
+
+    // Copies a save that will not load to save_data.unreadable-<n>.json beside
+    // it, taking the first free n. copy_file never replaces an existing file,
+    // so an earlier copy is never lost. Best effort: a failure is reported and
+    // the caller keeps its defaults either way.
+    void keep_unreadable_save(const std::filesystem::path& save, const char* cause)
+    {
+        const std::string from = path_to_utf8(save);
+        std::error_code ec;
+        for (int copy = 1; copy <= 999; ++copy)
+        {
+            const std::filesystem::path aside = save.parent_path() / (save.stem().wstring() +
+                L".unreadable-" + std::to_wstring(copy) + save.extension().wstring());
+            if (std::filesystem::copy_file(save, aside, std::filesystem::copy_options::none, ec))
+            {
+                fprintf(stderr, "save: %s could not be read (%s); kept a copy at %s and started from defaults.\n",
+                    from.c_str(), cause, path_to_utf8(aside).c_str());
+                return;
+            }
+            if (ec != std::errc::file_exists) { break; }
+        }
+        fprintf(stderr, "save: %s could not be read (%s) and could not be copied aside (%s); started from defaults.\n",
+            from.c_str(), cause, ec ? ec.message().c_str() : "no free copy name");
+    }
 }
 
 SaveData Save::load_from_json(const char* json_path) const
@@ -365,15 +389,18 @@ SaveData Save::load_from_json(const char* json_path) const
     }
 
     auto data = SaveData();
-    // One malformed section resets only itself.
+    // One malformed section resets only itself, and says so: the next write
+    // replaces what it held with the defaults.
     for (const SaveSection* section : save_sections())
     {
         try
         {
             section->read(root, data);
         }
-        catch (const std::runtime_error&)
+        catch (const std::runtime_error& error)
         {
+            fprintf(stderr, "save: %s section \"%s\" could not be read (%s); "
+                "it starts from defaults.\n", json_path, section->key(), error.what());
             section->reset(data);
         }
     }
@@ -390,14 +417,6 @@ bool Save::file_exists(const std::string& path)
 	return true;
 }
 void Save::load_save_file()
-{
-    this->load_save_data();
-    // Profiles may have changed underneath; every pad starts as itself.
-    this->worn_.fill(-1);
-    this->refresh_effective();
-}
-
-void Save::load_save_data()
 {
     const std::string path = save_file_path();
 
@@ -434,9 +453,11 @@ void Save::load_save_data()
     {
         this->save_data_ = this->load_from_json(path.c_str());
     }
-    catch (const std::exception&)
+    catch (const std::exception& error)
     {
         // Unreadable or corrupt saves use defaults; a later settings change retries saving.
+        // The next write would replace the file, so keep a copy of it first.
+        keep_unreadable_save(path_from_utf8(path), error.what());
         this->save_data_ = SaveData();
     }
 }

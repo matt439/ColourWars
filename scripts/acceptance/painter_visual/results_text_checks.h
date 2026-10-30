@@ -23,9 +23,9 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     RecordOutcome record; record.recorded = record.new_best = true; record.value = record.best = 68.4f;
 
     const NestedSaveProfile profile(output / "results-text-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed Results text's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Results text's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "results-text-profile/ColourWars/save_data.json", std::ios::binary);
@@ -33,9 +33,9 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(3); settings.set_duration(73.0f);
     settings.set_stage("movement_course"); settings.set_screen_layout(ScreenLayout::two_player);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -47,14 +47,14 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreResultsText()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
     size_t updates = 0, readbacks = 0, rows = 0, crops = 0, openings = 0, pops = 0, font_controls = 0;
     const auto unchanged = [&]
     {
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(ledger(single) == single_ledger && ledger(series) == series_ledger &&
             single.score_string(original.menu_text().results) == L"Wins: A 1 - B 0  |  First to 1" && single.result_string(original.menu_text().results) == L"Team A wins the series!" &&
             series.score_string(original.menu_text().results) == L"Wins: A 1 - B 0  |  First to 2" && series.result_string(original.menu_text().results) == L"Draw - no win awarded" &&
@@ -135,15 +135,15 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
             std::array<std::string, 3>{ original.menu().heading_font, original.results_menu().contribution_font,
                 original.menu().detail_font } :
             std::array<std::string, 3>{ style.heading_font, look.contribution_font, style.detail_font };
-        UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::ZERO,
+        colourwars::UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
-        UiTextDropShadow contribution("independent-results-contribution", words[1], fonts[1], look.contribution_position,
+        colourwars::UiTextDropShadow contribution("independent-results-contribution", words[1], fonts[1], look.contribution_position,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
-        UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::ZERO,
+        colourwars::UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !proceed_visible);
         prompt.set_position({ (menu_consts::DESIGN_RESOLUTION.x - prompt.bounds().width) / 2.0f, look.proceed_y });
-        UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::ZERO,
+        colourwars::UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
         const float fill_right = (menu_consts::DESIGN_RESOLUTION.x + look.fill_box_size.x) / 2.0f;
         record_line.set_position({ fill_right - record_line.bounds().width, look.record_y });

@@ -6,7 +6,9 @@ param(
     [ValidateRange(1,4)][int] $Players = 2,
     [ValidateRange(0.05,600.0)][double] $Duration = 60,
     [ValidateSet('sprayer','sniper','roller','mister','bucket')][string[]] $Tools,
-    [ValidateSet('idle','walk','jump','chase','paint','skirmish')][string] $Bot = 'paint',
+    [ValidateSet('idle','walk','jump','chase','paint','skirmish','match')][string] $Bot = 'paint',
+    # match only: the shipping bot's difficulty per seat (default Normal for every seat).
+    [ValidateSet('easy','normal','hard')][string[]] $Difficulty,
     [string] $Csv,
     [string] $PaintCsv,
     [string] $OutputDirectory,
@@ -127,6 +129,9 @@ foreach ($id in $Stage) {
 }
 if (-not $Tools) { $Tools = @('sprayer') * $Players }
 if ($Tools.Count -ne $Players) { throw 'Tools must contain exactly one weapon for each player.' }
+if ($Difficulty -and $Bot -ne 'match') { throw 'Difficulty applies only to the match bot.' }
+if ($Bot -eq 'match' -and -not $Difficulty) { $Difficulty = @('normal') * $Players }
+if ($Bot -eq 'match' -and $Difficulty.Count -ne $Players) { throw 'Difficulty must name exactly one level for each player.' }
 $run = if ($PSBoundParameters.ContainsKey('OutputDirectory')) {
     Resolve-BalancePath $OutputDirectory
 } else {
@@ -171,7 +176,7 @@ $receipt = Join-Path $run 'run-info.json'
 $result = [ordered]@{
     outcome='running'; started_utc=[DateTime]::UtcNow.ToString('o'); preset=$Preset
     stages=$Stage; seeds=$Seed; players=$Players; requested_duration=$Duration
-    tools=$Tools; bot=$Bot; csv=$csvPath; paint_csv=$paintPath; executable=$exe
+    tools=$Tools; bot=$Bot; difficulty=$Difficulty; csv=$csvPath; paint_csv=$paintPath; executable=$exe
     main_schema=2; main_columns=81; paint_schema=1; paint_columns=29
     publication_convention='companion-first-main-last-completion-marker'; joint_physical_atomicity=$false
     device_free=$true; human_acceptance=$false; failure=$null
@@ -191,6 +196,7 @@ try {
         '--duration',$Duration.ToString('R',[Globalization.CultureInfo]::InvariantCulture),
         '--tools',(($Tools | ForEach-Object { $_.ToLowerInvariant() }) -join ','),
         '--bot',$Bot.ToLowerInvariant(),'--csv',$csvPath,'--paint-csv',$paintPath)
+    if ($Bot -eq 'match') { $arguments += @('--difficulty',(($Difficulty | ForEach-Object { $_.ToLowerInvariant() }) -join ',')) }
     $result.arguments=$arguments
     $result.input_pins=@((Get-Pin (Join-Path $content 'tuning.json')),(Get-Pin (Join-Path $content 'presentation.json')),
         (Get-Pin (Join-Path $content 'manifest.json')),(Get-Pin (Join-Path $build 'generated/build-info.txt')),

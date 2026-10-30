@@ -1,8 +1,9 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
+#include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
@@ -10,7 +11,7 @@ using namespace labrador;
 #pragma region MainMenuTeamSelect
 
 MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
-	MainMenuPage(context), team_focus_(context->level_settings()->player_count())
+	RosterSetupPage(context), team_focus_(context->level_settings()->player_count())
 {
 
 }
@@ -51,9 +52,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			if (can_leave)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuPlayerCount>(
-						this->menu_context()));
+				this->go_to(MainMenuScreen::player_count);
 				return;
 			}
 			if (this->confirmations_[i] == ConfirmationState::confirmed)
@@ -124,9 +123,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 	if (this->all_players_confirmed())
 	{
 		this->set_level_settings();
-		this->context()->transition_to(
-			std::make_unique<MainMenuWeaponSelect>(
-				this->menu_context()));
+		this->go_to(MainMenuScreen::weapon_select);
 		return;
 	}
 	this->update_team_select_visuals();
@@ -135,7 +132,7 @@ void MainMenuTeamSelect::shuffle_teams()
 {
 	// Like manual choices, a shuffle is provisional until everyone confirms.
 	// Only the final team commit writes the shared match settings.
-	MenuLevelSettings shuffled = *this->level_settings();
+	MatchSetup shuffled = *this->level_settings();
 	if (!shuffled.shuffle_teams()) { return; }
 	for (int i = 0; i < this->player_count(); ++i)
 	{
@@ -362,7 +359,7 @@ void MainMenuTeamSelect::init()
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::teams),
 		this->menu_style().heading_font,
@@ -375,7 +372,7 @@ void MainMenuTeamSelect::init()
 	this->text_container_->add_child(this->heading_.get());
 
 	// Keep the warning below the four player cards and inside the paper.
-	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
+	this->both_teams_needed_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"both_teams_needed",
 		this->text().connection.teams_required,
 		this->menu_style().detail_font,
@@ -396,9 +393,9 @@ void MainMenuTeamSelect::init()
 		auto widgets = std::make_unique<PlayerWidgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = this->level_settings()->player_label(i, this->text());
+		std::wstring label_text = player_label(*this->level_settings(), i, this->text());
 
-		widgets->player = std::make_unique<UiTextDropShadow>(
+		widgets->player = std::make_unique<colourwars::UiTextDropShadow>(
 			name,
 			label_text,
 			this->menu_style().detail_font,
@@ -416,7 +413,7 @@ void MainMenuTeamSelect::init()
 			look.team_select_sheet,
 			this->team_select_frames_[0],
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().team_select.size),
-			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+			this->render_resources(), &widgets->motion, &this->settings_session()->play_settings());
 
 		auto move = Vector2F(this->look().team_select.size.x, 0.0f);
 
@@ -426,7 +423,7 @@ void MainMenuTeamSelect::init()
 			this->team_select_frames_[1],
 			RectangleF(widgets->player_a->rectangle().position() + move,
 				this->look().team_select.size),
-			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+			this->render_resources(), &widgets->motion, &this->settings_session()->play_settings());
 
 		widgets->player_b = std::make_unique<MenuChoiceIcon>(
 			name + "_b",
@@ -434,7 +431,7 @@ void MainMenuTeamSelect::init()
 			this->team_select_frames_[2],
 			RectangleF(widgets->player_center->rectangle().position() + move,
 				this->look().team_select.size),
-			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+			this->render_resources(), &widgets->motion, &this->settings_session()->play_settings());
 		RectangleF row = RectangleF::union_of(widgets->player->bounds(), widgets->badge->bounds());
 		row = RectangleF::union_of(row, widgets->player_a->bounds());
 		row = RectangleF::union_of(row, widgets->player_center->bounds());

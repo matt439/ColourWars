@@ -195,7 +195,7 @@ and `out/acceptance/x64-release/level-editor/779b68cf562d437cb6a54df051b962de`.
 
 #### Warmed input resource lifetime (`ED#20`)
 
-**Open (2026-10-28).** The separate `--gestures` process drives real hidden
+**Done (2026-10-29).** The separate `--gestures` process drives real hidden
 canvas input and DPI changes, but its aggregate GDI lifetime remains
 unqualified. The original unactivated 28-transition fixture has a separate
 exact GDI-count gate and stays unchanged.
@@ -280,6 +280,42 @@ the replacement's stated bounded contract;
 creation/destruction lifetime, invalid-property dialogs and attended `ED#5`
 acceptance remain separate. No game graphics/audio device or player data is
 needed.
+
+**Ownership receipt (2026-10-29).** The source step above is complete for the
+only GDI objects the input fixture explicitly owns. `MechanismBitmap` keeps a
+ledger of the bitmaps it created and still holds. It also counts failed cleanup
+calls: restoring the original selection, `DeleteObject` and `DeleteDC`.
+Its constructor refuses a failed bitmap selection. `run_gestures` keeps the
+six helpers in their unchanged order on one hidden editor. After each helper it
+writes a `bitmap-ownership.csv` row, including an `aborted` row if the helper
+throws, and then asserts. No fixture bitmap may outlive its helper, and no
+cleanup call may fail. `empty_key_properties` and `ramp_hits` are the only
+helpers that draw, and each must record at least one bitmap.
+
+Both presets pass the full editor checker with 19 fixture bitmaps. The earlier
+DPI and paint-failure count gates are unchanged. Two temporary negative
+controls each failed at the intended assertion in `empty_key_properties`, and
+the sources were restored byte for byte afterwards. One control leaked a bitmap;
+the other called `DeleteDC` before the checked cleanup. Evidence is
+`out/acceptance/x64-debug/level-editor/7b798d8d6dd743c98390a35707ce58d5`,
+`out/acceptance/x64-release/level-editor/5df1d18b3af3445d97f35acae5a2099f` and
+the `ed20-*` logs under `out/validation/road35/`.
+
+Two consecutive full Debug checker runs on the final source failed before any
+receipt assertion. The failure was the existing `overlap_selection` check that
+the probe thread's 256-byte keyboard state survives `MK_CONTROL` messages.
+Their receipts recorded that helper as `aborted` with no bitmaps. An earlier
+Debug run, a run with a temporary per-key diagnostic and the final run passed.
+The diagnostic build then passed 12 standalone `--gestures` runs with no
+differing key. The cause is unexplained; nothing shows that the
+receipt causes it, or that it is an editor defect.
+
+This qualifies fixture-owned bitmap and DC cleanup only. Pens, brushes and fonts
+that production drawing selects into a fixture DC are not counted. Neither are
+native-control resources or process-wide GDI stability. The archived aggregate
+candidates and traces above stay unqualified, and no aggregate gate is
+proposed. Editor creation/destruction lifetime remains separate, as does
+attended `ED#5`.
 
 #### Paint exception cleanup (`ED#21`)
 
@@ -587,7 +623,8 @@ Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),
 left/right ramps, [fixed scored slabs](#fixed-scored-slab-authoring-gapd5)
 and decorative visuals. Team spawns and the four
-bounds rectangles are also selectable and editable. The level entry exposes
+bounds rectangles are also selectable and editable, and so are the level's
+[stations](#station-editing-ed26) (goto targets), which the palette also adds. The level entry exposes
 the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
 music name and volume for a music-free arena; `end_sting_name` and
@@ -650,6 +687,8 @@ them.
 | Grid spacing | Choose 1, 10, 25, 50 or 100 |
 | Temporarily bypass grid snapping | Hold Shift while dragging |
 | Duplicate selection | Ctrl+D |
+| Mirror copy across the arena centre ([rules](#mirror-copy-across-the-arena-centre-ed24)) | Ctrl+Shift+D |
+| Copy / paste one object, including into another level ([rules](#copy-and-paste-between-documents-ed27)) | Ctrl+C / Ctrl+V |
 | Delete selection | Delete |
 | Undo / redo | Ctrl+Z / Ctrl+Y |
 | New / open / save | Ctrl+N / Ctrl+O / Ctrl+S |
@@ -688,6 +727,9 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
   Slabs retain local face areas and display actual world quads; selection
   regions clip those quads, including their empty bounding-box corners.
   During a drag, measurements and scoring edges wait for the committed drop.
+- **Symmetry** gives the scoring area either side of the arena centre and lists
+  spawns and objects without an `ED#24` mirror partner. See
+  [Symmetry report](#symmetry-report-in-the-blockout-aids-ed25).
 - **Purple/gold boxes** show the recorded tap/held jump envelope in both
   directions from the top centre of the selected geometry, or the feet of a
   selected spawn. They bound maximum rise and same-height horizontal travel;
@@ -1017,6 +1059,242 @@ Builds used the installed-dependency offline workflow above, restoring both
 manifest-install cache settings to `ON` before runtime checks. No engine or
 vendored RapidJSON source changed. The attended `ED#5` gate remains open.
 
+## Station and copy backlog (2026-10-29)
+
+A verified source brainstorm on 2026-10-29 found these editor gaps. None needs
+a pad or the author, and none settles a layout, route or attended result: those
+stay with `ED#5` and the stage's own `DECISION` rows. `ED#25` built on `ED#24`
+and `ED#26` builds on `ED#23`, both now done.
+
+### Station validation in the editor (`ED#23`)
+
+**Done 2026-10-29.** The engine-free station and lesson rules now live in
+[station_contract.h](../game/station_contract.h), beside
+`user_stage_contract.h` and `team_gate_contract.h`.
+`LevelLoadedInfo::validate_stations` and `validate_lesson` call them with
+unchanged messages, and `level_json::validate_document` calls them too, so
+every editor edit and load refuses what the game refuses: name spelling,
+reserved and repeated names, a station outside `out_of_bounds`, and a lesson
+area that is flat, leaves the camera bounds or misses its station, or a blank
+lesson title or text. The editor names the entry (`stations[2] ('crown')`)
+where the game names the JSON path. Whether lesson words can be drawn is
+checked by the game alone, since it owns the fonts.
+
+Acceptance (`scripts/acceptance/level_editor/station_checks.cpp`, in
+`check-level-editor`): shrinking Press Tower's `out_of_bounds` past `crown` at
+(1774, 620) is refused in the game's words with the earlier undo step intact;
+eight station files are refused at load without changing the open document;
+Crossfeed, Close Quarters, Press Tower and the Movement Course save and reopen
+with their stations. On the game side, the station refusals in `debug_console`
+and the lesson refusals in `practice_workshop` pass unchanged through the shared
+rules, and `level_format` still admits every registered level and the template.
+Station editing in the canvas followed as [`ED#26`](#station-editing-ed26).
+
+### Mirror copy across the arena centre (`ED#24`)
+
+**Done 2026-10-29.** **Edit > Mirror copy** (Ctrl+Shift+D) is
+`LevelDocument::mirror_copy` ([level_document.cpp](../editor/level_document.cpp)):
+it appends one copy reflected across the `out_of_bounds` centre through the
+same validated, single-undo-step edit as Duplicate, and selects it. With
+`sum` = `out_of_bounds` left + right:
+
+- a rectangle's x becomes `sum - x - width`, in either rectangle encoding;
+- a ramp's triangle x values become `sum - x`, and its collision type swaps
+  `STRUCTURE_RAMP_RIGHT` and `STRUCTURE_RAMP_LEFT`;
+- a fixed slab's stored left endpoint becomes the old right one
+  (`sum - x - 160`, y moved by the 80-unit rise) and `slab.rise` flips;
+- a cycle mover reflects its whole path (`sum - x - width - travel_x`) and its
+  phase moves half a cycle (+0.5, wrapping, rounded to 12 places so a decimal
+  stays a short decimal, and wrapping again if the rounding reaches 1); a drifting `Visual` shifts its drift phase the same
+  way, since its sine offset half a cycle on is its reflection;
+- paintable `left` and `right` faces swap;
+- a Team A spawn becomes a Team B spawn and back, reflecting the whole body at
+  source `player.size` width (the editor's 52-unit box when no tuning is
+  given);
+- a trailing `_a` name becomes `_b` and `_b` becomes `_a`; any other name gains
+  ` mirror`, as Duplicate adds ` copy`.
+
+Paint ferries (`"drive": "paint"`) are refused with a message saying their
+heading and outgoing-leg phase need their own rule; level settings and bounds
+have no mirror. A copy the game would refuse, such as a spawn that lands on
+the wrong side of the centre, is refused by ordinary validation with the
+document unchanged. Other fields, including unknown metadata, are copied as
+they are. It does not decide whether any stage should be symmetric.
+
+Acceptance (`scripts/acceptance/level_editor/mirror_checks.cpp`, in
+`check-level-editor`): every shipped `_a` object with a `_b` partner in the
+same list, 62 in all across Crossfeed, Press Tower and the Turbulence
+blockout and trials, is mirrored after its partner is removed and must equal
+that partner exactly, in one undo step that undo and redo cross unchanged. The
+pairs cover plain and jump-through paintables, ramps of both hands, the fixed
+slab, the Mover Trial's `mover_a` (x 600 becomes 2760, phase 0.5) and visuals;
+Crossfeed's two clouds are authored different sizes and are skipped. Every
+spawn in three stages mirrors onto its other-team partner. A one-sided face,
+an unsuffixed name and a Close Quarters drift phase (0.51 to 0.01, and
+0.4999999999999 to 0) reflect;
+the Ferry Trial's `ferry_a`, level settings, bounds and a spawn 10 units left
+of Press Tower's centre are refused without change. Debug and Release passed
+on 2026-10-29 (evidence `0dc49c15b2fc42dda5eae3b4ee727168` and
+`c5f0d8b71a9a4108ba57c9b808ed4748`) and again with the wrap case on 2026-10-30
+(`d083756a97b84c00a47b4323ebe29b45` and `eae75ae0f01f48c9ade390ff16c9be88`),
+under `out/acceptance/<preset>/level-editor/`.
+The menu item and accelerator have no hidden-window probe of their own; using
+them belongs to the attended pass (`ED#5`).
+
+### Symmetry report in the blockout aids (`ED#25`)
+
+**Done 2026-10-30.** The [blockout aids](#blockout-aids) summary has a fifth
+line, built by `symmetry_summary` in [blockout_aids.cpp](../editor/blockout_aids.cpp)
+from `LevelDocument::symmetry` ([level_document.cpp](../editor/level_document.cpp)):
+
+```
+Symmetry: left 70200.0 / right 70200.0  |  every play object has a mirror partner  |  Art without partner: brush_pot
+```
+
+- **Left and right** are the scoring area either side of the `out_of_bounds`
+  centre (`side_scoring_areas`). Each half is a region passed to the existing
+  `scoring_area`, so a strip across the centre splits by region and left plus
+  right is the total.
+- **Mirror partners** use the `ED#24` reflection (`mirror_object`), compared
+  without names and with a 1e-6 relative tolerance. An object partners one
+  other in its own list, or itself when it is its own reflection (a centred
+  floor); a spawn partners one of the other team's, reflected at the source
+  `player.size` width. Pairing is one to one in document order, so a duplicate
+  on one side is still reported. Up to four names are shown, then `+N more`.
+- **Art without partner** lists unpartnered decorations apart from spawns and
+  collision objects. They have no collision or paint, and most shipped skies
+  are not mirrored; Press Tower's left `brush_pot` is the one example there.
+  This is a deliberate split, made because the scope's "no unmatched objects"
+  on Press Tower holds for play objects but not for that pot.
+- **Authored: paint-ferry heading** lists paint ferries whose path has a
+  partner. A ferry's heading and phase have no mirror rule, so they are
+  ignored and the pair is reported as authored, not unmatched: the Ferry
+  Trial's two ferries both use `"team_a_heads": "right"`. A ferry without a
+  path partner is unmatched.
+
+During a drag the line reads "Symmetry updates on drop", like the measurements.
+
+Acceptance (`scripts/acceptance/level_editor/symmetry_checks.cpp`, in
+`check-level-editor`): Press Tower has no unmatched spawns or collision
+objects, only `brush_pot` as art, and equal halves of 70,200. Without
+`stair_1_b` exactly `stair_1_a` is reported and the left half scores more;
+mirror-copying it restores equal halves. A Team A spawn moved 10 units reports
+it and its Team B partner. A 300-unit object 100 units left of centre is the
+one unmatched object and adds more area right than left; centred, it is its own
+partner. The Ferry Trial lists `ferry_a` and `ferry_b` as authored with
+nothing unmatched. Every other shipped stage is read and its line printed,
+judging nothing: the Turbulence blockout and trials and Close Quarters and
+Crossfeed have every play object partnered; King of the Hill, Turbulence and
+the Movement Course report unmatched spawns and objects. Debug and Release
+passed on 2026-10-30 (evidence `6a6b2cde3e5a47ba83703349a9ab9d9f` and
+`5eca9a3798fd465b86be4a861ea3be14` under
+`out/acceptance/<preset>/level-editor/`). The canvas line has no
+hidden-window probe of its own; reading it belongs to the attended pass
+(`ED#5`). It reports only: fairness and side-swap acceptance stay play review.
+
+### Station editing (`ED#26`)
+
+**Done 2026-10-30.** `EntryKind::station`
+([level_document.h](../editor/level_document.h)) lists each of a level's
+`"stations"` in Level Contents as `Station <name>`, after the spawns. Every
+edit goes through the document's ordinary validated, single-undo-step path, so
+the `ED#23` shared rules refuse what the game refuses, in the game's words.
+
+- **Marker.** A station is the character's top-left, like a spawn, so the
+  canvas draws it as a green dashed character-sized box (source `player.size`)
+  with a crosshair at the origin and its full name above. It is moved by drag,
+  arrows and **Align origin to grid**, never resized, and is hit before spawns.
+- **Palette.** **Station (goto target)** adds `{name, x, y}` at the drop point,
+  named `station_1`, `station_2`, ... (the first unused number). A level with no
+  stations gains the optional array; deleting its last station removes it
+  again, so add-then-delete leaves the file as it was.
+- **Inspector.** `name`, `x`, `y` and any unknown fields are rows; the name row
+  says the spelling rule. A misspelt, reserved (`spawn_a`, `spawn_b`) or
+  repeated name is refused with the document unchanged.
+- **Lessons stay preserved metadata.** A `lesson` block has no rows, and an
+  edit to a `lesson/...` path is refused. Moving a station does not move its
+  lesson area, so a move that leaves the area is refused by the shared rule
+  ("does not contain station ..."); edit the area in the level file to move a
+  lesson. This was the call made over carrying the area with the station,
+  which would have been a lesson control the scope keeps out.
+- **Duplicate** offsets the copy by 50 units, names it `<name>_copy` (then
+  `_copy_2`, ...) since a space is not a station character, and drops the
+  lesson, whose words and area belong to the original. **Mirror copy** refuses
+  a station: a goto target names one place, and there is no `_a`/`_b` rule for
+  one. Neither the symmetry report nor scoring reads stations.
+
+It places no station in any shipped stage.
+
+Acceptance (`scripts/acceptance/level_editor/station_editing_checks.cpp`, in
+`check-level-editor`): the Movement Course lists its ten stations, with
+`drop_through` a 52 by 120 marker at (559, 715) and no lesson rows; a
+`lesson/title` edit and a mirror copy of it are refused. Renaming it
+is accepted; `Drop`, `spawn_a`, `spawn_b`, `high_step`, an empty name and a
+spaced name are refused without change, the reserved and repeated ones in the
+game's words. A move inside its lesson area and an origin alignment are
+accepted, a move out of it is refused; saved and reopened, its lesson block
+equals the authored one and the other nine stations are unchanged as
+JSON values. Undo returns to the file as loaded and redo replays it. Duplicates are
+`high_step_copy` and `high_step_copy_2` without lessons; deleting them is undone
+and redone. On the template, the palette adds `station_1` and `station_2`,
+refuses one outside `out_of_bounds` and a drag out of bounds, saves and
+reopens both, and deleting both leaves no `stations` member. Debug and Release passed on 2026-10-30
+(evidence `42cfbc10714d409d8d25981d6b1fc9a8` and `caa4b072e75d4ab987d302a50bb9ff6e` under
+`out/acceptance/<preset>/level-editor/`), and the `fixed_slab` case, which
+compiles the editor document, passed in Debug. The marker and palette entry
+have no hidden-window probe of their own; seeing and dragging them belongs to
+the attended pass (`ED#5`).
+
+### Copy and paste between documents (`ED#27`)
+
+**Done 2026-10-30.** **Edit > Copy** (Ctrl+C) puts the selected object, spawn
+or station on the clipboard as `CF_UNICODETEXT` JSON, and **Edit > Paste**
+(Ctrl+V) appends it to the open level, so one object can move between two
+editor windows or two levels opened in turn. The text is
+`LevelDocument::copy_text` ([level_document.cpp](../editor/level_document.cpp)):
+
+```json
+{ "colourwars_level_object": 1, "list": "collision_objects", "object": { ... } }
+```
+
+`list` is `collision_objects`, `non_collision_objects`, `team_a`, `team_b` or
+`stations`, and `object` is the record exactly as written, unknown fields
+included. Level settings and bounds are not copied (the menu item is greyed).
+
+`LevelDocument::paste_text` appends the record to the same list, unchanged and
+at the same position, through the same validated edit as Duplicate: one undo
+step, and the copy is selected. Text that is not JSON, JSON without the marker,
+a `list` or `object` of any other shape, and a record the receiving level would
+refuse (a spawn on the wrong half, an unknown material, a decoration named into
+`collision_objects`, an untypeable station name) are all refused with the
+document and history unchanged. A station keeps its name and lesson where the
+name is free; where it is taken it is renamed `<name>_copy` and drops its
+lesson, as Duplicate does. Pasting into the same level puts the copy on top of
+the original; Duplicate is the in-level copy with an offset.
+
+The inspector's edit field keeps its own Ctrl+C and Ctrl+V for text: the
+message loop (`Editor::dispatch`) passes those keys to the field before the
+accelerators, as it already did for Ctrl+Z/Y. It does not add multi-selection.
+
+Acceptance, in `check-level-editor`:
+`scripts/acceptance/level_editor/clipboard_checks.cpp` copies a Close Quarters
+wall and decoration, a spawn and a Movement Course station (with its lesson)
+into a second stage, each appended last with the identical record in exactly
+one undo step, and reopens the saved result; refuses copying level settings
+and bounds, ten malformed texts and the four invalid records above without
+change; and renames the station pasted back over its own name.
+`scripts/acceptance/level_editor_dpi/clipboard_checks.h` drives the hidden
+shell through the real clipboard: Edit > Copy and the Ctrl+C accelerator put
+the JSON on the clipboard, Edit > Paste and Ctrl+V append it to a second stage
+in one undo step, non-JSON, empty and wrong-half clipboards are refused
+without change, Copy is greyed for level settings, and Ctrl+C/V with the
+property field focused copy and paste its text without touching the document.
+The probe puts back any text the clipboard held before it. Debug and Release
+passed on 2026-10-30 (evidence `21da0d880ebb4abd9d147aec1826b19e` and
+`84b210fe08db431ab25e3e2332962872` under
+`out/acceptance/<preset>/level-editor/`). Using it between two visible editor
+windows belongs to the attended pass (`ED#5`).
+
 ## Acceptance checks
 
 `ED#5` is `DECISION`: the remaining GUI and saved-stage gameplay checks need an
@@ -1310,6 +1588,11 @@ and per-monitor v2 DPI awareness. No hardware skip was used. Evidence is under
 `integration/x64-release/3850fed0b130438a814d23c6ee7817aa/`.
 These automated checks complete `ED#4`; the attended editor and saved-stage
 play review remains `ED#5`.
+
+Since 2026-10-29 CI runs `-SkipBuild` in both jobs, after building
+`ColourWarsRegisterStage`, and uploads the receipts and logs. Timing and focus
+evidence are in
+[code-hygiene.md](code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3).
 
 ## Movement Course icon (`ED#6`, retired)
 

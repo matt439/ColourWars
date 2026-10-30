@@ -2,7 +2,7 @@
 
 #include "game/debug/match_fingerprint.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -22,7 +22,9 @@
 //   layout counts human views, while inputs remain indexed by participant.
 //   inputs:  one array per seat, each a run-length list of
 //            "[count*]flags|x|aim_x|aim_y|angle|lx|ly|rx|ry" with the floats as
-//            8-hex-digit bit patterns ("0" for +0.0).
+//            8-hex-digit bit patterns ("0" for +0.0). Flags 64 and 256, a
+//            seat's old pause and intro-skip signals, are no longer written
+//            and are ignored when read: neither ever reached a player.
 //   dt, hashes and fingerprint floats as hex bit patterns: bit-exact.
 //   stage_hash identifies the loaded semantic stage definition. The codec
 //   retains hash-less legacy files, but play requires this field.
@@ -49,7 +51,7 @@ public:
 	std::vector<std::string> tune_diff;
 	bool god = false;
 	bool infinite_ammo = false;
-	MenuLevelSettings settings;
+	MatchSetup settings;
 
 	int updates = 0;
 	// Level updates already run when the match was suspended.

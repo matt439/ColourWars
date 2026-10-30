@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // The arena card's summary and briefing.
 namespace menu_text_acceptance
@@ -168,7 +169,7 @@ namespace menu_text_acceptance
             std::wstring source = stage_summary(look.menu_text(), entry, entry.value);
             require(source == literal, "Boundary fixture did not format the independent literal arena summary");
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(font), literal);
-            UiTextDropShadow label(entry.key, source, font, point, &world.render,
+            colourwars::UiTextDropShadow label(entry.key, source, font, point, &world.render,
                 Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.detail_shadow_offset);
             source = L"Changed after construction";
             const auto bounds = mattmath::RectangleF::union_of(mattmath::RectangleF(point, size),
@@ -332,7 +333,7 @@ namespace menu_text_acceptance
                     stage.briefing.spacing * static_cast<float>(entry.row);
                 const auto shadow = style.detail_shadow_offset;
                 const auto shadow_colour = style.shadow_colour;
-                UiTextDropShadow text(entry.key, source, font_name, point, &world.render,
+                colourwars::UiTextDropShadow text(entry.key, source, font_name, point, &world.render,
                     entry.detail ? style.heading_colour : style.highlight, shadow_colour, shadow);
                 source = L"Changed after construction";
                 style.brand_font = "lato_black_48";
@@ -462,7 +463,7 @@ namespace menu_text_acceptance
             d["main_menu"]["stage_select"]["briefing"]["position"]["y"].SetFloat(-28.0f);
         };
         const auto top = variants.load(screen_top);
-        UiTextDropShadow top_label("legacy_briefing_top", L"Fit", "menu_text_exact",
+        colourwars::UiTextDropShadow top_label("legacy_briefing_top", L"Fit", "menu_text_exact",
             top.main_menu().stage_select.briefing.position + top.main_menu().stage_select.briefing_padding,
             &world.render, Colour::black, top.menu().shadow_colour, top.menu().detail_shadow_offset);
         require(top_label.bounds().y == 0.0f,
@@ -482,7 +483,7 @@ namespace menu_text_acceptance
             d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(1.0f);
         };
         const auto left = variants.load(screen_left);
-        UiTextDropShadow left_label("legacy_briefing_left", L"Fit", "menu_text_exact",
+        colourwars::UiTextDropShadow left_label("legacy_briefing_left", L"Fit", "menu_text_exact",
             left.main_menu().stage_select.briefing.position + left.main_menu().stage_select.briefing_padding,
             &world.render, Colour::black, left.menu().shadow_colour, left.menu().detail_shadow_offset);
         require(left_label.bounds().x == 0.0f,

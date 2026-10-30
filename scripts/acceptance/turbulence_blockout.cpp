@@ -1,11 +1,12 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_blockout/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <string_view>
 
 int main(int argc, char** argv)
 {
     using namespace turbulence_blockout_acceptance;
-    try
+    return acceptance::run_probe("Turbulence blockout", [&]
     {
         require(argc == 2 || (argc == 3 && (std::string_view(argv[2]) == "--tools" ||
             std::string_view(argv[2]) == "--escape" || std::string_view(argv[2]) == "--exchange")),
@@ -26,7 +27,5 @@ int main(int argc, char** argv)
             "jump-free required walking and driven optional/recovery edges. "
             "Tool/escape and native composition use separate focused modes; mover/rotation, attended play and pad acceptance remain open\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL Turbulence blockout: " << error.what() << '\n'; return 1; }
+    });
 }

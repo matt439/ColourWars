@@ -171,13 +171,12 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 
 bool Level::cursor_marker_visible() const
 {
-	if (!this->presentation_->hud().cursor_marker.enabled || this->mouse_ == nullptr || !this->mouse_->focused())
+	if (!this->presentation_->hud().cursor_marker.enabled || !this->pointer_)
 	{
 		return false;
 	}
 	const Vector2F size = this->resolution_manager_->resolution_vec();
-	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
-		static_cast<float>(this->mouse_->state().position.y));
+	const Vector2F at = *this->pointer_;
 	if (at.x < 0.0f || at.y < 0.0f || at.x >= size.x || at.y >= size.y) { return false; }
 	for (int participant = 0; participant < this->player_count(); ++participant)
 	{
@@ -190,67 +189,79 @@ bool Level::cursor_marker_visible() const
 	return false;
 }
 
-void Level::draw_cursor_marker(DrawList& list) const
+std::array<CursorMarkerFrame, 3> Level::cursor_marker_frames(
+	const CursorMarkerPresentation& look, const Vector2F& at, float window_height)
 {
 	// Whole pixels keep the marquee's edges crisp while the pointer moves.
-	const CursorMarkerPresentation& look = this->presentation_->hud().cursor_marker;
-	const float scale = this->resolution_manager_->resolution_vec().y / 1080.0f;
+	const float scale = window_height / 1080.0f;
 	const float ink = std::max(1.0f, std::round(look.ink_width * scale));
 	const float paper = std::max(1.0f, std::round(look.paper_width * scale));
 	const float half = std::round(look.size * scale * 0.5f);
-	const Vector2F at(static_cast<float>(this->mouse_->state().position.x),
-		static_cast<float>(this->mouse_->state().position.y));
-	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
 	const auto frame = [&](float inset, float width, const Colour& colour)
 	{
-		const RectangleF box(at.x - half + inset, at.y - half + inset,
-			(half - inset) * 2.0f, (half - inset) * 2.0f);
-		const Colour tint = CrudeDrawing::premultiplied(colour);
+		return CursorMarkerFrame{ RectangleF(at.x - half + inset, at.y - half + inset,
+			(half - inset) * 2.0f, (half - inset) * 2.0f), width, colour };
+	};
+	// Ink outside and inside the paper rim reads on pale and dark ground alike.
+	return { frame(0.0f, ink, look.ink), frame(ink, paper, look.paper), frame(ink + paper, ink, look.ink) };
+}
+
+void Level::set_pointer(std::optional<Vector2F> window_point)
+{
+	this->pointer_ = window_point;
+}
+
+void Level::draw_cursor_marker(DrawList& list) const
+{
+	const Vector2F at = *this->pointer_;
+	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
+	list.set_filter(TextureFilter::point);
+	for (const CursorMarkerFrame& frame : cursor_marker_frames(this->presentation_->hud().cursor_marker,
+		at, this->resolution_manager_->resolution_vec().y))
+	{
+		const RectangleF& box = frame.box;
+		const float width = frame.width;
+		const Colour tint = CrudeDrawing::premultiplied(frame.colour);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y, box.width, width), tint);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.bottom() - width, box.width, width), tint);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y + width, width, box.height - width * 2.0f), tint);
 		sheet->draw(list, this->overlay_fill_, RectangleF(box.right() - width, box.y + width, width, box.height - width * 2.0f), tint);
-	};
-	list.set_filter(TextureFilter::point);
-	// Ink outside and inside the paper rim reads on pale and dark ground alike.
-	frame(0.0f, ink, look.ink);
-	frame(ink, paper, look.paper);
-	frame(ink + paper, ink, look.ink);
+	}
 }
 
-bool Level::player_identity_visible(int view) const
+bool Level::player_identity_visible(int participant) const
 {
-	return view >= 0 && view < this->player_count() &&
+	return participant >= 0 && participant < this->player_count() &&
 		this->presentation_->player_identity().enabled &&
 		(this->state_ == LevelState::start_countdown || this->state_ == LevelState::active) &&
-		this->player(view).state() == PlayerState::alive && this->player(view).health() > 0.0f;
+		this->player(participant).state() == PlayerState::alive && this->player(participant).health() > 0.0f;
 }
 
-float Level::player_identity_emphasis(int view) const
+float Level::player_identity_emphasis(int participant) const
 {
-	return this->player_identity_emphasis_for(view, this->player(view).player_num());
+	return this->player_identity_emphasis_for(participant, this->player(participant).player_num());
 }
 
-float Level::player_identity_emphasis_for(int view, int viewer_slot) const
+float Level::player_identity_emphasis_for(int participant, int viewer_slot) const
 {
-	if (!this->player_identity_visible(view) || this->preferences_->reduce_effects_for(viewer_slot))
+	if (!this->player_identity_visible(participant) || this->preferences_->reduce_effects_for(viewer_slot))
 	{
 		return 0.0f;
 	}
-	return std::clamp(this->player_identity_remaining_[static_cast<size_t>(view)] /
+	return std::clamp(this->player_identity_remaining_[static_cast<size_t>(participant)] /
 		this->presentation_->player_identity().emphasis_duration, 0.0f, 1.0f);
 }
 
-RectangleF Level::player_identity_bounds(int view) const
+RectangleF Level::player_identity_bounds(int participant) const
 {
-	return this->player_identity_bounds_for(view, this->player(view).player_num());
+	return this->player_identity_bounds_for(participant, this->player(participant).player_num());
 }
 
-RectangleF Level::player_identity_bounds_for(int view, int viewer_slot) const
+RectangleF Level::player_identity_bounds_for(int participant, int viewer_slot) const
 {
 	const PlayerIdentityPresentation& look = this->presentation_->player_identity();
-	const RectangleF body = this->player(view).rectangle();
-	const float emphasis = this->player_identity_emphasis_for(view, viewer_slot);
+	const RectangleF body = this->player(participant).rectangle();
+	const float emphasis = this->player_identity_emphasis_for(participant, viewer_slot);
 	const float scale = 1.0f + (look.emphasis_scale - 1.0f) * emphasis;
 	const Vector2F size = look.world_size * scale;
 	const Vector2F bottom = Vector2F(body.center().x, body.top()) + look.world_offset;
@@ -267,15 +278,15 @@ void Level::emphasise_players()
 void Level::refresh_identity_texts()
 {
 	this->identity_texts_.resize(this->players_.size());
-	for (std::size_t view = 0; view < this->players_.size(); ++view)
+	for (std::size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
-		const Player& player = *this->players_[view];
-		const bool labelled = view < this->seat_labels_.size() &&
-			!this->seat_labels_[view].empty();
-		this->identity_texts_[view] = InterfaceGameplay::identity_text(
-			static_cast<int>(view), player.team(), labelled ?
-			this->seat_labels_[view] : (this->is_bot(static_cast<int>(view)) ?
-				this->presentation_->menu_text().bot_label(this->roster_[view].difficulty) :
+		const Player& player = *this->players_[participant];
+		const bool labelled = participant < this->seat_labels_.size() &&
+			!this->seat_labels_[participant].empty();
+		this->identity_texts_[participant] = InterfaceGameplay::identity_text(
+			static_cast<int>(participant), player.team(), labelled ?
+			this->seat_labels_[participant] : (this->is_bot(static_cast<int>(participant)) ?
+				this->presentation_->menu_text().bot_label(this->roster_[participant].difficulty) :
 				input_slots::device_name(this->pad_device(player.player_num()))));
 	}
 }
@@ -358,13 +369,13 @@ void Level::update_teammate_markers(float dt)
 	}
 }
 
-bool Level::aim_marker_visible(int view) const
+bool Level::aim_marker_visible(int participant) const
 {
-	if (view < 0 || static_cast<size_t>(view) >= this->players_.size()) { return false; }
-	const Player& player = *this->players_.at(static_cast<size_t>(view));
+	if (participant < 0 || static_cast<size_t>(participant) >= this->players_.size()) { return false; }
+	const Player& player = *this->players_.at(static_cast<size_t>(participant));
 	return this->state_ == LevelState::active && this->preferences_->aim_marker_enabled(player.player_num()) &&
 		this->presentation_->weapon_feedback().enabled && player.aim_marker_allowed() &&
-		player.primary_weapon().type() != WeaponType::roller;
+		player.primary_weapon().has_aim_marker();
 }
 
 const BlockedShotFeedback& Level::blocked_shot_feedback() const

@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/series_stage_rule.h"
 #include "game/session.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <algorithm>
 #include <array>
 #include <utility>
@@ -24,10 +24,10 @@ namespace
 		return PlayerTeam::none;
 	}
 
-	bool has_human(const MenuLevelSettings& settings, PlayerTeam team)
+	bool has_human(const MatchSetup& settings, PlayerTeam team)
 	{
-		const std::vector<MenuPlayerSettings>& seats = settings.player_settings();
-		return std::any_of(seats.begin(), seats.end(), [team](const MenuPlayerSettings& seat)
+		const std::vector<SeatSetup>& seats = settings.player_settings();
+		return std::any_of(seats.begin(), seats.end(), [team](const SeatSetup& seat)
 			{ return seat.team == team && seat.controller == PlayerController::human; });
 	}
 }
@@ -65,7 +65,7 @@ std::string rotated_stage(const StageList& stages, const std::string& current)
 	return current;
 }
 
-PlayerTeam series_stage_picker(const MenuLevelSettings& settings, const Session& session)
+PlayerTeam series_stage_picker(const MatchSetup& settings, const Session& session)
 {
 	if (!session.is_series() || settings.series_stage_rule() != SeriesStageRule::losers_pick)
 	{
@@ -75,7 +75,7 @@ PlayerTeam series_stage_picker(const MenuLevelSettings& settings, const Session&
 	return loser != PlayerTeam::none && has_human(settings, loser) ? loser : PlayerTeam::none;
 }
 
-std::string series_next_stage(const MenuLevelSettings& settings, const StageList& stages,
+std::string series_next_stage(const MatchSetup& settings, const StageList& stages,
 	const Session& session, bool chosen_by_hand)
 {
 	const std::string& current = settings.stage();

@@ -13,9 +13,9 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     controls.item_font = "lato_black_24"; controls.help_font = "courier_prime_bold_16";
     const_cast<ResultsMenuPresentation&>(alternate.results_menu()).contribution_font = "courier_prime_bold_16";
     alternate.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "menu-label-profile"); Save preferences;
-    PlaySettings play = preferences.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(play), "Cannot seed the private menu-label profile");
+    const NestedSaveProfile isolated(output / "menu-label-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private menu-label profile");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "menu-label-profile/ColourWars/save_data.json", std::ios::binary);
@@ -24,9 +24,9 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const std::string saved = saved_bytes();
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, expected;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreMenuLabels
     {
@@ -77,7 +77,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (auto& state : painter_scripted_pads::states) { state.connected = kind != 3; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(kind == 0 ? 3 : 4);
+        settings = MatchSetup(); settings.set_player_count(kind == 0 ? 3 : 4);
         settings.begin_input_claims(3); const auto& slots = kind == 3 ? pads : sparse;
         for (int seat = 1; seat < settings.player_count(); ++seat)
         { if (kind != 0 || seat == 1) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Menu label fixture claim failed"); } }
@@ -147,7 +147,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             }
             text = std::move(value);
         }
-        else { text = std::make_unique<UiTextDropShadow>("independent-menu-label", literal, font, position, app.render_resources(), ink, Colour{}, shadow); }
+        else { text = std::make_unique<colourwars::UiTextDropShadow>("independent-menu-label", literal, font, position, app.render_resources(), ink, Colour{}, shadow); }
         const RectangleF text_bounds = text->bounds();
         require(panel.contains(text_bounds) && text_bounds.width > 0.0f && text_bounds.height > 0.0f,
             "Composed menu label escapes its actual paper");

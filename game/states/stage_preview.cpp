@@ -31,7 +31,7 @@ void StagePreview::set_stage(const std::string& stage)
 
 	const LevelLoadedInfo* level = this->data_->level_infos()->get(stage);
 	const LevelObjectBuilder builder(this->data_->render_resources(),
-		this->data_->audio_resources(), &this->data_->save()->play_settings(),
+		this->data_->audio_resources(), &this->data_->settings_session()->play_settings(),
 		&this->data_->tuning()->paint(), &this->data_->presentation()->gate_permission(),
 		&this->data_->presentation()->ferry_direction());
 
@@ -54,7 +54,7 @@ void StagePreview::set_stage(const std::string& stage)
 	// Configure only the new objects before replacing the previous selection.
 	for (const auto& object : collision_objects)
 	{
-		if (auto* structure = dynamic_cast<Structure*>(object.get()))
+		if (Structure* structure = Collider::of(*object).structure())
 		{
 			structure->set_miniature(true);
 		}

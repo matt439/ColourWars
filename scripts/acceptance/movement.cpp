@@ -10,6 +10,7 @@
 #include "engine/math/triangle.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/movement/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -27,7 +28,7 @@ using namespace movement_acceptance;
 // in order.
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("movement", [&]
     {
         require(argc == 2, "Usage: movement.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -124,10 +125,5 @@ int main(int argc, char** argv)
                 << ", speed=" << measured->player->velocity().x << '\n';
         }
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

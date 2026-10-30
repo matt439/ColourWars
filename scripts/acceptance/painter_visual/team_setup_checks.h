@@ -5,15 +5,15 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     // The series below finishes rounds, which write stage records.
     const NestedSaveProfile profile(output / "team-setup-profile");
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearTeamSetup
@@ -65,9 +65,9 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
     };
-    const auto reference = [&](const MenuLevelSettings& plan, bool weapon = false)
+    const auto reference = [&](const MatchSetup& plan, bool weapon = false)
     {
-        MenuLevelSettings reference_settings = plan;
+        MatchSetup reference_settings = plan;
         MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &reference_settings);
         StateContext reference_stack;
@@ -102,7 +102,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         return read(*app.renderer());
     };
-    const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b, bool teams = true)
+    const auto same_plan = [](const MatchSetup& a, const MatchSetup& b, bool teams = true)
     {
         if (a.player_count() != b.player_count() || a.stage() != b.stage() || a.duration() != b.duration() ||
             a.best_of() != b.best_of() || a.screen_layout() != b.screen_layout()) { return false; }
@@ -114,7 +114,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         return true;
     };
-    const auto verify_team_page = [&](const MenuLevelSettings& plan, const char* reason)
+    const auto verify_team_page = [&](const MatchSetup& plan, const char* reason)
     {
         app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
         require(frame().pixels == reference(plan).pixels, reason);
@@ -128,7 +128,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (int i = 1; i < count; ++i)
             { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(i)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(count);
+        settings = MatchSetup(); settings.set_player_count(count);
         settings.begin_input_claims(slots[0]);
         for (int i = 1; i < count; ++i) { require(settings.claim_input_slot(slots[static_cast<size_t>(i)]), "Scripted setup seat claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(123.0f); settings.set_best_of(5);
@@ -165,11 +165,11 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (unsigned int seed = 1; seed <= 8; ++seed)
         {
             open(count);
-            const MenuLevelSettings initial = settings;
+            const MatchSetup initial = settings;
             for (int player = 0; player < count - 1; ++player) { tap(player, GamepadButton::a); }
             const Frame partly_ready = frame();
             require(partly_ready.pixels != reference(initial).pixels, "Pre-confirmed roster did not show any readiness");
-            MenuLevelSettings shuffled = initial;
+            MatchSetup shuffled = initial;
             std::srand(seed); require(shuffled.shuffle_teams(), "Expected complete roster did not shuffle");
             std::srand(seed);
             const int requester = static_cast<int>((seed - 1) % static_cast<unsigned int>(count));
@@ -216,7 +216,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 
     // Held actions from the old context, same-device conflicts, missing pads
     // and focus loss must not turn into a new shuffle or a confirmation.
-    open(4); const MenuLevelSettings before = settings;
+    open(4); const MatchSetup before = settings;
     const Frame unchanged = frame();
     for (const int player : { 0, 1 })
     {
@@ -252,14 +252,14 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     for (const int player : { 1, 3 })
         { tap(player, GamepadButton::dpad_left); tap(player, GamepadButton::dpad_left); }
     for (int player = 0; player < 4; ++player) { tap(player, GamepadButton::a); }
-    MenuLevelSettings warning_recovery = settings;
+    MatchSetup warning_recovery = settings;
     std::srand(57); require(warning_recovery.shuffle_teams(), "Warning-recovery setup did not shuffle");
     std::srand(57); tap(3, GamepadButton::x); tick();
     verify_team_page(warning_recovery, "Shuffle did not clear the empty-team warning and all readiness");
 
     // A manual edit following a shuffle still works, and no shuffled team is
     // committed early. Swap both sides for a balanced two-player roster.
-    open(2); MenuLevelSettings manual = settings;
+    open(2); MatchSetup manual = settings;
     std::srand(91); require(manual.shuffle_teams(), "Manual-edit setup did not shuffle");
     std::srand(91); tap(1, GamepadButton::x); tick();
     for (int player = 0; player < 2; ++player)
@@ -272,7 +272,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     verify_team_page(manual, "Manual team edits stopped working after shuffle");
     tap(0, GamepadButton::a); tap(1, GamepadButton::a);
     require(same_plan(settings, manual), "Manual post-shuffle teams did not commit while preserving other match settings");
-    open(1); const MenuLevelSettings solo = settings;
+    open(1); const MatchSetup solo = settings;
     verify_team_page(solo, "Solo team-selection return advertised Random teams");
     const Frame solo_frame = frame(); tap(0, GamepadButton::x);
     require(same_plan(settings, solo) && frame().pixels == solo_frame.pixels,
@@ -325,7 +325,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     open(2);
     std::srand(113); tap(1, GamepadButton::x); tick();
     tap(0, GamepadButton::a); tap(1, GamepadButton::a);
-    MenuLevelSettings series = settings;
+    MatchSetup series = settings;
     series.set_best_of(3); series.set_duration(0.25f);
     stack.clear(); stack.push(std::make_unique<ResumeProbeRoot>());
     auto owned_game = std::make_unique<GameLevel>(&data, series);
@@ -430,7 +430,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(course != nullptr && course->versus_played == 2 && course->draws == 2 &&
         !course->best_win_percentage && course->practice_played == 0,
         "Actual series rounds were not recorded once each on their stage");
-    Save reloaded; reloaded.load_save_file();
+    Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
     const StageRecord* saved = reloaded.records().find("movement_course");
     require(saved != nullptr && saved->versus_played == 2 && saved->draws == 2,
         "Actual series records did not reach the isolated save");

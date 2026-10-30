@@ -2,7 +2,6 @@
 #include "game/objects/weapon_builder.h"
 
 using namespace mattmath;
-using namespace DirectX;
 using namespace labrador;
 
 std::unique_ptr<Weapon> WeaponBuilder::build_weapon(

@@ -79,7 +79,7 @@ void countdown_glyph_matrix(Application& app, const Canvas& canvas,
 std::unique_ptr<Level> countdown_level(Application& app, LevelBuilder& builder,
     int count, OpeningMode opening, const std::string& stage = "movement_course")
 {
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(count);
     settings.set_stage(stage);
     settings.set_duration(10.0f);
@@ -266,7 +266,7 @@ void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
         const int countdown_ticks = static_cast<int>(std::ceil(tuning.match().countdown / dt)) + 2;
         for (int tick = 0; tick < countdown_ticks && !level->match_started(); ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(level->match_started(), "Stage entry delayed the established gameplay start");
         stage_entry_hidden(*level);
@@ -293,14 +293,14 @@ void stage_entry_skip_matrix(Application& app, LevelBuilder& builder,
             {
                 for (int tick = 0; tick < 1800 && level->state() == LevelState::opening; ++tick)
                 {
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                 }
                 stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), L"Close Quarters");
                 require(level->intro_playing(), "Story did not retain its monitor countdown before skip");
             }
-            auto skip = inputs;
+            auto skip = acceptance::slot_inputs(inputs);
             skip[static_cast<size_t>(input_slots::keyboard_and_mouse)].skip_intro = true;
-            level->update(skip, dt);
+            acceptance::update_from_slots(*level, skip, dt);
             require(level->state() == LevelState::start_countdown && !level->intro_playing() &&
                 !level->match_started(), "Story skip released controls or bypassed stage entry");
             stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), L"Close Quarters");
@@ -310,7 +310,7 @@ void stage_entry_skip_matrix(Application& app, LevelBuilder& builder,
             const int countdown_ticks = static_cast<int>(std::ceil(tuning.match().countdown / dt)) + 2;
             for (int tick = 0; tick < countdown_ticks && !level->match_started(); ++tick)
             {
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
             }
             require(level->match_started(), "Skipped stage entry delayed gameplay start");
             stage_entry_hidden(*level);
@@ -352,7 +352,7 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
                 }
                 for (int tick = 0; tick < 1800 && level->state() == LevelState::opening; ++tick)
                 {
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                 }
                 require(level->state() == LevelState::start_countdown && !level->match_started(),
                     "Opening did not enter its frozen countdown");
@@ -383,34 +383,34 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
                 resize(app, *level, sizes[index]);
                 require(native.pixels == render(*level, *app.renderer()).pixels,
                     "Countdown resize round-trip retained stale scale or placement");
-                level->update(inputs, 0.0f);
+                level->update(acceptance::slot_seats(*level, inputs), 0.0f);
                 require(native.pixels == render(*level, *app.renderer()).pixels,
                     "Zero-time countdown update advanced its presentation");
-                level->update(inputs, -dt);
+                level->update(acceptance::slot_seats(*level, inputs), -dt);
                 require(native.pixels == render(*level, *app.renderer()).pixels,
                     "Negative-time countdown update advanced its presentation");
                 level->suspend();
                 snap("paused");
                 level->resume();
-                level->update(inputs, 0.05f);
+                level->update(acceptance::slot_seats(*level, inputs), 0.05f);
                 snap("beat", true);
-                level->update(inputs, 0.45f);
+                level->update(acceptance::slot_seats(*level, inputs), 0.45f);
                 snap("settled", true);
                 const float remaining = tuning.match().countdown - 0.5f;
                 require(remaining > 0.001f, "Countdown fixture needs at least half a second");
-                level->update(inputs, remaining - 0.001f);
+                level->update(acceptance::slot_seats(*level, inputs), remaining - 0.001f);
                 require(!level->match_started(), "Countdown released controls before GO");
                 snap("before-go");
-                level->update(inputs, 0.002f);
+                level->update(acceptance::slot_seats(*level, inputs), 0.002f);
                 require(level->match_started() && level->state() == LevelState::active &&
                     level->opening_cards().empty(), "GO did not release controls and clear reminder cards");
                 stage_entry_hidden(*level);
                 snap("go", true);
                 countdown_live_signal(app, *level, presentation, card, true);
-                for (int tick = 0; tick < 54; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < 54; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 snap("go-tail");
                 countdown_live_signal(app, *level, presentation, card, true);
-                for (int tick = 0; tick < 7; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < 7; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 snap("expired");
                 stage_entry_hidden(*level);
                 countdown_live_signal(app, *level, presentation, card, false);

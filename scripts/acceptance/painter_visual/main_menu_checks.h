@@ -98,16 +98,16 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
 void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     GameData data;
     data.set_application(&app);
-    data.set_save(&preferences);
+    data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     menu_widget_geometry_checks(context, presentation, output);
     StateContext& stack = app;

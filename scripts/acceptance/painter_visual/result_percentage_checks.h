@@ -48,9 +48,9 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     std::array<std::vector<int>, 3> frozen_ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { frozen_ledgers[index] = ledger(cases[index].session); }
     const NestedSaveProfile profile(output / "result-percentage-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed result percentage's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed result percentage's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "result-percentage-profile/ColourWars/save_data.json", std::ios::binary);
@@ -58,9 +58,9 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_duration(73.0f); settings.set_stage("movement_course");
     MenuContext context(&data, &input, &settings); StateContext stack;
     struct RestoreResultPercentage
@@ -68,7 +68,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreResultPercentage()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -77,7 +77,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     const ResultCase* active = nullptr;
     const auto saved_unchanged = [&]
     {
-        const auto& play = preferences.play_settings();
+        const auto& play = preferences_session.play_settings();
         require(play.music_volume == 0 && play.sfx_volume == 0 && play.aim_sensitivity == 4 && !play.view_shake &&
             play.aim_marker && play.reduce_effects && preferences.resolution() == ScreenResolution::s_1920_1080 &&
             !preferences.fullscreen() && preferences.team_palette() == TeamColourPair::random &&
@@ -180,10 +180,10 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         const std::string& detail_font = wrong_font ? original.menu().detail_font : style.detail_font;
         const std::array<bool, 3> visible{ details && !revealed, details && fixture.info.team_a_played,
             details && fixture.info.team_b_played };
-        std::array<std::unique_ptr<UiTextDropShadow>, 3> labels;
+        std::array<std::unique_ptr<colourwars::UiTextDropShadow>, 3> labels;
         for (size_t role = 0; role < labels.size(); ++role)
         {
-            labels[role] = std::make_unique<UiTextDropShadow>("independent-result-percentage", words[role],
+            labels[role] = std::make_unique<colourwars::UiTextDropShadow>("independent-result-percentage", words[role],
                 role == 0 ? item_font : detail_font, Vector2F::ZERO, app.render_resources(), look.art.ink,
                 Colour(), Vector2F::ZERO, !visible[role]);
             const Vector2F raw = labels[role]->bounds().size();
@@ -191,24 +191,24 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
                 Vector2F(role == 1 ? 620.0f : 1300.0f - raw.x, 500.0f);
             labels[role]->set_position(at); result_metrics[role] = { raw, at, 1.0f };
         }
-        UiTextDropShadow heading("independent-result-percentage-title", fixture.heading, style.heading_font,
+        colourwars::UiTextDropShadow heading("independent-result-percentage-title", fixture.heading, style.heading_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (1920.0f - heading.bounds().width) / 2.0f, 125.0f });
         // The fixed A mark extends into this complete plate band even before
         // the percentages appear. Include both literal marks at their original
         // centers, with the same absent-team and already-revealed gates.
-        UiTextDropShadow mark_a("independent-result-percentage-mark-a", L"A", item_font,
+        colourwars::UiTextDropShadow mark_a("independent-result-percentage-mark-a", L"A", item_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO,
             revealed || !fixture.info.team_a_played);
-        UiTextDropShadow mark_b("independent-result-percentage-mark-b", L"B", item_font,
+        colourwars::UiTextDropShadow mark_b("independent-result-percentage-mark-b", L"B", item_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO,
             revealed || !fixture.info.team_b_played);
         mark_a.set_position(Vector2F(562.0f, 550.0f) - mark_a.bounds().center());
         mark_b.set_position(Vector2F(1358.0f, 550.0f) - mark_b.bounds().center());
-        UiTextDropShadow score("independent-result-percentage-score", fixture.score, style.detail_font,
+        colourwars::UiTextDropShadow score("independent-result-percentage-score", fixture.score, style.detail_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details || !fixture.session.is_series());
         score.set_position({ (1920.0f - score.bounds().width) / 2.0f, 340.0f });
-        UiTextDropShadow outcome("independent-result-percentage-outcome", fixture.outcome, style.detail_font,
+        colourwars::UiTextDropShadow outcome("independent-result-percentage-outcome", fixture.outcome, style.detail_font,
             Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details || !fixture.session.is_series());
         outcome.set_position({ (1920.0f - outcome.bounds().width) / 2.0f, 405.0f });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
@@ -430,18 +430,18 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
 
     // Simulation here is intentional fixture setup, independently counted from
     // StateContext. No GameLevel or save/record callback owns these three Levels.
-    const PlaySettings level_play = preferences.play_settings();
+    const PlaySettings level_play = preferences_session.play_settings();
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(), &level_play,
-        &levels, &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+        &levels, &tuning, &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
     std::array<std::unique_ptr<Level>, 3> monitor_levels;
     const auto level_tick = [&](Level& level, const std::vector<PlayerInputData>& inputs, float elapsed)
     {
         require(level_updates < 240, "Result percentage exceeded its separate Level-update budget");
-        ++level_updates; level.update(inputs, elapsed);
+        ++level_updates; level.update(acceptance::slot_seats(level, inputs), elapsed);
     };
     const auto build_monitor = [&]
     {
-        MenuLevelSettings setup; setup.set_player_count(2); setup.set_best_of(3); setup.set_duration(1.25f);
+        MatchSetup setup; setup.set_player_count(2); setup.set_best_of(3); setup.set_duration(1.25f);
         setup.set_stage("movement_course"); setup.set_screen_layout(ScreenLayout::two_player); setup.begin_input_claims(3);
         require(setup.claim_input_slot(1), "Cannot claim the monitor's second roller seat");
         setup.set_player_team(0, PlayerTeam::a); setup.set_player_team(1, PlayerTeam::b);
@@ -450,7 +450,11 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         auto level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::full); ++level_builds;
         resize(app, *level, { 1280, 720 }); const size_t before = level_updates;
         constexpr float simulation_dt = 1.0f / 60.0f; auto inputs = neutral_inputs();
-        inputs[3].skip_intro = true; level_tick(*level, inputs, simulation_dt); inputs[3].skip_intro = false;
+        {
+            require(level_updates < 240, "Result percentage exceeded its separate Level-update budget");
+            auto skip = acceptance::slot_inputs(inputs); skip[3].skip_intro = true;
+            ++level_updates; acceptance::update_from_slots(*level, skip, simulation_dt);
+        }
         require(level->state() == LevelState::start_countdown, "Public monitor skip missed the countdown");
         level_tick(*level, inputs, tuning.match().countdown - simulation_dt * 0.5f);
         require(level->state() == LevelState::start_countdown, "Near-boundary monitor countdown advanced the world early");

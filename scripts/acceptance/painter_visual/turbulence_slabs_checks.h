@@ -278,7 +278,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             for (std::size_t paint = 0; paint < 2; ++paint)
             {
                 require(++updates <= 6000, "Slab native inspection exceeded its finite update budget");
-                pair[paint].level->update(input, dt); const auto owners = pair[paint].level->horizontal_structure_states();
+                pair[paint].level->update(acceptance::slot_seats(*pair[paint].level, input), dt); const auto owners = pair[paint].level->horizontal_structure_states();
                 require(turbulence_mover_paint_state(owners) == local_paint[paint], "Slab walking changed mover-local paint credit");
                 require(turbulence_slab_surface_state(pair[paint]) == slab_paint[paint], "Slab walking changed fixed local paint/credit/corners");
                 for (std::size_t side = 0; side < 2; ++side)
@@ -444,7 +444,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         capture_phase("upper-flat-stop");
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&trial_levels);
+        Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_slab_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation); const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size); StagePreview preview("explicit-slab-preview", box, &data); preview.set_stage("turbulence_slab_trial");
         const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
@@ -480,7 +480,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const auto tick = [&]()
         {
             require(++level_updates <= 1200 && ++updates <= 8000, "Slab short-match ending exceeded its finite update budget");
-            ++ending_updates; fixture.level->update(neutral, dt);
+            ++ending_updates; fixture.level->update(acceptance::slot_seats(*fixture.level, neutral), dt);
         };
         while (fixture.level->state() != LevelState::overview) { tick(); }
         const auto fullscreen = app.viewport_manager()->fullscreen_viewport();
@@ -529,13 +529,13 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         while (fixture.level->state() != LevelState::finished) { tick(); }
         const LevelEndInfo actual_result = fixture.level->level_end_info();
         Session session; session.finish_round(actual_result);
-        Save saved; const_cast<PlaySettings&>(saved.play_settings()) = preferences;
-        auto& menu_preferences = const_cast<PlaySettings&>(saved.play_settings());
+        Save saved; SettingsSession saved_session(saved); const_cast<PlaySettings&>(saved_session.play_settings()) = preferences;
+        auto& menu_preferences = const_cast<PlaySettings&>(saved_session.play_settings());
         menu_preferences.music_volume = menu_preferences.sfx_volume = 0;
-        GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&trial_levels);
+        GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_slab_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-        MenuLevelSettings settings; settings.set_stage("turbulence_slab_trial"); settings.set_player_count(count);
+        MatchSetup settings; settings.set_stage("turbulence_slab_trial"); settings.set_player_count(count);
         constexpr std::array<int, 4> slots{ 3, 1, 2, 0 }; settings.begin_input_claims(slots[0]);
         for (int view = 1; view < count; ++view) { require(settings.claim_input_slot(slots[static_cast<std::size_t>(view)]), "Ending sparse input claim failed"); }
         for (int view = 0; view < count; ++view) { settings.set_player_team(view, fixture.level->player(view).team()); }

@@ -12,6 +12,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <cmath>
@@ -32,10 +33,7 @@ namespace movement_acceptance
     using namespace labrador;
     using namespace mattmath;
 
-    inline void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));

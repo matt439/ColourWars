@@ -2,11 +2,13 @@
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "game/sound_groups.h"
 #include "engine/app/application.h"
-#include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/drawable_text.h"
 #include "game/game_data.h"
+#include "game/stage_catalog.h"
 #include "game/states/game_states.h"
+#include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
@@ -32,10 +34,7 @@ extern "C"
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     int integer(const wchar_t* text, int minimum, int maximum)
     {
@@ -165,7 +164,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("frame pacing", [&]
     {
         require(argc == 9,
             "usage: frame_pacing <content> <output> <players> <frames> <warmup-updates> <resolution> <max-threads> <visible:0|1>");
@@ -180,14 +179,15 @@ int wmain(int argc, wchar_t** argv)
         std::filesystem::create_directories(output / "debug");
 
         // These borrowed services outlive Application and every state it owns.
-        Save preferences;
-        preferences.load_save_file();
-        require(preferences.play_settings().music_volume == 0 && preferences.play_settings().sfx_volume == 0,
+        Save preferences; SettingsSession preferences_session(preferences);
+        preferences_session.load_save_file();
+        require(preferences_session.play_settings().music_volume == 0 && preferences_session.play_settings().sfx_volume == 0,
             "Frame-pacing probe requires its isolated muted save");
-        require(preferences.play_settings().aim_marker && !preferences.play_settings().reduce_effects &&
-            preferences.play_settings().view_shake, "Frame-pacing probe requires the current visual feedback preferences");
-        Registry<LevelLoadedInfo> levels("Level");
-        StageList stages;
+        require(preferences_session.play_settings().aim_marker && !preferences_session.play_settings().reduce_effects &&
+            preferences_session.play_settings().view_shake, "Frame-pacing probe requires the current visual feedback preferences");
+        StageCatalog catalog;
+        const Registry<LevelLoadedInfo>& levels = catalog.level_infos();
+        const StageList& stages = catalog.stages();
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
         DebugDirector debug(&tuning, &presentation);
@@ -211,18 +211,17 @@ int wmain(int argc, wchar_t** argv)
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());
                 info->validate();
                 drawable_text::widen_drawable(info->display_name(), "frame-pacing stage " + name);
-                stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
-                levels.add(name, std::move(info));
+                Stage stage{ name, info->display_name(), info->icon_frame(), info->include_in_random() };
+                catalog.add(StageDefinition{ std::move(stage), std::move(info) });
             }, nullptr });
         app.load_manifest((content / "manifest.json").string().c_str());
-        validate_game_content(tuning, presentation, app.render_resources(), app.audio_resources(),
-            levels, stages, preferences.play_settings());
+        validate_shell_content(tuning, presentation, app.render_resources(), app.audio_resources(),
+            levels, stages, preferences_session.play_settings());
         sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
-        sound_groups::apply(*app.audio_resources(), preferences.play_settings());
+        sound_groups::apply(*app.audio_resources(), preferences_session.play_settings());
         data.set_application(&app);
-        data.set_save(&preferences);
-        data.set_level_infos(&levels);
-        data.set_stages(&stages);
+        data.set_save(&preferences); data.set_settings_session(&preferences_session);
+        data.set_stage_catalog(&catalog);
         data.set_tuning(&tuning);
         data.set_presentation(&presentation);
         data.set_debug(&debug);
@@ -238,7 +237,7 @@ int wmain(int argc, wchar_t** argv)
         const bool synthetic_activation = !app.active();
         if (synthetic_activation) { app.notify_activation(true); }
         write_device_metadata(app, output / "device-metadata.json", visible, synthetic_activation,
-            preferences.play_settings());
+            preferences_session.play_settings());
         debug.run_launch_arguments({ L"+players", std::to_wstring(players), L"paint",
             L"+bot", L"1", L"paint", L"+weapon", L"all", L"sprayer",
             L"+seed", L"439", L"+intro", L"off",
@@ -254,10 +253,5 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "CAPTURE 1x Close Quarters " << players << "P; " << frames
             << " requested rendered samples; Debug diagnostic, no baseline acceptance\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "frame-pacing capture failure: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

@@ -1,6 +1,7 @@
 // Explicit authoring/registration tool. Never linked into a consumer case.
 #include "editor/level_document.h"
 #include "editor/stage_registration.h"
+#include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <array>
 #include <filesystem>
@@ -18,8 +19,7 @@ namespace
     using namespace colourwars_editor;
     constexpr const char* stage_name = "turbulence_slab_trial";
 
-    void require(bool value, const std::string& reason)
-    { if (!value) { throw std::runtime_error(reason); } }
+    using acceptance::require;
 
     std::string read(const fs::path& path)
     {
@@ -165,7 +165,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("explicit slab registration", [&]
     {
         require(argc == 5, "Usage: slab-register (--author-preview|--apply) <absolute-repo> <absolute-qualified-private24> <absolute-new-receipt>");
         const std::wstring_view mode(argv[1]);
@@ -175,7 +175,5 @@ int wmain(int argc, wchar_t** argv)
         if (mode == L"--author-preview") { author(repo, source, receipt); }
         else { apply(repo, source, receipt); }
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL explicit slab registration: " << error.what() << '\n'; return 1; }
+    });
 }

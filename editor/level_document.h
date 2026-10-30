@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 #include "game/paint_polygon_geometry.h"
 
@@ -12,7 +13,9 @@ namespace colourwars_editor
 {
     struct ContentCatalog;
 
-    enum class EntryKind { level, bounds, spawn_a, spawn_b, collision, decoration };
+    // A station is one of the level's named "stations" (goto targets): its
+    // name, x and y are edited here; its lesson block is preserved as written.
+    enum class EntryKind { level, bounds, spawn_a, spawn_b, station, collision, decoration };
 
     struct Entry
     {
@@ -83,10 +86,46 @@ namespace colourwars_editor
         // Palette: Structure, StructureJumpThrough, StructurePaintable,
         // MovingPaintable, MovingJumpThrough, StructureRampRight,
         // StructureRampLeft, FixedSlabRight, FixedSlabLeft, TeamGate, Visual, SpawnA,
-        // SpawnB. A TeamGate is a solid eraser StructurePaintable with "gate": "paint"
-        // and its bottom face unpainted, as it stands on the floor.
+        // SpawnB, Station. A TeamGate is a solid eraser StructurePaintable with
+        // "gate": "paint" and its bottom face unpainted, as it stands on the
+        // floor. A Station is {name, x, y} at the rectangle's top-left, named
+        // station_<n> with the first unused n; it never gains a lesson.
         Entry add_object(const std::string& type, const Rect& rectangle);
+        // A station copy is renamed <name>_copy (then _copy_2, ...) and drops
+        // its lesson, which belongs to the original's words and area.
         Entry duplicate(const Entry& entry);
+        // One validated copy reflected across the out_of_bounds centre: x
+        // becomes left + right - x - width, ramps and fixed slabs change hand,
+        // left/right paint faces swap, cycle movers reflect their whole path
+        // with phase + 0.5 (drifting visuals likewise), a team spawn becomes
+        // the other team's, and a trailing _a/_b name swaps. Paint ferries,
+        // stations, level settings and bounds are refused.
+        Entry mirror_copy(const Entry& entry);
+        // ED#27, Edit > Copy and Paste between documents. copy_text is one
+        // object, spawn or station as JSON text, {"colourwars_level_object":
+        // 1, "list": <its list>, "object": <its record as written>}; level
+        // settings and bounds are refused. paste_text appends that record to
+        // the same list here, unchanged and at the same position, as one
+        // validated undo step: malformed text, any other shape and an object
+        // this level would refuse all leave the document untouched. A
+        // station whose name is taken here is renamed <name>_copy (then
+        // _copy_2, ...) and drops its lesson, as Duplicate does.
+        std::string copy_text(const Entry& entry) const;
+        Entry paste_text(std::string_view text);
+        // Mirror partners under the mirror_copy rule, ignoring names: an
+        // object partners one other object in its list (or itself, when it is
+        // its own reflection) and a spawn one of the other team's. Paint
+        // ferries have no mirror rule for heading or phase, so they are paired
+        // by path alone and listed apart as authored, not as unmatched.
+        // Unpartnered decorations (art, no collision or paint) are listed
+        // apart from unmatched spawns and collision objects.
+        struct SymmetryReport
+        {
+            std::vector<Entry> unmatched;
+            std::vector<Entry> unmatched_art;
+            std::vector<Entry> paint_ferries;
+        };
+        SymmetryReport symmetry() const;
         void erase(const Entry& entry);
 
         bool undo();

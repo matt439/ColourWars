@@ -161,7 +161,7 @@ namespace debug_console_acceptance
         {
             if (!director.before_match_update(match, stage_replay_step))
             {
-                director.update_match(match, keyboard_step(director.impl()->level_updates()), stage_replay_step);
+                update_match(director, match, keyboard_step(director.impl()->level_updates()), stage_replay_step);
             }
         }
 
@@ -198,15 +198,14 @@ namespace debug_console_acceptance
         write_text(stage_path, original_bytes);
         const UserStageChecks checks{ &tuning, &presentation, &world.render, &world.audio, &world.preferences };
         UserStageFolder folder;
-        folder.attach(user_folder, checks, &world.audio, &world.levels, &world.stages);
+        folder.attach(user_folder, checks, &world.audio, &world.catalog);
         const auto scanned = folder.scan();
         require(scanned.accepted == std::vector<std::string>{ "user_replay" } && scanned.refused.empty(),
             "Actual user-stage loader refused the private replay arena");
         const std::uint64_t original_hash = world.levels.get("user_replay")->semantic_hash();
         const LevelLoadedInfo* const shipped_definition = world.levels.get("movement_course");
         GameData data;
-        data.set_stages(&world.stages);
-        data.set_level_infos(&world.levels);
+        data.set_stage_catalog(&world.catalog);
         DebugDirector director(&tuning, &presentation);
         director.attach(nullptr, &data);
         auto& impl = *director.impl();
@@ -383,9 +382,10 @@ namespace debug_console_acceptance
         require(impl.execute("play stop").ok, "Cannot release stage-guard active playback");
         // Missing services must fail explicitly; the running Level remains
         // alive in its real world rather than being replaced by a zero hash.
-        data.set_level_infos(nullptr);
+        const StageCatalog listed_only = acceptance::catalog_of(world.stages);
+        data.set_stage_catalog(&listed_only);
         refuse("play " + shipped_name, "has no loaded definition");
-        data.set_level_infos(&world.levels);
+        data.set_stage_catalog(&world.catalog);
         director.detach_match(match);
         match.level.reset();
         std::filesystem::remove(stage_path);

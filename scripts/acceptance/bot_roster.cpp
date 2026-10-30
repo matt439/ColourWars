@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/input_slots.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -12,12 +13,9 @@ void check_unsupported_bot_consumers(const std::filesystem::path& content);
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
-    void same_settings(const MenuLevelSettings& before, const MenuLevelSettings& after,
+    void same_settings(const MatchSetup& before, const MatchSetup& after,
         bool compare_teams = true)
     {
         require(before.player_count() == after.player_count() &&
@@ -27,8 +25,8 @@ namespace
             "A roster operation changed unrelated match settings or seat counts");
         for (size_t seat = 0; seat < before.player_settings().size(); ++seat)
         {
-            const MenuPlayerSettings& first = before.player_settings()[seat];
-            const MenuPlayerSettings& second = after.player_settings()[seat];
+            const SeatSetup& first = before.player_settings()[seat];
+            const SeatSetup& second = after.player_settings()[seat];
             require(first.controller == second.controller && first.difficulty == second.difficulty &&
                 first.num == second.num && first.weapon == second.weapon &&
                 (!compare_teams || first.team == second.team),
@@ -37,9 +35,9 @@ namespace
     }
 
     template<class Exception, class Action>
-    void rejects_unchanged(MenuLevelSettings& settings, Action action, const char* message)
+    void rejects_unchanged(MatchSetup& settings, Action action, const char* message)
     {
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         bool rejected = false;
         try { action(); }
         catch (const Exception&) { rejected = true; }
@@ -49,7 +47,7 @@ namespace
 
     void check_defaults_and_errors()
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         require(settings.player_count() == 0 && settings.human_count() == 0 &&
             settings.bot_count() == 0 && !settings.input_roster_complete(),
             "An empty roster acquired a participant or became complete");
@@ -58,7 +56,7 @@ namespace
             settings.set_player_count(count);
             require(settings.human_count() == count && settings.bot_count() == 0 &&
                 !settings.input_roster_complete(), "New seats must be unclaimed humans");
-            for (const MenuPlayerSettings& player : settings.player_settings())
+            for (const SeatSetup& player : settings.player_settings())
             {
                 require(player.controller == PlayerController::human && player.num == -1 &&
                     player.difficulty == BotDifficulty::normal,
@@ -101,7 +99,7 @@ namespace
 
     void check_device_conversion()
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         require(settings.claim_input_slot(3) && settings.claim_input_slot(1),
@@ -121,7 +119,7 @@ namespace
             !settings.release_input_slot(input_slots::keyboard_and_mouse),
             "Bots must not relax unique-device, valid-slot or host-retention rules");
 
-        const MenuLevelSettings before_noop = settings;
+        const MatchSetup before_noop = settings;
         settings.set_player_human(2);
         same_settings(before_noop, settings);
         settings.set_player_bot(1, BotDifficulty::easy);
@@ -152,7 +150,7 @@ namespace
             {
                 for (size_t variant = 0; variant < difficulties.size(); ++variant)
                 {
-                    MenuLevelSettings settings;
+                    MatchSetup settings;
                     settings.set_player_count(count);
                     settings.set_stage("crossfeed");
                     settings.set_duration(123.5f);
@@ -184,13 +182,13 @@ namespace
                     require(settings.input_roster_complete() && settings.bot_count() == expected_bots &&
                         settings.human_count() == count - expected_bots,
                         "Mixed roster completeness must count bot seats and claimed human seats exactly once");
-                    for (const MenuPlayerSettings& player : settings.player_settings())
+                    for (const SeatSetup& player : settings.player_settings())
                     {
                         require(player.controller == PlayerController::human || player.num == -1,
                             "A bot consumed a physical device slot");
                     }
-                    const MenuLevelSettings retained = settings;
-                    MenuLevelSettings copied = settings;
+                    const MatchSetup retained = settings;
+                    MatchSetup copied = settings;
                     same_settings(retained, copied);
                     if (count > 1)
                     {
@@ -198,7 +196,7 @@ namespace
                         require(copied.shuffle_teams(), "A complete mixed roster must support balanced random teams");
                         same_settings(retained, copied, false);
                         int team_a = 0;
-                        for (const MenuPlayerSettings& player : copied.player_settings())
+                        for (const SeatSetup& player : copied.player_settings())
                         {
                             require(player.team == PlayerTeam::a || player.team == PlayerTeam::b,
                                 "Shuffle left an unresolved mixed-roster team");
@@ -214,8 +212,8 @@ namespace
                         "Starting fresh input claims must retain bot roles and bind only the host");
                     for (int seat = 1; seat < count; ++seat)
                     {
-                        const MenuPlayerSettings& current = settings.player_settings()[static_cast<size_t>(seat)];
-                        const MenuPlayerSettings& previous = retained.player_settings()[static_cast<size_t>(seat)];
+                        const SeatSetup& current = settings.player_settings()[static_cast<size_t>(seat)];
+                        const SeatSetup& previous = retained.player_settings()[static_cast<size_t>(seat)];
                         require(current.num == -1 && current.controller == previous.controller &&
                             current.difficulty == previous.difficulty && current.team == previous.team &&
                             current.weapon == previous.weapon,
@@ -230,7 +228,7 @@ namespace
 
     void check_resize()
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.begin_input_claims(2);
         settings.set_player_bot(1, BotDifficulty::hard);
@@ -238,7 +236,7 @@ namespace
         settings.set_player_weapon(1, WeaponType::mister);
         settings.set_player_bot(3, BotDifficulty::easy);
         require(settings.claim_input_slot(0), "Could not claim the resized roster's human gap");
-        const MenuLevelSettings before = settings;
+        const MatchSetup before = settings;
         settings.set_player_count(2);
         require(settings.player_settings()[0].num == before.player_settings()[0].num &&
             settings.player_settings()[1].controller == PlayerController::bot &&
@@ -264,7 +262,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot roster", [&]
     {
         require(argc == 2, "Usage: bot_roster.exe <game/content directory>");
         check_defaults_and_errors();
@@ -275,10 +273,5 @@ int main(int argc, char** argv)
         std::cout << "PASS bot roster: per-seat difficulty, mixed human/bot claims, host retention, "
             "conversion, reset, copies, balanced teams and resizing.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL bot roster: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

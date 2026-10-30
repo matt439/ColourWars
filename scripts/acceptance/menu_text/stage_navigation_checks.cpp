@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // The arena picker's Random entry and stage count.
 namespace menu_text_acceptance
@@ -14,7 +15,7 @@ namespace menu_text_acceptance
             std::wstring source = look.menu_text().values.random;
             const auto measured = world.render.measure_text(font, source);
             const auto retained = source;
-            UiTextDropShadow name("random_stage_name", source, style.item_font, stage.name_position,
+            colourwars::UiTextDropShadow name("random_stage_name", source, style.item_font, stage.name_position,
                 &world.render, stage.unselected, style.shadow_colour, style.item_shadow_offset);
             source = L"Changed after construction";
             const mattmath::RectangleF raw = mattmath::RectangleF::union_of(
@@ -396,7 +397,7 @@ namespace menu_text_acceptance
         };
         const auto fits = variants.load(edge);
         fits.validate_stage_counts(world.render, 10, 0);
-        UiTextDropShadow counter("count_record_room", L"8/10", "menu_stage_count_proportional",
+        colourwars::UiTextDropShadow counter("count_record_room", L"8/10", "menu_stage_count_proportional",
             fits.main_menu().stage_select.navigation_position, &world.render, Colour::black,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), fits.menu().detail_shadow_offset);
         require(counter.bounds().right() == 1135.75f &&
@@ -424,7 +425,7 @@ namespace menu_text_acceptance
         };
         const auto left = variants.load(negative);
         left.validate_stage_counts(world.render, 10, 0);
-        UiTextDropShadow shadowed("count_negative_shadow", L"8/10", "menu_stage_count_proportional",
+        colourwars::UiTextDropShadow shadowed("count_negative_shadow", L"8/10", "menu_stage_count_proportional",
             left.main_menu().stage_select.navigation_position, &world.render, Colour::black,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), left.menu().detail_shadow_offset);
         require(shadowed.bounds().x == 52.0f && shadowed.bounds().width == 105.5f,
@@ -441,7 +442,7 @@ namespace menu_text_acceptance
         };
         const auto bottom_contact = variants.load(bottom);
         bottom_contact.validate_stage_counts(world.render, 10, 0);
-        UiTextDropShadow bottom_label("count_bottom", L"8/10", "menu_stage_count_proportional",
+        colourwars::UiTextDropShadow bottom_label("count_bottom", L"8/10", "menu_stage_count_proportional",
             bottom_contact.main_menu().stage_select.navigation_position, &world.render, Colour::black,
             bottom_contact.menu().shadow_colour, bottom_contact.menu().detail_shadow_offset);
         require(bottom_label.bounds().bottom() == 926.0f,
@@ -489,7 +490,7 @@ namespace menu_text_acceptance
         hint_edge.validate_stage_counts(world.render, 10, 1);
         const auto& stage = hint_edge.main_menu().stage_select;
         const auto point = stage.briefing.position + stage.briefing_padding + stage.briefing.spacing * 7.0f;
-        UiTextDropShadow hint("count_hint", hint_edge.menu_text().stage_random_hint(1), "menu_stage_count_hint_edge",
+        colourwars::UiTextDropShadow hint("count_hint", hint_edge.menu_text().stage_random_hint(1), "menu_stage_count_hint_edge",
             point, &world.render, Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), hint_edge.menu().detail_shadow_offset);
         const auto fit_hint = [&](const mattmath::Vector2F& shadow)
         {
@@ -534,7 +535,7 @@ namespace menu_text_acceptance
         };
         const auto card_edge = variants.load(card_contact);
         card_edge.validate_stage_counts(world.render, 10, 1);
-        UiTextDropShadow card_label("count_hint_card", card_edge.menu_text().stage_random_hint(1),
+        colourwars::UiTextDropShadow card_label("count_hint_card", card_edge.menu_text().stage_random_hint(1),
             "menu_stage_count_card_edge", point, &world.render, Colour::black,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), card_edge.menu().detail_shadow_offset);
         card_label.set_scale(0.5f);

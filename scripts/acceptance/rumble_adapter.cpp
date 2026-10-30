@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/rumble_sink.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <iostream>
 #include <limits>
@@ -7,10 +8,7 @@
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     struct Requests
     {
@@ -153,7 +151,7 @@ namespace
 
 int main()
 {
-    try
+    return acceptance::run_probe("rumble adapter", [&]
     {
         conversion_and_slots();
         invalid_motors_stop();
@@ -163,10 +161,5 @@ int main()
             "unavailable/failing transport, lifetime unwind and policy stop path. Injected callback only; "
             "no default factory, XInput request, physical pad or feel acceptance.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL rumble adapter: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

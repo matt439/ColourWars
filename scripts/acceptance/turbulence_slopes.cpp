@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_slopes/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <process.h>
 #include <string_view>
@@ -7,7 +8,7 @@
 int main(int argc, char** argv)
 {
     using namespace turbulence_slopes_acceptance;
-    try
+    return acceptance::run_probe("Turbulence shoulders", [&]
     {
         require(argc == 2 || argc == 3 || (argc == 4 &&
             (std::string_view(argv[3]) == "--tools" || std::string_view(argv[3]) == "--comparison")) ||
@@ -56,7 +57,5 @@ int main(int argc, char** argv)
                 "and lower recovery. Existing ramp passes paint; shoe is flat scored solid. Useful paint/shot/native and attended acceptance remain separate\n";
         }
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL Turbulence shoulders: " << error.what() << '\n'; return 1; }
+    });
 }

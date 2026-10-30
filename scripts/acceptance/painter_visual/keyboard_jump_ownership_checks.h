@@ -7,9 +7,9 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
 {
     const auto profile = output / "keyboard-jump-ownership-profile";
     const NestedSaveProfile isolated(profile);
-    Save preferences; PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     InputBindings initial; initial.keyboard_jump = Key::j;
-    require(preferences.set_play_settings_and_save(quiet) && preferences.set_input_bindings_and_save(initial),
+    require(preferences_session.set_play_settings_and_save(quiet) && preferences_session.set_input_bindings_and_save(initial),
         "Cannot seed private Jump ownership preferences");
     const auto bytes = [&]
     {
@@ -19,8 +19,8 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     };
     const std::string saved = bytes();
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
-    data.set_presentation(&presentation); data.set_level_infos(&levels); data.set_stages(&stages);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
+    data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
 #if COLOURWARS_DEV_TOOLS
     director.impl()->set_content_directories(content, content);
@@ -29,7 +29,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     static_cast<void>(content);
 #endif
     director.attach(&app, &data);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(0);
     require(settings.claim_input_slot(1), "Cannot build Jump ownership participant roster");
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
@@ -66,7 +66,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     {
         const std::string message = std::string("Actual Jump ownership mismatch: ") + name;
         require(stack.depth() == 2 && page->capture_active() == capturing && page->pending_key() == pending &&
-            preferences.input_bindings().keyboard_jump == Key::j && bytes() == saved,
+            preferences_session.input_bindings().keyboard_jump == Key::j && bytes() == saved,
             message.c_str());
         records << name << ',' << capturing << ',' << input_key_name(pending) << ",j," << stack.depth() << ',' <<
             updates << ",true\n"; ++cases;

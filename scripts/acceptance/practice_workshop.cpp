@@ -4,6 +4,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <cmath>
@@ -24,10 +25,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -80,7 +78,7 @@ namespace
             this->resolution.set_resolution(Vector2F(1920.0f, 1080.0f));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         const LevelLoadedInfo& course() const { return *this->levels.get("movement_course"); }
@@ -88,7 +86,7 @@ namespace
         std::unique_ptr<Level> build(bool practice, int humans = 1, float duration = 1.0f,
             WeaponType tool = WeaponType::sprayer)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(humans);
             settings.set_screen_layout(humans == 1 ? ScreenLayout::one_player : ScreenLayout::two_player);
@@ -291,7 +289,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("practice workshop", [&]
     {
         require(argc == 2, "Usage: practice_workshop.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -304,10 +302,5 @@ int main(int argc, char** argv)
         check_rejected_lessons(content);
         std::cout << "PASS practice workshop\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL practice workshop: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

@@ -146,7 +146,7 @@
                     require(level->place_player(view, Vector2F(1200.0f + 400.0f * static_cast<float>(view), 1275)),
                         "could not place the view shake fixture on the recovery floor");
                 }
-                for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 const Frame dark_hud = shake_hud(app, *level, tuning, presentation, Colour::black);
                 const Frame light_hud = shake_hud(app, *level, tuning, presentation, Colour::white);
                 const auto phase = [&](const char* name, bool active)
@@ -158,7 +158,7 @@
                 {
                     for (int tick = 0; tick < 120 && level->player(0).view_shake().remaining() > 0.0f; ++tick)
                     {
-                        level->update(inputs, dt);
+                        level->update(acceptance::slot_seats(*level, inputs), dt);
                     }
                     require(level->player(0).view_shake().remaining() == 0.0f,
                         "real match view shake did not expire within 120 ticks");
@@ -196,28 +196,28 @@
                 // direct airborne placement is spawn settling and must stay
                 // silent. Stop in the gap before its x2700 recovery platforms.
                 require(level->place_player(0, Vector2F(2380, 875)), "could not place the strong-landing fixture");
-                for (int tick = 0; tick < 30; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < 30; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 require(player.move_state() == PlayerMoveState::on_ground,
                     "strong-landing fixture did not establish runway support");
                 PlayerInputData& input = inputs[static_cast<size_t>(player.player_num())];
                 input.x_movement = 1.0f;
                 for (int tick = 0; tick < 120 && player.rectangle().x < 2482.0f; ++tick)
                 {
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                 }
                 input.x_movement = 0.0f;
                 require(player.rectangle().x >= 2482.0f && player.rectangle().right() < 2700.0f,
                     "strong-landing fixture did not leave the runway into the open gap");
                 for (int tick = 0; tick < 180 && player.view_shake().remaining() == 0.0f; ++tick)
                 {
-                    level->update(inputs, dt);
+                    level->update(acceptance::slot_seats(*level, inputs), dt);
                 }
                 require(player.state() == PlayerState::alive && player.move_state() == PlayerMoveState::on_ground &&
                     player.view_shake().remaining() > 0.0f, "resolved strong landing did not start local view shake");
                 phase("landing", true);
                 expire();
                 require(level->kill_player(0), "could not request local view shake elimination");
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
                 require(player.state() == PlayerState::dead, "view shake elimination fixture stayed alive");
                 phase("elimination", true);
                 expire();

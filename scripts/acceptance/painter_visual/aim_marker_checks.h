@@ -75,7 +75,7 @@
                 require(level->place_player(view, Vector2F(1200.0f + 400.0f * static_cast<float>(view), 1275)),
                     "Could not place marker fixture on recovery floor");
             }
-            for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             for (int direction = 0; direction < 4; ++direction)
             {
                 const float angle = -3.0f * PI / 4.0f + static_cast<float>(direction) * PI / 2.0f;

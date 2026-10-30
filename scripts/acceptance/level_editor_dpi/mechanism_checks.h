@@ -15,6 +15,25 @@ namespace colourwars_editor
 {
     namespace
     {
+        // ED#20: what every MechanismBitmap owned and whether each cleanup call
+        // succeeded. Destructors cannot throw, so callers read this receipt instead
+        // of a process-wide GDI count.
+        struct MechanismBitmapLedger
+        {
+            std::size_t created = 0;
+            std::size_t live = 0;
+            std::size_t restore_failures = 0;
+            std::size_t bitmap_delete_failures = 0;
+            std::size_t dc_delete_failures = 0;
+            std::size_t failures() const { return restore_failures + bitmap_delete_failures + dc_delete_failures; }
+        };
+
+        inline MechanismBitmapLedger& mechanism_bitmap_ledger()
+        {
+            static MechanismBitmapLedger ledger;
+            return ledger;
+        }
+
         class MechanismBitmap
         {
         public:
@@ -22,6 +41,7 @@ namespace colourwars_editor
             {
                 dc_ = CreateCompatibleDC(nullptr);
                 require(dc_ != nullptr, "Could not create the native guide DC");
+                MechanismBitmapLedger& ledger = mechanism_bitmap_ledger();
                 BITMAPINFO information{};
                 information.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
                 information.bmiHeader.biWidth = width;
@@ -31,15 +51,30 @@ namespace colourwars_editor
                 information.bmiHeader.biCompression = BI_RGB;
                 void* bits = nullptr;
                 bitmap_ = CreateDIBSection(dc_, &information, DIB_RGB_COLORS, &bits, nullptr, 0);
-                if (!bitmap_) { DeleteDC(dc_); throw std::runtime_error("Could not create the native guide bitmap"); }
+                if (!bitmap_)
+                {
+                    if (!DeleteDC(dc_)) { ++ledger.dc_delete_failures; }
+                    throw std::runtime_error("Could not create the native guide bitmap");
+                }
                 pixels_ = static_cast<std::uint32_t*>(bits);
                 previous_ = SelectObject(dc_, bitmap_);
+                if (previous_ == nullptr || previous_ == HGDI_ERROR)
+                {
+                    if (!DeleteObject(bitmap_)) { ++ledger.bitmap_delete_failures; }
+                    if (!DeleteDC(dc_)) { ++ledger.dc_delete_failures; }
+                    throw std::runtime_error("Could not select the native guide bitmap");
+                }
+                ++ledger.created; ++ledger.live;
                 SetBkMode(dc_, TRANSPARENT);
                 clear();
             }
             ~MechanismBitmap()
             {
-                SelectObject(dc_, previous_); DeleteObject(bitmap_); DeleteDC(dc_);
+                MechanismBitmapLedger& ledger = mechanism_bitmap_ledger();
+                if (SelectObject(dc_, previous_) != bitmap_) { ++ledger.restore_failures; }
+                if (!DeleteObject(bitmap_)) { ++ledger.bitmap_delete_failures; }
+                if (!DeleteDC(dc_)) { ++ledger.dc_delete_failures; }
+                --ledger.live;
             }
             MechanismBitmap(const MechanismBitmap&) = delete;
             MechanismBitmap& operator=(const MechanismBitmap&) = delete;

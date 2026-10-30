@@ -8,7 +8,7 @@ namespace practice_replay_acceptance
         friend typename Tag::Type member(Tag) { return Member; }
     };
     struct TapeTag { using Type = RoundTape GameLevel::*; friend Type member(TapeTag); };
-    struct SettingsTag { using Type = MenuLevelSettings GameLevel::*; friend Type member(SettingsTag); };
+    struct SettingsTag { using Type = MatchSetup GameLevel::*; friend Type member(SettingsTag); };
     struct StartTag { using Type = MatchStart GameLevel::*; friend Type member(StartTag); };
     struct BuildTag { using Type = void (GameLevel::*)(); friend Type member(BuildTag); };
     struct EndMenuTag { using Type = void (GameLevel::*)(); friend Type member(EndMenuTag); };
@@ -16,7 +16,7 @@ namespace practice_replay_acceptance
     struct EndReplayTag { using Type = void (GameLevel::*)(); friend Type member(EndReplayTag); };
     struct UpdateTag
     {
-        using Type = void (GameLevel::*)(const std::vector<PlayerInputData>&, float, SeatInputFilter*);
+        using Type = void (GameLevel::*)(const std::vector<SlotInput>&, float, SeatInputFilter*);
         friend Type member(UpdateTag);
     };
     template struct Access<TapeTag, &GameLevel::tape_>;
@@ -26,7 +26,7 @@ namespace practice_replay_acceptance
     template struct Access<EndMenuTag, &GameLevel::open_end_menu>;
     template struct Access<StepReplayTag, &GameLevel::step_replay>;
     template struct Access<EndReplayTag, &GameLevel::end_replay>;
-    template struct Access<UpdateTag, &GameLevel::debug_update_level>;
+    template struct Access<UpdateTag, &GameLevel::step_match>;
 
     struct GapsTag { friend size_t gaps(GapsTag, const RoundTape&); };
     template<auto Member> struct GapsAccess
@@ -43,9 +43,9 @@ namespace practice_replay_acceptance
             "Untimed actual GameLevel retained shipping replay inputs or suspend/resume gaps");
     }
 
-    MenuLevelSettings settings(const char* stage, int count = 1)
+    MatchSetup settings(const char* stage, int count = 1)
     {
-        MenuLevelSettings result; result.set_stage(stage); result.set_duration(3.0f);
+        MatchSetup result; result.set_stage(stage); result.set_duration(3.0f);
         result.set_player_count(count); result.begin_input_claims(input_slots::keyboard_and_mouse);
         for (int seat = 0; seat < count; ++seat)
         {
@@ -100,13 +100,13 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     using namespace practice_replay_acceptance;
     const NestedSaveProfile profile(output / "practice-replay-profile");
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "crossfeed", "Crossfeed", "stage_turbulence", true } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "crossfeed", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     // The inert director leaves the shipping path intact in both presets.
     // Debug's independent recorder is supplied explicitly below.
     StateContext& stack = app;
@@ -135,7 +135,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     { app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); ++updates; };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(0.0f); app.keyboard()->on_key_up(key); tick(0.0f); };
-    const auto push = [&](const MenuLevelSettings& plan, MatchStart start)
+    const auto push = [&](const MatchSetup& plan, MatchStart start)
     {
         stack.clear(); stack.push(std::make_unique<ResumeProbeRoot>());
         auto owned = std::make_unique<GameLevel>(&data, plan, start); GameLevel* game = owned.get();
@@ -172,9 +172,9 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
 
 #if COLOURWARS_DEV_TOOLS
     // The actual Debug recorder sits downstream of the shipping filter, as in
-    // DebugDirector::update_match. This deliberately keeps the existing practice
+    // GameLevel::update's step loop. This deliberately keeps the existing practice
     // Level: the user-facing record command rebuilds a developer/timed course.
-    const std::vector<PlayerInputData> neutral = neutral_inputs();
+    const std::vector<SlotInput> neutral = acceptance::slot_inputs(neutral_inputs());
     const Vector2F before_debug = game->level().player(0).rectangle().position();
     class Drive final : public SeatInputFilter
     {

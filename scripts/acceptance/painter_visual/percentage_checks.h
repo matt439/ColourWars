@@ -38,7 +38,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             const_cast<InputTuning&>(this->tuning.input()).movement_deadzone = this->cutoff;
         }
     };
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     const auto saved_bytes = [&]
     {
         std::ifstream stream(save_path, std::ios::binary);
@@ -66,30 +66,30 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (StickSettings& slot : fresh.sticks)
             { slot.movement_deadzone = movement; slot.aim_deadzone = aim; }
         require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
-            false, TeamColourPair::blue_yellow) && preferences.set_play_settings_and_save(fresh),
+            false, TeamColourPair::blue_yellow) && preferences_session.set_play_settings_and_save(fresh),
             "Cannot seed the percentage fixture's isolated preferences");
         return fresh;
     };
     const auto check_preferences = [&](const PlaySettings& expected)
     {
-        require(same_play(preferences.play_settings(), expected) &&
+        require(same_play(preferences_session.play_settings(), expected) &&
             preferences.resolution() == ScreenResolution::s_1920_1080 && !preferences.fullscreen() &&
             preferences.team_palette() == TeamColourPair::blue_yellow,
             "Percentage formatting changed active or unrelated preferences");
     };
     const auto check_reload = [&](const PlaySettings& expected)
     {
-        Save reloaded; reloaded.load_save_file();
-        require(same_play(reloaded.play_settings(), expected) &&
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+        require(same_play(reloaded_session.play_settings(), expected) &&
             reloaded.resolution() == ScreenResolution::s_1920_1080 && !reloaded.fullscreen() &&
             reloaded.team_palette() == TeamColourPair::blue_yellow,
             "Percentage fixture's persisted preferences differ from the expected private save");
     };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     // Clear borrowed pages before MenuContext, GameData or Save is destroyed,
     // including failure exits; the caller's Presentation and tuning then return.
@@ -221,7 +221,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             else if (sticks && (row == 0 || row >= 3) && row < 7)
             {
                 // The comfort rows follow the shared switches the fixture seeded.
-                const PlaySettings& play = preferences.play_settings();
+                const PlaySettings& play = preferences_session.play_settings();
                 const auto shared = [](bool on) { return std::wstring(on ? L"Shared (On)" : L"Shared (Off)"); };
                 const std::wstring copy = row == 0 ? L"Pad " + std::to_wstring(selected_slot + 1) :
                     row == 3 ? std::wstring(L"On") : shared(row == 4 ? play.view_shake :
@@ -304,7 +304,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         std::wstring controls_help = help.controls;
         if (!sticks)
         {
-            require(preferences.input_bindings().keyboard_jump == Key::space,
+            require(preferences_session.input_bindings().keyboard_jump == Key::space,
                 "Percentage fixture unexpectedly changed its effective Jump binding");
             const size_t token = controls_help.find(L"{jump}");
             require(token != std::wstring::npos && controls_help.find(L"{jump}", token + 6) == std::wstring::npos,

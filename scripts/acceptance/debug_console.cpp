@@ -2,6 +2,7 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 #include "game/debug/debug_tokenizer.h"
 #include "game/input_slots.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -131,7 +132,7 @@ int main(int argc, char** argv)
 {
 	using namespace debug_console_acceptance;
 
-	try
+	return acceptance::run_probe("debug console", [&]
 	{
 		require(argc == 2 || (argc == 3 && std::string(argv[2]) == "--background-only"),
 			"Usage: debug_console.exe <game directory> [--background-only]");
@@ -155,6 +156,8 @@ int main(int argc, char** argv)
 		check_registry();
 		check_clock();
 		check_planner();
+		check_roster_planner();
+		check_roster_statements(tuning, presentation);
 		if (!background_only) { check_text_field(); }
 		check_director(tuning, presentation);
 		check_match_hooks(tuning, presentation);
@@ -222,6 +225,7 @@ int main(int argc, char** argv)
 			check_seeded_planner(tuning, presentation);
 			check_replay_codec();
 			replay_case = check_replay_cpu_match(game_directory);
+			check_roster_replay(game_directory);
 			if (!background_only)
 			{
 				check_opening(game_directory);
@@ -287,7 +291,7 @@ int main(int argc, char** argv)
 
 		// The chord, the overlays and the unwinding are inert: pad Back and
 		// Start keep F1 and pause, and no page is asked anything.
-		std::vector<PlayerInputData> inputs(input_slots::count);
+		std::vector<SlotInput> inputs(input_slots::count);
 		inputs[0].toggle_debug = true;
 		inputs[0].toggle_pause_menu = true;
 		director.filter_match_inputs(inputs);
@@ -303,7 +307,7 @@ int main(int argc, char** argv)
 		director.before_level_build(match);
 		director.after_level_build(match);
 		require(!director.before_match_update(match, 1.0f / 60.0f), "Release never takes an update");
-		director.update_match(match, inputs, 1.0f / 60.0f);
+		update_match(director, match, inputs, 1.0f / 60.0f);
 		director.detach_match(match);
 		require(match.overlay_sets == 0 && match.player_text_sets == 0 && match.cheat_sets == 0 &&
 			match.rebuilds == 0 && match.adopts == 0 && match.placed.empty() &&
@@ -327,10 +331,5 @@ int main(int argc, char** argv)
 			"in ColourWars.exe.\n";
 #endif
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL debug console: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

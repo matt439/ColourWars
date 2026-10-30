@@ -3,6 +3,7 @@
 #include "game/presentation.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <array>
@@ -17,13 +18,7 @@ using namespace mattmath;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition)
-		{
-			throw std::runtime_error(message);
-		}
-	}
+	using acceptance::require;
 
 	bool close_to(float actual, float expected)
 	{
@@ -83,7 +78,7 @@ namespace
 					// options must preserve its arithmetic even while moving.
 					Camera scaled = previous;
 					scaled.scale = 1080.0f / framing.reference_height;
-					const Camera original = CameraTools{}.calculate_camera(route[step],
+					const Camera original = colourwars::CameraTools{}.calculate_camera(route[step],
 						scaled.visible_rectangle(panes.player_viewport(view)).size(), scaled, bounds);
 					const Camera moving = follow.follow(route[step], panes.player_viewport(view),
 						1080.0f, framing, previous, bounds, step % 2 == 0 ? 800.0f : -800.0f);
@@ -231,7 +226,7 @@ namespace
 						scale = std::min(scale, pane.width / framing.minimum_world_width);
 					}
 					const Vector2F world = pane.size() / scale;
-					const BorderThickness border = CameraTools::calculate_camera_scroll_border(world);
+					const BorderThickness border = colourwars::CameraTools::calculate_camera_scroll_border(world);
 					const float lead = std::min({ 800.0f * framing.horizontal_lead_seconds,
 						framing.horizontal_lead_max_distance, world.x / 4.0f });
 					for (const float direction : { -1.0f, 1.0f })
@@ -350,7 +345,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("camera framing", [&]
 	{
 		require(argc == 2, "Usage: camera_framing.exe <game/content directory>");
 		const std::string path = (std::filesystem::path(argv[1]) / "presentation.json").string();
@@ -379,10 +374,5 @@ int main(int argc, char** argv)
 		std::cout << "PASS camera framing: exact zero-option history and loaded/lead/minimum-width profiles; "
 			"1-4 players at 720p/1080p/QHD/odd/aspect sizes; bounds, body/badge space, rear tradeoffs, stop/reversal and mouse aim.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL camera framing: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

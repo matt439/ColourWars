@@ -34,8 +34,8 @@ round. After the series, Play Series Again clears the wins. Quitting discards
 the session. For solo practice, choose Single Match and 1 Player. The experimental
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
 and platform-drop trials; select it explicitly, as Random uses the four arenas
-(including Crossfeed). The provisional Press Tower and the static, mover and
-scored-slab Turbulence Yard comparisons are also explicit-only.
+(including Crossfeed). The provisional Press Tower and the static, mover, scored-slab,
+gate and ferry Turbulence Yard comparisons are also explicit-only.
 The chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads.
 Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-establish-the-art-and-display-rules);
 the superseded workshop comparison was retired on 2026-10-15. Open work is in
@@ -172,13 +172,14 @@ no client is a library of guesses, and ColourWars is what keeps saying "this
 API is awkward" loudly enough to be worth fixing.
 
 ```
-game/                 ~34k lines     the game: states, objects, content, and
-                                     ~14k of Debug-only tools in game/debug/
-editor/               ~2k lines      the desktop level editor
+game/                 ~71k lines     the game: states, objects, content, and
+                                     ~16k of Debug-only tools in game/debug/
+editor/               ~6k lines      the desktop level editor
 scripts/                             acceptance checks, startup, capture and
                                      art-build scripts, developer-console scripts
+                                     (indexed in scripts/README.md)
 docs/                                the backstory, polish plan, roadmap,
-                                     guides and reviews
+                                     guides and reviews (indexed in docs/README.md)
 external/labrador/                   the engine, as a submodule
 external/rapidjson/                  vendored, for the save and level files
 cmake/                               the wave-bank recipe, release packaging
@@ -241,7 +242,9 @@ feedback. Release ignores `+` arguments and contains none of it. See
 There is no `ctest` step here: the engine's test suite lives with
 the engine. Labrador puts its tests, its benchmark and its samples behind
 `PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library
-and nothing else.
+and nothing else. The game's own checks below are not CTest tests either: their
+runner builds them only on request and owns their selection, deadlines,
+evidence and timing summary.
 
 ### Consumer acceptance
 
@@ -255,16 +258,18 @@ pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset x64-debug -SkipBuild -C
 ```
 
 These commands configure/build the game, then compile small native checks
-against its actual objects. They cover full-cost ammunition and held-fire
-recovery, exposed paint surfaces and ownership, settings persistence and
-write-failure recovery, camera framing and aiming, jump buffering and ledge grace,
+against the game library the executable is linked from (`colourwars_game`).
+They cover full-cost ammunition and held-fire recovery, exposed paint surfaces
+and ownership, settings persistence and write-failure recovery, camera framing
+and aiming, jump buffering and ledge grace,
 takeoff/landing feedback events and lifetime, stage eligibility for Random,
 Movement Course routes, developer tools and audio cue content/lifecycle.
 They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.
 
-CI lints changed lines for whitespace errors and conflict markers on every run.
+CI lints changed lines for whitespace errors and conflict markers on every run,
+and checks that relative Markdown links and their heading anchors resolve.
 Pushes and pull requests containing only Markdown or images/videos under
 `docs/images/` stop after lint. Code, build files, scripts, schemas, runtime assets,
 submodule changes and deletion of packaged Markdown still run the full Windows
@@ -417,9 +422,12 @@ continues; the normal Release package requires the validated audible bank.
 
 ColourWars is a working example of object-oriented game code: abstract
 interfaces, deep and multiple inheritance, virtual behavior, composition and
-explicit ownership. The [OOP reading guide](docs/oop-guide.md) maps those
-concepts to the implementation, follows a shot from input to score, and explains
-how to extend the game. It is Labrador's real client; the engine's `samples/`
+explicit ownership. [The architecture overview](docs/architecture.md) maps the
+directories, the dependency direction, the services and the state stack. The
+[OOP reading guide](docs/oop-guide.md) maps those concepts to the
+implementation, follows a shot from input to score, and explains how to extend
+the game. [docs/README.md](docs/README.md) indexes the rest of the docs and
+[scripts/README.md](scripts/README.md) the scripts. It is Labrador's real client; the engine's `samples/`
 provide its starter template.
 
 The project began here on 2022-12-30 as ColourWars, became ChromaClash, then

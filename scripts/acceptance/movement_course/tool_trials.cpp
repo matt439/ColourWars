@@ -89,9 +89,11 @@ namespace movement_course_acceptance
 
             // These are the player hooks used when Level suspends/resumes;
             // no simulation time passes while the menu owns the match.
-            run.player->pause_sounds();
+            MatchVoices voices;
+            run.player->add_voices(voices);
+            voices.pause();
             run.player->reset_jump_input();
-            run.player->resume_sounds();
+            voices.resume();
             run.tick();
             require(holds(replaced), "pause and resume discarded retained pad aim");
 

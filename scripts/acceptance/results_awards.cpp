@@ -10,6 +10,7 @@
 #include "engine/render/sprite_font_file.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <iostream>
@@ -25,10 +26,7 @@ using namespace mattmath;
 // rest of presentation.json and checked in the menu_text case.
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -271,7 +269,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("results awards", [&]
     {
         require(argc == 2, "Usage: results_awards.exe <staged content directory>");
         const std::filesystem::path content(argv[1]);
@@ -283,10 +281,5 @@ int main(int argc, char** argv)
         shipped_layout(world);
         std::cout << "Results awards acceptance passed\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "Results awards acceptance failed: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

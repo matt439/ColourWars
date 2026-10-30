@@ -6,6 +6,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/collision/partitioner.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/slot_seats.h"
 
 namespace
 {
@@ -66,7 +67,7 @@ namespace
             roof->tag() == floor->tag() && floor_bounds.height == 10.0f && roof_bounds.height == 10.0f,
             "Paintable rulers changed their ten-unit one-way collision classification");
         area_is(floor->paint_total().total, floor_bounds.width * tuning.paint().thickness);
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(1);
         settings.set_screen_layout(ScreenLayout::one_player);
         settings.set_stage("crossfeed");
@@ -83,13 +84,12 @@ namespace
             colours, info.camera_bounds_rectangle(), info.zoom_out_start_bounds_rectangle(),
             info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation, L"One-way paint check",
             info.sound_bank_name(), info.music_name(), info.music_volume(), info.end_sting_name(),
-            info.end_sting_volume(), &resolution, &viewports, &render, &audio, &preferences,
-            &mouse, info.stations(), OpeningMode::off, 300.0f);
+            info.end_sting_volume(), &resolution, &viewports, &render, &audio, &preferences, info.stations(), OpeningMode::off, 300.0f);
         const float step = static_cast<float>(StepTimer::TicksToSeconds(
             StepTimer::SecondsToTicks(1.0 / 60.0)));
         std::vector<PlayerInputData> inputs(input_slots::count);
         inputs[3].connected = true;
-        const auto tick = [&] { level.update(inputs, step); };
+        const auto tick = [&] { level.update(acceptance::slot_seats(level, inputs), step); };
         for (int ticks = 0; ticks < 1000 && !level.match_started(); ++ticks) { tick(); }
         require(level.match_started(), "One-way paint check did not finish its countdown");
         for (int ticks = 0; ticks < 30; ++ticks) { tick(); }

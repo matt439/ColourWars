@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -27,20 +28,37 @@ namespace
         const char* finish_b;
         float start_x_a;
         float start_x_b;
+        // The fewest takeoffs any path between the named contacts needs.
+        int min_jumps;
     };
 
     const std::array<Route, 5> routes = {{
         { "crossfeed", "home_return", "boundary_floor_a", "boundary_floor_b", nullptr, nullptr,
-            "spawn_a_floor", "spawn_b_floor", 300.0f, 3300.0f },
+            "spawn_a_floor", "spawn_b_floor", 300.0f, 3300.0f, 1 },
         { "crossfeed", "mixer", "centre_plinth", "centre_plinth", "upper_step_a", "upper_step_b",
-            "centre_mixer", "centre_mixer", 1700.0f, 1900.0f },
+            "centre_mixer", "centre_mixer", 1700.0f, 1900.0f, 2 },
         { "king_of_the_hill", "terraces", "mountain_level_5", "mountain_level_5",
-            "mountain_level_6", "mountain_level_6", "mountain_level_7", "mountain_level_7", 2000.0f, 4000.0f },
+            "mountain_level_6", "mountain_level_6", "mountain_level_7", "mountain_level_7", 2000.0f, 4000.0f, 2 },
         { "turbulence", "lower_deck", "boundary_floor", "boundary_floor",
             "left_bottom_left_jump", "right_bottom_right_jump", "left_lower_paint", "right_lower_paint",
-            825.0f, 5385.0f },
+            825.0f, 5385.0f, 2 },
         { "turbulence", "mid_deck", "left_lower_paint", "right_lower_paint",
-            "left_mid_left_jump", "right_mid_right_jump", "left_mid_paint", "right_mid_paint", 1190.0f, 4810.0f }
+            "left_mid_left_jump", "right_mid_right_jump", "left_mid_paint", "right_mid_paint", 1190.0f, 4810.0f, 2 }
+    }};
+
+    // Press Tower is measured, not required: an unfinished route is a limit
+    // with its trace (docs/polish-press-tower.md, POL#41). R2 walks the ramps
+    // and bed. A held jump rises 207 at most, and R3 rises 240 and R4 320, so each
+    // needs two takeoffs by any path; the summit leg's 80 needs one.
+    const std::array<Route, 4> press_tower_routes = {{
+        { "press_tower", "r2", "floor_yard_a", "floor_yard_b", "press_bed", "press_bed",
+            "floor_yard_b", "floor_yard_a", 1200.0f, 2400.0f, 0 },
+        { "press_tower", "r3", "catwalk_a", "catwalk_b", "stair_3_a", "stair_3_b",
+            "shoulder_a", "shoulder_b", 900.0f, 2700.0f, 2 },
+        { "press_tower", "r4", "press_bed", "press_bed", "frame_a", "frame_b",
+            "shoulder_a", "shoulder_b", 1560.0f, 2040.0f, 2 },
+        { "press_tower", "summit", "shoulder_a", "shoulder_b", nullptr, nullptr,
+            "press_head", "press_head", 1560.0f, 2040.0f, 1 }
     }};
 
     struct Trial
@@ -69,9 +87,9 @@ namespace
             world.named(left ? route.finish_a : route.finish_b), left ? route.start_x_a : route.start_x_b };
     }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -127,7 +145,7 @@ namespace
 
     TrialResult run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const Endpoints route = endpoints(world, trial);
@@ -145,7 +163,7 @@ namespace
                 "Arena-route trial escaped its finite active-step budget");
             require(tape.steps.back().size() == 2, "Arena-route trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Arena-route bot emitted a device/menu/pause action");
             require(tape.steps.back()[0].x_movement == 0.0f && !tape.steps.back()[0].primary_shoot,
                 "Arena-route driver changed the stationary human's input");
@@ -155,10 +173,14 @@ namespace
                 std::isfinite(bot.center().y) && std::isfinite(bot.weapon_ammo()) && bot.weapon_ammo() >= 0.0f,
                 "Arena-route bot died, changed identity/tool or produced invalid state");
             if (on_support(bot, route.start) && first_start < 0) { first_start = tick; }
-            if (first_start >= 0 && route.intermediate != nullptr && on_support(bot, *route.intermediate) &&
-                first_intermediate < 0) { first_intermediate = tick; }
-            const bool previous_contact = route.intermediate == nullptr ? first_start >= 0 : first_intermediate >= 0;
-            if (previous_contact && on_support(bot, route.finish) && first_finish < 0) { first_finish = tick; }
+            // Each contact counts from the step after the one before it: a body
+            // straddling two level neighbours (Press Tower's stair_3 and
+            // shoulder) touches both at once without having crossed.
+            if (first_start >= 0 && tick > first_start && route.intermediate != nullptr &&
+                on_support(bot, *route.intermediate) && first_intermediate < 0) { first_intermediate = tick; }
+            const int previous_contact = route.intermediate == nullptr ? first_start : first_intermediate;
+            if (previous_contact >= 0 && tick > previous_contact && on_support(bot, route.finish) && first_finish < 0)
+            { first_finish = tick; }
             if (on_support(bot, route.finish))
             {
                 // An observed net ammunition decrease establishes paid fire
@@ -179,8 +201,12 @@ namespace
                 }
             }
             jumps += input.jump_pressed ? 1 : 0;
-            if (static_cast<int>(trial.tool) == 0 && trial.difficulty == BotDifficulty::normal &&
-                (tick < 180 && (tick % 5 == 0 || input.jump_pressed)))
+            // Press Tower may leave a route unfinished, so every one of its
+            // trials keeps a sparse whole-horizon trace for the limit record.
+            const bool tower = std::string_view(trial.route.stage) == "press_tower";
+            if ((static_cast<int>(trial.tool) == 0 && trial.difficulty == BotDifficulty::normal &&
+                (tick < 180 && (tick % 5 == 0 || input.jump_pressed))) ||
+                (tower && (tick % 30 == 0 || input.jump_pressed)))
             {
                 trace << "TRACE step=" << tick << " x=" << bot.center().x << " feet=" << bot.rectangle().bottom()
                     << " vx=" << bot.velocity().x << " vy=" << bot.velocity().y << " ground=" << grounded(bot)
@@ -200,7 +226,7 @@ namespace
         // is reported separately, since these local starts do not prove value.
         const bool passed = first_start >= 0 && first_finish > first_start &&
             (route.intermediate == nullptr || (first_intermediate > first_start && first_finish > first_intermediate)) &&
-            jumps >= (route.intermediate == nullptr ? 1 : 2);
+            jumps >= trial.route.min_jumps;
         std::cout << "MEASURE bot arena route stage=" << trial.route.stage << " route=" << trial.route.name <<
             " team=" << (trial.team == PlayerTeam::a ? 'a' : 'b') << " tool=" << static_cast<int>(trial.tool) <<
             " difficulty=" << static_cast<int>(trial.difficulty) << " start=" << first_start <<
@@ -234,7 +260,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot arena routes", [&]
     {
         require(argc == 2, "usage: bot_arena_routes <content>");
         int trials = 0, passed = 0, paint_trials = 0;
@@ -265,11 +291,51 @@ int main(int argc, char** argv)
             " finish_paint_trials=" << paint_trials << "/" << trials << '\n';
         require(trials == 150 && passed == trials,
             "A bot did not complete every named static arena route within 900 active steps");
+
+        // Press Tower's own totals, after the unchanged contract above. Its
+        // unfinished routes are measured limits, never a failure.
+        World tower(std::filesystem::absolute(argv[1]), "bot-arena-routes",
+            "Bot arena route needs authored support '", "press_tower");
+        int tower_trials = 0, tower_passed = 0, tower_paint = 0;
+        std::array<int, 3> by_difficulty{};
+        std::array<int, 2> by_team{};
+        for (const Route& route : press_tower_routes)
+        {
+            int route_passed = 0;
+            std::array<int, 3> route_difficulty{};
+            for (const PlayerTeam team : { PlayerTeam::a, PlayerTeam::b })
+            {
+                for (int tool = 0; tool < 5; ++tool)
+                {
+                    for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+                    {
+                        const TrialResult result = run(tower, { route, team, static_cast<WeaponType>(tool), difficulty },
+                            tool == 0 && difficulty == BotDifficulty::normal);
+                        const int pass = result.route_passed ? 1 : 0;
+                        route_passed += pass;
+                        route_difficulty[static_cast<std::size_t>(difficulty)] += pass;
+                        by_difficulty[static_cast<std::size_t>(difficulty)] += pass;
+                        by_team[team == PlayerTeam::a ? 0 : 1] += pass;
+                        tower_paint += result.owns_finish_paint ? 1 : 0;
+                        ++tower_trials;
+                    }
+                }
+            }
+            tower_passed += route_passed;
+            std::cout << "MEASURE bot arena route completed stage=press_tower route=" << route.name <<
+                " route_passed=" << route_passed << "/30 easy=" << route_difficulty[0] << "/10 normal=" <<
+                route_difficulty[1] << "/10 hard=" << route_difficulty[2] << "/10\n";
+        }
+        std::cout << "MEASURE bot arena press_tower routes completed=" << tower_trials << " route_passed=" <<
+            tower_passed << " finish_paint_trials=" << tower_paint << "/" << tower_trials << " easy=" <<
+            by_difficulty[0] << "/40 normal=" << by_difficulty[1] << "/40 hard=" << by_difficulty[2] <<
+            "/40 team_a=" << by_team[0] << "/60 team_b=" << by_team[1] << "/60\n";
+        require(tower_trials == 120, "Press Tower route matrix changed size");
         std::cout << "PASS 150 bounded actual-driver Crossfeed, King of the Hill and Turbulence routes, ordered named "
             "contacts and ordinary jumps; ten 900-step final-input replays; finish paint is measured, "
             "territory usefulness remains unqualified\n";
+        std::cout << "PASS 120 bounded actual-driver Press Tower R2/R3/R4/summit measurements and eight final-input "
+            "replays; unfinished routes are measured limits, not failures\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot arena routes: " << error.what() << '\n'; return 1; }
+    });
 }

@@ -14,13 +14,13 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     replacement.validate_resources(*app.render_resources(), *app.audio_resources());
     const NestedSaveProfile isolated(output / "stick-readout-profile");
     const auto save_path = output / "stick-readout-profile/ColourWars/save_data.json";
-    Save preferences; PlaySettings play = preferences.play_settings();
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings();
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     for (auto& stick : play.sticks) { stick = { 20, 50 }; }
     play.sticks[3] = { -1, -1 };
     require(tuning.input().movement_deadzone == 0.5f && play.aim_deadzone() == 0.5f,
         "The independent inherited-deadzone fixture needs the authored/default 50 percent cutoffs");
-    require(preferences.set_play_settings_and_save(play), "Cannot seed the private stick readout profile");
+    require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private stick readout profile");
     const auto bytes = [&]
     {
         std::ifstream file(save_path, std::ios::binary);
@@ -28,14 +28,14 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(4);
     require(settings.claim_input_slot(3), "Cannot specify the readout fixture's retained sparse roster");
     settings.set_stage("movement_course"); settings.set_best_of(3); settings.set_duration(73.0f);
     settings.set_screen_layout(ScreenLayout::two_player);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
-    const MenuLevelSettings retained = settings;
+    const MatchSetup retained = settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreReadouts
     {
@@ -46,7 +46,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto unchanged = [&]
     {
         require(bytes() == saved, "A stick readout refresh or pending preview wrote the save");
-        const PlaySettings& actual = preferences.play_settings();
+        const PlaySettings& actual = preferences_session.play_settings();
         for (size_t slot = 0; slot < play.sticks.size(); ++slot)
         {
             require(actual.sticks[slot].movement_deadzone == play.sticks[slot].movement_deadzone &&
@@ -162,6 +162,124 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         std::srand(9353); const int next = std::rand(); std::srand(9353);
         require(actual.pixels == frame().pixels && std::rand() == next, "Frozen stick readout drawing changed pixels or RNG"); unchanged();
     };
+    // ROAD35: paused previews sample a recovered device using the retained logical profile.
+    {
+        const SaveData saved_data = preferences.save_data();
+        const InputBindings effective_bindings = preferences_session.input_bindings();
+        require(saved_data.records.stages().empty() && !saved_data.last_match,
+            "The private recovery fixture starts without records or a remembered match");
+        std::array<int, input_slots::pad_count> worn{};
+        for (int slot = 0; slot < input_slots::pad_count; ++slot) { worn[slot] = preferences_session.worn_profile(slot); }
+        const auto same_play = [](const PlaySettings& a, const PlaySettings& b)
+        {
+            if (a.aim_sensitivity != b.aim_sensitivity || a.music_volume != b.music_volume || a.sfx_volume != b.sfx_volume ||
+                a.view_shake != b.view_shake || a.aim_marker != b.aim_marker || a.reduce_effects != b.reduce_effects ||
+                a.pad_rumble != b.pad_rumble || a.pad_comfort != b.pad_comfort) { return false; }
+            for (size_t slot = 0; slot < a.sticks.size(); ++slot)
+            {
+                if (a.sticks[slot].movement_deadzone != b.sticks[slot].movement_deadzone ||
+                    a.sticks[slot].aim_deadzone != b.sticks[slot].aim_deadzone) { return false; }
+            }
+            return true;
+        };
+        MatchSetup recovered = retained;
+        recovered.begin_input_claims(0);
+        require(recovered.claim_input_slot(2) && recovered.move_to_device(0, 3), "Cannot arrange the private recovered seat");
+        recovered.set_player_weapon(0, WeaponType::sniper); recovered.set_player_handicap(0, 2);
+        recovered.set_player_weapon(1, WeaponType::mister); recovered.set_series_stage_rule(SeriesStageRule::rotate);
+        const MatchSetup expected_settings = recovered;
+        MenuContext recovery_context(&data, &input, &recovered);
+        struct ClearRecoveryPage
+        {
+            StateContext& stack;
+            ~ClearRecoveryPage() { this->stack.clear(); painter_scripted_pads::states = {}; }
+        } clear_recovery{ stack };
+        int recovery_ticks = 0;
+        const auto recovery_unchanged = [&]
+        {
+            unchanged(); const SaveData actual = preferences.save_data();
+            require(actual.resolution == saved_data.resolution && actual.fullscreen == saved_data.fullscreen &&
+                actual.team_palette == saved_data.team_palette && same_play(actual.play, saved_data.play) &&
+                same_play(preferences_session.play_settings(), play) && actual.input_bindings == saved_data.input_bindings &&
+                preferences_session.input_bindings() == effective_bindings && actual.profiles == saved_data.profiles &&
+                actual.records.stages().empty() && !actual.last_match,
+                "Recovery readouts preserve every active and stored private preference");
+            for (int slot = 0; slot < input_slots::pad_count; ++slot)
+                { require(preferences_session.worn_profile(slot) == worn[slot], "Recovery readouts changed a worn profile"); }
+            for (const auto& [actual_settings, expected] :
+                { std::pair{ &settings, &retained }, std::pair{ &recovered, &expected_settings } })
+            {
+                require(actual_settings->player_count() == expected->player_count() && actual_settings->stage() == expected->stage() &&
+                    actual_settings->duration() == expected->duration() && actual_settings->best_of() == expected->best_of() &&
+                    actual_settings->screen_layout() == expected->screen_layout() && actual_settings->series_stage_rule() == expected->series_stage_rule() &&
+                    actual_settings->pad_devices() == expected->pad_devices(), "Recovery readouts changed match settings or device mappings");
+                const auto& seats = actual_settings->player_settings(); const auto& expected_seats = expected->player_settings();
+                for (size_t seat = 0; seat < expected_seats.size(); ++seat)
+                {
+                    require(seats[seat].num == expected_seats[seat].num && seats[seat].team == expected_seats[seat].team &&
+                        seats[seat].weapon == expected_seats[seat].weapon && seats[seat].controller == expected_seats[seat].controller &&
+                        seats[seat].difficulty == expected_seats[seat].difficulty && seats[seat].handicap == expected_seats[seat].handicap,
+                        "Recovery readouts changed a roster participant");
+                }
+            }
+        };
+        const auto recovery_tick = [&]
+        {
+            require(++recovery_ticks <= 96, "Recovered stick readouts exceeded their bounded 96-update budget");
+            app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
+        };
+        const auto recovery_open = [&](int owner)
+        {
+            stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
+            for (const Key key : { Key::enter, Key::space, Key::escape, Key::up, Key::down, Key::left, Key::right })
+                { app.keyboard()->on_key_up(key); }
+            app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+            app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); selected = owner >= 0 ? owner : 0;
+            stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+            stack.push(std::make_unique<StickSettingsMenu>(&recovery_context, owner)); recovery_tick(); recovery_tick();
+            require(stack.depth() == 2, "The recovery page consumed neutral entry input");
+        };
+        const Copy recovered_positive{ L"Pad 1 - connected", L"Left stick raw X: 60%", L"Move response: 50%",
+            L"Raw X: 60%\nRaw Y: 80%\nAim X: 60%\nAim Y: 80%\nRaw: hollow\nAim: solid" };
+        const Copy recovered_negative{ L"Pad 1 - connected", L"Left stick raw X: -60%", L"Move response: -50%",
+            L"Raw X: -60%\nRaw Y: -80%\nAim X: -60%\nAim Y: -80%\nRaw: hollow\nAim: solid" };
+        const Copy recovered_missing{ L"Pad 1 - disconnected", L"Left stick raw X: 0%", L"Move response: 0%",
+            L"Raw X: 0%\nRaw Y: 0%\nNo new aim\nRaw: hollow\nAim: solid" };
+        const Copy physical_zero{ L"Pad 1 - connected", L"Left stick raw X: -50%", L"Move response: -38%",
+            L"Raw X: -60%\nRaw Y: 80%\nAim X: -60%\nAim Y: 80%\nRaw: hollow\nAim: solid" };
+        const Copy unmapped_owner{ L"Pad 3 - connected", L"Left stick raw X: 50%", L"Move response: 38%",
+            L"Raw X: 30%\nRaw Y: 40%\nNo new aim\nRaw: hollow\nAim: solid" };
+        for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
+        {
+            presentation = original; app.resolution_manager()->set_resolution_exactly(size);
+            std::ignore = app.renderer()->window_size_changed(size.x, size.y); painter_scripted_pads::states = {};
+            auto& old_device = painter_scripted_pads::states[0]; old_device.left_stick = { -0.5f, 0.0f }; old_device.right_stick = { -0.6f, 0.8f };
+            auto& replacement_pad = painter_scripted_pads::states[3]; replacement_pad.connected = true;
+            replacement_pad.left_stick = { 0.6f, 0.0f }; replacement_pad.right_stick = { 0.6f, 0.8f };
+            auto& other_pad = painter_scripted_pads::states[2]; other_pad.connected = true;
+            other_pad.left_stick = { 0.5f, 0.0f }; other_pad.right_stick = { 0.3f, 0.4f };
+            recovery_open(0);
+            // This first literal comparison is the old-source RED before later controls or old matrices.
+            compare("road35-paused-recovered", original, recovered_positive); recovery_unchanged();
+            old_device.connected = true; recovery_tick(); recovery_tick();
+            compare("road35-old-device-reconnected", original, recovered_positive); recovery_unchanged();
+            replacement_pad.left_stick = { -0.6f, 0.0f }; replacement_pad.right_stick = { -0.6f, -0.8f }; recovery_tick();
+            compare("road35-replacement-reversed", original, recovered_negative); recovery_unchanged();
+            replacement_pad.connected = false; recovery_tick();
+            compare("road35-replacement-disconnected", original, recovered_missing); recovery_unchanged();
+            replacement_pad.connected = true; replacement_pad.left_stick = { 0.6f, 0.0f }; replacement_pad.right_stick = { 0.6f, 0.8f };
+            recovery_open(-1);
+            compare("road35-unpaused-stale-map", original, physical_zero); recovery_unchanged();
+            recovery_open(2);
+            compare("road35-paused-unmapped-owner", original, unmapped_owner); recovery_unchanged();
+            // A keyboard owner starts on the first logical pad whose device is connected, not physical Pad 3.
+            old_device.connected = false; recovery_open(input_slots::keyboard_and_mouse);
+            compare("road35-keyboard-owner-recovered", original, recovered_positive); recovery_unchanged();
+        }
+        std::cout << "PASS ROAD35 recovered stick preview: 14 cases, 56 literal readouts, " << recovery_ticks <<
+            " updates; paused logical profiles, keyboard-owner start, replacement disconnect, old-device reconnect and unpaused stale-map controls; private save and roster unchanged\n";
+    }
+
     const Copy zero{ L"Pad 1 - connected", L"Left stick raw X: 0%", L"Move response: 0%",
         L"Raw X: 0%\nRaw Y: 0%\nNo new aim\nRaw: hollow\nAim: solid" };
     const Copy disconnected{ L"Pad 1 - disconnected", L"Left stick raw X: 0%", L"Move response: 0%", zero[3] };

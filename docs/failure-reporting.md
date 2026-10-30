@@ -95,7 +95,10 @@ device initialization. It reads and dismisses only that process's error dialog.
 Both writable and blocked-log cases require the complete original parser cause
 in the dialog and exact stderr, exit code 1, correct metadata status and no
 private fixture values in the report. Evidence is retained under
-`out/validation/failure-reporting/<preset>/<run>/`.
+`out/validation/failure-reporting/<preset>/<run>/`. CI runs the probe in both
+jobs and uploads its receipts, dialog text and stderr. It takes about a second
+and needs no focus or input; see
+[code-hygiene.md](code-hygiene.md#registration-and-failure-reporting-checks-in-ci-ci3).
 An existing isolated save containing a private marker must remain byte-for-byte
 unchanged in both cases.
 

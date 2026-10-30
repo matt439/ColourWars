@@ -3,7 +3,6 @@
 
 #include <limits>
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -32,6 +31,8 @@ Weapon::Weapon(const GameTuning* tuning,
     TextureObject(tuning->weapon(type).details.sheet_name,
                   tuning->weapon(type).details.frame_name, render_resources,
                   color, rotation, origin, flip, layer_depth),
+    colourwars::SoundBankObject(tuning->weapon(type).details.sound_bank_name,
+                  audio_resources),
         tuning_(tuning),
         weapon_tuning_(&tuning->weapon(type)),
         render_resources_(render_resources),
@@ -46,25 +47,24 @@ Weapon::Weapon(const GameTuning* tuning,
 
     this->ammo_ = tuning->starting_ammo();
     this->proj_builder_ = std::make_unique<ProjectileBuilder>(tuning, render_resources);
-    this->sound_bank_ = audio_resources->sound_bank(details.sound_bank_name);
-    this->loop_sound_ = resolve_loop_sound(*this->sound_bank_,
-        this->weapon_tuning_->loop_sounds, team, sound_index);
-    this->shoot_sound_ = this->sound_bank_->resolve_wave(
+    this->loop_voice_ = MatchVoice(details.sound_bank_name, audio_resources,
+        loop_sound_name(this->weapon_tuning_->loop_sounds, team, sound_index));
+    this->shoot_sound_ = this->resolve_wave(
         details.shoot_sound_name);
     const WeaponFeedbackSounds& feedback = this->weapon_tuning_->feedback_sounds;
-    this->empty_sound_ = this->sound_bank_->resolve_wave(feedback.empty.name);
-    this->recovered_sound_ = this->sound_bank_->resolve_wave(feedback.recovered.name);
+    this->empty_sound_ = this->resolve_wave(feedback.empty.name);
+    this->recovered_sound_ = this->resolve_wave(feedback.recovered.name);
     if (feedback.stop.has_value())
     {
-        this->stop_sound_ = this->sound_bank_->resolve_wave(feedback.stop->name);
+        this->stop_sound_ = this->resolve_wave(feedback.stop->name);
     }
     if (feedback.ready.has_value())
     {
-        this->ready_sound_ = this->sound_bank_->resolve_wave(feedback.ready->name);
+        this->ready_sound_ = this->resolve_wave(feedback.ready->name);
     }
     if (feedback.low.has_value())
     {
-        this->low_sound_ = this->sound_bank_->resolve_wave(feedback.low->name);
+        this->low_sound_ = this->resolve_wave(feedback.low->name);
     }
     this->paint_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(details.frame_name + "_paint");
@@ -163,15 +163,15 @@ bool Weapon::shooting_this_update() const
 {
     return this->shooting_this_update_;
 }
-Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin origin)
+Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, colourwars::RotationOrigin origin)
 {
     switch (origin)
     {
-    case RotationOrigin::center:
+    case colourwars::RotationOrigin::center:
         return Vector2F(size) / 2.0f;
-    case RotationOrigin::left_center:
+    case colourwars::RotationOrigin::left_center:
         return {0.0f, size.y / 2.0f};
-    case RotationOrigin::top_left:
+    case colourwars::RotationOrigin::top_left:
         return Vector2F::ZERO;
     default:
         return Vector2F::ZERO;
@@ -385,14 +385,14 @@ WeaponReadiness Weapon::readiness() const
 
 void Weapon::draw_aim_marker(DrawList& draw_list) const
 {
-    if (this->type() == WeaponType::roller || this->feedback_ == nullptr) { return; }
+    if (!this->has_aim_marker() || this->feedback_ == nullptr) { return; }
     this->feedback_->draw_aim_marker(draw_list, this->nozzle_pos(), this->rotation(),
         this->readiness(), this->team_colour());
 }
 
 RectangleF Weapon::aim_marker_bounds() const
 {
-    if (this->type() == WeaponType::roller || this->feedback_ == nullptr)
+    if (!this->has_aim_marker() || this->feedback_ == nullptr)
     {
         return RectangleF(this->nozzle_pos(), Vector2F::ZERO);
     }
@@ -467,9 +467,9 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
     }
 }
 void Weapon::play_feedback_sound(SoundBank::WaveHandle sound,
-    const SoundTuning& tuning) const
+    const SoundTuning& tuning)
 {
-    this->sound_bank_->play_wave(sound, tuning.volume);
+    this->play_wave(sound, tuning.volume);
 }
 void Weapon::update_ground_contact(bool /*supported*/, bool /*established_support*/,
     float /*dt*/)
@@ -507,7 +507,7 @@ bool Weapon::can_afford_shot() const
 }
 void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
 {
-    if (!this->loop_sound_.valid())
+    if (!this->loop_voice_.valid())
     {
         return;
     }
@@ -516,10 +516,9 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
     {
         if (!this->loop_playing_)
         {
-            this->sound_bank_->play_wave(this->shoot_sound_,
+            this->play_wave(this->shoot_sound_,
                 this->details().shoot_sound_volume);
-            this->sound_bank_->play_effect(
-                this->loop_sound_, true,
+            this->loop_voice_.play(true,
                 this->details().shoot_sound_volume);
             this->loop_playing_ = true;
         }
@@ -529,36 +528,25 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
         this->stop_sounds();
     }
 }
-void Weapon::stop_sounds() const
+void Weapon::stop_sounds()
 {
-    if (!this->loop_sound_.valid())
+    if (!this->loop_voice_.valid())
     {
         return;
     }
-    this->sound_bank_->stop_effect(this->loop_sound_, true);
+    this->loop_voice_.stop();
     this->loop_playing_ = false;
 }
-void Weapon::pause_sounds() const
+void Weapon::add_voices(MatchVoices& voices)
 {
-    if (!this->loop_sound_.valid())
-    {
-        return;
-    }
-    this->sound_bank_->pause_effect(this->loop_sound_);
+    voices.add(this->loop_voice_);
 }
-void Weapon::resume_sounds() const
+std::string Weapon::loop_sound_name(const WeaponLoopSounds& loop_sounds,
+    PlayerTeam team, int sound_index)
 {
-    if (!this->loop_sound_.valid())
-    {
-        return;
-    }
-    this->sound_bank_->resume_effect(this->loop_sound_);
-}
-SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
-    const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index)
-{
-    // One-shot weapons have no loop_sounds record and use an invalid handle.
-    // Resolve loops at construction to avoid name lookups during firing or teardown.
+    // One-shot weapons have no loop_sounds record and get a voice that never
+    // sounds. Loops resolve at construction to avoid name lookups during
+    // firing or teardown.
     if (team != PlayerTeam::a && team != PlayerTeam::b)
     {
         return {};
@@ -573,7 +561,7 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
         return {};
     }
 
-    return sound_bank.resolve_effect(loop_sounds.sound_name(team, sound_index));
+    return loop_sounds.sound_name(team, sound_index);
 }
 void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,

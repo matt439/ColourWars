@@ -2,6 +2,7 @@
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "scripts/acceptance/balance_regions/exchange.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -11,6 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <locale>
+#include <optional>
 #include <sstream>
 
 namespace
@@ -34,6 +36,7 @@ namespace
         unsigned int seed;
         Matrix kind;
         int rotation;
+        BotDifficulty difficulty = BotDifficulty::normal;
         WeaponType tool(int seat) const { return this->tools[static_cast<std::size_t>(seat)]; }
         bool mixed() const { return this->kind != Matrix::same_tool; }
         bool bot(int seat) const { return this->kind == Matrix::sustained ? seat == 1 || seat == 2 : seat > 0; }
@@ -47,6 +50,11 @@ namespace
         return names[static_cast<int>(tool)];
     }
     char name(PlayerTeam team) { return team == PlayerTeam::a ? 'a' : 'b'; }
+    const char* name(BotDifficulty difficulty)
+    {
+        constexpr const char* names[] = { "easy", "normal", "hard" };
+        return names[static_cast<int>(difficulty)];
+    }
     const char* matrix(const Trial& trial)
     {
         constexpr const char* names[] = { "same_tool", "mixed", "sustained" };
@@ -79,11 +87,11 @@ namespace
     }
     const char* tool_label(const Trial& trial) { return trial.mixed() ? "mixed" : name(trial.tool(1)); }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(seats);
-        for (int seat = 1; seat < seats; ++seat) { if (trial.bot(seat)) { settings.set_player_bot(seat, BotDifficulty::normal); } }
+        for (int seat = 1; seat < seats; ++seat) { if (trial.bot(seat)) { settings.set_player_bot(seat, trial.difficulty); } }
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         // The second neutral human claims an ordinary pad slot and never acts.
         if (!trial.bot(3)) { require(settings.claim_input_slot(0), "Sustained trial could not seat its second human"); }
@@ -110,13 +118,66 @@ namespace
     balance_regions::Partition partition(const World& world, const char* stage)
     {
         const RectangleF arena = world.levels.get(stage)->camera_bounds_rectangle();
-        if (std::string_view(stage) == "crossfeed") { return balance_regions::stage_partition(stage, arena); }
+        // The Turbulence Yard blockout has authored geographic bands (POL#42);
+        // its mover and slab trials keep the thirds POL#42 recorded, although
+        // balance_regions now gives them the blockout's bands (TOOL#3).
+        if (std::string_view(stage) == "crossfeed" || std::string_view(stage) == "press_tower" ||
+            std::string_view(stage) == "turbulence_blockout")
+        { return balance_regions::stage_partition(stage, arena); }
         const double left = arena.left(), width = arena.width;
         // Geographic thirds are measurements, not authored combat-role zones.
         return { "geographic_x_thirds", arena.top(), arena.bottom(),
             { { "left_third", left, left + width / 3.0 },
               { "middle_third", left + width / 3.0, left + 2.0 * width / 3.0 },
               { "right_third", left + 2.0 * width / 3.0, arena.right() } } };
+    }
+
+    // Press Tower's route contacts (POL#41), named from each bot's own side.
+    // Only Press Tower trials fill them; the other stages leave them empty.
+    constexpr std::array<const char*, 12> tower_contacts{ "own_yard", "bed", "far_yard", "own_catwalk",
+        "far_catwalk", "own_stair_3", "far_stair_3", "own_frame", "far_frame", "own_shoulder", "far_shoulder", "head" };
+    struct TowerSupports
+    {
+        std::array<RectangleF, 12> a, b;
+        RectangleF head, crown;
+    };
+    TowerSupports tower_supports(const World& world)
+    {
+        const auto side = [&](char own, char other)
+        {
+            const auto n = [&](const char* stem, char letter) { return world.named(std::string(stem) + letter); };
+            return std::array<RectangleF, 12>{ n("floor_yard_", own), world.named("press_bed"), n("floor_yard_", other),
+                n("catwalk_", own), n("catwalk_", other), n("stair_3_", own), n("stair_3_", other), n("frame_", own),
+                n("frame_", other), n("shoulder_", own), n("shoulder_", other), world.named("press_head") };
+        };
+        return { side('a', 'b'), side('b', 'a'), world.named("press_head"), world.named("press_crown") };
+    }
+
+    // Turbulence Yard family crossing contacts (POL#42), named from each
+    // bot's own side. The far ones complete a crossing; the yard and home
+    // contacts are ground windows inside the far approach and home bands.
+    // The far contacts run from first_far_contact up to, not including, own_home.
+    constexpr std::array<const char*, 9> crossing_contacts{ "own_upper", "own_crossover", "own_bed",
+        "far_crossover", "far_upper", "far_bed", "far_yard", "far_home", "own_home" };
+    constexpr std::size_t first_far_contact = 3;
+    bool turbulence_family(std::string_view stage) { return stage.starts_with("turbulence_"); }
+    struct CrossingSupports
+    {
+        std::array<RectangleF, 9> a, b;
+    };
+    CrossingSupports crossing_supports(const World& world)
+    {
+        const RectangleF& ground = world.named("ground");
+        const auto side = [&](char own, char other)
+        {
+            const auto n = [&](const char* stem, char letter) { return world.named(std::string(stem) + letter); };
+            // The far approach band's ground: 2900..3400 for team a, mirrored for b.
+            const float yard_left = other == 'b' ? 2900.0f : 600.0f;
+            return std::array<RectangleF, 9>{ n("upper_approach_", own), n("crossover_", own), n("lower_bed_", own),
+                n("crossover_", other), n("upper_approach_", other), n("lower_bed_", other),
+                RectangleF(yard_left, ground.top(), 500.0f, ground.height), n("home_floor_", other), n("home_floor_", own) };
+        };
+        return { side('a', 'b'), side('b', 'a') };
     }
 
     struct ActorMetrics
@@ -131,6 +192,10 @@ namespace
         int neutral_paints = 0, enemy_repaints = 0, ally_repaints = 0;
         double neutral_paint_area = 0.0, enemy_repaint_area = 0.0, ally_repaint_area = 0.0;
         bool was_low = false;
+        std::array<bool, tower_contacts.size()> landed{};
+        int summit_steps = 0;
+        // First active step on each crossing contact; -1 if never.
+        std::array<int, crossing_contacts.size()> arrival{ -1, -1, -1, -1, -1, -1, -1, -1, -1 };
         PlayerState previous_state = PlayerState::alive;
         std::uint64_t eliminations = 0, enemy_lethal_taken = 0, uncredited_lethal = 0;
     };
@@ -167,6 +232,9 @@ namespace
     {
         std::array<ActorMetrics, seats> actors;
         std::array<double, 2> team_paint{}, team_off_home{}, team_middle{};
+        // Held paint in the opposing team's half (x about the arena centre),
+        // partition-independent so the Turbulence variants compare directly.
+        std::array<double, 2> team_far_half{};
         std::array<double, 2> middle_enemy_capture{}, middle_contested{};
         std::array<MiddleHold, 2> middle_hold;
         // The enemy was still capturing this team's middle tiles in the final third.
@@ -255,8 +323,12 @@ namespace
     Metrics run(World& world, const Trial& trial, const balance_regions::Partition& regions,
         bool replay_check, int trial_id, std::ostream& regional_csv, std::ostream& exchange_csv)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings, trial.seed); prepare(*level);
+        const std::optional<TowerSupports> tower = std::string_view(trial.stage) == "press_tower" ?
+            std::optional<TowerSupports>(tower_supports(world)) : std::nullopt;
+        const std::optional<CrossingSupports> crossing = turbulence_family(trial.stage) ?
+            std::optional<CrossingSupports>(crossing_supports(world)) : std::nullopt;
         Metrics result;
         for (int seat = 0; seat < seats; ++seat)
         {
@@ -266,6 +338,7 @@ namespace
             m.health_before = player.health(); m.previous_state = player.state();
         }
         std::vector<PaintSurfaceSample> previous_paint = level->paint_surfaces();
+        const std::vector<PaintSurfaceSample> start_paint = previous_paint;
         std::array<int, seats> owners{};
         for (int seat = 0; seat < seats; ++seat)
         { owners[static_cast<std::size_t>(seat)] = paint_owners::index(level->player(seat).player_num(), seat); }
@@ -288,7 +361,7 @@ namespace
             for (int seat = 0; seat < seats; ++seat)
             {
                 const PlayerInputData& input = inputs[static_cast<std::size_t>(seat)];
-                require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+                require(input.connected && !input.toggle_debug,
                     "Team trial emitted a menu/pause/device action");
                 require(level->player(seat).primary_weapon().type() == trial.tool(seat) &&
                     level->player(seat).team() == settings.player_team(seat), "Team trial changed a participant's tool/team");
@@ -300,6 +373,23 @@ namespace
                 }
                 observe(result.actors[static_cast<std::size_t>(seat)], level->player(seat), input,
                     world.assets.tuning, regions, ammo_before[static_cast<std::size_t>(seat)], tick);
+                if (tower && trial.bot(seat))
+                {
+                    ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
+                    const Player& bot = level->player(seat);
+                    const std::array<RectangleF, 12>& own = bot.team() == PlayerTeam::a ? tower->a : tower->b;
+                    for (std::size_t contact = 0; contact < own.size(); ++contact)
+                    { m.landed[contact] = m.landed[contact] || on_support(bot, own[contact]); }
+                    m.summit_steps += on_support(bot, tower->head) || on_support(bot, tower->crown) ? 1 : 0;
+                }
+                if (crossing && trial.bot(seat))
+                {
+                    ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
+                    const Player& bot = level->player(seat);
+                    const std::array<RectangleF, 9>& own = bot.team() == PlayerTeam::a ? crossing->a : crossing->b;
+                    for (std::size_t contact = 0; contact < own.size(); ++contact)
+                    { if (m.arrival[contact] < 0 && on_support(bot, own[contact])) { m.arrival[contact] = tick; } }
+                }
             }
             const std::vector<PaintSurfaceSample> paint = level->paint_surfaces();
             require(paint.size() == previous_paint.size(), "Static team arena changed its scoring tile count");
@@ -307,9 +397,19 @@ namespace
             {
                 const PaintSurfaceSample& now = paint[tile]; const PaintSurfaceSample& before = previous_paint[tile];
                 // Area bits too: the exchange ledger allocates each tile once.
-                require(now.source_index == before.source_index && now.face == before.face && now.corners == before.corners &&
+                require(now.source_index == before.source_index && now.face == before.face &&
                     std::bit_cast<std::uint32_t>(now.scored_area) == std::bit_cast<std::uint32_t>(before.scored_area),
                     "Static team scoring tile order changed during measurement");
+                // A mover's tiles travel with it (POL#42). The ledger computes
+                // pieces once, so a moving tile must keep its starting regions.
+                // Only the Turbulence family has movers; every other stage keeps
+                // its original static-corner contract.
+                if (now.corners != before.corners)
+                {
+                    require(crossing.has_value(), "Static team scoring tile moved during measurement");
+                    require(balance_regions::region_pieces(now, regions) == balance_regions::region_pieces(start_paint[tile], regions),
+                        "A moving team scoring tile changed region during measurement");
+                }
                 if (now.paint_owner == before.paint_owner || now.team == PlayerTeam::none) { continue; }
                 for (int seat = 1; seat < seats; ++seat)
                 {
@@ -343,6 +443,19 @@ namespace
             }
         }
         const balance_regions::Measurement measured(previous_paint, metric_roster, regions);
+        if (crossing)
+        {
+            const RectangleF arena = world.levels.get(trial.stage)->camera_bounds_rectangle();
+            const double centre = arena.left() + arena.width * 0.5;
+            const balance_regions::Measurement halves(previous_paint, metric_roster, { "x_halves", arena.top(), arena.bottom(),
+                { { "half_a", arena.left(), centre }, { "half_b", centre, arena.right() } } });
+            for (const balance_regions::Cell& cell : halves.cells())
+            {
+                if (cell.seat == 0 || cell.region >= 2) { continue; }
+                const std::size_t team = cell.team == PlayerTeam::a ? 0 : 1;
+                if (cell.region != team) { result.team_far_half[team] += cell.held_sample_area; }
+            }
+        }
         const LevelEndInfo score = level->level_end_info();
         PaintTotal expected_score;
         expected_score.total = score.total_area; expected_score.team_a = score.team_a_area;
@@ -445,7 +558,7 @@ namespace
                 (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
             const std::size_t team_index = team == PlayerTeam::a ? 0 : 1;
             csv << trial_id << ',' << trial.stage << ',' << tool_label(trial) << ',' << name(trial.human_team) << ',' <<
-                trial.seed << ',' << trial.steps() << ',' << seat + 1 << ',' << (trial.bot(seat) ? "normal" : "human") << ',' <<
+                trial.seed << ',' << trial.steps() << ',' << seat + 1 << ',' << (trial.bot(seat) ? name(trial.difficulty) : "human") << ',' <<
                 name(team) << ',' << m.max_x - m.min_x << ',' << m.max_y - m.min_y << ',' << m.path << ',' <<
                 m.movement_steps << ',' << m.jumps << ',' << m.fire_requests << ',' << m.shooting_flag_steps << ',' <<
                 m.paid_fire_steps << ',' <<
@@ -458,6 +571,57 @@ namespace
                 result.team_paint[team_index] << ',' << result.team_off_home[team_index] << ',' <<
                 result.team_middle[team_index] << ',' << matrix(trial) << ',' << trial.rotation << ',' <<
                 name(trial.tool(seat)) << ',' << m.off_home_steps << '\n';
+        }
+    }
+
+    // One row per Press Tower bot: route contacts landed, summit steps,
+    // leaving its home band and deaths. Descriptive evidence for POL#31.
+    void write_tower(std::ostream& csv, int trial_id, const Trial& trial, const Metrics& result)
+    {
+        for (int seat = 1; seat < seats; ++seat)
+        {
+            const ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
+            const PlayerTeam team = seat < 2 ? trial.human_team :
+                (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+            int landed = 0;
+            std::string names;
+            for (std::size_t contact = 0; contact < tower_contacts.size(); ++contact)
+            {
+                if (!m.landed[contact]) { continue; }
+                ++landed;
+                names += (names.empty() ? "" : "|") + std::string(tower_contacts[contact]);
+            }
+            csv << trial_id << ',' << trial.stage << ',' << name(trial.tool(seat)) << ',' << name(trial.human_team) << ',' <<
+                trial.seed << ',' << name(trial.difficulty) << ',' << seat + 1 << ',' << name(team) << ',' << landed << ',' <<
+                names << ',' << m.summit_steps << ',' << m.off_home_steps << ',' << (m.off_home_steps > 0 ? 1 : 0) << ',' <<
+                m.deaths << '\n';
+        }
+    }
+
+    // One row per Turbulence-family bot (POL#42): the first update on each
+    // crossing contact, takeoffs and the paint its team held at the end.
+    void write_crossing(std::ostream& csv, int trial_id, const Trial& trial, const Metrics& result)
+    {
+        for (int seat = 1; seat < seats; ++seat)
+        {
+            const ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
+            const PlayerTeam team = seat < 2 ? trial.human_team :
+                (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+            const std::size_t t = team == PlayerTeam::a ? 0 : 1;
+            int completion = -1;
+            const char* first_far = "";
+            for (std::size_t contact = first_far_contact; contact + 1 < crossing_contacts.size(); ++contact)
+            {
+                if (m.arrival[contact] >= 0 && (completion < 0 || m.arrival[contact] < completion))
+                { completion = m.arrival[contact]; first_far = crossing_contacts[contact]; }
+            }
+            csv << trial_id << ',' << matrix(trial) << ',' << trial.stage << ',' << trial.rotation << ',' <<
+                name(trial.human_team) << ',' << trial.seed << ',' << seat + 1 << ',' << name(team) << ',' <<
+                (seat < 2 ? 1 : 2) << ',' << name(trial.tool(seat)) << ',' << m.jumps << ',';
+            for (const int arrival : m.arrival) { csv << arrival << ','; }
+            csv << completion << ',' << first_far << ',' << m.off_home_steps << ',' << m.deaths << ',' << m.final_paint << ',' <<
+                result.team_paint[t] << ',' << result.team_off_home[t] << ',' << result.team_middle[t] << ',' <<
+                result.team_far_half[t] << '\n';
         }
     }
 
@@ -485,7 +649,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot team trials", [&]
     {
         require(argc == 2, "usage: bot_team_trials <content>");
         const std::filesystem::path output = std::filesystem::absolute(argv[0]).parent_path();
@@ -668,6 +832,174 @@ int main(int argc, char** argv)
             regional_csv.good() && exchange_csv.good() && middle_csv.good(), "Team-trial finite matrix/report contract failed");
         std::cout << "MEASURE mixed totals: moving/paid-fire/retained-paint bots=" << mixed_active_total <<
             "/360; off-home teams=" << mixed_off_home_total << "/240\n";
+
+        // Press Tower's own pass (POL#41), appended after the unchanged
+        // contract above: same-tool 2v2 over both human sides, all five tools
+        // and every difficulty, with the authored x_band partition. Its counts
+        // are measurements; only the matrix and report contract are checked.
+        const std::filesystem::path tower_path = output / "bot_team_trials_press_tower.csv";
+        std::ofstream tower_csv(tower_path);
+        require(tower_csv.good(), "Could not open the Press Tower team-trial CSV");
+        tower_csv.imbue(std::locale::classic());
+        tower_csv << "trial,stage,tool,human_team,seed,difficulty,seat,team,landed_contacts,landed,summit_steps,"
+            "off_home_steps,left_home,deaths\n";
+        World tower(std::filesystem::absolute(argv[1]), "bot-team-trials", "Team trial needs support '", "press_tower");
+        const balance_regions::Partition tower_regions = partition(tower, "press_tower");
+        struct TowerTally
+        {
+            int bots = 0, landed = 0, summit_bots = 0, summit_steps = 0, left = 0, deaths = 0, dying = 0;
+            std::array<int, tower_contacts.size()> contacts{};
+        };
+        std::array<TowerTally, 3> tower_difficulty{};
+        std::array<TowerTally, 2> tower_team{};
+        int tower_trials = 0, tower_replays = 0;
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            for (int tool = 0; tool < 5; ++tool)
+            {
+                for (const PlayerTeam human_team : { PlayerTeam::a, PlayerTeam::b })
+                {
+                    Trial trial = same_tool("press_tower", static_cast<WeaponType>(tool), human_team);
+                    trial.difficulty = difficulty;
+                    const bool replay = tool == 0 && human_team == PlayerTeam::a && difficulty == BotDifficulty::normal;
+                    const Metrics metrics = run(tower, trial, tower_regions, replay, ++trials, regional_csv, exchange_csv);
+                    write(csv, trials, trial, metrics); write_middle(middle_csv, trials, trial, metrics);
+                    write_tower(tower_csv, trials, trial, metrics);
+                    csv.flush(); regional_csv.flush(); exchange_csv.flush(); middle_csv.flush(); tower_csv.flush();
+                    tower_replays += replay ? 1 : 0; ++tower_trials;
+                    for (int seat = 1; seat < seats; ++seat)
+                    {
+                        const ActorMetrics& m = metrics.actors[static_cast<std::size_t>(seat)];
+                        const PlayerTeam team = seat < 2 ? human_team :
+                            (human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                        for (TowerTally* x : { &tower_difficulty[static_cast<std::size_t>(difficulty)],
+                            &tower_team[team == PlayerTeam::a ? 0 : 1] })
+                        {
+                            ++x->bots;
+                            for (std::size_t contact = 0; contact < tower_contacts.size(); ++contact)
+                            {
+                                x->landed += m.landed[contact] ? 1 : 0;
+                                x->contacts[contact] += m.landed[contact] ? 1 : 0;
+                            }
+                            x->summit_bots += m.summit_steps > 0 ? 1 : 0; x->summit_steps += m.summit_steps;
+                            x->left += m.off_home_steps > 0 ? 1 : 0;
+                            x->deaths += m.deaths; x->dying += m.deaths > 0 ? 1 : 0;
+                        }
+                    }
+                }
+            }
+        }
+        const auto report = [](const std::string& label, const TowerTally& x)
+        {
+            std::cout << "MEASURE press_tower team trials " << label << ": bots=" << x.bots << " landed_contacts=" <<
+                x.landed << " summit_bots=" << x.summit_bots << "/" << x.bots << " summit_steps=" << x.summit_steps <<
+                " left_home=" << x.left << "/" << x.bots << " deaths=" << x.deaths << " dying_bots=" << x.dying << "/" <<
+                x.bots << " landed_bots";
+            for (std::size_t contact = 0; contact < tower_contacts.size(); ++contact)
+            { std::cout << ' ' << tower_contacts[contact] << '=' << x.contacts[contact]; }
+            std::cout << '\n';
+        };
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        { report(std::string("difficulty=") + name(difficulty), tower_difficulty[static_cast<std::size_t>(difficulty)]); }
+        report("team=a", tower_team[0]); report("team=b", tower_team[1]);
+        require(tower_trials == 30 && tower_replays == 1 && trials == 230 && tower_csv.good() && csv.good() &&
+            regional_csv.good() && exchange_csv.good() && middle_csv.good(), "Press Tower team-trial matrix/report contract failed");
+
+        // The Turbulence Yard family's own pass (POL#42), appended after the
+        // unchanged contracts above: the blockout and its mover and slab trials
+        // from ordinary spawns, same-tool 2v2 over five tools and both human
+        // sides plus five mixed rotations on the first seed, Normal bots. The
+        // blockout uses its authored bands, the trials geographic thirds. The
+        // crossing and paint counts are measurements, not requirements.
+        const std::filesystem::path crossing_path = output / "bot_team_trials_turbulence.csv";
+        std::ofstream crossing_csv(crossing_path);
+        require(crossing_csv.good(), "Could not open the Turbulence team-trial CSV");
+        crossing_csv.imbue(std::locale::classic());
+        crossing_csv << std::setprecision(9);
+        crossing_csv << "trial,matrix,stage,rotation,human_team,seed,seat,team,team_bots,tool,takeoffs";
+        for (const char* contact : crossing_contacts) { crossing_csv << ',' << contact << "_step"; }
+        crossing_csv << ",completion_step,completion_contact,off_home_steps,deaths,final_owned_paint,team_final_paint,"
+            "team_off_home_paint,team_middle_paint,team_far_half_paint\n";
+        struct CrossingTally
+        {
+            int bots = 0, completing = 0, takeoffs = 0, deaths = 0, left_home = 0, team_samples = 0;
+            long long completion_sum = 0;
+            int completion_min = -1, completion_max = -1;
+            std::array<int, crossing_contacts.size()> reached{};
+            double paint = 0.0, off_home = 0.0, middle = 0.0, far_half = 0.0;
+        };
+        int crossing_trials = 0, crossing_replays = 0;
+        for (const char* stage : { "turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial" })
+        {
+            World world(std::filesystem::absolute(argv[1]), "bot-team-trials", "Team trial needs support '", stage);
+            const balance_regions::Partition regions = partition(world, stage);
+            std::array<CrossingTally, 2> by_team{};
+            std::vector<Trial> plan;
+            for (int tool = 0; tool < 5; ++tool)
+            {
+                for (const PlayerTeam human_team : { PlayerTeam::a, PlayerTeam::b })
+                { plan.push_back(same_tool(stage, static_cast<WeaponType>(tool), human_team)); }
+            }
+            for (int rotation = 0; rotation < 5; ++rotation)
+            {
+                for (const PlayerTeam human_team : { PlayerTeam::a, PlayerTeam::b })
+                { plan.push_back(mixed(stage, rotation, human_team, mixed_seeds[0])); }
+            }
+            for (const Trial& trial : plan)
+            {
+                const bool replay = trial.kind == Matrix::same_tool && trial.tool(1) == WeaponType::sprayer &&
+                    trial.human_team == PlayerTeam::a;
+                const Metrics metrics = run(world, trial, regions, replay, ++trials, regional_csv, exchange_csv);
+                write(csv, trials, trial, metrics); write_middle(middle_csv, trials, trial, metrics);
+                write_crossing(crossing_csv, trials, trial, metrics);
+                csv.flush(); regional_csv.flush(); exchange_csv.flush(); middle_csv.flush(); crossing_csv.flush();
+                crossing_replays += replay ? 1 : 0; ++crossing_trials;
+                for (std::size_t team = 0; team < 2; ++team)
+                {
+                    CrossingTally& x = by_team[team];
+                    ++x.team_samples;
+                    x.paint += metrics.team_paint[team]; x.off_home += metrics.team_off_home[team];
+                    x.middle += metrics.team_middle[team]; x.far_half += metrics.team_far_half[team];
+                }
+                for (int seat = 1; seat < seats; ++seat)
+                {
+                    const ActorMetrics& m = metrics.actors[static_cast<std::size_t>(seat)];
+                    const PlayerTeam team = seat < 2 ? trial.human_team :
+                        (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                    CrossingTally& x = by_team[team == PlayerTeam::a ? 0 : 1];
+                    ++x.bots; x.takeoffs += m.jumps; x.deaths += m.deaths; x.left_home += m.off_home_steps > 0 ? 1 : 0;
+                    int completion = -1;
+                    for (std::size_t contact = 0; contact < crossing_contacts.size(); ++contact)
+                    {
+                        x.reached[contact] += m.arrival[contact] >= 0 ? 1 : 0;
+                        if (contact >= first_far_contact && contact + 1 < crossing_contacts.size() && m.arrival[contact] >= 0 &&
+                            (completion < 0 || m.arrival[contact] < completion)) { completion = m.arrival[contact]; }
+                    }
+                    if (completion < 0) { continue; }
+                    ++x.completing; x.completion_sum += completion;
+                    x.completion_min = x.completion_min < 0 ? completion : std::min(x.completion_min, completion);
+                    x.completion_max = std::max(x.completion_max, completion);
+                }
+            }
+            for (std::size_t team = 0; team < 2; ++team)
+            {
+                const CrossingTally& x = by_team[team];
+                std::cout << "MEASURE turbulence team trials stage=" << stage << " partition=" << regions.name <<
+                    " team=" << (team == 0 ? 'a' : 'b') << ": bots=" << x.bots << " completing=" << x.completing << "/" <<
+                    x.bots << " arrival_update_mean=" <<
+                    (x.completing > 0 ? static_cast<double>(x.completion_sum) / x.completing : -1.0) <<
+                    " arrival_update_min=" << x.completion_min << " arrival_update_max=" << x.completion_max <<
+                    " takeoffs=" << x.takeoffs << " left_home=" << x.left_home << "/" << x.bots << " deaths=" << x.deaths <<
+                    " mean_team_paint=" << x.paint / x.team_samples << " mean_far_half_paint=" << x.far_half / x.team_samples <<
+                    " mean_off_home_paint=" << x.off_home / x.team_samples << " mean_middle_paint=" << x.middle / x.team_samples <<
+                    " reached";
+                for (std::size_t contact = 0; contact < crossing_contacts.size(); ++contact)
+                { std::cout << ' ' << crossing_contacts[contact] << '=' << x.reached[contact]; }
+                std::cout << '\n';
+            }
+        }
+        require(crossing_trials == 60 && crossing_replays == 3 && trials == 290 && crossing_csv.good() && csv.good() &&
+            regional_csv.good() && exchange_csv.good() && middle_csv.good(), "Turbulence team-trial matrix/report contract failed");
         std::cout << "PASS 200 bounded natural-spawn team measurements (40 same-tool and 120 mixed-tool 2v2 over three "
             "independent seeds, 40 sustained 7200-step 1v1) and eight 1800-step plus one 7200-step final-input replays; reports=" <<
             path_to_utf8(output / "bot_team_trials.csv") << ", " << path_to_utf8(output / "bot_team_trials_regions.csv") <<
@@ -676,7 +1008,13 @@ int main(int argc, char** argv)
             "; all bots move/buy fire/retain paint and leave their home band, two-bot teams retain off-home paint and "
             "sustained 1v1 teams retain the middle through the final third; neutral humans never act, bots use Normal; "
             "one-bot retention, damage and repaint outcomes remain measurements\n";
+        std::cout << "PASS 30 bounded natural-spawn Press Tower same-tool 2v2 measurements over both human sides, five "
+            "tools and Easy/Normal/Hard, and one 1800-step final-input replay; report=" << path_to_utf8(tower_path) <<
+            "; route contacts, summit steps, leaving home and deaths are measurements, not requirements\n";
+        std::cout << "PASS 60 bounded natural-spawn Turbulence Yard family 2v2 measurements (blockout, mover trial and slab "
+            "trial; ten same-tool and ten mixed-tool each) and three 1800-step final-input replays; report=" <<
+            path_to_utf8(crossing_path) << "; crossings, arrival updates, takeoffs and held paint are measurements, "
+            "not requirements\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot team trials: " << error.what() << '\n'; return 1; }
+    });
 }

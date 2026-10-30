@@ -15,8 +15,10 @@ class LevelObjectBuilder;
 // resource names, each stage's object construction, match sounds and
 // anti-tunnelling bound (game/tunnelling_limits.h), and the authored text
 // against its fonts. Throws with source context on the first
-// problem. Shared by wWinMain and the Debug `reload` command, which runs it on
-// candidate content before swapping it in.
+// problem. Nothing here names a menu page: validate_shell_content
+// (game/states/menu_content_validation.h) runs this and then the Mode page's
+// row checks, and is what wWinMain and the Debug `reload` command run, the
+// latter on candidate content before swapping it in.
 void validate_game_content(const GameTuning& tuning, const Presentation& presentation,
 	labrador::RenderResources* render, const labrador::AudioResources* audio,
 	const labrador::Registry<LevelLoadedInfo>& level_infos, const StageList& stages,

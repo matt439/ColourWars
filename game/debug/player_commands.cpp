@@ -219,19 +219,14 @@ std::vector<std::string> DebugDirectorImpl::station_names() const
 			// rebuild). Only a concrete stage key: next, prev and random name
 			// no level yet, so they list nothing.
 			const std::string& stage = *this->request_.stage;
-			if (this->data_ == nullptr || this->data_->stages() == nullptr ||
-				this->data_->level_infos() == nullptr)
+			const StageCatalog* catalog = this->data_ != nullptr ?
+				this->data_->stage_catalog() : nullptr;
+			const LevelLoadedInfo* level = catalog != nullptr ? catalog->definition(stage) : nullptr;
+			if (level == nullptr)
 			{
 				return names;
 			}
-			for (const Stage& known : *this->data_->stages())
-			{
-				if (known.name == stage && this->data_->level_infos()->contains(stage))
-				{
-					stations = this->data_->level_infos()->get(stage)->stations();
-					break;
-				}
-			}
+			stations = level->stations();
 		}
 		else if (this->match_ != nullptr)
 		{
@@ -281,20 +276,20 @@ DebugStatus DebugDirectorImpl::apply_goto(DebugMatchTarget& match,
 
 // Bots ------------------------------------------------------------------------
 
-std::string DebugDirectorImpl::bot_for_seat(int seat, int slot) const
+std::string DebugDirectorImpl::bot_for_seat(int seat, int slot, bool shipping_bot) const
 {
 	const auto explicit_bot = this->seat_bots_.find(seat);
 	if (explicit_bot != this->seat_bots_.end())
 	{
 		return explicit_bot->second;
 	}
-	return slot < 0 ? this->dummy_bot_ : std::string();
+	return slot < 0 && !shipping_bot ? this->dummy_bot_ : std::string();
 }
 
-void DebugDirectorImpl::rebuild_bots(const DebugMatchTarget& match)
+void DebugDirectorImpl::rebuild_bots(const DebugMatchView& match)
 {
 	this->bot_driver_.reset();
-	const std::vector<MenuPlayerSettings> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
 	// The same seed gives the same bots on every build; without one each
 	// build draws a new one.
 	const std::uint64_t seed = this->seed_ ? static_cast<std::uint64_t>(*this->seed_) :
@@ -302,7 +297,8 @@ void DebugDirectorImpl::rebuild_bots(const DebugMatchTarget& match)
 	auto driver = std::make_unique<BotDriver>(this->tuning_, seed);
 	for (std::size_t i = 0; i < seats.size(); ++i)
 	{
-		const std::string behaviour = this->bot_for_seat(static_cast<int>(i), seats[i].num);
+		const std::string behaviour = this->bot_for_seat(static_cast<int>(i), seats[i].num,
+			seats[i].controller == PlayerController::bot);
 		if (!behaviour.empty())
 		{
 			driver->assign(static_cast<int>(i), behaviour);

@@ -9,6 +9,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -26,8 +27,7 @@ namespace fixed_slab_acceptance
         const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
         const TeamColour colours{ Colour::orange, Colour::cyan };
 
-        void require(bool value, const char* message)
-        { if (!value) { throw std::runtime_error(message); } }
+        using acceptance::require;
 
         void close_value(float actual, float expected, const char* message)
         { require(std::isfinite(actual) && std::abs(actual - expected) <= 0.002f, message); }

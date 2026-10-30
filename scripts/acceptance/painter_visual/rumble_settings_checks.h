@@ -8,18 +8,18 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     const NestedSaveProfile isolated(profile);
     const auto save_path = profile / "ColourWars/save_data.json";
     const auto blocked = std::filesystem::path(save_path.wstring() + L".tmp");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;
     initial.music_volume = initial.sfx_volume = 0;
     initial.sticks[1] = { 25, 35 };
     initial.sticks[3] = { 30, 40 };
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed private rumble settings");
-    const InputBindings bindings = preferences.input_bindings();
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed private rumble settings");
+    const InputBindings bindings = preferences_session.input_bindings();
     GameData data;
-    data.set_application(&app); data.set_save(&preferences);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearRumbleSettings
@@ -66,20 +66,20 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     Comfort comfort = initial.pad_comfort;
     const auto verify = [&](const char* name, const Slots& active, const Slots& disk, int active_music, int disk_music)
     {
-        const PlaySettings& play = preferences.play_settings();
-        Save restored; restored.load_save_file();
-        require(play.pad_comfort == comfort && restored.play_settings().pad_comfort == comfort,
+        const PlaySettings& play = preferences_session.play_settings();
+        Save restored; SettingsSession restored_session(restored); restored_session.load_save_file();
+        require(play.pad_comfort == comfort && restored_session.play_settings().pad_comfort == comfort,
             "Pad sticks lost or leaked a per-pad comfort override between slots, memory and disk");
-        require(play.pad_rumble == active && restored.play_settings().pad_rumble == disk &&
-            play.music_volume == active_music && restored.play_settings().music_volume == disk_music,
+        require(play.pad_rumble == active && restored_session.play_settings().pad_rumble == disk &&
+            play.music_volume == active_music && restored_session.play_settings().music_volume == disk_music,
             "Rumble page lost pending/active/disk or physical-slot association");
         require(play.sfx_volume == 0 && play.aim_sensitivity == initial.aim_sensitivity &&
             play.view_shake == initial.view_shake && play.aim_marker == initial.aim_marker &&
             play.reduce_effects == initial.reduce_effects &&
             play.sticks[1].movement_deadzone == 25 && play.sticks[1].aim_deadzone == 35 &&
             play.sticks[3].movement_deadzone == 30 && play.sticks[3].aim_deadzone == 40 &&
-            preferences.input_bindings().keyboard_jump == bindings.keyboard_jump &&
-            preferences.input_bindings().pads == bindings.pads,
+            preferences_session.input_bindings().keyboard_jump == bindings.keyboard_jump &&
+            preferences_session.input_bindings().pads == bindings.pads,
             "Rumble edit replaced unrelated audio, comfort, sticks or Jump preferences");
         records << name << ",3," << active[0] << ',' << active[1] << ',' << active[2] << ',' << active[3] << ',' <<
             active_music << ',' << (active == disk && active_music == disk_music) << '\n';
@@ -150,8 +150,8 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     verify("discard", { true, true, true, true }, { true, true, true, true }, 10, 10);
 
     pad(3, GamepadButton::a);
-    PlaySettings independent = preferences.play_settings(); independent.pad_rumble[1] = false;
-    require(preferences.set_play_settings_and_save(independent), "Cannot prepare an independent pad-slot edit");
+    PlaySettings independent = preferences_session.play_settings(); independent.pad_rumble[1] = false;
+    require(preferences_session.set_play_settings_and_save(independent), "Cannot prepare an independent pad-slot edit");
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_left);
     move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     verify("edited-slot-merge", { true, false, true, false }, { true, false, true, false }, 10, 10);
@@ -174,7 +174,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::a);
     comfort[3].view_shake = SeatSwitch::off;
     verify("comfort-applied", { true, false, true, false }, { true, false, true, false }, 10, 10);
-    const PlaySettings& resolved = preferences.play_settings();
+    const PlaySettings& resolved = preferences_session.play_settings();
     require(!resolved.view_shake_enabled(3) && resolved.view_shake_enabled(1) && resolved.view_shake &&
         resolved.aim_marker_enabled(3) && !resolved.reduce_effects_for(3),
         "Pad 4's View shake Off did not resolve for its own slot only");

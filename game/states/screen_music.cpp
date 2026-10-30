@@ -4,7 +4,8 @@
 ScreenMusic::ScreenMusic(const std::string& bank, const labrador::AudioResources* resources,
 	const PlaySettings* preferences, const PresentationSound& music,
 	const MusicMixPresentation& mix, bool loop) :
-	SoundBankObject(bank, resources), preferences_(preferences), music_(music), mix_(mix)
+	colourwars::SoundBankObject(bank, resources), preferences_(preferences), music_(music), mix_(mix),
+	loop_(loop)
 {
 	this->effect_ = this->resolve_effect(this->music_.name);
 	this->play_effect(this->effect_, loop, 0.0f);
@@ -24,10 +25,25 @@ void ScreenMusic::apply_gain()
 void ScreenMusic::update(float dt)
 {
 	if (dt < 0.0f || !std::isfinite(dt)) { return; }
+	if (dt > 0.0f && this->restart_lost_loop()) { return; }
 	if (this->effect_state(this->effect_) != labrador::SoundState::playing) { return; }
 	this->envelope_.advance(dt);
 	this->apply_gain();
 	if (this->leaving_ && this->finished()) { this->stop_effect(this->effect_, true); }
+}
+
+// A looping, staying voice is only stopped by something outside this owner:
+// device recovery stops persistent voices without an event (ROAD#36). Play it
+// again from silence and fade in. A one-shot coda, an exit and a silent bank
+// keep the stopped voice; a paused (suspended) one is not stopped.
+bool ScreenMusic::restart_lost_loop()
+{
+	if (!this->loop_ || this->leaving_ || !this->sound_bank()->audible() ||
+		this->effect_state(this->effect_) != labrador::SoundState::stopped) { return false; }
+	this->envelope_ = MusicEnvelope();
+	this->envelope_.fade_to(1.0f, this->mix_.fade_in);
+	this->play_effect(this->effect_, true, 0.0f);
+	return true;
 }
 
 void ScreenMusic::suspend()

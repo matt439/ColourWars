@@ -32,7 +32,7 @@ namespace
 		return "idle";
 	}
 
-	std::string controller_label(const MenuPlayerSettings& player)
+	std::string controller_label(const SeatSetup& player)
 	{
 		if (player.controller == PlayerController::human)
 		{
@@ -57,20 +57,22 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 
 	if (this->match_ != nullptr)
 	{
-		const MenuLevelSettings& settings = this->match_->debug_settings();
+		const MatchSetup& settings = this->match_->debug_settings();
 		lines.push_back("match: stage " + settings.stage() + ", " +
 			std::to_string(settings.player_count()) + " player(s)" +
 			", best of " + std::to_string(settings.best_of()));
-		const std::vector<MenuPlayerSettings> players = settings.player_settings();
+		const std::vector<SeatSetup> players = settings.player_settings();
 		const std::vector<std::string> views = this->match_->debug_status();
 		for (std::size_t i = 0; i < players.size(); ++i)
 		{
 			const std::string bot = this->player_ != nullptr ? std::string("replay") :
-				this->bot_driver_ != nullptr ? this->bot_for_seat(static_cast<int>(i), players[i].num) :
+				this->bot_driver_ != nullptr ? this->bot_for_seat(static_cast<int>(i), players[i].num,
+					players[i].controller == PlayerController::bot) :
 				std::string();
 			lines.push_back("  P" + std::to_string(i + 1) + " " + controller_label(players[i]) +
 				" team " + (players[i].team == PlayerTeam::a ? "a" : "b") + " " +
 				MatchPlanner::weapon_name(players[i].weapon) +
+				(players[i].handicap != 0 ? " boost " + std::to_string(players[i].handicap) : std::string()) +
 				(bot.empty() ? std::string() : " bot " + bot) +
 				(i < views.size() ? "  " + views[i] : std::string()));
 		}
@@ -237,7 +239,7 @@ std::vector<std::string> DebugDirectorImpl::paint_lines() const
 	std::vector<std::string> lines;
 	lines.push_back("paint  A " + percent(paint.team_a) + "  B " + percent(paint.team_b) +
 		"  free " + percent(std::max(0.0f, paint.total - paint.team_a - paint.team_b)));
-	const std::vector<MenuPlayerSettings> players = this->match_->debug_settings().player_settings();
+	const std::vector<SeatSetup> players = this->match_->debug_settings().player_settings();
 	std::string seats;
 	for (std::size_t i = 0; i < players.size() && i < paint.seats.size(); ++i)
 	{

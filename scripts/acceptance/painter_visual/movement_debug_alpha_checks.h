@@ -231,7 +231,7 @@ void movement_debug_alpha_checks(Application& app, Registry<LevelLoadedInfo>& le
         "Movement/DebugText opaque parity fixture differs from reviewed defaults");
     MovementAlphaFixture cues(app, movement);
     PlaySettings preferences; preferences.music_volume = preferences.sfx_volume = 0;
-    MenuLevelSettings settings; settings.set_stage("movement_course"); settings.set_player_count(1);
+    MatchSetup settings; settings.set_stage("movement_course"); settings.set_player_count(1);
     settings.set_screen_layout(ScreenLayout::one_player); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);
     const PlayerBuilder player_builder(&tuning, &local);

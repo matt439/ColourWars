@@ -100,7 +100,7 @@
             }
             for (int tick = 0; tick < 600 && level->player_identity_emphasis(0) > 0.0f; ++tick)
             {
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
             }
             require(level->player_identity_emphasis(0) == 0.0f, "Identity emphasis did not settle");
             const std::string prefix = std::string("4p-identity-") + TeamColourTools::palette_key(palette);
@@ -181,7 +181,7 @@
             for (int tick = 0; tick < 60 &&
                 level->player(0).rectangle().x <= level->player(1).rectangle().x; ++tick)
             {
-                level->update(crossing, dt);
+                level->update(acceptance::slot_seats(*level, crossing), dt);
             }
             require(level->player(0).rectangle().x > level->player(1).rectangle().x,
                 "Same-team scripted players did not cross");
@@ -190,12 +190,12 @@
             identity_capture(app, *level, presentation, output, prefix + "-paused-1280", records);
             level->resume();
             require(level->kill_player(0), "Could not kill identity fixture");
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
             require(!level->player_identity_visible(0), "Dead player retained an owner badge");
             identity_capture(app, *level, presentation, output, prefix + "-dead-1280", records);
             for (int tick = 0; tick < 600 && level->player(0).state() != PlayerState::alive; ++tick)
             {
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
             }
             require(level->player(0).state() == PlayerState::alive &&
                 level->player_identity_visible(0) && level->player_identity_emphasis(0) > 0.0f,

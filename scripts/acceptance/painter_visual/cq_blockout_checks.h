@@ -114,7 +114,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
     };
     const auto build_cq = [&](int count, float duration, WeaponType solo_tool)
     {
-        MenuLevelSettings settings; settings.set_stage("close_quarters");
+        MatchSetup settings; settings.set_stage("close_quarters");
         settings.set_player_count(count); settings.set_duration(duration);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
         constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
@@ -140,7 +140,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
     const auto step = [&](Level& level)
     {
         require(++updates <= 1800, "CQ focused native inspection exceeded its bounded update budget");
-        level.update(inputs, dt);
+        level.update(acceptance::slot_seats(level, inputs), dt);
     };
     const auto active = [&](Level& level)
     {
@@ -221,8 +221,8 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
             0, level->player(0).player_num(), level->player(0).rectangle().position(), camera, crop, true);
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved);
-        data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
+        Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session);
+        const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         const StageSelectPresentation& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("cq-blockout-actual-preview", box, &data); preview.set_stage("close_quarters");

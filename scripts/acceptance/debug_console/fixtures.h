@@ -9,6 +9,8 @@
 #include "game/input_slots.h"
 #include "game/presentation.h"
 #include "game/tuning.h"
+#include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>
 #include <array>
@@ -29,7 +31,7 @@
 
 namespace debug_console_acceptance
 {
-	void require(bool condition, const std::string& message);
+	using acceptance::require;
 	void check_loaded_stage_semantics();
 
 	// A match as the director sees it: counts updates and rebuilds, records
@@ -41,7 +43,7 @@ namespace debug_console_acceptance
 	public:
 		explicit FakeMatch(DebugDirector& director) : director_(director) {}
 
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		int updates = 0;
 		int finish_after = -1;
 		std::vector<bool> jumps;
@@ -70,8 +72,8 @@ namespace debug_console_acceptance
 		SeatInputFilter* last_filter = nullptr;
 		int filtered_updates = 0;
 
-		const MenuLevelSettings& debug_settings() const override { return this->settings; }
-		void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override
+		const MatchSetup& debug_settings() const override { return this->settings; }
+		void debug_rebuild(const MatchSetup& plan, bool reset_session) override
 		{
 			this->settings = plan;
 			++this->rebuilds;
@@ -79,7 +81,7 @@ namespace debug_console_acceptance
 			this->director_.before_level_build(*this);
 			this->director_.after_level_build(*this);
 		}
-		void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override
+		void debug_adopt(const MatchSetup& plan, bool reset_session) override
 		{
 			this->settings = plan;
 			++this->adopts;
@@ -134,8 +136,9 @@ namespace debug_console_acceptance
 			paint.seats.resize(static_cast<std::size_t>(this->settings.player_count()));
 			return paint;
 		}
-		void debug_update_level(const std::vector<PlayerInputData>& inputs, float,
-			SeatInputFilter* seats) override
+		// GameLevel::step_match's place: one step of the match.
+		void step(const std::vector<SlotInput>& inputs, float,
+			SeatInputFilter* seats)
 		{
 			++this->updates;
 			this->jumps.push_back(
@@ -152,6 +155,7 @@ namespace debug_console_acceptance
 		}
 		const Level* debug_level() const override { return nullptr; }
 		void debug_sync_audio() override { ++this->audio_syncs; }
+		void debug_suspend_level() override {}
 		void debug_background_changed() override { ++this->background_changes; }
 		std::vector<std::string> debug_status() const override { return {}; }
 
@@ -188,6 +192,24 @@ namespace debug_console_acceptance
 		DebugDirector& director_;
 	};
 
+	// GameLevel::update's step loop (game_states.cpp), with the match's own
+	// step in place of GameLevel::step_match: the director's hooks decide how
+	// many steps run and with which developer filter, and the match takes each.
+	template <class Match>
+	void update_match(DebugDirector& director, Match& match,
+		const std::vector<SlotInput>& inputs, float dt)
+	{
+		const int steps = director.match_steps(inputs, dt);
+		for (int run = 0; run < steps; ++run)
+		{
+			MatchStep step{ &inputs, nullptr };
+			if (!director.before_match_step(match, run, step)) { break; }
+			match.step(*step.inputs, dt, step.seats);
+			if (!director.after_match_step(match)) { break; }
+		}
+		director.end_match_steps(match, steps);
+	}
+
 	// A page as the director sees it: records what it was asked to do.
 	class FakePage final : public DebugPageTarget
 	{
@@ -199,9 +221,9 @@ namespace debug_console_acceptance
 		int resets = 0;
 		std::vector<int> reset_slots;
 		bool last_leaving = false;
-		MenuLevelSettings started;
+		MatchSetup started;
 
-		bool debug_start_match(const MenuLevelSettings& plan) override
+		bool debug_start_match(const MatchSetup& plan) override
 		{
 			++this->starts;
 			this->started = plan;
@@ -223,20 +245,22 @@ namespace debug_console_acceptance
 #if COLOURWARS_DEV_TOOLS
 	bool log_contains(const DebugLog& log, const std::string& text, DebugSeverity severity);
 	const StageList& test_stages();
-	MenuLevelSettings planned(int players);
+	MatchSetup planned(int players);
 
 	// A director over the two test stages, with no application: what the
 	// hooks do without a window.
 	struct TestDirector
 	{
+		StageCatalog stages;
 		GameData data;
 		DebugDirector director;
 		DebugDirectorImpl& impl;
 
 		TestDirector(GameTuning& tuning, Presentation& presentation) :
-			director(&tuning, &presentation), impl(*director.impl())
+			stages(acceptance::catalog_of(test_stages())), director(&tuning, &presentation),
+			impl(*director.impl())
 		{
-			this->data.set_stages(&test_stages());
+			this->data.set_stage_catalog(&this->stages);
 			this->director.attach(nullptr, &this->data);
 			this->impl.log().set_mirror_to_debugger(false);
 		}
@@ -417,6 +441,8 @@ namespace debug_console_acceptance
 	void check_registry();
 	void check_clock();
 	void check_planner();
+	void check_roster_planner();
+	void check_roster_statements(GameTuning& tuning, Presentation& presentation);
 	void check_text_field();
 
 	// director_checks.cpp
@@ -456,6 +482,7 @@ namespace debug_console_acceptance
 	// replay_checks.cpp
 	void check_replay_codec();
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);
+	void check_roster_replay(const std::filesystem::path& game_directory);
 
 	// level_checks.cpp
 	void check_opening(const std::filesystem::path& game_directory);

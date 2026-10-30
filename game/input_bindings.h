@@ -28,7 +28,8 @@ struct PadActionChoice
 };
 
 // One physical XInput slot's choices. The defaults are the controls the game
-// has always had: A / LT jump, RT shoots, Start pauses.
+// has always had: A / LT jump, RT shoots, Start pauses. They are stated only
+// here; default_action_bindings converts them.
 struct PadProfile
 {
 	std::array<PadActionChoice, pad_action_count> actions{ {
@@ -59,14 +60,15 @@ struct DesktopControl
 };
 
 // Gameplay preferences: the shared keyboard keys and one pad profile per
-// physical XInput slot. Menu/intro aliases stay fixed.
+// physical XInput slot. Menu/intro aliases stay fixed. A default-constructed
+// one is the game's default controls, which default_action_bindings reads.
 struct InputBindings
 {
-	labrador::Key keyboard_jump = labrador::Key::space;
-	labrador::Key keyboard_move_left = labrador::Key::a;
-	labrador::Key keyboard_move_right = labrador::Key::d;
-	labrador::Key keyboard_drop = labrador::Key::s;
-	DesktopControl keyboard_shoot{ labrador::Key::none, labrador::MouseButton::left };
+	labrador::Key keyboard_jump = player_input_consts::jump_key;
+	labrador::Key keyboard_move_left = player_input_consts::move_left_key;
+	labrador::Key keyboard_move_right = player_input_consts::move_right_key;
+	labrador::Key keyboard_drop = player_input_consts::drop_key;
+	DesktopControl keyboard_shoot{ labrador::Key::none, player_input_consts::shoot_button };
 	// In addition to the fixed Escape.
 	labrador::Key keyboard_pause = labrador::Key::none;
 	std::array<PadProfile, input_slots::pad_count> pads{};

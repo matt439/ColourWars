@@ -50,6 +50,11 @@ PlayerTeam TeamGateStructurePaintable::open_for() const
     return this->open_for_;
 }
 
+bool TeamGateStructurePaintable::passable_for(PlayerTeam team) const
+{
+    return team != PlayerTeam::none && this->open_for_ == team;
+}
+
 PlayerTeam TeamGateStructurePaintable::paint_leader() const
 {
     const PaintTotal paint = this->paint_total();

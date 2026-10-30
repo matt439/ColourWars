@@ -20,28 +20,13 @@ void GameMenu::init()
 {
 	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads(),
 		this->data()->keyboard(), this->data()->tuning());
-	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
+	this->match_setup_ = std::make_unique<MatchSetup>();
 	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
 	{
-		*this->menu_level_settings_ = remembered->restore(*this->data()->stages());
+		*this->match_setup_ = remembered->restore(*this->data()->stages());
 	}
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
-		this->menu_input_.get(), this->menu_level_settings_.get());
-	this->menu_context_->set_music_update([this](float dt) { this->update_music(dt); });
-	this->menu_context_->set_music_suspend([this]
-	{
-		if (this->music_) { this->music_->suspend(); }
-	});
-	// Only this frame lends the rescan: a match's frame never sets it, so the
-	// stage list holds still under a running match or series.
-	if (this->user_stages_ != nullptr)
-	{
-		this->menu_context_->set_stage_rescan([folder = this->user_stages_] { folder->rescan(); });
-		this->menu_context_->set_stage_scan([folder = this->user_stages_]
-		{
-			return &folder->latest_scan();
-		});
-	}
+		this->menu_input_.get(), this->match_setup_.get(), static_cast<MenuOwner*>(this));
 
 	this->open_menu(MainMenuScreen::title);
 }
@@ -61,41 +46,13 @@ void GameMenu::open_menu(MainMenuScreen screen)
 {
 	const Presentation& look = *this->data()->presentation();
 	this->music_ = std::make_unique<ScreenMusic>(look.menu().sound_bank,
-		this->data()->audio_resources(), &this->data()->save()->play_settings(),
+		this->data()->audio_resources(), &this->data()->settings_session()->play_settings(),
 		look.main_menu().music, look.music_mix(), true);
 	if (!this->context()->active()) { this->music_->suspend(); }
 	this->menu_input_->reset_actions();
 	// The frame retains provenance while pages replace each other during setup.
-	this->context()->push<MatchStart>(this->build_page(screen),
+	this->context()->push<MatchStart>(make_main_menu_page(this->menu_context_.get(), screen),
 		[this](const MatchStart& start) { this->start_match(start); });
-}
-
-std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
-{
-	MenuContext* context = this->menu_context_.get();
-
-	switch (screen)
-	{
-	case MainMenuScreen::home:
-		return std::make_unique<MainMenuHome>(context);
-	case MainMenuScreen::options:
-		return std::make_unique<MainMenuOptions>(context);
-	case MainMenuScreen::credits:
-		return std::make_unique<MainMenuCredits>(context);
-	case MainMenuScreen::mode_select:
-		return std::make_unique<MainMenuModeSelect>(context);
-	case MainMenuScreen::player_count:
-		return std::make_unique<MainMenuPlayerCount>(context);
-	case MainMenuScreen::team_select:
-		return std::make_unique<MainMenuTeamSelect>(context);
-	case MainMenuScreen::weapon_select:
-		return std::make_unique<MainMenuWeaponSelect>(context);
-	case MainMenuScreen::stage_select:
-		return std::make_unique<MainMenuStageSelect>(context);
-	case MainMenuScreen::title:
-	default:
-		return std::make_unique<MainMenuTitle>(context);
-	}
 }
 
 void GameMenu::start_match(MatchStart start)
@@ -105,7 +62,7 @@ void GameMenu::start_match(MatchStart start)
 	this->music_.reset();
 	// Keep the menu context and its settings alive beneath the match.
 	this->context()->push<EndMenuAction>(
-		std::make_unique<GameLevel>(this->data(), *this->menu_level_settings_, start),
+		std::make_unique<GameLevel>(this->data(), *this->match_setup_, start),
 		[this](const EndMenuAction& action) { this->on_match_ended(action); });
 }
 
@@ -114,7 +71,7 @@ void GameMenu::on_deactivated()
 	if (this->music_) { this->music_->suspend(); }
 }
 
-void GameMenu::update_music(float dt)
+void GameMenu::update_menu_music(float dt)
 {
 	if (!this->music_ || !this->context()->active()) { return; }
 	// Only a normal page tick restores playback. Focus returning underneath a
@@ -126,6 +83,23 @@ void GameMenu::update_music(float dt)
 	{
 		this->menu_context_->complete_music_exit();
 	}
+}
+
+void GameMenu::suspend_menu_music()
+{
+	if (this->music_) { this->music_->suspend(); }
+}
+
+// Only this frame lends the rescan: a match's frame has none, so the stage
+// list holds still under a running match or series.
+void GameMenu::rescan_stages()
+{
+	if (this->user_stages_ != nullptr) { this->user_stages_->rescan(); }
+}
+
+const UserStageScan* GameMenu::stage_scan() const
+{
+	return this->user_stages_ != nullptr ? &this->user_stages_->latest_scan() : nullptr;
 }
 
 void GameMenu::on_match_ended(const EndMenuAction& action)
@@ -156,7 +130,7 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 	}
 }
 
-GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings, MatchStart start) :
+GameLevel::GameLevel(GameData* game_data, const MatchSetup& settings, MatchStart start) :
 	game_data_(game_data), settings_(settings), start_(start),
 	session_(settings.player_count() == 1 ? 1 : settings.best_of()),
 	rumble_sink_(make_rumble_sink())
@@ -188,53 +162,51 @@ void GameLevel::init()
 		this->data()->gamepads(),
 		this->data()->keyboard(),
 		this->data()->mouse(),
-		this->data()->tuning(), &this->data()->save()->play_settings(),
-		&this->data()->save()->input_bindings());
+		this->data()->tuning(), &this->data()->settings_session()->play_settings(),
+		&this->data()->settings_session()->input_bindings());
+	this->seat_commands_ = std::make_unique<SeatCommandBuilder>(
+		this->data()->mouse(), this->data()->viewport_manager());
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
 		this->data()->keyboard(), this->data()->tuning());
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
-		this->menu_input_.get(), &this->settings_);
-	this->menu_context_->set_music_update([this](float dt)
-	{
-		this->update_music(dt);
-	});
+		this->menu_input_.get(), &this->settings_, static_cast<MenuOwner*>(this));
 
 	this->level_builder_ = std::make_unique<LevelBuilder>(
 		this->data()->viewport_manager(),
 		this->data()->render_resources(),
 		this->data()->audio_resources(),
-		&this->data()->save()->play_settings(),
+		&this->data()->settings_session()->play_settings(),
 		this->data()->level_infos(),
 		this->data()->tuning(),
 		this->data()->presentation(),
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner(),
-		this->data()->mouse(), &this->data()->save()->input_bindings());
+		&this->data()->settings_session()->input_bindings());
 
 	// Content reloaded from the menus is swapped in by the first build.
 	this->data()->debug().attach_match(*this);
 	this->build_and_enter_level();
 	// Remember only a normally confirmed setup, after its first complete build.
 	// Later restarts/series rounds use build_and_enter_level without this write.
-	const std::vector<MenuPlayerSettings> seats = this->settings_.player_settings();
+	const std::vector<SeatSetup> seats = this->settings_.player_settings();
 	if (this->start_ == MatchStart::menu &&
-		std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
+		std::none_of(seats.begin(), seats.end(), [this](const SeatSetup& seat)
 			{ return this->data()->debug().drives_slot(seat.num); }))
 	{
 		// Each worn profile keeps the Boost its seat started with (ROAD#21).
 		std::array<int, input_slots::pad_count> boosts{ -1, -1, -1, -1 };
-		for (const MenuPlayerSettings& seat : seats)
+		for (const SeatSetup& seat : seats)
 		{
 			if (seat.controller == PlayerController::human && input_slots::is_pad(seat.num))
 			{
 				boosts[static_cast<size_t>(seat.num)] = seat.handicap;
 			}
 		}
-		std::ignore = this->data()->save()->remember_profile_boosts_and_save(boosts);
+		std::ignore = this->data()->settings_session()->remember_profile_boosts_and_save(boosts);
 		std::ignore = this->data()->save()->remember_match_setup_and_save(
 			LastMatchSetup::capture(this->settings_));
 		// This synchronous save is part of entering the match, not elapsed play.
@@ -416,7 +388,7 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	std::vector<PlayerInputData> player_inputs;
+	std::vector<SlotInput> player_inputs;
 	if (this->context()->active())
 	{
 		player_inputs = this->player_input_->player_inputs(this->settings_.pad_devices());
@@ -475,8 +447,9 @@ void GameLevel::update(float dt)
 		if (this->resume_countdown_.advance(dt))
 		{
 			this->resume_audio_->stop();
-			this->tape_.record_resume(player_inputs);
-			this->level_->prepare_resume(player_inputs);
+			const SeatCommands resumed = this->seat_commands(player_inputs);
+			this->tape_.record_resume(resumed.seats);
+			this->level_->prepare_resume(resumed.seats);
 			this->level_->emphasise_players();
 			if (this->audio_may_play()) { this->level_->resume(); }
 		}
@@ -488,14 +461,54 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	// One Level::update, or the debug clock's 0..4 fixed-dt updates.
-	this->data()->debug().update_match(*this, player_inputs, dt);
+	// One match step, or the debug clock's 0..4 fixed-dt steps with any
+	// developer seat filter. Release runs exactly one, with none.
+	DebugDirector& debug = this->data()->debug();
+	const int steps = debug.match_steps(player_inputs, dt);
+	for (int run = 0; run < steps; ++run)
+	{
+		MatchStep step{ &player_inputs, nullptr };
+		if (!debug.before_match_step(*this, run, step)) { break; }
+		this->step_match(*step.inputs, dt, step.seats);
+		if (!debug.after_match_step(*this)) { break; }
+	}
+	debug.end_match_steps(*this, steps);
+}
+
+void GameLevel::step_match(const std::vector<SlotInput>& inputs, float dt,
+	SeatInputFilter* seats)
+{
+	this->data()->debug().sync_background_audio(this->context()->active());
+	this->sync_rumble();
+	// The recorder always forwards the Debug filter; timed rounds also tape
+	// each step's final input. Untimed practice keeps no shipping tape.
+	this->tape_recorder_.prepare(seats, dt);
+	const SeatCommands commands = this->seat_commands(inputs);
+	if (commands.skip_intro) { this->level_->request_intro_skip(); }
+	this->level_->update(commands.seats, dt, &this->tape_recorder_);
+	if (!this->context()->active()) { this->level_->pause_audio(); }
+	this->drain_rumble(dt);
+}
+
+SeatCommands GameLevel::seat_commands(const std::vector<SlotInput>& inputs)
+{
+	this->level_->refresh_layout();
+	return this->seat_commands_->build(*this->level_, inputs);
 }
 
 void GameLevel::draw(Renderer& renderer) const
 {
 	// The perf overlay's frame starts here. Inert in Release.
 	this->data()->debug().begin_match_draw();
+	// The cursor marker follows the pointer as this frame shows it.
+	const labrador::Mouse& mouse = *this->data()->mouse();
+	std::optional<mattmath::Vector2F> pointer;
+	if (mouse.focused())
+	{
+		pointer = mattmath::Vector2F(static_cast<float>(mouse.state().position.x),
+			static_cast<float>(mouse.state().position.y));
+	}
+	this->level_->set_pointer(pointer);
 	// A covered match does not update, but its window can still resize. Prepare
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
@@ -507,6 +520,11 @@ void GameLevel::draw(Renderer& renderer) const
 	}
 	if (this->replay_phase_ != ReplayPhase::none) { this->level_->draw_replay_banner(renderer); }
 	this->data()->debug().draw_status(renderer);
+}
+
+void GameLevel::update_menu_music(float dt)
+{
+	this->update_music(dt);
 }
 
 void GameLevel::update_music(float dt)
@@ -658,14 +676,14 @@ void GameLevel::open_results_menu()
 	// Every finished round counts toward its stage's record, unless a Debug
 	// bot or replay played a seat (never in Release).
 	RecordOutcome record;
-	const std::vector<MenuPlayerSettings> seats = this->settings_.player_settings();
-	if (std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
+	const std::vector<SeatSetup> seats = this->settings_.player_settings();
+	if (std::none_of(seats.begin(), seats.end(), [this](const SeatSetup& seat)
 		{ return this->data()->debug().drives_slot(seat.num); }))
 	{
 		record = this->data()->save()->record_result_and_save(this->settings_.stage(), result);
 	}
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
-		&this->data()->save()->play_settings(), *this->data()->presentation());
+		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
 	if (this->data()->debug().match_audio_paused()) { this->results_audio_->suspend(); }
 	this->menu_input_->reset_actions();
 	this->context()->push(
@@ -714,7 +732,7 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 	this->leave_match(action);
 }
 
-void GameLevel::leave_match(EndMenuAction action) const
+void GameLevel::leave_match(EndMenuAction action)
 {
 	this->stop_rumble();
 	this->menu_context_->cancel_music_exit();
@@ -722,7 +740,7 @@ void GameLevel::leave_match(EndMenuAction action) const
 }
 
 int GameLevel::check_for_pause_input(
-	const std::vector<PlayerInputData>& player_inputs) const
+	const std::vector<SlotInput>& player_inputs) const
 {
 	for (int i = 0; i < static_cast<int>(player_inputs.size()); i++)
 	{

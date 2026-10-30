@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdio>
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 

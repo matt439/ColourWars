@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot.h"
+#include "scripts/acceptance/support/probe.h"
 #include <filesystem>
 #include <iostream>
 
@@ -7,10 +8,7 @@ namespace
 {
     using namespace mattmath;
 
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     MatchBotObservation fixture(const GameTuning& tuning)
     {
@@ -41,7 +39,7 @@ namespace
                 view.velocity.x = step % 2 == 0 ? 120.0f : -120.0f;
             }
             const PlayerInputData input = bot.think(view);
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held,
+            require(input.connected,
                 "Recovery emitted an unavailable device/menu action");
             moved_right = moved_right || input.x_movement > 0.0f;
             if (input.x_movement < 0.0f)
@@ -149,7 +147,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-    try
+    return acceptance::run_probe("bot recovery", [&]
     {
         require(argc == 2, "Usage: bot_recovery <staged-content-directory>");
         const GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
@@ -163,10 +161,5 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "PASS bot recovery: all difficulties retain finite escape, resume replanning, reset on death, "
             "detect positional oscillation and preserve real progress/intentional idle\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL bot recovery: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

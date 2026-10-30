@@ -3,6 +3,7 @@
 #include "game/build_info.h"
 #include "game/directory_consts.h"
 #include "engine/core/file_path.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -16,10 +17,7 @@
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     using Record = std::map<std::string, std::string>;
 
@@ -369,7 +367,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("fatal report", [&]
     {
         require(argc == 2, "Usage: fatal_report.exe <staged content directory>");
         const auto scratch = std::filesystem::absolute(argv[0]).parent_path() /
@@ -382,10 +380,5 @@ int main(int argc, char** argv)
         std::cout << "PASS fatal report: startup/runtime phases, exact nested causes, bounded local Unicode diagnostics, "
             "controlled metadata privacy, per-user paths and atomic replacement/failure recovery.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL fatal report: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

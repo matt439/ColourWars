@@ -31,13 +31,13 @@ void miniature_path_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto step = [&]()
     {
         require(++positive_updates <= 4800, "Miniature path fixture exceeded its source-bounded update budget");
-        level.update(inputs, dt);
+        level.update(acceptance::slot_seats(level, inputs), dt);
     };
     const auto advance = [&](float seconds)
     { for (int tick = 0; tick < static_cast<int>(std::ceil(seconds / dt)); ++tick) { step(); } };
     require(level.state() == LevelState::opening, "Miniature path construction skipped its full opening");
     check_modes("constructed-opening", true);
-    level.update(inputs, 0.0f); ++zero_refreshes;
+    level.update(acceptance::slot_seats(level, inputs), 0.0f); ++zero_refreshes;
     check_modes("zero-opening", true);
     advance(tuning.match().opening.settle + tuning.match().opening.preview * 0.5f);
     require(level.state() == LevelState::opening, "Miniature path fixture missed its preview");
@@ -97,7 +97,7 @@ void miniature_path_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         "Wrong miniature mode did not change the exposed floor-bottom witness");
     require(changed > 0, "Low-scale active fixture cannot distinguish an incorrect scale-selected miniature rule");
     // Only ordinary update/refresh restores the flag; do not hand-reset it.
-    level.update(inputs, 0.0f); ++zero_refreshes;
+    level.update(acceptance::slot_seats(level, inputs), 0.0f); ++zero_refreshes;
     check_modes("zero-active-restored", false);
     const Frame restored = render(level, *app.renderer()); ++readbacks;
     require(ordinary.pixels == restored.pixels && before == observation(level) &&

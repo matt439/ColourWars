@@ -11,6 +11,7 @@
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -26,10 +27,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     bool close_to(float a, float b) { return std::abs(a - b) < 0.0001f; }
 
@@ -592,7 +590,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("view shake", [&]
     {
         require(argc == 2, "Usage: view_shake.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -607,10 +605,5 @@ int main(int argc, char** argv)
         check_simulation_equivalence(world);
         check_validation(content);
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL view shake: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

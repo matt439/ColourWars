@@ -16,6 +16,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -36,8 +37,7 @@
 
 namespace moving_structure_acceptance
 {
-    inline void require(bool value, const std::string& reason)
-    { if (!value) { throw std::runtime_error(reason); } }
+    using acceptance::require;
     // A shortened test countdown must retain the schema's contained push beat.
     inline void set_countdown(rapidjson::Document& document, float seconds)
     {
@@ -309,7 +309,7 @@ namespace moving_structure_acceptance
                 std::vector<std::unique_ptr<labrador::GameObject>>{}, world.palette,
                 bounds_, bounds_, bounds_, &tuning, &world.presentation, L"Moving capability fixture",
                 "paint_exe", "", 0.0f, "", 0.0f, &resolution, &viewports, &world.render,
-                &world.audio, &world.preferences, &mouse, std::vector<LevelStation>{}, opening, 120.0f);
+                &world.audio, &world.preferences, std::vector<LevelStation>{}, opening, 120.0f);
         }
         void tick(const std::vector<PlayerInputData>& actions = {}, float seconds = dt,
             SeatInputFilter* next = nullptr)

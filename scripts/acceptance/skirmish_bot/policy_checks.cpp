@@ -35,8 +35,7 @@ namespace skirmish_acceptance
 
 		void sane(const PlayerInputData& input)
 		{
-			require(input.connected && !input.toggle_debug && !input.toggle_pause_menu &&
-				!input.pause_held && !input.skip_intro && !input.drop_through,
+			require(input.connected && !input.toggle_debug && !input.drop_through,
 				"Skirmish opened UI, disconnected or requested an unrelated action");
 			require(input.x_movement >= -1.0f && input.x_movement <= 1.0f &&
 				input.left_analog_stick.x == input.x_movement && input.left_analog_stick.y == 0.0f,

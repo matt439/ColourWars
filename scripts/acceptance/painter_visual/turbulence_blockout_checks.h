@@ -81,7 +81,7 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     {
         require(++updates <= 8000, "Turbulence native matrix exceeded its finite Level-update budget");
         if (moving) { ++input_steps; }
-        fixture.level->update(inputs, dt);
+        fixture.level->update(acceptance::slot_seats(*fixture.level, inputs), dt);
     };
     const auto capture = [&](CrossfeedFixture& fixture, const std::string& stem, const char* phase, bool heavy, bool ending)
     {
@@ -244,7 +244,7 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
             "-720p", "overview", paint == 1, true);
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&levels);
+        Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_blockout" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size);

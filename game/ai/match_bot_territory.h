@@ -2,6 +2,7 @@
 
 #include "game/ai/match_bot.h"
 #include "game/objects/paintable_object.h"
+#include "game/simulation.h"
 #include <algorithm>
 #include <cmath>
 #include <optional>
@@ -47,7 +48,7 @@ namespace match_bot_territory
 		// Weapon::nozzle_pos from the post-move centre; ProjectileJet centres
 		// its collision box on that point.
 		const bool left = angle > mattmath::PI * 0.5f || angle < -mattmath::PI * 0.5f;
-		const mattmath::Vector2F tip = view.center + view.velocity / 60.0f +
+		const mattmath::Vector2F tip = view.center + view.velocity / static_cast<float>(SIMULATION_HZ) +
 			mattmath::Vector2F(left ? -tool.details.offset.x : tool.details.offset.x, tool.details.offset.y) +
 			mattmath::Vector2F::rotate_vector(tool.details.nozzle_offset +
 				mattmath::Vector2F(tool.details.size.x, 0.0f), angle);

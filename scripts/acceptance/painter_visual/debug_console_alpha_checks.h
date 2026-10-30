@@ -38,13 +38,13 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         "\"music_volume\":37,\"sfx_volume\":61,\"view_shake\":false,\"aim_marker\":true,"
         "\"reduce_effects\":false,\"pad_sticks\":[{\"movement_deadzone\":17,\"aim_deadzone\":29}]}\r\n";
     tune_colour_write(save_path, saved_preferences);
-    Save preferences; preferences.load_save_file();
-    require(preferences.play_settings().music_volume == 37 && preferences.play_settings().sfx_volume == 61 &&
-        preferences.play_settings().sticks[0].movement_deadzone == 17,
+    Save preferences; SettingsSession preferences_session(preferences); preferences_session.load_save_file();
+    require(preferences_session.play_settings().music_volume == 37 && preferences_session.play_settings().sfx_volume == 61 &&
+        preferences_session.play_settings().sticks[0].movement_deadzone == 17,
         "Console alpha private preference fixture was not loaded");
     const auto preference_values = [&]()
     {
-        const PlaySettings& play = preferences.play_settings();
+        const PlaySettings& play = preferences_session.play_settings();
         std::vector<int> values{ static_cast<int>(preferences.resolution()), preferences.fullscreen(),
             static_cast<int>(preferences.team_palette()), play.aim_sensitivity, play.music_volume,
             play.sfx_volume, play.view_shake, play.aim_marker, play.reduce_effects };
@@ -60,8 +60,8 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         require(info != nullptr, "Console alpha fixture requires the shipped stage catalog");
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     DebugDirectorImpl& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");

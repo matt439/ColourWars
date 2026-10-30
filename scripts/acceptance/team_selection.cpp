@@ -1,7 +1,8 @@
 #include "game/pch.h"
 #include "game/input_slots.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -11,14 +12,11 @@
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
-    MenuLevelSettings roster(int count, unsigned int variant = 0)
+    MatchSetup roster(int count, unsigned int variant = 0)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(count);
         settings.set_stage(variant % 2 == 0 ? "close_quarters" : "movement_course");
         settings.set_duration(variant % 2 == 0 ? std::optional<float>(123.5f) : std::nullopt);
@@ -44,7 +42,7 @@ namespace
         return settings;
     }
 
-    void unchanged(const MenuLevelSettings& before, const MenuLevelSettings& after, bool teams)
+    void unchanged(const MatchSetup& before, const MatchSetup& after, bool teams)
     {
         require(before.player_count() == after.player_count() && before.best_of() == after.best_of() &&
             before.duration() == after.duration() && before.stage() == after.stage() &&
@@ -67,35 +65,35 @@ namespace
 
     void check_refused_rosters()
     {
-        MenuLevelSettings empty;
-        const MenuLevelSettings empty_before = empty;
+        MatchSetup empty;
+        const MatchSetup empty_before = empty;
         require(!empty.shuffle_teams(), "An empty roster must refuse team shuffle");
         unchanged(empty_before, empty, true);
         for (const bool joined : { false, true })
         {
-            MenuLevelSettings solo;
+            MatchSetup solo;
             solo.set_player_count(1);
             solo.set_player_team(0, PlayerTeam::b);
             solo.set_player_weapon(0, WeaponType::bucket);
             if (joined) { solo.begin_input_claims(input_slots::keyboard_and_mouse); }
-            const MenuLevelSettings before = solo;
+            const MatchSetup before = solo;
             require(!solo.shuffle_teams(), "Solo practice must retain its chosen team");
             unchanged(before, solo, true);
         }
         for (int count = 2; count <= 4; ++count)
         {
-            MenuLevelSettings waiting;
+            MatchSetup waiting;
             waiting.set_player_count(count);
             waiting.set_player_team(0, PlayerTeam::b);
-            const MenuLevelSettings before_join = waiting;
+            const MatchSetup before_join = waiting;
             require(!waiting.shuffle_teams(), "An unclaimed multiplayer roster must refuse shuffle");
             unchanged(before_join, waiting, true);
             for (int gap = 1; gap < count; ++gap)
             {
-                MenuLevelSettings missing = roster(count, static_cast<unsigned int>(gap));
+                MatchSetup missing = roster(count, static_cast<unsigned int>(gap));
                 require(missing.release_input_slot(missing.player_settings()[static_cast<size_t>(gap)].num),
                     "Cannot release the team-selection fixture seat");
-                const MenuLevelSettings before = missing;
+                const MatchSetup before = missing;
                 require(!missing.input_roster_complete() && !missing.shuffle_teams(),
                     "A gap in joined players must refuse shuffle");
                 unchanged(before, missing, true);
@@ -112,9 +110,9 @@ namespace
             std::set<unsigned int> partitions;
             for (unsigned int seed = 0; seed < 128; ++seed)
             {
-                const MenuLevelSettings retained = roster(count, seed);
-                const MenuLevelSettings before = retained;
-                MenuLevelSettings settings = retained;
+                const MatchSetup retained = roster(count, seed);
+                const MatchSetup before = retained;
+                MatchSetup settings = retained;
                 std::srand(seed);
                 require(settings.shuffle_teams(), "A fully joined multiplayer roster must support shuffle");
                 unchanged(before, settings, false);
@@ -137,7 +135,7 @@ namespace
 
                 // Team selection uses a copied model; the retained setup and
                 // deterministic game RNG remain usable by the normal page.
-                MenuLevelSettings repeated = before;
+                MatchSetup repeated = before;
                 std::srand(seed);
                 require(repeated.shuffle_teams(), "A copied joined roster must support shuffle");
                 unchanged(settings, repeated, true);
@@ -212,7 +210,7 @@ namespace
         require(release(Key::enter) == MenuInputAction::proceed, "Conflicting R must not break later fresh confirmation");
         poll();
 
-        MenuLevelSettings joined;
+        MatchSetup joined;
         joined.set_player_count(2);
         joined.begin_input_claims(3);
         require(joined.claim_input_slot(input_slots::keyboard_and_mouse), "Cannot claim the second keyboard seat");
@@ -222,7 +220,7 @@ namespace
         require(joined_input.size() == 2 && joined_input[0].action == MenuInputAction::none &&
             joined_input[1].action == MenuInputAction::shuffle,
             "Shuffle belongs to the keyboard's retained seat rather than the first player");
-        const MenuLevelSettings unjoined = roster(2, 1); // Pad 3 and Pad 1, no keyboard.
+        const MatchSetup unjoined = roster(2, 1); // Pad 3 and Pad 1, no keyboard.
         const auto unjoined_input = input.player_inputs(unjoined);
         require(std::all_of(unjoined_input.begin(), unjoined_input.end(), [](const ProcessedMenuInput& value)
             { return value.action == MenuInputAction::none; }), "An unjoined keyboard must not shuffle a pad-only roster");
@@ -231,7 +229,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("team selection", [&]
     {
         require(argc == 2, "Usage: team_selection.exe <game/content directory>");
         check_refused_rosters();
@@ -240,10 +238,5 @@ int main(int argc, char** argv)
         std::cout << "PASS team selection: balanced seeded shuffles, both odd sides, joined-roster guards, "
             "retained devices/weapons/setup, manual choices and armed keyboard shuffle.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL team selection: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

@@ -3,7 +3,7 @@
 #include "game/rumble_events.h"
 #include <cmath>
 
-void GameLevel::stop_rumble() const noexcept
+void GameLevel::stop_rumble() noexcept
 {
     if (this->rumble_ != nullptr)
     {
@@ -32,7 +32,7 @@ void GameLevel::sync_rumble()
         // No private Debug state or replay format leaks into the match owner.
         const bool automated = this->data()->debug().drives_slot(slot);
         this->rumble_->set_slot(device, { player != -1 && this->data()->gamepads()->connected(device),
-            this->data()->save()->play_settings().rumble_enabled(slot), automated, false });
+            this->data()->settings_session()->play_settings().rumble_enabled(slot), automated, false });
     }
     if (this->level_ != nullptr && (!playing || !focused || paused))
     {

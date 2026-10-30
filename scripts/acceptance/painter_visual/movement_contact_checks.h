@@ -46,7 +46,7 @@
             require(level->place_player(view, Vector2F(1200.0f + 200.0f * static_cast<float>(view), 1275)),
                 "could not place the resolved-contact fixture on the recovery floor");
         }
-        for (int tick = 0; tick < 30; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 30; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         for (int view = 0; view < level->player_count(); ++view)
         {
             inputs[static_cast<size_t>(level->player(view).player_num())].x_movement =
@@ -64,7 +64,7 @@
         };
         for (int tick = 0; tick < 60 && !all_emitted(MovementFeedbackKind::step); ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(all_emitted(MovementFeedbackKind::step), "resolved walking did not produce four dry contact particles");
         capture(app, *level, canvas, output, "4p-contact-resolved-dry-step", records);
@@ -79,10 +79,10 @@
             }
             return true;
         };
-        for (int tick = 0; tick < 60 && !all_at_skid_speed(); ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 60 && !all_at_skid_speed(); ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(all_at_skid_speed(), "resolved walking never reached the skid threshold");
         for (auto& input : inputs) { input.x_movement = -input.x_movement; }
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         require(all_emitted(MovementFeedbackKind::skid), "resolved reversal did not produce four dry skid particles");
         capture(app, *level, canvas, output, "4p-contact-resolved-dry-skid", records);
     }

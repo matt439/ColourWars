@@ -2,6 +2,7 @@
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/team_gate_contract.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -209,7 +210,7 @@ namespace
 
     std::unique_ptr<Level> two_humans(World& world)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_screen_layout(ScreenLayout::two_player);
         settings.set_stage("turbulence_gate_trial");
@@ -416,9 +417,9 @@ namespace
     };
 
     // Seat 0 is an idle human on team A; seats 1-3 are bots, two of them on B.
-    MenuLevelSettings roster(const Roster& variant)
+    MatchSetup roster(const Roster& variant)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(4);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_screen_layout(ScreenLayout::one_player);
@@ -529,7 +530,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("team gate", [&]
     {
         require(argc == 2, "usage: team_gate <content>");
         check_contract();
@@ -552,7 +553,5 @@ int main(int argc, char** argv)
         std::cout << "PASS team gate trial: the gate loads shut; every step of three whole 3-bot matches follows "
             "the paint held before it, never shuts on a player inside, and no bot sticks; passing is a measurement\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL team gate: " << error.what() << '\n'; return 1; }
+    });
 }

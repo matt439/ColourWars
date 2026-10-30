@@ -3,16 +3,15 @@
 
 using namespace labrador;
 
-// GameLevel's DebugMatchTarget adapters. DebugDirector also forwards ordinary
-// Release updates through debug_update_level, which wraps any Debug filter in
-// the shipping recorder. The other adapters serve the developer tools.
+// GameLevel's DebugMatchTarget adapters, which serve only the developer
+// tools. The match step they wrap is GameLevel::step_match (game_states.cpp).
 
-const MenuLevelSettings& GameLevel::debug_settings() const
+const MatchSetup& GameLevel::debug_settings() const
 {
 	return this->settings_;
 }
 
-void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
+void GameLevel::debug_rebuild(const MatchSetup& plan, bool reset_session)
 {
 	this->start_ = MatchStart::developer;
 	this->settings_ = plan;
@@ -23,7 +22,7 @@ void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
 	this->build_and_enter_level();
 }
 
-void GameLevel::debug_adopt(const MenuLevelSettings& plan, bool reset_session)
+void GameLevel::debug_adopt(const MatchSetup& plan, bool reset_session)
 {
 	this->start_ = MatchStart::developer;
 	this->settings_ = plan;
@@ -38,19 +37,6 @@ void GameLevel::debug_leave()
 	this->leave_match(EndMenuAction::exit);
 }
 
-void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
-	SeatInputFilter* seats)
-{
-	this->data()->debug().sync_background_audio(this->context()->active());
-	this->sync_rumble();
-	// The recorder always forwards the Debug filter; timed rounds also tape
-	// each step's final input. Untimed practice keeps no shipping tape.
-	this->tape_recorder_.prepare(seats, dt);
-	this->level_->update(inputs, dt, &this->tape_recorder_);
-	if (!this->context()->active()) { this->level_->pause_audio(); }
-	this->drain_rumble(dt);
-}
-
 const Level* GameLevel::debug_level() const
 {
 	return this->level_.get();
@@ -59,6 +45,11 @@ const Level* GameLevel::debug_level() const
 bool GameLevel::debug_level_finished() const
 {
 	return this->level_->state() == LevelState::finished;
+}
+
+void GameLevel::debug_suspend_level()
+{
+	this->level_->suspend();
 }
 
 void GameLevel::debug_sync_audio()
@@ -181,7 +172,7 @@ MatchPaint GameLevel::debug_paint() const
 	paint.team_b = info.team_b_area;
 	paint.total = info.total_area;
 	// Convert roster positions to the same owners used by their projectiles.
-	for (const MenuPlayerSettings& player : this->settings_.player_settings())
+	for (const SeatSetup& player : this->settings_.player_settings())
 	{
 		const int owner = paint_owners::index(player.num, static_cast<int>(paint.seats.size()));
 		paint.seats.push_back(owner >= 0 ? info.player_areas.at(static_cast<size_t>(owner)) : 0.0f);

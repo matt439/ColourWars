@@ -4,6 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
+#include "game/player_control.h"
 #include "scripts/acceptance/balance_regions/metrics.h"
 #include <array>
 #include <cstdint>
@@ -26,7 +27,10 @@ namespace balance_runner
         int players = 2;
         float duration = 60.0f;
         std::vector<WeaponType> tools;
+        // A Debug behaviour, or "match": the shipping MatchBotDriver at one
+        // difficulty per seat (all Normal unless --difficulty names them).
         std::string bot = "paint";
+        std::vector<BotDifficulty> difficulties;
         std::filesystem::path csv;
         std::filesystem::path paint_csv;
     };
@@ -48,6 +52,9 @@ namespace balance_runner
         std::uint64_t credited_enemy_eliminations = 0;
         std::uint64_t credited_enemy_projectile_deaths = 0;
         std::uint64_t uncredited_projectile_lethals = 0;
+        // Read back from the shipping driver after the match; empty for a
+        // Debug behaviour. Never a CSV field: the policy label carries it.
+        std::optional<BotDifficulty> difficulty;
     };
 
     struct Result
@@ -75,6 +82,9 @@ namespace balance_runner
     void validate_options(const Options& options);
     float fixed_dt();
     std::string tool_name(WeaponType tool);
+    std::string difficulty_name(BotDifficulty difficulty);
+    // The main CSV's bot field: the behaviour, or match:<seat 1>:<seat 2>...
+    std::string policy_label(const Options& options);
     std::string csv_header();
     std::string csv_row(const Result& result);
     std::string csv_text(const std::vector<Result>& results);

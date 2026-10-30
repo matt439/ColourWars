@@ -14,14 +14,14 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         L"Solo practice: choose Single Match" };
     static_assert(static_cast<size_t>(MenuItem::resume) - static_cast<size_t>(MenuItem::single_match) == 8);
     const Presentation original = presentation;
-    Save preferences;
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences);
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct RestoreSetupText
@@ -49,7 +49,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_best_of(best_of);
+        settings = MatchSetup(); settings.set_best_of(best_of);
         input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         if (count) { stack.push(std::make_unique<MainMenuPlayerCount>(&context)); }
         else { stack.push(std::make_unique<MainMenuModeSelect>(&context)); }
@@ -58,7 +58,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     const auto destination = [&](bool join)
     {
-        MenuLevelSettings copy = settings;
+        MatchSetup copy = settings;
         MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &copy);
         StateContext reference_stack;
@@ -78,13 +78,13 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             return style.layout.position + Vector2F(spacing.x * static_cast<float>(column),
                 spacing.y * static_cast<float>(row));
         };
-        std::vector<std::unique_ptr<UiTextDropShadow>> widgets;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> widgets;
         const auto add = [&](const std::wstring& text, const std::string& font,
             const Vector2F& where, const Colour& colour, const Vector2F& shadow)
         {
-            auto widget = std::make_unique<UiTextDropShadow>("reference-setup-text", text, font, where,
+            auto widget = std::make_unique<colourwars::UiTextDropShadow>("reference-setup-text", text, font, where,
                 app.render_resources(), colour, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
-            UiTextDropShadow* result = widget.get(); widgets.push_back(std::move(widget)); return result;
+            colourwars::UiTextDropShadow* result = widget.get(); widgets.push_back(std::move(widget)); return result;
         };
         add(snapshot.menu_text().heading(count ? MenuHeading::players : MenuHeading::mode),
             style.heading_font, position(0, 0), art.ink, style.heading_shadow_offset);
@@ -131,7 +131,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         actions.push_back(back->bounds());
         if (focus == back_focus) { focused = back->bounds(); }
         const auto& footer = snapshot.prompt_bar();
-        const UiTextDropShadow prompt("reference-setup-prompt", snapshot.menu_text().prompt(
+        const colourwars::UiTextDropShadow prompt("reference-setup-prompt", snapshot.menu_text().prompt(
             count ? MenuPrompt::select_back : MenuPrompt::mode), footer.font, footer.position,
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);

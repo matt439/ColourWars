@@ -1297,7 +1297,55 @@ attended review rather than retuning automatically from these bot observations.
 `POL#27` remains the attended balance/resource gate; this report does not change
 the author's arena acceptance, C2/pad or finish-review gates.
 
+## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
+
+125 matches of the 875-match `TOOL#3` rerun: all 25 ordered five-tool pairs at
+seeds 0, 1, 17, 42, 2026, 2P A/B, 60 seconds, Hard shipping bots on both sides.
+No gameplay value changed. Bands are **final held area** at time-up, not route use, visits, time held or
+spawn pressure. The policy is the shipping `MatchBotDriver` at Hard on both
+seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
+Skirmish, but it is one bot at one difficulty, and ordered swaps combine side,
+seat RNG, tool and conditional bot behaviour. Five chosen seeds are not population
+samples; ranges are observed minima/maxima. Method, receipts and limits:
+[gameplay tuning](gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29).
+
+Team A's share of painted was 50.9 [6.5, 92.8]% over all 125 matches; 90 had a
+credited elimination (156 in all). Equal-tool controls, A share of painted (%):
+
+| Same tool on A and B | Five seeds | Median [min, max] | Painted / paintable, median |
+|---|---|---|---|
+| Sprayer | 59.9, 57.4, 48.7, 48.2, 57.3 | 57.3 [48.2, 59.9] | 64.6 |
+| Sniper | 52.8, 51.7, 48.1, 53.3, 48.1 | 51.7 [48.1, 53.3] | 14.2 |
+| Roller | 40.7, 51.0, 36.2, 56.4, 45.1 | 45.1 [36.2, 56.4] | 61.5 |
+| Mister | 43.1, 40.0, 54.3, 50.4, 58.8 | 50.4 [40.0, 58.8] | 63.7 |
+| Bucket | 48.4, 45.2, 59.8, 42.8, 44.3 | 45.2 [42.8, 59.8] | 53.5 |
+
+Per band, all 125 matches (coverage is both teams' held paint over the band's
+paintable area; A's part is A held over painted in the band; median [min, max] %):
+
+| Band | Paintable area | Coverage | A's part of painted |
+|---|---|---|---|
+| left_home | 22320 | 57.2 [1.3, 92.3] | 97.4 [9.1, 100.0] |
+| left_contest | 30240 | 49.8 [1.0, 76.0] | 72.5 [0.0, 100.0] |
+| centre | 19200 | 81.0 [20.2, 96.8] | 51.4 [4.1, 97.9] |
+| right_contest | 30240 | 52.1 [6.7, 85.6] | 32.2 [0.0, 97.5] |
+| right_home | 22320 | 59.8 [7.5, 97.8] | 7.0 [0.0, 100.0] |
+
+The centre band is the most covered and the evenest split; each home stays
+almost wholly its own team's at the median, with single matches where the other
+team holds most of it. In the equal-tool controls the Sniper mirror covers
+28 [20, 33]% of the centre band and the Sprayer mirror 84 [71, 89]% (all faces
+together; `TOOL#1`'s Skirmish figures above are per face under another policy).
+These are questions for the attended `POL#27` review, not a tuning signal.
+
 ## Verification record
+
+### Review frames (`DBG#18`, 2026-10-29)
+
+`ColourWars.exe +exec review_crossfeed +quit` writes seed-7 paint-bot clean
+and heavy frames at 1-4P and every station
+([pack](debug-console-record.md#arena-review-screenshot-pack-dbg18)), for the
+`POL#24` readability look; it accepts nothing.
 
 ### Selected C2 framing and identity ink (2026-10-20)
 

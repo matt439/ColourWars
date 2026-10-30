@@ -3,9 +3,11 @@
 #include "game/input_bindings.h"
 #include "game/input_slots.h"
 #include "game/save.h"
+#include "game/settings_session.h"
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
 #include "engine/input/gamepad_reader.h"
+#include "scripts/acceptance/support/probe.h"
 #include <objbase.h>
 #include <array>
 #include <cstdint>
@@ -25,7 +27,7 @@ namespace input_bindings_acceptance
 {
     using namespace labrador;
 
-    void require(bool condition, const char* message);
+    using acceptance::require;
 
     template<class Action> void rejects(Action action, const char* message)
     {
@@ -75,7 +77,7 @@ namespace input_bindings_acceptance
     bool conflicting(Key key);
     void require_mapping(const ActionBindings& actual, Key jump, const PadProfile& pad = PadProfile{});
     KeyboardState keys(std::initializer_list<Key> pressed);
-    bool same_input(const PlayerInputData& a, const PlayerInputData& b);
+    bool same_input(const SlotInput& a, const SlotInput& b);
 
     struct ReaderHarness
     {
@@ -88,7 +90,7 @@ namespace input_bindings_acceptance
             binding_test_pads::states = {}; keyboard.set_focused(true); mouse.set_focused(true);
             std::ignore = this->sample(); std::ignore = this->sample();
         }
-        std::vector<PlayerInputData> sample()
+        std::vector<SlotInput> sample()
         {
             pads.poll(); keyboard.poll(); mouse.poll(); menu.update_directions(0.0f, 0.4f, 0.1f, false);
             auto result = player.player_inputs(); const auto repeated = player.player_inputs();
@@ -97,7 +99,7 @@ namespace input_bindings_acceptance
             { require(same_input(result[slot], repeated[slot]), "Repeated reader access consumed or changed a sampled action edge"); }
             menus = menu.menu_inputs(); return result;
         }
-        PlayerInputData desktop() { return this->sample()[input_slots::keyboard_and_mouse]; }
+        SlotInput desktop() { return this->sample()[input_slots::keyboard_and_mouse]; }
     };
 
     class IsolatedSaveDirectory

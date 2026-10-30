@@ -3,6 +3,7 @@
 #include "game/objects/level_end_info.h"
 #include "game/objects/projectile_spray.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -16,13 +17,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition)
-        {
-            throw std::runtime_error(message);
-        }
-    }
+    using acceptance::require;
 
     void area_is(float actual, float expected)
     {
@@ -36,7 +31,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("paint", [&]
     {
         require(argc == 2, "Usage: paint.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -254,10 +249,5 @@ int main(int argc, char** argv)
         }
         std::cout << "PASS exposed surfaces, partial tiles, ownership and stage coverage\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << error.what() << '\n';
-        return 1;
-    }
+    });
 }

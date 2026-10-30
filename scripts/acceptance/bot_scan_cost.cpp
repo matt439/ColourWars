@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/ai/match_bot_driver.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
@@ -36,12 +37,12 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings)
+        std::unique_ptr<Level> build(const MatchSetup& settings)
         {
             std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
         paint_surfaces_acceptance::World assets;
@@ -62,9 +63,9 @@ namespace
     };
 
     // One idle human view; bots alternate teams so every roster has opponents.
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(trial.bots + 1);
         for (int seat = 1; seat <= trial.bots; ++seat) { settings.set_player_bot(seat, trial.difficulty); }
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -94,7 +95,7 @@ namespace
     class TimedDriver final : public SeatInputFilter
     {
     public:
-        TimedDriver(const GameTuning* tuning, const MenuLevelSettings& settings) :
+        TimedDriver(const GameTuning* tuning, const MatchSetup& settings) :
             driver_(tuning, settings, trial_seed) {}
         void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override
         {
@@ -176,7 +177,7 @@ namespace
 
     Costs run(World& world, const Trial& trial, int& moved, int& bots)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         const std::vector<PlayerInputData> physical = physical_inputs();
         for (int tick = 0; tick < 900 && level->state() != LevelState::active; ++tick) { level->update(physical, dt); }
@@ -228,7 +229,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot scan cost", [&]
     {
         require(argc == 2, "usage: bot_scan_cost <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -261,7 +262,5 @@ int main(int argc, char** argv)
             "difficulties, 1800 active steps each; every bot moved; timings are measurements against a "
             << std::setprecision(1) << frame_budget_us / 1000.0 << " ms frame\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot scan cost: " << error.what() << '\n'; return 1; }
+    });
 }

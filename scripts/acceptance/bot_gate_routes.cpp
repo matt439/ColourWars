@@ -3,6 +3,7 @@
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/team_gate_structure_paintable.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -38,9 +39,9 @@ namespace
         require(gate.paint_leader() == team, "The gate fixture did not give the requested team its paint lead");
     }
 
-    MenuLevelSettings human_settings()
+    MatchSetup human_settings()
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2); settings.set_screen_layout(ScreenLayout::two_player);
         settings.set_stage("turbulence_gate_trial"); settings.set_duration(120.0f);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
@@ -273,9 +274,9 @@ namespace
         std::filesystem::path root;
     };
 
-    MenuLevelSettings route_settings(PlayerTeam team)
+    MatchSetup route_settings(PlayerTeam team)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2); settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_player_bot(1, BotDifficulty::hard); settings.set_screen_layout(ScreenLayout::one_player);
         settings.set_player_team(0, other_team(team)); settings.set_player_team(1, team);
@@ -438,7 +439,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot gate routes", [&]
     {
         require(argc == 2, "usage: bot_gate_routes <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-gate-routes", "Gate routes need support '", "turbulence_gate_trial");
@@ -449,7 +450,5 @@ int main(int argc, char** argv)
         World control_world(std::filesystem::absolute(argv[1]), "bot-gate-control", "Gate routes need support '", "turbulence_gate_trial");
         check_driver(world, control_world, files);
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL bot gate routes: " << error.what() << '\n'; return 1; }
+    });
 }

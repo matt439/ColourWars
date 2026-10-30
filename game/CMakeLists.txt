@@ -1,15 +1,20 @@
-# xaudio2redist first: directxtk's config references Microsoft::XAudio2Redist
-# but does not find it itself.
-find_package(xaudio2redist CONFIG REQUIRED)
-find_package(directxtk CONFIG REQUIRED)
-
-add_executable(ColourWars WIN32
+# Every game source except the entry point and the two platform adapters. The
+# executable and the acceptance probes link this one library, so a probe sees
+# the game exactly as the executable does without reaching into its objects.
+add_library(colourwars_game STATIC
+    ai/bot_random.cpp
     ai/match_bot.cpp
     ai/match_bot_ascent.cpp
     ai/match_bot_ballistics.cpp
     ai/match_bot_driver.cpp
     ai/match_bot_navigation.cpp
     ai/match_bot_ramp.cpp
+    carried/animation_object.cpp
+    carried/camera_tools.cpp
+    carried/moving_object.cpp
+    carried/sound_bank_object.cpp
+    carried/text_drop_shadow.cpp
+    carried/ui_text_drop_shadow.cpp
     action_bindings.cpp
     input_bindings.cpp
     player_profiles.cpp
@@ -17,13 +22,12 @@ add_executable(ColourWars WIN32
     content_value.cpp
     controls_text.cpp
     directory_consts.cpp
-    display_awake.cpp
     drawable_text.cpp
     fatal_report.cpp
     game_data.cpp
     last_match_setup.cpp
-    main.cpp
     match_records.cpp
+    match_setup.cpp
     presentation.cpp
     presentation_menu_text.cpp
     presentation_read_match.cpp
@@ -40,12 +44,13 @@ add_executable(ColourWars WIN32
     presentation_validation_text.cpp
     round_tape.cpp
     rumble.cpp
-    rumble_xinput.cpp
     save.cpp
     save_profiles.cpp
     series_stage_rule.cpp
     session.cpp
+    settings_session.cpp
     sound_groups.cpp
+    stage_catalog.cpp
     stage_loading.cpp
     stage_scan_diagnostics.cpp
     presentation_validation_stage_scan.cpp
@@ -98,6 +103,7 @@ add_executable(ColourWars WIN32
     debug/view_commands.cpp
 
     objects/blocked_shot_feedback.cpp
+    objects/collider.cpp
     objects/collision_object_type.cpp
     objects/combat_feedback.cpp
     objects/airbrush_shadow.cpp
@@ -123,6 +129,7 @@ add_executable(ColourWars WIN32
     objects/level_intro.cpp
     objects/level_opening.cpp
     objects/level_practice.cpp
+    objects/match_voices.cpp
     objects/monitor.cpp
     objects/movement_audio.cpp
     objects/movement_feedback.cpp
@@ -136,6 +143,7 @@ add_executable(ColourWars WIN32
     objects/player_camera.cpp
     objects/view_shake.cpp
     objects/player_input.cpp
+    objects/seat_commands.cpp
     objects/projectile.cpp
     objects/projectile_contacts.cpp
     objects/projectile_ball.cpp
@@ -190,44 +198,70 @@ add_executable(ColourWars WIN32
     states/main_menu_exit.cpp
     states/main_menu_options.cpp
     states/main_menu_players.cpp
+    states/main_menu_route.cpp
     states/main_menu_stage_select.cpp
     states/main_menu_team_select.cpp
     states/main_menu_weapon_select.cpp
     states/menu_context.cpp
     states/user_stage_refusals_menu.cpp
     states/menu_focus_motion.cpp
+    states/menu_content_validation.cpp
     states/menu_input.cpp
-    states/menu_level_settings.cpp
     states/menu_page.cpp
     states/menu_panel.cpp
     states/option_row.cpp
     states/pause_menu.cpp
+    states/player_label.cpp
     states/prompt_bar.cpp
     states/results_menu.cpp
+    states/settings_panel_page.cpp
     states/stage_preview.cpp
     states/wrapped_text_drop_shadow.cpp
-
-    resource.rc
-    settings.manifest
 )
 # Resolve game includes from this repository's root.
-target_include_directories(ColourWars PRIVATE
+target_include_directories(colourwars_game PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
 
 # save.cpp uses RapidJSON to write saves; Labrador does not expose it.
 # SYSTEM keeps third-party headers outside the game's /W4 /WX checks.
-target_include_directories(ColourWars SYSTEM PRIVATE
+target_include_directories(colourwars_game SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../external/rapidjson/include"
 )
-target_link_libraries(ColourWars PRIVATE
-    LabradorEngine
-    Microsoft::DirectXTK
-    labrador_settings
-    Xinput
-    comctl32
+target_link_libraries(colourwars_game
+    PUBLIC
+        LabradorEngine
+        comctl32
+    PRIVATE
+        labrador_settings
 )
-target_precompile_headers(ColourWars PRIVATE pch.h)
+target_precompile_headers(colourwars_game PRIVATE pch.h)
+
+# The platform adapters are libraries of their own, so a probe chooses each by
+# linking it or supplying its own definitions: make_rumble_sink() for the motor
+# adapter, DisplayAwake's default constructor for the display-idle request.
+# Each implements a seam the game library declares, so it builds against that
+# library's headers and precompiled header; the game library never names them.
+add_library(colourwars_rumble_xinput STATIC rumble_xinput.cpp)
+target_link_libraries(colourwars_rumble_xinput PRIVATE Xinput)
+add_library(colourwars_display_awake STATIC display_awake.cpp)
+foreach(adapter IN ITEMS colourwars_rumble_xinput colourwars_display_awake)
+    target_link_libraries(${adapter} PRIVATE colourwars_game labrador_settings)
+    target_precompile_headers(${adapter} REUSE_FROM colourwars_game)
+endforeach()
+
+add_executable(ColourWars WIN32
+    main.cpp
+    resource.rc
+    settings.manifest
+)
+target_link_libraries(ColourWars PRIVATE
+    colourwars_game
+    colourwars_rumble_xinput
+    colourwars_display_awake
+    labrador_settings
+)
+target_precompile_headers(ColourWars REUSE_FROM colourwars_game)
 
 add_custom_target(colourwars_build_info
     COMMAND "${CMAKE_COMMAND}"
@@ -242,7 +276,7 @@ add_custom_target(colourwars_build_info
         "${PROJECT_BINARY_DIR}/generated/build-info.txt"
     VERBATIM
 )
-add_dependencies(ColourWars colourwars_build_info)
+add_dependencies(colourwars_game colourwars_build_info)
 
 # The Debug developer console's `reload` reads tuning and presentation from the
 # source tree, so edits apply without a rebuild, `tune.save` writes edits back
@@ -275,7 +309,7 @@ file(CONFIGURE OUTPUT "${PROJECT_BINARY_DIR}/generated/game/version.rc.h"
 #define COLOURWARS_VERSION_STRING \"${PROJECT_VERSION}\"
 "
     @ONLY)
-target_include_directories(ColourWars PRIVATE "${PROJECT_BINARY_DIR}/generated")
+target_include_directories(colourwars_game PUBLIC "${PROJECT_BINARY_DIR}/generated")
 
 # Stage the same reviewed assets as Release, pruning stale files only inside
 # the build's four owned content directories. Root DLLs and other outputs stay.

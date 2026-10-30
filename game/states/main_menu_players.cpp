@@ -1,8 +1,9 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/objects/crude_drawing.h"
+#include "game/carried/ui_text_drop_shadow.h"
+#include "game/states/player_label.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
@@ -10,7 +11,7 @@ using namespace labrador;
 #pragma region MainMenuPlayerCount
 
 MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
-	MainMenuPage(context)
+	RosterSetupPage(context)
 {
 
 }
@@ -27,8 +28,7 @@ void MainMenuPlayerCount::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::mode_select);
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -70,7 +70,7 @@ void MainMenuPlayerCount::init()
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::players),
 		this->menu_style().heading_font,
@@ -80,7 +80,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().heading_shadow_offset);
 
-	this->_1_player = std::make_unique<UiTextDropShadow>(
+	this->_1_player = std::make_unique<colourwars::UiTextDropShadow>(
 		"1_player",
 		this->text().item(MenuItem::one_player_practice),
 		this->menu_style().item_font,
@@ -90,7 +90,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_2_players = std::make_unique<UiTextDropShadow>(
+	this->_2_players = std::make_unique<colourwars::UiTextDropShadow>(
 		"2_players",
 		this->text().item(MenuItem::two_players),
 		this->menu_style().item_font,
@@ -100,7 +100,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_3_players = std::make_unique<UiTextDropShadow>(
+	this->_3_players = std::make_unique<colourwars::UiTextDropShadow>(
 		"3_players",
 		this->text().item(MenuItem::three_players),
 		this->menu_style().item_font,
@@ -110,7 +110,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_4_players = std::make_unique<UiTextDropShadow>(
+	this->_4_players = std::make_unique<colourwars::UiTextDropShadow>(
 		"4_players",
 		this->text().item(MenuItem::four_players),
 		this->menu_style().item_font,
@@ -120,7 +120,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->back_ = std::make_unique<UiTextDropShadow>(
+	this->back_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"back",
 		this->text().item(MenuItem::back),
 		this->menu_style().item_font,
@@ -133,7 +133,7 @@ void MainMenuPlayerCount::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -181,8 +181,7 @@ void MainMenuPlayerCount::init()
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::mode_select);
 		});
 
 }
@@ -190,7 +189,7 @@ void MainMenuPlayerCount::init()
 void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 {
 	this->play_wave(this->confirm_sound_);
-	MenuLevelSettings* settings = this->level_settings();
+	MatchSetup* settings = this->level_settings();
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
 	settings->begin_input_claims(this->activating_slot_);
@@ -206,14 +205,13 @@ void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 	{
 		settings->set_player_team(0, PlayerTeam::a);
 	}
-	this->context()->transition_to(
-		std::make_unique<MainMenuJoin>(this->menu_context()));
+	this->go_to(MainMenuScreen::join);
 }
 
 #pragma endregion MainMenuPlayerCount
 
 #pragma region MainMenuJoin
-MainMenuJoin::MainMenuJoin(MenuContext* context) : MainMenuPage(context)
+MainMenuJoin::MainMenuJoin(MenuContext* context) : RosterSetupPage(context)
 {
 }
 
@@ -234,12 +232,12 @@ void MainMenuJoin::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->paper_.get());
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
-	this->heading_ = std::make_unique<UiTextDropShadow>("heading", this->text().heading(MenuHeading::join_players),
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>("heading", this->text().heading(MenuHeading::join_players),
 		style.heading_font, this->calculate_widget_position(0, 0),
 		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.heading_shadow_offset);
@@ -247,8 +245,8 @@ void MainMenuJoin::init()
 	std::ignore = this->check_paper_bounds(*this->heading_, "heading");
 	for (int player = 0; player < this->player_count(); ++player)
 	{
-		this->players_.push_back(std::make_unique<UiTextDropShadow>(
-			"player_" + std::to_string(player), this->level_settings()->player_label(player, this->text()), style.item_font,
+		this->players_.push_back(std::make_unique<colourwars::UiTextDropShadow>(
+			"player_" + std::to_string(player), player_label(*this->level_settings(), player, this->text()), style.item_font,
 			this->calculate_widget_position(0, player + 2), this->render_resources(),
 			this->setup_art_.ink, clear_shadow, style.item_shadow_offset));
 		this->text_container_->add_child(this->players_.back().get());
@@ -260,12 +258,12 @@ void MainMenuJoin::init()
 			"join_accent_" + std::to_string(player),
 			RectangleF(row.x - style.focus_padding.x, row.y,
 				std::max(0.0f, style.focus_padding.x), row.height),
-			this->render_resources(), &style, &motion->motion, &this->save()->play_settings());
+			this->render_resources(), &style, &motion->motion, &this->settings_session()->play_settings());
 		motion->accent->set_colour(this->setup_art_.focus_ink);
 		this->texture_container_->add_child(motion->accent.get());
 		this->join_motion_.push_back(std::move(motion));
 	}
-	this->status_ = std::make_unique<UiTextDropShadow>("status", L"",
+	this->status_ = std::make_unique<colourwars::UiTextDropShadow>("status", L"",
 		style.detail_font, this->calculate_widget_position(0, 7),
 		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.detail_shadow_offset);
@@ -297,7 +295,7 @@ RectangleF MainMenuJoin::check_paper_bounds(const UiWidget& widget, const char* 
 void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)
 {
 	bool ready = this->level_settings()->input_roster_complete();
-	const std::vector<MenuPlayerSettings>& players = this->level_settings()->player_settings();
+	const std::vector<SeatSetup>& players = this->level_settings()->player_settings();
 	float previous_bottom = this->heading_->bounds().bottom();
 	for (int player = 0; player < this->player_count(); ++player)
 	{
@@ -305,9 +303,9 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		JoinMotionRow& motion = *this->join_motion_[player];
 		// A reserved pad's reconnect note takes the place of its profile's name.
 		const int worn = players[player].controller == PlayerController::human && connected ?
-			this->save()->worn_profile(players[player].num) : -1;
+			this->settings_session()->worn_profile(players[player].num) : -1;
 		const std::wstring label = this->text().worn_profile_label(
-			this->level_settings()->player_label(player, this->text()), worn < 0 ? std::string_view() :
+			player_label(*this->level_settings(), player, this->text()), worn < 0 ? std::string_view() :
 			std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)) +
 			(!connected && players[player].num >= 0 ? this->text().connection.join_reconnect_suffix : L"");
 		const bool row_changed = motion.slot != players[player].num || motion.connected != connected ||
@@ -367,7 +365,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 
 void MainMenuJoin::change_host_row(Direction direction)
 {
-	MenuLevelSettings& settings = *this->level_settings();
+	MatchSetup& settings = *this->level_settings();
 	if (this->host_row_ <= 0 || this->host_row_ >= this->player_count()) { return; }
 	const auto& seat = settings.player_settings()[static_cast<size_t>(this->host_row_)];
 	if (seat.controller == PlayerController::human)
@@ -398,11 +396,11 @@ void MainMenuJoin::change_host_row(Direction direction)
 	this->play_wave(this->direction_sound_);
 }
 
-void MainMenuPage::take_profile_boost(int slot)
+void RosterSetupPage::take_profile_boost(int slot)
 {
 	// A seat starts from the Boost its pad's profile carries; Weapon Select
 	// can still change it, and the match carries the choice back.
-	const int worn = this->save()->worn_profile(slot);
+	const int worn = this->settings_session()->worn_profile(slot);
 	const int player = this->level_settings()->player_index_for_slot(slot);
 	if (worn >= 0 && player >= 0)
 	{
@@ -417,7 +415,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 	{
 		return;
 	}
-	MenuLevelSettings* settings = this->level_settings();
+	MatchSetup* settings = this->level_settings();
 	const std::vector<ProcessedMenuInput> players = this->input()->player_inputs(*settings);
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	// Evaluate readiness before accepting joins: the last join cannot also
@@ -452,8 +450,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 			if (player == 0 || !players[0].connected)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+				this->go_to(MainMenuScreen::player_count);
 				return;
 			}
 			if (settings->release_input_slot(slot))
@@ -480,8 +477,8 @@ void MainMenuJoin::update_page(float /*dt*/)
 		else if (inputs[slot].action == MenuInputAction::shuffle && player >= 0 && input_slots::is_pad(slot))
 		{
 			// A joined pad steps through the profiles it may wear, then none.
-			const int next = this->save()->next_wearable_profile(slot, 1);
-			if (next != this->save()->worn_profile(slot) && this->save()->wear_profile(slot, next))
+			const int next = this->settings_session()->next_wearable_profile(slot, 1);
+			if (next != this->settings_session()->worn_profile(slot) && this->settings_session()->wear_profile(slot, next))
 			{
 				this->take_profile_boost(slot);
 				roster_changed = true;
@@ -495,13 +492,11 @@ void MainMenuJoin::update_page(float /*dt*/)
 		this->play_wave(this->confirm_sound_);
 		if (this->player_count() == 1)
 		{
-			this->context()->transition_to(
-				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::weapon_select);
 		}
 		else
 		{
-			this->context()->transition_to(
-				std::make_unique<MainMenuTeamSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::team_select);
 		}
 		return;
 	}

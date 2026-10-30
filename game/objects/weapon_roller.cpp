@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon_roller.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -28,11 +27,11 @@ WeaponRoller::WeaponRoller(const GameTuning* tuning,
     const WeaponFeedbackSounds& feedback = this->weapon_tuning_->feedback_sounds;
     if (feedback.lift.has_value())
     {
-        this->lift_sound_ = this->sound_bank_->resolve_wave(feedback.lift->name);
+        this->lift_sound_ = this->resolve_wave(feedback.lift->name);
     }
     if (feedback.settle.has_value())
     {
-        this->settle_sound_ = this->sound_bank_->resolve_wave(feedback.settle->name);
+        this->settle_sound_ = this->resolve_wave(feedback.settle->name);
     }
 }
 
@@ -80,6 +79,47 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     {
         this->set_invert_y(false);
     }
+}
+
+void WeaponRoller::advance_travel_motion(bool supported, bool established_support,
+    float signed_distance, float dt)
+{
+    const ToolMotionPresentation& look = this->motion_look();
+    ToolMotionState& motion = this->tool_motion();
+    // Ground contact, rather than input or pre-collision velocity, turns
+    // the sleeve. Reversing direction reverses the same accumulated turn.
+    if (supported && established_support)
+    {
+        motion.travel_phase = std::fmod(motion.travel_phase +
+            signed_distance / look.roller_travel_per_turn, 1.0f);
+        if (motion.travel_phase < 0.0f) { motion.travel_phase += 1.0f; }
+    }
+    const float lift_target = supported ? 0.0f : 1.0f;
+    motion.lift += std::clamp(lift_target - motion.lift,
+        -dt / look.roller_lift_time, dt / look.roller_lift_time);
+    motion.compression = std::max(0.0f,
+        motion.compression - dt / look.roller_settle_time);
+    if (supported && !this->motion_supported_ && established_support)
+    {
+        motion.compression = 1.0f;
+    }
+    this->motion_supported_ = supported;
+}
+
+ToolMotionPose WeaponRoller::motion_pose() const
+{
+    const ToolMotionState& motion = this->tool_motion();
+    if (motion.lift > 0.0f) { return ToolMotionPose::lift; }
+    if (motion.compression > 0.0f) { return ToolMotionPose::motion_1; }
+    if (motion.travel_phase >= 0.25f && motion.travel_phase < 0.5f)
+    {
+        return ToolMotionPose::motion_1;
+    }
+    if (motion.travel_phase >= 0.5f && motion.travel_phase < 0.75f)
+    {
+        return ToolMotionPose::motion_2;
+    }
+    return ToolMotionPose::idle;
 }
 
 labrador::Colour WeaponRoller::paint_colour() const

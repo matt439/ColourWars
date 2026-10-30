@@ -1,6 +1,5 @@
 #include "game/pch.h"
 #include "game/states/profiles_menu.h"
-#include "game/objects/crude_drawing.h"
 #include "game/player_control.h"
 #include <algorithm>
 
@@ -15,55 +14,22 @@ namespace
 	}
 }
 
-ProfilesMenu::ProfilesMenu(MenuContext* context, int player) : PauseMenuPage(context, player) {}
-
-void ProfilesMenu::fit_text(UiText& widget, const RectangleF& available)
-{
-	widget.set_scale(1.0f);
-	const RectangleF bounds = widget.bounds();
-	if (bounds.width > 0.0f && bounds.height > 0.0f)
-	{
-		widget.set_scale(std::min({ 1.0f, available.width / bounds.width,
-			available.height / bounds.height }));
-	}
-}
+ProfilesMenu::ProfilesMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
 
 void ProfilesMenu::init()
 {
 	this->input()->reset_actions();
-	this->pressing_slot_ = this->pausing_player();
+	this->pressing_slot_ = this->opening_slot();
 	// Open on the profile the opening pad wears, else the first.
-	this->profile_ = this->save()->worn_profile(this->pausing_player());
+	this->profile_ = this->settings_session()->worn_profile(this->opening_slot());
 	if (this->profile_ < 0 && !this->save()->profiles().list.empty()) { this->profile_ = 0; }
-	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	MenuStyle style = this->menu_style();
-	style.item_font = look.item_font;
-	this->set_widget_position(look.layout.position);
-	this->set_widget_spacing(look.layout.spacing);
+	const ControlsSettingsPresentation& look = this->panel_look();
+	const MenuStyle style = this->panel_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, style.disabled });
 	this->set_prompts(MenuPrompt::profiles);
-	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
-		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
-	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
-		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
-	this->texture_container_ = std::make_unique<UiContainer>("textures");
-	this->texture_container_->add_child(this->background_.get());
-	this->texture_container_->add_child(this->paper_.get());
-	this->text_container_ = std::make_unique<UiContainer>("text");
-	const auto add_text = [&](const char* name, const std::wstring& value,
-		const std::string& font, const Vector2F& position)
-	{
-		this->text_.push_back(std::make_unique<UiText>(name, value, font, position,
-			this->render_resources(), look.art.ink));
-		UiText* widget = this->text_.back().get();
-		this->text_container_->add_child(widget);
-		return widget;
-	};
+	this->build_panel(style);
 	const ProfilesMenuText& copy = this->text().profiles;
-	add_text("heading", copy.heading, style.heading_font, look.heading_position);
+	this->add_text("heading", copy.heading, style.heading_font, look.heading_position);
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
@@ -88,7 +54,7 @@ void ProfilesMenu::init()
 	const auto action = [&](const char* name, const std::wstring& label, int index, Button::Action activate)
 	{
 		const Vector2F position = this->calculate_widget_position(0, index);
-		UiText* widget = add_text(name, label, style.item_font, position);
+		UiText* widget = this->add_text(name, label, style.item_font, position);
 		fit_text(*widget, RectangleF(position, Vector2F(
 			look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - position.x,
 			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
@@ -98,12 +64,10 @@ void ProfilesMenu::init()
 	this->new_ = action("new_profile", copy.new_profile, 4, [this] { this->add_profile(); });
 	this->delete_ = action("delete_profile", copy.delete_profile, 5, [this] { this->delete_profile(); });
 	action("back", this->text().item(MenuItem::back), 6, [this] { this->close(); });
-	this->status_limit_ = RectangleF(look.status_position, Vector2F(
-		this->paper_->rectangle().right() - look.art.shadow_offset - look.art.focus_padding.x - look.status_position.x,
-		style.footer_y - look.status_position.y));
-	this->help_ = add_text("help", copy.help, look.help_font, look.controls_position);
+	this->status_limit_ = this->status_limit(style);
+	this->help_ = this->add_text("help", copy.help, look.help_font, look.controls_position);
 	fit_text(*this->help_, RectangleF(look.controls_position, look.controls_size));
-	this->status_ = add_text("status", L"", look.help_font, this->status_limit_.position());
+	this->status_ = this->add_text("status", L"", look.help_font, this->status_limit_.position());
 	this->refresh_values();
 	if (this->profile_ < 0) { this->focus_.set_focused(0, this->new_); }
 	this->set_status(copy.idle_status);
@@ -167,7 +131,7 @@ void ProfilesMenu::refresh_values()
 		this->name_row_->set_value(widened(profile.name));
 	}
 	this->boost_row_->set_value(this->text().handicap_label(profile.boost));
-	const int wearer = this->save()->profile_wearer(this->profile_);
+	const int wearer = this->settings_session()->profile_wearer(this->profile_);
 	this->wearer_row_->set_value(wearer < 0 ? copy.nobody : this->text().device_label(wearer));
 }
 
@@ -196,14 +160,14 @@ void ProfilesMenu::change_wearer(Direction direction)
 	if (this->profile_ < 0) { return; }
 	// Nobody, then Pad 1-4. Moving a profile takes it off its old pad; the
 	// new pad takes off whatever it wore.
-	const int wearer = this->save()->profile_wearer(this->profile_);
+	const int wearer = this->settings_session()->profile_wearer(this->profile_);
 	const int next = std::clamp(wearer + (direction == Direction::right ? 1 : -1), -1, input_slots::pad_count - 1);
 	if (next == wearer) { return; }
-	if (wearer >= 0) { this->save()->wear_profile(wearer, -1); }
+	if (wearer >= 0) { this->settings_session()->wear_profile(wearer, -1); }
 	if (next >= 0)
 	{
-		this->save()->wear_profile(next, -1);
-		this->save()->wear_profile(next, this->profile_);
+		this->settings_session()->wear_profile(next, -1);
+		this->settings_session()->wear_profile(next, this->profile_);
 	}
 	this->refresh_values();
 	this->set_status(this->text().profiles.idle_status);
@@ -218,7 +182,7 @@ void ProfilesMenu::add_profile()
 		return;
 	}
 	bool saved = false;
-	this->profile_ = this->save()->add_profile_and_save(this->save()->profiles().next_free_name(),
+	this->profile_ = this->settings_session()->add_profile_and_save(this->save()->profiles().next_free_name(),
 		this->pressing_slot_, saved);
 	this->refresh_values();
 	this->report_save(saved, this->text().profiles.saved_status);
@@ -238,7 +202,7 @@ void ProfilesMenu::delete_profile()
 		return;
 	}
 	this->delete_armed_ = false;
-	const bool saved = this->save()->delete_profile_and_save(this->profile_);
+	const bool saved = this->settings_session()->delete_profile_and_save(this->profile_);
 	this->play_wave(this->confirm_sound_);
 	this->refresh_values();
 	if (this->profile_ < 0) { this->focus_.set_focused(0, this->new_); }
@@ -321,24 +285,15 @@ void ProfilesMenu::update_name_edit(const ProcessedMenuInput& input)
 	this->refresh_values();
 }
 
-void ProfilesMenu::close()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
-}
-
-bool ProfilesMenu::debug_dismiss(bool /*leaving_match*/) { this->close(); return true; }
-
 void ProfilesMenu::update_page(float /*dt*/)
 {
 	if (!this->context()->active()) { return; }
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	std::vector<int> slots;
-	if (this->pausing_player() >= 0)
+	if (this->opening_slot() >= 0)
 	{
-		inputs = { this->pausing_player_input(inputs) };
-		slots = { this->pausing_player() };
+		inputs = { this->opening_slot_input(inputs) };
+		slots = { this->opening_slot() };
 	}
 	else
 	{

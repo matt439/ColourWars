@@ -4,6 +4,7 @@
 // and the rules for what a valid level is. Not included by main.cpp or the acceptance case.
 
 #include "editor/level_document.h"
+#include "game/level_format.h"
 
 #include <rapidjson/document.h>
 
@@ -19,8 +20,10 @@ namespace colourwars_editor
         using Document = rapidjson::Document;
         using Allocator = Document::AllocatorType;
 
-        inline constexpr std::array<const char*, 4> bounds_names = {
-            "out_of_bounds", "camera_bounds", "zoom_out_start_bounds", "zoom_out_finish_bounds" };
+        // The format's words and tables are game/level_format.h's.
+        namespace key = level_format::key;
+        namespace object_type = level_format::object_type;
+        inline constexpr const auto& bounds_names = level_format::bounds_keys;
 
         [[noreturn]] void fail(const std::string& text);
         const Json& member(const Json& object, const char* name);
@@ -31,8 +34,6 @@ namespace colourwars_editor
         void check_rectangle(const Rect& rectangle);
         Rect plain_rectangle(const Json& value);
         Rect object_rectangle(const Json& value);
-        // The materials a collision tag may carry, comma-separated, empty for none.
-        std::string allowed_materials(std::string_view collision_type);
         void validate_document(const Document& document,
             const std::filesystem::path& motion_tuning = {});
         Document parse(std::string_view text);

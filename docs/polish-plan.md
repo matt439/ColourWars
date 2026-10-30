@@ -396,6 +396,8 @@ story/redraw audio and replay determinism remain covered. The registry no longer
 offers `visual`, F8 has no default action, and replay v3 explicitly rejects the
 old v2 schema. Acceptance runners ignore object files whose retired source no
 longer exists, so an incremental build cannot link the old visual into a probe.
+(Since `HYG#29` they link the `colourwars_game` library instead, which the
+build archives from the current sources only.)
 
 The hidden D3D11 movement-feedback probe passes in one/four views at 720p,
 1080p and QHD, including camera pan, aim sweeps and frozen redraw. Both staged
@@ -1509,7 +1511,9 @@ Use a repeatable finish review for each major pass:
    jump, land, fire, stop, exhaust paint and recover. Review the transitions too.
 2. Repeat the same sequence with individual details disabled. Retain and refine
    details that contribute clear material, weight, state or personality; adjust
-   those that draw attention without helping the experience.
+   those that draw attention without helping the experience. Seeded still
+   frames of each detail off come from
+   [`review_finish_details`](#finish-review-detail-ab-script-pol43).
 3. Review at normal speed and actual display size, with audio on and muted. Use
    slow motion only to diagnose contact, attachment and timing problems.
 4. Repeat in four-player combat and through pause, death, respawn and rematch.
@@ -1578,6 +1582,60 @@ and audio; it does not block implementing the remaining game.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 
+### Finish-review detail A/B script (`POL#43`)
+
+**Done (2026-10-30).** Step 2 of the finish review above ("individual details
+disabled") now has a repeatable form. `presentation.json` has ten `enabled`
+flags: `hud.cursor_marker`, `hud.teammate_marker`, `player_identity`,
+`combat_feedback`, `blocked_shot`, `idle_drip`, `weapon_feedback`,
+`movement_feedback`, `tool_motion` and `figure.quiet`.
+
+[`review_finish_details.cfg`](../scripts/debug/review_finish_details.cfg), with
+the helpers `finish_details_flag` and `finish_details_pass`, follows the
+`review_feedback_ab` structure on Crossfeed with seed 7 and four seats: seat 1
+(the keyboard seat) and seats 2-3 are paint bots, and seat 4 stands still
+(`bot 4 idle`) with a sprayer, because a drip and the figure's quiet motion
+appear only on a settled painter. It photographs three paused frames counted
+from GO, `t07s`, `t17s` and `t54s`, once with every detail on (`all_on`) and once
+per flag with that flag off (`no_<detail>`): 33 PNGs in
+`screens\review-finish-details-<time>\`. Every variant uses
+`tune <flag> off restart`, live-scoped flags included, so all eleven replay the
+same seeded match from a fresh build; the flag is turned back on after its pass.
+The script ends with `tune.reset presentation` and `tune.diff presentation`,
+then puts back the strip, folder, bots, seed and timescale. It leaves seat 4's
+sprayer and the Crossfeed match.
+
+The frames were chosen from one-second sweeps over the first 60 match seconds:
+`t07s` and `t17s` have seat 4's drip, `t17s` a blocked shot, `t54s` a hit
+(combat feedback), and all three have teammate markers, quiet figures, tool
+motion and weapon and movement feedback. The cursor marker is drawn at the real
+mouse pointer while it is inside the window. A Debug bot on the keyboard seat
+does not hide it, so its frames depend on where the pointer is.
+
+[`scripts/check-finish-details.ps1`](../scripts/check-finish-details.ps1) is the
+opt-in local runner, like `check-debug-console.ps1`, whose driver it reuses. It
+needs Windows PowerShell 5.1 because the driver does not compile under pwsh 7.
+It launches `+exec review_finish_details +quit` on an isolated profile and
+parks the pointer at 56%/25% of the client area, in the second pane's sky. It
+requires a clean exit, no error or stopped script, 33 named PNGs, three
+checksums per variant, the frames' hash, update and paint equal across all
+eleven variants, and `tune.diff: no edits` after the last checksum. `bursts` is
+reported but not compared, because it counts movement feedback. It writes
+`finish-details-report.txt` listing, per variant, which frames differ from
+`all_on` by bytes. That list is evidence for a person, not a pass condition.
+
+Validation on 2026-10-30, Debug on MattPC, about 165 seconds per run:
+`check-finish-details.ps1` passed twice. The checksums were `afa5d0f51a8185fa`
+at update 601, `57ef68e8b67e8415` at 1201 and `5d0bd18ca9725af4` at 3421, equal
+in every variant. All 33 PNGs were byte-identical between the two launches.
+Every flag changed at least one frame: `combat_feedback` only `t54s`,
+`blocked_shot` only `t17s`, and the other eight all three. The
+`debug_console` acceptance case follows and lints the three new scripts (35
+shipped files). Evidence is under `out/validation/finish-details/`.
+
+This decides nothing about which details stay, are refined or cut. That is the
+attended finish review (`POL#24`); these frames are its material.
+
 ## 8. Further improvements to prototype
 
 The following candidates extend the plan after another source review on
@@ -1607,7 +1665,58 @@ a scripted pointer show it over pale sky and mid-grey walls at 2P and 4P.
 The marquee follows the last polled position, so it can trail the hardware
 cursor by about a frame while the mouse moves fast. **Remaining (`DECISION`):**
 judge it in play over pale, dark and heavily painted scenes at 1/2/4P,
-including that trail; size and colours are provisional.
+including that trail; size and colours are provisional. The same decision
+should set a minimum size: the reader's open-half rule uses authored widths,
+so an accepted marquee of size 13 or less can close over the pointer once
+widths round up to a pixel ([`POL#44` finding](#cursor-marker-acceptance-case-pol44)).
+
+### Cursor-marker acceptance case (`POL#44`)
+
+**Done (2026-10-29).** The marquee now has a CPU acceptance case,
+[`cursor_marker`](../scripts/acceptance/cursor_marker.cpp), in the default
+`run-acceptance.ps1` list. It creates no device and passes under
+`-Preset x64-debug` and `x64-release`.
+
+The code change is access only. `Level::cursor_marker_visible` moved to the
+public section unchanged. The frame arithmetic moved out of
+`draw_cursor_marker` into the pure static
+`Level::cursor_marker_frames(look, at, window_height)`
+([level_draw.cpp](../game/objects/level_draw.cpp)). It returns the three
+`CursorMarkerFrame`s (outer ink, paper rim, inner ink) as box, edge width and
+colour, and `draw_cursor_marker` draws the same four edges per frame from it in
+the same order. Drawing is unchanged.
+
+The case checks:
+
+- **Visibility.** 229 checks on real Movement Course Levels at 720, 1080 and
+  1440 lines. A keyboard/mouse human is placed in each participant slot (P1 to
+  P4) beside pads and bots, with pads in sparse slots. The pointer is inside at
+  the centre and at all four corner pixels, and outside one pixel past each
+  edge. The case also checks unfocused, presentation disabled and re-enabled,
+  pads only, a pad with only bots, and a Level built with no mouse.
+- **Geometry.** 45 marquees: the shipped look and the widest accepted looks
+  (size 96 with ink 8, or paper 8), each at 720, 1080 and 1440 lines and five
+  hotspots including the window corner. Every edge and width is a whole pixel
+  at least one pixel wide. Each frame is square, centred on the hotspot and
+  flush inside the one outside it. The hollow centre is at least 2 px and
+  contains the hotspot. The 1080-line sizes equal the presented values.
+- **Presentation refusals.** 25 malformed `cursor_marker` variants are refused,
+  and each error names the section. They cover: each field missing; text, zero
+  or negative sizes and widths; a numeric `enabled`; size above 96; each width
+  above 8; less than half open, including exactly half; translucent ink or
+  paper; ink equal to paper; and unreadable ink. Five boundary variants still
+  load: shipped, size 96, ink 8, paper 8 and disabled.
+
+**Finding, not acted on.** The reader's open-half rule uses the authored
+widths, but drawing rounds each width up to at least one pixel. A very small
+accepted marquee can therefore close or invert at some heights. Sweeping sizes
+in 0.5 steps and widths in 0.25 steps, the largest such accepted size is 13
+(for example size 3.5 with 0.25 widths). The shipped 44 and every size above 13
+stay open. A minimum size belongs to the `POL#39` look decision, so this case
+checks the shipped and largest looks only.
+
+The case does not decide the marquee's look, size, colours or one-frame trail.
+Those remain the `POL#39` `DECISION`.
 
 ### Help players read the tool and the fight
 

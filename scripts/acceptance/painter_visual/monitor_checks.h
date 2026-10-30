@@ -163,7 +163,7 @@ void monitor_frozen(Application& app, Level& level, const std::filesystem::path&
 
 std::unique_ptr<Level> monitor_story(Application& app, LevelBuilder& builder, int count)
 {
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(count);
     settings.set_stage("movement_course");
     settings.set_duration(1.25f);
@@ -396,7 +396,7 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
     static_info->validate(); static_levels.add("movement_course", std::move(static_info));
     LevelBuilder static_builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
         &preferences, &static_levels, &tuning, &presentation, app.resolution_manager(),
-        app.thread_pool(), app.partitioner(), app.mouse());
+        app.thread_pool(), app.partitioner());
     std::ofstream click_records(output / "monitor-click.csv");
     click_records << "capture,players,expected_click_response,changed_pixels,state_unchanged,draw_rng_unchanged\n";
     // The shipped pass retains all real cloud motion and its original story
@@ -417,20 +417,20 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
             const auto advance = [&](float seconds)
             {
                 const int ticks = static_cast<int>(std::ceil(seconds / dt));
-                for (int tick = 0; tick < ticks; ++tick) { level->update(inputs, dt); }
+                for (int tick = 0; tick < ticks; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             };
             snap("opening");
             advance(opening.settle + opening.preview * 0.65f);
             snap("preview-a");
             advance(opening.preview);
             snap("preview-b");
-            for (int tick = 0; tick < 1200 && level->state() == LevelState::opening; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() == LevelState::opening; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::start_countdown, "monitor story missed its countdown");
             snap("countdown");
             advance(std::max(0.0f, tuning.match().countdown - opening.push * 0.5f));
             require(level->state() == LevelState::start_countdown, "monitor story missed its glass push");
             snap("push");
-            for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::active, "monitor story did not reach active play");
             if (count == 2)
             {
@@ -438,11 +438,11 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
                 inputs[3].primary_shoot = true;
                 inputs[3].x_movement = 1;
             }
-            for (int tick = 0; tick < 600 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 600 && level->state() == LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::zoom_out, "monitor story missed its reveal pullback");
             advance(tuning.match().zoom_out * 0.5f);
             snap("pullback");
-            for (int tick = 0; tick < 600 && level->state() == LevelState::zoom_out; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 600 && level->state() == LevelState::zoom_out; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::overview, "monitor story did not reach its monitor overview");
             const LevelEndInfo info = level->level_end_info();
             require(count == 2 ? info.team_a_area > 0 && info.winning_team() == PlayerTeam::a :
@@ -452,7 +452,7 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
             float reveal_time = 0.0f;
             const auto reveal_tick = [&]()
             {
-                level->update(inputs, dt);
+                level->update(acceptance::slot_seats(*level, inputs), dt);
                 reveal_time += dt;
             };
             const auto reveal_before = [&](float target)

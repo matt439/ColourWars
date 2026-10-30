@@ -5,7 +5,7 @@
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
-#include "game/objects/player_input_data.h"
+#include "game/objects/slot_input.h"
 #include "game/input_slots.h"
 #include "game/objects/weapon_type.h"
 
@@ -15,16 +15,16 @@
 class DebugDirector;
 
 // Whether an input slot belongs to the match, including keyboard/mouse.
-// MenuPlayerSettings::num is the device slot; its roster index is the view.
-bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot);
+// SeatSetup::num is the device slot; its roster index is the view.
+bool match_owns_pad_slot(const MatchSetup& settings, int slot);
 
 // A pad the match waits for: a pad slot that is not connected and whose seat
 // the developer tools do not drive (a Debug bot or replay; never in Release).
 // The one rule behind the missing-pad pause, the pause page's "Controller
 // lost" and the restart confirmation's fallback.
-bool pad_seat_missing(const MenuLevelSettings& settings, int slot,
+bool pad_seat_missing(const MatchSetup& settings, int slot,
 	const labrador::Gamepads& gamepads, const DebugDirector& debug);
-int disconnected_player_slot(const MenuLevelSettings& settings,
+int disconnected_player_slot(const MatchSetup& settings,
 	const labrador::Gamepads& gamepads, const DebugDirector& debug);
 
 // ROAD#4. XInput cannot tell a controller that came back in another slot from
@@ -32,14 +32,14 @@ int disconnected_player_slot(const MenuLevelSettings& settings,
 // pad that no seat reads takes the first missing seat in roster order
 // (missing_seats has a bit per roster index). Returns that seat's input slot,
 // or -1 with the settings unchanged.
-int reclaim_missing_seat(MenuLevelSettings& settings,
+int reclaim_missing_seat(MatchSetup& settings,
 	const std::vector<ProcessedMenuInput>& inputs, unsigned int missing_seats);
 
 // Over the intro, Start (Escape) skips it rather than pausing. A press that
 // begins while the intro plays is latched for its device slot, and its
 // release clears toggle_pause_menu however late it comes: a skip held past
 // GO, or a Start held while another button skipped, never opens pause.
-void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_inputs,
+void latch_intro_pause(bool intro_playing, std::vector<SlotInput>& player_inputs,
 	std::array<bool, input_slots::count>& latched);
 
 
@@ -53,7 +53,6 @@ public:
 	void init() override = 0;
 	void update_page(float dt) override = 0;
 protected:
-	bool shows_brand() const override { return false; }
 	const PauseMenuPresentation& look() const;
 
 	std::wstring player_number_text() const;

@@ -11,10 +11,12 @@ ordinary C++ application that links the engine; the engine is the larger
 project. Windows-only, inherited from the engine's XAudio2 backend.
 
 The engine now has **five render backends** — `d3d11`, `d3d12`, `gl`, `vulkan`
-and `null`, chosen at configure time by `LABRADOR_RENDER_BACKEND`, and **two
-audio backends** — `xaudio2` and `null`, chosen by `LABRADOR_AUDIO_BACKEND`.
-This repository sets neither and gets the `d3d11` and `xaudio2` defaults, which
-are the two it has always had. The rest are the engine's business: `gl` and the
+and `null`, chosen at configure time by `LABRADOR_RENDER_BACKEND`, **three
+audio backends** — `xaudio2`, `webaudio` and `null`, chosen by
+`LABRADOR_AUDIO_BACKEND` — and **two input backends** for the pad — `xinput`
+and `web`, chosen by `LABRADOR_INPUT_BACKEND`. This repository sets none of
+them and gets the Windows defaults, `d3d11`, `xaudio2` and `xinput`, which are
+the ones it has always had. The rest are the engine's business: `gl` and the
 two newer Direct3D and Vulkan paths are the implementations that prove the
 render seam, and each `null` records what it was asked to do so a headless test
 can read it back. There is nothing to do here unless this game grows a reason
@@ -116,29 +118,52 @@ suite lives with the engine, and Labrador puts its tests, benchmark and sample
 behind `PROJECT_IS_TOP_LEVEL` — so consuming it as a submodule brings in the
 library and nothing else. A `ctest` run from here is empty, not broken.
 
+The game's own probes are not CTest tests either, and that is a choice rather
+than an omission. `scripts/run-acceptance.ps1` compiles them only when asked,
+so the default build stays the game, and it owns what CTest would not give
+them: case selection, a Windows Job Object and deadline per probe, retained
+logs and evidence, and `acceptance-summary.json`. They link the build's own
+output rather than a copy of it: [game/CMakeLists.txt](game/CMakeLists.txt)
+builds every game source but `main.cpp` into the `colourwars_game` static
+library, the two platform adapters into `colourwars_rumble_xinput` and
+`colourwars_display_awake`, and links all three into the thin `ColourWars`
+executable. A probe links `colourwars_game.lib` and chooses each adapter by
+linking its library or defining the adapter's symbols itself.
+
 Consumer acceptance checks live under `scripts/acceptance/`. From an x64 VS
 Developer shell, `scripts/run-acceptance.ps1 -Preset x64-debug` (or
-`x64-release`) builds the game and checks its actual objects for ammunition,
+`x64-release`) builds the game and checks the game library for ammunition,
 paint coverage and save regressions. They do not create a graphics/audio device
 or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
 and graceful shutdown.
 
+Each case is declared once, in `scripts/acceptance/cases.psd1`: its name, its
+group (default, Debug-only or opt-in), extra sources, arguments, start rank and
+whether it is slow in Debug. A new case is a `.cpp` there plus one entry; the
+runner and CI read the list and write no case names of their own. Probes share
+`scripts/acceptance/support/probe.h`: `acceptance::require` throws on a failed
+check, and `acceptance::run_probe` turns an escaping exception into a `FAIL`
+line and exit code 1.
+
 Use `-Cases ammo,text_wrap` to select a subset, including with `pwsh -File`.
 PowerShell arrays also work; names are trimmed and case-insensitive, while
 empty names, unknown names and duplicate selections are refused. `-ExcludeCases`
-removes cases from the chosen/default list. `scripts/check-acceptance-selection.ps1`
+removes cases from the chosen/default list. `-OptIn` selects the opt-in group
+instead of the default list, and `-SkipSlowDebug` (Debug only) leaves out the
+cases declared slow in Debug. `scripts/check-acceptance-selection.ps1`
 checks these rules without starting CMake, a compiler or the native helper.
 
 `scripts/check-painter-selection.ps1` checks every focused painter selector,
-false/conflicting switches and trial-path preflight in PowerShell 5.1 and pwsh.
+false/conflicting switches, `-CompileOnly` routing and trial-path preflight in
+PowerShell 5.1 and pwsh.
 It uses private scratch files and starts no compiler, native probe or GPU.
 
 Explicit `OutputDirectory` paths on the painter/acceptance runners and their
 selection checkers, and painter `TrialPath`, use the caller's PowerShell
 filesystem location when relative. The movement-feedback, paint-fx,
 display-awake, frame-pacing, acceptance-process, stage-registration,
-debug-console, startup and failure-reporting checkers follow the same
+debug-console, finish-details, startup, failure-reporting and sandbox-release scripts follow the same
 `OutputDirectory` rule.
 The selection checks cover separate
 PowerShell/process directories, trial hashes and caller-state restoration.
@@ -151,8 +176,10 @@ with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
 Timeout or cancellation cleans only that probe's private Windows Job Object;
 compilation and the initial CMake build have no new deadline. Already-running
 parallel compiles finish during cancellation; queued compiles are skipped.
-`-CompileOnly` does not load the native process helper. From the same Developer
-shell, `scripts/check-acceptance-process.ps1` qualifies ownership, deadlines,
+`-CompileOnly` does not load the native process helper. Every run past
+preflight, passing or not, writes `acceptance-summary.json` beside its
+evidence: each case's compile and run seconds and outcome, longest first. CI
+uploads it. From the same Developer shell, `scripts/check-acceptance-process.ps1` qualifies ownership, deadlines,
 logging and cancellation with isolated processes under PowerShell 5.1 and pwsh.
 
 To run engine tests, configure the submodule as its own top-level project:
@@ -165,16 +192,21 @@ ctest --test-dir out/labrador/x64-debug -R <name>    # a single test
 ```
 
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) always lints changed lines
-for whitespace errors and conflict markers. Pushes and pull requests that change
+for whitespace errors and conflict markers, and checks that relative links and
+heading anchors in tracked Markdown outside `external/` resolve
+(`scripts/ci/check_doc_links.py`). Pushes and pull requests that change
 only Markdown or image/video files under `docs/images/` skip the Windows jobs.
 Deleting a packaged Markdown file still runs full CI, as do code, scripts, schemas,
 runtime assets and submodule changes. Manual runs always run full CI. Change
 detection and its regression checks live in `scripts/ci/`.
 
-Full CI builds both presets, runs consumer acceptance and checks startup.
+Full CI builds both presets, compiles without running the opt-in probes
+(the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
+both pad readers and, in Debug, `check-frame-pacing.ps1 -CompileOnly`), runs
+consumer acceptance and checks startup.
 Acceptance runs four cases at a
 time (`-Parallel 4`); on pull requests the Debug job leaves out `crossfeed`,
-`press_tower`, `menu_text` and `debug_console` (`-ExcludeCases`), which take
+`press_tower`, `menu_text` and `debug_console` (`-SkipSlowDebug`), which take
 minutes each under Debug's checked iterators (with them, Debug acceptance
 alone took 27 minutes). Release runs them on every pull request and a push to
 `master` runs the full Debug suite. Debug startup is required; Release
@@ -238,85 +270,44 @@ are historical, not current.
 
 ## Architecture
 
-### Service bag, not globals
+The overview is [docs/architecture.md](docs/architecture.md): the directory map,
+the intended dependency direction, `GameData`, the state stack, `Level` and
+`Scene`, the builders, the four startup JSON files and the main class chains.
+[docs/oop-guide.md](docs/oop-guide.md) walks the hierarchies;
+[docs/README.md](docs/README.md) and [scripts/README.md](scripts/README.md)
+index the docs and the scripts. Keep those pages true when a change moves what
+they describe. The rules that follow from that structure:
 
-[game/game_data.h](game/game_data.h) — `GameData` is handed to every state,
-object and drawable at construction. It holds exactly seven borrowed pointers: the
-engine `Application`, this game's `Save`, the level registry, the stage list, the
-tuning, the presentation and the developer `DebugDirector` (inert in Release, and
-`DebugDirector::inert()` when unset). Everything else that looks like a service
-(`ThreadPool`, `Gamepads`, `RenderResources`, …) is a forward to the shell. All
-seven are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
-the `Application`, so they outlive every state that borrows them.
-
-### State stack
-
-[game/states/game_states.h](game/states/game_states.h) — two game states over the
-engine's state stack:
-
-```
-[GameMenu]                                  bottom for the whole session; owns
-[GameMenu, MainMenu*Page]                   what the main-menu pages share
-[GameMenu, GameLevel]
-[GameMenu, GameLevel, PauseMenu*Page | ResultsMenu | EndMenu]
-```
-
-A match is pushed *above* the menu, never in place of it, so returning from a
-match returns to a screen that still exists. `GameLevel` restores the screen
-layout it took in its destructor. Menu pages derive from `MenuPage` and share a
-`MenuContext` (services + pad reader + the `MenuLevelSettings` being assembled),
-owned by whichever state owns the screen.
-
-### Level vs Scene
-
-[game/objects/level.h](game/objects/level.h) — `Level` is one paint match: the
-countdown, the clock, the HUDs, the cameras, the music. The generic parts —
-object lists, the tick, the collision sweep, out-of-bounds retirement, per-view
-render fan-out — are `labrador::Scene` in the engine. `Level` holds non-owning
-`Player*` back into the scene that owns them; the index into `players_` is the
-stable roster participant, **not** the player's pad slot (`player_num()`) or
-human pane. Bots have no device or pane. `participant_for_view` and
-`view_for_participant` map between human panes and roster seats; a bot in P2
-does not rename P3 when P3 owns the second pane.
-
-Construction goes through builders — `LevelBuilder` → `PlayerBuilder`,
-`LevelObjectBuilder`, `WeaponBuilder`, `ProjectileBuilder` — which read the level
-definition and the tuning and hand finished objects to the scene.
-
-### Everything numeric is data
-
-Four JSON files are read at startup, before anything else:
-
-| File | What |
-|---|---|
-| `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
-| `tuning.json` | every number a match is *balanced* on ([game/tuning.h](game/tuning.h)) |
-| `presentation.json` | every font, colour, offset and box size the shell is *laid out* from ([game/presentation.h](game/presentation.h), with its menu-page layout records in [game/presentation_menu.h](game/presentation_menu.h) and its menu text in [game/presentation_menu_text.h](game/presentation_menu_text.h)) |
-| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records; versioned `SaveSection`s ([game/save_section.h](game/save_section.h)) |
-
-Tuning and presentation are deliberately two files with two audiences (a balance
-pass and an art pass) and are deliberately *not* manifest entries — they are read
-before every asset and are what those assets are used *by*.
-
-The save is in that list because of *when* it is read, and is otherwise the odd
-one out: the first three are content, staged beside the exe by the build and only
-ever read; the save is written by the player and created by nothing but the game.
-It used to sit with them at `./save/save_data.json` inside the staged mirror,
-where a clean rebuild deleted it and two Windows accounts shared one file. That
-path is still read once, if nothing is at the real one, to carry an older save
-across — see [game/directory_consts.h](game/directory_consts.h). Nothing seeds a
-save; `Save` writes its own defaults on first run.
-
-The rule these follow: **C++ says *how*; data says *which* and *how much*.** A
-jump's shape is code, its three numbers are tuning. Anything whose value would
-change the code — animation states the code switches on, member defaults a
-builder overwrites — stays in C++. Moving a number into JSON so it can be a
-scripting layer is the failure mode to avoid.
-
-`main.cpp` teaches the engine's resource loader what a `"level"` kind is
-(`register_kind`), because a level definition means nothing to the engine. Levels
-are never optional; a stage the manifest names and the disk lacks is a content
-bug that must fail at startup, not three screens later.
+- **`GameData` is the shell's, not the objects'.** States, menu pages,
+  `MenuContext`, `StagePreview` and `game/debug/` hold it; nothing in
+  `game/objects`, `game/ai` or `game/carried` names it. A state unpacks it into
+  a builder's constructor, and each object is constructed with only what it
+  uses. Keep it that way: it is what lets the probes build a real `Level`
+  against fakes.
+- **Nothing in `game/objects` or `game/ai` includes a `states/` header**, and
+  code outside `game/debug/` reaches the developer tools only through
+  `debug_director.h`, `debug_targets.h` and `debug_overlay_draw.h`.
+- **The engine-free contract headers** (`level_format.h`, `simulation.h`, the
+  `*_contract.h` and `*paint*_geometry.h` headers at the `game/` root) include
+  only the standard library and each other, because the editor compiles them
+  without the engine's include path.
+- **A match is pushed above `GameMenu`, never in place of it.** When a page or
+  state is added, add its stack shape to docs/architecture.md and to the
+  comment at the top of `game/states/game_states.h`.
+- **`Level::players_` is indexed by roster participant**, not by device slot
+  (`player_num()`) or human pane; use `participant_for_view` and
+  `view_for_participant` to cross between them.
+- **C++ says *how*; data says *which* and *how much*.** A jump's shape is code,
+  its three numbers are tuning. Anything whose value would change the code -
+  animation states the code switches on, member defaults a builder overwrites -
+  stays in C++. Moving a number into JSON so it can be a scripting layer is the
+  failure mode to avoid. Tuning and presentation stay two files, and neither
+  becomes a manifest entry.
+- **Levels are never optional.** A stage the manifest names and the disk lacks
+  is a content bug that must fail at startup, not three screens later.
+- **Nothing seeds a save.** `Save` writes its own defaults on first run; the old
+  `./save/save_data.json` path is only read once to carry an older save across
+  ([game/directory_consts.h](game/directory_consts.h)).
 
 ## Conventions
 
@@ -345,10 +336,15 @@ this code, written while the two repositories were one.
 
 This code is full inheritance and virtual dispatch, several levels deep and
 multiple where it suits: `ProjectileMist → DiffusingProjectile → Projectile →
-MovingObject + CollisionObject`, `WeaponBucket → RelativeVelocityWeapon →
-Weapon`, `MainMenuStageSelect → MainMenuPage → MenuPage + SoundBankObject`,
-`StructurePaintable → Structure + PaintableObject`. **That is the design, not
-drift.**
+MovingObject + AnimationObject + CollisionObject`, `WeaponBucket →
+RelativeVelocityWeapon → Weapon → TextureObject + SoundBankObject`,
+`MainMenuStageSelect → RosterSetupPage → MainMenuPage → MenuPage → State +
+SoundBankObject + DebugPageTarget`,
+`StructurePaintable → Structure + PaintableObject` (and `Structure →
+TextureObject + CollisionObject`). `Player` even holds two `DrawObject`
+subobjects, one through `AnimationObject` and one through `TextureObject`
+([the guide](docs/oop-guide.md#players-two-drawing-bases)). **That is the
+design, not drift.**
 
 The engine says the opposite about itself and says so loudly, which is exactly
 why this is worth stating. Labrador's **T11** makes inheritance and virtual

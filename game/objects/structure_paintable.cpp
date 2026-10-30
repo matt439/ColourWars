@@ -3,7 +3,6 @@
 #include "game/objects/projectile.h"
 #include "game/paint_face_geometry.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -138,7 +137,7 @@ RectangleF StructurePaintable::cull_bounds(float units_per_pixel) const
 	return result;
 }
 
-void StructurePaintable::on_contact(const CollisionObject& other,
+void StructurePaintable::on_projectile_contact(const Projectile& other,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
 	// The mask also accepts players, but only projectiles paint the surface.
@@ -152,9 +151,8 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
 		PlayerTeam::a : PlayerTeam::b;
 
-	const Projectile& projectile = dynamic_cast<const Projectile&>(other);
 	const RectangleF splash = other.shape()->bounding_box();
-	this->paint_from_projectile(projectile, splash, team);
+	this->paint_from_projectile(other, splash, team);
 }
 
 void StructurePaintable::paint_from_projectile(const Projectile& projectile,
@@ -242,7 +240,7 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 			}
 		}
 	}
-	projectile.note_paint_contact(tile_painted, tile_captured);
+	Projectile::answer_paint_contact(projectile, tile_painted, tile_captured);
 }
 
 std::optional<PaintRunoffVisual> StructurePaintable::runoff_visual(

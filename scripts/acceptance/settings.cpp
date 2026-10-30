@@ -1,5 +1,7 @@
 #include "game/pch.h"
 #include "game/save.h"
+#include "game/settings_session.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -11,13 +13,7 @@
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition)
-		{
-			throw std::runtime_error(message);
-		}
-	}
+	using acceptance::require;
 
 	// Save reads LOCALAPPDATA through the CRT. This process never opens the
 	// player's real preferences, and removes only the paths it creates here.
@@ -77,14 +73,14 @@ namespace
 
 	void check_round_trip(const Save& expected)
 	{
-		Save restored;
-		restored.load_save_file();
+		Save restored; SettingsSession restored_session(restored);
+		restored_session.load_save_file();
 		require(restored.resolution() == expected.resolution() &&
 			restored.fullscreen() == expected.fullscreen() &&
 			restored.team_palette() == expected.team_palette(),
 			"Display preferences did not survive reloading");
-		const PlaySettings& actual = restored.play_settings();
-		const PlaySettings& wanted = expected.play_settings();
+		const PlaySettings& actual = restored_session.play_settings();
+		const PlaySettings& wanted = expected.saved_play_settings();
 		require(actual.aim_sensitivity == wanted.aim_sensitivity &&
 			actual.music_volume == wanted.music_volume &&
 			actual.sfx_volume == wanted.sfx_volume &&
@@ -116,7 +112,7 @@ namespace
 
 	void require_fixture_preferences(const Save& restored)
 	{
-		const PlaySettings& play = restored.play_settings();
+		const PlaySettings& play = restored.saved_play_settings();
 		require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow &&
 			play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80 &&
@@ -153,10 +149,10 @@ namespace
 					"{\"movement_deadzone\":10,\"aim_deadzone\":15}," + profile + ',' +
 					"{\"movement_deadzone\":35,\"aim_deadzone\":45},"
 					"{\"movement_deadzone\":70,\"aim_deadzone\":80}]");
-				Save restored;
-				restored.load_save_file();
+				Save restored; SettingsSession restored_session(restored);
+				restored_session.load_save_file();
 				require_fixture_preferences(restored);
-				const PlaySettings& play = restored.play_settings();
+				const PlaySettings& play = restored_session.play_settings();
 				require(play.stick_settings(1).movement_deadzone == (movement ? fixture.expected : 55) &&
 					play.stick_settings(1).aim_deadzone == (movement ? 55 : fixture.expected),
 					"Missing, invalid or boundary stick field changed its sibling or used the wrong fallback");
@@ -176,13 +172,13 @@ namespace
 			",\"pad_sticks\":{}", ",\"pad_sticks\":\"pads\"", ",\"pad_sticks\":[]" })
 		{
 			write_stick_fixture(directory, member);
-			Save restored;
-			restored.load_save_file();
+			Save restored; SettingsSession restored_session(restored);
+			restored_session.load_save_file();
 			require_fixture_preferences(restored);
 			for (int slot = 0; slot < input_slots::pad_count; ++slot)
 			{
-				require(restored.play_settings().stick_settings(slot).movement_deadzone == -1 &&
-					restored.play_settings().stick_settings(slot).aim_deadzone == -1,
+				require(restored_session.play_settings().stick_settings(slot).movement_deadzone == -1 &&
+					restored_session.play_settings().stick_settings(slot).aim_deadzone == -1,
 					"Missing or malformed stick profile container did not inherit defaults");
 			}
 		}
@@ -191,10 +187,10 @@ namespace
 			"{\"movement_deadzone\":25,\"aim_deadzone\":40},true,"
 			"{\"movement_deadzone\":65,\"aim_deadzone\":75},"
 			"{\"movement_deadzone\":90,\"aim_deadzone\":90}]");
-		Save recovered;
-		recovered.load_save_file();
+		Save recovered; SettingsSession recovered_session(recovered);
+		recovered_session.load_save_file();
 		require_fixture_preferences(recovered);
-		const PlaySettings& recovered_play = recovered.play_settings();
+		const PlaySettings& recovered_play = recovered_session.play_settings();
 		require(recovered_play.stick_settings(0).movement_deadzone == -1 &&
 			recovered_play.stick_settings(0).aim_deadzone == -1 &&
 			recovered_play.stick_settings(1).movement_deadzone == 25 &&
@@ -208,16 +204,16 @@ namespace
 		check_round_trip(recovered);
 
 		write_stick_fixture(directory, ",\"pad_sticks\":[{\"aim_deadzone\":20}]");
-		Save shortened;
-		shortened.load_save_file();
+		Save shortened; SettingsSession shortened_session(shortened);
+		shortened_session.load_save_file();
 		require_fixture_preferences(shortened);
-		require(shortened.play_settings().stick_settings(0).movement_deadzone == -1 &&
-			shortened.play_settings().stick_settings(0).aim_deadzone == 20,
+		require(shortened_session.play_settings().stick_settings(0).movement_deadzone == -1 &&
+			shortened_session.play_settings().stick_settings(0).aim_deadzone == 20,
 			"Partial first profile did not retain its valid field");
 		for (int slot = 1; slot < input_slots::pad_count; ++slot)
 		{
-			require(shortened.play_settings().stick_settings(slot).movement_deadzone == -1 &&
-				shortened.play_settings().stick_settings(slot).aim_deadzone == -1,
+			require(shortened_session.play_settings().stick_settings(slot).movement_deadzone == -1 &&
+				shortened_session.play_settings().stick_settings(slot).aim_deadzone == -1,
 				"Absent trailing profile did not inherit defaults");
 		}
 	}
@@ -228,9 +224,9 @@ namespace
 		for (int sensitivity = 1; sensitivity <= 5; ++sensitivity)
 		{
 			write_stick_fixture(directory, "", sensitivity);
-			Save restored;
-			restored.load_save_file();
-			const PlaySettings& play = restored.play_settings();
+			Save restored; SettingsSession restored_session(restored);
+			restored_session.load_save_file();
+			const PlaySettings& play = restored_session.play_settings();
 			for (int slot = 0; slot < input_slots::pad_count; ++slot)
 			{
 				require(play.stick_settings(slot).movement_deadzone == -1 &&
@@ -241,11 +237,11 @@ namespace
 			}
 			require(restored.save_to_file(), "Could not round-trip a legacy aim preference");
 			check_round_trip(restored);
-			Save canonical;
-			canonical.load_save_file();
+			Save canonical; SettingsSession canonical_session(canonical);
+			canonical_session.load_save_file();
 			for (int slot = 0; slot < input_slots::pad_count; ++slot)
 			{
-				require(canonical.play_settings().aim_deadzone(slot) == legacy_deadzones[sensitivity - 1],
+				require(canonical_session.play_settings().aim_deadzone(slot) == legacy_deadzones[sensitivity - 1],
 					"Saving legacy preferences changed an inherited aim deadzone");
 			}
 		}
@@ -253,13 +249,13 @@ namespace
 
 	void check_stick_api(const IsolatedSaveDirectory& directory)
 	{
-		Save save;
+		Save save; SettingsSession save_session(save);
 		PlaySettings play;
 		play.sticks[0] = { 10, 20 };
 		play.sticks[1] = { 30, 40 };
 		play.sticks[2] = { 50, 60 };
 		play.sticks[3] = { 70, 80 };
-		require(save.set_play_settings_and_save(play), "Could not save four separate pad profiles");
+		require(save_session.set_play_settings_and_save(play), "Could not save four separate pad profiles");
 		check_round_trip(save);
 		require(contents(directory.save_path()).find("\"pad_sticks\":[") != std::string::npos,
 			"Saving pad profiles did not write their canonical array");
@@ -268,8 +264,8 @@ namespace
 		play.sticks[1] = { 999, -999 };
 		play.sticks[2] = { 0, 90 };
 		play.sticks[3] = { 90, 0 };
-		require(save.set_play_settings_and_save(play), "Could not save normalized pad profiles");
-		const PlaySettings& normalized = save.play_settings();
+		require(save_session.set_play_settings_and_save(play), "Could not save normalized pad profiles");
+		const PlaySettings& normalized = save_session.play_settings();
 		require(normalized.stick_settings(0).movement_deadzone == -1 &&
 			normalized.stick_settings(0).aim_deadzone == 90 &&
 			normalized.stick_settings(1).movement_deadzone == 90 &&
@@ -296,16 +292,16 @@ namespace
 		const auto check = [&](const std::string& member, const std::array<bool, input_slots::pad_count>& expected)
 		{
 			write_stick_fixture(directory, ",\"pad_sticks\":[{\"movement_deadzone\":25,\"aim_deadzone\":35}]" + member);
-			Save restored;
-			restored.load_save_file();
+			Save restored; SettingsSession restored_session(restored);
+			restored_session.load_save_file();
 			require_fixture_preferences(restored);
-			require(restored.play_settings().pad_rumble == expected &&
-				restored.play_settings().sticks[0].movement_deadzone == 25 &&
-				restored.play_settings().sticks[0].aim_deadzone == 35,
+			require(restored_session.play_settings().pad_rumble == expected &&
+				restored_session.play_settings().sticks[0].movement_deadzone == 25 &&
+				restored_session.play_settings().sticks[0].aim_deadzone == 35,
 				"Rumble recovery lost physical-slot association or reset unrelated stick preferences");
 			for (int slot = 0; slot < input_slots::pad_count; ++slot)
 			{
-				require(restored.play_settings().rumble_enabled(slot) == expected[static_cast<size_t>(slot)],
+				require(restored_session.play_settings().rumble_enabled(slot) == expected[static_cast<size_t>(slot)],
 					"Rumble preference accessor read a different device slot");
 			}
 			require(restored.save_to_file(), "Could not canonicalize the rumble save fixture");
@@ -400,12 +396,12 @@ namespace
 		{
 			write_stick_fixture(directory, ",\"pad_sticks\":[{\"movement_deadzone\":25,\"aim_deadzone\":35}]"
 				",\"pad_rumble\":[{\"enabled\":false}]" + member);
-			Save restored;
-			restored.load_save_file();
+			Save restored; SettingsSession restored_session(restored);
+			restored_session.load_save_file();
 			require_fixture_preferences(restored);
-			require(restored.play_settings().pad_comfort == expected &&
-				restored.play_settings().sticks[0].movement_deadzone == 25 &&
-				!restored.play_settings().pad_rumble[0] && restored.play_settings().pad_rumble[1],
+			require(restored_session.play_settings().pad_comfort == expected &&
+				restored_session.play_settings().sticks[0].movement_deadzone == 25 &&
+				!restored_session.play_settings().pad_rumble[0] && restored_session.play_settings().pad_rumble[1],
 				"Comfort recovery lost physical-slot association or reset unrelated pad preferences");
 			require(restored.save_to_file(), "Could not canonicalize the comfort save fixture");
 			std::string canonical = "\"pad_comfort\":[";
@@ -496,9 +492,9 @@ namespace
 				output << '}';
 				require(output.good(), "Could not write the boolean-preference save fixture");
 			}
-			Save restored;
-			restored.load_save_file();
-			const PlaySettings& play = restored.play_settings();
+			Save restored; SettingsSession restored_session(restored);
+			restored_session.load_save_file();
+			const PlaySettings& play = restored_session.play_settings();
 			require(play.*preference == fixture.expected,
 				"Absent or invalid boolean preference did not use its default");
 			require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
@@ -518,10 +514,10 @@ namespace
 
 int main()
 {
-	try
+	return acceptance::run_probe("settings", [&]
 	{
 		const IsolatedSaveDirectory directory;
-		Save save;
+		Save save; SettingsSession save_session(save);
 		PlaySettings play;
 		require(play.pad_rumble == std::array<bool, input_slots::pad_count>{ true, true, true, true },
 			"Rumble is not enabled independently on all four pad slots by default");
@@ -542,7 +538,7 @@ int main()
 		play.reduce_effects = true;
 		require(!play.view_shake_enabled(), "Reduce effects re-enabled disabled view shake");
 		play.aim_marker = false;
-		require(save.set_play_settings_and_save(play), "Initial play save failed");
+		require(save_session.set_play_settings_and_save(play), "Initial play save failed");
 		require(save.set_display_settings_and_save(
 			labrador::ScreenResolution::s_2560_1440, true, TeamColourPair::blue_yellow),
 			"Bulk display save failed");
@@ -576,15 +572,15 @@ int main()
 		play.aim_marker = true;
 		play.reduce_effects = false;
 		play.pad_rumble = { true, false, true, false };
-		const bool play_saved = save.set_play_settings_and_save(play);
+		const bool play_saved = save_session.set_play_settings_and_save(play);
 		CloseHandle(locked);
 		require(!display_saved && !play_saved,
 			"Persistence failure was reported as success");
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			!save.fullscreen() && save.team_palette() == TeamColourPair::pink_green &&
-			save.play_settings().music_volume == 0 && save.play_settings().view_shake &&
-			save.play_settings().aim_marker && !save.play_settings().reduce_effects &&
-			save.play_settings().pad_rumble == play.pad_rumble,
+			save_session.play_settings().music_volume == 0 && save_session.play_settings().view_shake &&
+			save_session.play_settings().aim_marker && !save_session.play_settings().reduce_effects &&
+			save_session.play_settings().pad_rumble == play.pad_rumble,
 			"Failed saves lost the active settings");
 		require(contents(directory.save_path()) == original,
 			"Failed replacement damaged the previous save");
@@ -609,10 +605,5 @@ int main()
 			"stick normalization, independent per-slot rumble recovery and persistence, "
 			"per-slot comfort overrides, their resolution and field-independent recovery\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL settings: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

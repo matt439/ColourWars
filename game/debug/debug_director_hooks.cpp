@@ -14,7 +14,7 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <bit>
 #include <cctype>
 #include <chrono>
@@ -238,7 +238,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 {
 	if (this->build_began_ms_ >= 0.0)
 	{
-		const MenuLevelSettings& built = match.debug_settings();
+		const MatchSetup& built = match.debug_settings();
 		this->last_build_ = LevelBuildTime{ perf_now_ms() - this->build_began_ms_,
 			built.stage(), built.player_count() };
 		this->build_began_ms_ = -1.0;
@@ -300,9 +300,9 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 	}
 }
 
-std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchTarget& match) const
+std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchView& match) const
 {
-	const std::vector<MenuPlayerSettings> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
 	std::vector<std::wstring> labels(seats.size());
 	bool any = false;
 	for (std::size_t i = 0; i < seats.size(); ++i)
@@ -330,14 +330,14 @@ void DebugDirectorImpl::push_seat_labels(DebugMatchTarget& match)
 	match.debug_set_seat_labels(this->seat_labels(match));
 }
 
-void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
+void DebugDirectorImpl::filter_match_inputs(std::vector<SlotInput>& inputs)
 {
 	for (int slot = 0; slot < input_slots::pad_count &&
 		slot < static_cast<int>(inputs.size()); ++slot)
 	{
 		if (this->chord_.suppressing(slot))
 		{
-			PlayerInputData& input = inputs[static_cast<std::size_t>(slot)];
+			SlotInput& input = inputs[static_cast<std::size_t>(slot)];
 			input.toggle_debug = false;
 			input.toggle_pause_menu = false;
 			input.skip_intro = false;
@@ -346,12 +346,12 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs
 	// The live console has the keyboard: the keyboard seat stands still (no
 	// move, jump, drop, shot, F1 or pause) while it is open and on the frame
 	// it closed, whose Escape release is that seat's pause key. Mouse aim is
-	// read by the level directly and still follows the cursor. Raw reads are
+	// resolved after this, as seat commands are built, and still follows the cursor. Raw reads are
 	// never consumed, so which reader sees the keys is this client's policy.
 	const std::size_t keyboard = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
 	if ((this->live_open_ || this->blank_keyboard_once_) && keyboard < inputs.size())
 	{
-		PlayerInputData idle;
+		SlotInput idle;
 		idle.connected = inputs[keyboard].connected;
 		inputs[keyboard] = idle;
 	}
@@ -549,44 +549,60 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, b
 	return true;
 }
 
-void DebugDirectorImpl::update_match(DebugMatchTarget& match,
-	const std::vector<PlayerInputData>& inputs, float dt)
+int DebugDirectorImpl::match_steps(const std::vector<SlotInput>& inputs, float dt)
 {
 	this->last_dt_bits_ = std::bit_cast<std::uint32_t>(dt);
+	this->step_dt_ = dt;
 	const int runs = this->clock_.updates_this_step();
-	const std::vector<PlayerInputData> latched = this->clock_.latch(inputs, runs);
-	for (int run = 0; run < runs; ++run)
+	this->latched_ = this->clock_.latch(inputs, runs);
+	return runs;
+}
+
+bool DebugDirectorImpl::before_match_step(DebugMatchTarget& match, int run, MatchStep& step)
+{
+	// A round that ends mid fast-forward stops there; GameLevel opens
+	// results on its next update, as it would at normal speed.
+	if (match.debug_level_finished())
 	{
-		// A round that ends mid fast-forward stops there; GameLevel opens
-		// results on its next update, as it would at normal speed.
-		if (match.debug_level_finished())
-		{
-			break;
-		}
-		const bool replay_was_running = this->player_ != nullptr && !this->player_->finished;
-		this->before_level_update(match, dt);
-		// The perf overlay times the game's own Level::update, seat filter
-		// (bots, record, play) included.
-		const double start = perf_now_ms();
-		match.debug_update_level(run == 0 ? latched : DebugClock::without_edges(latched), dt,
-			this->seat_filter());
-		this->perf_.add_update(perf_now_ms() - start);
-		++this->level_updates_;
-		++this->total_updates_;
-		this->after_level_update(match);
-		// A replay that just reached its last update holds that frame, even
-		// mid fast-forward.
-		if (replay_was_running && this->player_ != nullptr && this->player_->finished)
-		{
-			break;
-		}
-		// A script waiting for this update (or the end of the countdown)
-		// runs before the next one, even at timescale 4.
-		if (this->scripts_.should_stop(this->wait_context()))
-		{
-			break;
-		}
+		return false;
 	}
+	this->replay_was_running_ = this->player_ != nullptr && !this->player_->finished;
+	this->before_level_update(match, this->step_dt_);
+	if (run == 0)
+	{
+		step.inputs = &this->latched_;
+	}
+	else
+	{
+		this->later_step_ = DebugClock::without_edges(this->latched_);
+		step.inputs = &this->later_step_;
+	}
+	// The perf overlay times the game's own step, seat filter (bots, record,
+	// play) included, from here to after_match_step.
+	this->step_began_ms_ = perf_now_ms();
+	step.seats = this->seat_filter();
+	return true;
+}
+
+bool DebugDirectorImpl::after_match_step(DebugMatchTarget& match)
+{
+	this->perf_.add_update(perf_now_ms() - this->step_began_ms_);
+	++this->level_updates_;
+	++this->total_updates_;
+	this->after_level_update(match);
+	// A replay that just reached its last update holds that frame, even
+	// mid fast-forward.
+	if (this->replay_was_running_ && this->player_ != nullptr && this->player_->finished)
+	{
+		return false;
+	}
+	// A script waiting for this update (or the end of the countdown)
+	// runs before the next one, even at timescale 4.
+	return !this->scripts_.should_stop(this->wait_context());
+}
+
+void DebugDirectorImpl::end_match_steps(DebugMatchTarget& match, int runs)
+{
 	if (runs > 0 && this->clock_.paused())
 	{
 		// A stepped update can start the music or a weapon voice.

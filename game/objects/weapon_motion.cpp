@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -103,30 +102,16 @@ void Weapon::update_resolved_motion(bool supported, bool established_support,
 {
     if (dt <= 0.0f || this->motion_presentation_ == nullptr ||
         !this->motion_presentation_->enabled) { return; }
+    this->advance_travel_motion(supported, established_support, signed_distance, dt);
+    this->select_motion_pose();
+}
+
+void Weapon::advance_travel_motion(bool supported, bool established_support,
+    float signed_distance, float dt)
+{
     const auto& look = *this->motion_presentation_;
     auto& motion = this->motion_;
-    if (this->type_ == WeaponType::roller)
-    {
-        // Ground contact, rather than input or pre-collision velocity, turns
-        // the sleeve. Reversing direction reverses the same accumulated turn.
-        if (supported && established_support)
-        {
-            motion.travel_phase = std::fmod(motion.travel_phase +
-                signed_distance / look.roller_travel_per_turn, 1.0f);
-            if (motion.travel_phase < 0.0f) { motion.travel_phase += 1.0f; }
-        }
-        const float lift_target = supported ? 0.0f : 1.0f;
-        motion.lift += std::clamp(lift_target - motion.lift,
-            -dt / look.roller_lift_time, dt / look.roller_lift_time);
-        motion.compression = std::max(0.0f,
-            motion.compression - dt / look.roller_settle_time);
-        if (supported && !this->motion_supported_ && established_support)
-        {
-            motion.compression = 1.0f;
-        }
-        this->motion_supported_ = supported;
-    }
-    else if (this->type_ == WeaponType::bucket || this->type_ == WeaponType::sprayer)
+    if (this->type_ == WeaponType::bucket || this->type_ == WeaponType::sprayer)
     {
         // Walking drives the hose, handle and liquid; at rest they settle.
         // No player velocity or aim is changed by this visual accumulator.
@@ -146,46 +131,51 @@ void Weapon::update_resolved_motion(bool supported, bool established_support,
             swing += std::clamp(-swing, -dt / settle, dt / settle);
         }
     }
-    this->select_motion_pose();
 }
 
 void Weapon::select_motion_pose()
 {
+    this->motion_.pose = this->motion_pose();
+}
+
+ToolMotionPose Weapon::motion_pose() const
+{
     const auto& look = *this->motion_presentation_;
-    auto& motion = this->motion_;
-    motion.pose = ToolMotionPose::idle;
-    if (this->type_ == WeaponType::roller)
-    {
-        if (motion.lift > 0.0f) { motion.pose = ToolMotionPose::lift; }
-        else if (motion.compression > 0.0f) { motion.pose = ToolMotionPose::motion_1; }
-        else if (motion.travel_phase >= 0.25f && motion.travel_phase < 0.5f)
-        {
-            motion.pose = ToolMotionPose::motion_1;
-        }
-        else if (motion.travel_phase >= 0.5f && motion.travel_phase < 0.75f)
-        {
-            motion.pose = ToolMotionPose::motion_2;
-        }
-        return;
-    }
+    const auto& motion = this->motion_;
     if (motion.pressure > 0.0f)
     {
-        motion.pose = motion.pressure >= 1.0f - look.shot_pose_split ?
+        return motion.pressure >= 1.0f - look.shot_pose_split ?
             ToolMotionPose::motion_1 : ToolMotionPose::motion_2;
     }
-    else if (this->type_ == WeaponType::bucket && motion.bucket_swing != 0.0f)
+    if (this->type_ == WeaponType::bucket && motion.bucket_swing != 0.0f)
     {
-        motion.pose = motion.bucket_swing > 0.0f ? ToolMotionPose::motion_1 : ToolMotionPose::motion_2;
+        return motion.bucket_swing > 0.0f ? ToolMotionPose::motion_1 : ToolMotionPose::motion_2;
     }
-    else if (this->type_ == WeaponType::sprayer && motion.hose_sway != 0.0f)
+    if (this->type_ == WeaponType::sprayer && motion.hose_sway != 0.0f)
     {
-        motion.pose = motion.hose_sway > 0.0f ? ToolMotionPose::motion_1 : ToolMotionPose::motion_2;
+        return motion.hose_sway > 0.0f ? ToolMotionPose::motion_1 : ToolMotionPose::motion_2;
     }
-    else if ((this->type_ == WeaponType::sprayer || this->type_ == WeaponType::mister) &&
+    if ((this->type_ == WeaponType::sprayer || this->type_ == WeaponType::mister) &&
         motion.valve > 0.0f)
     {
-        motion.pose = ToolMotionPose::motion_2;
+        return ToolMotionPose::motion_2;
     }
+    return ToolMotionPose::idle;
+}
+
+ToolMotionState& Weapon::tool_motion()
+{
+    return this->motion_;
+}
+
+const ToolMotionState& Weapon::tool_motion() const
+{
+    return this->motion_;
+}
+
+const ToolMotionPresentation& Weapon::motion_look() const
+{
+    return *this->motion_presentation_;
 }
 
 void Weapon::draw_mist_tail(DrawList& draw_list) const

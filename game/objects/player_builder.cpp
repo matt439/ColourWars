@@ -2,7 +2,6 @@
 #include "game/objects/player_builder.h"
 #include "game/paint_owners.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
@@ -31,7 +30,7 @@ PlayerBuilder::PlayerBuilder(const GameTuning* tuning, const Presentation* prese
 }
 
 std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
-	const MenuLevelSettings& settings,
+	const MatchSetup& settings,
 	const LevelLoadedInfo* load_info,
 	TeamColour team_colours,
 	RenderResources* render_resources,

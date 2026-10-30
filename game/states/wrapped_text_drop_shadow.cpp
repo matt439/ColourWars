@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/wrapped_text_drop_shadow.h"
 #include "game/text_wrap.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -26,7 +27,7 @@ WrappedTextDropShadow::WrappedTextDropShadow(const std::string& name,
 	const Colour& color,
 	const Colour& shadow_color,
 	const Vector2F& shadow_offset) :
-	UiTextDropShadow(name,
+	colourwars::UiTextDropShadow(name,
 		wrap_for(render_resources, font_name, text, max_width),
 		font_name,
 		position,
@@ -43,14 +44,14 @@ WrappedTextDropShadow::WrappedTextDropShadow(const std::string& name,
 void WrappedTextDropShadow::set_text(const std::wstring& text)
 {
 	this->authored_text_ = text;
-	UiTextDropShadow::set_text(text_wrap::wrap(*this->render_resources_,
+	colourwars::UiTextDropShadow::set_text(text_wrap::wrap(*this->render_resources_,
 		this->font(), text, this->max_width_, this->scale()));
 }
 
 void WrappedTextDropShadow::set_scale(float scale)
 {
-	UiTextDropShadow::set_scale(scale);
-	UiTextDropShadow::set_text(text_wrap::wrap(*this->render_resources_,
+	colourwars::UiTextDropShadow::set_scale(scale);
+	colourwars::UiTextDropShadow::set_text(text_wrap::wrap(*this->render_resources_,
 		this->font(), this->authored_text_, this->max_width_, this->scale()));
 }
 

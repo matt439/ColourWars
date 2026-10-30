@@ -9,10 +9,10 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
         std::vector<float>{ 60.0f, 120.0f, 240.0f, 360.0f, 480.0f },
         "Duration probe requires the independent shipped 240-second default and five choices");
     const NestedSaveProfile profile(output / "duration-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed the duration probe's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed the duration probe's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream stream(output / "duration-profile/ColourWars/save_data.json", std::ios::binary);
@@ -21,9 +21,9 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const std::string saved = saved_bytes();
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(1); settings.set_stage("movement_course");
     settings.set_screen_layout(ScreenLayout::two_player); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
@@ -51,7 +51,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     std::optional<float> expected_override;
     const auto unchanged = [&]
     {
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(settings.player_count() == 2 && settings.best_of() == 1 && settings.stage() == "movement_course" &&
             settings.screen_layout() == ScreenLayout::two_player && players.size() == 2 &&
             players[0].num == input_slots::keyboard_and_mouse && players[1].num == -1 &&
@@ -106,9 +106,9 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const auto& style = snapshot.menu(); const auto& main = snapshot.main_menu();
         auto art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
         const Vector2F position = style.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 5.0f);
-        const UiTextDropShadow label("independent-duration-label", L"Match length", font, position,
+        const colourwars::UiTextDropShadow label("independent-duration-label", L"Match length", font, position,
             app.render_resources(), art.focus_ink, Colour{}, style.item_shadow_offset);
-        const UiTextDropShadow number("independent-duration-value", value, font,
+        const colourwars::UiTextDropShadow number("independent-duration-value", value, font,
             position + Vector2F(main.mode_select_spacing.x * 2.0f, 0.0f), app.render_resources(),
             art.ink, Colour{}, style.item_shadow_offset);
         const auto font_handle = app.render_resources()->resolve_sprite_font(font);
@@ -336,7 +336,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
         "Duration target private font did not exclude the scientific exponent sign");
     const_cast<MenuStyle&>(private_presentation.menu()).item_font = font_name;
     private_presentation.validate_resources(resources, *app.audio_resources());
-    MainMenuModeSelect::validate_durations(&resources, private_tuning, private_presentation);
+    validate_mode_durations(&resources, private_tuning, private_presentation);
     const auto tuning_path = scratch / "tuning.candidate";
     const std::string valid_tuning = replace(originals[0], "match.duration", "90.0");
     const std::string bad_tuning = replace(originals[0], "match.duration", "600000000.0");
@@ -347,7 +347,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     write(tuning_path, bad_tuning);
     const GameTuning bad_balance(tuning_path.string().c_str());
     bad_balance.validate_resources(resources, *app.audio_resources()); ++legacy_acceptances;
-    refusal([&] { MainMenuModeSelect::validate_durations(&resources, bad_balance, private_presentation); },
+    refusal([&] { validate_mode_durations(&resources, bad_balance, private_presentation); },
         "menu_text.values.duration_default"); ++paired_refusals;
     refusal([&] { ++validations; tuning_target.validate(bad_tuning, tuning_path.string(), &data, false); },
         "menu_text.values.duration_default"); ++target_refusals;
@@ -375,7 +375,7 @@ void duration_target_checks(Application& app, GameTuning& tuning, Presentation& 
     write(presentation_path, bad_presentation);
     const Presentation bad_layout(presentation_path.string().c_str());
     bad_layout.validate_resources(resources, *app.audio_resources()); ++legacy_acceptances;
-    refusal([&] { MainMenuModeSelect::validate_durations(&resources, private_tuning, bad_layout); },
+    refusal([&] { validate_mode_durations(&resources, private_tuning, bad_layout); },
         "the complete duration row"); ++paired_refusals;
     refusal([&] { ++validations; presentation_target.validate(bad_presentation, presentation_path.string(), &data, false); },
         "the complete duration row"); ++target_refusals;

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/movement_course/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 
 // Route trials on the authored Movement Course geometry. Every trial builds a
 // fresh Scene from movement_course.json through LevelObjectBuilder and places
@@ -14,7 +15,7 @@ using namespace movement_course_acceptance;
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("movement course", [&]
     {
         require(argc == 2, "Usage: movement_course.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -66,10 +67,5 @@ int main(int argc, char** argv)
         painting(services);
         std::cout << "PASS Movement Course route trials on authored geometry\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

@@ -4,12 +4,12 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
-    data.set_presentation(&presentation); data.set_stages(&stages); data.set_level_infos(&levels);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
+    data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* active = nullptr;
     struct ClearJoinPaper
@@ -65,7 +65,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const auto text_bounds = [&](const Presentation& snapshot, int player)
     {
         const auto& style = snapshot.menu();
-        const UiTextDropShadow text("independent-join-seed", label(player), style.item_font,
+        const colourwars::UiTextDropShadow text("independent-join-seed", label(player), style.item_font,
             position(snapshot, player + 2), app.render_resources(), snapshot.main_menu().art.ink,
             Colour{}, style.item_shadow_offset);
         return text.bounds();
@@ -81,7 +81,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             std::array<int, 4>{ input_slots::keyboard_and_mouse, 3, 0, 2 };
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(1);
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(1);
         settings.set_stage("movement_course"); settings.set_duration(73.0f);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
             count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
@@ -114,10 +114,10 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     {
         const Frame actual = frame(); const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu();
         auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
-        std::vector<std::unique_ptr<UiTextDropShadow>> text;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> text;
         const auto add = [&](const std::wstring& words, const std::string& font, int row, const Colour& ink, Vector2F shadow)
         {
-            auto widget = std::make_unique<UiTextDropShadow>("independent-join-text", words, font,
+            auto widget = std::make_unique<colourwars::UiTextDropShadow>("independent-join-text", words, font,
                 position(snapshot, row), app.render_resources(), ink, Colour{}, shadow);
             text.push_back(std::move(widget));
         };
@@ -186,7 +186,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); for (const auto& widget : text) { widget->draw(list); }
         const auto& footer = snapshot.prompt_bar();
-        const UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
+        const colourwars::UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
             footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         prompt.draw(list); const Frame expected = read(renderer);
         const std::string stem = "join-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-" +
@@ -224,7 +224,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const auto destination = [&](int kind)
     {
-        MenuLevelSettings plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
+        MatchSetup plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &plan); StateContext reference_stack;
         reference_stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         if (kind == 0) { reference_stack.push(std::make_unique<MainMenuPlayerCount>(&reference_context)); }
@@ -323,7 +323,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             ~RestoreJoinDetailFont() { this->font = this->original; }
         } restore_font{ live_style.detail_font, live_style.detail_font };
         live_style.detail_font = "lato_black_144";
-        MenuLevelSettings invalid_settings; invalid_settings.set_player_count(1); invalid_settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        MatchSetup invalid_settings; invalid_settings.set_player_count(1); invalid_settings.begin_input_claims(input_slots::keyboard_and_mouse);
         MenuInput invalid_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext invalid_context(&data, &invalid_input, &invalid_settings); StateContext invalid_stack;
         bool rejected = false;

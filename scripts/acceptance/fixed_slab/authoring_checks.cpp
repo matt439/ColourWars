@@ -165,9 +165,9 @@ namespace fixed_slab_acceptance
             return total;
         }
 
-        MenuLevelSettings setup(int count)
+        MatchSetup setup(int count)
         {
-            MenuLevelSettings result;
+            MatchSetup result;
             result.set_stage("turbulence_slab_trial"); result.set_player_count(count);
             result.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
             constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
@@ -196,7 +196,7 @@ namespace fixed_slab_acceptance
             Partitioner partitioner;
             auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
-                &world.tuning, &world.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
             std::srand(260026u);
             const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
             require(level->player_count() == count, "Public slab load lost a roster seat");

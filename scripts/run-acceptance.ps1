@@ -6,6 +6,8 @@ param(
     [string] $OutputDirectory,
     [string[]] $Cases,
     [string[]] $ExcludeCases,
+    [switch] $OptIn,
+    [switch] $SkipSlowDebug,
     [ValidateRange(1, 64)]
     [int] $Parallel = 1,
     [switch] $CompileOnly,
@@ -16,10 +18,34 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$acceptanceCases = @('display_awake', 'rumble', 'rumble_adapter', 'action_bindings', 'input_bindings', 'keyboard_jump_capture', 'ammo', 'settings', 'player_profiles', 'match_records', 'remembered_setup', 'bot_roster', 'stick_settings', 'paint', 'camera_framing', 'view_shake', 'movement', 'movement_contact', 'combat_feedback', 'tool_motion', 'weapon_feedback', 'low_paint', 'aim_marker', 'player_identity', 'blocked_shot', 'idle_drip', 'quiet_character', 'stage_selection', 'team_palette', 'team_selection', 'menu_navigation',
-        'movement_course', 'cq_blockout', 'crossfeed', 'press_tower', 'turbulence_blockout', 'resume_countdown', 'debug_console', 'story_audio', 'level_format', 'fatal_report', 'gameplay_tuning', 'menu_presentation', 'weapon_catalog', 'menu_text', 'menu_focus_motion', 'display_trial', 'tunnelling', 'text_wrap', 'terrain', 'lethal_provenance', 'skirmish_bot', 'paint_surfaces', 'balance_regions', 'paint_underfoot', 'moving_structure', 'fixed_slab', 'practice_workshop', 'results_awards', 'paint_ferry', 'team_gate')
-$acceptanceCases += @('bot_driver', 'bot_runtime', 'bot_recovery', 'bot_ballistics', 'bot_navigation', 'bot_territory', 'bot_gate_routes', 'handicap', 'instant_replay', 'user_stages', 'series_stage_rule', 'teammate_markers')
-$availableCases = @($acceptanceCases) + @('balance_runner', 'bot_trials', 'bot_combat_trials', 'bot_team_trials', 'bot_ascents', 'bot_arena_routes', 'bot_hill_routes', 'bot_turbulence_routes', 'bot_scan_cost', 'bot_mover_routes', 'turbulence_movers', 'turbulence_slopes', 'turbulence_slab_routes', 'turbulence_slab_stage', 'turbulence_slab_tools')
+# Each case is declared once, in scripts/acceptance/cases.psd1.
+$declaredCases = @((Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'acceptance/cases.psd1')).Cases)
+$caseKeys = @('Name', 'Group', 'Sources', 'Arguments', 'StartRank', 'SlowInDebug', 'Utf8Output')
+$caseTable = @{}
+foreach ($declared in $declaredCases) {
+    foreach ($key in $declared.Keys) {
+        if ($key -cnotin $caseKeys) { throw "acceptance/cases.psd1: unknown key $key." }
+    }
+    if ($declared.Name -cnotmatch '^[a-z0-9_]+$' -or $caseTable.ContainsKey($declared.Name)) {
+        throw "acceptance/cases.psd1: case names must be unique lower-case identifiers ($($declared.Name))."
+    }
+    if (-not $declared.ContainsKey('Group')) { $declared.Group = 'default' }
+    if ($declared.Group -cnotin @('default', 'debug-only', 'opt-in')) {
+        throw "acceptance/cases.psd1: $($declared.Name) has an unknown group."
+    }
+    # Fill in what a declaration leaves out, so every key reads under strict mode.
+    $defaults = @{ Arguments = @('game'); Sources = @(); StartRank = [int]::MaxValue; SlowInDebug = $false; Utf8Output = $false }
+    foreach ($key in $defaults.Keys) {
+        if (-not $declared.ContainsKey($key)) { $declared[$key] = $defaults[$key] }
+    }
+    foreach ($argument in $declared.Arguments) {
+        if ($argument -cnotin @('game', 'repo')) { throw "acceptance/cases.psd1: $($declared.Name) has an unknown argument." }
+    }
+    $caseTable[$declared.Name] = $declared
+}
+$availableCases = @($declaredCases | ForEach-Object { $_.Name })
+if ($OptIn -and $PSBoundParameters.ContainsKey('Cases')) { throw 'Choose -Cases or -OptIn, not both.' }
+if ($SkipSlowDebug -and $Preset -ne 'x64-debug') { throw 'SkipSlowDebug applies only to x64-debug.' }
 $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
     if (-not $Cases) { throw 'Cases must contain at least one case name.' }
     @($Cases | ForEach-Object {
@@ -29,13 +55,17 @@ $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
             $name.Trim().ToLowerInvariant()
         }
     })
+} elseif ($OptIn) {
+    @($declaredCases | Where-Object { $_.Group -ceq 'opt-in' } | ForEach-Object { $_.Name })
 } else {
-    @($acceptanceCases) + @(if ($Preset -eq 'x64-debug') { 'balance_runner' })
+    @($declaredCases | Where-Object {
+        $_.Group -ceq 'default' -or ($_.Group -ceq 'debug-only' -and $Preset -eq 'x64-debug')
+    } | ForEach-Object { $_.Name })
 }
 foreach ($case in $selectedCases) {
     if ($case -notin $availableCases) { throw "Unknown acceptance case: $case" }
-    if ($case -eq 'balance_runner' -and $Preset -ne 'x64-debug') {
-        throw 'balance_runner is a Debug-only developer tool.'
+    if ($caseTable[$case].Group -ceq 'debug-only' -and $Preset -ne 'x64-debug') {
+        throw "$case is a Debug-only developer tool."
     }
 }
 if (@($selectedCases | Select-Object -Unique).Count -ne @($selectedCases).Count) {
@@ -49,6 +79,10 @@ if ($ExcludeCases) {
         if ($case -notin $availableCases) { throw "Unknown excluded acceptance case: $case" }
     }
     $selectedCases = @($selectedCases | Where-Object { $_ -notin $excluded })
+    if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
+}
+if ($SkipSlowDebug) {
+    $selectedCases = @($selectedCases | Where-Object { -not $caseTable[$_].SlowInDebug })
     if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
 }
 
@@ -91,6 +125,10 @@ $evidence = if ($OutputDirectory) {
     Join-Path $repo "out/acceptance/$Preset"
 }
 [System.IO.Directory]::CreateDirectory($evidence) | Out-Null
+# A timing summary never outlives the run that follows it, even one that stops
+# in tool checks or the build; a fresh one is written once cases are scheduled.
+$staleSummary = Join-Path $evidence 'acceptance-summary.json'
+if (Test-Path -LiteralPath $staleSummary -PathType Leaf) { Remove-Item -LiteralPath $staleSummary -Force }
 
 foreach ($command in 'cmake', 'cl') {
     if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
@@ -104,6 +142,51 @@ if ($env:VSCMD_ARG_TGT_ARCH -and $env:VSCMD_ARG_TGT_ARCH -ne 'x64') {
     throw 'The acceptance executables require the x64 Visual Studio environment.'
 }
 
+# Per-case compile and run seconds and outcome, longest first, for every
+# selected case. A case the run never reached is 'not-run'.
+function Write-AcceptanceSummary {
+    $entries = @(foreach ($case in $selectedCases) {
+        $result = $timedResults[$case]
+        if ($null -ne $result) {
+            $compile = [Math]::Round([double]$result.CompileSeconds, 1)
+            $run = [Math]::Round([double]$result.RunSeconds, 1)
+            $outcome = [string]$result.Outcome
+        } else {
+            $compile = 0.0
+            $run = 0.0
+            $outcome = if ($runnerFailures.ContainsKey($case)) { 'runner-failed' }
+                elseif ($interruptedCases.ContainsKey($case)) { 'cancelled' } else { 'not-run' }
+        }
+        [pscustomobject][ordered]@{
+            case = $case
+            outcome = $outcome
+            compile_seconds = $compile
+            run_seconds = $run
+            total_seconds = [Math]::Round($compile + $run, 1)
+        }
+    })
+    $sorted = @($entries | Sort-Object -Property @{ Expression = 'total_seconds'; Descending = $true },
+        @{ Expression = { [array]::IndexOf($selectedCases, $_.case) } })
+    $passing = if ($CompileOnly) { 'compiled' } else { 'passed' }
+    $summary = [ordered]@{
+        schema_version = 1
+        preset = $Preset
+        compile_only = $CompileOnly.IsPresent
+        parallel = $Parallel
+        outcome = if (@($sorted | Where-Object { $_.outcome -ne $passing }).Count -eq 0) { 'passed' } else { 'failed' }
+        started_utc = $summaryStarted.ToString('o')
+        completed_utc = [DateTime]::UtcNow.ToString('o')
+        wall_seconds = [Math]::Round($summaryWatch.Elapsed.TotalSeconds, 1)
+        shell_edition = $PSVersionTable.PSEdition
+        shell_version = $PSVersionTable.PSVersion.ToString()
+        cases = $sorted
+    }
+    [System.IO.File]::WriteAllText($summaryPath, ($summary | ConvertTo-Json -Depth 4),
+        [System.Text.UTF8Encoding]::new($false))
+    Write-Host "Acceptance summary: $summaryPath"
+}
+
+$summaryPath = $null
 Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
 $probeControl = $null
@@ -149,26 +232,16 @@ try {
     }
 
     $gameDirectory = Join-Path $build 'game'
-    $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
-    $objects = @(Get-ChildItem -LiteralPath $objectDirectory -Filter '*.obj' -File -Recurse |
-        Where-Object {
-            if ($_.Name -eq 'main.cpp.obj') { return $false }
-            if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
-            # CMake may leave an old object behind after its source is retired.
-            $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
-            $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
-            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
-        } |
-        Sort-Object FullName)
-    if ($objects.Count -eq 0) {
-        throw 'No game objects exist. Run without -SkipBuild first.'
-    }
-
     $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
     $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else {
         Join-Path $installed 'lib'
     }
+    # The game library is every game source but main.cpp; the cases also link
+    # both platform adapters, as the executable does (game/CMakeLists.txt).
     $libraries = @(
+        (Join-Path $gameDirectory 'colourwars_game.lib'),
+        (Join-Path $gameDirectory 'colourwars_rumble_xinput.lib'),
+        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
@@ -208,22 +281,9 @@ try {
     }
     $specs = @()
     foreach ($case in $selectedCases) {
+        $declared = $caseTable[$case]
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
-        if ($case -eq 'story_audio') {
-            # The real game objects use the engine's audio seam unchanged.
-            # Supply its recording backend before the static engine archive,
-            # so this case can observe sound calls without opening hardware.
-            $sources += Join-Path $repo 'external/labrador/engine/audio/null/audio_device.cpp'
-        }
-        if ($case -eq 'balance_runner') {
-            # Reuse only the reviewed measurement/serializer, not its fixture or main.
-            foreach ($shared in @('metrics.cpp','csv.cpp')) {
-                $sources += Join-Path $PSScriptRoot ('acceptance/balance_regions/' + $shared)
-            }
-        }
-        if ($case -eq 'bot_team_trials') {
-            $sources += Join-Path $PSScriptRoot 'acceptance/balance_regions/metrics.cpp'
-        }
+        $sources += @($declared.Sources | ForEach-Object { Join-Path $repo $_ })
         $parts = Join-Path $PSScriptRoot "acceptance/$case"
         if (Test-Path -LiteralPath $parts -PathType Container) {
             $sources += @(Get-ChildItem -LiteralPath $parts -Filter '*.cpp' -File |
@@ -242,14 +302,14 @@ try {
             # Bound probe compiler fan-out while other local projects are active.
             '/MP2'
         )
-        $arguments += @($objects | ForEach-Object { Quote-ResponsePath $_.FullName })
         $arguments += @($libraries | ForEach-Object { Quote-ResponsePath $_ })
         $arguments += $windowsLibraries
         # CL accepts UTF-16 response files, including checkout paths that are
         # not representable in the machine's active ANSI code page.
         $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
-        $caseArguments = @($gameDirectory)
-        if ($case -in @('level_format', 'turbulence_slab_stage')) { $caseArguments += $repo }
+        $caseArguments = @($declared.Arguments | ForEach-Object {
+            if ($_ -ceq 'repo') { $repo } else { $gameDirectory }
+        })
         $specs += [pscustomobject]@{
             Case = $case
             Compiler = $cache.CMAKE_CXX_COMPILER
@@ -261,11 +321,21 @@ try {
             RunTimeoutSeconds = $RunTimeoutSeconds
             ProbeControl = $probeControl
             CancellationToken = $caseCancellation.Token
-            # The new console tool emits UTF-8 paths. Native decoding is
-            # process-wide, so it runs on its own after any parallel batch.
-            Utf8 = $case -eq 'balance_runner'
+            # Native decoding is process-wide, so a UTF-8 case runs on its
+            # own after any parallel batch.
+            Utf8 = [bool]$declared.Utf8Output
+            StartRank = [int]$declared.StartRank
         }
     }
+
+    # acceptance-summary.json is written by every run that reaches this
+    # point, even a failed or interrupted one.
+    $summaryPath = $staleSummary
+    $timedResults = @{}
+    $runnerFailures = @{}
+    $interruptedCases = @{}
+    $summaryWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $summaryStarted = [DateTime]::UtcNow
 
     # Compiles and runs one case. Self-contained so it can run in a parallel
     # runspace; output is returned rather than printed so cases never interleave.
@@ -277,6 +347,8 @@ try {
         $watch = [System.Diagnostics.Stopwatch]::StartNew()
         $lines = @()
         $failure = $null
+        $outcome = $null
+        $runSeconds = 0.0
         $log = Join-Path $Spec.Evidence "$($Spec.Case)-build.log"
         $compileSkipped = $Spec.CancellationToken.IsCancellationRequested -or
             ($null -ne $Spec.ProbeControl -and $Spec.ProbeControl.IsCancellationRequested)
@@ -289,14 +361,19 @@ try {
             $output = & $Spec.Compiler "@$($Spec.ResponseFile)" 2>&1
             $code = $LASTEXITCODE
         }
+        $compileSeconds = $watch.Elapsed.TotalSeconds
         $output | Out-File -LiteralPath $log -Encoding utf8
         if ($code -ne 0) {
             $lines = $output
+            $outcome = if ($compileSkipped) { 'cancelled' } else { 'compile-failed' }
             $failure = if ($compileSkipped) { "Compilation cancelled before launch. See $log" }
                 else { "$($Spec.Compiler) exited with $code. See $log" }
-        } elseif (-not $CompileOnly) {
+        } elseif ($CompileOnly) {
+            $outcome = 'compiled'
+        } else {
             $log = Join-Path $Spec.Evidence "$($Spec.Case)-run.log"
             $command = $null
+            $runWatch = [System.Diagnostics.Stopwatch]::StartNew()
             try {
                 $command = [ColourWars.Acceptance.OwnedCommand]::Start(
                     $Spec.Executable, [string[]]$Spec.Arguments, $Spec.WorkingDirectory,
@@ -317,32 +394,34 @@ try {
                 $failure = "$($Spec.Executable): probe runner failed: $_. See $log"
             } finally {
                 if ($null -ne $command) { $command.Dispose() }
+                $runSeconds = $runWatch.Elapsed.TotalSeconds
             }
+            $outcome = if ($failure) { 'run-failed' } else { 'passed' }
         }
         [pscustomobject]@{
             Case = $Spec.Case
             Lines = @($lines | ForEach-Object { "$_" })
             Failure = $failure
+            Outcome = $outcome
+            CompileSeconds = $compileSeconds
+            RunSeconds = $runSeconds
             Seconds = [int]$watch.Elapsed.TotalSeconds
         }
     }
     $failures = [System.Collections.Generic.List[string]]::new()
     $report = {
         param($Result)
-        Write-Host "Acceptance: $($Result.Case) ($Preset, $($Result.Seconds)s)"
+        $timedResults[$Result.Case] = $Result
+        Write-Host ("Acceptance: $($Result.Case) ($Preset, $($Result.Seconds)s; compile " +
+            "$([int]$Result.CompileSeconds)s, run $([int]$Result.RunSeconds)s)")
         $Result.Lines | ForEach-Object { Write-Host $_ }
         if ($Result.Failure) { $failures.Add("$($Result.Case): $($Result.Failure)") }
     }
 
     # Start the longest cases first so none of them is left running alone at
-    # the end; the order is from CI timings, slowest first.
-    $longestFirst = @('crossfeed', 'menu_text', 'press_tower', 'debug_console', 'story_audio',
-        'movement_course', 'menu_presentation', 'movement', 'cq_blockout', 'balance_regions',
-        'paint_surfaces', 'moving_structure', 'paint_underfoot', 'weapon_catalog')
-    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 } | Sort-Object {
-        $rank = [array]::IndexOf($longestFirst, $_.Case)
-        if ($rank -lt 0) { $longestFirst.Count } else { $rank }
-    }, { [array]::IndexOf($selectedCases, $_.Case) })
+    # the end; StartRank in cases.psd1 is from CI timings, slowest first.
+    $parallelSpecs = @($specs | Where-Object { -not $_.Utf8 } | Sort-Object { $_.StartRank },
+        { [array]::IndexOf($selectedCases, $_.Case) })
     $serialSpecs = @($specs | Where-Object { $_.Utf8 })
     if ($Parallel -gt 1) {
         # A runspace pool rather than ForEach-Object -Parallel, so this also
@@ -356,7 +435,7 @@ try {
                 $shell = [powershell]::Create()
                 $shell.RunspacePool = $pool
                 [void]$shell.AddScript($runCase.ToString()).AddArgument($spec).AddArgument($CompileOnly.IsPresent)
-                $pending.Add([pscustomobject]@{ Shell = $shell; Handle = $shell.BeginInvoke() })
+                $pending.Add([pscustomobject]@{ Case = $spec.Case; Shell = $shell; Handle = $shell.BeginInvoke() })
             }
             while ($pending.Count -gt 0) {
                 $done = @($pending | Where-Object { $_.Handle.IsCompleted })
@@ -367,6 +446,7 @@ try {
                         foreach ($result in $item.Shell.EndInvoke($item.Handle)) { & $report $result }
                     } catch {
                         $failures.Add("runner: $_")
+                        $runnerFailures[$item.Case] = "$_"
                     } finally {
                         $item.Shell.Dispose()
                     }
@@ -381,8 +461,13 @@ try {
                 # active compilation finishes before its runspace is disposed.
                 foreach ($item in $pending) {
                     while (-not $item.Handle.IsCompleted) { [Threading.Thread]::Sleep(100) }
-                    try { [void]$item.Shell.EndInvoke($item.Handle) }
-                    catch { }
+                    # Keep each drained case's timing for the summary only.
+                    try {
+                        foreach ($result in $item.Shell.EndInvoke($item.Handle)) {
+                            if ($null -ne $result.PSObject.Properties['Outcome']) { $timedResults[$result.Case] = $result }
+                        }
+                    }
+                    catch { $runnerFailures[$item.Case] = "$_" }
                     finally { $item.Shell.Dispose() }
                 }
             }
@@ -400,8 +485,14 @@ try {
         try {
             if ($spec.Utf8) { [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false) }
             & $report (& $runCase $spec $CompileOnly.IsPresent)
+        } catch {
+            $runnerFailures[$spec.Case] = "$_"
+            throw
         } finally {
             [Console]::OutputEncoding = $previousNativeEncoding
+            # Stopped mid-case (Ctrl+C runs no catch): reached, not completed.
+            if (-not $timedResults.ContainsKey($spec.Case) -and
+                -not $runnerFailures.ContainsKey($spec.Case)) { $interruptedCases[$spec.Case] = $true }
         }
     }
     if ($failures.Count -gt 0) {
@@ -412,11 +503,21 @@ try {
 }
 finally {
     try {
-        $caseCancellation.Cancel()
-        if ($null -ne $probeControl) { $probeControl.Dispose() }
+        if ($null -ne $summaryPath) {
+            try {
+                Write-AcceptanceSummary
+            } catch {
+                Write-Warning "Could not write $($summaryPath): $_"
+            }
+        }
     } finally {
-        $caseCancellation.Dispose()
-        $env:PATH = $previousPath
-        Pop-Location
+        try {
+            $caseCancellation.Cancel()
+            if ($null -ne $probeControl) { $probeControl.Dispose() }
+        } finally {
+            $caseCancellation.Dispose()
+            $env:PATH = $previousPath
+            Pop-Location
+        }
     }
 }

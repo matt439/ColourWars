@@ -18,7 +18,7 @@
 #include "game/sound_groups.h"
 #include "game/states/menu_context.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include <filesystem>
 #include <fstream>
 #include <random>
@@ -110,7 +110,7 @@ void DebugDirectorImpl::sync_background_audio(bool active)
 	}
 	else if (active && this->background_audio_muted_)
 	{
-		sound_groups::apply(audio, this->data_->save()->play_settings());
+		sound_groups::apply(audio, this->data_->settings_session()->play_settings());
 		this->background_audio_muted_ = false;
 	}
 }
@@ -283,7 +283,7 @@ MenuContext* DebugDirectorImpl::menu_context()
 	{
 		this->menu_input_ = std::make_unique<MenuInput>(this->data_->gamepads(),
 			this->data_->keyboard(), this->data_->tuning());
-		this->menu_settings_ = std::make_unique<MenuLevelSettings>();
+		this->menu_settings_ = std::make_unique<MatchSetup>();
 		this->menu_context_ = std::make_unique<MenuContext>(this->data_,
 			this->menu_input_.get(), this->menu_settings_.get());
 	}

@@ -230,11 +230,44 @@ namespace colourwars_editor
         Editor editor(GetModuleHandleW(nullptr));
         editor.create_window(SW_HIDE, stage);
         require(!IsWindowVisible(editor.window_), "Canvas gesture probe unexpectedly showed its editor");
-        check_align_origin(editor, scratch);
-        check_overlap_selection(editor, scratch);
-        check_button_chords(editor, scratch);
-        check_empty_key_properties(editor, scratch);
-        check_gestures(editor, scratch);
-        check_ramp_hits(editor, scratch);
+        // ED#20: an ownership receipt for the bitmaps these helpers draw into,
+        // recorded before it is asserted. It makes no process-wide GDI claim.
+        // Only the two drawing helpers own a bitmap; each must record at least one.
+        using Helper = void (*)(Editor&, const std::filesystem::path&);
+        struct OwnedHelper { const char* name; Helper run; bool draws; };
+        const OwnedHelper helpers[] = {
+            { "align_origin", &EditorDpiProbe::check_align_origin, false },
+            { "overlap_selection", &EditorDpiProbe::check_overlap_selection, false },
+            { "button_chords", &EditorDpiProbe::check_button_chords, false },
+            { "empty_key_properties", &EditorDpiProbe::check_empty_key_properties, true },
+            { "gestures", &EditorDpiProbe::check_gestures, false },
+            { "ramp_hits", &EditorDpiProbe::check_ramp_hits, true } };
+        const MechanismBitmapLedger& ledger = mechanism_bitmap_ledger();
+        require(ledger.created == 0 && ledger.live == 0 && ledger.failures() == 0,
+            "The gesture process started with native bitmaps already recorded");
+        std::ofstream receipt(scratch / "bitmap-ownership.csv", std::ios::trunc);
+        require(receipt.good(), "Could not open the gesture bitmap ownership receipt");
+        receipt << "helper,outcome,created,live,restore_failures,bitmap_delete_failures,dc_delete_failures\n";
+        for (const OwnedHelper& helper : helpers)
+        {
+            const std::size_t created = ledger.created;
+            const auto record = [&](const char* outcome)
+            {
+                receipt << helper.name << ',' << outcome << ',' << ledger.created - created << ',' << ledger.live << ',' <<
+                    ledger.restore_failures << ',' << ledger.bitmap_delete_failures << ',' << ledger.dc_delete_failures <<
+                    '\n' << std::flush;
+            };
+            try { helper.run(editor, scratch); }
+            catch (...) { record("aborted"); throw; }
+            record("returned");
+            const std::string name = helper.name;
+            require(ledger.live == 0, ("A native bitmap outlived the " + name + " helper").c_str());
+            require(ledger.failures() == 0, ("A native bitmap cleanup call failed in the " + name + " helper").c_str());
+            require(!helper.draws || ledger.created > created, ("The " + name + " helper recorded no owned bitmap").c_str());
+        }
+        require(receipt.good(), "Could not write the gesture bitmap ownership receipt");
+        std::cout << "PASS gesture bitmap ownership: " << ledger.created << " fixture bitmaps (empty_key_properties, "
+            "ramp_hits); each selection restored and bitmap/DC deleted before its helper returned; production and "
+            "native-control GDI not counted; no process-wide GDI count claimed\n";
     }
 }

@@ -1,10 +1,11 @@
 #include "game/pch.h"
 #include "scripts/acceptance/crossfeed/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 
 int main(int argc, char** argv)
 {
     using namespace crossfeed_acceptance;
-    try
+    return acceptance::run_probe("Crossfeed", [&]
     {
         require(argc == 2, "Usage: crossfeed.exe <content directory>");
         Services services(argv[1]);
@@ -27,10 +28,5 @@ int main(int argc, char** argv)
         std::cout << "PASS Crossfeed baseline feasibility and measured score/tool access. "
             "Human pressure, camera warning, weapon balance and physical-pad acceptance remain open\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL Crossfeed: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

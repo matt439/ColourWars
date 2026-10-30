@@ -215,7 +215,8 @@ Save-Result
 Write-Host "Acceptance-selection evidence: $run"
 try {
     Require (-not (Helper-Loaded)) 'Run selection qualification in a fresh -NoProfile host without the native helper loaded.'
-    $sourcePaths = @($PSCommandPath, $runner)
+    $caseFile = Join-Path $PSScriptRoot 'acceptance/cases.psd1'
+    $sourcePaths = @($PSCommandPath, $runner, $caseFile)
     $pathHelper = Join-Path $PSScriptRoot 'check-path.ps1'
     if (Test-Path -LiteralPath $pathHelper -PathType Leaf) { $sourcePaths += $pathHelper }
     $result.source_hashes = @(foreach ($path in $sourcePaths) {
@@ -256,6 +257,22 @@ try {
         $failures.Add("default-preset-relationship: $($_.Exception.Message)")
     } finally { Save-Result }
 
+    # The opt-in group and the Debug pull-request exclusions come from the
+    # case declarations, in declaration order.
+    $declared = @((Import-PowerShellDataFile -LiteralPath $caseFile).Cases)
+    $optInNames = [string[]]@($declared | Where-Object { $_.ContainsKey('Group') -and $_.Group -ceq 'opt-in' } |
+        ForEach-Object { $_.Name })
+    $slowNames = [string[]]@($declared | Where-Object { $_.ContainsKey('SlowInDebug') -and $_.SlowInDebug } |
+        ForEach-Object { $_.Name })
+    Require ($optInNames.Count -gt 0 -and $slowNames.Count -gt 0) 'The case declarations lost the opt-in group or the slow Debug cases.'
+    $result.opt_in_cases = $optInNames.Count
+    $result.slow_debug_cases = $slowNames
+    Check-Selection 'opt-in-debug' @{ Preset = 'x64-debug'; OptIn = $true } $missingCmake $optInNames -CheckNames
+    Check-Selection 'opt-in-release' @{ Preset = 'x64-release'; OptIn = $true } $missingCmake $optInNames -CheckNames
+    Check-Selection 'skip-slow-debug' @{ Preset = 'x64-debug'; SkipSlowDebug = $true } $missingCmake `
+        ([string[]]@($observations['default-debug'].selected | Where-Object { $_ -cnotin $slowNames })) -CheckNames
+    Check-Selection 'skip-slow-release' @{ Preset = 'x64-release'; SkipSlowDebug = $true } 'SkipSlowDebug applies only to x64-debug.'
+    Check-Selection 'opt-in-with-cases' @{ OptIn = $true; Cases = [string[]]@('ammo') } 'Choose -Cases or -OptIn, not both.'
     Check-Selection 'empty-explicit-array' @{ Cases = [string[]]@() } 'Cases must contain at least one case name.'
     Check-Selection 'whitespace-entry' @{ Cases = [string[]]@('ammo', ' ') } 'Cases must contain nonempty names.'
     foreach ($entry in @(

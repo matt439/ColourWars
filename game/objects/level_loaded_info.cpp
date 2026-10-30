@@ -5,6 +5,7 @@
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
 #include "game/drawable_text.h"
+#include "game/station_contract.h"
 #include "engine/core/file_path.h"
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -16,6 +17,7 @@
 
 using namespace mattmath;
 using namespace labrador;
+namespace key = level_format::key;
 
 namespace
 {
@@ -155,12 +157,17 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
 	// An untagged legacy level has exactly the format-1 meaning. Reject a
 	// future or malformed tag before interpreting any of its content fields.
 	const JsonValue root = this->json_doc_.root();
-	if (root.has("format") && root.integer("format") != level_format::current)
+	if (root.has(key::format) && root.integer(key::format) != level_format::current)
 	{
 		throw std::runtime_error(root.where() + ": unsupported 'format'; expected " +
 			std::to_string(level_format::current) + " (or an untagged legacy level).");
 	}
 	this->semantic_hash_ = hash_stage_snapshot(snapshot, json_path);
+}
+
+const std::string& LevelLoadedInfo::source_path() const
+{
+	return this->json_doc_.source_path();
 }
 
 void LevelLoadedInfo::validate() const
@@ -190,8 +197,10 @@ void LevelLoadedInfo::validate() const
 	// Require enough spawn points for a full roster on either team.
 	const JsonValue root = this->json_doc_.root();
 
-	if (team_a.size() < labrador::Gamepads::max_count ||
-		team_b.size() < labrador::Gamepads::max_count)
+	static_assert(level_format::min_team_spawns == labrador::Gamepads::max_count,
+		"the level format's spawn minimum is a full roster a side");
+	if (team_a.size() < level_format::min_team_spawns ||
+		team_b.size() < level_format::min_team_spawns)
 	{
 		throw std::runtime_error(root.where() +
 			" lists " + std::to_string(team_a.size()) + " spawn(s) for team A "
@@ -212,10 +221,9 @@ void LevelLoadedInfo::validate() const
 
 	// The opening previews team A's colour over the left half of the picture
 	// and team B's over the right, so each team must start on its own half.
-	const float middle = out_of_bounds.x + out_of_bounds.width / 2.0f;
 	for (const Vector2F& spawn : team_a)
 	{
-		if (spawn.x >= middle)
+		if (!level_format::on_own_half(true, spawn.x, out_of_bounds.x, out_of_bounds.width))
 		{
 			throw std::runtime_error(root.where() + ": a team_a spawn is on the right "
 				"half of the stage; team A starts on the left, team B on the right.");
@@ -223,7 +231,7 @@ void LevelLoadedInfo::validate() const
 	}
 	for (const Vector2F& spawn : team_b)
 	{
-		if (spawn.x < middle)
+		if (!level_format::on_own_half(false, spawn.x, out_of_bounds.x, out_of_bounds.width))
 		{
 			throw std::runtime_error(root.where() + ": a team_b spawn is on the left "
 				"half of the stage; team A starts on the left, team B on the right.");
@@ -253,39 +261,32 @@ void LevelLoadedInfo::validate_position(const JsonValue& root,
 void LevelLoadedInfo::validate_stations(const RectangleF& out_of_bounds) const
 {
 	const JsonValue root = this->json_doc_.root();
-	if (!root.has("stations"))
+	if (!root.has(key::stations))
 	{
 		return;
 	}
-	const JsonValue stations = root.array("stations");
+	const JsonValue stations = root.array(key::stations);
+	const station_contract::Rectangle arena{ out_of_bounds.x, out_of_bounds.y,
+		out_of_bounds.width, out_of_bounds.height };
 	std::vector<std::string> seen;
 	for (size_t index = 0; index < stations.size(); ++index)
 	{
 		const JsonValue station = stations.at(index);
-		const std::string name = station.identifier("name");
-		const bool spelled = !name.empty() && std::all_of(name.begin(), name.end(),
-			[](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'; });
-		if (!spelled)
+		const std::string name = station.identifier(key::name);
+		try { station_contract::validate_name(name, seen); }
+		catch (const std::invalid_argument& error)
 		{
-			throw std::runtime_error(station.where() + " names a station '" + name +
-				"'; station names are lower-case letters, digits and '_', so they can be typed.");
+			throw std::runtime_error(station.where() + " " + error.what());
 		}
-		if (name == "spawn_a" || name == "spawn_b")
-		{
-			throw std::runtime_error(station.where() + " names a station '" + name +
-				"', which every level already has (its team's first spawn).");
-		}
-		if (std::find(seen.begin(), seen.end(), name) != seen.end())
-		{
-			throw std::runtime_error(station.where() + " repeats the station name '" +
-				name + "'.");
-		}
-		seen.push_back(name);
 		const Vector2F position(station.number("x"), station.number("y"));
-		validate_position(root, position, out_of_bounds, "a station '" + name + "'");
-		if (station.has("lesson"))
+		try { station_contract::validate_position(name, { position.x, position.y }, arena); }
+		catch (const std::invalid_argument& error)
 		{
-			validate_lesson(station.object("lesson"), position, name);
+			throw std::runtime_error(root.where() + " " + error.what());
+		}
+		if (station.has(key::lesson))
+		{
+			validate_lesson(station.object(key::lesson), position, name);
 		}
 	}
 }
@@ -294,33 +295,25 @@ void LevelLoadedInfo::validate_lesson(const JsonValue& lesson,
 	const Vector2F& station, const std::string& name) const
 {
 	const RectangleF area = lesson_area(lesson);
-	if (!std::isfinite(area.x) || !std::isfinite(area.y) ||
-		!std::isfinite(area.width) || !std::isfinite(area.height) ||
-		area.width <= 0.0f || area.height <= 0.0f)
-	{
-		throw std::runtime_error(lesson.object("area").where() +
-			" needs finite coordinates and positive width and height");
-	}
 	const RectangleF camera = this->camera_bounds_rectangle();
-	if (area.left() < camera.left() || area.top() < camera.top() ||
-		area.right() > camera.right() || area.bottom() > camera.bottom())
+	try
 	{
-		throw std::runtime_error(lesson.object("area").where() +
-			" leaves the camera bounds; no player could stand in all of it.");
+		station_contract::validate_lesson_area(name, { station.x, station.y },
+			{ area.x, area.y, area.width, area.height },
+			{ camera.x, camera.y, camera.width, camera.height });
 	}
-	// `goto <station>` must land inside the station's own lesson.
-	if (!rectangle_point_intersect(area, station))
+	catch (const std::invalid_argument& error)
 	{
-		throw std::runtime_error(lesson.object("area").where() + " does not contain station '" +
-			name + "'; going to the station must show its lesson.");
+		throw std::runtime_error(lesson.object("area").where() + " " + error.what());
 	}
-	for (const char* key : { "title", "text" })
+	for (const char* field : { "title", "text" })
 	{
-		const std::string words = lesson.string(key);
-		const std::string where = lesson.where() + "." + key;
-		if (words.find_first_not_of(" \n") == std::string::npos)
+		const std::string words = lesson.string(field);
+		const std::string where = lesson.where() + "." + field;
+		try { station_contract::validate_lesson_words(words); }
+		catch (const std::invalid_argument& error)
 		{
-			throw std::runtime_error(where + " is empty; a lesson needs a title and a line to read.");
+			throw std::runtime_error(where + " " + error.what());
 		}
 		std::ignore = drawable_text::widen_drawable(words, where);
 	}
@@ -337,14 +330,14 @@ std::vector<LevelLesson> LevelLoadedInfo::lessons() const
 {
 	std::vector<LevelLesson> result;
 	const JsonValue root = this->json_doc_.root();
-	if (!root.has("stations")) { return result; }
-	const JsonValue stations = root.array("stations");
+	if (!root.has(key::stations)) { return result; }
+	const JsonValue stations = root.array(key::stations);
 	for (size_t index = 0; index < stations.size(); ++index)
 	{
 		const JsonValue station = stations.at(index);
-		if (!station.has("lesson")) { continue; }
-		const JsonValue lesson = station.object("lesson");
-		result.push_back({ station.identifier("name"), lesson_area(lesson),
+		if (!station.has(key::lesson)) { continue; }
+		const JsonValue lesson = station.object(key::lesson);
+		result.push_back({ station.identifier(key::name), lesson_area(lesson),
 			lesson.string("title"), lesson.string("text") });
 	}
 	return result;
@@ -354,13 +347,13 @@ std::vector<LevelStation> LevelLoadedInfo::stations() const
 {
 	std::vector<LevelStation> result;
 	const JsonValue root = this->json_doc_.root();
-	if (root.has("stations"))
+	if (root.has(key::stations))
 	{
-		const JsonValue stations = root.array("stations");
+		const JsonValue stations = root.array(key::stations);
 		for (size_t index = 0; index < stations.size(); ++index)
 		{
 			const JsonValue station = stations.at(index);
-			result.push_back({ station.identifier("name"),
+			result.push_back({ station.identifier(key::name),
 				Vector2F(station.number("x"), station.number("y")) });
 		}
 	}
@@ -399,7 +392,7 @@ void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
 	}
 	catch (const std::exception& error)
 	{
-		throw std::runtime_error(root.object("sound").where() + ": " + error.what());
+		throw std::runtime_error(root.object(key::sound).where() + ": " + error.what());
 	}
 	// Uses the builder itself, so the accepted vocabulary cannot drift from
 	// the path that starts a match. Objects resolve their assets on construction.
@@ -409,32 +402,32 @@ void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
 
 std::string LevelLoadedInfo::display_name() const
 {
-	return this->json_doc_.root().string("display_name");
+	return this->json_doc_.root().string(key::display_name);
 }
 std::string LevelLoadedInfo::icon_frame() const
 {
-	return this->json_doc_.root().string("icon_frame");
+	return this->json_doc_.root().string(key::icon_frame);
 }
 bool LevelLoadedInfo::include_in_random() const
 {
 	const JsonValue root = this->json_doc_.root();
-	return !root.has("include_in_random") || root.boolean("include_in_random");
+	return !root.has(key::include_in_random) || root.boolean(key::include_in_random);
 }
 std::vector<Vector2F> LevelLoadedInfo::team_a_spawns() const
 {
 	return decode_team_spawns(
-		this->json_doc_.root().object("spawn_locations").array("team_a"));
+		this->json_doc_.root().object(key::spawn_locations).array(key::team_a));
 }
 std::vector<Vector2F> LevelLoadedInfo::team_b_spawns() const
 {
 	return decode_team_spawns(
-		this->json_doc_.root().object("spawn_locations").array("team_b"));
+		this->json_doc_.root().object(key::spawn_locations).array(key::team_b));
 }
 
-RectangleF LevelLoadedInfo::bounds_rectangle(const char* key) const
+RectangleF LevelLoadedInfo::bounds_rectangle(const char* bounds_key) const
 {
 	const JsonValue bounds =
-		this->json_doc_.root().object("level_bounds").object(key);
+		this->json_doc_.root().object(key::level_bounds).object(bounds_key);
 
 	const RectangleF rectangle(
 		bounds.number("x"),
@@ -453,38 +446,38 @@ RectangleF LevelLoadedInfo::bounds_rectangle(const char* key) const
 
 RectangleF LevelLoadedInfo::out_of_bounds_rectangle() const
 {
-	return this->bounds_rectangle("out_of_bounds");
+	return this->bounds_rectangle(key::out_of_bounds);
 }
 RectangleF LevelLoadedInfo::camera_bounds_rectangle() const
 {
-	return this->bounds_rectangle("camera_bounds");
+	return this->bounds_rectangle(key::camera_bounds);
 }
 RectangleF LevelLoadedInfo::zoom_out_start_bounds_rectangle() const
 {
-	return this->bounds_rectangle("zoom_out_start_bounds");
+	return this->bounds_rectangle(key::zoom_out_start_bounds);
 }
 RectangleF LevelLoadedInfo::zoom_out_finish_bounds_rectangle() const
 {
-	return this->bounds_rectangle("zoom_out_finish_bounds");
+	return this->bounds_rectangle(key::zoom_out_finish_bounds);
 }
 
 JsonValue LevelLoadedInfo::collision_objects_json() const
 {
-	return this->json_doc_.root().array("collision_objects");
+	return this->json_doc_.root().array(key::collision_objects);
 }
 JsonValue LevelLoadedInfo::non_collision_objects_json() const
 {
-	return this->json_doc_.root().array("non_collision_objects");
+	return this->json_doc_.root().array(key::non_collision_objects);
 }
 std::string LevelLoadedInfo::sound_bank_name() const
 {
-	return this->json_doc_.root().object("sound").string("sound_bank_name");
+	return this->json_doc_.root().object(key::sound).string(key::sound_bank_name);
 }
 bool LevelLoadedInfo::has_music() const
 {
-	const JsonValue sound = this->json_doc_.root().object("sound");
-	const bool named = sound.has("music_name");
-	if (named != sound.has("music_volume"))
+	const JsonValue sound = this->json_doc_.root().object(key::sound);
+	const bool named = sound.has(key::music_name);
+	if (named != sound.has(key::music_volume))
 	{
 		throw std::runtime_error(sound.where() +
 			": music_name and music_volume come together, or neither for a silent stage.");
@@ -494,20 +487,20 @@ bool LevelLoadedInfo::has_music() const
 std::string LevelLoadedInfo::music_name() const
 {
 	return this->has_music() ?
-		this->json_doc_.root().object("sound").string("music_name") : std::string();
+		this->json_doc_.root().object(key::sound).string(key::music_name) : std::string();
 }
 float LevelLoadedInfo::music_volume() const
 {
 	// Authored gain under the player's music preference, as the sting is.
 	return this->has_music() ?
-		content_value::read_unit(this->json_doc_.root().object("sound"), "music_volume") : 0.0f;
+		content_value::read_unit(this->json_doc_.root().object(key::sound), key::music_volume) : 0.0f;
 }
 
 bool LevelLoadedInfo::has_end_sting() const
 {
-	const JsonValue sound = this->json_doc_.root().object("sound");
-	const bool named = sound.has("end_sting_name");
-	if (named != sound.has("end_sting_volume"))
+	const JsonValue sound = this->json_doc_.root().object(key::sound);
+	const bool named = sound.has(key::end_sting_name);
+	if (named != sound.has(key::end_sting_volume))
 	{
 		throw std::runtime_error(sound.where() +
 			": end_sting_name and end_sting_volume come together, or neither.");
@@ -518,13 +511,13 @@ bool LevelLoadedInfo::has_end_sting() const
 std::string LevelLoadedInfo::end_sting_name() const
 {
 	return this->has_end_sting() ?
-		this->json_doc_.root().object("sound").identifier("end_sting_name") : std::string();
+		this->json_doc_.root().object(key::sound).identifier(key::end_sting_name) : std::string();
 }
 
 float LevelLoadedInfo::end_sting_volume() const
 {
 	if (!this->has_end_sting()) { return 0.0f; }
-	return content_value::read_unit(this->json_doc_.root().object("sound"), "end_sting_volume");
+	return content_value::read_unit(this->json_doc_.root().object(key::sound), key::end_sting_volume);
 }
 
 std::vector<Vector2F>

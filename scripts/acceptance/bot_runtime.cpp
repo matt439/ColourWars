@@ -2,6 +2,7 @@
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/ai/match_bot_support.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #include "game/debug/replay.h"
@@ -26,11 +27,11 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(MenuLevelSettings settings)
+        std::unique_ptr<Level> build(MatchSetup settings)
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
         paint_surfaces_acceptance::World assets;
@@ -41,9 +42,9 @@ namespace
         Partitioner partitioner;
     };
 
-    MenuLevelSettings roster(int count, unsigned int mask, BotDifficulty difficulty)
+    MatchSetup roster(int count, unsigned int mask, BotDifficulty difficulty)
     {
-        MenuLevelSettings settings; settings.set_player_count(count);
+        MatchSetup settings; settings.set_player_count(count);
         for (int seat = 1; seat < count; ++seat)
         {
             if ((mask & (1u << (seat - 1))) != 0) { settings.set_player_bot(seat, difficulty); }
@@ -71,7 +72,7 @@ namespace
                 // Every legal human/bot arrangement; difficulties rotate across
                 // cases, while per-seat enum/data coverage lives in bot_driver.
                 const auto difficulty = static_cast<BotDifficulty>(cases % 3);
-                const MenuLevelSettings settings = roster(count, mask, difficulty);
+                const MatchSetup settings = roster(count, mask, difficulty);
                 std::srand(8301); auto level = world.build(settings);
                 require(level->player_count() == count && level->view_count() == settings.human_count(),
                     "Runtime conflated participants and human views");
@@ -122,7 +123,7 @@ namespace
         // non-scoring one-way supports; collision alone cannot supply this role.
         for (const char* stage : { "crossfeed", "king_of_the_hill" })
         {
-            MenuLevelSettings settings = roster(2, 1, BotDifficulty::normal);
+            MatchSetup settings = roster(2, 1, BotDifficulty::normal);
             settings.set_stage(stage);
             auto level = world.build(settings);
             int scoring_one_way = 0, plain_one_way = 0;
@@ -181,7 +182,7 @@ namespace
 
     void check_inputs(World& world)
     {
-        MenuLevelSettings settings = roster(4, 5, BotDifficulty::hard); // P1/P3 humans, P2/P4 bots.
+        MatchSetup settings = roster(4, 5, BotDifficulty::hard); // P1/P3 humans, P2/P4 bots.
         settings.set_stage("movement_course");
         settings.set_player_weapon(1, WeaponType::sprayer); settings.set_player_weapon(3, WeaponType::roller);
         std::srand(8301); auto level = world.build(settings);
@@ -208,7 +209,7 @@ namespace
             for (const int seat : { 1, 3 })
             {
                 const auto& input = observer.last[static_cast<size_t>(seat)];
-                require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+                require(input.connected && !input.toggle_debug,
                     "Shipping bot emitted a menu/pause/debug action or claimed a device");
                 drove |= input.primary_shoot || input.jump_pressed || input.x_movement != 0;
             }
@@ -240,12 +241,11 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot runtime", [&]
     {
         require(argc == 2, "usage: bot_runtime <content>");
         World world(std::filesystem::absolute(argv[1]));
         check_mapping(world); check_support_roles(world); check_inputs(world);
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot runtime: " << error.what() << '\n'; return 1; }
+    });
 }

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/fixed_slab_geometry.h"
 #include "engine/collision/narrow_phase.h"
+#include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -21,8 +22,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    { if (!condition) { throw std::runtime_error(message); } }
+    using acceptance::require;
 
     bool approximately(double actual, double expected, double tolerance = 0.000003)
     { return std::abs(actual - expected) <= tolerance; }
@@ -178,7 +178,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("fixed slab geometry", [&]
     {
         require(argc == 2, "Expected the staged game directory");
         geometry_checks(); sweep_checks(); independent_overlap_checks(); invalid_checks();
@@ -194,7 +194,5 @@ int main(int argc, char** argv)
             "changing-box sweeps, thin/empty-corner/growth/initial/zero-step/tangent controls and560 independent SAT probes; "
             "runtime object/Player checks reported separately; rendered and human acceptance remain open\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL fixed slab geometry: " << error.what() << '\n'; return 1; }
+    });
 }

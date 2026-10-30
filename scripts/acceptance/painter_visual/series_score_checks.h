@@ -43,9 +43,9 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
     std::array<std::vector<int>, 5> ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { ledgers[index] = ledger(cases[index].session); }
     const NestedSaveProfile profile(output / "series-score-profile");
-    Save preferences; PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed Series score's private preferences");
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Series score's private preferences");
     const auto saved_bytes = [&]
     {
         std::ifstream file(output / "series-score-profile/ColourWars/save_data.json", std::ios::binary);
@@ -53,9 +53,9 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();
-    GameData data; data.set_application(&app); data.set_save(&preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.set_best_of(3); settings.set_duration(73.0f);
     settings.set_stage("movement_course"); settings.set_screen_layout(ScreenLayout::two_player);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -67,7 +67,7 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
         ~RestoreSeriesScore()
         {
-            this->context.cancel_music_exit(); this->context.set_music_update({});
+            this->context.cancel_music_exit(); script_menu_music(this->context, {});
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
@@ -86,7 +86,7 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
                 fixture.info.team_a_area + fixture.info.team_b_area == 100.0f,
                 "Series score changed a frozen branch, ledger, score or input-owner credit");
         }
-        const auto players = settings.player_settings(); const auto& play = preferences.play_settings();
+        const auto players = settings.player_settings(); const auto& play = preferences_session.play_settings();
         require(settings.player_count() == 2 && settings.best_of() == 3 && settings.duration() == 73.0f &&
             settings.stage() == "movement_course" && settings.screen_layout() == ScreenLayout::two_player &&
             players.size() == 2 && players[0].num == input_slots::keyboard_and_mouse && players[1].num == -1 &&
@@ -157,14 +157,14 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.results_menu();
         const bool visible = fixture.session.is_series() && details_visible;
-        UiTextDropShadow score("independent-series-score", literal,
+        colourwars::UiTextDropShadow score("independent-series-score", literal,
             wrong_font ? original.menu().detail_font : style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !visible);
         score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
-        UiTextDropShadow outcome("independent-session-outcome", fixture.outcome, style.detail_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow outcome("independent-session-outcome", fixture.outcome, style.detail_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !visible);
         outcome.set_position({ (menu_consts::DESIGN_RESOLUTION.x - outcome.bounds().width) / 2.0f, look.session_result_y });
-        UiTextDropShadow heading("independent-session-round", fixture.heading, style.heading_font, Vector2F::ZERO,
+        colourwars::UiTextDropShadow heading("independent-session-round", fixture.heading, style.heading_font, Vector2F::ZERO,
             app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);

@@ -167,18 +167,21 @@ void Level::admit_horizontal_structures()
     // Leave static Level arithmetic, allocation and construction order alone.
     bool moving = false;
     for (CollisionObject* object : this->scene_->collision_objects())
-    { moving |= dynamic_cast<TranslatingStructurePaintable*>(object) != nullptr; }
+    {
+        const Structure* surface = Collider::of(*object).structure();
+        moving |= surface != nullptr && surface->mover() != nullptr;
+    }
     if (!moving) { return; }
 
     std::uint64_t support_order = 0;
     for (CollisionObject* object : this->scene_->collision_objects())
     {
-        auto* surface = dynamic_cast<Structure*>(object);
+        Structure* surface = Collider::of(*object).structure();
         if (surface == nullptr) { continue; }
         if (support_order > (std::numeric_limits<std::uint32_t>::max)())
         { throw std::invalid_argument("Horizontal motion has too many canonical support identities."); }
         HorizontalMotionId id = 0;
-        if (auto* mover = dynamic_cast<TranslatingStructurePaintable*>(surface))
+        if (TranslatingStructurePaintable* mover = surface->mover())
         {
             if (mover->motion_id() != 0 || this->horizontal_structures_.size() >=
                 static_cast<std::size_t>((std::numeric_limits<int>::max)()))
@@ -218,12 +221,13 @@ void Level::validate_horizontal_admission() const
             { throw std::invalid_argument("Horizontal motion standing envelope leaves Scene bounds."); }
             for (const CollisionObject* object : this->scene_->collision_objects())
             {
-                if (object == mover || !is_structure(to_collision_type(object->tag()))) { continue; }
+                const Structure* surface = Collider::of(*object).structure();
+                if (object == mover || surface == nullptr) { continue; }
                 if (object->shape() == nullptr)
                 { throw std::invalid_argument("Horizontal motion blocking geometry has no shape."); }
                 const RectangleF actual = object->shape()->bounding_box();
-                const HorizontalBox obstacle = dynamic_cast<const TranslatingStructurePaintable*>(object) != nullptr ?
-                    horizontal_path(*static_cast<const TranslatingStructurePaintable*>(object)) : horizontal_box(actual);
+                const HorizontalBox obstacle = surface->mover() != nullptr ?
+                    horizontal_path(*surface->mover()) : horizontal_box(actual);
                 // Positive, finite sums must not turn the engine's raw float
                 // extent addition into an infinite, automatically passing bound.
                 horizontal_finite(static_cast<double>(body.width) + actual.width);

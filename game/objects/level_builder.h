@@ -3,7 +3,7 @@
 #include "game/play_settings.h"
 
 #include "game/objects/level.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/objects/team_colour.h"
 #include "game/objects/player_builder.h"
 #include "engine/render/resolution_manager.h"
@@ -14,7 +14,6 @@
 #include "game/objects/level_object_builder.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/collision/partitioner.h"
-#include "engine/input/mouse.h"
 
 class LevelBuilder
 {
@@ -29,12 +28,12 @@ public:
 		labrador::ResolutionManager* resolution_manager,
 		labrador::ThreadPool* thread_pool,
 		const labrador::Partitioner* partitioner,
-		const labrador::Mouse* mouse, const InputBindings* input_bindings = nullptr);
+		const InputBindings* input_bindings = nullptr);
 
 	// `practice` asks for untimed solo practice: a one-human roster on a stage
 	// whose stations carry lessons gets them and no clock (POL#19). Any other
 	// roster or stage is built as an ordinary timed match.
-	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings,
+	std::unique_ptr<Level> build_level(const MatchSetup& settings,
 		TeamColourPair palette, OpeningMode opening, bool practice = false);
 
 private:
@@ -51,8 +50,5 @@ private:
 	labrador::ResolutionManager* resolution_manager_ = nullptr;
 	labrador::ThreadPool* thread_pool_ = nullptr;
 	const labrador::Partitioner* partitioner_ = nullptr;
-
-	// Borrowed mouse state passed to Level for camera-dependent aiming.
-	const labrador::Mouse* mouse_ = nullptr;
 	const InputBindings* input_bindings_ = nullptr;
 };

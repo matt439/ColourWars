@@ -4,11 +4,6 @@
 
 namespace crossfeed_acceptance
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
-
     std::string fixed(float value, int precision)
     {
         std::ostringstream text;

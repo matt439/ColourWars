@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/prompt_bar.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -35,7 +36,7 @@ PromptBar::PromptBar(const std::string& name,
 
 PromptBar::PromptBar(const std::string& name, const std::wstring& legend,
 	const PromptBarPresentation& look, RenderResources* render_resources) :
-	UiTextDropShadow(name,
+	colourwars::UiTextDropShadow(name,
 		legend,
 		look.font,
 		look.position,

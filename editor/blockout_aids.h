@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace colourwars_editor
@@ -40,4 +41,18 @@ namespace colourwars_editor
     // runtime scoring, corners/overlapping strips contribute separately.
     double scoring_area(const std::vector<ScoringFace>& faces,
         const std::optional<Rect>& region = std::nullopt);
+
+    // Scoring area either side of the out_of_bounds centre (ED#25). Strips
+    // that straddle the centre split by region, so left + right is the total.
+    struct SideScoring
+    {
+        double left = 0.0;
+        double right = 0.0;
+    };
+    SideScoring side_scoring_areas(const std::vector<ScoringFace>& faces, const Rect& out_of_bounds);
+
+    // The blockout summary's symmetry line: left and right scoring area,
+    // spawns and collision objects with no mirror partner, unpartnered
+    // decorations apart, and paint ferries as authored.
+    std::string symmetry_summary(const LevelDocument& document, const std::vector<ScoringFace>& faces);
 }

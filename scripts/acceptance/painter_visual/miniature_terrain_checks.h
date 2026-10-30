@@ -376,8 +376,8 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
     const std::vector<GameObject*>& scenery, const char* stage, const GameTuning& tuning,
     const Presentation& presentation, const std::filesystem::path& output, std::ofstream& records)
 {
-    Save preferences;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
+    Save preferences; SettingsSession preferences_session(preferences);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "press_tower", "turbulence" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     StagePreview preview("miniature-test-preview", { 960, 270, 960, 540 }, &data);
     preview.set_stage(stage);
@@ -453,7 +453,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Vector2F spawn = info->team_a_spawns().front();
         scenery.push_back(scene.add(std::make_unique<Visual>("sprite_sheet_1", "pixel",
             RectangleF(spawn - Vector2F(32, 24), Vector2F(96, 96)), app.render_resources(), Colour(0.7f, 0.2f, 0.6f))));
-        MenuLevelSettings player_settings; player_settings.set_stage(stage); player_settings.set_player_count(1);
+        MatchSetup player_settings; player_settings.set_stage(stage); player_settings.set_player_count(1);
         player_settings.set_screen_layout(ScreenLayout::one_player); player_settings.begin_input_claims(3);
         player_settings.set_player_team(0, PlayerTeam::a); player_settings.set_player_weapon(0, WeaponType::roller);
         const PlayerBuilder player_builder(&tuning, &presentation);
@@ -560,7 +560,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
         for (const int count : { 1, 4 })
         {
             std::cout << "CHECK miniature story " << stage << ' ' << count << "P\n";
-            MenuLevelSettings settings; settings.set_stage(stage); settings.set_player_count(count); settings.set_duration(0.75f);
+            MatchSetup settings; settings.set_stage(stage); settings.set_player_count(count); settings.set_duration(0.75f);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
             constexpr int slots[] = { 3, 1, 2, 0 }; settings.begin_input_claims(slots[0]);
             for (int view = 1; view < count; ++view)
@@ -640,7 +640,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
                 }
             };
             const auto advance = [&](float seconds)
-            { for (int tick = 0; tick < static_cast<int>(std::ceil(seconds / dt)); ++tick) { level->update(inputs, dt); } };
+            { for (int tick = 0; tick < static_cast<int>(std::ceil(seconds / dt)); ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); } };
             if (count == 4)
             {
                 sample("opening");
@@ -648,16 +648,16 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
                 require(level->state() == LevelState::opening, "miniature story missed its monitor preview");
                 sample("preview");
             }
-            for (int tick = 0; tick < 2400 && level->state() == LevelState::opening; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 2400 && level->state() == LevelState::opening; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::start_countdown, "miniature story missed the countdown"); sample("countdown");
             advance(std::max(0.0f, tuning.match().countdown - tuning.match().opening.push * 0.5f));
             if (count == 4) { sample("push"); }
-            for (int tick = 0; tick < 1200 && level->state() != LevelState::active; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() != LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::active, "miniature story did not reach ordinary gameplay"); sample("active");
-            for (int tick = 0; tick < 1200 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() == LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::zoom_out, "miniature story missed pullback");
             advance(tuning.match().zoom_out * 0.5f); sample("pullback");
-            for (int tick = 0; tick < 1200 && level->state() == LevelState::zoom_out; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 1200 && level->state() == LevelState::zoom_out; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             require(level->state() == LevelState::overview, "miniature story did not reach overview"); sample("overview");
         }
     }

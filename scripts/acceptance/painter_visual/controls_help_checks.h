@@ -17,13 +17,13 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         L"Right stick: radial cutoff"
     };
     const Presentation original = presentation;
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     const auto reset_preferences = [&]
     {
         PlaySettings fresh;
         fresh.music_volume = fresh.sfx_volume = 0;
-        require(preferences.set_play_settings_and_save(fresh), "Cannot reset the isolated static-help save");
-        require(preferences.set_input_bindings_and_save(InputBindings{}), "Cannot reset the isolated help Jump preference");
+        require(preferences_session.set_play_settings_and_save(fresh), "Cannot reset the isolated static-help save");
+        require(preferences_session.set_input_bindings_and_save(InputBindings{}), "Cannot reset the isolated help Jump preference");
     };
     const auto saved_bytes = [&]
     {
@@ -36,9 +36,9 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     {
         // Independent literal labels for the actual choices driven below.
         // Do not use the formatter under test to construct the raster oracle.
-        const Key key = preferences.input_bindings().keyboard_jump;
+        const Key key = preferences_session.input_bindings().keyboard_jump;
         require(key == Key::space || key == Key::j, "Help fixture encountered an undeclared effective Jump key");
-        InputBindings others = preferences.input_bindings(); others.keyboard_jump = Key::space;
+        InputBindings others = preferences_session.input_bindings(); others.keyboard_jump = Key::space;
         require(same_keyboard(others, InputBindings{}), "Help fixture encountered undeclared keyboard keys");
         const std::wstring label = key == Key::space ? L"Space" : L"J";
         const size_t token = authored.find(L"{jump}");
@@ -56,10 +56,10 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         return result;
     };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct RestoreControlsHelp
@@ -179,7 +179,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
                 look.help_font << ',' << std::count(copy.begin(), copy.end(), L'\n') + 1 << ',' <<
                 raw_sizes[index].x << ',' << raw_sizes[index].y << ',' << scales[index] << ',' <<
                 text[index]->bounds().width << ',' << text[index]->bounds().height << ",true," <<
-                input_key_name(preferences.input_bindings().keyboard_jump) << '\n';
+                input_key_name(preferences_session.input_bindings().keyboard_jump) << '\n';
         }
         std::srand(6151); const int next_random = std::rand(); std::srand(6151);
         require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
@@ -279,11 +279,11 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     tap(Key::down); tap(Key::down); // Jump is Keyboard Keys' third row.
     tap(Key::enter); tick(); // Capture observes a fresh neutral frame after entry.
     tap(Key::j); tick();
-    require(preferences.input_bindings().keyboard_jump == Key::space,
+    require(preferences_session.input_bindings().keyboard_jump == Key::space,
         "Capturing a pending Jump key applied it without confirmation");
     for (int row = 2; row < 7; ++row) { tap(Key::down); } // Apply.
     tap(Key::enter); tick();
-    require(preferences.input_bindings().keyboard_jump == Key::j,
+    require(preferences_session.input_bindings().keyboard_jump == Key::j,
         "Actual Keyboard Jump child did not apply its captured key");
     tap(Key::escape); tick(); require(stack.depth() == 2, "Keyboard Jump did not return to its retained Controls parent");
     const Frame old_after_jump = compare("old-parent-refreshed-jump", false, old, old_words, true);
@@ -301,14 +301,14 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     require(old_after_jump.pixels == main_menu_frame(app).pixels,
         "Live replacement changed the retained parent's refreshed template, font or fitting bounds");
 
-    const int applied_cutoff = preferences.play_settings().sticks[0].movement_deadzone;
+    const int applied_cutoff = preferences_session.play_settings().sticks[0].movement_deadzone;
     for (int row = 1; row < 9; ++row) { tap(Key::down); }
     tap(Key::enter);
-    Save reloaded; reloaded.load_save_file();
-    require(reloaded.play_settings().music_volume == 10 &&
-        reloaded.play_settings().sticks[0].movement_deadzone == applied_cutoff,
+    Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+    require(reloaded_session.play_settings().music_volume == 10 &&
+        reloaded_session.play_settings().sticks[0].movement_deadzone == applied_cutoff,
         "Old Controls Apply lost its pending choice or its newer child's applied cutoff");
-    require(reloaded.input_bindings().keyboard_jump == Key::j,
+    require(reloaded_session.input_bindings().keyboard_jump == Key::j,
         "Old Controls Apply overwrote its child's independent applied Jump preference");
     compare("old-parent-applied-after-child", false, old, old_words, true);
 

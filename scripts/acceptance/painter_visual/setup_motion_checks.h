@@ -20,16 +20,16 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         ~SetupMotionProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } isolated(output / "setup-motion-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial; initial.music_volume = initial.sfx_volume = 0; initial.reduce_effects = false;
-    require(preferences.set_play_settings_and_save(initial), "Cannot seed setup-motion preferences");
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    require(preferences_session.set_play_settings_and_save(initial), "Cannot seed setup-motion preferences");
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     MenuPage* active_page = nullptr;
@@ -93,7 +93,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto setup_bounds = [&](Vector2F spacing, int row, const std::wstring& words)
     {
         const Vector2F origin = style.layout.position + Vector2F(0.0f, spacing.y * static_cast<float>(row));
-        const UiTextDropShadow text("independent-setup-motion-text", words, style.item_font, origin,
+        const colourwars::UiTextDropShadow text("independent-setup-motion-text", words, style.item_font, origin,
             app.render_resources(), look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
         return text.bounds();
     };
@@ -109,7 +109,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Vector2F spacing = look.mode_select_spacing;
         std::wostringstream words; words << settings.duration().value_or(tuning.match().duration) / 60.0f << L" min";
         const std::wstring value = settings.duration() ? words.str() : L"Default (" + words.str() + L")";
-        const UiTextDropShadow text("independent-setup-motion-value", value, style.item_font,
+        const colourwars::UiTextDropShadow text("independent-setup-motion-value", value, style.item_font,
             style.layout.position + Vector2F(spacing.x * 2.0f, spacing.y * 5.0f), app.render_resources(),
             look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
         RectangleF bounds = RectangleF::union_of(setup_bounds(spacing, 5,
@@ -213,7 +213,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(best_of);
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(best_of);
         settings.begin_input_claims(slots[0]);
         for (int player = 1; player < count; ++player)
             { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Setup-motion input claim failed"); }
@@ -238,7 +238,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto expected_page = [&](int page)
     {
-        MenuLevelSettings plan = settings;
+        MatchSetup plan = settings;
         MenuInput expected_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext expected_context(&data, &expected_input, &plan);
         StateContext expected_stack;
@@ -329,7 +329,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             frame().pixels == expected_page(2).pixels,
             "Count confirmation waited for cosmetic motion instead of starting Join");
 
-        open(2); const MenuLevelSettings initial_team = settings;
+        open(2); const MatchSetup initial_team = settings;
         together(GamepadButton::dpad_right, GamepadButton::dpad_left);
         const Frame team_arrival = frame(); frozen(team_arrival);
         tick(motion.focus_duration * 0.4f); const Frame team_middle = frame(); tick(settle_time);
@@ -366,7 +366,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (int player = 0; player < 3; ++player) { tap(player, GamepadButton::a); }
         tick(settle_time); tap(3, GamepadButton::a); const Frame refused = frame(); tick(settle_time);
         require(refused.pixels == frame().pixels, "Refused empty-team completion invented a press");
-        MenuLevelSettings shuffled = initial_team;
+        MatchSetup shuffled = initial_team;
         std::srand(67); require(shuffled.shuffle_teams(), "Expected setup shuffle failed"); std::srand(67);
         together(GamepadButton::x, GamepadButton::a); const Frame shuffle = frame(); frozen(shuffle);
         tick(settle_time); const Frame shuffle_rest = frame(); std::vector<RectangleF> shuffled_boxes;
@@ -379,7 +379,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(frame().pixels == expected_page(0).pixels,
             "Final Team confirmation waited for motion or carried motion into Weapon Select");
 
-        open(3); const MenuLevelSettings initial_weapon = settings;
+        open(3); const MatchSetup initial_weapon = settings;
         together(GamepadButton::dpad_right, GamepadButton::dpad_right);
         const Frame weapon_arrival = frame(); frozen(weapon_arrival);
         tick(motion.focus_duration * 0.4f); const Frame weapon_middle = frame(); tick(settle_time);

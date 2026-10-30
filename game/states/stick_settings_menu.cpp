@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/stick_settings_menu.h"
+#include "game/match_setup.h"
 #include "game/objects/stick_response.h"
 #include "game/objects/crude_drawing.h"
 #include <algorithm>
@@ -97,55 +98,31 @@ namespace
 	}
 }
 
-StickSettingsMenu::StickSettingsMenu(MenuContext* context, int player) : PauseMenuPage(context, player) {}
+StickSettingsMenu::StickSettingsMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
 StickSettingsMenu::~StickSettingsMenu() = default;
 
 void StickSettingsMenu::init()
 {
 	this->input()->reset_actions();
-	this->selection_ = this->save()->play_settings();
+	this->selection_ = this->settings_session()->play_settings();
 	this->rumble_edited_.fill(false);
 	this->comfort_edited_.fill(false);
-	if (input_slots::is_pad(this->pausing_player())) { this->slot_ = this->pausing_player(); }
+	if (input_slots::is_pad(this->opening_slot())) { this->slot_ = this->opening_slot(); }
 	else
 	{
 		for (int slot = 0; slot < input_slots::pad_count; ++slot)
 		{
-			if (this->data()->gamepads()->connected(slot)) { this->slot_ = slot; break; }
+			if (this->data()->gamepads()->connected(this->preview_device(slot))) { this->slot_ = slot; break; }
 		}
 	}
-	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	MenuStyle style = this->menu_style();
-	style.item_font = look.item_font;
-	this->set_widget_position(look.layout.position);
-	this->set_widget_spacing(look.layout.spacing);
+	const ControlsSettingsPresentation& look = this->panel_look();
+	const MenuStyle style = this->panel_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
 	this->set_prompts(MenuPrompt::sticks);
-	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
-		CrudeDrawing::premultiplied(this->presentation().main_menu().home_background_colour));
-	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
-		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+	this->build_panel(style);
 	this->preview_ = std::make_unique<StickResponsePreview>(this->render_resources(), &style, &look);
-	this->texture_container_ = std::make_unique<UiContainer>("textures");
-	for (UiObject* object : { static_cast<UiObject*>(this->background_.get()),
-		static_cast<UiObject*>(this->paper_.get()), static_cast<UiObject*>(this->preview_.get()) })
-	{
-		this->texture_container_->add_child(object);
-	}
-	this->text_container_ = std::make_unique<UiContainer>("text");
-	const auto add_text = [&](const char* name, const std::wstring& value,
-		const std::string& font, const Vector2F& position)
-	{
-		this->text_.push_back(std::make_unique<UiText>(name, value, font, position,
-			this->render_resources(), look.art.ink));
-		UiText* text = this->text_.back().get();
-		this->text_container_->add_child(text);
-		return text;
-	};
-	add_text("heading", this->text().heading(MenuHeading::pad_sticks), style.heading_font, look.heading_position);
+	this->texture_container_->add_child(this->preview_.get());
+	this->add_text("heading", this->text().heading(MenuHeading::pad_sticks), style.heading_font, look.heading_position);
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
@@ -210,27 +187,27 @@ void StickSettingsMenu::init()
 		this->text_container_->add_child(option);
 		this->focus_.add(option);
 	}
-	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
+	UiText* apply = this->add_text("apply", this->text().item(MenuItem::apply), style.item_font,
 		this->calculate_widget_position(0, 7));
 	const RectangleF apply_bounds = apply->bounds();
 	apply->set_scale(std::min({ 1.0f,
 		(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - apply_bounds.x) / apply_bounds.width,
 		(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / apply_bounds.height }));
 	this->focus_.add(apply, [this] { this->apply_settings(); });
-	this->focus_.add(add_text("back", this->text().item(MenuItem::back), style.item_font,
+	this->focus_.add(this->add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 8)), [this] { this->close(); });
-	this->status_ = add_text("status", L"", look.help_font, look.status_position);
-	this->connection_ = add_text("connection", L"", look.help_font, look.controls_position);
+	this->status_ = this->add_text("status", L"", look.help_font, look.status_position);
+	this->connection_ = this->add_text("connection", L"", look.help_font, look.controls_position);
 	const float label_height = this->render_resources()->measure_text(
 		this->render_resources()->resolve_sprite_font(look.help_font), L"Move").y;
-	this->raw_movement_ = add_text("raw_movement", L"", look.help_font,
+	this->raw_movement_ = this->add_text("raw_movement", L"", look.help_font,
 		look.stick_preview.raw_movement.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
-	this->movement_response_ = add_text("movement_response", L"", look.help_font,
+	this->movement_response_ = this->add_text("movement_response", L"", look.help_font,
 		look.stick_preview.movement_response.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
-	add_text("aim_label", this->text().help.aim_cutoff, look.help_font,
+	this->add_text("aim_label", this->text().help.aim_cutoff, look.help_font,
 		look.stick_preview.aim.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
-	this->aim_readout_ = add_text("aim_response", L"", look.help_font, look.stick_preview.aim_readout_position);
-	UiText* association = add_text("association",
+	this->aim_readout_ = this->add_text("aim_response", L"", look.help_font, look.stick_preview.aim_readout_position);
+	UiText* association = this->add_text("association",
 		this->text().help.pad_association,
 		look.help_font, look.stick_preview.association_position);
 	const Vector2F available = look.controls_position + look.controls_size - look.stick_preview.association_position;
@@ -254,7 +231,7 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 void StickSettingsMenu::refresh_values()
 {
 	// A pad wearing a profile edits the profile, so the row names it.
-	const int worn = this->save()->worn_profile(this->slot_);
+	const int worn = this->settings_session()->worn_profile(this->slot_);
 	this->pad_->set_value(this->text().worn_profile_label(this->text().device_label(this->slot_),
 		worn < 0 ? std::string_view() : std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)));
 	this->movement_->set_value(this->text().setting_percentage(rounded_percent(this->selection_.movement_deadzone(this->slot_,
@@ -273,9 +250,16 @@ void StickSettingsMenu::refresh_values()
 	this->refresh_preview();
 }
 
+// A recovered seat keeps its logical profile while its input arrives on another
+// device. Unpaused Options read physical slots even if the shared setup kept a mapping.
+int StickSettingsMenu::preview_device(int slot) const
+{
+	return this->opening_slot() >= 0 ? this->level_settings()->device_slot(slot) : slot;
+}
+
 void StickSettingsMenu::refresh_preview()
 {
-	const GamepadState& pad = this->data()->gamepads()->state(this->slot_);
+	const GamepadState& pad = this->data()->gamepads()->state(this->preview_device(this->slot_));
 	const Vector2F left = pad.connected ? pad.left_stick : Vector2F::ZERO;
 	const Vector2F right = pad.connected ? pad.right_stick : Vector2F::ZERO;
 	const float authored = this->data()->tuning()->input().movement_deadzone;
@@ -319,14 +303,14 @@ void StickSettingsMenu::refresh_preview()
 void StickSettingsMenu::apply_settings()
 {
 	// Other preference pages may have pending edits; commit only this page's scope.
-	PlaySettings applied = this->save()->play_settings();
+	PlaySettings applied = this->settings_session()->play_settings();
 	applied.sticks = this->selection_.sticks;
 	for (size_t slot = 0; slot < this->rumble_edited_.size(); ++slot)
 	{
 		if (this->rumble_edited_[slot]) { applied.pad_rumble[slot] = this->selection_.pad_rumble[slot]; }
 		if (this->comfort_edited_[slot]) { applied.pad_comfort[slot] = this->selection_.pad_comfort[slot]; }
 	}
-	const bool saved = this->save()->set_play_settings_and_save(applied);
+	const bool saved = this->settings_session()->set_play_settings_and_save(applied);
 	this->selection_.pad_rumble = applied.pad_rumble;
 	this->selection_.pad_comfort = applied.pad_comfort;
 	this->rumble_edited_.fill(false);
@@ -336,21 +320,12 @@ void StickSettingsMenu::apply_settings()
 	this->set_status(saved ? this->text().status.sticks_saved : this->text().status.active_save_failed, !saved);
 }
 
-void StickSettingsMenu::close()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
-}
-
-bool StickSettingsMenu::debug_dismiss(bool /*leaving_match*/) { this->close(); return true; }
-
 void StickSettingsMenu::update_page(float /*dt*/)
 {
 	if (!this->context()->active()) { return; }
 	this->refresh_preview();
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	if (this->pausing_player() >= 0) { inputs = { this->pausing_player_input(inputs) }; }
+	if (this->opening_slot() >= 0) { inputs = { this->opening_slot_input(inputs) }; }
 	for (const ProcessedMenuInput& input : inputs)
 	{
 		if (input.action == MenuInputAction::back) { this->close(); return; }

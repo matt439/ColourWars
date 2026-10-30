@@ -12,6 +12,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <cstdlib>
@@ -24,16 +25,14 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
 using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     bool close_to(float first, float second)
     {
@@ -89,7 +88,7 @@ namespace
             this->levels.add("movement_course", std::move(info));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         auto shots(ProjectileType type = ProjectileType::jet,
@@ -130,7 +129,7 @@ namespace
 
         std::unique_ptr<Level> build(float duration = 300.0f)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(1);
             settings.set_screen_layout(ScreenLayout::one_player);
@@ -435,7 +434,7 @@ namespace
 
     void activate(Level& level, const std::vector<PlayerInputData>& inputs)
     {
-        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(inputs, dt); }
+        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         require(level.state() == LevelState::active, "Blocked-shot fixture did not reach active play");
     }
 
@@ -451,7 +450,7 @@ namespace
         inputs[3] = aimed(true, PI);
         for (int tick = 0; tick < 90 && level->blocked_shot_feedback().cues().empty(); ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
         }
         require(!level->blocked_shot_feedback().cues().empty(),
             "Level did not flush a flying bare-wall contact before Scene retirement");
@@ -463,14 +462,14 @@ namespace
         for (int repeat = 0; repeat < 10; ++repeat)
         {
             level->refresh_layout();
-            level->update(inputs, 0.0f);
-            level->update(inputs, -1.0f);
+            level->update(acceptance::slot_seats(*level, inputs), 0.0f);
+            level->update(acceptance::slot_seats(*level, inputs), -1.0f);
         }
         require(observation(level->blocked_shot_feedback()) == frozen &&
             level->blocked_shot_feedback().repeat_remaining(3) == budget,
             "Pause or frozen layout refresh advanced blocked-shot state");
         level->resume();
-        for (int tick = 0; tick < 180 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
+        for (int tick = 0; tick < 180 && level->state() == LevelState::active; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(level->state() != LevelState::active && level->blocked_shot_feedback().cues().empty(),
             "Time-up retained active-play obstruction cues");
         level.reset();
@@ -493,7 +492,7 @@ namespace
         std::vector<Record> result;
         for (int tick = 0; tick < 180; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
             const auto score = level->level_end_info();
             const auto& player = level->player(0);
             result.emplace_back(player.rectangle(), player.velocity(), player.health(),
@@ -580,7 +579,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("blocked shot", [&]
     {
         require(argc == 2, "Usage: blocked_shot.exe <game/content directory>");
         World world{ std::filesystem::path(argv[1]) };
@@ -593,10 +592,5 @@ int main(int argc, char** argv)
         check_physics_equivalence(world);
         check_validation(world, std::filesystem::path(argv[1]), std::filesystem::absolute(argv[0]).parent_path());
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

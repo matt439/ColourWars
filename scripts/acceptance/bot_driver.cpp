@@ -6,6 +6,7 @@
 #include "scripts/acceptance/bot_driver/ascent_approach_checks.h"
 #include "scripts/acceptance/bot_driver/ramp_checks.h"
 #include "engine/assets/json.h"
+#include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -19,10 +20,7 @@ using namespace mattmath;
 
 namespace
 {
-	void require(bool condition, const char* message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	bool same(const PlayerInputData& left, const PlayerInputData& right)
 	{
@@ -37,8 +35,7 @@ namespace
 
 	void ordinary(const PlayerInputData& input)
 	{
-		require(input.connected && !input.toggle_pause_menu && !input.pause_held &&
-			!input.toggle_debug && !input.skip_intro, "A shipping bot emitted a menu/debug action or disconnected");
+		require(input.connected && !input.toggle_debug, "A shipping bot emitted a menu/debug action or disconnected");
 		require(std::isfinite(input.x_movement) && input.x_movement >= -1.0f && input.x_movement <= 1.0f &&
 			std::isfinite(input.shoot_angle) && std::isfinite(input.shoot_direction.x) &&
 			std::isfinite(input.shoot_direction.y), "A shipping bot emitted invalid ordinary input");
@@ -179,7 +176,7 @@ namespace
 			require(differs, "Different bot seeds never changed a decision sequence");
 			require(std::rand() == expected_random, "Bot decisions consumed the game's global random stream");
 		}
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		settings.set_player_count(4); settings.begin_input_claims(0);
 		settings.set_player_bot(1, BotDifficulty::hard); settings.set_player_bot(3, BotDifficulty::easy);
 		MatchBotDriver driver(&tuning, settings, 12);
@@ -484,7 +481,7 @@ namespace
 
 int wmain(int argc, wchar_t** argv)
 {
-	try
+	return acceptance::run_probe("bot driver", [&]
 	{
 		require(argc == 2, "Usage: bot_driver <staged-content-directory>");
 		const std::filesystem::path content(argv[1]);
@@ -512,10 +509,5 @@ int wmain(int argc, wchar_t** argv)
 		bot_ramp_acceptance::check(tuning);
 		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, refill off enemy paint under the underfoot trial, bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

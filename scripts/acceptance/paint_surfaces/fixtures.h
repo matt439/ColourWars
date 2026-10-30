@@ -9,6 +9,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 #include <bit>
 #include <cmath>
 #include <cstdlib>
@@ -21,8 +22,7 @@
 
 namespace paint_surfaces_acceptance
 {
-    inline void require(bool condition, const char* reason)
-    { if (!condition) { throw std::runtime_error(reason); } }
+    using acceptance::require;
 
     inline std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
     inline void area_near(float actual, float expected)
@@ -60,7 +60,7 @@ namespace paint_surfaces_acceptance
                 levels_.add(stage, std::move(info));
             }
             builder_ = std::make_unique<LevelBuilder>(&viewports_, &render, &audio, &preferences,
-                &levels_, &tuning, &presentation, &resolution_, nullptr, &partitioner_, &mouse_);
+                &levels_, &tuning, &presentation, &resolution_, nullptr, &partitioner_);
         }
         std::unique_ptr<StructurePaintable> surface(const mattmath::RectangleF& rectangle,
             const PaintableFaces& faces, std::span<const mattmath::RectangleF> obstacles = {})
@@ -81,7 +81,7 @@ namespace paint_surfaces_acceptance
         }
         std::unique_ptr<Level> level(const std::string& stage, unsigned int seed)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(2);
             settings.set_screen_layout(labrador::ScreenLayout::two_player);
             settings.set_stage(stage);

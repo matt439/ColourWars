@@ -23,9 +23,11 @@
 			for (int i = 0; i < 10; ++i) { update(true); }
 			require(world.wave_plays(start) == 1 && world.plays(loop) == 1,
 				"Held firing repeated the weapon start or loop entry");
-			weapon->pause_sounds();
+			MatchVoices voices;
+			weapon->add_voices(voices);
+			voices.pause();
 			require(world.state(loop) == SoundState::paused, "Weapon suspension did not pause the loop");
-			weapon->resume_sounds();
+			voices.resume();
 			update(true);
 			require(world.wave_plays(start) == 1 && world.plays(loop) == 1 &&
 				world.state(loop) == SoundState::playing, "Weapon resume retriggered a start cue");
@@ -48,13 +50,13 @@
 		world.until([&] { return world.level->state() == LevelState::active; });
 		auto firing = world.idle;
 		firing[static_cast<size_t>(world.level->player(0).player_num())].primary_shoot = true;
-		world.level->update(firing, 1.0f / 60.0f);
+		world.level->update(acceptance::slot_seats(*world.level, firing), 1.0f / 60.0f);
 		const auto& sprayer = world.tuning.weapon(WeaponType::sprayer);
 		const std::string loop = sprayer.loop_sounds.sound_name(PlayerTeam::a, 0);
 		require(world.state(loop) == SoundState::playing, "Player did not begin its firing loop");
 		require(world.level->kill_player(0), "Death probe did not find its player");
-		world.level->update(firing, 1.0f / 60.0f);
-		world.level->update(firing, 1.0f / 60.0f);
+		world.level->update(acceptance::slot_seats(*world.level, firing), 1.0f / 60.0f);
+		world.level->update(acceptance::slot_seats(*world.level, firing), 1.0f / 60.0f);
 		require(world.level->player(0).state() == PlayerState::dead &&
 			world.state(loop) == SoundState::stopped &&
 			world.wave_plays(sprayer.details.shoot_sound_name) == 1 &&
@@ -375,8 +377,10 @@
 		{
 			require(world.state(loops[index]) == SoundState::playing && world.plays(loops[index]) == 1,
 				"One player's release stopped or restarted another player's loop");
-			weapons[index]->pause_sounds();
-			weapons[index]->resume_sounds();
+			MatchVoices voices;
+			weapons[index]->add_voices(voices);
+			voices.pause();
+			voices.resume();
 			weapons[index]->stop_sounds();
 		}
 		require(world.wave_plays(tuning.feedback_sounds.stop->name) == 1,

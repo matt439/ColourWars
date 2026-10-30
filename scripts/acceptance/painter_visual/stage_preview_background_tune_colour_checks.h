@@ -48,23 +48,23 @@ public:
             random_stage_indices(stages_) == std::vector<size_t>{ 1 } &&
             levels.get("crossfeed")->zoom_out_finish_bounds_rectangle() == RectangleF(0, 500, 3600, 880),
             "Preview backing Crossfeed/eligible Random source geometry changed");
-        auto& play = const_cast<PlaySettings&>(preferences_.play_settings());
+        auto& play = const_cast<PlaySettings&>(preferences_settings_.play_settings());
         play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
         preferences_before_ = preference_values();
-        data_.set_application(&app); data_.set_save(&preferences_); data_.set_level_infos(&levels); data_.set_stages(&stages_);
+        data_.set_application(&app); data_.set_save(&preferences_); data_.set_settings_session(&preferences_settings_); stage_catalog_ = acceptance::catalog_of(levels, stages_, { "crossfeed" }); data_.set_stage_catalog(&stage_catalog_);
         data_.set_tuning(&tuning); data_.set_presentation(&presentation); if (debug) { data_.set_debug(debug); }
         font_names_ = { menu.heading_font, menu.item_font, menu.detail_font, menu.brand_font,
             presentation.main_menu().announcement_font, geometry.record_font };
         for (size_t i = 0; i < font_names_.size(); ++i)
         { fonts_[i] = app.render_resources()->resolve_sprite_font(font_names_[i]); font_pointers_[i] = app.render_resources()->font(fonts_[i]); }
         const RectangleF preview(150, 330, 1010, 500), sample(180, 350, 64, 32);
-        UiTextDropShadow question("source-preview-question-bound", L"?", font_names_[4], Vector2F::ZERO,
+        colourwars::UiTextDropShadow question("source-preview-question-bound", L"?", font_names_[4], Vector2F::ZERO,
             app.render_resources(), menu.highlight, menu.shadow_colour, menu.title_shadow_offset);
         question.set_position(preview.center() - question.bounds().center());
         require(preview.contains(sample) && !sample.intersects(question.bounds()), "Source backing ROI intersects the Random question");
         for (const wchar_t* text : { L"Crossfeed", L"Random" })
         {
-            const UiTextDropShadow name("source-preview-name-bound", text, menu.item_font, geometry.name_position,
+            const colourwars::UiTextDropShadow name("source-preview-name-bound", text, menu.item_font, geometry.name_position,
                 app.render_resources(), Colour::white, Colour::black, menu.item_shadow_offset);
             require(!sample.intersects(name.bounds()), "Source backing ROI intersects a stage name");
         }
@@ -105,11 +105,11 @@ public:
     }
     void open(bool random = false)
     {
-        stack_.clear(); context_.cancel_music_exit(); context_.set_music_update({});
+        stack_.clear(); context_.cancel_music_exit(); script_menu_music(context_, {});
         stack_.notify_activation(true); app_.keyboard()->set_focused(true); app_.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app_.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; poll(); poll(); input_.reset_actions();
-        settings_ = MenuLevelSettings(); settings_.set_player_count(1); settings_.set_best_of(1); settings_.set_duration(73.0f);
+        settings_ = MatchSetup(); settings_.set_player_count(1); settings_.set_best_of(1); settings_.set_duration(73.0f);
         settings_.set_stage("crossfeed"); settings_.set_screen_layout(ScreenLayout::one_player);
         settings_.begin_input_claims(input_slots::keyboard_and_mouse); settings_.set_player_team(0, PlayerTeam::a);
         settings_.set_player_weapon(0, WeaponType::sprayer); slot_ = 0; locked_ = false; captured_ = look_.player_identity_background_colour;
@@ -188,7 +188,7 @@ public:
     }
     void close()
     {
-        if (closed_) { return; } context_.cancel_music_exit(); context_.set_music_update({}); stack_.clear();
+        if (closed_) { return; } context_.cancel_music_exit(); script_menu_music(context_, {}); stack_.clear();
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app_.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = initial_pads_; app_.keyboard()->set_focused(initial_keyboard_.focused);
         app_.mouse()->set_focused(initial_mouse_focus_); stack_.notify_activation(initial_activation_); poll(); poll(); closed_ = true;
@@ -211,9 +211,9 @@ private:
     }
     std::vector<int> preference_values() const
     {
-        auto values = limb_preference_values(preferences_.play_settings());
+        auto values = limb_preference_values(preferences_settings_.play_settings());
         values.insert(values.end(), { static_cast<int>(preferences_.resolution()), preferences_.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences_.team_palette()), static_cast<int>(preferences_.input_bindings().keyboard_jump) }); return values;
+            static_cast<int>(preferences_.team_palette()), static_cast<int>(preferences_settings_.input_bindings().keyboard_jump) }); return values;
     }
     void poll() { app_.gamepads()->poll(); app_.keyboard()->poll(); app_.mouse()->poll(); ++counts_.polls; }
     void tap(Key key) { app_.keyboard()->on_key_down(key); tick(); app_.keyboard()->on_key_up(key); tick(); ++counts_.taps; }
@@ -258,7 +258,7 @@ private:
         require(record.good(), "Cannot preserve preview failure receipt");
     }
     Application& app_; Presentation& presentation_; const HudPresentation& look_; const Canvas& canvas_;
-    Save preferences_; StageList stages_; GameData data_; MenuInput input_; MenuLevelSettings settings_; MenuContext context_; StateContext& stack_;
+    Save preferences_; SettingsSession preferences_settings_{ preferences_ }; StageList stages_; StageCatalog stage_catalog_; GameData data_; MenuInput input_; MatchSetup settings_; MenuContext context_; StateContext& stack_;
     const SpriteSheet* sheet_; const SpriteFrame& pixel_; std::vector<float> fixed_, identity_fixed_; TeamPalettePresentation palette_;
     std::vector<int> preferences_before_; std::array<std::string, 6> font_names_{}; std::array<FontHandle, 6> fonts_{}; std::array<const Font*, 6> font_pointers_{};
     const std::filesystem::path output_; const std::string phase_; KeyboardState initial_keyboard_, initial_previous_; bool initial_mouse_focus_, initial_activation_;

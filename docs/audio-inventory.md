@@ -194,7 +194,7 @@ above:
 | `game/states/stage_preview.cpp` and `level_object_builder.cpp` | Stage previews build real `StructurePaintable`s. Since 2026-10-15 surfaces report contact results; Level owns paint audio, so previews resolve no paint voices and play none | Every paint cue is checked at startup; match construction resolves the same choices in `PaintAudio` |
 | `game/debug/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `debug_console/tune_document_checks.cpp` (`check_tune_scope`) pins the list |
 | `game/play_settings.h`; `save.cpp`; `controls_settings_menu.cpp` (`apply_settings`); `game/sound_groups.{h,cpp}`; `GameTuning::sound_references`, `match_sound_references`, `Presentation::sound_references` | The player's 0-100 music and SFX volumes are the `music` and `sfx` engine sound-group volumes. Every listed wave and effect is assigned one group at load, emitters play authored levels only, and Apply calls `sound_groups::apply`. The Controls volume preview is the one ungrouped sound | A new cue slot goes in a reference list with its group, or it plays at full volume whatever the setting. Room tone and stings need a deliberate choice of which. `story_audio`'s `check_sound_groups` plays every listed sound under each muted group; `scripts/acceptance/settings.cpp` pins the stored values |
-| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/states/game_level_dev_tools.cpp` (`debug_sync_audio`); `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
+| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/states/game_level_dev_tools.cpp` (`debug_sync_audio`); `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). Since `HYG#50` (2026-10-30) that means making it a `MatchVoice` and registering it with the Level's `MatchVoices` ([match_voices.h](../game/objects/match_voices.h)). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
 | `game/main.cpp:107`; `content_validation.cpp:9-34`; `resource_validation.h:37-47` | Startup validation of every name above against the loaded banks | Unchanged in shape; extend it for every new slot (section 4) |
 
 Validation can be fooled in a fresh clone. A silent bank accepts any name
@@ -1093,3 +1093,88 @@ runs are `final-debug/x64-debug/9005e062a2a14253b062c97cada46919` and
 `final-release/x64-release/5232a20aff7244ac853e8c0cb87472c5`. These checks
 establish requests, ownership and flow; optional detail/mix assessment remains
 POL#23, listening remains ROAD#3 and visual transitions/loading remain GAP#5.1.
+
+### Looping music after device recovery (`ROAD#36`)
+
+**Done 2026-10-29, ahead of the pin.** The client handling and its recorder
+case landed while the pin is still `v0.2.0`; see the result at the end of this
+section. The record below is the scope as written.
+
+Labrador `2b3b97b` (on engine
+`master`, not in the pinned `v0.2.0`) retries a lost XAudio2 output, and its
+contract (`engine/audio/audio_device.h:147-151` there) says recovery "stops
+persistent voices; their handles remain valid, and the game may play them
+again". It sends no event. The pinned header (`audio_device.h:146-150`) still
+leaves a lost device unhandled, so this changes nothing until the pin passes
+that commit.
+
+After that bump, both music owners treat an outside stop as a finished voice.
+`ScreenMusic::update` returns unless the effect is playing
+(`game/states/screen_music.cpp:27`), `resume` revives only a paused one
+(42-45), and `finished` counts any stopped voice as done (57). `Level::update_music`
+and `Level::resume_music` have the same playing/paused guards
+(`game/objects/level_audio.cpp:112-123`, 133-139); the arena loop is started
+only once, at the countdown (`game/objects/level.cpp:263`). A recovered device
+would leave menu or arena music silent for the rest of that screen or match.
+
+Scope: the two looping music owners only. When the effect is stopped while
+looping, not leaving and not ending, the owner plays it again from zero gain
+and fades in with `music_mix.fade_in`. A finished one-shot, the results coda,
+a completed exit, a muted or missing bank, and suspension stay as they are; the
+screen-music "no stopped-voice resurrection" guarantee keeps holding for those.
+Room tone, redraw, weapon and results-fill loops can be stopped the same way
+and are not covered here.
+
+First step: a `story_audio` recorder case that stops each music effect directly
+through its sound bank (standing in for recovery) on the menu, in the countdown,
+in live play and under a pause page, then advances one positive update.
+
+Acceptance: that case shows one fresh looping play per outside stop and none
+for a leaving `ScreenMusic`, an ending arena loop, the Movement Course or the
+silent bank; existing screen-music and arena-mix checks still pass in Debug
+and Release. No device, speaker or gamepad is needed.
+
+Not decided here: whether the restart should resume position instead of
+starting over (the engine contract gives none), and how it sounds, which stays
+with `ROAD#3`.
+
+Result (2026-10-29). Nothing in the handling depends on the engine revision:
+it reacts to a stopped voice, whoever stopped it. It is therefore in place
+before the pin passes `2b3b97b`. On `v0.2.0` nothing outside the owners stops
+these voices, so nothing changes in play until that bump.
+
+- `ScreenMusic` remembers whether it loops. On a positive update, a looping
+  voice that is stopped, not leaving and on an audible bank is played again at
+  zero gain, and a fresh envelope fades it in over `music_mix.fade_in`
+  (`restart_lost_loop`, `game/states/screen_music.cpp`). `resume` still revives
+  only a paused voice, and `finished` is unchanged. The results coda
+  (`loop` false), an exit (`leaving_`) and a silent bank keep their stopped voice.
+- `Level::update_music` does the same for the arena loop (`restart_lost_music`,
+  `game/objects/level_audio.cpp`), but only after the countdown has started it,
+  before `music_ending_` and on an audible bank. The duck envelope keeps its own
+  target, so a loop stopped under a pause page comes back ducked. Time up, the
+  overview cut and teardown still own their stops. A Movement Course has no
+  resolved effect.
+- Suspension is unchanged: the owners still get no update while inactive, and a
+  voice stopped while paused comes back on the first positive tick after focus
+  returns, not on `resume`. "Muted" in the scope is read as the immediate muted
+  exit, which is leaving. A staying loop at zero music gain is replayed too, so
+  that unmuting is heard.
+
+`story_audio` gains `scripts/acceptance/story_audio/music_recovery_checks.h`.
+It stops each effect through its own `SoundBank::stop_effect`, which stands in
+for recovery, and checks five things. Main-menu music is replayed once, from
+silence, then fades to the midpoint. Zero time and `resume` do not replay it.
+Menu music stopped while suspended comes back on the next positive tick only.
+The arena loop comes back in the countdown, in live play and under a ducked
+pause page, then restores after `resume`. No replay happens for a leaving menu
+loop, the one-shot results coda, an ending arena loop, the Movement Course, or
+silent menu and arena banks. One existing `music_mix_checks.h` assertion
+expected an outside-stopped arena loop to stay stopped. It now checks only that
+`resume_music` leaves it stopped. A negative build that disabled the arena
+restart failed the case at the countdown assertion. Debug and Release build
+under `/W4 /WX`; the Debug `story_audio` case and the full Release acceptance
+suite (75 cases) pass.
+
+Left: room tone, redraw, weapon and results-fill loops (outside this scope),
+resume-position, and hearing a real device loss and recovery (`ROAD#3`).

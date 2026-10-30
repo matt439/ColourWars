@@ -8,6 +8,7 @@
 #include <chrono>
 #include <fstream>
 #include <iterator>
+#include <objbase.h>
 #include <regex>
 
 // The director's match and page hooks against FakeMatch and FakePage: match
@@ -16,16 +17,18 @@
 namespace debug_console_acceptance
 {
 	// The director's match hooks, driven against a fake match: what the real
-	// update_match, before_match_update, before_level_build, attach_match and
-	// detach_match do, not a copy of their loops.
+	// step hooks (match_steps to end_match_steps, in GameLevel's step loop),
+	// before_match_update, before_level_build, attach_match and detach_match
+	// do, not a copy of their logic.
 	void check_match_hooks(GameTuning& tuning, Presentation& presentation)
 	{
 		const StageList stages = {
 			{ "movement_course", "Movement Course", "icon", false },
 			{ "x", "X", "icon", true },
 		};
+		const StageCatalog stage_catalog = acceptance::catalog_of(stages);
 		GameData data;
-		data.set_stages(&stages);
+		data.set_stage_catalog(&stage_catalog);
 		DebugDirector director(&tuning, &presentation);
 		director.attach(nullptr, &data);
 		DebugDirectorImpl& impl = *director.impl();
@@ -55,13 +58,13 @@ namespace debug_console_acceptance
 			"A match started from the menus is not rebuilt from menu-time settings");
 
 		const std::size_t kbm = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
-		std::vector<PlayerInputData> tap(input_slots::count);
+		std::vector<SlotInput> tap(input_slots::count);
 		tap[kbm].jump_pressed = true;
 		tap[kbm].jump_held = true;
-		const std::vector<PlayerInputData> none(input_slots::count);
+		const std::vector<SlotInput> none(input_slots::count);
 
 		// Timescale 1: one update, the edge delivered.
-		director.update_match(match, tap, dt);
+		update_match(director, match, tap, dt);
 		require(match.updates == 1 && match.jumps_delivered() == 1,
 			"Timescale 1 runs one update with the press");
 
@@ -71,7 +74,7 @@ namespace debug_console_acceptance
 		impl.clock().reset_accumulator();
 		for (int step = 0; step < 8; ++step)
 		{
-			director.update_match(match, step == 0 ? tap : none, dt);
+			update_match(director, match, step == 0 ? tap : none, dt);
 		}
 		require(match.updates == 2, "Timescale 0.25 runs two updates in eight steps, got " +
 			std::to_string(match.updates));
@@ -81,25 +84,25 @@ namespace debug_console_acceptance
 		// Fast forward: four updates, the edge only on the first.
 		match.reset_counts();
 		impl.execute("timescale 4");
-		director.update_match(match, tap, dt);
+		update_match(director, match, tap, dt);
 		require(match.updates == 4 && match.jumps_delivered() == 1 && match.jumps.front(),
 			"Timescale 4 runs four updates and delivers the press once");
 
 		// A round that ends mid fast-forward stops there.
 		match.reset_counts();
 		match.finish_after = 2;
-		director.update_match(match, none, dt);
+		update_match(director, match, none, dt);
 		require(match.updates == 2, "A level that finishes mid fast-forward is not updated again");
 		match.reset_counts();
 		impl.execute("timescale 1");
 
 		// Paused: nothing runs; a step runs one update and resyncs audio.
 		impl.execute("pause on");
-		director.update_match(match, tap, dt);
+		update_match(director, match, tap, dt);
 		require(match.updates == 0, "A paused clock runs no update");
 		const int syncs = match.audio_syncs;
 		require(impl.execute("step 1").ok, "step works in a match");
-		director.update_match(match, none, dt);
+		update_match(director, match, none, dt);
 		require(match.updates == 1 && match.jumps_delivered() == 1,
 			"A step delivers the press latched while paused");
 		require(match.audio_syncs > syncs, "A stepped update resyncs the paused audio");

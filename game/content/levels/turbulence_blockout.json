@@ -46,6 +46,58 @@
             }
         ]
     },
+    "stations": [
+        {
+            "name": "home_lower_exit_a",
+            "x": 540.0,
+            "y": 1160.0
+        },
+        {
+            "name": "home_lower_exit_b",
+            "x": 3408.0,
+            "y": 1160.0
+        },
+        {
+            "name": "home_upper_exit_a",
+            "x": 714.0,
+            "y": 920.0
+        },
+        {
+            "name": "home_upper_exit_b",
+            "x": 3234.0,
+            "y": 920.0
+        },
+        {
+            "name": "upper_receiver_a",
+            "x": 1134.0,
+            "y": 760.0
+        },
+        {
+            "name": "upper_receiver_b",
+            "x": 2814.0,
+            "y": 760.0
+        },
+        {
+            "name": "crossover_end_a",
+            "x": 1514.0,
+            "y": 680.0
+        },
+        {
+            "name": "crossover_end_b",
+            "x": 2434.0,
+            "y": 680.0
+        },
+        {
+            "name": "lower_cover_a",
+            "x": 1394.0,
+            "y": 1080.0
+        },
+        {
+            "name": "lower_cover_b",
+            "x": 2554.0,
+            "y": 1080.0
+        }
+    ],
     "level_bounds": {
         "out_of_bounds": {
             "x": -100.0,

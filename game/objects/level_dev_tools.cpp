@@ -91,17 +91,17 @@ void Level::set_player_cheats(bool damage_immune, bool infinite_ammo)
 	}
 }
 
-bool Level::place_player(int view, const Vector2F& top_left)
+bool Level::place_player(int participant, const Vector2F& top_left)
 {
-	if (view < 0 || view >= this->player_count())
+	if (participant < 0 || participant >= this->player_count())
 	{
 		return false;
 	}
-	Player* player = this->players_[static_cast<size_t>(view)];
+	Player* player = this->players_[static_cast<size_t>(participant)];
 	if (player->state() == PlayerState::dead)
 	{
 		player->force_respawn();
-		this->player_identity_remaining_[static_cast<size_t>(view)] =
+		this->player_identity_remaining_[static_cast<size_t>(participant)] =
 			this->presentation_->player_identity().emphasis_duration;
 	}
 	player->place_at(top_left);
@@ -111,18 +111,18 @@ bool Level::place_player(int view, const Vector2F& top_left)
 	return true;
 }
 
-bool Level::respawn_player(int view)
+bool Level::respawn_player(int participant)
 {
-	if (view < 0 || view >= this->player_count())
+	if (participant < 0 || participant >= this->player_count())
 	{
 		return false;
 	}
-	Player* player = this->players_[static_cast<size_t>(view)];
+	Player* player = this->players_[static_cast<size_t>(participant)];
 	const bool was_dead = player->state() == PlayerState::dead;
 	player->force_respawn();
 	if (was_dead)
 	{
-		this->player_identity_remaining_[static_cast<size_t>(view)] =
+		this->player_identity_remaining_[static_cast<size_t>(participant)] =
 			this->presentation_->player_identity().emphasis_duration;
 	}
 	player->update_weapon_position();
@@ -131,12 +131,12 @@ bool Level::respawn_player(int view)
 	return true;
 }
 
-bool Level::kill_player(int view)
+bool Level::kill_player(int participant)
 {
-	if (view < 0 || view >= this->player_count())
+	if (participant < 0 || participant >= this->player_count())
 	{
 		return false;
 	}
-	this->players_[static_cast<size_t>(view)]->kill();
+	this->players_[static_cast<size_t>(participant)]->kill();
 	return true;
 }

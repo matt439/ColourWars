@@ -8,11 +8,6 @@
 // The fixture helpers more than one group of checks uses.
 namespace menu_text_acceptance
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
-
     rapidjson::Document read_document(const std::filesystem::path& path)
     {
         std::ifstream input(path, std::ios::binary);

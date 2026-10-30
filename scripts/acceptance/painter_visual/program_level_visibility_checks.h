@@ -16,7 +16,7 @@ void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>
     // Presentation. Level dies before both its builder and its borrowed data.
     LevelBuilder local_builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
         &preferences, &levels, &tuning, &local, app.resolution_manager(), app.thread_pool(),
-        app.partitioner(), app.mouse());
+        app.partitioner());
     auto level = countdown_level(app, local_builder, 2, OpeningMode::full, "crossfeed");
     const float setup_elapsed = tuning.match().opening.settle * .5f;
     require(setup_elapsed == .4f, "Program Level setup checkpoint is no longer .4f");

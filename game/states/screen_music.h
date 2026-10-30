@@ -1,13 +1,13 @@
 #pragma once
 
-#include "engine/audio/sound_bank_object.h"
+#include "game/carried/sound_bank_object.h"
 #include "game/objects/music_envelope.h"
 #include "game/play_settings.h"
 #include "game/presentation.h"
 
 // One screen owner's music voice. Page navigation borrows its clock instead
 // of replaying the shared bank instance; an exit waits for silence.
-class ScreenMusic : public labrador::SoundBankObject
+class ScreenMusic : public colourwars::SoundBankObject
 {
 public:
 	ScreenMusic(const std::string& bank, const labrador::AudioResources* resources,
@@ -25,6 +25,8 @@ private:
 	MusicMixPresentation mix_;
 	labrador::SoundBank::EffectHandle effect_;
 	MusicEnvelope envelope_;
+	bool loop_ = false;
 	bool leaving_ = false;
 	void apply_gain();
+	bool restart_lost_loop();
 };

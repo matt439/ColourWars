@@ -34,6 +34,7 @@ $missingCmake = 'Run this script from an x64 Visual Studio Developer shell (cmak
 $focusConflict = 'Choose only one focused painter matrix.'
 $trialUnsupported = 'TrialPath is supported only with TurbulenceMoverOnly, TurbulenceShoulderOnly or TurbulenceSlabOnly.'
 $unmapped = "Focused painter selector 'FutureUnmappedOnly' has no native scope argument."
+$compileOnlySelector = 'CompileOnly compiles both pad readers and takes no focused painter selector.'
 $trialSelectors = @('TurbulenceMoverOnly','TurbulenceShoulderOnly','TurbulenceSlabOnly')
 $debugSelectors = @('TuneColoursOnly','TeamTuneColoursOnly','WeaponTuneColoursOnly')
 $selectionResult = [ordered]@{
@@ -58,9 +59,11 @@ function Read-PainterAst([string] $Path) {
     Require-Selection (@($selectionErrors).Count -eq 0) "Painter source did not parse: $Path"
     return $selectionAst
 }
+# CompileOnly (CI#2) ends in Only but selects no matrix; it is checked separately.
 function Get-OnlySwitches($Ast) {
     return @($Ast.ParamBlock.Parameters | Where-Object {
-        $_.StaticType -eq [Management.Automation.SwitchParameter] -and $_.Name.VariablePath.UserPath -like '*Only'
+        $_.StaticType -eq [Management.Automation.SwitchParameter] -and $_.Name.VariablePath.UserPath -like '*Only' -and
+        $_.Name.VariablePath.UserPath -cne 'CompileOnly'
     } | ForEach-Object { $_.Name.VariablePath.UserPath })
 }
 function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [string] $RunnerPath,
@@ -69,6 +72,7 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
     # unmodified baseline fails with the intended diagnostic, even in StrictMode.
     $focusedSelectors=@()
     $probeArguments=@()
+    $painterCompileVariants=@()
     $trialResolved=$null
     $trialHashBefore=$null
     $trialHashAfterAttempted=$false
@@ -115,6 +119,7 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
             diagnostic=$selectionCaught.Exception.Message
             selectors=[string[]]@($focusedSelectors)
             arguments=[string[]]@($probeArguments)
+            compile_variants=[bool[]]@($painterCompileVariants)
             trial_resolved=$trialResolved
             trial_sha256=$trialHashBefore
             trial_after_attempted=$trialHashAfterAttempted
@@ -378,6 +383,39 @@ try {
             $actual.arguments.Count -eq 1 -and $actual.arguments[0] -ceq 'identity') 'Focused parameter binding became case-sensitive.'
     }
     Check-PainterSelection 'two-focused-conflict' @{IdentityOnly=$true;QuietOnly=$true} $focusConflict $true
+
+    # CI#2: CompileOnly is no focused selector, compiles both readers and
+    # refuses a focused matrix before any output or tool preflight.
+    $compileSwitch=@($actualAst.ParamBlock.Parameters | Where-Object {
+        $_.Name.VariablePath.UserPath -ceq 'CompileOnly' -and $_.StaticType -eq [Management.Automation.SwitchParameter]
+    })
+    Require-Selection ($compileSwitch.Count -eq 1) 'The actual painter runner has no CompileOnly switch.'
+    foreach ($presetName in @('x64-debug','x64-release')) {
+        Check-PainterSelection ('compile-only-' + $presetName) @{Preset=$presetName;CompileOnly=$true} $missingCmake $false {
+            param($actual)
+            Require-Selection ($actual.selectors.Count -eq 0 -and $actual.arguments.Count -eq 0) `
+                'CompileOnly became a focused selector or acquired a native flag.'
+            Require-Selection ($actual.compile_variants.Count -eq 2 -and -not $actual.compile_variants[0] -and
+                $actual.compile_variants[1]) 'CompileOnly did not select the normal then the scripted pad reader.'
+        }
+    }
+    Check-PainterSelection 'default-one-normal-reader' @{IdentityOnly=$true} $missingCmake $false {
+        param($actual)
+        Require-Selection ($actual.compile_variants.Count -eq 1 -and -not $actual.compile_variants[0]) `
+            'A normal-reader matrix did not keep its one normal compile.'
+    }
+    Check-PainterSelection 'default-one-scripted-reader' @{RumbleOnly=$true} $missingCmake $false {
+        param($actual)
+        Require-Selection ($actual.compile_variants.Count -eq 1 -and $actual.compile_variants[0]) `
+            'A scripted-reader matrix did not keep its one scripted compile.'
+    }
+    Check-PainterSelection 'compile-only-false' @{CompileOnly=$false;QuietOnly=$true} $missingCmake $false {
+        param($actual)
+        Require-Selection ($actual.selectors.Count -eq 1 -and $actual.arguments.Count -eq 1 -and
+            $actual.compile_variants.Count -eq 1) 'An explicitly false CompileOnly changed focused routing.'
+    }
+    Check-PainterSelection 'compile-only-with-selector' @{CompileOnly=$true;IdentityOnly=$true} $compileOnlySelector $true
+    Check-PainterSelection 'compile-only-with-two-selectors' @{CompileOnly=$true;IdentityOnly=$true;QuietOnly=$true} $focusConflict $true
     Check-PainterSelection 'synthetic-false-default' @{FutureUnmappedOnly=$false} $missingCmake $false {
         param($actual)
         Require-Selection ($actual.selectors.Count -eq 0 -and $actual.arguments.Count -eq 0) 'An explicitly false unmapped switch became active.'

@@ -20,16 +20,17 @@
 // rows). A new check that needs a font from another file must run after it.
 #include "game/presentation.h"
 #include "game/controls_text.h"
-#include "game/content_validation.h"
+#include "game/states/menu_content_validation.h"
 #include "game/play_settings.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/option_row.h"
 #include "game/states/main_menu.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "game/states/prompt_bar.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <cmath>
@@ -45,7 +46,7 @@ using namespace labrador;
 
 namespace menu_text_acceptance
 {
-    void require(bool condition, const std::string& message);
+    using acceptance::require;
     rapidjson::Document read_document(const std::filesystem::path& path);
     UiText* row_text(OptionRow& row, const std::string& name);
     MenuPaperArtPresentation options_art(const MainMenuPresentation& main);

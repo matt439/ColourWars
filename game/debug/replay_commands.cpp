@@ -130,7 +130,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 		this->play_armed_.get();
 	if (replay != nullptr)
 	{
-		for (const MenuPlayerSettings& seat : replay->file().settings.player_settings())
+		for (const SeatSetup& seat : replay->file().settings.player_settings())
 		{
 			if (seat.num == slot)
 			{
@@ -140,7 +140,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 	}
 	if (this->match_ != nullptr)
 	{
-		const std::vector<MenuPlayerSettings> seats = this->match_->debug_settings().player_settings();
+		const std::vector<SeatSetup> seats = this->match_->debug_settings().player_settings();
 		for (std::size_t i = 0; i < seats.size(); ++i)
 		{
 			if (seats[i].num == slot && !this->bot_for_seat(static_cast<int>(i), slot).empty())
@@ -199,7 +199,7 @@ std::uint64_t DebugDirectorImpl::content_hash(std::string_view file)
 	return document != nullptr ? document->current_hash() : 0;
 }
 
-ReplayFile DebugDirectorImpl::replay_header(const DebugMatchTarget& match)
+ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 {
 	ReplayFile file;
 	file.build = narrow_build_label();
@@ -260,7 +260,7 @@ void DebugDirectorImpl::before_level_update(DebugMatchTarget& match, float dt)
 	if (this->player_->recorded_suspend(this->level_updates_) && match.debug_level() != nullptr)
 	{
 		this->injecting_suspend_ = true;
-		match.debug_level()->suspend();
+		match.debug_suspend_level();
 		match.debug_sync_audio();
 		this->injecting_suspend_ = false;
 	}
@@ -628,7 +628,7 @@ void DebugDirectorImpl::register_replay_commands()
 				log.info("play: recorded with " + line);
 			}
 			this->play_armed_ = std::make_unique<ReplayPlayer>(name, std::move(file));
-			const MenuLevelSettings& settings = this->play_armed_->file().settings;
+			const MatchSetup& settings = this->play_armed_->file().settings;
 			this->request_ = MatchRequest();
 			this->request_.exact = settings;
 			this->request_.exact_label = name;

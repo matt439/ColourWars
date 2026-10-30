@@ -243,11 +243,11 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
     for (const auto& stage : landmark_stages)
     { const auto path = landmark_omission_copy(content, output, stage); auto info = std::make_unique<LevelLoadedInfo>(path.string().c_str()); info->validate(); omitted.add(stage.name, std::move(info)); }
     LevelBuilder without(app.viewport_manager(), app.render_resources(), app.audio_resources(), &preferences, &omitted, &tuning,
-        &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
-    Save saved; PlaySettings preview_preferences = saved.play_settings(); preview_preferences.reduce_effects = false;
+        &presentation, app.resolution_manager(), app.thread_pool(), app.partitioner());
+    Save saved; SettingsSession saved_session(saved); PlaySettings preview_preferences = saved_session.play_settings(); preview_preferences.reduce_effects = false;
     preview_preferences.music_volume = preview_preferences.sfx_volume = 0;
-    require(saved.set_play_settings_and_save(preview_preferences), "Cannot isolate actual StagePreview preferences");
-    GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    require(saved_session.set_play_settings_and_save(preview_preferences), "Cannot isolate actual StagePreview preferences");
+    GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     for (const auto& stage : landmark_stages)
     {
         const auto* info = levels.get(stage.name); const TeamColour colours{};
@@ -278,7 +278,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
         }
         for (const int count : { 1, 4 })
         {
-            MenuLevelSettings settings; settings.set_stage(stage.name); settings.set_player_count(count); settings.set_duration(0.75f);
+            MatchSetup settings; settings.set_stage(stage.name); settings.set_player_count(count); settings.set_duration(0.75f);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player); settings.begin_input_claims(3);
             for (int view = 1; view < count; ++view) { require(settings.claim_input_slot(view - 1), "Landmark story sparse claim failed"); }
             for (int view = 0; view < count; ++view) { settings.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(view, WeaponType::roller); }
@@ -289,7 +289,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
             const auto step = [&]
             {
                 require(++ticks <= 16000, "Landmark story exceeded its hard update bound");
-                std::srand(6203 + ticks); actual->update(inputs, dt); std::srand(6203 + ticks); missing->update(inputs, dt);
+                std::srand(6203 + ticks); actual->update(acceptance::slot_seats(*actual, inputs), dt); std::srand(6203 + ticks); missing->update(acceptance::slot_seats(*missing, inputs), dt);
             };
             const auto sample = [&](const char* phase)
             {

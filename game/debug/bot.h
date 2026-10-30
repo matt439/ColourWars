@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/math/vector2f.h"
+#include "game/ai/bot_random.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/player_team.h"
 #include <cstdint>
@@ -8,24 +9,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-// A bot's own random numbers: splitmix64, seeded from the match seed and the
-// seat, so a bot never touches rand() and two bots never share a sequence.
-class BotRandom
-{
-public:
-	explicit BotRandom(std::uint64_t seed = 0);
-
-	std::uint64_t next();
-	// [0, 1).
-	float unit();
-	// [low, high], inclusive.
-	int between(int low, int high);
-	float between(float low, float high);
-
-private:
-	std::uint64_t state_ = 0;
-};
 
 // What one bot sees on one logic step: public state only, built by
 // BotDriver from the running Level.
@@ -48,8 +31,9 @@ struct BotSeatView
 	// Only populated by BotDriver's opt-in skirmish observation. This is the
 	// actual full-shot affordability state, including a positive but low tank.
 	bool shot_empty = false;
-	// Developer engagement heuristic: a stationary horizontal launch for at
-	// most 60 fixed steps, plus muzzle/body/volume extent. Not a hit or LOS test.
+	// Developer engagement heuristic: the shipping driver's
+	// match_bot_ballistics::horizontal_reach plus muzzle/body/volume extent.
+	// Not a hit or LOS test.
 	float engage_distance = 0.0f;
 	Seat self;
 	std::vector<Seat> others; // every other seat, in view order

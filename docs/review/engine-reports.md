@@ -6,8 +6,10 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Two are live as unfiled drafts with exhibits (23 and 25), found after the
-> engine's last answers. Twenty-three are closed** and kept below as one paragraph
+> **Three are live (23, 25 and 26), all found after the engine's last tagged
+> answers.** Engine master answered 23 and 25 on 2026-10-27, after `v0.2.0`, so
+> they wait for the first minor tag carrying those answers; 26 is an unfiled
+> draft. **Twenty-three are closed** (1–22 and 24) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -77,6 +79,18 @@ and one of them, `814f2ee`, answered report 24 the day it was drafted, without
 it being filed. See
 [What the 2026-10-25 bump changed](#what-the-2026-10-25-bump-changed).
 
+**Re-checked 2026-10-29 against upstream master `b96bad6`**, fetched that day;
+the pin stays at `1e60fb2` (`v0.2.0`), 182 commits behind. `42bc478` answers
+report 23 and `cadc962` answers report 25, both on 2026-10-27, and neither is
+in `v0.2.0`. Labrador's `docs/review/colourwars-reports/README.md` ("Filing
+recheck, 2026-10-27") records both as answered without a public issue, which
+closes its `PI-09` filing queue. Neither report needs filing. Their workarounds
+are deleted at the first minor tag that carries the answers, under the pin
+policy in AGENTS.md. Report 26 is unanswered on master (`3a14f11` only
+rewrote `Registry`'s comments). Master also has source breaks and a manifest
+rule that will stop this game at that bump; they are scoped under
+[Preparing the next bump (2026-10-29)](#preparing-the-next-bump-2026-10-29).
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -120,6 +134,10 @@ forbids filing; separate author authorization and a fresh upstream recheck
 are required before using the established route above.
 This supporting work does not change TODO's level-first priority.
 
+**2026-10-29:** the route is no longer needed for 23 or 25. Engine master
+answered both without a filing (see the 2026-10-29 recheck above), so the
+route now applies only to report 26 and to later drafts.
+
 Before authorized filing, refresh engine master from upstream and recheck the
 concrete client exhibit against that revision. Record the checked commit with
 the report. A cached `origin/master` ref or local branch is not evidence of
@@ -160,11 +178,13 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | prepared and qualified locally 2026-10-24; upstream checked 02:24:30 UTC at pin `19cf650`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
-| 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | prepared locally 2026-10-26; published master checked at `c03a6f6`; unfiled, awaiting separate authorization and a pre-filing upstream recheck |
-| 26 | `Registry` cannot forget a name | [`UserStageFolder::rescan`](../../game/stage_loading.cpp) leaves a vanished user stage's definition registered | drafted locally 2026-10-28 against pin `1e60fb2`; not rechecked upstream; unfiled, awaiting separate authorization |
+| 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | answered on untagged master in `42bc478` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the guards go at the first minor tag carrying it |
+| 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
+| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); unfiled, awaiting separate authorization |
+| 27-32 | Six owed by the 2026-10-30 architecture review | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | found 2026-10-30; not yet drafted or rechecked against master |
 
-Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below and the
+Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six
+[owed by the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -173,7 +193,35 @@ reachable on a machine with no pad.
 
 ---
 
+## Owed from the architecture review (2026-10-30)
+
+The [2026-10-30 architecture review](2026-10-30-architecture-review.md#engine-reports-owed)
+found six places where the engine's API forced the answer this repository has,
+and working its `HYG#49` found a seventh (33).
+Each is numbered here so TODO can point at it; none is drafted yet. Drafting
+means checking engine master first (the rule above), writing the exhibit and
+the ask in the shape of reports 23-26, and then waiting for authorization to file.
+
+| # | Report | Exhibit at `96c65373` |
+|---|---|---|
+| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp` and `painter_visual.cpp`; this replaces the "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which said no exhibit existed |
+| 28 | Public types removed without a deprecation release, after report 7's procedure | `game/carried/` and the `HYG#25` removed-member list |
+| 29 | `Scene` gives no typed access to short-lived objects and no retirement notice | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
+| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:113`, `scripts/check-startup.ps1:225` and `:248` |
+| 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/tuning.cpp` (`:461`, `:477`, `:484` and others) |
+| 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/text_wrap.h` and its caller `WrappedTextDropShadow` |
+| 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
+
 ## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
+
+**Answered on untagged master (rechecked 2026-10-29 at `b96bad6`).**
+`42bc478` (2026-10-27, *Keep window resizing from requesting activation*)
+adds `SWP_NOACTIVATE` to `resize_client`'s `SetWindowPos` call, with an engine
+regression for both hidden window modes. Engine `CHANGES.md` lists it as a
+silent behaviour change under Unreleased. It is not in `v0.2.0`, so the pin
+does not have it. No filing is needed. At the first minor tag that carries
+it, delete the guard and its five uses as below, then close this report.
+The text below is the draft as prepared.
 
 Found 2026-10-22 while spending [report 16](#16-windowed-apply-shows-a-deliberately-hidden-window--7db3d5c),
 against the pin `19cf650`. A read-only upstream check on 2026-10-24 at
@@ -244,6 +292,18 @@ hidden/not-foreground requirement as the regression check.
 
 ## 25. No public controller vibration output - **draft with isolated adapter exhibit**
 
+**Answered, narrowed, on untagged master (rechecked 2026-10-29 at `b96bad6`).**
+`42bc478` recorded the decision (slot-addressed output belongs behind the
+input seam, as engine story `PI-21`). `cadc962` (2026-10-27) implements it:
+`Gamepads::vibrate(slot, Vibration)` returns a `VibrationResult` and
+`stop_vibration(slot)` stops the pad. Each request is bounded to
+`max_vibration_seconds` (5 s), and the engine ends requests at a stop, a newer
+request, a pad leaving its slot, suspension or destruction. Neither commit is
+in `v0.2.0`. No filing is needed. At the first minor tag that carries it,
+replace the native request and factory and the `Xinput.lib` link with that
+call. Pulse timing, preferences and the pause, replay and bot gates stay in
+the client. Then close this report. The text below is the draft as prepared.
+
 **Upstream checked 2026-10-26, 14:55 UTC.** GitHub's published `master` resolved
 to [`c03a6f653f3d524fae53b6cb662074ec3f2bb48a`](https://github.com/matt439/Labrador/commit/c03a6f653f3d524fae53b6cb662074ec3f2bb48a).
 The immutable [Gamepads header](https://github.com/matt439/Labrador/blob/c03a6f653f3d524fae53b6cb662074ec3f2bb48a/engine/input/gamepads.h),
@@ -284,32 +344,51 @@ authorization and a fresh upstream recheck are required before filing.
 
 ## 26. `Registry` cannot forget a name - **draft with rescan exhibit**
 
-**Checked against the pin only** (`1e60fb2`, 2026-10-28). The published
-upstream has not been checked. `labrador::Registry` (`engine/core/registry.h`)
-offers `add`, which replaces the resource of a name it already holds, plus
-`resolve`, `get` and `contains`. It has no way to remove a name.
+**Drafted against the pin** (`1e60fb2`, 2026-10-28). `labrador::Registry`
+(`engine/core/registry.h`) offers `add`, which replaces the resource of a name
+it already holds, plus `resolve`, `get` and `contains`. It has no way to remove
+a name.
+
+**Rechecked 2026-10-29 against upstream master `b96bad6`: still unanswered.**
+The only change to the header since the pin is `3a14f11` (2026-10-29,
+*Clarify Registry presence and retained resource handles*), and it changes
+comments only. Master's header comment says a name owns its slot for the
+registry's lifetime. `contains` answers false for an empty or released slot,
+the name still resolves to its handle, and `get` throws until the slot is
+refilled. Per-name removal is still absent. The only bulk operation is
+`release_all`, which empties every slot and keeps every name. That empty-slot
+behaviour is the pin's code too; `3a14f11` only documents it. So the
+`contains` trap below is a client choice. The rescan could
+`add(name, nullptr)` a vanished stage, after which `contains` says no and
+`get` throws "released". The name and its slot would still stay, so the ask
+narrows to forgetting the name itself. Filing still needs separate author
+authorization.
 
 **Exhibit.** `ROAD#16` rereads the player's stage folder each time Stage Select
 opens from the main menu ([`UserStageFolder::rescan`](../../game/stage_loading.cpp)).
 A new or edited file goes through `add`, which is what the rescan needs. A
 file the player deleted, or one that now fails its checks, can only leave the
-game's `StageList`. Its old `LevelLoadedInfo` stays in the registry,
-unreachable from the list, until the game exits. Every name lookup in this
-game goes through the list first (Stage Select, the Debug `stage` and `play`
-commands, which check `MatchPlanner::stage_words`), so today the cost is
-memory only. The registry's own `contains` still answers yes for a stage
-that is gone, which is the trap a later caller would fall into. Every client
-that reloads user content over a session would meet the same thing.
+stage list. Its old `LevelLoadedInfo` stays in the registry, unreachable from
+the list, until the game exits.
+
+**Narrowed 2026-10-30 (`HYG#47`).** The list and the registry now have one
+owner and one writer, [`StageCatalog`](../../game/stage_catalog.h), and its
+by-name lookup `definition` answers from the list, so a stage that is gone is
+not found there. The registry's own `contains` still answers yes for one, but
+only whole-registry readers (`LevelBuilder`, the content and sound-group
+checks) are handed it. What is left is the memory the vanished definitions
+hold until the game exits. Every client that reloads user content over a
+session would still meet that.
 
 **The ask.** A way to remove a name (or to replace the whole set) with a
 defined meaning for handles already resolved to it. The spelling, and
 whether stale handles throw or stay invalid, are engine decisions.
 
-**What an answer lets this repository delete.** The comment in
-`game/stage_loading.h` and the roadmap's note about stale entries. The rescan
-would remove the names that left the list, so `contains` and `get` would
-agree with it. This is a local draft,
-not a filed issue.
+**What an answer lets this repository delete.** The paragraph about
+unreachable definitions in `game/stage_catalog.h` and the roadmap's note
+about stale entries. `StageCatalog::remove_user_stages` would remove the
+names that left the list, so the registry would agree with it. This is a
+local draft, not a filed issue.
 
 ---
 
@@ -1384,6 +1463,15 @@ still only reads.
   then `Reset()`, and only the engine can make it. Nothing here works around
   it, so there is no exhibit yet. The `ROAD#3` listening session observes the
   case. A report follows if that session shows it in ordinary play.
+  **Rechecked 2026-10-29 at master `b96bad6`:** engine `2b3b97b` (2026-10-26,
+  *Retry unavailable XAudio2 output without restarting voices*, not in
+  `v0.2.0`) retries an unavailable default output once a second while active.
+  Banks and persistent voice handles stay valid, but one-shots are dropped and
+  persistent voices stop, and the game has to play them again. So no report
+  is owed. Both music owners now replay a looping voice stopped from outside
+  ([`ROAD#36`](../audio-inventory.md#looping-music-after-device-recovery-road36),
+  done 2026-10-29 ahead of the bump), so the bump leaves nothing here for music.
+  Other persistent loops are outside that scope.
 
 - **The display-idle owner is client-side** (added 2026-10-24).
   `ROAD#6` now supplies the [client exhibit](../../game/display_awake.cpp):
@@ -1818,3 +1906,224 @@ the end of a tick) are not used here yet. No source break.
 **Validation:** the CI run on pull request #3 at this pin, `x64-debug` and
 `x64-release`: build, consumer acceptance, the movement feedback probe, the
 startup check and, in Release, the package.
+
+# Preparing the next bump (2026-10-29)
+
+Fetched 2026-10-29: upstream master is `b96bad6`, 182 commits past the pin
+`1e60fb2` (`v0.2.0`). No tag has been cut since. Engine `TODO.md` gates
+`v0.3.0` only on `SITE#3`, the website snapshot acceptance, and its `SRL-07`
+row waits on this client to migrate the renamed constants at its next pin
+move. AGENTS.md gives a week from a minor tag to move the pin. The work below
+can start before the tag, so that week is spent on validation rather than
+discovery. None of it moves the pin or checks out anything in
+`external/labrador`.
+
+Master's Unreleased section in `CHANGES.md` also carries the answers to
+reports 23 and 25 (see [Live](#live)) and the audio-recovery change under
+[What is deliberately not here](#what-is-deliberately-not-here). Those are
+spent at the bump itself, not here.
+
+## Remove the manifest's `_comment` key (`HYG#23`)
+
+**Done 2026-10-29.** The key is gone; README's Audio section already said
+everything it did, so no wording moved. A JSON check of
+`game/content/manifest.json` finds only `assets` at the root and only `kind`,
+`directory`, `names` and `optional` in its four groups. At the current pin the
+x64-debug consumer acceptance passed (69 cases, the pull-request exclusions)
+and x64-release passed all 73 (`movement` rerun alone after the parallel
+compile ran out of compiler heap). `check-startup.ps1` passed the Debug
+executable with `-RequireAudio`, and a copy with `sounds/paint_exe.xwb`
+removed with `-RequireNoAudio`, reporting the silent bank once on stderr.
+The record as filed:
+
+Engine `e166dcc` (2026-10-29, *Reject unknown manifest
+and sprite-sheet keys*, not in `v0.2.0`) makes `read_asset_manifest` refuse
+any key it does not know. The root may hold only `assets`
+(`engine/assets/asset_manifest_loader.cpp:16` on master). A group may hold
+only `kind`, `directory`, `names` and `optional` (`:25`).
+`game/content/manifest.json:48` puts a `_comment` in the `sound_bank` group.
+It is the only key outside that schema, and at the bump startup would refuse
+the manifest. The six sprite sheets under `game/content/textures/` use only
+keys the new sprite-sheet checks accept.
+
+- **Scope:** delete that one key. `README.md`'s Audio section (lines 412-413)
+  already says what the comment says: the bank is optional, and a missing bank
+  gets a silent substitute reported once on stderr. Move any wording the
+  README lacks there. `presentation.json`'s `_comment` keys are read by this
+  game, not by the engine, and are out of scope.
+- **First step:** remove the key and build `x64-debug`. The pin's loader
+  ignores unknown keys, so the change is safe now.
+- **Acceptance:** a JSON check finds no group key outside the four allowed
+  keys and no root key but `assets`. Startup and consumer acceptance pass at
+  the current pin. The missing-bank fallback still starts silent when the bank
+  is renamed away, checked as AGENTS.md describes, with no audio hardware
+  needed.
+- **Does not decide:** whether the bank stays optional. That is the release's
+  call, and AGENTS.md says to keep the fallback.
+
+## Trial-build against engine master (`HYG#24`)
+
+**Done 2026-10-29.** This game was built once against engine master `b96bad6`
+(*Synchronize LineSweeper page-test key phases with UI updates*, 182 commits
+after `v0.2.0`). The build ran in a scratch worktree of `a992d8f1` whose own
+submodule was checked out at that commit, and the worktree was then removed.
+The real pin stays at `v0.2.0` (`1e60fb2`), and `git submodule status` is
+unchanged. Configuring `x64-debug` succeeded with no CMake change, because
+nothing here names the math target.
+
+The game, the editor and every acceptance case were built in passes. Each
+pass added scratch-only stand-ins for one class, so the next class could
+surface. A raw error count mostly measures cascades: the first pass printed
+12,237 error lines, and `C1003` (too many errors) stopped 92 of them early.
+The counts below are therefore distinct error sites, each a file and line.
+
+| Pass and scratch stand-in | Game (`ColourWars`) | Acceptance (88 cases, `-CompileOnly`) |
+|---|---|---|
+| 1. none | 165 translation units fail. In 132 the first error is `mattmath`, and in 33 it is one of the seven removed types. The editor builds and links unchanged. | `run-acceptance.ps1` stops before compiling: "A required build output is missing" for `engine/math/MattMath.lib`, now `LabradorMath.lib` |
+| 2. `namespace mattmath = labrador;` and the seven types copied from `v0.2.0` | 117 fail, every first error a constant: `ZERO` at 228 sites in 85 files, `PI`/`PI_OVER_2` at 21 in 11, `DEFAULT_CAMERA` 3, `ONE` 3 | with the library path patched: 61 fail; first errors are 54 constants, 4 removed members and 3 link failures; constants at 355 sites in 92 files; no `mattmath` errors, since the alias rides in `game/pch.h` |
+| 3. master's constant table applied mechanically | 6 fail: 8 removed-member sites in 5 files, plus the `pi` collision below | 7 fail: 5 removed-member sites, plus the three link failures below; the other 81 cases build |
+| 4. v0.2.0 bodies for the removed members | builds and links; `check-startup.ps1 -RequireAudio` passes on the master executable | not run |
+
+Breaks by class, measured:
+
+- **`mattmath` namespace and `LabradorMath`:** the first error in 132 game
+  translation units. `MattMath.lib` is named in six scripts:
+  `run-acceptance.ps1:222`, `check-display-awake.ps1`, `check-frame-pacing.ps1`,
+  `check-movement-feedback.ps1`, `check-paint-fx.ps1` and `check-painter.ps1`.
+  Each refuses to start without that library.
+- **Constant renames:** 255 sites in 91 files in `game/` (pass 2) and 355 in
+  92 files under `scripts/` (pass 2, acceptance). The grep estimate of about
+  900 `ZERO` uses counted every use, not the sites a compiler reports first.
+  Master's rename table covers every one, applied mechanically.
+- **A new name collision, not in the estimate:** `game/debug/bot.cpp:22`
+  declares its own `constexpr float pi`. Under `using namespace labrador` it
+  is ambiguous with master's `labrador::pi` at lines 279, 318 and 430.
+- **Removed members:** exactly the estimated set. In `game/`:
+  `calculate_intermediate_camera` (`level.cpp:384`, `:659`,
+  `level_intro.cpp:254`), `set_position_y_from_bottom` (`player.cpp:920`,
+  `:1319`, `:1328`), `from_top_left_bottom_right`
+  (`level_object_builder.cpp:114`) and `set_position_from_top_right_origin`
+  (`results_menu.cpp:444`). In acceptance there are five
+  `from_top_left_bottom_right` sites: `cq_blockout/fixtures.cpp:84`,
+  `crossfeed/fixtures.cpp:84`, `press_tower/fire_checks.cpp:38`,
+  `press_tower/fixtures.cpp:105` and `terrain.cpp:112`.
+- **Seven removed types:** the first error in 33 game translation units.
+  [`HYG#25`](#carry-the-seven-removed-engine-types-into-the-client-hyg25)
+  owns them. The `v0.2.0` copies compiled with no error against master's
+  public API once the alias and the constant table were applied to them.
+  `UiTextDropShadow` was carried as a separate header over master's
+  `widget.h`.
+- **A new link break, not in the estimate:** `action_bindings`,
+  `input_bindings` and `keyboard_jump_capture` each define a fake
+  `labrador::GamepadReader`, and `painter_visual.cpp` has the same kind of
+  fake. Master's reader adds `vibrate` and `stop_vibration` (`cadc962`, the
+  [report 25](#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit)
+  answer), and `Gamepads` calls them. The fakes lack them, so the linker pulls
+  the engine's `gamepad_reader.cpp.obj` as well, and every reader member is
+  defined twice (`LNK2005`, `LNK1169`). At the bump the fakes need both
+  members.
+- **`RectangleI` include:** no error. Every use reaches
+  `engine/math/rectanglei.h` through another header.
+- **`/utf-8`:** no error. `game/` and `editor/` are ASCII. The three
+  non-ASCII acceptance sources (`team_palette.cpp`, `user_stages.cpp` and
+  `level_editor/user_stage_checks.cpp`) are compiled by `run-acceptance.ps1`,
+  whose own flag list does not inherit `labrador_settings`. At the bump the
+  game objects get `/utf-8` but those probes do not, unless the runner adds it.
+- **Runtime:** none in the master build beyond the manifest key `HYG#23`
+  removed. Putting the old `_comment` back into the staged manifest made
+  master refuse startup: "assets[3] has unknown key '_comment'".
+- **Configure:** no change needed.
+
+What this left for the bump: the rename sweep (namespace, the six script
+library paths and the constants), the `pi` collision, the eight game and five
+acceptance removed-member sites, the three fake readers' two members, `/utf-8`
+in the acceptance runner, and `HYG#25`. It does not decide when to bump. Engine
+releases set that, under the pin policy, and adopting master's names beyond
+what compiles is the bump's work.
+
+## Carry the seven removed engine types into the client (`HYG#25`)
+
+**Done 2026-10-29.** The seven types now live in
+[game/carried/](../../game/carried/), copied from the pinned engine
+(`v0.2.0`, the last release that has them) into `namespace colourwars`. The
+namespace keeps them from ever being ambiguous with an engine type: at the
+pin, where the engine still declares its own copies, and at any later engine
+type of the same name. Each copy keeps the original shape: the same bases,
+virtuals, members, defaults and access. A diff against the engine sources
+differs only in the namespace, `labrador::` qualifiers on engine names in the
+headers (comments left as written), a file-scope `using namespace labrador` in
+the sources that need it, and a provenance note. `UiTextDropShadow`, which was
+part of `engine/ui/widget.h`, is its own header. Every use in `game/` and
+`scripts/` names `colourwars::X` and includes `game/carried/*.h`. No file
+includes one of the removed engine headers, and the editor uses none of the
+types.
+
+Hierarchy rungs that moved from the engine into the client, at the same depth:
+
+- `MovingObject` under `Player` and `Projectile`, so the
+  `ProjectileMist -> DiffusingProjectile -> Projectile -> MovingObject`
+  chain AGENTS.md describes is unchanged.
+- `AnimationObject` under `Player`, `Projectile`, `FigureClothing` and
+  `PaintTileSplash`.
+- `SoundBankObject` under `MenuPage` (so every main-menu and pause page),
+  `ScreenMusic`, `ConnectionAudio` and `ResumeAudio`.
+- `UiTextDropShadow`, itself on `labrador::UiWidget` and the carried
+  `TextDropShadow`, under `PromptBar` and `WrappedTextDropShadow`.
+- `CameraTools` and `RotationOrigin` are used rather than derived from, in
+  `player_camera.h`, `debug_overlay_draw.cpp`, `weapon.h`, `weapon.cpp`,
+  `projectile_details.h` and `tuning.cpp`.
+
+`docs/oop-guide.md` names none of the seven, so it needs no change.
+
+Verification at the pin:
+
+- Default acceptance passes: x64-debug with CI's pull-request exclusions,
+  and all 73 cases in x64-release.
+- `menu_presentation` first failed on an include. Its `paper_checks.h` is a
+  fragment with no includes of its own, and the old name had arrived through
+  the engine's `widget.h`. `menu_presentation.cpp` now includes the carried
+  header, and the case passes in both presets.
+- `check-painter.ps1 -IdentityOnly` (Release) compiles the painter probe,
+  whose 31 `painter_visual` fragments reach the carried header through
+  `main_menu.h` and `results_menu.h`, and passes.
+- A read-only review workflow (shape fidelity, coverage and master readiness,
+  each finding put to a skeptic) confirmed only that `menu_presentation`
+  include.
+
+Against master, the `HYG#24` scratch trial was rebuilt at `b96bad6` with this
+change applied. It used the namespace alias, the constant table and the
+removed-member stand-ins, but no type shims. The game built and linked, and
+`check-startup.ps1 -RequireAudio` passed. So at the bump the carried copies
+need only the same namespace and constant renames as the rest of `game/`.
+
+The scope as filed:
+
+`730dd99` (2026-10-27, *Remove engine
+types nothing uses*) deletes `MovingObject`, `RotationOrigin`,
+`SoundBankObject`, `AnimationObject`, `CameraTools`, `TextDropShadow` and
+`UiTextDropShadow`. Its `CHANGES.md` entry gives no replacement: "A game that
+used one should copy the class from the previous release into its own
+source." This game builds hierarchy rungs on four of them: `Player` and
+`Projectile` on `MovingObject` (`player.h:104`, `projectile.h:25`), `MenuPage`,
+`ScreenMusic` (`screen_music.h:10`), `ConnectionAudio` and `ResumeAudio` on
+`SoundBankObject`, and `FigureClothing` and `PaintTileSplash` on
+`AnimationObject`. `UiTextDropShadow` appears in 57 files. At `v0.2.0` the six
+headers and their sources come to about 860 lines.
+
+- **Scope:** copy each type from `v0.2.0` into `game/` with its shape
+  unchanged: same bases, virtuals and members. Use names or a namespace that
+  cannot become ambiguous with a later engine type. Repoint includes and base
+  lists. Do not flatten, merge or turn a rung into a value type; AGENTS.md
+  explains why. Record here which rungs moved from the engine into the
+  client, and update `docs/oop-guide.md` at the bump.
+- **First step:** list each type's engine dependencies at `v0.2.0` against
+  master, for example `UiTextDropShadow` against master's `UiWidget`, which is
+  still not `final`. That shows each copy compiles on master's public API
+  alone.
+- **Acceptance:** the copies build at the current pin and in the `HYG#24`
+  scratch trial against master. No `game/` or `scripts/` file includes one of
+  the seven removed engine headers. The hierarchy depth that AGENTS.md
+  describes is unchanged. Consumer acceptance passes in both presets.
+- **Does not decide:** whether any of these rungs should become an engine
+  report. A copied class that keeps forcing a bad answer gets its own report
+  in [Live](#live), with the copy as its exhibit.

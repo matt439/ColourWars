@@ -325,13 +325,13 @@ namespace debug_console_acceptance
 		require(clock.timescale() == DebugClock::max_timescale, "Timescale is clamped");
 		clock.set_timescale(1.0f);
 
-		std::vector<PlayerInputData> inputs(input_slots::count);
+		std::vector<SlotInput> inputs(input_slots::count);
 		inputs[4].jump_pressed = true;
 		inputs[4].jump_held = true;
 		inputs[4].toggle_debug = true;
 		inputs[4].toggle_pause_menu = true;
 		inputs[4].x_movement = 1.0f;
-		const std::vector<PlayerInputData> later = DebugClock::without_edges(inputs);
+		const std::vector<SlotInput> later = DebugClock::without_edges(inputs);
 		require(!later[4].jump_pressed && !later[4].toggle_debug,
 			"Later runs of a step drop the latched press edges");
 		require(later[4].jump_held && later[4].x_movement == 1.0f && later[4].toggle_pause_menu,
@@ -367,7 +367,7 @@ namespace debug_console_acceptance
 		request.players = 2;
 		MatchPlan plan = planner.resolve(nullptr, request, no_pads, random);
 		require(plan.ok, "A stage and player count resolve: " + plan.error);
-		const std::vector<MenuPlayerSettings> seats = plan.settings.player_settings();
+		const std::vector<SeatSetup> seats = plan.settings.player_settings();
 		require(seats.size() == 2 && seats[0].num == input_slots::keyboard_and_mouse &&
 			seats[1].num == -1, "With no pads, seat 0 is keyboard/mouse and seat 1 an idle dummy");
 		require(seats[0].team == PlayerTeam::a && seats[1].team == PlayerTeam::b,
@@ -375,7 +375,7 @@ namespace debug_console_acceptance
 		require(plan.settings.screen_layout() == labrador::ScreenLayout::two_player,
 			"The layout follows the player count");
 		require(plan.reset_session, "A new roster starts a new session");
-		for (const MenuPlayerSettings& seat : seats)
+		for (const SeatSetup& seat : seats)
 		{
 			require(!input_slots::is_pad(seat.num),
 				"No seat claims a pad that is not connected (that would open the pause menu)");
@@ -395,7 +395,7 @@ namespace debug_console_acceptance
 		weapons.weapons.push_back({ 1, "roller" });
 		plan = planner.resolve(&plan.settings, weapons, two_pads, random);
 		require(plan.ok, "Weapons resolve on a running match: " + plan.error);
-		for (const MenuPlayerSettings& seat : plan.settings.player_settings())
+		for (const SeatSetup& seat : plan.settings.player_settings())
 		{
 			require(seat.weapon != WeaponType::random_primary &&
 				static_cast<int>(seat.weapon) < static_cast<int>(WeaponType::max_prim_wep),

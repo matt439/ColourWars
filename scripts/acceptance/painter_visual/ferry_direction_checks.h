@@ -10,7 +10,7 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences, int count,
     bool left_heading)
 {
-    MenuLevelSettings settings; settings.set_stage("turbulence_ferry_trial"); settings.set_player_count(count);
+    MatchSetup settings; settings.set_stage("turbulence_ferry_trial"); settings.set_player_count(count);
     settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
         (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
     settings.begin_input_claims(3); constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
@@ -46,7 +46,7 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
         info.zoom_out_start_bounds_rectangle(), info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation,
         L"Ferry direction inspection", info.sound_bank_name(), info.music_name(), info.music_volume(),
         info.end_sting_name(), info.end_sting_volume(), app.resolution_manager(), app.viewport_manager(),
-        app.render_resources(), app.audio_resources(), &preferences, app.mouse(), info.stations(), OpeningMode::off,
+        app.render_resources(), app.audio_resources(), &preferences, info.stations(), OpeningMode::off,
         settings.duration(), nullptr, &settings);
     return { std::move(level), ferry };
 }
@@ -124,7 +124,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             std::srand(227); auto fixture = ferry_direction_level(app, left ? left_info : right_info,
                 tuning, presentation, preferences, count, left); ++builds;
             Level& level = *fixture.level; auto& ferry = *fixture.ferry; const auto inputs = neutral_inputs();
-            const auto step = [&]() { level.update(inputs, dt); require(++updates <= 5000, "Ferry native update budget exceeded"); };
+            const auto step = [&]() { level.update(acceptance::slot_seats(level, inputs), dt); require(++updates <= 5000, "Ferry native update budget exceeded"); };
             for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { step(); }
             require(level.state() == LevelState::active, "Ferry native countdown did not finish");
             require(level.place_player(0, { ferry.bounds().center().x, ferry.bounds().top() - level.player(0).rectangle().height }),
@@ -214,7 +214,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
     }
     // StagePreview builds the shipped, unpainted initial ferry independently.
-    Save preview_save; GameData data; data.set_application(&app); data.set_save(&preview_save); data.set_level_infos(&levels);
+    Save preview_save; SettingsSession preview_save_session(preview_save); GameData data; data.set_application(&app); data.set_save(&preview_save); data.set_settings_session(&preview_save_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_ferry_trial" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); StagePreview preview("ferry-preview", preview_box, &data);
     preview.set_stage("turbulence_ferry_trial");
     const LevelObjectBuilder preview_builder(app.render_resources(), app.audio_resources(), &preferences,

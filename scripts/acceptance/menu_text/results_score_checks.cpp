@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
 // Results: series score and numbered round headings. Percentages are in
 // results_percentage_checks.cpp.
@@ -145,7 +146,7 @@ namespace menu_text_acceptance
             "Series-score boundary fixture changed the full-height Results paper or actual row");
         std::wstring source = edge.menu_text().results.score_line(1, 0, 1);
         require(source == L"~101", "Series-score boundary must format the independently expected literal");
-        UiTextDropShadow widget("series-score-edge", source, edge.menu().detail_font, { 310.0f, 340.0f }, &world.render,
+        colourwars::UiTextDropShadow widget("series-score-edge", source, edge.menu().detail_font, { 310.0f, 340.0f }, &world.render,
             edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
         source = L"Changed after construction";
         require(widget.bounds() == mattmath::RectangleF(310.0f, 340.0f, 1300.0f, 20.0f) && widget.text() == L"~101" &&
@@ -155,7 +156,7 @@ namespace menu_text_acceptance
         variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_width_overflow"); }, &world);
         const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_bottom"); });
         bottom.validate_resources(world.render, world.audio);
-        UiTextDropShadow tall("series-score-bottom", L"~101", bottom.menu().detail_font, { 944.0f, 340.0f }, &world.render,
+        colourwars::UiTextDropShadow tall("series-score-bottom", L"~101", bottom.menu().detail_font, { 944.0f, 340.0f }, &world.render,
             bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
         require(tall.bounds() == mattmath::RectangleF(944.0f, 340.0f, 32.0f, 630.0f) && tall.bounds().bottom() == 970.0f,
             "Series-score height must use full paper containment without a new row-fit or overlap restriction");
@@ -364,7 +365,7 @@ namespace menu_text_acceptance
         require(wide_nines.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) &&
             wide_nines.results_menu().heading_y == 125.0f, "Numbered heading boundary changed the actual paper or row");
         std::wstring source = wide_nines.menu_text().results.round_title(1999999999);
-        UiTextDropShadow widget("round-heading-edge", source, wide_nines.menu().heading_font, { 310.0f, 125.0f },
+        colourwars::UiTextDropShadow widget("round-heading-edge", source, wide_nines.menu().heading_font, { 310.0f, 125.0f },
             &world.render, wide_nines.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
         source.clear();
         require(widget.text() == L"~1999999999" && widget.bounds() == mattmath::RectangleF(310.0f, 125.0f, 1300.0f, 20.0f) &&
@@ -381,7 +382,7 @@ namespace menu_text_acceptance
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_wide2_overflow"); }, &world);
         const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_bottom"); });
         bottom.validate_resources(world.render, world.audio);
-        UiTextDropShadow tall("round-heading-bottom", L"~1", bottom.menu().heading_font, { 952.0f, 125.0f },
+        colourwars::UiTextDropShadow tall("round-heading-bottom", L"~1", bottom.menu().heading_font, { 952.0f, 125.0f },
             &world.render, bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
         require(tall.bounds() == mattmath::RectangleF(952.0f, 125.0f, 16.0f, 845.0f) && tall.bounds().bottom() == 970.0f,
             "Numbered heading must meet the full paper bottom without a new collision or row-height restriction");

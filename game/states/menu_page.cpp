@@ -1,14 +1,13 @@
 #include "game/pch.h"
 #include "game/states/menu_page.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
 // Read through the constructor argument: context_ is not initialized
 // until after the SoundBankObject base.
 MenuPage::MenuPage(MenuContext* context) :
-	SoundBankObject(context->data()->presentation()->menu().sound_bank,
+	colourwars::SoundBankObject(context->data()->presentation()->menu().sound_bank,
 		context->data()->audio_resources()),
 	focus_motion_(context->data()->presentation()->menu().motion),
 	context_(context)
@@ -26,7 +25,6 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->chrome_sheet_ = this->render_resources()->resolve_sprite_sheet(style.sprite_sheet);
 	this->chrome_pixel_ = this->render_resources()->sprite_sheet(this->chrome_sheet_)->
 		resolve_sprite_frame(style.fill_frame);
-	this->brand_font_ = this->render_resources()->resolve_sprite_font(style.brand_font);
 }
 
 void MenuPage::update(float dt)
@@ -52,11 +50,11 @@ void MenuPage::update(float dt)
 	}
 	this->focus_motion_.observe(this->motion_focus());
 	this->focus_motion_.update(this->context()->active() ? dt : 0.0f,
-		this->save()->play_settings().reduce_effects);
+		this->settings_session()->play_settings().reduce_effects);
 	for (MenuFocusMotion* motion : this->selection_motion_)
 	{
 		motion->update(this->context()->active() ? dt : 0.0f,
-			this->save()->play_settings().reduce_effects);
+			this->settings_session()->play_settings().reduce_effects);
 	}
 	if (!this->context()->active()) { this->reset_menu_motion(); }
 	const bool leaving = this->menu_context()->music_exit_pending();
@@ -129,7 +127,7 @@ Activation MenuPage::activate_focus()
 
 void MenuPage::press_focus()
 {
-	if (!this->context()->active() || this->save()->play_settings().reduce_effects)
+	if (!this->context()->active() || this->settings_session()->play_settings().reduce_effects)
 	{
 		this->focus_motion_.reset();
 		return;
@@ -139,7 +137,7 @@ void MenuPage::press_focus()
 	if (focused != nullptr) { this->focus_motion_.press(); }
 }
 
-bool MenuPage::debug_start_match(const MenuLevelSettings& /*plan*/)
+bool MenuPage::debug_start_match(const MatchSetup& /*plan*/)
 {
 	return false;
 }
@@ -291,7 +289,7 @@ const MenuText& MenuPage::text() const
 {
 	return this->text_;
 }
-MenuLevelSettings* MenuPage::level_settings() const
+MatchSetup* MenuPage::level_settings() const
 {
 	return this->context_->level_settings();
 }
@@ -306,6 +304,10 @@ ResolutionManager* MenuPage::resolution_manager() const
 Save* MenuPage::save() const
 {
 	return this->data()->save();
+}
+SettingsSession* MenuPage::settings_session() const
+{
+	return this->data()->settings_session();
 }
 RenderResources* MenuPage::render_resources() const
 {
@@ -367,30 +369,16 @@ void MenuPage::draw_chrome(DrawList& list) const
 	sheet->draw(list, this->chrome_pixel_, RectangleF(style.brand_position.x,
 		style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f,
 		style.rule_height), style.panel_edge_colour);
-	list.set_filter(TextureFilter::linear);
-	if (this->shows_brand())
-	{
-		list.draw_text(this->brand_font_, this->text_.brand,
-			style.brand_position, style.unhighlight, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
-	}
 
 	// Use the focus group's result, so the backing follows keyboard, pad,
 	// disabled rows and compound option rows without duplicating navigation.
 	const UiWidget* focused = this->focus_.focused(0);
 	if (this->shows_focus_backing() && focused != nullptr && !focused->hidden())
 	{
-		list.set_filter(TextureFilter::point);
 		RectangleF panel = focused->bounds();
 		panel.inflate(style.focus_padding);
 		sheet->draw(list, this->chrome_pixel_, panel, style.focus_panel_colour);
-		// Move only the accent within its existing padding. Text, panel bounds
-		// and the focus group's navigation geometry keep their resting layout.
-		const bool animate = this->animates_focus_backing() &&
-			this->focus_.enabled(focused) && !this->save()->play_settings().reduce_effects;
-		const float inward = animate ? std::min(
-			style.accent_width * (this->focus_motion_.arrow_offset() + this->focus_motion_.press_fraction()),
-			std::max(0.0f, style.focus_padding.x - style.accent_width)) : 0.0f;
-		sheet->draw(list, this->chrome_pixel_, RectangleF(panel.x + inward, panel.y,
+		sheet->draw(list, this->chrome_pixel_, RectangleF(panel.x, panel.y,
 			style.accent_width, panel.height),
 			this->focus_.enabled(focused) ? style.highlight : style.disabled);
 	}
@@ -421,7 +409,7 @@ MenuSound MenuPage::resolve_sound(const PresentationSound& sound) const
 	return { this->resolve_wave(sound.name), sound.volume };
 }
 
-void MenuPage::play_wave(const MenuSound& sound) const
+void MenuPage::play_wave(const MenuSound& sound)
 {
 	this->play_wave(sound.wave, sound.volume);
 }

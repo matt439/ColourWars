@@ -6,6 +6,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <array>
 #include <filesystem>
@@ -16,10 +17,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -364,7 +362,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("tool motion", [&]
     {
         require(argc == 2, "Usage: tool_motion.exe <content directory>");
         World world{ std::filesystem::path(argv[1]) };
@@ -373,10 +371,5 @@ int main(int argc, char** argv)
         check_cosmetic_equivalence(world);
         check_roller_contacts_and_lifecycle(world);
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL tool motion: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

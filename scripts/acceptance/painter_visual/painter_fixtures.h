@@ -1,10 +1,7 @@
 // Included inside painter_visual.cpp's private namespace, before every other
 // painter_visual/ header: the shared probe fixtures and raster helpers.
 
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -340,7 +337,7 @@
         int count, TeamColourPair palette, bool roller = false, bool same_team = false,
         WeaponType tool = WeaponType::none, OpeningMode opening = OpeningMode::off)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(count);
         settings.set_stage("movement_course");
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
@@ -382,9 +379,9 @@
 
     void settle(Level& level, const std::vector<PlayerInputData>& inputs)
     {
-        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(inputs, dt); }
+        for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         require(level.state() == LevelState::active, "countdown did not reach active play");
-        for (int tick = 0; tick < 60; ++tick) { level.update(inputs, dt); }
+        for (int tick = 0; tick < 60; ++tick) { level.update(acceptance::slot_seats(level, inputs), dt); }
         for (int view = 0; view < level.player_count(); ++view)
         {
             require(level.player(view).state() == PlayerState::alive, "authored spawn did not settle alive");

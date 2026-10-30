@@ -9,8 +9,8 @@
 #include "game/objects/crude_drawing.h"
 #include "game/series_stage_rule.h"
 #include "game/stage_loading.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
@@ -19,7 +19,7 @@ using namespace labrador;
 
 MainMenuStageSelect::MainMenuStageSelect(MenuContext* context,
 	std::optional<Session> between_rounds, PlayerTeam picker) :
-	MainMenuPage(context, std::move(between_rounds)),
+	RosterSetupPage(context, std::move(between_rounds)),
 	picker_(this->between_rounds() ? picker : PlayerTeam::none),
 	stage_motion_(context->data()->presentation()->menu().motion)
 {
@@ -59,9 +59,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				}
 				else
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuWeaponSelect>(
-							this->menu_context()));
+					this->go_to(MainMenuScreen::weapon_select);
 				}
 				return;
 			}
@@ -149,7 +147,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 
 void MainMenuStageSelect::on_resume()
 {
-	MainMenuPage::on_resume();
+	RosterSetupPage::on_resume();
 	this->input()->reset_actions();
 }
 
@@ -360,7 +358,7 @@ void MainMenuStageSelect::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
 			main.stage_box_size), resources, &style, &this->paper_art_, &this->focus_);
-	this->heading_ = std::make_unique<UiTextDropShadow>("heading",
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>("heading",
 		this->picker_ == PlayerTeam::a ? this->text().stage.team_a_picks :
 		this->picker_ == PlayerTeam::b ? this->text().stage.team_b_picks :
 		this->text().heading(MenuHeading::arena), style.heading_font,
@@ -377,16 +375,16 @@ void MainMenuStageSelect::init()
 		CrudeDrawing::premultiplied(this->presentation().hud().player_identity_background_colour));
 	this->stage_preview_ = std::make_unique<StagePreview>("stage_preview",
 		preview, this->data());
-	this->stage_name_ = std::make_unique<UiTextDropShadow>("stage_name",
+	this->stage_name_ = std::make_unique<colourwars::UiTextDropShadow>("stage_name",
 		L"", style.item_font, look.name_position, resources,
 		look.unselected, clear_shadow, style.item_shadow_offset);
-	this->navigation_ = std::make_unique<UiTextDropShadow>("navigation",
+	this->navigation_ = std::make_unique<colourwars::UiTextDropShadow>("navigation",
 		L"", style.detail_font, look.navigation_position, resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset);
-	this->stage_record_ = std::make_unique<UiTextDropShadow>("stage_record",
+	this->stage_record_ = std::make_unique<colourwars::UiTextDropShadow>("stage_record",
 		L"", look.record_font, Vector2F(0.0f, look.record_y), resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset, true);
-	this->random_mark_ = std::make_unique<UiTextDropShadow>("random_mark",
+	this->random_mark_ = std::make_unique<colourwars::UiTextDropShadow>("random_mark",
 		L"?", this->look().announcement_font, Vector2F::ZERO, resources,
 		style.highlight, style.shadow_colour, style.title_shadow_offset);
 	this->random_mark_->set_position(preview.center() -
@@ -399,7 +397,7 @@ void MainMenuStageSelect::init()
 		resources, &style, &this->briefing_art_, &this->focus_);
 	this->briefing_accent_ = std::make_unique<MenuStageAccent>("briefing_accent",
 		RectangleF(briefing.position(), Vector2F(briefing.width, style.accent_width)),
-		resources, &style, &this->stage_motion_, &this->save()->play_settings(),
+		resources, &style, &this->stage_motion_, &this->settings_session()->play_settings(),
 		std::max(0.0f, look.briefing_padding.y - style.accent_width));
 	this->briefing_accent_->set_colour(this->paper_art_.ink);
 	this->stage_motion_.observe(this->briefing_accent_.get());
@@ -428,7 +426,7 @@ void MainMenuStageSelect::init()
 		const std::string& name, const std::wstring& text,
 		const std::string& font, float line, const Colour& colour)
 	{
-		auto label = std::make_unique<UiTextDropShadow>(name, text, font,
+		auto label = std::make_unique<colourwars::UiTextDropShadow>(name, text, font,
 			info + row * line, resources, colour, clear_shadow,
 			style.detail_shadow_offset);
 		this->text_container_->add_child(label.get());
@@ -448,10 +446,10 @@ void MainMenuStageSelect::init()
 		this->text().stage.solo_objective : this->text().stage.versus_objective,
 		style.brand_font, 4.0f, this->paper_art_.ink);
 
-	this->selection_status_ = std::make_unique<UiTextDropShadow>("selection_status",
+	this->selection_status_ = std::make_unique<colourwars::UiTextDropShadow>("selection_status",
 		L"", style.detail_font, info + row * 6.0f, resources,
 		look.unselected, clear_shadow, style.detail_shadow_offset);
-	this->selection_hint_ = std::make_unique<UiTextDropShadow>("selection_hint",
+	this->selection_hint_ = std::make_unique<colourwars::UiTextDropShadow>("selection_hint",
 		L"", style.brand_font, info + row * 7.0f, resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset);
 	this->text_container_->add_child(this->selection_status_.get());

@@ -66,7 +66,7 @@ establish difficulty or gameplay quality.
 #### Roster foundation (2026-10-27)
 
 The first bounded slice adds explicit human/bot seats and `BotDifficulty`
-(`easy`, `normal`, `hard`) to `MenuLevelSettings` in both builds. Existing
+(`easy`, `normal`, `hard`) to `MenuLevelSettings` (now `MatchSetup`) in both builds. Existing
 seats default to human; P1 remains the human setup host. A bot occupies one of
 the four participant seats and has no physical device slot. An unclaimed
 human, including a Debug dummy, is still human: `num == -1` alone never means
@@ -127,7 +127,10 @@ The integration contract for the next slices is:
   seeded private random stream per bot. All difficulties obey normal movement,
   tool, reserve, health, respawn and scoring rules; Hard does not gain hidden
   enemies, extra paint or speed. Initial values remain provisional until the
-  attended comparison establishes distinct, useful difficulties.
+  attended comparison establishes distinct, useful difficulties. In a Debug
+  build that comparison starts from a launch line, for example
+  `+stage crossfeed +players 2 +seat 2 bot hard`
+  ([`DBG#17`](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17)).
 
 #### Saved identity and replay metadata (2026-10-27)
 
@@ -1241,6 +1244,52 @@ comparison and usefulness remain the author's gate. Physical-pad checks were
 not run. Mover painting and pane-clamped labels are implemented above; values
 remain provisional and `ROAD#10` is `DECISION`.
 
+#### Fixed scored slabs for bots (`ROAD#38`)
+
+**Measured; no segment landed (2026-10-30).** When filed, bots treated the fixed
+scored slabs as solid boxes: `Level::bot_supports` leaves out
+`structure_fixed_slab`, `Level::bot_ramps` takes only ramps, and the traversal
+sweeps keep slab bounds as conservative barriers
+(`game/ai/match_bot_navigation.cpp`, `match_bot_ramp.cpp`). That is unchanged.
+Only the explicit-only `turbulence_slab_trial` has fixed slabs; it is the mover
+trial plus one slab per side bridging the upper approach (top 880) to the
+crossover (top 800).
+
+The opt-in case `bot_slab_routes`, built like `bot_mover_routes`, runs the
+actual driver for 2400 steps per trial on both stages: an approach start (placed
+on the upper approach, as the mover case's reach route) and an ordinary spawn
+start, both teams, five tools and three difficulties, 120 trials. It counts
+steps grounded on a slab's top line (a ramp state with the uphill corner on the
+line, as `Player` supports it), owned slab-top paint, and the first arrival on
+the bot's own crossover, noting whether a slab step came first. On the mover
+trial the same slab windows must read zero; nothing else is gated.
+
+| Stage, start | Trials on a slab | Slab steps | Slab top painted | Crossover arrivals | Via a slab |
+|---|---|---|---|---|---|
+| slab trial, approach | 21/30 | 525 | 19/30 | 20/30 | 11/30 |
+| slab trial, spawn | 17/30 | 342 | 18/30 | 11/30 | 8/30 |
+| mover trial, approach | 0/30 | 0 | 0/30 | 30/30 | 0/30 |
+| mover trial, spawn | 0/30 | 0 | 0/30 | 21/30 | 0/30 |
+
+Identical in Debug and Release. The counts are not near zero: ordinary walking
+carries bots onto and up the slabs (38/60 trials), they paint the slab tops
+(37/60), and 19 of 31 crossover arrivals came over a slab. By the rule this
+item was scoped with, no slab-aware segment was added, and bot code is
+unchanged. The cost the slabs do show is fewer crossover arrivals than the
+mover trial's empty gap: 31/60 against 51/60.
+
+An unlanded experiment, recorded for whoever revisits it: offering each slab's
+top line to `choose_ramp` as a `MatchBotRamp` (bounds spanning the top line,
+with the slab's own AABB as the one obstacle its path may disregard) raised
+slab-trial crossover arrivals to 30/30 (approach) and 25/30 (spawn), 55/60.
+It was reverted because the scope did not call for it. If `POL#21` keeps the
+slabs, that is the measured starting point.
+
+Evidence: `out/validation/road38/` (per-trial `MEASURE` lines in each preset's
+`bot_slab_routes-run.log`). This does not put slabs into Turbulence (`POL#21`),
+change difficulty values or close the attended `ROAD#10` gate. The slab trial
+can now join `POL#42`'s comparisons.
+
 ### Balanced random teams
 
 **GAP#1.5 - implemented (2026-10-15).** In team setup, any joined player may
@@ -1318,14 +1367,55 @@ an unknown level is refused.
 
 **Validation.** The `handicap` case checks the tuning shape and refusals,
 the roster field, the Weapon Select copy and prompts, bit-exact damage at
-every level (Off unchanged), the refill multiplier and respawn retention;
+every level (Off unchanged), the refill multiplier and respawn retention,
+and Boost on paint underfoot (below);
 `remembered_setup` round-trips and recovers handicaps. Presentation
 validation fits every level's text under every Weapon Select label.
 
 **Still the author's:** judge in attended play whether +1 and +2 are worth
 having and the values feel fair against Easy/Normal/Hard bots. The author
 picked one Boost for health and refill over health-only, refill-only or
-two-way levels; the values remain provisional until that play.
+two-way levels; the values remain provisional until that play. A Debug
+build can start that session without the menus:
+`ColourWars.exe +exec review_bots_boost` plans a seeded Crossfeed with Easy +2,
+Normal +1 and Hard bots, and `seat <n> bot|boost|team` sets any other roster
+([`DBG#17`](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17)).
+
+#### Boost on paint underfoot (`ROAD#39`)
+
+**Covered (2026-10-29); checks only.** `Player::ammo_regen_multiplier`
+multiplies the underfoot multiplier by the level's `paint_refill`
+(`game/objects/player.cpp`), which is what "multiplies paint underfoot rather
+than replacing it" above means. Paint underfoot ships disabled (`tuning.json`
+`paint_underfoot.enabled: false`, `POL#36` trial amounts), so the `handicap`
+case now exercises the combination on a test tuning copy, through the
+`paint_underfoot` case's fixture (`scripts/acceptance/paint_underfoot/fixtures.h`):
+
+- **Shipped tuning (Off):** on unpainted, own and enemy floor, every level's
+  multiplier is that level's `paint_refill` alone, bit for bit.
+- **Enabled copy, at the shipped trial amounts:** standing on actual floor
+  paint, with the support consumed through real contacts, own paint gives
+  `own_ammo_regen_multiplier` × `paint_refill` and enemy paint gives
+  `enemy_ammo_regen_multiplier` × `paint_refill` bit-exact at every level;
+  enemy 0 stays positive zero at +2, and Off on own paint equals the own
+  multiplier unchanged. Unpainted floor, a fatally hit player and a dead
+  player on own or enemy paint give `paint_refill` alone.
+- **The bot's observation:** a Hard sprayer bot placed riding Team A's mover
+  on `turbulence_mover_trial`, driven by the actual `MatchBotDriver` at
+  Level's input boundary, opens a ride finishing window whose budget counts
+  the refill at the observation's `paint_refill`
+  (`MatchBot::open_finish`). Its first refilling window lasts 158, 138 and
+  125 steps at Off, +1 and +2, under the shipped tuning and the enabled copy
+  alike; the case requires each length to match its own level's
+  `paint_refill` and no other level's, so the driver must observe the seat's
+  Boost.
+
+Validation: `handicap` and `paint_underfoot` pass in Debug and Release. No
+tuning, content or game source changed. This does not decide whether paint
+underfoot ships, whether the Boost values are fair (the author's attended
+play above, `ROAD#5`), or whether the bot's refill estimate should count
+paint underfoot; the observation still carries the handicap's `paint_refill`
+alone, as `MatchBotObservation` documents.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -1450,6 +1540,101 @@ uses it for the existing startup smoke check. A clean Windows machine still
 needs a separate deployment check. The engine pin and source are unchanged.
 The original validation predates replacement audio; current migration checks
 are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration).
+
+### Windows Sandbox run of the Release ZIP (`ROAD#37`)
+
+**Done 2026-10-30.** A Windows Sandbox run proves that the ZIP loads and runs
+on a clean OS. It does not prove that the game runs on a player's PC or GPU:
+`ROAD#1` stays `DECISION`, and no CI job runs a sandbox.
+
+**Labrador's run, recorded here.** Labrador's `PI-14` (master
+`docs/product/BACKLOG.md:294`, at `b96bad6`) records a 2026-10-28 Windows
+Sandbox run of this repository's CI Release ZIP (ColourWars `26a249d`, engine
+`1e60fb2` = v0.2.0). The sandbox was Windows 11 Enterprise 10.0.26100, with no
+Visual C++ runtime in System32 and no Visual Studio. The engine's
+`tools/consumer_check/sandbox.py` set it up, and a script drove the run. The
+sandbox's GPU was the host's RTX 5080 behind a paravirtual driver (guest driver
+10.0.26100.1150, host driver 32.0.16.1692), so the game drew instead of
+refusing. Synthetic key presses reached a keyboard-seat match and its pause
+menu. Closing the window exited with code 0. The limits Labrador states
+(`BACKLOG.md:2102`): a sandbox proves the loader and runtime requirements on a
+clean OS, not a target GPU, and Release has no WARP fallback. Not checked: a
+match on a physical pad, the Radeon iGPU (Labrador `SM-01`) and a
+non-paravirtual GPU.
+
+**The driver.** `scripts/sandbox-release.ps1 [-Zip <zip>] [-VGpu
+Default|Enable|Disable] [-Run | -HostTrial]` uses
+`out/build/x64-release/packages/ColourWars-windows-x64.zip` unless `-Zip` names
+another. It writes a run folder under `out/validation/sandbox/` containing:
+
+- `package/`: the ZIP and its extraction, mapped into the sandbox read-only.
+- `results/`: holds a copy of `scripts/sandbox/logon.ps1` and is mapped
+  writable.
+- `clean-machine.wsb`: networking is off, and the sandbox runs the logon script
+  at logon.
+- `host.json`: the host's ZIP SHA-256 and, after a run, the verdict.
+
+The logon script is self-contained and runs under Windows PowerShell 5.1. It
+starts `ColourWars.exe` with `LOCALAPPDATA` set to the results folder, waits
+for `ColourWarsWindowClass`, and captures the sandbox screen to `screen.png`.
+It then closes the game with `WM_CLOSE`, as `check-startup.ps1` does, and
+shuts the sandbox down. Before shutdown it writes `receipt.json`, which
+records:
+
+- the ZIP's SHA-256, hashed inside the sandbox;
+- `build-info.txt`;
+- the exit code;
+- the game's stderr, stdout and `last-error.log`;
+- the Windows caption, edition and build;
+- whether `vcruntime140.dll`, `vcruntime140_1.dll` and `msvcp140.dll` are in
+  System32;
+- the display adapters.
+
+The Release build has no `--smoke-test` (Labrador's script runs one), so the
+logon script checks for the window, the save and a clean exit.
+
+`-Run` starts `WindowsSandbox.exe` and waits for the receipt. It then checks
+that the receipt's hash equals the host's and closes the leftover client
+window. `-HostTrial` runs the same logon script on the host. It skips the
+screenshot, because a host screenshot would capture the user's other windows,
+and it skips the shutdown.
+
+`scripts/check-sandbox-release.ps1` checks the generator without starting a
+sandbox, using a synthetic ZIP. It checks:
+
+- the `.wsb` XML: its elements, read-only and writable mappings, networking and
+  logon command;
+- XML escaping and relative paths;
+- the copied ZIP and its extraction;
+- that the logon script parses;
+- refusals of bad input.
+
+With `-Zip` the checker also runs a host trial of a real ZIP. The game cannot
+open content through paths of 260 characters or more, so `-HostTrial` refuses
+a deep `-OutputDirectory`.
+
+**This machine's runs (MattPC, 2026-10-30).** All runs used a local Release ZIP
+built from `74df941` (engine `1e60fb2`, SHA-256
+`0C55115F...8555B9083`).
+
+- **`-Run`:** the receipt's hash matched the host's. The guest was Windows 11
+  Enterprise 24H2 26100.9711, with none of the three runtime DLLs in System32.
+  Its adapters were an "NVIDIA GeForce RTX 5080" on the Microsoft paravirtual
+  driver 10.0.26100.1150, plus the Remote Display Adapter. The title screen
+  drew, showing "Build 74df941891da / Release". The save was created, stderr was
+  empty, and `WM_CLOSE` exited with code 0.
+- **`-Run -VGpu Disable`:** the same result. The paravirtual adapter was still
+  present, so the missing-adapter refusal that Labrador describes did not
+  happen. The receipt's `refused-no-hardware-adapter` path remains unexercised.
+- **`-HostTrial`:** passed under both Windows PowerShell 5.1 and pwsh 7.6.9.
+
+The first `-Run` produced no receipt. Windows PowerShell 5.1 leaves
+`PSScriptRoot` empty in parameter defaults, so the script failed before
+writing anything. The fix sets the default in the script body, and the host
+trial now leaves `-Results` at that default as the sandbox does.
+
+These runs did not include a match, any input, audio or a physical pad. They
+also did not cover a target or non-paravirtual GPU.
 
 ## Fourth increment: pause controls/settings
 
@@ -1809,9 +1994,12 @@ Known limits, recorded so a later gap list does not file them again. The first
 now has a row.
 
 - **XInput only.** DualShock, DualSense and Switch Pro pads work only through
-  Steam Input or a wrapper. The engine's reader seam is one function wide
-  (`engine/input/gamepad_reader.h`), so a GameInput backend is Labrador work and
-  would need an exhibit before it is a report. `ROAD#2` observes the limit
+  Steam Input or a wrapper. The engine's reader seam
+  (`engine/input/gamepad_reader.h`) is a concrete class chosen at build time:
+  `sample`, `read`, `suspend` and `resume`, with XInput and browser backends at
+  the pin. Labrador master (`cadc962`, untagged; rechecked 2026-10-29 at
+  `b96bad6`) also sends vibration through it. A GameInput backend is still
+  Labrador work and would need an exhibit before it is a report. `ROAD#2` observes the limit
   (item 6 above). The author asked for it to be tracked on 2026-10-27
   (`ROAD#23`, [comparable-game gaps](#comparable-game-gaps-2026-10-27)).
 - **One keyboard seat.** That seat aims with the mouse, so a second keyboard
@@ -2238,7 +2426,8 @@ above:
 - **Vertical lifts (`ROAD#28`, XL):** define vertical admission and swept
   displacement, rider support identity and carry, ceilings/crush refusal,
   projectiles, shadows, editor envelopes and replay before choosing a trial.
-  The current horizontal carry contract does not answer these.
+  The current horizontal carry contract does not answer these; the
+  [draft](#vertical-lift-contract-draft-road28) below does, pending the author.
 - **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
@@ -2247,6 +2436,133 @@ above:
 Promote a bounded slice only once its owner records those choices and its
 acceptance. Neither adds a new physics/scoring requirement to an accepted
 arena while `POL#21` remains a geometry decision.
+
+#### Vertical-lift contract draft (`ROAD#28`)
+
+**DECISION: draft recorded, awaiting the author (2026-10-30).** The step was
+a written draft, not code; it is below. The capability stays unscoped until the
+author accepts the engineering answers and picks among the gameplay options.
+Acceptance of the draft step: every inventory row below resolved against the
+tree at the commit that records it, each engineering answer names its
+precedent, and no code, tuning or content changed. The draft chooses no trial
+and does not touch Turbulence's geometry (`POL#21`).
+
+**1. Inventory of horizontal-only sites.** Line numbers are as of this commit.
+"Assumes" is what the site takes for granted today; "A lift needs" is the
+change a vertical mover would force there, not a design.
+
+| Area | Site | Assumes | A lift needs |
+|---|---|---|---|
+| Capability note | `game/objects/translating_structure_paintable.h:23-24` | "not a lift or a rotating body" | the note rewritten for the accepted axis |
+| Engine-free spec | `game/horizontal_motion_contract.h:32-40` (`Spec::travel_x`) | one travel along +x | a vertical travel (see answer E1) |
+| Spec validation | `game/horizontal_motion_contract.h:91-110` | the endpoint is `anchor.x + travel_x` and must exceed `anchor.x` | the same distinct-endpoint check on y |
+| Paint-drive heading | `game/horizontal_motion_contract.h:26-75` (`team_a_heading`, `decode_drive`) | headings are `right`/`left`; phase 0 is the left end | `up`/`down` naming, if a lift is paint-driven (option G3) |
+| Pose | `game/horizontal_motion_contract.h:159-165`, `game/objects/horizontal_motion.cpp:59-64` | an offset adds to x only | an offset adds to y for a lift |
+| Path | `game/horizontal_motion_contract.h:167-174` | the path keeps the anchor's top and bottom and widens left/right | widen top/bottom instead |
+| Standing corridor | `game/horizontal_motion_contract.h:176-184` | one body height above a fixed `path.top` | the corridor rises with the highest pose (answer E3) |
+| Motion state | `game/objects/horizontal_motion.h:22-60` | `HorizontalMotionSpec::travel_x`; segments carry `from_x`/`to_x` | segment offsets on the lift's axis; `Vector2F` offsets already hold a y that is always 0 |
+| Segment building | `game/objects/horizontal_motion.cpp:97-103`, `:142-149` | reads `current_offset.x` | read the lift's axis |
+| Carry step | `game/objects/horizontal_motion.h:71-77` (`HorizontalCarryStep::displacement_x`) | x displacement only | a y displacement (answer E2) |
+| Admission | `game/objects/level_horizontal_motion.cpp:42-56`, `:199-238` | pose/path are horizontal; standing envelope and obstacle refusals use that path | the lift's path and corridor, same refusals |
+| Displacement budget | `game/objects/level_horizontal_motion.cpp:240-308`, refusals at `:301-305` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound |
+| Frame preparation | `game/objects/level_horizontal_motion.cpp:320-332` | carrier displacement is `after.x - before.x` | `after.y - before.y` too |
+| Persisted pose | `game/objects/level_horizontal_motion.cpp:364-380` | poses rebuilt from `previous_offset.x`/`current_offset.x` | rebuild from the lift's axis |
+| Rider carry | `game/objects/player.h:169-171`, `game/objects/player.cpp:531-550` | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before the rider's own integration (answer E2) |
+| Carrier choice | `game/objects/player.cpp:552-605` | a support is a measured or resolved top contact under the feet | unchanged rule; the top moves each step |
+| Movement feedback | `game/objects/player.cpp:455-460`, `game/objects/player.h:307-308`, `:365` | subtracts carried x from resolved x | a carried y kept out of landing/fall feedback |
+| Level step order | `game/objects/level.cpp:203-210`, `:457-459` | prepare before input, supports after contacts | unchanged order |
+| Flying-paint sweep | `game/objects/projectile_contacts.cpp:115-124` (`relative_rectangle_at`) | subtracts the mover offset from left/right only | subtract it from top/bottom |
+| Swept response | `game/objects/projectile_contacts.cpp:251-326`, response `:318` | segments are x offsets; response offsets by the full translation | segment offsets on the lift's axis |
+| Roller footprint | `game/objects/projectile_contacts.cpp:332-368`, union `:355-361` | the visited footprint grows left/right, keeping `entered.top`/`bottom` | grow top/bottom |
+| Mover world queries | `game/objects/translating_structure_paintable.cpp:248-249`, `:266-267`, `:272-273`, `:278-286`, `:300-305` | bounds, splash, `top_paint_team`, runoff and paint samples shift by `translation().x` | shift by y as well (draws at `:224`, `:230` and the cue at `:111` already use the full vector) |
+| Ferry cue | `game/objects/translating_structure_paintable.cpp:195-201` | movement heading is the sign of `after.x - before.x` | a lift's cue, if any, is its own presentation (option G3) |
+| Translated shadow | `game/objects/translated_airbrush_shadow.cpp:52-65` | bounds/cull shift by `offset.x` only; anchored at the anchor's bottom | shift by y; the shadow rides with the lift |
+| Shadow admission | `game/objects/level_object_builder.cpp:645-662` | casts for wide, thin movers | unchanged rule |
+| Loader | `game/objects/level_object_builder.cpp:150-185` | only `type: "horizontal"`; `axis`, `travel_y` and `rotation` are refused by name | a second type (answer E1) |
+| Editor guide and checks | `editor/horizontal_authoring.cpp:105-155` | guide and refusals use the horizontal path/corridor | the shared contract's lift path |
+| Editor duplicate | `editor/level_document.cpp:895-915` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path |
+| Editor mirror | `editor/level_document.cpp:1005-1018` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
+| Editor fields | `editor/level_document.cpp:616`, `:866` | `motion/travel_x` label and default | the lift's field |
+| Blockout aids | `editor/blockout_aids.cpp:175-190` | initial-phase offset added to x | added to y |
+| Bot supports | `game/objects/level.cpp:787-808` | `moving` marks a support whose bounds change | unchanged flag |
+| Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
+| Match fingerprint | `game/debug/match_fingerprint.cpp:36-60`, `game/debug/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
+| Replay codec | `game/debug/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
+| Replay version | `game/debug/replay.h:32`, `game/debug/replay.cpp:619-623` | writes 4, reads 3 and 4 | writes 5 (answer E5) |
+| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
+
+**2. Engineering answers, each following existing practice.**
+
+- **E1. One axis per mover, a second motion type.** A lift is
+  `"motion": { "type": "vertical", "travel_y": …, "period": …, "phase": … }`
+  on the same `TranslatingStructurePaintable`, with the triangular path,
+  phase and drive rules unchanged; diagonal or two-axis motion stays refused.
+  *Precedent:* the loader already reserves `travel_y` and `axis` by name
+  (`level_object_builder.cpp:157-163`), and the paint ferry joined the same
+  class as a new `drive` value rather than a subclass. The rectangle is the
+  **topmost** anchor, as the horizontal one is the leftmost.
+- **E2. Carry a rider by its support's identity, before its own motion.** The
+  carrier step gains a y displacement; `apply_carrier` moves the body by both
+  components after its velocity update and before its own integration, where
+  the x carry sits now (`player.cpp:1301-1303`), under the same checks (alive,
+  flat, overlapping, feet at the previous top). Jump, drop, walk-off, death and
+  placement release it, and release adds no lift velocity to the rider.
+  *Precedent:* the x carry (`player.cpp:531-550`), keyed by
+  `HorizontalMotionId`, "without adding personal velocity or tool travel"
+  ([capability](#horizontal-movement-capability-2026-10-26)).
+- **E3. Refuse a crush; never push a player through geometry.** Two parts:
+  (a) *static:* admission refuses a lift whose path or standing corridor —
+  one body height above its *highest* pose — meets blocking geometry or
+  leaves the scene, so a ceiling cannot close on a rider. The same check runs
+  below the *lowest* pose: a descending underside must leave either a full
+  body height plus the corridor pad above the floor beneath it, or meet that
+  floor flush with no gap to stand in. (b) *dynamic:* a lift whose next step
+  would close on a living player under it holds still for that step, and
+  resumes as soon as they are clear. *Precedent:* (a) is the horizontal
+  standing-envelope refusal (`level_horizontal_motion.cpp:216-234`, mirrored in
+  the editor at `horizontal_authoring.cpp:137-151`); (b) is the team gate,
+  which stays open while a permitted player is inside rather than pushing them
+  out (`team_gate_structure_paintable.cpp:65-84`,
+  [Team gate](#team-gate-road15-second-slice)), and is settled from the state
+  before the step, as the gate and the paint ferry's heading are.
+- **E4. Sweeps and world queries generalise, they do not fork.** Flying paint,
+  Roller footprints, splash, runoff, `top_paint_team`, shadows and culling take
+  the full offset vector. Paint, credit and scored area stay on local anchor
+  faces. *Precedent:* the horizontal increment kept paint local and moved only
+  world queries; draws and the ferry cue already use the full vector
+  (`translating_structure_paintable.cpp:111`, `:224`, `:230`).
+- **E5. Version the record.** The motion block's `schema` goes 1 → 2 with the
+  axis and travel, and `Replay::format_version` 4 → 5. The reader keeps 3 and 4.
+  *Precedent:* the 3 → 4 bump kept 3 readable (`replay.cpp:619-623`), and the
+  motion block already carries its own schema number.
+- **E6. Budget the relative motion.** The lift's per-step travel joins the
+  vertical relative-displacement bound beside the player's own speed, refused
+  at admission like the horizontal one. *Precedent:*
+  `level_horizontal_motion.cpp:301-305`.
+
+**3. Gameplay calls, as options for the author.** Values follow the current
+movers (320 travel, 4 s round trip, about 160 units/s) only as a reference
+point; values stay provisional, and none of these gates the engineering.
+
+- **G1. Travel.** (a) Less than a jump's height, a lift that only saves a
+  jump; (b) one storey, reaching a ledge a jump cannot; (c) a full arena
+  height, a route in itself.
+- **G2. Speed.** (a) The current movers' 160 units/s; (b) slower, 80-100
+  units/s, so a ride is a commitment under fire; (c) faster, a quick escape.
+- **G3. What drives it.** (a) A cycle, always running; (b) paint, like the
+  ferry, with team A's paint carrying it up or down (headings `up`/`down`, and
+  a cue of its own); (c) a rider — it rises only while occupied and returns
+  empty. (c) has no precedent here and would need its own contract.
+- **G4. Whether its surface scores.** (a) Scored, like the ferry; (b) material
+  only (cover/route, no score); (c) scored top, unscored sides.
+- **G5. Which trial carries it.** (a) A new explicit-only Lift Trial beside the
+  Ferry and Gate Trials; (b) an explicit variant of an existing trial. Neither
+  joins Random nor touches Turbulence's selected geometry (`POL#21`).
+
+**Next step after acceptance.** Promote one bounded slice: E1-E6 with
+`moving_structure`, `level_format` and editor acceptance, behind the chosen
+G-options, in an explicit-only trial. Bot routing and attended play stay
+separate rows, as for the gate and ferry.
 
 ### Paint-object trial play (`ROAD#30`)
 
@@ -2392,8 +2708,9 @@ falls back for the rest, and an entry with no usable name, or a name already
 taken, is dropped.
 
 A pad wears at most one profile and a profile is worn by at most one pad. While
-a pad wears one, the pad-slot settings every reader already uses (`Save::play_settings`,
-`Save::input_bindings`) show the profile's values for that slot. Pad sticks and
+a pad wears one, the pad-slot settings every reader already uses (now
+`SettingsSession::play_settings` and `input_bindings`, which `HYG#48` moved out of
+`Save`) show the profile's values for that slot. Pad sticks and
 Pad buttons edit the worn profile rather than the slot, and their Pad row
 names it. The slot's own settings stay saved underneath and come back when the
 profile comes off. Wearing lasts for the run and is not saved, because a pad
@@ -2482,6 +2799,56 @@ native painter leaves are Debug `2844bbe443f849c5a96e255b89bc30f6` and Release
 `978ad28fc1a14d1e96fa46bd58b1678d` under its `painter` directory. No real pad or
 player save was used. The attended `ROAD#21` and fairness `ROAD#5` gates remain
 unchanged.
+
+#### Paused stick preview after controller recovery (`ROAD#35`)
+
+**Done (2026-10-29).** A seat reclaimed by a controller in another XInput slot
+keeps its original profile (`ROAD#4`). Paused Pad sticks correctly selects that
+profile, but its preview reads the original physical slot directly. With logical
+Pad 1 mapped to device 4, the page can show disconnected or unrelated input even
+though gameplay and pause navigation use device 4.
+
+| rank | evidence and candidate | value, scope and risk |
+|---|---|---|
+| 1 | `StickSettingsMenu::refresh_preview` reads `state(slot_)` while pause navigation already resolves `device_slot`. | Selected as `ROAD#35`: use the recovered device only in paused previews, retaining the logical profile and labels. Small caller-wiring correction with an existing scripted-pad readout fixture. |
+| 2 | Input-fixture bitmap/DC cleanup has no explicit ownership receipt. | Continue the independent `ED#20` scope; its aggregate discrepancy remains unexplained. |
+| 3 | External capture loss leaves the editor's resize flag set. | Investigate separately before asserting a lost-edit defect. |
+
+Preserve unpaused Options' physical-slot preview even if its shared setup object
+retains an old mapping. Keep profile selection, deadzones, persistence, roster,
+navigation and live gameplay unchanged. Extend `-StickReadoutsOnly` with literal
+connection, raw movement, processed movement and aim expectations for a remapped
+paused seat. Reconnecting the original device with different input must not
+change that paused preview. An unpaused control with the same stale mapping
+must read the original physical slot instead. Preserve every existing readout
+matrix, private save bytes and seat/device mapping. Retain an old-source failure,
+then qualify both builds and focused native checks with worktree-status collection
+explicitly omitted. This software wiring check does not qualify physical-pad
+comfort or the attended `ROAD#21` session.
+
+`StickSettingsMenu::preview_device` now resolves a slot through
+`MatchSetup::device_slot` only while the page has a pause owner. The
+paused preview samples that device. A keyboard-owned pause starts on the first
+logical pad whose device is connected, the rule `pad_seat_missing` already uses.
+Profile, deadzone, rumble and comfort edits and labels remain keyed by the
+logical slot. Independent review found the keyboard-owner start; the first
+candidate had remapped only the preview.
+
+The old source failed at the first new comparison, `road35-paused-recovered`,
+because it read disconnected Pad 1 instead of device 4. With the preview remapped
+but the old start loop, `road35-keyboard-owner-recovered` failed because the page
+opened on physical Pad 3. The final fixture has 14 cases and 56 literal readouts
+at 720p and 1080p, within its separate 96-update budget, and adds no crops.
+The cases are paused owner, original-device reconnect, replacement reversal and
+disconnect, unpaused stale map, unmapped paused owner and keyboard owner. Every
+existing readout matrix passes unchanged. Private save bytes, active
+preferences, worn profiles, both rosters and device mappings are unchanged.
+
+`-StickReadoutsOnly` and `-PausedOptionsOnly` pass in Debug and Release. So
+does the `stick_settings` acceptance case, which builds both games. Worktree-status
+collection was explicitly omitted. Evidence is under `out/validation/road35`:
+`red-debug` (old source), `red-keyboard` (preview only) and the `final-*` runs.
+No real pad or player save was used.
 
 ### User stages (`ROAD#16`)
 
@@ -2595,22 +2962,25 @@ copy of Close Quarters from an isolated profile.
 - **A rescan without a restart.** `UserStageFolder` (`game/stage_loading.h`)
   owns the folder for the session. `wWinMain` declares it above the
   `Application`, attaches it after the manifest and runs the startup scan
-  through it. `GameMenu` takes it as an optional second argument and lends it
-  to its `MenuContext` as a rescan hook. `MainMenuStageSelect::init` calls the
-  hook as the page opens from the main menu. A match's `MenuContext` never
-  has the hook, and the page also skips it between rounds, so the list holds
-  still while a match or series could be using it. A rescan builds the new
-  list beside the live one: the manifest stages unchanged, then the folder's
-  stages in file-name order. Each new or edited file is checked as at
-  startup and replaces its registry entry. The sound groups are then
+  through it. `GameMenu` takes it as an optional second argument and answers
+  `MenuOwner::rescan_stages` with it. `MainMenuStageSelect::init` calls the
+  rescan as the page opens from the main menu. A match's owner, `GameLevel`,
+  has none to lend, and the page also skips it between rounds, so the list holds
+  still while a match or series could be using it. A rescan replaces the
+  user stages in the `StageCatalog` (`game/stage_catalog.h`), the only writer
+  of the list and the registry: the manifest stages unchanged, then the
+  folder's stages in file-name order, with the list it started from put back
+  if the read throws. Each new or edited file is checked as at startup and
+  replaces its registry entry. The sound groups are then
   reassigned over the new list (it cannot fail on stages that each passed
   `check_candidate`, and if it does the session keeps only the shipped
   stages). Only refusals the previous scan did not print reach stderr, so
   reopening the page stays quiet. A stage whose file vanished or now fails
   leaves the list. Stage Select's `slot_of` already falls back to the first
   slot for a remembered or current stage that is gone. The old definition
-  stays in the registry, unreachable from the list, because
-  `labrador::Registry` has no remove. That costs memory only; see the draft
+  stays registered in the catalog, unreachable from its list, because
+  `labrador::Registry` has no remove; `StageCatalog::definition` answers from
+  the list, so it does not find one. That costs memory only; see the draft
   report in [engine reports](review/engine-reports.md). Probes that build a
   `GameMenu` without the folder keep their fixed lists. The Debug `reload`
   command still rereads only tuning and presentation.
@@ -2878,16 +3248,20 @@ save that holds it is built from sections and carries a version key.
 
 **Save layout.** `Save` reads and writes a list of `SaveSection` objects
 (`game/save_section.h`) against one root object; each section's read is caught
-on its own, so a malformed section falls back to its defaults and leaves the
-others intact. The display and play preferences stay flat root keys exactly as
+on its own, so a malformed section falls back to its defaults, printing one
+stderr line with its key and the error, and leaves the others intact. There is
+no migration pass: each section reads every older layout in place, as
+[save_section.h](../game/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 3` is written first (version 1 introduced records, version 2
-remembered setup, and version 3 independent input bindings). A missing key is
-version 0, the same flat layout.
+`"save_version": 5` is written first (version 1 introduced records, version 2
+remembered setup, version 3 independent input bindings, version 4
+`"profiles"` and version 5 `"last_match.stage_rule"`; [save.h](../game/save.h)
+keeps the list). A missing key is version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
 local save. New sections use nested keys: `"records"`, the last-match
-setup's `"last_match"` (`GAP#6.1`), and `"input_bindings"` (`GAP#4.2`).
+setup's `"last_match"` (`GAP#6.1`), `"input_bindings"` (`GAP#4.2`) and
+the player profiles' `"profiles"` (`ROAD#21`).
 
 **Records** (`game/match_records.h`) are an array of `{ "stage": ... }`
 objects, keyed by the manifest name, because the engine's JSON reader has no
@@ -3264,7 +3638,7 @@ untouched pad behaves exactly as before: A / LT Jump, RT Shoot, Start Pause.
 
 One control does one action per pad: a profile with an unbound action, an
 alternate equal to its primary, or a control used twice is invalid, and
-`Save::set_input_bindings_and_save` refuses it before mutation. Movement, aim and
+`SettingsSession::set_input_bindings_and_save` refuses it before mutation. Movement, aim and
 the stick-down drop stay on the sticks. Menus keep A/B/X/Start and the intro skip
 keeps A/B/Start whatever the profile says, as Jump's face choice did before. A
 trigger keeps its strict live threshold: the shoot threshold when it shoots, the
@@ -3667,7 +4041,8 @@ unchanged.
 
 ## Presentation rate (`GAP#L9`)
 
-**UNSCOPED.** `SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing
+**DEFERRED (inspected 2026-10-29; [slice](#presentation-rate-inspection-slice-gapl9)).**
+`SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing
 `ApplicationOptions::target_fps` changes that step, not just presentation. The
 pinned D3D11 backend presents with sync interval 1 and exposes no client vsync
 switch. A presentation-rate setting must first identify its engine seam and
@@ -3676,3 +4051,52 @@ supported policy, separately from simulation and any interpolation work.
 Inspect the current engine API and master before proposing a client setting or
 report. Define its persistence and visible acceptance on the intended refresh
 rates before implementation; this row does not supply a ready engine change.
+
+### Presentation-rate inspection slice (`GAP#L9`)
+
+**Recorded and deferred (2026-10-29).** The inspection the boundary above
+asks for, against the pin (v0.2.0, `1e60fb2`) and Labrador master (filed at
+`b96bad6`, re-checked at `8e91aab`; none of the 22 commits between them touch
+the cited lines):
+
+- D3D11 calls `Present(1, 0)` (`engine/render/d3d11/device_resources.cpp:395`
+  on both) and reports `requested_swap_interval = 1` (`d3d11/renderer.cpp:70` at
+  the pin, `:50` on master). D3D12 is the same
+  (`d3d12/device_resources.cpp:511` on both). Vulkan sets
+  `VK_PRESENT_MODE_FIFO_KHR` only (`vulkan/device_resources.cpp:1157` at the
+  pin, `:1178` on master).
+- `ApplicationOptions` has `target_fps` (`engine/app/application.h:66` at the
+  pin, `:69` on master) and no vsync or present-interval option on either.
+- The game sets `target_fps = SIMULATION_HZ` (`game/main.cpp:52`), and nothing
+  in `game/` or `scripts/` calls `Application::step_position()`
+  (`application.h:295` at the pin, `:291` on master), so the client does no
+  interpolation.
+
+**Receipt.** One Debug `overlay.perf` run (`game/debug/view_commands.cpp:55`)
+on MattPC: visible 1920×1080 window, D3D11, host load not controlled,
+`+seed 7 +stage movement_course +players 4 +bot all paint`, then `perf` and a
+600-interval `perf.capture`. Windows reports the display as 59 Hz, which is
+an integer truncation: `QueryDisplayConfig` gives 59951/1000 Hz on three paths
+and 60/1 on one. The capture is complete and every row is engine-paired:
+
+| Draws/s | p50 ms | p95 ms | p99 ms | Max ms | Updates | x2 frames |
+|---:|---:|---:|---:|---:|---:|---:|
+| 59.236 | 16.665 | 16.887 | 33.500 | 33.788 | 613 | 10 |
+
+The ten ~33.5 ms intervals fall every 59 rendered frames (0-based rows 61
+to 592, CSV `frame` 62 to 593),
+each carrying two updates, while their `end` phase (9–11 ms) matches normal
+frames, so the extra time is outside the measured Present-wait phase. A
+59.951 Hz/60 Hz beat alone would drop a frame about every 20 s, not every
+second; this run does not diagnose the cause. Row 0 (five updates) and row 2
+(none) follow the capture start. The receipt, CSV/JSON, log and overlay
+screenshot are under `out/validation/gapl9/`. CPU wall time, uncontrolled
+load: it qualifies no visible pacing, which stays with
+[`POL#25`](polish-frame-pacing.md#remaining-acceptance).
+
+**Deferred until** the author wants presentation decoupled from the 60 Hz step
+(a high-refresh, uncapped or vsync-off mode), or `POL#25`'s attended visible
+captures show the once-a-second long interval on an uncontended run. Either
+way, the next step is an engine report for a present-interval option and,
+for a decoupled rate, a client `step_position()` consumer; no client setting
+precedes it. This chooses no refresh-rate policy, setting or persistence.

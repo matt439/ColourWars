@@ -2,6 +2,7 @@
 #include "game/objects/weapon_builder.h"
 #include "game/objects/projectile_builder.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -17,10 +18,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const std::string& message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     constexpr ProjectileType projectile_types[]{ ProjectileType::spray, ProjectileType::jet,
         ProjectileType::rolling, ProjectileType::mist, ProjectileType::ball };
@@ -527,7 +525,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("gameplay tuning", [&]
     {
         require(argc == 2, "Usage: gameplay_tuning.exe <staged content directory>");
         const std::filesystem::path content(argv[1]);
@@ -574,10 +572,5 @@ int main(int argc, char** argv)
         std::cout << "PASS gameplay tuning: exact legacy roller/mist/integrator parity, real custom values, "
             "stable live borrowed records, strict boundaries, named rumble data and contextual rejection.\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL gameplay tuning: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

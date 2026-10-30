@@ -1,5 +1,7 @@
 #include "game/pch.h"
 #include "game/states/display_settings_trial.h"
+#include "game/settings_session.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -18,10 +20,7 @@ using labrador::ScreenResolution;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     // All Save calls happen after replacing LOCALAPPDATA in this process.
     // Cleanup removes only these individually created files/directories.
@@ -143,8 +142,8 @@ namespace
 
     Save seed_save()
     {
-        Save save;
-        require(save.set_play_settings_and_save(preferences()), "Cannot seed play preferences");
+        Save save; SettingsSession save_session(save);
+        require(save_session.set_play_settings_and_save(preferences()), "Cannot seed play preferences");
         require(save.set_display_settings_and_save(ScreenResolution::s_2560_1440,
             false, TeamColourPair::blue_yellow), "Cannot seed display preferences");
         require(save.remember_match_setup_and_save(setup()), "Cannot seed remembered match choices");
@@ -164,8 +163,8 @@ namespace
 
     void require_reloaded(const Save& save)
     {
-        Save restored;
-        restored.load_save_file();
+        Save restored; SettingsSession restored_session(restored);
+        restored_session.load_save_file();
         require(same_save(restored.save_data(), save.save_data()),
             "Display trial failed to preserve display/play/four-pad preferences or remembered setup on reload");
     }
@@ -210,7 +209,7 @@ namespace
 
     void check_configuration(const IsolatedSaveDirectory& directory)
     {
-        Save save = seed_save();
+        Save save = seed_save(); SettingsSession save_session(save);
         const SaveData before = save.save_data();
         const std::string saved = contents(directory.save_path());
         int calls = 0;
@@ -265,7 +264,7 @@ namespace
         {
             for (bool candidate_fullscreen : { false, true })
             {
-                Save save = seed_save();
+                Save save = seed_save(); SettingsSession save_session(save);
                 const SaveData before = save.save_data();
                 const std::string saved = contents(directory.save_path());
                 std::vector<DisplayCall> calls;
@@ -309,7 +308,7 @@ namespace
     {
         for (float duration : { 1.0f, 10.0f, 60.0f })
         {
-            Save save = seed_save();
+            Save save = seed_save(); SettingsSession save_session(save);
             const SaveData before = save.save_data();
             const std::string saved = contents(directory.save_path());
             std::vector<DisplayCall> calls;
@@ -334,7 +333,7 @@ namespace
             require(calls.size() == 2, "Expired trial accepted another terminal action");
             require_unchanged(save, before, directory, saved);
         }
-        Save save = seed_save();
+        Save save = seed_save(); SettingsSession save_session(save);
         const SaveData before = save.save_data();
         const std::string saved = contents(directory.save_path());
         int calls = 0;
@@ -349,7 +348,7 @@ namespace
     {
         for (bool fullscreen : { false, true })
         {
-            Save save = seed_save();
+            Save save = seed_save(); SettingsSession save_session(save);
             const SaveData before = save.save_data();
             const std::string saved = contents(directory.save_path());
             const auto candidate = choice(fullscreen);
@@ -361,12 +360,12 @@ namespace
                 require_unchanged(save, before, directory, saved);
                 // Another preference page may commit independently while this
                 // trial exists. Keep must not restore a captured whole SaveData.
-                PlaySettings changed = save.play_settings();
+                PlaySettings changed = save_session.play_settings();
                 changed.aim_sensitivity = 2; changed.music_volume = 80; changed.sfx_volume = 10;
                 changed.view_shake = true; changed.aim_marker = true; changed.reduce_effects = false;
                 changed.sticks = { StickSettings{ -1, 25 }, StickSettings{ 30, 40 },
                     StickSettings{ 55, 75 }, StickSettings{ 90, 0 } };
-                require(save.set_play_settings_and_save(changed), "Cannot seed an independent preferences change");
+                require(save_session.set_play_settings_and_save(changed), "Cannot seed an independent preferences change");
                 const LastMatchSetup changed_setup = setup(true);
                 require(save.remember_match_setup_and_save(changed_setup), "Cannot seed an independent remembered setup");
                 const std::string changed_file = contents(directory.save_path());
@@ -379,7 +378,7 @@ namespace
                 trial.keep();
                 require_result(trial, DisplayTrialResult::kept);
                 require_choice(save, candidate);
-                require(same_play(save.play_settings(), changed), "Keep overwrote current shared or four-pad preferences");
+                require(same_play(save_session.play_settings(), changed), "Keep overwrote current shared or four-pad preferences");
                 require(same_setup(save.last_match_setup(), current.last_match), "Keep overwrote current remembered choices");
                 require(calls.size() == 1, "Keep reapplied or rolled back the accepted display");
                 require_reloaded(save);
@@ -395,7 +394,7 @@ namespace
 
     void check_revert_preserves_current_setup(const IsolatedSaveDirectory& directory)
     {
-        Save save = seed_save();
+        Save save = seed_save(); SettingsSession save_session(save);
         int calls = 0;
         DisplaySettingsTrial trial(&save, choice(true), false,
             [&](ScreenResolution, bool) { ++calls; }, 15.0f);
@@ -428,8 +427,8 @@ namespace
     {
         for (bool after_serialization : { false, true })
         {
-            Save save = seed_save();
-            const PlaySettings before_play = save.play_settings();
+            Save save = seed_save(); SettingsSession save_session(save);
+            const PlaySettings before_play = save_session.play_settings();
             const std::string old_file = contents(directory.save_path());
             const auto candidate = choice(true);
             int calls = 0;
@@ -451,17 +450,17 @@ namespace
                 }
                 require_result(trial, DisplayTrialResult::save_failed);
                 require_choice(save, candidate);
-                require(same_play(save.play_settings(), before_play) && contents(directory.save_path()) == old_file,
+                require(same_play(save_session.play_settings(), before_play) && contents(directory.save_path()) == old_file,
                     "A failed Keep damaged the old save or unrelated preferences");
                 terminal_noops(trial);
             }
             require(calls == 1, "Failed persistence rolled back the accepted active display");
             require(contents(directory.save_path()) == old_file &&
                 !std::filesystem::exists(directory.temporary_path()), "Failed Keep left a partial persisted file");
-            Save old;
-            old.load_save_file();
+            Save old; SettingsSession old_session(old);
+            old_session.load_save_file();
             require(old.resolution() == ScreenResolution::s_2560_1440 && !old.fullscreen() &&
-                old.team_palette() == TeamColourPair::blue_yellow && same_play(old.play_settings(), before_play),
+                old.team_palette() == TeamColourPair::blue_yellow && same_play(old_session.play_settings(), before_play),
                 "Failed Keep overwrote persisted display preferences");
             DisplaySettingsChoice recovered{ ScreenResolution::s_3840_2160, false, TeamColourPair::random };
             DisplaySettingsTrial recovery(&save, recovered, true, [&](ScreenResolution, bool) { ++calls; }, 15.0f);
@@ -474,7 +473,7 @@ namespace
 
     void check_reentrant_cancel(const IsolatedSaveDirectory& directory)
     {
-        Save save = seed_save();
+        Save save = seed_save(); SettingsSession save_session(save);
         const SaveData before = save.save_data();
         const std::string saved = contents(directory.save_path());
         std::vector<DisplayCall> calls;
@@ -516,7 +515,7 @@ namespace
         {
             for (bool rollback_fails : { false, true })
             {
-                Save save = seed_save();
+                Save save = seed_save(); SettingsSession save_session(save);
                 const SaveData before = save.save_data();
                 const std::string saved = contents(directory.save_path());
                 std::vector<DisplayCall> calls;
@@ -539,7 +538,7 @@ namespace
                 require_unchanged(save, before, directory, saved);
             }
 
-            Save save = seed_save();
+            Save save = seed_save(); SettingsSession save_session(save);
             const SaveData before = save.save_data();
             const std::string saved = contents(directory.save_path());
             int calls = 0;
@@ -580,7 +579,7 @@ namespace
 int main(int argc, char** /*argv*/)
 {
     static_assert(std::is_nothrow_destructible_v<DisplaySettingsTrial>);
-    try
+    return acceptance::run_probe("display trial", [&]
     {
         require(argc == 2, "Usage: display_trial.exe <staged content directory>");
         const IsolatedSaveDirectory directory;
@@ -599,15 +598,5 @@ int main(int argc, char** /*argv*/)
             "apply/rollback exceptions, no writes before Keep, current shared/four-pad/remembered-setup preservation, "
             "real isolated save failures and recovery; fake display callback only, no window/device\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL display trial: " << error.what() << '\n';
-        return 1;
-    }
-    catch (...)
-    {
-        std::cerr << "FAIL display trial: an unknown exception escaped the trial\n";
-        return 1;
-    }
+    });
 }

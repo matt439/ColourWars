@@ -3,8 +3,9 @@
 #include "game/input_slots.h"
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
-#include "game/states/menu_level_settings.h"
+#include "game/match_setup.h"
 #include "engine/input/gamepad_reader.h"
+#include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cmath>
 #include <filesystem>
@@ -39,10 +40,7 @@ using mattmath::Vector2F;
 
 namespace
 {
-	void require(bool value, const std::string& message)
-	{
-		if (!value) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 	uint16_t button(GamepadButton value) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(value)); }
 	bool pad_down(const GamepadState& state, GamepadButton value) { return (state.buttons & button(value)) != 0; }
 	bool key_down(const KeyboardState& state, Key value)
@@ -247,10 +245,10 @@ namespace
 		pad(asymmetric_pad, asymmetric_pad, asymmetric);
 	}
 
-	PlayerInputData legacy_player(const GamepadState& now, const GamepadState& before,
+	SlotInput legacy_player(const GamepadState& now, const GamepadState& before,
 		const GameTuning& tuning, const PlaySettings& preferences, int slot)
 	{
-		PlayerInputData result;
+		SlotInput result;
 		if (!now.connected) { return result; }
 		result.connected = true;
 		const auto jump = legacy_pad_action(GameAction::jump, now, before, tuning.input());
@@ -276,9 +274,9 @@ namespace
 		result.left_analog_stick = now.left_stick; result.right_analog_stick = now.right_stick;
 		return result;
 	}
-	PlayerInputData legacy_player(const KeyboardState& now, const KeyboardState& before, const MouseState& mouse)
+	SlotInput legacy_player(const KeyboardState& now, const KeyboardState& before, const MouseState& mouse)
 	{
-		PlayerInputData result; result.connected = true;
+		SlotInput result; result.connected = true;
 		result.x_movement = (held(now, Key::d) ? 1.0f : 0.0f) - (held(now, Key::a) ? 1.0f : 0.0f);
 		const auto jump = legacy_desktop(GameAction::jump, now, before, {}, {});
 		result.jump_held = jump.held; result.jump_pressed = jump.pressed;
@@ -290,7 +288,7 @@ namespace
 		result.skip_intro = legacy_desktop(GameAction::skip_intro, now, before, {}, {}).released;
 		return result;
 	}
-	void same_player(const PlayerInputData& a, const PlayerInputData& b, const std::string& where)
+	void same_player(const SlotInput& a, const SlotInput& b, const std::string& where)
 	{
 		require(a.connected == b.connected && near_value(a.x_movement, b.x_movement) && a.jump_held == b.jump_held &&
 			a.jump_pressed == b.jump_pressed && a.primary_shoot == b.primary_shoot && a.drop_through == b.drop_through &&
@@ -337,7 +335,7 @@ namespace
 		GamepadReader reader; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
 		GameTuning tuning; PlaySettings preferences; InputBindings input_bindings;
 		PlayerInput players; MenuInput menu; LegacyMenu legacy;
-		std::vector<PlayerInputData> gameplay; std::vector<ProcessedMenuInput> menus;
+		std::vector<SlotInput> gameplay; std::vector<ProcessedMenuInput> menus;
 		explicit Harness(const char* directory) : tuning((std::filesystem::path(directory) / "tuning.json").string().c_str()),
 			players(&pads, &keyboard, &mouse, &tuning, &preferences, &input_bindings), menu(&pads, &keyboard, &tuning)
 		{
@@ -481,7 +479,7 @@ namespace
 		pad.buttons = 0; action_test_pads::states[1].buttons = 0; h.keyboard.on_key_up(Key::enter); h.step("reset one owner only");
 		require(h.menus[3].action == MenuInputAction::none && h.menus[1].action == MenuInputAction::shuffle &&
 			h.menus[4].action == MenuInputAction::proceed, "Resetting one pad must preserve other pad and keyboard owners");
-		MenuLevelSettings roster; roster.set_player_count(2); roster.begin_input_claims(3); require(roster.claim_input_slot(4), "Roster setup failed");
+		MatchSetup roster; roster.set_player_count(2); roster.begin_input_claims(3); require(roster.claim_input_slot(4), "Roster setup failed");
 		const auto ordered = h.menu.player_inputs(roster);
 		require(ordered.size() == 2 && ordered[0].action == h.menus[3].action && ordered[1].action == h.menus[4].action &&
 			ordered[0].connected == h.menus[3].connected && ordered[1].connected == h.menus[4].connected &&
@@ -496,7 +494,7 @@ namespace
 
 int main(int argc, char* argv[])
 {
-	try
+	return acceptance::run_probe("default actions", [&]
 	{
 		require(argc == 2, "Expected the staged game directory");
 		GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
@@ -504,9 +502,5 @@ int main(int argc, char* argv[])
 		std::cout << "PASS default actions: independent frozen legacy mappings, aliases/source edges, focus/connection/epoch boundaries, "
 			"strict triggers/drop, menu arming/chords/reset/repeated reads, direction aliases, raw sticks and live per-slot preferences; no hardware/window\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL default actions: " << error.what() << '\n'; return 1;
-	}
+	});
 }

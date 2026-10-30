@@ -16,9 +16,12 @@
 #include "engine/render/colour.h"
 
 #include <optional>
+#include "game/carried/ui_text_drop_shadow.h"
 
 enum class DisplayTrialResult;
 
+// Every page of the main menu's frame. A MainMenuRoute names one of them and
+// make_main_menu_page builds it; main_menu_route.cpp draws the whole graph.
 enum class MainMenuScreen
 {
 	title,
@@ -27,31 +30,57 @@ enum class MainMenuScreen
 	credits,
 	mode_select,
 	player_count,
+	join,
 	team_select,
 	weapon_select,
 	stage_select
 };
 
+struct MainMenuRoute;
+
+// A page in the main menu's frame: Title, Home, Credits, Options and Mode
+// Select directly, and the roster pages through RosterSetupPage.
 class MainMenuPage : public MenuPage
 {
 public:
-	// A series between rounds reopens Weapon and Stage Select above its
-	// match, in the End menu's frame: Back returns to that menu and the
-	// Stage confirmation plays the next round (ROAD#20).
-	explicit MainMenuPage(MenuContext* context,
-		std::optional<Session> between_rounds = std::nullopt);
+	explicit MainMenuPage(MenuContext* context);
 	~MainMenuPage() override = default;
 	void init() override = 0;
 
 	// Main-menu frames start a match with the shared plan when they pop.
 	// Options also serves as a paused child and guards that route separately.
-	bool debug_start_match(const MenuLevelSettings& plan) override;
-	// Between rounds these pages close like the End menu they replaced.
-	bool debug_dismiss(bool leaving_match) override;
+	bool debug_start_match(const MatchSetup& plan) override;
 protected:
 	void update_page(float dt) override = 0;
 	const MainMenuPresentation& look() const;
 
+	// Replaces this page with the route's page. Every page change inside the
+	// main menu's frame goes through here (main_menu_route.cpp).
+	void go_to(const MainMenuRoute& route);
+
+	// Available input slots, including keyboard/mouse.
+	std::vector<int> connected_slots() const;
+};
+
+// A page that builds the roster: Player Count, Join, and the per-seat Team,
+// Weapon and Stage Select. It owns the roster's shared machinery: the seats'
+// readiness sounds, the missing-controller wait, the host's row cursor over
+// bot seats and profile Boost.
+class RosterSetupPage : public MainMenuPage
+{
+public:
+	// A series between rounds reopens Weapon and Stage Select above its
+	// match, in the End menu's frame: Back returns to that menu and the
+	// Stage confirmation plays the next round (ROAD#20).
+	explicit RosterSetupPage(MenuContext* context,
+		std::optional<Session> between_rounds = std::nullopt);
+	~RosterSetupPage() override = default;
+
+	// Between rounds this frame belongs to the match, which takes the plan.
+	bool debug_start_match(const MatchSetup& plan) override;
+	// Between rounds these pages close like the End menu they replaced.
+	bool debug_dismiss(bool leaving_match) override;
+protected:
 	int player_count() const;
 
 	// Sets the seat `slot` joined to the Boost of the profile it wears.
@@ -61,9 +90,6 @@ protected:
 	const std::optional<Session>& between_rounds() const;
 	// Back to the End menu this page replaced; only between rounds.
 	void return_to_round_menu();
-
-	// Available input slots, including keyboard/mouse.
-	std::vector<int> connected_slots() const;
 
 	// Return true while the roster is missing a controller. Keep each player's
 	// row and offer reconnect or return to the count screen to choose again.
@@ -91,7 +117,6 @@ public:
 	explicit MainMenuTitle(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -112,7 +137,6 @@ public:
 	explicit MainMenuHome(MenuContext* context, InitialFocus initial_focus = InitialFocus::play);
 	void update_page(float dt) override;
 	void init() override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	InitialFocus initial_focus_;
@@ -135,7 +159,6 @@ public:
 	void update_page(float dt) override;
 	bool debug_dismiss(bool leaving_match) override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	void cancel();
@@ -154,7 +177,6 @@ public:
 	explicit MainMenuCredits(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -173,9 +195,8 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 	bool covers_screen() const override { return this->pausing_slot_.has_value(); }
-	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_start_match(const MatchSetup& plan) override;
 	bool debug_dismiss(bool leaving_match) override;
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	std::optional<int> pausing_slot_;
@@ -223,8 +244,9 @@ public:
 	explicit MainMenuModeSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
-	// Candidate validation uses the same unscaled row and complete ornament
-	// as a real Mode page, after the ordinary resource checks have passed.
+	// Candidate validation (game/states/menu_content_validation.h) uses the
+	// same unscaled row and complete ornament as a real Mode page, after the
+	// ordinary resource checks have passed.
 	// Rows of mode_select_spacing under the heading; Match length and Series
 	// stage are the two OptionRows. The practice hint sits on Single Match's
 	// row, one card padding after that row's complete focus card.
@@ -236,8 +258,6 @@ public:
 		OptionRow::Adjust on_adjust = {});
 	static void check_duration_row(const OptionRow& duration_row,
 		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
-	static void validate_durations(labrador::RenderResources* render,
-		const GameTuning& tuning, const Presentation& presentation);
 	// The Series stage row (ROAD#20), checked like the duration row for
 	// every rule's value.
 	static std::unique_ptr<OptionRow> make_stage_rule_row(labrador::RenderResources* render,
@@ -245,9 +265,7 @@ public:
 		OptionRow::Adjust on_adjust = {});
 	static void check_stage_rule_row(const OptionRow& stage_rule_row,
 		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
-	static void validate_stage_rules(labrador::RenderResources* render, const Presentation& presentation);
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -269,47 +287,45 @@ private:
 	float duration_row_spacing_ = 0.0f;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> standard_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> best_of_three_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> best_of_five_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> practice_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> standard_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> best_of_three_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> best_of_five_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> practice_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 };
 
-class MainMenuPlayerCount final : public MainMenuPage
+class MainMenuPlayerCount final : public RosterSetupPage
 {
 public:
 	explicit MainMenuPlayerCount(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _1_player = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _2_players = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _3_players = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> _4_players = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _1_player = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _2_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _3_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> _4_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 
 	int activating_slot_ = -1;
 
 	void start_join(int players, labrador::ScreenLayout layout);
 };
 
-class MainMenuJoin final : public MainMenuPage
+class MainMenuJoin final : public RosterSetupPage
 {
 public:
 	explicit MainMenuJoin(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -326,23 +342,22 @@ private:
 		const char* role, const labrador::UiWidget* accent = nullptr) const;
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_;
-	std::unique_ptr<labrador::UiTextDropShadow> status_;
-	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> players_;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_;
+	std::unique_ptr<colourwars::UiTextDropShadow> status_;
+	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> players_;
 	std::vector<std::unique_ptr<JoinMotionRow>> join_motion_;
 	int host_row_ = 1;
 	std::unique_ptr<labrador::UiTexture> host_cursor_;
 	void change_host_row(labrador::Direction direction);
 };
 
-class MainMenuTeamSelect final : public MainMenuPage
+class MainMenuTeamSelect final : public RosterSetupPage
 {
 public:
 	explicit MainMenuTeamSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation setup_art_;
@@ -352,7 +367,7 @@ private:
 		explicit PlayerWidgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
 		std::unique_ptr<MenuPaperArtwork> paper;
-		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> player = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuChoiceIcon> player_a = nullptr;
 		std::unique_ptr<MenuChoiceIcon> player_center = nullptr;
@@ -360,10 +375,10 @@ private:
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 
 	// Shown when completing a multiplayer roster would leave a team empty.
-	std::unique_ptr<labrador::UiTextDropShadow> both_teams_needed_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> both_teams_needed_ = nullptr;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	// Roster seats are cursor slots, independent of each seat's input device.
@@ -401,7 +416,7 @@ private:
 	void check_paper_geometry() const;
 };
 
-class MainMenuWeaponSelect final : public MainMenuPage
+class MainMenuWeaponSelect final : public RosterSetupPage
 {
 public:
 	explicit MainMenuWeaponSelect(MenuContext* context,
@@ -409,7 +424,6 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation paper_art_;
@@ -424,17 +438,17 @@ private:
 	{
 		explicit Widgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
-		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> player = nullptr;
 		// The row's handicap, under its label.
-		std::unique_ptr<labrador::UiTextDropShadow> handicap = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> handicap = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
-		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
+		std::unique_ptr<colourwars::UiTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<WrappedTextDropShadow> weapon_description = nullptr;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
 	std::vector<SelectState> select_states_;
 	// Keep names, frames and descriptions paired with the atlas captured on entry.
@@ -458,7 +472,7 @@ private:
 	void check_paper_geometry() const;
 };
 
-class MainMenuStageSelect final : public MainMenuPage
+class MainMenuStageSelect final : public RosterSetupPage
 {
 public:
 	// `picker`: between rounds under Loser's pick, the team whose seats alone
@@ -470,7 +484,6 @@ public:
 	void init() override;
 	void on_resume() override;
 protected:
-	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
 	MenuPaperArtPresentation paper_art_;
@@ -487,21 +500,21 @@ private:
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<StagePreview> stage_preview_;
 	std::unique_ptr<labrador::UiTexture> preview_edge_;
 	std::unique_ptr<labrador::UiTexture> preview_background_;
 	std::unique_ptr<MenuPaperArtwork> briefing_background_;
 	std::unique_ptr<labrador::UiTexture> briefing_accent_;
-	std::unique_ptr<labrador::UiTextDropShadow> stage_name_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> navigation_;
+	std::unique_ptr<colourwars::UiTextDropShadow> stage_name_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> navigation_;
 	// The shown stage's saved record; hidden for Random and unplayed stages.
-	std::unique_ptr<labrador::UiTextDropShadow> stage_record_;
-	std::unique_ptr<labrador::UiTextDropShadow> selection_status_;
-	std::unique_ptr<labrador::UiTextDropShadow> selection_hint_;
+	std::unique_ptr<colourwars::UiTextDropShadow> stage_record_;
+	std::unique_ptr<colourwars::UiTextDropShadow> selection_status_;
+	std::unique_ptr<colourwars::UiTextDropShadow> selection_hint_;
 	std::unique_ptr<labrador::UiText> stage_scan_status_;
-	std::unique_ptr<labrador::UiTextDropShadow> random_mark_;
-	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> briefing_text_;
+	std::unique_ptr<colourwars::UiTextDropShadow> random_mark_;
+	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> briefing_text_;
 	SelectState select_state_ = SelectState();
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
@@ -526,3 +539,27 @@ private:
 	void cycle_stages(labrador::Direction direction);
 	void set_level_settings() const;
 };
+
+// One edge of the setup flow: the page to show next and what it opens with.
+// GameMenu opens its frame with one, MainMenuPage::go_to follows one and the
+// End menu re-picks between rounds with one.
+struct MainMenuRoute
+{
+	// Most edges name only the page, so a screen converts to its route.
+	MainMenuRoute(MainMenuScreen screen);
+	// Back from Options or Credits, onto the row that opened them.
+	static MainMenuRoute home(MainMenuHome::InitialFocus focus);
+	// Weapon or Stage Select re-picking for an unfinished series (ROAD#20);
+	// an empty `between_rounds` is ordinary setup. `picker` as for
+	// MainMenuStageSelect.
+	static MainMenuRoute re_pick(MainMenuScreen screen, std::optional<Session> between_rounds,
+		PlayerTeam picker = PlayerTeam::none);
+
+	MainMenuScreen screen = MainMenuScreen::title;
+	MainMenuHome::InitialFocus home_focus = MainMenuHome::InitialFocus::play;
+	std::optional<Session> between_rounds;
+	PlayerTeam picker = PlayerTeam::none;
+};
+
+// The one place a main-menu page is built for a route.
+std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const MainMenuRoute& route);

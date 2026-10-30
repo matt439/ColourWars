@@ -73,7 +73,7 @@ void DebugDirector::after_level_build(DebugMatchTarget& match)
 	}
 }
 
-void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
+void DebugDirector::filter_match_inputs(std::vector<SlotInput>& inputs)
 {
 	if (this->impl_ != nullptr)
 	{
@@ -86,15 +86,32 @@ bool DebugDirector::before_match_update(DebugMatchTarget& match, float dt, bool 
 	return this->impl_ != nullptr && this->impl_->before_match_update(match, dt, active);
 }
 
-void DebugDirector::update_match(DebugMatchTarget& match,
-	const std::vector<PlayerInputData>& inputs, float dt)
+int DebugDirector::match_steps(const std::vector<SlotInput>& inputs, float dt)
+{
+	return this->impl_ != nullptr ? this->impl_->match_steps(inputs, dt) : 1;
+}
+
+bool DebugDirector::before_match_step(DebugMatchTarget& match, int run, MatchStep& step)
 {
 	if (this->impl_ == nullptr)
 	{
-		match.debug_update_level(inputs, dt, nullptr);
-		return;
+		step.seats = nullptr;
+		return true;
 	}
-	this->impl_->update_match(match, inputs, dt);
+	return this->impl_->before_match_step(match, run, step);
+}
+
+bool DebugDirector::after_match_step(DebugMatchTarget& match)
+{
+	return this->impl_ == nullptr || this->impl_->after_match_step(match);
+}
+
+void DebugDirector::end_match_steps(DebugMatchTarget& match, int runs)
+{
+	if (this->impl_ != nullptr)
+	{
+		this->impl_->end_match_steps(match, runs);
+	}
 }
 
 bool DebugDirector::match_audio_paused() const

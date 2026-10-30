@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_movers/fixtures.h"
+#include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <process.h>
 #include <string_view>
@@ -7,7 +8,7 @@
 int main(int argc, char** argv)
 {
     using namespace turbulence_movers_acceptance;
-    try
+    return acceptance::run_probe("Turbulence mover trial", [&]
     {
         require(argc >= 2, "turbulence_movers <content> [trial.json] [--routes|--replay|--pressure|--local-roles] | <content> --author <static.json> <tuning.json> <new-output.json>");
         const fs::path content = fs::absolute(argv[1]);
@@ -53,7 +54,5 @@ int main(int argc, char** argv)
             "local score and bounded driven boarding/carry/reversal/escape. "
             "Five-tool role, seeded replay, native composition and attended acceptance remain separate\n";
         return 0;
-    }
-    catch (const std::exception& error)
-    { std::cerr << "FAIL Turbulence mover trial: " << error.what() << '\n'; return 1; }
+    });
 }

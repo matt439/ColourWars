@@ -24,7 +24,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     // Rollback may run from notification or destruction, so guard the whole
     // fixture, including explicit stack cleanup; this guard must never nest.
     const SettingsProbeActivationGuard activation(window);
-    Save preferences; PlaySettings expected; expected.aim_sensitivity = 5;
+    Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
     for (size_t slot = 0; slot < expected.sticks.size(); ++slot)
     {
@@ -47,8 +47,8 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         std::ifstream stream(save_path, std::ios::binary); require(stream.good(), "Display trial lost its private save");
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearTrial
     {
@@ -97,13 +97,13 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto old = [&](bool rolled_back)
     {
-        preserved(preferences.play_settings()); require(preferences.resolution() == ScreenResolution::s_1280_720 && preferences.fullscreen() == metadata_fullscreen &&
+        preserved(preferences_session.play_settings()); require(preferences.resolution() == ScreenResolution::s_1280_720 && preferences.fullscreen() == metadata_fullscreen &&
             preferences.team_palette() == TeamColourPair::blue_yellow && bytes() == before_bytes, "Unconfirmed display trial changed active or durable preferences");
         if (rolled_back) { require(app.resolution_manager()->resolution_ivec() == Vector2I(1280, 720) && !app.fullscreen(), "Display trial did not restore its configured preset and prior actual mode"); }
     };
     const auto kept = [&]
     {
-        preserved(preferences.play_settings()); require(preferences.resolution() == ScreenResolution::s_1920_1080 && !preferences.fullscreen() && preferences.team_palette() == TeamColourPair::random &&
+        preserved(preferences_session.play_settings()); require(preferences.resolution() == ScreenResolution::s_1920_1080 && !preferences.fullscreen() && preferences.team_palette() == TeamColourPair::random &&
             app.resolution_manager()->resolution_ivec() == Vector2I(1920, 1080) && !app.fullscreen() && stack.depth() == 2,
             "Keep lost the selected private window or candidate preferences");
     };
@@ -114,7 +114,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         // Seed the durable play preferences, not only Save's effective view:
         // since ROAD#21 play_settings() is derived from them plus worn
         // profiles, and every later save serializes the durable copy.
-        require(preferences.set_play_settings_and_save(expected), "Cannot seed private display trial play preferences");
+        require(preferences_session.set_play_settings_and_save(expected), "Cannot seed private display trial play preferences");
         require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, saved_fullscreen, TeamColourPair::blue_yellow), "Cannot seed private display trial preferences");
         metadata_fullscreen = saved_fullscreen; before_bytes = bytes();
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
@@ -169,7 +169,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, 1920.0f, 1080.0f - style.footer_y), style.scrim_colour);
         sheet->draw(list, pixel, RectangleF(style.brand_position.x, style.footer_y, 1920.0f - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); heading.draw(list); question.draw(list); accept.draw(list); cancel.draw(list); countdown.draw(list);
-        const auto& footer = original.prompt_bar(); const UiTextDropShadow prompt("independent-display-prompt", L"A/Enter Select    B/Esc Back", footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); prompt.draw(list);
+        const auto& footer = original.prompt_bar(); const colourwars::UiTextDropShadow prompt("independent-display-prompt", L"A/Enter Select    B/Esc Back", footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); prompt.draw(list);
         return read(renderer);
     };
     std::ofstream records(output / "display-trial.csv"); records << "case,width,height,input_slot,keep,seconds,full_frame_matches\n";
@@ -219,9 +219,9 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         require((delta.width <= 0 || countdown_crop_bounds(camera.calculate_view_rectangle(clock_band)).contains(delta)),
             "Nonpositive display trial update changed geometry beyond the live wall-clock countdown");
         moving = after_nonpositive; old(false);
-        const_cast<PlaySettings&>(preferences.play_settings()).reduce_effects = true; expected.reduce_effects = true; compare("reduce-immediate", true, true);
-        const_cast<PlaySettings&>(preferences.play_settings()).reduce_effects = false; expected.reduce_effects = false; require(moving.pixels == frame().pixels, "Reduced display trial drawing consumed focus motion"); tap(GamepadButton::b); reverted();
-        seed(); begin(); select_keep(); compare("deliberate-keep", true); tap(GamepadButton::a); hide(); kept(); Save loaded; loaded.load_save_file(); preserved(loaded.play_settings()); require(loaded.resolution() == ScreenResolution::s_1920_1080 && !loaded.fullscreen() && loaded.team_palette() == TeamColourPair::random, "Keep failed to persist and reload its candidate");
+        const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = true; expected.reduce_effects = true; compare("reduce-immediate", true, true);
+        const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = false; expected.reduce_effects = false; require(moving.pixels == frame().pixels, "Reduced display trial drawing consumed focus motion"); tap(GamepadButton::b); reverted();
+        seed(); begin(); select_keep(); compare("deliberate-keep", true); tap(GamepadButton::a); hide(); kept(); Save loaded; SettingsSession loaded_session(loaded); loaded_session.load_save_file(); preserved(loaded_session.play_settings()); require(loaded.resolution() == ScreenResolution::s_1920_1080 && !loaded.fullscreen() && loaded.team_palette() == TeamColourPair::random, "Keep failed to persist and reload its candidate");
         const auto once = bytes(); tap(GamepadButton::a); hide(); kept(); require(bytes() == once, "Repeated unchanged Apply reopened a trial or changed saved bytes");
     }
     device = keyboard; seed();
@@ -231,8 +231,8 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     seed(); begin(); hold(keyboard, GamepadButton::a, true); tick(); hold(3, GamepadButton::dpad_up, true); hold(keyboard, GamepadButton::a, false); tick(); hold(3, GamepadButton::dpad_up, false); tick(); tick(settled); compare("simultaneous-move-confirm", true); tap(GamepadButton::b); reverted();
     seed(); begin(); select_keep(); hold(3, GamepadButton::a, true); hold(keyboard, GamepadButton::b, true); tick(); hold(3, GamepadButton::a, false); hold(keyboard, GamepadButton::b, false); tick(); reverted();
     seed(); begin(); select_keep(); require(std::filesystem::create_directory(blocked), "Cannot block the isolated trial Keep write"); tap(GamepadButton::a); hide(); kept(); require(bytes() == before_bytes, "Failed Keep replaced the prior durable save");
-    Save durable; durable.load_save_file(); preserved(durable.play_settings()); require(durable.resolution() == ScreenResolution::s_1280_720 && durable.team_palette() == TeamColourPair::blue_yellow, "Failed Keep lost prior durable choices");
-    require(std::filesystem::remove(blocked), "Cannot remove trial Keep write refusal"); tap(GamepadButton::a); hide(); kept(); Save recovered; recovered.load_save_file(); preserved(recovered.play_settings()); require(recovered.resolution() == ScreenResolution::s_1920_1080 && recovered.team_palette() == TeamColourPair::random, "Unchanged Apply did not recover failed Keep persistence");
+    Save durable; SettingsSession durable_session(durable); durable_session.load_save_file(); preserved(durable_session.play_settings()); require(durable.resolution() == ScreenResolution::s_1280_720 && durable.team_palette() == TeamColourPair::blue_yellow, "Failed Keep lost prior durable choices");
+    require(std::filesystem::remove(blocked), "Cannot remove trial Keep write refusal"); tap(GamepadButton::a); hide(); kept(); Save recovered; SettingsSession recovered_session(recovered); recovered_session.load_save_file(); preserved(recovered_session.play_settings()); require(recovered.resolution() == ScreenResolution::s_1920_1080 && recovered.team_palette() == TeamColourPair::random, "Unchanged Apply did not recover failed Keep persistence");
     seed(true); begin(); select_keep(); tap(GamepadButton::a); hide(); kept();
     const_cast<MainMenuPresentation&>(presentation.main_menu()).display_trial_seconds = 15.0f;
     seed(); begin(); compare("shipped-fifteen-second-timeout", false, true); tap(GamepadButton::b); reverted();

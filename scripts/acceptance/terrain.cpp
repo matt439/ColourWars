@@ -14,6 +14,7 @@
 #include "engine/render/dds_file.h"
 #include "engine/render/visual.h"
 #include "engine/math/triangle.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
 #include <array>
@@ -32,10 +33,7 @@ using namespace mattmath;
 // shadows sit under real undersides. No device is created.
 namespace
 {
-	void require(bool condition, const std::string& message)
-	{
-		if (!condition) { throw std::runtime_error(message); }
-	}
+	using acceptance::require;
 
 	constexpr float EPSILON = 0.01f;
 	// Generous; a ruined budget is a material drawing per cell, not per run.
@@ -454,7 +452,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-	try
+	return acceptance::run_probe("terrain", [&]
 	{
 		require(argc == 2, "Usage: terrain.exe <game/content directory>");
 		const std::filesystem::path content = argv[1];
@@ -491,10 +489,5 @@ int main(int argc, char** argv)
 			"qualified native-size static landmarks with stable bounds/RNG/reduction, paper-only provisional blockouts, "
 			"bounded deterministic cloud drift with live reduction, and material/drift/camera refusals.\n";
 		return 0;
-	}
-	catch (const std::exception& error)
-	{
-		std::cerr << "FAIL terrain: " << error.what() << '\n';
-		return 1;
-	}
+	});
 }

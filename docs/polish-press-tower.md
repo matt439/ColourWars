@@ -247,6 +247,48 @@ attended review rather than retuning automatically from these bot observations.
 summit value and whether the halves feel fiddly. Support art and the explicit-only
 stage policy remain unchanged.
 
+## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
+
+125 matches of the 875-match `TOOL#3` rerun: all 25 ordered five-tool pairs at
+seeds 0, 1, 17, 42, 2026, 2P A/B, 60 seconds, Hard shipping bots on both sides.
+No gameplay value changed. Bands are **final held area** at time-up, not route use, visits, time held,
+spawn pressure or hill control; `crown` is the full-height X band 1640-1960, not the summit. The policy is the shipping `MatchBotDriver` at Hard on both
+seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
+Skirmish, but it is one bot at one difficulty, and ordered swaps combine side,
+seat RNG, tool and conditional bot behaviour. Five chosen seeds are not population
+samples; ranges are observed minima/maxima. Method, receipts and limits:
+[gameplay tuning](gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29).
+
+Team A's share of painted was 51.4 [6.5, 94.5]% over all 125 matches; 99 had a
+credited elimination (214 in all). Equal-tool controls, A share of painted (%):
+
+| Same tool on A and B | Five seeds | Median [min, max] | Painted / paintable, median |
+|---|---|---|---|
+| Sprayer | 50.9, 53.1, 57.3, 49.0, 49.9 | 50.9 [49.0, 57.3] | 62.7 |
+| Sniper | 50.7, 51.5, 47.7, 47.4, 55.4 | 50.7 [47.4, 55.4] | 14.3 |
+| Roller | 40.2, 58.5, 36.7, 47.8, 43.0 | 43.0 [36.7, 58.5] | 61.7 |
+| Mister | 55.1, 53.2, 46.4, 46.0, 51.4 | 51.4 [46.0, 55.1] | 60.4 |
+| Bucket | 45.7, 51.9, 53.1, 46.8, 57.1 | 51.9 [45.7, 57.1] | 44.1 |
+
+Per band, all 125 matches (coverage is both teams' held paint over the band's
+paintable area; A's part is A held over painted in the band; median [min, max] %):
+
+| Band | Paintable area | Coverage | A's part of painted |
+|---|---|---|---|
+| home_a | 18720 | 50.5 [0.3, 92.6] | 98.3 [0.0, 100.0] |
+| approach_a | 38280 | 52.9 [6.3, 84.3] | 78.3 [0.0, 100.0] |
+| hoist_a | 5760 | 75.0 [0.8, 100.0] | 64.9 [0.0, 100.0] |
+| crown | 14880 | 60.0 [9.7, 92.3] | 49.4 [3.8, 100.0] |
+| hoist_b | 5760 | 74.2 [5.0, 100.0] | 44.0 [0.0, 100.0] |
+| approach_b | 38280 | 55.7 [6.9, 81.8] | 18.2 [0.0, 98.8] |
+| home_b | 18720 | 53.6 [5.1, 97.4] | 6.1 [0.0, 98.4] |
+
+The two hoist bands are the most covered and the crown splits evenly at the
+median. Of the equal-tool controls, the Bucket mirror leaves the hoists least
+covered (43% and 62% median, against 78-98% for Sprayer, Roller and Mister).
+Whether the crown is worth contesting, and whether the hoists feel fiddly, stay
+attended `POL#31` questions.
+
 ## Evidence
 
 [scripts/acceptance/press_tower.cpp](../scripts/acceptance/press_tower.cpp) and
@@ -347,11 +389,101 @@ comfort, competitive balance, listening, physical-device or performance
 acceptance. Press Tower remains explicit-only and excluded from Random;
 `POL#31` and the support-art question below remain open.
 
+### Shipping-bot routes and team trials (`POL#41`)
+
+Done 2026-10-29: descriptive evidence for `POL#31`, not a substitute for it.
+The scripted routes above prove the geometry can be crossed. These two opt-in
+cases now show what the shipping bot does on it, with no bot, geometry or
+tuning change. The other stages are unchanged and come first.
+[bot_arena_routes.cpp](../scripts/acceptance/bot_arena_routes.cpp) keeps its
+150-route contract, and [bot_team_trials.cpp](../scripts/acceptance/bot_team_trials.cpp)
+keeps its 200-trial contract. Press Tower runs after each, with its own lines
+and totals. Its unfinished routes are measured limits, not failures.
+
+- **Routes** (`press_tower_routes`): each run injects the start position only.
+  The bot then gets 900 active steps of ordinary driver input, against a
+  neutral human at the opposite natural spawn. Each route runs for both teams,
+  all five tools and Easy/Normal/Hard, so 30 trials per route.
+  R2 is `floor_yard_a` → `press_bed` → `floor_yard_b` (start X 1200).
+  R3 is `catwalk_a` → `stair_3_a` → `shoulder_a` (start X 900).
+  R4 is `press_bed` → `frame_a` → `shoulder_a` (start X 1560).
+  The summit leg is `shoulder_a` → `press_head` (start X 1560).
+  Each route mirrors exactly for B. Each also has a minimum takeoff count:
+  0 for R2, 2 for R3 and R4, since they rise 240 and 320 against a held jump's
+  207, and 1 for the summit leg. Contacts must come on strictly later steps.
+  That matters here because `stair_3` and `shoulder` are level neighbours, and
+  a body straddling X 1480 touches both on the same step.
+  Every Press Tower trial keeps a trace of every 30th step and every jump, and
+  an unfinished trial prints it.
+- **Team trials**: same-tool 2v2 from natural spawns: three bots and a neutral
+  human. Each runs for both human sides, all five tools and Easy/Normal/Hard
+  (30 trials of 1800 steps, one final-input replay), using the `x_band`
+  partition (`metrics.cpp:221-226`). The trial rows append to the existing
+  four CSVs; their `controller` column now names the difficulty.
+  `bot_team_trials_press_tower.csv` adds one row per bot: route contacts landed
+  (named from the bot's side), summit steps (grounded on `press_head` or
+  `press_crown`), off-home steps and deaths.
+
+**First results (x64-release and x64-debug identical).** Before and after the
+change, the existing stages' stdout (216 route lines, 19 team lines) and every
+existing row of the four team CSVs are byte-identical.
+
+| Route | Finished | Easy | Normal | Hard | A / B |
+|---|---|---|---|---|---|
+| R2 | 5/30 | 5/10 | 0/10 | 0/10 | 2/15, 3/15 |
+| R3 | 24/30 | 6/10 | 9/10 | 9/10 | 9/15, 15/15 |
+| R4 | 30/30 | 10/10 | 10/10 | 10/10 | 15/15, 15/15 |
+| Summit | 30/30 | 10/10 | 10/10 | 10/10 | 15/15, 15/15 |
+
+Finish-top paint was held in 80 of the 120 trials.
+
+| Team trials | Summit bots | Summit steps | Left home | Deaths (bots) | Bed / far yard landed |
+|---|---|---|---|---|---|
+| Easy | 25/30 | 3629 | 30/30 | 10 (9) | 23 / 12 |
+| Normal | 25/30 | 3678 | 30/30 | 14 (11) | 19 / 5 |
+| Hard | 26/30 | 3131 | 30/30 | 20 (14) | 13 / 1 |
+| Team A | 38/45 | 5240 | 45/45 | 20 (16) | 28 / 10 |
+| Team B | 38/45 | 5198 | 45/45 | 24 (18) | 27 / 8 |
+
+Measured limits, named:
+
+- **R2, the required contest crossing: 25 of 30 unfinished, including every
+  Normal and Hard trial.** All 30 reached the bed. Sampled traces across
+  tools, difficulties and both teams agree. The bot walks the yard and ramp
+  onto the bed, climbs under its own frame (X 1521 for A, 2077 for B), goes
+  through frame and shoulder, and stands on the press head by about step 240.
+  Its goal choice prefers the tower to the far yard.
+  The team trials agree: from natural spawns, 12, 5 and 1 bots per 30 landed
+  on the far yard at Easy, Normal and Hard. R2's only finishers are Easy
+  Sprayer and Mister for A, and Easy Roller, Mister and Bucket for B.
+- **R3 is one-sided: A finished 9 of 15 and B 15 of 15.** The starts mirror
+  exactly. Four A misses never reached `stair_3_a`: Easy Sprayer, Mister and
+  Bucket, and Hard Roller. Two touched it and left without reaching the
+  shoulder: Normal Sprayer and Easy Sniper. The Normal Sprayer trace drops
+  through the catwalk toward home on step 10.
+- R4 and the summit leg have no limit: 60 of 60.
+
+What this does not decide is unchanged. It does not settle whether the summit
+is worth holding, whether the crown halves are fiddly or whether spawn pressure
+is fair; those remain `POL#31`, attended. It does not decide Easy/Normal/Hard
+values (`ROAD#10`) and does not move Press Tower into Random. The A/B R3
+asymmetry and the bot preferring the hoist to R2 are bot facts for `ROAD#10` to
+weigh. They are not geometry findings, and no row follows unless attended play
+shows bots abandoning the floor matters.
+
+Rerun: `scripts/run-acceptance.ps1 -Cases bot_arena_routes,bot_team_trials`
+(x64-debug or x64-release).
+
 ## Open
 
 - Attended play on both sides and 1-4P (`POL#31`), including spawn pressure, the summit's
   value and the summit halves' feel. If the halves read as fiddly, narrow the
   crown to 24 (halves 148) and re-run the sightline and live-fire checks.
+- Bot evidence for that session (`POL#41`, above): bots favour the hoist and
+  summit, and seldom take R2 to the far yard at Normal or Hard.
 - Support art for the brief, above.
+- Review frames: `ColourWars.exe +exec review_press_tower +quit` writes the
+  seeded 1-4P clean and heavy frames and every station
+  ([`DBG#18`](debug-console-record.md#arena-review-screenshot-pack-dbg18)).
 - Spawn margins depend on the gantry ending at X 1000; shortening it to 940
   opens a standing summit line to X 405. Any geometry edit re-runs the checks.

@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <ctime>
 #include <wincodec.h>
+#include <wrl/client.h>
 
 // Debug-only, so Release links no imaging library.
 #pragma comment(lib, "windowscodecs.lib")

@@ -9,6 +9,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -19,16 +20,14 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
 using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     bool close_to(float first, float second)
     {
@@ -79,13 +78,13 @@ namespace
             this->levels.add("movement_course", std::move(info));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         std::unique_ptr<Level> build(int count = 4, OpeningMode opening = OpeningMode::off,
             float duration = 300.0f)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(count);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
@@ -125,7 +124,7 @@ namespace
     {
         for (int tick = 0; tick < 600 && level.state() != LevelState::active; ++tick)
         {
-            level.update(inputs, dt);
+            level.update(acceptance::slot_seats(level, inputs), dt);
         }
         require(level.state() == LevelState::active, "Identity fixture did not reach live play");
     }
@@ -134,7 +133,7 @@ namespace
     {
         for (int tick = 0; tick < 600 && level.player_identity_emphasis(0) > 0.0f; ++tick)
         {
-            level.update(inputs, dt);
+            level.update(acceptance::slot_seats(level, inputs), dt);
         }
         require(level.player_identity_emphasis(0) == 0.0f,
             "Identity emphasis failed to expire within its bounded duration");
@@ -188,14 +187,14 @@ namespace
         auto level = world.build();
         const auto countdown_emphasis = level->player_identity_emphasis(0);
         require(close_to(countdown_emphasis, 1.0f), "Countdown did not begin with emphasized identity");
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         require(close_to(level->player_identity_emphasis(0), countdown_emphasis),
             "Countdown consumed the live identity emphasis budget");
         activate(*level, inputs);
         require(level->player_identity_emphasis(0) > 0.9f,
             "Entering live play did not start the identity emphasis");
         const auto first = level->player_identity_emphasis(0);
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         require(level->player_identity_emphasis(0) < first,
             "Positive live update did not age identity emphasis");
 
@@ -205,7 +204,7 @@ namespace
         for (int repeat = 0; repeat < 20; ++repeat)
         {
             level->refresh_layout();
-            level->update(inputs, repeat % 2 == 0 ? 0.0f : -dt);
+            level->update(acceptance::slot_seats(*level, inputs), repeat % 2 == 0 ? 0.0f : -dt);
             require(level->player_identity_visible(0) && level->player_identity_emphasis(0) == frozen &&
                 level->player_identity_bounds(0) == frozen_bounds,
                 "Frozen redraw or layout refresh consumed identity emphasis or moved its bounds");
@@ -253,18 +252,18 @@ namespace
             "Respawn request for an already-alive player invented a new identity event");
         require(level->kill_player(0) && !level->player_identity_visible(0),
             "Fatal health edge left the figure's identity visible before the dead-state tick");
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         require(level->player(0).state() == PlayerState::dead && !level->player_identity_visible(0),
             "Dead player's redraw carried an ordinary world identity badge");
         require(level->respawn_player(0) && level->player_identity_visible(0) &&
             close_to(level->player_identity_emphasis(0), 1.0f) && level->player_identity_emphasis(1) == 0.0f,
             "Actual developer respawn lost its emphasis or re-emphasized another pane");
         require(level->kill_player(0), "Could not eliminate natural-respawn identity player");
-        level->update(inputs, dt);
+        level->update(acceptance::slot_seats(*level, inputs), dt);
         bool respawned = false;
         for (int tick = 0; tick < 600; ++tick)
         {
-            level->update(inputs, dt);
+            level->update(acceptance::slot_seats(*level, inputs), dt);
             if (level->player(0).state() == PlayerState::alive)
             {
                 require(level->player_identity_visible(0) && level->player_identity_emphasis(0) > 0.9f,
@@ -280,7 +279,7 @@ namespace
         activate(*short_round, inputs);
         for (int tick = 0; tick < 120 && short_round->state() == LevelState::active; ++tick)
         {
-            short_round->update(inputs, dt);
+            short_round->update(acceptance::slot_seats(*short_round, inputs), dt);
         }
         require(short_round->state() == LevelState::zoom_out, "Short identity fixture did not reach time-up");
         short_round->emphasise_players();
@@ -343,8 +342,8 @@ namespace
             }
             if (tick % 30 == 0) { enabled->emphasise_players(); }
             const unsigned seed = static_cast<unsigned>(tick + 123);
-            std::srand(seed); enabled->update(inputs, dt);
-            std::srand(seed); disabled->update(inputs, dt);
+            std::srand(seed); enabled->update(acceptance::slot_seats(*enabled, inputs), dt);
+            std::srand(seed); disabled->update(acceptance::slot_seats(*disabled, inputs), dt);
             compare_gameplay(*enabled, *disabled);
             shots = shots || enabled->projectile_count() > 0;
             require(!disabled->player_identity_visible(0),
@@ -387,10 +386,10 @@ namespace
         auto level = world.build(); activate(*level, neutral);
         require(level->place_player(0, { runway.left() + size.x, runway.top() - size.y }),
             "Could not start camera integration on the actual interior runway");
-        for (int tick = 0; tick < 8; ++tick) { level->update(neutral, dt); }
+        for (int tick = 0; tick < 8; ++tick) { level->update(acceptance::slot_seats(*level, neutral), dt); }
         moving[static_cast<size_t>(level->player(0).player_num())].x_movement = 1.0f;
         for (int tick = 0; tick < 90 && level->player(0).velocity().x < world.tuning.player().max_velocity.x; ++tick)
-        { level->update(moving, dt); }
+        { level->update(acceptance::slot_seats(*level, moving), dt); }
         const Player& player = level->player(0);
         const float retained_velocity = player.velocity().x;
         require(retained_velocity == world.tuning.player().max_velocity.x &&
@@ -478,7 +477,7 @@ namespace
         bool saw_hold = false, saw_spawn = false, respawned = false;
         for (int tick = 0; tick < 600; ++tick)
         {
-            level->update(neutral, dt);
+            level->update(acceptance::slot_seats(*level, neutral), dt);
             if (player.state() == PlayerState::alive)
             {
                 require(player.health() == world.tuning.player().starting_health && player.velocity() == Vector2F::ZERO &&
@@ -506,7 +505,7 @@ namespace
         bool hit_wall = false;
         for (int tick = 0; tick < 180; ++tick)
         {
-            const float before = player.velocity().x; level->update(moving, dt);
+            const float before = player.velocity().x; level->update(acceptance::slot_seats(*level, moving), dt);
             if (before > 0.0f && player.velocity().x == 0.0f && close_to(player.rectangle().right(), wall.left()))
             { hit_wall = true; break; }
         }
@@ -598,7 +597,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("player identity", [&]
     {
         require(argc == 2, "Usage: player_identity.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -609,10 +608,5 @@ int main(int argc, char** argv)
         check_camera_integration(world, content);
         check_validation(content, std::filesystem::absolute(argv[0]).parent_path());
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL player identity: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

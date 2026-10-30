@@ -29,7 +29,7 @@ public:
 	// reader's object from it and keeps it. Throws the reader's own message,
 	// which names `source_name`: the content file's own name for an edit
 	// ("tuning.json"), the written file's path for tune.save. `context`, when it has a running
-	// application, also runs validate_game_content for edits that reach level
+	// application, also runs validate_shell_content for edits that reach level
 	// construction (`checks_levels`), and otherwise the object's own
 	// validate_resources: startup's checks of numbers against the loaded
 	// frames and fonts.

@@ -9,6 +9,8 @@
 #include "game/objects/level.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/objects/seat_commands.h"
+#include "game/stage_catalog.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
@@ -33,13 +35,15 @@ namespace debug_console_acceptance
 		labrador::RenderResources render;
 		labrador::AudioResources audio;
 		PlaySettings preferences;
-		labrador::Registry<LevelLoadedInfo> levels{ "Level" };
-		StageList stages;
+		StageCatalog catalog;
+		const labrador::Registry<LevelLoadedInfo>& levels = catalog.level_infos();
+		const StageList& stages = catalog.stages();
 		labrador::ResolutionManager resolution;
 		labrador::ViewportManager viewports{ &resolution };
 		labrador::Mouse mouse;
 		labrador::Partitioner partitioner;
 		std::unique_ptr<LevelBuilder> builder;
+		SeatCommandBuilder seat_commands{ &mouse, &viewports };
 
 		CpuWorld(const std::filesystem::path& content, const GameTuning& tuning,
 			const Presentation& presentation)
@@ -62,18 +66,18 @@ namespace debug_console_acceptance
 				this->render.add_font(font, std::move(loaded));
 			}
 			this->audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
-			for (const char* level : { "movement_course", "close_quarters" })
+			const Stage listed[] = { { "movement_course", "Movement Course", "icon", false },
+				{ "close_quarters", "Close Quarters", "icon", true } };
+			for (const Stage& stage : listed)
 			{
 				auto info = std::make_unique<LevelLoadedInfo>(
-					(content / "levels" / (std::string(level) + ".json")).string().c_str());
+					(content / "levels" / (stage.name + ".json")).string().c_str());
 				info->validate();
-				this->levels.add(level, std::move(info));
+				this->catalog.add(StageDefinition{ stage, std::move(info) });
 			}
-			this->stages = { { "movement_course", "Movement Course", "icon", false },
-				{ "close_quarters", "Close Quarters", "icon", true } };
 			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
 				&this->preferences, &this->levels, &tuning, &presentation, &this->resolution, nullptr,
-				&this->partitioner, &this->mouse);
+				&this->partitioner);
 		}
 	};
 
@@ -84,7 +88,7 @@ namespace debug_console_acceptance
 	public:
 		CpuMatch(CpuWorld& world, DebugDirector& director) : world_(world), director_(director) {}
 
-		MenuLevelSettings settings;
+		MatchSetup settings;
 		std::unique_ptr<Level> level;
 		int builds = 0;
 		// What GameLevel would choose; the director may override it.
@@ -108,21 +112,26 @@ namespace debug_console_acceptance
 			this->director_.match_suspended(*this);
 		}
 
-		const MenuLevelSettings& debug_settings() const override { return this->settings; }
-		void debug_rebuild(const MenuLevelSettings& plan, bool) override
+		const MatchSetup& debug_settings() const override { return this->settings; }
+		void debug_rebuild(const MatchSetup& plan, bool) override
 		{
 			this->settings = plan;
 			this->build();
 		}
-		void debug_adopt(const MenuLevelSettings& plan, bool) override { this->settings = plan; }
+		void debug_adopt(const MatchSetup& plan, bool) override { this->settings = plan; }
 		void debug_leave() override {}
-		void debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
-			SeatInputFilter* seats) override
+		// GameLevel::step_match's place, without its recorder and rumble.
+		void step(const std::vector<SlotInput>& inputs, float dt,
+			SeatInputFilter* seats)
 		{
-			this->level->update(inputs, dt, seats);
+			this->level->refresh_layout();
+			const SeatCommands commands = this->world_.seat_commands.build(*this->level, inputs);
+			if (commands.skip_intro) { this->level->request_intro_skip(); }
+			this->level->update(commands.seats, dt, seats);
 		}
 		bool debug_level_finished() const override { return this->level->state() == LevelState::finished; }
 		const Level* debug_level() const override { return this->level.get(); }
+		void debug_suspend_level() override { this->level->suspend(); }
 		// GameLevel's, uncovered and in focus: only the debug clock pauses it,
 		// which pauses the voices and leaves the players alone.
 		void debug_sync_audio() override
@@ -185,10 +194,10 @@ namespace debug_console_acceptance
 	};
 
 	// The keyboard seat's own scripted input (the bots drive the rest).
-	inline std::vector<PlayerInputData> keyboard_step(int step)
+	inline std::vector<SlotInput> keyboard_step(int step)
 	{
-		std::vector<PlayerInputData> inputs(input_slots::count);
-		PlayerInputData& keys = inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
+		std::vector<SlotInput> inputs(input_slots::count);
+		SlotInput& keys = inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
 		keys.connected = true;
 		keys.x_movement = (step / 90) % 3 == 0 ? 1.0f : (step / 90) % 3 == 1 ? -1.0f : 0.0f;
 		keys.jump_held = step % 75 < 12;

@@ -5,9 +5,10 @@
 #include "game/objects/blocked_shot_contact.h"
 #include "game/objects/horizontal_motion.h"
 #include "game/tuning.h"
-#include "engine/render/animation_object.h"
-#include "engine/core/moving_object.h"
+#include "game/carried/animation_object.h"
+#include "game/carried/moving_object.h"
 #include "engine/collision/collision_object.h"
+#include "game/objects/collider.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
 #include <span>
@@ -21,9 +22,10 @@ labrador::RenderResources::SheetStrip resolve_projectile_strip(
 	const ProjectileTuning& tuning, const labrador::RenderResources& render_resources);
 
 // Abstract paint projectile: shared lifetime, team filtering and swept contacts;
-// concrete subclasses supply their shape, movement update and drawing.
-class Projectile : public labrador::MovingObject,
-	public labrador::AnimationObject, public labrador::CollisionObject
+// concrete subclasses supply their shape, movement update and drawing, and
+// override the contact rules a flying shot has (ProjectileRolling does).
+class Projectile : public colourwars::MovingObject,
+	public colourwars::AnimationObject, public Collider
 {
 public:
 	// Borrowed tuning must outlive the projectile. main() owns the immutable
@@ -52,10 +54,17 @@ public:
 	labrador::CollisionLayer layer() const override;
 	labrador::CollisionMask mask() const override;
 	labrador::CollisionTag tag() const override;
-	void on_contact(const labrador::CollisionObject& other,
+	// A flying shot dies on its first contact with flat cover or an enemy,
+	// marking where cover stopped it.
+	void on_structure_contact(const Structure& other,
+		const mattmath::Vector2F& normal, float penetration) override;
+	void on_player_contact(const Player& other,
 		const mattmath::Vector2F& normal, float penetration) override;
 	bool for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
+
+	Projectile* projectile() override { return this; }
+	const Projectile* projectile() const override { return this; }
 
 	float delete_timer() const;
 	// Paint-owner index; device-less players have a separate owner by view.
@@ -66,9 +75,8 @@ public:
 	// the launch volume before Scene defers its first collision sweep.
 	void resolve_launch_obstruction(const mattmath::Vector2F& origin,
 		std::span<labrador::CollisionObject* const> objects);
-	// Resolve a flying projectile at its first impact along this tick's travel,
-	// before the scene dispatches endpoint contacts in object-list order.
-	// Rollers keep their one-step, multiple-contact behaviour.
+	// Resolve this tick's travel (resolve_travel) before the scene dispatches
+	// endpoint contacts in object-list order, once per actual update.
 	void resolve_movement_contacts(
 		std::span<labrador::CollisionObject* const> objects);
 	// Completed moving Roller contacts suppress only duplicate endpoint paint.
@@ -76,13 +84,39 @@ public:
 	bool moving_paint_completed(HorizontalMotionId id) const;
 	// Cosmetic results accumulate across both contact callbacks and all surfaces
 	// touched by a roller. Flush only after that contact batch is complete.
-	void note_paint_contact(bool painted, bool captured) const;
+	void note_paint_contact(bool painted, bool captured);
+	// note_paint_contact from a surface answering this projectile's contact,
+	// where the projectile is the contact's other party and so arrives const
+	// (labrador::CollisionObject::on_contact). Every projectile is owned
+	// non-const by its scene or a probe, so the write is defined. This is the
+	// one place the game writes through a contact's other party; engine
+	// report 33 asks for a contact that can carry the answer back.
+	static void answer_paint_contact(const Projectile& toucher,
+		bool painted, bool captured);
 	void flush_paint_audio(PaintAudio& audio);
 	// Consume after both callbacks classify the hit, before the projectile is
 	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
 	std::optional<BlockedShotContact> take_blocked_contact();
 protected:
 	virtual void set_rectangle(const mattmath::RectangleF& rectangle) = 0;
+	void touch(Collider& receiver,
+		const mattmath::Vector2F& normal, float penetration) const override;
+
+	// A flying shot stops at its first impact along this tick's travel, if
+	// its kind is swept (is_swept). Rollers keep their one-step volume.
+	virtual void resolve_travel(std::span<labrador::CollisionObject* const> objects);
+	// Whether a launch volume crossing an enemy between owner and muzzle hits
+	// them, as it hits cover there.
+	virtual bool launch_hits_players() const { return true; }
+	// Whether retiring after touching only bare cover sounds a dud.
+	virtual bool duds_on_bare_cover() const { return true; }
+
+	// Set by each positive update until Level resolves its travel.
+	bool moving_contact_ready() const { return this->moving_contact_ready_; }
+	// Paint every moving surface the one-step volume crosses in the surface's
+	// own frame, once each (moving_paint_completed).
+	void resolve_rolling_translating_contacts(
+		std::span<labrador::CollisionObject* const> objects);
 
 	// This projectile kind's whole record, borrowed. Never null.
 	const ProjectileTuning& tuning() const;
@@ -113,11 +147,11 @@ private:
 
 	// Allow one update before lifetime retirement so every spawn receives a collision sweep.
 	bool first_update_done_ = false;
-	mutable bool geometry_contact_ = false;
-	mutable bool painted_contact_ = false;
-	mutable bool captured_contact_ = false;
+	bool geometry_contact_ = false;
+	bool painted_contact_ = false;
+	bool captured_contact_ = false;
 	std::optional<BlockedShotContact> blocked_contact_;
-	mutable bool wet_contact_ = false;
+	bool wet_contact_ = false;
 	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
 	// One complete target span consumes each positive actual projectile update.
 	bool moving_contact_ready_ = false;
@@ -134,8 +168,6 @@ private:
     void resolve_translating_contacts(const mattmath::RectangleF& start,
         const mattmath::RectangleF& finish,
         std::span<labrador::CollisionObject* const> objects, bool moving_ready);
-    void resolve_rolling_translating_contacts(
-        std::span<labrador::CollisionObject* const> objects);
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
 	ProjectileType type_ = ProjectileType::spray;

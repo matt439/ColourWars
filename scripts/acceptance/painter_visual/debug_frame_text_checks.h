@@ -12,8 +12,8 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
         ~RestoreLayout() { this->viewports.set_layout(this->layout); }
     } restore_layout{ *app.viewport_manager(), app.viewport_manager()->layout() };
     LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
-        &data.save()->play_settings(), data.level_infos(), data.tuning(), &presentation,
-        app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
+        &data.settings_session()->play_settings(), data.level_infos(), data.tuning(), &presentation,
+        app.resolution_manager(), app.thread_pool(), app.partitioner());
     auto& look = const_cast<DebugOverlayPresentation&>(presentation.debug_overlay());
     const auto font = app.render_resources()->resolve_sprite_font(look.font);
     const std::wstring simulation = L"sim dt: " + std::to_wstring(dt);
@@ -43,7 +43,7 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
     {
         app.viewport_manager()->set_layout(count == 1 ? ScreenLayout::one_player :
             count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_duration(60.0f);
         settings.set_player_count(count);

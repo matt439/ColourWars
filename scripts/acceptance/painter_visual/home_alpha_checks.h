@@ -20,7 +20,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         "Home alpha opaque parity fixture differs from the reviewed default");
     const NestedSaveProfile profile(output / "alpha-home-profile");
     const auto save_path = output / "alpha-home-profile/ColourWars/save_data.json";
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play;
     play.music_volume = play.sfx_volume = 0; play.aim_sensitivity = 4;
     play.view_shake = false; play.aim_marker = true; play.reduce_effects = true;
@@ -29,7 +29,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         play.sticks[slot].movement_deadzone = 10 + static_cast<int>(slot) * 10;
         play.sticks[slot].aim_deadzone = 20 + static_cast<int>(slot) * 10;
     }
-    require(preferences.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
+    require(preferences_session.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
         ScreenResolution::s_1280_720, false, TeamColourPair::blue_yellow),
         "Cannot seed the Home alpha fixture's private save");
     const std::string saved = bytes(save_path);
@@ -38,10 +38,10 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     require(movement != nullptr, "Home alpha fixture requires the reviewed movement_course stage");
     stages.push_back({ "movement_course", movement->display_name(), movement->icon_frame(), movement->include_in_random() });
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings plan;
+    MatchSetup plan;
     plan.set_player_count(1); plan.set_best_of(1); plan.set_stage("movement_course");
     plan.set_duration(73.0f); plan.set_screen_layout(ScreenLayout::one_player);
     plan.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -68,7 +68,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     } restore{ stack, presentation, original, window };
     const auto unchanged = [&]
     {
-        const PlaySettings& active = preferences.play_settings();
+        const PlaySettings& active = preferences_session.play_settings();
         require(preferences.resolution() == ScreenResolution::s_1280_720 && !preferences.fullscreen() &&
             preferences.team_palette() == TeamColourPair::blue_yellow && active.aim_sensitivity == play.aim_sensitivity &&
             active.music_volume == 0 && active.sfx_volume == 0 && active.view_shake == play.view_shake &&

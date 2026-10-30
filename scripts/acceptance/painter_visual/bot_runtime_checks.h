@@ -5,13 +5,13 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
 {
     std::ignore = content;
     const NestedSaveProfile profile(output / "bot-players-runtime-profile");
-    Save preferences; preferences.load_save_file();
-    PlaySettings silent = preferences.play_settings(); silent.music_volume = silent.sfx_volume = 0;
-    require(preferences.set_play_settings_and_save(silent), "Cannot silence private runtime fixture");
+    Save preferences; SettingsSession preferences_session(preferences); preferences_session.load_save_file();
+    PlaySettings silent = preferences_session.play_settings(); silent.music_volume = silent.sfx_volume = 0;
+    require(preferences_session.set_play_settings_and_save(silent), "Cannot silence private runtime fixture");
     StageList stages;
-    GameData data; data.set_application(&app); data.set_save(&preferences);
-    data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    data.set_stages(&stages);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
+    data.set_tuning(&tuning); data.set_presentation(&presentation);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "crossfeed" }); data.set_stage_catalog(&stage_catalog);
     StateContext& stack = app;
     struct ClearBots { StateContext& stack; ~ClearBots() { this->stack.clear(); } } clear{ stack };
     stack.clear(); stack.notify_activation(true);
@@ -21,7 +21,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
     app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
 
-    MenuLevelSettings settings; settings.set_player_count(4);
+    MatchSetup settings; settings.set_player_count(4);
     settings.set_player_bot(1, BotDifficulty::easy); settings.set_player_bot(3, BotDifficulty::hard);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
     require(settings.claim_input_slot(3), "Cannot claim P3's sparse human device");
@@ -179,7 +179,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     stack.clear();
 
     // One human pane beside two bots, captured live for label inspection.
-    MenuLevelSettings solo; solo.set_player_count(3);
+    MatchSetup solo; solo.set_player_count(3);
     solo.set_player_bot(1, BotDifficulty::normal); solo.set_player_bot(2, BotDifficulty::hard);
     solo.begin_input_claims(input_slots::keyboard_and_mouse);
     solo.set_screen_layout(ScreenLayout::one_player); solo.set_stage("crossfeed"); solo.set_duration(60.0f);

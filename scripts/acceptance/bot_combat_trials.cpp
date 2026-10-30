@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -37,9 +38,9 @@ namespace
         return names[static_cast<int>(difficulty)];
     }
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(trial.mode == Mode::moving_human ? 2 : 3);
         settings.set_player_bot(1, trial.difficulty);
         if (trial.mode == Mode::opposed_bots) { settings.set_player_bot(2, trial.difficulty); }
@@ -154,7 +155,7 @@ namespace
 
     Metrics run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings); prepare(*level, world, trial);
         Metrics result; result.actors.resize(static_cast<std::size_t>(level->player_count()));
         for (int seat = 0; seat < level->player_count(); ++seat)
@@ -179,7 +180,7 @@ namespace
             for (int seat = 0; seat < level->player_count(); ++seat)
             {
                 const PlayerInputData& input = inputs[static_cast<std::size_t>(seat)];
-                require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+                require(input.connected && !input.toggle_debug,
                     "Combat trial emitted a menu/pause/device action");
                 require(level->player(seat).primary_weapon().type() == trial.tool,
                     "Combat trial changed a participant's tool");
@@ -265,7 +266,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot combat trials", [&]
     {
         require(argc == 2, "usage: bot_combat_trials <content>");
         World world(std::filesystem::absolute(argv[1]), "bot-combat-trials", "Combat trial needs support '", "crossfeed");
@@ -321,6 +322,5 @@ int main(int argc, char** argv)
         std::cout << "PASS 60 bounded moving/opposed combat trials and six 1200-step final-input replays; report=" <<
             path_to_utf8(report) << "; ordinary fire/motion/damage/owned-paint gates; only lethal contacts have owner attribution; repaint counts remain measurements\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot combat trials: " << error.what() << '\n'; return 1; }
+    });
 }

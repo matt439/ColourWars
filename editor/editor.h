@@ -22,7 +22,8 @@ namespace colourwars_editor
         edit_undo, edit_redo, edit_duplicate, edit_delete,
         view_fit, view_selection, view_match, view_bounds, view_blockout, help_controls,
         add_object, apply_property, revert_property, objects_list,
-        properties_list, property_value, palette, grid_size, edit_align_origin
+        properties_list, property_value, palette, grid_size, edit_align_origin, edit_mirror,
+        edit_copy, edit_paste
     };
 
     inline bool same_entry(const Entry& a, const Entry& b)
@@ -79,6 +80,8 @@ namespace colourwars_editor
         bool show_blockout_ = true;
         std::optional<BlockoutTuning> blockout_tuning_;
         std::vector<ScoringFace> scoring_faces_;
+        // ED#25: left/right scoring area and unpartnered objects, per refresh.
+        std::wstring symmetry_;
         std::wstring blockout_error_;
         // Reread with tuning on every refresh; warnings only, never a blocked edit.
         ContentCatalog content_catalog_;
@@ -133,5 +136,10 @@ namespace colourwars_editor
         double snapped(double) const;
         void cancel_drag();
         void nudge(int, int);
+        // ED#27: one object as CF_UNICODETEXT JSON, through LevelDocument's copy/paste text.
+        void copy_to_clipboard();
+        void paste_from_clipboard();
+        // One message-loop step: inspector keys, the list's keys, accelerators, Tab.
+        void dispatch(MSG&);
     };
 }

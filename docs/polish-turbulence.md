@@ -181,6 +181,61 @@ threatens, the warning/escape interval and the approach needed to gain it.
 Reject geometry that lets one centre holder cover both departures and their
 retreat at once. The samples will not prove universal spawn safety.
 
+### Authored review stations (`POL#40`)
+
+**Done 2026-10-29.** `turbulence_blockout` and the mover, gate, ferry and slab
+trials now share one station list, so Debug `goto` and an attended `POL#21`
+comparison reach the same named positions on every variant. Each station is a
+player's top-left with its feet on the surface, as the spawns stand (body 52 x
+120); B is A reflected by body width, `x_b = 3948 - x_a`.
+
+| Station | A (x, y) | B (x, y) | Stands on |
+|---|---|---|---|
+| `home_lower_exit` | 540, 1160 | 3408, 1160 | ground, under the home floor's open edge (the drop departure) |
+| `home_upper_exit` | 714, 920 | 3234, 920 | side step (the tap departure) |
+| `upper_receiver` | 1134, 760 | 2814, 760 | upper approach, centre 1160 as in the slab comparison |
+| `crossover_end` | 1514, 680 | 2434, 680 | crossover half, centre 1540 as in the slab comparison |
+| `lower_cover` | 1394, 1080 | 2554, 1080 | lower bed |
+| `mover_outer_end` | 734, 600 | 3214, 600 | the mover or ferry at its home-side end (mover, ferry and slab trials) |
+| `mover_inner_end` | 1054, 600 | 2894, 600 | the mover or ferry at its centre-side end (same three trials) |
+
+Before any file was edited, every body was checked against every variant's
+collision objects: each stands on its named support and overlaps no solid,
+including the slab trial's slabs (x 1240-1400 and 2600-2760) and the gate trial's
+centre gate. No added object occupies a shared position, so no station moved.
+The blockout and gate trial carry ten stations; the three mover trials carry
+fourteen. The preserved `turbulence.json` is unchanged.
+
+`turbulence_station_tour <stage>` tours the ten shared stations and
+`turbulence_mover_station_tour <stage>` adds the four mover ends; both share
+`turbulence_station_tour_shared`, and `turbulence_station_tours` runs the
+right one on all five variants (62 screenshots). The review wrappers
+`review_turbulence_blockout` and the four trial wrappers now also photograph
+every station on the one-player heavy frame, as Crossfeed's does.
+
+**Limit: mover ends are placements, not rests.** A mover has no dwell at its
+ends, so the tour photographs `mover_*` stations paused as placed: the body at
+the endpoint, the mover wherever its phase is at that moment. The fixed
+stations are photographed after two updates, supported at rest. An unpainted
+ferry holds its starting pose, so a ferry's outer end has the ferry under it.
+
+Acceptance: the five stages load at startup and pass `stage_selection`,
+`level_format` and `terrain`, and the editor check accepts and round-trips them
+(`ED#23`). The Turbulence cases that read these stages also pass:
+`turbulence_blockout`, `team_gate`, `paint_ferry`, `fixed_slab`,
+`moving_structure`, `instant_replay`, `bot_gate_routes`, `balance_regions` and
+the opt-in mover, slope, slab and bot-route cases. `turbulence_movers` pinned the
+mover trial's metadata to the blockout's; it now requires the trial to carry the
+blockout's ten stations unchanged and in order, plus only `mover_*` ends. The
+`debug_console` shipped-script walk checks every `goto` against its stage
+(32 files, 1,437 statements). `+script.background 1
++exec turbulence_station_tours +quit` exits 0 with 62 screenshots. No replay is
+kept against these stages, so none needed re-recording; the dated receipts above
+are left as written.
+
+Not decided here: geometry, spawn safety or which variant `POL#21` keeps.
+Stations are review positions, not a pressure or balance claim.
+
 ## Regional and face paint budget
 
 These are initial **design allocations of exposed scored area**, totalling
@@ -1058,3 +1113,180 @@ attended balance remain open.
 Attended both-side 1-4P play must still answer crossing comfort,
 pressure and regional value. `POL#21`, `POL#3`, `POL#24`, `POL#27`
 and physical-pad acceptance remain open.
+
+### Review frames (`DBG#18`)
+
+`ColourWars.exe +exec review_turbulence_blockout +quit` (and
+`review_turbulence`, `_mover_trial`, `_slab_trial`, `_ferry_trial`,
+`_gate_trial`) writes seed-7 paint-bot clean and heavy frames at 1-4 panes
+([pack](debug-console-record.md#arena-review-screenshot-pack-dbg18)). They are
+now followed by every station on the one-player heavy frame (`POL#40`), and are
+evidence for `POL#21`, not acceptance.
+
+### Shipping-bot routes and team trials (`POL#42`)
+
+**Measured 2026-10-30; recorded 2026-10-29.** When filed, the shipping bots had unequal
+evidence across the Turbulence family. `bot_turbulence_routes.cpp:100` sets
+the preserved `turbulence` stage, not the blockout. The mover and gate trials
+have their own route cases (`bot_mover_routes.cpp:38`, `bot_gate_routes.cpp:45`),
+and the slab trial has `ROAD#38`'s measurement case (`bot_slab_routes.cpp:199`).
+The blockout had none. The natural-spawn team matrix in
+`bot_team_trials.cpp:678` covers Crossfeed, Close Quarters, King of the Hill and
+the preserved Turbulence, so no current variant had bot-held paint from
+ordinary spawns.
+
+Scope: a shipping-bot route case on `turbulence_blockout` (home departures,
+the lower route, the fixed crossover and the return, both teams and all five
+tools, on the `bot_turbulence_routes` pattern), and `turbulence_blockout` plus
+`turbulence_mover_trial` added to the team matrix. The matrix gives a stage
+partition only to Crossfeed and Press Tower (now `bot_team_trials.cpp:122`, with the blockout); let the blockout use
+its existing `balance_regions` bands and keep geographic thirds for the mover
+trial until `TOOL#3` supplies its own. Report completion, takeoffs, arrival updates and
+held paint per team so the two stages compare like for like. The slab trial
+is optional here: `bot_slab_routes` ([`ROAD#38`](feature-roadmap.md#fixed-scored-slabs-for-bots-road38))
+measured bots walking its slabs, with fewer crossover arrivals than the mover trial.
+`TOOL#3` has since given the four trials the blockout's bands in
+`balance_regions` and run the [Hard five-tool matrix](#hard-five-tool-matrix-tool3-2026-10-30);
+`bot_team_trials` still uses its own geographic thirds for the trials.
+
+First step: run the existing team matrix with the two stages added and record
+whether the bots complete any crossing before writing the new route case.
+
+Acceptance: both new cases pass in Release, the route case also in Debug, and
+the measured rows are recorded under this heading with their receipts. A route
+the bots cannot complete is a recorded result with its stop point, not a
+failure to hide by changing geometry or bot tuning.
+
+Not decided here: arena selection, weapon balance or bot difficulty. These are
+descriptive evidence for `POL#21` and `POL#27`; bots are not a stand-in for
+attended play.
+
+**Team trials (first step).** `bot_team_trials` now ends with a third pass,
+after its unchanged Crossfeed/CQ/King/Turbulence and Press Tower contracts:
+the blockout, the mover trial and, since `ROAD#38` landed, the slab trial, each
+with ten same-tool 2v2 (five tools, both human sides) and ten mixed-tool
+rotations on the first seed, Normal bots, 1800 steps from ordinary spawns, and
+one final-input replay per stage. The blockout uses its `x_band` bands; the two
+trials use geographic thirds. A mover's scoring tiles may now move during a
+Turbulence-family team trial provided each keeps its starting region pieces
+(the movers stay inside the left and right thirds); every other stage still
+rejects a moved tile. Per bot, `bot_team_trials_turbulence.csv`
+records the first update on nine named contacts from its own side, takeoffs
+(jump presses) and its team's held paint, including paint in the opposing half,
+which does not depend on the partition. A *crossing* is the first arrival on
+the far crossover, far upper approach, far lower bed, far approach yard or far
+home floor. Each team row is 30 bots (10 trials as the one-bot side, 10 as the
+two-bot side).
+
+| Stage, team | Crossing | Mean / min arrival update | Via far crossover / far bed | Takeoffs | Mean held paint | In far half |
+|---|---|---|---|---|---|---|
+| blockout, a | 25/30 | 719 / 207 | 13 / 10 | 384 | 35618 | 11945 |
+| blockout, b | 24/30 | 632 / 204 | 0 / 24 | 337 | 31956 | 11758 |
+| mover trial, a | 21/30 | 904 / 207 | 6 / 15 | 399 | 36667 | 11566 |
+| mover trial, b | 22/30 | 743 / 204 | 5 / 17 | 371 | 34056 | 11222 |
+| slab trial, a | 23/30 | 1000 / 522 | 10 / 12 | 329 | 34990 | 9258 |
+| slab trial, b | 19/30 | 945 / 463 | 12 / 7 | 387 | 32342 | 6491 |
+
+The bots do cross every variant from ordinary spawns. The blockout has the
+most crossings and the earliest arrivals. On it, team b crossed only by the
+lower route: 4 of its 30 bots reached their own crossover and 2 the far one,
+against 14 and 13 for team a. The mover trial loses crossings on both sides. The
+slab trial has the latest arrivals, and team b holds the least far-half paint.
+By tool, over all three stages, Sniper bots crossed least (16/36) and Roller
+most (32/36). Every bot left home except 3 and 4 slab-trial bots
+(left_home 27/30, 26/30). The side asymmetry on a mirrored arena comes from
+the bots, which share one seed here; it is not a geometry finding.
+
+**Route case.** The opt-in `bot_blockout_routes` runs the actual driver for 3600
+steps against a stationary human, from three starts, both teams, five tools and
+three difficulties (90 trials, one replay per start). Each start is measured
+against the authored chains that leave from it; a chain advances only on
+grounded contact with its next named support. The home start is the ordinary
+spawn. The upper start is placed on the bot's upper approach, and the centre
+start on the lower-crossing floor at x 2000. Only valid driver output and the
+replays are gated.
+
+| Start, chain (contacts) | Team a | Team b | Most common stop (a / b) |
+|---|---|---|---|
+| home, lower route (home, own yard, own bed, far bed, far yard) | 9/15, mean 2437 | 6/15, mean 2571 | far yard 3 / far yard 7 |
+| home, upper departure (home, side step, own upper, own crossover, far crossover) | 6/15, mean 1973 | 4/15, mean 1513 | side step 8 / side step 6 |
+| upper, fixed crossover (own upper, own crossover, far crossover, far upper) | 8/15, mean 815 | 5/15, mean 1797 | far upper 6 / far upper 6 |
+| centre, return home (own yard, home) | 11/15, mean 1604 | 11/15, mean 1236 | own yard 2, home 2 / own yard 4 |
+| centre, return to height (own yard, side step, own upper) | 9/15, mean 1539 | 10/15, mean 1442 | own yard, side step, own upper 2 each / own yard 4 |
+
+Means are the completing update. No bot died. Every recorded stop is a measurement; geometry
+and bot tuning are unchanged. From home, the common upper-departure stop is the
+side step: those bots took the lower route. On the fixed crossover, most
+stops come after the far crossover, before the far upper approach; 4 of team
+b's 15 never reached the far crossover. That matches team b's low crossover
+use in the team trials. Release and Debug `MEASURE` lines are identical.
+
+Receipts: `out/validation/pol42/team/` (Release; `bot_team_trials-run.log` and
+`bot_team_trials_turbulence.csv`) and `out/validation/pol42/routes/` (Release
+and Debug `bot_blockout_routes-run.log`). The team trials also pass in Debug,
+with all six CSVs byte-identical to Release.
+
+## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
+
+625 matches of the 875-match `TOOL#3` rerun: the blockout and the four trials,
+each with all 25 ordered five-tool pairs at seeds 0, 1, 17, 42, 2026, 2P A/B,
+60 seconds, Hard shipping bots on both sides. No gameplay value changed. The
+four trials now use the blockout's five `x_band` bands (they share its bounds),
+so all five stages compare band for band; the 6200-wide `turbulence` candidate
+was not run. Bands are **final held area** at time-up, not route use, visits, time held or
+spawn pressure. A moving scored tile is credited to the band its
+final position falls in, so the ferry trial's band denominators vary by match. The policy is the shipping `MatchBotDriver` at Hard on both
+seats, 2P only: it has a route planner and ballistic aim, unlike `TOOL#1`'s
+Skirmish, but it is one bot at one difficulty, and ordered swaps combine side,
+seat RNG, tool and conditional bot behaviour. Five chosen seeds are not population
+samples; ranges are observed minima/maxima. Method, receipts and limits:
+[gameplay tuning](gameplay-tuning.md#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29).
+
+| Stage | A share of painted, median [min, max] % | Painted / paintable, median % | Credited eliminations (matches with one) |
+|---|---|---|---|
+| blockout | 49.2 [4.9, 94.2] | 53.1 | 243 (115/125) |
+| mover trial | 51.2 [6.2, 90.3] | 51.1 | 160 (98/125) |
+| gate trial | 49.9 [5.5, 93.6] | 51.4 | 126 (81/125) |
+| ferry trial | 47.9 [4.0, 94.0] | 52.0 | 185 (103/125) |
+| slab trial | 52.3 [8.6, 94.4] | 47.8 | 93 (63/125) |
+
+Per band, all 125 matches per stage: coverage (both teams' held paint over the
+band's paintable area) / A's part of the painted band, median %:
+
+| Band | Blockout | Mover | Gate | Ferry | Slab |
+|---|---|---|---|---|---|
+| home_a | 48.1 / 100.0 | 47.6 / 98.2 | 42.1 / 100.0 | 49.0 / 100.0 | 41.4 / 100.0 |
+| approach_a | 52.4 / 74.4 | 51.1 / 71.2 | 55.2 / 99.3 | 48.5 / 75.5 | 51.4 / 79.5 |
+| contest | 57.5 / 48.0 | 53.4 / 53.1 | 54.0 / 48.3 | 55.0 / 50.2 | 42.0 / 49.1 |
+| approach_b | 52.0 / 15.4 | 45.1 / 23.1 | 53.1 / 7.7 | 48.1 / 15.0 | 58.5 / 40.3 |
+| home_b | 51.2 / 0.0 | 44.3 / 0.0 | 45.5 / 0.0 | 45.0 / 0.0 | 55.5 / 15.3 |
+
+Paintable area per band: homes 20160 on every stage; approaches 20880 (blockout,
+gate) or 29040 (mover, slab; ferry 25440-29040 by final ferry position);
+contest 66720 (blockout, mover), 72480 (gate), 74950.5 (slab) and 66720-73920
+(ferry). Every band held paint in at least 124 of 125 matches on every stage.
+
+What stands out, as questions rather than findings:
+
+- **Gate trial approaches stay their own team's.** A held 99.3% of painted
+  `approach_a` and B 92.3% of `approach_b` at the median; on the other stages
+  A held 71-80% of its approach. Whether that reflects the centre gate or how
+  the bot routes around it is not separable here.
+- **Slab trial is the one asymmetric stage.** Its contest band is the least
+  covered (42.0%), and A reaches into B's side (40.3% of `approach_b`, 15.3% of
+  `home_b`) while B holds 20.5% of `approach_a`. `POL#42` also saw slab-trial
+  team b hold the least far-half paint; both runs share bots and seeds, so this
+  is not yet a geometry finding.
+- **Hard bots fight most on the blockout** (115 of 125 matches with a credited
+  elimination) and least on the slab trial (63).
+- **By tool** (own share of painted against every opponent, both seats), Mister
+  holds the most on all five stages (59.2-63.1%), Roller 46.0-51.8% (55.7-57.0%
+  on Crossfeed and Press Tower) and the Hard Sniper bot 12.0-14.9%. The Sniper
+  mirror covers 9.8-12.7% of each stage.
+
+These answer none of the attended `POL#21` questions (crossing comfort, pressure,
+regional value, geometry choice) and change no value; they are the paint half
+of "reconcile paint and sampled five-tool pressure with side/loadout swaps" from
+the [static qualification](#static-qualification-and-next-slice), for bots only.
+Per-band coverage for every equal-tool control on each stage is in the receipt's
+`summary.md`.

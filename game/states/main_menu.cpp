@@ -6,63 +6,28 @@
 #include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
 #include "game/drawable_text.h"
+#include "game/carried/ui_text_drop_shadow.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
 
-MainMenuPage::MainMenuPage(MenuContext* context, std::optional<Session> between_rounds) :
-	MenuPage(context), between_rounds_(std::move(between_rounds))
+MainMenuPage::MainMenuPage(MenuContext* context) :
+	MenuPage(context)
 {
-	const MainMenuPresentation& look = this->look();
-
-	this->error_sound_ = this->resolve_sound(look.error_sound);
-	this->ready_sound_ = this->resolve_sound(look.ready_sound);
-	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
 }
 
-bool MainMenuPage::debug_start_match(const MenuLevelSettings& plan)
+bool MainMenuPage::debug_start_match(const MatchSetup& plan)
 {
-	// Between rounds this frame belongs to the match, which takes the plan.
-	if (this->between_rounds_) { return false; }
 	this->menu_context()->cancel_music_exit();
 	*this->level_settings() = plan;
 	this->context()->pop(MatchStart::developer);
 	return true;
 }
 
-bool MainMenuPage::debug_dismiss(bool leaving_match)
-{
-	if (!this->between_rounds_)
-	{
-		return MenuPage::debug_dismiss(leaving_match);
-	}
-	this->menu_context()->cancel_music_exit();
-	this->context()->pop(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
-	return true;
-}
-
-const std::optional<Session>& MainMenuPage::between_rounds() const
-{
-	return this->between_rounds_;
-}
-
-void MainMenuPage::return_to_round_menu()
-{
-	this->context()->transition_to(
-		std::make_unique<EndMenuInitial>(this->menu_context(), *this->between_rounds_));
-}
-
 const MainMenuPresentation& MainMenuPage::look() const
 {
 	return this->presentation().main_menu();
-}
-
-int MainMenuPage::player_count() const
-{ 
-	return this->level_settings()->
-		player_count();
 }
 
 std::vector<int> MainMenuPage::connected_slots() const
@@ -79,13 +44,57 @@ std::vector<int> MainMenuPage::connected_slots() const
 	return result;
 }
 
-void MainMenuPage::set_player_prompts(MenuPrompt prompts)
+RosterSetupPage::RosterSetupPage(MenuContext* context, std::optional<Session> between_rounds) :
+	MainMenuPage(context), between_rounds_(std::move(between_rounds))
+{
+	const MainMenuPresentation& look = this->look();
+
+	this->error_sound_ = this->resolve_sound(look.error_sound);
+	this->ready_sound_ = this->resolve_sound(look.ready_sound);
+	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
+}
+
+bool RosterSetupPage::debug_start_match(const MatchSetup& plan)
+{
+	if (this->between_rounds_) { return false; }
+	return MainMenuPage::debug_start_match(plan);
+}
+
+bool RosterSetupPage::debug_dismiss(bool leaving_match)
+{
+	if (!this->between_rounds_)
+	{
+		return MenuPage::debug_dismiss(leaving_match);
+	}
+	this->menu_context()->cancel_music_exit();
+	this->context()->pop(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
+	return true;
+}
+
+const std::optional<Session>& RosterSetupPage::between_rounds() const
+{
+	return this->between_rounds_;
+}
+
+void RosterSetupPage::return_to_round_menu()
+{
+	this->context()->transition_to(
+		std::make_unique<EndMenuInitial>(this->menu_context(), *this->between_rounds_));
+}
+
+int RosterSetupPage::player_count() const
+{
+	return this->level_settings()->
+		player_count();
+}
+
+void RosterSetupPage::set_player_prompts(MenuPrompt prompts)
 {
 	this->player_prompts_ = prompts;
 	this->set_prompts(prompts);
 }
 
-int MainMenuPage::next_host_row(int row, Direction direction, bool joining) const
+int RosterSetupPage::next_host_row(int row, Direction direction, bool joining) const
 {
 	if (direction != Direction::up && direction != Direction::down) { return row; }
 	const int step = direction == Direction::up ? -1 : 1;
@@ -102,7 +111,7 @@ int MainMenuPage::next_host_row(int row, Direction direction, bool joining) cons
 	return row;
 }
 
-void MainMenuPage::route_host_setup_input(std::vector<ProcessedMenuInput>& inputs, int& row)
+void RosterSetupPage::route_host_setup_input(std::vector<ProcessedMenuInput>& inputs, int& row)
 {
 	if (inputs.empty() || this->level_settings()->bot_count() == 0) { return; }
 	const ProcessedMenuInput host = inputs[0];
@@ -117,7 +126,7 @@ void MainMenuPage::route_host_setup_input(std::vector<ProcessedMenuInput>& input
 	inputs[static_cast<size_t>(row)] = host;
 }
 
-std::unique_ptr<UiTexture> MainMenuPage::make_host_cursor() const
+std::unique_ptr<UiTexture> RosterSetupPage::make_host_cursor() const
 {
 	const MenuStyle& style = this->menu_style();
 	return std::make_unique<UiTexture>("host_row", style.sprite_sheet, style.fill_frame,
@@ -125,7 +134,7 @@ std::unique_ptr<UiTexture> MainMenuPage::make_host_cursor() const
 		CrudeDrawing::premultiplied(this->look().art.focus_ink));
 }
 
-void MainMenuPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) const
+void RosterSetupPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) const
 {
 	const RectangleF bounds = row.bounds();
 	const MenuStyle& style = this->menu_style();
@@ -134,7 +143,7 @@ void MainMenuPage::place_host_cursor(UiTexture& cursor, const UiWidget& row) con
 	cursor.set_size(Vector2F(bounds.width, style.rule_height));
 }
 
-bool MainMenuPage::wait_for_players(
+bool RosterSetupPage::wait_for_players(
 	const std::vector<ProcessedMenuInput>& inputs)
 {
 	// Focus loss can temporarily hide every pad. It does not change the roster.
@@ -173,8 +182,7 @@ bool MainMenuPage::wait_for_players(
 				}
 				else
 				{
-					this->context()->transition_to(
-						std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+					this->go_to(MainMenuScreen::player_count);
 				}
 				break;
 			}
@@ -204,8 +212,7 @@ void MainMenuTitle::update_page(float /*dt*/)
 		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->menu_context()));
+			this->go_to(MainMenuScreen::home);
 			return;
 		}
 	}
@@ -244,7 +251,7 @@ void MainMenuTitle::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.title_box_size) / 2.0f,
 			look.title_box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, this->start_.get(),
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -276,8 +283,7 @@ void MainMenuHome::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuTitle>(this->menu_context()));
+			this->go_to(MainMenuScreen::title);
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -322,7 +328,7 @@ void MainMenuHome::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
 			look.home_box_size),
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -339,20 +345,17 @@ void MainMenuHome::init()
 	this->focus_.add(this->play_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->menu_context()));
+			this->go_to(MainMenuScreen::mode_select);
 		});
 	this->focus_.add(this->options_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuOptions>(this->menu_context()));
+			this->go_to(MainMenuScreen::options);
 		});
 	this->focus_.add(this->credits_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuCredits>(this->menu_context()));
+			this->go_to(MainMenuScreen::credits);
 		});
 	this->focus_.add(this->exit_.get(), [this]
 		{
@@ -452,52 +455,6 @@ void MainMenuModeSelect::check_stage_rule_row(const OptionRow& stage_rule_row,
 	}
 }
 
-void MainMenuModeSelect::validate_stage_rules(RenderResources* render, const Presentation& presentation)
-{
-	const MenuStyle& style = presentation.menu();
-	const MainMenuPresentation& look = presentation.main_menu();
-	const MenuText& text = presentation.menu_text();
-	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-		look.setup_box_size);
-	MenuPaperArtPresentation art = look.art;
-	art.focus_padding = look.setup_focus_padding;
-	art.shadow_offset = look.setup_shadow_offset;
-	for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
-	{
-		const std::wstring& value = text.series_stage_value(rule);
-		drawable_text::check_font_can_draw(render, style.item_font, value,
-			std::string("presentation.json: menu_text.values.series_stage_") + series_stage_rule_key(rule));
-		auto row = make_stage_rule_row(render, style, look, text);
-		row->set_value(value);
-		check_stage_rule_row(*row, panel, art, look.mode_select_spacing.y);
-	}
-}
-
-void MainMenuModeSelect::validate_durations(RenderResources* render,
-	const GameTuning& tuning, const Presentation& presentation)
-{
-	const MenuStyle& style = presentation.menu();
-	const MainMenuPresentation& look = presentation.main_menu();
-	const MenuText& text = presentation.menu_text();
-	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-		look.setup_box_size);
-	MenuPaperArtPresentation art = look.art;
-	art.focus_padding = look.setup_focus_padding;
-	art.shadow_offset = look.setup_shadow_offset;
-	const auto check = [&](float seconds, bool use_default)
-	{
-		const std::string where = std::string("presentation.json: menu_text.values.") +
-			(use_default ? "duration_default" : "duration_minutes");
-		const std::wstring value = text.setting_duration(seconds, use_default);
-		drawable_text::check_font_can_draw(render, style.item_font, value, where);
-		auto row = make_duration_row(render, style, look, text);
-		row->set_value(value);
-		check_duration_row(*row, panel, art, look.mode_select_spacing.y);
-	};
-	check(tuning.match().duration, true);
-	for (const float seconds : tuning.match().duration_choices) { check(seconds, false); }
-}
-
 void MainMenuModeSelect::refresh_duration()
 {
 	const std::optional<float> seconds = this->level_settings()->duration();
@@ -571,8 +528,7 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->menu_context()));
+			this->go_to(MainMenuScreen::home);
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -621,7 +577,7 @@ void MainMenuModeSelect::init()
 
 	// Invisible shadows retain the existing font extents and navigation
 	// geometry while the paper's lettering uses plain, readable ink.
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::mode),
 		style.heading_font,
@@ -631,7 +587,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.heading_shadow_offset);
 
-	this->standard_ = std::make_unique<UiTextDropShadow>(
+	this->standard_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"standard",
 		this->text().item(MenuItem::single_match),
 		style.item_font,
@@ -641,7 +597,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->best_of_three_ = std::make_unique<UiTextDropShadow>(
+	this->best_of_three_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"best_of_three",
 		this->text().item(MenuItem::best_of_three),
 		style.item_font,
@@ -651,7 +607,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->best_of_five_ = std::make_unique<UiTextDropShadow>(
+	this->best_of_five_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"best_of_five",
 		this->text().item(MenuItem::best_of_five),
 		style.item_font,
@@ -661,7 +617,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->practice_ = std::make_unique<UiTextDropShadow>(
+	this->practice_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"practice",
 		this->text().solo_practice_hint,
 		style.detail_font,
@@ -671,7 +627,7 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->back_ = std::make_unique<UiTextDropShadow>(
+	this->back_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"back",
 		this->text().item(MenuItem::back),
 		style.item_font,
@@ -692,7 +648,7 @@ void MainMenuModeSelect::init()
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
 			look.setup_box_size),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->refresh_duration();
 	this->refresh_stage_rule();
 
@@ -716,8 +672,7 @@ void MainMenuModeSelect::init()
 		{
 			this->level_settings()->set_best_of(best_of);
 			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+			this->go_to(MainMenuScreen::player_count);
 		};
 	this->focus_.add(this->standard_.get(), [choose] { choose(1); });
 	this->focus_.add(this->best_of_three_.get(), [choose] { choose(3); });
@@ -736,8 +691,7 @@ void MainMenuModeSelect::init()
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuHome>(this->menu_context()));
+			this->go_to(MainMenuScreen::home);
 		});
 	if (this->level_settings()->best_of() == 3)
 	{

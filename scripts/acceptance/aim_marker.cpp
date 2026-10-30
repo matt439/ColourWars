@@ -5,6 +5,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -21,10 +22,7 @@ using namespace mattmath;
 
 namespace
 {
-    void require(bool condition, const char* message)
-    {
-        if (!condition) { throw std::runtime_error(message); }
-    }
+    using acceptance::require;
 
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -69,13 +67,13 @@ namespace
             this->levels.add("movement_course", std::move(info));
             this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render,
                 &this->audio, &this->preferences, &this->levels, &this->tuning,
-                &this->presentation, &this->resolution, nullptr, &this->partitioner, &this->mouse);
+                &this->presentation, &this->resolution, nullptr, &this->partitioner);
         }
 
         std::unique_ptr<Level> build(WeaponType first = WeaponType::sprayer,
             OpeningMode opening = OpeningMode::off, float duration = 300.0f)
         {
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_stage("movement_course");
             settings.set_player_count(4);
             settings.set_screen_layout(ScreenLayout::four_player);
@@ -398,7 +396,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("aim marker", [&]
     {
         require(argc == 2, "Usage: aim_marker.exe <content directory>");
         const std::filesystem::path content(argv[1]);
@@ -409,10 +407,5 @@ int main(int argc, char** argv)
         check_gameplay(world, content);
         check_validation(content, std::filesystem::absolute(argv[0]).parent_path());
         return 0;
-    }
-    catch (const std::exception& error)
-    {
-        std::cerr << "FAIL aim marker: " << error.what() << '\n';
-        return 1;
-    }
+    });
 }

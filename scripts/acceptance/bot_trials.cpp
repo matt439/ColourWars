@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/debug/dev_tools.h"
+#include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #endif
@@ -31,12 +32,12 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(const MenuLevelSettings& settings)
+        std::unique_ptr<Level> build(const MatchSetup& settings)
         {
             std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
-                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner, &mouse);
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
         }
         paint_surfaces_acceptance::World assets;
@@ -56,9 +57,9 @@ namespace
         bool local_combat = false;
     };
 
-    MenuLevelSettings roster(const Trial& trial)
+    MatchSetup roster(const Trial& trial)
     {
-        MenuLevelSettings settings;
+        MatchSetup settings;
         settings.set_player_count(2);
         settings.set_player_bot(1, trial.difficulty);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -153,7 +154,7 @@ namespace
 
     Metrics run(World& world, const Trial& trial, bool replay_check)
     {
-        const MenuLevelSettings settings = roster(trial);
+        const MatchSetup settings = roster(trial);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, trial);
         Metrics metrics;
@@ -174,7 +175,7 @@ namespace
                 "Trial ran outside its finite active-step budget");
             require(tape.steps.back().size() == 2, "Final-input trial lost a roster participant");
             const PlayerInputData& input = tape.steps.back()[1];
-            require(input.connected && !input.toggle_pause_menu && !input.pause_held && !input.toggle_debug,
+            require(input.connected && !input.toggle_debug,
                 "Trial bot emitted a menu/pause/debug action");
             const Player& bot = level->player(1);
             require(bot.primary_weapon().type() == trial.tool && bot.player_num() == -1,
@@ -271,7 +272,7 @@ namespace
 
 int main(int argc, char** argv)
 {
-    try
+    return acceptance::run_probe("bot trials", [&]
     {
         require(argc == 2, "usage: bot_trials <content>");
         World world(std::filesystem::absolute(argv[1]));
@@ -332,6 +333,5 @@ int main(int argc, char** argv)
         std::cout << "PASS " << trials << " bounded actual-driver trials, CQ paid-paint gates and three 600-step final-input replays; report=" <<
             path_to_utf8(report) << "; measurements do not establish arena/difficulty quality\n";
         return 0;
-    }
-    catch (const std::exception& error) { std::cerr << "FAIL bot trials: " << error.what() << '\n'; return 1; }
+    });
 }

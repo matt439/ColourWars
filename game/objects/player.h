@@ -13,6 +13,8 @@
 #include "game/objects/movement_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "game/objects/movement_audio.h"
+#include "game/objects/match_voices.h"
+#include "game/carried/sound_bank_object.h"
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/figure_clothing.h"
 #include "game/objects/figure_attachments.h"
@@ -21,11 +23,12 @@
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
-#include "engine/render/animation_object.h"
+#include "game/carried/animation_object.h"
 #include "engine/collision/collision_object.h"
 #include "engine/collision/contacts.h"
+#include "game/objects/collider.h"
 #include "game/objects/collision_object_type.h"
-#include "engine/core/moving_object.h"
+#include "game/carried/moving_object.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/colour.h"
@@ -58,8 +61,7 @@ enum class PlayerState
     dead
 };
 
-class StructurePaintable;
-class FixedSlabPaintable;
+class FixedSlabGeometry;
 class BlockedShotFeedback;
 
 enum class PlayerMoveState
@@ -101,9 +103,10 @@ struct FigurePose
     bool whole = false;
 };
 
-class Player final : public labrador::MovingObject,
-                     public labrador::CollisionObject,
-                     public labrador::AnimationObject, public labrador::TextureObject
+class Player final : public colourwars::MovingObject,
+                     public Collider,
+                     public colourwars::AnimationObject, public labrador::TextureObject,
+                     public colourwars::SoundBankObject
 {
 public:
     // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn
@@ -156,7 +159,15 @@ public:
     labrador::CollisionLayer layer() const override;
     labrador::CollisionMask mask() const override;
     labrador::CollisionTag tag() const override;
-    void on_contact(const labrador::CollisionObject& other,
+    // Lands on, climbs or is stopped by the structure, as it answers
+    // jump_through, slab_geometry and ramp.
+    void on_structure_contact(const Structure& other,
+        const mattmath::Vector2F& normal, float penetration) override;
+    // Players never touch: the collision masks exclude them, so this throws.
+    void on_player_contact(const Player& other,
+        const mattmath::Vector2F& normal, float penetration) override;
+    // Takes the shot's damage, unless immune; the paint still lands.
+    void on_projectile_contact(const Projectile& source,
         const mattmath::Vector2F& normal, float penetration) override;
     // Always false: Level holds borrowed Player pointers for the entire match.
     // A dead player respawns rather than being retired by Scene.
@@ -248,15 +259,17 @@ public:
     // spawn where the figure is being redrawn.
     mattmath::Vector2F camera_focus() const;
 
-    void update_weapon_position() const;
+    void update_weapon_position();
     void update_prev_rectangle();
-    void stop_sounds() const;
-    // Lifecycle reset is explicit and mutable, separate from const audio stops.
+    void stop_sounds();
+    // The tool's looping fire voice only, as a resume re-reads held input.
+    void stop_tool_sounds();
+    // Lifecycle reset, separate from the audio stops.
     void reset_tool_motion();
 
-    // Pause/resume the player's audio while a menu covers the match.
-    void pause_sounds() const;
-    void resume_sounds() const;
+    // Registers the tool's loop voice, then the redraw voice, so the match
+    // pauses, resumes and stops them with its own (game/objects/match_voices.h).
+    void add_voices(MatchVoices& voices);
 
 	std::string player_move_state_string() const;
 
@@ -322,7 +335,7 @@ private:
     struct RampSupport
     {
         mattmath::RectangleF bounds;
-        CollisionObjectType type;
+        bool rises_right = false;
     };
     std::optional<RampSupport> ramp_support_;
     bool projected_ramp_support_ = false;
@@ -336,15 +349,16 @@ private:
     {
         mattmath::Vector2F start;
         mattmath::Vector2F end;
-        const FixedSlabPaintable* surface = nullptr;
+        const Structure* surface = nullptr;
     };
     std::optional<FixedSlabSupport> fixed_slab_support_;
     bool projected_fixed_slab_support_ = false;
     std::optional<mattmath::Vector2F> fixed_slab_support_at(
         const mattmath::RectangleF& body) const;
-    void remember_fixed_slab_support(const FixedSlabPaintable& slab);
-    // Borrowed only for this contact phase; query after every paint callback.
-    std::vector<const StructurePaintable*> paint_supports_;
+    void remember_fixed_slab_support(const Structure& slab, const FixedSlabGeometry& geometry);
+    // Supports holding paint on a flat top (holds_flat_top_paint), borrowed
+    // only for this contact phase; query after every paint callback.
+    std::vector<const Structure*> paint_supports_;
     // Successful flat resolving callbacks can differ from measured normals
     // at one-way edges. These borrows end with the current contact phase.
     std::vector<const Structure*> resolved_flat_supports_;
@@ -365,7 +379,7 @@ private:
     float movement_carried_x_ = 0.0f;
     void clear_carrier() noexcept;
     void apply_carrier(float dt);
-    void remember_flat_support(const labrador::CollisionObject& other);
+    void remember_flat_support(const Structure& other);
     void choose_carrier(std::span<const labrador::Contact> contacts,
         std::span<const HorizontalSupportRef> supports);
     PlayerTeam underfoot_support_team_ = PlayerTeam::none;
@@ -428,18 +442,36 @@ private:
 
     mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
-    labrador::SoundBank* sound_bank_ = nullptr;
     const PlaySettings* preferences_ = nullptr;
+
+    // The pen heard while the figure is redrawn at its spawn. It keeps its
+    // own playing and paused state, so a pause touches it only while it
+    // sounds, and a resume stops it instead if the redraw has ended since.
+    class RedrawVoice final : public MatchVoice
+    {
+    public:
+        RedrawVoice() = default;
+        RedrawVoice(const Player* owner, const std::string& sound_bank_name,
+            const labrador::AudioResources* audio_resources,
+            const std::string& effect_name);
+        bool playing() const;
+        void start(float volume);
+        void pause() override;
+        void resume() override;
+        void stop() override;
+    private:
+        const Player* owner_ = nullptr;
+        bool playing_ = false;
+        bool paused_ = false;
+    };
 
     // Sound handles resolved once at construction.
     labrador::SoundBank::WaveHandle damage_sound_;
     labrador::SoundBank::WaveHandle death_sound_;
     labrador::SoundBank::WaveHandle jump_sound_;
     labrador::SoundBank::WaveHandle respawn_sound_;
-    labrador::SoundBank::EffectHandle redraw_sound_;
+    RedrawVoice redraw_voice_;
     size_t redraw_index_ = 0;
-    mutable bool redraw_playing_ = false;
-    mutable bool redraw_paused_ = false;
 
 
     float health_regen_timer_ = 0.0f;
@@ -453,21 +485,21 @@ private:
 	bool supported_this_tick_ = false;
 	bool hit_ceiling_this_tick_ = false;
 
-	void on_projectile_contact(CollisionObjectType other_type, const labrador::CollisionObject& source);
+	void touch(Collider& receiver,
+		const mattmath::Vector2F& normal, float penetration) const override;
 
 	// Resolve flat surfaces using the contact normal and penetration depth.
-	void on_structure_contact(const labrador::CollisionObject& other,
+	void on_solid_contact(const Structure& other,
 		const mattmath::Vector2F& normal,
 		float penetration);
 
-	void on_ramp_contact(CollisionObjectType other_type,
-		const labrador::CollisionObject& other,
+	void on_ramp_contact(const Structure& ramp,
 		const mattmath::Vector2F& normal, float penetration);
 
-    void on_fixed_slab_contact(const FixedSlabPaintable& slab,
+    void on_fixed_slab_contact(const Structure& slab, const FixedSlabGeometry& geometry,
         const mattmath::Vector2F& normal, float penetration);
 
-	void on_jump_through_contact(const labrador::CollisionObject& other);
+	void on_jump_through_contact(const Structure& other);
 
 	void update_movement(float dt);
 	void do_jump(float dt);
@@ -491,8 +523,8 @@ private:
     void respawn();
     bool redrawing() const;
     float redraw_volume() const;
-    void update_redraw_sound(float dt) const;
-    void stop_redraw_sound() const;
+    void update_redraw_sound(float dt);
+    void stop_redraw_sound();
 
     void set_facing_right(bool facing_right);
 

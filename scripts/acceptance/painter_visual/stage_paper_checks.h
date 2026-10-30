@@ -22,15 +22,15 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         words.stage.browse_status == L"FIND YOUR ARENA" && words.stage.locked_status == L"ARENA LOCKED" && words.stage.random_navigation == L"<   SURPRISE ME   >" &&
         words.stage.browse_hint == L"Left/Right to browse.\nConfirm to lock your choice." && words.stage.locked_hint == L"Confirm again to start.\nBack to change your choice.",
         "Shipped Stage paper copy drifted from its independent literals");
-    Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages = shipped;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MenuLevelSettings settings, initial;
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearStagePaper
     {
         StateContext& stack; MenuContext& context; Presentation& presentation; Presentation original;
-        ~ClearStagePaper() { this->context.cancel_music_exit(); this->context.set_music_update({}); this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; }
+        ~ClearStagePaper() { this->context.cancel_music_exit(); script_menu_music(this->context, {}); this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; }
     } clear{ stack, context, presentation, original };
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
     const std::array<WeaponType, 4> tools{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller, WeaponType::bucket };
@@ -55,11 +55,11 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     };
     const auto open = [&](int count, int best_of = 1, int selected = 0)
     {
-        stack.clear(); context.cancel_music_exit(); context.set_music_update({}); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
+        stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        settings = MenuLevelSettings(); settings.set_player_count(count); settings.set_best_of(best_of); settings.set_duration(73.0f); settings.set_stage(stages[static_cast<size_t>(selected)].name);
+        settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(best_of); settings.set_duration(73.0f); settings.set_stage(stages[static_cast<size_t>(selected)].name);
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Stage paper fixture claim failed"); }
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, tools[static_cast<size_t>(player)]); }
@@ -96,10 +96,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         RectangleF edge = preview; edge.inflate(style.rule_height);
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.stage_box_size) / 2.0f, look.stage_box_size);
         const float border = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(border), paper.size() - Vector2F(border * 2.0f + art.shadow_offset));
-        std::vector<std::unique_ptr<UiTextDropShadow>> labels;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
         const auto label = [&](const std::wstring& value, const std::string& font, const Vector2F& position, const Colour& ink, const Vector2F& shadow)
         {
-            auto result = std::make_unique<UiTextDropShadow>("independent-stage-text", value, font, position, app.render_resources(), ink, Colour{}, shadow); auto* raw = result.get(); labels.push_back(std::move(result)); return raw;
+            auto result = std::make_unique<colourwars::UiTextDropShadow>("independent-stage-text", value, font, position, app.render_resources(), ink, Colour{}, shadow); auto* raw = result.get(); labels.push_back(std::move(result)); return raw;
         };
         const auto* heading = label(text.heading(MenuHeading::arena), style.heading_font, style.layout.position, art.ink, style.heading_shadow_offset);
         const auto& display = stages[static_cast<size_t>(random ? 0 : slot)].display_name;
@@ -108,7 +108,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const RectangleF raw_name = RectangleF::union_of(arena_name->text_bounds_at(Vector2F::ZERO, 1.0f), arena_name->text_bounds_at(refreshed.menu().item_shadow_offset, 1.0f));
         const float name_scale = std::min(1.0f, live.preview_size.x / raw_name.width); arena_name->set_scale(name_scale); arena_name->set_shadow_scale(name_scale); arena_name->set_shadow_offset(refreshed.menu().item_shadow_offset * name_scale);
         label(random ? text.stage.random_navigation : L"<   ARENA " + std::to_wstring(slot + 1) + L" / " + std::to_wstring(stages.size()) + L"   >", style.detail_font, geometry.navigation_position, art.ink, style.detail_shadow_offset);
-        UiTextDropShadow question("independent-stage-question", L"?", look.announcement_font, Vector2F::ZERO, app.render_resources(), style.highlight, style.shadow_colour, style.title_shadow_offset);
+        colourwars::UiTextDropShadow question("independent-stage-question", L"?", look.announcement_font, Vector2F::ZERO, app.render_resources(), style.highlight, style.shadow_colour, style.title_shadow_offset);
         question.set_position(preview.center() - question.bounds().center());
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding, row = geometry.briefing.spacing;
         const bool solo = settings.player_count() == 1; const int best_of = settings.best_of();
@@ -151,7 +151,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         list.set_filter(TextureFilter::linear);
         for (size_t i = 0; i < labels.size(); ++i) { labels[i]->draw(list); if (i == 2 && random) { question.draw(list); } }
         const auto& footer = captured.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : locked ? L"A/Enter Start match    B/Esc Unlock arena" : L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back";
-        const UiTextDropShadow legend("independent-stage-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
+        const colourwars::UiTextDropShadow legend("independent-stage-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "stage-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-best" + std::to_string(best_of) + "-slot" + std::to_string(slot) + '-' + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "STAGE PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(actual.pixels == expected.pixels, "Actual Stage paper differs from independent paper/briefing/text and actual miniature StagePreview raster");
@@ -169,7 +169,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     };
     const auto destination = [&](bool count)
     {
-        MenuLevelSettings copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
+        MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
         other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); if (count) { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); } else { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };
@@ -192,7 +192,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             for (int selected = 0; selected <= static_cast<int>(stages.size()); ++selected)
             {
                 open(count, best_of, selected == static_cast<int>(stages.size()) ? 0 : selected); if (selected == static_cast<int>(stages.size())) { browse(false); tick(settled); }
-                lock(true); tick(settled); const Frame outgoing = compare("before-start"); int music_updates = 0; context.set_music_update([&](float) { ++music_updates; });
+                lock(true); tick(settled); const Frame outgoing = compare("before-start"); int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
                 std::srand(4937); const auto candidates = eligible(); committed = selected == static_cast<int>(stages.size()) ? stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name : stages[static_cast<size_t>(selected)].name;
                 const int after = std::rand(); std::srand(4937); tap(count - 1, GamepadButton::a);
                 require(std::rand() == after && settings.stage() == committed && context.music_exit_pending() && stack.depth() == 2 && music_updates == 1 && outgoing.pixels == frame().pixels, "Stage paper final start changed its RNG budget, outgoing page or state boundary");
@@ -218,7 +218,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         lock(true); compare("lock-press", 0, motion.press_fraction, true); tick(settled); lock(false); compare("unlock-press", 0, motion.press_fraction); stack.notify_activation(false); compare("deactivated"); stack.notify_activation(true); tick();
         browse(true); stack.push(std::make_unique<MainMenuCredits>(&context)); stack.pop(); compare("cover-return"); tick(); browse(false); active->debug_reset_input(slots[0]); compare("developer-reset");
         play.reduce_effects = true; browse(true); const Frame quiet = compare("reduced-input"); tick(settled); require(quiet.pixels == frame().pixels, "Reduced Stage input restarted its accent"); play.reduce_effects = false;
-        open(4, 3); browse(false); lock(true); compare("rapid-lock", motion.arrow_travel, motion.press_fraction); context.set_music_update([](float) {});
+        open(4, 3); browse(false); lock(true); compare("rapid-lock", motion.arrow_travel, motion.press_fraction); script_menu_music(context, [](float) {});
         std::srand(4937); const auto candidates = eligible(); committed = stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name; const int after = std::rand(); std::srand(4937); tap(0, GamepadButton::a);
         require(std::rand() == after && context.music_exit_pending(), "Rapid Stage paper final start changed Random RNG or failed to latch"); const Frame pending = compare("rapid-final-random", 0, 0, true);
         static_cast<WindowNotify&>(app).on_deactivated(); tick(); static_cast<WindowNotify&>(app).on_activated(); tick(); tap(0, GamepadButton::dpad_left); tap(1, GamepadButton::b); tap(0, GamepadButton::a); tick(settled);

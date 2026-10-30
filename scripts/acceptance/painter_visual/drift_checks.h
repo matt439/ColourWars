@@ -228,7 +228,7 @@ void drift_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Can
         for (const int count : { 1, 4 })
         {
             if (count == 4 && std::string(stage) != "close_quarters") { continue; }
-            MenuLevelSettings settings;
+            MatchSetup settings;
             settings.set_player_count(count);
             settings.set_stage(stage);
             settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
@@ -283,7 +283,7 @@ void drift_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Can
                 "p" + (count == 4 ? "-sky-composition" : "");
             compose_sky();
             drift_context_capture(app, *level, output, stem + "-early");
-            for (int tick = 0; tick < 720; ++tick) { level->update(inputs, dt); }
+            for (int tick = 0; tick < 720; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             compose_sky();
             drift_context_capture(app, *level, output, stem + "-later");
         }

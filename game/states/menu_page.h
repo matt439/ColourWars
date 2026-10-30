@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/audio/sound_bank_object.h"
+#include "game/carried/sound_bank_object.h"
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_context.h"
@@ -31,7 +31,7 @@ struct MenuSound
 // Shared menu layout, focus, prompts, and sound-bank access.
 // DebugPageTarget is how the developer tools reach the page on top; its
 // defaults say no, and the pages with a way out of a match say how.
-class MenuPage : public labrador::State, public labrador::SoundBankObject,
+class MenuPage : public labrador::State, public colourwars::SoundBankObject,
 	protected DebugPageTarget
 {
 public:
@@ -50,7 +50,7 @@ public:
 	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
 	// a match on close, start one; child and match-overlay pages dismiss
 	// themselves; every page forgets armed presses on request.
-	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_start_match(const MatchSetup& plan) override;
 	bool debug_dismiss(bool leaving_match) override;
 	void debug_reset_input(int pad_slot) override;
 
@@ -62,13 +62,8 @@ public:
 protected:
 	virtual void update_page(float dt) = 0;
 
-	// Whether the chrome draws the brand line at the top. The Debug menu
-	// says no: it opens over a running match, where the line would sit on
-	// the first pane's HUD.
-	virtual bool shows_brand() const { return true; }
 	// Pages with their own paper cards draw focus in their texture layer.
 	virtual bool shows_focus_backing() const { return true; }
-	virtual bool animates_focus_backing() const { return false; }
 	// Calibration pages reserve analogue sticks for their live response preview.
 	virtual bool accepts_stick_navigation() const { return true; }
 	// A physical-key capture owns input before developer shortcuts or queued
@@ -96,10 +91,11 @@ protected:
 	const MenuStyle& menu_style() const;
 	const MenuText& text() const;
 
-	MenuLevelSettings* level_settings() const;
+	MatchSetup* level_settings() const;
 	MenuInput* input() const;
 	labrador::ResolutionManager* resolution_manager() const;
 	Save* save() const;
+	SettingsSession* settings_session() const;
 	labrador::RenderResources* render_resources() const;
 	const labrador::AudioResources* audio_resources() const;
 	labrador::ViewportManager* viewport_manager() const;
@@ -136,8 +132,8 @@ protected:
 
 	// Menu and results sounds play at their authored volumes; the user's SFX
 	// and Music volumes are their sound groups' (game/sound_groups.h).
-	using labrador::SoundBankObject::play_wave;
-	void play_wave(const MenuSound& sound) const;
+	using colourwars::SoundBankObject::play_wave;
+	void play_wave(const MenuSound& sound);
 
 	// Optional control legend, drawn after page widgets. Set only actions
 	// this page accepts; it can be built before or after the widget trees.
@@ -155,7 +151,6 @@ private:
 	void draw_chrome(labrador::DrawList& list) const;
 	labrador::RenderResources::SpriteSheetHandle chrome_sheet_;
 	labrador::SpriteSheet::frame_handle chrome_pixel_;
-	labrador::FontHandle brand_font_;
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
 	MenuText text_;

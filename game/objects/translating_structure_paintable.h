@@ -62,7 +62,8 @@ public:
     mattmath::RectangleF bounds() const override;
     mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
     const mattmath::Shape* shape() const override;
-    void on_contact(const labrador::CollisionObject& other,
+    // Paint lands in the rest frame: the splash is shifted back by the pose.
+    void on_projectile_contact(const Projectile& other,
         const mattmath::Vector2F& normal, float penetration) override;
     PlayerTeam top_paint_team(float world_x) const override;
     std::vector<PaintRunoffVisual> runoff_visuals() const override;
@@ -70,6 +71,8 @@ public:
         std::size_t source_index = 0) const override;
     bool for_deletion() const override;
     void set_for_deletion(bool requested) override;
+    TranslatingStructurePaintable* mover() override { return this; }
+    const TranslatingStructurePaintable* mover() const override { return this; }
 
 private:
     friend class Level;

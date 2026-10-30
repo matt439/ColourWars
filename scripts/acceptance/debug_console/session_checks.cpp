@@ -166,8 +166,8 @@ namespace debug_console_acceptance
 		const std::size_t kbm = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
 		const auto busy = []
 			{
-				std::vector<PlayerInputData> inputs(input_slots::count);
-				for (PlayerInputData& input : inputs)
+				std::vector<SlotInput> inputs(input_slots::count);
+				for (SlotInput& input : inputs)
 				{
 					input.connected = true;
 					input.x_movement = 1.0f;
@@ -179,7 +179,7 @@ namespace debug_console_acceptance
 				}
 				return inputs;
 			};
-		std::vector<PlayerInputData> inputs = busy();
+		std::vector<SlotInput> inputs = busy();
 		test.director.filter_match_inputs(inputs);
 		require(inputs[kbm].x_movement == 1.0f && inputs[kbm].toggle_pause_menu,
 			"With no live console the keyboard seat is untouched");
@@ -187,7 +187,7 @@ namespace debug_console_acceptance
 		impl.set_live_console_open(true);
 		inputs = busy();
 		test.director.filter_match_inputs(inputs);
-		const PlayerInputData& keys = inputs[kbm];
+		const SlotInput& keys = inputs[kbm];
 		require(keys.connected && keys.x_movement == 0.0f && !keys.jump_pressed && !keys.jump_held &&
 			!keys.primary_shoot && !keys.drop_through && !keys.toggle_debug && !keys.toggle_pause_menu,
 			"While it is open the keyboard seat is connected and idle");

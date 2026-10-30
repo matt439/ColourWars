@@ -20,18 +20,18 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         }
         ~MotionProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } isolated(output / "menu-motion-profile");
-    Save preferences;
+    Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;
     initial.music_volume = initial.sfx_volume = 0;
     initial.reduce_effects = false;
-    require(preferences.set_play_settings_and_save(initial),
+    require(preferences_session.set_play_settings_and_save(initial),
         "Cannot seed the isolated menu-motion preferences");
-    auto& play = const_cast<PlaySettings&>(preferences.play_settings());
+    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
+    data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
-    MenuLevelSettings settings;
+    MatchSetup settings;
     MenuContext context(&data, &input, &settings);
     StateContext& stack = app;
     struct ClearMotionStates
@@ -129,7 +129,7 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
     {
         resize_page(size);
-        require(preferences.set_play_settings_and_save(initial), "Cannot reset menu-motion preferences");
+        require(preferences_session.set_play_settings_and_save(initial), "Cannot reset menu-motion preferences");
         open(std::make_unique<MainMenuHome>(&context));
         const Frame first = main_menu_frame(app); tick(settle_time);
         require(first.pixels == main_menu_frame(app).pixels,
@@ -290,8 +290,8 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         tap(Key::right); require(!play.reduce_effects, "An un-applied reduction choice leaked into preferences");
         tap(Key::down); tap(Key::enter);
         require(play.reduce_effects, "Actual Controls Apply did not commit Reduce effects");
-        Save reloaded; reloaded.load_save_file();
-        require(reloaded.play_settings().reduce_effects, "Applied Reduce effects did not survive save reload");
+        Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
+        require(reloaded_session.play_settings().reduce_effects, "Applied Reduce effects did not survive save reload");
         const Frame reduced_apply = main_menu_frame(app); tick(settle_time);
         require(reduced_apply.pixels == main_menu_frame(app).pixels,
             "Applying Reduce effects left an animated selection paper");
