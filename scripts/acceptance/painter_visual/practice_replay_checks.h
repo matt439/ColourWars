@@ -28,15 +28,8 @@ namespace practice_replay_acceptance
     template struct Access<EndReplayTag, &GameLevel::end_replay>;
     template struct Access<UpdateTag, &GameLevel::step_match>;
 
-    struct GapsTag { friend size_t gaps(GapsTag, const RoundTape&); };
-    template<auto Member> struct GapsAccess
-    {
-        friend size_t gaps(GapsTag, const RoundTape& tape) { return (tape.*Member).size(); }
-    };
-    template struct GapsAccess<&RoundTape::gaps_>;
-
     const RoundTape& tape(const GameLevel& game) { return game.*member(TapeTag{}); }
-    size_t gaps(const GameLevel& game) { return gaps(GapsTag{}, tape(game)); }
+    size_t gaps(const GameLevel& game) { return tape(game).gaps().size(); }
     void empty(const GameLevel& game)
     {
         require(game.level().practice() && tape(game).steps() == 0 && gaps(game) == 0 && !tape(game).playable(),
@@ -186,10 +179,11 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     for (int step = 0; step < 120; ++step)
     { (game->*member(UpdateTag{}))(neutral, dt, &driven_recorder); ++practice_steps; }
     empty(*game);
-    require(driven_recorder.file().inputs.size() == 1 && driven_recorder.file().inputs[0].size() == 120 &&
+    const auto driven_inputs = driven_recorder.file().inputs_by_seat();
+    require(driven_inputs.size() == 1 && driven_inputs[0].size() == 120 &&
         game->level().player(0).rectangle().position() != before_debug,
         "Disabled shipping tape blocked actual Debug recording or its downstream input driver");
-    for (const PlayerInputData& input : driven_recorder.file().inputs[0])
+    for (const PlayerInputData& input : driven_inputs[0])
     { require(input.x_movement == 1.0f, "Debug recorder missed the downstream driver's final input"); }
     note("independent-debug-recorder", *game);
 #endif

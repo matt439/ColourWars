@@ -323,7 +323,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const auto replay = root / "ColourWars/replays/remembered_setup.json";
     for (int step = 0; step < 1500 && (!std::filesystem::is_regular_file(replay) || impl.recording()); ++step) { tick(dt); }
     require(std::filesystem::is_regular_file(replay) && !impl.recording(), "The actual sparse developer recording did not complete");
-    const ReplayFile file = ReplayFile::read(replay); const auto seats = file.settings.player_settings();
+    const ReplayFile file = ReplayFile::read(replay); const auto seats = file.tape.settings().player_settings();
     require(file.updates == 4 && seats.size() == 4 && seats[0].num == 3 && seats[1].num == 4 &&
         seats[2].num == -1 && seats[3].num == -1, "The real developer replay did not retain sparse pad/keyboard/dummy seats");
     command("menu"); tick(); require(!impl.in_match(), "The real developer match did not return to the menu");

@@ -205,7 +205,7 @@ private:
 	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
 	void debug_leave() override;
 	void debug_sync_audio() override;
-	void debug_suspend_level() override;
+	void debug_apply_gap(const RoundTape::Gap& gap) override;
 	void debug_background_changed() override;
 
 	void debug_set_overlays(const LevelOverlays& overlays) override;

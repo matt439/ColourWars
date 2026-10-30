@@ -72,7 +72,7 @@ namespace moving_structure_acceptance
 #if COLOURWARS_DEV_TOOLS
         ReplayFile header;
         header.build = "editor-authored-moving-public";
-        header.settings = settings; header.seed = seed; header.dt_bits = bits(dt);
+        header.tape.start(0, settings); header.seed = seed; header.dt_bits = bits(dt);
         constexpr int updates = 180;
         ReplayRecorder recorder("editor-authored-moving", header, nullptr, updates);
         const auto initial = MatchFingerprint::of(*runtime->level, 0);
@@ -100,9 +100,9 @@ namespace moving_structure_acceptance
         const unsigned int terminal_rng = static_cast<unsigned int>(std::rand());
         runtime.reset();
         const auto decoded = ReplayFile::read(tape_path);
-        require(decoded.seed && decoded.inputs.size() == 1 && decoded.inputs[0].size() == updates,
+        require(decoded.seed && decoded.inputs_by_seat().size() == 1 && decoded.inputs_by_seat()[0].size() == updates,
             "Editor-saved public replay lost its input or reconstruction header");
-        LoadedFixture replay(world, directory / (decoded.settings.stage() + ".json"), decoded.settings, *decoded.seed);
+        LoadedFixture replay(world, directory / (decoded.tape.settings().stage() + ".json"), decoded.tape.settings(), *decoded.seed);
         require(MatchFingerprint::difference(initial, MatchFingerprint::of(*replay.level, 0)).empty(),
             "Fresh public rebuild of editor-saved stage differs at initial admission");
         ReplayPlayer player("editor-authored-moving", decoded);

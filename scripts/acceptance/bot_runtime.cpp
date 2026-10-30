@@ -193,7 +193,7 @@ namespace
         require(level->state() == LevelState::active, "Bot runtime did not finish countdown");
         Observe observer;
 #if COLOURWARS_DEV_TOOLS
-        ReplayFile header; header.settings = settings; header.dt_bits = std::bit_cast<std::uint32_t>(step);
+        ReplayFile header; header.tape.start(0, settings); header.dt_bits = std::bit_cast<std::uint32_t>(step);
         ReplayRecorder recorder("shipping-bots", header, &observer, 1000);
         SeatInputFilter* final_filter = &recorder;
 #else
@@ -221,8 +221,9 @@ namespace
         require(observer.steps == observed_steps && level->player(1).rectangle() == frozen,
             "Zero-time updates advanced bot decisions or actors");
 #if COLOURWARS_DEV_TOOLS
-        require(recorder.file().inputs.size() == 4 && recorder.file().inputs[1].size() == 120 &&
-            replay_codec::same(recorder.file().inputs[1].back(), observer.last[1]),
+        const RoundTape& tape = recorder.file().tape;
+        require(tape.steps() == 120 && tape.seats(tape.steps() - 1).size() == 4 &&
+            replay_codec::same(tape.seats(tape.steps() - 1)[1], observer.last[1]),
             "Recording did not capture the final shipping bot input");
         // Playback directly replaces inputs, even though fresh bot drivers exist.
         std::srand(8301); auto replay_level = world.build(settings);

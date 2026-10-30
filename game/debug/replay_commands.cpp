@@ -130,7 +130,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 		this->play_armed_.get();
 	if (replay != nullptr)
 	{
-		for (const SeatSetup& seat : replay->file().settings.player_settings())
+		for (const SeatSetup& seat : replay->file().tape.settings().player_settings())
 		{
 			if (seat.num == slot)
 			{
@@ -154,7 +154,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 
 void DebugDirectorImpl::match_suspended(DebugMatchTarget& match)
 {
-	if (&match != this->match_ || this->injecting_suspend_)
+	if (&match != this->match_)
 	{
 		return;
 	}
@@ -168,13 +168,21 @@ void DebugDirectorImpl::match_suspended(DebugMatchTarget& match)
 	}
 	if (this->player_ != nullptr && !this->player_->finished &&
 		this->player_->unrecorded_suspend < 0 &&
-		!this->player_->recorded_suspend(this->level_updates_))
+		!this->player_->file().suspended_at(this->level_updates_))
 	{
 		this->player_->unrecorded_suspend = this->level_updates_;
 		this->log_.warning("replay " + this->player_->name() + ": the match was suspended at "
 			"update " + std::to_string(this->level_updates_) + " (console, menu or focus), "
 			"which the recording was not; that clears every jump buffer, so a divergence "
 			"after it is expected");
+	}
+}
+
+void DebugDirectorImpl::match_resumed(DebugMatchTarget& match, const std::vector<PlayerInputData>& seats)
+{
+	if (&match == this->match_ && this->recorder_ != nullptr)
+	{
+		this->recorder_->note_resume(this->level_updates_, seats);
 	}
 }
 
@@ -220,10 +228,9 @@ ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 				" -> " + edit.current_token);
 		}
 	}
-	file.god = this->god_;
-	file.infinite_ammo = this->infinite_ammo_;
-	file.settings = match.debug_settings();
-	const std::string& stage = file.settings.stage();
+	file.tape.start(0, match.debug_settings());
+	file.tape.set_cheats(this->god_, this->infinite_ammo_);
+	const std::string& stage = file.tape.settings().stage();
 	const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
 	if (levels == nullptr || !levels->contains(stage))
 	{
@@ -256,13 +263,18 @@ void DebugDirectorImpl::before_level_update(DebugMatchTarget& match, float dt)
 		this->push_seat_labels(match);
 		return;
 	}
-	// A suspend clears every jump buffer; do it where the recording had one.
-	if (this->player_->recorded_suspend(this->level_updates_) && match.debug_level() != nullptr)
+	// A suspend clears every jump buffer and a resume re-reads the held
+	// jumps; repeat each at the Level update the recording had it.
+	if (match.debug_level() != nullptr)
 	{
-		this->injecting_suspend_ = true;
-		match.debug_suspend_level();
-		match.debug_sync_audio();
-		this->injecting_suspend_ = false;
+		const std::vector<RoundTape::Gap>& gaps = file.tape.gaps();
+		for (std::size_t i = 0; i < gaps.size() && i < file.gap_updates.size(); ++i)
+		{
+			if (file.gap_updates[i] == this->level_updates_)
+			{
+				match.debug_apply_gap(gaps[i]);
+			}
+		}
 	}
 }
 
@@ -570,26 +582,26 @@ void DebugDirectorImpl::register_replay_commands()
 			if (!file.stage_hash)
 			{
 				return DebugStatus::failure("play: legacy recording '" + name +
-					"' has no stage fingerprint for '" + file.settings.stage() +
+					"' has no stage fingerprint for '" + file.tape.settings().stage() +
 					"'; record a new run with this build");
 			}
 			const StageList* stages = this->data_ != nullptr ? this->data_->stages() : nullptr;
 			if (stages == nullptr || std::none_of(stages->begin(), stages->end(),
-				[&file](const Stage& stage) { return stage.name == file.settings.stage(); }))
+				[&file](const Stage& stage) { return stage.name == file.tape.settings().stage(); }))
 			{
-				return DebugStatus::failure("play: the recording's stage '" + file.settings.stage() +
+				return DebugStatus::failure("play: the recording's stage '" + file.tape.settings().stage() +
 					"' is not loaded");
 			}
 			const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
-			if (levels == nullptr || !levels->contains(file.settings.stage()))
+			if (levels == nullptr || !levels->contains(file.tape.settings().stage()))
 			{
-				return DebugStatus::failure("play: the recording's stage '" + file.settings.stage() +
+				return DebugStatus::failure("play: the recording's stage '" + file.tape.settings().stage() +
 					"' has no loaded definition; restore the stage definition or record a new run");
 			}
-			const std::uint64_t stage_hash = levels->get(file.settings.stage())->semantic_hash();
+			const std::uint64_t stage_hash = levels->get(file.tape.settings().stage())->semantic_hash();
 			if (*file.stage_hash != stage_hash)
 			{
-				return DebugStatus::failure("play: stage '" + file.settings.stage() +
+				return DebugStatus::failure("play: stage '" + file.tape.settings().stage() +
 					"' differs from the recording (recorded " + hex64(*file.stage_hash) +
 					", loaded " + hex64(stage_hash) +
 					"); restore the recorded stage definition or record a new run");
@@ -628,7 +640,7 @@ void DebugDirectorImpl::register_replay_commands()
 				log.info("play: recorded with " + line);
 			}
 			this->play_armed_ = std::make_unique<ReplayPlayer>(name, std::move(file));
-			const MatchSetup& settings = this->play_armed_->file().settings;
+			const MatchSetup& settings = this->play_armed_->file().tape.settings();
 			this->request_ = MatchRequest();
 			this->request_.exact = settings;
 			this->request_.exact_label = name;

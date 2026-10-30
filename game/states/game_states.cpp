@@ -450,6 +450,7 @@ void GameLevel::update(float dt)
 			const SeatCommands resumed = this->seat_commands(player_inputs);
 			this->tape_.record_resume(resumed.seats);
 			this->level_->prepare_resume(resumed.seats);
+			this->data()->debug().match_resumed(*this, resumed.seats);
 			this->level_->emphasise_players();
 			if (this->audio_may_play()) { this->level_->resume(); }
 		}

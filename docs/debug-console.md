@@ -1039,15 +1039,22 @@ recording stops too). The file is `%LOCALAPPDATA%\ColourWars\replays\<name>.json
 weapons), best-of, the seed, the cheats, hashes of both content files
 and the live tune edits, a semantic hash of the loaded stage definition
 (`stage_hash`; [how it is computed](debug-console-record.md#loaded-stage-replay-fingerprint-dbg8)), the step size, one run-length list of inputs per seat
-(floats as bit patterns), where the match was suspended, a state hash every 60
-updates and the final state.
+(floats as bit patterns), where the match was suspended and resumed, a state
+hash every 60 updates and the final state. In memory a recording is the same
+`RoundTape` the shipping instant replay keeps (`game/round_tape.h`); the file
+is that tape plus the checks.
 
-New files use **format 4**, with explicit human/bot controller kind and
+Files use **format 5**, with explicit human/bot controller kind and
 Easy/Normal/Hard difficulty for each participant. Layout counts humans, while
-input arrays count all participants. The reader also accepts human-only
-format 3, treating unclaimed seats as human dummies. Present format-4 metadata
-is strict; bot seats cannot own devices and P1 must be human. Human difficulty
-is unused and written as Normal. Normal setup now supports playable bots
+input arrays count all participants and are all the same length. `gaps` lists
+every suspend and resume in order, a resume with the seat commands it re-read;
+each has the tape `step` it preceded (an index into the inputs, which the
+countdown and the end of the round do not advance) and the Level `update` it
+was noted at, which is where playback repeats it.
+Formats 3 and 4 (which noted suspends only) are refused: a replay holds only on
+the build that recorded it. The metadata is strict; bot seats cannot own
+devices and P1 must be human. Human difficulty is unused and written as
+Normal. Normal setup now supports playable bots
 (`ROAD#10`); recording captures their final inputs, and playback bypasses their
 live decision driver. Arena navigation/combat and attended difficulty acceptance
 remain separate from replay qualification.
@@ -1087,8 +1094,10 @@ neither the mouse nor the camera is read on replay. The limits:
   from one never replays in the other, and `play` says so.
 - **Suspends.** Covering the match (the console, the debug menu, the pause
   menu) and losing window focus suspend the level, and suspending clears every
-  player's jump buffer outside the input stream. The recording notes the update
-  of every suspend and the replay suspends there too. A suspend during playback
+  player's jump buffer outside the input stream; resuming re-reads which jumps
+  are still held. The recording notes the Level update of every suspend and
+  resume, with the seat commands a resume read, and the replay repeats each there,
+  without pausing a voice. A suspend during playback
   that the recording did not have is reported, and a divergence after it is
   expected - so do not open the console or switch windows while a replay you
   care about is running. Pausing (F6) and stepping (F7) are not suspends: the
@@ -1540,7 +1549,8 @@ as the game. In Release:
   PaintBot` hierarchy; `bot_driver.*`, the seat filter that runs them);
   record and play (`replay.*`: the file, the input codec, `ReplayRecorder` and
   `ReplayPlayer`; `match_fingerprint.*`; `replay_commands.cpp`, which also holds
-  the update hooks that count updates, inject recorded suspends and compare).
+  the update hooks that count updates, repeat recorded suspends and resumes and
+  compare).
   Phase 4: scripts (`debug_script.*`, the pure parser; `debug_wait.*`, the
   `DebugWait -> UpdatesWait / FramesWait / MatchWait / ReplayWait / RecordWait`
   hierarchy; `debug_script_runner.*`, the frame stack the director ticks from

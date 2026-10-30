@@ -10,6 +10,7 @@
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/seat_commands.h"
+#include "game/round_tape.h"
 #include "game/stage_catalog.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
@@ -131,7 +132,7 @@ namespace debug_console_acceptance
 		}
 		bool debug_level_finished() const override { return this->level->state() == LevelState::finished; }
 		const Level* debug_level() const override { return this->level.get(); }
-		void debug_suspend_level() override { this->level->suspend(); }
+		void debug_apply_gap(const RoundTape::Gap& gap) override { RoundTape::apply_gap(*this->level, gap); }
 		// GameLevel's, uncovered and in focus: only the debug clock pauses it,
 		// which pauses the voices and leaves the players alone.
 		void debug_sync_audio() override

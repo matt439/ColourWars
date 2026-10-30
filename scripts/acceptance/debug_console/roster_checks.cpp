@@ -319,8 +319,8 @@ namespace debug_console_acceptance
 		const ReplayFile file = ReplayFile::read(path);
 		require(!impl.recording() && file.updates == roster_length && file.seed == 211u,
 			"The planned roster's recording is complete and seeded");
-		require(recorded_roster(file.settings) == recorded_roster(planned),
-			"The recording reads back the planned roster: " + recorded_roster(file.settings));
+		require(recorded_roster(file.tape.settings()) == recorded_roster(planned),
+			"The recording reads back the planned roster: " + recorded_roster(file.tape.settings()));
 		require(impl.execute("pause off").ok && impl.execute("play " + name).ok &&
 			director.before_match_update(match, roster_step) && impl.playing(), "Cannot play the roster recording");
 		require(recorded_roster(match.settings) == recorded_roster(planned), "Playback rebuilt a different roster");

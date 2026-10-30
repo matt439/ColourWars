@@ -124,6 +124,9 @@ public:
 	// every player's jump buffer outside the input stream, so a recording
 	// notes where it happened and a replay does it again there.
 	void match_suspended(DebugMatchTarget& match);
+	// GameLevel, right after each Level::prepare_resume, with the seat commands
+	// it read: a recording notes them so a replay re-reads the same held jumps.
+	void match_resumed(DebugMatchTarget& match, const std::vector<PlayerInputData>& seats);
 
 	// Whether a bot or a replay drives the seat on this device slot, so a
 	// missing pad there is no reason to pause the match. False in Release.
@@ -187,6 +190,7 @@ inline bool DebugDirector::background_scripts() const { return false; }
 inline bool DebugDirector::background_updates_allowed() const { return false; }
 inline void DebugDirector::sync_background_audio(bool) {}
 inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
+inline void DebugDirector::match_resumed(DebugMatchTarget&, const std::vector<PlayerInputData>&) {}
 inline bool DebugDirector::drives_slot(int) const { return false; }
 inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { return chosen; }
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float, bool) { return false; }
