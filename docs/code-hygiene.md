@@ -365,23 +365,51 @@ changes:
   papers (900 tall, centred on the design) reach y 990 and Results (860) 970,
   so the band covers their bottom 30 and 10 pixels. Nothing relates those boxes
   to `footer_y`. Whether that is intended is the author's call (`POL#45`).
-- D2: the Pad sticks validator still checks rows pad, move, aim, rumble, apply
-  at 4 and back at 5, but the page has nine rows (Back at 8), so its status
-  overlap check tests the wrong card.
-- D3: End row 0's labels are fitted to the whole paper, ignoring the shade that
-  every other End row subtracts.
-- D4: the practice Pause layout (five rows at 0.8 spacing, the Tool label) is not
-  validated.
 - D5: three meanings of "inside the paper" (interior, face, whole box) are used
   for the same kind of check on different pages.
-- D6-D10: Display's setup shade checked only for Keep/Revert; the setup shade
-  never checked against a setup box; `footer_y` range-checked in `main_menu`'s
-  reader but read by the controls reader too; Credits' fit checked only on the
-  page; static stage navigation and hints missing checks the numbered ones get.
+- D4's row rule, a visible question for the author: practice Pause puts its
+  five rows 96 apart (0.8 of 120), but a shipped item's focus card is 113 tall
+  (77 + 2 x 18), so neighbouring cards overlap by 17 pixels. The validator
+  checks practice rows against the paper only; the row rule would refuse the
+  shipped file. Filed with D1 under `POL#45`.
 
-Left: correct D2-D4 and D6-D10 in the validator, then the order-preserving split
-by page (keep the nine phase functions in `Validation::validate` as the owners of
-order, move each phase's per-page blocks into per-page files).
+**D2-D4 and D6-D10, done 2026-10-31.** The validator now checks what the pages
+draw. Pad sticks: its nine rows (seven option rows, Apply at 7, Back at 8);
+Back's card at row 8 is the status obstacle, and the stale Apply-at-3 and
+Back-at-4 checks are gone. Every Sticks row sits above a Controls row checked
+the same way, and the Controls items must end above the shared status line, so
+no content fails only the corrected rows. End's first row fits the face short
+of `end_menu.art.shadow_offset`, like its others. Practice Pause: Resume, Tool,
+Restart, Options and Quit at 0.8 spacing on the Pause paper, and
+`menu_text.practice_tool` for each real tool (glyph coverage stays with
+`content_validation`). Display's heading, question and countdown use the face
+the setup shade leaves, as Keep and Revert did. `read_main_menu` refuses a setup
+paper (Options, setup, Team, Weapon, Stage) that is no larger than
+`setup_shadow_offset` plus six keylines, and the Display check refuses a
+`pause_menu.box_size` no larger than the setup shade plus six Pause keylines,
+since Pause's own box check sees only Pause's shade. `main_menu.credits.text`
+must leave a positive fitting area on the Credits face above Back. After the
+summaries, the static `menu_text.stage.random_navigation` must fit the Stage
+interior, every briefing row, status and hint keeps its expanded briefing card
+inside the Stage paper and off the preview (`check_briefing_card`, shared with
+the summaries), and then the union of every row and every alternative must keep
+one card off the preview, because the page draws one card around all the rows
+it shows: a row widening it and another deepening it can reach a preview set
+diagonally from the briefing. That union is stricter than any one screen (it
+joins solo and versus, locked and browse); the shipped layout passes because the
+preview's vertical span lies inside the briefing's. Probes whose accepted edges
+encoded the old answers moved to the new edges, and each new check has a variant
+only it rejects (`menu_text`, `menu_presentation`) except two: the Pause-box
+check, whose failing boxes (under 144 pixels) Pause's own heading and row fits
+refuse first with the shipped fonts, and the combined card, which only an authored preview diagonal from the
+briefing can reach and which no probe layout builds yet. `footer_y`'s range
+check stays at the top of `read_main_menu`, so its order and text are unchanged;
+D8 needed no move, since `read_main_menu` runs before `read_controls_settings`
+in `presentation.cpp`, so the controls reader only ever sees a checked value.
+
+Left: the order-preserving split by page (keep the nine phase functions in
+`Validation::validate` as the owners of order, move each phase's per-page blocks
+into per-page files).
 
 ### Presentation includes and the content layer (`HYG#38`)
 

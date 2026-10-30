@@ -281,6 +281,19 @@ namespace presentation_read
 				": setup_focus_padding must be at most (48,24) "
 				"and exceed setup_shadow_offset + art.keyline_width on both axes.");
 		}
+		// The setup pages draw their papers with the setup shade, which art's
+		// own box check above does not see.
+		for (const Vector2F& box : { menu.options_box_size, menu.setup_box_size, menu.team_box_size,
+			menu.weapon_box_size, menu.stage_box_size })
+		{
+			if (box.x <= menu.setup_shadow_offset + menu.art.keyline_width * 6.0f ||
+				box.y <= menu.setup_shadow_offset + menu.art.keyline_width * 6.0f)
+			{
+				throw std::runtime_error(json.where() +
+					": options_box_size, setup_box_size, team_box_size, weapon_box_size and stage_box_size "
+					"must exceed setup_shadow_offset + art.keyline_width * 6 on both axes.");
+			}
+		}
 		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
 			menu.art.disabled_ink == menu.art.focus_fill || menu.art.disabled_ink == menu.art.ink ||
 			menu.art.disabled_ink == menu.art.focus_ink)

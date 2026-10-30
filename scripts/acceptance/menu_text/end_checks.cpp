@@ -389,8 +389,8 @@ namespace menu_text_acceptance
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
         };
-        add_font("menu_continue_right", 722, 16);
-        add_font("menu_continue_right_overflow", 722, 16, 0.25f);
+        add_font("menu_continue_right", 714, 16);
+        add_font("menu_continue_right_overflow", 714, 16, 0.25f);
         add_font("menu_continue_height", 8, 81);
         add_font("menu_continue_height_overflow", 8, 81, 0.0f, 0.25f);
         add_font("menu_continue_zero_width", 0, 20);
@@ -414,14 +414,17 @@ namespace menu_text_acceptance
                 const auto measured = world.render.measure_text(world.render.resolve_sprite_font(edge.menu().item_font), L"~");
                 UiText value("continuation", L"~", edge.menu().item_font, end.layout.position, &world.render, end.art.ink);
                 const mattmath::RectangleF paper(470.0f, 90.0f, 980.0f, 900.0f);
+                // Like every End row, the first stops at the face, short of
+                // the paper's shade.
+                const mattmath::RectangleF face(paper.position(), paper.size() - mattmath::Vector2F(end.art.shadow_offset));
                 require(value.bounds() == mattmath::RectangleF(700.0f, 300.0f,
-                    height_edge ? 8.0f : 722.0f, height_edge ? 81.0f : 20.0f) &&
+                    height_edge ? 8.0f : 714.0f, height_edge ? 81.0f : 20.0f) &&
                     value.bounds().size() == measured, "Continuation edge fixture changed the actual plain unscaled UiText bounds");
                 auto padded = value.bounds(); padded.inflate(end.art.focus_padding);
-                require(paper.contains(padded) && (height_edge ? padded.height == 117.0f : padded.right() == 1450.0f),
+                require(face.contains(padded) && (height_edge ? padded.height == 117.0f : padded.right() == 1442.0f),
                     "Continuation edge fixture lost exact inclusive text-plus-focus-padding contact");
                 require(height_edge ? padded.height + end.art.shadow_offset > end.layout.spacing.y :
-                    padded.right() + end.art.shadow_offset > paper.right(),
+                    padded.right() + end.art.shadow_offset > face.right(),
                     "Continuation fixture no longer distinguishes the existing plain rule from an added card-shade constraint");
                 variants.rejects(field, [&](rapidjson::Document& d)
                     { use_font(d, entry.key, height_edge ? "menu_continue_height_overflow" : "menu_continue_right_overflow"); }, &world);

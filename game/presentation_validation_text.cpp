@@ -226,12 +226,18 @@ RectangleF Presentation::Validation::check_stage_briefing(const RectangleF& stag
 	return bounds;
 }
 
-void Presentation::Validation::check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
+RectangleF Presentation::Validation::check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
 	float line, float next_line) const
+{
+	const RectangleF bounds = check_stage_briefing(stage_briefing, stage_info, role, text, font, line, next_line);
+	check_briefing_card(stage_briefing, std::string("menu_text.stage.") + role, bounds);
+	return bounds;
+}
+
+void Presentation::Validation::check_briefing_card(const RectangleF& stage_briefing, const std::string& key, RectangleF bounds) const
 {
 	const MainMenuPresentation& main = this->presentation_.main_menu_;
 	const StageSelectPresentation& stage = main.stage_select;
-	RectangleF bounds = check_stage_briefing(stage_briefing, stage_info, role, text, font, line, next_line);
 	// The page expands the briefing artwork around unscaled copy rather
 	// than fitting copy to its authored width. That expanded card must
 	// still fit the outer paper and remain separate from the preview.
@@ -256,7 +262,7 @@ void Presentation::Validation::check_stage_summary(const RectangleF& stage_brief
 		(card.x < preview.right() && card.right() > preview.x &&
 			card.y < preview.bottom() && card.bottom() > preview.y))
 	{
-		throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.stage." + role +
+		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 			" must keep the expanded briefing card inside the Stage paper and separate from the preview edge, including its retained artwork and shadow.");
 	}
 }

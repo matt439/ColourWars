@@ -1738,6 +1738,17 @@ match; each is a `presentation.json` or one-function change in
 [menu_geometry](../game/menu_geometry.h), plus a validator rule that keeps the
 chosen relation.
 
+A second overlay question, found 2026-10-31 while making the validator check
+the practice Pause layout: practice Pause puts its five rows (Resume, Tool,
+Restart, Options, Quit) 96 pixels apart (0.8 of the 120 row spacing), but a
+shipped item's focus card is 113 tall (77 text plus 2 x 18 focus padding), so
+neighbouring focus cards overlap by 17 pixels. Only one card is drawn at a time,
+so the overlap shows only as a focused card reaching into its neighbours' text.
+The validator checks the practice rows against the paper only, because the
+normal row rule would refuse the shipped file. Left, for the author: look at
+practice Pause and say whether that is fine; if not, widen the spacing, shrink
+the padding for that page, or drop a row, and the validator takes the row rule.
+
 ### Help players read the tool and the fight
 
 The current [weapon update](../game/objects/weapon.cpp) distinguishes ammunition

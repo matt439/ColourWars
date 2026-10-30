@@ -107,6 +107,12 @@ namespace menu_text_acceptance
             "Confirmation paper fixtures no longer exercise the shipped full-height Pause paper");
         add_font("menu_confirmation_width_edge", 1050, 20);
         add_font("menu_confirmation_width_overflow", 1051, 20);
+        // Display draws the same paper with the setup shade (2), and centres on
+        // the design, so its rows meet the face's right edge at 1046 wide.
+        require(original.main_menu().setup_shadow_offset == 2.0f,
+            "Display confirmation fixtures no longer exercise the shipped setup shade");
+        add_font("menu_confirmation_display_width_edge", 1046, 20);
+        add_font("menu_confirmation_display_width_overflow", 1047, 20);
         // The shared font's unrelated two-line missing list must also fit;
         // retain each target '~' height while compacting only line spacing.
         add_font("menu_confirmation_action_edge", 8, 20, 0.0f, 0.0f, 1.0f);
@@ -114,19 +120,23 @@ namespace menu_text_acceptance
         for (const auto& entry : confirmation_text)
         {
             const std::string field = std::string("confirmations.") + entry.key;
+            const bool on_display = std::string(entry.key) == "display";
             const auto width_edge = variants.load([&](rapidjson::Document& d)
             {
-                use_font(d, "menu_confirmation_width_edge", entry.key);
+                use_font(d, on_display ? "menu_confirmation_display_width_edge" : "menu_confirmation_width_edge", entry.key);
             });
             width_edge.validate_resources(world.render, world.audio);
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(width_edge.menu().detail_font), L"~");
             const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+            const mattmath::RectangleF face(paper.position(), paper.size() -
+                mattmath::Vector2F(original.main_menu().setup_shadow_offset));
             const mattmath::RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
-            require(bounds.x == paper.x && bounds.right() == paper.right() && paper.contains(bounds),
+            require(on_display ? bounds.right() == face.right() && face.contains(bounds) :
+                bounds.x == paper.x && bounds.right() == paper.right() && paper.contains(bounds),
                 "Confirmation's unpadded centered text no longer touches both inclusive paper edges");
             variants.rejects(field, [&](rapidjson::Document& d)
             {
-                use_font(d, "menu_confirmation_width_overflow", entry.key);
+                use_font(d, on_display ? "menu_confirmation_display_width_overflow" : "menu_confirmation_width_overflow", entry.key);
             }, &world);
             const auto action_edge = [&](rapidjson::Document& d)
             {
@@ -414,9 +424,12 @@ namespace menu_text_acceptance
             d["menu_style"]["fonts"]["detail"].SetString(name, d.GetAllocator());
             d["menu_text"]["display_trial_countdown"].SetString("~{seconds}");
         };
-        add_font("display_countdown_width_edge", 1034, 20);
-        add_font("display_countdown_width_overflow", 1035, 20);
-        const int countdown_height = static_cast<int>((1080.0f + original.pause_menu().box_size.y) / 2.0f -
+        // The countdown keeps to the face Display's setup shade leaves: 1046
+        // wide when centred on the design, and 988 at the bottom.
+        add_font("display_countdown_width_edge", 1030, 20);
+        add_font("display_countdown_width_overflow", 1031, 20);
+        const float shade = original.main_menu().setup_shadow_offset;
+        const int countdown_height = static_cast<int>((1080.0f + original.pause_menu().box_size.y) / 2.0f - shade -
             original.pause_menu().layout.position.y - original.pause_menu().layout.spacing.y * 2.0f);
         add_font("display_countdown_height_edge", 8, countdown_height);
         add_font("display_countdown_height_overflow", 8, countdown_height + 1);
@@ -431,9 +444,10 @@ namespace menu_text_acceptance
                 &world.render, pause.art.ink);
             copy.display_trial_countdown = L"Changed {seconds}";
             countdown.set_position({ (1920.0f - countdown.bounds().width) / 2.0f, countdown.bounds().y });
-            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f,
+                pause.box_size - mattmath::Vector2F(shade));
             require(countdown.text() == L"~15" && paper.contains(countdown.bounds()) &&
-                (std::string(font) == "display_countdown_width_edge" ? countdown.bounds().width == 1050.0f : countdown.bounds().bottom() == 990.0f),
+                (std::string(font) == "display_countdown_width_edge" ? countdown.bounds().width == 1046.0f : countdown.bounds().bottom() == 988.0f),
                 "Display countdown borrowed copy, fitted its text, used line spacing instead of tall glyphs or missed inclusive paper edges");
             countdown.set_hidden(true); DrawList no_device; countdown.draw(no_device);
         }
@@ -444,6 +458,12 @@ namespace menu_text_acceptance
         variants.rejects("headings.options", [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["heading"].SetString("menu_confirmation_width_overflow");
+            d["menu_text"]["headings"]["options"].SetString("~");
+        }, &world);
+        // Within the Pause paper, but into Display's setup shade.
+        variants.rejects("headings.options", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString("menu_confirmation_display_width_overflow");
             d["menu_text"]["headings"]["options"].SetString("~");
         }, &world);
     }

@@ -82,7 +82,7 @@ comparison and physical-pad check; values remain provisional.
   HUD tag and figure tank at 4P with sound muted (`POL#38`).
 - **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
 - **Overlay papers:** whether the footer band may cover the bottom of the Pause, End and
-  Results papers (`POL#45`).
+  Results papers, and whether practice Pause's focus cards may overlap their neighbours (`POL#45`).
 - **Design-process draft:** accept or amend the personas, stories and journeys, the
   hypotheses they mark and the three unserved stories (`DES#1`); `DES#2` waits on it.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
@@ -117,7 +117,7 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#37` | OPEN | MED | M | `menu_geometry` is shared by the reader, validators and pages. Left: correct the validator drift it exposed (D2-D4, D6-D10) and split validation by page in the same order. [Scope](docs/code-hygiene.md#menu-page-geometry-in-one-place-hyg37). |
+| `HYG#37` | OPEN | MED | M | `menu_geometry` is shared by the reader, validators and pages, and the validator drift it exposed is corrected. Left: split validation by page in the same order. [Scope](docs/code-hygiene.md#menu-page-geometry-in-one-place-hyg37). |
 | `HYG#38` | OPEN | LOW | S | Trim the include block copied into 13 presentation sources and keep menu records out of gameplay includes. [Scope](docs/code-hygiene.md#presentation-includes-and-the-content-layer-hyg38). |
 | `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
 | `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
@@ -148,7 +148,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DECISION | LOW | S | Built: menu solo practice on the Movement Course is untimed, with station lessons and a pause Tool row. Watch a fresh player use it, then keep or cut it and settle the lesson wording. [Workshop](docs/polish-movement-course.md#practice-workshop). |
 | `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
-| `POL#45` | DECISION | LOW | S | The footer band (from `footer_y` 960) covers the bottom 30 px of the Pause and End papers and 10 px of Results. Look at them at 1/2/4P and say whether that is intended; if not, pick shorter papers, centring above the footer or no band over a match. [Record](docs/polish-plan.md#footer-band-over-the-overlay-papers-pol45). |
+| `POL#45` | DECISION | LOW | S | The footer band (from `footer_y` 960) covers the bottom 30 px of the Pause and End papers and 10 px of Results. Look at them at 1/2/4P and say whether that is intended; if not, pick shorter papers, centring above the footer or no band over a match. Also: practice Pause's focus cards (113 tall) overlap their 96 px rows by 17 px; fine or respace? [Record](docs/polish-plan.md#footer-band-over-the-overlay-papers-pol45). |
 | `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
 
 ## Levels and the editor

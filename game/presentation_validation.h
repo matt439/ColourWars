@@ -9,6 +9,8 @@
 #include "game/input_slots.h"
 #include "game/player_control.h"
 #include <optional>
+#include <utility>
+#include <vector>
 
 struct Presentation::Validation
 {
@@ -32,6 +34,10 @@ struct Presentation::Validation
         RectangleF results_panel;
         float results_fill_right, results_fill_bottom;
         RectangleF contribution_heading;
+        // Each briefing row and the Random counter, for the checks that run
+        // after the summaries (the expanded card and the Stage paper).
+        std::vector<std::pair<const char*, RectangleF>> briefing_rows;
+        RectangleF random_navigation;
     };
     struct ControlsGeometry
     {
@@ -83,8 +89,9 @@ struct Presentation::Validation
 		const MenuPaperArtPresentation& art, float row_spacing, bool controls_value) const;
 	RectangleF check_stage_briefing(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
 		float line, float next_line) const;
-	void check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
+	RectangleF check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
 		float line, float next_line) const;
+	void check_briefing_card(const RectangleF& stage_briefing, const std::string& key, RectangleF bounds) const;
 	static bool finite_stage_rectangle(const RectangleF& bounds);
 	Vector2F options_value_position(int row) const;
 	std::wstring label_words(int player, int choice) const;

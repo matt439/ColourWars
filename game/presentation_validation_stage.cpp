@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 using namespace labrador;
 using namespace mattmath;
@@ -76,7 +77,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 	const Vector2F stage_info = stage.briefing.position + stage.briefing_padding;
 	const Vector2F stage_status_position = stage_info + stage.briefing.spacing * 6.0f;
 	const float stage_hint_top = (stage_info + stage.briefing.spacing * 7.0f).y;
-	const auto check_stage_status = [&](const char* role, const std::wstring& text)
+	const auto check_stage_status = [&](const char* role, const std::wstring& text) -> RectangleF
 	{
 		const std::string key = std::string("menu_text.stage.") + role;
 		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.detail_font);
@@ -97,15 +98,19 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must fit unscaled inside the briefing panel and design area before the authored hint row origin, including its shadow.");
 		}
+		return bounds;
 	};
-	check_stage_status("browse_status", this->presentation_.menu_text_.stage.browse_status);
-	check_stage_status("locked_status", this->presentation_.menu_text_.stage.locked_status);
-	check_stage_briefing(stage_briefing, stage_info, "briefing_label", this->presentation_.menu_text_.stage.briefing_label, this->presentation_.menu_.brand_font, 0.0f, 1.0f);
-	check_stage_briefing(stage_briefing, stage_info, "goal", this->presentation_.menu_text_.stage.goal, this->presentation_.menu_.brand_font, 3.0f, 4.0f);
-	check_stage_briefing(stage_briefing, stage_info, "solo_objective", this->presentation_.menu_text_.stage.solo_objective, this->presentation_.menu_.brand_font, 4.0f, 6.0f);
-	check_stage_briefing(stage_briefing, stage_info, "versus_objective", this->presentation_.menu_text_.stage.versus_objective, this->presentation_.menu_.brand_font, 4.0f, 6.0f);
-	check_stage_briefing(stage_briefing, stage_info, "solo_mode", this->presentation_.menu_text_.stage.solo_mode, this->presentation_.menu_.detail_font, 1.0f, 2.0f);
-	check_stage_briefing(stage_briefing, stage_info, "single_match_mode", this->presentation_.menu_text_.stage.single_match_mode, this->presentation_.menu_.detail_font, 1.0f, 2.0f);
+	// The page grows its briefing card around every row it draws; the
+	// expanded card is checked after the summaries' (validate_generated_values).
+	std::vector<std::pair<const char*, RectangleF>> briefing_rows;
+	briefing_rows.emplace_back("browse_status", check_stage_status("browse_status", this->presentation_.menu_text_.stage.browse_status));
+	briefing_rows.emplace_back("locked_status", check_stage_status("locked_status", this->presentation_.menu_text_.stage.locked_status));
+	briefing_rows.emplace_back("briefing_label", check_stage_briefing(stage_briefing, stage_info, "briefing_label", this->presentation_.menu_text_.stage.briefing_label, this->presentation_.menu_.brand_font, 0.0f, 1.0f));
+	briefing_rows.emplace_back("goal", check_stage_briefing(stage_briefing, stage_info, "goal", this->presentation_.menu_text_.stage.goal, this->presentation_.menu_.brand_font, 3.0f, 4.0f));
+	briefing_rows.emplace_back("solo_objective", check_stage_briefing(stage_briefing, stage_info, "solo_objective", this->presentation_.menu_text_.stage.solo_objective, this->presentation_.menu_.brand_font, 4.0f, 6.0f));
+	briefing_rows.emplace_back("versus_objective", check_stage_briefing(stage_briefing, stage_info, "versus_objective", this->presentation_.menu_text_.stage.versus_objective, this->presentation_.menu_.brand_font, 4.0f, 6.0f));
+	briefing_rows.emplace_back("solo_mode", check_stage_briefing(stage_briefing, stage_info, "solo_mode", this->presentation_.menu_text_.stage.solo_mode, this->presentation_.menu_.detail_font, 1.0f, 2.0f));
+	briefing_rows.emplace_back("single_match_mode", check_stage_briefing(stage_briefing, stage_info, "single_match_mode", this->presentation_.menu_text_.stage.single_match_mode, this->presentation_.menu_.detail_font, 1.0f, 2.0f));
 	// Stage records share the navigation row, right-aligned to the preview,
 	// and the page shrinks a line to the room beside the arena counter. The
 	// copy must draw in its font and the row must sit below the preview edge
@@ -170,7 +175,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 	}
 	const Vector2F stage_hint_position = stage_info + stage.briefing.spacing * 7.0f;
 	const float stage_hint_width = stage.briefing.size.x - 2.0f * stage.briefing_padding.x;
-	const auto check_stage_hint = [&](const char* role, const std::wstring& text)
+	const auto check_stage_hint = [&](const char* role, const std::wstring& text) -> RectangleF
 	{
 		const std::string key = std::string("menu_text.stage.") + role;
 		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.brand_font);
@@ -193,12 +198,14 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must fit its briefing panel and design area before the footer using width-only fitting, including its scaled shadow.");
 		}
+		return bounds;
 	};
-	check_stage_hint("locked_hint", this->presentation_.menu_text_.stage.locked_hint);
-	check_stage_hint("browse_hint", this->presentation_.menu_text_.stage.browse_hint);
-	check_stage_hint("user_hint", this->presentation_.menu_text_.stage.user_hint);
+	briefing_rows.emplace_back("locked_hint", check_stage_hint("locked_hint", this->presentation_.menu_text_.stage.locked_hint));
+	briefing_rows.emplace_back("browse_hint", check_stage_hint("browse_hint", this->presentation_.menu_text_.stage.browse_hint));
+	briefing_rows.emplace_back("user_hint", check_stage_hint("user_hint", this->presentation_.menu_text_.stage.user_hint));
 
-	return { stage_briefing, stage_info, results_panel, results_fill_right, results_fill_bottom, contribution_heading };
+	return { stage_briefing, stage_info, results_panel, results_fill_right, results_fill_bottom, contribution_heading,
+		std::move(briefing_rows), navigation_bounds };
 }
 
 void Presentation::Validation::validate_generated_values(const SetupGeometry& setup, const StageGeometry& stage_geometry,
@@ -212,15 +219,38 @@ void Presentation::Validation::validate_generated_values(const SetupGeometry& se
 	const auto& controls_value_limit = control_geometry.controls_value_limit;
 	const auto& options_value_limit = control_geometry.options_value_limit;
 	const auto& options_art = setup.options_art;
+	// The page draws one card around every row it shows at once, so the rows
+	// are also checked together, each alternative included, for the preview.
+	RectangleF shown_together = stage_geometry.briefing_rows.front().second;
 	for (const int best_of : { 3, 5 })
 	{
-		check_stage_summary(stage_briefing, stage_info, "best_of_mode", this->presentation_.menu_text_.stage_best_of_mode(best_of), this->presentation_.menu_.detail_font, 1.0f, 2.0f);
+		shown_together = RectangleF::union_of(shown_together, check_stage_summary(stage_briefing, stage_info, "best_of_mode", this->presentation_.menu_text_.stage_best_of_mode(best_of), this->presentation_.menu_.detail_font, 1.0f, 2.0f));
 	}
 	for (int players = 1; players <= 4; ++players)
 	{
-		check_stage_summary(stage_briefing, stage_info, players == 1 ? "solo_roster" : "versus_roster", this->presentation_.menu_text_.stage_roster(players),
-			this->presentation_.menu_.brand_font, 2.0f, 3.0f);
+		shown_together = RectangleF::union_of(shown_together, check_stage_summary(stage_briefing, stage_info, players == 1 ? "solo_roster" : "versus_roster", this->presentation_.menu_text_.stage_roster(players),
+			this->presentation_.menu_.brand_font, 2.0f, 3.0f));
 	}
+	// The summaries' rules for the other rows. The numbered counter's paper
+	// rule holds for the static Random one; Random hides the stage record, so
+	// it needs no record room.
+	const RectangleF stage_inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.stage_box_size, this->presentation_.menu_.footer_y),
+		menu_geometry::setup_art(main));
+	if (!finite_stage_rectangle(stage_inside) || !stage_inside.contains(stage_geometry.random_navigation))
+	{
+		throw std::runtime_error(this->presentation_.source_path_ +
+			": menu_text.stage.random_navigation must fit unscaled inside the Stage paper, including its shadow.");
+	}
+	for (const auto& [role, bounds] : stage_geometry.briefing_rows)
+	{
+		check_briefing_card(stage_briefing, std::string("menu_text.stage.") + role, bounds);
+		shown_together = RectangleF::union_of(shown_together, bounds);
+	}
+	// Each row fits the Stage paper alone, so only the preview can refuse the
+	// whole card: a row widening it and another deepening it can together
+	// reach a preview sitting diagonally from the briefing.
+	check_briefing_card(stage_briefing, "menu_text.stage briefing rows shown together", shown_together);
 	// Only glyph coverage is independent of the stage catalog. Count-aware
 	// geometry is checked after the actual total and eligibility are known.
 	std::ignore = fixed_menu_size("menu_text.stage.numbered_navigation",

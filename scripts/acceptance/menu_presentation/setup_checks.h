@@ -85,6 +85,21 @@ namespace
         });
         require(padding_boundary.main_menu().setup_focus_padding == Vector2F(48.0f, 24.0f),
             "Inclusive setup focus-padding definition limits were rejected");
+        // The setup pages draw with the setup shade, so each setup box must
+        // exceed it plus the keyline edge, as art's box check does for its own
+        // shade: 16 + 4 * 6 = 40 here, while art's 8 + 24 = 32 already passes.
+        const auto setup_shade = [](float width)
+        {
+            return [width](rapidjson::Document& d)
+            {
+                d["main_menu"]["setup_shadow_offset"].SetFloat(16.0f);
+                d["main_menu"]["setup_focus_padding"]["y"].SetFloat(24.0f);
+                d["main_menu"]["team_box_size"]["x"].SetFloat(width);
+            };
+        };
+        require(variants.load(setup_shade(40.25f)).main_menu().team_box_size.x == 40.25f,
+            "A setup box just past the setup shade and keyline edge was rejected");
+        variants.rejects("main_menu", "setup_shadow_offset", setup_shade(40.0f));
         const auto padding_minimum = variants.load([](rapidjson::Document& d)
         {
             d["main_menu"]["setup_focus_padding"]["x"].SetFloat(6.25f);

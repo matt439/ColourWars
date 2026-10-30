@@ -296,6 +296,15 @@ namespace menu_text_acceptance
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+            // Practice's Tool row shares the column; keep it narrower than Fit.
+            d["menu_text"]["practice_tool"].SetString("{tool}");
+            const char* tools[]{ "Fa", "Fb", "Fc", "Fd", "Fe", "Ff", "Fg" };
+            size_t tool = 0;
+            auto& choices = d["main_menu"]["weapon_select"]["choices"];
+            for (auto choice = choices.MemberBegin(); choice != choices.MemberEnd(); ++choice)
+            {
+                choice->value["name"].SetString(rapidjson::StringRef(tools[tool++ % std::size(tools)]));
+            }
         };
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& pause = original.pause_menu();
@@ -318,7 +327,8 @@ namespace menu_text_acceptance
         const auto bottom = top + pause.box_size - mattmath::Vector2F(pause.art.shadow_offset);
         const float left_position = top.x + pause.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
-        const float bottom_position = bottom.y - 3.0f * pause.layout.spacing.y -
+        // Practice's Quit is the deepest row: the fifth, at 0.8 spacing.
+        const float bottom_position = bottom.y - 4.0f * (pause.layout.spacing.y * 0.8f) -
             20.0f - pause.art.focus_padding.y;
         const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
         {
@@ -340,8 +350,13 @@ namespace menu_text_acceptance
         // A positive-height confirmation question must fit above the first
         // padded action, so that action cannot also touch the paper's top.
         // Exit heading paper-top and question/action contact are checked below.
-        // Quit's last row reaches the full-height Pause paper face, below the menu footer.
+        // Practice Quit's last row reaches the full-height Pause paper face, below the menu footer.
         paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
+        // The Tool row names every tool, unscaled, on the same paper face.
+        variants.rejects("practice_tool", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["practice_tool"].SetString(("{tool} " + std::string(60, 'W')).c_str(), d.GetAllocator());
+        }, &world);
 
         const float row_height = 20.0f + 2.0f * pause.art.focus_padding.y;
         const auto row_edge = [&](rapidjson::Document& d)

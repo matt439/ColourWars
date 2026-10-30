@@ -38,10 +38,11 @@ void Presentation::Validation::validate_results_text(const StageGeometry& stage_
 	const ResultsMenuPresentation& results = this->presentation_.results_menu_;
 	const auto& results_panel = stage_geometry.results_panel;
 	// Session selects one of these plain, unscaled labels for End's first
-	// action. Retain the same paper, padding and row rule as its other actions.
+	// action. Retain the same paper face, padding and row rule as its other
+	// actions: the face stops short of the shade at its right and bottom.
 	const RectangleF end_paper = menu_geometry::screen_paper(end.box_size);
 	const Vector2F end_top = end_paper.position();
-	const Vector2F end_bottom = end_top + end.box_size;
+	const Vector2F end_bottom = end_top + end_paper.size() - Vector2F(end.art.shadow_offset);
 	for (const auto& field : { std::pair("rematch", &this->presentation_.menu_text_.end.rematch),
 		std::pair("play_series_again", &this->presentation_.menu_text_.end.play_series_again),
 		std::pair("replay_draw", &this->presentation_.menu_text_.end.replay_draw),

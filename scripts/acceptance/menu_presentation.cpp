@@ -412,6 +412,15 @@ namespace
             variants.rejects("menu_style", "spacing", [axis, limit](rapidjson::Document& d)
                 { d["menu_style"]["layout"]["spacing"][axis].SetInt(limit + 1); });
         }
+        // Credits fits its body into the face right of its origin, clear of the
+        // shade and focus padding: 1840 - 8 - 28 = 1804 for the shipped paper,
+        // inside the 1820 the reader's interior allows the origin.
+        const auto credits_at = [](float x)
+        {
+            return [x](rapidjson::Document& d) { d["main_menu"]["credits"]["position"]["x"].SetFloat(x); };
+        };
+        variants.load(credits_at(1803.75f)).validate_resources(world.render, world.audio);
+        variants.rejects("main_menu.credits", "text", credits_at(1804.0f), &world);
     }
 }
 

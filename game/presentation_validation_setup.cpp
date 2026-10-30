@@ -126,8 +126,12 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 		this->presentation_.menu_text_.heading(MenuHeading::options), this->presentation_.menu_.heading_font);
 	const RectangleF display_heading(menu_geometry::centred_x(display_heading_size.x), pause.heading_y,
 		display_heading_size.x, display_heading_size.y);
+	// Display draws the Pause paper with the setup shade; its rows keep to
+	// the face that shade leaves.
+	const RectangleF display_face(confirmation_paper.position(),
+		confirmation_paper.size() - Vector2F(display_art.shadow_offset));
 	if (!std::isfinite(display_heading.x) || !std::isfinite(display_heading.y) ||
-		!confirmation_paper.contains(display_heading) || display_heading.bottom() > pause.status_y)
+		!display_face.contains(display_heading) || display_heading.bottom() > pause.status_y)
 	{
 		throw std::runtime_error(this->presentation_.source_path_ +
 			": menu_text.headings.options must fit unscaled inside the Pause paper before the display confirmation question.");
@@ -141,7 +145,7 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 		const std::string key = "menu_text.display_trial_countdown";
 		const Vector2F size = fixed_menu_size(key, this->presentation_.menu_text_.display_countdown(seconds), this->presentation_.menu_.detail_font);
 		const RectangleF bounds(menu_geometry::centred_x(size.x), countdown_y, size.x, size.y);
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !display_face.contains(bounds) ||
 			bounds.y < revert_card.bottom())
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
@@ -156,6 +160,15 @@ Presentation::Validation::RosterPapers Presentation::Validation::validate_additi
 		throw std::runtime_error(this->presentation_.source_path_ +
 			": main_menu.setup_focus_padding must exceed main_menu.setup_shadow_offset + "
 			"pause_menu.art.keyline_width on both axes for the Display confirmation paper.");
+	}
+	// Pause's own box check sees only Pause's shade, not the setup shade
+	// Display draws the same paper with.
+	if (pause.box_size.x <= display_art.shadow_offset + display_art.keyline_width * 6.0f ||
+		pause.box_size.y <= display_art.shadow_offset + display_art.keyline_width * 6.0f)
+	{
+		throw std::runtime_error(this->presentation_.source_path_ +
+			": pause_menu.box_size must exceed main_menu.setup_shadow_offset + "
+			"pause_menu.art.keyline_width * 6 on both axes for the Display confirmation paper.");
 	}
 	const std::string palette_timing_key = "menu_text.options_palette_timing";
 	const Vector2F palette_timing_size = fixed_menu_size(palette_timing_key,

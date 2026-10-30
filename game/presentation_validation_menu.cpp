@@ -109,6 +109,23 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	check_menu_item(MenuItem::back, this->presentation_.menu_.item_font, main.credits_back_position,
 		menu_geometry::footer_paper(main.credits_box_size, this->presentation_.menu_.footer_y), 0.0f, std::nullopt,
 		main.art);
+	{
+		// Credits fits its body uniformly into the paper face beside it and the
+		// room above Back's focus card, and skips the fit when either is empty.
+		const std::string key = "main_menu.credits.text";
+		const Vector2F raw = fixed_menu_size(key, main.credits_text, main.credits_font);
+		const Vector2F available(menu_geometry::paper_text_right(
+			menu_geometry::footer_paper(main.credits_box_size, this->presentation_.menu_.footer_y), main.art) -
+			main.credits_position.x,
+			main.credits_back_position.y - main.art.focus_padding.y - main.credits_position.y);
+		const float scale = std::min({ 1.0f, available.x / raw.x, available.y / raw.y });
+		if (!std::isfinite(available.x) || !std::isfinite(available.y) || available.x <= 0.0f ||
+			available.y <= 0.0f || !std::isfinite(scale) || scale <= 0.0f)
+		{
+			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+				" must have a finite positive fitting area inside the Credits paper above Back's focus padding.");
+		}
+	}
 	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
 	const MenuPaperArtPresentation display_art = menu_geometry::display_art(pause, main);
 	if (!std::isfinite(pause.layout.spacing.y) || pause.layout.spacing.y <= 0.0f)
@@ -122,6 +139,52 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 		check_menu_item(pause_items[index], this->presentation_.menu_.item_font, pause.layout.position +
 			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
 			menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
+	}
+	// Practice fits a fifth row, Tool, into the same paper at 0.8 spacing:
+	// Resume, Tool, Restart, Options and Quit. Only the paper is checked: the
+	// shipped rows are closer than a focus card is tall (HYG#37), so the row
+	// rule would refuse them.
+	const float practice_spacing = pause.layout.spacing.y * 0.8f;
+	for (size_t index = 0; index < std::size(pause_items); ++index)
+	{
+		const int row = index == 0 ? 0 : static_cast<int>(index) + 1;
+		check_menu_item(pause_items[index], this->presentation_.menu_.item_font, pause.layout.position +
+			Vector2F(0.0f, practice_spacing * static_cast<float>(row)),
+			menu_geometry::screen_paper(pause.box_size), 0.0f, std::nullopt, pause.art);
+	}
+	{
+		// The Tool row names each real tool, unscaled. Glyph coverage stays
+		// with the content check that names the same token.
+		const RectangleF paper = menu_geometry::screen_paper(pause.box_size);
+		const Vector2F face_bottom = paper.position() + paper.size() - Vector2F(pause.art.shadow_offset);
+		const Vector2F position = pause.layout.position + Vector2F(0.0f, practice_spacing);
+		const Vector2F padding = pause.art.focus_padding;
+		const FontHandle font = render.resolve_sprite_font(this->presentation_.menu_.item_font);
+		for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)
+		{
+			std::wstring label;
+			try
+			{
+				label = this->presentation_.menu_text_.practice_tool_label(
+					main.weapon_select_art.choice(static_cast<WeaponType>(tool)).name);
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.practice_tool: " + error.what());
+			}
+			if (!render.can_render(font, label)) { continue; }
+			const Vector2F size = render.measure_text(font, label);
+			if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f ||
+				position.x - padding.x < paper.x || position.y - padding.y < paper.y ||
+				position.x + size.x + padding.x > face_bottom.x ||
+				position.y + size.y + padding.y > face_bottom.y)
+			{
+				throw std::runtime_error(this->presentation_.source_path_ +
+					": menu_text.practice_tool with main_menu.weapon_select.choices." +
+					weapon_name(static_cast<WeaponType>(tool)) +
+					".name must fit the practice Pause paper including focus padding.");
+			}
+		}
 	}
 	check_menu_item(MenuItem::yes, this->presentation_.menu_.item_font, pause.layout.position,
 		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
@@ -190,14 +253,14 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	{
 		check_controls_item(controls_items[index], static_cast<int>(index), index >= 4 && index <= 8);
 	}
+	// Pad sticks: seven option rows, then Apply and Back.
 	const MenuItem sticks_items[]{ MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone,
-		MenuItem::rumble, MenuItem::apply, MenuItem::back };
+		MenuItem::rumble, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects,
+		MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(sticks_items); ++index)
 	{
-		check_controls_item(sticks_items[index], static_cast<int>(index), index < 4);
+		check_controls_item(sticks_items[index], static_cast<int>(index), index < 7);
 	}
-	check_controls_item(MenuItem::apply, 3, false);
-	check_controls_item(MenuItem::back, 4, false);
 	const RectangleF setup_inside = menu_geometry::paper_interior(
 		menu_geometry::footer_paper(main.setup_box_size, this->presentation_.menu_.footer_y),
 		menu_geometry::setup_art(main));
@@ -289,24 +352,33 @@ Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_
 	RectangleF first_confirmation_action(pause.layout.position,
 		fixed_menu_size("menu_text.items.yes", this->presentation_.menu_text_.item(MenuItem::yes), this->presentation_.menu_.item_font));
 	first_confirmation_action.inflate(pause.art.focus_padding);
-	const auto check_confirmation = [&](const char* role, const std::wstring& text, float action_top)
+	// Display draws the same paper with the setup shade, so its rows stay on
+	// the face that shade leaves.
+	const RectangleF display_face(confirmation_paper.position(),
+		confirmation_paper.size() - Vector2F(display_art.shadow_offset));
+	const auto check_confirmation = [&](const char* role, const std::wstring& text, float action_top,
+		const RectangleF& paper)
 	{
 		const std::string key = std::string("menu_text.confirmations.") + role;
 		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.detail_font);
 		// Confirmation questions remain plain, unscaled and centered on the
 		// full-design Pause paper rather than the footer-centered menu paper.
 		const RectangleF bounds(menu_geometry::centred_x(size.x), pause.status_y, size.x, size.y);
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !paper.contains(bounds) ||
 			bounds.bottom() > action_top)
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must fit unscaled inside the Pause paper before the first action's focus padding.");
 		}
 	};
-	check_confirmation("restart", this->presentation_.menu_text_.confirmations.restart, first_confirmation_action.y);
-	check_confirmation("quit", this->presentation_.menu_text_.confirmations.quit, first_confirmation_action.y);
-	check_confirmation("exit", this->presentation_.menu_text_.confirmations.exit, first_confirmation_action.y);
-	check_confirmation("display", this->presentation_.menu_text_.confirmations.display, pause.layout.position.y - display_art.focus_padding.y);
+	check_confirmation("restart", this->presentation_.menu_text_.confirmations.restart, first_confirmation_action.y,
+		confirmation_paper);
+	check_confirmation("quit", this->presentation_.menu_text_.confirmations.quit, first_confirmation_action.y,
+		confirmation_paper);
+	check_confirmation("exit", this->presentation_.menu_text_.confirmations.exit, first_confirmation_action.y,
+		confirmation_paper);
+	check_confirmation("display", this->presentation_.menu_text_.confirmations.display,
+		pause.layout.position.y - display_art.focus_padding.y, display_face);
 	const RectangleF end_paper = menu_geometry::screen_paper(end.box_size);
 	// The first continuation row starts here regardless of its Session label.
 	const float first_end_action_top = end.layout.position.y - end.art.focus_padding.y;
@@ -632,7 +704,7 @@ Presentation::Validation::ControlsGeometry Presentation::Validation::validate_co
 		controls.item_font, controls.art);
 	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
 		controls.item_font, controls.art);
-	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 5.0f),
+	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 8.0f),
 		controls.item_font, controls.art);
 	struct StatusMessage { const char* key; const std::wstring& text; };
 	const auto check_status = [&](const StatusMessage& message, const std::string& font,

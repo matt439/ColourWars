@@ -165,9 +165,12 @@ namespace menu_text_acceptance
             d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
             d["menu_text"]["stage"]["random_navigation"].SetString("Fit");
         };
+        // Like the numbered counter, the Random one keeps inside the Stage
+        // paper's interior (52, 32)-(1866, 926), which sits within the design
+        // and above the footer; "Fit" and its shadow are 25 by 21.
         struct Edge { const char* axis; float position; float outside; };
-        const Edge nav_edges[]{ { "x", 0.0f, -0.25f }, { "x", 1895.0f, 1895.25f },
-            { "y", 0.0f, -0.25f }, { "y", 939.0f, 939.25f },
+        const Edge nav_edges[]{ { "x", 52.0f, 51.75f }, { "x", 1841.0f, 1841.25f },
+            { "y", 32.0f, 31.75f }, { "y", 905.0f, 905.25f },
             { "y", 832.0f, 831.75f }, { "x", 1205.0f, 1205.25f } };
         for (const auto& edge : nav_edges)
         {
@@ -201,16 +204,18 @@ namespace menu_text_acceptance
             for (const char* axis : { "x", "y" })
             {
                 d["menu_style"]["shadow"]["detail_offset"][axis].SetFloat(-1.5f);
-                d["main_menu"]["stage_select"]["navigation_position"][axis].SetFloat(1.5f);
             }
+            d["main_menu"]["stage_select"]["navigation_position"]["x"].SetFloat(53.5f);
+            d["main_menu"]["stage_select"]["navigation_position"]["y"].SetFloat(33.5f);
         };
         variants.load(negative).validate_resources(world.render, world.audio);
-        for (const char* axis : { "x", "y" })
+        const Edge negative_edges[]{ { "x", 53.5f, 53.25f }, { "y", 33.5f, 33.25f } };
+        for (const auto& edge : negative_edges)
         {
             variants.rejects("stage.random_navigation", [&](rapidjson::Document& d)
             {
                 negative(d);
-                d["main_menu"]["stage_select"]["navigation_position"][axis].SetFloat(1.25f);
+                d["main_menu"]["stage_select"]["navigation_position"][edge.axis].SetFloat(edge.outside);
             }, &world);
         }
         const auto add_font = [&](const std::string& name, int width, int height)
