@@ -3,6 +3,9 @@
 ###############################################################################
 * text=auto
 
+# cmd mis-parses labels in LF batch files, e.g. from a GitHub source ZIP.
+*.cmd text eol=crlf
+
 # The editable kit and generated metadata use byte hashes for reproducibility.
 game/art/polish/kit/*.json text eol=lf
 game/content/textures/workshop_kit.json text eol=lf
