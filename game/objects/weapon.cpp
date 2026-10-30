@@ -466,7 +466,7 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
     }
 }
 void Weapon::play_feedback_sound(SoundBank::WaveHandle sound,
-    const SoundTuning& tuning) const
+    const SoundTuning& tuning)
 {
     this->sound_bank_->play_wave(sound, tuning.volume);
 }
@@ -528,7 +528,7 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
         this->stop_sounds();
     }
 }
-void Weapon::stop_sounds() const
+void Weapon::stop_sounds()
 {
     if (!this->loop_sound_.valid())
     {
@@ -537,7 +537,7 @@ void Weapon::stop_sounds() const
     this->sound_bank_->stop_effect(this->loop_sound_, true);
     this->loop_playing_ = false;
 }
-void Weapon::pause_sounds() const
+void Weapon::pause_sounds()
 {
     if (!this->loop_sound_.valid())
     {
@@ -545,7 +545,7 @@ void Weapon::pause_sounds() const
     }
     this->sound_bank_->pause_effect(this->loop_sound_);
 }
-void Weapon::resume_sounds() const
+void Weapon::resume_sounds()
 {
     if (!this->loop_sound_.valid())
     {

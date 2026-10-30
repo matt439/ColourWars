@@ -131,6 +131,7 @@ namespace debug_console_acceptance
 		}
 		bool debug_level_finished() const override { return this->level->state() == LevelState::finished; }
 		const Level* debug_level() const override { return this->level.get(); }
+		void debug_suspend_level() override { this->level->suspend(); }
 		// GameLevel's, uncovered and in focus: only the debug clock pauses it,
 		// which pauses the voices and leaves the players alone.
 		void debug_sync_audio() override

@@ -169,7 +169,8 @@ colour and one frame, so it is not used here.
    [PaintTile::paint](../game/objects/paint_tile.cpp). A capture changes team and
    player ownership; friendly repaint retains the original player's credit.
    The splash is a tile-owned animation, not a separate Scene object.
-   The projectile accumulates cosmetic contact results; Level-owned
+   The projectile accumulates cosmetic contact results, which the surface
+   reports through `Projectile::answer_paint_contact`; Level-owned
    [PaintAudio](../game/objects/paint_audio.h) plays the completed batch with
    limits per paint owner across every surface. Player flushes launch hits
    before discarding blocked shots, and Level flushes Scene contacts before
@@ -193,6 +194,20 @@ several views may draw the same object concurrently. Change animation state
 during update; compute per-view tint and offsets locally during draw. The
 roller's `paint_colour` override, which reads state set during update,
 demonstrates this separation.
+
+So in this game `const` means draw-safe: a const member function is one a
+draw worker could call while other views draw, and it changes nothing, its own
+members or anything it drives through a pointer. A method that plays, stops,
+pauses or resumes a sound, answers a contact, moves a held part or consumes a
+one-shot flag is not const, even when the only thing it changes sits behind a
+borrowed pointer (`Weapon::stop_sounds`, `Level::suspend`,
+`Projectile::note_paint_contact`). `mutable` is kept only for a cache whose fill
+is synchronised or safe under concurrent draws, and `game/` has none today.
+The one write through a const reference is
+[`Projectile::answer_paint_contact`](../game/objects/projectile.h): the engine
+hands a contact's other party over const, and a surface's paint answer has to
+reach the projectile. It is engine report 33 in
+[the ledger](review/engine-reports.md#owed-from-the-architecture-review-2026-10-30).
 
 ## Add a weapon without losing the contracts
 

@@ -32,17 +32,18 @@ public:
 	// devices[slot] is the pad that slot's entry reads, for a seat a
 	// controller reclaimed from another slot; that slot's bindings and stick
 	// preferences still apply. Omitted, every slot reads its own pad.
-	std::vector<SlotInput> player_inputs() const;
+	// Not const: a read refreshes the mapping copies below.
+	std::vector<SlotInput> player_inputs();
 	std::vector<SlotInput> player_inputs(
-		const std::array<int, input_slots::pad_count>& devices) const;
+		const std::array<int, input_slots::pad_count>& devices);
 
 private:
 	SlotInput pad_input(const labrador::Gamepads& gamepads,
-		int device, int slot) const;
+		int device, int slot);
 	SlotInput keyboard_and_mouse_input(
-		const labrador::Keyboard& keyboard, const labrador::Mouse& mouse) const;
-	const ActionBindings& effective_bindings() const;
-	const ActionBindings& effective_pad_bindings(int slot) const;
+		const labrador::Keyboard& keyboard, const labrador::Mouse& mouse);
+	const ActionBindings& effective_bindings();
+	const ActionBindings& effective_pad_bindings(int slot);
 
 	const labrador::Gamepads* gamepads_ = nullptr;
 	const labrador::Keyboard* keyboard_ = nullptr;
@@ -50,11 +51,11 @@ private:
 	const GameTuning* tuning_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 	const InputBindings* input_bindings_ = nullptr;
-	// Reading a frame is const. Only changed saved keyboard choices or a changed pad
-	// profile rebuild a copy; edges always come from the engine's continuously
-	// sampled snapshots. Only keyboard_choices_' keyboard fields are compared.
-	mutable InputBindings keyboard_choices_;
-	mutable ActionBindings keyboard_bindings_;
-	mutable std::array<PadProfile, input_slots::pad_count> pad_profiles_{};
-	mutable std::array<ActionBindings, input_slots::pad_count> pad_bindings_;
+	// Only changed saved keyboard choices or a changed pad profile rebuild a
+	// copy; edges always come from the engine's continuously sampled
+	// snapshots. Only keyboard_choices_' keyboard fields are compared.
+	InputBindings keyboard_choices_;
+	ActionBindings keyboard_bindings_;
+	std::array<PadProfile, input_slots::pad_count> pad_profiles_{};
+	std::array<ActionBindings, input_slots::pad_count> pad_bindings_;
 };

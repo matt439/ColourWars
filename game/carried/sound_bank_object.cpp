@@ -60,40 +60,40 @@ namespace colourwars
 	}
 
 	void SoundBankObject::play_wave(SoundBank::WaveHandle wave, float volume,
-		float pitch, float pan) const
+		float pitch, float pan)
 	{
 		this->sound_bank()->play_wave(wave, volume, pitch, pan);
 	}
 	void SoundBankObject::play_effect(SoundBank::EffectHandle effect,
-		bool loop, float volume, float pitch, float pan) const
+		bool loop, float volume, float pitch, float pan)
 	{
 		this->sound_bank()->play_effect(effect, loop, volume, pitch, pan);
 	}
 	void SoundBankObject::stop_effect(SoundBank::EffectHandle effect,
-		bool immediate) const
+		bool immediate)
 	{
 		this->sound_bank()->stop_effect(effect, immediate);
 	}
-	void SoundBankObject::pause_effect(SoundBank::EffectHandle effect) const
+	void SoundBankObject::pause_effect(SoundBank::EffectHandle effect)
 	{
 		this->sound_bank()->pause_effect(effect);
 	}
-	void SoundBankObject::resume_effect(SoundBank::EffectHandle effect) const
+	void SoundBankObject::resume_effect(SoundBank::EffectHandle effect)
 	{
 		this->sound_bank()->resume_effect(effect);
 	}
 	void SoundBankObject::set_effect_volume(SoundBank::EffectHandle effect,
-		float volume) const
+		float volume)
 	{
 		this->sound_bank()->set_effect_volume(effect, volume);
 	}
 	void SoundBankObject::set_effect_pitch(SoundBank::EffectHandle effect,
-		float pitch) const
+		float pitch)
 	{
 		this->sound_bank()->set_effect_pitch(effect, pitch);
 	}
 	void SoundBankObject::set_effect_pan(SoundBank::EffectHandle effect,
-		float pan) const
+		float pan)
 	{
 		this->sound_bank()->set_effect_pan(effect, pan);
 	}

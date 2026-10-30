@@ -207,7 +207,7 @@ void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
         this->credit_.add(projectile.player_num(), before, team, tile.paint.area());
         painted = true;
     }
-    projectile.note_paint_contact(painted, captured);
+    Projectile::answer_paint_contact(projectile, painted, captured);
 }
 
 PaintTotal FixedSlabPaintable::paint_total() const

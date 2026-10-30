@@ -2,8 +2,8 @@
 
 // Carried from Labrador v0.2.0, which removes this type on master (730dd99,
 // "A game that used one should copy the class ... into its own source").
-// Shape unchanged; it lives in colourwars:: so it can never be ambiguous with
-// an engine type. See docs/review/engine-reports.md, HYG#25.
+// Shape unchanged but for the play calls, no longer const (HYG#49); it lives
+// in colourwars:: so it can never be ambiguous with an engine type. See docs/review/engine-reports.md, HYG#25.
 
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
@@ -44,18 +44,20 @@ namespace colourwars
 		labrador::SoundBank::WaveHandle resolve_wave(const std::string& wave_name) const;
 		labrador::SoundBank::EffectHandle resolve_effect(const std::string& effect_name) const;
 
+		// Non-const, unlike the engine's original: a call that makes or changes
+		// a sound is never one a draw may make (HYG#49, docs/oop-guide.md).
 		void play_wave(labrador::SoundBank::WaveHandle wave,
-			float volume = 1.0f, float pitch = 0.0f, float pan = 0.0f) const;
+			float volume = 1.0f, float pitch = 0.0f, float pan = 0.0f);
 		void play_effect(labrador::SoundBank::EffectHandle effect,
 			bool loop = false, float volume = 1.0f, float pitch = 0.0f,
-			float pan = 0.0f) const;
+			float pan = 0.0f);
 		void stop_effect(labrador::SoundBank::EffectHandle effect,
-			bool immediate = false) const;
-		void pause_effect(labrador::SoundBank::EffectHandle effect) const;
-		void resume_effect(labrador::SoundBank::EffectHandle effect) const;
-		void set_effect_volume(labrador::SoundBank::EffectHandle effect, float volume) const;
-		void set_effect_pitch(labrador::SoundBank::EffectHandle effect, float pitch) const;
-		void set_effect_pan(labrador::SoundBank::EffectHandle effect, float pan) const;
+			bool immediate = false);
+		void pause_effect(labrador::SoundBank::EffectHandle effect);
+		void resume_effect(labrador::SoundBank::EffectHandle effect);
+		void set_effect_volume(labrador::SoundBank::EffectHandle effect, float volume);
+		void set_effect_pitch(labrador::SoundBank::EffectHandle effect, float pitch);
+		void set_effect_pan(labrador::SoundBank::EffectHandle effect, float pan);
 		labrador::SoundState effect_state(labrador::SoundBank::EffectHandle effect) const;
 		bool is_effect_looping(labrador::SoundBank::EffectHandle effect) const;
 

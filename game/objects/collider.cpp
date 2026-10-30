@@ -22,7 +22,8 @@ void Collider::on_contact(const CollisionObject& other,
 	const Vector2F& normal, float penetration)
 {
 	// touch is const on the other party: it only names its class, and every
-	// response belongs to this object's handler.
+	// response belongs to this object's handler. The one exception is a
+	// surface's paint answer, Projectile::answer_paint_contact.
 	Collider::of(other).touch(*this, normal, penetration);
 }
 

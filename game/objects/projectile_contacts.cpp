@@ -537,7 +537,13 @@ void Projectile::on_player_contact(const Player& /*other*/,
     this->set_for_deletion(true);
 }
 
-void Projectile::note_paint_contact(bool painted, bool captured) const
+void Projectile::answer_paint_contact(const Projectile& toucher,
+    bool painted, bool captured)
+{
+    const_cast<Projectile&>(toucher).note_paint_contact(painted, captured);
+}
+
+void Projectile::note_paint_contact(bool painted, bool captured)
 {
     this->geometry_contact_ = true;
     this->painted_contact_ |= painted;

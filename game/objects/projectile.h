@@ -84,7 +84,15 @@ public:
 	bool moving_paint_completed(HorizontalMotionId id) const;
 	// Cosmetic results accumulate across both contact callbacks and all surfaces
 	// touched by a roller. Flush only after that contact batch is complete.
-	void note_paint_contact(bool painted, bool captured) const;
+	void note_paint_contact(bool painted, bool captured);
+	// note_paint_contact from a surface answering this projectile's contact,
+	// where the projectile is the contact's other party and so arrives const
+	// (labrador::CollisionObject::on_contact). Every projectile is owned
+	// non-const by its scene or a probe, so the write is defined. This is the
+	// one place the game writes through a contact's other party; engine
+	// report 33 asks for a contact that can carry the answer back.
+	static void answer_paint_contact(const Projectile& toucher,
+		bool painted, bool captured);
 	void flush_paint_audio(PaintAudio& audio);
 	// Consume after both callbacks classify the hit, before the projectile is
 	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
@@ -139,11 +147,11 @@ private:
 
 	// Allow one update before lifetime retirement so every spawn receives a collision sweep.
 	bool first_update_done_ = false;
-	mutable bool geometry_contact_ = false;
-	mutable bool painted_contact_ = false;
-	mutable bool captured_contact_ = false;
+	bool geometry_contact_ = false;
+	bool painted_contact_ = false;
+	bool captured_contact_ = false;
 	std::optional<BlockedShotContact> blocked_contact_;
-	mutable bool wet_contact_ = false;
+	bool wet_contact_ = false;
 	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
 	// One complete target span consumes each positive actual projectile update.
 	bool moving_contact_ready_ = false;

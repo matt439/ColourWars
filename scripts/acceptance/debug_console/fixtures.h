@@ -155,6 +155,7 @@ namespace debug_console_acceptance
 		}
 		const Level* debug_level() const override { return nullptr; }
 		void debug_sync_audio() override { ++this->audio_syncs; }
+		void debug_suspend_level() override {}
 		void debug_background_changed() override { ++this->background_changes; }
 		std::vector<std::string> debug_status() const override { return {}; }
 

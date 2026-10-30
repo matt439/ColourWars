@@ -59,8 +59,9 @@ public:
 
 	// Rebuilt from live values on every call. What is expensive to list (a
 	// picker's choices, a tuning node's children) is kept between calls: a
-	// picker's from when it was entered, a node's until the tune documents move.
-	std::vector<DebugMenuRow> rows() const;
+	// picker's from when it was entered, a node's until the tune documents move,
+	// which is why this is not const.
+	std::vector<DebugMenuRow> rows();
 
 	// "DEBUG", "DEBUG / view", "DEBUG / match / stage".
 	std::string title() const;
@@ -92,23 +93,23 @@ private:
 	// page of it. Numeric/bool leaves step; colour leaves only print their value.
 	std::string tune_node_;
 	std::size_t tune_page_ = 0;
-	std::vector<DebugMenuRow> tuning_rows() const;
+	std::vector<DebugMenuRow> tuning_rows();
 	// tune_children(tune_paths(), tune_node_), cached against the node and
 	// the director's tune_revision(): building every prefixed path is a
 	// thousand allocations. Filled from rows(), which only the page's update
 	// and the model's own actions call, never a draw.
-	const std::vector<std::string>& tune_node_children() const;
-	mutable std::vector<std::string> tune_children_;
-	mutable std::string tune_children_node_;
-	mutable std::array<int, 3> tune_children_revision_{ -1, -1, -1 };
-	mutable bool tune_children_valid_ = false;
+	const std::vector<std::string>& tune_node_children();
+	std::vector<std::string> tune_children_;
+	std::string tune_children_node_;
+	std::array<int, 3> tune_children_revision_{ -1, -1, -1 };
+	bool tune_children_valid_ = false;
 	std::size_t focus_hint_ = 0;
 	int level_ = 0;
 
-	std::vector<DebugMenuRow> collect() const;
+	std::vector<DebugMenuRow> collect();
 	const DebugEntry* entry(const std::string& name) const;
 	Result run(const std::string& line, bool staged);
 	void enter(std::string category, std::string picker);
 	void enter_tune_node(std::string node, const std::string& focus_line);
-	std::size_t row_of(const std::string& label) const;
+	std::size_t row_of(const std::string& label);
 };

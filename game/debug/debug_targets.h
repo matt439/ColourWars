@@ -86,6 +86,10 @@ public:
 	// Pauses the level's voices while the debug clock is paused, the match is
 	// covered or the window is inactive; resumes them otherwise.
 	virtual void debug_sync_audio() = 0;
+	// Suspends the level as a covering menu does (its voices paused, every
+	// jump buffer cleared) with none of the screen's bookkeeping: playback
+	// repeats a recorded suspend where the recording had one.
+	virtual void debug_suspend_level() = 0;
 	// A session policy/native hard gate changed while focus may already be
 	// absent. Real GameLevel reconciles immediately; other targets need none.
 	virtual void debug_background_changed() {}

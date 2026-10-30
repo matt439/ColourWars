@@ -88,7 +88,7 @@ public:
 	void detach_match(const DebugMatchTarget& match);
 	void before_level_build(DebugMatchTarget& match);
 	void after_level_build(DebugMatchTarget& match);
-	void filter_match_inputs(std::vector<SlotInput>& inputs) const;
+	void filter_match_inputs(std::vector<SlotInput>& inputs);
 	bool before_match_update(DebugMatchTarget& match, float dt, bool active = true);
 	int match_steps(const std::vector<SlotInput>& inputs, float dt);
 	bool before_match_step(DebugMatchTarget& match, int run, MatchStep& step);
@@ -457,7 +457,7 @@ private:
 	bool live_open_ = false;
 	// The frame the live console closed on (the Escape release, which is the
 	// keyboard player's pause key) is blanked too; filter_match_inputs clears it.
-	mutable bool blank_keyboard_once_ = false;
+	bool blank_keyboard_once_ = false;
 	void open_live_console();
 	void close_live_console(const std::string& reason);
 

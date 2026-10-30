@@ -409,7 +409,7 @@ MenuSound MenuPage::resolve_sound(const PresentationSound& sound) const
 	return { this->resolve_wave(sound.name), sound.volume };
 }
 
-void MenuPage::play_wave(const MenuSound& sound) const
+void MenuPage::play_wave(const MenuSound& sound)
 {
 	this->play_wave(sound.wave, sound.volume);
 }

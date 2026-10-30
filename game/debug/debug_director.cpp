@@ -73,7 +73,7 @@ void DebugDirector::after_level_build(DebugMatchTarget& match)
 	}
 }
 
-void DebugDirector::filter_match_inputs(std::vector<SlotInput>& inputs) const
+void DebugDirector::filter_match_inputs(std::vector<SlotInput>& inputs)
 {
 	if (this->impl_ != nullptr)
 	{

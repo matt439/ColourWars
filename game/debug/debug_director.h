@@ -83,7 +83,7 @@ public:
 
 	// GameLevel::update, on the inputs it just read: clears the pad Back and
 	// Start release edges a debug-menu chord consumed (F1 overlay and pause).
-	void filter_match_inputs(std::vector<SlotInput>& inputs) const;
+	void filter_match_inputs(std::vector<SlotInput>& inputs);
 
 	// The top of GameLevel::update. Opens the console or the debug menu, takes
 	// a queued screenshot, runs the F-key binds and applies queued requests
@@ -172,7 +172,7 @@ inline void DebugDirector::attach_match(DebugMatchTarget&) {}
 inline void DebugDirector::detach_match(const DebugMatchTarget&) {}
 inline void DebugDirector::before_level_build(DebugMatchTarget&) {}
 inline void DebugDirector::after_level_build(DebugMatchTarget&) {}
-inline void DebugDirector::filter_match_inputs(std::vector<SlotInput>&) const {}
+inline void DebugDirector::filter_match_inputs(std::vector<SlotInput>&) {}
 inline bool DebugDirector::before_match_update(DebugMatchTarget&, float, bool) { return false; }
 inline int DebugDirector::match_steps(const std::vector<SlotInput>&, float) { return 1; }
 inline bool DebugDirector::before_match_step(DebugMatchTarget&, int, MatchStep& step)

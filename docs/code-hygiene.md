@@ -541,8 +541,31 @@ compiled in Debug, the Release `-ControlsMenuOnly`, `-KeyboardJumpOnly`,
 
 ### `const` means draw-safe (`HYG#49`)
 
-Make the contact and sound methods that change state non-const, keep `mutable`
-only for synchronised or draw-safe caches, and state the rule once in the guide.
+**Done 2026-10-30.** `game/` has no `mutable` member left. The methods that
+play, stop, pause or resume a sound are no longer const: `Weapon`'s and
+`Player`'s sound methods (with the redraw pen and fire-loop flags), `Level`'s
+`suspend`, `interrupt_players`, `pause_audio`, `resume_music` and player-sound
+fan-out, `MovementAudio::play`, `MenuPage::play_wave` and the carried
+`SoundBankObject`'s play and effect calls, as are `GameLevel::stop_rumble`
+and `leave_match`, `Player::update_weapon_position` and the Debug
+`filter_match_inputs`, which consumes the one-frame keyboard blank.
+`Level::prepare_resume` stops a tool's loop through the new
+`Player::stop_tool_sounds`, since `primary_weapon()` stays read-only, and Debug
+playback's injected suspend goes through `DebugMatchControl::debug_suspend_level`
+rather than the read-only `debug_level()`. `PlayerInput::player_inputs` and the
+Debug menu model's `rows` are non-const, because a read refreshes their copied
+mappings. `Projectile::note_paint_contact` is non-const; a surface reaches it
+through `Projectile::answer_paint_contact`, the one `const_cast` in `game/`,
+because the engine hands a contact's other party over const. That is engine
+report 33 in [the ledger](review/engine-reports.md#owed-from-the-architecture-review-2026-10-30).
+[The OOP guide](oop-guide.md#follow-one-shot-from-input-to-score) states the
+rule. Behaviour, evaluation order and formats are unchanged. Both presets
+build under `/W4 /WX`. In a clean worktree of the tip plus this change, the
+full default acceptance list passed in Release (74 cases; `moving_structure`
+first refused a stale receipt folder, as under `HYG#48`, and passed on a
+rerun) and in Debug without the four slow cases (71), `debug_console` and
+`menu_text` passed in Debug, and the opt-in and painter compile gates compiled
+in both presets, with `check-frame-pacing.ps1 -CompileOnly` in Debug.
 
 ### One audio idiom (`HYG#50`)
 

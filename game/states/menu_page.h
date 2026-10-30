@@ -133,7 +133,7 @@ protected:
 	// Menu and results sounds play at their authored volumes; the user's SFX
 	// and Music volumes are their sound groups' (game/sound_groups.h).
 	using colourwars::SoundBankObject::play_wave;
-	void play_wave(const MenuSound& sound) const;
+	void play_wave(const MenuSound& sound);
 
 	// Optional control legend, drawn after page widgets. Set only actions
 	// this page accepts; it can be built before or after the widget trees.

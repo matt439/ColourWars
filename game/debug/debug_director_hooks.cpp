@@ -330,7 +330,7 @@ void DebugDirectorImpl::push_seat_labels(DebugMatchTarget& match)
 	match.debug_set_seat_labels(this->seat_labels(match));
 }
 
-void DebugDirectorImpl::filter_match_inputs(std::vector<SlotInput>& inputs) const
+void DebugDirectorImpl::filter_match_inputs(std::vector<SlotInput>& inputs)
 {
 	for (int slot = 0; slot < input_slots::pad_count &&
 		slot < static_cast<int>(inputs.size()); ++slot)

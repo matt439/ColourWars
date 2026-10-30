@@ -256,15 +256,17 @@ public:
     // spawn where the figure is being redrawn.
     mattmath::Vector2F camera_focus() const;
 
-    void update_weapon_position() const;
+    void update_weapon_position();
     void update_prev_rectangle();
-    void stop_sounds() const;
-    // Lifecycle reset is explicit and mutable, separate from const audio stops.
+    void stop_sounds();
+    // The tool's looping fire voice only, as a resume re-reads held input.
+    void stop_tool_sounds();
+    // Lifecycle reset, separate from the audio stops.
     void reset_tool_motion();
 
     // Pause/resume the player's audio while a menu covers the match.
-    void pause_sounds() const;
-    void resume_sounds() const;
+    void pause_sounds();
+    void resume_sounds();
 
 	std::string player_move_state_string() const;
 
@@ -447,8 +449,8 @@ private:
     labrador::SoundBank::WaveHandle respawn_sound_;
     labrador::SoundBank::EffectHandle redraw_sound_;
     size_t redraw_index_ = 0;
-    mutable bool redraw_playing_ = false;
-    mutable bool redraw_paused_ = false;
+    bool redraw_playing_ = false;
+    bool redraw_paused_ = false;
 
 
     float health_regen_timer_ = 0.0f;
@@ -500,8 +502,8 @@ private:
     void respawn();
     bool redrawing() const;
     float redraw_volume() const;
-    void update_redraw_sound(float dt) const;
-    void stop_redraw_sound() const;
+    void update_redraw_sound(float dt);
+    void stop_redraw_sound();
 
     void set_facing_right(bool facing_right);
 

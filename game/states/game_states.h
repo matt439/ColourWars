@@ -184,7 +184,7 @@ private:
 	// MenuOwner: a page above the match ticks the match's music. GameLevel
 	// lends no suspend and no stage folder.
 	void update_menu_music(float dt) override;
-	void stop_rumble() const noexcept;
+	void stop_rumble() noexcept;
 	void sync_rumble();
 	void drain_rumble(float dt);
 
@@ -205,6 +205,7 @@ private:
 	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
 	void debug_leave() override;
 	void debug_sync_audio() override;
+	void debug_suspend_level() override;
 	void debug_background_changed() override;
 
 	void debug_set_overlays(const LevelOverlays& overlays) override;
@@ -221,7 +222,7 @@ private:
 	void open_end_menu();
 	void on_end_menu_closed(const EndMenuAction& action);
 
-	void leave_match(EndMenuAction action) const;
+	void leave_match(EndMenuAction action);
 
 	// Returns the input slot of a participant requesting pause, or -1.
 	// Unclaimed devices cannot open the pause menu.

@@ -196,7 +196,8 @@ reachable on a machine with no pad.
 ## Owed from the architecture review (2026-10-30)
 
 The [2026-10-30 architecture review](2026-10-30-architecture-review.md#engine-reports-owed)
-found six places where the engine's API forced the answer this repository has.
+found six places where the engine's API forced the answer this repository has,
+and working its `HYG#49` found a seventh (33).
 Each is numbered here so TODO can point at it; none is drafted yet. Drafting
 means checking engine master first (the rule above), writing the exhibit and
 the ask in the shape of reports 23-26, and then waiting for authorization to file.
@@ -209,6 +210,7 @@ the ask in the shape of reports 23-26, and then waiting for authorization to fil
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:113`, `scripts/check-startup.ps1:225` and `:248` |
 | 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/tuning.cpp` (`:461`, `:477`, `:484` and others) |
 | 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/text_wrap.h` and its caller `WrappedTextDropShadow` |
+| 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
 
 ## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
 

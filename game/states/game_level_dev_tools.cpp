@@ -47,6 +47,11 @@ bool GameLevel::debug_level_finished() const
 	return this->level_->state() == LevelState::finished;
 }
 
+void GameLevel::debug_suspend_level()
+{
+	this->level_->suspend();
+}
+
 void GameLevel::debug_sync_audio()
 {
 	this->data()->debug().sync_background_audio(this->context()->active());

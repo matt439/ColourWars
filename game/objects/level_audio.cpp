@@ -33,13 +33,13 @@ Level::~Level()
 	this->stop_player_sounds();
 }
 
-void Level::suspend() const
+void Level::suspend()
 {
 	this->interrupt_players();
 	this->pause_audio();
 }
 
-void Level::interrupt_players() const
+void Level::interrupt_players()
 {
 	for (Player* player : this->players_)
 	{
@@ -48,7 +48,7 @@ void Level::interrupt_players() const
 	}
 }
 
-void Level::pause_audio() const
+void Level::pause_audio()
 {
 	if (this->end_sting_.valid()) { this->sound_bank_->pause_effect(this->end_sting_); }
 	if (this->music_.valid())
@@ -101,7 +101,7 @@ void Level::prepare_resume(const std::vector<PlayerInputData>& seats)
 	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
 		Player* player = this->players_[participant];
-		player->primary_weapon().stop_sounds();
+		player->stop_tool_sounds();
 		// A seat no device drives (a bot, an unclaimed human) keeps its arming.
 		const int slot = player->player_num();
 		if (slot >= 0 && slot < input_slots::count && participant < seats.size())
@@ -147,7 +147,7 @@ void Level::set_music_ducked(bool ducked)
 		ducked ? mix.duck_time : mix.restore_time);
 }
 
-void Level::resume_music() const
+void Level::resume_music()
 {
 	if (!this->music_.valid() || this->sound_bank_->effect_state(this->music_) != SoundState::paused) { return; }
 	this->sound_bank_->set_effect_volume(this->music_, this->music_volume_ *
@@ -155,25 +155,25 @@ void Level::resume_music() const
 	this->sound_bank_->resume_effect(this->music_);
 }
 
-void Level::stop_player_sounds() const
+void Level::stop_player_sounds()
 {
-	for (const Player* player : this->players_)
+	for (Player* player : this->players_)
 	{
 		player->stop_sounds();
 	}
 }
 
-void Level::pause_player_sounds() const
+void Level::pause_player_sounds()
 {
-	for (const Player* player : this->players_)
+	for (Player* player : this->players_)
 	{
 		player->pause_sounds();
 	}
 }
 
-void Level::resume_player_sounds() const
+void Level::resume_player_sounds()
 {
-	for (const Player* player : this->players_)
+	for (Player* player : this->players_)
 	{
 		player->resume_sounds();
 	}

@@ -240,7 +240,7 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 			}
 		}
 	}
-	projectile.note_paint_contact(tile_painted, tile_captured);
+	Projectile::answer_paint_contact(projectile, tile_painted, tile_captured);
 }
 
 std::optional<PaintRunoffVisual> StructurePaintable::runoff_visual(

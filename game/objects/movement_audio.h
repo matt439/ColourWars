@@ -42,6 +42,6 @@ private:
     float skid_delay_ = 0.0f;
 
     void play(labrador::SoundBank::WaveHandle wave, const SoundTuning& tuning,
-        float strength = 1.0f) const;
+        float strength = 1.0f);
     void play_painted(float strength = 1.0f);
 };

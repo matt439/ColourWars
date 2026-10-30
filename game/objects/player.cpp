@@ -918,7 +918,7 @@ void Player::on_jump_through_contact(const Structure& other)
     }
 }
 
-void Player::update_weapon_position() const
+void Player::update_weapon_position()
 {
     this->primary_->set_player_center(this->center());
 }
@@ -1596,10 +1596,14 @@ void Player::respawn()
 	this->state_ = PlayerState::alive;
     this->sound_bank_->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
 }
-void Player::stop_sounds() const
+void Player::stop_sounds()
 {
     this->primary_->stop_sounds();
     this->stop_redraw_sound();
+}
+void Player::stop_tool_sounds()
+{
+    this->primary_->stop_sounds();
 }
 void Player::reset_tool_motion()
 {
@@ -1607,7 +1611,7 @@ void Player::reset_tool_motion()
     this->primary_->reset_motion();
     this->quiet_character_.reset();
 }
-void Player::pause_sounds() const
+void Player::pause_sounds()
 {
     this->primary_->pause_sounds();
     if (this->redraw_playing_ && !this->redraw_paused_)
@@ -1616,7 +1620,7 @@ void Player::pause_sounds() const
         this->redraw_paused_ = true;
     }
 }
-void Player::resume_sounds() const
+void Player::resume_sounds()
 {
     this->primary_->resume_sounds();
     if (this->redraw_playing_)
@@ -1645,7 +1649,7 @@ float Player::redraw_volume() const
     return this->player_tuning().redraw_sounds[this->redraw_index_].volume;
 }
 
-void Player::update_redraw_sound(float dt) const
+void Player::update_redraw_sound(float dt)
 {
     // Drawing can be culled or repeated for several views; only a progressing
     // simulation tick starts the pen, and a long tick never catches up a replay.
@@ -1669,7 +1673,7 @@ void Player::update_redraw_sound(float dt) const
     }
 }
 
-void Player::stop_redraw_sound() const
+void Player::stop_redraw_sound()
 {
     if (this->redraw_playing_)
     {

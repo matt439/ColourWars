@@ -133,11 +133,11 @@ public:
 		float dt);
 
 	// Never throws: weapons with no looping fire sound stop nothing.
-	virtual void stop_sounds() const;
+	virtual void stop_sounds();
 
 	// Pause loops while gameplay updates are suspended, preserving playback position.
-	virtual void pause_sounds() const;
-	virtual void resume_sounds() const;
+	virtual void pause_sounds();
+	virtual void resume_sounds();
 
 	// Visual bounds cover every rotated pose and any detached release haze.
 	// Player::bounds unions this with the body for scene culling.
@@ -171,7 +171,7 @@ protected:
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 	void play_feedback_sound(labrador::SoundBank::WaveHandle sound,
-		const SoundTuning& tuning) const;
+		const SoundTuning& tuning);
 
 	// Tint only the paint overlay without mutating shared state during draw.
 	virtual labrador::Colour paint_colour() const;
@@ -298,8 +298,7 @@ private:
 	bool aim_requested_ = false;
 
 	float ammo_timer_ = 0.0f;
-	// stop_sounds() is const because it changes presentation, not gameplay.
-	mutable bool loop_playing_ = false;
+	bool loop_playing_ = false;
 	bool empty_warned_ = false;
 	RumbleEvents pending_rumble_;
 	float empty_repeat_remaining_ = 0.0f;

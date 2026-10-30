@@ -117,23 +117,23 @@ public:
 	// under normal pause menus. Weapon loops retain their playback position.
 	// A suspend also resets every player's jump input, so a jump held across
 	// the menu is not taken as a new press.
-	void suspend() const;
+	void suspend();
 	// What suspend does to the players, without pausing a voice: an instant
 	// replay repeats a round's suspends where they happened (game/round_tape.h).
-	void interrupt_players() const;
+	void interrupt_players();
 	void resume();
 	// The top state supplies one active real-time tick, even under pause pages.
 	// Simulation, replay steps and drawing never advance these music ramps.
 	void update_music(float dt);
 	void set_music_ducked(bool ducked);
-	void resume_music() const;
+	void resume_music();
 	// Complete the count-in without a simulation tick. Neutral jump input
 	// rearms the next press; old fire loops must not return before a new shot.
 	// `seats` is one command per participant, as update takes them.
 	void prepare_resume(const std::vector<PlayerInputData>& seats);
 	// Pauses the same voices without touching any player: for a frozen
 	// simulation that no menu covers (the Debug clock's pause).
-	void pause_audio() const;
+	void pause_audio();
 
 	// `commands` holds one command per participant, in roster order: device
 	// slots already mapped and keyboard/mouse aim resolved (SeatCommandBuilder).
@@ -628,9 +628,9 @@ private:
 	float zoom_out_camera_ratio() const;
 
 	bool restart_lost_music();
-	void stop_player_sounds() const;
-	void pause_player_sounds() const;
-	void resume_player_sounds() const;
+	void stop_player_sounds();
+	void pause_player_sounds();
+	void resume_player_sounds();
 
 	int count_projectiles() const;
 

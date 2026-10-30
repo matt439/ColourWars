@@ -3,7 +3,7 @@
 #include "game/rumble_events.h"
 #include <cmath>
 
-void GameLevel::stop_rumble() const noexcept
+void GameLevel::stop_rumble() noexcept
 {
     if (this->rumble_ != nullptr)
     {

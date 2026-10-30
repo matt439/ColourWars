@@ -109,7 +109,7 @@ void MovementAudio::reset()
 }
 
 void MovementAudio::play(SoundBank::WaveHandle wave, const SoundTuning& tuning,
-    float strength) const
+    float strength)
 {
     this->bank_->play_wave(wave, tuning.volume * strength);
 }

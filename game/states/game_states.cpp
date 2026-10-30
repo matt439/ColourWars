@@ -732,7 +732,7 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 	this->leave_match(action);
 }
 
-void GameLevel::leave_match(EndMenuAction action) const
+void GameLevel::leave_match(EndMenuAction action)
 {
 	this->stop_rumble();
 	this->menu_context_->cancel_music_exit();

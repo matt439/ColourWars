@@ -49,7 +49,7 @@ when they don't compete with it.
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
 [Architecture review](#architecture-review) rows (`HYG#35`-`HYG#51`, `CI#6`) and the
-owed reports `ENG#27`-`ENG#32` are `OPEN`, in the order listed there. Before them,
+owed reports `ENG#27`-`ENG#33` are `OPEN`, in the order listed there. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
@@ -121,7 +121,6 @@ comparison and physical-pad check; values remain provisional.
 | `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
 | `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
 | `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
-| `HYG#49` | OPEN | LOW | M | Make state-changing contact and sound methods non-const so `const` means draw-safe. [Scope](docs/code-hygiene.md#const-means-draw-safe-hyg49). |
 | `HYG#50` | OPEN | LOW | L | One audio ownership idiom and one match-level owner for pause, resume and teardown. [Scope](docs/code-hygiene.md#one-audio-idiom-hyg50). |
 | `HYG#51` | OPEN | LOW | L | Last: give `game/` role folders, `game/debug` subsystem folders and the engine-free contracts an include check. [Scope](docs/code-hygiene.md#directories-by-role-hyg51). |
 | `CI#6` | OPEN | LOW | S | Move the Release ZIP inspection into a script CI calls, and set up MSVC once per job. [Scope](docs/code-hygiene.md#release-package-rules-runnable-locally-ci6). |
@@ -260,7 +259,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#25` | BLOCKED | LOW | S | Answered, narrowed, on untagged master by `cadc962` (`Gamepads::vibrate`; not in v0.2.0); no filing needed. Waits on the next Labrador minor tag, then replace the native XInput transport and close the report. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) |
 | `ENG#26` | DECISION | LOW | S | Rechecked 2026-10-29 at master `b96bad6`: `Registry` still cannot remove a name (`3a14f11` changed comments only). The ask narrows to forgetting the name, since `add(name, nullptr)` already empties a slot. Author authorization is needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit) |
 | `ENG#23` | BLOCKED | LOW | S | Answered on untagged engine master by `42bc478` (not in v0.2.0); filing no longer needed. Waits on the next Labrador minor tag, then delete `SettingsProbeActivationGuard` and its five uses and close the report. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit) |
-| `ENG#27`-`ENG#32` | OPEN | LOW | M | Six reports owed by the architecture review: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, unread JSON keys, word wrap. Recheck master, then draft each. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#27`-`ENG#33` | OPEN | LOW | M | Seven reports owed by the architecture review and `HYG#49`: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, unread JSON keys, word wrap, a contact's `const` other party. Recheck master, then draft each. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

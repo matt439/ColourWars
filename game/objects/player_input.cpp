@@ -22,7 +22,7 @@ PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 	}
 }
 
-const ActionBindings& PlayerInput::effective_bindings() const
+const ActionBindings& PlayerInput::effective_bindings()
 {
 	if (!same_keyboard(this->keyboard_choices_, *this->input_bindings_))
 	{
@@ -32,7 +32,7 @@ const ActionBindings& PlayerInput::effective_bindings() const
 	return this->keyboard_bindings_;
 }
 
-const ActionBindings& PlayerInput::effective_pad_bindings(int slot) const
+const ActionBindings& PlayerInput::effective_pad_bindings(int slot)
 {
 	if (this->pad_profiles_[slot] != this->input_bindings_->pads[slot])
 	{
@@ -42,7 +42,7 @@ const ActionBindings& PlayerInput::effective_pad_bindings(int slot) const
 	return this->pad_bindings_[slot];
 }
 
-SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot) const
+SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot)
 {
 	const GamepadState& pad = gamepads.state(device);
 	const GamepadState& before = gamepads.previous_state(device);
@@ -95,7 +95,7 @@ SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot)
 }
 
 SlotInput PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
-	const Mouse& mouse) const
+	const Mouse& mouse)
 {
 	const ActionBindings& bindings = this->effective_bindings();
 	const auto action = [&](GameAction name)
@@ -134,7 +134,7 @@ SlotInput PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 	return result;
 }
 
-std::vector<SlotInput> PlayerInput::player_inputs() const
+std::vector<SlotInput> PlayerInput::player_inputs()
 {
 	std::array<int, input_slots::pad_count> own{};
 	for (int slot = 0; slot < input_slots::pad_count; ++slot) { own[slot] = slot; }
@@ -142,7 +142,7 @@ std::vector<SlotInput> PlayerInput::player_inputs() const
 }
 
 std::vector<SlotInput> PlayerInput::player_inputs(
-	const std::array<int, input_slots::pad_count>& devices) const
+	const std::array<int, input_slots::pad_count>& devices)
 {
 	this->input_bindings_->validate();
 	std::vector<SlotInput> result(input_slots::count);

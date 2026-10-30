@@ -260,7 +260,7 @@ void DebugDirectorImpl::before_level_update(DebugMatchTarget& match, float dt)
 	if (this->player_->recorded_suspend(this->level_updates_) && match.debug_level() != nullptr)
 	{
 		this->injecting_suspend_ = true;
-		match.debug_level()->suspend();
+		match.debug_suspend_level();
 		match.debug_sync_audio();
 		this->injecting_suspend_ = false;
 	}
