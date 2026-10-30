@@ -540,12 +540,14 @@ int main(int argc, char** argv)
         check_permission_geometry(world);
         check_walks(world);
         check_settled_hold_reason(world);
+        // The bot seeds srand(41731), srand(9127) and srand(30011) gave
+        // before HYG#39, so the trials' bots are unchanged.
         const Roster rosters[] = {
-            { 41731, { WeaponType::sprayer, WeaponType::roller, WeaponType::bucket, WeaponType::mister },
+            { 5242, { WeaponType::sprayer, WeaponType::roller, WeaponType::bucket, WeaponType::mister },
                 BotDifficulty::hard },
-            { 9127, { WeaponType::sprayer, WeaponType::sprayer, WeaponType::roller, WeaponType::sniper },
+            { 29843, { WeaponType::sprayer, WeaponType::sprayer, WeaponType::roller, WeaponType::sniper },
                 BotDifficulty::normal },
-            { 30011, { WeaponType::sprayer, WeaponType::mister, WeaponType::sprayer, WeaponType::bucket },
+            { 32505, { WeaponType::sprayer, WeaponType::mister, WeaponType::sprayer, WeaponType::bucket },
                 BotDifficulty::easy } };
         Totals totals;
         for (const Roster& variant : rosters) { check_stage(world, variant, totals); }

@@ -17,7 +17,8 @@ namespace
     using paint_surfaces_acceptance::require;
 
     constexpr int trial_steps = 600;
-    constexpr unsigned int trial_seed = 41731;
+    // The bot seed srand(41731) gave before HYG#39.
+    constexpr unsigned int trial_seed = 5242;
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
 
     class World
@@ -34,11 +35,11 @@ namespace
         }
         std::unique_ptr<Level> build(const MatchSetup& settings)
         {
-            std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
                 &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
-            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(trial_seed));
         }
         paint_surfaces_acceptance::World assets;
         Registry<LevelLoadedInfo> levels{ "bot-trials" };

@@ -184,7 +184,7 @@ namespace
 			&world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner);
 		const auto silent_calls = recorded_sounds(world.device).size();
 		{
-			auto silent = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::off);
+			auto silent = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
 			silent->update(world.idle, 0.001f);
 			for (int tick = 0; tick < 3; ++tick) { silent->update_music(mix.fade_in); }
 		}

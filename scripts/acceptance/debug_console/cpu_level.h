@@ -94,6 +94,9 @@ namespace debug_console_acceptance
 		int builds = 0;
 		// What GameLevel would choose; the director may override it.
 		OpeningMode opening = OpeningMode::off;
+		// The round seed GameLevel would draw from rand(); the director may
+		// override it with `seed` or a replay's own.
+		unsigned int drawn_seed = 0;
 
 		void build()
 		{
@@ -101,7 +104,8 @@ namespace debug_console_acceptance
 			this->director_.before_level_build(*this);
 			this->world_.viewports.set_layout(this->settings.screen_layout());
 			this->level = this->world_.builder->build_level(this->settings, TeamColourPair::blue_orange,
-				this->director_.opening_mode(this->opening));
+				this->director_.opening_mode(this->opening),
+				MatchRandom(this->director_.round_seed(this->drawn_seed)));
 			++this->builds;
 			this->director_.after_level_build(*this);
 		}

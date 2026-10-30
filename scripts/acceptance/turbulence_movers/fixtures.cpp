@@ -148,8 +148,9 @@ namespace turbulence_movers_acceptance
         viewports.set_layout(setup.screen_layout());
         LevelBuilder builder(&viewports, &with.world.render, &with.world.audio, &with.world.preferences, &infos,
             &with.world.tuning, &with.world.presentation, &resolution, nullptr, &partitioner);
+        // terminal_next_rand and terminal_rng read the next rand() after a run.
         std::srand(seed);
-        level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::off);
+        level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom(seed));
         check();
     }
 

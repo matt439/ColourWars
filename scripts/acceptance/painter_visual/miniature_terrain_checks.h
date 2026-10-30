@@ -568,9 +568,9 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
             for (int view = 0; view < count; ++view)
             { settings.set_player_team(view, view % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(view, WeaponType::roller); }
             app.viewport_manager()->set_layout(settings.screen_layout());
-            std::srand(533 + count);
             auto level = builder.build_level(settings, TeamColourPair::blue_orange,
-                count == 1 ? OpeningMode::off : OpeningMode::full);
+                count == 1 ? OpeningMode::off : OpeningMode::full,
+                MatchRandom(static_cast<unsigned int>(533 + count)));
             auto inputs = neutral_inputs();
             const auto sample = [&](const char* beat)
             {

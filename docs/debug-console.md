@@ -175,7 +175,7 @@ running.
 | `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of fifty-eight audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` within their field's validation (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|skirmish\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
-| `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
+| `seed [n\|off]` | fix the round seed of every build, the menus' `rand()` and the planner (see [Seed, record and play](#seed-record-and-play)) |
 | `record [name\|stop] [updates]`, `play <name\|stop> [force]`, `replays`, `checksum` | record every seat's input from a fresh build, replay it and compare, list recordings, print the running match's state hash |
 | `status` | stack depth, stage, seats (device, team, weapon, position, move state), clock, feedback, overlays, cheats, the stage's stations, anything queued |
 | `set <var> <value>`, `get <var>`, `list [prefix]`, `help [name]` | the registry; `feedback off` and `set feedback off` are the same |
@@ -959,7 +959,9 @@ device (or the neutral input of an idle dummy):
   (`game/objects/seat_input_filter.h`).
 - Bots draw on their own random numbers (splitmix64 from the seed and the seat,
   the shipping bots' `BotRandom` in `game/ai/bot_random.h`), never `rand()`:
-  with `seed` set, the same match plays out the same way every time.
+  with `seed` set, the same match plays out the same way every time. Shipping
+  bots are seeded with the round seed itself (`MatchRandom::bot_seed`), as the
+  balance runner seeds its bots.
 - A seat a bot drives never opens the disconnected-pad pause, the pause page's
   "Controller lost" or the restart fallback - not even a pad seat whose pad is
   unplugged.
@@ -1024,10 +1026,44 @@ command or shipping bot policy.
 ## Seed, record and play
 
 **`seed <n|off>`** fixes the random seed of every build until `seed off`:
-`rand()` (the random palette, the menus' random weapon and stage), the
-planner's `stage random` and `weapon all random` (re-seeded for each plan, so
-every one draws the same), and the bots. `+seed 7` before `+stage` makes
-the whole launch repeat. `seed` alone prints it.
+
+- **The round seed.** Every build under `seed n` is built from round seed `n`
+  (`HYG#39`). A build draws only from the `MatchRandom` made from it
+  (`game/objects/match_random.h`): one splitmix64 stream for a Random team
+  palette and another for the intro's monitor persona, and the shipping bots
+  get the seed itself. Which of them draw never moves another, and a build
+  never reads or moves `rand()`.
+- **The menus' `rand()`.** The random teams, weapon and stage stay on `rand()`.
+  `seed n` seeds it at once, and every seeded build seeds it again with the
+  round seed, so the menus' picks after any build under `seed` repeat.
+- **The planner and the scripted bots.** The planner's `stage random` and
+  `weapon all random` are re-seeded for each plan, so every one draws the
+  same, and the Debug bots take the seed directly.
+
+`+seed 7` before `+stage` makes the whole launch repeat. `seed` alone prints
+it, and `status` shows the running round's seed (`round seed n`): `seed n` then
+`restart` builds that round again, palette and persona included.
+
+With the save's palette on Random, the round seed picks the pair. Against the
+shipped `presentation.json` list (`blue_orange`, `pink_green`, `blue_yellow`,
+`purple_gold`, `red_azure`, `magenta_forest`):
+
+| `+seed` | Team pair |
+|---|---|
+| 0 | `blue_yellow` |
+| 1 | `blue_orange` |
+| 2 | `magenta_forest` |
+| 3 | `red_azure` |
+| 4 | `purple_gold` |
+| 5 | `magenta_forest` |
+| 6 | `blue_orange` |
+| 7 | `purple_gold` |
+| 211 | `pink_green` |
+| 4242 | `pink_green` |
+
+The draw is plain integer arithmetic, so the table holds on any build, and the
+`team_palette` acceptance case pins it. Adding or reordering a pair moves it:
+update this table and that pin together.
 
 **`record [name] [updates]`** records every seat's input on every logic step,
 from a fresh build: in a match it restarts the match (and closes the console),
@@ -1036,7 +1072,7 @@ Level updates (the 3 s countdown is 180 of them), at the end of the round, when
 the match is rebuilt or left, or on `record stop` (a bare `record` while
 recording stops too). The file is `%LOCALAPPDATA%\ColourWars\replays\<name>.json`
 (default name `replay-YYYYMMDD-HHMMSS`): the stage, roster (device slots, teams,
-weapons), best-of, the seed, the cheats, hashes of both content files
+weapons), best-of, the round seed the level was built from, the cheats, hashes of both content files
 and the live tune edits, a semantic hash of the loaded stage definition
 (`stage_hash`; [how it is computed](debug-console-record.md#loaded-stage-replay-fingerprint-dbg8)), the step size, one run-length list of inputs per seat
 (floats as bit patterns), where the match was suspended and resumed, a state
@@ -1044,16 +1080,19 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 5**, with explicit human/bot controller kind and
-Easy/Normal/Hard difficulty for each participant. Layout counts humans, while
+Files use **format 6**, with explicit human/bot controller kind and
+Easy/Normal/Hard difficulty for each participant. `seed` is required and is the
+round seed, which `play` builds from, so a recording made without `seed`
+replays its Random palette too. Layout counts humans, while
 input arrays count all participants and are all the same length. `gaps` lists
 every suspend and resume in order, a resume with the seat commands it re-read;
 each has the tape `step` it preceded (an index into the inputs, which the
 countdown and the end of the round do not advance) and the Level `update` it
 was noted at, which is where playback repeats it.
-Formats 3 and 4 (which noted suspends only) are refused: a replay holds only on
-the build that recorded it. The metadata is strict; bot seats cannot own
-devices and P1 must be human. Human difficulty is unused and written as
+Formats 3 and 4 (which noted suspends only) and 5 (whose `seed` was the
+optional developer seed) are refused: a replay holds only on the build that
+recorded it. The metadata is strict; bot seats cannot own devices and P1 must
+be human. Human difficulty is unused and written as
 Normal. Normal setup now supports playable bots
 (`ROAD#10`); recording captures their final inputs, and playback bypasses their
 live decision driver. Arena navigation/combat and attended difficulty acceptance
@@ -1583,10 +1622,12 @@ as the game. In Release:
   - `GameLevel::build_and_enter_level`, the one build path (first build, pause-
     and end-menu restarts, debug rebuilds), calls `before_level_build(match)`
     with no level alive - it applies reloaded content, adopts a plan queued
-    under a menu's own restart, and consumes a queued restart - and
-    `after_level_build(match)` once the level exists, which re-applies overlays
-    and cheats, applies a goto stored before the match, and resets the clock's
-    partial step.
+    under a menu's own restart, and consumes a queued restart - then
+    `round_seed(drawn)` for the round seed the level is built from (a replay's
+    own, else `seed`'s, else the one the game drew; an override re-seeds
+    `rand()` with it), and `after_level_build(match)` once the level exists,
+    which re-applies overlays and cheats, applies a goto stored before the
+    match, and resets the clock's partial step.
   - Every `MenuPage` runs `before_page_update(page, dt)` before its
     `update_page`, except that raw keyboard capture calls `capture_input_frame`
     first and bypasses ordinary developer work. The page is a `DebugPageTarget`,

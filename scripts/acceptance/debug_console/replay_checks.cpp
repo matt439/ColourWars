@@ -256,17 +256,17 @@ namespace debug_console_acceptance
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 3, 4, 6 })
+		for (const int rejected_version : { 2, 3, 4, 5, 7 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 5"), 12,
+			text.replace(text.find("\"version\": 6"), 12,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads only 5") != std::string::npos,
+				"; this build reads only 6") != std::string::npos,
 				"A previous workshop recording, an older replay or another format is refused: " + message);
 		}
 		// Every participant's inputs cover every step.
@@ -888,6 +888,34 @@ namespace debug_console_acceptance
             "Actual active-prototype replay diverged");
         require(impl.execute("tune.reset tuning.player.paint_underfoot.enabled").ok && !tuning.player().paint_underfoot.enabled,
             "Active replay fixture did not restore the default-off switch");
+		// HYG#39: with no seed, a recording writes the round seed the build
+		// drew, and playback builds from that one, not from a new draw.
+		// A finished replay holds its last frame on a paused clock.
+		require(impl.execute("play stop").ok && !impl.playing() && impl.execute("seed off").ok &&
+			impl.execute("pause off").ok, "Cannot leave the seeded replay for an unseeded recording");
+		const std::string unseeded_name = "hyg39_unseeded_" + std::to_string(_getpid());
+		fresh.drawn_seed = 90210u;
+		require(impl.execute("record " + unseeded_name + " 120").ok, "Cannot queue an unseeded recording");
+		drive(director, fresh, dt, 2000, [&] { return impl.recording(); });
+		drive(director, fresh, dt, 2000, [&] { return !impl.recording(); });
+		require(!impl.recording(), "The unseeded recording did not finish");
+		const std::filesystem::path unseeded_path = std::filesystem::path(labrador::widen(
+			directory_consts::replay_directory())) / labrador::path_from_utf8(unseeded_name + ".json");
+		const ReplayFile unseeded = ReplayFile::read(unseeded_path);
+		require(unseeded.updates == 120 && unseeded.seed == 90210u && unseeded.tape.seed() == 90210u,
+			"An unseeded recording did not write the round seed it was built from");
+		// A replay's build re-seeds rand() with the round seed it overrides.
+		std::srand(90210u); const int after_round = std::rand(); std::srand(1u);
+		fresh.drawn_seed = 4321u;
+		require(impl.execute("play " + unseeded_name).ok && director.before_match_update(fresh, dt) && impl.playing(),
+			"Cannot build the unseeded recording's replay");
+		require(std::rand() == after_round, "Playback did not build from the recorded round seed");
+		drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= 120; });
+		require(log_contains(log, "replay " + unseeded_name + ": MATCH (120 updates", DebugSeverity::info),
+			"An unseeded recording did not replay from its own round seed");
+		require(impl.execute("play stop").ok, "Cannot stop the unseeded replay");
+		fresh.drawn_seed = 0;
+		{ std::error_code ignored_unseeded; std::filesystem::remove(unseeded_path, ignored_unseeded); }
 		director.detach_match(fresh);
 		impl.execute("bot off");
 		impl.execute("seed off");

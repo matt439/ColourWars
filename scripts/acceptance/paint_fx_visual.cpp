@@ -574,7 +574,7 @@ namespace
             settings.set_player_weapon(view, tools[static_cast<size_t>(view)]);
         }
         app.viewport_manager()->set_layout(ScreenLayout::four_player);
-        auto result = builder.build_level(settings, palette, OpeningMode::off);
+        auto result = builder.build_level(settings, palette, OpeningMode::off, MatchRandom());
         require(result->player_count() == 4, "builder changed the four-player roster");
         return result;
     }

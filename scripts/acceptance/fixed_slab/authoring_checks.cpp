@@ -197,8 +197,8 @@ namespace fixed_slab_acceptance
             auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
                 &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
-            std::srand(260026u);
-            const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(260026u));
             require(level->player_count() == count, "Public slab load lost a roster seat");
             const double total = compare_budget(expected, level->paint_surfaces());
             const auto initial = level->horizontal_structure_states();

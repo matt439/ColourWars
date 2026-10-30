@@ -129,7 +129,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
             settings.set_player_weapon(view, count == 1 ? solo_tool : tools[static_cast<size_t>(view)]);
         }
         app.viewport_manager()->set_layout(settings.screen_layout());
-        auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+        auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         resize(app, *level, { 1280, 720 });
         require(level->player_count() == count, "CQ native builder changed the requested roster");
         for (int view = 0; view < count; ++view)

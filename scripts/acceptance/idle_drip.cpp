@@ -166,7 +166,7 @@ namespace
             settings.begin_input_claims(0);
             for (int slot = 1; slot < 4; ++slot) { require(settings.claim_input_slot(slot), "Could not claim CPU pad slot"); }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         }
 
         std::unique_ptr<Structure> structure(std::unique_ptr<Shape> shape,

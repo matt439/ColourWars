@@ -1,22 +1,21 @@
 #include "game/pch.h"
 #include "game/objects/monitor.h"
 
-#include <cstdlib>
-
 using namespace labrador;
 using namespace mattmath;
 
 namespace
 {
-    // 0..1 from rand(), which `seed` fixes.
-    float roll_fraction()
+    // [0, 1) from the round's persona stream (HYG#39).
+    float roll_fraction(BotRandom& random)
     {
-        return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+        return random.unit();
     }
 
-    size_t roll_index(size_t count)
+    // Reduced in 64 bits before narrowing, so a 32-bit size_t rolls the same.
+    size_t roll_index(BotRandom& random, size_t count)
     {
-        return static_cast<size_t>(std::rand()) % count;
+        return static_cast<size_t>(random.next() % static_cast<std::uint64_t>(count));
     }
 
     Vector2F on_screen(const RectangleF& screen, const Vector2F& fraction)
@@ -44,43 +43,51 @@ namespace
     constexpr float picker_padding = 0.2f; // of a picker swatch's width
 }
 
-MonitorPersona MonitorPersona::roll(const OpeningPresentation& look)
+// Every draw is a named local: C++ leaves the order of a call's arguments
+// unspecified, and the persona must be the same on any compiler.
+MonitorPersona MonitorPersona::roll(const OpeningPresentation& look, BotRandom& random)
 {
     MonitorPersona persona;
-    persona.shade = roll_index(look.bezel_shades.size());
-    persona.child = roll_fraction() < 0.3f;
-    persona.mug = !persona.child && roll_fraction() < 0.6f;
+    persona.shade = roll_index(random, look.bezel_shades.size());
+    persona.child = roll_fraction(random) < 0.3f;
+    persona.mug = !persona.child && roll_fraction(random) < 0.6f;
 
     // Notes on distinct spots: a child's are fewer, an adult may have none.
     std::array<size_t, note_spots.size()> spots = { 0, 1, 2, 3, 4, 5 };
-    const size_t notes = persona.child ? 1 + roll_index(2) : roll_index(4);
+    const size_t notes = persona.child ? 1 + roll_index(random, 2) : roll_index(random, 4);
     for (size_t index = 0; index < notes; ++index)
     {
-        std::swap(spots[index], spots[index + roll_index(spots.size() - index)]);
-        persona.sticky_notes.push_back({ note_spots[spots[index]],
-            roll_index(look.sticky_notes.size()), (roll_fraction() - 0.5f) * 0.3f });
+        const size_t spot = index + roll_index(random, spots.size() - index);
+        std::swap(spots[index], spots[spot]);
+        const size_t colour = roll_index(random, look.sticky_notes.size());
+        const float tilt = (roll_fraction(random) - 0.5f) * 0.3f;
+        persona.sticky_notes.push_back({ note_spots[spots[index]], colour, tilt });
     }
 
     // Stickers along the bottom of the bezel, which a child covers.
-    const size_t stickers = persona.child ? 2 + roll_index(4) : roll_index(2);
+    const size_t stickers = persona.child ? 2 + roll_index(random, 4) : roll_index(random, 2);
     for (size_t index = 0; index < stickers; ++index)
     {
-        persona.stickers.push_back({ Vector2F(0.12f + roll_fraction() * 0.7f,
-            0.86f + roll_fraction() * 0.1f), roll_index(look.stickers.size()), 0.0f });
+        const float x = 0.12f + roll_fraction(random) * 0.7f;
+        const float y = 0.86f + roll_fraction(random) * 0.1f;
+        const size_t colour = roll_index(random, look.stickers.size());
+        persona.stickers.push_back({ Vector2F(x, y), colour, 0.0f });
     }
 
-    persona.coffee_ring = Vector2F(0.7f + roll_fraction() * 0.18f, 0.9f);
+    persona.coffee_ring = Vector2F(0.7f + roll_fraction(random) * 0.18f, 0.9f);
 
-    if (roll_fraction() < 0.35f)
+    if (roll_fraction(random) < 0.35f)
     {
         // From a corner of the bezel, jagged.
-        const bool left = roll_fraction() < 0.5f;
-        Vector2F at(left ? 0.004f : 0.996f, 0.6f + roll_fraction() * 0.35f);
+        const bool left = roll_fraction(random) < 0.5f;
+        const float height = 0.6f + roll_fraction(random) * 0.35f;
+        Vector2F at(left ? 0.004f : 0.996f, height);
         persona.crack.push_back(at);
         for (int step = 0; step < 4; ++step)
         {
-            at += Vector2F((left ? 1.0f : -1.0f) * (0.012f + roll_fraction() * 0.018f),
-                (roll_fraction() - 0.6f) * 0.06f);
+            const float across = (left ? 1.0f : -1.0f) * (0.012f + roll_fraction(random) * 0.018f);
+            const float down = (roll_fraction(random) - 0.6f) * 0.06f;
+            at += Vector2F(across, down);
             persona.crack.push_back(at);
         }
     }

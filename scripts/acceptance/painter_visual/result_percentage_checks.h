@@ -446,8 +446,8 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         require(setup.claim_input_slot(1), "Cannot claim the monitor's second roller seat");
         setup.set_player_team(0, PlayerTeam::a); setup.set_player_team(1, PlayerTeam::b);
         setup.set_player_weapon(0, WeaponType::roller); setup.set_player_weapon(1, WeaponType::roller);
-        app.viewport_manager()->set_layout(ScreenLayout::two_player); std::srand(411);
-        auto level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::full); ++level_builds;
+        app.viewport_manager()->set_layout(ScreenLayout::two_player);
+        auto level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::full, MatchRandom(411)); ++level_builds;
         resize(app, *level, { 1280, 720 }); const size_t before = level_updates;
         constexpr float simulation_dt = 1.0f / 60.0f; auto inputs = neutral_inputs();
         {

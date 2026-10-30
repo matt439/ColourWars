@@ -100,9 +100,9 @@ namespace moving_structure_acceptance
         const unsigned int terminal_rng = static_cast<unsigned int>(std::rand());
         runtime.reset();
         const auto decoded = ReplayFile::read(tape_path);
-        require(decoded.seed && decoded.inputs_by_seat().size() == 1 && decoded.inputs_by_seat()[0].size() == updates,
+        require(decoded.seed == header.seed && decoded.inputs_by_seat().size() == 1 && decoded.inputs_by_seat()[0].size() == updates,
             "Editor-saved public replay lost its input or reconstruction header");
-        LoadedFixture replay(world, directory / (decoded.tape.settings().stage() + ".json"), decoded.tape.settings(), *decoded.seed);
+        LoadedFixture replay(world, directory / (decoded.tape.settings().stage() + ".json"), decoded.tape.settings(), decoded.seed);
         require(MatchFingerprint::difference(initial, MatchFingerprint::of(*replay.level, 0)).empty(),
             "Fresh public rebuild of editor-saved stage differs at initial admission");
         ReplayPlayer player("editor-authored-moving", decoded);

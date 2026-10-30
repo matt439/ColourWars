@@ -49,7 +49,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const PlaySettings* preferences,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
-	const MatchSetup* roster, std::uint64_t bot_seed, std::vector<LevelLesson> lessons) :
+	const MatchSetup* roster, MatchRandom random, std::vector<LevelLesson> lessons) :
 	colourwars::SoundBankObject(sound_bank_name, audio_resources),
 	scene_(std::move(scene)),
 	players_(std::move(players)),
@@ -96,7 +96,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	if (this->view_participants_.empty())
 	{ throw std::invalid_argument("Level requires at least one human view"); }
 	if (roster != nullptr && roster->bot_count() != 0)
-	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, bot_seed); }
+	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, random.bot_seed()); }
 	const MenuStyle& menu = presentation->menu();
 	const CountdownArtPresentation& paper = presentation->match().countdown_art;
 	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage_name,
@@ -183,8 +183,9 @@ Level::Level(std::unique_ptr<Scene> scene,
 	if (opening != OpeningMode::off)
 	{
 		const OpeningPresentation& look = presentation->opening();
+		BotRandom persona = random.persona();
 		this->monitor_ = std::make_unique<Monitor>(&look, render_resources,
-			MonitorPersona::roll(look));
+			MonitorPersona::roll(look, persona));
 		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
 		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
 		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),

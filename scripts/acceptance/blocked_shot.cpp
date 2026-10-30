@@ -139,7 +139,7 @@ namespace
             settings.set_player_team(0, PlayerTeam::a);
             settings.set_player_weapon(0, WeaponType::sniper);
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         }
     };
 

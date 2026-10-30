@@ -5,6 +5,7 @@
 #include "game/objects/level.h"
 #include "game/match_setup.h"
 #include "game/objects/team_colour.h"
+#include "game/objects/match_random.h"
 #include "game/objects/player_builder.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/render_resources.h"
@@ -35,8 +36,14 @@ public:
 	// `practice` asks for untimed solo practice: a one-human roster on a stage
 	// whose stations carry lessons gets them and no clock (POL#19). Any other
 	// roster or stage is built as an ordinary timed match.
+	//
+	// `random` is the round's random numbers (HYG#39): a Random palette and an
+	// intro's persona each draw from their own stream of it, the shipping bots
+	// take the seed itself, and the build never reads or moves the global
+	// rand().
 	std::unique_ptr<Level> build_level(const MatchSetup& settings,
-		TeamColourPair palette, OpeningMode opening, bool practice = false);
+		TeamColourPair palette, OpeningMode opening, const MatchRandom& random,
+		bool practice = false);
 
 private:
 	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;

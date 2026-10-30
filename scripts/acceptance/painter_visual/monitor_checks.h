@@ -180,8 +180,8 @@ std::unique_ptr<Level> monitor_story(Application& app, LevelBuilder& builder, in
         settings.set_player_weapon(view, WeaponType::roller);
     }
     app.viewport_manager()->set_layout(settings.screen_layout());
-    std::srand(409 + count);
-    return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::full);
+    return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::full,
+        MatchRandom(static_cast<unsigned int>(409 + count)));
 }
 
 std::filesystem::path monitor_static_backdrop(const std::filesystem::path& content,

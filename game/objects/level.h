@@ -28,6 +28,7 @@
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
 #include "game/objects/monitor.h"
+#include "game/objects/match_random.h"
 #include "game/objects/opening_mode.h"
 #include "game/objects/silhouette.h"
 #include "game/objects/screen_cursor.h"
@@ -110,7 +111,7 @@ public:
 		std::vector<LevelStation> stations,
 		OpeningMode opening, std::optional<float> duration = std::nullopt,
 		const InputBindings* input_bindings = nullptr,
-		const MatchSetup* roster = nullptr, std::uint64_t bot_seed = 0,
+		const MatchSetup* roster = nullptr, MatchRandom random = MatchRandom(),
 		std::vector<LevelLesson> lessons = {});
 
 	// Stop the match's voices: the level's and the player weapon/redraw loops.

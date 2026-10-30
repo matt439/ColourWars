@@ -1,5 +1,6 @@
 ﻿#include "game/pch.h"
 #include "game/presentation.h"
+#include "game/objects/match_random.h"
 #include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -274,14 +275,33 @@ int main(int argc, char** argv)
             require(changed.random_pair(draw).key == changed.pairs[draw % changed.pairs.size()].key,
                 "Random draw must include added data pairs and wrap by the list size");
         }
-        std::srand(0);
         bool saw_extra = false;
-        for (int draw = 0; draw < 100; ++draw)
+        for (unsigned int seed = 0; seed < 100; ++seed)
         {
-            const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::random, changed);
+            const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::random, changed,
+                MatchRandom(seed));
             saw_extra |= colours.team_a == orange.team_b && colours.team_b == pink.team_b;
         }
         require(saw_extra, "Runtime random selection never reached the added pair");
+        // The round seed's Random pair against the shipped list (HYG#39). This
+        // is plain splitmix64 arithmetic, so it holds on any standard library;
+        // docs/debug-console.md ("seed") records the same table for +seed.
+        // Adding or reordering a pair moves it: update both together.
+        const struct { unsigned int seed; TeamColourPair pair; } pinned[] = {
+            { 0, TeamColourPair::blue_yellow }, { 1, TeamColourPair::blue_orange },
+            { 2, TeamColourPair::magenta_forest }, { 3, TeamColourPair::red_azure },
+            { 4, TeamColourPair::purple_gold }, { 5, TeamColourPair::magenta_forest },
+            { 6, TeamColourPair::blue_orange }, { 7, TeamColourPair::purple_gold },
+            { 211, TeamColourPair::pink_green }, { 4242, TeamColourPair::pink_green } };
+        for (const auto& pin : pinned)
+        {
+            const TeamColour drawn = TeamColourTools::team_colours(TeamColourPair::random, palette,
+                MatchRandom(pin.seed));
+            const TeamColour expected = TeamColourTools::team_colours(pin.pair, palette);
+            require(drawn.team_a == expected.team_a && drawn.team_b == expected.team_b,
+                "Round seed " + std::to_string(pin.seed) + " no longer draws " +
+                TeamColourTools::palette_key(pin.pair) + "; update the +seed table in docs/debug-console.md");
+        }
         const auto reset = [&] { document.CopyFrom(baseline, document.GetAllocator()); };
         reset(); document["team_palette"]["pairs"].Clear(); fixture.reject(document, "missing fixed team pair");
         reset(); document["team_palette"]["pairs"][0]["team_a"].SetString("missing"); fixture.reject(document, "unknown team colour");

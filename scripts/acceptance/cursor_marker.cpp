@@ -116,7 +116,7 @@ namespace
                 settings.set_player_weapon(static_cast<int>(seat), WeaponType::sprayer);
             }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         }
 
         // The pointer as the window would report it, after the frame boundary,
@@ -224,7 +224,7 @@ namespace
         settings.set_player_weapon(0, WeaponType::sprayer);
         settings.set_screen_layout(ScreenLayout::one_player);
         world.viewports.set_layout(settings.screen_layout());
-        auto level = mouseless.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+        auto level = mouseless.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         expect(*level, false, "no mouse");
         std::cout << "PASS cursor marker visibility: " << checked_visibility << " checks at 720/1080/1440 - "
             "keyboard/mouse in each participant slot, corners in, each edge out, unfocused, disabled, "

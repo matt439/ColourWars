@@ -137,6 +137,14 @@ public:
 	// overrides it, and a recording or a replay always starts without one.
 	OpeningMode opening_mode(OpeningMode chosen) const;
 
+	// GameLevel's build, after before_level_build: the round seed the
+	// match's MatchRandom is made from (HYG#39). `drawn` is the game's own,
+	// from rand(); a replay being played returns the seed it was recorded
+	// with, and `seed n` returns n, so every build under it is the same. An
+	// override also re-seeds rand() with it, so the menus' Random picks
+	// after each such build repeat. Release returns `drawn`.
+	unsigned int round_seed(unsigned int drawn);
+
 	// The top of every MenuPage::update. Opens the console or the debug menu,
 	// takes a queued screenshot, starts a match queued by the console or by
 	// launch arguments, and dismisses pages over a match a request is waiting
@@ -193,6 +201,7 @@ inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
 inline void DebugDirector::match_resumed(DebugMatchTarget&, const std::vector<PlayerInputData>&) {}
 inline bool DebugDirector::drives_slot(int) const { return false; }
 inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { return chosen; }
+inline unsigned int DebugDirector::round_seed(unsigned int drawn) { return drawn; }
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float, bool) { return false; }
 inline void DebugDirector::begin_keyboard_capture() {}
 inline void DebugDirector::capture_input_frame(DebugPageTarget&) {}

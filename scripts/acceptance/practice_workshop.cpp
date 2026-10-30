@@ -104,7 +104,7 @@ namespace
             }
             this->viewports.set_layout(settings.screen_layout());
             return this->builder->build_level(settings, TeamColourPair::blue_orange,
-                OpeningMode::off, practice);
+                OpeningMode::off, MatchRandom(), practice);
         }
     };
 

@@ -8,7 +8,9 @@ namespace bot_navigation_acceptance
     using namespace mattmath;
     using paint_surfaces_acceptance::require;
 
-    constexpr unsigned int trial_seed = 41731;
+    // The bot seed srand(41731) gave before HYG#39: the round seed is now the
+    // shipping bots' seed itself, so the trials' bots are unchanged.
+    constexpr unsigned int trial_seed = 5242;
     constexpr float endpoint_tolerance = 0.05f;
     inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
 
@@ -42,14 +44,14 @@ namespace bot_navigation_acceptance
             throw std::runtime_error(support_error_ + name + "'");
         }
 
-        // The whole-match seed reaches stage draws and then the bot seed.
+        // The round seed, which is the shipping bots' seed (MatchRandom).
         std::unique_ptr<Level> build(const MatchSetup& settings, unsigned int seed = trial_seed)
         {
-            std::srand(seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
                 &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
-            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(seed));
         }
 
         paint_surfaces_acceptance::World assets;

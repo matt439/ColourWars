@@ -4,7 +4,10 @@
 
 // A bot's own random numbers: splitmix64, seeded from the match seed and the
 // seat, so a bot never touches rand() and two bots never share a sequence.
-// The shipping MatchBot and the Debug scripted bots both draw from this.
+// The shipping MatchBot and the Debug scripted bots both draw from this, and
+// so does a match build: MatchRandom (game/objects/match_random.h) hands out
+// one of these per use of the round seed (HYG#39). Plain uint64 arithmetic,
+// so a sequence is the same on every standard library and CRT.
 class BotRandom
 {
 public:

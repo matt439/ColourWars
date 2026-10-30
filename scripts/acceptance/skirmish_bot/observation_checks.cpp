@@ -81,9 +81,9 @@ namespace skirmish_acceptance
 					settings.set_player_team(view, view == 0 ? PlayerTeam::a : PlayerTeam::b);
 					settings.set_player_weapon(view, tool);
 				}
-				std::srand(741);
 				viewports.set_layout(settings.screen_layout());
-				return builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+				return builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+					MatchRandom(741));
 			}
 
 			GameTuning tuning;

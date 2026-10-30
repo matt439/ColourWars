@@ -223,8 +223,11 @@ namespace turbulence_slab_routes_acceptance
                 viewports.set_layout(settings.screen_layout());
                 LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
                     &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
-                std::srand(decoded_seed ? *decoded_seed : seed);
-                level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+                // terminal_rng reads the next rand() after the run.
+                const unsigned int round_seed = decoded_seed ? *decoded_seed : seed;
+                std::srand(round_seed);
+                level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                    MatchRandom(round_seed));
                 owner = paint_owners::index(player().player_num(), 0);
                 require(owner == 4 && player().primary_weapon().type() == WeaponType::roller,
                     "Public Roller route lost actual device-less owner4 or tool");
@@ -508,7 +511,7 @@ namespace turbulence_slab_routes_acceptance
             roster.set_player_team(0, side_b ? PlayerTeam::b : PlayerTeam::a);
             roster.set_player_weapon(0, WeaponType::roller);
             header.tape.start(0, roster);
-            auto original = std::make_unique<Trial>(world, stage, groups, side_b, &header.tape.settings(), &*header.seed);
+            auto original = std::make_unique<Trial>(world, stage, groups, side_b, &header.tape.settings(), &header.seed);
             const Observation initial = observe(*original, 0);
             ReplayRecorder recorder(name, header, nullptr, maximum_scene_updates);
             std::vector<Observation> priming, recorded;
@@ -595,7 +598,7 @@ namespace turbulence_slab_routes_acceptance
             const auto decoded = ReplayFile::read(tape);
             const auto priming_receipt = parse(read(priming_path));
             const int priming_count = priming_receipt["unfiltered_updates"].GetInt();
-            require(decoded.seed && decoded.build == header.build && decoded.dt_bits == header.dt_bits &&
+            require(decoded.seed == header.seed && decoded.build == header.build && decoded.dt_bits == header.dt_bits &&
                 decoded.tuning_hash == fnv1a(read(content / "tuning.json")) &&
                 decoded.presentation_hash == fnv1a(read(content / "presentation.json")) && !decoded.tape.damage_immune() && !decoded.tape.infinite_ammo() &&
                 decoded.tape.gaps().empty() && decoded.updates == counts.input_updates && decoded.inputs_by_seat().size() == 1 &&
@@ -617,7 +620,7 @@ namespace turbulence_slab_routes_acceptance
                 "Decoded public slab stage selection/source hash differs");
             const float seconds = float_from_bits(decoded.dt_bits);
             const auto rebuilt_groups = roles(parse(read(rebuild_stage)), geometry, side_b);
-            auto playback = std::make_unique<Trial>(world, rebuild_stage, rebuilt_groups, side_b, &decoded.tape.settings(), &*decoded.seed);
+            auto playback = std::make_unique<Trial>(world, rebuild_stage, rebuilt_groups, side_b, &decoded.tape.settings(), &decoded.seed);
             same_observation(initial, *playback, 0, "Decoded cold slab rebuild differs before countdown");
             for (int update = 0; update < priming_count; ++update)
             {
@@ -668,7 +671,7 @@ namespace turbulence_slab_routes_acceptance
                 ReplayPlayer mismatch(name + "-wrong-checkpoint", corrupt);
                 const auto control_stage = evidence / (corrupt.tape.settings().stage() + ".json");
                 const auto control_groups = roles(parse(read(control_stage)), geometry, side_b);
-                auto control = std::make_unique<Trial>(world, control_stage, control_groups, side_b, &corrupt.tape.settings(), &*corrupt.seed);
+                auto control = std::make_unique<Trial>(world, control_stage, control_groups, side_b, &corrupt.tape.settings(), &corrupt.seed);
                 for (int update = 0; update < priming_count; ++update)
                 { control->tick(0.0f, false, false, nullptr, float_from_bits(corrupt.dt_bits)); }
                 const int checkpoint_update = corrupt.checkpoints[0].update;

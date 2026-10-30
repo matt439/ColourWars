@@ -31,13 +31,13 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(const MatchSetup& settings, OpeningMode opening)
+        std::unique_ptr<Level> build(const MatchSetup& settings, OpeningMode opening, const MatchRandom& random)
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
                 &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
             // Random, so the palette draw is part of what the seed must repeat.
-            return builder.build_level(settings, TeamColourPair::random, opening);
+            return builder.build_level(settings, TeamColourPair::random, opening, random);
         }
         paint_surfaces_acceptance::World assets;
         Registry<LevelLoadedInfo> levels{ "instant-replay" };
@@ -72,7 +72,7 @@ namespace
     {
         std::vector<RectangleF> players;
         std::vector<PlayerState> states;
-        // The palette is drawn from rand() at the build: the seed's part.
+        // The palette is drawn from the round seed's stream: the seed's part.
         std::vector<Colour> colours;
         int projectiles = 0;
         bool operator==(const Moment&) const = default;
@@ -121,9 +121,8 @@ namespace
         // The round, as GameLevel plays it.
         RoundTape tape;
         RoundTapeRecorder recorder(&tape);
-        std::srand(seed);
         tape.start(seed, settings);
-        auto level = world.build(settings, OpeningMode::full);
+        auto level = world.build(settings, OpeningMode::full, MatchRandom(seed));
         std::vector<Moment> seen;
         std::vector<PlayerInputData> devices(input_slots::count);
         for (auto& device : devices) { device.connected = true; }
@@ -158,8 +157,7 @@ namespace
         level.reset();
 
         // The replay, as GameLevel::start_replay builds and steps it.
-        std::srand(tape.seed());
-        auto replay = world.build(tape.settings(), OpeningMode::off);
+        auto replay = world.build(tape.settings(), OpeningMode::off, MatchRandom(tape.seed()));
         replay->set_player_cheats(tape.damage_immune(), tape.infinite_ammo());
         replay->start_without_countdown();
         RoundTapePlayer player(&tape, 0);
@@ -213,6 +211,43 @@ namespace
         std::cout << "PASS tape rules: empty and spoiled tapes are not offered; cheats change only before play\n";
     }
 
+    // HYG#39: a build draws from its own MatchRandom streams, so what one use
+    // draws never moves another, and the global rand() is never touched.
+    void check_streams(World& world)
+    {
+        // Four pad humans on the same alternating teams as roster(): no bots.
+        MatchSetup humans; humans.set_player_count(4);
+        humans.begin_input_claims(0);
+        for (int slot = 1; slot < 4; ++slot) { require(humans.claim_input_slot(slot), "Cannot claim a human slot"); }
+        humans.set_screen_layout(ScreenLayout::four_player);
+        humans.set_stage("crossfeed"); humans.set_duration(20.0f);
+        for (int seat = 0; seat < 4; ++seat)
+        {
+            humans.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
+            humans.set_player_weapon(seat, static_cast<WeaponType>((seat + 1) % 5));
+        }
+        const auto pair = [](const Level& level)
+        { return std::make_pair(level.player(0).team_colour(), level.player(1).team_colour()); };
+        std::vector<std::pair<Colour, Colour>> drawn;
+        for (unsigned int seed : { 0u, 1u, 2u, 7u, 211u, 19019u })
+        {
+            const MatchRandom random(seed);
+            const auto bare = pair(*world.build(humans, OpeningMode::off, random));
+            const auto intro = pair(*world.build(humans, OpeningMode::full, random));
+            const auto bots = pair(*world.build(roster("crossfeed"), OpeningMode::full, random));
+            require(bare == intro && bare == bots,
+                "A round seed's palette moved with the intro's persona or the shipping bots");
+            if (std::find(drawn.begin(), drawn.end(), bare) == drawn.end()) { drawn.push_back(bare); }
+        }
+        require(drawn.size() > 1, "Every round seed drew the same Random palette");
+
+        std::srand(4057u); const int expected_random = std::rand(); std::srand(4057u);
+        auto level = world.build(roster("crossfeed"), OpeningMode::full, MatchRandom(4057u));
+        require(std::rand() == expected_random,
+            "A build with a Random palette, shipping bots and a full intro consumed the global rand()");
+        std::cout << "PASS round streams: the palette ignores the intro and the bots; a build never touches rand()\n";
+    }
+
     void check_disabled_capture(World& world)
     {
         class InputReplacement final : public SeatInputFilter
@@ -231,7 +266,7 @@ namespace
         // must still supply downstream input and suppress the shipping bots.
         RoundTape tape;
         RoundTapeRecorder recorder(&tape);
-        const auto level = world.build(roster("crossfeed"), OpeningMode::off);
+        const auto level = world.build(roster("crossfeed"), OpeningMode::off, MatchRandom());
         const auto same_input = [](const PlayerInputData& actual, const PlayerInputData& expected)
         {
             return actual.connected == expected.connected && actual.x_movement == expected.x_movement &&
@@ -273,6 +308,7 @@ int main(int argc, char** argv)
         require(argc == 2, "usage: instant_replay <content>");
         World world(std::filesystem::absolute(argv[1]));
         check_tape_rules();
+        check_streams(world);
         check_disabled_capture(world);
         unsigned int seed = 19019;
         // The ferry trial's movers and the gate trial's gate follow the paint,

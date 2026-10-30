@@ -116,7 +116,7 @@ namespace
                 settings.set_player_weapon(static_cast<int>(seat), WeaponType::sprayer);
             }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         }
     };
 

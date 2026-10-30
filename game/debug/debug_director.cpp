@@ -161,6 +161,11 @@ OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const
 	return this->impl_ != nullptr ? this->impl_->opening_mode(chosen) : chosen;
 }
 
+unsigned int DebugDirector::round_seed(unsigned int drawn)
+{
+	return this->impl_ != nullptr ? this->impl_->round_seed(drawn) : drawn;
+}
+
 bool DebugDirector::before_page_update(DebugPageTarget& page, float dt, bool active)
 {
 	return this->impl_ != nullptr && this->impl_->before_page_update(page, dt, active);

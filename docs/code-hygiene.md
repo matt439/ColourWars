@@ -271,13 +271,14 @@ the zoom-out and reveal at the last step, and a suspend there (which clears a
 mover's carrier, part of the fingerprint) would otherwise move. The adversarial
 review found that case after a first version keyed playback to tape steps.
 
-The file is **format 5**: one inputs array per participant, all the same
+The file was **format 5**: one inputs array per participant, all the same
 length, every step at the file's dt (the writer refuses otherwise), and an
 ordered `gaps` list of `{ step, update }` with a resume's seat commands.
 Formats 3 and 4 are refused with the version message; a replay holds only on
-the build that recorded it (`DBG#2`). The tape's own seed is not written:
-`seed` remains the developer seed the round's seed is drawn from, which
-`HYG#39` replaces. [The debug console](debug-console.md#seed-record-and-play),
+the build that recorded it (`DBG#2`). `HYG#39` made it **format 6**: `seed` is
+now required and is the round seed the level was built from, not the optional
+developer seed it used to be drawn from, so format 5 is refused too.
+[The debug console](debug-console.md#seed-record-and-play),
 the instant replay's "How" and the vertical-lift draft's replay row in
 [the roadmap](feature-roadmap.md) describe this.
 
@@ -532,6 +533,71 @@ passed into `LevelBuilder::build_level`, with independent sub-streams for
 palette, bot seeds and the monitor persona; `RoundTape` stores the seed it
 hands in. Seeded team pairs and colours may change; record the new `+seed`
 mapping where the screenshot loop documents it.
+
+**Done 2026-10-31.** A build now draws only from the
+[MatchRandom](../game/objects/match_random.h) it is given, and never reads or
+moves `rand()`. `MatchRandom` holds the round seed and makes one `BotRandom`
+(splitmix64) stream per use: the state of each is the first output of
+`(tag << 32) | seed`, with tag 1 for the palette and 2 for the persona. The
+shipping bots get the seed itself, as the balance runner already seeded its
+bots. A Random palette is `next() % pairs` and the persona's rolls are
+`unit()` and `next() % n`, all reduced in 64 bits, and every persona draw is a
+named local because argument order is unspecified. So the same seed builds the
+same match on any standard library, and whether one use draws never moves
+another.
+
+- **The build.** `build_level(settings, palette, opening, random, practice)`
+  passes the stream to `TeamColourTools::team_colours` and to `Level`, whose
+  `bot_seed` parameter became `MatchRandom random`. The rand-based
+  `generate_random_team_colour(palette)` and `MonitorPersona::roll(look)` are
+  gone. The two-argument `team_colours` is fixed-pair only and refuses Random
+  by name. The weapon page's preview never took that path.
+- **The round seed.** `GameLevel` still draws it from `rand()`, as two
+  sequenced locals, and asks the new `DebugDirector::round_seed(drawn)` hook,
+  whose Release stub returns `drawn`. In Debug a replay being played returns
+  its recorded seed and `seed n` returns `n`. Either override also calls
+  `srand(n)`, so the menus' Random picks after every seeded build repeat. The
+  two `srand` calls in `before_level_build` are gone. The menus' team shuffle,
+  random weapon and random stage stay on `rand()`.
+- **The instant replay.** It builds from `MatchRandom(tape.seed())` and from
+  `round_palette_`, the preference the round was built with. Before this, it
+  read the save's palette, which Paused Options can change mid-round while
+  keeping the arena, so a replay could show the new colours.
+- **`ReplayFile`.** It is **format 6**. `seed` is required and is the round
+  seed, so a recording made without `seed` now replays its Random palette.
+  The header starts its tape from it, and format 5 is refused. `status` shows
+  `round seed n`.
+
+`+seed n` now means "every round is built from seed n". The seed-to-pair table
+is in [the debug console](debug-console.md#seed-record-and-play), and
+`team_palette` pins it for seeds 0-7, 211 and 4242. For the probes:
+
+- **The shipping-bot probes swapped their seeds.** Each now names the bot seed
+  its old `srand` gave, so their bots are bit-identical: `41731` became `5242`
+  (the `bot_navigation` fixture, `bot_trials` and `bot_scan_cost`'s level),
+  `9127` became `29843`, `30011` became `32505`, `52807` became `8644`,
+  `61403` became `3946`, and `bot_runtime`'s `8301` became `27146`.
+  `bot_scan_cost`'s timed driver keeps `41731`. `bot_team_trials`' Close
+  Quarters exclusion now names seed `3946`.
+- **The other build sites.** Every other `build_level` site passes
+  `MatchRandom(k)` for its old `srand(k)`, or `MatchRandom()` where nothing was
+  seeded. The `srand` stays only where a probe reads a terminal `rand()` after
+  the run: `paint_surfaces`, `moving_structure`, `turbulence_movers`,
+  `turbulence_slab_routes` and `pad_buttons`.
+- **New checks.** `instant_replay` checks that a seed's palette is the same
+  with and without an intro and shipping bots, and that a full build leaves
+  `rand()` untouched. `debug_console` records without `seed`, checks that the
+  file holds the drawn round seed, and checks that playback builds from it and
+  reports MATCH.
+
+The baseline was taken on the unchanged tree. Against it, the `MEASURE` and
+`PASS` lines of `paint_ferry`, `team_gate`, `handicap`, `bot_territory`,
+`bot_navigation`, `bot_gate_routes`, `bot_runtime` and `bot_ascents` are
+identical apart from the relabelled seeds. So are the rows of
+`bot_trials.csv` and `bot_combat_trials.csv`. The full default list passed in
+Release (74 cases). Debug passed with `-SkipSlowDebug` (71 cases), and
+`debug_console` and `crossfeed` passed when run on their own. The opt-in group
+and both painter probes compiled. `HYG#39` is complete.
 
 ### `Level` composed of owned parts (`HYG#40`)
 

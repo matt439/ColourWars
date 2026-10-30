@@ -27,7 +27,9 @@ namespace
     enum class Matrix { same_tool, mixed, sustained };
     // A same-tool trial gives every seat one tool; a mixed trial rotates the
     // three bots through all five. A sustained trial is one bot a side, with a
-    // neutral human on each team. Seed is the whole-match srand value.
+    // neutral human on each team. Seed is the round seed (MatchRandom), which
+    // the shipping bots take as their seed itself; the values are the bot
+    // seeds the old srand seeds gave (HYG#39).
     struct Trial
     {
         const char* stage;
@@ -42,7 +44,8 @@ namespace
         bool bot(int seat) const { return this->kind == Matrix::sustained ? seat == 1 || seat == 2 : seat > 0; }
         int steps() const { return this->kind == Matrix::sustained ? sustained_steps : trial_steps; }
     };
-    constexpr std::array<unsigned int, 3> mixed_seeds{ trial_seed, 52807u, 61403u };
+    // The bot seeds srand(52807) and srand(61403) gave before HYG#39.
+    constexpr std::array<unsigned int, 3> mixed_seeds{ trial_seed, 8644u, 3946u };
 
     const char* name(WeaponType tool)
     {
@@ -824,8 +827,8 @@ int main(int argc, char** argv)
         for (const std::string& miss : lone_off_home_misses)
         {
             // The fixed home-band loop: its lone Sprayer now reaches scoring ground.
-            require(miss != "close_quarters seed=61403 human=a rotation=0 team=a",
-                "The Close Quarters seed-61403 home-band loop returned");
+            require(miss != "close_quarters seed=3946 human=a rotation=0 team=a",
+                "The Close Quarters seed-3946 (formerly 61403) home-band loop returned");
         }
         std::cout << "MEASURE mixed one-bot teams retaining off-home paint=" << 120 - lone_off_home_misses.size() << "/120\n";
         require(trials == 200 && mixed_trials == 120 && sustained_trials == 40 && replays == 9 && csv.good() &&

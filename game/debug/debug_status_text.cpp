@@ -79,6 +79,8 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 		lines.push_back("updates " + std::to_string(this->level_updates_) + " since the build" +
 			(this->recorder_ != nullptr ? ", recording " + this->recorder_->name() : std::string()) +
 			(this->player_ != nullptr ? ", replaying " + this->player_->name() : std::string()));
+		// `seed n` with this number builds the round again (HYG#39).
+		lines.push_back("round seed " + std::to_string(this->round_seed_));
 	}
 	lines.push_back(std::string("seed ") + (this->seed_ ? std::to_string(*this->seed_) :
 		std::string("off (time)")) + "; bots: dummies " +

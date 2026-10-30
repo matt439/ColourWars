@@ -92,7 +92,7 @@ namespace
                 settings.set_player_weapon(view, tools.at(static_cast<size_t>(view)));
             }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, opening);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, opening, MatchRandom());
         }
     };
 

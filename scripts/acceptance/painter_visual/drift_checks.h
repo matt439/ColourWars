@@ -243,7 +243,7 @@ void drift_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Can
                 settings.set_player_weapon(view, WeaponType::sprayer);
             }
             app.viewport_manager()->set_layout(settings.screen_layout());
-            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
             const auto inputs = neutral_inputs();
             settle(*level, inputs);
             resize(app, *level, count == 1 ? Vector2I(1280, 720) : Vector2I(1920, 1080));

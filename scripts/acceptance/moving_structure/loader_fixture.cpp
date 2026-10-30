@@ -84,8 +84,9 @@ namespace moving_structure_acceptance
         levels.add(settings.stage(), std::move(info));
         LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences,
             &levels, &tuning, &world.presentation, &resolution, nullptr, &partitioner);
+        // The probes compare a terminal rand() draw, so it still starts here.
         std::srand(seed);
-        level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+        level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom(seed));
     }
 
     void LoadedFixture::tick(const PlayerInputData& action, float seconds, SeatInputFilter* next)

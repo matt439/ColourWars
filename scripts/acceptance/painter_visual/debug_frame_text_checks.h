@@ -54,7 +54,7 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
             settings.set_player_team(view, view == 0 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_weapon(view, WeaponType::sprayer);
         }
-        auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+        auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         resize(app, *level, { 1280, 720 });
         settle(*level, inputs);
         level->set_players_showing_debug(true);

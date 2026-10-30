@@ -169,6 +169,7 @@ add_library(colourwars_game STATIC
     objects/terrain_material.cpp
     objects/terrain_material_drawings.cpp
     objects/team_colour.cpp
+    objects/match_random.cpp
     objects/weapon.cpp
     objects/weapon_motion.cpp
     objects/weapon_feedback.cpp

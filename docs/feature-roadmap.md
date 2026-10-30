@@ -894,10 +894,12 @@ its 40 same-tool trials byte-identical apart from trial numbering, and adds
 **120** mixed-tool trials: four arenas, five rotations, both sides and three
 whole-match seeds (`41731`, `52807`, `61403`). Across the rotations each bot seat
 holds every tool once, and the lone bot and both opponents always differ. The
-neutral human holds a Sprayer and never fires. The seed is the `std::srand`
-value that reaches stage draws and then the bot seed. Every one of the 40
-configurations gives three pairwise-different final states, so the seeds reach
-play.
+neutral human holds a Sprayer and never fires. The seed was the `std::srand`
+value whose first draw became the bot seed. Since `HYG#39` the round seed is
+the shipping bots' seed itself, so the probes now name the bot seeds those gave,
+`5242`, `8644` and `3946`, and the bots are bit-identical; the `61403` notes
+below are about seed `3946`'s matches. Every one of the 40 configurations gives
+three pairwise-different final states, so the seeds reach play.
 
 A new exchange ledger attributes every sampled owner change to Measurement's
 exact regional tile pieces, computed once per tile (the harness now also checks
@@ -2591,15 +2593,19 @@ Untimed practice has no End menu and so no replay.
 **How.** It is the Debug record/play model (`DBG#2`) in Release, held in memory:
 a Debug recording is the same `RoundTape` written to a file with its checks.
 Each round draws its own seed from the running `rand()` sequence just before
-it is built, and `RoundTape` (`game/round_tape.h`) keeps that seed, a copy of
+it is built, and the build draws only from the `MatchRandom` made from that
+seed (`HYG#39`): separate streams for a Random palette and the intro's persona,
+and the seed itself for the shipping bots. `GameLevel` keeps the round's palette
+preference, since Paused Options can save another mid-round, and `RoundTape`
+(`game/round_tape.h`) keeps that seed, a copy of
 the setup (a re-pick page can change the match's own and then be backed out
 of), every participant's final input on every logic step, and where the round was
 suspended (which clears jump buffers) or resumed (which re-reads held jumps).
 `GameLevel` records timed rounds through `RoundTapeRecorder`, the seat filter
 every live update passes through, behind the Debug filter when there is one.
 Untimed practice keeps the filter but starts no shipping tape (`ROAD#31`). Watch Replay
-destroys the finished level and builds it again from the seed, with no intro
-and the countdown skipped. It runs the steps before the replay's window with
+destroys the finished level and builds it again from the seed and the round's
+palette preference, with no intro and the countdown skipped. It runs the steps before the replay's window with
 the sound groups at zero, up to 12 ms of steps a frame, which draws the round
 at speed under the REPLAY card. Then it plays the window at the normal rate.
 The rebuilt level's bots do not run; every seat comes from the tape. The tape

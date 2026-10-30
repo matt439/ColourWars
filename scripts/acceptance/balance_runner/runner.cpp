@@ -111,10 +111,9 @@ namespace balance_runner
                 }
                 // Keep each seat unclaimed (-1): BotDriver addresses views,
                 // while PlayerBuilder allocates distinct device-less paint owners.
-                // These must remain sequential: gameplay also uses global rand().
-                std::srand(seed);
                 this->viewports_.set_layout(settings.screen_layout());
-                return this->builder_->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+                return this->builder_->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                    MatchRandom(seed));
             }
 
         private:
