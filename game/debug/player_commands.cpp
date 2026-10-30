@@ -219,19 +219,14 @@ std::vector<std::string> DebugDirectorImpl::station_names() const
 			// rebuild). Only a concrete stage key: next, prev and random name
 			// no level yet, so they list nothing.
 			const std::string& stage = *this->request_.stage;
-			if (this->data_ == nullptr || this->data_->stages() == nullptr ||
-				this->data_->level_infos() == nullptr)
+			const StageCatalog* catalog = this->data_ != nullptr ?
+				this->data_->stage_catalog() : nullptr;
+			const LevelLoadedInfo* level = catalog != nullptr ? catalog->definition(stage) : nullptr;
+			if (level == nullptr)
 			{
 				return names;
 			}
-			for (const Stage& known : *this->data_->stages())
-			{
-				if (known.name == stage && this->data_->level_infos()->contains(stage))
-				{
-					stations = this->data_->level_infos()->get(stage)->stations();
-					break;
-				}
-			}
+			stations = level->stations();
 		}
 		else if (this->match_ != nullptr)
 		{

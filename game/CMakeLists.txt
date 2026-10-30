@@ -49,6 +49,7 @@ add_library(colourwars_game STATIC
     series_stage_rule.cpp
     session.cpp
     sound_groups.cpp
+    stage_catalog.cpp
     stage_loading.cpp
     stage_scan_diagnostics.cpp
     presentation_validation_stage_scan.cpp

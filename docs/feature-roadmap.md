@@ -2965,18 +2965,21 @@ copy of Close Quarters from an isolated profile.
   `MenuOwner::rescan_stages` with it. `MainMenuStageSelect::init` calls the
   rescan as the page opens from the main menu. A match's owner, `GameLevel`,
   has none to lend, and the page also skips it between rounds, so the list holds
-  still while a match or series could be using it. A rescan builds the new
-  list beside the live one: the manifest stages unchanged, then the folder's
-  stages in file-name order. Each new or edited file is checked as at
-  startup and replaces its registry entry. The sound groups are then
+  still while a match or series could be using it. A rescan replaces the
+  user stages in the `StageCatalog` (`game/stage_catalog.h`), the only writer
+  of the list and the registry: the manifest stages unchanged, then the
+  folder's stages in file-name order, with the list it started from put back
+  if the read throws. Each new or edited file is checked as at startup and
+  replaces its registry entry. The sound groups are then
   reassigned over the new list (it cannot fail on stages that each passed
   `check_candidate`, and if it does the session keeps only the shipped
   stages). Only refusals the previous scan did not print reach stderr, so
   reopening the page stays quiet. A stage whose file vanished or now fails
   leaves the list. Stage Select's `slot_of` already falls back to the first
   slot for a remembered or current stage that is gone. The old definition
-  stays in the registry, unreachable from the list, because
-  `labrador::Registry` has no remove. That costs memory only; see the draft
+  stays registered in the catalog, unreachable from its list, because
+  `labrador::Registry` has no remove; `StageCatalog::definition` answers from
+  the list, so it does not find one. That costs memory only; see the draft
   report in [engine reports](review/engine-reports.md). Probes that build a
   `GameMenu` without the folder keep their fixed lists. The Debug `reload`
   command still rereads only tuning and presentation.

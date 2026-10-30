@@ -7,8 +7,8 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     bool closed = false, warning = false; int ticks = 0, captures = 0, records_written = 0;
@@ -341,8 +341,8 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     require(preferences.set_play_settings_and_save(play), "Cannot seed the private Team tune profile");
     const auto save_path = root / "profile/ColourWars/save_data.json"; const std::string saved = tune_colour_bytes(save_path);
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);

@@ -26,7 +26,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
-    data.set_presentation(&presentation); data.set_stages(&stages); data.set_level_infos(&levels);
+    data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreConnection

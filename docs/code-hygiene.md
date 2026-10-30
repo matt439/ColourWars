@@ -480,9 +480,27 @@ the DPI probe's thread keyboard-state check once and passed on a rerun), and
 
 ### One stage catalog (`HYG#47`)
 
-Introduce a game-owned `StageCatalog` that owns the ordered stage list and the
-level registry and is their only writer, and put it in `GameData` in place of
-the two pointers. `ENG#26` then reduces to reclaiming memory.
+**Done 2026-10-30.** [game/stage_catalog.h](../game/stage_catalog.h) owns the
+ordered stage list and the level registry and is their only writer:
+`StageDefinition` moved there from `stage_loading.h`, the manifest's `"level"`
+kind calls `add`, and `UserStageFolder` and `load_user_stages` take a
+`StageCatalog` in place of the registry and list pair. `GameData` holds one
+`const StageCatalog*` (`set_stage_catalog`) in place of the two pointers, and
+`stages()` and `level_infos()` now forward to it, read-only. The rescan is
+unchanged in what it does: it drops and rereads the user stages, a vanished
+stage's definition stays registered, and a read that throws puts the starting
+list back, as building beside the live list did. `StageCatalog::definition`
+answers by name from the list, and the Debug station lookup uses it. Probes
+that offer their own lists from one shared registry build a catalog per list
+with `acceptance::catalog_of` ([scripts/acceptance/support/stage_catalog.h](../scripts/acceptance/support/stage_catalog.h)),
+which rereads each definition from `LevelLoadedInfo::source_path`, since a
+definition cannot be copied. `ENG#26` in the ledger now asks only for the memory
+back. Both presets build under `/W4 /WX`. In a clean worktree of the tip plus
+this change, the full default acceptance list passed in Release (74 cases) and
+in Debug without the four slow cases (71), `debug_console` and `menu_text`
+passed in Debug, the Debug compile gate (the opt-in cases,
+`check-painter.ps1 -CompileOnly` and `check-frame-pacing.ps1 -CompileOnly`)
+compiled, and `check-startup.ps1` passed on the Debug executable.
 
 ### Save and the active profile (`HYG#48`)
 

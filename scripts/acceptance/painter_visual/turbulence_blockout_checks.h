@@ -244,7 +244,7 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
             "-720p", "overview", paint == 1, true);
     }
     {
-        Save saved; GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&levels);
+        Save saved; GameData data; data.set_application(&app); data.set_save(&saved); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_blockout" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size);

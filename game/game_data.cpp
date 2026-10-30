@@ -12,14 +12,9 @@ void GameData::set_save(Save* save)
 	this->save_ = save;
 }
 
-void GameData::set_level_infos(Registry<LevelLoadedInfo>* level_infos)
+void GameData::set_stage_catalog(const StageCatalog* stage_catalog)
 {
-	this->level_infos_ = level_infos;
-}
-
-void GameData::set_stages(const StageList* stages)
-{
-	this->stages_ = stages;
+	this->stage_catalog_ = stage_catalog;
 }
 
 void GameData::set_tuning(const GameTuning* tuning)
@@ -52,9 +47,14 @@ Save* GameData::save() const
 	return this->save_;
 }
 
+const StageCatalog* GameData::stage_catalog() const
+{
+	return this->stage_catalog_;
+}
+
 const StageList* GameData::stages() const
 {
-	return this->stages_;
+	return this->stage_catalog_ != nullptr ? &this->stage_catalog_->stages() : nullptr;
 }
 
 const GameTuning* GameData::tuning() const
@@ -67,9 +67,9 @@ const Presentation* GameData::presentation() const
 	return this->presentation_;
 }
 
-Registry<LevelLoadedInfo>* GameData::level_infos() const
+const Registry<LevelLoadedInfo>* GameData::level_infos() const
 {
-	return this->level_infos_;
+	return this->stage_catalog_ != nullptr ? &this->stage_catalog_->level_infos() : nullptr;
 }
 
 

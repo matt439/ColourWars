@@ -10,6 +10,7 @@
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/seat_commands.h"
+#include "game/stage_catalog.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
@@ -34,8 +35,9 @@ namespace debug_console_acceptance
 		labrador::RenderResources render;
 		labrador::AudioResources audio;
 		PlaySettings preferences;
-		labrador::Registry<LevelLoadedInfo> levels{ "Level" };
-		StageList stages;
+		StageCatalog catalog;
+		const labrador::Registry<LevelLoadedInfo>& levels = catalog.level_infos();
+		const StageList& stages = catalog.stages();
 		labrador::ResolutionManager resolution;
 		labrador::ViewportManager viewports{ &resolution };
 		labrador::Mouse mouse;
@@ -64,15 +66,15 @@ namespace debug_console_acceptance
 				this->render.add_font(font, std::move(loaded));
 			}
 			this->audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
-			for (const char* level : { "movement_course", "close_quarters" })
+			const Stage listed[] = { { "movement_course", "Movement Course", "icon", false },
+				{ "close_quarters", "Close Quarters", "icon", true } };
+			for (const Stage& stage : listed)
 			{
 				auto info = std::make_unique<LevelLoadedInfo>(
-					(content / "levels" / (std::string(level) + ".json")).string().c_str());
+					(content / "levels" / (stage.name + ".json")).string().c_str());
 				info->validate();
-				this->levels.add(level, std::move(info));
+				this->catalog.add(StageDefinition{ stage, std::move(info) });
 			}
-			this->stages = { { "movement_course", "Movement Course", "icon", false },
-				{ "close_quarters", "Close Quarters", "icon", true } };
 			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
 				&this->preferences, &this->levels, &tuning, &presentation, &this->resolution, nullptr,
 				&this->partitioner);

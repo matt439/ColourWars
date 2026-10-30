@@ -73,6 +73,7 @@
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/slot_seats.h"
+#include "scripts/acceptance/support/stage_catalog.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 // This focused probe supplies the concrete input backend at the link seam.

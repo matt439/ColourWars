@@ -26,8 +26,9 @@ namespace debug_console_acceptance
 			{ "movement_course", "Movement Course", "icon", false },
 			{ "x", "X", "icon", true },
 		};
+		const StageCatalog stage_catalog = acceptance::catalog_of(stages);
 		GameData data;
-		data.set_stages(&stages);
+		data.set_stage_catalog(&stage_catalog);
 		DebugDirector director(&tuning, &presentation);
 		director.attach(nullptr, &data);
 		DebugDirectorImpl& impl = *director.impl();

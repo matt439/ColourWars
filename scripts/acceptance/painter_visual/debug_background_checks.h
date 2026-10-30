@@ -131,8 +131,8 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     };
     const std::string saved = save_bytes();
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugBackgroundState facts{ true, false, false };
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     DebugDirectorImpl& impl = *director.impl();

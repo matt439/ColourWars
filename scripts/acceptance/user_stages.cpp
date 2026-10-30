@@ -6,6 +6,7 @@
 #include "game/play_settings.h"
 #include "game/presentation.h"
 #include "game/sound_groups.h"
+#include "game/stage_catalog.h"
 #include "game/stage_loading.h"
 #include "game/stage_scan_diagnostics.h"
 #include "game/states/menu_context.h"
@@ -122,8 +123,9 @@ namespace
 	// What wWinMain's "level" kind produces from the staged manifest.
 	struct Shipped
 	{
-		Registry<LevelLoadedInfo> levels{ "Level" };
-		StageList stages;
+		StageCatalog catalog;
+		const Registry<LevelLoadedInfo>& levels = catalog.level_infos();
+		const StageList& stages = catalog.stages();
 	};
 
 	void load_shipped(const std::filesystem::path& content, Shipped& shipped)
@@ -138,10 +140,8 @@ namespace
 			for (size_t index = 0; index < names.size(); ++index)
 			{
 				const std::string name = names.at(index).as_string();
-				StageDefinition definition = read_stage_definition(
-					(content / asset.string("directory") / (name + ".json")).string(), name);
-				shipped.stages.push_back(std::move(definition.stage));
-				shipped.levels.add(name, std::move(definition.info));
+				shipped.catalog.add(read_stage_definition(
+					(content / asset.string("directory") / (name + ".json")).string(), name));
 			}
 		}
 		require(shipped.stages.size() == 11, "User-stage acceptance expects the eleven shipped stages");
@@ -341,7 +341,7 @@ namespace
 		const std::filesystem::path& folder, Shipped& shipped)
 	{
 		load_shipped(content, shipped);
-		return load_user_stages(folder, fixture.checks(), shipped.levels, shipped.stages);
+		return load_user_stages(folder, fixture.checks(), shipped.catalog);
 	}
 
 	bool refused(const UserStageScan& result, const std::string& file, const std::string& reason)
@@ -533,7 +533,7 @@ namespace
 		write_level(base, second / "twin.json", [](rapidjson::Document&) {});
 		Shipped shipped;
 		const UserStageScan once = scan(fixture, content, first, shipped);
-		const UserStageScan twice = load_user_stages(second, fixture.checks(), shipped.levels, shipped.stages);
+		const UserStageScan twice = load_user_stages(second, fixture.checks(), shipped.catalog);
 		require(once.accepted == std::vector<std::string>{ "Twin" } && twice.accepted.empty() &&
 			refused(twice, "twin.json", "another user stage's ('Twin')") && shipped.stages.size() == 12,
 			"A user stage may not take another user stage's name");
@@ -564,7 +564,7 @@ namespace
 			"An unattached folder (every probe's GameMenu) must do nothing");
 
 		UserStageFolder session;
-		session.attach(folder, fixture.checks(), &fixture.world->audio, &shipped.levels, &shipped.stages);
+		session.attach(folder, fixture.checks(), &fixture.world->audio, &shipped.catalog);
 		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
 		{
 			set_string(d, d, "display_name", "B Arena");

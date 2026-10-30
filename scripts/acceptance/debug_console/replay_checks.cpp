@@ -267,8 +267,7 @@ namespace debug_console_acceptance
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
 		CpuWorld world(game_directory, tuning, presentation);
 		GameData data;
-		data.set_stages(&world.stages);
-		data.set_level_infos(&world.levels);
+		data.set_stage_catalog(&world.catalog);
 		DebugDirector director(&tuning, &presentation);
 		director.attach(nullptr, &data);
 		DebugDirectorImpl& impl = *director.impl();

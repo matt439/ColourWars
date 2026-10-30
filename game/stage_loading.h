@@ -1,26 +1,15 @@
 #pragma once
 
-#include "engine/core/registry.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/render_resources.h"
-#include "game/objects/level_loaded_info.h"
-#include "game/objects/stage.h"
 #include "game/play_settings.h"
 #include "game/presentation.h"
+#include "game/stage_catalog.h"
 #include "game/tuning.h"
 #include <filesystem>
-#include <memory>
 #include <set>
 #include <string>
 #include <vector>
-
-// A level file read into what the stage list and the level registry hold. The
-// manifest's "level" kind and the user-stage scan read stages the same way.
-struct StageDefinition
-{
-	Stage stage;
-	std::unique_ptr<LevelLoadedInfo> info;
-};
 
 // Reads and structurally validates a level file (LevelLoadedInfo::validate) and
 // checks its display_name converts to drawable text. Throws naming the file.
@@ -46,8 +35,8 @@ struct UserStageScan
 	std::vector<std::string> refused;
 };
 
-// ROAD#16: adds every valid *.json directly in `directory` to `stages` and
-// `level_infos`, after the manifest's stages, in file-name order. Each file is
+// ROAD#16: adds every valid *.json directly in `directory` to `catalog`, after
+// the stages it already lists, in file-name order. Each file is
 // checked on its own with what a shipped stage is checked with (the level
 // format, its built objects, sounds, tunnelling, fonts and the arena counter)
 // plus a file name the registry can key ([A-Za-z0-9_-], no leading hyphen, at
@@ -59,8 +48,7 @@ struct UserStageScan
 // Call after the manifest has loaded and before validate_game_content and
 // sound_groups::assign, which then see the accepted stages like any other.
 UserStageScan load_user_stages(const std::filesystem::path& directory,
-	const UserStageChecks& checks, labrador::Registry<LevelLoadedInfo>& level_infos,
-	StageList& stages);
+	const UserStageChecks& checks, StageCatalog& catalog);
 
 // ROAD#16: the player's stage folder for a whole session. wWinMain owns one
 // above the Application and attaches it once the manifest has loaded; scan()
@@ -70,9 +58,8 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 // lends it to Stage Select, which calls it as it opens from the main menu and
 // never between series rounds. Manifest stages stay first and untouched; user
 // stages follow in file-name order. A file that vanished, or now fails its
-// checks, leaves the list; its old definition stays in the registry,
-// unreachable from the list, because the registry has no remove.
-// Unattached, both do nothing.
+// checks, leaves the catalog's list; its old definition stays registered,
+// unreachable from the list (see StageCatalog). Unattached, both do nothing.
 class UserStageFolder
 {
 public:
@@ -83,8 +70,7 @@ public:
 	// All borrowed, and outliving this. `audio` is the checks' audio, mutable
 	// so a rescan can regroup the sounds.
 	void attach(std::filesystem::path directory, const UserStageChecks& checks,
-		labrador::AudioResources* audio, labrador::Registry<LevelLoadedInfo>* level_infos,
-		StageList* stages);
+		labrador::AudioResources* audio, StageCatalog* catalog);
 	bool attached() const;
 
 	// Startup: before validate_game_content and sound_groups::assign, which
@@ -102,11 +88,9 @@ private:
 	std::filesystem::path directory_;
 	UserStageChecks checks_;
 	labrador::AudioResources* audio_ = nullptr;
-	labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
-	StageList* stages_ = nullptr;
+	StageCatalog* catalog_ = nullptr;
 	std::set<std::string> reported_;
 	UserStageScan latest_scan_;
 
-	UserStageScan read_into(StageList& stages) const;
 	void report(const UserStageScan& scan);
 };

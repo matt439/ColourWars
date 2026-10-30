@@ -26,8 +26,8 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MatchSetup settings;
     MenuContext context(&data, &input, &settings);

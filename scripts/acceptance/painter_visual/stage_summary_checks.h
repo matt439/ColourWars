@@ -56,8 +56,8 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 }, "Summary refresh fixture needs an actual eligible Random slot");
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageSummary

@@ -16,8 +16,8 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences);
-    data.set_level_infos(&levels);
-    data.set_stages(&stages);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" });
+    data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation);

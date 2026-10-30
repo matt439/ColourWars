@@ -83,7 +83,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     const auto bytes = [&]
     { std::ifstream file(output / "stage-count-profile/ColourWars/save_data.json", std::ios::binary); require(file.good(), "Cannot read the private Stage count save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()); };
     const std::string saved = bytes(); StageList stages;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected; MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreStageCounts
     {
@@ -112,6 +112,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     const auto open = [&](const StageList& list, const char* stage)
     {
         stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stages = list;
+        stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" });
         presentation.validate_stage_counts(*app.render_resources(), stages.size(), random_stage_indices(stages).size());
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }

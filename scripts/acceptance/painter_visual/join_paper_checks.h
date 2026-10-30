@@ -8,7 +8,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
-    data.set_presentation(&presentation); data.set_stages(&stages); data.set_level_infos(&levels);
+    data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* active = nullptr;

@@ -6,6 +6,7 @@
 #include "game/debug/debug_director_impl.h"
 #include "game/drawable_text.h"
 #include "game/game_data.h"
+#include "game/stage_catalog.h"
 #include "game/states/game_states.h"
 #include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
@@ -184,8 +185,9 @@ int wmain(int argc, wchar_t** argv)
             "Frame-pacing probe requires its isolated muted save");
         require(preferences.play_settings().aim_marker && !preferences.play_settings().reduce_effects &&
             preferences.play_settings().view_shake, "Frame-pacing probe requires the current visual feedback preferences");
-        Registry<LevelLoadedInfo> levels("Level");
-        StageList stages;
+        StageCatalog catalog;
+        const Registry<LevelLoadedInfo>& levels = catalog.level_infos();
+        const StageList& stages = catalog.stages();
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
         DebugDirector debug(&tuning, &presentation);
@@ -209,8 +211,8 @@ int wmain(int argc, wchar_t** argv)
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());
                 info->validate();
                 drawable_text::widen_drawable(info->display_name(), "frame-pacing stage " + name);
-                stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
-                levels.add(name, std::move(info));
+                Stage stage{ name, info->display_name(), info->icon_frame(), info->include_in_random() };
+                catalog.add(StageDefinition{ std::move(stage), std::move(info) });
             }, nullptr });
         app.load_manifest((content / "manifest.json").string().c_str());
         validate_shell_content(tuning, presentation, app.render_resources(), app.audio_resources(),
@@ -219,8 +221,7 @@ int wmain(int argc, wchar_t** argv)
         sound_groups::apply(*app.audio_resources(), preferences.play_settings());
         data.set_application(&app);
         data.set_save(&preferences);
-        data.set_level_infos(&levels);
-        data.set_stages(&stages);
+        data.set_stage_catalog(&catalog);
         data.set_tuning(&tuning);
         data.set_presentation(&presentation);
         data.set_debug(&debug);

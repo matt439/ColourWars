@@ -47,7 +47,7 @@ The `game/` root mixes several concerns:
 
 | Concern | Files (examples) |
 |---|---|
-| Configuration and content checks | `tuning*`, `presentation*`, `content_value`, `content_validation`, `resource_validation.h`, `stage_loading`, `drawable_text`, `text_wrap` |
+| Configuration and content checks | `tuning*`, `presentation*`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
 | Persistence | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings.h` |
 | Input | `action_bindings`, `input_bindings`, `input_slots.h`, `player_control.h`, `controls_text` |
 | Rumble and display | `rumble*`, `rumble_xinput.cpp`, `display_awake` |
@@ -141,14 +141,20 @@ deprecation release is report `ENG#28` in the
 
 ## Services: `GameData`
 
-[game/game_data.h](../game/game_data.h) is a bag of seven borrowed pointers:
-the engine `Application`, this game's `Save`, the level registry, the stage
-list, the tuning, the presentation and the developer `DebugDirector` (inert in
-Release, and `DebugDirector::inert()` when unset). Everything else that looks
-like a service (`ThreadPool`, `Gamepads`, `RenderResources`, ...) is a forward
-to the `Application`. `wWinMain` in [game/main.cpp](../game/main.cpp) declares
-all seven before the `Application`, so they outlive every state that borrows
-them.
+[game/game_data.h](../game/game_data.h) is a bag of six borrowed pointers:
+the engine `Application`, this game's `Save`, the `StageCatalog`, the tuning,
+the presentation and the developer `DebugDirector` (inert in Release, and
+`DebugDirector::inert()` when unset). Everything else that looks like a
+service (`ThreadPool`, `Gamepads`, `RenderResources`, ...) is a forward to the
+`Application`. `wWinMain` in [game/main.cpp](../game/main.cpp) declares all six
+before the `Application`, so they outlive every state that borrows them.
+
+[game/stage_catalog.h](../game/stage_catalog.h) owns the ordered stage list
+and the level registry and is their only writer: the manifest's `"level"` kind
+adds the shipped stages, and `UserStageFolder`
+([game/stage_loading.h](../game/stage_loading.h)) replaces the user stages
+after them. `GameData` lends it read-only, with `stages()` and `level_infos()`
+forwarding to its two halves.
 
 It is the shell's bag, not the game's. `GameMenu`, `GameLevel`, `MenuContext`,
 `MenuPage`, `StagePreview` and the developer tools hold it. Gameplay objects do

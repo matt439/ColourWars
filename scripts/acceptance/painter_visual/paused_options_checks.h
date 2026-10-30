@@ -168,8 +168,8 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     }
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     StateContext& stack = app;
     struct Cleanup
     {

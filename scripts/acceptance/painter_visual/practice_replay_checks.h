@@ -105,8 +105,8 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "crossfeed", "Crossfeed", "stage_turbulence", true } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "crossfeed", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     // The inert director leaves the shipping path intact in both presets.
     // Debug's independent recorder is supplied explicitly below.
     StateContext& stack = app;

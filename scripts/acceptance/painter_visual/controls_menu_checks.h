@@ -36,7 +36,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     GameData data;
     data.set_application(&app); data.set_save(&preferences);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
-    data.set_level_infos(&levels); data.set_stages(&stages);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation);
     data.set_debug(&director);
 #if COLOURWARS_DEV_TOOLS

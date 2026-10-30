@@ -56,8 +56,8 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const auto* info = levels.get(name);
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(preferences.get()); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(preferences.get());
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
 #if COLOURWARS_DEV_TOOLS
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     DebugDirectorImpl& impl = *director.impl();

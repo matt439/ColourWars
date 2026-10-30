@@ -10,8 +10,8 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     require(preferences.set_play_settings_and_save(silent), "Cannot silence private runtime fixture");
     StageList stages;
     GameData data; data.set_application(&app); data.set_save(&preferences);
-    data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    data.set_stages(&stages);
+    data.set_tuning(&tuning); data.set_presentation(&presentation);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "crossfeed" }); data.set_stage_catalog(&stage_catalog);
     StateContext& stack = app;
     struct ClearBots { StateContext& stack; ~ClearBots() { this->stack.clear(); } } clear{ stack };
     stack.clear(); stack.notify_activation(true);

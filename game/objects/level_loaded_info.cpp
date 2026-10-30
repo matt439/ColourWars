@@ -165,6 +165,11 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
 	this->semantic_hash_ = hash_stage_snapshot(snapshot, json_path);
 }
 
+const std::string& LevelLoadedInfo::source_path() const
+{
+	return this->json_doc_.source_path();
+}
+
 void LevelLoadedInfo::validate() const
 {
 	// Validate all exposed keys at startup. JsonValue errors identify the file and key.

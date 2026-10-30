@@ -359,8 +359,7 @@
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
 		CpuWorld world(game_directory, tuning, presentation);
 		TestDirector test(tuning, presentation);
-		test.data.set_stages(&world.stages);
-		test.data.set_level_infos(&world.levels);
+		test.data.set_stage_catalog(&world.catalog);
 		DebugDirectorImpl& impl = test.impl;
 		impl.set_content_directories(scratch.source, scratch.staged);
 		const RespawnRedrawPresentation* const look = &presentation.respawn_redraw();

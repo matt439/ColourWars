@@ -180,7 +180,7 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | answered on untagged master in `42bc478` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the guards go at the first minor tag carrying it |
 | 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
-| 26 | `Registry` cannot forget a name | [`UserStageFolder::rescan`](../../game/stage_loading.cpp) leaves a vanished user stage's definition registered | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; unfiled, awaiting separate authorization |
+| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); unfiled, awaiting separate authorization |
 | 27-32 | Six owed by the 2026-10-30 architecture review | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | found 2026-10-30; not yet drafted or rechecked against master |
 
 Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six
@@ -366,23 +366,27 @@ authorization.
 opens from the main menu ([`UserStageFolder::rescan`](../../game/stage_loading.cpp)).
 A new or edited file goes through `add`, which is what the rescan needs. A
 file the player deleted, or one that now fails its checks, can only leave the
-game's `StageList`. Its old `LevelLoadedInfo` stays in the registry,
-unreachable from the list, until the game exits. Every name lookup in this
-game goes through the list first (Stage Select, the Debug `stage` and `play`
-commands, which check `MatchPlanner::stage_words`), so today the cost is
-memory only. The registry's own `contains` still answers yes for a stage
-that is gone, which is the trap a later caller would fall into. Every client
-that reloads user content over a session would meet the same thing.
+stage list. Its old `LevelLoadedInfo` stays in the registry, unreachable from
+the list, until the game exits.
+
+**Narrowed 2026-10-30 (`HYG#47`).** The list and the registry now have one
+owner and one writer, [`StageCatalog`](../../game/stage_catalog.h), and its
+by-name lookup `definition` answers from the list, so a stage that is gone is
+not found there. The registry's own `contains` still answers yes for one, but
+only whole-registry readers (`LevelBuilder`, the content and sound-group
+checks) are handed it. What is left is the memory the vanished definitions
+hold until the game exits. Every client that reloads user content over a
+session would still meet that.
 
 **The ask.** A way to remove a name (or to replace the whole set) with a
 defined meaning for handles already resolved to it. The spelling, and
 whether stale handles throw or stay invalid, are engine decisions.
 
-**What an answer lets this repository delete.** The comment in
-`game/stage_loading.h` and the roadmap's note about stale entries. The rescan
-would remove the names that left the list, so `contains` and `get` would
-agree with it. This is a local draft,
-not a filed issue.
+**What an answer lets this repository delete.** The paragraph about
+unreachable definitions in `game/stage_catalog.h` and the roadmap's note
+about stale entries. `StageCatalog::remove_user_stages` would remove the
+names that left the list, so the registry would agree with it. This is a
+local draft, not a filed issue.
 
 ---
 

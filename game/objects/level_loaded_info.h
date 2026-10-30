@@ -26,6 +26,9 @@ public:
 	// This metadata supports Debug replay checks; layout is the same in Release.
 	std::uint64_t semantic_hash() const { return this->semantic_hash_; }
 
+	// The path this definition was read from, as given to the constructor.
+	const std::string& source_path() const;
+
 	// Validate required keys and spawn bounds at startup; errors name the file and key.
 	// validate_content checks resource names and object entries after the complete
 	// manifest has loaded, including optional sound banks.

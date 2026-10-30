@@ -15,8 +15,8 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     // these are fixture values, not a claim about the authored physical feel.
     const_cast<RumbleProfile&>(local.rumble())[static_cast<size_t>(RumbleEvent::hit)].duration_seconds = 0.5f;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&local); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&local); data.set_presentation(&presentation);
     DebugDirector director(&local, &presentation); data.set_debug(&director);
 #if COLOURWARS_DEV_TOOLS
     director.impl()->set_content_directories(content, content);

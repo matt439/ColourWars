@@ -38,8 +38,8 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     require(movement != nullptr, "Home alpha fixture requires the reviewed movement_course stage");
     stages.push_back({ "movement_course", movement->display_name(), movement->icon_frame(), movement->include_in_random() });
     GameData data;
-    data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    data.set_application(&app); data.set_save(&preferences);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MatchSetup plan;
     plan.set_player_count(1); plan.set_best_of(1); plan.set_stage("movement_course");

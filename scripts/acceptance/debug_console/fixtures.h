@@ -10,6 +10,7 @@
 #include "game/presentation.h"
 #include "game/tuning.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>
 #include <array>
@@ -249,14 +250,16 @@ namespace debug_console_acceptance
 	// hooks do without a window.
 	struct TestDirector
 	{
+		StageCatalog stages;
 		GameData data;
 		DebugDirector director;
 		DebugDirectorImpl& impl;
 
 		TestDirector(GameTuning& tuning, Presentation& presentation) :
-			director(&tuning, &presentation), impl(*director.impl())
+			stages(acceptance::catalog_of(test_stages())), director(&tuning, &presentation),
+			impl(*director.impl())
 		{
-			this->data.set_stages(&test_stages());
+			this->data.set_stage_catalog(&this->stages);
 			this->director.attach(nullptr, &this->data);
 			this->impl.log().set_mirror_to_debugger(false);
 		}

@@ -29,7 +29,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         };
         StageList host_stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
         GameData host_data; host_data.set_application(&app); host_data.set_save(&host_preferences);
-        host_data.set_level_infos(&levels); host_data.set_stages(&host_stages);
+        const StageCatalog host_stage_catalog = acceptance::catalog_of(levels, host_stages, { "movement_course" }); host_data.set_stage_catalog(&host_stage_catalog);
         host_data.set_tuning(&tuning); host_data.set_presentation(&presentation);
         MenuInput host_input(app.gamepads(), app.keyboard(), &tuning);
         MatchSetup host_settings;
@@ -225,7 +225,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
     GameData data; data.set_application(&app); data.set_save(&preferences);
-    data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MatchSetup settings;

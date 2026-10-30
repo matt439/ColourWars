@@ -237,7 +237,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
     // The actual Stage Select widget owns an unpainted gate and chooses the
     // production miniature path. Its reference remains an authored initial pose.
     Save preview_save; GameData data; data.set_application(&app); data.set_save(&preview_save);
-    data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_gate_trial" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     StagePreview preview("gate-permission-preview", preview_box, &data);
     preview.set_stage("turbulence_gate_trial");
     const auto preview_frame = [&]()

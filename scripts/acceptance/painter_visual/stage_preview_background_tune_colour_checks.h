@@ -51,7 +51,7 @@ public:
         auto& play = const_cast<PlaySettings&>(preferences_.play_settings());
         play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
         preferences_before_ = preference_values();
-        data_.set_application(&app); data_.set_save(&preferences_); data_.set_level_infos(&levels); data_.set_stages(&stages_);
+        data_.set_application(&app); data_.set_save(&preferences_); stage_catalog_ = acceptance::catalog_of(levels, stages_, { "crossfeed" }); data_.set_stage_catalog(&stage_catalog_);
         data_.set_tuning(&tuning); data_.set_presentation(&presentation); if (debug) { data_.set_debug(debug); }
         font_names_ = { menu.heading_font, menu.item_font, menu.detail_font, menu.brand_font,
             presentation.main_menu().announcement_font, geometry.record_font };
@@ -258,7 +258,7 @@ private:
         require(record.good(), "Cannot preserve preview failure receipt");
     }
     Application& app_; Presentation& presentation_; const HudPresentation& look_; const Canvas& canvas_;
-    Save preferences_; StageList stages_; GameData data_; MenuInput input_; MatchSetup settings_; MenuContext context_; StateContext& stack_;
+    Save preferences_; StageList stages_; StageCatalog stage_catalog_; GameData data_; MenuInput input_; MatchSetup settings_; MenuContext context_; StateContext& stack_;
     const SpriteSheet* sheet_; const SpriteFrame& pixel_; std::vector<float> fixed_, identity_fixed_; TeamPalettePresentation palette_;
     std::vector<int> preferences_before_; std::array<std::string, 6> font_names_{}; std::array<FontHandle, 6> fonts_{}; std::array<const Font*, 6> font_pointers_{};
     const std::filesystem::path output_; const std::string phase_; KeyboardState initial_keyboard_, initial_previous_; bool initial_mouse_focus_, initial_activation_;

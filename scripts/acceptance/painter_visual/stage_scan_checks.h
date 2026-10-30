@@ -24,9 +24,8 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     const NestedSaveProfile isolated(output / "stage-scan-profile");
     Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    Registry<LevelLoadedInfo> levels("stage-scan-inspection"); StageList stages;
-    auto shipped = read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course");
-    stages.push_back(shipped.stage); levels.add("movement_course", std::move(shipped.info));
+    StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
+    catalog.add(read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course"));
     const auto folder_path = output / "stage-scan-profile/ColourWars/stages";
     std::filesystem::create_directories(folder_path);
     const auto valid_path = folder_path / "my_course.json", broken_path = folder_path / "broken_stage.json";
@@ -37,7 +36,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     { std::ofstream file(path, std::ios::binary); file << value; file.close(); require(file.good(), "Cannot write isolated stage-scan fixture"); };
     write(valid_path, valid); write(broken_path, "{broken");
     UserStageFolder folder; folder.attach(folder_path, { &tuning, &presentation, app.render_resources(),
-        app.audio_resources(), &play }, app.audio_resources(), &levels, &stages);
+        app.audio_resources(), &play }, app.audio_resources(), &catalog);
     const auto diagnostic_path = output / "stage-scan-stderr.txt";
     StageScanStderrCapture captured_errors(diagnostic_path);
     int scans = 0; folder.scan(); ++scans;
@@ -46,7 +45,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         "One broken optional stage prevented the good stage from joining");
     const std::string first_refusal = folder.latest_scan().refused[0];
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_tuning(&tuning);
-    data.set_presentation(&presentation); data.set_level_infos(&levels); data.set_stages(&stages);
+    data.set_presentation(&presentation); data.set_stage_catalog(&catalog);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
     settings.set_screen_layout(ScreenLayout::one_player); settings.set_stage("movement_course");

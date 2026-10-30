@@ -222,7 +222,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
     }
     {
         Save saved; GameData data; data.set_application(&app); data.set_save(&saved);
-        data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
+        const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         const StageSelectPresentation& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("cq-blockout-actual-preview", box, &data); preview.set_stage("close_quarters");

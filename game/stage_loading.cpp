@@ -38,15 +38,15 @@ namespace
 	}
 
 	void check_user_stage(const UserStageChecks& checks, const LevelObjectBuilder& builder,
-		const Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
-		const StageDefinition& candidate)
+		const StageCatalog& catalog, const StageDefinition& candidate)
 	{
+		const StageList& stages = catalog.stages();
 		validate_stage_objects(*checks.tuning, builder, *checks.render, *checks.audio,
 			*candidate.info);
 		validate_stage_text(*checks.tuning, *checks.presentation, checks.render,
 			*candidate.info, candidate.stage);
-		sound_groups::check_candidate(*checks.tuning, *checks.presentation, level_infos,
-			stages, *candidate.info, candidate.stage);
+		sound_groups::check_candidate(*checks.tuning, *checks.presentation,
+			catalog.level_infos(), stages, *candidate.info, candidate.stage);
 		// The arena counter must still fit with one more stage; a user stage
 		// is never a Random candidate, so the eligible count is unchanged.
 		checks.presentation->validate_stage_counts(*checks.render, stages.size() + 1,
@@ -69,8 +69,9 @@ StageDefinition read_stage_definition(const std::string& path, const std::string
 }
 
 UserStageScan load_user_stages(const std::filesystem::path& directory,
-	const UserStageChecks& checks, Registry<LevelLoadedInfo>& level_infos, StageList& stages)
+	const UserStageChecks& checks, StageCatalog& catalog)
 {
+	const StageList& stages = catalog.stages();
 	UserStageScan scan;
 	std::error_code error;
 	if (!std::filesystem::exists(directory, error))
@@ -142,10 +143,9 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 			StageDefinition candidate = read_stage_definition(path_to_utf8(file), name);
 			candidate.stage.include_in_random = false;
 			candidate.stage.user = true;
-			check_user_stage(checks, builder, level_infos, stages, candidate);
+			check_user_stage(checks, builder, catalog, candidate);
 
-			level_infos.add(name, std::move(candidate.info));
-			stages.push_back(std::move(candidate.stage));
+			catalog.add(std::move(candidate));
 			scan.accepted.push_back(name);
 		}
 		catch (const std::exception& failure)
@@ -162,27 +162,18 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 }
 
 void UserStageFolder::attach(std::filesystem::path directory, const UserStageChecks& checks,
-	AudioResources* audio, Registry<LevelLoadedInfo>* level_infos, StageList* stages)
+	AudioResources* audio, StageCatalog* catalog)
 {
 	this->directory_ = std::move(directory);
 	this->checks_ = checks;
 	this->audio_ = audio;
-	this->level_infos_ = level_infos;
-	this->stages_ = stages;
+	this->catalog_ = catalog;
 	this->latest_scan_ = {};
 }
 
 bool UserStageFolder::attached() const
 {
-	return this->stages_ != nullptr;
-}
-
-UserStageScan UserStageFolder::read_into(StageList& stages) const
-{
-	// The user stages are the tail; the manifest's are never reread.
-	stages.erase(std::remove_if(stages.begin(), stages.end(),
-		[](const Stage& stage) { return stage.user; }), stages.end());
-	return load_user_stages(this->directory_, this->checks_, *this->level_infos_, stages);
+	return this->catalog_ != nullptr;
 }
 
 void UserStageFolder::report(const UserStageScan& scan)
@@ -205,7 +196,8 @@ UserStageScan UserStageFolder::scan()
 	{
 		return {};
 	}
-	UserStageScan result = this->read_into(*this->stages_);
+	this->catalog_->remove_user_stages();
+	UserStageScan result = load_user_stages(this->directory_, this->checks_, *this->catalog_);
 	this->report(result);
 	this->latest_scan_ = result;
 	return result;
@@ -217,26 +209,35 @@ UserStageScan UserStageFolder::rescan()
 	{
 		return {};
 	}
-	// Build the new list beside the live one, so a failure keeps a usable list.
-	StageList next = *this->stages_;
-	UserStageScan result = this->read_into(next);
+	// A read that throws (never for what is in the folder) puts back the list
+	// it started from, so a failure keeps a usable list.
+	const StageList previous = this->catalog_->stages();
+	this->catalog_->remove_user_stages();
+	UserStageScan result;
+	try
+	{
+		result = load_user_stages(this->directory_, this->checks_, *this->catalog_);
+	}
+	catch (...)
+	{
+		this->catalog_->restore_user_stages(previous);
+		throw;
+	}
 	try
 	{
 		// Each accepted stage passed sound_groups::check_candidate against the
 		// list before it, so this cannot fail on them; if it ever does, the
 		// session goes on with the shipped stages alone.
 		sound_groups::assign(*this->audio_, *this->checks_.tuning, *this->checks_.presentation,
-			*this->level_infos_, next);
+			this->catalog_->level_infos(), this->catalog_->stages());
 	}
 	catch (const std::exception& failure)
 	{
-		next.erase(std::remove_if(next.begin(), next.end(),
-			[](const Stage& stage) { return stage.user; }), next.end());
+		this->catalog_->remove_user_stages();
 		result.accepted.clear();
 		result.refused.push_back(refusal(path_to_utf8(this->directory_),
 			std::string("every user stage left out: ") + failure.what()));
 	}
-	*this->stages_ = std::move(next);
 	this->report(result);
 	this->latest_scan_ = result;
 	return result;

@@ -2,6 +2,7 @@
 #include "game/display_awake.h"
 #include "game/states/game_states.h"
 #include "game/game_data.h"
+#include "game/stage_catalog.h"
 #include "game/save.h"
 #include "game/sound_groups.h"
 #include "engine/app/application.h"
@@ -103,10 +104,10 @@ namespace
     {
         // Every GameData borrow is declared BEFORE Application and outlives its
         // destructor, including the final live GameLevel during app shutdown.
-        Registry<LevelLoadedInfo> levels("Level"); StageList stages;
+        StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
         GameTuning tuning((content / "tuning.json").string().c_str()); Presentation presentation((content / "presentation.json").string().c_str());
         Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings()); play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
-        GameData data; data.set_save(&preferences); data.set_level_infos(&levels); data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+        GameData data; data.set_save(&preferences); data.set_stage_catalog(&catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course"); settings.set_duration(60.0f);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_screen_layout(ScreenLayout::one_player);
         settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::sprayer);
@@ -116,7 +117,7 @@ namespace
             Application app(options); data.set_application(&app); app.initialize(); StateContext& stack = app;
             app.resource_loader()->register_kind("level", { [&](const std::string& directory, const std::string& name, bool)
                 { auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str()); info->validate();
-                    stages.push_back(Stage{ name }); levels.add(name, std::move(info)); }, nullptr });
+                    catalog.add(StageDefinition{ Stage{ name }, std::move(info) }); }, nullptr });
             app.load_manifest((content / "manifest.json").string().c_str());
             sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages); sound_groups::apply(*app.audio_resources(), play);
             tuning.validate_resources(*app.render_resources(), *app.audio_resources()); presentation.validate_resources(*app.render_resources(), *app.audio_resources());

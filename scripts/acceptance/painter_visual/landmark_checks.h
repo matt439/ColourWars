@@ -247,7 +247,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
     Save saved; PlaySettings preview_preferences = saved.play_settings(); preview_preferences.reduce_effects = false;
     preview_preferences.music_volume = preview_preferences.sfx_volume = 0;
     require(saved.set_play_settings_and_save(preview_preferences), "Cannot isolate actual StagePreview preferences");
-    GameData data; data.set_application(&app); data.set_save(&saved); data.set_level_infos(&levels); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&saved); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     for (const auto& stage : landmark_stages)
     {
         const auto* info = levels.get(stage.name); const TeamColour colours{};

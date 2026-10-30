@@ -10,8 +10,8 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     const StageList original_stages = stages;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
-    data.set_stages(&stages); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences);
+    StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     MenuPage* page = nullptr;
@@ -365,11 +365,13 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
         require(before_resize.pixels == frame().pixels, "Settled Stage changed after resize round-trip");
-        stages = { original_stages.front() }; open(true); const Frame only_stage = frame();
+        stages = { original_stages.front() };
+        stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); open(true); const Frame only_stage = frame();
         tap(slots[0], GamepadButton::dpad_left); tap(slots[0], GamepadButton::dpad_right);
         require(only_stage.pixels == frame().pixels && settings.stage() == "movement_course",
             "A single excluded arena invented Random or a selection pulse");
         stages = original_stages;
+        stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" });
         std::cout << "PASS native Join/Stage motion " << size.x << 'x' << size.y << '\n';
     }
     require(records.good(), "Join/Stage motion evidence write failed");

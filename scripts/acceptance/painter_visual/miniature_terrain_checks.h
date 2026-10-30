@@ -377,7 +377,7 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
     const Presentation& presentation, const std::filesystem::path& output, std::ofstream& records)
 {
     Save preferences;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_level_infos(&levels);
+    GameData data; data.set_application(&app); data.set_save(&preferences); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "press_tower", "turbulence" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     StagePreview preview("miniature-test-preview", { 960, 270, 960, 540 }, &data);
     preview.set_stage(stage);
