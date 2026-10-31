@@ -160,10 +160,10 @@ namespace
 		{ "tuning.player.size.*", TuneScope::rebuild },
 		// Player::player_tuning() every step; frame_time at each animation change.
 		{ "tuning.player.**", TuneScope::live },
-		// Level reads the volume each time it plays them; MatchAudio reads the
-		// room tone's each time it starts the loop.
+		// Level and MatchOpening read the volume each time they play them;
+		// MatchAudio reads the room tone's each time it starts the loop.
 		{ "tuning.match.sounds.*.volume", TuneScope::live },
-		// The opening's and the reveal's beats are read every update (level_intro.cpp).
+		// The opening's and the reveal's beats are read every update (match_opening.cpp).
 		{ "tuning.match.opening.**", TuneScope::live },
 		{ "tuning.match.reveal.**", TuneScope::live },
 		// Timers are copied by the Level constructor; the countdown's first label
@@ -189,7 +189,7 @@ namespace
 		// FigureAttachments borrows the geometry that the numeric tuner can edit.
 		{ "presentation.figure.**", TuneScope::live },
 		{ "presentation.respawn_redraw.**", TuneScope::live },
-		// Monitor, Silhouette and ScreenCursor keep a pointer; Level reads figure_grey.
+		// Monitor, Silhouette and ScreenCursor keep a pointer; MatchOpening reads figure_grey.
 		{ "presentation.opening.**", TuneScope::live },
 		{ "presentation.debug_overlay.**", TuneScope::live },
 		{ "presentation.hud.**", TuneScope::live },

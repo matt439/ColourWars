@@ -12,6 +12,7 @@
 #include "game/objects/player_identity_hud.h"
 #include "game/objects/match_audio.h"
 #include "game/objects/countdown_cards.h"
+#include "game/objects/match_opening.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -118,23 +119,12 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 
 	if (round_setup.opening != OpeningMode::off)
 	{
-		const OpeningPresentation& look = presentation->opening();
-		BotRandom persona = round_setup.random.persona();
-		this->monitor_ = std::make_unique<Monitor>(&look, render_resources,
-			MonitorPersona::roll(look, persona));
-		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
-		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
-		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),
-			render_resources);
-		this->reveal_text_ = std::make_unique<const MenuResultsText>(presentation->menu_text().results);
-		this->reveal_art_ = std::make_unique<RevealArt>(&look, render_resources);
-		this->hover_sound_ = this->resolve_wave(match.hover_sound.name);
-		this->click_sound_ = this->resolve_wave(match.click_sound.name);
-		this->close_sound_ = this->resolve_wave(match.close_sound.name);
+		// Rolls the person, makes the monitor and the rest, resolves the
+		// reveal's waves and greys the figures, in the order this always did.
+		this->opening_ = std::make_unique<MatchOpening>(services, stage.audio.sound_bank_name,
+			&this->team_colours_, this->audio_.get(), round_setup.random.persona(),
+			round_setup.opening == OpeningMode::quick, this->players_);
 		this->state_ = LevelState::opening;
-		// A quick rematch starts with the colours being tried.
-		this->opening_time_ = round_setup.opening == OpeningMode::quick ? match.opening.settle : 0.0f;
-		this->colour_players(false, false);
 	}
 
 	this->lessons_ = PracticeLessons(std::move(stage.lessons), tuning, presentation,
@@ -162,7 +152,11 @@ void Level::update(const std::vector<PlayerInputData>& commands, float dt,
 	if (dt > 0.0f)
 	{
 		this->update_state(commands, dt, seats, horizontal ? &*horizontal : nullptr);
-		this->update_acting(dt);
+		// Chooses each figure's act for this moment and poses it.
+		if (this->opening_ != nullptr)
+		{
+			this->opening_->update_acting(dt, this->opening_clock(), this->players_);
+		}
 	}
 	this->intro_skip_requested_ = false;
 
@@ -197,7 +191,13 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 {
 	if (this->state_ == LevelState::opening)
 	{
-		this->update_opening(dt);
+		const MatchOpening::Step step = this->opening_->update_opening(
+			dt, this->skip_requested(), this->players_);
+		if (step != MatchOpening::Step::stay)
+		{
+			this->state_ = LevelState::start_countdown;
+			this->intro_countdown_ = step == MatchOpening::Step::intro_countdown;
+		}
 		return;
 	}
 	if (this->intro_countdown_ && this->skip_requested())
@@ -310,7 +310,8 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 				this->tuning_->match().time_up_sound.volume);
 			this->audio_->zoom_out_sound().play(false,
 				this->tuning_->match().zoom_out_sound.volume);
-			this->start_reveal();
+			// The scene's coverage is counted only when someone will reveal it.
+			if (this->opening_ != nullptr) { this->opening_->start_reveal(this->level_end_info()); }
 		}
 	}
 	else if (this->state_ == LevelState::zoom_out)
@@ -331,9 +332,12 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 			this->zoom_out_camera_ratio());
 	}
-	else if (this->state_ == LevelState::overview && this->monitor_ != nullptr)
+	else if (this->state_ == LevelState::overview && this->opening_ != nullptr)
 	{
-		this->update_reveal(dt);
+		if (this->opening_->update_reveal(dt, this->players_))
+		{
+			this->state_ = LevelState::finished;
+		}
 	}
 	else if (this->state_ == LevelState::overview)
 	{
@@ -607,7 +611,8 @@ void Level::refresh_views()
 
 	if (this->intro_showing() || this->reveal_showing())
 	{
-		this->add_intro_views();
+		this->opening_->add_intro_views(*this->scene_, this->view_participants_,
+			this->players_, this->opening_clock());
 		return;
 	}
 

@@ -6,6 +6,7 @@
 #include "game/objects/crude_drawing.h"
 #include "game/objects/teammate_markers.h"
 #include "game/objects/player_identity_hud.h"
+#include "game/objects/match_opening.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -17,7 +18,9 @@ void Level::draw(Renderer& renderer) const
 {
 	if (this->intro_showing() || this->reveal_showing())
 	{
-		this->draw_intro(renderer);
+		// The countdown's number and cards show in the picture as they do in the panes.
+		this->opening_->draw(renderer, *this->scene_, this->opening_clock(), this->players_,
+			[this](DrawList& list) { this->draw_countdown_text(list); });
 		return;
 	}
 	if (this->state_ == LevelState::start_countdown ||

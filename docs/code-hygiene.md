@@ -601,145 +601,113 @@ and both painter probes compiled. `HYG#39` is complete.
 
 ### `Level` composed of owned parts (`HYG#40`)
 
-Group the 27-parameter constructor into a few parameter records built by
-`LevelBuilder`; extract owned collaborators (the intro/opening presenter,
-horizontal motion, practice, the HUD/draw layer, match audio) with their own
-state; give `game/ai` a narrow world-query interface that `Level` implements,
-instead of `bot_*` members. Update the guide's description of `Level`.
+**Done 2026-10-31.** `Level` is now the composition root of owned parts, in
+nine commits (stages 1 to 8, with stage 5 in two halves). It keeps
+the match state, every timer, the roster and pane maps, the scene and the order
+of `update`, `update_state`, `update_level_logic`, `draw`,
+`draw_player_overlay` and `refresh_layout`; each part keeps one concern's
+state and drawing, borrows the tuning and presentation and reads them per call
+(so `tune` stays live, and `game/debug/tune_scope.cpp` names the new readers),
+and is created at the point its members were. Every public `Level` member
+stays, as a forwarder where its body moved; `players_` and `timer_` keep their
+names for `movement_feedback_visual.cpp`, `cursor_marker_frames` stays a
+public static, and `level.h` keeps every include it had, so no probe changed
+beyond the two planned edits below. The bodies moved unchanged.
 
-Progress. The constructor takes four records from
-[level_inputs.h](../game/objects/level_inputs.h): `LevelWorld` (the scene,
-its players and the pane dividers, handed over), `LevelServices` (the
-borrowed services and the live tuning, presentation, preferences and
-bindings), `LevelStage` (the stage's name, camera bounds, `StageAudio`,
-stations and lessons) and `LevelMatch` (team colours, opening, duration,
-roster and random stream). `LevelBuilder` fills them inside the `try` that
-names the stage in an error, so a bad display name is still reported against
-it. The four probes that build a `Level` by hand use designated initialisers
-and leave the defaults they relied on unset. `LevelBuilder`'s own
-constructor is unchanged.
+The constructor takes four records from
+[level_inputs.h](../game/objects/level_inputs.h) instead of 27 parameters:
+`LevelWorld` (the scene, its players and the pane dividers, handed over),
+`LevelServices` (the borrowed services and live tuning, presentation,
+preferences and bindings), `LevelStage` (name, camera bounds, `StageAudio`,
+stations, lessons) and `LevelMatch` (team colours, opening, duration, roster,
+random stream). `LevelBuilder` fills them inside the `try` that names the stage
+in an error; its own constructor is unchanged. The four probes that build a
+`Level` by hand use designated initialisers.
 
 [LevelStructures](../game/objects/level_structures.h), a value member
-declared after the scene, owns what `Level` borrowed from the scene at
-admission: the translating structures and their supports, the team gates and
-the projectile targets. `level_horizontal_motion.cpp` became
-`level_structures.cpp`; its admission, budget, prepare, commit, zero-step and
-snapshot bodies moved unchanged, with the scene, the players and the player
-tuning passed in to each call instead of read from `Level`. `admit` holds the
-three collections `build_opening_frame` made after `end_tick`, in the same
-order, and the mover validation still runs before any binding inside one
-function. `Level` keeps the update order (prepare and zero-step before layout,
-commit and gate settling before the scene update), passes `supports()` to
-`Player::end_contacts` and sweeps `projectile_targets()` where it swept its own
-list; its public `has_horizontal_motion`, `horizontal_structure_states` and
-`team_gates` forward. `TranslatingStructurePaintable` now befriends
-`LevelStructures` instead of `Level`.
+(`level_horizontal_motion.cpp` became `level_structures.cpp`), owns what
+`Level` borrowed at admission: the translating structures and their supports,
+the team gates and the projectile targets, collected in the old order inside
+`build_opening_frame`; `TranslatingStructurePaintable` befriends it instead of
+`Level`. The bots query the world through [BotWorld](../game/ai/bot_world.h),
+an abstract `game/ai` class that returns only values (a `BotBody` per
+participant with `tool_ready`/`tool_empty`, the gates' permissions, paint
+surfaces, obstacles, supports, ramps and the two sight lines).
+[LevelBotWorld](../game/objects/level_bot_world.h) implements it, borrowing
+the scene, `players_` and `LevelStructures` by reference because the targets
+are admitted after it is built. `MatchBotDriver` no longer derives from
+`SeatInputFilter`: `drive(seats, world)` keeps the same loops and RNG draws, so
+`game/ai` includes neither `level.h`, `weapon.h` nor the team gate. The four
+probes that drove it call `drive(seats, level.bot_world())`; the balance
+runner wraps it in a probe-local filter.
 
-The bots query the world through [BotWorld](../game/ai/bot_world.h), an
-abstract class in `game/ai` that returns only values: a `BotBody` per
-participant (the `Player` and tool reads the driver made, flattened, with
-`tool_ready`/`tool_empty` instead of `WeaponReadiness` and the nozzle's reach
-precomputed), the gates' settled permissions, the paint surfaces, obstacles,
-supports, ramps and the two sight lines. `Level` owns its implementation,
-[LevelBotWorld](../game/objects/level_bot_world.h), built just before the
-driver and borrowing the scene, `players_` and `LevelStructures` by reference,
-since the projectile targets are admitted after it is built; the
-`bot_*` bodies and `paint_surfaces` moved into it unchanged, and `Level`'s
-public queries forward. `MatchBotDriver` no longer derives from
-`SeatInputFilter`: `drive(seats, world)` replaces `filter_seats`, with the same
-loops, the same RNG draws and `engagement_distance`'s sum in the same order,
-so `game/ai` includes neither `level.h`, `weapon.h` nor the team gate. The four
-probes that drove it by hand call `drive(seats, level.bot_world())`; the
-balance runner wraps it in a probe-local `SeatInputFilter`.
+The window-space and HUD layers followed. [PaperCard](../game/objects/paper_card.h)
+holds the overlay sheet, its fill and the one card scale and card draw that
+every card uses; [PracticeLessons](../game/objects/practice_lessons.h) the
+lessons and their cards; [CursorMarkerOverlay](../game/objects/cursor_marker_overlay.h)
+the mouse pointer and its marquee (all three value members);
+[TeammateMarkers](../game/objects/teammate_markers.h) the edge chips and their
+per-pane fade ages; [PlayerIdentityHud](../game/objects/player_identity_hud.h)
+the badge, the emphasis, the bot labels, seat labels, pad mapping and HUD
+identity texts, created empty before the roster loop so each bot label is
+still made before the no-human-view throw. [MatchAudio](../game/objects/match_audio.h),
+declared after the scene, owns the one `MatchVoices` list, the music as its
+`MusicVoice`, the end sting, the match cues, the room tone and the story
+voices, and resolves and registers them in the old order; `Level` still
+registers each player's voices after them, decides when every cue plays, and
+keeps `~Level` in `level_audio.cpp`, which stops the list before any member
+goes. `PaintAudio` and `BlockedShotFeedback` stay in `Level`, declared before
+the scene, because players point at both. [CountdownCards](../game/objects/countdown_cards.h)
+owns the countdown, resume and replay cards, the stage title and the controls
+reminders, built in two steps at the old points; `Level` keeps the state checks
+and the beat timing.
 
-Two value members took the window-space cards. [PaperCard](../game/objects/paper_card.h)
-resolves the overlay sheet and its fill frame where the constructor resolved
-them, and is the one place the card scale (`opening_scale`, read live from the
-window) and the shadowed, edged card (`draw_opening_card`) live; the controls
-reminders, the countdown and replay cards' scale, the identity tags, the
-cursor marker and the developer overlays draw through its `sheet()` and
-`fill()`. [PracticeLessons](../game/objects/practice_lessons.h) owns the
-lessons, their prepared cards and the active lesson; it is built where the
-constructor built the cards, so a title that cannot be drawn fails at the same
-point, is laid out from `refresh_layout`, updated after the live step only in
-practice (with the one human's player) and drawn over the last view as before.
-`level_practice.cpp` keeps `start_without_countdown` and the forwarders, which
-still hide the card outside live play.
+[MatchOpening](../game/objects/match_opening.h), owned through a `unique_ptr`
+that is null when the match has no intro, took the opening, the reveal and the
+figures' acting from `level_intro.cpp` into `match_opening.cpp`: the
+`Monitor`, `Silhouette`, `ScreenCursor`, `FigureActing` and `RevealArt`, the
+coverage text, the hover, click and close waves, the opening and reveal clocks,
+the picture bounds, the end info and winner, the acts and their beats. It is
+created where those members were, rolling the persona and making them in the
+old order, and greys the figures as before; `build_opening_frame` still works
+out the picture bounds at the same point and hands them over. It borrows
+`MatchAudio` for the room tone and story voices. `Level` keeps `state_`,
+`intro_countdown_`, `glass_in_started_`, the skip request and every timer,
+hands them over as an `OpeningClock` on each call, and applies each transition
+the part returns where it was written before: `update_opening` returns `stay`,
+`countdown` (a skip) or `intro_countdown`, `update_reveal` returns whether the
+reveal is over, and `Level::skip_intro` calls `skip` and then sets the state
+before the countdown branch reads it. `start_reveal` is called only when the
+opening exists, so the scene is still counted only then; `update_acting` runs
+only with an opening, where the null `acting_` check returned before. The draw
+takes a callback that draws `Level`'s countdown at the old point, and the
+intro's views are added in the same order. `revealed()` is now whether the
+opening exists. `LevelState` moved into `level_state.h`, which `level.h`
+includes, so the part need not include `level.h`. `Level` keeps its
+`SoundBankObject` base although nothing plays through it now: resolving the
+stage's bank there is the first check a `Level` makes, before the roster
+checks, and dropping it would report a bad roster ahead of a bad bank.
 
-The two pointers at things off the pane moved out next.
-[CursorMarkerOverlay](../game/objects/cursor_marker_overlay.h), a value member
-where the pointer was, holds the pointer `set_pointer` hands it, answers
-whether the marquee shows (enabled, focused inside the window, and a human
-seat on keyboard and mouse, which `Level::cursor_marker_visible` still works
-out and passes in) and draws `Level::cursor_marker_frames`, which stays a
-public static on `Level`, through the paper card's sheet and fill.
-[TeammateMarkers](../game/objects/teammate_markers.h), owned through a
-`unique_ptr` created where the marker and its ages were, owns the
-`TeammateMarker` leaf, the per-pane fade ages and `hud_scale`; it borrows the
-HUD presentation, the viewport manager and the preferences and takes the
-players and the pane map per call. `Level` still advances it at the same point
-of the live tick, still owns the badge it draws with, and its public
-`teammate_markers(view)` forwards with whether the match is live. The bodies
-moved unchanged.
-
-[PlayerIdentityHud](../game/objects/player_identity_hud.h), owned through a
-`unique_ptr`, took who each figure is: the `PlayerBadge`, each participant's
-emphasis, the bots' roster labels, the seat labels, the pad mapping and the
-HUD identity texts built from them. It is created empty where the bot labels
-were sized, before the roster loop; each bot's label is still made inside the
-loop, before the no-human-view throw; the badge and the emphasis are still
-created after the stage title, and the texts still refreshed after the HUD is
-built. It borrows the presentation and the preferences and reads them on every
-call; the players, the roster and whether the match is in its countdown or
-live play (`Level::identity_showing`) are passed in. `Level` still decays the
-emphasis at the top of the live tick and re-emphasises a respawn at the same
-point, keeps the live-play check in `emphasise_players`, and its public
-identity, seat-label and pad queries forward. `draw_player_overlay` keeps its
-filter changes and order, drawing the badge and each bot's badge and label
-(through the paper card's sheet and fill) by the part's const pieces, and
-hands `TeammateMarkers::draw` the part's badge. The bodies moved unchanged.
-
-[MatchAudio](../game/objects/match_audio.h), owned through a `unique_ptr`
-declared after the scene, took the match's sound: the one `MatchVoices` list,
-the stage music as its `MusicVoice` (whose back-pointer is now the part), the
-end sting, the five match cues, the room tone and the eight story voices, the
-music's and sting's volumes, its fade and duck envelopes and whether it is
-ending. It is created where the voices were resolved, resolves them in the same
-order (so the first effect the bank lacks still throws first, after the bank
-check `Level`'s own `SoundBankObject` base still makes) and registers them in
-the same order; `Level` then registers each player's voices in roster order.
-It borrows the match tuning and the presentation and reads them per call: the
-music mix on every fade and duck, the room tone's volume when the loop starts.
-`start_music` sets its own `music_started_` where `Level` sets
-`countdown_started_`, which `restart_lost_music` now reads instead; `Level`
-keeps `countdown_started_` for `start_without_countdown`. `Level` still decides
-when each cue plays and reads every other cue's volume from tuning at the same
-call; `end_music`, `play_end_sting`, `stop_arena` and `set_room_tone` replace
-their old lines in place. `last_ten_second_`, the player stops,
-`interrupt_players`, `prepare_resume`, `PaintAudio` and `BlockedShotFeedback`
-stay in `Level`. `~Level` stays in `level_audio.cpp` and stops the list in its
-body, before any member is destroyed; `suspend`, `pause_audio`, `resume`,
-`update_music`, `set_music_ducked` and `resume_music` forward. The bodies moved
-unchanged.
-
-[CountdownCards](../game/objects/countdown_cards.h), owned through a
-`unique_ptr`, took the window-space cards around the start signal: the
-`CountdownArt`, the countdown's label and number box, the GET READY, RESUMING
-and REPLAY headings and their cards, the stage title with its card and text
-bounds, and the controls reminders with the words, pad profiles and slots they
-were last worded from. It is built in two steps at the old points: the
-constructor makes only the stage title, where the `Level` constructor made it,
-and `build` makes the rest inside `build_opening_frame`, after the picture
-bounds, copying the reminders' look and the first label as before (the only
-copies; `presentation.match` stays rebuild). It borrows the match tuning, the
-presentation, the window and the effective bindings and takes the paper card
-per call for the card scale. `refresh_layout` still rewords the reminders
-first and, on a resize, lays out the countdown cards, the stage title and the
-reminders in that order; `Level` still sets the label at the same three points,
-computes the beat's age from its own clock and keeps every
-`state_ == start_countdown` check in its public forwarders. The draws keep
-their filter changes in the same order, and `draw_intro` still calls
-`Level::draw_countdown_text`. The bodies moved unchanged. The opening remains.
+Every stage built both presets under `/W4 /WX`, ran the acceptance cases,
+script checks and painter switches its files touch, and compared what the plan
+asked of it (`check-paint-fx.ps1` failing only on its known camera-scale
+check). For the last
+commit: Release passed all 74 default cases and Debug 71 with `-SkipSlowDebug`
+plus `crossfeed`, `press_tower`, `menu_text` and `debug_console`; the opt-in
+group, both painter probes and the frame-pacing probe compiled;
+`check-movement-feedback.ps1` and `check-display-awake.ps1` passed;
+`check-startup.ps1` passed on both executables, and with the bank hidden
+under `-RequireNoAudio` and for a `+stage` match launch, which reported the
+silent bank once and exited 0. `bot_trials.csv`, `bot_combat_trials.csv` and
+the `bot_team_trials` reports are byte-identical to the stage-3 evidence, and
+the 2- and 4-player `run-balance.ps1 -Bot match` CSVs on `crossfeed` are
+byte-identical to the baseline taken before stage 1. On MattPC the painter's
+`-MonitorOnly`, `-RevealTuneColoursOnly`, `-ResultPercentageOnly`,
+`-CountdownOnly`, `-LandmarkOnly`, `-SilhouetteTuneColoursOnly`,
+`-SilhouetteBodyTuneColourOnly`, `-ActingTuneColoursOnly`,
+`-GlassTuneColourOnly`, `-TeamSetupOnly` and `-PausedOptionsOnly` matrices
+passed, and the full run passed 716 checks, as it did after stage 7.
+`HYG#40` is complete.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

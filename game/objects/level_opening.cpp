@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 #include "game/objects/countdown_cards.h"
+#include "game/objects/match_opening.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -28,9 +29,12 @@ void Level::build_opening_frame()
 	const float top = std::max(picture.y, limit.y);
 	const float right = std::min(picture.right(), limit.right());
 	const float bottom = std::min(picture.bottom(), limit.bottom());
-	this->picture_bounds_ = right > left && bottom > top ?
-		RectangleF(left, top, right - left, bottom - top) : this->camera_bounds_;
-	this->picture_middle_ = limit.x + limit.width / 2.0f;
+	if (this->opening_ != nullptr)
+	{
+		this->opening_->set_picture(right > left && bottom > top ?
+			RectangleF(left, top, right - left, bottom - top) : this->camera_bounds_,
+			limit.x + limit.width / 2.0f);
+	}
 
 	// The countdown's cards and a controls reminder for each device in play.
 	this->cards_->build(this->players_, this->paper_);

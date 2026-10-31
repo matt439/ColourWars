@@ -247,6 +247,19 @@ retirement, per-view render fan-out) are `labrador::Scene` in the engine, which
 [SeatCommandBuilder](../game/objects/seat_commands.h) maps slots to seats and
 resolves mouse aim, so the level never reads a device or the mouse.
 
+`Level` is built from owned parts, each of which keeps one concern's state
+and drawing: `LevelStructures` (the movers, team gates and projectile
+targets), `LevelBotWorld` (the [BotWorld](../game/ai/bot_world.h) the bots
+query), `MatchAudio` (the voices and the music), `CountdownCards`,
+`PaperCard`, `PracticeLessons`, `PlayerIdentityHud`, `TeammateMarkers`,
+`CursorMarkerOverlay` and, when the match has an intro, `MatchOpening` (the
+monitor, the person, the reveal and the figures' acting). `Level` keeps the
+match state, its timers and the order of update, draw and layout, so its
+`update`, `draw` and `refresh_layout` read as the match's sequence; a part that
+needs the state is handed it per call and returns a transition for `Level` to
+apply rather than writing it. The parts borrow the tuning and presentation and
+read them per call, so `tune` stays live.
+
 Construction goes through builders that read the level definition and the
 tuning and hand finished objects to the scene. `LevelBuilder` owns a
 `PlayerBuilder` (which owns a `WeaponBuilder`) and a `LevelObjectBuilder`; each

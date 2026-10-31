@@ -49,6 +49,7 @@
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
 #include "game/match_setup.h"
+#include "game/objects/level_state.h"
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -61,21 +62,12 @@ class TeammateMarkers;
 class PlayerIdentityHud;
 class MatchAudio;
 class CountdownCards;
+class MatchOpening;
+struct OpeningClock;
 class Presentation;
 struct MenuResultsText;
 struct MatchBotSupport;
 struct MatchBotRamp;
-
-enum class LevelState
-{
-	start_countdown,
-	active,
-	zoom_out,
-	overview,
-	finished,
-	// Before the countdown. Last, so the values above keep their numbers.
-	opening,
-};
 
 // POL#39: one of the cursor marquee's three nested frames, in window pixels.
 // Drawn as four edges `width` thick just inside `box`.
@@ -400,80 +392,22 @@ private:
 
 	LevelState state_ = LevelState::start_countdown;
 
-	// The opening (level_intro.cpp). The monitor, the person and the cursor
-	// exist only when the match has an intro.
-	struct OpeningBeat
-	{
-		bool previewing_a = false;
-		bool previewing_b = false;
-		bool picker = false;
-		float cursor_at_a = 0.0f;
-		float cursor_at_b = 0.0f;
-		float cursor_back = 0.0f;
-		SilhouettePose pose;
-	};
-	float opening_time_ = 0.0f;
 	// The countdown plays in the picture and ends by pushing through the glass.
 	bool intro_countdown_ = false;
 	bool glass_in_started_ = false;
-	std::unique_ptr<Monitor> monitor_;
-	std::unique_ptr<Silhouette> silhouette_;
-	std::unique_ptr<ScreenCursor> cursor_;
-	std::unique_ptr<FigureActing> acting_;
-	// By roster participant: what each figure is doing, and for how long.
-	std::vector<FigureAct> acts_;
-	float act_time_ = 0.0f;
-	// What of the world the picture shows, and where its two halves meet.
-	mattmath::RectangleF picture_bounds_;
-	float picture_middle_ = 0.0f;
+	// The opening and the reveal: the monitor, the person, the cursor, the
+	// figures' acting and their beats. Null when the match has no intro.
+	// Level keeps the state, the flags above and every timer, hands them to
+	// it as an OpeningClock, and applies each transition it returns.
+	std::unique_ptr<MatchOpening> opening_;
 
-	// The reveal (level_intro.cpp): the same monitor and person at the end.
-	struct RevealBeat
-	{
-		float cursor_at_a = 0.0f;
-		float cursor_at_b = 0.0f;
-		bool showing_a = false;
-		bool showing_b = false;
-		bool picker = false;
-		float waver = 0.0f;
-		bool clicked = false;
-		SilhouettePose pose;
-	};
-	float reveal_time_ = 0.0f;
-	LevelEndInfo end_info_;
-	PlayerTeam winner_ = PlayerTeam::none;
-	labrador::SoundBank::WaveHandle hover_sound_;
-	labrador::SoundBank::WaveHandle click_sound_;
-	labrador::SoundBank::WaveHandle close_sound_;
-	std::unique_ptr<RevealArt> reveal_art_;
-	// Capture the wrappers alongside RevealArt's percent font, so replacement
-	// presentation text never draws against the preceding font snapshot. A copy
-	// held by pointer, so the menu text records stay out of this header.
-	std::unique_ptr<const MenuResultsText> reveal_text_;
-
-	RevealBeat reveal_beat() const;
-	float reveal_length() const;
-	bool reveal_showing() const;
-	// How far the view is through the glass: 0 at the monitor, 1 in the panes.
-	float glass_push() const;
-	void start_reveal();
-	void update_reveal(float dt);
-	void draw_reveal(labrador::DrawList& front, const mattmath::RectangleF& screen) const;
-	// Chooses each figure's act for this moment and poses it.
-	void update_acting(float dt);
-	void draw_acting(labrador::DrawList& list, int view) const;
-
-	OpeningBeat opening_beat() const;
-	float opening_length() const;
+	// What the opening reads of the match this moment (level_intro.cpp).
+	OpeningClock opening_clock() const;
 	bool intro_showing() const;
-	float push_ratio() const;
-	mattmath::RectangleF intro_screen() const;
+	bool reveal_showing() const;
 	bool skip_requested() const;
-	void colour_players(bool team_a, bool team_b);
+	// Applies the opening's skip: straight to the split-screen countdown.
 	void skip_intro();
-	void update_opening(float dt);
-	void add_intro_views();
-	void draw_intro(labrador::Renderer& renderer) const;
 
 	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& commands,

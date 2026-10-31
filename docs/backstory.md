@@ -151,12 +151,12 @@ Decided with the author on 2026-10-12, while the first slice was built:
 | Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw` |
 | Respawn: the pop | Built. The accepted `player.pop` plays when the paint comes off, through `player.sounds.death` in the replacement bank (`STORY#1`) |
 | Muted scenery, no team hue in it, each team on its own half | Built. Authored tints are grey, enforced by the game and the level editor; the Muted Day terrain and backdrop take their muted tones from the terrain sheet's texels ([terrain kit](polish-terrain.md)) |
-| Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `level_intro.cpp`; `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
+| Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `MatchOpening` (`match_opening.cpp`); `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
 | Opening: skip, quick rematch | Built. A, B or Start skips; a Start (Escape) pressed while the intro plays is a skip, never a pause, however late after GO it is released (`latch_intro_pause`); a rematch starts at the preview |
 | Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |
 | Opening: figures looking at their hands, then across at the other side | Built. `FigureActing` repaints the eyes the respawn strokes locate |
-| Opening: sigh and chair creak | Built. Accepted `room.sigh` and `room.chair` cues, `match.sounds` slots and phase-edge play calls in `level_intro.cpp` (`STORY#2`) |
-| Reveal: pull back into the monitor, the person sits, hovers each colour over the whole picture, wavers, clicks the winner, the slot fills, the coverage shows, the person leaves | Built. `level_intro.cpp`; timings in `tuning.json` `match.reveal`, sounds `match.sounds.hover/click`; the results page then keeps only the percentages |
+| Opening: sigh and chair creak | Built. Accepted `room.sigh` and `room.chair` cues, `match.sounds` slots and phase-edge play calls in `match_opening.cpp` (`STORY#2`) |
+| Reveal: pull back into the monitor, the person sits, hovers each colour over the whole picture, wavers, clicks the winner, the slot fills, the coverage shows, the person leaves | Built. `match_opening.cpp`; timings in `tuning.json` `match.reveal`, sounds `match.sounds.hover/click`; the results page then keeps only the percentages |
 | Reveal, nobody painted: the person stares, then closes the program instead of choosing | Built. The glass goes to `opening.desktop_colour` |
 | Reveal: figures freezing but cheating (darting eyes, sweat, shaking knees), then celebrating or slumping once the person has gone | Built. `tuning.json` `match.reveal.react`, `presentation.json` `opening.acting` |
 

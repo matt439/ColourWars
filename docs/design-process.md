@@ -179,7 +179,7 @@ by** names the feature or row and, where one exists, the retained
 | A6 | P2: to know what each tool does before I pick it, so I pick one that suits me | Weapon Select names and describes all five tools in text that fits; the choice can change before Stage Select | Weapon Select descriptions; `weapon_catalog`, `text_wrap`; whether the text is enough is `POL#24` | E12, E23 |
 | A7 | P1: to see the arena and its record before locking it, so the choice is informed | Stage Select draws the live arena and its best record; Random draws only from Random stages | Stage Select, `GAP#6.2`; `stage_selection`, `match_records` | E1, E20 |
 | A8 | P2: the controls before my first shot, so I do not learn them by dying | The countdown shows a controls card for each device in the match; Controls / audio carries a full reference, also from Pause | Countdown cards, Controls / audio; `menu_text`; observation is `POL#24` | E17, E19 |
-| A9 | P1: to skip the opening once everyone has seen it, so rematches start fast | A, B or Start (Space, Escape or Enter) skips; a skip press is never a pause; a rematch starts at the preview | `Level::skip_intro` (`game/objects/level_intro.cpp`), `latch_intro_pause` (`game/states/pause_menu.cpp`, called from `game_states.cpp`); `debug_console` (skip, latch), `action_bindings` (skip keys) | E19 |
+| A9 | P1: to skip the opening once everyone has seen it, so rematches start fast | A, B or Start (Space, Escape or Enter) skips; a skip press is never a pause; a rematch starts at the preview | `MatchOpening::skip` (`game/objects/match_opening.cpp`), `latch_intro_pause` (`game/states/pause_menu.cpp`, called from `game_states.cpp`); `debug_console` (skip, latch), `action_bindings` (skip keys) | E19 |
 
 #### B. In the match
 
@@ -187,7 +187,7 @@ by** names the feature or row and, where one exists, the retained
 |---|---|---|---|---|
 | B1 | P2: to know which figure is mine, so I never steer the wrong one | My pane's HUD names my seat, device and team; my figure carries a badge readable over paint; Reduce effects keeps it | HUD identity, `PlayerBadge`; `player_identity` | E3, E15, gap audit 2.4 |
 | B2 | P2: to know where my teammates are when they are off my pane, so we can work together | An off-screen teammate is marked at my pane's edge in their direction, bots included | `ROAD#18` (attended: readability); `teammate_markers` | E11 |
-| B3 | P2: to learn who won only at the end, so the reveal is the payoff | No coverage figure is shown during play; the reveal shows both teams' coverage | The reveal (`game/objects/level_intro.cpp`); deliberate (E8) | E8, E19 |
+| B3 | P2: to learn who won only at the end, so the reveal is the payoff | No coverage figure is shown during play; the reveal shows both teams' coverage | The reveal (`game/objects/match_opening.cpp`); deliberate (E8) | E8, E19 |
 | B4 | P4: warning before my paint runs out, even with the sound off, so I am not caught dry | A HUD tag and the tank change before exhaustion, and a cue sounds once per descent | `POL#38` (attended); `low_paint` | E24 |
 | B5 | P1: a dropped pad to stop the match, so nobody loses a player to a cable | Disconnect pauses and names the missing seat; Resume waits for its return; a pad in another slot reclaims with Start | `ROAD#4`; `menu_navigation` (physical pads: `ROAD#2`) | E3 |
 | B6 | Any seat: resuming not to surprise anyone, so nobody dies on the first frame | Resume and focus return count in before play; held fire or jump needs a release | `POL#18` (attended); `resume_countdown` | E18 |
@@ -270,9 +270,9 @@ Each step names the screen or state that serves it; classes are in
 | Team Select: choose or shuffle; both teams needed | `MainMenuTeamSelect` | A4 |
 | Weapon Select: tool descriptions, Boost | `MainMenuWeaponSelect` | A6, D3 |
 | Stage Select: live preview, record, Random | `MainMenuStageSelect` | A7 |
-| Opening (skippable), countdown with controls cards | `GameLevel` above `GameMenu`; `game/objects/level_intro.cpp` | A8, A9 |
+| Opening (skippable), countdown with controls cards | `GameLevel` above `GameMenu`; `game/objects/match_opening.cpp` | A8, A9 |
 | Play | `GameLevel`, `Level` | B1-B8 |
-| Reveal, then Results | `level_intro.cpp`, `ResultsMenuPage` | B3, C2 |
+| Reveal, then Results | `match_opening.cpp`, `ResultsMenuPage` | B3, C2 |
 | End: Watch Replay, continue, change, exit | `EndMenuPage` | C5, C6, C7 |
 
 *Unobserved:* whether a guest reads the countdown card and the weapon

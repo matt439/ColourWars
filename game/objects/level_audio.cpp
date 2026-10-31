@@ -7,6 +7,7 @@
 #include "game/objects/player_identity_hud.h"
 #include "game/objects/match_audio.h"
 #include "game/objects/countdown_cards.h"
+#include "game/objects/match_opening.h"
 
 using namespace mattmath;
 using namespace labrador;

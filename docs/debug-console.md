@@ -595,8 +595,8 @@ resources, persona, geometry and palette occlusion remain unchanged. Nonblack
 zero alpha reveals the opaque `161616` glass below the visible program mask,
 not the initial Canvas. The native contract uses one effective Canvas.
 
-**Actual-Level visibility witness:** `Level::draw_intro` submits Monitor behind
-its miniature world, with later intro/reveal/front layers able to cover the
+**Actual-Level visibility witness:** `MatchOpening::draw` (called from
+`Level::draw`) submits Monitor behind its miniature world, with later intro/reveal/front layers able to cover the
 program. The separate `ProgramLevelVisibilityOnly` (`program-level-visibility`)
 check below verifies exposed program adoption/restoration in one retained
 two-player Crossfeed full-opening checkpoint at 1280x720. Direct-Monitor alpha
