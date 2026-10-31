@@ -3,7 +3,6 @@
 #include "game/presentation.h"
 #include "game/input_slots.h"
 #include "game/controls_text.h"
-#include "game/objects/team_gate_structure_paintable.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -12,23 +11,7 @@ void Level::build_opening_frame(RenderResources* render_resources)
 {
 	// Admit the builder's pending objects before the first frame is drawn.
 	this->scene_->end_tick();
-	this->admit_horizontal_structures();
-	for (CollisionObject* object : this->scene_->collision_objects())
-	{
-		Structure* structure = Collider::of(*object).structure();
-		if (TeamGateStructurePaintable* gate = structure != nullptr ? structure->gate() : nullptr)
-		{
-			this->team_gates_.push_back(gate);
-			this->team_gates_view_.push_back(gate);
-		}
-	}
-	for (CollisionObject* object : this->scene_->collision_objects())
-	{
-		if (Collider::of(*object).projectile() == nullptr)
-		{
-			this->projectile_targets_.push_back(object);
-		}
-	}
+	this->structures_.admit(*this->scene_, this->players_, this->tuning_->player());
 	this->projectile_count_ = this->count_projectiles();
 
 	// The picture is the stage's authored overview and everyone in it, with

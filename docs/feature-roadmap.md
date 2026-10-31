@@ -2466,10 +2466,10 @@ change a vertical mover would force there, not a design.
 | Motion state | `game/objects/horizontal_motion.h:22-60` | `HorizontalMotionSpec::travel_x`; segments carry `from_x`/`to_x` | segment offsets on the lift's axis; `Vector2F` offsets already hold a y that is always 0 |
 | Segment building | `game/objects/horizontal_motion.cpp:97-103`, `:142-149` | reads `current_offset.x` | read the lift's axis |
 | Carry step | `game/objects/horizontal_motion.h:71-77` (`HorizontalCarryStep::displacement_x`) | x displacement only | a y displacement (answer E2) |
-| Admission | `game/objects/level_horizontal_motion.cpp:42-56`, `:199-238` | pose/path are horizontal; standing envelope and obstacle refusals use that path | the lift's path and corridor, same refusals |
-| Displacement budget | `game/objects/level_horizontal_motion.cpp:240-308`, refusals at `:301-305` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound |
-| Frame preparation | `game/objects/level_horizontal_motion.cpp:320-332` | carrier displacement is `after.x - before.x` | `after.y - before.y` too |
-| Persisted pose | `game/objects/level_horizontal_motion.cpp:364-380` | poses rebuilt from `previous_offset.x`/`current_offset.x` | rebuild from the lift's axis |
+| Admission | `game/objects/level_structures.cpp:47-61`, `:230-270` | pose/path are horizontal; standing envelope and obstacle refusals use that path | the lift's path and corridor, same refusals |
+| Displacement budget | `game/objects/level_structures.cpp:272-340`, refusals at `:334-338` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound |
+| Frame preparation | `game/objects/level_structures.cpp:350-362` | carrier displacement is `after.x - before.x` | `after.y - before.y` too |
+| Persisted pose | `game/objects/level_structures.cpp:398-414` | poses rebuilt from `previous_offset.x`/`current_offset.x` | rebuild from the lift's axis |
 | Rider carry | `game/objects/player.h:169-171`, `game/objects/player.cpp:531-550` | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before the rider's own integration (answer E2) |
 | Carrier choice | `game/objects/player.cpp:552-605` | a support is a measured or resolved top contact under the feet | unchanged rule; the top moves each step |
 | Movement feedback | `game/objects/player.cpp:455-460`, `game/objects/player.h:307-308`, `:365` | subtracts carried x from resolved x | a carried y kept out of landing/fall feedback |
@@ -2522,7 +2522,7 @@ change a vertical mover would force there, not a design.
   floor flush with no gap to stand in. (b) *dynamic:* a lift whose next step
   would close on a living player under it holds still for that step, and
   resumes as soon as they are clear. *Precedent:* (a) is the horizontal
-  standing-envelope refusal (`level_horizontal_motion.cpp:216-234`, mirrored in
+  standing-envelope refusal (`level_structures.cpp:247-266`, mirrored in
   the editor at `horizontal_authoring.cpp:137-151`); (b) is the team gate,
   which stays open while a permitted player is inside rather than pushing them
   out (`team_gate_structure_paintable.cpp:65-84`,
@@ -2542,7 +2542,7 @@ change a vertical mover would force there, not a design.
 - **E6. Budget the relative motion.** The lift's per-step travel joins the
   vertical relative-displacement bound beside the player's own speed, refused
   at admission like the horizontal one. *Precedent:*
-  `level_horizontal_motion.cpp:301-305`.
+  `level_structures.cpp:334-338`.
 
 **3. Gameplay calls, as options for the author.** Values follow the current
 movers (320 travel, 4 s round trip, about 160 units/s) only as a reference

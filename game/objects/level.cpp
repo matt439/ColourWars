@@ -198,8 +198,12 @@ void Level::update(const std::vector<PlayerInputData>& commands, float dt,
     if (this->has_horizontal_motion())
     {
         HorizontalMotion::validate_dt(dt);
-        if (dt > 0.0f) { horizontal.emplace(this->prepare_horizontal_frame(dt)); }
-        this->publish_horizontal_zero();
+        if (dt > 0.0f)
+        {
+            horizontal.emplace(this->structures_.prepare(
+                dt, *this->scene_, this->players_, this->tuning_->player()));
+        }
+        this->structures_.publish_zero(this->players_);
     }
 	this->refresh_layout();
 	this->simulation_dt_ = dt;
@@ -426,10 +430,10 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	this->paint_audio_->update(dt);
 	this->blocked_shot_feedback_->update(dt);
 	this->apply_player_inputs(commands, seats);
-    if (horizontal != nullptr) { this->commit_horizontal_frame(*horizontal); }
+    if (horizontal != nullptr) { this->structures_.commit(*horizontal, this->players_); }
 	// Before any of this step's movement or paint, so a gate follows the
 	// paint held before the step and its overlap test sees where players are.
-	this->settle_team_gates();
+	this->structures_.settle_gates(this->players_);
 
 	this->scene_->update(dt);
 	this->resolve_projectile_movement();
@@ -453,7 +457,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	for (Player* player : this->players_)
 	{
         if (this->has_horizontal_motion())
-        { player->end_contacts(this->scene_->contacts(), this->horizontal_supports_); }
+        { player->end_contacts(this->scene_->contacts(), this->structures_.supports()); }
         else { player->end_contacts(this->scene_->contacts()); }
 	}
 
@@ -533,7 +537,7 @@ void Level::update_idle_drips(float dt)
 				!player.input().jump_held && !player.input().jump_pressed &&
 				player.animation_state() == PlayerAnimationState::idle;
 			drip->advance(settled, weapon.nozzle_pos(), weapon.rotation(), dt,
-				this->projectile_targets_);
+				this->structures_.projectile_targets());
 		}
 	}
 }
@@ -545,7 +549,7 @@ void Level::update_players(float dt)
 	{
 		for (std::unique_ptr<Projectile>& projectile :
 			player->update_weapon_and_get_projectiles(
-				dt, this->projectile_targets_))
+				dt, this->structures_.projectile_targets()))
 		{
 			// The game keeps the projectile interface until Scene takes ownership
 			// through its engine collision interface.
@@ -562,7 +566,7 @@ void Level::resolve_projectile_movement()
 	{
 		if (Projectile* projectile = Collider::of(*object).projectile())
 		{
-			projectile->resolve_movement_contacts(this->projectile_targets_);
+			projectile->resolve_movement_contacts(this->structures_.projectile_targets());
 		}
 	}
 }
@@ -650,7 +654,7 @@ void Level::refresh_views()
 		(this->state_ != LevelState::start_countdown && this->state_ != LevelState::active);
 	// These existing stable targets include every structure and player, but no
 	// retiring projectile. This is mode configuration, not a draw-order mirror.
-	for (CollisionObject* object : this->projectile_targets_)
+	for (CollisionObject* object : this->structures_.projectile_targets())
 	{
 		if (Structure* structure = Collider::of(*object).structure())
 		{
@@ -729,7 +733,7 @@ std::wstring_view Level::bot_identity(int participant) const
 std::vector<RectangleF> Level::bot_obstacles(PlayerTeam team) const
 {
 	std::vector<RectangleF> bounds;
-	for (const CollisionObject* object : this->projectile_targets_)
+	for (const CollisionObject* object : this->structures_.projectile_targets())
 	{
 		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
 			!passable_gate(object, team))
@@ -744,7 +748,7 @@ std::vector<MatchBotSupport> Level::bot_supports(PlayerTeam team) const
 	// The target list is fixed for the match, so a position in it is a stable
 	// identity even for a support that moves.
 	std::uint32_t id = 0;
-	for (const CollisionObject* object : this->projectile_targets_)
+	for (const CollisionObject* object : this->structures_.projectile_targets())
 	{
 		++id;
 		const Structure* structure = Collider::of(*object).structure();
@@ -762,7 +766,7 @@ std::vector<MatchBotSupport> Level::bot_supports(PlayerTeam team) const
 std::vector<MatchBotRamp> Level::bot_ramps() const
 {
 	std::vector<MatchBotRamp> ramps;
-	for (const CollisionObject* object : this->projectile_targets_)
+	for (const CollisionObject* object : this->structures_.projectile_targets())
 	{
 		const CollisionObjectType type = to_collision_type(object->tag());
 		if (is_structure_ramp(type) && object->shape() != nullptr)
@@ -784,7 +788,7 @@ bool Level::bot_traversal_line_of_sight(Vector2F from, Vector2F to, PlayerTeam t
 	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||
 		!std::isfinite(to.x) || !std::isfinite(to.y)) { return false; }
 	const Segment sight(from, to);
-	for (const CollisionObject* object : this->projectile_targets_)
+	for (const CollisionObject* object : this->structures_.projectile_targets())
 	{
 		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
 			!passable_gate(object, team) &&
@@ -907,12 +911,17 @@ std::vector<PaintSurfaceSample> Level::paint_surfaces() const
     return samples;
 }
 
-std::span<const TeamGateStructurePaintable* const> Level::team_gates() const
+bool Level::has_horizontal_motion() const
 {
-    return this->team_gates_view_;
+    return this->structures_.has_horizontal_motion();
 }
 
-void Level::settle_team_gates()
+std::vector<HorizontalStructureState> Level::horizontal_structure_states() const
 {
-    for (TeamGateStructurePaintable* gate : this->team_gates_) { gate->settle(this->players_); }
+    return this->structures_.horizontal_structure_states();
+}
+
+std::span<const TeamGateStructurePaintable* const> Level::team_gates() const
+{
+    return this->structures_.team_gates();
 }

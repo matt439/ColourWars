@@ -1,7 +1,12 @@
 #include "game/pch.h"
-#include "game/objects/level.h"
+#include "game/objects/level_structures.h"
+#include "game/objects/collider.h"
+#include "game/objects/player.h"
 #include "game/objects/structure.h"
+#include "game/objects/team_gate_structure_paintable.h"
 #include "game/objects/translating_structure_paintable.h"
+#include "game/tuning.h"
+#include "engine/scene/scene.h"
 #include "game/simulation.h"
 #include "game/horizontal_motion_contract.h"
 #include <algorithm>
@@ -157,16 +162,39 @@ namespace
     }
 }
 
-bool Level::has_horizontal_motion() const
+bool LevelStructures::has_horizontal_motion() const
 {
     return !this->horizontal_structures_.empty();
 }
 
-void Level::admit_horizontal_structures()
+void LevelStructures::admit(const Scene& scene, std::span<Player* const> players,
+    const PlayerTuning& player_tuning)
+{
+    this->admit_horizontal(scene, players, player_tuning);
+    for (CollisionObject* object : scene.collision_objects())
+    {
+        Structure* structure = Collider::of(*object).structure();
+        if (TeamGateStructurePaintable* gate = structure != nullptr ? structure->gate() : nullptr)
+        {
+            this->team_gates_.push_back(gate);
+            this->team_gates_view_.push_back(gate);
+        }
+    }
+    for (CollisionObject* object : scene.collision_objects())
+    {
+        if (Collider::of(*object).projectile() == nullptr)
+        {
+            this->projectile_targets_.push_back(object);
+        }
+    }
+}
+
+void LevelStructures::admit_horizontal(const Scene& scene, std::span<Player* const> players,
+    const PlayerTuning& player_tuning)
 {
     // Leave static Level arithmetic, allocation and construction order alone.
     bool moving = false;
-    for (CollisionObject* object : this->scene_->collision_objects())
+    for (CollisionObject* object : scene.collision_objects())
     {
         const Structure* surface = Collider::of(*object).structure();
         moving |= surface != nullptr && surface->mover() != nullptr;
@@ -174,7 +202,7 @@ void Level::admit_horizontal_structures()
     if (!moving) { return; }
 
     std::uint64_t support_order = 0;
-    for (CollisionObject* object : this->scene_->collision_objects())
+    for (CollisionObject* object : scene.collision_objects())
     {
         Structure* surface = Collider::of(*object).structure();
         if (surface == nullptr) { continue; }
@@ -192,25 +220,25 @@ void Level::admit_horizontal_structures()
         this->horizontal_supports_.push_back({ surface,
             static_cast<std::uint32_t>(support_order++), id });
     }
-    this->validate_horizontal_admission();
-    this->validate_horizontal_budget(nullptr);
+    this->validate_admission(scene, players);
+    this->validate_budget(nullptr, scene, players, player_tuning);
     // All counts/geometry were checked before the first binding operation.
     for (std::size_t index = 0; index < this->horizontal_structures_.size(); ++index)
     { this->horizontal_structures_[index]->bind_motion_id(static_cast<HorizontalMotionId>(index + 1)); }
 }
 
-void Level::validate_horizontal_admission() const
+void LevelStructures::validate_admission(const Scene& scene, std::span<Player* const> players) const
 {
     if (!this->has_horizontal_motion()) { return; }
-    if (this->players_.empty() || !this->scene_->bounds())
+    if (players.empty() || !scene.bounds())
     { throw std::invalid_argument("Horizontal motion admission requires actual Players and finite Scene bounds."); }
-    const HorizontalBox world = horizontal_box(*this->scene_->bounds());
+    const HorizontalBox world = horizontal_box(*scene.bounds());
     for (const TranslatingStructurePaintable* mover : this->horizontal_structures_)
     {
         const HorizontalBox path = horizontal_path(*mover);
         if (!horizontal_contains(world, path))
         { throw std::invalid_argument("Horizontal motion platform envelope leaves Scene bounds."); }
-        for (const Player* player : this->players_)
+        for (const Player* player : players)
         {
             if (player == nullptr)
             { throw std::invalid_argument("Horizontal motion admission received a null Player."); }
@@ -219,7 +247,7 @@ void Level::validate_horizontal_admission() const
             const HorizontalBox standing = horizontal_motion_contract::standing(path, body.width, body.height);
             if (!horizontal_contains(world, standing))
             { throw std::invalid_argument("Horizontal motion standing envelope leaves Scene bounds."); }
-            for (const CollisionObject* object : this->scene_->collision_objects())
+            for (const CollisionObject* object : scene.collision_objects())
             {
                 const Structure* surface = Collider::of(*object).structure();
                 if (object == mover || surface == nullptr) { continue; }
@@ -241,7 +269,8 @@ void Level::validate_horizontal_admission() const
     }
 }
 
-void Level::validate_horizontal_budget(const HorizontalFrame* prepared) const
+void LevelStructures::validate_budget(const Frame* prepared, const Scene& scene,
+    std::span<Player* const> players, const PlayerTuning& player_tuning) const
 {
     if (!this->has_horizontal_motion()) { return; }
     if (prepared != nullptr && prepared->motions.size() != this->horizontal_structures_.size())
@@ -255,12 +284,12 @@ void Level::validate_horizontal_budget(const HorizontalFrame* prepared) const
         maximum_path = std::max(maximum_path, horizontal_up(
             2.0 * static_cast<double>(spec.travel_x) / static_cast<double>(spec.period_seconds) * step));
     }
-    const HorizontalBox world = horizontal_box(*this->scene_->bounds());
-    for (const Player* player : this->players_)
+    const HorizontalBox world = horizontal_box(*scene.bounds());
+    for (const Player* player : players)
     {
         const RectangleF& body = player->rectangle();
         const HorizontalBox actual = horizontal_box(body);
-        const HorizontalPlayerSpeed speed = horizontal_player_speed(*player, this->tuning_->player());
+        const HorizontalPlayerSpeed speed = horizontal_player_speed(*player, player_tuning);
         const double personal_x = horizontal_up(speed.x * step);
         const double personal_y = horizontal_up(speed.y * step);
         const double x_scale = horizontal_finite(std::max({ std::abs(world.left), std::abs(world.right),
@@ -311,19 +340,20 @@ void Level::validate_horizontal_budget(const HorizontalFrame* prepared) const
     }
 }
 
-Level::HorizontalFrame Level::prepare_horizontal_frame(float dt) const
+LevelStructures::Frame LevelStructures::prepare(float dt, const Scene& scene,
+    std::span<Player* const> players, const PlayerTuning& player_tuning) const
 {
     HorizontalMotion::validate_dt(dt);
-    this->validate_horizontal_admission();
-    HorizontalFrame frame;
+    this->validate_admission(scene, players);
+    Frame frame;
     frame.motions.reserve(this->horizontal_structures_.size());
     for (const TranslatingStructurePaintable* mover : this->horizontal_structures_)
     { frame.motions.push_back(mover->prepare_motion(dt)); }
-    frame.carriers.resize(this->players_.size());
-    this->validate_horizontal_budget(&frame);
-    for (std::size_t player = 0; player < this->players_.size(); ++player)
+    frame.carriers.resize(players.size());
+    this->validate_budget(&frame, scene, players, player_tuning);
+    for (std::size_t player = 0; player < players.size(); ++player)
     {
-        const HorizontalMotionId selected = this->players_[player]->carrier_id();
+        const HorizontalMotionId selected = players[player]->carrier_id();
         if (selected == 0) { continue; }
         for (std::size_t index = 0; index < this->horizontal_structures_.size(); ++index)
         {
@@ -337,19 +367,19 @@ Level::HorizontalFrame Level::prepare_horizontal_frame(float dt) const
     return frame;
 }
 
-void Level::commit_horizontal_frame(const HorizontalFrame& prepared) noexcept
+void LevelStructures::commit(const Frame& prepared, std::span<Player* const> players) noexcept
 {
     for (std::size_t index = 0; index < this->horizontal_structures_.size(); ++index)
     { this->horizontal_structures_[index]->commit_motion(prepared.motions[index]); }
-    for (std::size_t index = 0; index < this->players_.size(); ++index)
-    { this->players_[index]->prepare_carrier_step(prepared.carriers[index]); }
+    for (std::size_t index = 0; index < players.size(); ++index)
+    { players[index]->prepare_carrier_step(prepared.carriers[index]); }
 }
 
-void Level::publish_horizontal_zero() noexcept
+void LevelStructures::publish_zero(std::span<Player* const> players) noexcept
 {
     for (TranslatingStructurePaintable* mover : this->horizontal_structures_)
     { mover->publish_zero_step(); }
-    for (Player* player : this->players_)
+    for (Player* player : players)
     {
         std::optional<HorizontalCarryStep> zero;
         for (const TranslatingStructurePaintable* mover : this->horizontal_structures_)
@@ -365,7 +395,7 @@ void Level::publish_horizontal_zero() noexcept
     }
 }
 
-std::vector<HorizontalStructureState> Level::horizontal_structure_states() const
+std::vector<HorizontalStructureState> LevelStructures::horizontal_structure_states() const
 {
     std::vector<HorizontalStructureState> result;
     result.reserve(this->horizontal_structures_.size());
@@ -381,4 +411,24 @@ std::vector<HorizontalStructureState> Level::horizontal_structure_states() const
         result.push_back(std::move(state));
     }
     return result;
+}
+
+std::span<const HorizontalSupportRef> LevelStructures::supports() const
+{
+    return this->horizontal_supports_;
+}
+
+void LevelStructures::settle_gates(std::span<Player* const> players)
+{
+    for (TeamGateStructurePaintable* gate : this->team_gates_) { gate->settle(players); }
+}
+
+std::span<const TeamGateStructurePaintable* const> LevelStructures::team_gates() const
+{
+    return this->team_gates_view_;
+}
+
+std::span<CollisionObject* const> LevelStructures::projectile_targets() const
+{
+    return this->projectile_targets_;
 }

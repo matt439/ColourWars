@@ -74,10 +74,12 @@ Application owns the state stack
         TeammateMarker
 ```
 
-Level also borrows pointers to the Scene's players, and, collected once when
-the match's objects are admitted, to its team gates and translating
-structures. Players respawn rather than being removed from Scene, and structures
-stay for the match, so these pointers remain valid while Level exists. The
+Level also borrows pointers to the Scene's players. Its
+[LevelStructures](../game/objects/level_structures.h) part, a value member,
+borrows the stage's translating structures, team gates and projectile targets,
+collected once when the match's objects are admitted. Players respawn rather
+than being removed from Scene, and structures stay for the match, so these
+pointers remain valid while Level exists. The
 index in Level's player vector is a stable roster participant; `player_num()`
 identifies a human input slot. Bots have no device or pane. Explicit mappings
 connect human pane indices to participants, so a bot in P2 does not rename P3
@@ -388,13 +390,13 @@ scored slab needed.
    how neighbouring faces clip their paint, add it to the `StageContext`
    pre-pass as well, as the slab does through `context.slabs`. Scene owns the
    result from there.
-5. Give per-step behaviour a typed borrow through a role. Level collects its
-   gates in `build_opening_frame` ([level_opening.cpp](../game/objects/level_opening.cpp))
-   and its movers in `admit_horizontal_structures`
-   ([level_horizontal_motion.cpp](../game/objects/level_horizontal_motion.cpp))
-   by asking each [Structure](../game/objects/structure.h) for its `gate()` or
-   `mover()`, which those two leaves answer with themselves, and calls them each
-   step (`settle_team_gates`). The slab is static and needed none of this.
+5. Give per-step behaviour a typed borrow through a role. Level's
+   `LevelStructures` part collects its movers and then its gates in `admit`
+   ([level_structures.cpp](../game/objects/level_structures.cpp)), which
+   `build_opening_frame` calls, by asking each
+   [Structure](../game/objects/structure.h) for its `mover()` or `gate()`,
+   which those two leaves answer with themselves, and Level calls them each
+   step through it (`settle_gates`). The slab is static and needed none of this.
 6. Teach contacts only what the shape needs, as answers to `Structure`'s
    queries rather than as a new case in its callers. The gate inherits the
    base's painting `on_projectile_contact` and answers `passable_for`; the

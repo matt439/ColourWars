@@ -617,8 +617,24 @@ roster and random stream). `LevelBuilder` fills them inside the `try` that
 names the stage in an error, so a bad display name is still reported against
 it. The four probes that build a `Level` by hand use designated initialisers
 and leave the defaults they relied on unset. `LevelBuilder`'s own
-constructor is unchanged. The collaborators and the bots' world-query
-interface remain.
+constructor is unchanged.
+
+[LevelStructures](../game/objects/level_structures.h), a value member
+declared after the scene, owns what `Level` borrowed from the scene at
+admission: the translating structures and their supports, the team gates and
+the projectile targets. `level_horizontal_motion.cpp` became
+`level_structures.cpp`; its admission, budget, prepare, commit, zero-step and
+snapshot bodies moved unchanged, with the scene, the players and the player
+tuning passed in to each call instead of read from `Level`. `admit` holds the
+three collections `build_opening_frame` made after `end_tick`, in the same
+order, and the mover validation still runs before any binding inside one
+function. `Level` keeps the update order (prepare and zero-step before layout,
+commit and gate settling before the scene update), passes `supports()` to
+`Player::end_contacts` and sweeps `projectile_targets()` where it swept its own
+list; its public `has_horizontal_motion`, `horizontal_structure_states` and
+`team_gates` forward. `TranslatingStructurePaintable` now befriends
+`LevelStructures` instead of `Level`. The opening, practice, the HUD and draw
+layer, match audio and the bots' world-query interface remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

@@ -25,6 +25,7 @@
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
 #include "game/objects/level_inputs.h"
+#include "game/objects/level_structures.h"
 #include "engine/ui/widget.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
@@ -287,25 +288,10 @@ private:
 	// outside the pane's view. Presentation only, advanced by live ticks.
 	std::vector<float> teammate_marker_age_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
-    // Admitted fixed movers explicitly refuse retirement. These borrows live
-    // for this Level; no terrain add/remove API is exposed after admission.
-    std::vector<TranslatingStructurePaintable*> horizontal_structures_;
-    std::vector<HorizontalSupportRef> horizontal_supports_;
-    // Borrowed from scene_ at admission, like the movers.
-    std::vector<const TeamGateStructurePaintable*> team_gates_view_;
-    std::vector<TeamGateStructurePaintable*> team_gates_;
-    void settle_team_gates();
-    struct HorizontalFrame
-    {
-        std::vector<HorizontalPreparedStep> motions;
-        std::vector<std::optional<HorizontalCarryStep>> carriers;
-    };
-    void admit_horizontal_structures();
-    void validate_horizontal_admission() const;
-    void validate_horizontal_budget(const HorizontalFrame* prepared) const;
-    HorizontalFrame prepare_horizontal_frame(float dt) const;
-    void commit_horizontal_frame(const HorizontalFrame& prepared) noexcept;
-    void publish_horizontal_zero() noexcept;
+    // The movers, their supports, the team gates and the projectile targets,
+    // borrowed from scene_ when build_opening_frame admits the builder's objects.
+    LevelStructures structures_;
+    using HorizontalFrame = LevelStructures::Frame;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
 	// so these pointers remain valid for the match.
@@ -328,10 +314,6 @@ private:
 	// for the match; hiding them is UiText::set_hidden, which keeps their
 	// words, box and colour.
 	std::vector<labrador::UiText*> station_labels_;
-
-	// Scene-owned geometry and players, which live for the whole match. Flying
-	// paint sweeps this list so its cost does not grow with other projectiles.
-	std::vector<labrador::CollisionObject*> projectile_targets_;
 
 	// Screen-space dividers owned outside Scene and drawn by each pane's overlay.
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
