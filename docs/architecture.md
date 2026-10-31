@@ -249,7 +249,11 @@ resolves mouse aim, so the level never reads a device or the mouse.
 Construction goes through builders that read the level definition and the
 tuning and hand finished objects to the scene. `LevelBuilder` owns a
 `PlayerBuilder` (which owns a `WeaponBuilder`) and a `LevelObjectBuilder`; each
-`Weapon` owns the `ProjectileBuilder` it fires through.
+`Weapon` owns the `ProjectileBuilder` it fires through. `LevelBuilder` hands
+`Level` four records from
+[level_inputs.h](../game/objects/level_inputs.h): the world it owns (scene,
+players, dividers), the services and live records it borrows, what the stage
+says, and this round's decisions.
 
 ## Data
 

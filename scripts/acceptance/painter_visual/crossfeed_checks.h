@@ -109,12 +109,22 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
         app.audio_resources(), &preferences, app.viewport_manager()))
     { roster.push_back(scene->add(std::move(player))); }
     const std::string display = info.display_name();
-    fixture.level = std::make_unique<Level>(std::move(scene), std::move(roster),
-        objects.build_viewport_dividers(app.viewport_manager()), colours, info.camera_bounds_rectangle(),
-        info.zoom_out_start_bounds_rectangle(), info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation,
-        std::wstring(display.begin(), display.end()), info.sound_bank_name(), info.music_name(), info.music_volume(),
-        info.end_sting_name(), info.end_sting_volume(), app.resolution_manager(), app.viewport_manager(),
-        app.render_resources(), app.audio_resources(), &preferences, info.stations(), opening, duration);
+    fixture.level = std::make_unique<Level>(
+        LevelWorld{ .scene = std::move(scene), .players = std::move(roster),
+            .viewport_dividers = objects.build_viewport_dividers(app.viewport_manager()) },
+        LevelServices{ .tuning = &tuning, .presentation = &presentation,
+            .render_resources = app.render_resources(), .audio_resources = app.audio_resources(),
+            .resolution_manager = app.resolution_manager(), .viewport_manager = app.viewport_manager(),
+            .preferences = &preferences },
+        LevelStage{ .name = std::wstring(display.begin(), display.end()),
+            .camera_bounds = info.camera_bounds_rectangle(),
+            .zoom_out_start_bounds = info.zoom_out_start_bounds_rectangle(),
+            .zoom_out_finish_bounds = info.zoom_out_finish_bounds_rectangle(),
+            .audio = { .sound_bank_name = info.sound_bank_name(), .music_name = info.music_name(),
+                .music_volume = info.music_volume(), .end_sting_name = info.end_sting_name(),
+                .end_sting_volume = info.end_sting_volume() },
+            .stations = info.stations() },
+        LevelMatch{ .team_colours = colours, .opening = opening, .duration = duration });
     require(fixture.level->player_count() == count, "Crossfeed native Level changed its requested player count");
     for (int view = 0; view < count; ++view)
     { require(fixture.level->player(view).player_num() == slots[static_cast<size_t>(view)], "Crossfeed native roster changed its view/input mapping"); }

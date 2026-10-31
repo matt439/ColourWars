@@ -27,46 +27,30 @@ namespace
     }
 }
 
-Level::Level(std::unique_ptr<Scene> scene,
-	std::vector<Player*> players,
-	std::vector<std::unique_ptr<GameObject>> viewport_dividers,
-	const TeamColour& team_colours,
-	const RectangleF& camera_bounds,
-	const RectangleF& zoom_out_start_bounds,
-	const RectangleF& zoom_out_finish_bounds,
-	const GameTuning* tuning,
-	const Presentation* presentation,
-	const std::wstring& stage_name,
-	const std::string& sound_bank_name,
-	const std::string& music_name,
-	float music_volume,
-	const std::string& end_sting_name,
-	float end_sting_volume,
-	const ResolutionManager* resolution_manager,
-	const ViewportManager* viewport_manager,
-	RenderResources* render_resources,
-	const AudioResources* audio_resources,
-	const PlaySettings* preferences,
-	std::vector<LevelStation> stations,
-	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
-	const MatchSetup* roster, MatchRandom random, std::vector<LevelLesson> lessons) :
-	colourwars::SoundBankObject(sound_bank_name, audio_resources),
-	scene_(std::move(scene)),
-	players_(std::move(players)),
-	stations_(std::move(stations)),
-	viewport_dividers_(std::move(viewport_dividers)),
-	music_volume_(music_volume),
-	end_sting_volume_(end_sting_volume),
-	resolution_manager_(resolution_manager),
-	viewport_manager_(viewport_manager),
-	team_colours_(team_colours),
-	tuning_(tuning),
-	camera_bounds_(camera_bounds),
-	zoom_out_start_bounds_(zoom_out_start_bounds),
-	zoom_out_finish_bounds_(zoom_out_finish_bounds)
+Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, LevelMatch round_setup) :
+	colourwars::SoundBankObject(stage.audio.sound_bank_name, services.audio_resources),
+	scene_(std::move(world.scene)),
+	players_(std::move(world.players)),
+	stations_(std::move(stage.stations)),
+	viewport_dividers_(std::move(world.viewport_dividers)),
+	music_volume_(stage.audio.music_volume),
+	end_sting_volume_(stage.audio.end_sting_volume),
+	resolution_manager_(services.resolution_manager),
+	viewport_manager_(services.viewport_manager),
+	team_colours_(round_setup.team_colours),
+	tuning_(services.tuning),
+	camera_bounds_(stage.camera_bounds),
+	zoom_out_start_bounds_(stage.zoom_out_start_bounds),
+	zoom_out_finish_bounds_(stage.zoom_out_finish_bounds)
 {
-	this->preferences_ = preferences;
-	this->input_bindings_ = input_bindings;
+	const GameTuning* tuning = services.tuning;
+	const Presentation* presentation = services.presentation;
+	RenderResources* render_resources = services.render_resources;
+	const AudioResources* audio_resources = services.audio_resources;
+	const MatchSetup* roster = round_setup.roster;
+	const std::string& sound_bank_name = stage.audio.sound_bank_name;
+	this->preferences_ = services.preferences;
+	this->input_bindings_ = services.input_bindings;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
 	this->roster_.resize(this->players_.size());
@@ -96,10 +80,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 	if (this->view_participants_.empty())
 	{ throw std::invalid_argument("Level requires at least one human view"); }
 	if (roster != nullptr && roster->bot_count() != 0)
-	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, random.bot_seed()); }
+	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, round_setup.random.bot_seed()); }
 	const MenuStyle& menu = presentation->menu();
 	const CountdownArtPresentation& paper = presentation->match().countdown_art;
-	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage_name,
+	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage.name,
 		menu.heading_font, Vector2F::ZERO, render_resources,
 		paper.ink, paper.paper, menu.heading_shadow_offset);
 	this->player_badge_ = std::make_unique<PlayerBadge>(
@@ -122,7 +106,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		{
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
 				&presentation->idle_drip(type), render_resources, player->team_colour(),
-				static_cast<uint32_t>(this->idle_drips_.size()), preferences));
+				static_cast<uint32_t>(this->idle_drips_.size()), services.preferences));
 		}
 		this->idle_drips_.push_back(drip);
 	}
@@ -132,13 +116,13 @@ Level::Level(std::unique_ptr<Scene> scene,
 		->resolve_sprite_frame(presentation->hud().fill_frame);
 	const MatchTuning& match = tuning->match();
 
-	this->timer_ = duration.value_or(match.duration);
+	this->timer_ = round_setup.duration.value_or(match.duration);
 	this->start_timer_ = match.countdown;
 	this->zoom_out_timer_ = match.zoom_out;
 	this->overview_timer_ = match.overview;
 
 	this->debug_text_ = std::make_unique<DebugText>(
-		render_resources, resolution_manager,
+		render_resources, services.resolution_manager,
 		&presentation->debug_overlay());
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
 		render_resources, &presentation->hud(), &presentation->player_identity());
@@ -147,8 +131,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 	// nothing, and the music paths that would wait on it check first.
 	const auto voice = [&](const std::string& effect)
 	{ return MatchVoice(sound_bank_name, audio_resources, effect); };
-	this->music_ = MusicVoice(this, sound_bank_name, audio_resources, music_name);
-	this->end_sting_ = voice(end_sting_name);
+	this->music_ = MusicVoice(this, sound_bank_name, audio_resources, stage.audio.music_name);
+	this->end_sting_ = voice(stage.audio.end_sting_name);
 	this->zoom_out_sound_ = voice(match.zoom_out_sound.name);
 	this->countdown_sound_ = voice(match.countdown_sound.name);
 	this->go_sound_ = voice(match.go_sound.name);
@@ -180,10 +164,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 		player->add_voices(this->voices_);
 	}
 
-	if (opening != OpeningMode::off)
+	if (round_setup.opening != OpeningMode::off)
 	{
 		const OpeningPresentation& look = presentation->opening();
-		BotRandom persona = random.persona();
+		BotRandom persona = round_setup.random.persona();
 		this->monitor_ = std::make_unique<Monitor>(&look, render_resources,
 			MonitorPersona::roll(look, persona));
 		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
@@ -197,11 +181,11 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->close_sound_ = this->resolve_wave(match.close_sound.name);
 		this->state_ = LevelState::opening;
 		// A quick rematch starts with the colours being tried.
-		this->opening_time_ = opening == OpeningMode::quick ? match.opening.settle : 0.0f;
+		this->opening_time_ = round_setup.opening == OpeningMode::quick ? match.opening.settle : 0.0f;
 		this->colour_players(false, false);
 	}
 
-	this->lessons_ = std::move(lessons);
+	this->lessons_ = std::move(stage.lessons);
 	this->build_lesson_cards(render_resources);
 	this->build_opening_frame(render_resources);
 }

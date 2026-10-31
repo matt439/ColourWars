@@ -80,11 +80,20 @@ namespace
         for (auto& player : players.build_players(settings, &info, colours, &render,
             &audio, &preferences, &viewports))
         { roster.push_back(scene->add(std::move(player))); }
-        Level level(std::move(scene), std::move(roster), objects.build_viewport_dividers(&viewports),
-            colours, info.camera_bounds_rectangle(), info.zoom_out_start_bounds_rectangle(),
-            info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation, L"One-way paint check",
-            info.sound_bank_name(), info.music_name(), info.music_volume(), info.end_sting_name(),
-            info.end_sting_volume(), &resolution, &viewports, &render, &audio, &preferences, info.stations(), OpeningMode::off, 300.0f);
+        Level level(
+            LevelWorld{ .scene = std::move(scene), .players = std::move(roster),
+                .viewport_dividers = objects.build_viewport_dividers(&viewports) },
+            LevelServices{ .tuning = &tuning, .presentation = &presentation, .render_resources = &render,
+                .audio_resources = &audio, .resolution_manager = &resolution, .viewport_manager = &viewports,
+                .preferences = &preferences },
+            LevelStage{ .name = L"One-way paint check", .camera_bounds = info.camera_bounds_rectangle(),
+                .zoom_out_start_bounds = info.zoom_out_start_bounds_rectangle(),
+                .zoom_out_finish_bounds = info.zoom_out_finish_bounds_rectangle(),
+                .audio = { .sound_bank_name = info.sound_bank_name(), .music_name = info.music_name(),
+                    .music_volume = info.music_volume(), .end_sting_name = info.end_sting_name(),
+                    .end_sting_volume = info.end_sting_volume() },
+                .stations = info.stations() },
+            LevelMatch{ .team_colours = colours, .opening = OpeningMode::off, .duration = 300.0f });
         const float step = static_cast<float>(StepTimer::TicksToSeconds(
             StepTimer::SecondsToTicks(1.0 / 60.0)));
         std::vector<PlayerInputData> inputs(input_slots::count);

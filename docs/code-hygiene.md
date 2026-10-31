@@ -601,11 +601,24 @@ and both painter probes compiled. `HYG#39` is complete.
 
 ### `Level` composed of owned parts (`HYG#40`)
 
-Group the 28-parameter constructor into a few parameter records built by
+Group the 27-parameter constructor into a few parameter records built by
 `LevelBuilder`; extract owned collaborators (the intro/opening presenter,
 horizontal motion, practice, the HUD/draw layer, match audio) with their own
 state; give `game/ai` a narrow world-query interface that `Level` implements,
 instead of `bot_*` members. Update the guide's description of `Level`.
+
+Progress. The constructor takes four records from
+[level_inputs.h](../game/objects/level_inputs.h): `LevelWorld` (the scene,
+its players and the pane dividers, handed over), `LevelServices` (the
+borrowed services and the live tuning, presentation, preferences and
+bindings), `LevelStage` (the stage's name, camera bounds, `StageAudio`,
+stations and lessons) and `LevelMatch` (team colours, opening, duration,
+roster and random stream). `LevelBuilder` fills them inside the `try` that
+names the stage in an error, so a bad display name is still reported against
+it. The four probes that build a `Level` by hand use designated initialisers
+and leave the defaults they relied on unset. `LevelBuilder`'s own
+constructor is unchanged. The collaborators and the bots' world-query
+interface remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

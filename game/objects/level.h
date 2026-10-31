@@ -24,6 +24,7 @@
 #include "engine/render/camera.h"
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
+#include "game/objects/level_inputs.h"
 #include "engine/ui/widget.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
@@ -88,31 +89,8 @@ class TeamGateStructurePaintable;
 class Level : public colourwars::SoundBankObject
 {
 public:
-	Level(std::unique_ptr<labrador::Scene> scene,
-		std::vector<Player*> players,
-		std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers,
-		const TeamColour& team_colours,
-		const mattmath::RectangleF& camera_bounds,
-		const mattmath::RectangleF& zoom_out_start_bounds,
-		const mattmath::RectangleF& zoom_out_finish_bounds,
-		const GameTuning* tuning,
-		const Presentation* presentation,
-		const std::wstring& stage_name,
-		const std::string& sound_bank_name,
-		const std::string& music_name,
-		float music_volume,
-		const std::string& end_sting_name,
-		float end_sting_volume,
-		const labrador::ResolutionManager* resolution_manager,
-		const labrador::ViewportManager* viewport_manager,
-		labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources,
-		const PlaySettings* preferences,
-		std::vector<LevelStation> stations,
-		OpeningMode opening, std::optional<float> duration = std::nullopt,
-		const InputBindings* input_bindings = nullptr,
-		const MatchSetup* roster = nullptr, MatchRandom random = MatchRandom(),
-		std::vector<LevelLesson> lessons = {});
+	// The records are in level_inputs.h; LevelBuilder fills them.
+	Level(LevelWorld world, const LevelServices& services, LevelStage stage, LevelMatch match);
 
 	// Stop the match's voices: the level's and the player weapon/redraw loops.
 	~Level();

@@ -305,11 +305,16 @@ namespace moving_structure_acceptance
         {
             require(pending_ != nullptr && players.size() == static_cast<std::size_t>(expected_players_),
                 "Fixture Level requires its complete real roster");
-            level = std::make_unique<Level>(std::move(pending_), players,
-                std::vector<std::unique_ptr<labrador::GameObject>>{}, world.palette,
-                bounds_, bounds_, bounds_, &tuning, &world.presentation, L"Moving capability fixture",
-                "paint_exe", "", 0.0f, "", 0.0f, &resolution, &viewports, &world.render,
-                &world.audio, &world.preferences, std::vector<LevelStation>{}, opening, 120.0f);
+            level = std::make_unique<Level>(
+                LevelWorld{ .scene = std::move(pending_), .players = players },
+                LevelServices{ .tuning = &tuning, .presentation = &world.presentation,
+                    .render_resources = &world.render, .audio_resources = &world.audio,
+                    .resolution_manager = &resolution, .viewport_manager = &viewports,
+                    .preferences = &world.preferences },
+                LevelStage{ .name = L"Moving capability fixture", .camera_bounds = bounds_,
+                    .zoom_out_start_bounds = bounds_, .zoom_out_finish_bounds = bounds_,
+                    .audio = { .sound_bank_name = "paint_exe" } },
+                LevelMatch{ .team_colours = world.palette, .opening = opening, .duration = 120.0f });
         }
         void tick(const std::vector<PlayerInputData>& actions = {}, float seconds = dt,
             SeatInputFilter* next = nullptr)
