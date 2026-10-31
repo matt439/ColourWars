@@ -194,19 +194,22 @@
 
                 // Establish real support before walking off the runway. A
                 // direct airborne placement is spawn settling and must stay
-                // silent. Stop in the gap before its x2700 recovery platforms.
+                // silent. Walk until the runway (ending at x2560) drops away,
+                // then stop steering in the gap before its x2700 recovery
+                // platforms: a fixed release point glides on or off the ledge
+                // with movement tuning.
                 require(level->place_player(0, Vector2F(2380, 875)), "could not place the strong-landing fixture");
                 for (int tick = 0; tick < 30; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
                 require(player.move_state() == PlayerMoveState::on_ground,
                     "strong-landing fixture did not establish runway support");
                 PlayerInputData& input = inputs[static_cast<size_t>(player.player_num())];
                 input.x_movement = 1.0f;
-                for (int tick = 0; tick < 120 && player.rectangle().x < 2482.0f; ++tick)
+                for (int tick = 0; tick < 120 && player.move_state() == PlayerMoveState::on_ground; ++tick)
                 {
                     level->update(acceptance::slot_seats(*level, inputs), dt);
                 }
                 input.x_movement = 0.0f;
-                require(player.rectangle().x >= 2482.0f && player.rectangle().right() < 2700.0f,
+                require(player.move_state() != PlayerMoveState::on_ground && player.rectangle().x >= 2560.0f && player.rectangle().right() < 2700.0f,
                     "strong-landing fixture did not leave the runway into the open gap");
                 for (int tick = 0; tick < 180 && player.view_shake().remaining() == 0.0f; ++tick)
                 {

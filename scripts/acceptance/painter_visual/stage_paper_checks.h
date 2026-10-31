@@ -24,7 +24,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         "Shipped Stage paper copy drifted from its independent literals");
     Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
     StageList stages = shipped;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
+    // The catalog owns a copy of the list, so each edit of `stages` below is
+    // republished to the page through it.
+    const auto restage = [&] { stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); }; data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearStagePaper
@@ -240,9 +243,9 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = old; open(2, 3); compare("old-art-font-copy"); presentation = next; tick(); compare("unchanged-before-refresh"); browse(false); tick(settled); compare("old-random-after-replacement"); lock(true); tick(settled); compare("old-locked-after-replacement");
     open(2, 3); compare("reopened-art-font-copy", 0, 0, true); presentation = original; tick(); compare("captured-before-reversal-refresh"); browse(false); tick(settled); compare("new-random-after-reversal"); lock(true); tick(settled); compare("new-locked-after-reversal");
-    presentation = original; stages = shipped; for (auto& stage : stages) { stage.include_in_random = false; } open(1); browse(false); tick(settled); compare("no-eligible-left-wrap"); browse(true); tick(settled); compare("no-eligible-right-wrap");
-    stages = { shipped.back() }; open(1); const Frame only = compare("single-excluded-stage"); browse(true); tick(settled); browse(false); require(only.pixels == frame().pixels, "Single excluded Stage offered Random or invented motion");
-    stages = shipped; open(4, 5); compare("restored-default");
+    presentation = original; stages = shipped; for (auto& stage : stages) { stage.include_in_random = false; } restage(); open(1); browse(false); tick(settled); compare("no-eligible-left-wrap"); browse(true); tick(settled); compare("no-eligible-right-wrap");
+    stages = { shipped.back() }; restage(); open(1); const Frame only = compare("single-excluded-stage"); browse(true); tick(settled); browse(false); require(only.pixels == frame().pixels, "Single excluded Stage offered Random or invented motion");
+    stages = shipped; restage(); open(4, 5); compare("restored-default");
     // Saved records: one line on the navigation row, right-aligned to the
     // preview and shrunk clear of the arena counter, for the shown stage and
     // this roster's kind of match only. Random and unplayed modes show none.
