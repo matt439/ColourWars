@@ -60,6 +60,7 @@ class LevelBotWorld;
 class TeammateMarkers;
 class PlayerIdentityHud;
 class MatchAudio;
+class CountdownCards;
 class Presentation;
 struct MenuResultsText;
 struct MatchBotSupport;
@@ -346,41 +347,10 @@ private:
 	// Cached once per tick for all debug overlays.
 	int projectile_count_ = 0;
 
-	std::unique_ptr<CountdownArt> countdown_art_;
-	std::wstring countdown_label_;
-	mattmath::RectangleF countdown_number_box_;
-	std::unique_ptr<colourwars::TextDropShadow> countdown_heading_ = nullptr;
-	std::unique_ptr<colourwars::TextDropShadow> resume_heading_;
-	std::unique_ptr<colourwars::TextDropShadow> replay_heading_;
-	mattmath::RectangleF replay_card_;
-	mattmath::RectangleF countdown_card_;
-	std::unique_ptr<colourwars::TextDropShadow> stage_entry_;
-	mattmath::RectangleF stage_entry_card_;
-	mattmath::RectangleF stage_entry_text_bounds_;
-
-	// One shared reminder per input device type present in the match.
-	struct ControlsReminder
-	{
-		std::unique_ptr<colourwars::TextDropShadow> heading;
-		std::unique_ptr<colourwars::TextDropShadow> text;
-		mattmath::RectangleF card;
-		mattmath::RectangleF text_bounds;
-	};
-	std::vector<ControlsReminder> controls_reminders_;
-	// Save owns the effective binding; a paused draw refreshes only its cached
-	// words and fitting, retaining the text widget's original font and copy.
-	const InputBindings* input_bindings_ = nullptr;
-	colourwars::TextDropShadow* keyboard_controls_ = nullptr;
-	std::wstring keyboard_controls_words_;
-	colourwars::TextDropShadow* gamepad_controls_ = nullptr;
-	std::vector<int> gamepad_slots_;
-	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};
-	struct ControlsReminderLook
-	{
-		mattmath::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;
-		float gap = 0.0f, y = 0.0f;
-	} controls_look_;
-	void refresh_keyboard_controls();
+	// The countdown, resume and replay cards, the stage title and the
+	// controls reminders; the stage title is made in the constructor, the rest
+	// by build_opening_frame.
+	std::unique_ptr<CountdownCards> cards_;
 	const Presentation* presentation_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 	// The overlay sheet's fill frame and the window-space card scale.
@@ -539,13 +509,9 @@ private:
 	// current presentation (so tune is live). Main thread, between updates.
 	void refresh_station_labels();
 
+	// The countdown's number, and its cards while it counts: the beat's age
+	// from the match clock, drawn by cards_.
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
-
-	// Sets the displayed beat; drawing derives its age from the match clock.
-	void set_countdown_text(const std::wstring& text);
-	void centre_countdown_text();
-	void centre_stage_entry();
-	void centre_controls_text();
 
 	float zoom_out_camera_ratio() const;
 
@@ -554,5 +520,5 @@ private:
 	int count_projectiles() const;
 
 	// Build countdown text and cameras before the first frame is drawn.
-	void build_opening_frame(labrador::RenderResources* render_resources);
+	void build_opening_frame();
 };

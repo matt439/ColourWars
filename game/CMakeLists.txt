@@ -141,6 +141,7 @@ add_library(colourwars_game STATIC
     objects/player_identity_hud.cpp
     objects/match_voices.cpp
     objects/match_audio.cpp
+    objects/countdown_cards.cpp
     objects/monitor.cpp
     objects/movement_audio.cpp
     objects/movement_feedback.cpp

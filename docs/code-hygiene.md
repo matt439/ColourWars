@@ -720,7 +720,26 @@ their old lines in place. `last_ten_second_`, the player stops,
 stay in `Level`. `~Level` stays in `level_audio.cpp` and stops the list in its
 body, before any member is destroyed; `suspend`, `pause_audio`, `resume`,
 `update_music`, `set_music_ducked` and `resume_music` forward. The bodies moved
-unchanged. The opening and the countdown cards remain.
+unchanged.
+
+[CountdownCards](../game/objects/countdown_cards.h), owned through a
+`unique_ptr`, took the window-space cards around the start signal: the
+`CountdownArt`, the countdown's label and number box, the GET READY, RESUMING
+and REPLAY headings and their cards, the stage title with its card and text
+bounds, and the controls reminders with the words, pad profiles and slots they
+were last worded from. It is built in two steps at the old points: the
+constructor makes only the stage title, where the `Level` constructor made it,
+and `build` makes the rest inside `build_opening_frame`, after the picture
+bounds, copying the reminders' look and the first label as before (the only
+copies; `presentation.match` stays rebuild). It borrows the match tuning, the
+presentation, the window and the effective bindings and takes the paper card
+per call for the card scale. `refresh_layout` still rewords the reminders
+first and, on a resize, lays out the countdown cards, the stage title and the
+reminders in that order; `Level` still sets the label at the same three points,
+computes the beat's age from its own clock and keeps every
+`state_ == start_countdown` check in its public forwarders. The draws keep
+their filter changes in the same order, and `draw_intro` still calls
+`Level::draw_countdown_text`. The bodies moved unchanged. The opening remains.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

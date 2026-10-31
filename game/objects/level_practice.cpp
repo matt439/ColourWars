@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/objects/countdown_cards.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -19,7 +20,7 @@ void Level::start_without_countdown()
 {
 	if (this->state_ != LevelState::start_countdown || this->countdown_started_) { return; }
 	this->start_timer_ = 0.0f;
-	this->set_countdown_text(L"GO!");
+	this->cards_->set_label(L"GO!");
 }
 
 int Level::active_lesson() const

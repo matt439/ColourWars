@@ -11,6 +11,7 @@
 #include "game/objects/teammate_markers.h"
 #include "game/objects/player_identity_hud.h"
 #include "game/objects/match_audio.h"
+#include "game/objects/countdown_cards.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -41,7 +42,6 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	const AudioResources* audio_resources = services.audio_resources;
 	const MatchSetup* roster = round_setup.roster;
 	this->preferences_ = services.preferences;
-	this->input_bindings_ = services.input_bindings;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
 	this->roster_.resize(this->players_.size());
@@ -71,11 +71,8 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	this->bot_world_ = std::make_unique<LevelBotWorld>(*this->scene_, this->players_, this->structures_);
 	if (roster != nullptr && roster->bot_count() != 0)
 	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, round_setup.random.bot_seed()); }
-	const MenuStyle& menu = presentation->menu();
-	const CountdownArtPresentation& paper = presentation->match().countdown_art;
-	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage.name,
-		menu.heading_font, Vector2F::ZERO, render_resources,
-		paper.ink, paper.paper, menu.heading_shadow_offset);
+	this->cards_ = std::make_unique<CountdownCards>(stage.name, &tuning->match(), presentation,
+		this->resolution_manager_, render_resources, services.input_bindings);
 	this->identity_->create_badge();
 	this->teammate_markers_ = std::make_unique<TeammateMarkers>(&presentation->hud(), render_resources,
 		this->viewport_manager_, services.preferences,
@@ -142,7 +139,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 
 	this->lessons_ = PracticeLessons(std::move(stage.lessons), tuning, presentation,
 		render_resources);
-	this->build_opening_frame(render_resources);
+	this->build_opening_frame();
 }
 
 void Level::update(const std::vector<PlayerInputData>& commands, float dt,
@@ -239,12 +236,12 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		}
 		if (this->start_timer_ > 0.0f)
 		{
-			this->set_countdown_text(std::to_wstring(
+			this->cards_->set_label(std::to_wstring(
 				static_cast<int>(std::ceil(this->start_timer_))));
 		}
 		else
 		{
-			this->set_countdown_text(L"GO!");
+			this->cards_->set_label(L"GO!");
 		}
 
 		if (this->start_timer_ <= 0.0f)
@@ -548,7 +545,7 @@ void Level::set_debug_frame_time(double frame_ms)
 void Level::refresh_layout()
 {
 	this->refresh_station_labels();
-	this->refresh_keyboard_controls();
+	this->cards_->refresh_controls();
 	const Vector2F size = this->resolution_manager_->resolution_vec();
 	if (size == this->layout_size_)
 	{
@@ -563,8 +560,7 @@ void Level::refresh_layout()
 	this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
 		this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 		this->zoom_out_camera_ratio());
-	this->centre_countdown_text();
-	this->centre_controls_text();
+	this->cards_->centre(this->paper_);
 	this->lessons_.centre(this->paper_);
 	this->refresh_player_cameras();
 	this->refresh_views();

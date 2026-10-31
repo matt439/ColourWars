@@ -166,7 +166,8 @@ namespace
 		// The opening's and the reveal's beats are read every update (level_intro.cpp).
 		{ "tuning.match.opening.**", TuneScope::live },
 		{ "tuning.match.reveal.**", TuneScope::live },
-		// Timers and texts are copied by the Level constructor.
+		// Timers are copied by the Level constructor; the countdown's first label
+		// and the reminders' look by CountdownCards when the level is built.
 		{ "tuning.match.**", TuneScope::rebuild },
 		// Tiles and their thickness are built with the level.
 		{ "tuning.paint.**", TuneScope::rebuild },
