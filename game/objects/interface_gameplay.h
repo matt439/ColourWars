@@ -45,7 +45,8 @@ public:
         bool clock_running = true) const;
 
     // The same, with the identity box's whole text already built by
-    // identity_text. Level keeps one per view so the draw path allocates nothing.
+    // identity_text. Level's PlayerIdentityHud keeps one per participant so the
+    // draw path allocates nothing.
     // `low_paint` tags the PAINT label (POL#38); it blinks with the tool's
     // simulated low-paint age unless effects are reduced. Untimed practice
     // passes show_clock false and the clock panel is not drawn at all.

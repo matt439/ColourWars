@@ -9,6 +9,7 @@
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/level_bot_world.h"
 #include "game/objects/teammate_markers.h"
+#include "game/objects/player_identity_hud.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -53,7 +54,8 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		this->roster_ = roster->player_settings();
 	}
 	this->participant_views_.assign(this->players_.size(), -1);
-	this->bot_identity_texts_.resize(this->players_.size());
+	this->identity_ = std::make_unique<PlayerIdentityHud>(presentation, render_resources,
+		services.preferences, this->players_.size());
 	for (std::size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
 		if (this->roster_[participant].controller == PlayerController::human)
@@ -63,10 +65,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		}
 		else
 		{
-			this->bot_identity_texts_[participant] = std::make_unique<Text>(
-				presentation->menu_text().bot_roster_label(static_cast<int>(participant),
-					this->roster_[participant].difficulty), presentation->hud().player_identity_font,
-				Vector2F::ZERO, render_resources, presentation->player_identity().ink_colour);
+			this->identity_->add_bot_text(participant, this->roster_[participant].difficulty);
 		}
 	}
 	if (this->view_participants_.empty())
@@ -79,10 +78,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage.name,
 		menu.heading_font, Vector2F::ZERO, render_resources,
 		paper.ink, paper.paper, menu.heading_shadow_offset);
-	this->player_badge_ = std::make_unique<PlayerBadge>(
-		&presentation->player_identity(), render_resources);
-	this->player_identity_remaining_.assign(this->players_.size(),
-		presentation->player_identity().emphasis_duration);
+	this->identity_->create_badge();
 	this->teammate_markers_ = std::make_unique<TeammateMarkers>(&presentation->hud(), render_resources,
 		this->viewport_manager_, services.preferences,
 		this->view_participants_.size(), this->players_.size());
@@ -116,7 +112,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		&presentation->debug_overlay());
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
 		render_resources, &presentation->hud(), &presentation->player_identity());
-	this->refresh_identity_texts();
+	this->identity_->refresh_texts(this->players_, this->roster_);
 	// A silent stage leaves music_ unresolved; a voice with no effect does
 	// nothing, and the music paths that would wait on it check first.
 	const auto voice = [&](const std::string& effect)
@@ -420,7 +416,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	{
 		was_dead[participant] = this->players_[participant]->state() == PlayerState::dead;
 	}
-	this->update_player_identity(dt);
+	this->identity_->decay(dt);
 	// Run the scene phases in order, with game-specific work between them.
 	this->paint_audio_->update(dt);
 	this->blocked_shot_feedback_->update(dt);
@@ -461,8 +457,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	{
 		if (was_dead[participant] && this->players_[participant]->state() == PlayerState::alive)
 		{
-			this->player_identity_remaining_[participant] =
-				this->presentation_->player_identity().emphasis_duration;
+			this->identity_->emphasise(participant);
 		}
 	}
 	this->update_idle_drips(dt);
@@ -721,8 +716,7 @@ BotDifficulty Level::bot_difficulty(int participant) const
 
 std::wstring_view Level::bot_identity(int participant) const
 {
-	const std::unique_ptr<Text>& text = this->bot_identity_texts_.at(static_cast<std::size_t>(participant));
-	return text == nullptr ? std::wstring_view{} : text->text();
+	return this->identity_->bot_identity(static_cast<std::size_t>(participant));
 }
 
 const BotWorld& Level::bot_world() const

@@ -138,6 +138,7 @@ add_library(colourwars_game STATIC
     objects/practice_lessons.cpp
     objects/cursor_marker_overlay.cpp
     objects/teammate_markers.cpp
+    objects/player_identity_hud.cpp
     objects/match_voices.cpp
     objects/monitor.cpp
     objects/movement_audio.cpp

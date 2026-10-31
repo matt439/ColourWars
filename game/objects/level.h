@@ -58,6 +58,7 @@ class MatchBotDriver;
 class BotWorld;
 class LevelBotWorld;
 class TeammateMarkers;
+class PlayerIdentityHud;
 class Presentation;
 struct MenuResultsText;
 struct MatchBotSupport;
@@ -290,8 +291,9 @@ public:
 private:
 	std::unique_ptr<PaintAudio> paint_audio_;
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
-	std::unique_ptr<PlayerBadge> player_badge_;
-	std::vector<float> player_identity_remaining_;
+	// The badges, the bot labels and the HUD identity texts, with what they
+	// are built from; created empty before the roster loop.
+	std::unique_ptr<PlayerIdentityHud> identity_;
 	// The edge chips for teammates out of a pane's view, and their fade ages.
 	std::unique_ptr<TeammateMarkers> teammate_markers_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
@@ -311,8 +313,6 @@ private:
 	// Borrows scene_, players_ and structures_; never null after construction.
 	std::unique_ptr<LevelBotWorld> bot_world_;
 	std::unique_ptr<MatchBotDriver> bot_driver_;
-	// Immutable labels and metrics shared safely by every human pane.
-	std::vector<std::unique_ptr<labrador::Text>> bot_identity_texts_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
 	std::vector<IdleDrip*> idle_drips_;
 
@@ -416,17 +416,6 @@ private:
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 	LevelOverlays overlays_{};
-
-	// By participant; see set_seat_labels. Present in every build, only ever set by
-	// the Debug director, so empty in Release.
-	std::vector<std::wstring> seat_labels_;
-	// See set_pad_devices; -1 until set, which is the slot's own pad.
-	std::array<int, input_slots::pad_count> pad_devices_ = { -1, -1, -1, -1 };
-	// By participant: each HUD identity box's whole text. Built from the seat, the
-	// player's team, pad (fixed unless a seat is reclaimed) and seat_labels_,
-	// so only construction, set_seat_labels and set_pad_devices rebuild it;
-	// draws only read it.
-	std::vector<std::wstring> identity_texts_;
 
 	// Borrowed shell services; both outlive every level.
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
@@ -582,10 +571,8 @@ private:
 	// The HUD, the dividers and the debug text, over one pane.
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
-	void update_player_identity(float dt);
-	// Rebuilds identity_texts_. Main thread, never from a draw.
-	void refresh_identity_texts();
-	int pad_device(int slot) const;
+	// Whether the match shows identity badges: its countdown and live play.
+	bool identity_showing() const;
 	// Makes the labels on first use, then applies overlays_.stations and the
 	// current presentation (so tune is live). Main thread, between updates.
 	void refresh_station_labels();

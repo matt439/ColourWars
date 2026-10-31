@@ -72,9 +72,10 @@ Application owns the state stack
         and the MatchBotDriver, which owns a MatchBot per bot seat
       Level owns InterfaceGameplay (which owns a PlayerBadge)
       Level owns PracticeLessons (each lesson's TextDropShadow pair)
+      Level owns PlayerIdentityHud (a PlayerBadge and each bot's label Text)
       Level owns TeammateMarkers (a TeammateMarker and each pane's fade ages)
       Level owns the other CrudeDrawing leaves: CountdownArt, Monitor,
-        Silhouette, ScreenCursor, FigureActing, RevealArt, PlayerBadge
+        Silhouette, ScreenCursor, FigureActing, RevealArt
 ```
 
 Level also borrows pointers to the Scene's players. Its

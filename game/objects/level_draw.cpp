@@ -5,6 +5,7 @@
 #include "game/input_slots.h"
 #include "game/objects/crude_drawing.h"
 #include "game/objects/teammate_markers.h"
+#include "game/objects/player_identity_hud.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -78,7 +79,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	if (this->player_identity_visible(participant))
 	{
 		list.set_filter(TextureFilter::point);
-		this->player_badge_->draw(list, this->player_identity_bounds(participant), participant);
+		this->identity_->draw_badge(list, this->player_identity_bounds(participant), participant);
 	}
 	// Bots share human views. Their stable roster number and explicit difficulty
 	// travel with their world figure, never masquerading as an unclaimed human.
@@ -90,34 +91,8 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	{
 		if (!this->is_bot(bot) || !this->player_identity_visible(bot)) { continue; }
 		list.set_filter(TextureFilter::point);
-		RectangleF badge = this->player_identity_bounds_for(bot, player->player_num());
-		const Text& text = *this->bot_identity_texts_[static_cast<std::size_t>(bot)];
-		const RectangleF measured = text.text_bounds_at(Vector2F::ZERO, 1.0f);
-		const PlayerIdentityPresentation& look = this->presentation_->player_identity();
-		const float emphasis = badge.width / look.world_size.x;
-		const float scale = emphasis * std::min(
-			look.bot_label_size.x / std::max(1.0f, measured.width),
-			look.bot_label_size.y / std::max(1.0f, measured.height));
-		const Vector2F size = measured.size() * scale;
-		Vector2F position(badge.center().x - size.x * 0.5f,
-			badge.top() - size.y - look.bot_label_gap * emphasis);
-		const auto inside = [](float low, float high, float min, float max)
-		{
-			if (high - low > max - min) { return min - low; }
-			return low < min ? min - low : (high > max ? max - high : 0.0f);
-		};
-		const Vector2F shift(
-			inside(std::min(badge.left(), position.x), std::max(badge.right(), position.x + size.x),
-				visible.left(), visible.right()),
-			inside(position.y, badge.bottom(), visible.top(), visible.bottom()));
-		badge = RectangleF(badge.position() + shift, badge.size());
-		position += shift;
-		this->player_badge_->draw(list, badge, bot);
-		this->paper_.sheet()->draw(list,
-			this->paper_.fill(), RectangleF(position, size),
-			this->presentation_->player_identity().background_colour);
-		text.draw_with(list, this->presentation_->player_identity().ink_colour,
-			position - measured.position() * scale, scale);
+		this->identity_->draw_bot(list, this->player_identity_bounds_for(bot, player->player_num()),
+			bot, visible, this->paper_);
 	}
 
 	// Dividers use window coordinates; subtract the pane's screen origin
@@ -146,13 +121,13 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	{
 		this->teammate_markers_->draw(list, marker,
 			this->players_[static_cast<std::size_t>(marker.participant)]->team_colour(),
-			*this->player_badge_);
+			this->identity_->badge());
 	}
 
 	this->interface_gameplay_->draw_gameplay_interface_prepared(list,
 		player_vp.size(),
 		participant,
-		this->identity_texts_[static_cast<std::size_t>(participant)],
+		this->identity_->identity_text(static_cast<std::size_t>(participant)),
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,
@@ -208,12 +183,15 @@ void Level::set_pointer(std::optional<Vector2F> window_point)
 	this->cursor_marker_.set_pointer(window_point);
 }
 
+bool Level::identity_showing() const
+{
+	return this->state_ == LevelState::start_countdown || this->state_ == LevelState::active;
+}
+
 bool Level::player_identity_visible(int participant) const
 {
 	return participant >= 0 && participant < this->player_count() &&
-		this->presentation_->player_identity().enabled &&
-		(this->state_ == LevelState::start_countdown || this->state_ == LevelState::active) &&
-		this->player(participant).state() == PlayerState::alive && this->player(participant).health() > 0.0f;
+		this->identity_->visible(this->player(participant), this->identity_showing());
 }
 
 float Level::player_identity_emphasis(int participant) const
@@ -223,12 +201,9 @@ float Level::player_identity_emphasis(int participant) const
 
 float Level::player_identity_emphasis_for(int participant, int viewer_slot) const
 {
-	if (!this->player_identity_visible(participant) || this->preferences_->reduce_effects_for(viewer_slot))
-	{
-		return 0.0f;
-	}
-	return std::clamp(this->player_identity_remaining_[static_cast<size_t>(participant)] /
-		this->presentation_->player_identity().emphasis_duration, 0.0f, 1.0f);
+	if (participant < 0 || participant >= this->player_count()) { return 0.0f; }
+	return this->identity_->emphasis(static_cast<std::size_t>(participant), this->player(participant),
+		this->identity_showing(), viewer_slot);
 }
 
 RectangleF Level::player_identity_bounds(int participant) const
@@ -238,57 +213,19 @@ RectangleF Level::player_identity_bounds(int participant) const
 
 RectangleF Level::player_identity_bounds_for(int participant, int viewer_slot) const
 {
-	const PlayerIdentityPresentation& look = this->presentation_->player_identity();
-	const RectangleF body = this->player(participant).rectangle();
-	const float emphasis = this->player_identity_emphasis_for(participant, viewer_slot);
-	const float scale = 1.0f + (look.emphasis_scale - 1.0f) * emphasis;
-	const Vector2F size = look.world_size * scale;
-	const Vector2F bottom = Vector2F(body.center().x, body.top()) + look.world_offset;
-	return RectangleF(bottom - Vector2F(size.x * 0.5f, size.y), size);
+	return this->identity_->bounds(static_cast<std::size_t>(participant), this->player(participant),
+		this->identity_showing(), viewer_slot);
 }
 
 void Level::emphasise_players()
 {
 	if (this->state_ != LevelState::active) { return; }
-	std::fill(this->player_identity_remaining_.begin(), this->player_identity_remaining_.end(),
-		this->presentation_->player_identity().emphasis_duration);
-}
-
-void Level::refresh_identity_texts()
-{
-	this->identity_texts_.resize(this->players_.size());
-	for (std::size_t participant = 0; participant < this->players_.size(); ++participant)
-	{
-		const Player& player = *this->players_[participant];
-		const bool labelled = participant < this->seat_labels_.size() &&
-			!this->seat_labels_[participant].empty();
-		this->identity_texts_[participant] = InterfaceGameplay::identity_text(
-			static_cast<int>(participant), player.team(), labelled ?
-			this->seat_labels_[participant] : (this->is_bot(static_cast<int>(participant)) ?
-				this->presentation_->menu_text().bot_label(this->roster_[participant].difficulty) :
-				input_slots::device_name(this->pad_device(player.player_num()))));
-	}
-}
-
-int Level::pad_device(int slot) const
-{
-	return input_slots::is_pad(slot) && this->pad_devices_[static_cast<size_t>(slot)] >= 0 ?
-		this->pad_devices_[static_cast<size_t>(slot)] : slot;
+	this->identity_->emphasise();
 }
 
 void Level::set_pad_devices(const std::array<int, input_slots::pad_count>& devices)
 {
-	if (devices == this->pad_devices_) { return; }
-	this->pad_devices_ = devices;
-	this->refresh_identity_texts();
-}
-
-void Level::update_player_identity(float dt)
-{
-	for (float& remaining : this->player_identity_remaining_)
-	{
-		remaining = std::max(0.0f, remaining - std::max(0.0f, dt));
-	}
+	this->identity_->set_pad_devices(devices, this->players_, this->roster_);
 }
 
 std::vector<TeammateMarkerPlacement> Level::teammate_markers(int view) const

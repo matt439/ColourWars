@@ -4,6 +4,7 @@
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/level_bot_world.h"
 #include "game/objects/teammate_markers.h"
+#include "game/objects/player_identity_hud.h"
 
 using namespace mattmath;
 using namespace labrador;

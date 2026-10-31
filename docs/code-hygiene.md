@@ -680,8 +680,25 @@ HUD presentation, the viewport manager and the preferences and takes the
 players and the pane map per call. `Level` still advances it at the same point
 of the live tick, still owns the badge it draws with, and its public
 `teammate_markers(view)` forwards with whether the match is live. The bodies
-moved unchanged. The opening, the player identity HUD, the countdown cards
-and match audio remain.
+moved unchanged.
+
+[PlayerIdentityHud](../game/objects/player_identity_hud.h), owned through a
+`unique_ptr`, took who each figure is: the `PlayerBadge`, each participant's
+emphasis, the bots' roster labels, the seat labels, the pad mapping and the
+HUD identity texts built from them. It is created empty where the bot labels
+were sized, before the roster loop; each bot's label is still made inside the
+loop, before the no-human-view throw; the badge and the emphasis are still
+created after the stage title, and the texts still refreshed after the HUD is
+built. It borrows the presentation and the preferences and reads them on every
+call; the players, the roster and whether the match is in its countdown or
+live play (`Level::identity_showing`) are passed in. `Level` still decays the
+emphasis at the top of the live tick and re-emphasises a respawn at the same
+point, keeps the live-play check in `emphasise_players`, and its public
+identity, seat-label and pad queries forward. `draw_player_overlay` keeps its
+filter changes and order, drawing the badge and each bot's badge and label
+(through the paper card's sheet and fill) by the part's const pieces, and
+hands `TeammateMarkers::draw` the part's badge. The bodies moved unchanged.
+The opening, the countdown cards and match audio remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

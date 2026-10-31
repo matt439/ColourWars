@@ -1540,7 +1540,8 @@ as the game. In Release:
   and `place_at`/`force_respawn`, never called; `LevelLoadedInfo::stations()`
   and its validation, which are level data and correct in both;
   `directory_consts::screenshot_directory()`, `replay_directory()` and
-  `debug_directory()`; phase 4's `Level::seat_labels_` (always empty there),
+  `debug_directory()`; phase 4's seat labels
+  (`PlayerIdentityHud::seat_labels_`, always empty there),
   `set_seat_labels`, `opening_cards`, `projectile_count` and
   `collision_object_count`, `InterfaceGameplay`'s label overload (the slot
   overload forwards to it), `debug_countdown_over`, `debug_set_seat_labels` and
