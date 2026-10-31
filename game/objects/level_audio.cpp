@@ -3,6 +3,7 @@
 #include "game/presentation.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/level_bot_world.h"
+#include "game/objects/teammate_markers.h"
 
 using namespace mattmath;
 using namespace labrador;

@@ -28,6 +28,7 @@
 #include "game/objects/level_structures.h"
 #include "game/objects/paper_card.h"
 #include "game/objects/practice_lessons.h"
+#include "game/objects/cursor_marker_overlay.h"
 #include "engine/ui/widget.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
@@ -56,6 +57,7 @@
 class MatchBotDriver;
 class BotWorld;
 class LevelBotWorld;
+class TeammateMarkers;
 class Presentation;
 struct MenuResultsText;
 struct MatchBotSupport;
@@ -290,10 +292,8 @@ private:
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
 	std::unique_ptr<PlayerBadge> player_badge_;
 	std::vector<float> player_identity_remaining_;
-	std::unique_ptr<TeammateMarker> teammate_marker_;
-	// By human pane, then participant: seconds that teammate's body has been
-	// outside the pane's view. Presentation only, advanced by live ticks.
-	std::vector<float> teammate_marker_age_;
+	// The edge chips for teammates out of a pane's view, and their fade ages.
+	std::unique_ptr<TeammateMarkers> teammate_markers_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
     // The movers, their supports, the team gates and the projectile targets,
     // borrowed from scene_ when build_opening_frame admits the builder's objects.
@@ -432,8 +432,8 @@ private:
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const labrador::ViewportManager* viewport_manager_ = nullptr;
 
-	// See set_pointer; read only by the cursor marker.
-	std::optional<mattmath::Vector2F> pointer_;
+	// The marquee at the mouse pointer and where set_pointer last put it.
+	CursorMarkerOverlay cursor_marker_;
 	// See request_intro_skip.
 	bool intro_skip_requested_ = false;
 
@@ -583,9 +583,6 @@ private:
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 	void update_player_identity(float dt);
-	void update_teammate_markers(float dt);
-	// The HUD's scale for human pane `view`, as InterfaceGameplay computes it.
-	float hud_scale(int view) const;
 	// Rebuilds identity_texts_. Main thread, never from a draw.
 	void refresh_identity_texts();
 	int pad_device(int slot) const;
@@ -594,8 +591,6 @@ private:
 	void refresh_station_labels();
 
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
-	// POL#39: draws cursor_marker_frames at the mouse pointer.
-	void draw_cursor_marker(labrador::DrawList& draw_list) const;
 
 	// Sets the displayed beat; drawing derives its age from the match clock.
 	void set_countdown_text(const std::wstring& text);

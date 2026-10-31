@@ -4,6 +4,7 @@
 #include "game/debug/debug_overlay_draw.h"
 #include "game/input_slots.h"
 #include "game/objects/crude_drawing.h"
+#include "game/objects/teammate_markers.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -49,7 +50,7 @@ void Level::draw(Renderer& renderer) const
 			DrawList list = renderer.view(renderer.view_count() - 1);
 			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
 			list.set_camera(Camera::DEFAULT_CAMERA);
-			this->draw_cursor_marker(list);
+			this->cursor_marker_.draw(list, this->paper_);
 		}
 	}
 	else
@@ -143,7 +144,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	// paint and clock stay on top where a chip reaches a corner.
 	for (const TeammateMarkerPlacement& marker : this->teammate_markers(view_index))
 	{
-		this->teammate_marker_->draw(list, marker,
+		this->teammate_markers_->draw(list, marker,
 			this->players_[static_cast<std::size_t>(marker.participant)]->team_colour(),
 			*this->player_badge_);
 	}
@@ -172,22 +173,17 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 
 bool Level::cursor_marker_visible() const
 {
-	if (!this->presentation_->hud().cursor_marker.enabled || !this->pointer_)
-	{
-		return false;
-	}
-	const Vector2F size = this->resolution_manager_->resolution_vec();
-	const Vector2F at = *this->pointer_;
-	if (at.x < 0.0f || at.y < 0.0f || at.x >= size.x || at.y >= size.y) { return false; }
+	bool keyboard_and_mouse_seat = false;
 	for (int participant = 0; participant < this->player_count(); ++participant)
 	{
 		if (!this->is_bot(participant) &&
 			input_slots::is_keyboard_and_mouse(this->player(participant).player_num()))
 		{
-			return true;
+			keyboard_and_mouse_seat = true;
+			break;
 		}
 	}
-	return false;
+	return this->cursor_marker_.visible(keyboard_and_mouse_seat);
 }
 
 std::array<CursorMarkerFrame, 3> Level::cursor_marker_frames(
@@ -209,25 +205,7 @@ std::array<CursorMarkerFrame, 3> Level::cursor_marker_frames(
 
 void Level::set_pointer(std::optional<Vector2F> window_point)
 {
-	this->pointer_ = window_point;
-}
-
-void Level::draw_cursor_marker(DrawList& list) const
-{
-	const Vector2F at = *this->pointer_;
-	const SpriteSheet* sheet = this->paper_.sheet();
-	list.set_filter(TextureFilter::point);
-	for (const CursorMarkerFrame& frame : cursor_marker_frames(this->presentation_->hud().cursor_marker,
-		at, this->resolution_manager_->resolution_vec().y))
-	{
-		const RectangleF& box = frame.box;
-		const float width = frame.width;
-		const Colour tint = CrudeDrawing::premultiplied(frame.colour);
-		sheet->draw(list, this->paper_.fill(), RectangleF(box.x, box.y, box.width, width), tint);
-		sheet->draw(list, this->paper_.fill(), RectangleF(box.x, box.bottom() - width, box.width, width), tint);
-		sheet->draw(list, this->paper_.fill(), RectangleF(box.x, box.y + width, width, box.height - width * 2.0f), tint);
-		sheet->draw(list, this->paper_.fill(), RectangleF(box.right() - width, box.y + width, width, box.height - width * 2.0f), tint);
-	}
+	this->cursor_marker_.set_pointer(window_point);
 }
 
 bool Level::player_identity_visible(int participant) const
@@ -313,61 +291,10 @@ void Level::update_player_identity(float dt)
 	}
 }
 
-float Level::hud_scale(int view) const
-{
-	const HudPresentation& look = this->presentation_->hud();
-	const Vector2F pane = this->viewport_manager_->player_viewport(view).size();
-	return std::min(pane.x / look.player_identity_reference_width, pane.y / look.reference_height);
-}
-
 std::vector<TeammateMarkerPlacement> Level::teammate_markers(int view) const
 {
-	std::vector<TeammateMarkerPlacement> markers;
-	const TeammateMarkerPresentation& look = this->presentation_->hud().teammate_marker;
-	if (view < 0 || view >= this->view_count() || !look.enabled ||
-		this->state_ != LevelState::active) { return markers; }
-	const int viewer = this->participant_for_view(view);
-	const Player& own = this->player(viewer);
-	const Vector2F pane = Viewport(this->viewport_manager_->player_viewport(view).pixel_rect()).size();
-	const float scale = this->hud_scale(view);
-	const bool steady = this->preferences_->reduce_effects_for(own.player_num());
-	for (int participant = 0; participant < this->player_count(); ++participant)
-	{
-		const Player& mate = this->player(participant);
-		if (participant == viewer || mate.team() != own.team() ||
-			mate.state() != PlayerState::alive || mate.health() <= 0.0f) { continue; }
-		std::optional<TeammateMarkerPlacement> placed = TeammateMarker::place(
-			look, pane, own.camera(), mate.rectangle(), scale);
-		if (!placed) { continue; }
-		placed->participant = participant;
-		const float age = this->teammate_marker_age_[
-			static_cast<std::size_t>(view * this->player_count() + participant)];
-		placed->opacity = steady || look.fade_in <= 0.0f ? 1.0f :
-			std::clamp(age / look.fade_in, 0.0f, 1.0f);
-		markers.push_back(*placed);
-	}
-	return markers;
-}
-
-void Level::update_teammate_markers(float dt)
-{
-	const TeammateMarkerPresentation& look = this->presentation_->hud().teammate_marker;
-	const int count = this->player_count();
-	for (int view = 0; view < this->view_count(); ++view)
-	{
-		const Player& own = this->player(this->participant_for_view(view));
-		const Vector2F pane = Viewport(this->viewport_manager_->player_viewport(view).pixel_rect()).size();
-		const float scale = this->hud_scale(view);
-		for (int participant = 0; participant < count; ++participant)
-		{
-			float& age = this->teammate_marker_age_[static_cast<std::size_t>(view * count + participant)];
-			const Player& mate = this->player(participant);
-			const bool away = mate.state() == PlayerState::alive && mate.health() > 0.0f &&
-				TeammateMarker::place(look, pane, own.camera(), mate.rectangle(), scale).has_value();
-			// Held at the fade's end so a long absence never grows without bound.
-			age = away ? std::min(age + std::max(0.0f, dt), std::max(look.fade_in, 0.0f)) : 0.0f;
-		}
-	}
+	return this->teammate_markers_->markers(view, this->players_, this->view_participants_,
+		this->state_ == LevelState::active);
 }
 
 bool Level::aim_marker_visible(int participant) const

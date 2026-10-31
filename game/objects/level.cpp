@@ -8,6 +8,7 @@
 #include "game/simulation.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/level_bot_world.h"
+#include "game/objects/teammate_markers.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -27,6 +28,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	end_sting_volume_(stage.audio.end_sting_volume),
 	resolution_manager_(services.resolution_manager),
 	viewport_manager_(services.viewport_manager),
+	cursor_marker_(services.presentation, services.resolution_manager),
 	team_colours_(round_setup.team_colours),
 	tuning_(services.tuning),
 	camera_bounds_(stage.camera_bounds),
@@ -81,9 +83,9 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		&presentation->player_identity(), render_resources);
 	this->player_identity_remaining_.assign(this->players_.size(),
 		presentation->player_identity().emphasis_duration);
-	this->teammate_marker_ = std::make_unique<TeammateMarker>(
-		&presentation->hud().teammate_marker, render_resources);
-	this->teammate_marker_age_.assign(this->view_participants_.size() * this->players_.size(), 0.0f);
+	this->teammate_markers_ = std::make_unique<TeammateMarkers>(&presentation->hud(), render_resources,
+		this->viewport_manager_, services.preferences,
+		this->view_participants_.size(), this->players_.size());
 	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources);
 	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
 		&presentation->blocked_shot(), render_resources);
@@ -471,7 +473,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 
 	// Count once per tick for all debug overlays.
 	this->projectile_count_ = this->count_projectiles();
-	this->update_teammate_markers(dt);
+	this->teammate_markers_->update(dt, this->players_, this->view_participants_);
 
 	// Players must remain in the arena; unlike projectiles, they cannot be retired.
 	for (const Player* player : this->players_)

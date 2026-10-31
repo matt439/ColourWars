@@ -664,8 +664,24 @@ constructor built the cards, so a title that cannot be drawn fails at the same
 point, is laid out from `refresh_layout`, updated after the live step only in
 practice (with the one human's player) and drawn over the last view as before.
 `level_practice.cpp` keeps `start_without_countdown` and the forwarders, which
-still hide the card outside live play. The opening, the HUD and draw layer and
-match audio remain.
+still hide the card outside live play.
+
+The two pointers at things off the pane moved out next.
+[CursorMarkerOverlay](../game/objects/cursor_marker_overlay.h), a value member
+where the pointer was, holds the pointer `set_pointer` hands it, answers
+whether the marquee shows (enabled, focused inside the window, and a human
+seat on keyboard and mouse, which `Level::cursor_marker_visible` still works
+out and passes in) and draws `Level::cursor_marker_frames`, which stays a
+public static on `Level`, through the paper card's sheet and fill.
+[TeammateMarkers](../game/objects/teammate_markers.h), owned through a
+`unique_ptr` created where the marker and its ages were, owns the
+`TeammateMarker` leaf, the per-pane fade ages and `hud_scale`; it borrows the
+HUD presentation, the viewport manager and the preferences and takes the
+players and the pane map per call. `Level` still advances it at the same point
+of the live tick, still owns the badge it draws with, and its public
+`teammate_markers(view)` forwards with whether the match is live. The bodies
+moved unchanged. The opening, the player identity HUD, the countdown cards
+and match audio remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 
