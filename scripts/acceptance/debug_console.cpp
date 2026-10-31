@@ -57,7 +57,7 @@ namespace debug_console_acceptance
 		".?AVDebugConsoleState@@", ".?AVDebugRegistry@@", ".?AVLambdaCommand@@",
 		".?AVDebugMenuPage@@", ".?AVNumberVariable@@",
 		// Developer bots, record/play and live tuning. SeatInputFilter is also
-		// used by the shipping MatchBotDriver and therefore exists in Release.
+		// used by the shipping round tape and therefore exists in Release.
 		".?AVBot@@", ".?AVPaintBot@@", ".?AVBotDriver@@", ".?AVReplayRecorder@@",
 		".?AVReplayPlayer@@", ".?AVTuneTarget@@", ".?AVTuningTarget@@",
 		".?AVDebugBackgroundInput@@",

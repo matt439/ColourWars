@@ -633,8 +633,25 @@ commit and gate settling before the scene update), passes `supports()` to
 `Player::end_contacts` and sweeps `projectile_targets()` where it swept its own
 list; its public `has_horizontal_motion`, `horizontal_structure_states` and
 `team_gates` forward. `TranslatingStructurePaintable` now befriends
-`LevelStructures` instead of `Level`. The opening, practice, the HUD and draw
-layer, match audio and the bots' world-query interface remain.
+`LevelStructures` instead of `Level`.
+
+The bots query the world through [BotWorld](../game/ai/bot_world.h), an
+abstract class in `game/ai` that returns only values: a `BotBody` per
+participant (the `Player` and tool reads the driver made, flattened, with
+`tool_ready`/`tool_empty` instead of `WeaponReadiness` and the nozzle's reach
+precomputed), the gates' settled permissions, the paint surfaces, obstacles,
+supports, ramps and the two sight lines. `Level` owns its implementation,
+[LevelBotWorld](../game/objects/level_bot_world.h), built just before the
+driver and borrowing the scene, `players_` and `LevelStructures` by reference,
+since the projectile targets are admitted after it is built; the
+`bot_*` bodies and `paint_surfaces` moved into it unchanged, and `Level`'s
+public queries forward. `MatchBotDriver` no longer derives from
+`SeatInputFilter`: `drive(seats, world)` replaces `filter_seats`, with the same
+loops, the same RNG draws and `engagement_distance`'s sum in the same order,
+so `game/ai` includes neither `level.h`, `weapon.h` nor the team gate. The four
+probes that drove it by hand call `drive(seats, level.bot_world())`; the
+balance runner wraps it in a probe-local `SeatInputFilter`. The opening,
+practice, the HUD and draw layer and match audio remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

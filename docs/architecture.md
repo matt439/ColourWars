@@ -78,6 +78,11 @@ What holds at `272ecb75`:
 - **No file-level include cycles**, and nothing in `objects/`, `ai/` or
   `carried/` includes a `states/` header.
 - **`carried/` depends on nothing in the game** but the precompiled header.
+- **`ai/` sees a match only through [BotWorld](../game/ai/bot_world.h)**
+  (since `HYG#40`): it reaches `objects/` through value headers and the
+  `paintable_object.h` interface, never `Level`, `Player`, `Weapon` or a gate.
+  `Level` implements the interface with its owned `LevelBotWorld` and owns the
+  `MatchBotDriver`, so the remaining edge runs one way, `objects/` to `ai/`.
 - **`objects/`, `ai/` and `carried/` never name `GameData`.** The states unpack
   it into the builders' constructors, and the builders hand each object only
   what it uses; that is why the probes can build a real `Level` against fakes.
@@ -103,10 +108,6 @@ What holds at `272ecb75`:
 
 Where it does not hold yet:
 
-- `ai/` and `objects/` include each other: the bot driver reads `Level`,
-  `Weapon` and the team gate, and `level.cpp`/`level_audio.cpp` include
-  `match_bot_driver.h`. A world-query interface for the bots is part of
-  `HYG#40`.
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers,
   and `action_bindings.h` includes `states/menu_input_action.h`.
 - Nothing enforces the contract headers' independence; an include check is

@@ -123,6 +123,7 @@ add_library(colourwars_game STATIC
     objects/interface_gameplay.cpp
     objects/level.cpp
     objects/level_structures.cpp
+    objects/level_bot_world.cpp
     objects/level_audio.cpp
     objects/level_dev_tools.cpp
     objects/level_draw.cpp

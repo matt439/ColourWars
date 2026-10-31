@@ -113,7 +113,7 @@ namespace
                     player.primary_weapon().readiness() == WeaponReadiness::ready))) { work = Work::scan; }
             }
             const Clock::time_point start = Clock::now();
-            this->driver_.filter_seats(seats, level);
+            this->driver_.drive(seats, level.bot_world());
             elapsed = Clock::now() - start;
         }
         bool replaces_bot_inputs() const override { return true; }

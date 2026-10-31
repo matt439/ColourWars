@@ -351,7 +351,7 @@ namespace
         {
             before = driver.bot(1)->finishing();
             ammo = level.player(1).weapon_ammo();
-            driver.filter_seats(seats, level);
+            driver.drive(seats, level.bot_world());
             after = driver.bot(1)->finishing();
             seats[0] = {}; seats[0].connected = true;
         }

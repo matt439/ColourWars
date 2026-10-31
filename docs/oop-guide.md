@@ -68,6 +68,8 @@ Application owns the state stack
         StructurePaintable (and its gate/translating leaves) owns PaintTiles
         FixedSlabPaintable owns its own PaintTiles
           PaintTile owns PaintTileSplash
+      Level owns LevelBotWorld (the BotWorld its MatchBotDriver reads)
+        and the MatchBotDriver, which owns a MatchBot per bot seat
       Level owns InterfaceGameplay (which owns a PlayerBadge)
       Level owns the other CrudeDrawing leaves: CountdownArt, Monitor,
         Silhouette, ScreenCursor, FigureActing, RevealArt, PlayerBadge,
@@ -77,7 +79,11 @@ Application owns the state stack
 Level also borrows pointers to the Scene's players. Its
 [LevelStructures](../game/objects/level_structures.h) part, a value member,
 borrows the stage's translating structures, team gates and projectile targets,
-collected once when the match's objects are admitted. Players respawn rather
+collected once when the match's objects are admitted. Its
+[LevelBotWorld](../game/objects/level_bot_world.h) borrows the scene, the
+player vector and that part by reference, and answers the shipping bots'
+[BotWorld](../game/ai/bot_world.h) queries with values, so the bots never see
+a `Level` or a `Player`. Players respawn rather
 than being removed from Scene, and structures stay for the match, so these
 pointers remain valid while Level exists. The
 index in Level's player vector is a stable roster participant; `player_num()`
@@ -347,8 +353,9 @@ not need artificial inheritance or every design pattern to fill a checklist.
 ## Add a scored paint object
 
 Scoring is a role, not a registration. Level keeps no list of scored objects:
-[Level::level_end_info and Level::paint_surfaces](../game/objects/level.cpp)
-walk Scene's collision objects and ask each for its `paintable()` role
+[Level::level_end_info](../game/objects/level.cpp) and
+[LevelBotWorld::paint_surfaces](../game/objects/level_bot_world.cpp) (behind
+`Level::paint_surfaces`) walk Scene's collision objects and ask each for its `paintable()` role
 ([Collider](../game/objects/collider.h)). Whatever answers is scored, whatever
 its collision tag. The only check runs the
 other way: an object tagged `structure_paintable` that is not a

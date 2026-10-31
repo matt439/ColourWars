@@ -52,6 +52,8 @@
 #include <string_view>
 
 class MatchBotDriver;
+class BotWorld;
+class LevelBotWorld;
 class Presentation;
 struct MenuResultsText;
 struct MatchBotSupport;
@@ -188,6 +190,9 @@ public:
 	bool is_bot(int participant) const;
 	BotDifficulty bot_difficulty(int participant) const;
 	std::wstring_view bot_identity(int participant) const;
+	// The world as the shipping bots query it (game/ai/bot_world.h). The
+	// bot_* queries below forward to it.
+	const BotWorld& bot_world() const;
 	// Conservative traversal bounds. A permitted team's open gates are neither
 	// obstacles nor standing supports; none retains all structural bounds.
 	std::vector<mattmath::RectangleF> bot_obstacles(PlayerTeam team = PlayerTeam::none) const;
@@ -301,6 +306,8 @@ private:
 	std::vector<SeatSetup> roster_;
 	std::vector<int> view_participants_;
 	std::vector<int> participant_views_;
+	// Borrows scene_, players_ and structures_; never null after construction.
+	std::unique_ptr<LevelBotWorld> bot_world_;
 	std::unique_ptr<MatchBotDriver> bot_driver_;
 	// Immutable labels and metrics shared safely by every human pane.
 	std::vector<std::unique_ptr<labrador::Text>> bot_identity_texts_;

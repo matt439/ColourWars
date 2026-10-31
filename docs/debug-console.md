@@ -1546,7 +1546,7 @@ as the game. In Release:
   overload forwards to it), `debug_countdown_over`, `debug_set_seat_labels` and
   `debug_screen_obstacles` with their `GameLevel` adapters, and
   `DebugDirector::begin_match_draw`, an inline no-op; the
-  `SeatInputFilter` interface, also used by the shipping `MatchBotDriver`, and
+  `SeatInputFilter` interface, also used by the shipping round tape, and
   the developer `seats` parameter of `Level::update`, always null in Release
   (shipping bots are owned by Level); `DebugMatchView::debug_level`;
   `pad_seat_missing`, whose "driven by a bot or replay" half is always false;
@@ -1561,7 +1561,7 @@ as the game. In Release:
   `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
   `.?AVMatchWait@@`, and the Release executable must contain none of them;
   in Release it also checks that the director supplies no developer filter or
-  driven physical slot. `SeatInputFilter` remains present for shipping bots.
+  driven physical slot. `SeatInputFilter` remains present for the round tape.
   CI also checks the packaged
   `ColourWars.exe`.
 

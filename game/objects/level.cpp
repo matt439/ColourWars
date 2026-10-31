@@ -7,7 +7,7 @@
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/simulation.h"
 #include "game/ai/match_bot_driver.h"
-#include "engine/math/intersects.h"
+#include "game/objects/level_bot_world.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -16,16 +16,6 @@
 using namespace mattmath;
 using namespace labrador;
 
-
-namespace
-{
-    bool passable_gate(const CollisionObject* object, PlayerTeam team)
-    {
-        if (team == PlayerTeam::none) { return false; }
-        const Structure* structure = Collider::of(*object).structure();
-        return structure != nullptr && structure->passable_for(team);
-    }
-}
 
 Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, LevelMatch round_setup) :
 	colourwars::SoundBankObject(stage.audio.sound_bank_name, services.audio_resources),
@@ -79,6 +69,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	}
 	if (this->view_participants_.empty())
 	{ throw std::invalid_argument("Level requires at least one human view"); }
+	this->bot_world_ = std::make_unique<LevelBotWorld>(*this->scene_, this->players_, this->structures_);
 	if (roster != nullptr && roster->bot_count() != 0)
 	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, round_setup.random.bot_seed()); }
 	const MenuStyle& menu = presentation->menu();
@@ -501,7 +492,7 @@ void Level::apply_player_inputs(
 
 	if (this->bot_driver_ != nullptr && (seats == nullptr || !seats->replaces_bot_inputs()))
 	{
-		this->bot_driver_->filter_seats(by_participant, *this);
+		this->bot_driver_->drive(by_participant, *this->bot_world_);
 	}
 	if (seats != nullptr)
 	{
@@ -730,71 +721,34 @@ std::wstring_view Level::bot_identity(int participant) const
 	return text == nullptr ? std::wstring_view{} : text->text();
 }
 
+const BotWorld& Level::bot_world() const
+{
+	return *this->bot_world_;
+}
+
 std::vector<RectangleF> Level::bot_obstacles(PlayerTeam team) const
 {
-	std::vector<RectangleF> bounds;
-	for (const CollisionObject* object : this->structures_.projectile_targets())
-	{
-		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
-			!passable_gate(object, team))
-		{ bounds.push_back(object->shape()->bounding_box()); }
-	}
-	return bounds;
+	return this->bot_world_->obstacles(team);
 }
 
 std::vector<MatchBotSupport> Level::bot_supports(PlayerTeam team) const
 {
-	std::vector<MatchBotSupport> supports;
-	// The target list is fixed for the match, so a position in it is a stable
-	// identity even for a support that moves.
-	std::uint32_t id = 0;
-	for (const CollisionObject* object : this->structures_.projectile_targets())
-	{
-		++id;
-		const Structure* structure = Collider::of(*object).structure();
-		if (structure != nullptr && structure->flat() && object->shape() != nullptr &&
-			!passable_gate(object, team))
-		{
-			supports.push_back({ object->shape()->bounding_box(),
-				structure->jump_through(), structure->paintable() != nullptr, id,
-				structure->mover() != nullptr });
-		}
-	}
-	return supports;
+	return this->bot_world_->supports(team);
 }
 
 std::vector<MatchBotRamp> Level::bot_ramps() const
 {
-	std::vector<MatchBotRamp> ramps;
-	for (const CollisionObject* object : this->structures_.projectile_targets())
-	{
-		const CollisionObjectType type = to_collision_type(object->tag());
-		if (is_structure_ramp(type) && object->shape() != nullptr)
-		{
-			ramps.push_back({ object->shape()->bounding_box(),
-				type == CollisionObjectType::structure_ramp_right });
-		}
-	}
-	return ramps;
+	return this->bot_world_->ramps();
 }
 
 bool Level::bot_line_of_sight(Vector2F from, Vector2F to) const
 {
-	return this->bot_traversal_line_of_sight(from, to, PlayerTeam::none);
+	return this->bot_world_->line_of_sight(from, to);
 }
 
 bool Level::bot_traversal_line_of_sight(Vector2F from, Vector2F to, PlayerTeam team) const
 {
-	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||
-		!std::isfinite(to.x) || !std::isfinite(to.y)) { return false; }
-	const Segment sight(from, to);
-	for (const CollisionObject* object : this->structures_.projectile_targets())
-	{
-		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
-			!passable_gate(object, team) &&
-			rectangle_segment_intersect(object->shape()->bounding_box(), sight)) { return false; }
-	}
-	return true;
+	return this->bot_world_->traversal_line_of_sight(from, to, team);
 }
 
 LevelState Level::state() const
@@ -893,22 +847,7 @@ LevelEndInfo Level::level_end_info() const
 
 std::vector<PaintSurfaceSample> Level::paint_surfaces() const
 {
-    std::vector<PaintSurfaceSample> samples;
-    std::size_t source_index = 0;
-    for (const CollisionObject* object : this->scene_->collision_objects())
-    {
-        const PaintableObject* paintable = Collider::of(*object).paintable();
-        if (paintable == nullptr)
-        {
-            if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
-            {
-                throw std::runtime_error("Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
-            }
-            continue;
-        }
-        paintable->append_paint_surfaces(samples, source_index++);
-    }
-    return samples;
+    return this->bot_world_->paint_surfaces();
 }
 
 bool Level::has_horizontal_motion() const
