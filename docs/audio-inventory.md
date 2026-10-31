@@ -194,7 +194,7 @@ above:
 | `game/states/stage_preview.cpp` and `level_object_builder.cpp` | Stage previews build real `StructurePaintable`s. Since 2026-10-15 surfaces report contact results; Level owns paint audio, so previews resolve no paint voices and play none | Every paint cue is checked at startup; match construction resolves the same choices in `PaintAudio` |
 | `game/debug/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `debug_console/tune_document_checks.cpp` (`check_tune_scope`) pins the list |
 | `game/play_settings.h`; `save.cpp`; `controls_settings_menu.cpp` (`apply_settings`); `game/sound_groups.{h,cpp}`; `GameTuning::sound_references`, `match_sound_references`, `Presentation::sound_references` | The player's 0-100 music and SFX volumes are the `music` and `sfx` engine sound-group volumes. Every listed wave and effect is assigned one group at load, emitters play authored levels only, and Apply calls `sound_groups::apply`. The Controls volume preview is the one ungrouped sound | A new cue slot goes in a reference list with its group, or it plays at full volume whatever the setting. Room tone and stings need a deliberate choice of which. `story_audio`'s `check_sound_groups` plays every listed sound under each muted group; `scripts/acceptance/settings.cpp` pins the stored values |
-| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/states/game_level_dev_tools.cpp` (`debug_sync_audio`); `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). Since `HYG#50` (2026-10-30) that means making it a `MatchVoice` and registering it with the Level's `MatchVoices` ([match_voices.h](../game/objects/match_voices.h)). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
+| `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/states/game_level_dev_tools.cpp` (`debug_sync_audio`); `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). Since `HYG#50` (2026-10-30) that means making it a `MatchVoice` and registering it with the match's `MatchVoices` ([match_voices.h](../game/objects/match_voices.h)), which the Level's `MatchAudio` owns ([match_audio.h](../game/objects/match_audio.h)). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
 | `game/main.cpp:107`; `content_validation.cpp:9-34`; `resource_validation.h:37-47` | Startup validation of every name above against the loaded banks | Unchanged in shape; extend it for every new slot (section 4) |
 
 Validation can be fooled in a fresh clone. A silent bank accepts any name
@@ -265,7 +265,7 @@ cue fails only on a machine that has the real bank.
    the results fill loop do not pause on focus loss; only minimising does
    (`external/labrador/engine/app/application.cpp:389-403`). In a match,
    focus loss reaches `GameLevel::on_deactivated` (`game_states.cpp:199-203`),
-   and `Level::pause_audio` (`level_audio.cpp`) pauses the music, the
+   and `Level::pause_audio` (`level_audio.cpp`, through `MatchAudio`) pauses the music, the
    time-up cue and the weapon loops, but not fire-and-forget waves.
 9. **Weapon loops call play every tick.** They call `play_effect` on every
    held tick (`weapon.cpp:286-291`), which reaches `SoundEffectInstance::Play`
@@ -1113,7 +1113,8 @@ After that bump, both music owners treat an outside stop as a finished voice.
 (`game/states/screen_music.cpp:27`), `resume` revives only a paused one
 (42-45), and `finished` counts any stopped voice as done (57). `Level::update_music`
 and `Level::resume_music` have the same playing/paused guards
-(`game/objects/level_audio.cpp:112-123`, 133-139); the arena loop is started
+(`game/objects/level_audio.cpp:112-123`, 133-139, now `MatchAudio`'s in
+`game/objects/match_audio.cpp`); the arena loop is started
 only once, at the countdown (`game/objects/level.cpp:263`). A recovered device
 would leave menu or arena music silent for the rest of that screen or match.
 
@@ -1149,8 +1150,9 @@ these voices, so nothing changes in play until that bump.
   (`restart_lost_loop`, `game/states/screen_music.cpp`). `resume` still revives
   only a paused voice, and `finished` is unchanged. The results coda
   (`loop` false), an exit (`leaving_`) and a silent bank keep their stopped voice.
-- `Level::update_music` does the same for the arena loop (`restart_lost_music`,
-  `game/objects/level_audio.cpp`), but only after the countdown has started it,
+- `Level::update_music` does the same for the arena loop (it forwards to
+  `MatchAudio::restart_lost_music`, `game/objects/match_audio.cpp`), but only
+  after the countdown has started it,
   before `music_ending_` and on an audible bank. The duck envelope keeps its own
   target, so a loop stopped under a pause page comes back ducked. Time up, the
   overview cut and teardown still own their stops. A Movement Course has no

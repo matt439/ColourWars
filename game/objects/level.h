@@ -59,6 +59,7 @@ class BotWorld;
 class LevelBotWorld;
 class TeammateMarkers;
 class PlayerIdentityHud;
+class MatchAudio;
 class Presentation;
 struct MenuResultsText;
 struct MatchBotSupport;
@@ -87,9 +88,9 @@ struct CursorMarkerFrame
 
 // One paint match: countdown, clock, cameras, HUDs and music.
 // Scene owns and steps the objects; Level keeps borrowed player pointers
-// and supplies the views and game-specific overlays. It owns the match's
-// voices (voices_): its own and every player's, paused, resumed and stopped
-// together.
+// and supplies the views and game-specific overlays. Its MatchAudio owns the
+// match's voices: the level's own and every player's, paused, resumed and
+// stopped together.
 struct InputBindings;
 class TranslatingStructurePaintable;
 class TeamGateStructurePaintable;
@@ -329,39 +330,13 @@ private:
 
 	const PlaySettings* preferences_ = nullptr;
 
-	// The arena loop resumes only from a pause, and at the gain the fade and
-	// the duck have reached, not where it was left.
-	class MusicVoice final : public MatchVoice
-	{
-	public:
-		MusicVoice() = default;
-		MusicVoice(const Level* level, const std::string& sound_bank_name,
-			const labrador::AudioResources* audio_resources,
-			const std::string& effect_name);
-		void resume() override;
-	private:
-		const Level* level_ = nullptr;
-	};
-
-	// Every voice below, then each player's, in the order the constructor
-	// registers them. Pause, resume and teardown go through this alone.
-	MatchVoices voices_;
-
-	// Resolve the level's music and fixed match sounds once at construction.
-	MusicVoice music_;
-	MatchVoice end_sting_;
-	MatchVoice zoom_out_sound_;
-	MatchVoice countdown_sound_;
-	MatchVoice go_sound_;
-	MatchVoice time_up_sound_;
-	MatchVoice last_ten_sound_;
+	// The match's voices, in the one list pause, resume and teardown walk
+	// (its own, then each player's), the arena music, the match cues and the
+	// opening's room tone and story voices. Declared after scene_, so it is
+	// destroyed first; ~Level stops it in its body before any member goes.
+	std::unique_ptr<MatchAudio> audio_;
 	// The displayed positive second most recently sounded; zero means none yet.
 	float last_ten_second_ = 0.0f;
-	float music_volume_ = 0.0f;
-	float end_sting_volume_ = 0.0f;
-	MusicEnvelope music_fade_;
-	MusicEnvelope music_duck_{ 1.0f };
-	bool music_ending_ = false;
 
 	// Simulation and rendering have independent clocks; both snapshots have
 	// identical layout in Debug and Release and are read-only during fan-out.
@@ -468,18 +443,6 @@ private:
 		SilhouettePose pose;
 	};
 	float opening_time_ = 0.0f;
-	// Room cues are owned voices so a paused or skipped opening cannot leave
-	// its person making a noise after the silhouette has stopped or gone.
-	MatchVoice sigh_sound_;
-	MatchVoice chair_sound_;
-	MatchVoice room_tone_sound_;
-	bool room_tone_playing_ = false;
-	MatchVoice glass_in_sound_;
-	MatchVoice celebrate_sound_;
-	MatchVoice slump_sound_;
-	MatchVoice colour_in_sound_;
-	MatchVoice skip_sound_;
-	MatchVoice undo_sound_;
 	// The countdown plays in the picture and ends by pushing through the glass.
 	bool intro_countdown_ = false;
 	bool glass_in_started_ = false;
@@ -538,7 +501,6 @@ private:
 	bool skip_requested() const;
 	void colour_players(bool team_a, bool team_b);
 	void skip_intro();
-	void set_room_tone(bool playing);
 	void update_opening(float dt);
 	void add_intro_views();
 	void draw_intro(labrador::Renderer& renderer) const;
@@ -587,9 +549,6 @@ private:
 
 	float zoom_out_camera_ratio() const;
 
-	bool restart_lost_music();
-	// The arena loop's gain: the stage's volume through the fade and the duck.
-	float music_gain() const;
 	void stop_player_sounds();
 
 	int count_projectiles() const;

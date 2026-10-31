@@ -698,7 +698,29 @@ identity, seat-label and pad queries forward. `draw_player_overlay` keeps its
 filter changes and order, drawing the badge and each bot's badge and label
 (through the paper card's sheet and fill) by the part's const pieces, and
 hands `TeammateMarkers::draw` the part's badge. The bodies moved unchanged.
-The opening, the countdown cards and match audio remain.
+
+[MatchAudio](../game/objects/match_audio.h), owned through a `unique_ptr`
+declared after the scene, took the match's sound: the one `MatchVoices` list,
+the stage music as its `MusicVoice` (whose back-pointer is now the part), the
+end sting, the five match cues, the room tone and the eight story voices, the
+music's and sting's volumes, its fade and duck envelopes and whether it is
+ending. It is created where the voices were resolved, resolves them in the same
+order (so the first effect the bank lacks still throws first, after the bank
+check `Level`'s own `SoundBankObject` base still makes) and registers them in
+the same order; `Level` then registers each player's voices in roster order.
+It borrows the match tuning and the presentation and reads them per call: the
+music mix on every fade and duck, the room tone's volume when the loop starts.
+`start_music` sets its own `music_started_` where `Level` sets
+`countdown_started_`, which `restart_lost_music` now reads instead; `Level`
+keeps `countdown_started_` for `start_without_countdown`. `Level` still decides
+when each cue plays and reads every other cue's volume from tuning at the same
+call; `end_music`, `play_end_sting`, `stop_arena` and `set_room_tone` replace
+their old lines in place. `last_ten_second_`, the player stops,
+`interrupt_players`, `prepare_resume`, `PaintAudio` and `BlockedShotFeedback`
+stay in `Level`. `~Level` stays in `level_audio.cpp` and stops the list in its
+body, before any member is destroyed; `suspend`, `pause_audio`, `resume`,
+`update_music`, `set_music_ducked` and `resume_music` forward. The bodies moved
+unchanged. The opening and the countdown cards remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

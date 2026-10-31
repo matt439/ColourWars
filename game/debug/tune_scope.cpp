@@ -160,7 +160,8 @@ namespace
 		{ "tuning.player.size.*", TuneScope::rebuild },
 		// Player::player_tuning() every step; frame_time at each animation change.
 		{ "tuning.player.**", TuneScope::live },
-		// Level reads the volume each time it plays them.
+		// Level reads the volume each time it plays them; MatchAudio reads the
+		// room tone's each time it starts the loop.
 		{ "tuning.match.sounds.*.volume", TuneScope::live },
 		// The opening's and the reveal's beats are read every update (level_intro.cpp).
 		{ "tuning.match.opening.**", TuneScope::live },

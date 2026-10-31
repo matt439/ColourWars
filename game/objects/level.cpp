@@ -10,6 +10,7 @@
 #include "game/objects/level_bot_world.h"
 #include "game/objects/teammate_markers.h"
 #include "game/objects/player_identity_hud.h"
+#include "game/objects/match_audio.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -25,8 +26,6 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	players_(std::move(world.players)),
 	stations_(std::move(stage.stations)),
 	viewport_dividers_(std::move(world.viewport_dividers)),
-	music_volume_(stage.audio.music_volume),
-	end_sting_volume_(stage.audio.end_sting_volume),
 	resolution_manager_(services.resolution_manager),
 	viewport_manager_(services.viewport_manager),
 	cursor_marker_(services.presentation, services.resolution_manager),
@@ -41,7 +40,6 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	RenderResources* render_resources = services.render_resources;
 	const AudioResources* audio_resources = services.audio_resources;
 	const MatchSetup* roster = round_setup.roster;
-	const std::string& sound_bank_name = stage.audio.sound_bank_name;
 	this->preferences_ = services.preferences;
 	this->input_bindings_ = services.input_bindings;
 	this->presentation_ = presentation;
@@ -113,41 +111,12 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
 		render_resources, &presentation->hud(), &presentation->player_identity());
 	this->identity_->refresh_texts(this->players_, this->roster_);
-	// A silent stage leaves music_ unresolved; a voice with no effect does
-	// nothing, and the music paths that would wait on it check first.
-	const auto voice = [&](const std::string& effect)
-	{ return MatchVoice(sound_bank_name, audio_resources, effect); };
-	this->music_ = MusicVoice(this, sound_bank_name, audio_resources, stage.audio.music_name);
-	this->end_sting_ = voice(stage.audio.end_sting_name);
-	this->zoom_out_sound_ = voice(match.zoom_out_sound.name);
-	this->countdown_sound_ = voice(match.countdown_sound.name);
-	this->go_sound_ = voice(match.go_sound.name);
-	this->time_up_sound_ = voice(match.time_up_sound.name);
-	this->last_ten_sound_ = voice(match.last_ten_sound.name);
-	this->room_tone_sound_ = voice(match.room_tone_sound.name);
-	this->sigh_sound_ = voice(match.sigh_sound.name);
-	this->chair_sound_ = voice(match.chair_sound.name);
-	this->glass_in_sound_ = voice(match.glass_in_sound.name);
-	this->celebrate_sound_ = voice(match.celebrate_sound.name);
-	this->slump_sound_ = voice(match.slump_sound.name);
-	this->colour_in_sound_ = voice(match.colour_in_sound.name);
-	this->skip_sound_ = voice(match.skip_sound.name);
-	this->undo_sound_ = voice(match.undo_sound.name);
-	// The order every pause, resume and teardown has always taken: the level's
-	// voices, then each player's tool loop and redraw pen, in roster order.
-	for (MatchVoice* own : { static_cast<MatchVoice*>(&this->end_sting_),
-		static_cast<MatchVoice*>(&this->music_), &this->zoom_out_sound_,
-		&this->countdown_sound_, &this->go_sound_, &this->time_up_sound_,
-		&this->last_ten_sound_, &this->room_tone_sound_, &this->sigh_sound_,
-		&this->chair_sound_, &this->glass_in_sound_, &this->celebrate_sound_,
-		&this->slump_sound_, &this->colour_in_sound_, &this->skip_sound_,
-		&this->undo_sound_ })
-	{
-		this->voices_.add(*own);
-	}
+	// Resolves and registers the level's voices in their fixed order; each
+	// player's tool loop and redraw pen follow, in roster order.
+	this->audio_ = std::make_unique<MatchAudio>(stage.audio, audio_resources, &match, presentation);
 	for (Player* player : this->players_)
 	{
-		player->add_voices(this->voices_);
+		player->add_voices(this->audio_->voices());
 	}
 
 	if (round_setup.opening != OpeningMode::off)
@@ -245,11 +214,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		if (starting)
 		{
 			this->countdown_started_ = true;
-			if (this->music_.valid())
-			{
-				this->music_fade_.fade_to(1.0f, this->presentation_->music_mix().fade_in);
-				this->music_.play(true, 0.0f);
-			}
+			this->audio_->start_music();
 		}
 		const float before = this->start_timer_;
 		this->start_timer_ -= dt;
@@ -259,8 +224,8 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			this->start_timer_ <= this->tuning_->match().opening.push)
 		{
 			this->glass_in_started_ = true;
-			this->set_room_tone(false);
-			this->glass_in_sound_.play(false,
+			this->audio_->set_room_tone(false);
+			this->audio_->glass_in_sound().play(false,
 				this->tuning_->match().glass_in_sound.volume);
 		}
 		// One cue for the displayed number, including the initial beat. A long
@@ -269,7 +234,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			(starting ||
 				std::ceil(before) != std::ceil(this->start_timer_)))
 		{
-			this->countdown_sound_.play(false,
+			this->audio_->countdown_sound().play(false,
 				this->tuning_->match().countdown_sound.volume);
 		}
 		if (this->start_timer_ > 0.0f)
@@ -286,8 +251,8 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		{
 			if (this->state_ == LevelState::start_countdown)
 			{
-				this->countdown_sound_.stop();
-				this->go_sound_.play(false,
+				this->audio_->countdown_sound().stop();
+				this->audio_->go_sound().play(false,
 					this->tuning_->match().go_sound.volume);
 			}
 			this->state_ = LevelState::active;
@@ -318,7 +283,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		if (this->timer_ > 0.0f && second <= 10.0f && second != this->last_ten_second_)
 		{
 			this->last_ten_second_ = second;
-			this->last_ten_sound_.play(false,
+			this->audio_->last_ten_sound().play(false,
 				this->tuning_->match().last_ten_sound.volume);
 		}
 		if (this->timer_ <= 0.0f)
@@ -330,16 +295,8 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			// already renders the newly entered state this frame.
 			this->zoom_out_camera_ = this->zoom_out_start_camera_;
 
-			if (this->music_.valid())
-			{
-				this->music_ending_ = true;
-				this->music_fade_.fade_to(0.0f, this->presentation_->music_mix().fade_out);
-			}
-			if (this->end_sting_.valid())
-			{
-				this->end_sting_.play(false,
-					this->end_sting_volume_);
-			}
+			this->audio_->end_music();
+			this->audio_->play_end_sting();
 			this->stop_player_sounds();
 			for (Player* player : this->players_)
 			{
@@ -349,12 +306,12 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			{
 				if (drip != nullptr) { drip->clear(); }
 			}
-			this->countdown_sound_.stop();
-			this->go_sound_.stop();
-			this->last_ten_sound_.stop();
-			this->time_up_sound_.play(false,
+			this->audio_->countdown_sound().stop();
+			this->audio_->go_sound().stop();
+			this->audio_->last_ten_sound().stop();
+			this->audio_->time_up_sound().play(false,
 				this->tuning_->match().time_up_sound.volume);
-			this->zoom_out_sound_.play(false,
+			this->audio_->zoom_out_sound().play(false,
 				this->tuning_->match().zoom_out_sound.volume);
 			this->start_reveal();
 		}
@@ -368,8 +325,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			this->state_ = LevelState::overview;
 			this->zoom_out_timer_ = 0.0f;
 			// Even a shortened glass transition leaves the returning person silent.
-			if (this->music_.valid()) { this->music_.stop(); }
-			if (this->end_sting_.valid()) { this->end_sting_.stop(); }
+			this->audio_->stop_arena();
 			// Let the glass cue's tail finish naturally; destruction still owns it.
 		}
 

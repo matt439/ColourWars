@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 #include "game/presentation.h"
+#include "game/objects/match_audio.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -137,35 +138,17 @@ void Level::colour_players(bool team_a, bool team_b)
 	}
 }
 
-void Level::set_room_tone(bool playing)
-{
-	if (playing == this->room_tone_playing_)
-	{
-		return;
-	}
-	this->room_tone_playing_ = playing;
-	if (playing)
-	{
-		this->room_tone_sound_.play(true,
-			this->tuning_->match().room_tone_sound.volume);
-	}
-	else
-	{
-		this->room_tone_sound_.stop();
-	}
-}
-
 void Level::skip_intro()
 {
 	// Do not advance through the remaining story beats on a skip, or let a
 	// bypassed story cue follow the person into the split countdown.
-	this->set_room_tone(false);
-	this->sigh_sound_.stop();
-	this->chair_sound_.stop();
-	this->undo_sound_.stop();
-	this->colour_in_sound_.stop();
-	this->glass_in_sound_.stop();
-	this->skip_sound_.play(false,
+	this->audio_->set_room_tone(false);
+	this->audio_->sigh_sound().stop();
+	this->audio_->chair_sound().stop();
+	this->audio_->undo_sound().stop();
+	this->audio_->colour_in_sound().stop();
+	this->audio_->glass_in_sound().stop();
+	this->audio_->skip_sound().play(false,
 		this->tuning_->match().skip_sound.volume);
 	// Straight to the split-screen countdown, from its start if it had not begun.
 	this->state_ = LevelState::start_countdown;
@@ -182,7 +165,7 @@ void Level::update_opening(float dt)
 	}
 	// Room sound belongs to the monitor, including a quick opening. Starting
 	// here keeps construction and stationary presentation updates silent.
-	this->set_room_tone(true);
+	this->audio_->set_room_tone(true);
 	const float before = this->opening_time_;
 	this->opening_time_ += dt;
 	const MatchTuning& match = this->tuning_->match();
@@ -201,20 +184,20 @@ void Level::update_opening(float dt)
 	}
 	if (crossed(before, this->opening_time_, undo))
 	{
-		this->undo_sound_.play(false, match.undo_sound.volume);
+		this->audio_->undo_sound().play(false, match.undo_sound.volume);
 	}
 	if (crossed(before, this->opening_time_, leave))
 	{
-		this->sigh_sound_.play(false, match.sigh_sound.volume);
+		this->audio_->sigh_sound().play(false, match.sigh_sound.volume);
 	}
 	if (crossed(before, this->opening_time_, leave + opening_stand * timing.leave))
 	{
-		this->chair_sound_.play(false, match.chair_sound.volume);
+		this->audio_->chair_sound().play(false, match.chair_sound.volume);
 	}
 	if (this->opening_time_ >= this->opening_length())
 	{
 		// The figures come alive in their colours as the countdown starts.
-		this->colour_in_sound_.play(false,
+		this->audio_->colour_in_sound().play(false,
 			match.colour_in_sound.volume);
 		this->state_ = LevelState::start_countdown;
 		this->intro_countdown_ = true;
@@ -365,7 +348,7 @@ void Level::start_reveal()
 	{
 		return;
 	}
-	this->set_room_tone(true);
+	this->audio_->set_room_tone(true);
 	// The coverage is counted once, now, and is what the click and the
 	// results agree on.
 	this->end_info_ = this->level_end_info();
@@ -421,7 +404,7 @@ void Level::update_reveal(float dt)
 	const bool closing = this->winner_ == PlayerTeam::none;
 	if (crossed(before_time, this->reveal_time_, reveal_sit * timing.walk_in))
 	{
-		this->chair_sound_.play(false, match.chair_sound.volume);
+		this->audio_->chair_sound().play(false, match.chair_sound.volume);
 	}
 	// A draw moves to the close button and shows no colour swatches.
 	if (!closing)
@@ -442,7 +425,7 @@ void Level::update_reveal(float dt)
 	}
 	if (crossed(before_time, this->reveal_time_, leave))
 	{
-		this->chair_sound_.play(false, match.chair_sound.volume);
+		this->audio_->chair_sound().play(false, match.chair_sound.volume);
 	}
 	// The picture stays silent while the person is in the room. Each team
 	// gets one reaction after they leave, however many figures it contains.
@@ -454,18 +437,18 @@ void Level::update_reveal(float dt)
 			[this](const Player* player) { return player->team() != this->winner_; });
 		if (winners)
 		{
-			this->celebrate_sound_.play(false,
+			this->audio_->celebrate_sound().play(false,
 				match.celebrate_sound.volume);
 		}
 		if (losers)
 		{
-			this->slump_sound_.play(false,
+			this->audio_->slump_sound().play(false,
 				match.slump_sound.volume);
 		}
 	}
 	if (this->reveal_time_ >= this->reveal_length())
 	{
-		this->set_room_tone(false);
+		this->audio_->set_room_tone(false);
 		this->state_ = LevelState::finished;
 	}
 }

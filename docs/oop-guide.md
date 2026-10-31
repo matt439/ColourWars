@@ -62,7 +62,7 @@ The principal ownership chain is:
 ```text
 Application owns the state stack
   GameLevel owns Level
-    Level owns PaintAudio, MatchVoices and Scene
+    Level owns PaintAudio, MatchAudio (which owns MatchVoices) and Scene
       Scene owns Players, Structures and Projectiles
         Player owns Weapon and FigureAttachments
         StructurePaintable (and its gate/translating leaves) owns PaintTiles
@@ -107,7 +107,8 @@ MovementAudio, PaintAudio and the menu pages alike - and resolves its handles
 once, at construction. A sound that keeps playing and has to stop is a
 [MatchVoice](../game/objects/match_voices.h) member of its owner: the stage
 music, the match and room cues, a tool's firing loop, the redraw pen. Level's
-constructor registers its own voices and then each player's, which adds its
+[MatchAudio](../game/objects/match_audio.h) registers the level's own voices
+and Level's constructor then registers each player's, which adds its
 tool's loop and its pen, in one `MatchVoices` list; pause, resume and teardown
 walk that list and nothing else. A voice with its own rule overrides it: the
 pen pauses only while it sounds and stops on resume if the redraw has ended,
