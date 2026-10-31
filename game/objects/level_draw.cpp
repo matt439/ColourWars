@@ -42,7 +42,7 @@ void Level::draw(Renderer& renderer) const
 			DrawList list = renderer.view(renderer.view_count() - 1);
 			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
 			list.set_camera(Camera::DEFAULT_CAMERA);
-			this->draw_lesson_card(list);
+			this->lessons_.draw(list, this->paper_);
 		}
 		if (this->cursor_marker_visible())
 		{
@@ -112,8 +112,8 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		badge = RectangleF(badge.position() + shift, badge.size());
 		position += shift;
 		this->player_badge_->draw(list, badge, bot);
-		this->render_resources_->sprite_sheet(this->overlay_sheet_)->draw(list,
-			this->overlay_fill_, RectangleF(position, size),
+		this->paper_.sheet()->draw(list,
+			this->paper_.fill(), RectangleF(position, size),
 			this->presentation_->player_identity().background_colour);
 		text.draw_with(list, this->presentation_->player_identity().ink_colour,
 			position - measured.position() * scale, scale);
@@ -133,7 +133,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	{
 		debug_overlay::draw_pane(list, this->overlays_, *this->scene_,
 			this->scene_->view(view_index), *player, this->camera_bounds_,
-			*this->render_resources_->sprite_sheet(this->overlay_sheet_), this->overlay_fill_);
+			*this->paper_.sheet(), this->paper_.fill());
 	}
 
 	// The HUD uses pane-local coordinates, so draw it with the identity camera.
@@ -215,7 +215,7 @@ void Level::set_pointer(std::optional<Vector2F> window_point)
 void Level::draw_cursor_marker(DrawList& list) const
 {
 	const Vector2F at = *this->pointer_;
-	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
+	const SpriteSheet* sheet = this->paper_.sheet();
 	list.set_filter(TextureFilter::point);
 	for (const CursorMarkerFrame& frame : cursor_marker_frames(this->presentation_->hud().cursor_marker,
 		at, this->resolution_manager_->resolution_vec().y))
@@ -223,10 +223,10 @@ void Level::draw_cursor_marker(DrawList& list) const
 		const RectangleF& box = frame.box;
 		const float width = frame.width;
 		const Colour tint = CrudeDrawing::premultiplied(frame.colour);
-		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y, box.width, width), tint);
-		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.bottom() - width, box.width, width), tint);
-		sheet->draw(list, this->overlay_fill_, RectangleF(box.x, box.y + width, width, box.height - width * 2.0f), tint);
-		sheet->draw(list, this->overlay_fill_, RectangleF(box.right() - width, box.y + width, width, box.height - width * 2.0f), tint);
+		sheet->draw(list, this->paper_.fill(), RectangleF(box.x, box.y, box.width, width), tint);
+		sheet->draw(list, this->paper_.fill(), RectangleF(box.x, box.bottom() - width, box.width, width), tint);
+		sheet->draw(list, this->paper_.fill(), RectangleF(box.x, box.y + width, width, box.height - width * 2.0f), tint);
+		sheet->draw(list, this->paper_.fill(), RectangleF(box.right() - width, box.y + width, width, box.height - width * 2.0f), tint);
 	}
 }
 

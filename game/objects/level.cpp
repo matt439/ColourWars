@@ -101,10 +101,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		}
 		this->idle_drips_.push_back(drip);
 	}
-	this->overlay_sheet_ = render_resources->resolve_sprite_sheet(
-		presentation->hud().sprite_sheet);
-	this->overlay_fill_ = render_resources->sprite_sheet(this->overlay_sheet_)
-		->resolve_sprite_frame(presentation->hud().fill_frame);
+	this->paper_ = PaperCard(presentation, this->resolution_manager_, render_resources);
 	const MatchTuning& match = tuning->match();
 
 	this->timer_ = round_setup.duration.value_or(match.duration);
@@ -176,8 +173,8 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		this->colour_players(false, false);
 	}
 
-	this->lessons_ = std::move(stage.lessons);
-	this->build_lesson_cards(render_resources);
+	this->lessons_ = PracticeLessons(std::move(stage.lessons), tuning, presentation,
+		render_resources);
 	this->build_opening_frame(render_resources);
 }
 
@@ -307,7 +304,12 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 	if (this->state_ == LevelState::active)
 	{
 		this->update_level_logic(commands, dt, seats, horizontal);
-		this->update_active_lesson();
+		if (this->practice())
+		{
+			// Practice is solo, so the one human view is the one being taught.
+			this->lessons_.update(*this->players_.at(
+				static_cast<size_t>(this->view_participants_.front())));
+		}
 		// Practice has no clock to run out; the player leaves from pause.
 		if (this->practice()) { return; }
 
@@ -610,7 +612,7 @@ void Level::refresh_layout()
 		this->zoom_out_camera_ratio());
 	this->centre_countdown_text();
 	this->centre_controls_text();
-	this->centre_lesson_cards();
+	this->lessons_.centre(this->paper_);
 	this->refresh_player_cameras();
 	this->refresh_views();
 	this->layout_size_ = size;

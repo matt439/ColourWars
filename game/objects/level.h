@@ -26,6 +26,8 @@
 #include "game/objects/level_station.h"
 #include "game/objects/level_inputs.h"
 #include "game/objects/level_structures.h"
+#include "game/objects/paper_card.h"
+#include "game/objects/practice_lessons.h"
 #include "engine/ui/widget.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
@@ -406,8 +408,8 @@ private:
 	void refresh_keyboard_controls();
 	const Presentation* presentation_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
-	labrador::RenderResources::SpriteSheetHandle overlay_sheet_;
-	labrador::SpriteSheet::frame_handle overlay_fill_;
+	// The overlay sheet's fill frame and the window-space card scale.
+	PaperCard paper_;
 
 	PlayerCamera player_camera_;
 
@@ -435,21 +437,8 @@ private:
 	// See request_intro_skip.
 	bool intro_skip_requested_ = false;
 
-	// Practice lessons and one prepared card per lesson, so a draw only
-	// chooses among them. Laid out in window pixels by centre_lesson_cards.
-	struct LessonCard
-	{
-		std::unique_ptr<colourwars::TextDropShadow> title;
-		std::unique_ptr<colourwars::TextDropShadow> text;
-		mattmath::RectangleF card;
-	};
-	std::vector<LevelLesson> lessons_;
-	std::vector<LessonCard> lesson_cards_;
-	int active_lesson_ = -1;
-	void build_lesson_cards(labrador::RenderResources* render_resources);
-	void centre_lesson_cards();
-	void update_active_lesson();
-	void draw_lesson_card(labrador::DrawList& draw_list) const;
+	// Practice lessons and their cards; empty unless this is practice.
+	PracticeLessons lessons_;
 
 	// Initialized from match tuning in the constructor.
 	float timer_ = 0.0f;
@@ -607,9 +596,6 @@ private:
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
 	// POL#39: draws cursor_marker_frames at the mouse pointer.
 	void draw_cursor_marker(labrador::DrawList& draw_list) const;
-	void draw_opening_card(labrador::DrawList& draw_list,
-		const mattmath::RectangleF& rectangle, float scale) const;
-	float opening_scale() const;
 
 	// Sets the displayed beat; drawing derives its age from the match clock.
 	void set_countdown_text(const std::wstring& text);

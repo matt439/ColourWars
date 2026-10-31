@@ -71,6 +71,7 @@ Application owns the state stack
       Level owns LevelBotWorld (the BotWorld its MatchBotDriver reads)
         and the MatchBotDriver, which owns a MatchBot per bot seat
       Level owns InterfaceGameplay (which owns a PlayerBadge)
+      Level owns PracticeLessons (each lesson's TextDropShadow pair)
       Level owns the other CrudeDrawing leaves: CountdownArt, Monitor,
         Silhouette, ScreenCursor, FigureActing, RevealArt, PlayerBadge,
         TeammateMarker
@@ -83,7 +84,11 @@ collected once when the match's objects are admitted. Its
 [LevelBotWorld](../game/objects/level_bot_world.h) borrows the scene, the
 player vector and that part by reference, and answers the shipping bots'
 [BotWorld](../game/ai/bot_world.h) queries with values, so the bots never see
-a `Level` or a `Player`. Players respawn rather
+a `Level` or a `Player`. Its [PaperCard](../game/objects/paper_card.h) and
+[PracticeLessons](../game/objects/practice_lessons.h) parts are value members
+too: the first borrows the presentation, the window and the render resources
+to draw the window-space cards, and the second is empty unless the match is
+practice. Players respawn rather
 than being removed from Scene, and structures stay for the match, so these
 pointers remain valid while Level exists. The
 index in Level's player vector is a stable roster participant; `player_num()`

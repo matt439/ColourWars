@@ -650,8 +650,22 @@ public queries forward. `MatchBotDriver` no longer derives from
 loops, the same RNG draws and `engagement_distance`'s sum in the same order,
 so `game/ai` includes neither `level.h`, `weapon.h` nor the team gate. The four
 probes that drove it by hand call `drive(seats, level.bot_world())`; the
-balance runner wraps it in a probe-local `SeatInputFilter`. The opening,
-practice, the HUD and draw layer and match audio remain.
+balance runner wraps it in a probe-local `SeatInputFilter`.
+
+Two value members took the window-space cards. [PaperCard](../game/objects/paper_card.h)
+resolves the overlay sheet and its fill frame where the constructor resolved
+them, and is the one place the card scale (`opening_scale`, read live from the
+window) and the shadowed, edged card (`draw_opening_card`) live; the controls
+reminders, the countdown and replay cards' scale, the identity tags, the
+cursor marker and the developer overlays draw through its `sheet()` and
+`fill()`. [PracticeLessons](../game/objects/practice_lessons.h) owns the
+lessons, their prepared cards and the active lesson; it is built where the
+constructor built the cards, so a title that cannot be drawn fails at the same
+point, is laid out from `refresh_layout`, updated after the live step only in
+practice (with the one human's player) and drawn over the last view as before.
+`level_practice.cpp` keeps `start_without_countdown` and the forwarders, which
+still hide the card outside live play. The opening, the HUD and draw layer and
+match audio remain.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 

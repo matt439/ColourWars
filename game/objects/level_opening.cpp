@@ -188,7 +188,7 @@ void Level::centre_countdown_text()
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
 	const MatchPresentation& look = this->presentation_->match();
 	const MenuStyle& menu = this->presentation_->menu();
-	const float scale = this->opening_scale();
+	const float scale = this->paper_.scale();
 	const Vector2F card_size = look.countdown_size * scale;
 	this->countdown_card_ = RectangleF(
 		Vector2F((resolution.x - card_size.x) / 2.0f,
@@ -244,7 +244,7 @@ void Level::centre_stage_entry()
 	const MatchPresentation& look = this->presentation_->match();
 	const MenuStyle& menu = this->presentation_->menu();
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const float scale = this->opening_scale();
+	const float scale = this->paper_.scale();
 	const Vector2F size = look.stage_entry_size * scale;
 	this->stage_entry_card_ = RectangleF(
 		(resolution.x - size.x) / 2.0f, look.stage_entry_top * scale, size.x, size.y);
@@ -352,13 +352,6 @@ void Level::centre_controls_text()
 	}
 }
 
-float Level::opening_scale() const
-{
-	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const Vector2F reference = this->presentation_->match().reference_size;
-	return std::min(resolution.x / reference.x, resolution.y / reference.y);
-}
-
 std::vector<RectangleF> Level::opening_cards() const
 {
 	std::vector<RectangleF> cards;
@@ -382,7 +375,7 @@ void Level::draw_resume_countdown(Renderer& renderer, float remaining) const
 	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
 	list.set_camera(Camera::DEFAULT_CAMERA);
 	list.set_filter(TextureFilter::point);
-	this->countdown_art_->draw_card(list, this->countdown_card_, this->opening_scale());
+	this->countdown_art_->draw_card(list, this->countdown_card_, this->paper_.scale());
 	const float duration = this->presentation_->pause_menu().resume_countdown;
 	const float beat_age = std::min(duration - remaining, std::ceil(remaining) - remaining);
 	this->countdown_art_->draw(list, this->countdown_number_box_,
@@ -399,7 +392,7 @@ void Level::draw_replay_banner(Renderer& renderer) const
 	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
 	list.set_camera(Camera::DEFAULT_CAMERA);
 	list.set_filter(TextureFilter::point);
-	this->countdown_art_->draw_card(list, this->replay_card_, this->opening_scale());
+	this->countdown_art_->draw_card(list, this->replay_card_, this->paper_.scale());
 	list.set_filter(TextureFilter::linear);
 	this->replay_heading_->draw(list);
 	list.set_filter(TextureFilter::point);
@@ -410,7 +403,7 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 	const bool getting_ready = this->state_ == LevelState::start_countdown;
 	if (getting_ready)
 	{
-		const float scale = this->opening_scale();
+		const float scale = this->paper_.scale();
 		draw_list.set_filter(TextureFilter::point);
 		this->countdown_art_->draw_card(draw_list, this->countdown_card_, scale);
 		if (!this->stage_entry_name().empty())
@@ -419,7 +412,7 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 		}
 		for (const ControlsReminder& reminder : this->controls_reminders_)
 		{
-			this->draw_opening_card(draw_list, reminder.card, scale);
+			this->paper_.draw(draw_list, reminder.card, scale);
 		}
 	}
 	const float beat_age = this->start_timer_ > 0.0f ?
@@ -444,23 +437,4 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 	}
 
 	draw_list.set_filter(TextureFilter::point);
-}
-
-void Level::draw_opening_card(DrawList& draw_list,
-	const RectangleF& rectangle, float scale) const
-{
-	const MenuStyle& menu = this->presentation_->menu();
-	const SpriteSheet* sheet = this->render_resources_->sprite_sheet(this->overlay_sheet_);
-	sheet->draw(draw_list, this->overlay_fill_,
-		RectangleF(rectangle.position() + menu.panel_shadow_offset * scale, rectangle.size()),
-		menu.scrim_colour);
-	sheet->draw(draw_list, this->overlay_fill_, rectangle, menu.panel_edge_colour);
-	const float border = menu.rule_height * scale;
-	sheet->draw(draw_list, this->overlay_fill_, RectangleF(
-		rectangle.x + border, rectangle.y + border,
-		rectangle.width - border * 2.0f, rectangle.height - border * 2.0f),
-		menu.focus_panel_colour);
-	sheet->draw(draw_list, this->overlay_fill_, RectangleF(
-		rectangle.x + border, rectangle.y + border,
-		rectangle.width - border * 2.0f, menu.accent_width * scale), menu.highlight);
 }

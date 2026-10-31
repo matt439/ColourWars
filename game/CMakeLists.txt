@@ -134,6 +134,8 @@ add_library(colourwars_game STATIC
     objects/level_intro.cpp
     objects/level_opening.cpp
     objects/level_practice.cpp
+    objects/paper_card.cpp
+    objects/practice_lessons.cpp
     objects/match_voices.cpp
     objects/monitor.cpp
     objects/movement_audio.cpp
