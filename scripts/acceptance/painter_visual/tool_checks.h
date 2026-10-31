@@ -38,6 +38,19 @@
                 // nozzle, including when aim has changed since its paid shot.
                 const float reach = look.muzzle_sizes.at(static_cast<size_t>(tool.type())).length() *
                     player.camera().scale * 2.0f + look.keyline_width * player.camera().scale * 2.0f + 2.0f;
+                // POL#38's low-paint tank shares the switch but sits beside the
+                // body, not the nozzle: its own keyed rectangle, from the same
+                // cue and pivot the tool draws with, is the one other place the
+                // switch may change, and it must change there when it is shown.
+                const LowPaintCue low = tool.low_paint_cue();
+                const WeaponFeedbackState& pulses = tool.feedback()->state();
+                const bool tank = low.low && pulses.empty_remaining <= 0.0f && pulses.recovered_remaining <= 0.0f;
+                const Vector2F tank_centre = player.camera().calculate_view_position(
+                    Vector2F(low.body_x, tool.draw_pos().y - look.status_offset) + look.low_paint_offset) +
+                    Vector2F(static_cast<float>(pane.x), static_cast<float>(pane.y));
+                const Vector2F tank_reach = (look.low_paint_size * 0.5f +
+                    Vector2F(look.keyline_width, look.keyline_width)) * player.camera().scale + Vector2F(2.0f, 2.0f);
+                bool tank_drawn = false;
                 for (int y = pane.y; y < pane.bottom(); ++y)
                 {
                     for (int x = pane.x; x < pane.right(); ++x)
@@ -47,11 +60,18 @@
                         if (enabled.pixels[offset] == disabled.pixels[offset] &&
                             enabled.pixels[offset + 1] == disabled.pixels[offset + 1] &&
                             enabled.pixels[offset + 2] == disabled.pixels[offset + 2]) { continue; }
+                        if (tank && std::abs(static_cast<float>(x) - tank_centre.x) <= tank_reach.x &&
+                            std::abs(static_cast<float>(y) - tank_centre.y) <= tank_reach.y)
+                        {
+                            tank_drawn = true;
+                            continue;
+                        }
                         require(std::abs(static_cast<float>(x) - nozzle.x) <= reach &&
                             std::abs(static_cast<float>(y) - nozzle.y) <= reach,
                             "paid-shot raster did not follow the current actual nozzle");
                     }
                 }
+                require(tank_drawn == tank, "low-paint tank did not follow the switch at its own place");
             }
         }
         require(before == observation(level), "weapon drawing changed feedback timers or simulation state");

@@ -5,7 +5,6 @@
 #include "game/states/player_label.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 #pragma region MainMenuPlayerCount
@@ -50,9 +49,7 @@ void MainMenuPlayerCount::init()
 	this->set_prompts(MenuPrompt::select_back);
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
-	this->setup_art_ = look.art;
-	this->setup_art_.focus_padding = look.setup_focus_padding;
-	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	this->setup_art_ = menu_geometry::setup_art(look);
 	// Keep the existing measured/navigation extents, including their offsets,
 	// while lettering uses the paper pages' plain dark ink.
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
@@ -66,7 +63,7 @@ void MainMenuPlayerCount::init()
 		"background",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		menu_geometry::design_area(),
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 
@@ -130,8 +127,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-			look.setup_box_size),
+		menu_geometry::footer_paper(look.setup_box_size, style.footer_y),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 
@@ -221,16 +217,13 @@ void MainMenuJoin::init()
 	this->set_widget_spacing(this->look().player_count_spacing);
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
-	this->setup_art_ = look.art;
-	this->setup_art_.focus_padding = look.setup_focus_padding;
-	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	this->setup_art_ = menu_geometry::setup_art(look);
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 	this->background_ = std::make_unique<UiTexture>("background",
-		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		style.sprite_sheet, style.fill_frame, menu_geometry::design_area(),
 		this->render_resources(), CrudeDrawing::premultiplied(look.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-			look.setup_box_size),
+		menu_geometry::footer_paper(look.setup_box_size, style.footer_y),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
@@ -277,9 +270,7 @@ RectangleF MainMenuJoin::check_paper_bounds(const UiWidget& widget, const char* 
 	const UiWidget* accent) const
 {
 	const RectangleF panel = this->paper_->rectangle();
-	const float edge = this->setup_art_.keyline_width * 3.0f;
-	const RectangleF inside(panel.position() + Vector2F(edge),
-		panel.size() - Vector2F(edge * 2.0f + this->setup_art_.shadow_offset));
+	const RectangleF inside = menu_geometry::paper_interior(panel, this->setup_art_);
 	const RectangleF bounds = accent == nullptr ? widget.bounds() :
 		RectangleF::union_of(widget.bounds(), accent->bounds());
 	if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||

@@ -387,7 +387,7 @@ namespace
             settings.set_player_weapon(player, player % 2 == 0 ? WeaponType::sprayer : WeaponType::roller);
         }
         app.viewport_manager()->set_layout(settings.screen_layout());
-        return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+        return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
     }
 
     // One player on the moving route. Team A runs from rest and holds a full
@@ -732,7 +732,7 @@ int wmain(int argc, wchar_t** argv)
                 settings.set_player_weapon(player, player % 2 == 0 ? WeaponType::sprayer : WeaponType::roller);
             }
             app.viewport_manager()->set_layout(settings.screen_layout());
-            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
             std::vector<PlayerInputData> inputs(input_slots::count);
             for (auto& input : inputs)
             {

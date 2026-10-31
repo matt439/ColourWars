@@ -23,12 +23,11 @@ public:
     mattmath::RectangleF bounds() const override { return rectangle_; }
 
     // Existing labels retain their geometry; the same badge sits just before them.
+    // The geometry is PlayerIdentityPresentation's, which the content checks share.
     static mattmath::RectangleF before(const mattmath::RectangleF& label,
         const PlayerIdentityPresentation& look)
     {
-        return mattmath::RectangleF(label.x - look.ui_size.x - look.ui_gap,
-            label.y + (label.height - look.ui_size.y) / 2.0f,
-            look.ui_size.x, look.ui_size.y);
+        return look.ui_badge_before(label);
     }
 
 private:

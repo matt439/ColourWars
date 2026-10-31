@@ -215,7 +215,7 @@ namespace turbulence_slab_tools_acceptance
                 viewports_.set_layout(setup.screen_layout());
                 LevelBuilder builder(&viewports_, &world.render, &world.audio, &world.preferences, &infos_,
                     &world.tuning, &world.presentation, &resolution_, nullptr, &partitioner_);
-                std::srand(seed); level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::off);
+                level = builder.build_level(setup, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom(seed));
                 require(level->player_count() == 2, "Lower-approach builder lost the opposed roster"); record("constructed", 0);
             }
             void tick(const char* phase, int phase_update, const PlayerInputData& action = moving_structure_acceptance::input())

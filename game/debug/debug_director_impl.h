@@ -151,6 +151,7 @@ public:
 	void match_resumed(DebugMatchTarget& match, const std::vector<PlayerInputData>& seats);
 	bool drives_slot(int slot) const;
 	OpeningMode opening_mode(OpeningMode chosen) const;
+	unsigned int round_seed(unsigned int drawn);
 
 	// Live tuning reads the baseline from the staged copy and tune.save
 	// writes the source tree. Empty: the build's source tree
@@ -334,9 +335,13 @@ private:
 	void register_bot_commands();
 	void register_replay_commands();
 
-	// Seed: `seed n` makes rand() (menus, palettes) and the planner's random
+	// Seed: `seed n` makes every build's round seed n (so its palette, intro
+	// persona and shipping bots), the menus' rand() and the planner's random
 	// choices repeat; without one the planner draws from random_device.
 	std::optional<unsigned int> seed_;
+	// The round seed of the last build (round_seed), which a recording's
+	// header writes and `status` shows.
+	unsigned int round_seed_ = 0;
 	std::mt19937 planner_random_;
 	MatchPlanner::Random planner_random();
 

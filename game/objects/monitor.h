@@ -1,7 +1,8 @@
 #pragma once
 
 #include "game/objects/crude_drawing.h"
-#include "game/presentation.h"
+#include "game/presentation_match.h"
+#include "game/ai/bot_random.h"
 
 #include <vector>
 
@@ -28,8 +29,9 @@ struct MonitorPersona
     mattmath::Vector2F coffee_ring;
     std::vector<mattmath::Vector2F> crack;
 
-    // Draws from rand(), after the build's own draws, so `seed` repeats it.
-    static MonitorPersona roll(const OpeningPresentation& look);
+    // Draws from the round's persona stream (MatchRandom::persona), so the
+    // same round seed rolls the same person whatever else the build drew.
+    static MonitorPersona roll(const OpeningPresentation& look, BotRandom& random);
 };
 
 // The person's monitor, the paint program on it and its palette: one full

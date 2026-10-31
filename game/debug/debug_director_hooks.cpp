@@ -195,15 +195,11 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	// This build is the restart.
 	this->request_.restart = false;
 
-	// The palette and anything else the build draws from rand() repeat with
-	// the seed; a replay uses the seed it was recorded with, and the cheats.
+	// A replay uses the cheats it was recorded with; its round seed is
+	// round_seed's, which the build asks for next.
 	if (this->play_armed_ != nullptr)
 	{
 		const ReplayFile& file = this->play_armed_->file();
-		if (file.seed)
-		{
-			std::srand(*file.seed);
-		}
 		if (!this->cheats_before_play_)
 		{
 			this->cheats_before_play_ = std::make_pair(this->god_, this->infinite_ammo_);
@@ -211,13 +207,25 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 		this->god_ = file.tape.damage_immune();
 		this->infinite_ammo_ = file.tape.infinite_ammo();
 	}
-	else if (this->seed_)
-	{
-		std::srand(*this->seed_);
-	}
 	// The build proper - layout and LevelBuilder::build_level - is what
 	// blocks on the last menu frame; `perf` reports it (GAP#5.1).
 	this->build_began_ms_ = perf_now_ms();
+}
+
+unsigned int DebugDirectorImpl::round_seed(unsigned int drawn)
+{
+	// A replay is built from the round seed it recorded, so a Random palette
+	// repeats; under `seed n` every build is round n.
+	const std::optional<unsigned int> fixed = this->play_armed_ != nullptr ?
+		std::optional<unsigned int>(this->play_armed_->file().seed) : this->seed_;
+	this->round_seed_ = fixed.value_or(drawn);
+	if (fixed)
+	{
+		// The build no longer moves rand(), so this keeps the menus' Random
+		// picks after every seeded build the same.
+		std::srand(this->round_seed_);
+	}
+	return this->round_seed_;
 }
 
 OpeningMode DebugDirectorImpl::opening_mode(OpeningMode chosen) const

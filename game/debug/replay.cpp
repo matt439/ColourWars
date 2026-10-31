@@ -529,10 +529,7 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	out << "  \"version\": " << format_version << ",\n";
 	out << "  \"build\": " << quoted(this->build) << ",\n";
 	out << "  \"dt\": " << quoted(hex32(this->dt_bits)) << ",\n";
-	if (this->seed)
-	{
-		out << "  \"seed\": " << quoted(std::to_string(*this->seed)) << ",\n";
-	}
+	out << "  \"seed\": " << quoted(std::to_string(this->seed)) << ",\n";
 	out << "  \"tuning_hash\": " << quoted(hex64(this->tuning_hash)) << ",\n";
 	out << "  \"presentation_hash\": " << quoted(hex64(this->presentation_hash)) << ",\n";
 	if (this->stage_hash)
@@ -692,7 +689,10 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	ReplayFile file;
 	file.build = root.string("build");
 	file.dt_bits = hex_field(root, "dt", path);
-	if (root.has("seed"))
+	if (!root.has("seed"))
+	{
+		fail(path, "'seed' is missing");
+	}
 	{
 		unsigned int seed = 0;
 		const std::string text = root.string("seed");
@@ -858,7 +858,7 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 
 	// The tape, rebuilt as it was recorded: each gap before the step it
 	// preceded, in order.
-	file.tape.start(0, rebuilt);
+	file.tape.start(file.seed, rebuilt);
 	file.tape.set_cheats(god, infinite_ammo);
 	const float dt = std::bit_cast<float>(file.dt_bits);
 	const labrador::JsonValue gaps = root.array("gaps");
@@ -982,7 +982,7 @@ ReplayRecorder::ReplayRecorder(std::string name, ReplayFile header, SeatInputFil
 	if (!this->file_.tape.started())
 	{
 		const MatchSetup settings = this->file_.tape.settings();
-		this->file_.tape.start(0, settings);
+		this->file_.tape.start(this->file_.seed, settings);
 	}
 }
 

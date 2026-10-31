@@ -5,7 +5,6 @@
 #include "game/states/player_label.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 ResultsMenuPage::ResultsMenuPage(MenuContext* context,
@@ -136,12 +135,11 @@ void ResultsMenuInitial::init()
 	const LevelEndInfo end_info = this->level_end_info();
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF(Vector2F::ZERO, look.box_size),
+		menu_geometry::screen_paper(look.box_size),
 		this->render_resources(), &style, &look.art, &this->focus_);
-	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 	const auto center_text = [](colourwars::UiTextDropShadow& text, float y)
 	{
-		text.set_position(Vector2F((DESIGN_RESOLUTION.x - text.bounds().width) / 2.0f, y));
+		text.set_position(Vector2F(menu_geometry::centred_x(text.bounds().width), y));
 	};
 
 	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
@@ -160,14 +158,10 @@ void ResultsMenuInitial::init()
 		"fill_box",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO, look.fill_box_size),
+		menu_geometry::results_fill_box(look),
 		this->render_resources(),
 		look.art.ink);
-	auto fill_box_position = Vector2F(
-		this->calculate_center_position(
-		this->fill_box_->rectangle().width, DESIGN_RESOLUTION.x),
-		this->box_->rectangle().position().y + look.fill_box_y_offset);
-	this->fill_box_->set_position(fill_box_position);
+	const Vector2F fill_box_position = this->fill_box_->rectangle().position();
 	this->fill_track_ = std::make_unique<UiTexture>(
 		"fill_track", style.sprite_sheet, style.fill_frame,
 		RectangleF(fill_box_position + Vector2F(look.art.keyline_width),

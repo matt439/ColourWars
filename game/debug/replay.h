@@ -18,7 +18,7 @@
 // hashes. Written as JSON to %LOCALAPPDATA%\ColourWars\replays\<name>.json.
 // Debug-only.
 //
-// Format version 5 (versions 3 and 4 are refused: a replay holds only on the
+// Format version 6 (versions 3 to 5 are refused: a replay holds only on the
 // build that recorded it, DBG#2):
 //   settings preserves each seat's controller kind, bot difficulty and
 //   handicap (written only when a seat has one);
@@ -37,12 +37,13 @@
 //   step was taken at the one dt.
 //   stage_hash identifies the loaded semantic stage definition; play requires
 //   it.
-// The tape's own seed is not written: `seed` is the developer seed the round's
-// seed is drawn from, and playback reseeds that sequence before the build.
+// `seed` is the round seed the level was built from (HYG#39), always
+// written: playback builds from it, so even an unseeded recording repeats its
+// Random palette.
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 5;
+	static constexpr int format_version = 6;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint
@@ -53,7 +54,7 @@ public:
 
 	std::string build;
 	std::uint32_t dt_bits = 0;
-	std::optional<unsigned int> seed;
+	unsigned int seed = 0;
 	std::uint64_t tuning_hash = 0;
 	std::uint64_t presentation_hash = 0;
 	std::optional<std::uint64_t> stage_hash;

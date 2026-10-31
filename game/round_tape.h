@@ -9,9 +9,9 @@
 class Level;
 
 // One round, kept so it can be built again and any stretch of it watched
-// (ROAD#19, the end-of-round instant replay): the setup and the seed rand()
-// had when the level was built, every participant's final input on every
-// logic step, and
+// (ROAD#19, the end-of-round instant replay): the setup and the round seed
+// the level was built from (its MatchRandom, HYG#39), every participant's
+// final input on every logic step, and
 // the two things between steps that change a player - a suspend clears every
 // jump buffer, and a resume re-reads which jumps are still held.
 //
@@ -34,7 +34,7 @@ public:
 		std::vector<PlayerInputData> seats;
 	};
 
-	// A fresh, empty tape for a level built from `settings` after std::srand(seed).
+	// A fresh, empty tape for a level built from `settings` and MatchRandom(seed).
 	// The setup is copied: the End menu's re-pick pages may change the match's
 	// own before its Watch Replay is chosen.
 	void start(unsigned int seed, const MatchSetup& settings);

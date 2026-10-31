@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <limits>
 #include <locale>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -58,11 +59,8 @@ namespace balance_runner
         }
         WeaponType parse_tool(const std::string& name)
         {
-            if (name == "sprayer") { return WeaponType::sprayer; }
-            if (name == "sniper") { return WeaponType::sniper; }
-            if (name == "roller") { return WeaponType::roller; }
-            if (name == "mister") { return WeaponType::mister; }
-            if (name == "bucket") { return WeaponType::bucket; }
+            const std::optional<WeaponType> tool = weapon_from_name(name);
+            if (tool && static_cast<std::size_t>(*tool) < TUNED_WEAPON_COUNT) { return *tool; }
             throw std::invalid_argument("Unknown concrete primary tool: " + name);
         }
         std::vector<WeaponType> parse_tools(const std::string& value)
@@ -321,16 +319,9 @@ namespace balance_runner
 
     std::string tool_name(WeaponType tool)
     {
-        switch (tool)
-        {
-        case WeaponType::sprayer: return "sprayer";
-        case WeaponType::sniper: return "sniper";
-        case WeaponType::roller: return "roller";
-        case WeaponType::mister: return "mister";
-        case WeaponType::bucket: return "bucket";
-        case WeaponType::none: return "none";
-        default: throw std::invalid_argument("Runner needs a concrete primary tool");
-        }
+        if (tool == WeaponType::none) { return "none"; }
+        if (static_cast<std::size_t>(tool) < TUNED_WEAPON_COUNT) { return weapon_name(tool); }
+        throw std::invalid_argument("Runner needs a concrete primary tool");
     }
 
     std::string difficulty_name(BotDifficulty difficulty)

@@ -2,7 +2,7 @@
 #include "game/objects/translating_structure_paintable.h"
 #include "game/objects/projectile.h"
 #include "game/objects/translated_draw_scope.h"
-#include "game/presentation.h"
+#include "game/presentation_match.h"
 #include <array>
 #include <limits>
 #include <stdexcept>

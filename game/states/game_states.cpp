@@ -234,12 +234,15 @@ void GameLevel::build_and_enter_level()
 	// content `reload` validated and consumes a queued debug restart; a menu
 	// restart also adopts a queued debug plan, so settings_ may change here.
 	this->data()->debug().before_level_build(*this);
-	// Each round draws its own seed from the running sequence, which a Debug
-	// `seed` fixes, so its tape can build the same level again (ROAD#19).
+	// Each round draws its own seed from the running rand() sequence, and its
+	// tape keeps it so it can build the same level again (ROAD#19). The build
+	// draws only from the MatchRandom made from it (HYG#39). The developer
+	// tools may fix it: `seed n`, or the seed a replay was recorded with.
 	this->end_replay();
-	const unsigned int seed = (static_cast<unsigned int>(std::rand()) << 15) ^
-		static_cast<unsigned int>(std::rand());
-	std::srand(seed);
+	// Two sequenced draws: the order of an expression's operands is unspecified.
+	const unsigned int high = static_cast<unsigned int>(std::rand());
+	const unsigned int low = static_cast<unsigned int>(std::rand());
+	const MatchRandom random(this->data()->debug().round_seed((high << 15) ^ low));
 	// A reload may replace the authored profile. No old pulse or pending event
 	// crosses the round boundary; the sink belongs to the containing screen.
 	this->rumble_ = std::make_unique<Rumble>(*this->rumble_sink_, this->data()->tuning()->rumble());
@@ -259,9 +262,10 @@ void GameLevel::build_and_enter_level()
 	// A practice session has no replay and can run indefinitely. Clearing here
 	// also drops a previous timed round's inputs and suspend/resume gaps.
 	this->tape_.clear();
+	this->round_palette_ = this->data()->save()->team_palette();
 	this->level_ = this->level_builder_->build_level(this->settings_,
-		this->data()->save()->team_palette(), opening, this->start_ == MatchStart::menu);
-	if (!this->level_->practice()) { this->tape_.start(seed, this->settings_); }
+		this->round_palette_, opening, random, this->start_ == MatchStart::menu);
+	if (!this->level_->practice()) { this->tape_.start(random.seed(), this->settings_); }
 	this->data()->debug().after_level_build(*this);
 	this->level_->set_pad_devices(this->settings_.pad_devices());
 	this->menu_context_->reset_connection_audio();

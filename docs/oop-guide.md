@@ -26,7 +26,7 @@ direction, the services and the state stack these classes sit in.
 | Factory over a closed family | [LevelObjectBuilder](../game/objects/level_object_builder.cpp), [TerrainMaterial](../game/objects/terrain_material.h), [implementation](../game/objects/terrain_material.cpp) | The level object builder reads a record's `type`, `gate` and `motion` fields and returns a `StructurePaintable`, `TeamGateStructurePaintable`, `TranslatingStructurePaintable` or `FixedSlabPaintable` as an owning collision object. `TerrainMaterial::make` maps a level's `material` name and collision type to `GroundMaterial`, `PencilMaterial` and their siblings, refusing a mismatch. Each leaf works out its drawing in its constructor ([terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)); `OrientedTerrainMaterial` shares the long-axis layout between pencil, ruler, eraser and tin. A `Structure` owns its material and never asks which one it has. |
 | Overriding and shared algorithms | [WeaponRoller](../game/objects/weapon_roller.cpp), [WeaponBucket](../game/objects/weapon_bucket.cpp), [ProjectileRolling](../game/objects/projectile_rolling.h) | Roller changes aim, tint, its sleeve's motion and pose, and answers `has_aim_marker` with false; bucket changes firing sound. The rolling projectile overrides its contact handlers, `resolve_travel`, `launch_hits_players` and `duds_on_bare_cover`. Shared ammunition, firing and sweep work remains in the base workflow, which never asks which tool or kind it is running. |
 | Composition | [PaintTile](../game/objects/paint_tile.h), [OptionRow](../game/states/option_row.h) | A tile owns its splash animation. A settings row owns its label and value, and accepts an adjustment callback. |
-| Ownership and borrowing | [Level](../game/objects/level.h), [LevelBuilder](../game/objects/level_builder.cpp) | Scene owns its objects; Level owns Scene and borrows Player pointers. Moving a `unique_ptr` transfers ownership. |
+| Ownership and borrowing | [Level](../game/objects/level.h), [LevelBuilder](../game/objects/level_builder.cpp) | Scene owns its objects; Level owns Scene and the parts it is composed of ([MatchOpening](../game/objects/match_opening.h), [MatchAudio](../game/objects/match_audio.h), [CountdownCards](../game/objects/countdown_cards.h) and the rest) and borrows Player pointers. Moving a `unique_ptr` transfers ownership. |
 | Dependency injection | [Player constructor](../game/objects/player.h), [GameData](../game/game_data.h), [main](../game/main.cpp) | Constructors receive their services and tuning. The application entry point owns and connects their lifetimes. |
 | Polymorphic states | [MenuPage](../game/states/menu_page.h), [MainMenuPage and RosterSetupPage](../game/states/main_menu.h), [SettingsPanelPage](../game/states/settings_panel_page.h), [PauseMenuPage](../game/states/pause_menu.h), [GameMenu and GameLevel](../game/states/game_states.h) | The state stack calls common `init`, `update` and `draw` operations; individual pages supply their behavior. Each intermediate page base is named for its role and carries only what that role shares: a main-menu frame page, the roster setup pages under it, the settings panels that can only pop, and the pause pages that `finish` with a `PauseMenuAction`. The two states also implement [MenuOwner](../game/states/menu_owner.h), through which the pages above them reach their music and stage folder. |
 | Resource lifetime | [Level destructor](../game/objects/level_audio.cpp), [GameLevel destructor](../game/states/game_states.cpp) | Destruction stops match audio and restores the previous screen layout as well as releasing owned objects. |
@@ -43,7 +43,7 @@ when its name matches a virtual base function. Most `CrudeDrawing` leaves show
 this: their `draw` functions take the leaf's own parameters, so they hide
 `TextureObject`'s virtual `draw` rather than override it. `Monitor::draw`'s
 parameters match the base's `(DrawList&, const RectangleF&) const` exactly, so
-it does override it, though it is not marked `override`. Level owns a
+it does override it, though it is not marked `override`. MatchOpening owns a
 `Monitor` and calls it by that type, so no call reaches it virtually.
 
 An OO example does not need every class to be polymorphic. `Session` protects
@@ -62,22 +62,46 @@ The principal ownership chain is:
 ```text
 Application owns the state stack
   GameLevel owns Level
-    Level owns PaintAudio, MatchVoices and Scene
+    Level owns PaintAudio, BlockedShotFeedback, MatchAudio (which owns
+      MatchVoices) and Scene
       Scene owns Players, Structures and Projectiles
         Player owns Weapon and FigureAttachments
         StructurePaintable (and its gate/translating leaves) owns PaintTiles
         FixedSlabPaintable owns its own PaintTiles
           PaintTile owns PaintTileSplash
-      Level owns InterfaceGameplay (which owns a PlayerBadge)
-      Level owns the other CrudeDrawing leaves: CountdownArt, Monitor,
-        Silhouette, ScreenCursor, FigureActing, RevealArt, PlayerBadge,
-        TeammateMarker
+      Level owns LevelStructures, by value (borrowed movers, gates, targets)
+      Level owns LevelBotWorld (the BotWorld its MatchBotDriver reads)
+        and the MatchBotDriver, which owns a MatchBot per bot seat
+      Level owns PaperCard and CursorMarkerOverlay, by value
+      Level owns PracticeLessons, by value (each lesson's TextDropShadow pair)
+      Level owns PlayerIdentityHud (a PlayerBadge and each bot's label Text)
+      Level owns TeammateMarkers (a TeammateMarker and each pane's fade ages)
+      Level owns CountdownCards (a CountdownArt, the card headings, the stage
+        title and each controls reminder's TextDropShadow pair)
+      Level owns MatchOpening, when the match has an intro (a Monitor, a
+        Silhouette, a ScreenCursor, a FigureActing and a RevealArt)
+      Level owns InterfaceGameplay (which owns a PlayerBadge) and DebugText
 ```
 
-Level also borrows pointers to the Scene's players, and, collected once when
-the match's objects are admitted, to its team gates and translating
-structures. Players respawn rather than being removed from Scene, and structures
-stay for the match, so these pointers remain valid while Level exists. The
+Level also borrows pointers to the Scene's players. Its
+[LevelStructures](../game/objects/level_structures.h) part, a value member,
+borrows the stage's translating structures, team gates and projectile targets,
+collected once when the match's objects are admitted. Its
+[LevelBotWorld](../game/objects/level_bot_world.h) borrows the scene, the
+player vector and that part by reference, and answers the shipping bots'
+[BotWorld](../game/ai/bot_world.h) queries with values, so the bots never see
+a `Level` or a `Player`. Its [PaperCard](../game/objects/paper_card.h),
+[PracticeLessons](../game/objects/practice_lessons.h) and
+[CursorMarkerOverlay](../game/objects/cursor_marker_overlay.h) parts are value
+members too: the first borrows the presentation, the window and the render
+resources to draw the window-space cards, the second is empty unless the match
+is practice, and the third holds the mouse pointer and draws its marquee
+through the first. Its [MatchOpening](../game/objects/match_opening.h)
+exists only when the match has an intro; it borrows MatchAudio for the story
+voices, Level hands it the state and the timers as an `OpeningClock` on each
+call, and Level applies each transition it returns. Players respawn rather
+than being removed from Scene, and structures stay for the match, so these
+pointers remain valid while Level exists. The
 index in Level's player vector is a stable roster participant; `player_num()`
 identifies a human input slot. Bots have no device or pane. Explicit mappings
 connect human pane indices to participants, so a bot in P2 does not rename P3
@@ -86,12 +110,15 @@ widgets owned by pages or compound widgets such as `OptionRow`.
 
 Sound has one idiom. Anything that makes a noise reaches its bank by
 inheriting the carried
-[SoundBankObject](../game/carried/sound_bank_object.h) - Level, Player, Weapon,
-MovementAudio, PaintAudio and the menu pages alike - and resolves its handles
-once, at construction. A sound that keeps playing and has to stop is a
+[SoundBankObject](../game/carried/sound_bank_object.h) - Level, MatchOpening,
+Player, Weapon, MovementAudio, PaintAudio and the menu pages alike - and
+resolves its handles once, at construction. Level plays nothing through its
+base any more; it keeps it because resolving the stage's bank there is the
+first check a Level makes, before its roster checks. A sound that keeps playing and has to stop is a
 [MatchVoice](../game/objects/match_voices.h) member of its owner: the stage
 music, the match and room cues, a tool's firing loop, the redraw pen. Level's
-constructor registers its own voices and then each player's, which adds its
+[MatchAudio](../game/objects/match_audio.h) registers the level's own voices
+and Level's constructor then registers each player's, which adds its
 tool's loop and its pen, in one `MatchVoices` list; pause, resume and teardown
 walk that list and nothing else. A voice with its own rule overrides it: the
 pen pauses only while it sounds and stops on resume if the redraw has ended,
@@ -345,8 +372,9 @@ not need artificial inheritance or every design pattern to fill a checklist.
 ## Add a scored paint object
 
 Scoring is a role, not a registration. Level keeps no list of scored objects:
-[Level::level_end_info and Level::paint_surfaces](../game/objects/level.cpp)
-walk Scene's collision objects and ask each for its `paintable()` role
+[Level::level_end_info](../game/objects/level.cpp) and
+[LevelBotWorld::paint_surfaces](../game/objects/level_bot_world.cpp) (behind
+`Level::paint_surfaces`) walk Scene's collision objects and ask each for its `paintable()` role
 ([Collider](../game/objects/collider.h)). Whatever answers is scored, whatever
 its collision tag. The only check runs the
 other way: an object tagged `structure_paintable` that is not a
@@ -388,13 +416,13 @@ scored slab needed.
    how neighbouring faces clip their paint, add it to the `StageContext`
    pre-pass as well, as the slab does through `context.slabs`. Scene owns the
    result from there.
-5. Give per-step behaviour a typed borrow through a role. Level collects its
-   gates in `build_opening_frame` ([level_opening.cpp](../game/objects/level_opening.cpp))
-   and its movers in `admit_horizontal_structures`
-   ([level_horizontal_motion.cpp](../game/objects/level_horizontal_motion.cpp))
-   by asking each [Structure](../game/objects/structure.h) for its `gate()` or
-   `mover()`, which those two leaves answer with themselves, and calls them each
-   step (`settle_team_gates`). The slab is static and needed none of this.
+5. Give per-step behaviour a typed borrow through a role. Level's
+   `LevelStructures` part collects its movers and then its gates in `admit`
+   ([level_structures.cpp](../game/objects/level_structures.cpp)), which
+   `build_opening_frame` calls, by asking each
+   [Structure](../game/objects/structure.h) for its `mover()` or `gate()`,
+   which those two leaves answer with themselves, and Level calls them each
+   step through it (`settle_gates`). The slab is static and needed none of this.
 6. Teach contacts only what the shape needs, as answers to `Structure`'s
    queries rather than as a new case in its callers. The gate inherits the
    base's painting `on_projectile_contact` and answers `passable_for`; the

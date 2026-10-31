@@ -79,7 +79,7 @@ namespace
 MatchPlanner::Random DebugDirectorImpl::planner_random()
 {
 	// Every plan under a seed draws the same choices, as every build under it
-	// draws the same rand() and bots.
+	// has the same round seed and bots.
 	if (this->seed_)
 	{
 		this->planner_random_.seed(*this->seed_);
@@ -212,7 +212,7 @@ ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 	ReplayFile file;
 	file.build = narrow_build_label();
 	file.dt_bits = this->last_dt_bits_;
-	file.seed = this->seed_;
+	file.seed = this->round_seed_;
 	file.tuning_hash = this->content_hash("tuning");
 	file.presentation_hash = this->content_hash("presentation");
 	for (const char* name : { "tuning", "presentation" })
@@ -228,7 +228,7 @@ ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 				" -> " + edit.current_token);
 		}
 	}
-	file.tape.start(0, match.debug_settings());
+	file.tape.start(this->round_seed_, match.debug_settings());
 	file.tape.set_cheats(this->god_, this->infinite_ammo_);
 	const std::string& stage = file.tape.settings().stage();
 	const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
@@ -443,7 +443,7 @@ void DebugDirectorImpl::register_replay_commands()
 			registry.add(std::move(command));
 		};
 
-	add("seed", "fix the random seed (rand(), the planner, bots) for the next build, or off",
+	add("seed", "fix the round seed of every build (palette, intro, bots), the menus' rand() and the planner, or off",
 		{ { "n|off", true, [] { return std::vector<std::string>{ "off" }; } } },
 		[this](Args args, DebugLog&)
 		{

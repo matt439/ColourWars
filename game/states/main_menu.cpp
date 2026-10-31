@@ -9,7 +9,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 MainMenuPage::MainMenuPage(MenuContext* context) :
@@ -225,7 +224,7 @@ void MainMenuTitle::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		style.sprite_sheet, style.fill_frame, menu_geometry::design_area(),
 		this->render_resources(), look.title_background_colour);
 	this->title_ = std::make_unique<UiText>("title", this->text().title.wordmark,
 		look.title_font, Vector2F(0.0f, look.title_y), this->render_resources(), look.art.ink);
@@ -243,13 +242,11 @@ void MainMenuTitle::init()
 	for (UiText* text : { this->title_.get(), this->subtitle_.get(), this->start_.get(),
 		this->no_pad_.get(), this->build_id_.get() })
 	{
-		text->set_position(Vector2F(this->calculate_center_position(text->bounds().width,
-			DESIGN_RESOLUTION.x), text->bounds().y));
+		text->set_position(Vector2F(menu_geometry::centred_x(text->bounds().width), text->bounds().y));
 	}
 	this->focus_.add(this->start_.get());
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.title_box_size) / 2.0f,
-			look.title_box_size),
+		menu_geometry::footer_paper(look.title_box_size, style.footer_y),
 		this->render_resources(), &style, &look.art, &this->focus_, this->start_.get(),
 		&this->focus_motion_, &this->settings_session()->play_settings());
 
@@ -310,7 +307,7 @@ void MainMenuHome::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		style.sprite_sheet, style.fill_frame, menu_geometry::design_area(),
 		this->render_resources(), CrudeDrawing::premultiplied(look.home_background_colour));
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::home),
 		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
@@ -325,8 +322,7 @@ void MainMenuHome::init()
 	this->exit_ = std::make_unique<UiText>("exit", this->text().item(MenuItem::exit), style.item_font,
 		this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
-			look.home_box_size),
+		menu_geometry::footer_paper(look.home_box_size, style.footer_y),
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 
@@ -424,8 +420,7 @@ bool MainMenuModeSelect::setup_row_fits(const OptionRow& row_widget,
 {
 	const float pen = art.keyline_width;
 	const float shade = art.shadow_offset;
-	const RectangleF inside(panel.position() + Vector2F(pen * 3.0f),
-		panel.size() - Vector2F(pen * 6.0f + shade));
+	const RectangleF inside = menu_geometry::paper_interior(panel, art);
 	RectangleF row = row_widget.bounds();
 	row.inflate(art.focus_padding);
 	const RectangleF arrow(row.x - pen * 7.0f, row.center().y - pen * 3.0f,
@@ -557,9 +552,7 @@ void MainMenuModeSelect::init()
 {
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
-	this->setup_art_ = look.art;
-	this->setup_art_.focus_padding = look.setup_focus_padding;
-	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	this->setup_art_ = menu_geometry::setup_art(look);
 	this->set_prompts(MenuPrompt::mode);
 
 	// Every mode uses the same player setup and paint scoring.
@@ -571,7 +564,7 @@ void MainMenuModeSelect::init()
 		"background",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		menu_geometry::design_area(),
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 
@@ -645,8 +638,7 @@ void MainMenuModeSelect::init()
 	this->stage_rule_row_ = make_stage_rule_row(this->render_resources(), style, look, this->text(),
 		[this](Direction direction) { this->cycle_stage_rule(direction); });
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-			look.setup_box_size),
+		menu_geometry::footer_paper(look.setup_box_size, style.footer_y),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->refresh_duration();

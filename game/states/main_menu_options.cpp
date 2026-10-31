@@ -8,23 +8,19 @@
 #include <stdexcept>
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 #pragma region MainMenuOptions
 
 MainMenuOptions::MainMenuOptions(MenuContext* context, std::optional<int> pausing_slot) :
 	MainMenuPage(context), pausing_slot_(pausing_slot),
-	options_art_(context->data()->presentation()->main_menu().art)
+	options_art_(menu_geometry::setup_art(context->data()->presentation()->main_menu()))
 {
 	if (pausing_slot && (*pausing_slot < 0 || *pausing_slot >= input_slots::count ||
 		this->level_settings()->player_index_for_slot(*pausing_slot) < 0))
 	{
 		throw std::invalid_argument("Paused Options requires a device in the match roster.");
 	}
-	const MainMenuPresentation& look = this->look();
-	this->options_art_.focus_padding = look.setup_focus_padding;
-	this->options_art_.shadow_offset = look.setup_shadow_offset;
 }
 
 void MainMenuOptions::update_page(float /*dt*/)
@@ -121,8 +117,7 @@ void MainMenuOptions::set_status(const std::wstring& text, const Colour& colour)
 	this->status_->set_text(text);
 	this->status_->set_colour(colour);
 	this->status_->set_scale(1.0f);
-	const float right = this->paper_->rectangle().right() - this->options_art_.shadow_offset -
-		this->options_art_.focus_padding.x;
+	const float right = menu_geometry::paper_text_right(this->paper_->rectangle(), this->options_art_);
 	const float available = right - this->look().options_status_position.x;
 	if (available > 0.0f && this->status_->bounds().width > available)
 	{
@@ -201,11 +196,9 @@ void MainMenuOptions::init()
 
 	// Disabling a row greys its label; the displayed value keeps its own colour.
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
-	const RectangleF paper_bounds(
-		(Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.options_box_size) / 2.0f,
-		look.options_box_size);
+	const RectangleF paper_bounds = menu_geometry::footer_paper(look.options_box_size, style.footer_y);
 	const Vector2F value_limit(
-		paper_bounds.right() - this->options_art_.shadow_offset - this->options_art_.focus_padding.x - look.options_value_x,
+		menu_geometry::paper_text_right(paper_bounds, this->options_art_) - look.options_value_x,
 		look.options_spacing.y - this->options_art_.focus_padding.y * 2.0f);
 	const auto value_position = [&](int row)
 	{
@@ -221,7 +214,7 @@ void MainMenuOptions::init()
 		"background",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		menu_geometry::design_area(),
 		this->render_resources(),
 		CrudeDrawing::premultiplied(look.home_background_colour));
 

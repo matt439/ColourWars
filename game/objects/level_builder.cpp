@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_builder.h"
+#include "game/presentation.h"
 #include "game/drawable_text.h"
 
 using namespace mattmath;
@@ -38,7 +39,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 
 std::unique_ptr<Level>
 	LevelBuilder::build_level(const MatchSetup& settings, TeamColourPair palette,
-		OpeningMode opening, bool practice)
+		OpeningMode opening, const MatchRandom& random, bool practice)
 {
 	if (settings.player_count() < 1 || settings.human_count() < 1 ||
 		(settings.bot_count() != 0 &&
@@ -47,7 +48,8 @@ std::unique_ptr<Level>
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());
 
-	const TeamColour team_colours = team_colour_->team_colours(palette, this->presentation_->team_palette());
+	const TeamColour team_colours = team_colour_->team_colours(palette,
+		this->presentation_->team_palette(), random);
 
 	// Scene additions remain pending until Level builds its opening frame.
 	auto scene = std::make_unique<Scene>(this->thread_pool_,
@@ -92,34 +94,45 @@ std::unique_ptr<Level>
 
 	try
 	{
-		return std::make_unique<Level>(
-		std::move(scene),
-		std::move(players),
-		this->level_object_builder_->build_viewport_dividers(
-			this->viewport_manager_),
-		team_colours,
-		load_info->camera_bounds_rectangle(),
-		load_info->zoom_out_start_bounds_rectangle(),
-		load_info->zoom_out_finish_bounds_rectangle(),
-		this->tuning_,
-		this->presentation_,
-		drawable_text::widen_drawable(load_info->display_name(),
-			"the display_name of stage '" + settings.stage() + "'"),
-		load_info->sound_bank_name(),
-		load_info->music_name(),
-		load_info->music_volume(),
-		load_info->end_sting_name(),
-		load_info->end_sting_volume(),
-		this->resolution_manager_,
-		this->viewport_manager_,
-		this->render_resources_,
-		this->audio_resources_,
-		this->preferences_,
-		load_info->stations(),
-		opening, settings.duration(), this->input_bindings_, &settings,
-		settings.bot_count() == 0 ? 0u : static_cast<std::uint64_t>(std::rand()),
-		practice && settings.player_count() == 1 && settings.human_count() == 1 ?
-			load_info->lessons() : std::vector<LevelLesson>{});
+		// The records are filled here, inside the try, so a display name or
+		// divider that fails is reported against the stage as before.
+		LevelWorld world{
+			.scene = std::move(scene),
+			.players = std::move(players),
+			.viewport_dividers = this->level_object_builder_->build_viewport_dividers(
+				this->viewport_manager_) };
+		const LevelServices services{
+			.tuning = this->tuning_,
+			.presentation = this->presentation_,
+			.render_resources = this->render_resources_,
+			.audio_resources = this->audio_resources_,
+			.resolution_manager = this->resolution_manager_,
+			.viewport_manager = this->viewport_manager_,
+			.preferences = this->preferences_,
+			.input_bindings = this->input_bindings_ };
+		LevelStage stage{
+			.name = drawable_text::widen_drawable(load_info->display_name(),
+				"the display_name of stage '" + settings.stage() + "'"),
+			.camera_bounds = load_info->camera_bounds_rectangle(),
+			.zoom_out_start_bounds = load_info->zoom_out_start_bounds_rectangle(),
+			.zoom_out_finish_bounds = load_info->zoom_out_finish_bounds_rectangle(),
+			.audio = {
+				.sound_bank_name = load_info->sound_bank_name(),
+				.music_name = load_info->music_name(),
+				.music_volume = load_info->music_volume(),
+				.end_sting_name = load_info->end_sting_name(),
+				.end_sting_volume = load_info->end_sting_volume() },
+			.stations = load_info->stations(),
+			.lessons = practice && settings.player_count() == 1 && settings.human_count() == 1 ?
+				load_info->lessons() : std::vector<LevelLesson>{} };
+		LevelMatch match{
+			.team_colours = team_colours,
+			.opening = opening,
+			.duration = settings.duration(),
+			.roster = &settings,
+			.random = random };
+		return std::make_unique<Level>(std::move(world), services,
+			std::move(stage), std::move(match));
 	}
 	catch (const std::invalid_argument& error)
 	{

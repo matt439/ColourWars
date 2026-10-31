@@ -373,13 +373,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         LevelBuilder builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
             &preferences_session.play_settings(), &levels, &replay_tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences_session.input_bindings());
+        // terminal_rng compares the next rand() after each run.
         std::srand(seed);
-        return builder.build_level(setup, TeamColourPair::blue_yellow, OpeningMode::off);
+        return builder.build_level(setup, TeamColourPair::blue_yellow, OpeningMode::off, MatchRandom(seed));
     };
     snapshots(-1); snapshots(-1); neutral();
     PlayerInput mapped(app.gamepads(), app.keyboard(), app.mouse(), &replay_tuning,
         &preferences_session.play_settings(), &preferences_session.input_bindings());
-    auto recorded = fresh(header.tape.settings(), *header.seed);
+    auto recorded = fresh(header.tape.settings(), header.seed);
     const auto initial_print = MatchFingerprint::of(*recorded, 0);
     constexpr int replay_length = 360;
     ReplayRecorder recorder("actual-pad-reader", header, nullptr, replay_length);
@@ -411,7 +412,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const ReplayFile decoded = ReplayFile::read(tape);
     const auto decoded_inputs = decoded.inputs_by_seat();
     require(decoded_inputs.size() == 2 && decoded_inputs[0].size() == replay_length &&
-        decoded_inputs[1].size() == replay_length && decoded.updates == replay_length && decoded.seed &&
+        decoded_inputs[1].size() == replay_length && decoded.updates == replay_length && decoded.seed == header.seed &&
         decoded.checkpoints.size() == 6 && decoded.tape.settings().player_settings()[0].num == 3 &&
         decoded.tape.settings().player_settings()[1].num == 1, "Mapped tape lost decoded setup, six checkpoints or complete seat streams");
     const InputBindings playback_bindings = with_jumps(initial, { PadControl::a, PadControl::x, PadControl::a, PadControl::b });
@@ -420,7 +421,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(replay_save_session.input_bindings() == playback_bindings && playback_bindings != recording_bindings,
         "Replay remapping control did not persist different face choices");
     snapshots(-1); snapshots(-1);
-    auto playback = fresh(decoded.tape.settings(), *decoded.seed);
+    auto playback = fresh(decoded.tape.settings(), decoded.seed);
     require(MatchFingerprint::difference(initial_print, MatchFingerprint::of(*playback, 0)).empty(),
         "Fresh decoded-setup rebuild changed initial simulation when only saved bindings changed");
     ReplayPlayer player("actual-pad-reader", decoded);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/play_settings.h"
-#include "game/presentation.h"
+#include "game/presentation_match.h"
 
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
@@ -24,10 +24,16 @@
 #include "engine/render/camera.h"
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
+#include "game/objects/level_inputs.h"
+#include "game/objects/level_structures.h"
+#include "game/objects/paper_card.h"
+#include "game/objects/practice_lessons.h"
+#include "game/objects/cursor_marker_overlay.h"
 #include "engine/ui/widget.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
 #include "game/objects/monitor.h"
+#include "game/objects/match_random.h"
 #include "game/objects/opening_mode.h"
 #include "game/objects/silhouette.h"
 #include "game/objects/screen_cursor.h"
@@ -43,25 +49,25 @@
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
 #include "game/match_setup.h"
+#include "game/objects/level_state.h"
 #include <cstdint>
 #include <optional>
 #include <span>
 #include <string_view>
 
 class MatchBotDriver;
+class BotWorld;
+class LevelBotWorld;
+class TeammateMarkers;
+class PlayerIdentityHud;
+class MatchAudio;
+class CountdownCards;
+class MatchOpening;
+struct OpeningClock;
+class Presentation;
+struct MenuResultsText;
 struct MatchBotSupport;
 struct MatchBotRamp;
-
-enum class LevelState
-{
-	start_countdown,
-	active,
-	zoom_out,
-	overview,
-	finished,
-	// Before the countdown. Last, so the values above keep their numbers.
-	opening,
-};
 
 // POL#39: one of the cursor marquee's three nested frames, in window pixels.
 // Drawn as four edges `width` thick just inside `box`.
@@ -75,9 +81,9 @@ struct CursorMarkerFrame
 
 // One paint match: countdown, clock, cameras, HUDs and music.
 // Scene owns and steps the objects; Level keeps borrowed player pointers
-// and supplies the views and game-specific overlays. It owns the match's
-// voices (voices_): its own and every player's, paused, resumed and stopped
-// together.
+// and supplies the views and game-specific overlays. Its MatchAudio owns the
+// match's voices: the level's own and every player's, paused, resumed and
+// stopped together.
 struct InputBindings;
 class TranslatingStructurePaintable;
 class TeamGateStructurePaintable;
@@ -85,31 +91,8 @@ class TeamGateStructurePaintable;
 class Level : public colourwars::SoundBankObject
 {
 public:
-	Level(std::unique_ptr<labrador::Scene> scene,
-		std::vector<Player*> players,
-		std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers,
-		const TeamColour& team_colours,
-		const mattmath::RectangleF& camera_bounds,
-		const mattmath::RectangleF& zoom_out_start_bounds,
-		const mattmath::RectangleF& zoom_out_finish_bounds,
-		const GameTuning* tuning,
-		const Presentation* presentation,
-		const std::wstring& stage_name,
-		const std::string& sound_bank_name,
-		const std::string& music_name,
-		float music_volume,
-		const std::string& end_sting_name,
-		float end_sting_volume,
-		const labrador::ResolutionManager* resolution_manager,
-		const labrador::ViewportManager* viewport_manager,
-		labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources,
-		const PlaySettings* preferences,
-		std::vector<LevelStation> stations,
-		OpeningMode opening, std::optional<float> duration = std::nullopt,
-		const InputBindings* input_bindings = nullptr,
-		const MatchSetup* roster = nullptr, std::uint64_t bot_seed = 0,
-		std::vector<LevelLesson> lessons = {});
+	// The records are in level_inputs.h; LevelBuilder fills them.
+	Level(LevelWorld world, const LevelServices& services, LevelStage stage, LevelMatch match);
 
 	// Stop the match's voices: the level's and the player weapon/redraw loops.
 	~Level();
@@ -206,6 +189,9 @@ public:
 	bool is_bot(int participant) const;
 	BotDifficulty bot_difficulty(int participant) const;
 	std::wstring_view bot_identity(int participant) const;
+	// The world as the shipping bots query it (game/ai/bot_world.h). The
+	// bot_* queries below forward to it.
+	const BotWorld& bot_world() const;
 	// Conservative traversal bounds. A permitted team's open gates are neither
 	// obstacles nor standing supports; none retains all structural bounds.
 	std::vector<mattmath::RectangleF> bot_obstacles(PlayerTeam team = PlayerTeam::none) const;
@@ -299,32 +285,16 @@ public:
 private:
 	std::unique_ptr<PaintAudio> paint_audio_;
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
-	std::unique_ptr<PlayerBadge> player_badge_;
-	std::vector<float> player_identity_remaining_;
-	std::unique_ptr<TeammateMarker> teammate_marker_;
-	// By human pane, then participant: seconds that teammate's body has been
-	// outside the pane's view. Presentation only, advanced by live ticks.
-	std::vector<float> teammate_marker_age_;
+	// The badges, the bot labels and the HUD identity texts, with what they
+	// are built from; created empty before the roster loop.
+	std::unique_ptr<PlayerIdentityHud> identity_;
+	// The edge chips for teammates out of a pane's view, and their fade ages.
+	std::unique_ptr<TeammateMarkers> teammate_markers_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
-    // Admitted fixed movers explicitly refuse retirement. These borrows live
-    // for this Level; no terrain add/remove API is exposed after admission.
-    std::vector<TranslatingStructurePaintable*> horizontal_structures_;
-    std::vector<HorizontalSupportRef> horizontal_supports_;
-    // Borrowed from scene_ at admission, like the movers.
-    std::vector<const TeamGateStructurePaintable*> team_gates_view_;
-    std::vector<TeamGateStructurePaintable*> team_gates_;
-    void settle_team_gates();
-    struct HorizontalFrame
-    {
-        std::vector<HorizontalPreparedStep> motions;
-        std::vector<std::optional<HorizontalCarryStep>> carriers;
-    };
-    void admit_horizontal_structures();
-    void validate_horizontal_admission() const;
-    void validate_horizontal_budget(const HorizontalFrame* prepared) const;
-    HorizontalFrame prepare_horizontal_frame(float dt) const;
-    void commit_horizontal_frame(const HorizontalFrame& prepared) noexcept;
-    void publish_horizontal_zero() noexcept;
+    // The movers, their supports, the team gates and the projectile targets,
+    // borrowed from scene_ when build_opening_frame admits the builder's objects.
+    LevelStructures structures_;
+    using HorizontalFrame = LevelStructures::Frame;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
 	// so these pointers remain valid for the match.
@@ -334,9 +304,9 @@ private:
 	std::vector<SeatSetup> roster_;
 	std::vector<int> view_participants_;
 	std::vector<int> participant_views_;
+	// Borrows scene_, players_ and structures_; never null after construction.
+	std::unique_ptr<LevelBotWorld> bot_world_;
 	std::unique_ptr<MatchBotDriver> bot_driver_;
-	// Immutable labels and metrics shared safely by every human pane.
-	std::vector<std::unique_ptr<labrador::Text>> bot_identity_texts_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
 	std::vector<IdleDrip*> idle_drips_;
 
@@ -348,48 +318,18 @@ private:
 	// words, box and colour.
 	std::vector<labrador::UiText*> station_labels_;
 
-	// Scene-owned geometry and players, which live for the whole match. Flying
-	// paint sweeps this list so its cost does not grow with other projectiles.
-	std::vector<labrador::CollisionObject*> projectile_targets_;
-
 	// Screen-space dividers owned outside Scene and drawn by each pane's overlay.
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
 
 	const PlaySettings* preferences_ = nullptr;
 
-	// The arena loop resumes only from a pause, and at the gain the fade and
-	// the duck have reached, not where it was left.
-	class MusicVoice final : public MatchVoice
-	{
-	public:
-		MusicVoice() = default;
-		MusicVoice(const Level* level, const std::string& sound_bank_name,
-			const labrador::AudioResources* audio_resources,
-			const std::string& effect_name);
-		void resume() override;
-	private:
-		const Level* level_ = nullptr;
-	};
-
-	// Every voice below, then each player's, in the order the constructor
-	// registers them. Pause, resume and teardown go through this alone.
-	MatchVoices voices_;
-
-	// Resolve the level's music and fixed match sounds once at construction.
-	MusicVoice music_;
-	MatchVoice end_sting_;
-	MatchVoice zoom_out_sound_;
-	MatchVoice countdown_sound_;
-	MatchVoice go_sound_;
-	MatchVoice time_up_sound_;
-	MatchVoice last_ten_sound_;
+	// The match's voices, in the one list pause, resume and teardown walk
+	// (its own, then each player's), the arena music, the match cues and the
+	// opening's room tone and story voices. Declared after scene_, so it is
+	// destroyed first; ~Level stops it in its body before any member goes.
+	std::unique_ptr<MatchAudio> audio_;
 	// The displayed positive second most recently sounded; zero means none yet.
 	float last_ten_second_ = 0.0f;
-	float music_volume_ = 0.0f;
-	float end_sting_volume_ = 0.0f;
-	MusicEnvelope music_fade_;
-	MusicEnvelope music_duck_{ 1.0f };
-	bool music_ending_ = false;
 
 	// Simulation and rendering have independent clocks; both snapshots have
 	// identical layout in Debug and Release and are read-only during fan-out.
@@ -399,45 +339,14 @@ private:
 	// Cached once per tick for all debug overlays.
 	int projectile_count_ = 0;
 
-	std::unique_ptr<CountdownArt> countdown_art_;
-	std::wstring countdown_label_;
-	mattmath::RectangleF countdown_number_box_;
-	std::unique_ptr<colourwars::TextDropShadow> countdown_heading_ = nullptr;
-	std::unique_ptr<colourwars::TextDropShadow> resume_heading_;
-	std::unique_ptr<colourwars::TextDropShadow> replay_heading_;
-	mattmath::RectangleF replay_card_;
-	mattmath::RectangleF countdown_card_;
-	std::unique_ptr<colourwars::TextDropShadow> stage_entry_;
-	mattmath::RectangleF stage_entry_card_;
-	mattmath::RectangleF stage_entry_text_bounds_;
-
-	// One shared reminder per input device type present in the match.
-	struct ControlsReminder
-	{
-		std::unique_ptr<colourwars::TextDropShadow> heading;
-		std::unique_ptr<colourwars::TextDropShadow> text;
-		mattmath::RectangleF card;
-		mattmath::RectangleF text_bounds;
-	};
-	std::vector<ControlsReminder> controls_reminders_;
-	// Save owns the effective binding; a paused draw refreshes only its cached
-	// words and fitting, retaining the text widget's original font and copy.
-	const InputBindings* input_bindings_ = nullptr;
-	colourwars::TextDropShadow* keyboard_controls_ = nullptr;
-	std::wstring keyboard_controls_words_;
-	colourwars::TextDropShadow* gamepad_controls_ = nullptr;
-	std::vector<int> gamepad_slots_;
-	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};
-	struct ControlsReminderLook
-	{
-		mattmath::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;
-		float gap = 0.0f, y = 0.0f;
-	} controls_look_;
-	void refresh_keyboard_controls();
+	// The countdown, resume and replay cards, the stage title and the
+	// controls reminders; the stage title is made in the constructor, the rest
+	// by build_opening_frame.
+	std::unique_ptr<CountdownCards> cards_;
 	const Presentation* presentation_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
-	labrador::RenderResources::SpriteSheetHandle overlay_sheet_;
-	labrador::SpriteSheet::frame_handle overlay_fill_;
+	// The overlay sheet's fill frame and the window-space card scale.
+	PaperCard paper_;
 
 	PlayerCamera player_camera_;
 
@@ -445,41 +354,17 @@ private:
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 	LevelOverlays overlays_{};
 
-	// By participant; see set_seat_labels. Present in every build, only ever set by
-	// the Debug director, so empty in Release.
-	std::vector<std::wstring> seat_labels_;
-	// See set_pad_devices; -1 until set, which is the slot's own pad.
-	std::array<int, input_slots::pad_count> pad_devices_ = { -1, -1, -1, -1 };
-	// By participant: each HUD identity box's whole text. Built from the seat, the
-	// player's team, pad (fixed unless a seat is reclaimed) and seat_labels_,
-	// so only construction, set_seat_labels and set_pad_devices rebuild it;
-	// draws only read it.
-	std::vector<std::wstring> identity_texts_;
-
 	// Borrowed shell services; both outlive every level.
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const labrador::ViewportManager* viewport_manager_ = nullptr;
 
-	// See set_pointer; read only by the cursor marker.
-	std::optional<mattmath::Vector2F> pointer_;
+	// The marquee at the mouse pointer and where set_pointer last put it.
+	CursorMarkerOverlay cursor_marker_;
 	// See request_intro_skip.
 	bool intro_skip_requested_ = false;
 
-	// Practice lessons and one prepared card per lesson, so a draw only
-	// chooses among them. Laid out in window pixels by centre_lesson_cards.
-	struct LessonCard
-	{
-		std::unique_ptr<colourwars::TextDropShadow> title;
-		std::unique_ptr<colourwars::TextDropShadow> text;
-		mattmath::RectangleF card;
-	};
-	std::vector<LevelLesson> lessons_;
-	std::vector<LessonCard> lesson_cards_;
-	int active_lesson_ = -1;
-	void build_lesson_cards(labrador::RenderResources* render_resources);
-	void centre_lesson_cards();
-	void update_active_lesson();
-	void draw_lesson_card(labrador::DrawList& draw_list) const;
+	// Practice lessons and their cards; empty unless this is practice.
+	PracticeLessons lessons_;
 
 	// Initialized from match tuning in the constructor.
 	float timer_ = 0.0f;
@@ -507,92 +392,22 @@ private:
 
 	LevelState state_ = LevelState::start_countdown;
 
-	// The opening (level_intro.cpp). The monitor, the person and the cursor
-	// exist only when the match has an intro.
-	struct OpeningBeat
-	{
-		bool previewing_a = false;
-		bool previewing_b = false;
-		bool picker = false;
-		float cursor_at_a = 0.0f;
-		float cursor_at_b = 0.0f;
-		float cursor_back = 0.0f;
-		SilhouettePose pose;
-	};
-	float opening_time_ = 0.0f;
-	// Room cues are owned voices so a paused or skipped opening cannot leave
-	// its person making a noise after the silhouette has stopped or gone.
-	MatchVoice sigh_sound_;
-	MatchVoice chair_sound_;
-	MatchVoice room_tone_sound_;
-	bool room_tone_playing_ = false;
-	MatchVoice glass_in_sound_;
-	MatchVoice celebrate_sound_;
-	MatchVoice slump_sound_;
-	MatchVoice colour_in_sound_;
-	MatchVoice skip_sound_;
-	MatchVoice undo_sound_;
 	// The countdown plays in the picture and ends by pushing through the glass.
 	bool intro_countdown_ = false;
 	bool glass_in_started_ = false;
-	std::unique_ptr<Monitor> monitor_;
-	std::unique_ptr<Silhouette> silhouette_;
-	std::unique_ptr<ScreenCursor> cursor_;
-	std::unique_ptr<FigureActing> acting_;
-	// By roster participant: what each figure is doing, and for how long.
-	std::vector<FigureAct> acts_;
-	float act_time_ = 0.0f;
-	// What of the world the picture shows, and where its two halves meet.
-	mattmath::RectangleF picture_bounds_;
-	float picture_middle_ = 0.0f;
+	// The opening and the reveal: the monitor, the person, the cursor, the
+	// figures' acting and their beats. Null when the match has no intro.
+	// Level keeps the state, the flags above and every timer, hands them to
+	// it as an OpeningClock, and applies each transition it returns.
+	std::unique_ptr<MatchOpening> opening_;
 
-	// The reveal (level_intro.cpp): the same monitor and person at the end.
-	struct RevealBeat
-	{
-		float cursor_at_a = 0.0f;
-		float cursor_at_b = 0.0f;
-		bool showing_a = false;
-		bool showing_b = false;
-		bool picker = false;
-		float waver = 0.0f;
-		bool clicked = false;
-		SilhouettePose pose;
-	};
-	float reveal_time_ = 0.0f;
-	LevelEndInfo end_info_;
-	PlayerTeam winner_ = PlayerTeam::none;
-	labrador::SoundBank::WaveHandle hover_sound_;
-	labrador::SoundBank::WaveHandle click_sound_;
-	labrador::SoundBank::WaveHandle close_sound_;
-	std::unique_ptr<RevealArt> reveal_art_;
-	// Capture the wrappers alongside RevealArt's percent font, so replacement
-	// presentation text never draws against the preceding font snapshot.
-	MenuResultsText reveal_text_;
-
-	RevealBeat reveal_beat() const;
-	float reveal_length() const;
-	bool reveal_showing() const;
-	// How far the view is through the glass: 0 at the monitor, 1 in the panes.
-	float glass_push() const;
-	void start_reveal();
-	void update_reveal(float dt);
-	void draw_reveal(labrador::DrawList& front, const mattmath::RectangleF& screen) const;
-	// Chooses each figure's act for this moment and poses it.
-	void update_acting(float dt);
-	void draw_acting(labrador::DrawList& list, int view) const;
-
-	OpeningBeat opening_beat() const;
-	float opening_length() const;
+	// What the opening reads of the match this moment (level_intro.cpp).
+	OpeningClock opening_clock() const;
 	bool intro_showing() const;
-	float push_ratio() const;
-	mattmath::RectangleF intro_screen() const;
+	bool reveal_showing() const;
 	bool skip_requested() const;
-	void colour_players(bool team_a, bool team_b);
+	// Applies the opening's skip: straight to the split-screen countdown.
 	void skip_intro();
-	void set_room_tone(bool playing);
-	void update_opening(float dt);
-	void add_intro_views();
-	void draw_intro(labrador::Renderer& renderer) const;
 
 	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& commands,
@@ -622,39 +437,22 @@ private:
 	// The HUD, the dividers and the debug text, over one pane.
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
-	void update_player_identity(float dt);
-	void update_teammate_markers(float dt);
-	// The HUD's scale for human pane `view`, as InterfaceGameplay computes it.
-	float hud_scale(int view) const;
-	// Rebuilds identity_texts_. Main thread, never from a draw.
-	void refresh_identity_texts();
-	int pad_device(int slot) const;
+	// Whether the match shows identity badges: its countdown and live play.
+	bool identity_showing() const;
 	// Makes the labels on first use, then applies overlays_.stations and the
 	// current presentation (so tune is live). Main thread, between updates.
 	void refresh_station_labels();
 
+	// The countdown's number, and its cards while it counts: the beat's age
+	// from the match clock, drawn by cards_.
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
-	// POL#39: draws cursor_marker_frames at the mouse pointer.
-	void draw_cursor_marker(labrador::DrawList& draw_list) const;
-	void draw_opening_card(labrador::DrawList& draw_list,
-		const mattmath::RectangleF& rectangle, float scale) const;
-	float opening_scale() const;
-
-	// Sets the displayed beat; drawing derives its age from the match clock.
-	void set_countdown_text(const std::wstring& text);
-	void centre_countdown_text();
-	void centre_stage_entry();
-	void centre_controls_text();
 
 	float zoom_out_camera_ratio() const;
 
-	bool restart_lost_music();
-	// The arena loop's gain: the stage's volume through the fade and the duck.
-	float music_gain() const;
 	void stop_player_sounds();
 
 	int count_projectiles() const;
 
 	// Build countdown text and cameras before the first frame is drawn.
-	void build_opening_frame(labrador::RenderResources* render_resources);
+	void build_opening_frame();
 };

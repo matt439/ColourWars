@@ -85,8 +85,8 @@ namespace turbulence_blockout_acceptance
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &render, &audio, &services.preferences, &levels,
                 &services.tuning, &services.presentation, &resolution, nullptr, &partitioner, &bindings);
-            std::srand(179u);
-            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(179u));
             require(level->player_count() == count && !level->has_horizontal_motion(),
                 "Public candidate build lost its roster or acquired an unqualified mover");
             std::size_t a_index = 0, b_index = 0;

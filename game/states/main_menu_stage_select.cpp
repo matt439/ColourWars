@@ -12,7 +12,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 #pragma region MainMenuStageSelect
@@ -344,20 +343,18 @@ void MainMenuStageSelect::init()
 	const MainMenuPresentation& main = this->look();
 	const StageSelectPresentation& look = this->look().stage_select;
 	RenderResources* resources = this->render_resources();
-	this->paper_art_ = main.art;
-	this->paper_art_.focus_padding = main.setup_focus_padding;
-	this->paper_art_.shadow_offset = main.setup_shadow_offset;
+	this->paper_art_ = menu_geometry::setup_art(main);
 	this->briefing_art_ = this->paper_art_;
 	this->briefing_art_.paper = this->paper_art_.focus_fill;
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), resources,
+		menu_geometry::design_area(), resources,
 		CrudeDrawing::premultiplied(main.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
-			main.stage_box_size), resources, &style, &this->paper_art_, &this->focus_);
+		menu_geometry::footer_paper(main.stage_box_size, style.footer_y), resources, &style,
+		&this->paper_art_, &this->focus_);
 	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>("heading",
 		this->picker_ == PlayerTeam::a ? this->text().stage.team_a_picks :
 		this->picker_ == PlayerTeam::b ? this->text().stage.team_b_picks :
@@ -493,13 +490,7 @@ void MainMenuStageSelect::refresh_briefing_paper()
 }
 void MainMenuStageSelect::check_paper_geometry() const
 {
-	const auto inside_paper = [](const RectangleF& paper, const MenuPaperArtPresentation& art)
-	{
-		const float edge = art.keyline_width * 3.0f;
-		return RectangleF(paper.position() + Vector2F(edge),
-			paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
-	};
-	const RectangleF inside = inside_paper(this->paper_->rectangle(), this->paper_art_);
+	const RectangleF inside = menu_geometry::paper_interior(this->paper_->rectangle(), this->paper_art_);
 	const auto check = [](const RectangleF& bounds, const RectangleF& container,
 		const char* role, const char* key)
 	{
@@ -545,7 +536,7 @@ void MainMenuStageSelect::check_paper_geometry() const
 		check(this->random_mark_->bounds(), this->preview_background_->rectangle(),
 			"Random mark", "main_menu.stage_select.preview_size");
 	}
-	const RectangleF briefing_inside = inside_paper(briefing, this->briefing_art_);
+	const RectangleF briefing_inside = menu_geometry::paper_interior(briefing, this->briefing_art_);
 	const auto check_briefing = [&](const UiWidget& widget, const char* role)
 	{
 		check_outer(widget.bounds(), role);

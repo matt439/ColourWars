@@ -6,7 +6,6 @@
 #include "game/states/player_label.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 bool match_owns_pad_slot(const MatchSetup& settings, int slot)
@@ -247,11 +246,9 @@ void PauseMenuInitial::refresh_connections()
 		this->shown_missing_seats_ = missing_seats;
 	}
 	this->connection_status_->set_position(Vector2F(
-		this->calculate_center_position(this->connection_status_->bounds().width,
-			DESIGN_RESOLUTION.x), this->look().status_y));
+		menu_geometry::centred_x(this->connection_status_->bounds().width), this->look().status_y));
 	this->player_num_->set_position(Vector2F(
-		this->calculate_center_position(this->player_num_->bounds().width,
-			DESIGN_RESOLUTION.x), this->look().heading_y));
+		menu_geometry::centred_x(this->player_num_->bounds().width), this->look().heading_y));
 	this->focus_.set_enabled(this->resume_.get(), !this->waiting_for_players_);
 	this->focus_.set_enabled(this->restart_.get(), !this->waiting_for_players_);
 	if (this->tool_) { this->focus_.set_enabled(this->tool_.get(), !this->waiting_for_players_); }
@@ -280,11 +277,10 @@ void PauseMenuInitial::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF(Vector2F::ZERO, look.box_size),
+		menu_geometry::screen_paper(look.box_size),
 		this->render_resources(),
 		&style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
-	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
 	this->set_widget_size(look.layout.size);
@@ -459,11 +455,10 @@ void PauseMenuConfirmation::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
-		RectangleF(Vector2F::ZERO, look.box_size),
+		menu_geometry::screen_paper(look.box_size),
 		this->render_resources(),
 		&style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
-	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
 	this->set_widget_size(look.layout.size);
@@ -477,8 +472,7 @@ void PauseMenuConfirmation::init()
 		this->render_resources(),
 		look.art.ink);
 	this->player_num_->set_position(Vector2F(
-		this->calculate_center_position(this->player_num_->bounds().width,
-			DESIGN_RESOLUTION.x), look.heading_y));
+		menu_geometry::centred_x(this->player_num_->bounds().width), look.heading_y));
 
 	this->question_ = std::make_unique<UiText>(
 		"question",
@@ -488,8 +482,7 @@ void PauseMenuConfirmation::init()
 		this->render_resources(),
 		look.art.ink);
 	this->question_->set_position(Vector2F(
-		this->calculate_center_position(this->question_->bounds().width,
-			DESIGN_RESOLUTION.x), look.status_y));
+		menu_geometry::centred_x(this->question_->bounds().width), look.status_y));
 
 	this->yes_ = std::make_unique<UiText>(
 		"yes",

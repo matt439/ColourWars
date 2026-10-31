@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/presentation.h"
+#include "game/presentation_match.h"
 #include "engine/render/texture_object.h"
 
 // A splatted figure coming back. It has been painted over, so it is gone from

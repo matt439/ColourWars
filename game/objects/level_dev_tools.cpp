@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/presentation.h"
 #include "game/objects/crude_drawing.h"
+#include "game/objects/player_identity_hud.h"
 #include "engine/render/text_encoding.h"
 
 using namespace mattmath;
@@ -60,8 +62,7 @@ const UiText& Level::station_label(int index) const
 
 void Level::set_seat_labels(std::vector<std::wstring> labels)
 {
-	this->seat_labels_ = std::move(labels);
-	this->refresh_identity_texts();
+	this->identity_->set_seat_labels(std::move(labels), this->players_, this->roster_);
 }
 
 int Level::projectile_count() const
@@ -101,8 +102,7 @@ bool Level::place_player(int participant, const Vector2F& top_left)
 	if (player->state() == PlayerState::dead)
 	{
 		player->force_respawn();
-		this->player_identity_remaining_[static_cast<size_t>(participant)] =
-			this->presentation_->player_identity().emphasis_duration;
+		this->identity_->emphasise(static_cast<size_t>(participant));
 	}
 	player->place_at(top_left);
 	player->update_weapon_position();
@@ -122,8 +122,7 @@ bool Level::respawn_player(int participant)
 	player->force_respawn();
 	if (was_dead)
 	{
-		this->player_identity_remaining_[static_cast<size_t>(participant)] =
-			this->presentation_->player_identity().emphasis_duration;
+		this->identity_->emphasise(static_cast<size_t>(participant));
 	}
 	player->update_weapon_position();
 	this->refresh_player_cameras();

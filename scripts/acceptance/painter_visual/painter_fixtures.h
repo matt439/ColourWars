@@ -356,7 +356,7 @@
                 (roller ? WeaponType::roller : tools[view]));
         }
         app.viewport_manager()->set_layout(settings.screen_layout());
-        auto level = builder.build_level(settings, palette, opening);
+        auto level = builder.build_level(settings, palette, opening, MatchRandom());
         require(level->player_count() == count, "builder changed the roster count");
         for (int view = 0; view < count; ++view)
         {

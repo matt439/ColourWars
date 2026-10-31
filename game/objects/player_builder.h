@@ -9,6 +9,8 @@
 #include "game/objects/weapon_builder.h"
 #include "engine/render/viewport_manager.h"
 
+class Presentation;
+
 class PlayerBuilder
 {
 public:

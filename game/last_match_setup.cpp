@@ -5,6 +5,7 @@
 #include "game/match_setup.h"
 #include <array>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -17,11 +18,6 @@ namespace
 		ScreenLayout::three_player, ScreenLayout::four_player };
 	constexpr std::array<const char*, 4> layout_keys{
 		"one_player", "two_player", "three_player", "four_player" };
-	constexpr std::array<WeaponType, 5> weapons{
-		WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-		WeaponType::mister, WeaponType::bucket };
-	constexpr std::array<const char*, 5> weapon_keys{
-		"sprayer", "sniper", "roller", "mister", "bucket" };
 	constexpr std::array<BotDifficulty, 3> difficulties{
 		BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };
 	constexpr std::array<const char*, 3> difficulty_keys{ "easy", "normal", "hard" };
@@ -42,7 +38,8 @@ namespace
 
 	bool valid_weapon(WeaponType weapon)
 	{
-		return std::find(weapons.begin(), weapons.end(), weapon) != weapons.end();
+		// A remembered weapon is a resolved one: never Random, never a sub.
+		return static_cast<size_t>(weapon) < TUNED_WEAPON_COUNT;
 	}
 
 	bool valid_best_of(int best_of)
@@ -147,11 +144,8 @@ namespace
 	{
 		try
 		{
-			const std::string key = player.identifier("weapon");
-			for (size_t index = 0; index < weapons.size(); ++index)
-			{
-				if (key == weapon_keys[index]) { return weapons[index]; }
-			}
+			const std::optional<WeaponType> weapon = weapon_from_name(player.identifier("weapon"));
+			if (weapon && valid_weapon(*weapon)) { return *weapon; }
 		}
 		catch (const std::runtime_error&)
 		{
@@ -161,11 +155,7 @@ namespace
 
 	const char* weapon_key(WeaponType weapon)
 	{
-		for (size_t index = 0; index < weapons.size(); ++index)
-		{
-			if (weapon == weapons[index]) { return weapon_keys[index]; }
-		}
-		return "sprayer";
+		return valid_weapon(weapon) ? weapon_name(weapon) : weapon_name(WeaponType::sprayer);
 	}
 }
 

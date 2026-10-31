@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/stage_scan_diagnostics.h"
 #include "engine/render/font.h"
+#include "game/menu_geometry.h"
 #include "game/presentation_menu.h"
 #include "game/presentation_menu_text.h"
 
@@ -60,10 +61,11 @@ stage_scan_diagnostics::Layout stage_scan_diagnostics::layout(const StageScanPre
 	const auto positive = [](float value) { return std::isfinite(value) && value > 0.0f; };
 	if (!positive(look.heading_scale) || !positive(look.text_scale) || !positive(look.gap) ||
 		!positive(look.padding.x) || !positive(look.padding.y) || !positive(look.box_size.x) ||
-		!positive(look.box_size.y) || look.box_size.x > 1880.0f || look.box_size.y > content_height - 40.0f)
+		!positive(look.box_size.y) || look.box_size.x > menu_geometry::scan_paper_max_width ||
+		look.box_size.y > content_height - menu_geometry::paper_footer_margin)
 	{ throw std::invalid_argument("stage_scan needs positive scales/geometry and a paper inside the menu chrome."); }
 	Layout result;
-	result.paper = RectangleF((Vector2F(1920.0f, content_height) - look.box_size) / 2.0f, look.box_size);
+	result.paper = menu_geometry::footer_paper(look.box_size, content_height);
 	const float edge = art.keyline_width * 3.0f;
 	const Vector2F padding = look.padding + Vector2F(edge);
 	const Vector2F top = result.paper.position() + padding;

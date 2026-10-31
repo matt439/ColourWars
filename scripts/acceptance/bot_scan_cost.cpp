@@ -17,7 +17,10 @@ namespace
     using Clock = std::chrono::steady_clock;
 
     constexpr int trial_steps = 1800;
+    // The timed driver's seed. The level's own bots are seeded level_seed, the
+    // bot seed srand(41731) gave before HYG#39, so neither changed.
     constexpr unsigned int trial_seed = 41731;
+    constexpr unsigned int level_seed = 5242;
     constexpr double frame_budget_us = 1.0e6 / 60.0;
     const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
     const char* const stages[] = { "crossfeed", "close_quarters", "king_of_the_hill", "turbulence", "press_tower" };
@@ -39,11 +42,11 @@ namespace
         }
         std::unique_ptr<Level> build(const MatchSetup& settings)
         {
-            std::srand(trial_seed);
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
                 &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
-            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(level_seed));
         }
         paint_surfaces_acceptance::World assets;
         Registry<LevelLoadedInfo> levels{ "bot-scan-cost" };
@@ -110,7 +113,7 @@ namespace
                     player.primary_weapon().readiness() == WeaponReadiness::ready))) { work = Work::scan; }
             }
             const Clock::time_point start = Clock::now();
-            this->driver_.filter_seats(seats, level);
+            this->driver_.drive(seats, level.bot_world());
             elapsed = Clock::now() - start;
         }
         bool replaces_bot_inputs() const override { return true; }

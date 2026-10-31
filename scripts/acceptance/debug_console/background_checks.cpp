@@ -94,7 +94,7 @@ namespace debug_console_acceptance
 				MatchPlanner::ConnectedPads{}, [] { return 7u; });
 			require(plan.ok, "The background input CPU roster must resolve");
 			world.viewports.set_layout(plan.settings.screen_layout());
-			const auto level = world.builder->build_level(plan.settings, TeamColourPair::blue_orange, OpeningMode::off);
+			const auto level = world.builder->build_level(plan.settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
 			PlayerInputData physical;
 			physical.x_movement = 0.75f;
 			physical.jump_pressed = physical.jump_held = physical.shoot_direction_requested = true;

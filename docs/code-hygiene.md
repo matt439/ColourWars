@@ -271,13 +271,14 @@ the zoom-out and reveal at the last step, and a suspend there (which clears a
 mover's carrier, part of the fingerprint) would otherwise move. The adversarial
 review found that case after a first version keyed playback to tape steps.
 
-The file is **format 5**: one inputs array per participant, all the same
+The file was **format 5**: one inputs array per participant, all the same
 length, every step at the file's dt (the writer refuses otherwise), and an
 ordered `gaps` list of `{ step, update }` with a resume's seat commands.
 Formats 3 and 4 are refused with the version message; a replay holds only on
-the build that recorded it (`DBG#2`). The tape's own seed is not written:
-`seed` remains the developer seed the round's seed is drawn from, which
-`HYG#39` replaces. [The debug console](debug-console.md#seed-record-and-play),
+the build that recorded it (`DBG#2`). `HYG#39` made it **format 6**: `seed` is
+now required and is the round seed the level was built from, not the optional
+developer seed it used to be drawn from, so format 5 is refused too.
+[The debug console](debug-console.md#seed-record-and-play),
 the instant replay's "How" and the vertical-lift draft's replay row in
 [the roadmap](feature-roadmap.md) describe this.
 
@@ -299,9 +300,29 @@ executable and `check_doc_links.py` passes.
 
 ### One owner for weapon and projectile names (`HYG#36`)
 
-Give `WeaponType` (and `ProjectileType`) one constexpr name table with
-`to_string`/parse beside the enum, and make tuning, validation, presentation,
-`last_match_setup` and the Debug match plan use it.
+**Done 2026-10-30.** [weapon_type.h](../game/objects/weapon_type.h) now holds
+`WEAPON_NAMES`, the one spelling of each selectable weapon (`sprayer` to
+`bucket`, then `random` for `WeaponType::random_primary`), with
+`TUNED_WEAPON_COUNT`, `weapon_name`, `weapon_from_name` and
+`for_each_tuned_weapon(visit)`, which calls `visit(type, name)` in enum order;
+[projectile_type.h](../game/objects/projectile_type.h) holds `PROJECTILE_NAMES`,
+`projectile_name`, `projectile_from_name` and `for_each_projectile`. The
+hand-written lists are gone: tuning's projectile parser (its refusal now lists
+the table), splash animations, impact sounds, weapons and projectiles in
+[tuning.cpp](../game/tuning.cpp) and their four checks in
+`tuning_validation.cpp`; the tool-motion frame check in
+`content_validation.cpp`; the idle drip, muzzle size, tool motion and grip
+readers and the weapon-select choice keys and descriptions in the presentation
+readers (`presentation_read::weapon_choice_keys` is gone);
+`last_match_setup.cpp`'s two arrays, whose reader still falls back to the
+sprayer for an unknown name or `random`; the Debug `MatchPlanner`'s list, parser
+and printer, which still prints `other` for anything but a tuned weapon; and the
+balance runner's tool parser. Every visit keeps the order the calls were
+written in, which was enum order, so diagnostics are raised in the same order.
+The other probes keep their own literal names on purpose: they check the files'
+spellings independently, or only label a failure. Both presets build under
+`/W4 /WX`; the full default acceptance list passed in Release (74 cases) and in
+Debug without the four slow cases (71, `balance_runner` included).
 
 ### Menu page geometry in one place (`HYG#37`)
 
@@ -310,13 +331,200 @@ that owns the design size, and have the reader, the validator and the pages call
 it; move `DESIGN_RESOLUTION` out of `states/menu_page.h`. Split presentation
 validation by page rather than by size where the shared geometry allows.
 
+**The module, done 2026-10-30.** [menu_geometry.h](../game/menu_geometry.h) at
+the `game/` root owns `menu_consts::DESIGN_RESOLUTION` (moved unchanged;
+`menu_page.h` includes it, so no probe changed) and the reader's caps by name
+(`paper_max_width` 1760, `setup_paper_max_width` 1840, `scan_paper_max_width`
+1880, `paper_footer_margin` 40, `overlay_max_y` 900, `overlay_paper_max`
+1600x900). Its functions are the page rectangles: `design_area`, `centred` and
+`centred_x`, `footer_paper` (centred above `footer_y`), `screen_paper` (centred
+on the design: Exit, Display, Pause, End, Results), `paper_interior` (inside
+three keylines and the shade), `paper_text_right`, `footer_band` and
+`footer_rule`, `setup_art` and `display_art`, `settings_action_width` and
+`results_fill_box`. The reader, every presentation validator,
+`menu_content_validation`, `stage_scan_diagnostics` and the pages call them; no
+bare 1920, 1080 or cap literal is left in the reader or validators except in
+message text. `MenuPage::calculate_center_position` forwards to `centred`;
+Pause, End and Results build their paper at `screen_paper` instead of moving it
+with `set_position_at_center`, the same rectangle exactly; `stage_preview`
+frames its camera on `design_area`; `Validation::check_menu_item` takes the
+paper rectangle instead of a size and a content height. Where the reader or a
+validator associated a sum differently from the page (interior bottoms, right
+edges, the Results fill's right edge, the controls value width), it now uses the
+page's form, which can move a limit by one ulp for fractional data and changes
+nothing for today's whole-number values. Diagnostic order and text are
+unchanged. Both presets build under `/W4 /WX`; the full default acceptance list
+passed in Release (74) and in Debug without the four slow cases, `menu_text`
+passed in Debug and `check-painter.ps1 -CompileOnly` compiled in Release.
+
+**Drift the shared geometry exposed.** Mapping every formula found places where
+the three sides disagree; the module keeps each as it was, so these are separate
+changes:
+
+- D1, a visible question for the author: every page draws the footer band from
+  `footer_y` (960) to the bottom, including over a match, while Pause and End
+  papers (900 tall, centred on the design) reach y 990 and Results (860) 970,
+  so the band covers their bottom 30 and 10 pixels. Nothing relates those boxes
+  to `footer_y`. Whether that is intended is the author's call (`POL#45`).
+- D5: three meanings of "inside the paper" (interior, face, whole box) are used
+  for the same kind of check on different pages.
+- D4's row rule, a visible question for the author: practice Pause puts its
+  five rows 96 apart (0.8 of 120), but a shipped item's focus card is 113 tall
+  (77 + 2 x 18), so neighbouring cards overlap by 17 pixels. The validator
+  checks practice rows against the paper only; the row rule would refuse the
+  shipped file. Filed with D1 under `POL#45`.
+
+**D2-D4 and D6-D10, done 2026-10-31.** The validator now checks what the pages
+draw. Pad sticks: its nine rows (seven option rows, Apply at 7, Back at 8);
+Back's card at row 8 is the status obstacle, and the stale Apply-at-3 and
+Back-at-4 checks are gone. Every Sticks row sits above a Controls row checked
+the same way, and the Controls items must end above the shared status line, so
+no content fails only the corrected rows. End's first row fits the face short
+of `end_menu.art.shadow_offset`, like its others. Practice Pause: Resume, Tool,
+Restart, Options and Quit at 0.8 spacing on the Pause paper, and
+`menu_text.practice_tool` for each real tool (glyph coverage stays with
+`content_validation`). Display's heading, question and countdown use the face
+the setup shade leaves, as Keep and Revert did. `read_main_menu` refuses a setup
+paper (Options, setup, Team, Weapon, Stage) that is no larger than
+`setup_shadow_offset` plus six keylines, and the Display check refuses a
+`pause_menu.box_size` no larger than the setup shade plus six Pause keylines,
+since Pause's own box check sees only Pause's shade. `main_menu.credits.text`
+must leave a positive fitting area on the Credits face above Back. After the
+summaries, the static `menu_text.stage.random_navigation` must fit the Stage
+interior, every briefing row, status and hint keeps its expanded briefing card
+inside the Stage paper and off the preview (`check_briefing_card`, shared with
+the summaries), and then the union of every row and every alternative must keep
+one card off the preview, because the page draws one card around all the rows
+it shows: a row widening it and another deepening it can reach a preview set
+diagonally from the briefing. That union is stricter than any one screen (it
+joins solo and versus, locked and browse); the shipped layout passes because the
+preview's vertical span lies inside the briefing's. Probes whose accepted edges
+encoded the old answers moved to the new edges, and each new check has a variant
+only it rejects (`menu_text`, `menu_presentation`) except two: the Pause-box
+check, whose failing boxes (under 144 pixels) Pause's own heading and row fits
+refuse first with the shipped fonts, and the combined card, which only an authored preview diagonal from the
+briefing can reach and which no probe layout builds yet. `footer_y`'s range
+check stays at the top of `read_main_menu`, so its order and text are unchanged;
+D8 needed no move, since `read_main_menu` runs before `read_controls_settings`
+in `presentation.cpp`, so the controls reader only ever sees a checked value.
+
+**The split by page, done 2026-10-31.** `Validation::validate` and its phase
+functions stay the only owners of diagnostic order: the eight that check pages
+now live in [presentation_validation.cpp](../game/presentation_validation.cpp)
+as lists of calls, and `validate_artwork_resources` (phase 4, assets, no page)
+keeps its walk in `presentation_validation_assets.cpp`. Each call is one page's
+block from that phase, moved verbatim into a private `Validation` member in its
+page's file and called where the block stood, so every input throws in the same
+order. A page spans phases, so a file holds several steps:
+
+- `presentation_validation_menu.cpp`: what every page shares and the pages with
+  no other file. The chrome (menu resources, brand, headings, prompts; phase 1),
+  Home's actions and Credits (1), the Title page and Home's subtitle (3), and
+  the status-line helpers `padded_back`, `check_status` and
+  `status_back_cards`, which measures the Options, Controls, Pad Buttons and
+  Sticks Back cards together before any status line, as before.
+- `presentation_validation_options.cpp`: actions (1), values and status lines
+  (3), palette timing (5), resolution values (8).
+- `presentation_validation_settings.cpp`: Controls and Sticks actions through
+  `check_controls_item` (1); toggles, Controls help, Keyboard Jump, Pad Buttons,
+  Profiles, Sticks help and each page's status lines, with `check_help_fit` (3);
+  stick readouts (6); the Sticks pad value (7); percentages and the Sticks
+  `shared` template (8).
+- `presentation_validation_pause.cpp`: Pause and practice Pause, Exit's Yes and
+  No, Display's Keep and Revert, and the four questions (1); Exit's heading and
+  Display's heading, countdown and paper (5); connection lines and missing
+  lists (6).
+- `presentation_validation_end.cpp`: actions and headings (1), Session labels
+  (9).
+- `presentation_validation_setup.cpp`: Mode and Player Count rows and the Join
+  heading (1); Team and Weapon headings and papers (5); bot labels, Join rows
+  and the Team and Weapon label rows, one player at a time across both pages
+  as before (6); Mode's duration templates (8).
+- `presentation_validation_stage.cpp`: briefing, records, then Random counter
+  and hints (2, either side of Results' step); heading (5); summaries and the
+  expanded card (8). The count checks stay in
+  `presentation_validation_catalog.cpp`.
+- `presentation_validation_results.cpp`: panel and records (2), contributions
+  and awards (7), headings, Session lines and percentages (9).
+
+`presentation_validation_roster.cpp` is gone; its blocks went to setup, pause,
+settings and results. The steps take the `SetupGeometry`, `StageGeometry` and
+`ControlsGeometry` they need; the phase-2 and phase-5 steps fill their fields
+of the geometry by reference, and the later Stage Select step reads the
+briefing rows the earlier one left. Three lambdas that several pages' steps
+shared became members (`check_controls_item`, `check_help_fit`, which now takes
+the help area, and `check_status` with its `padded_back`); one loop over the
+Mode duration templates and the Sticks `shared` template became two loops in
+the same order. The Results contribution rows, which phase 6 used to declare
+and phase 7 fill, are now a local of the Results step, so neither phase passes
+them. The four rewritten files and the four new ones include only
+what they use. Both presets build under `/W4 /WX`; in Release `menu_text`,
+`menu_presentation`, `weapon_catalog`, `story_audio`, `stage_selection`,
+`display_trial`, `practice_workshop`, `stick_settings`, `menu_navigation`,
+`series_stage_rule`, `user_stages`, `movement`, `turbulence_blockout` and
+`debug_console` passed. `HYG#37` is complete.
+
 ### Presentation includes and the content layer (`HYG#38`)
 
-Trim the 24-line include block copied into 13 `presentation*.cpp` files to what
-each uses, so `build_info.h` and the `states/` badge header appear only where
-referenced. Move the badge geometry the roster validator needs beside
-`PlayerIdentityPresentation`, and stop `presentation.h` dragging the menu
-records into gameplay objects.
+Trim the 24-line include block copied into eight `presentation*.cpp` files to
+what each uses (`HYG#37`'s page files already include only theirs), so
+`build_info.h` and the `states/` badge header appear only where referenced.
+Move the badge geometry the roster-label checks (setup and results) need
+beside `PlayerIdentityPresentation`, and stop `presentation.h` dragging the
+menu records into gameplay objects.
+
+**Done 2026-10-31.** The eight sources that carried the copied block
+(`presentation.cpp`, `presentation_menu_text.cpp`, both readers and the
+assets, catalog, metrics and text validators) now include only what they use:
+`build_info.h` is left only in `presentation_validation_menu.cpp`, which draws
+the build label, and `objects/player_badge.h` only in
+`presentation_menu_text.cpp`, which formats `PlayerBadge::label`. The metrics
+file includes its own `presentation_validation_metrics.h` rather than the
+validator. The badge rectangle is now
+`PlayerIdentityPresentation::ui_badge_before(label)`, the same arithmetic
+`UiPlayerBadge::before` had, and `before` forwards to it, so the pages and the
+probes that call it did not change. The setup and results checks call the
+record, and no `presentation*` source includes a `states/` header.
+
+The in-match records moved unchanged from `presentation.h` into
+[presentation_match.h](../game/presentation_match.h): HUD, identity, camera,
+feedback, figure, respawn, opening, debug overlay, music mix and the team
+palette. `presentation.h` includes it with the two menu headers and keeps the
+`Presentation` class. Twenty `game/objects` headers, `level.h` among them, and
+four sources include `presentation_match.h` instead. `level.h`, `level_builder.h` and
+`player_builder.h` forward-declare `Presentation`. `level_end_info.cpp`
+includes `presentation_menu_text.h` for the `MenuResultsText` it formats.
+`Level` keeps the reveal's results text as a copy, now held by
+`std::unique_ptr<const MenuResultsText>`, so the snapshot taken with the
+reveal font is unchanged and `level.h` needs only a forward declaration. The
+nine `Level`/builder sources that call `Presentation` getters include
+`presentation.h` directly.
+
+Of the 165 files in `game/objects` and `game/ai`, 70 reached
+`presentation_menu.h` and `presentation_menu_text.h` through their includes
+before this change and 10 reach a menu header now, none of them headers and
+none in `game/ai`: nine reach both through `presentation.h`, and
+`level_end_info.cpp` reaches only `presentation_menu_text.h`.
+`level.cpp`, `level_draw.cpp`, `level_opening.cpp`, `level_practice.cpp` and
+`level_end_info.cpp` use menu records themselves: the menu style's fonts, the
+pause menu, the bot roster label and the results text. `level_audio.cpp`,
+`level_builder.cpp`, `level_dev_tools.cpp`, `level_intro.cpp` and
+`player_builder.cpp` read only in-match records, but through the `Presentation`
+class, which holds the menu records by value. Handing `Level` and the builders
+the records they read is left to `HYG#40`, which regroups `Level`'s inputs.
+Thirteen acceptance probes that used `Presentation` through `level.h`
+(`aim_marker`, `blocked_shot`, `cursor_marker`, `idle_drip`,
+`movement_contact`, `paint`, `player_identity`, `practice_workshop`,
+`quiet_character`, `teammate_markers`, the balance runner, the skirmish
+observation checks and the paint-surface fixtures) now include it. Both
+presets build under `/W4 /WX`. Every default case compiles in both presets,
+along with the opt-in cases and both painter probes in Release. In Release,
+`menu_text`, `menu_presentation`, `player_identity`, `weapon_catalog`,
+`story_audio`, `team_palette`, `aim_marker`, `teammate_markers`,
+`results_awards`, `instant_replay`, `cursor_marker`, `low_paint`, `paint`,
+`blocked_shot`, `idle_drip`, `quiet_character`, `movement_contact`,
+`practice_workshop`, `team_selection`, `stage_selection` and
+`menu_navigation` passed. `HYG#38` is complete.
 
 ### An explicit match random stream (`HYG#39`)
 
@@ -326,13 +534,180 @@ palette, bot seeds and the monitor persona; `RoundTape` stores the seed it
 hands in. Seeded team pairs and colours may change; record the new `+seed`
 mapping where the screenshot loop documents it.
 
+**Done 2026-10-31.** A build now draws only from the
+[MatchRandom](../game/objects/match_random.h) it is given, and never reads or
+moves `rand()`. `MatchRandom` holds the round seed and makes one `BotRandom`
+(splitmix64) stream per use: the state of each is the first output of
+`(tag << 32) | seed`, with tag 1 for the palette and 2 for the persona. The
+shipping bots get the seed itself, as the balance runner already seeded its
+bots. A Random palette is `next() % pairs` and the persona's rolls are
+`unit()` and `next() % n`, all reduced in 64 bits, and every persona draw is a
+named local because argument order is unspecified. So the same seed builds the
+same match on any standard library, and whether one use draws never moves
+another.
+
+- **The build.** `build_level(settings, palette, opening, random, practice)`
+  passes the stream to `TeamColourTools::team_colours` and to `Level`, whose
+  `bot_seed` parameter became `MatchRandom random`. The rand-based
+  `generate_random_team_colour(palette)` and `MonitorPersona::roll(look)` are
+  gone. The two-argument `team_colours` is fixed-pair only and refuses Random
+  by name. The weapon page's preview never took that path.
+- **The round seed.** `GameLevel` still draws it from `rand()`, as two
+  sequenced locals, and asks the new `DebugDirector::round_seed(drawn)` hook,
+  whose Release stub returns `drawn`. In Debug a replay being played returns
+  its recorded seed and `seed n` returns `n`. Either override also calls
+  `srand(n)`, so the menus' Random picks after every seeded build repeat. The
+  two `srand` calls in `before_level_build` are gone. The menus' team shuffle,
+  random weapon and random stage stay on `rand()`.
+- **The instant replay.** It builds from `MatchRandom(tape.seed())` and from
+  `round_palette_`, the preference the round was built with. Before this, it
+  read the save's palette, which Paused Options can change mid-round while
+  keeping the arena, so a replay could show the new colours.
+- **`ReplayFile`.** It is **format 6**. `seed` is required and is the round
+  seed, so a recording made without `seed` now replays its Random palette.
+  The header starts its tape from it, and format 5 is refused. `status` shows
+  `round seed n`.
+
+`+seed n` now means "every round is built from seed n". The seed-to-pair table
+is in [the debug console](debug-console.md#seed-record-and-play), and
+`team_palette` pins it for seeds 0-7, 211 and 4242. For the probes:
+
+- **The shipping-bot probes swapped their seeds.** Each now names the bot seed
+  its old `srand` gave, so their bots are bit-identical: `41731` became `5242`
+  (the `bot_navigation` fixture, `bot_trials` and `bot_scan_cost`'s level),
+  `9127` became `29843`, `30011` became `32505`, `52807` became `8644`,
+  `61403` became `3946`, and `bot_runtime`'s `8301` became `27146`.
+  `bot_scan_cost`'s timed driver keeps `41731`. `bot_team_trials`' Close
+  Quarters exclusion now names seed `3946`.
+- **The other build sites.** Every other `build_level` site passes
+  `MatchRandom(k)` for its old `srand(k)`, or `MatchRandom()` where nothing was
+  seeded. The `srand` stays only where a probe reads a terminal `rand()` after
+  the run: `paint_surfaces`, `moving_structure`, `turbulence_movers`,
+  `turbulence_slab_routes` and `pad_buttons`.
+- **New checks.** `instant_replay` checks that a seed's palette is the same
+  with and without an intro and shipping bots, and that a full build leaves
+  `rand()` untouched. `debug_console` records without `seed`, checks that the
+  file holds the drawn round seed, and checks that playback builds from it and
+  reports MATCH.
+
+The baseline was taken on the unchanged tree. Against it, the `MEASURE` and
+`PASS` lines of `paint_ferry`, `team_gate`, `handicap`, `bot_territory`,
+`bot_navigation`, `bot_gate_routes`, `bot_runtime` and `bot_ascents` are
+identical apart from the relabelled seeds. So are the rows of
+`bot_trials.csv` and `bot_combat_trials.csv`. The full default list passed in
+Release (74 cases). Debug passed with `-SkipSlowDebug` (71 cases), and
+`debug_console` and `crossfeed` passed when run on their own. The opt-in group
+and both painter probes compiled. `HYG#39` is complete.
+
 ### `Level` composed of owned parts (`HYG#40`)
 
-Group the 28-parameter constructor into a few parameter records built by
-`LevelBuilder`; extract owned collaborators (the intro/opening presenter,
-horizontal motion, practice, the HUD/draw layer, match audio) with their own
-state; give `game/ai` a narrow world-query interface that `Level` implements,
-instead of `bot_*` members. Update the guide's description of `Level`.
+**Done 2026-10-31.** `Level` is now the composition root of owned parts, in
+nine commits (stages 1 to 8, with stage 5 in two halves). It keeps
+the match state, every timer, the roster and pane maps, the scene and the order
+of `update`, `update_state`, `update_level_logic`, `draw`,
+`draw_player_overlay` and `refresh_layout`; each part keeps one concern's
+state and drawing, borrows the tuning and presentation and reads them per call
+(so `tune` stays live, and `game/debug/tune_scope.cpp` names the new readers),
+and is created at the point its members were. Every public `Level` member
+stays, as a forwarder where its body moved; `players_` and `timer_` keep their
+names for `movement_feedback_visual.cpp`, `cursor_marker_frames` stays a
+public static, and `level.h` keeps every include it had, so no probe changed
+beyond the two planned edits below. The bodies moved unchanged.
+
+The constructor takes four records from
+[level_inputs.h](../game/objects/level_inputs.h) instead of 27 parameters:
+`LevelWorld` (the scene, its players and the pane dividers, handed over),
+`LevelServices` (the borrowed services and live tuning, presentation,
+preferences and bindings), `LevelStage` (name, camera bounds, `StageAudio`,
+stations, lessons) and `LevelMatch` (team colours, opening, duration, roster,
+random stream). `LevelBuilder` fills them inside the `try` that names the stage
+in an error; its own constructor is unchanged. The four probes that build a
+`Level` by hand use designated initialisers.
+
+[LevelStructures](../game/objects/level_structures.h), a value member
+(`level_horizontal_motion.cpp` became `level_structures.cpp`), owns what
+`Level` borrowed at admission: the translating structures and their supports,
+the team gates and the projectile targets, collected in the old order inside
+`build_opening_frame`; `TranslatingStructurePaintable` befriends it instead of
+`Level`. The bots query the world through [BotWorld](../game/ai/bot_world.h),
+an abstract `game/ai` class that returns only values (a `BotBody` per
+participant with `tool_ready`/`tool_empty`, the gates' permissions, paint
+surfaces, obstacles, supports, ramps and the two sight lines).
+[LevelBotWorld](../game/objects/level_bot_world.h) implements it, borrowing
+the scene, `players_` and `LevelStructures` by reference because the targets
+are admitted after it is built. `MatchBotDriver` no longer derives from
+`SeatInputFilter`: `drive(seats, world)` keeps the same loops and RNG draws, so
+`game/ai` includes neither `level.h`, `weapon.h` nor the team gate. The four
+probes that drove it call `drive(seats, level.bot_world())`; the balance
+runner wraps it in a probe-local filter.
+
+The window-space and HUD layers followed. [PaperCard](../game/objects/paper_card.h)
+holds the overlay sheet, its fill and the one card scale and card draw that
+every card uses; [PracticeLessons](../game/objects/practice_lessons.h) the
+lessons and their cards; [CursorMarkerOverlay](../game/objects/cursor_marker_overlay.h)
+the mouse pointer and its marquee (all three value members);
+[TeammateMarkers](../game/objects/teammate_markers.h) the edge chips and their
+per-pane fade ages; [PlayerIdentityHud](../game/objects/player_identity_hud.h)
+the badge, the emphasis, the bot labels, seat labels, pad mapping and HUD
+identity texts, created empty before the roster loop so each bot label is
+still made before the no-human-view throw. [MatchAudio](../game/objects/match_audio.h),
+declared after the scene, owns the one `MatchVoices` list, the music as its
+`MusicVoice`, the end sting, the match cues, the room tone and the story
+voices, and resolves and registers them in the old order; `Level` still
+registers each player's voices after them, decides when every cue plays, and
+keeps `~Level` in `level_audio.cpp`, which stops the list before any member
+goes. `PaintAudio` and `BlockedShotFeedback` stay in `Level`, declared before
+the scene, because players point at both. [CountdownCards](../game/objects/countdown_cards.h)
+owns the countdown, resume and replay cards, the stage title and the controls
+reminders, built in two steps at the old points; `Level` keeps the state checks
+and the beat timing.
+
+[MatchOpening](../game/objects/match_opening.h), owned through a `unique_ptr`
+that is null when the match has no intro, took the opening, the reveal and the
+figures' acting from `level_intro.cpp` into `match_opening.cpp`: the
+`Monitor`, `Silhouette`, `ScreenCursor`, `FigureActing` and `RevealArt`, the
+coverage text, the hover, click and close waves, the opening and reveal clocks,
+the picture bounds, the end info and winner, the acts and their beats. It is
+created where those members were, rolling the persona and making them in the
+old order, and greys the figures as before; `build_opening_frame` still works
+out the picture bounds at the same point and hands them over. It borrows
+`MatchAudio` for the room tone and story voices. `Level` keeps `state_`,
+`intro_countdown_`, `glass_in_started_`, the skip request and every timer,
+hands them over as an `OpeningClock` on each call, and applies each transition
+the part returns where it was written before: `update_opening` returns `stay`,
+`countdown` (a skip) or `intro_countdown`, `update_reveal` returns whether the
+reveal is over, and `Level::skip_intro` calls `skip` and then sets the state
+before the countdown branch reads it. `start_reveal` is called only when the
+opening exists, so the scene is still counted only then; `update_acting` runs
+only with an opening, where the null `acting_` check returned before. The draw
+takes a callback that draws `Level`'s countdown at the old point, and the
+intro's views are added in the same order. `revealed()` is now whether the
+opening exists. `LevelState` moved into `level_state.h`, which `level.h`
+includes, so the part need not include `level.h`. `Level` keeps its
+`SoundBankObject` base although nothing plays through it now: resolving the
+stage's bank there is the first check a `Level` makes, before the roster
+checks, and dropping it would report a bad roster ahead of a bad bank.
+
+Every stage built both presets under `/W4 /WX`, ran the acceptance cases,
+script checks and painter switches its files touch, and compared what the plan
+asked of it (`check-paint-fx.ps1` failing only on its known camera-scale
+check). For the last
+commit: Release passed all 74 default cases and Debug 71 with `-SkipSlowDebug`
+plus `crossfeed`, `press_tower`, `menu_text` and `debug_console`; the opt-in
+group, both painter probes and the frame-pacing probe compiled;
+`check-movement-feedback.ps1` and `check-display-awake.ps1` passed;
+`check-startup.ps1` passed on both executables, and with the bank hidden
+under `-RequireNoAudio` and for a `+stage` match launch, which reported the
+silent bank once and exited 0. `bot_trials.csv`, `bot_combat_trials.csv` and
+the `bot_team_trials` reports are byte-identical to the stage-3 evidence, and
+the 2- and 4-player `run-balance.ps1 -Bot match` CSVs on `crossfeed` are
+byte-identical to the baseline taken before stage 1. On MattPC the painter's
+`-MonitorOnly`, `-RevealTuneColoursOnly`, `-ResultPercentageOnly`,
+`-CountdownOnly`, `-LandmarkOnly`, `-SilhouetteTuneColoursOnly`,
+`-SilhouetteBodyTuneColourOnly`, `-ActingTuneColoursOnly`,
+`-GlassTuneColourOnly`, `-TeamSetupOnly` and `-PausedOptionsOnly` matrices
+passed, and the full run passed 716 checks, as it did after stage 7.
+`HYG#40` is complete.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 
@@ -661,9 +1036,24 @@ input, the engine-free shared contracts with an include check like the engine's
 
 ### Release package rules runnable locally (`CI#6`)
 
-Move the Release ZIP inspection out of `ci.yml` into
-`scripts/check-release-package.ps1`, which CI calls, and set up the MSVC
-environment once per job.
+**Done 2026-10-30.** The Release ZIP inspection is now
+[check-release-package.ps1](../scripts/check-release-package.ps1), the same
+rules unchanged: no development files or unreviewed audio, the sixteen required
+files, the bank's hash against `scripts/audio/runtime-bank.json` and none of the
+sixteen developer-console RTTI names. It extracts into `-OutputDirectory`
+(default `out/validation/release-package`, relative paths following the
+caller's location), replacing only the `ColourWars-windows-x64` folder it
+extracts, so it reruns locally after `--target package`. CI's inspection step
+calls it with `$RUNNER_TEMP/ColourWars-release`, the folder the startup steps
+already read. [export-msvc-environment.ps1](../scripts/ci/export-msvc-environment.ps1)
+replaces the job's `Find vcvars64` step: it runs `vcvars64.bat` once and writes
+every variable it adds or changes to `GITHUB_ENV`, so the ten `call
+"%VCVARS%"` lines are gone and every later step has the environment those
+steps built (including whatever `VCPKG_ROOT` vcvars leaves, as before). Locally
+the package check passed twice on a fresh Release ZIP (34 checks, 66 files) and
+refused a copy with a stray `.pdb`; the export script, run with
+`-EnvironmentFile`, wrote 42 variables including `INCLUDE`, `LIB` and `Path`.
+The hosted run is the first test of the CI wiring.
 
 ## Open shortlist (2026-10-29)
 

@@ -15,6 +15,9 @@ namespace
     using namespace mattmath;
     using paint_surfaces_acceptance::require;
 
+    // The bot seed srand(8301) gave before HYG#39.
+    constexpr unsigned int runtime_seed = 27146;
+
     class World
     {
     public:
@@ -27,12 +30,13 @@ namespace
                 info->validate(); levels.add(stage, std::move(info));
             }
         }
-        std::unique_ptr<Level> build(MatchSetup settings)
+        std::unique_ptr<Level> build(MatchSetup settings, unsigned int seed = 0)
         {
             viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
                 &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
-            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(seed));
         }
         paint_surfaces_acceptance::World assets;
         Registry<LevelLoadedInfo> levels{ "bot-runtime" };
@@ -73,7 +77,7 @@ namespace
                 // cases, while per-seat enum/data coverage lives in bot_driver.
                 const auto difficulty = static_cast<BotDifficulty>(cases % 3);
                 const MatchSetup settings = roster(count, mask, difficulty);
-                std::srand(8301); auto level = world.build(settings);
+                auto level = world.build(settings, runtime_seed);
                 require(level->player_count() == count && level->view_count() == settings.human_count(),
                     "Runtime conflated participants and human views");
                 int view = 0;
@@ -185,7 +189,7 @@ namespace
         MatchSetup settings = roster(4, 5, BotDifficulty::hard); // P1/P3 humans, P2/P4 bots.
         settings.set_stage("movement_course");
         settings.set_player_weapon(1, WeaponType::sprayer); settings.set_player_weapon(3, WeaponType::roller);
-        std::srand(8301); auto level = world.build(settings);
+        auto level = world.build(settings, runtime_seed);
         std::vector<PlayerInputData> physical(input_slots::count);
         for (auto& input : physical) { input.connected = true; }
         const float step = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
@@ -226,7 +230,7 @@ namespace
             replay_codec::same(tape.seats(tape.steps() - 1)[1], observer.last[1]),
             "Recording did not capture the final shipping bot input");
         // Playback directly replaces inputs, even though fresh bot drivers exist.
-        std::srand(8301); auto replay_level = world.build(settings);
+        auto replay_level = world.build(settings, runtime_seed);
         for (int tick = 0; tick < 900 && replay_level->state() != LevelState::active; ++tick)
         { replay_level->update(physical, step); }
         ReplayPlayer player("shipping-bots", recorder.file());

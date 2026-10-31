@@ -1718,6 +1718,37 @@ checks the shipped and largest looks only.
 The case does not decide the marquee's look, size, colours or one-frame trail.
 Those remain the `POL#39` `DECISION`.
 
+### Footer band over the overlay papers (`POL#45`)
+
+Found 2026-10-30 while putting menu geometry in one place (`HYG#37`, see
+[code-hygiene.md](code-hygiene.md#menu-page-geometry-in-one-place-hyg37)).
+`MenuPage::draw_chrome` draws the footer band from `menu_style.chrome.footer_y`
+(960) to the bottom of the 1920x1080 design on every page, including the pages
+drawn over a match. The Pause and End papers are 900 tall and centred on the
+whole design, so they reach y 990, and the Results paper (860 tall) reaches
+970: the band covers their bottom 30 and 10 pixels. The menu pages' papers are
+centred above `footer_y` instead, and nothing in the reader or validators
+relates the overlay boxes to it. This is measured from `presentation.json` and
+the code, not yet looked at in a capture.
+
+Left, for the author: look at Pause, End and Results at 1/2/4P and say whether
+the overlap is intended. If not, the choices are shorter overlay papers, centring
+them above the footer as the menu pages are, or not drawing the band over a
+match; each is a `presentation.json` or one-function change in
+[menu_geometry](../game/menu_geometry.h), plus a validator rule that keeps the
+chosen relation.
+
+A second overlay question, found 2026-10-31 while making the validator check
+the practice Pause layout: practice Pause puts its five rows (Resume, Tool,
+Restart, Options, Quit) 96 pixels apart (0.8 of the 120 row spacing), but a
+shipped item's focus card is 113 tall (77 text plus 2 x 18 focus padding), so
+neighbouring focus cards overlap by 17 pixels. Only one card is drawn at a time,
+so the overlap shows only as a focused card reaching into its neighbours' text.
+The validator checks the practice rows against the paper only, because the
+normal row rule would refuse the shipped file. Left, for the author: look at
+practice Pause and say whether that is fine; if not, widen the spacing, shrink
+the padding for that page, or drop a row, and the validator takes the row rule.
+
 ### Help players read the tool and the fight
 
 The current [weapon update](../game/objects/weapon.cpp) distinguishes ammunition

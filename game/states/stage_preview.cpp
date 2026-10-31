@@ -4,7 +4,7 @@
 #include "game/game_data.h"
 #include "game/objects/level_object_builder.h"
 #include "game/objects/structure.h"
-#include "game/states/menu_page.h"
+#include "game/menu_geometry.h"
 
 using namespace labrador;
 using namespace mattmath;
@@ -81,8 +81,7 @@ void StagePreview::draw(DrawList& draw_list) const
 	// MenuPage uses this same fit for every UI layer. Derive the physical
 	// preview pane from it, preserving letterboxing and arbitrary window sizes.
 	const Viewport fullscreen = this->data_->viewport_manager()->fullscreen_viewport();
-	const Camera menu_camera = Camera::frame(
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
+	const Camera menu_camera = Camera::frame(menu_geometry::design_area(), fullscreen);
 	RectangleF pane = menu_camera.calculate_view_rectangle(this->rectangle_);
 	pane.offset(fullscreen.position());
 	const Viewport viewport(pane);

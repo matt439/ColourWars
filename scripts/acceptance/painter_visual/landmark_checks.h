@@ -283,8 +283,8 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
             for (int view = 1; view < count; ++view) { require(settings.claim_input_slot(view - 1), "Landmark story sparse claim failed"); }
             for (int view = 0; view < count; ++view) { settings.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(view, WeaponType::roller); }
             app.viewport_manager()->set_layout(settings.screen_layout());
-            std::srand(6203); auto actual = builder.build_level(settings, TeamColourPair::blue_orange, count == 1 ? OpeningMode::off : OpeningMode::full);
-            std::srand(6203); auto missing = without.build_level(settings, TeamColourPair::blue_orange, count == 1 ? OpeningMode::off : OpeningMode::full);
+            auto actual = builder.build_level(settings, TeamColourPair::blue_orange, count == 1 ? OpeningMode::off : OpeningMode::full, MatchRandom(6203));
+            auto missing = without.build_level(settings, TeamColourPair::blue_orange, count == 1 ? OpeningMode::off : OpeningMode::full, MatchRandom(6203));
             const auto inputs = neutral_inputs();
             const auto step = [&]
             {

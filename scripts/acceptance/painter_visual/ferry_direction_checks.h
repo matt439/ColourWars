@@ -41,13 +41,22 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
     PlayerBuilder player_builder(&tuning, &presentation);
     for (auto& player : player_builder.build_players(settings, &info, colours, app.render_resources(),
         app.audio_resources(), &preferences, app.viewport_manager())) { players.push_back(scene->add(std::move(player))); }
-    auto level = std::make_unique<Level>(std::move(scene), std::move(players),
-        objects.build_viewport_dividers(app.viewport_manager()), colours, info.camera_bounds_rectangle(),
-        info.zoom_out_start_bounds_rectangle(), info.zoom_out_finish_bounds_rectangle(), &tuning, &presentation,
-        L"Ferry direction inspection", info.sound_bank_name(), info.music_name(), info.music_volume(),
-        info.end_sting_name(), info.end_sting_volume(), app.resolution_manager(), app.viewport_manager(),
-        app.render_resources(), app.audio_resources(), &preferences, info.stations(), OpeningMode::off,
-        settings.duration(), nullptr, &settings);
+    auto level = std::make_unique<Level>(
+        LevelWorld{ .scene = std::move(scene), .players = std::move(players),
+            .viewport_dividers = objects.build_viewport_dividers(app.viewport_manager()) },
+        LevelServices{ .tuning = &tuning, .presentation = &presentation,
+            .render_resources = app.render_resources(), .audio_resources = app.audio_resources(),
+            .resolution_manager = app.resolution_manager(), .viewport_manager = app.viewport_manager(),
+            .preferences = &preferences, .input_bindings = nullptr },
+        LevelStage{ .name = L"Ferry direction inspection", .camera_bounds = info.camera_bounds_rectangle(),
+            .zoom_out_start_bounds = info.zoom_out_start_bounds_rectangle(),
+            .zoom_out_finish_bounds = info.zoom_out_finish_bounds_rectangle(),
+            .audio = { .sound_bank_name = info.sound_bank_name(), .music_name = info.music_name(),
+                .music_volume = info.music_volume(), .end_sting_name = info.end_sting_name(),
+                .end_sting_volume = info.end_sting_volume() },
+            .stations = info.stations() },
+        LevelMatch{ .team_colours = colours, .opening = OpeningMode::off, .duration = settings.duration(),
+            .roster = &settings });
     return { std::move(level), ferry };
 }
 

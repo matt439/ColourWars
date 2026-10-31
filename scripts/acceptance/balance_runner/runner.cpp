@@ -9,6 +9,7 @@
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/weapon_feedback.h"
+#include "game/presentation.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/sound_bank.h"
@@ -110,10 +111,9 @@ namespace balance_runner
                 }
                 // Keep each seat unclaimed (-1): BotDriver addresses views,
                 // while PlayerBuilder allocates distinct device-less paint owners.
-                // These must remain sequential: gameplay also uses global rand().
-                std::srand(seed);
                 this->viewports_.set_layout(settings.screen_layout());
-                return this->builder_->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+                return this->builder_->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                    MatchRandom(seed));
             }
 
         private:
@@ -131,6 +131,20 @@ namespace balance_runner
             std::unique_ptr<LevelBuilder> builder_;
         };
 
+        // The shipping driver as one of MetricsSeats' interchangeable filters:
+        // it reads the world only through Level::bot_world.
+        class MatchSeats final : public SeatInputFilter
+        {
+        public:
+            explicit MatchSeats(std::unique_ptr<MatchBotDriver> driver) : driver_(std::move(driver)) {}
+            void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override
+            { this->driver_->drive(seats, level.bot_world()); }
+            const MatchBotDriver* driver() const { return this->driver_.get(); }
+
+        private:
+            std::unique_ptr<MatchBotDriver> driver_;
+        };
+
         // This is the existing active-logic input seam, not a per-frame or
         // countdown clock. The bot's just-produced fire intent is sampled with
         // the actual full-shot affordability state before the world advances.
@@ -145,8 +159,9 @@ namespace balance_runner
                     // which a roster cannot express: P1 stays its human host.
                     std::vector<std::optional<BotDifficulty>> seats(options.difficulties.begin(),
                         options.difficulties.end());
-                    auto driver = std::make_unique<MatchBotDriver>(&tuning, seats, seed);
-                    this->match_ = driver.get();
+                    auto driver = std::make_unique<MatchSeats>(
+                        std::make_unique<MatchBotDriver>(&tuning, seats, seed));
+                    this->match_ = driver->driver();
                     this->bots_ = std::move(driver);
                 }
                 else

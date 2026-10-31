@@ -1,27 +1,15 @@
 #include "game/pch.h"
 #include "game/presentation_read.h"
-#include "game/build_info.h"
 #include "game/content_value.h"
 
 #include "engine/assets/json.h"
-#include "engine/render/text_encoding.h"
-#include "engine/render/resolution_manager.h"
-#include "game/drawable_text.h"
-#include "game/input_slots.h"
-#include "game/objects/player_badge.h"
-#include "game/resource_validation.h"
-#include "game/states/ui_player_badge.h"
-#include "game/text_wrap.h"
-#include "engine/render/sprite_geometry.h"
 
+#include <array>
 #include <cmath>
-#include <initializer_list>
-#include <limits>
-#include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
+#include <string>
 #include <utility>
+#include <vector>
 
 // Readers for the in-match and visual sections of presentation.json: HUD,
 // identity, feedback, figure, respawn, opening and the debug overlay.
@@ -288,9 +276,9 @@ namespace presentation_read
 			tool.enabled = false;
 		}
 		const JsonValue profiles = json.object("tools");
-		const auto read_tool = [&](WeaponType type, const char* name)
+		const auto read_tool = [&](WeaponType type)
 		{
-			const JsonValue profile = profiles.object(name);
+			const JsonValue profile = profiles.object(weapon_name(type));
 			IdleDripPresentation& tool = tools.at(static_cast<size_t>(type));
 			tool.enabled = drip.enabled;
 			tool.interval_min = read_positive(profile, "interval_min");
@@ -306,9 +294,9 @@ namespace presentation_read
 					": intervals must be ordered and keylines must leave visible paint.");
 			}
 		};
-		read_tool(WeaponType::sprayer, "sprayer");
-		read_tool(WeaponType::sniper, "sniper");
-		read_tool(WeaponType::bucket, "bucket");
+		read_tool(WeaponType::sprayer);
+		read_tool(WeaponType::sniper);
+		read_tool(WeaponType::bucket);
 		return tools;
 	}
 
@@ -345,13 +333,13 @@ namespace presentation_read
 				": 'keyline_width' must leave visible fill inside 'status_size'.");
 		}
 		const JsonValue sizes = json.object("muzzle_sizes");
-		const std::array<const char*, 5> names = { "sprayer", "sniper", "roller", "mister", "bucket" };
-		for (size_t index = 0; index < names.size(); ++index)
+		for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
 		{
-			const Vector2F size = read_positive_vector(sizes, names[index]);
+			const char* const name = WEAPON_NAMES[index];
+			const Vector2F size = read_positive_vector(sizes, name);
 			if (feedback.keyline_width * 2.0f >= std::min(size.x, size.y))
 			{
-				throw std::runtime_error(sizes.object(names[index]).where() +
+				throw std::runtime_error(sizes.object(name).where() +
 					": 'keyline_width' must leave visible fill inside the muzzle size.");
 			}
 			feedback.muzzle_sizes[index] = size;
@@ -420,10 +408,9 @@ namespace presentation_read
 		motion.bucket_travel_per_swing = read_positive(json, "bucket_travel_per_swing");
 		motion.bucket_settle_time = read_positive(json, "bucket_settle_time");
 		const JsonValue tools = json.object("tools");
-		const std::array<const char*, 5> names = { "sprayer", "sniper", "roller", "mister", "bucket" };
-		for (size_t index = 0; index < names.size(); ++index)
+		for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
 		{
-			const JsonValue tool = tools.object(names[index]);
+			const JsonValue tool = tools.object(WEAPON_NAMES[index]);
 			motion.tools[index] = { read_positive(tool, "shot_recovery"),
 				read_positive(tool, "valve_time") };
 		}
@@ -512,10 +499,9 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": 'hand_edge' must leave an interior in 'hand_size'.");
 		}
 		const JsonValue grips = json.object("grips");
-		const std::array<const char*, 5> keys = { "sprayer", "sniper", "roller", "mister", "bucket" };
-		for (size_t index = 0; index < keys.size(); ++index)
+		for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
 		{
-			const JsonValue grip = grips.object(keys[index]);
+			const JsonValue grip = grips.object(WEAPON_NAMES[index]);
 			figure.grips[index] = { read_vector(grip, "rear"), read_vector(grip, "front") };
 		}
 		return figure;

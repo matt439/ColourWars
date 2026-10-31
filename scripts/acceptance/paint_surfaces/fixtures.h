@@ -5,6 +5,7 @@
 #include "game/objects/level_builder.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/projectile_spray.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
@@ -90,9 +91,11 @@ namespace paint_surfaces_acceptance
             settings.set_player_weapon(0, WeaponType::sprayer); settings.set_player_weapon(1, WeaponType::sprayer);
             settings.begin_input_claims(0);
             require(settings.claim_input_slot(1), "Cannot claim the second real input slot");
+            // Kept for the probes that fold the next rand() into their state.
             std::srand(seed);
             viewports_.set_layout(settings.screen_layout());
-            return builder_->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return builder_->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(seed));
         }
         GameTuning tuning;
         Presentation presentation;

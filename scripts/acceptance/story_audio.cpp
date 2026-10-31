@@ -208,7 +208,7 @@ namespace
 				players == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
 			settings.set_duration(duration);
 			this->viewports.set_layout(settings.screen_layout());
-			this->level = this->builder->build_level(settings, TeamColourPair::blue_orange, opening);
+			this->level = this->builder->build_level(settings, TeamColourPair::blue_orange, opening, MatchRandom());
 		}
 
 		int plays(const std::string& name) const

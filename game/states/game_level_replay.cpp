@@ -41,10 +41,11 @@ void GameLevel::start_replay()
 	// been backed out of.
 	const MatchSetup& round = this->tape_.settings();
 	this->data()->viewport_manager()->set_layout(round.screen_layout());
-	std::srand(this->tape_.seed());
-	// The tape starts at the first step of play, which needs no intro.
-	this->level_ = this->level_builder_->build_level(round,
-		this->data()->save()->team_palette(), OpeningMode::off, this->start_ == MatchStart::menu);
+	// The tape starts at the first step of play, which needs no intro. The
+	// round's seed and palette preference rebuild its colours: the save's
+	// may have changed since, as Paused Options keeps a built arena.
+	this->level_ = this->level_builder_->build_level(round, this->round_palette_,
+		OpeningMode::off, MatchRandom(this->tape_.seed()), this->start_ == MatchStart::menu);
 	this->level_->set_pad_devices(round.pad_devices());
 	this->level_->set_player_cheats(this->tape_.damage_immune(), this->tape_.infinite_ammo());
 	this->level_->start_without_countdown();

@@ -1,7 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/team_colour.h"
 
-#include "game/presentation.h"
+#include "game/presentation_match.h"
+#include "game/objects/match_random.h"
 using namespace labrador;
 
 TeamColour::TeamColour(const Colour& team_a, const Colour& team_b)
@@ -23,9 +24,14 @@ const Colour& TeamColour::team_colour(PlayerTeam team) const
 	}
 }
 
-TeamColour TeamColourTools::generate_random_team_colour(const TeamPalettePresentation& palette)
+TeamColour TeamColourTools::generate_random_team_colour(const TeamPalettePresentation& palette,
+	const MatchRandom& random)
 {
-	return palette.random_pair(static_cast<size_t>(rand())).colours;
+	if (palette.pairs.empty()) { throw std::invalid_argument("No team palette pairs to draw"); }
+	BotRandom draw = random.palette();
+	// Reduced in 64 bits before narrowing, so a 32-bit size_t draws the same.
+	const std::uint64_t pairs = static_cast<std::uint64_t>(palette.pairs.size());
+	return palette.random_pair(static_cast<size_t>(draw.next() % pairs)).colours;
 }
 
 TeamColour TeamColourTools::team_colours(TeamColourPair team_colour,
@@ -33,7 +39,17 @@ TeamColour TeamColourTools::team_colours(TeamColourPair team_colour,
 {
 	if (team_colour == TeamColourPair::random)
 	{
-		return generate_random_team_colour(palette);
+		throw std::invalid_argument("The Random team palette is drawn from a round's MatchRandom");
+	}
+	return palette.fixed_pair(team_colour).colours;
+}
+
+TeamColour TeamColourTools::team_colours(TeamColourPair team_colour,
+	const TeamPalettePresentation& palette, const MatchRandom& random)
+{
+	if (team_colour == TeamColourPair::random)
+	{
+		return generate_random_team_colour(palette, random);
 	}
 	return palette.fixed_pair(team_colour).colours;
 }

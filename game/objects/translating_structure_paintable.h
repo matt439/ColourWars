@@ -3,7 +3,7 @@
 #include "game/objects/horizontal_motion.h"
 #include "game/objects/structure_paintable.h"
 
-class Level;
+class LevelStructures;
 class Projectile;
 struct FerryDirectionPresentation;
 
@@ -75,7 +75,7 @@ public:
     const TranslatingStructurePaintable* mover() const override { return this; }
 
 private:
-    friend class Level;
+    friend class LevelStructures;
     friend class Projectile;
     void bind_motion_id(HorizontalMotionId id);
     HorizontalPreparedStep prepare_motion(float dt) const;

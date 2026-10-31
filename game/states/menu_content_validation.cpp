@@ -6,7 +6,6 @@
 #include "game/states/main_menu.h"
 
 using namespace mattmath;
-using namespace menu_consts;
 using namespace labrador;
 
 void validate_mode_stage_rules(RenderResources* render, const Presentation& presentation)
@@ -14,11 +13,8 @@ void validate_mode_stage_rules(RenderResources* render, const Presentation& pres
 	const MenuStyle& style = presentation.menu();
 	const MainMenuPresentation& look = presentation.main_menu();
 	const MenuText& text = presentation.menu_text();
-	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-		look.setup_box_size);
-	MenuPaperArtPresentation art = look.art;
-	art.focus_padding = look.setup_focus_padding;
-	art.shadow_offset = look.setup_shadow_offset;
+	const RectangleF panel = menu_geometry::footer_paper(look.setup_box_size, style.footer_y);
+	const MenuPaperArtPresentation art = menu_geometry::setup_art(look);
 	for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
 	{
 		const std::wstring& value = text.series_stage_value(rule);
@@ -36,11 +32,8 @@ void validate_mode_durations(RenderResources* render,
 	const MenuStyle& style = presentation.menu();
 	const MainMenuPresentation& look = presentation.main_menu();
 	const MenuText& text = presentation.menu_text();
-	const RectangleF panel((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
-		look.setup_box_size);
-	MenuPaperArtPresentation art = look.art;
-	art.focus_padding = look.setup_focus_padding;
-	art.shadow_offset = look.setup_shadow_offset;
+	const RectangleF panel = menu_geometry::footer_paper(look.setup_box_size, style.footer_y);
+	const MenuPaperArtPresentation art = menu_geometry::setup_art(look);
 	const auto check = [&](float seconds, bool use_default)
 	{
 		const std::string where = std::string("presentation.json: menu_text.values.") +

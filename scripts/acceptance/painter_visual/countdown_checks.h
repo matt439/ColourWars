@@ -97,8 +97,8 @@ std::unique_ptr<Level> countdown_level(Application& app, LevelBuilder& builder,
         settings.set_player_weapon(view, WeaponType::roller);
     }
     app.viewport_manager()->set_layout(settings.screen_layout());
-    std::srand(9409 + count);
-    return builder.build_level(settings, TeamColourPair::blue_orange, opening);
+    return builder.build_level(settings, TeamColourPair::blue_orange, opening,
+        MatchRandom(static_cast<unsigned int>(9409 + count)));
 }
 
 bool stage_entry_empty(const RectangleF& bounds)

@@ -37,7 +37,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 	FailurePhase phase = FailurePhase::preferences;
 	try
 	{
-		// Seed before stage, weapon, or palette selection uses rand().
+		// Seed the menus' Random picks (teams, weapon, stage) and the draw of
+		// each round's seed; a build itself draws only from MatchRandom.
 		std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
 		Save save;

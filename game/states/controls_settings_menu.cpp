@@ -27,14 +27,14 @@ void ControlsSettingsMenu::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
 	this->set_prompts(MenuPrompt::controls);
 	this->build_panel(style);
-	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
-		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
+	const Vector2F value_limit(
+		menu_geometry::settings_action_width(look, this->calculate_widget_position(1, 0).x),
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
 	const auto fit_action = [&look](UiText* widget)
 	{
 		const RectangleF bounds = widget->bounds();
 		widget->set_scale(std::min({ 1.0f,
-			(look.controls_position.x - look.art.focus_padding.x * 2.0f - look.art.shadow_offset - bounds.x) / bounds.width,
+			menu_geometry::settings_action_width(look, bounds.x) / bounds.width,
 			(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / bounds.height }));
 	};
 	this->add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
@@ -170,8 +170,8 @@ void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& co
 	this->status_->set_colour(colour);
 	this->status_->set_scale(1.0f);
 	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	const float available = this->paper_->rectangle().right() - look.art.shadow_offset -
-		look.art.focus_padding.x - look.status_position.x;
+	const float available = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
+		look.status_position.x;
 	if (this->status_->bounds().width > available)
 	{
 		this->status_->set_scale(available / this->status_->bounds().width);

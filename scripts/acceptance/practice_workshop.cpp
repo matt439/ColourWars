@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
@@ -103,7 +104,7 @@ namespace
             }
             this->viewports.set_layout(settings.screen_layout());
             return this->builder->build_level(settings, TeamColourPair::blue_orange,
-                OpeningMode::off, practice);
+                OpeningMode::off, MatchRandom(), practice);
         }
     };
 

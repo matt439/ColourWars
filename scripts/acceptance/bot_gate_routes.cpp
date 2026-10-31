@@ -319,7 +319,7 @@ namespace
         {
             require(level.team_gates()[0]->open_for() == expected,
                 "The integrated driver observed the wrong side of gate settlement");
-            driver.filter_seats(seats, level);
+            driver.drive(seats, level.bot_world());
             last = seats[1];
             for (PlayerInputData& seat : seats) { seat = {}; seat.connected = true; }
         }

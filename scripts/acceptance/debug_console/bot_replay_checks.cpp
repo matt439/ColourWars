@@ -153,14 +153,14 @@ namespace debug_console_acceptance
 		require_same_recording(humans, ReplayFile::read(path));
 		const std::string current = read_text(path);
 		const std::string metadata = ", \"controller\": \"human\", \"difficulty\": \"normal\"";
-		for (const int legacy_version : { 3, 4 })
+		for (const int legacy_version : { 3, 4, 5 })
 		{
-			std::string legacy = replace_once(current, "\"version\": 5", "\"version\": " + std::to_string(legacy_version));
+			std::string legacy = replace_once(current, "\"version\": 6", "\"version\": " + std::to_string(legacy_version));
 			while (legacy.find(metadata) != std::string::npos) { legacy = replace_once(legacy, metadata, ""); }
 			write_text(path, legacy);
 			std::string error;
 			try { ReplayFile::read(path); } catch (const std::exception& failure) { error = failure.what(); }
-			require(error.find("format version " + std::to_string(legacy_version) + "; this build reads only 5") !=
+			require(error.find("format version " + std::to_string(legacy_version) + "; this build reads only 6") !=
 				std::string::npos, "A human-only legacy recording was not refused by version: " + error);
 		}
 
@@ -186,8 +186,9 @@ namespace debug_console_acceptance
 		rejects(replace_once(valid, "\"slot\": 0", "\"slot\": 5"), "out-of-range human device");
 		rejects(replace_once(valid, "\"slot\": 0", "\"slot\": -2"), "invalid unclaimed human device");
 		rejects(replace_once(valid, "\"layout\": 1", "\"layout\": 2"), "participant layout instead of human layout");
-		rejects(replace_once(valid, "\"version\": 5", "\"version\": 3"), "new metadata in old schema");
-		rejects(replace_once(valid, "\"version\": 5", "\"version\": 4"), "new metadata in the previous schema");
+		rejects(replace_once(valid, "\"version\": 6", "\"version\": 3"), "new metadata in old schema");
+		rejects(replace_once(valid, "\"version\": 6", "\"version\": 4"), "new metadata in an earlier schema");
+		rejects(replace_once(valid, "\"version\": 6", "\"version\": 5"), "the previous schema, whose seed was optional");
 
 		write_text(path, "existing recording");
 		MatchSetup invalid_roster = mixed.tape.settings();

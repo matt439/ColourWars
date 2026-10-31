@@ -258,15 +258,15 @@ Vector2F MenuPage::calculate_center_position(
 	const Vector2F& resolution)
 {
 	return {
-		(resolution.x - widget_size.x) / 2.0f,
-		(resolution.y - widget_size.y) / 2.0f
+		menu_geometry::centred(widget_size.x, resolution.x),
+		menu_geometry::centred(widget_size.y, resolution.y)
 	};
 }
 
 float MenuPage::calculate_center_position(
 	float widget_size, float resolution)
 {
-	return (resolution - widget_size) / 2.0f;
+	return menu_geometry::centred(widget_size, resolution);
 }
 
 MenuContext* MenuPage::menu_context() const
@@ -363,12 +363,10 @@ void MenuPage::draw_chrome(DrawList& list) const
 	list.set_filter(TextureFilter::point);
 
 	// Frame the controls consistently, including menus layered over a match.
-	sheet->draw(list, this->chrome_pixel_, RectangleF(0.0f, style.footer_y,
-		menu_consts::DESIGN_RESOLUTION.x, menu_consts::DESIGN_RESOLUTION.y - style.footer_y),
+	sheet->draw(list, this->chrome_pixel_, menu_geometry::footer_band(style),
 		style.scrim_colour);
-	sheet->draw(list, this->chrome_pixel_, RectangleF(style.brand_position.x,
-		style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f,
-		style.rule_height), style.panel_edge_colour);
+	sheet->draw(list, this->chrome_pixel_, menu_geometry::footer_rule(style),
+		style.panel_edge_colour);
 
 	// Use the focus group's result, so the backing follows keyboard, pad,
 	// disabled rows and compound option rows without duplicating navigation.
@@ -399,8 +397,7 @@ Vector2F MenuPage::float_resolution() const
 // and monitors with a different aspect ratio.
 Camera MenuPage::ui_camera() const
 {
-	return Camera::frame(
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+	return Camera::frame(menu_geometry::design_area(),
 		this->viewport_manager()->fullscreen_viewport());
 }
 

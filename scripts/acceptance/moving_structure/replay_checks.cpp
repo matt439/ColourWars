@@ -54,12 +54,13 @@ namespace
         return fixture;
     }
 
-    // Independent literal version-5 wire control; the dynamic domain stays absent.
-    // The version-3 literal (with the old zero shorthand) and version 4, which
-    // added roster metadata, are refused by version.
+    // Independent literal version-6 wire control; the dynamic domain stays absent.
+    // The version-3 literal (with the old zero shorthand), version 4, which
+    // added roster metadata, and version 5, whose seed was optional, are
+    // refused by version.
     void legacy_bytes(const std::filesystem::path& path)
     {
-        ReplayFile file = header(); file.build = "legacy"; file.dt_bits = 0; file.seed.reset();
+        ReplayFile file = header(); file.build = "legacy"; file.dt_bits = 0; file.seed = 0;
         MatchSetup untimed = file.tape.settings(); untimed.set_duration(std::nullopt); file.tape.start(0, untimed);
         file.final_print.seats.emplace_back();
         const std::string expected =
@@ -80,18 +81,23 @@ namespace
         version_4.replace(version_4.find(old_seat), old_seat.size(),
             "\"weapon\": \"sprayer\", \"controller\": \"human\", \"difficulty\": \"normal\" }");
         // Version 5 lists gaps in place of suspends and one input array per participant.
-        std::string current = version_4;
-        current.replace(current.find("\"version\": 4"), 12, "\"version\": 5");
+        std::string version_5 = version_4;
+        version_5.replace(version_5.find("\"version\": 4"), 12, "\"version\": 5");
         const std::string old_tape = "\"suspends\": [],\n  \"inputs\": [\n  ],";
-        current.replace(current.find(old_tape), old_tape.size(), "\"gaps\": [],\n  \"inputs\": [\n    []\n  ],");
-        file.write(path); require(read_text(path) == current, "Static version-5 replay bytes changed");
+        version_5.replace(version_5.find(old_tape), old_tape.size(), "\"gaps\": [],\n  \"inputs\": [\n    []\n  ],");
+        // Version 6 always writes the round seed (HYG#39).
+        std::string current = version_5;
+        current.replace(current.find("\"version\": 5"), 12, "\"version\": 6");
+        const std::string old_dt = "\"dt\": \"0\",\n";
+        current.replace(current.find(old_dt), old_dt.size(), old_dt + "  \"seed\": \"0\",\n");
+        file.write(path); require(read_text(path) == current, "Static version-6 replay bytes changed");
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = 1; file.final_print.seats[0].step_paint_team = 2;
         std::string active = current;
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL36-only version-5 replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL36-only version-6 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
@@ -99,14 +105,20 @@ namespace
         write_text(path, current);
         const ReplayFile static_read = ReplayFile::read(path);
         require(!static_read.final_print.horizontal_motion && static_read.tape.settings().human_count() == 1 &&
-            static_read.tape.settings().bot_count() == 0, "Static domain or bot appeared on version-5 read");
+            static_read.tape.settings().bot_count() == 0 && static_read.seed == 0,
+            "Static domain, bot or seed changed on version-6 read");
         // A replay holds only on the build that recorded it: older versions are refused, not read.
-        for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 } })
+        for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 }, std::pair{ version_5, 5 } })
         {
             write_text(path, text);
             throws_with([&] { static_cast<void>(ReplayFile::read(path)); },
-                "format version " + std::to_string(version) + "; this build reads only 5");
+                "format version " + std::to_string(version) + "; this build reads only 6");
         }
+        // The seed is required: a version-6 file without one is refused.
+        std::string seedless = current;
+        seedless.erase(seedless.find("  \"seed\": \"0\",\n"), std::string("  \"seed\": \"0\",\n").size());
+        write_text(path, seedless);
+        throws_with([&] { static_cast<void>(ReplayFile::read(path)); }, "'seed' is missing");
     }
 
     std::uint64_t legacy_hash(const Level& level, int updates)

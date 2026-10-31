@@ -125,6 +125,10 @@ private:
 	// seconds, plays those and returns to the End menu.
 	RoundTape tape_;
 	RoundTapeRecorder tape_recorder_{ &this->tape_ };
+	// The palette preference the round was built with. Paused Options can
+	// save another mid-round and keep the built arena, so the replay rebuilds
+	// with this one rather than the save's (HYG#39).
+	TeamColourPair round_palette_ = TeamColourPair::blue_orange;
 	enum class ReplayPhase { none, preparing, playing };
 	ReplayPhase replay_phase_ = ReplayPhase::none;
 	std::unique_ptr<RoundTapePlayer> replay_player_;

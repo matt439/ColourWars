@@ -159,8 +159,8 @@ namespace turbulence_slab_stage_acceptance
             const auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
                 &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);
-            std::srand(260026u);
-            const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            const auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(260026u));
             require(level->player_count() == count && level->state() == LevelState::start_countdown,
                 "Public registered slab build lost its cold roster/count-in");
             std::set<std::size_t> moving_sources;

@@ -27,7 +27,7 @@ void UserStageRefusalsMenu::init()
 	this->body_bounds_ = layout.body;
 	this->progress_bounds_ = layout.progress;
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
-		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
+		menu_geometry::design_area(), this->render_resources(),
 		CrudeDrawing::premultiplied(main.home_background_colour));
 	this->paper_ = std::make_unique<MenuPaperArtwork>(layout.paper, this->render_resources(),
 		&style, &main.art, &this->focus_);

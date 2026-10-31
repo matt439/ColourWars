@@ -193,7 +193,7 @@ namespace
                 count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
             settings.set_duration(duration);
             world.viewports.set_layout(settings.screen_layout());
-            world.level = world.builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            world.level = world.builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
             world.until([&] { return world.level->state() == LevelState::active; });
             for (int index = 0; index < count; ++index)
             {

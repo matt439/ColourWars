@@ -2,6 +2,7 @@
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/weapon_feedback.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
@@ -91,7 +92,7 @@ namespace
                 settings.set_player_weapon(view, tools.at(static_cast<size_t>(view)));
             }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, opening);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, opening, MatchRandom());
         }
     };
 

@@ -1,33 +1,15 @@
 #include "game/pch.h"
 #include "game/presentation_validation.h"
-#include "game/build_info.h"
-#include "game/content_value.h"
-
-#include "engine/assets/json.h"
-#include "engine/render/text_encoding.h"
-#include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
-#include "game/input_slots.h"
-#include "game/player_profiles.h"
-#include "game/objects/player_badge.h"
-#include "game/resource_validation.h"
-#include "game/controls_text.h"
-#include "game/states/ui_player_badge.h"
-#include "game/text_wrap.h"
-#include "engine/render/sprite_geometry.h"
+#include "game/menu_geometry.h"
 
 #include <cmath>
-#include <initializer_list>
-#include <limits>
-#include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
+#include <string>
+#include <vector>
 
 using namespace labrador;
 using namespace mattmath;
-using namespace content_value;
 using namespace presentation_read;
 using namespace presentation_validation;
 
@@ -102,14 +84,12 @@ void Presentation::validate_stage_counts(const RenderResources& render, size_t t
 	const Vector2F shadow = this->menu_.detail_shadow_offset;
 	const float edge = main.art.keyline_width * 3.0f;
 	const float inset = edge + main.setup_shadow_offset;
-	const RectangleF outer((Vector2F(1920.0f, this->menu_.footer_y) - main.stage_box_size) / 2.0f,
-		main.stage_box_size);
-	const RectangleF inside(outer.position() + Vector2F(edge),
-		outer.size() - Vector2F(edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.stage_box_size, this->menu_.footer_y), menu_geometry::setup_art(main));
 	const RectangleF briefing(stage.briefing.position, stage.briefing.size);
 	RectangleF preview_edge(stage.preview_position, stage.preview_size);
 	preview_edge.inflate(this->menu_.rule_height);
-	const RectangleF design(0.0f, 0.0f, 1920.0f, 1080.0f);
+	const RectangleF design = menu_geometry::design_area();
 	const std::string navigation_key = "menu_text.stage.numbered_navigation";
 	// Check every actual index: proportional digits and carried bearings can
 	// make an earlier number wider than the final one. The zero-based offset

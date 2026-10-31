@@ -23,6 +23,7 @@ full.
 | [check-acceptance-selection.ps1](check-acceptance-selection.ps1) | checks the runner's case selection rules without CMake, a compiler or the helper |
 | [check-acceptance-process.ps1](check-acceptance-process.ps1) | qualifies the helper's ownership, deadlines, logging and cancellation with isolated processes |
 | [check-path.ps1](check-path.ps1) | dot-sourced helper that resolves explicit output paths against the caller's location |
+| [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
 
 [acceptance/](acceptance/) holds one `.cpp` per case, a same-named folder of
 its checks where it has one, and [acceptance/support/probe.h](acceptance/support/probe.h)
@@ -57,6 +58,7 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 |---|---|
 | [sandbox-release.ps1](sandbox-release.ps1), [sandbox/](sandbox/) | prepares, and optionally runs, a Windows Sandbox trial of the Release ZIP (`ROAD#37`) |
 | [check-sandbox-release.ps1](check-sandbox-release.ps1) | checks that generator's output on the host without starting a sandbox |
+| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash and no developer-console RTTI (`CI#6`; CI's inspection step) |
 
 ## Content builds
 
@@ -71,5 +73,5 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 | Folder | What |
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
-| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the Markdown link check, and their tests |
+| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
 | [perf/](perf/) | frame-pacing analysis and its test |

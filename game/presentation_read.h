@@ -16,9 +16,6 @@
 namespace presentation_read
 {
 	// JsonValue provides source context for missing keys and wrong types.
-	inline constexpr std::array<const char*, WeaponSelectArtworkPresentation::CHOICES> weapon_choice_keys{
-		"sprayer", "sniper", "roller", "mister", "bucket", "random"
-	};
 	inline constexpr std::array<const char*, static_cast<size_t>(MenuHeading::count)> menu_heading_keys{
 		"home", "options", "credits", "controls_audio", "pad_sticks", "players", "join_players",
 		"mode", "teams", "weapons", "arena"

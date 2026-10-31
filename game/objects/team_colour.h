@@ -30,14 +30,22 @@ enum class TeamColourPair
 };
 
 struct TeamPalettePresentation;
+class MatchRandom;
 
 class TeamColourTools
 {
 public:
 	TeamColourTools() = default;
 
-	static TeamColour generate_random_team_colour(const TeamPalettePresentation& palette);
+	// One pair from the round's palette stream (HYG#39).
+	static TeamColour generate_random_team_colour(const TeamPalettePresentation& palette,
+		const MatchRandom& random);
 
+	// A fixed pair's colours. Random has none until a round draws it, so it
+	// is refused here; a match passes its MatchRandom to the form below.
 	static TeamColour team_colours(TeamColourPair team_colour, const TeamPalettePresentation& palette);
+	// A match's colours: the fixed pair, or Random drawn from `random`.
+	static TeamColour team_colours(TeamColourPair team_colour, const TeamPalettePresentation& palette,
+		const MatchRandom& random);
 	static const char* palette_key(TeamColourPair palette);
 };

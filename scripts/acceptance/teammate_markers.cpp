@@ -2,6 +2,7 @@
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/teammate_marker.h"
+#include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
@@ -115,7 +116,7 @@ namespace
                 settings.set_player_weapon(static_cast<int>(seat), WeaponType::sprayer);
             }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
         }
     };
 

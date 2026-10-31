@@ -272,7 +272,7 @@ namespace
 		LevelBuilder builder(&world.viewports, &world.render, &world.audio, &world.preferences, &world.levels,
 			&shortened, &world.presentation, &world.resolution, nullptr, &world.partitioner);
 		world.begin = recorded_sounds(world.device).size();
-		auto short_level = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::full);
+		auto short_level = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::full, MatchRandom());
 		short_level->request_intro_skip();
 		short_level->update(world.idle, 0.001f);
 		short_level->update(world.idle, 0.001f);
@@ -316,7 +316,7 @@ namespace
 			&world.tuning, &world.presentation, &world.resolution, nullptr, &world.partitioner);
 		const auto silent_calls = recorded_sounds(world.device).size();
 		{
-			auto silent = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::off);
+			auto silent = builder.build_level(music_mix_settings(), TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
 			silent->update(world.idle, 0.001f);
 			silent->update_music(world.presentation.music_mix().fade_in);
 			silent->set_music_ducked(true);

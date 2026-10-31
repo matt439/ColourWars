@@ -47,7 +47,7 @@ The `game/` root mixes several concerns:
 
 | Concern | Files (examples) |
 |---|---|
-| Configuration and content checks | `tuning*`, `presentation*`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
+| Configuration and content checks | `tuning*`, `presentation*`, `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators), `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
 | Persistence | `save*`, `save_section.h`, `settings_session`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings.h` |
 | Input | `action_bindings`, `input_bindings`, `input_slots.h`, `player_control.h`, `controls_text` |
 | Rumble and display | `rumble*`, `rumble_xinput.cpp`, `display_awake` |
@@ -78,6 +78,11 @@ What holds at `272ecb75`:
 - **No file-level include cycles**, and nothing in `objects/`, `ai/` or
   `carried/` includes a `states/` header.
 - **`carried/` depends on nothing in the game** but the precompiled header.
+- **`ai/` sees a match only through [BotWorld](../game/ai/bot_world.h)**
+  (since `HYG#40`): it reaches `objects/` through value headers and the
+  `paintable_object.h` interface, never `Level`, `Player`, `Weapon` or a gate.
+  `Level` implements the interface with its owned `LevelBotWorld` and owns the
+  `MatchBotDriver`, so the remaining edge runs one way, `objects/` to `ai/`.
 - **`objects/`, `ai/` and `carried/` never name `GameData`.** The states unpack
   it into the builders' constructors, and the builders hand each object only
   what it uses; that is why the probes can build a real `Level` against fakes.
@@ -91,19 +96,20 @@ What holds at `272ecb75`:
   `HYG#33` the match step is `GameLevel`'s own `step_match`, called from its
   `update`; the director only says how many steps run and with which
   developer filter.
+- **Gameplay headers see only the in-match presentation.** `objects/` headers
+  include [presentation_match.h](../game/presentation_match.h), and `level.h`
+  and the builders forward-declare `Presentation`, so no `objects/` or `ai/`
+  header reaches the menu records. Ten `objects/` sources do, by including
+  `presentation.h` (or `presentation_menu_text.h`) themselves; since `HYG#38`
+  no presentation source includes a `states/` header.
 - **The editor sees only the contracts**: it includes eight of the nine
   contract headers (and `simulation.h` through `horizontal_motion_contract.h`),
   and `colourwars_level_document` compiles without the engine's include path.
 
 Where it does not hold yet:
 
-- `ai/` and `objects/` include each other: the bot driver reads `Level`,
-  `Weapon` and the team gate, and `level.cpp`/`level_audio.cpp` include
-  `match_bot_driver.h`. A world-query interface for the bots is part of
-  `HYG#40`.
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers,
-  `action_bindings.h` includes `states/menu_input_action.h`, and thirteen
-  presentation sources include `states/ui_player_badge.h` (`HYG#38`).
+  and `action_bindings.h` includes `states/menu_input_action.h`.
 - Nothing enforces the contract headers' independence; an include check is
   part of `HYG#51`. The engine's `check_engine_includes` target only stops the
   engine reaching into `game/`.
@@ -241,10 +247,27 @@ retirement, per-view render fan-out) are `labrador::Scene` in the engine, which
 [SeatCommandBuilder](../game/objects/seat_commands.h) maps slots to seats and
 resolves mouse aim, so the level never reads a device or the mouse.
 
+`Level` is built from owned parts, each of which keeps one concern's state
+and drawing: `LevelStructures` (the movers, team gates and projectile
+targets), `LevelBotWorld` (the [BotWorld](../game/ai/bot_world.h) the bots
+query), `MatchAudio` (the voices and the music), `CountdownCards`,
+`PaperCard`, `PracticeLessons`, `PlayerIdentityHud`, `TeammateMarkers`,
+`CursorMarkerOverlay` and, when the match has an intro, `MatchOpening` (the
+monitor, the person, the reveal and the figures' acting). `Level` keeps the
+match state, its timers and the order of update, draw and layout, so its
+`update`, `draw` and `refresh_layout` read as the match's sequence; a part that
+needs the state is handed it per call and returns a transition for `Level` to
+apply rather than writing it. The parts borrow the tuning and presentation and
+read them per call, so `tune` stays live.
+
 Construction goes through builders that read the level definition and the
 tuning and hand finished objects to the scene. `LevelBuilder` owns a
 `PlayerBuilder` (which owns a `WeaponBuilder`) and a `LevelObjectBuilder`; each
-`Weapon` owns the `ProjectileBuilder` it fires through.
+`Weapon` owns the `ProjectileBuilder` it fires through. `LevelBuilder` hands
+`Level` four records from
+[level_inputs.h](../game/objects/level_inputs.h): the world it owns (scene,
+players, dividers), the services and live records it borrows, what the stage
+says, and this round's decisions.
 
 ## Data
 
@@ -254,7 +277,7 @@ Four JSON files are read at startup, before any asset:
 |---|---|
 | `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
 | `tuning.json` | every number a match is balanced on ([game/tuning.h](../game/tuning.h)) |
-| `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/presentation.h](../game/presentation.h), with the menu-page layout records in [presentation_menu.h](../game/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/presentation_menu_text.h)) |
+| `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/presentation.h](../game/presentation.h), with the in-match records in [presentation_match.h](../game/presentation_match.h), the menu-page layout records in [presentation_menu.h](../game/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/presentation_menu_text.h)) |
 | `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records, in versioned `SaveSection`s ([game/save_section.h](../game/save_section.h)) |
 
 Tuning and presentation are two files for two audiences (a balance pass and an

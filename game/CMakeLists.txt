@@ -28,6 +28,7 @@ add_library(colourwars_game STATIC
     last_match_setup.cpp
     match_records.cpp
     match_setup.cpp
+    menu_geometry.cpp
     presentation.cpp
     presentation_menu_text.cpp
     presentation_read_match.cpp
@@ -35,10 +36,13 @@ add_library(colourwars_game STATIC
     presentation_validation.cpp
     presentation_validation_assets.cpp
     presentation_validation_catalog.cpp
+    presentation_validation_end.cpp
     presentation_validation_menu.cpp
     presentation_validation_metrics.cpp
+    presentation_validation_options.cpp
+    presentation_validation_pause.cpp
     presentation_validation_results.cpp
-    presentation_validation_roster.cpp
+    presentation_validation_settings.cpp
     presentation_validation_setup.cpp
     presentation_validation_stage.cpp
     presentation_validation_text.cpp
@@ -118,7 +122,8 @@ add_library(colourwars_game STATIC
     objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
-    objects/level_horizontal_motion.cpp
+    objects/level_structures.cpp
+    objects/level_bot_world.cpp
     objects/level_audio.cpp
     objects/level_dev_tools.cpp
     objects/level_draw.cpp
@@ -129,7 +134,15 @@ add_library(colourwars_game STATIC
     objects/level_intro.cpp
     objects/level_opening.cpp
     objects/level_practice.cpp
+    objects/paper_card.cpp
+    objects/practice_lessons.cpp
+    objects/cursor_marker_overlay.cpp
+    objects/teammate_markers.cpp
+    objects/player_identity_hud.cpp
     objects/match_voices.cpp
+    objects/match_audio.cpp
+    objects/countdown_cards.cpp
+    objects/match_opening.cpp
     objects/monitor.cpp
     objects/movement_audio.cpp
     objects/movement_feedback.cpp
@@ -165,6 +178,7 @@ add_library(colourwars_game STATIC
     objects/terrain_material.cpp
     objects/terrain_material_drawings.cpp
     objects/team_colour.cpp
+    objects/match_random.cpp
     objects/weapon.cpp
     objects/weapon_motion.cpp
     objects/weapon_feedback.cpp

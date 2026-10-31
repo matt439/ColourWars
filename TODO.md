@@ -48,8 +48,8 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#36`-`HYG#51`, `CI#6`) and the
-owed reports `ENG#27`-`ENG#33` are `OPEN`, in the order listed there. Before them,
+[Architecture review](#architecture-review) rows (`HYG#41`-`HYG#51`) are `OPEN`,
+in the order listed there; its owed reports `ENG#27`-`ENG#33` are drafted. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
@@ -81,6 +81,8 @@ comparison and physical-pad check; values remain provisional.
 - **Low-paint warning:** listen to the provisional cue in the 1/2/4P mix and look at the
   HUD tag and figure tank at 4P with sound muted (`POL#38`).
 - **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
+- **Overlay papers:** whether the footer band may cover the bottom of the Pause, End and
+  Results papers, and whether practice Pause's focus cards may overlap their neighbours (`POL#45`).
 - **Design-process draft:** accept or amend the personas, stories and journeys, the
   hypotheses they mark and the three unserved stories (`DES#1`); `DES#2` waits on it.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
@@ -102,8 +104,9 @@ comparison and physical-pad check; values remain provisional.
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
   (`GAP#5.1`).
-- **Report filing:** the registry-removal draft (`ENG#26`) needs separate author
-  authorization. `ENG#23` and `ENG#25` are answered on engine master and need no filing.
+- **Report filing:** the registry-removal draft (`ENG#26`) and the architecture-review
+  drafts (`ENG#27`-`ENG#30`, `ENG#33`) need separate author authorization. `ENG#23`,
+  `ENG#25`, `ENG#31` and `ENG#32` are answered on engine master and need no filing.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -114,14 +117,8 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#36` | OPEN | LOW | S | One name table for `WeaponType` and `ProjectileType` instead of eight hand-written mappings. [Scope](docs/code-hygiene.md#one-owner-for-weapon-and-projectile-names-hyg36). |
-| `HYG#37` | OPEN | MED | L | Compute menu page geometry in one module that the reader, the validator and the pages share. [Scope](docs/code-hygiene.md#menu-page-geometry-in-one-place-hyg37). |
-| `HYG#38` | OPEN | LOW | S | Trim the include block copied into 13 presentation sources and keep menu records out of gameplay includes. [Scope](docs/code-hygiene.md#presentation-includes-and-the-content-layer-hyg38). |
-| `HYG#39` | OPEN | MED | M | Pass an explicit match random stream into the level build instead of seeding the global `rand()`. [Scope](docs/code-hygiene.md#an-explicit-match-random-stream-hyg39). |
-| `HYG#40` | OPEN | MED | XL | Compose `Level` from owned parts: grouped constructor inputs, extracted collaborators and a world-query interface for the bots. [Scope](docs/code-hygiene.md#level-composed-of-owned-parts-hyg40). |
 | `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
 | `HYG#51` | OPEN | LOW | L | Last: give `game/` role folders, `game/debug` subsystem folders and the engine-free contracts an include check. [Scope](docs/code-hygiene.md#directories-by-role-hyg51). |
-| `CI#6` | OPEN | LOW | S | Move the Release ZIP inspection into a script CI calls, and set up MSVC once per job. [Scope](docs/code-hygiene.md#release-package-rules-runnable-locally-ci6). |
 
 ## Art direction, characters and the UI
 
@@ -147,6 +144,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DECISION | LOW | S | Built: menu solo practice on the Movement Course is untimed, with station lessons and a pause Tool row. Watch a fresh player use it, then keep or cut it and settle the lesson wording. [Workshop](docs/polish-movement-course.md#practice-workshop). |
 | `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
+| `POL#45` | DECISION | LOW | S | The footer band (from `footer_y` 960) covers the bottom 30 px of the Pause and End papers and 10 px of Results. Look at them at 1/2/4P and say whether that is intended; if not, pick shorter papers, centring above the footer or no band over a match. Also: practice Pause's focus cards (113 tall) overlap their 96 px rows by 17 px; fine or respace? [Record](docs/polish-plan.md#footer-band-over-the-overlay-papers-pol45). |
 | `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
 
 ## Levels and the editor
@@ -246,8 +244,8 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. `ENG#23` and `ENG#25` are answered on untagged master and wait on the next
-minor tag; `ENG#26` remains an unfiled draft. Minimal engine-focused reports with
+`GAP#F*`. `ENG#23`, `ENG#25`, `ENG#31` and `ENG#32` are answered on untagged master and
+wait on the next minor tag; `ENG#26` to `ENG#30` and `ENG#33` are unfiled drafts. Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -257,7 +255,8 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#25` | BLOCKED | LOW | S | Answered, narrowed, on untagged master by `cadc962` (`Gamepads::vibrate`; not in v0.2.0); no filing needed. Waits on the next Labrador minor tag, then replace the native XInput transport and close the report. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) |
 | `ENG#26` | DECISION | LOW | S | Rechecked 2026-10-29 at master `b96bad6`: `Registry` still cannot remove a name (`3a14f11` changed comments only). The ask narrows to forgetting the name, since `add(name, nullptr)` already empties a slot. Author authorization is needed to file. [Report](docs/review/engine-reports.md#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit) |
 | `ENG#23` | BLOCKED | LOW | S | Answered on untagged engine master by `42bc478` (not in v0.2.0); filing no longer needed. Waits on the next Labrador minor tag, then delete `SettingsProbeActivationGuard` and its five uses and close the report. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit) |
-| `ENG#27`-`ENG#33` | OPEN | LOW | M | Seven reports owed by the architecture review and `HYG#49`: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, unread JSON keys, word wrap, a contact's `const` other party. Recheck master, then draft each. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#27`-`ENG#30`, `ENG#33` | DECISION | LOW | S | Drafted 2026-10-30 against master `47be5a3`, each fact-checked: headless pad backend, removal without deprecation, typed `Scene` access, typed startup failure, a contact's `const` other party. Author authorization is needed to file. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#31`, `ENG#32` | BLOCKED | LOW | S | Answered on untagged master: `JsonValue::keys()` (`e166dcc`) and `Font::wrap` (`80024e5`), neither in v0.2.0; no filing needed. Waits on the next Labrador minor tag, then spend each as its report says. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

@@ -2,6 +2,7 @@
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/player_badge.h"
+#include "game/presentation.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
@@ -105,7 +106,7 @@ namespace
                 settings.set_player_weapon(view, tools.at(static_cast<size_t>(view)));
             }
             this->viewports.set_layout(settings.screen_layout());
-            return this->builder->build_level(settings, TeamColourPair::blue_orange, opening);
+            return this->builder->build_level(settings, TeamColourPair::blue_orange, opening, MatchRandom());
         }
     };
 

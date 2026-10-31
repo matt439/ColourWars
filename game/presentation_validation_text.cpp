@@ -1,35 +1,20 @@
 #include "game/pch.h"
 #include "game/presentation_validation.h"
-#include "game/build_info.h"
-#include "game/content_value.h"
-
-#include "engine/assets/json.h"
-#include "engine/render/text_encoding.h"
-#include "engine/render/resolution_manager.h"
 #include "game/drawable_text.h"
 #include "game/input_slots.h"
-#include "game/player_profiles.h"
-#include "game/objects/player_badge.h"
-#include "game/resource_validation.h"
-#include "game/controls_text.h"
-#include "game/states/ui_player_badge.h"
-#include "game/text_wrap.h"
-#include "engine/render/sprite_geometry.h"
+#include "game/menu_geometry.h"
 
+#include <array>
 #include <cmath>
-#include <initializer_list>
-#include <limits>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
+#include <string>
 
 using namespace labrador;
 using namespace mattmath;
-using namespace content_value;
 using namespace presentation_read;
 using namespace presentation_validation;
+using menu_consts::DESIGN_RESOLUTION;
 
 void Presentation::Validation::check_menu_line(const std::string& key, const std::wstring& text,
 	const std::string& font, const Vector2F& position, float bottom, const Vector2F& shadow) const
@@ -37,7 +22,7 @@ void Presentation::Validation::check_menu_line(const std::string& key, const std
 	const std::string where = this->presentation_.source_path_ + ": " + key;
 	drawable_text::check_font_can_draw(&render, font, text, where);
 	const Vector2F size = render.measure_text(render.resolve_sprite_font(font), text);
-	const float width = 1920.0f - position.x - this->presentation_.menu_.brand_position.x;
+	const float width = DESIGN_RESOLUTION.x - position.x - this->presentation_.menu_.brand_position.x;
 	const float height = bottom - position.y;
 	if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
 		position.x < 0.0f || position.y < 0.0f || !std::isfinite(width) || !std::isfinite(height) ||
@@ -52,8 +37,8 @@ void Presentation::Validation::check_menu_line(const std::string& key, const std
 }
 
 Vector2F Presentation::Validation::check_menu_item(MenuItem item, const std::string& font, const Vector2F& position,
-	const Vector2F& paper_size, float row_spacing, const std::optional<float>& label_width,
-	const MenuPaperArtPresentation& art, float content_height, bool uniform_fit) const
+	const RectangleF& paper, float row_spacing, const std::optional<float>& label_width,
+	const MenuPaperArtPresentation& art, bool uniform_fit) const
 {
 	const std::string where = this->presentation_.source_path_ + ": menu_text.items." +
 		menu_item_keys[static_cast<size_t>(item)];
@@ -87,8 +72,8 @@ Vector2F Presentation::Validation::check_menu_item(MenuItem item, const std::str
 		}
 		size *= scale;
 	}
-	const Vector2F top = (Vector2F(1920.0f, content_height) - paper_size) / 2.0f;
-	const Vector2F bottom = top + paper_size - Vector2F(art.shadow_offset);
+	const Vector2F top = paper.position();
+	const Vector2F bottom = top + paper.size() - Vector2F(art.shadow_offset);
 	if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
 		position.x - padding.x < top.x || position.y - padding.y < top.y ||
 		position.x + size.x + padding.x > bottom.x ||
@@ -150,7 +135,7 @@ void Presentation::Validation::check_fixed_paper(const std::string& key, Rectang
 	const Vector2F& paper_size, const Vector2F& padding) const
 {
 	bounds.inflate(padding);
-	const RectangleF paper((Vector2F(1920.0f, this->presentation_.menu_.footer_y) - paper_size) / 2.0f, paper_size);
+	const RectangleF paper = menu_geometry::footer_paper(paper_size, this->presentation_.menu_.footer_y);
 	if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !paper.contains(bounds))
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
@@ -216,7 +201,7 @@ RectangleF Presentation::Validation::check_stage_briefing(const RectangleF& stag
 		!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
 		bounds.width <= 0.0f || bounds.height <= 0.0f || bounds.y < stage_briefing.y ||
 		bounds.bottom() > stage_briefing.bottom() ||
-		!RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(bounds) || bounds.bottom() > next_top)
+		!menu_geometry::design_area().contains(bounds) || bounds.bottom() > next_top)
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 			" must fit unscaled inside the design area and briefing vertical span before the next authored row origin, including its shadow.");
@@ -224,12 +209,18 @@ RectangleF Presentation::Validation::check_stage_briefing(const RectangleF& stag
 	return bounds;
 }
 
-void Presentation::Validation::check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
+RectangleF Presentation::Validation::check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
 	float line, float next_line) const
+{
+	const RectangleF bounds = check_stage_briefing(stage_briefing, stage_info, role, text, font, line, next_line);
+	check_briefing_card(stage_briefing, std::string("menu_text.stage.") + role, bounds);
+	return bounds;
+}
+
+void Presentation::Validation::check_briefing_card(const RectangleF& stage_briefing, const std::string& key, RectangleF bounds) const
 {
 	const MainMenuPresentation& main = this->presentation_.main_menu_;
 	const StageSelectPresentation& stage = main.stage_select;
-	RectangleF bounds = check_stage_briefing(stage_briefing, stage_info, role, text, font, line, next_line);
 	// The page expands the briefing artwork around unscaled copy rather
 	// than fitting copy to its authored width. That expanded card must
 	// still fit the outer paper and remain separate from the preview.
@@ -237,10 +228,9 @@ void Presentation::Validation::check_stage_summary(const RectangleF& stage_brief
 	const float inset = edge + main.setup_shadow_offset;
 	bounds.inflate(inset);
 	const RectangleF card = RectangleF::union_of(stage_briefing, bounds);
-	const RectangleF outer((Vector2F(1920.0f, this->presentation_.menu_.footer_y) - main.stage_box_size) / 2.0f,
-		main.stage_box_size);
-	const RectangleF inside(outer.position() + Vector2F(edge),
-		outer.size() - Vector2F(edge * 2.0f + main.setup_shadow_offset));
+	const RectangleF inside = menu_geometry::paper_interior(
+		menu_geometry::footer_paper(main.stage_box_size, this->presentation_.menu_.footer_y),
+		menu_geometry::setup_art(main));
 	RectangleF preview(stage.preview_position, stage.preview_size);
 	preview.inflate(this->presentation_.menu_.rule_height);
 	const auto finite_rectangle = [](const RectangleF& rectangle)
@@ -255,7 +245,7 @@ void Presentation::Validation::check_stage_summary(const RectangleF& stage_brief
 		(card.x < preview.right() && card.right() > preview.x &&
 			card.y < preview.bottom() && card.bottom() > preview.y))
 	{
-		throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.stage." + role +
+		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 			" must keep the expanded briefing card inside the Stage paper and separate from the preview edge, including its retained artwork and shadow.");
 	}
 }

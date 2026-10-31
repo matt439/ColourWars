@@ -1,12 +1,18 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/presentation.h"
 #include "game/input_slots.h"
 #include "game/objects/structure.h"
 #include "game/objects/translating_structure_paintable.h"
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/simulation.h"
 #include "game/ai/match_bot_driver.h"
-#include "engine/math/intersects.h"
+#include "game/objects/level_bot_world.h"
+#include "game/objects/teammate_markers.h"
+#include "game/objects/player_identity_hud.h"
+#include "game/objects/match_audio.h"
+#include "game/objects/countdown_cards.h"
+#include "game/objects/match_opening.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -16,56 +22,27 @@ using namespace mattmath;
 using namespace labrador;
 
 
-namespace
+Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, LevelMatch round_setup) :
+	colourwars::SoundBankObject(stage.audio.sound_bank_name, services.audio_resources),
+	scene_(std::move(world.scene)),
+	players_(std::move(world.players)),
+	stations_(std::move(stage.stations)),
+	viewport_dividers_(std::move(world.viewport_dividers)),
+	resolution_manager_(services.resolution_manager),
+	viewport_manager_(services.viewport_manager),
+	cursor_marker_(services.presentation, services.resolution_manager),
+	team_colours_(round_setup.team_colours),
+	tuning_(services.tuning),
+	camera_bounds_(stage.camera_bounds),
+	zoom_out_start_bounds_(stage.zoom_out_start_bounds),
+	zoom_out_finish_bounds_(stage.zoom_out_finish_bounds)
 {
-    bool passable_gate(const CollisionObject* object, PlayerTeam team)
-    {
-        if (team == PlayerTeam::none) { return false; }
-        const Structure* structure = Collider::of(*object).structure();
-        return structure != nullptr && structure->passable_for(team);
-    }
-}
-
-Level::Level(std::unique_ptr<Scene> scene,
-	std::vector<Player*> players,
-	std::vector<std::unique_ptr<GameObject>> viewport_dividers,
-	const TeamColour& team_colours,
-	const RectangleF& camera_bounds,
-	const RectangleF& zoom_out_start_bounds,
-	const RectangleF& zoom_out_finish_bounds,
-	const GameTuning* tuning,
-	const Presentation* presentation,
-	const std::wstring& stage_name,
-	const std::string& sound_bank_name,
-	const std::string& music_name,
-	float music_volume,
-	const std::string& end_sting_name,
-	float end_sting_volume,
-	const ResolutionManager* resolution_manager,
-	const ViewportManager* viewport_manager,
-	RenderResources* render_resources,
-	const AudioResources* audio_resources,
-	const PlaySettings* preferences,
-	std::vector<LevelStation> stations,
-	OpeningMode opening, std::optional<float> duration, const InputBindings* input_bindings,
-	const MatchSetup* roster, std::uint64_t bot_seed, std::vector<LevelLesson> lessons) :
-	colourwars::SoundBankObject(sound_bank_name, audio_resources),
-	scene_(std::move(scene)),
-	players_(std::move(players)),
-	stations_(std::move(stations)),
-	viewport_dividers_(std::move(viewport_dividers)),
-	music_volume_(music_volume),
-	end_sting_volume_(end_sting_volume),
-	resolution_manager_(resolution_manager),
-	viewport_manager_(viewport_manager),
-	team_colours_(team_colours),
-	tuning_(tuning),
-	camera_bounds_(camera_bounds),
-	zoom_out_start_bounds_(zoom_out_start_bounds),
-	zoom_out_finish_bounds_(zoom_out_finish_bounds)
-{
-	this->preferences_ = preferences;
-	this->input_bindings_ = input_bindings;
+	const GameTuning* tuning = services.tuning;
+	const Presentation* presentation = services.presentation;
+	RenderResources* render_resources = services.render_resources;
+	const AudioResources* audio_resources = services.audio_resources;
+	const MatchSetup* roster = round_setup.roster;
+	this->preferences_ = services.preferences;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
 	this->roster_.resize(this->players_.size());
@@ -76,7 +53,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->roster_ = roster->player_settings();
 	}
 	this->participant_views_.assign(this->players_.size(), -1);
-	this->bot_identity_texts_.resize(this->players_.size());
+	this->identity_ = std::make_unique<PlayerIdentityHud>(presentation, render_resources,
+		services.preferences, this->players_.size());
 	for (std::size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
 		if (this->roster_[participant].controller == PlayerController::human)
@@ -86,28 +64,20 @@ Level::Level(std::unique_ptr<Scene> scene,
 		}
 		else
 		{
-			this->bot_identity_texts_[participant] = std::make_unique<Text>(
-				presentation->menu_text().bot_roster_label(static_cast<int>(participant),
-					this->roster_[participant].difficulty), presentation->hud().player_identity_font,
-				Vector2F::ZERO, render_resources, presentation->player_identity().ink_colour);
+			this->identity_->add_bot_text(participant, this->roster_[participant].difficulty);
 		}
 	}
 	if (this->view_participants_.empty())
 	{ throw std::invalid_argument("Level requires at least one human view"); }
+	this->bot_world_ = std::make_unique<LevelBotWorld>(*this->scene_, this->players_, this->structures_);
 	if (roster != nullptr && roster->bot_count() != 0)
-	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, bot_seed); }
-	const MenuStyle& menu = presentation->menu();
-	const CountdownArtPresentation& paper = presentation->match().countdown_art;
-	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage_name,
-		menu.heading_font, Vector2F::ZERO, render_resources,
-		paper.ink, paper.paper, menu.heading_shadow_offset);
-	this->player_badge_ = std::make_unique<PlayerBadge>(
-		&presentation->player_identity(), render_resources);
-	this->player_identity_remaining_.assign(this->players_.size(),
-		presentation->player_identity().emphasis_duration);
-	this->teammate_marker_ = std::make_unique<TeammateMarker>(
-		&presentation->hud().teammate_marker, render_resources);
-	this->teammate_marker_age_.assign(this->view_participants_.size() * this->players_.size(), 0.0f);
+	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, round_setup.random.bot_seed()); }
+	this->cards_ = std::make_unique<CountdownCards>(stage.name, &tuning->match(), presentation,
+		this->resolution_manager_, render_resources, services.input_bindings);
+	this->identity_->create_badge();
+	this->teammate_markers_ = std::make_unique<TeammateMarkers>(&presentation->hud(), render_resources,
+		this->viewport_manager_, services.preferences,
+		this->view_participants_.size(), this->players_.size());
 	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources);
 	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
 		&presentation->blocked_shot(), render_resources);
@@ -121,87 +91,45 @@ Level::Level(std::unique_ptr<Scene> scene,
 		{
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
 				&presentation->idle_drip(type), render_resources, player->team_colour(),
-				static_cast<uint32_t>(this->idle_drips_.size()), preferences));
+				static_cast<uint32_t>(this->idle_drips_.size()), services.preferences));
 		}
 		this->idle_drips_.push_back(drip);
 	}
-	this->overlay_sheet_ = render_resources->resolve_sprite_sheet(
-		presentation->hud().sprite_sheet);
-	this->overlay_fill_ = render_resources->sprite_sheet(this->overlay_sheet_)
-		->resolve_sprite_frame(presentation->hud().fill_frame);
+	this->paper_ = PaperCard(presentation, this->resolution_manager_, render_resources);
 	const MatchTuning& match = tuning->match();
 
-	this->timer_ = duration.value_or(match.duration);
+	this->timer_ = round_setup.duration.value_or(match.duration);
 	this->start_timer_ = match.countdown;
 	this->zoom_out_timer_ = match.zoom_out;
 	this->overview_timer_ = match.overview;
 
 	this->debug_text_ = std::make_unique<DebugText>(
-		render_resources, resolution_manager,
+		render_resources, services.resolution_manager,
 		&presentation->debug_overlay());
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
 		render_resources, &presentation->hud(), &presentation->player_identity());
-	this->refresh_identity_texts();
-	// A silent stage leaves music_ unresolved; a voice with no effect does
-	// nothing, and the music paths that would wait on it check first.
-	const auto voice = [&](const std::string& effect)
-	{ return MatchVoice(sound_bank_name, audio_resources, effect); };
-	this->music_ = MusicVoice(this, sound_bank_name, audio_resources, music_name);
-	this->end_sting_ = voice(end_sting_name);
-	this->zoom_out_sound_ = voice(match.zoom_out_sound.name);
-	this->countdown_sound_ = voice(match.countdown_sound.name);
-	this->go_sound_ = voice(match.go_sound.name);
-	this->time_up_sound_ = voice(match.time_up_sound.name);
-	this->last_ten_sound_ = voice(match.last_ten_sound.name);
-	this->room_tone_sound_ = voice(match.room_tone_sound.name);
-	this->sigh_sound_ = voice(match.sigh_sound.name);
-	this->chair_sound_ = voice(match.chair_sound.name);
-	this->glass_in_sound_ = voice(match.glass_in_sound.name);
-	this->celebrate_sound_ = voice(match.celebrate_sound.name);
-	this->slump_sound_ = voice(match.slump_sound.name);
-	this->colour_in_sound_ = voice(match.colour_in_sound.name);
-	this->skip_sound_ = voice(match.skip_sound.name);
-	this->undo_sound_ = voice(match.undo_sound.name);
-	// The order every pause, resume and teardown has always taken: the level's
-	// voices, then each player's tool loop and redraw pen, in roster order.
-	for (MatchVoice* own : { static_cast<MatchVoice*>(&this->end_sting_),
-		static_cast<MatchVoice*>(&this->music_), &this->zoom_out_sound_,
-		&this->countdown_sound_, &this->go_sound_, &this->time_up_sound_,
-		&this->last_ten_sound_, &this->room_tone_sound_, &this->sigh_sound_,
-		&this->chair_sound_, &this->glass_in_sound_, &this->celebrate_sound_,
-		&this->slump_sound_, &this->colour_in_sound_, &this->skip_sound_,
-		&this->undo_sound_ })
-	{
-		this->voices_.add(*own);
-	}
+	this->identity_->refresh_texts(this->players_, this->roster_);
+	// Resolves and registers the level's voices in their fixed order; each
+	// player's tool loop and redraw pen follow, in roster order.
+	this->audio_ = std::make_unique<MatchAudio>(stage.audio, audio_resources, &match, presentation);
 	for (Player* player : this->players_)
 	{
-		player->add_voices(this->voices_);
+		player->add_voices(this->audio_->voices());
 	}
 
-	if (opening != OpeningMode::off)
+	if (round_setup.opening != OpeningMode::off)
 	{
-		const OpeningPresentation& look = presentation->opening();
-		this->monitor_ = std::make_unique<Monitor>(&look, render_resources,
-			MonitorPersona::roll(look));
-		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
-		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
-		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),
-			render_resources);
-		this->reveal_text_ = presentation->menu_text().results;
-		this->reveal_art_ = std::make_unique<RevealArt>(&look, render_resources);
-		this->hover_sound_ = this->resolve_wave(match.hover_sound.name);
-		this->click_sound_ = this->resolve_wave(match.click_sound.name);
-		this->close_sound_ = this->resolve_wave(match.close_sound.name);
+		// Rolls the person, makes the monitor and the rest, resolves the
+		// reveal's waves and greys the figures, in the order this always did.
+		this->opening_ = std::make_unique<MatchOpening>(services, stage.audio.sound_bank_name,
+			&this->team_colours_, this->audio_.get(), round_setup.random.persona(),
+			round_setup.opening == OpeningMode::quick, this->players_);
 		this->state_ = LevelState::opening;
-		// A quick rematch starts with the colours being tried.
-		this->opening_time_ = opening == OpeningMode::quick ? match.opening.settle : 0.0f;
-		this->colour_players(false, false);
 	}
 
-	this->lessons_ = std::move(lessons);
-	this->build_lesson_cards(render_resources);
-	this->build_opening_frame(render_resources);
+	this->lessons_ = PracticeLessons(std::move(stage.lessons), tuning, presentation,
+		render_resources);
+	this->build_opening_frame();
 }
 
 void Level::update(const std::vector<PlayerInputData>& commands, float dt,
@@ -212,15 +140,23 @@ void Level::update(const std::vector<PlayerInputData>& commands, float dt,
     if (this->has_horizontal_motion())
     {
         HorizontalMotion::validate_dt(dt);
-        if (dt > 0.0f) { horizontal.emplace(this->prepare_horizontal_frame(dt)); }
-        this->publish_horizontal_zero();
+        if (dt > 0.0f)
+        {
+            horizontal.emplace(this->structures_.prepare(
+                dt, *this->scene_, this->players_, this->tuning_->player()));
+        }
+        this->structures_.publish_zero(this->players_);
     }
 	this->refresh_layout();
 	this->simulation_dt_ = dt;
 	if (dt > 0.0f)
 	{
 		this->update_state(commands, dt, seats, horizontal ? &*horizontal : nullptr);
-		this->update_acting(dt);
+		// Chooses each figure's act for this moment and poses it.
+		if (this->opening_ != nullptr)
+		{
+			this->opening_->update_acting(dt, this->opening_clock(), this->players_);
+		}
 	}
 	this->intro_skip_requested_ = false;
 
@@ -255,7 +191,13 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 {
 	if (this->state_ == LevelState::opening)
 	{
-		this->update_opening(dt);
+		const MatchOpening::Step step = this->opening_->update_opening(
+			dt, this->skip_requested(), this->players_);
+		if (step != MatchOpening::Step::stay)
+		{
+			this->state_ = LevelState::start_countdown;
+			this->intro_countdown_ = step == MatchOpening::Step::intro_countdown;
+		}
 		return;
 	}
 	if (this->intro_countdown_ && this->skip_requested())
@@ -269,11 +211,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		if (starting)
 		{
 			this->countdown_started_ = true;
-			if (this->music_.valid())
-			{
-				this->music_fade_.fade_to(1.0f, this->presentation_->music_mix().fade_in);
-				this->music_.play(true, 0.0f);
-			}
+			this->audio_->start_music();
 		}
 		const float before = this->start_timer_;
 		this->start_timer_ -= dt;
@@ -283,8 +221,8 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			this->start_timer_ <= this->tuning_->match().opening.push)
 		{
 			this->glass_in_started_ = true;
-			this->set_room_tone(false);
-			this->glass_in_sound_.play(false,
+			this->audio_->set_room_tone(false);
+			this->audio_->glass_in_sound().play(false,
 				this->tuning_->match().glass_in_sound.volume);
 		}
 		// One cue for the displayed number, including the initial beat. A long
@@ -293,25 +231,25 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			(starting ||
 				std::ceil(before) != std::ceil(this->start_timer_)))
 		{
-			this->countdown_sound_.play(false,
+			this->audio_->countdown_sound().play(false,
 				this->tuning_->match().countdown_sound.volume);
 		}
 		if (this->start_timer_ > 0.0f)
 		{
-			this->set_countdown_text(std::to_wstring(
+			this->cards_->set_label(std::to_wstring(
 				static_cast<int>(std::ceil(this->start_timer_))));
 		}
 		else
 		{
-			this->set_countdown_text(L"GO!");
+			this->cards_->set_label(L"GO!");
 		}
 
 		if (this->start_timer_ <= 0.0f)
 		{
 			if (this->state_ == LevelState::start_countdown)
 			{
-				this->countdown_sound_.stop();
-				this->go_sound_.play(false,
+				this->audio_->countdown_sound().stop();
+				this->audio_->go_sound().play(false,
 					this->tuning_->match().go_sound.volume);
 			}
 			this->state_ = LevelState::active;
@@ -326,7 +264,12 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 	if (this->state_ == LevelState::active)
 	{
 		this->update_level_logic(commands, dt, seats, horizontal);
-		this->update_active_lesson();
+		if (this->practice())
+		{
+			// Practice is solo, so the one human view is the one being taught.
+			this->lessons_.update(*this->players_.at(
+				static_cast<size_t>(this->view_participants_.front())));
+		}
 		// Practice has no clock to run out; the player leaves from pause.
 		if (this->practice()) { return; }
 
@@ -337,7 +280,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		if (this->timer_ > 0.0f && second <= 10.0f && second != this->last_ten_second_)
 		{
 			this->last_ten_second_ = second;
-			this->last_ten_sound_.play(false,
+			this->audio_->last_ten_sound().play(false,
 				this->tuning_->match().last_ten_sound.volume);
 		}
 		if (this->timer_ <= 0.0f)
@@ -349,16 +292,8 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			// already renders the newly entered state this frame.
 			this->zoom_out_camera_ = this->zoom_out_start_camera_;
 
-			if (this->music_.valid())
-			{
-				this->music_ending_ = true;
-				this->music_fade_.fade_to(0.0f, this->presentation_->music_mix().fade_out);
-			}
-			if (this->end_sting_.valid())
-			{
-				this->end_sting_.play(false,
-					this->end_sting_volume_);
-			}
+			this->audio_->end_music();
+			this->audio_->play_end_sting();
 			this->stop_player_sounds();
 			for (Player* player : this->players_)
 			{
@@ -368,14 +303,15 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			{
 				if (drip != nullptr) { drip->clear(); }
 			}
-			this->countdown_sound_.stop();
-			this->go_sound_.stop();
-			this->last_ten_sound_.stop();
-			this->time_up_sound_.play(false,
+			this->audio_->countdown_sound().stop();
+			this->audio_->go_sound().stop();
+			this->audio_->last_ten_sound().stop();
+			this->audio_->time_up_sound().play(false,
 				this->tuning_->match().time_up_sound.volume);
-			this->zoom_out_sound_.play(false,
+			this->audio_->zoom_out_sound().play(false,
 				this->tuning_->match().zoom_out_sound.volume);
-			this->start_reveal();
+			// The scene's coverage is counted only when someone will reveal it.
+			if (this->opening_ != nullptr) { this->opening_->start_reveal(this->level_end_info()); }
 		}
 	}
 	else if (this->state_ == LevelState::zoom_out)
@@ -387,8 +323,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			this->state_ = LevelState::overview;
 			this->zoom_out_timer_ = 0.0f;
 			// Even a shortened glass transition leaves the returning person silent.
-			if (this->music_.valid()) { this->music_.stop(); }
-			if (this->end_sting_.valid()) { this->end_sting_.stop(); }
+			this->audio_->stop_arena();
 			// Let the glass cue's tail finish naturally; destruction still owns it.
 		}
 
@@ -397,9 +332,12 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 			this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 			this->zoom_out_camera_ratio());
 	}
-	else if (this->state_ == LevelState::overview && this->monitor_ != nullptr)
+	else if (this->state_ == LevelState::overview && this->opening_ != nullptr)
 	{
-		this->update_reveal(dt);
+		if (this->opening_->update_reveal(dt, this->players_))
+		{
+			this->state_ = LevelState::finished;
+		}
 	}
 	else if (this->state_ == LevelState::overview)
 	{
@@ -435,15 +373,15 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	{
 		was_dead[participant] = this->players_[participant]->state() == PlayerState::dead;
 	}
-	this->update_player_identity(dt);
+	this->identity_->decay(dt);
 	// Run the scene phases in order, with game-specific work between them.
 	this->paint_audio_->update(dt);
 	this->blocked_shot_feedback_->update(dt);
 	this->apply_player_inputs(commands, seats);
-    if (horizontal != nullptr) { this->commit_horizontal_frame(*horizontal); }
+    if (horizontal != nullptr) { this->structures_.commit(*horizontal, this->players_); }
 	// Before any of this step's movement or paint, so a gate follows the
 	// paint held before the step and its overlap test sees where players are.
-	this->settle_team_gates();
+	this->structures_.settle_gates(this->players_);
 
 	this->scene_->update(dt);
 	this->resolve_projectile_movement();
@@ -467,7 +405,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	for (Player* player : this->players_)
 	{
         if (this->has_horizontal_motion())
-        { player->end_contacts(this->scene_->contacts(), this->horizontal_supports_); }
+        { player->end_contacts(this->scene_->contacts(), this->structures_.supports()); }
         else { player->end_contacts(this->scene_->contacts()); }
 	}
 
@@ -476,8 +414,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	{
 		if (was_dead[participant] && this->players_[participant]->state() == PlayerState::alive)
 		{
-			this->player_identity_remaining_[participant] =
-				this->presentation_->player_identity().emphasis_duration;
+			this->identity_->emphasise(participant);
 		}
 	}
 	this->update_idle_drips(dt);
@@ -488,7 +425,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 
 	// Count once per tick for all debug overlays.
 	this->projectile_count_ = this->count_projectiles();
-	this->update_teammate_markers(dt);
+	this->teammate_markers_->update(dt, this->players_, this->view_participants_);
 
 	// Players must remain in the arena; unlike projectiles, they cannot be retired.
 	for (const Player* player : this->players_)
@@ -511,7 +448,7 @@ void Level::apply_player_inputs(
 
 	if (this->bot_driver_ != nullptr && (seats == nullptr || !seats->replaces_bot_inputs()))
 	{
-		this->bot_driver_->filter_seats(by_participant, *this);
+		this->bot_driver_->drive(by_participant, *this->bot_world_);
 	}
 	if (seats != nullptr)
 	{
@@ -547,7 +484,7 @@ void Level::update_idle_drips(float dt)
 				!player.input().jump_held && !player.input().jump_pressed &&
 				player.animation_state() == PlayerAnimationState::idle;
 			drip->advance(settled, weapon.nozzle_pos(), weapon.rotation(), dt,
-				this->projectile_targets_);
+				this->structures_.projectile_targets());
 		}
 	}
 }
@@ -559,7 +496,7 @@ void Level::update_players(float dt)
 	{
 		for (std::unique_ptr<Projectile>& projectile :
 			player->update_weapon_and_get_projectiles(
-				dt, this->projectile_targets_))
+				dt, this->structures_.projectile_targets()))
 		{
 			// The game keeps the projectile interface until Scene takes ownership
 			// through its engine collision interface.
@@ -576,7 +513,7 @@ void Level::resolve_projectile_movement()
 	{
 		if (Projectile* projectile = Collider::of(*object).projectile())
 		{
-			projectile->resolve_movement_contacts(this->projectile_targets_);
+			projectile->resolve_movement_contacts(this->structures_.projectile_targets());
 		}
 	}
 }
@@ -612,7 +549,7 @@ void Level::set_debug_frame_time(double frame_ms)
 void Level::refresh_layout()
 {
 	this->refresh_station_labels();
-	this->refresh_keyboard_controls();
+	this->cards_->refresh_controls();
 	const Vector2F size = this->resolution_manager_->resolution_vec();
 	if (size == this->layout_size_)
 	{
@@ -627,9 +564,8 @@ void Level::refresh_layout()
 	this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
 		this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 		this->zoom_out_camera_ratio());
-	this->centre_countdown_text();
-	this->centre_controls_text();
-	this->centre_lesson_cards();
+	this->cards_->centre(this->paper_);
+	this->lessons_.centre(this->paper_);
 	this->refresh_player_cameras();
 	this->refresh_views();
 	this->layout_size_ = size;
@@ -664,7 +600,7 @@ void Level::refresh_views()
 		(this->state_ != LevelState::start_countdown && this->state_ != LevelState::active);
 	// These existing stable targets include every structure and player, but no
 	// retiring projectile. This is mode configuration, not a draw-order mirror.
-	for (CollisionObject* object : this->projectile_targets_)
+	for (CollisionObject* object : this->structures_.projectile_targets())
 	{
 		if (Structure* structure = Collider::of(*object).structure())
 		{
@@ -675,7 +611,8 @@ void Level::refresh_views()
 
 	if (this->intro_showing() || this->reveal_showing())
 	{
-		this->add_intro_views();
+		this->opening_->add_intro_views(*this->scene_, this->view_participants_,
+			this->players_, this->opening_clock());
 		return;
 	}
 
@@ -736,75 +673,37 @@ BotDifficulty Level::bot_difficulty(int participant) const
 
 std::wstring_view Level::bot_identity(int participant) const
 {
-	const std::unique_ptr<Text>& text = this->bot_identity_texts_.at(static_cast<std::size_t>(participant));
-	return text == nullptr ? std::wstring_view{} : text->text();
+	return this->identity_->bot_identity(static_cast<std::size_t>(participant));
+}
+
+const BotWorld& Level::bot_world() const
+{
+	return *this->bot_world_;
 }
 
 std::vector<RectangleF> Level::bot_obstacles(PlayerTeam team) const
 {
-	std::vector<RectangleF> bounds;
-	for (const CollisionObject* object : this->projectile_targets_)
-	{
-		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
-			!passable_gate(object, team))
-		{ bounds.push_back(object->shape()->bounding_box()); }
-	}
-	return bounds;
+	return this->bot_world_->obstacles(team);
 }
 
 std::vector<MatchBotSupport> Level::bot_supports(PlayerTeam team) const
 {
-	std::vector<MatchBotSupport> supports;
-	// The target list is fixed for the match, so a position in it is a stable
-	// identity even for a support that moves.
-	std::uint32_t id = 0;
-	for (const CollisionObject* object : this->projectile_targets_)
-	{
-		++id;
-		const Structure* structure = Collider::of(*object).structure();
-		if (structure != nullptr && structure->flat() && object->shape() != nullptr &&
-			!passable_gate(object, team))
-		{
-			supports.push_back({ object->shape()->bounding_box(),
-				structure->jump_through(), structure->paintable() != nullptr, id,
-				structure->mover() != nullptr });
-		}
-	}
-	return supports;
+	return this->bot_world_->supports(team);
 }
 
 std::vector<MatchBotRamp> Level::bot_ramps() const
 {
-	std::vector<MatchBotRamp> ramps;
-	for (const CollisionObject* object : this->projectile_targets_)
-	{
-		const CollisionObjectType type = to_collision_type(object->tag());
-		if (is_structure_ramp(type) && object->shape() != nullptr)
-		{
-			ramps.push_back({ object->shape()->bounding_box(),
-				type == CollisionObjectType::structure_ramp_right });
-		}
-	}
-	return ramps;
+	return this->bot_world_->ramps();
 }
 
 bool Level::bot_line_of_sight(Vector2F from, Vector2F to) const
 {
-	return this->bot_traversal_line_of_sight(from, to, PlayerTeam::none);
+	return this->bot_world_->line_of_sight(from, to);
 }
 
 bool Level::bot_traversal_line_of_sight(Vector2F from, Vector2F to, PlayerTeam team) const
 {
-	if (!std::isfinite(from.x) || !std::isfinite(from.y) ||
-		!std::isfinite(to.x) || !std::isfinite(to.y)) { return false; }
-	const Segment sight(from, to);
-	for (const CollisionObject* object : this->projectile_targets_)
-	{
-		if (is_structure(to_collision_type(object->tag())) && object->shape() != nullptr &&
-			!passable_gate(object, team) &&
-			rectangle_segment_intersect(object->shape()->bounding_box(), sight)) { return false; }
-	}
-	return true;
+	return this->bot_world_->traversal_line_of_sight(from, to, team);
 }
 
 LevelState Level::state() const
@@ -903,30 +802,20 @@ LevelEndInfo Level::level_end_info() const
 
 std::vector<PaintSurfaceSample> Level::paint_surfaces() const
 {
-    std::vector<PaintSurfaceSample> samples;
-    std::size_t source_index = 0;
-    for (const CollisionObject* object : this->scene_->collision_objects())
-    {
-        const PaintableObject* paintable = Collider::of(*object).paintable();
-        if (paintable == nullptr)
-        {
-            if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
-            {
-                throw std::runtime_error("Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
-            }
-            continue;
-        }
-        paintable->append_paint_surfaces(samples, source_index++);
-    }
-    return samples;
+    return this->bot_world_->paint_surfaces();
+}
+
+bool Level::has_horizontal_motion() const
+{
+    return this->structures_.has_horizontal_motion();
+}
+
+std::vector<HorizontalStructureState> Level::horizontal_structure_states() const
+{
+    return this->structures_.horizontal_structure_states();
 }
 
 std::span<const TeamGateStructurePaintable* const> Level::team_gates() const
 {
-    return this->team_gates_view_;
-}
-
-void Level::settle_team_gates()
-{
-    for (TeamGateStructurePaintable* gate : this->team_gates_) { gate->settle(this->players_); }
+    return this->structures_.team_gates();
 }

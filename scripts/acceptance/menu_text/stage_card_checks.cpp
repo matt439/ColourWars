@@ -369,7 +369,9 @@ namespace menu_text_acceptance
                 d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
                 for (const auto& entry : stage_briefing_text)
                 {
-                    const std::string text = entry.multiline ? "Fit\nFit\nFit\nFit\nFit\nFit\nFit" : std::string(80, 'F');
+                    // 73 columns overhang the authored panel (1770) while the
+                    // expanded card stays inside the Stage paper (1852 + 14).
+                    const std::string text = entry.multiline ? "Fit\nFit\nFit\nFit\nFit\nFit\nFit" : std::string(73, 'F');
                     d["menu_text"]["stage"][entry.key].SetString(text.c_str(), d.GetAllocator());
                 }
                 if (negative)
@@ -419,8 +421,11 @@ namespace menu_text_acceptance
             for (const auto& other : stage_briefing_text) { d["menu_text"]["stage"][other.key].SetString("Fit"); }
             d["menu_text"]["stage"][entry.key].SetString("~");
         };
-        add_font("menu_stage_briefing_width_edge", 657, 20);
-        add_font("menu_stage_briefing_width_overflow", 658, 20);
+        // The page grows the briefing card around each row, and that card must
+        // stay inside the Stage paper: text may overhang the authored panel
+        // up to 1866 - 14 = 1852, short of the design's right edge.
+        add_font("menu_stage_briefing_width_edge", 589, 20);
+        add_font("menu_stage_briefing_width_overflow", 590, 20);
         for (const auto& entry : stage_briefing_text)
         {
             const std::string field = std::string("stage.") + entry.key;
@@ -432,8 +437,8 @@ namespace menu_text_acceptance
             const auto& stage = width.main_menu().stage_select;
             const float x = stage.briefing.position.x + stage.briefing_padding.x +
                 stage.briefing.spacing.x * static_cast<float>(entry.row);
-            require(x + 657.0f + width.menu().detail_shadow_offset.x == 1920.0f,
-                "Arena briefing width fixture no longer touches the full design's inclusive right edge");
+            require(x + 589.0f + width.menu().detail_shadow_offset.x + 14.0f == 1866.0f,
+                "Arena briefing width fixture's expanded card no longer touches the Stage paper's inclusive right edge");
             variants.rejects(field, [&](rapidjson::Document& d)
             {
                 use_font(d, "menu_stage_briefing_width_overflow", entry);

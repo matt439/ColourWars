@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/objects/crude_drawing.h"
-#include "game/presentation.h"
+#include "game/presentation_match.h"
 
 // What a figure is doing while the person is in the room, or has just left
 // (docs/backstory.md): looking at its hands and across at the other side as
