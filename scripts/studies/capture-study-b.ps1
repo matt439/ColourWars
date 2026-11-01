@@ -9,9 +9,10 @@ param(
     [string[]]$Stages = @('crossfeed', 'press_tower'),
     [string[]]$IdentityCues = @('on', 'off'),
     [int]$Seed = 7,
-    # The stage 1 revision (V1, V1b). V0 is its merge base with master.
+    # The stage 1 revision (V1, V1b), and V0's: the last master commit before
+    # stage 1. Pinned, because once stage 1 is in master no merge base finds it.
     [string]$Revision = 'HEAD',
-    [string]$BaseBranch = 'master',
+    [string]$BaseRevision = '89b18cd84910966270d5c4e0fff18ed99738eef6',
     [switch]$SkipBuild,
     [switch]$SkipCapture,
     [string]$OutputDirectory,
@@ -24,7 +25,7 @@ param(
 # Builds three variants of the game, each in its own detached git worktree
 # under <OutputDirectory>/worktrees/<variant>, with the x64-debug preset (the
 # console, scripts, seed and screenshot commands exist only in Debug):
-#   V0  - the merge base of -Revision and master: before stage 1;
+#   V0  - -BaseRevision: the last master commit before stage 1;
 #   V1  - -Revision: stage 1, one-cell brick slips;
 #   V1b - -Revision with BRICK_SLIP_CELLS = 2.0f, edited in its worktree only.
 # Then runs each variant once per resolution and team palette, on an isolated
@@ -90,10 +91,12 @@ function Invoke-Git([string[]]$arguments) {
 
 # Revisions are resolved once, so a commit landing during the run moves nothing.
 $v1Sha = Invoke-Git @('-C', $repo, 'rev-parse', '--verify', "$Revision^{commit}")
-$v0Sha = Invoke-Git @('-C', $repo, 'merge-base', $BaseBranch, $v1Sha)
-if ($v0Sha -eq $v1Sha) { throw "$Revision is already in ${BaseBranch}: V0 and V1 would be the same build." }
+$v0Sha = Invoke-Git @('-C', $repo, 'rev-parse', '--verify', "$BaseRevision^{commit}")
+if ($v0Sha -eq $v1Sha) { throw "-Revision and -BaseRevision are the same commit: V0 and V1 would be the same build." }
+& git -C $repo merge-base --is-ancestor $v0Sha $v1Sha
+if ($LASTEXITCODE -ne 0) { throw "-BaseRevision $v0Sha is not an ancestor of -Revision $v1Sha." }
 $definitions = [ordered]@{
-    V0  = @{ revision = $v0Sha; slip_cells = $null; note = "merge base of $Revision and $BaseBranch (before stage 1)" }
+    V0  = @{ revision = $v0Sha; slip_cells = $null; note = "$BaseRevision (before stage 1)" }
     V1  = @{ revision = $v1Sha; slip_cells = '1.0f'; note = 'stage 1: one-cell brick slips' }
     V1b = @{ revision = $v1Sha; slip_cells = '2.0f'; note = 'stage 1 with BRICK_SLIP_CELLS = 2.0f' }
 }

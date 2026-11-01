@@ -208,7 +208,7 @@ worktrees and their submodule clones, which git keeps under
 
 | Variant | Build |
 |---|---|
-| `V0` | The merge base of `-Revision` and `master`: the art before stage 1. |
+| `V0` | `-BaseRevision`: the last `master` commit before stage 1, pinned in the script because stage 1 is now in `master` and no merge base finds it. |
 | `V1` | `-Revision` (default `HEAD`): stage 1, with one-cell brick slips. |
 | `V1b` | `-Revision` with `BRICK_SLIP_CELLS = 2.0f` in `game/objects/terrain_material_drawings.cpp`. |
 
@@ -249,7 +249,7 @@ powershell -ExecutionPolicy Bypass -File scripts\studies\capture-study-b.ps1 `
 | `-Stages` | `crossfeed,press_tower` | the stages, one pass each per player count |
 | `-IdentityCues` | `on,off` | with or without the P1-P4 badges and teammate markers |
 | `-Seed` | `7` | the round seed |
-| `-Revision`, `-BaseBranch` | `HEAD`, `master` | V1's commit; V0 is their merge base |
+| `-Revision`, `-BaseRevision` | `HEAD`, the last `master` commit before stage 1 | V1's and V0's commits; V0 must be an ancestor of V1 |
 | `-SkipBuild` | off | use the existing worktree builds |
 | `-SkipCapture` | off | build only |
 | `-OutputDirectory` | `out/study` | everything the script writes; a relative path is resolved against the caller's PowerShell location |

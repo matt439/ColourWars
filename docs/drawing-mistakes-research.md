@@ -167,7 +167,7 @@ Frequencies are not known. Study A exists to find them.
   The monitor and cursor are drawn in Paint style today ([polish-monitor.md](polish-monitor.md)). If the program chrome looks drawn by a machine, the picture reads as drawn by a hand [I].
 - Write the guardrails below into the art rules.
 
-**Stage 1: on a scratch branch.** This doubles as V1 for Study B, and ships only after Study B passes.
+**Stage 1.** This doubles as V1 for Study B. The plan was to ship it only after Study B passed. The author has since shipped it first (section 9, decision 7).
 
 1. **Skill ceiling on `brush_pot` and `tape_roll`.**
    - Remove these shapes:
@@ -183,8 +183,9 @@ Frequencies are not known. Study A exists to find them.
    - Visibility at 4P 720p is a pass condition, not an assumption.
    - Run the `terrain` acceptance case (`miniature_checks.h` samples touching ground pieces) and `check-painter.ps1 -MiniatureTerrainOnly` on MattPC. CI only compiles the painter checks.
 
-**Stage 1 as built (2026-11-01, branch `drawing-mistakes-research`).** Not
-shipped: it waits on Study B.
+**Stage 1 as built (2026-11-01, branch `drawing-mistakes-research`).** Shipped
+before Study B by the author's call (section 9, decision 7). Study B now checks
+it after the fact.
 
 - **Skill ceiling.** `brush_pot` lost its three brush-head glints, the body
   highlight and the shaded inner rim. Its mouth is now a plain `bg_line` ring
@@ -333,7 +334,7 @@ This is a screen for gross failures, not a measurement.
   - Jitter or glitch comments no more than V0's rate plus one participant, with each one traced to a cause.
   - Pick one primary comparison in advance. If a heavier variant only squeaks past, ship the next lighter one.
 - **Ethics:** consent sheet, screen-only recording, anonymous IDs, data kept outside the repo. **No participant pixels enter the repo**: use the mistake patterns, not the drawings.
-- **Effort:** about 7-9 days in full. The minimum is about 4 days: Study A on the figure only, plus Study B's paired choice, find-the-bug and team-ID tests. Stage 1 needs Study B but not Study A.
+- **Effort:** about 7-9 days in full. The minimum is about 4 days: Study A on the figure only, plus Study B's paired choice, find-the-bug and team-ID tests. Stage 1 shipped before Study B; any part of it that Study B fails comes back out. Study A is not needed for stage 1.
 
 ## 9. Author decisions and open questions
 
@@ -363,8 +364,13 @@ This is a screen for gross failures, not a measurement.
    neither mirrored nor balanced per half. Collision, landing edges and scored
    paint stay mirrored and true.
 
-Nothing in this research is open now. Stage 1 waits only on being built and on
-Study B; stage 2 waits on Study A.
+7. **Stage 1 ships before Study B** (2026-11-01). The author judged the
+   mistakes from screenshots and stopped adding them there, so as not to go
+   overboard. Study B still runs: its pass rules stand, and any variant or
+   mistake that fails them is taken back out.
+
+Nothing in this research is open now. Stage 1 has shipped, and Study B checks it
+after the fact. Stage 2 waits on Study A.
 
 ---
 

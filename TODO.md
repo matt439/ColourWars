@@ -131,7 +131,7 @@ questions in the polish sub-docs are superseded, not open.
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
-| `POL#46` | OPEN | LOW | M | Deliberate drawing mistakes: stage 1 built on `drawing-mistakes-research` (backdrop skill ceiling and slips, brick slips, mortar strokes and doubled edges, simpler tools) and waits on Study B; per-person seeding and figure slips wait on Study A. Both study kits are in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
+| `POL#46` | OPEN | LOW | M | Deliberate drawing mistakes: stage 1 shipped before Study B by the author's call (backdrop skill ceiling and slips, brick slips, mortar strokes and doubled edges, simpler tools), and Study B checks it after the fact, taking out whatever fails; per-person seeding and figure slips wait on Study A. Both study kits are in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
 
 ## Feel and feedback
 
