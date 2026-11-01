@@ -209,6 +209,16 @@ shipped: it waits on Study B.
   `persona()` needs the match seed passed through the level builder to the
   materials; that waits for stage 2, which needs the same plumbing for the
   figure.
+- **Mortar strokes** (added 2026-11-01, from the author's sketch below). Each
+  course line is drawn as several strokes in 40-cell world bands, and about one
+  band in three lands a row off, in a direction fixed for that line. Where two
+  strokes meet at different rows they overlap by up to two cells or touch only
+  at a corner, so a 4-connected bucket fill could not leak through: the
+  author's rule for gaps is **diagonal only**. Joints meet the lines where the
+  lines were drawn, and about one joint in four runs one or two cells past an
+  interior line. A drift or overshoot that would come within 3 cells of the
+  outline is not drawn. Same constant-seed keying as the slips, so this is not
+  per person yet either.
 - **Simpler tools** ([polish-tools.md](polish-tools.md#drawing-and-attachments)):
   highlight strips, shade marks, glints and the roller's drum shine are gone;
   every moving mechanism stays.
@@ -246,6 +256,19 @@ No playtest with anyone other than the author is on record ([design-process.md](
 **Kits:** [scripts/studies/](../scripts/studies/README.md) holds both studies ready to run: Study A's reference images, participant and run sheets, consent sheet, codebook and analysis, and Study B's stimulus capture, test page and analysis. Two thresholds were fixed there before any data, beyond this section: `ASYM_MIN_PAIRS = 2` and `PROP_MIN_ERROR = 0.05` (a relative error).
 
 **Pilot (half a day):** the author runs Study A on themselves first, to debug the materials and the timing.
+
+**The author's first sample (2026-11-01).** Before any session, the author drew
+a square by hand to show the mistakes they make on lines along the axes:
+
+- a straight edge drawn as **two strokes a row apart**, which WOB codes when it
+  survives reduction;
+- a line **overshooting** the corner it should stop at (OVER);
+- a corner where the two lines **do not meet** (GAP).
+
+These are the first entries in the pool. They went into the brick mortar at once
+(stage 1, "Mortar strokes"), with corner gaps limited to diagonal touches. Terrain
+outlines stay closed because they are collision, and the head box waits for
+Study A.
 
 ### Study A: what mistakes do people make?
 
