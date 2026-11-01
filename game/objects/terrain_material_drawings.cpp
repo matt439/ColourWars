@@ -4,6 +4,8 @@
 #include "engine/math/triangle.h"
 
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 
@@ -27,6 +29,115 @@ namespace
 	float grid_from(float world, float period)
 	{
 		return std::ceil(world / period) * period;
+	}
+
+	std::uint64_t splitmix(std::uint64_t z)
+	{
+		z += 0x9E3779B97F4A7C15ULL;
+		z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
+		z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+		return z ^ (z >> 31);
+	}
+
+	// A hash of a world cell and a constant seed: neighbouring pieces agree and
+	// every build draws the same wall. Never the match's random streams.
+	std::uint64_t cell_key(float x, float y, std::uint64_t seed)
+	{
+		return splitmix((static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(x / CELL))) << 32) ^
+			static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(y / CELL))) ^ seed);
+	}
+
+	// The person laid the bricks by hand (docs/drawing-mistakes-research.md,
+	// stage 1). Decoration, so the stage's mirrored halves need not slip alike.
+	//
+	// A few joints landed off the bond.
+	constexpr unsigned BRICK_SLIP_ONE_IN = 5;
+	constexpr float BRICK_SLIP_CELLS = 1.0f;
+
+	float brick_slip(float joint_x, float course_top)
+	{
+		const std::uint64_t z = cell_key(joint_x, course_top, 0x6272696B736C6970ULL);
+		if (z % BRICK_SLIP_ONE_IN != 0) { return 0.0f; }
+		return ((z >> 32) & 1u) != 0 ? BRICK_SLIP_CELLS * CELL : -BRICK_SLIP_CELLS * CELL;
+	}
+
+	// A long mortar line went down in several strokes, and some strokes landed
+	// a row off: each line drifts one way, up or down, in bands of the world. Where
+	// two strokes meet at different rows they overlap by up to two cells or touch
+	// only at a corner, never leave a gap a bucket fill would leak through.
+	constexpr float MORTAR_BAND = 40.0f * CELL;
+	constexpr unsigned MORTAR_DRIFT_ONE_IN = 3;
+	constexpr float MORTAR_MIN_STROKE = 8.0f * CELL;
+	constexpr unsigned MORTAR_JOIN_CELLS = 3;
+
+	// A joint sometimes ran a cell or two past the line it was meant to stop at.
+	constexpr unsigned JOINT_OVERSHOOT_ONE_IN = 4;
+
+	// Each brick is its own rectangle, and a few were drawn a cell or two off the
+	// edge they should have shared, so that edge came out doubled: two lines side
+	// by side, or with a one-cell sliver of brick between them.
+	constexpr unsigned JOINT_DOUBLED_ONE_IN = 8;
+	constexpr unsigned BRICK_TOP_DOUBLED_ONE_IN = 10;
+
+	struct MortarStroke
+	{
+		float left, right, y;
+	};
+
+	std::vector<MortarStroke> mortar_strokes(const RectangleF& rectangle, float y)
+	{
+		float drift = (cell_key(0.0f, y, 0x6D6F727461726479ULL) & 1u) != 0 ? CELL : -CELL;
+		if (y + drift < rectangle.top() + CELL * 3.0f || y + drift + CELL > rectangle.bottom() - CELL * 3.0f)
+		{
+			drift = 0.0f;
+		}
+		std::vector<MortarStroke> bands;
+		for (float band = std::floor(rectangle.left() / MORTAR_BAND) * MORTAR_BAND;
+			band < rectangle.right(); band += MORTAR_BAND)
+		{
+			const bool off = cell_key(band, y, 0x6D6F72746172626EULL) % MORTAR_DRIFT_ONE_IN == 0;
+			bands.push_back({ std::max(band, rectangle.left()), std::min(band + MORTAR_BAND, rectangle.right()),
+				y + (off ? drift : 0.0f) });
+		}
+		// A sliver against the outline belongs to the stroke beside it.
+		if (bands.size() > 1 && bands.front().right - bands.front().left < MORTAR_MIN_STROKE)
+		{
+			bands.front().y = bands[1].y;
+		}
+		if (bands.size() > 1 && bands.back().right - bands.back().left < MORTAR_MIN_STROKE)
+		{
+			bands.back().y = bands[bands.size() - 2].y;
+		}
+		std::vector<MortarStroke> strokes;
+		for (const MortarStroke& band : bands)
+		{
+			if (!strokes.empty() && strokes.back().y == band.y) { strokes.back().right = band.right; }
+			else { strokes.push_back(band); }
+		}
+		for (size_t i = 1; i < strokes.size(); ++i)
+		{
+			const std::uint64_t join = cell_key(strokes[i].left, y, 0x6D6F72746172636AULL);
+			strokes[i - 1].right += static_cast<float>(join % MORTAR_JOIN_CELLS) * CELL;
+			strokes[i].left -= static_cast<float>((join / MORTAR_JOIN_CELLS) % MORTAR_JOIN_CELLS) * CELL;
+		}
+		return strokes;
+	}
+
+	// The rows a mortar line inks in the column at `x`, as [top, bottom).
+	std::pair<float, float> mortar_at(const std::vector<MortarStroke>& strokes, float x, float y)
+	{
+		float top = std::numeric_limits<float>::max();
+		float bottom = std::numeric_limits<float>::lowest();
+		for (const MortarStroke& stroke : strokes)
+		{
+			if (x >= stroke.left && x < stroke.right)
+			{
+				top = std::min(top, stroke.y);
+				bottom = std::max(bottom, stroke.y + CELL);
+			}
+		}
+		if (top > bottom) { return { y, y + CELL }; }
+		return { top, bottom };
 	}
 
 	bool overlaps(const std::vector<std::pair<float, float>>& spans, float low, float high)
@@ -109,18 +220,76 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 		const float top = rectangle.y + course * static_cast<float>(index);
 		if (top >= tiled_bottom) { break; }
 		const float bottom = std::min(top + course, tiled_bottom);
-		if (index > 0)
+		const std::vector<MortarStroke> above = index > 0
+			? mortar_strokes(rectangle, top) : std::vector<MortarStroke>{};
+		const std::vector<MortarStroke> below = bottom < tiled_bottom
+			? mortar_strokes(rectangle, bottom) : std::vector<MortarStroke>{};
+		for (const MortarStroke& stroke : above)
 		{
-			this->add(RectangleF(rectangle.x, top, rectangle.width, CELL),
+			this->add(RectangleF(stroke.left, stroke.y, stroke.right - stroke.left, CELL),
 				TerrainRole::keyline, rectangle);
 		}
 		// Halved bond: every other course starts half a tile along.
 		const float offset = (index % 2 == 0) ? 0.0f : brick / 2.0f;
 		// Joints keep clear of the outline, or they read as a doubled edge.
+		std::optional<float> previous;
 		for (float x = grid_from(rectangle.left() - offset + CELL * 3.0f, brick) + offset;
 			x < rectangle.right() - CELL * 3.0f; x += brick)
 		{
-			this->add(RectangleF(x, top, CELL, bottom - top), TerrainRole::keyline, rectangle);
+			float joint = x + brick_slip(x, top);
+			if (joint < rectangle.left() + CELL * 3.0f || joint >= rectangle.right() - CELL * 3.0f)
+			{
+				joint = x;
+			}
+			// A joint meets the lines where they were drawn, not where they were meant to be.
+			float joint_top = above.empty() ? top : mortar_at(above, joint, top).first;
+			float joint_bottom = below.empty() ? bottom : mortar_at(below, joint, bottom).second;
+			const std::uint64_t slip = cell_key(joint, top, 0x6A6F696E746F7672ULL);
+			if (slip % JOINT_OVERSHOOT_ONE_IN == 0)
+			{
+				const float tail = static_cast<float>(1u + ((slip >> 32) & 1u)) * CELL;
+				const bool up = ((slip >> 40) & 1u) != 0;
+				if (up && !above.empty() && joint_top - tail >= rectangle.top() + CELL * 3.0f)
+				{
+					joint_top -= tail;
+				}
+				else if (!up && !below.empty() && joint_bottom + tail <= rectangle.bottom() - CELL * 3.0f)
+				{
+					joint_bottom += tail;
+				}
+			}
+			this->add(RectangleF(joint, joint_top, CELL, joint_bottom - joint_top), TerrainRole::keyline, rectangle);
+
+			const std::uint64_t doubled = cell_key(joint, top, 0x646F75626C656A74ULL);
+			if (doubled % JOINT_DOUBLED_ONE_IN == 0)
+			{
+				const float apart = static_cast<float>(1u + ((doubled >> 32) & 1u)) * CELL;
+				const float twin = ((doubled >> 40) & 1u) != 0 ? joint + apart : joint - apart;
+				if (twin >= rectangle.left() + CELL * 3.0f && twin < rectangle.right() - CELL * 3.0f)
+				{
+					const float twin_top = above.empty() ? top : mortar_at(above, twin, top).first;
+					const float twin_bottom = below.empty() ? bottom : mortar_at(below, twin, bottom).second;
+					this->add(RectangleF(twin, twin_top, CELL, twin_bottom - twin_top), TerrainRole::keyline, rectangle);
+				}
+			}
+
+			// The brick between the last joint and this one: its top edge drawn
+			// again, a row or two under the line it should have shared.
+			if (previous && !above.empty())
+			{
+				const std::uint64_t edge = cell_key(*previous, top, 0x646F75626C65746FULL);
+				if (edge % BRICK_TOP_DOUBLED_ONE_IN == 0)
+				{
+					const float line_bottom = std::max(mortar_at(above, *previous, top).second,
+						mortar_at(above, joint, top).second);
+					const float y = line_bottom + static_cast<float>((edge >> 32) & 1u) * CELL;
+					if (y + CELL <= bottom - CELL * 3.0f && y + CELL <= rectangle.bottom() - CELL * 3.0f)
+					{
+						this->add(RectangleF(*previous, y, joint + CELL - *previous, CELL), TerrainRole::keyline, rectangle);
+					}
+				}
+			}
+			previous = joint;
 		}
 	}
 	this->outline(rectangle, faces);

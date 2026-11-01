@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ColourWars picture study</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.45 system-ui, "Segoe UI", sans-serif; color: #1b1b1b; background: #f4f4f1; }
+  header { display: flex; align-items: center; gap: 16px; padding: 8px 16px; background: #fff; border-bottom: 1px solid #ccc; }
+  header .title { font-weight: 600; white-space: nowrap; }
+  #progress { flex: 1; height: 12px; background: #e3e3e3; border-radius: 6px; overflow: hidden; }
+  #progress-fill { height: 100%; width: 0; background: #3b6fb6; transition: width 0.2s; }
+  #progress-text { min-width: 70px; text-align: right; font-size: 14px; color: #555; }
+  /* The layout constants in LAYOUT below must match these paddings and widths. */
+  main { padding: 12px 16px; }
+  .panel { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 20px 24px; margin-bottom: 16px; }
+  .panel.narrow { max-width: 760px; margin-left: auto; margin-right: auto; }
+  h1 { font-size: 24px; margin: 0 0 12px; }
+  h2 { font-size: 20px; margin: 0 0 10px; }
+  .prompt { font-size: 20px; font-weight: 600; margin: 0 0 10px; }
+  button { font: inherit; padding: 10px 22px; border: 1px solid #2e5a96; border-radius: 5px; background: #3b6fb6; color: #fff; cursor: pointer; margin: 4px 8px 4px 0; }
+  button.secondary { background: #fff; color: #2e5a96; }
+  button.on { outline: 4px solid #e0115f; }
+  button:disabled { background: #b9c6d8; border-color: #b9c6d8; cursor: default; color: #fff; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+  /* A trial: the picture on the left at a whole-number scale, every control in a fixed-width column on the right. */
+  .trial { display: flex; gap: 16px; align-items: flex-start; }
+  .trial .area { flex: none; }
+  .trial .side { flex: 0 0 300px; width: 300px; background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 14px; }
+  .trial .side button { display: block; width: 100%; margin: 6px 0; }
+  .stage { position: relative; display: inline-block; line-height: 0; cursor: crosshair; border: 1px solid #999; }
+  .stage img, .stage canvas { display: block; image-rendering: pixelated; }
+  .marker { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 3px solid #e0115f; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 2px #fff; }
+  .shown-label { font-size: 22px; font-weight: 700; margin: 6px 0; }
+  textarea { width: 100%; min-height: 120px; font: inherit; padding: 8px; }
+  input[type=text], input[type=number] { font: inherit; padding: 6px 8px; }
+  .muted { color: #666; font-size: 15px; }
+  .warn { color: #8a4b00; }
+  .error { color: #a00; font-weight: 600; }
+  .crop-wrap { display: flex; justify-content: center; margin: 12px 0; }
+  .crop-wrap canvas { border: 4px solid #e0115f; image-rendering: pixelated; }
+  .team-buttons button { min-width: 160px; font-size: 19px; }
+  ul.notes { margin: 6px 0 0 20px; padding: 0; }
+  label.block { display: block; margin: 10px 0 4px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <span class="title">Picture study</span>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <span id="progress-text"></span>
+  <button id="export-partial" class="secondary hidden" title="Save what has been recorded so far">Save results so far</button>
+</header>
+<main id="main"></main>
+
+<script>
+'use strict';
+/*
+ * ColourWars Study B test page. See scripts/studies/README.md.
+ *
+ * The page is opened from disk (file://). Browsers refuse fetch() of local
+ * files there, so the experimenter picks the stimulus folder with a directory
+ * picker and every image is shown through an object URL. Nothing is sent
+ * anywhere; results leave the page only through the Export download.
+ *
+ * Everything above the "user interface" line is pure logic with no DOM use,
+ * so a Node check can load it (see selftest.py).
+ */
+var StudyB = (function () {
+  var FORMAT = 'colourwars-study-b-results';
+  var FORMAT_VERSION = 2;
+  var BASELINE = 'V0';
+  var TESTS = ['paired', 'bug', 'stand', 'find'];
+  // Balanced (Williams) Latin square for four tests. The row is (participant number - 1) mod 4,
+  // so consecutive participant numbers fill the rows evenly.
+  var LATIN = [[0, 1, 3, 2], [1, 2, 0, 3], [2, 3, 1, 0], [3, 0, 2, 1]];
+  var DEFAULT_CAPS = { paired: 8, bug: 2, stand: 2, find: 3, team: 6 };
+  // Keys a seat or crop may not use in "where": they must hold in every variant.
+  var VARIANT_KEYS = ['variant', 'variants', 'path'];
+
+  // FNV-1a over UTF-16 code units, then a murmur3 finaliser.
+  function hashString(s) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b) >>> 0;
+    h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35) >>> 0;
+    h ^= h >>> 16;
+    return h >>> 0;
+  }
+
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function shuffle(list, rng) {
+    var a = list.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // The same frame in every variant shares a context. analyse.py builds the same key.
+  function contextKey(img) {
+    return [img.resolution, img.players, img.palette, img.shot, img.identity_cues].map(function (v) {
+      return v === null || v === undefined ? '' : String(v);
+    }).join('|');
+  }
+
+  function cleanPath(p) {
+    return String(p).replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+/, '');
+  }
+
+  function validRect(r) {
+    return Array.isArray(r) && r.length === 4 && r.every(function (v) { return typeof v === 'number' && v >= 0 && v <= 1; }) &&
+      r[2] > r[0] && r[3] > r[1];
+  }
+
+  // Same matching as region_applies in analyse.py.
+  function regionApplies(where, img) {
+    where = where || {};
+    return Object.keys(where).every(function (k) {
+      var want = where[k];
+      if (k === 'variants') return Array.isArray(want) && want.indexOf(img.variant) >= 0;
+      if (k === 'path') return img.path === cleanPath(want);
+      return Object.prototype.hasOwnProperty.call(img, k) && img[k] === want;
+    });
+  }
+
+  function paletteHalves(palette) {
+    var h = palette ? String(palette).split('_') : [];
+    return h.length === 2 ? h : null;
+  }
+
+  // A seat or crop names its team literally ("team") or as a half of the palette name ("side": 0 or 1).
+  function teamFor(entry, img) {
+    if (typeof entry.team === 'string') return entry.team;
+    var halves = paletteHalves(img.palette);
+    if ((entry.side === 0 || entry.side === 1) && halves) return halves[entry.side];
+    return null;
+  }
+
+  // available: function(path) -> bool, whether the picked folder holds that file.
+  function normaliseManifest(manifest, available) {
+    var warnings = [];
+    var images = [];
+    var seen = {};
+    var list = (manifest && Array.isArray(manifest.images)) ? manifest.images : [];
+    if (!list.length) warnings.push('The manifest has no "images" list.');
+    list.forEach(function (raw, i) {
+      if (!raw || typeof raw.path !== 'string' || typeof raw.variant !== 'string') {
+        warnings.push('Image ' + i + ' has no path or variant; skipped.');
+        return;
+      }
+      var path = cleanPath(raw.path);
+      if (seen[path]) { warnings.push('Duplicate path ' + path + '; skipped.'); return; }
+      if (available && !available(path)) { warnings.push('Missing file ' + path + '; skipped.'); return; }
+      seen[path] = true;
+      images.push({
+        variant: raw.variant,
+        resolution: raw.resolution === undefined ? null : String(raw.resolution),
+        players: raw.players === undefined ? null : Number(raw.players),
+        palette: raw.palette === undefined ? null : String(raw.palette),
+        stage: raw.stage === undefined ? null : String(raw.stage),
+        shot: raw.shot === undefined ? null : String(raw.shot),
+        frame: raw.frame === undefined ? null : String(raw.frame),
+        identity_cues: raw.identity_cues === undefined ? null : Boolean(raw.identity_cues),
+        path: path
+      });
+    });
+    if (manifest && (manifest.crops || list.some(function (r) { return r && r.seats; }))) {
+      warnings.push('The manifest carries crops or seats. They are ignored: seats and crops live in regions.json, which survives a recapture.');
+    }
+    images.sort(function (a, b) { return a.path < b.path ? -1 : a.path > b.path ? 1 : 0; });
+    return { images: images, warnings: warnings };
+  }
+
+  // Reads the experimenter's regions file: seats and crops for the page, and a check
+  // that every region matches at least one loaded image.
+  function normaliseRegions(doc, images) {
+    var warnings = [], seats = [], crops = [];
+    var list = (doc && Array.isArray(doc.regions)) ? doc.regions : [];
+    if (doc && !Array.isArray(doc.regions)) warnings.push('regions.json has no "regions" list.');
+    list.forEach(function (r, i) {
+      var label = 'Region ' + i + (r && r.id ? ' (' + r.id + ')' : '');
+      if (!r || !validRect(r.rect)) { warnings.push(label + ': rect must be [x0, y0, x1, y1] in 0..1; ignored.'); return; }
+      var where = r.where || {};
+      if (!images.some(function (img) { return regionApplies(where, img); })) {
+        warnings.push(label + ': its "where" matches no loaded image, so it can score nothing.');
+      }
+      if (r.kind === 'seat' || r.kind === 'crop') {
+        var bad = VARIANT_KEYS.filter(function (k) { return Object.prototype.hasOwnProperty.call(where, k); });
+        if (bad.length) { warnings.push(label + ': a ' + r.kind + ' must hold in every variant, so its "where" may not use ' + bad.join(', ') + '; ignored.'); return; }
+      }
+      if (r.kind === 'seat') {
+        if (typeof r.seat !== 'number' || Math.floor(r.seat) !== r.seat) { warnings.push(label + ': a seat needs an integer "seat"; ignored.'); return; }
+        seats.push({ seat: r.seat, team: r.team, side: r.side, where: where, rect: r.rect.slice() });
+      } else if (r.kind === 'crop') {
+        if (typeof r.id !== 'string') { warnings.push(label + ': a crop needs an "id"; ignored.'); return; }
+        if (typeof r.team !== 'string' && r.side !== 0 && r.side !== 1) { warnings.push(label + ': a crop needs "team" or "side" (0 or 1); ignored.'); return; }
+        crops.push({ id: r.id, team: r.team, side: r.side, where: where, rect: r.rect.slice(),
+          options: Array.isArray(r.options) ? r.options.map(String) : null });
+      }
+    });
+    return { seats: seats, crops: crops, warnings: warnings, count: list.length };
+  }
+
+  function prepare(manifest, available, regionsDoc) {
+    var m = normaliseManifest(manifest, available);
+    var r = normaliseRegions(regionsDoc, m.images);
+    return { images: m.images, seats: r.seats, crops: r.crops, regions_count: r.count,
+      has_regions: !!regionsDoc, warnings: m.warnings.concat(r.warnings) };
+  }
+
+  function variantsOf(images) {
+    var set = {};
+    images.forEach(function (img) { set[img.variant] = true; });
+    return Object.keys(set).sort();
+  }
+
+  function groupBy(list, keyFn) {
+    var out = {};
+    list.forEach(function (x) { var k = keyFn(x); (out[k] = out[k] || []).push(x); });
+    return out;
+  }
+
+  function imageInfo(img) {
+    return {
+      variant: img.variant, path: img.path, context: contextKey(img), resolution: img.resolution, players: img.players,
+      palette: img.palette, stage: img.stage, shot: img.shot, frame: img.frame, identity_cues: img.identity_cues
+    };
+  }
+
+  // Contexts that have an image in every variant, as units { key, byVariant }.
+  function completeContexts(images, variants, filter) {
+    var groups = groupBy(images.filter(filter), contextKey);
+    var out = [];
+    Object.keys(groups).sort().forEach(function (k) {
+      var byVariant = {};
+      groups[k].forEach(function (img) { if (!byVariant[img.variant]) byVariant[img.variant] = img; });
+      if (variants.every(function (v) { return byVariant[v]; })) out.push({ key: k, byVariant: byVariant });
+    });
+    return out;
+  }
+
+  // A fixed order for the stimulus set: the same for every participant, so the
+  // rotation below gives every unit to every variant over consecutive participants.
+  function setOrder(units, salt) {
+    var rng = mulberry32(hashString('set|' + salt + '|' + units.map(function (u) { return u.key; }).join(',')));
+    return shuffle(units, rng);
+  }
+
+  // Unit i goes to variant (i + rotation) mod K. Each participant sees each unit once, in one
+  // variant; over K consecutive participant numbers each unit is shown once in every variant.
+  function rotate(units, variants, rotation) {
+    return units.map(function (u, i) { return { unit: u, variant: variants[(i + rotation) % variants.length] }; });
+  }
+
+  function take(list, from, count) {
+    var out = [];
+    for (var i = 0; i < count && list.length; i++) out.push(list[(from + i) % list.length]);
+    return out;
+  }
+
+  function seatLabel(seat) {
+    return 'Player ' + seat.seat + (seat.team ? ' (' + seat.team + ' team)' : '');
+  }
+
+  function buildPlan(norm, participantId, participantNumber, capsIn) {
+    var caps = {};
+    Object.keys(DEFAULT_CAPS).forEach(function (k) {
+      caps[k] = (capsIn && capsIn[k] !== undefined) ? Math.max(0, Math.floor(capsIn[k])) : DEFAULT_CAPS[k];
+    });
+    var n = Math.floor(participantNumber);
+    if (!(n >= 1)) throw new Error('The participant number must be a whole number from 1.');
+    var rng = mulberry32(hashString('study-b|' + participantId + '|' + n));
+    var orderRow = (n - 1) % 4;
+    var order = LATIN[orderRow].map(function (i) { return TESTS[i]; });
+    var images = norm.images;
+    var variants = variantsOf(images);
+    var K = variants.length;
+    var rotation = K ? (n - 1) % K : 0;
+    var others = variants.filter(function (v) { return v !== BASELINE; });
+    var notes = [];
+    if (variants.indexOf(BASELINE) < 0) notes.push('No V0 images: nothing to compare against.');
+
+    // First impressions: one image per variant, same context where possible.
+    var byContext = groupBy(images, contextKey);
+    var bestScore = -1, best = [];
+    Object.keys(byContext).sort().forEach(function (k) {
+      var vs = variantsOf(byContext[k]);
+      var score = vs.length * 4 + (vs.indexOf(BASELINE) >= 0 ? 2 : 0) + (byContext[k][0].identity_cues !== false ? 1 : 0);
+      if (score > bestScore) { bestScore = score; best = [k]; } else if (score === bestScore) best.push(k);
+    });
+    var chosenContext = best.length ? best[Math.floor(rng() * best.length)] : null;
+    var impressions = [];
+    variants.forEach(function (v) {
+      var same = (byContext[chosenContext] || []).filter(function (img) { return img.variant === v; });
+      var pool = same.length ? same : images.filter(function (img) { return img.variant === v; });
+      var img = pool[Math.floor(rng() * pool.length)];
+      impressions.push({ test: 'impressions', image: img });
+    });
+    impressions = shuffle(impressions, rng);
+
+    // Paired choice: V0 against each variant in the same context. One picture at a time;
+    // the participant switches between A and B.
+    var paired = [];
+    others.forEach(function (v) {
+      var pairs = [];
+      images.forEach(function (img) {
+        if (img.variant !== v) return;
+        var base = (byContext[contextKey(img)] || []).filter(function (b) { return b.variant === BASELINE; });
+        if (base.length) pairs.push({ variant: img, baseline: base[0] });
+      });
+      if (!pairs.length) notes.push('Paired choice: no V0 image shares a context with ' + v + '.');
+      shuffle(pairs, rng).slice(0, caps.paired).forEach(function (p) {
+        paired.push({ test: 'paired', image: p.variant, baseline: p.baseline, first: rng() < 0.5 ? BASELINE : v });
+      });
+    });
+    paired = shuffle(paired, rng);
+
+    // Find the bug and standable: contexts that exist in every variant, rotated over variants.
+    var singles = completeContexts(images, variants, function (img) { return img.identity_cues !== false; });
+    if (!singles.length) singles = completeContexts(images, variants, function () { return true; });
+    singles = setOrder(singles, 'singles');
+    var nb = Math.min(caps.bug * K, singles.length), ns = Math.min(caps.stand * K, singles.length);
+    if (singles.length < Math.max(caps.bug, caps.stand) * K) {
+      notes.push('Only ' + singles.length + ' context(s) exist in every variant; find-the-bug and standable show fewer than their limits.');
+    }
+    if (nb + ns > singles.length) notes.push('The standable test reuses some find-the-bug contexts.');
+    var bug = rotate(take(singles, 0, nb), variants, rotation).map(function (a) {
+      return { test: 'bug', image: a.unit.byVariant[a.variant] };
+    });
+    var stand = rotate(take(singles, nb, ns), variants, rotation).map(function (a) {
+      return { test: 'stand', image: a.unit.byVariant[a.variant] };
+    });
+    bug = shuffle(bug, rng);
+    stand = shuffle(stand, rng);
+
+    // Find the player: 4-player frames with cues off, each context with one fixed seat.
+    var findUnits = setOrder(completeContexts(images, variants, function (img) {
+      return img.players === 4 && img.identity_cues === false;
+    }), 'find').slice(0, caps.find * K);
+    var unscored = 0;
+    findUnits.forEach(function (u, i) {
+      var ref = u.byVariant[variants[0]];
+      var bySeat = {};
+      norm.seats.forEach(function (s) { if (!bySeat[s.seat] && regionApplies(s.where, ref)) bySeat[s.seat] = s; });
+      var nums = Object.keys(bySeat).map(Number).sort(function (a, b) { return a - b; });
+      if (nums.length) {
+        var s = bySeat[nums[i % nums.length]];
+        u.seat = { seat: s.seat, team: teamFor(s, ref), rect: s.rect.slice() };
+      } else {
+        u.seat = { seat: 1 + (i % 4), team: null, rect: null };
+        unscored++;
+      }
+    });
+    if (!findUnits.length) notes.push('Find the player: no 4-player frames with identity cues off in every variant; skipped.');
+    if (unscored) notes.push('Find the player: ' + unscored + ' context(s) have no seat regions, so those clicks cannot be scored and the find rule will give NO DATA.');
+    var find = rotate(findUnits, variants, rotation).map(function (a) {
+      return { test: 'find', image: a.unit.byVariant[a.variant], seat: a.unit.seat, prompt: 'Click on ' + seatLabel(a.unit.seat) + '.' };
+    });
+    find = shuffle(find, rng);
+
+    // Which team: each crop in each context it names, rotated over variants like the rest.
+    var cropUnits = [];
+    norm.crops.forEach(function (c) {
+      completeContexts(images, variants, function (img) { return regionApplies(c.where, img); }).forEach(function (g) {
+        var ref = g.byVariant[variants[0]];
+        var truth = teamFor(c, ref);
+        var options = c.options || paletteHalves(ref.palette);
+        if (!truth || !options || options.indexOf(truth) < 0) {
+          notes.push('Crop ' + c.id + ' in ' + g.key + ': its team is not one of the answer options; skipped.');
+          return;
+        }
+        cropUnits.push({ key: c.id + '@' + g.key, crop: c, byVariant: g.byVariant, truth: truth, options: options });
+      });
+    });
+    var team = [];
+    if (!cropUnits.length) {
+      notes.push('Team ID on crops: regions.json has no usable crops, so it is skipped and the minimum study cannot complete.');
+    } else {
+      team = rotate(setOrder(cropUnits, 'team').slice(0, caps.team * K), variants, rotation).map(function (a) {
+        return { test: 'team', image: a.unit.byVariant[a.variant], crop_id: a.unit.crop.id, crop: a.unit.crop.rect,
+          truth: a.unit.truth, options: shuffle(a.unit.options, rng) };
+      });
+      team = shuffle(team, rng);
+    }
+
+    var blocks = [{ test: 'practice', trials: [{ test: 'practice' }] }];
+    if (impressions.length) blocks.push({ test: 'impressions', trials: impressions });
+    order.forEach(function (t) {
+      var trials = { paired: paired, bug: bug, stand: stand, find: find }[t];
+      if (trials.length) blocks.push({ test: t, trials: trials });
+      if (t === 'find' && team.length) blocks.push({ test: 'team', trials: team });
+    });
+    var total = 0;
+    blocks.forEach(function (b) { total += b.trials.length; });
+    return { participant: participantId, participant_number: n, order: order, order_row: orderRow,
+      variants: variants, rotation: rotation, caps: caps, blocks: blocks, total: total, notes: notes };
+  }
+
+  // The largest whole number of device pixels per image pixel that fits the space
+  // (CSS pixels at devicePixelRatio dpr). Below 1:1 it does not fit; the frame is
+  // then shown at 1:1 anyway, never shrunk, and the trial records fits: false.
+  function displayFit(w, h, availW, availH, dpr) {
+    dpr = dpr || 1;
+    var s = Math.floor(Math.min(availW * dpr / w, availH * dpr / h) + 1e-9);
+    var fits = s >= 1;
+    if (!fits) s = 1;
+    return { scale: s, css_w: w * s / dpr, css_h: h * s / dpr, dpr: dpr, natural: [w, h], fits: fits };
+  }
+
+  // Turns a trial and the participant's response into the exported record.
+  function recordFor(trial, response, index) {
+    var r = { test: trial.test, index: index };
+    if (trial.image) {
+      var info = imageInfo(trial.image);
+      Object.keys(info).forEach(function (k) { r[k] = info[k]; });
+    }
+    r.rt_ms = response.rt_ms === undefined || response.rt_ms === null ? null : Math.round(response.rt_ms);
+    r.display = response.display || null;
+    switch (trial.test) {
+      case 'practice':
+        r.click = response.click || null; r.hit = !!response.hit; break;
+      case 'impressions':
+        r.text = String(response.text || ''); break;
+      case 'paired':
+        r.baseline_path = trial.baseline.path;
+        r.first = trial.first;                     // the variant shown first, as picture A
+        r.chosen = response.chosen;                // 'V0' or the variant name
+        r.chose_variant = response.chosen === trial.image.variant;
+        r.changes = response.changes || 0;
+        r.switches = response.switches || 0;
+        r.why = String(response.why || '');
+        break;
+      case 'bug':
+        r.no_bug = !!response.no_bug;
+        r.click = response.no_bug ? null : response.click;
+        break;
+      case 'stand':
+        r.clicks = (response.clicks || []).slice();
+        break;
+      case 'find':
+        r.seat = trial.seat.seat;
+        r.seat_team = trial.seat.team || null;
+        r.seat_rect = trial.seat.rect || null;
+        r.prompt = trial.prompt;
+        r.click = response.click;
+        break;
+      case 'team':
+        r.crop_id = trial.crop_id;
+        r.crop = trial.crop.slice();
+        r.truth = trial.truth;
+        r.options = trial.options.slice();
+        r.answer = response.answer;
+        r.correct = response.answer === trial.truth;
+        break;
+    }
+    return r;
+  }
+
+  function newResults(plan, meta) {
+    return {
+      format: FORMAT, version: FORMAT_VERSION,
+      participant: plan.participant, participant_number: plan.participant_number,
+      order: plan.order, order_row: plan.order_row, variants: plan.variants, rotation: plan.rotation, caps: plan.caps,
+      consent: !!meta.consent, started: meta.started || null, finished: null, complete: false,
+      manifest_images: meta.manifest_images || 0, plan_notes: plan.notes.slice(), load_warnings: (meta.warnings || []).slice(),
+      user_agent: meta.user_agent || null, viewport: meta.viewport || null,
+      trials: []
+    };
+  }
+
+  return {
+    FORMAT: FORMAT, FORMAT_VERSION: FORMAT_VERSION, BASELINE: BASELINE, DEFAULT_CAPS: DEFAULT_CAPS, LATIN: LATIN, TESTS: TESTS,
+    hashString: hashString, mulberry32: mulberry32, shuffle: shuffle, cleanPath: cleanPath, contextKey: contextKey,
+    regionApplies: regionApplies, normaliseManifest: normaliseManifest, normaliseRegions: normaliseRegions, prepare: prepare,
+    buildPlan: buildPlan, displayFit: displayFit, recordFor: recordFor, newResults: newResults
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = StudyB;
+
+/* ---------------------------------------------------------------- user interface */
+if (typeof document !== 'undefined') (function () {
+  var main = document.getElementById('main');
+  var header = document.querySelector('header');
+  var fill = document.getElementById('progress-fill');
+  var ptext = document.getElementById('progress-text');
+  var partialBtn = document.getElementById('export-partial');
+
+  // Must match the CSS: main padding 16px each side and 12px top and bottom, a 300px
+  // side column, a 16px gap and the 1px stage border on each side.
+  var LAYOUT = { chromeW: 16 * 2 + 300 + 16 + 2, chromeH: 12 * 2 + 2 };
+
+  var files = {};      // relative path -> File
+  var urls = {};       // relative path -> object URL
+  var manifestDoc = null, regionsDoc = null, regionsSource = '';
+  var norm = null, plan = null, results = null;
+  var excluded = {};   // resolution -> true when the experimenter leaves it out
+  var blockIndex = 0, trialIndex = 0, done = 0;
+  var exported = false;
+  var onSetup = false;
+  var nextNumber = '';
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+  function urlFor(path) {
+    if (!urls[path]) urls[path] = URL.createObjectURL(files[path]);
+    return urls[path];
+  }
+  function setProgress() {
+    if (!plan || !results) { fill.style.width = '0'; ptext.textContent = ''; return; }
+    fill.style.width = (100 * done / plan.total).toFixed(1) + '%';
+    ptext.textContent = done + ' / ' + plan.total;
+  }
+  function newId() {
+    var b = new Uint8Array(4);
+    (window.crypto || window.msCrypto).getRandomValues(b);
+    return 'P-' + Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('').toUpperCase();
+  }
+  function available() {
+    return {
+      w: document.documentElement.clientWidth - LAYOUT.chromeW,
+      h: window.innerHeight - header.offsetHeight - LAYOUT.chromeH,
+      dpr: window.devicePixelRatio || 1
+    };
+  }
+  function fitFor(w, h) {
+    var a = available();
+    var f = StudyB.displayFit(w, h, a.w, a.h, a.dpr);
+    f.window = [window.innerWidth, window.innerHeight];
+    return f;
+  }
+  function normPoint(ev, el) {
+    var r = el.getBoundingClientRect();
+    var x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+    return { x: Math.min(1, Math.max(0, +x.toFixed(4))), y: Math.min(1, Math.max(0, +y.toFixed(4))) };
+  }
+  function addMarker(stage, p) {
+    var m = document.createElement('div');
+    m.className = 'marker';
+    m.style.left = (p.x * 100) + '%';
+    m.style.top = (p.y * 100) + '%';
+    stage.appendChild(m);
+    return m;
+  }
+  function download(obj, name) {
+    var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  function exportResults() {
+    var stamp = new Date().toISOString().slice(0, 10);
+    download(results, 'study-b-' + results.participant + '-' + stamp + (results.complete ? '' : '-partial') + '.json');
+    exported = true;
+  }
+  partialBtn.addEventListener('click', function () { if (results) exportResults(); });
+  window.addEventListener('beforeunload', function (e) {
+    if (results && results.trials.length && !exported) { e.preventDefault(); e.returnValue = ''; }
+  });
+  window.addEventListener('resize', function () { if (onSetup) renderStatus(); });
+
+  /* ---- setup (experimenter) */
+  function showSetup(message) {
+    onSetup = true;
+    main.innerHTML =
+      '<div class="panel narrow"><h1>Study B: setup</h1>' +
+      '<p>This part is for the experimenter. Pick the stimulus folder: the folder that holds <code>manifest.json</code> ' +
+      '(for example <code>out/study/stimuli</code>). Its <code>regions.json</code>, if there is one, is read too. ' +
+      'The browser reads the files locally; nothing is uploaded.</p>' +
+      '<label class="block">Stimulus folder</label><input type="file" id="dir" webkitdirectory directory multiple>' +
+      '<label class="block">Regions file, only if it is not <code>regions.json</code> in that folder</label>' +
+      '<input type="file" id="regions" accept=".json,application/json">' +
+      '<div id="load-status" class="muted" style="margin-top:8px">' + (message || '') + '</div>' +
+      '<label class="block">Participant number (1 for the first person, 2 for the next, and so on; it sets the test order and the variant rotation)</label>' +
+      '<input type="number" id="pnum" min="1" max="999" step="1" value="' + esc(nextNumber) + '"> <span id="order-info" class="muted"></span>' +
+      '<label class="block">Participant ID (anonymous)</label>' +
+      '<input type="text" id="pid" size="16" value="' + newId() + '"> <button class="secondary" id="regen">New ID</button>' +
+      '<details style="margin-top:12px"><summary>Trial limits per variant</summary>' +
+      ['paired', 'bug', 'stand', 'find', 'team'].map(function (k) {
+        return '<label class="block">' + k + ' <input type="number" min="0" max="99" id="cap-' + k + '" value="' + StudyB.DEFAULT_CAPS[k] + '"></label>';
+      }).join('') + '</details>' +
+      '<h2 style="margin-top:16px">Display</h2><div id="fit-status" class="muted">Pick the folder first.</div>' +
+      '<div class="row"><button id="start" disabled>Hand over to the participant</button></div></div>';
+    document.getElementById('regen').onclick = function () { document.getElementById('pid').value = newId(); };
+    document.getElementById('dir').onchange = onFolder;
+    document.getElementById('regions').onchange = onRegionsFile;
+    document.getElementById('pnum').oninput = renderStatus;
+    document.getElementById('start').onclick = onStart;
+    if (manifestDoc) renderStatus();
+  }
+
+  function readJson(file, done) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try { done(null, JSON.parse(reader.result)); } catch (e) { done(e.message, null); }
+    };
+    reader.onerror = function () { done('could not be read', null); };
+    reader.readAsText(file);
+  }
+
+  function onFolder(ev) {
+    var status = document.getElementById('load-status');
+    var list = Array.prototype.slice.call(ev.target.files || []);
+    files = {}; urls = {}; manifestDoc = null; norm = null;
+    if (regionsSource !== 'picked') { regionsDoc = null; regionsSource = ''; }
+    document.getElementById('start').disabled = true;
+    var manifestFile = null, prefix = '';
+    // webkitRelativePath starts with the picked folder's name; find manifest.json closest to the top.
+    list.forEach(function (f) {
+      var rel = (f.webkitRelativePath || f.name).replace(/\\/g, '/');
+      if (/(^|\/)manifest\.json$/.test(rel)) {
+        var p = rel.slice(0, rel.length - 'manifest.json'.length);
+        if (!manifestFile || p.length < prefix.length) { manifestFile = f; prefix = p; }
+      }
+    });
+    if (!manifestFile) { status.innerHTML = '<span class="error">No manifest.json in that folder.</span>'; return; }
+    list.forEach(function (f) {
+      var rel = (f.webkitRelativePath || f.name).replace(/\\/g, '/');
+      if (rel.indexOf(prefix) === 0) files[rel.slice(prefix.length)] = f;
+    });
+    readJson(manifestFile, function (err, doc) {
+      if (err) { status.innerHTML = '<span class="error">manifest.json is not valid JSON: ' + esc(err) + '</span>'; return; }
+      manifestDoc = doc;
+      if (regionsSource !== 'picked' && files['regions.json']) {
+        readJson(files['regions.json'], function (rerr, rdoc) {
+          if (rerr) { status.innerHTML = '<span class="error">regions.json is not valid JSON: ' + esc(rerr) + '</span>'; return; }
+          regionsDoc = rdoc; regionsSource = 'folder';
+          renderStatus();
+        });
+      } else {
+        renderStatus();
+      }
+    });
+  }
+
+  function onRegionsFile(ev) {
+    var f = (ev.target.files || [])[0];
+    if (!f) return;
+    readJson(f, function (err, doc) {
+      var status = document.getElementById('load-status');
+      if (err) { status.innerHTML = '<span class="error">' + esc(f.name) + ' is not valid JSON: ' + esc(err) + '</span>'; return; }
+      regionsDoc = doc; regionsSource = 'picked';
+      if (manifestDoc) renderStatus(); else status.textContent = 'Regions file read. Now pick the stimulus folder.';
+    });
+  }
+
+  function resolutionsOf(images) {
+    var set = {};
+    images.forEach(function (img) { set[img.resolution || '?'] = true; });
+    return Object.keys(set).sort();
+  }
+
+  function includedNorm() {
+    var images = norm.images.filter(function (img) { return !excluded[img.resolution || '?']; });
+    return { images: images, seats: norm.seats, crops: norm.crops, warnings: norm.warnings };
+  }
+
+  function participantNumber() {
+    var v = document.getElementById('pnum').value.trim();
+    return /^[1-9][0-9]{0,2}$/.test(v) ? +v : null;
+  }
+
+  function renderStatus() {
+    if (!manifestDoc || !document.getElementById('load-status')) return;
+    norm = StudyB.prepare(manifestDoc, function (p) { return !!files[p]; }, regionsDoc);
+    var status = document.getElementById('load-status');
+    var counts = {};
+    norm.images.forEach(function (img) { counts[img.variant] = (counts[img.variant] || 0) + 1; });
+    var html = '<p>Loaded ' + norm.images.length + ' images (' +
+      Object.keys(counts).sort().map(function (k) { return esc(k) + ': ' + counts[k]; }).join(', ') + '). Regions: ' +
+      (regionsDoc ? norm.regions_count + ' from ' + (regionsSource === 'picked' ? 'the picked file' : 'regions.json') +
+        ', of which ' + norm.seats.length + ' seat(s) and ' + norm.crops.length + ' crop(s).' : 'none.') + '</p>';
+    if (!norm.crops.length || !norm.seats.length) {
+      html += '<p class="error">' + (!regionsDoc ? 'No regions file. ' : '') +
+        (!norm.crops.length ? 'No crops: the team test is skipped. ' : '') +
+        (!norm.seats.length ? 'No seats: find-the-player clicks cannot be scored. ' : '') +
+        'The minimum study cannot complete. Write the seats and crops into regions.json before running anyone.</p>';
+    }
+    if (norm.warnings.length) {
+      html += '<p class="warn">' + norm.warnings.length + ' warning(s):</p><ul class="notes warn">' +
+        norm.warnings.slice(0, 20).map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') +
+        (norm.warnings.length > 20 ? '<li>...</li>' : '') + '</ul>';
+    }
+    status.innerHTML = html;
+
+    // Order row and rotation for this participant number.
+    var n = participantNumber();
+    var info = document.getElementById('order-info');
+    var variants = Object.keys(counts).sort();
+    if (n === null) {
+      info.innerHTML = '<span class="error">Enter the participant number.</span>';
+    } else {
+      var row = (n - 1) % 4;
+      info.textContent = 'Order row ' + (row + 1) + ' of 4: ' + StudyB.LATIN[row].map(function (i) { return StudyB.TESTS[i]; }).join(', ') +
+        (variants.length ? '; variant rotation ' + ((n - 1) % variants.length) + ' of ' + variants.length : '') + '.';
+    }
+
+    // Every frame must fit at a whole-number scale; frames are never shrunk.
+    var a = available();
+    var allFit = true;
+    var fitHtml = '<p>Window: ' + Math.round(a.w * a.dpr) + ' x ' + Math.round(a.h * a.dpr) + ' device pixels free for the picture ' +
+      '(device pixel ratio ' + a.dpr + '). Frames are shown only at 1:1 or a whole-number multiple; use full screen (F11) for room.</p><ul class="notes">';
+    resolutionsOf(norm.images).forEach(function (res) {
+      var m = /^(\d+)x(\d+)$/.exec(res);
+      var line;
+      if (!m) {
+        line = esc(res) + ': size unknown, checked per trial';
+      } else {
+        var f = StudyB.displayFit(+m[1], +m[2], a.w, a.h, a.dpr);
+        if (!f.fits && !excluded[res]) allFit = false;
+        line = esc(res) + ': ' + (f.fits ? 'shown at ' + f.scale + 'x' : '<span class="error">does not fit at 1:1</span>');
+      }
+      fitHtml += '<li><label><input type="checkbox" data-res="' + esc(res) + '"' + (excluded[res] ? '' : ' checked') + '> include</label> ' + line + '</li>';
+    });
+    fitHtml += '</ul>';
+    if (!allFit) fitHtml += '<p class="error">An included resolution does not fit this window. Use a larger display, full screen, or leave that resolution out.</p>';
+    var fitStatus = document.getElementById('fit-status');
+    fitStatus.innerHTML = fitHtml;
+    Array.prototype.forEach.call(fitStatus.querySelectorAll('input[data-res]'), function (box) {
+      box.onchange = function () { excluded[box.getAttribute('data-res')] = !box.checked; renderStatus(); };
+    });
+    var included = includedNorm().images.length;
+    document.getElementById('start').disabled = !(included > 0 && allFit && n !== null);
+  }
+
+  function onStart() {
+    var pid = document.getElementById('pid').value.trim();
+    if (!/^[A-Za-z0-9_-]{1,32}$/.test(pid)) { alert('Use letters, digits, - or _ for the participant ID.'); return; }
+    var n = participantNumber();
+    if (n === null) { alert('Enter the participant number: 1 for the first person, 2 for the next, and so on.'); return; }
+    var caps = {};
+    ['paired', 'bug', 'stand', 'find', 'team'].forEach(function (k) { caps[k] = +document.getElementById('cap-' + k).value; });
+    plan = StudyB.buildPlan(includedNorm(), pid, n, caps);
+    plan.excluded_resolutions = Object.keys(excluded).filter(function (k) { return excluded[k]; });
+    onSetup = false;
+    showConsent();
+  }
+
+  /* ---- consent */
+  function showConsent() {
+    main.innerHTML =
+      '<div class="panel narrow"><h1>Before you start</h1>' +
+      '<p>You will look at still pictures from a small video game and answer simple questions by clicking. ' +
+      'It takes about 15 to 20 minutes. There are no right or wrong answers about what you like.</p>' +
+      '<ul><li>Taking part is voluntary. You can stop at any time without giving a reason, and your answers will then be deleted.</li>' +
+      '<li>Your answers are stored under an anonymous code (<b>' + esc(plan.participant) + '</b>), not your name.</li>' +
+      '<li>The answers stay on this computer with the researcher. They are not published as raw data.</li>' +
+      '<li>The page records your clicks, your typed comments and how long each answer took.</li></ul>' +
+      '<p>Do you agree to take part?</p>' +
+      '<div class="row"><button id="yes">I agree</button><button class="secondary" id="no">I do not agree</button></div></div>';
+    document.getElementById('yes').onclick = function () {
+      results = StudyB.newResults(plan, {
+        consent: true, started: new Date().toISOString(), manifest_images: norm.images.length,
+        warnings: norm.warnings.concat(plan.excluded_resolutions.map(function (r) { return 'Resolution ' + r + ' left out by the experimenter.'; })),
+        user_agent: navigator.userAgent,
+        viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 }
+      });
+      partialBtn.classList.remove('hidden');
+      blockIndex = 0; trialIndex = 0; done = 0;
+      showBlockIntro();
+    };
+    document.getElementById('no').onclick = function () {
+      plan = null;
+      main.innerHTML = '<div class="panel narrow"><h1>Thank you</h1><p>Nothing has been recorded. Please let the researcher know.</p>' +
+        '<div class="row"><button class="secondary" id="back">Back to setup</button></div></div>';
+      document.getElementById('back').onclick = function () { showSetup(); };
+    };
+  }
+
+  /* ---- flow */
+  var INTROS = {
+    practice: ['A practice question', 'This one is only to get used to the page. It is not scored.'],
+    impressions: ['First look', 'You will see a few pictures from a game, one at a time. For each, write a sentence or two about what you notice. Anything at all is fine.'],
+    paired: ['Two pictures', 'You will see two pictures of the same moment, A and B, one at a time. Switch between them as often as you like with the buttons on the right. Then pick the one that looks more like it was drawn by a person, and press Next. You can add a reason if you like.'],
+    bug: ['Find the bug', 'Each picture may contain a rendering bug: something the game drew wrongly. If you see one, click on it. If you see none, press "No bug".'],
+    stand: ['Where could you stand?', 'Imagine you are a character in this game. Click on every thing in the picture that you could stand on. Click as many as you like, then press Done.'],
+    find: ['Find the player', 'Each picture shows four players. You will be told which one to find. Click on that player as quickly as you can.'],
+    team: ['Which team?', 'You will see a close-up of one figure, outlined in pink. Click the team you think it belongs to.']
+  };
+
+  function showBlockIntro() {
+    setProgress();
+    if (blockIndex >= plan.blocks.length) return finish();
+    var b = plan.blocks[blockIndex];
+    var intro = INTROS[b.test];
+    main.innerHTML = '<div class="panel narrow"><h1>' + esc(intro[0]) + '</h1><p>' + esc(intro[1]) + '</p>' +
+      '<div class="row"><button id="go">Start</button></div></div>';
+    document.getElementById('go').onclick = function () { trialIndex = 0; showTrial(); };
+  }
+
+  function record(trial, response) {
+    var r = StudyB.recordFor(trial, response, results.trials.length);
+    results.trials.push(r);
+    exported = false;
+    done++;
+    trialIndex++;
+    var b = plan.blocks[blockIndex];
+    if (trialIndex >= b.trials.length) { blockIndex++; showBlockIntro(); } else { setProgress(); showTrial(); }
+  }
+
+  function showTrial() {
+    setProgress();
+    var trial = plan.blocks[blockIndex].trials[trialIndex];
+    ({ practice: showPractice, impressions: showImpression, paired: showPaired, bug: showBug, stand: showStand, find: showFind, team: showTeam })[trial.test](trial);
+  }
+
+  // The trial layout: the picture area on the left, a side column for the prompt and controls.
+  function trialLayout(sideHtml) {
+    main.innerHTML = '<div class="trial"><div class="area" id="area"></div><div class="side">' + sideHtml + '</div></div>';
+    return document.getElementById('area');
+  }
+
+  function sizeImage(img) {
+    var f = fitFor(img.naturalWidth, img.naturalHeight);
+    img.style.width = f.css_w + 'px';
+    img.style.height = f.css_h + 'px';
+    return f;
+  }
+
+  // Shows an image in a click stage at a whole-number scale; calls onReady(stage, img, t0, display) once it has loaded.
+  function imageStage(container, path, onReady) {
+    var stage = document.createElement('div');
+    stage.className = 'stage';
+    var img = new Image();
+    img.alt = 'Picture';
+    img.draggable = false;
+    img.onload = function () { var f = sizeImage(img); onReady(stage, img, performance.now(), f); };
+    img.onerror = function () { container.innerHTML = '<p class="error">Could not show ' + esc(path) + '.</p>'; };
+    stage.appendChild(img);
+    container.appendChild(stage);
+    img.src = urlFor(path);
+    return stage;
+  }
+
+  function showPractice(trial) {
+    var area = trialLayout('<p class="prompt">Click on the red circle.</p><div class="muted" id="fb"></div>');
+    var c = document.createElement('canvas');
+    c.width = 480; c.height = 270;
+    var dpr = window.devicePixelRatio || 1;
+    c.style.width = (480 / dpr) + 'px'; c.style.height = (270 / dpr) + 'px';
+    var g = c.getContext('2d');
+    g.fillStyle = '#dfe9f3'; g.fillRect(0, 0, 480, 270);
+    g.fillStyle = '#3b6fb6'; g.fillRect(60, 80, 70, 70);
+    g.fillStyle = '#e0a400'; g.fillRect(330, 150, 80, 60);
+    g.fillStyle = '#d42020'; g.beginPath(); g.arc(250, 110, 32, 0, Math.PI * 2); g.fill();
+    var stage = document.createElement('div');
+    stage.className = 'stage';
+    stage.appendChild(c);
+    area.appendChild(stage);
+    var t0 = performance.now();
+    stage.onclick = function (ev) {
+      var p = normPoint(ev, c);
+      addMarker(stage, p);
+      var dx = p.x * 480 - 250, dy = p.y * 270 - 110;
+      var hit = dx * dx + dy * dy <= 40 * 40;
+      stage.onclick = null;
+      document.getElementById('fb').innerHTML = '<p>' + (hit ? 'Well done.' : 'That was not quite on the circle, but that is fine.') +
+        '</p><button id="next">Continue</button>';
+      var rt = performance.now() - t0;
+      document.getElementById('next').onclick = function () { record(trial, { click: p, hit: hit, rt_ms: rt }); };
+    };
+  }
+
+  function showImpression(trial) {
+    var area = trialLayout('<p class="prompt">What do you notice about this picture?</p>' +
+      '<label class="block">Your words</label><textarea id="txt" placeholder="Anything at all"></textarea>' +
+      '<button id="next" disabled>Next</button>');
+    var t0 = null, disp = null;
+    var stage = imageStage(area, trial.image.path, function (s, img, t, f) { t0 = t; disp = f; });
+    stage.style.cursor = 'default';
+    var txt = document.getElementById('txt'), next = document.getElementById('next');
+    txt.oninput = function () { next.disabled = txt.value.trim().length === 0; };
+    next.onclick = function () { record(trial, { text: txt.value.trim(), rt_ms: t0 === null ? null : performance.now() - t0, display: disp }); };
+  }
+
+  // Paired choice shows one full frame at a time; the participant switches between A and B.
+  function showPaired(trial) {
+    var firstIsBase = trial.first === StudyB.BASELINE;
+    var names = { A: firstIsBase ? StudyB.BASELINE : trial.image.variant, B: firstIsBase ? trial.image.variant : StudyB.BASELINE };
+    var paths = { A: firstIsBase ? trial.baseline.path : trial.image.path, B: firstIsBase ? trial.image.path : trial.baseline.path };
+    var area = trialLayout('<p class="prompt">Which looks drawn by a person?</p>' +
+      '<div class="shown-label" id="shown">Picture A</div>' +
+      '<button class="secondary" id="showA">Show picture A</button><button class="secondary" id="showB">Show picture B</button>' +
+      '<p class="muted">Look at both, then choose:</p>' +
+      '<button class="secondary" id="pickA" disabled>A looks drawn by a person</button>' +
+      '<button class="secondary" id="pickB" disabled>B looks drawn by a person</button>' +
+      '<label class="block">Why? (optional)</label><textarea id="why"></textarea>' +
+      '<button id="next" disabled>Next</button>');
+    var stage = document.createElement('div');
+    stage.className = 'stage';
+    stage.style.cursor = 'default';
+    var imgs = {};
+    var loaded = 0, t0 = null, rt = null, chosen = null, changes = 0, switches = 0, disp = null;
+    var seen = { A: true, B: false }, showing = 'A';
+    ['A', 'B'].forEach(function (k) {
+      var img = new Image();
+      img.alt = 'Picture ' + k;
+      img.draggable = false;
+      if (k === 'B') img.style.display = 'none';
+      img.onload = function () {
+        var f = sizeImage(img);
+        if (k === 'A') disp = f;
+        if (++loaded === 2) t0 = performance.now();
+      };
+      imgs[k] = img;
+      stage.appendChild(img);
+    });
+    area.appendChild(stage);
+    imgs.A.src = urlFor(paths.A);
+    imgs.B.src = urlFor(paths.B);
+    function show(k) {
+      if (t0 === null || k === showing) return;
+      showing = k; seen[k] = true; switches++;
+      imgs.A.style.display = k === 'A' ? '' : 'none';
+      imgs.B.style.display = k === 'B' ? '' : 'none';
+      document.getElementById('shown').textContent = 'Picture ' + k;
+      document.getElementById('pickA').disabled = document.getElementById('pickB').disabled = !(seen.A && seen.B);
+    }
+    function pick(k) {
+      if (rt === null) rt = performance.now() - t0; else if (chosen !== k) changes++;
+      chosen = k;
+      document.getElementById('pickA').classList.toggle('on', k === 'A');
+      document.getElementById('pickB').classList.toggle('on', k === 'B');
+      document.getElementById('next').disabled = false;
+    }
+    document.getElementById('showA').onclick = function () { show('A'); };
+    document.getElementById('showB').onclick = function () { show('B'); };
+    document.getElementById('pickA').onclick = function () { pick('A'); };
+    document.getElementById('pickB').onclick = function () { pick('B'); };
+    document.getElementById('next').onclick = function () {
+      record(trial, { chosen: names[chosen], changes: changes, switches: switches, rt_ms: rt, display: disp,
+        why: document.getElementById('why').value.trim() });
+    };
+  }
+
+  function showBug(trial) {
+    var area = trialLayout('<p class="prompt">Click on the rendering bug, or press "No bug".</p>' +
+      '<button class="secondary" id="none">No bug</button><button id="next" disabled>Next</button>' +
+      '<p class="muted">Click again to move your mark.</p>');
+    var t0 = null, rt = null, click = null, marker = null, disp = null;
+    imageStage(area, trial.image.path, function (stage, img, t, f) {
+      t0 = t; disp = f;
+      stage.onclick = function (ev) {
+        click = normPoint(ev, img);
+        if (rt === null) rt = performance.now() - t0;
+        if (marker) marker.remove();
+        marker = addMarker(stage, click);
+        document.getElementById('next').disabled = false;
+      };
+    });
+    document.getElementById('none').onclick = function () {
+      if (t0 === null) return;
+      record(trial, { no_bug: true, rt_ms: performance.now() - t0, display: disp });
+    };
+    document.getElementById('next').onclick = function () { record(trial, { no_bug: false, click: click, rt_ms: rt, display: disp }); };
+  }
+
+  function showStand(trial) {
+    var area = trialLayout('<p class="prompt">Click on every thing you could stand on.</p>' +
+      '<button class="secondary" id="undo" disabled>Undo last click</button><button id="next">Done</button>' +
+      '<p class="muted" id="count">0 clicks</p>');
+    var t0 = null, clicks = [], markers = [], disp = null;
+    function update() {
+      document.getElementById('count').textContent = clicks.length + (clicks.length === 1 ? ' click' : ' clicks');
+      document.getElementById('undo').disabled = clicks.length === 0;
+    }
+    imageStage(area, trial.image.path, function (stage, img, t, f) {
+      t0 = t; disp = f;
+      stage.onclick = function (ev) {
+        var p = normPoint(ev, img);
+        p.t_ms = Math.round(performance.now() - t0);
+        clicks.push(p);
+        markers.push(addMarker(stage, p));
+        update();
+      };
+    });
+    document.getElementById('undo').onclick = function () { clicks.pop(); markers.pop().remove(); update(); };
+    document.getElementById('next').onclick = function () {
+      if (t0 === null) return;
+      record(trial, { clicks: clicks, rt_ms: performance.now() - t0, display: disp });
+    };
+  }
+
+  function showFind(trial) {
+    var area = trialLayout('<p class="prompt">' + esc(trial.prompt) + '</p><p class="muted">Your first click counts.</p>');
+    imageStage(area, trial.image.path, function (stage, img, t0, f) {
+      stage.onclick = function (ev) {
+        stage.onclick = null;
+        var p = normPoint(ev, img);
+        var rt = performance.now() - t0;
+        addMarker(stage, p);
+        setTimeout(function () { record(trial, { click: p, rt_ms: rt, display: f }); }, 250);
+      };
+    });
+  }
+
+  function showTeam(trial) {
+    main.innerHTML = '<div class="panel"><p class="prompt">Which team is the outlined figure on?</p>' +
+      '<div class="crop-wrap" id="area"></div><div class="row team-buttons" id="btns"></div></div>';
+    var img = new Image();
+    img.onload = function () {
+      var r = trial.crop;
+      var sx = Math.round(r[0] * img.naturalWidth), sy = Math.round(r[1] * img.naturalHeight);
+      var sw = Math.max(1, Math.round((r[2] - r[0]) * img.naturalWidth)), sh = Math.max(1, Math.round((r[3] - r[1]) * img.naturalHeight));
+      // Whole device pixels per image pixel, up to about 480 CSS pixels on the long side.
+      var dpr = window.devicePixelRatio || 1;
+      var scale = Math.max(1, Math.floor(Math.min(480 * dpr / sw, 480 * dpr / sh)));
+      var c = document.createElement('canvas');
+      c.width = sw * scale; c.height = sh * scale;
+      c.style.width = (c.width / dpr) + 'px'; c.style.height = (c.height / dpr) + 'px';
+      var g = c.getContext('2d');
+      g.imageSmoothingEnabled = false;
+      g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      document.getElementById('area').appendChild(c);
+      var disp = { scale: scale, css_w: c.width / dpr, css_h: c.height / dpr, dpr: dpr, natural: [sw, sh], fits: true,
+        window: [window.innerWidth, window.innerHeight] };
+      var t0 = performance.now();
+      var btns = document.getElementById('btns');
+      trial.options.forEach(function (o) {
+        var b = document.createElement('button');
+        b.textContent = o.charAt(0).toUpperCase() + o.slice(1);
+        b.onclick = function () { record(trial, { answer: o, rt_ms: performance.now() - t0, display: disp }); };
+        btns.appendChild(b);
+      });
+    };
+    img.src = urlFor(trial.image.path);
+  }
+
+  function finish() {
+    results.complete = true;
+    results.finished = new Date().toISOString();
+    setProgress();
+    main.innerHTML = '<div class="panel narrow"><h1>Thank you</h1><p>That is everything. Please hand the computer back to the researcher.</p>' +
+      '<hr><p class="muted">For the researcher: save the results file now. It is downloaded to this computer only. ' +
+      'Keep it outside the repository.</p>' +
+      (plan.notes.length ? '<p class="muted">Notes from this run:</p><ul class="notes muted">' +
+        plan.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '') +
+      '<div class="row"><button id="exp">Export results (JSON)</button><button class="secondary" id="again">Next participant</button></div></div>';
+    document.getElementById('exp').onclick = exportResults;
+    document.getElementById('again').onclick = function () {
+      if (!exported && !confirm('The results have not been exported. Discard them?')) return;
+      nextNumber = String(plan.participant_number + 1);
+      results = null; plan = null; exported = false; partialBtn.classList.add('hidden');
+      showSetup();
+    };
+  }
+
+  showSetup();
+  setProgress();
+})();
+</script>
+</body>
+</html>

@@ -16,7 +16,7 @@ a piece of stationery that fills its collision shape exactly:
 
 | Material | Worn by | Drawing |
 |---|---|---|
-| `ground` | solid structures; the big paintable floors | Halved-bond tile courses with black joints in the top four courses, `ground_shade` below. Scoring faces use the common white primer described below. |
+| `ground` | solid structures; the big paintable floors | Halved-bond tile courses with black joints in the top four courses; about one joint in five slips a cell off the bond, keyed on its world position ([drawing mistakes](drawing-mistakes-research.md#7-recommendation-and-stages)), `ground_shade` below. Scoring faces use the common white primer described below. |
 | `pencil` | long paintable platforms and walls | `pencil_body` with a shaded lower facet; an eraser and ferrule at the end away from the stage's mirror line, a cut wood end with its graphite core toward it. A pencil across the mirror line is cut at both ends; one standing up has its eraser at the top; one shorter than four times its thickness (or 60 units) has no end caps. |
 | `eraser` | tall paintable blocks (King of the Hill's tiers) | `eraser_fill`, a keylined `eraser_shade` lower third and one shine dash below the paint band. |
 | `paint_tin` | King of the Hill's summit | Metal tin side on: rim, `prop_accent` label band, shaded side. |
