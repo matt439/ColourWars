@@ -4,6 +4,7 @@
 #include "engine/math/triangle.h"
 
 #include <cmath>
+#include <cstdint>
 #include <optional>
 #include <stdexcept>
 
@@ -27,6 +28,27 @@ namespace
 	float grid_from(float world, float period)
 	{
 		return std::ceil(world / period) * period;
+	}
+
+	// The person laid the bricks by hand, so a few joints landed off the bond
+	// (docs/drawing-mistakes-research.md, stage 1). Keyed on the joint's world
+	// position, so neighbouring pieces agree and every build draws the same
+	// wall; splitmix64 with a constant seed, never the match's random streams.
+	// Decoration, so the stage's mirrored halves need not slip alike.
+	constexpr unsigned BRICK_SLIP_ONE_IN = 5;
+	constexpr float BRICK_SLIP_CELLS = 1.0f;
+
+	float brick_slip(float joint_x, float course_top)
+	{
+		std::uint64_t z = (static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(joint_x / CELL))) << 32) ^
+			static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(course_top / CELL))) ^
+			0x6272696B736C6970ULL;
+		z += 0x9E3779B97F4A7C15ULL;
+		z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
+		z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+		z ^= z >> 31;
+		if (z % BRICK_SLIP_ONE_IN != 0) { return 0.0f; }
+		return ((z >> 32) & 1u) != 0 ? BRICK_SLIP_CELLS * CELL : -BRICK_SLIP_CELLS * CELL;
 	}
 
 	bool overlaps(const std::vector<std::pair<float, float>>& spans, float low, float high)
@@ -120,7 +142,12 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 		for (float x = grid_from(rectangle.left() - offset + CELL * 3.0f, brick) + offset;
 			x < rectangle.right() - CELL * 3.0f; x += brick)
 		{
-			this->add(RectangleF(x, top, CELL, bottom - top), TerrainRole::keyline, rectangle);
+			float joint = x + brick_slip(x, top);
+			if (joint < rectangle.left() + CELL * 3.0f || joint >= rectangle.right() - CELL * 3.0f)
+			{
+				joint = x;
+			}
+			this->add(RectangleF(joint, top, CELL, bottom - top), TerrainRole::keyline, rectangle);
 		}
 	}
 	this->outline(rectangle, faces);

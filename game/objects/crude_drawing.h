@@ -5,9 +5,11 @@
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 
-// Shapes drawn the way the person draws: a mouse, the rectangle tool and a
-// shaky hand. Everything is one stretched solid frame, so round things come
-// out stepped, which is the look (docs/backstory.md; the art is Paint-style).
+// Shapes drawn the way the person draws: a mouse and the rectangle tool.
+// Everything is one stretched solid frame, so round things come out stepped,
+// which is the look (docs/backstory.md; the art is Paint-style). There is no
+// jitter: any slip is authored where it is drawn
+// (docs/drawing-mistakes-research.md).
 // The drawings of the opening and the reveal derive from it.
 class CrudeDrawing : public labrador::TextureObject
 {

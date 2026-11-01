@@ -28,17 +28,17 @@ gutter.
 
 | Frame | Texels | Drawing |
 |---|---|---|
-| `hill_wide` | 1536x320 | two rolling bg_far humps, outline on top only, flat opaque bottom row |
-| `hill_small` | 768x192 | one bg_far hump with a low shoulder, same horizon rules |
-| `tree_round` | 128x224 | round bg_mid canopy on a one-cell bg_line stick trunk |
-| `tree_tall` | 96x256 | tall faceted bg_mid canopy on a stick trunk |
-| `house` | 384x352 | bg_mid gable roof and walls, two bg_detail windows with a bar, a door with a knob |
-| `cloud_big` | 256x96 | two bg_detail bumps and a small one on a long flat base |
-| `cloud_small` | 160x64 | two bumps on a flat base |
-| `sun` | 224x224 | bg_detail disc, twelve bg_line rays, a flat little face; not yellow |
+| `hill_wide` | 1536x320 | two rolling bg_far humps with one flat step where the drag paused, outline on top only, flat opaque bottom row |
+| `hill_small` | 768x192 | one bg_far hump with a low shoulder dragged a cell too deep, same horizon rules |
+| `tree_round` | 128x224 | round bg_mid canopy on a one-cell bg_line stick trunk that leans |
+| `tree_tall` | 96x256 | tall faceted bg_mid canopy on a stick trunk that leans the other way |
+| `house` | 384x352 | bg_mid gable roof, its peak a little left of centre, and walls, two bg_detail windows with a bar, a door with a knob |
+| `cloud_big` | 256x96 | two bg_detail bumps and a last one drawn too big, on a long flat base |
+| `cloud_small` | 160x64 | two bumps, the second dragged wide, on a flat base |
+| `sun` | 224x224 | bg_detail disc, twelve bg_line rays (one off level, one short), a flat little face; not yellow |
 | `birds` | 96x32 | two bg_line gull strokes |
-| `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes; bg_line outlines distinguish it from walkable terrain |
-| `tape_roll` | 256x160 | flat roll with a paper core and short peeled end; the same backdrop roles, without team colours or text |
+| `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes, flat fills and a plain rim with no highlights; bg_line outlines distinguish it from walkable terrain |
+| `tape_roll` | 256x160 | flat roll with a paper core and short peeled end, no shading inside the core or on the end; the same backdrop roles, without team colours or text |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 

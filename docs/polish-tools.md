@@ -35,6 +35,13 @@ their existing simulation paths. The [reservoir supply pass](#reservoir-paint-su
 now makes the sprayer and mister liquid follow ammunition; the bucket opening
 remains a wet material, and the sniper dial still depicts pressure.
 
+On 2026-11-01 the author asked for simpler tools
+([drawing mistakes](drawing-mistakes-research.md#7-recommendation-and-stages)).
+The sprayer, sniper and mister lost their barrel highlight strips, shade marks and
+nozzle glints. The roller lost the dark shine spot on its drum. Every mechanism
+that moves stayed: valves, the dial, the piston, the drum's wear index, the hose
+and the reservoir liquid. The bucket was already plain and is unchanged.
+
 ## Motion and lifecycle
 
 Numeric visual timing and travel periods live in `presentation.json.tool_motion`.

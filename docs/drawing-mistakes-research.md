@@ -183,6 +183,36 @@ Frequencies are not known. Study A exists to find them.
    - Visibility at 4P 720p is a pass condition, not an assumption.
    - Run the `terrain` acceptance case (`miniature_checks.h` samples touching ground pieces) and `check-painter.ps1 -MiniatureTerrainOnly` on MattPC. CI only compiles the painter checks.
 
+**Stage 1 as built (2026-11-01, branch `drawing-mistakes-research`).** Not
+shipped: it waits on Study B.
+
+- **Skill ceiling.** `brush_pot` lost its three brush-head glints, the body
+  highlight and the shaded inner rim. Its mouth is now a plain `bg_line` ring
+  around a `bg_mid` inside, because removing the inner ellipse alone left a solid
+  dark disc. `tape_roll` lost the shade inside its core and the highlight on its
+  peeled end. **It keeps its lighter top face**, unlike the list above: that face
+  is a flat fill that gives the roll its shape, not a highlight, and removing it
+  changes the silhouette.
+- **One mistake per prop** ([terrain.json](../game/art/terrain/terrain.json)):
+  a flat step on `hill_wide`'s first rise; `hill_small`'s dip a cell too deep;
+  both tree trunks leaning, in opposite directions; the house's roof peak three
+  cells left of centre; `cloud_big`'s last bump too big; `cloud_small`'s second
+  bump dragged wide; one sun ray off level and one short. `birds` already looked
+  drawn by hand and is unchanged.
+- **Brick slips.** `brick_slip` in
+  [terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)
+  moves about one joint in five by one cell, left or right, keyed on the joint's
+  world position with splitmix64 and a constant seed. A slip that would break the
+  3-cell clearance keeps the joint in place. The 2-cell variant for Study B is
+  `BRICK_SLIP_CELLS = 2`, a rebuild.
+  **Not yet per person:** the slips are the same every match. Seeding them from
+  `persona()` needs the match seed passed through the level builder to the
+  materials; that waits for stage 2, which needs the same plumbing for the
+  figure.
+- **Simpler tools** ([polish-tools.md](polish-tools.md#drawing-and-attachments)):
+  highlight strips, shade marks, glints and the roller's drum shine are gone;
+  every moving mechanism stays.
+
 **Stage 2: figure, after Study A, and an author decision.** The figure was chosen part by part by the author on 2026-10-18 ([polish-plan.md](polish-plan.md) §1), so any change reopens that choice and should be shown with before and after images.
 
 - At most 1-2 shared face or head-keyline mistakes, the same for every seat and team, for example uneven eye height.
