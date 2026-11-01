@@ -194,7 +194,7 @@ Frequencies are not known. Study A exists to find them.
 
 - Story beats: one small patched leak or overdraw inside a single backdrop prop.
 - The eraser-corrected stroke, if wanted.
-- Per-match hands only if Study B asks for them, derived from `persona()`. The canon argues against them.
+- Per-match hands are decided (section 9); their pool comes from Study A.
 
 **Guardrails for every stage:**
 
@@ -271,14 +271,35 @@ This is a screen for gross failures, not a measurement.
 - **Ethics:** consent sheet, screen-only recording, anonymous IDs, data kept outside the repo. **No participant pixels enter the repo**: use the mistake patterns, not the drawings.
 - **Effort:** about 7-9 days in full. The minimum is about 4 days: Study A on the figure only, plus Study B's paired choice, find-the-bug and team-ID tests. Stage 1 needs Study B but not Study A.
 
-## 9. Open questions for the author
+## 9. Author decisions and open questions
 
-1. **Layers.** Adopt the three-layer split (picture, program, room)? Do the HUD and menus take mistakes? Their palette membership is already decided.
-2. **Literal or stylistic.** Is open decision 4 literal or stylistic? Must each mistake be reproducible in jspaint?
-3. **One hand or many.** Different people each match is settled. Do they all share one hand (shared common mistakes), or does each person get their own (per-match variants from `persona()`)?
-4. **Figure changes.** Reopen the figure for 1-2 shared face mistakes, and possibly a kept mistake the respawn pen draws every time? Separately, allow an eraser stroke kind in the redraw?
-5. **Brick fairness.** Bricks: mirrored drift positions, or only equal drift counts per half?
-6. **Weapon detail.** Simplify the weapons' rendered detail, or keep it as chosen?
+**Decided by the author on 2026-11-01:**
+
+1. **The three-layer split is adopted:** the picture, the program and the room.
+   Menus take no mistakes, because the person did not draw them. Only the picture
+   takes mistakes. The HUD and menus belong to the program layer [I: the author
+   named menus; the HUD is placed with them by the same reasoning].
+2. **Literal.** Every mistake must be one a person could really make in Paint 98
+   at 400%, reproducible in jspaint.
+3. **Each person has their own mistakes.** The figure design stays shared, as
+   [backstory.md](backstory.md#why-everyone-draws-the-same-box-heads) says;
+   what varies is the slips. They are chosen per match from
+   `MatchRandom::persona()` ([match_random.h](../game/objects/match_random.h)), so
+   they agree with that match's bezel and silhouette. One person drew both teams,
+   so within a match both teams get the same mistakes, and fairness holds. This
+   moves per-match hands from stage 3 into the main plan. Study A now supplies a
+   pool of real mistakes to draw from, not one shared set.
+4. **Weapons are simplified:** the rendered detail (sprayer scope, sniper dial,
+   roller highlight) comes out, to the bucket's level.
+
+**Still open:**
+
+5. **Figure changes.** Reopen the author's 2026-10-18 figure so each match's
+   person can add 1-2 face or head-outline slips (for example one eye a cell
+   higher)? And may the respawn redraw show a stroke drawn wrong and then rubbed
+   out with the Eraser?
+6. **Brick fairness.** The arenas are mirrored left to right. Should brick drift
+   mirror too, or only keep an equal number of shifted bricks on each half?
 
 ---
 
