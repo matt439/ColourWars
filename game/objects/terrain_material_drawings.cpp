@@ -73,6 +73,12 @@ namespace
 	// A joint sometimes ran a cell or two past the line it was meant to stop at.
 	constexpr unsigned JOINT_OVERSHOOT_ONE_IN = 4;
 
+	// Each brick is its own rectangle, and a few were drawn a cell or two off the
+	// edge they should have shared, so that edge came out doubled: two lines side
+	// by side, or with a one-cell sliver of brick between them.
+	constexpr unsigned JOINT_DOUBLED_ONE_IN = 8;
+	constexpr unsigned BRICK_TOP_DOUBLED_ONE_IN = 10;
+
 	struct MortarStroke
 	{
 		float left, right, y;
@@ -226,6 +232,7 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 		// Halved bond: every other course starts half a tile along.
 		const float offset = (index % 2 == 0) ? 0.0f : brick / 2.0f;
 		// Joints keep clear of the outline, or they read as a doubled edge.
+		std::optional<float> previous;
 		for (float x = grid_from(rectangle.left() - offset + CELL * 3.0f, brick) + offset;
 			x < rectangle.right() - CELL * 3.0f; x += brick)
 		{
@@ -252,6 +259,37 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 				}
 			}
 			this->add(RectangleF(joint, joint_top, CELL, joint_bottom - joint_top), TerrainRole::keyline, rectangle);
+
+			const std::uint64_t doubled = cell_key(joint, top, 0x646F75626C656A74ULL);
+			if (doubled % JOINT_DOUBLED_ONE_IN == 0)
+			{
+				const float apart = static_cast<float>(1u + ((doubled >> 32) & 1u)) * CELL;
+				const float twin = ((doubled >> 40) & 1u) != 0 ? joint + apart : joint - apart;
+				if (twin >= rectangle.left() + CELL * 3.0f && twin < rectangle.right() - CELL * 3.0f)
+				{
+					const float twin_top = above.empty() ? top : mortar_at(above, twin, top).first;
+					const float twin_bottom = below.empty() ? bottom : mortar_at(below, twin, bottom).second;
+					this->add(RectangleF(twin, twin_top, CELL, twin_bottom - twin_top), TerrainRole::keyline, rectangle);
+				}
+			}
+
+			// The brick between the last joint and this one: its top edge drawn
+			// again, a row or two under the line it should have shared.
+			if (previous && !above.empty())
+			{
+				const std::uint64_t edge = cell_key(*previous, top, 0x646F75626C65746FULL);
+				if (edge % BRICK_TOP_DOUBLED_ONE_IN == 0)
+				{
+					const float line_bottom = std::max(mortar_at(above, *previous, top).second,
+						mortar_at(above, joint, top).second);
+					const float y = line_bottom + static_cast<float>((edge >> 32) & 1u) * CELL;
+					if (y + CELL <= bottom - CELL * 3.0f && y + CELL <= rectangle.bottom() - CELL * 3.0f)
+					{
+						this->add(RectangleF(*previous, y, joint + CELL - *previous, CELL), TerrainRole::keyline, rectangle);
+					}
+				}
+			}
+			previous = joint;
 		}
 	}
 	this->outline(rectangle, faces);

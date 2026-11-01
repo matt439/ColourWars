@@ -219,6 +219,13 @@ shipped: it waits on Study B.
   interior line. A drift or overshoot that would come within 3 cells of the
   outline is not drawn. Same constant-seed keying as the slips, so this is not
   per person yet either.
+- **Doubled edges** (added 2026-11-01, the author's second example). Each brick
+  is its own rectangle, and a few missed the edge they should have shared, so it
+  came out twice: about one joint in eight gets a twin one or two cells to one
+  side, and about one brick in ten between two joints gets its top edge again a
+  row under the line or two rows under it. A one-cell gap leaves a sliver of
+  brick between the two lines. This is F4's "doubled joint". The "doubled
+  keyline weight" exclusion in section 4 still holds for outlines.
 - **Simpler tools** ([polish-tools.md](polish-tools.md#drawing-and-attachments)):
   highlight strips, shade marks, glints and the roller's drum shine are gone;
   every moving mechanism stays.
@@ -264,9 +271,12 @@ a square by hand to show the mistakes they make on lines along the axes:
   survives reduction;
 - a line **overshooting** the corner it should stop at (OVER);
 - a corner where the two lines **do not meet** (GAP).
+- (a second example) a rectangle drawn beside another to **share an edge**,
+  which instead comes out as a **double line** (WEIGHT where the lines touch,
+  ADD where a sliver separates them).
 
 These are the first entries in the pool. They went into the brick mortar at once
-(stage 1, "Mortar strokes"), with corner gaps limited to diagonal touches. Terrain
+(stage 1, "Mortar strokes" and "Doubled edges"), with corner gaps limited to diagonal touches. Terrain
 outlines stay closed because they are collision, and the head box waits for
 Study A.
 
