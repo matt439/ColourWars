@@ -75,3 +75,4 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
 | [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
 | [perf/](perf/) | frame-pacing analysis and its test |
+| [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |

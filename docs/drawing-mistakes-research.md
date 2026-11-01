@@ -243,6 +243,8 @@ shipped: it waits on Study B.
 
 No playtest with anyone other than the author is on record ([design-process.md](design-process.md)) [E]. Study B fits inside `POL#24`. Study A needs a new TODO row.
 
+**Kits:** [scripts/studies/](../scripts/studies/README.md) holds both studies ready to run: Study A's reference images, participant and run sheets, consent sheet, codebook and analysis, and Study B's stimulus capture, test page and analysis. Two thresholds were fixed there before any data, beyond this section: `ASYM_MIN_PAIRS = 2` and `PROP_MIN_ERROR = 0.05` (a relative error).
+
 **Pilot (half a day):** the author runs Study A on themselves first, to debug the materials and the timing.
 
 ### Study A: what mistakes do people make?
