@@ -36,6 +36,7 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 | [audio-inventory.md](audio-inventory.md) | the sound inventory and direction behind the replacement bank |
 | [level-design-research.md](level-design-research.md) | combat-map research that led to Crossfeed |
 | [classic-paint-research.md](classic-paint-research.md) | what the old Microsoft paint programs could draw, for the art rules |
+| [drawing-mistakes-research.md](drawing-mistakes-research.md) | whether the art should carry deliberate mouse-drawing mistakes, and the human tests that decide which |
 
 ## Arenas
 
