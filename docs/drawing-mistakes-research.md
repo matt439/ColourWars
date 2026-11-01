@@ -128,7 +128,7 @@ Frequencies are not known. Study A exists to find them.
   - `GroundMaterial` takes no `mirror_x`; only `PencilMaterial` does.
   - The joints are not mirror-symmetric today.
   - A seeded mistake should therefore hash the world y of the course top and the joint's world x, using splitmix with a constant seed, as `AirbrushShadow` does. Apply the shift before the 3-cell clearance test.
-  - Mirrored mistakes would need new plumbing, and mirrored drift is itself a sign that the pattern was generated. Fairness needs only the same number of drifts in each half, because joints sit inside a collision outline that stays true [I]. This is the author's call.
+  - Mirrored mistakes would need new plumbing, and mirrored drift is itself a sign that the pattern was generated. Joints sit inside a collision outline that stays true [I]. The author decided on 2026-11-01 that decoration need not be equal: drift is neither mirrored nor counted per half.
 - **Figure** ([painter.json](../game/art/painter/painter.json)):
   - Editable area: face rows 5-10 and the head-box keyline, away from `T`, torso rows 0-4 and 11-15 (the action invariant), the shoulder anchors (`presentation.json:951-952`) and the grips.
   - Neutral and paint masks are split by the `T` legend, so they stay complementary by construction.
@@ -152,7 +152,7 @@ Frequencies are not known. Study A exists to find them.
 **Respawn redraw.** Respawn replays "the strokes the person used to draw it" (`backstory.md:74-76`), and "nobody presses Ctrl+Z" (`:82`). An undone stroke is gone from a linear history, so it cannot be replayed. **The undone wrong stroke is dropped.** Two versions remain:
 
 - **A kept mistake the pen draws every time** (an overshoot tail, say). It needs no new stroke kind, so it goes with the stage 2 figure work.
-- **A stroke drawn wrong and then erased with the Eraser.** The eraser stroke is part of the history, so the story allows it. It needs an eraser stroke kind in the pen check, which can still be exact on the final set. Author question.
+- **A stroke drawn wrong and then erased with the Eraser.** The eraser stroke is part of the history, so the story allows it. The author declined it on 2026-11-01: the redraw shows no erased strokes.
 
 ## 7. Recommendation and stages
 
@@ -193,7 +193,6 @@ Frequencies are not known. Study A exists to find them.
 **Stage 3: after Study B and an author call.**
 
 - Story beats: one small patched leak or overdraw inside a single backdrop prop.
-- The eraser-corrected stroke, if wanted.
 - Per-match hands are decided (section 9); their pool comes from Study A.
 
 **Guardrails for every stage:**
@@ -292,14 +291,15 @@ This is a screen for gross failures, not a measurement.
 4. **Weapons are simplified:** the rendered detail (sprayer scope, sniper dial,
    roller highlight) comes out, to the bucket's level.
 
-**Still open:**
+5. **The figure is reopened.** Each match's person may add 1-2 face or
+   head-outline slips, picked from the Study A pool, under the stage 2 rules.
+   The respawn redraw shows no erased strokes: kept mistakes only.
+6. **Decoration need not be equal.** Brick drift and other backdrop mistakes are
+   neither mirrored nor balanced per half. Collision, landing edges and scored
+   paint stay mirrored and true.
 
-5. **Figure changes.** Reopen the author's 2026-10-18 figure so each match's
-   person can add 1-2 face or head-outline slips (for example one eye a cell
-   higher)? And may the respawn redraw show a stroke drawn wrong and then rubbed
-   out with the Eraser?
-6. **Brick fairness.** The arenas are mirrored left to right. Should brick drift
-   mirror too, or only keep an equal number of shifted bricks on each half?
+Nothing in this research is open now. Stage 1 waits only on being built and on
+Study B; stage 2 waits on Study A.
 
 ---
 
