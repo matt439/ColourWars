@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level_builder.h"
-#include "game/presentation.h"
-#include "game/drawable_text.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/drawable_text.h"
 
 using namespace mattmath;
 using namespace labrador;

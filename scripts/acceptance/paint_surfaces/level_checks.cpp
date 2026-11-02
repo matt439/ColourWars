@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/match_fingerprint.h"
+#include "game/debug/replay/match_fingerprint.h"
 #endif
 #include <array>
 

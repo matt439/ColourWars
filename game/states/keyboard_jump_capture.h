@@ -2,7 +2,7 @@
 
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
-#include "game/input_bindings.h"
+#include "game/input/input_bindings.h"
 #include <optional>
 
 // One physical keyboard gesture for one keyboard action. The page samples once

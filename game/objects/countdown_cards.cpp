@@ -2,9 +2,9 @@
 #include "game/objects/countdown_cards.h"
 #include "game/objects/paper_card.h"
 #include "game/objects/player.h"
-#include "game/presentation.h"
-#include "game/tuning.h"
-#include "game/controls_text.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/tuning.h"
+#include "game/input/controls_text.h"
 #include "engine/render/renderer.h"
 #include "engine/render/resolution_manager.h"
 #include <algorithm>

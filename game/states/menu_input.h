@@ -3,9 +3,9 @@
 #include "engine/input/gamepads.h"
 #include "engine/input/keyboard.h"
 #include "engine/ui/navigation.h"
-#include "game/input_slots.h"
-#include "game/action_bindings.h"
-#include "game/tuning.h"
+#include "game/input/input_slots.h"
+#include "game/input/action_bindings.h"
+#include "game/config/tuning.h"
 #include "game/states/menu_input_action.h"
 #include <array>
 #include <vector>

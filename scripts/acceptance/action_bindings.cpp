@@ -1,9 +1,9 @@
 #include "game/pch.h"
-#include "game/action_bindings.h"
-#include "game/input_slots.h"
+#include "game/input/action_bindings.h"
+#include "game/input/input_slots.h"
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "engine/input/gamepad_reader.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>

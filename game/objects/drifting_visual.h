@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 #include "engine/core/game_object.h"
 #include "engine/render/texture_object.h"
 

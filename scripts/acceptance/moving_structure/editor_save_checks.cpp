@@ -7,7 +7,7 @@
 #include <process.h>
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay.h"
+#include "game/debug/replay/replay.h"
 #endif
 
 namespace moving_structure_acceptance

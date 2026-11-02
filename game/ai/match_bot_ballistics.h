@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 
 namespace match_bot_ballistics
 {

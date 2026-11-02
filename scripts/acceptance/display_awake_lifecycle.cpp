@@ -2,9 +2,9 @@
 #include "game/display_awake.h"
 #include "game/states/game_states.h"
 #include "game/game_data.h"
-#include "game/stage_catalog.h"
-#include "game/save.h"
-#include "game/sound_groups.h"
+#include "game/config/stage_catalog.h"
+#include "game/save/save.h"
+#include "game/config/sound_groups.h"
 #include "engine/app/application.h"
 #include <array>
 #include <atomic>

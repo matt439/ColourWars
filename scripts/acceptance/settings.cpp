@@ -1,6 +1,6 @@
 #include "game/pch.h"
-#include "game/save.h"
-#include "game/settings_session.h"
+#include "game/save/save.h"
+#include "game/config/settings_session.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>

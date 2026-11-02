@@ -3,7 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
-#include "game/debug/debug_perf.h"
+#include "game/debug/capture/debug_perf.h"
 #include "game/objects/debug_text.h"
 #include <cmath>
 #include <limits>

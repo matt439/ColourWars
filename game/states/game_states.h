@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/core/state.h"
-#include "game/session.h"
-#include "game/match_setup.h"
+#include "game/match/session.h"
+#include "game/match/match_setup.h"
 #include "game/game_data.h"
 #include "game/objects/level_builder.h"
 #include "game/states/pause_menu.h"
@@ -12,7 +12,7 @@
 #include "game/objects/player_input.h"
 #include "game/objects/seat_commands.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/debug/debug_targets.h"
 #include "game/states/match_suspension.h"
 #include "game/states/screen_layout_restore.h"
@@ -21,8 +21,8 @@
 #include "game/states/match_start.h"
 #include "game/states/menu_owner.h"
 #include "game/display_awake.h"
-#include "game/rumble_sink.h"
-#include "game/round_tape.h"
+#include "game/input/rumble_sink.h"
+#include "game/match/round_tape.h"
 
 // Stack shapes during a session (docs/architecture.md lists every overlay):
 //

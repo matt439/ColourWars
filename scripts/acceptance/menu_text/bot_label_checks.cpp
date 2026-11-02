@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/states/player_label.h"
 
 namespace menu_text_acceptance

@@ -4,7 +4,7 @@
 #include "game/game_data.h"
 #include "game/objects/level_object_builder.h"
 #include "game/objects/structure.h"
-#include "game/menu_geometry.h"
+#include "game/config/presentation/menu_geometry.h"
 
 using namespace labrador;
 using namespace mattmath;

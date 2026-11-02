@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 
 #include "engine/assets/json.h"
 #include "engine/collision/collision_object.h"

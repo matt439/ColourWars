@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 
 namespace labrador { class UiWidget; }
 

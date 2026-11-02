@@ -179,8 +179,8 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | answered on untagged master in `42bc478` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the guards go at the first minor tag carrying it |
-| 25 | No public controller vibration output | [Isolated XInput adapter](../../game/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
-| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); unfiled, awaiting separate authorization |
+| 25 | No public controller vibration output | [Isolated XInput adapter](../../game/input/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
+| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); unfiled, awaiting separate authorization |
 | 27-32 | Six owed by the 2026-10-30 architecture review | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | found 2026-10-30; not yet drafted or rechecked against master |
 
 Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six
@@ -210,8 +210,8 @@ drafts that wait for the author's authorization to file.
 | 28 | Public types removed without a deprecation release, after report 7's procedure | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | `Scene` gives no typed access to short-lived objects and no retirement notice | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:113`, `scripts/check-startup.ps1:225` and `:248` |
-| 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/tuning.cpp` (`:461`, `:477`, `:484` and others) |
-| 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/text_wrap.h` and its caller `WrappedTextDropShadow` |
+| 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
+| 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
 
 ## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
@@ -315,11 +315,11 @@ connection and suspend/resume, with no vibration output or capability query.
 Separate repository issue searches for rumble and vibration returned no match.
 This check did not move the client's engine pin or change the engine checkout.
 
-**Exhibit.** [game/rumble_xinput.cpp](../../game/rumble_xinput.cpp) converts two
+**Exhibit.** [game/input/rumble_xinput.cpp](../../game/input/rumble_xinput.cpp) converts two
 normalized motor amplitudes into 16-bit speeds and calls `XInputSetState` using
 the same physical user indices as the engine's reader. ColourWars consequently
 names a native pad API and links SDK `Xinput.lib` outside that reader's backend.
-The [factory seam](../../game/rumble_sink.h) isolates this exception. Its injected
+The [factory seam](../../game/input/rumble_sink.h) isolates this exception. Its injected
 transport exercises conversion, invalid-value stop, slot bounds, unavailable
 devices, failure and lifetime stop through the same adapter code.
 
@@ -367,14 +367,14 @@ narrows to forgetting the name itself. Filing still needs separate author
 authorization.
 
 **Exhibit.** `ROAD#16` rereads the player's stage folder each time Stage Select
-opens from the main menu ([`UserStageFolder::rescan`](../../game/stage_loading.cpp)).
+opens from the main menu ([`UserStageFolder::rescan`](../../game/config/stage_loading.cpp)).
 A new or edited file goes through `add`, which is what the rescan needs. A
 file the player deleted, or one that now fails its checks, can only leave the
 stage list. Its old `LevelLoadedInfo` stays in the registry, unreachable from
 the list, until the game exits.
 
 **Narrowed 2026-10-30 (`HYG#47`).** The list and the registry now have one
-owner and one writer, [`StageCatalog`](../../game/stage_catalog.h), and its
+owner and one writer, [`StageCatalog`](../../game/config/stage_catalog.h), and its
 by-name lookup `definition` answers from the list, so a stage that is gone is
 not found there. The registry's own `contains` still answers yes for one, but
 only whole-registry readers (`LevelBuilder`, the content and sound-group
@@ -387,7 +387,7 @@ defined meaning for handles already resolved to it. The spelling, and
 whether stale handles throw or stay invalid, are engine decisions.
 
 **What an answer lets this repository delete.** The paragraph about
-unreachable definitions in `game/stage_catalog.h` and the roadmap's note
+unreachable definitions in `game/config/stage_catalog.h` and the roadmap's note
 about stale entries. `StageCatalog::remove_user_stages` would remove the
 names that left the list, so the registry would agree with it. This is a
 local draft, not a filed issue.
@@ -822,7 +822,7 @@ The exhibit is cited at HEAD `f5303302`.
 then a typed accessor, because that is all the pin's `JsonValue` offers. The
 reads are at:
 
-- `game/tuning.cpp:109`: `frame_time`
+- `game/config/tuning.cpp:109`: `frame_time`
 - `:455`: `paint_underfoot`
 - `:471`: `enemy_blocks_health_regen`
 - `:478` and `:756`: `paint_underfoot` again, for validation
@@ -923,9 +923,9 @@ The engine may want to correct the note the next time it touches the story.
 
 The exhibit is at HEAD `25af4d16`.
 
-- [`game/text_wrap.h`](../../game/text_wrap.h):28-32 declares
+- [`game/config/text_wrap.h`](../../game/config/text_wrap.h):28-32 declares
   `text_wrap::wrap(render, font, text, max_width, scale)`. Its body in
-  `game/text_wrap.cpp`:39-99 does a greedy wrap. For each authored line it
+  `game/config/text_wrap.cpp`:39-99 does a greedy wrap. For each authored line it
   builds the next candidate line and measures it with
   `RenderResources::measure_text` (`:11-15`). It breaks before the next word
   when the candidate's measured width times `scale` would be greater than
@@ -937,7 +937,7 @@ The exhibit is at HEAD `25af4d16`.
   `game/states/main_menu_weapon_select.cpp:363`.
 - `text_wrap::check_fits` (`text_wrap.h:37-42`, `text_wrap.cpp:101-130`)
   refuses at load time any word wider than the width. It is called from
-  `game/content_validation.cpp:172`. The `text_wrap` acceptance case
+  `game/config/content_validation.cpp:172`. The `text_wrap` acceptance case
   (`scripts/acceptance/text_wrap.cpp`) checks both against the engine's own
   measurement.
 
@@ -1178,7 +1178,7 @@ at load, in `wWinMain` after `validate_game_content`, and again for a
 reloaded candidate on Debug `reload`. The engine cannot list a bank's waves,
 so the assignment walks the game's own references. `GameTuning` and
 `Presentation` now list their sounds once (`sound_references`,
-`match_sound_references`, `SoundReference` in `game/sound_reference.h`), and
+`match_sound_references`, `SoundReference` in `game/config/sound_reference.h`), and
 `validate_resources` and `validate_match_sounds` check that same list. A sound
 cannot be checked and still be left out of its group. Stage music, end stings
 and the menu and results music are music, everything else is sfx, and the
@@ -2058,7 +2058,7 @@ still only reads.
   2026-10-28 by the [keyboard actions slice](../feature-roadmap.md#keyboard-actions-slice-gap42),
   against the pin `1e60fb2`: Shoot may take a mouse button, and the save spells
   the five buttons itself (`mouse_left`, `mouse_right`, `mouse_middle`,
-  `mouse_x1`, `mouse_x2`) in `game/input_bindings.cpp` beside the keys, which
+  `mouse_x1`, `mouse_x2`) in `game/input/input_bindings.cpp` beside the keys, which
   use `labrador::key_name`. The exhibit is that five-row table. It is too small
   to file alone: the ask is `mouse_button_name`/`mouse_button_from_name` next to
   `MouseButton`, with the same file-format promise, and it rides with the next
@@ -2126,7 +2126,7 @@ still only reads.
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
   `ARCHITECTURE.md` names the read-only asymmetry and settles it, and T12
   declines automatic serialisation. What survives is narrower — the ~50-line
-  atomic-write protocol in `game/save.cpp` is entirely game-agnostic and no
+  atomic-write protocol in `game/save/save.cpp` is entirely game-agnostic and no
   second client should re-derive it — and is a small ask best made alongside
   something else.
 
@@ -2142,9 +2142,9 @@ still only reads.
   moved those labels to `UiText`, so `Label` has no client here again.
 
   A third item, the anti-tunnelling bound never being evaluated, is now paid.
-  `game/tunnelling_limits.cpp` evaluates `can_tunnel` at startup, and on Debug
+  `game/config/tunnelling_limits.cpp` evaluates `can_tunnel` at startup, and on Debug
   `reload` and `tune`, for every object in every stage against a player at its
-  speed cap. The step it uses is `SIMULATION_HZ` (`game/simulation.h`), the
+  speed cap. The step it uses is `SIMULATION_HZ` (`game/contracts/simulation.h`), the
   same value `main.cpp` passes to the engine as `target_fps`. The row that
   asked for the check also said "the sniper's 2000 u/s already exceeds it",
   but that has been stale since `9604211` added `Projectile::resolve_sweep`.
@@ -2489,7 +2489,7 @@ recorded in its dated follow-up above. These are later work, not claims about
 what the 2026-10-22 bump itself completed.
 
 **One source break, and it was report 13's own answer.** `labrador::key_name`
-made the unqualified `key_name(labrador::Key)` in `game/debug/debug_keys.cpp`
+made the unqualified `key_name(labrador::Key)` in `game/debug/input/debug_keys.cpp`
 ambiguous through argument-dependent lookup; `6a5d83c` qualified the call to
 build at the new pin, and `487b8d2` then deleted the client function the
 qualification pointed at. The engine's `CHANGES.md` now says in its preamble
@@ -2628,7 +2628,7 @@ Breaks by class, measured:
   92 files under `scripts/` (pass 2, acceptance). The grep estimate of about
   900 `ZERO` uses counted every use, not the sites a compiler reports first.
   Master's rename table covers every one, applied mechanically.
-- **A new name collision, not in the estimate:** `game/debug/bot.cpp:22`
+- **A new name collision, not in the estimate:** `game/debug/replay/bot.cpp:22`
   declares its own `constexpr float pi`. Under `using namespace labrador` it
   is ambiguous with master's `labrador::pi` at lines 279, 318 and 430.
 - **Removed members:** exactly the estimated set. In `game/`:

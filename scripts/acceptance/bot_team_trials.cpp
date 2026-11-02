@@ -4,7 +4,7 @@
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/match_fingerprint.h"
+#include "game/debug/replay/match_fingerprint.h"
 #endif
 #include <array>
 #include <bit>

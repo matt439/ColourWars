@@ -6,9 +6,9 @@
 // FakePage and the loaded-stage semantic checks.
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_director.h"
-#include "game/input_slots.h"
-#include "game/presentation.h"
-#include "game/tuning.h"
+#include "game/input/input_slots.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/tuning.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
@@ -22,9 +22,9 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_director_impl.h"
-#include "game/debug/debug_log.h"
-#include "game/debug/debug_menu_model.h"
-#include "game/debug/match_plan.h"
+#include "game/debug/commands/debug_log.h"
+#include "game/debug/console/debug_menu_model.h"
+#include "game/debug/replay/match_plan.h"
 #include "game/game_data.h"
 #include <process.h>
 #endif

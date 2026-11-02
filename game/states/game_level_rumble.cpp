@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
-#include "game/rumble_events.h"
+#include "game/input/rumble_events.h"
 #include <cmath>
 
 void GameLevel::stop_rumble() noexcept

@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "game/states/menu_content_validation.h"
-#include "game/content_validation.h"
-#include "game/drawable_text.h"
-#include "game/series_stage_rule.h"
+#include "game/config/content_validation.h"
+#include "game/config/drawable_text.h"
+#include "game/match/series_stage_rule.h"
 #include "game/states/main_menu.h"
 
 using namespace mattmath;

@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/teammate_markers.h"
 #include "game/objects/player.h"
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 #include "engine/render/viewport_manager.h"
 #include <algorithm>
 

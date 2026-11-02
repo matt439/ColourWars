@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/rumble_sink.h"
+#include "game/input/rumble_sink.h"
 #include <array>
 #include <cmath>
 

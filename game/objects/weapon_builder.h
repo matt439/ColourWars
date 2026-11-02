@@ -1,11 +1,11 @@
 #pragma once
 
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 
 #include "game/objects/weapon_sniper.h"
 #include "game/objects/weapon_bucket.h"
 #include "game/objects/weapon_roller.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "engine/render/colour.h"
 
 class WeaponBuilder

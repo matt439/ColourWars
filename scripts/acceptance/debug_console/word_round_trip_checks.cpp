@@ -2,9 +2,9 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_binds.h"
-#include "game/debug/debug_script.h"
-#include "game/debug/debug_tokenizer.h"
+#include "game/debug/input/debug_binds.h"
+#include "game/debug/script/debug_script.h"
+#include "game/debug/commands/debug_tokenizer.h"
 #include <array>
 #include <iostream>
 

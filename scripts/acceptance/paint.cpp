@@ -2,7 +2,7 @@
 #include "game/objects/level_object_builder.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/projectile_spray.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "scripts/acceptance/support/probe.h"
 

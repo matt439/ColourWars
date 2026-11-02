@@ -1,10 +1,10 @@
 #include "game/pch.h"
 #include "engine/assets/json.h"
-#include "game/input_slots.h"
-#include "game/last_match_setup.h"
-#include "game/save.h"
-#include "game/settings_session.h"
-#include "game/match_setup.h"
+#include "game/input/input_slots.h"
+#include "game/save/last_match_setup.h"
+#include "game/save/save.h"
+#include "game/config/settings_session.h"
+#include "game/match/match_setup.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>

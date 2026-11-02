@@ -7,7 +7,7 @@
 #include "game/carried/animation_object.h"
 #include "engine/render/colour.h"
 #include "engine/render/render_resources.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 
 #include <array>
 

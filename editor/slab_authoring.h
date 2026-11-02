@@ -1,7 +1,7 @@
 #pragma once
 
 #include "editor/level_json.h"
-#include "game/paint_polygon_geometry.h"
+#include "game/contracts/paint_polygon_geometry.h"
 
 namespace colourwars_editor
 {

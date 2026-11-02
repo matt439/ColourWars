@@ -2,8 +2,8 @@
 
 #include "game/objects/countdown_art.h"
 #include "game/carried/text_drop_shadow.h"
-#include "game/input_bindings.h"
-#include "game/input_slots.h"
+#include "game/input/input_bindings.h"
+#include "game/input/input_slots.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 #include <array>

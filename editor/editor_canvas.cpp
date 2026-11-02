@@ -1,7 +1,7 @@
 #include "editor/editor.h"
 #include "editor/paint_mechanism_guide.h"
 #include "editor/win32_text.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 
 #include <windows.h>
 #include <windowsx.h>

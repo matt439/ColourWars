@@ -3,12 +3,12 @@
 #include "game/states/match_start.h"
 #include "game/states/end_menu_action.h"
 #include "game/states/user_stage_refusals_menu.h"
-#include "game/drawable_text.h"
-#include "game/save.h"
+#include "game/config/drawable_text.h"
+#include "game/save/save.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/crude_drawing.h"
-#include "game/series_stage_rule.h"
-#include "game/stage_loading.h"
+#include "game/match/series_stage_rule.h"
+#include "game/config/stage_loading.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace mattmath;

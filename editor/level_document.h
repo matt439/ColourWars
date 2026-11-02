@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "game/paint_polygon_geometry.h"
+#include "game/contracts/paint_polygon_geometry.h"
 
 namespace colourwars_editor
 {

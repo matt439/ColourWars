@@ -1,12 +1,12 @@
 #include "game/pch.h"
-#include "game/rumble_events.h"
+#include "game/input/rumble_events.h"
 #include "game/objects/projectile_spray.h"
 #include "scripts/acceptance/moving_structure/fixtures.h"
 #include <bit>
 #include <cstdlib>
 #include <iostream>
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/match_fingerprint.h"
+#include "game/debug/replay/match_fingerprint.h"
 #endif
 
 namespace rumble_acceptance

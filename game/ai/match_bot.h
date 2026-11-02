@@ -3,7 +3,7 @@
 #include "game/objects/player_input_data.h"
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "game/ai/match_bot_support.h"
 #include "game/ai/bot_random.h"
 #include "engine/math/rectanglef.h"

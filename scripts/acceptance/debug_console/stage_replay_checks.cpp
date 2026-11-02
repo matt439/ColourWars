@@ -89,9 +89,9 @@ namespace debug_console_acceptance
 #include "scripts/acceptance/debug_console/cpu_level.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay.h"
+#include "game/debug/replay/replay.h"
 #include "game/directory_consts.h"
-#include "game/stage_loading.h"
+#include "game/config/stage_loading.h"
 #include "engine/render/text_encoding.h"
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>

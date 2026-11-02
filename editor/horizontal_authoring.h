@@ -1,7 +1,7 @@
 #pragma once
 
 #include "editor/level_json.h"
-#include "game/horizontal_motion_contract.h"
+#include "game/contracts/horizontal_motion_contract.h"
 
 namespace colourwars_editor
 {

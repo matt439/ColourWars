@@ -3,12 +3,12 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "scripts/acceptance/debug_console/cpu_level.h"
-#include "game/debug/debug_menu_model.h"
-#include "game/debug/debug_tokenizer.h"
-#include "game/debug/json_spans.h"
-#include "game/debug/match_fingerprint.h"
-#include "game/debug/tune_document.h"
-#include "game/debug/tune_scope.h"
+#include "game/debug/console/debug_menu_model.h"
+#include "game/debug/commands/debug_tokenizer.h"
+#include "game/debug/tune/json_spans.h"
+#include "game/debug/replay/match_fingerprint.h"
+#include "game/debug/tune/tune_document.h"
+#include "game/debug/tune/tune_scope.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "game/objects/figure_acting.h"

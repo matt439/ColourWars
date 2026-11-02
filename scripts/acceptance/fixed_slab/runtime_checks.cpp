@@ -4,7 +4,7 @@
 #include "game/objects/projectile_spray.h"
 #include "game/objects/projectile_mist.h"
 #include "engine/collision/narrow_phase.h"
-#include "game/fixed_slab_paint_geometry.h"
+#include "game/contracts/fixed_slab_paint_geometry.h"
 #include <array>
 #include <iostream>
 

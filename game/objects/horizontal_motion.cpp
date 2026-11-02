@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/horizontal_motion.h"
-#include "game/simulation.h"
-#include "game/horizontal_motion_contract.h"
+#include "game/contracts/simulation.h"
+#include "game/contracts/horizontal_motion_contract.h"
 #include <cmath>
 #include <stdexcept>
 

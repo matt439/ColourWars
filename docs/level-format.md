@@ -7,10 +7,10 @@ team. It is an authoring example, outside the runtime asset list and manifest;
 copy it before editing. Its geometry is not an accepted arena design.
 
 The format's key names, object and collision vocabulary and material table have
-one engine-free owner, [level_format.h](../game/level_format.h), which the game's
+one engine-free owner, [level_format.h](../game/contracts/level_format.h), which the game's
 loader and the editor both read; the stations, gates, movers and slabs keep their
 rules in the contracts it names.
-[level.schema.json](../game/level.schema.json), beside it, is a JSON Schema Draft-04 structural check,
+[level.schema.json](../game/contracts/level.schema.json), beside it, is a JSON Schema Draft-04 structural check,
 compatible with the repository's bundled RapidJSON `SchemaValidator`. The runtime
 still validates through [LevelLoadedInfo](../game/objects/level_loaded_info.cpp),
 [LevelObjectBuilder](../game/objects/level_object_builder.cpp) and loaded assets.
@@ -205,7 +205,7 @@ a cycle's leg speed, `2 * travel_x / period`. `phase` must be in [0, 0.5],
 where 0 is the left end and 0.5 the right. `team_a_heads` is required with a
 paint drive and refused with a cycle. The game's loader and the
 [editor](level-editor.md#moving-structure-authoring-gapd5) read both fields
-through one rule in `game/horizontal_motion_contract.h`, so the editor refuses
+through one rule in `game/contracts/horizontal_motion_contract.h`, so the editor refuses
 a bad record before save and the game refuses it at load.
 
 This is the existing horizontal triangular mover, with its existing safety
@@ -300,7 +300,7 @@ open for that team until they are clear.
 including a decorative `Visual`, is refused. At startup no spawn body (the
 tuned player size at a spawn point) may overlap a gate. The game's loader,
 its startup check and the [editor](level-editor.md#team-gate-authoring-road15)
-read all of this through `game/team_gate_contract.h`, in the same words.
+read all of this through `game/contracts/team_gate_contract.h`, in the same words.
 
 ### Decorative drift
 
@@ -477,7 +477,7 @@ the match controls font the text. The editor preserves lesson blocks unchanged
 and exposes no station or lesson controls.
 
 The editor applies the same station and lesson-geometry rules
-([station_contract.h](../game/station_contract.h)), so a bounds resize or a
+([station_contract.h](../game/contracts/station_contract.h)), so a bounds resize or a
 loaded file the game would refuse is refused in the editor too
 ([`ED#23`](level-editor.md#station-validation-in-the-editor-ed23)). Only the
 lesson fonts stay a game-side check.
@@ -493,7 +493,7 @@ checks to their owners:
   area size, camera containment and station containment, nonblank lesson text
   and its fonts; grey
   hex channel equality; assets and drawable text; and the engine's
-  anti-tunnelling bound ([tunnelling_limits.h](../game/tunnelling_limits.h)):
+  anti-tunnelling bound ([tunnelling_limits.h](../game/config/tunnelling_limits.h)):
   a stage is rejected when a player at its farthest step would travel at
   least its own extent plus an object's width or height, so it could pass
   through that object. That step is `tuning.player.max_velocity`, widened
@@ -517,7 +517,7 @@ runtime validation in the authoring workflow even after a schema pass.
 
 ## Validation and authoring workflow
 
-Point a JSON editor at [level.schema.json](../game/level.schema.json), then open the file
+Point a JSON editor at [level.schema.json](../game/contracts/level.schema.json), then open the file
 in ColourWarsEditor and save a copy. Register an intended runtime stage using
 the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
 Rebuild and run it in the game: the schema does not resolve its assets, the

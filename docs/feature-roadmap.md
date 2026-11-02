@@ -1956,7 +1956,7 @@ the current authored profile. Time-up stops at the transition out of active
 play, before the later Results page. Sink lifetime covers policy destruction
 and initialization/rebuild unwind.
 
-`game/rumble_xinput.cpp` isolates SDK types, normalized-to-16-bit conversion,
+`game/input/rumble_xinput.cpp` isolates SDK types, normalized-to-16-bit conversion,
 `XInputSetState`, failure handling and the transport-level lifetime stop. It
 links SDK `Xinput.lib`, matching the current DirectXTK reader's XINPUT1_4 import.
 The injected overload checks conversion/invalid-input/failure/stop intent without
@@ -2197,7 +2197,7 @@ the inspector: `motion/drive` (shown as `cycle` when absent) and
 `motion/team_a_heads`. Switching a mover to `paint` adds team A heading right
 unless it has a heading, and switching to `cycle` or clearing the drive drops
 it. The drive rule itself (`decode_drive`, `validate_drive`) moved into the
-engine-free `game/horizontal_motion_contract.h`, which the game's loader and
+engine-free `game/contracts/horizontal_motion_contract.h`, which the game's loader and
 the editor both call, so the editor refuses at load and on every edit exactly
 the drives the game would refuse, in the game's words. See
 [Moving-structure authoring](level-editor.md#moving-structure-authoring-gapd5).
@@ -2457,12 +2457,12 @@ change a vertical mover would force there, not a design.
 | Area | Site | Assumes | A lift needs |
 |---|---|---|---|
 | Capability note | `game/objects/translating_structure_paintable.h:23-24` | "not a lift or a rotating body" | the note rewritten for the accepted axis |
-| Engine-free spec | `game/horizontal_motion_contract.h:32-40` (`Spec::travel_x`) | one travel along +x | a vertical travel (see answer E1) |
-| Spec validation | `game/horizontal_motion_contract.h:91-110` | the endpoint is `anchor.x + travel_x` and must exceed `anchor.x` | the same distinct-endpoint check on y |
-| Paint-drive heading | `game/horizontal_motion_contract.h:26-75` (`team_a_heading`, `decode_drive`) | headings are `right`/`left`; phase 0 is the left end | `up`/`down` naming, if a lift is paint-driven (option G3) |
-| Pose | `game/horizontal_motion_contract.h:159-165`, `game/objects/horizontal_motion.cpp:59-64` | an offset adds to x only | an offset adds to y for a lift |
-| Path | `game/horizontal_motion_contract.h:167-174` | the path keeps the anchor's top and bottom and widens left/right | widen top/bottom instead |
-| Standing corridor | `game/horizontal_motion_contract.h:176-184` | one body height above a fixed `path.top` | the corridor rises with the highest pose (answer E3) |
+| Engine-free spec | `game/contracts/horizontal_motion_contract.h:32-40` (`Spec::travel_x`) | one travel along +x | a vertical travel (see answer E1) |
+| Spec validation | `game/contracts/horizontal_motion_contract.h:91-110` | the endpoint is `anchor.x + travel_x` and must exceed `anchor.x` | the same distinct-endpoint check on y |
+| Paint-drive heading | `game/contracts/horizontal_motion_contract.h:26-75` (`team_a_heading`, `decode_drive`) | headings are `right`/`left`; phase 0 is the left end | `up`/`down` naming, if a lift is paint-driven (option G3) |
+| Pose | `game/contracts/horizontal_motion_contract.h:159-165`, `game/objects/horizontal_motion.cpp:59-64` | an offset adds to x only | an offset adds to y for a lift |
+| Path | `game/contracts/horizontal_motion_contract.h:167-174` | the path keeps the anchor's top and bottom and widens left/right | widen top/bottom instead |
+| Standing corridor | `game/contracts/horizontal_motion_contract.h:176-184` | one body height above a fixed `path.top` | the corridor rises with the highest pose (answer E3) |
 | Motion state | `game/objects/horizontal_motion.h:22-60` | `HorizontalMotionSpec::travel_x`; segments carry `from_x`/`to_x` | segment offsets on the lift's axis; `Vector2F` offsets already hold a y that is always 0 |
 | Segment building | `game/objects/horizontal_motion.cpp:97-103`, `:142-149` | reads `current_offset.x` | read the lift's axis |
 | Carry step | `game/objects/horizontal_motion.h:71-77` (`HorizontalCarryStep::displacement_x`) | x displacement only | a y displacement (answer E2) |
@@ -2489,9 +2489,9 @@ change a vertical mover would force there, not a design.
 | Blockout aids | `editor/blockout_aids.cpp:175-190` | initial-phase offset added to x | added to y |
 | Bot supports | `game/objects/level.cpp:787-808` | `moving` marks a support whose bounds change | unchanged flag |
 | Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
-| Match fingerprint | `game/debug/match_fingerprint.cpp:36-60`, `game/debug/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
-| Replay codec | `game/debug/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
-| Replay version | `game/debug/replay.h:45`, `game/debug/replay.cpp:686-690` | writes and reads 5 only (`HYG#35`) | writes 6 (answer E5) |
+| Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-60`, `game/debug/replay/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
+| Replay codec | `game/debug/replay/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
+| Replay version | `game/debug/replay/replay.h:45`, `game/debug/replay/replay.cpp:686-690` | writes and reads 5 only (`HYG#35`) | writes 6 (answer E5) |
 | Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
 
 **2. Engineering answers, each following existing practice.**
@@ -2597,7 +2597,7 @@ it is built, and the build draws only from the `MatchRandom` made from that
 seed (`HYG#39`): separate streams for a Random palette and the intro's persona,
 and the seed itself for the shipping bots. `GameLevel` keeps the round's palette
 preference, since Paused Options can save another mid-round, and `RoundTape`
-(`game/round_tape.h`) keeps that seed, a copy of
+(`game/match/round_tape.h`) keeps that seed, a copy of
 the setup (a re-pick page can change the match's own and then be backed out
 of), every participant's final input on every logic step, and where the round was
 suspended (which clears jump buffers) or resumed (which re-reads held jumps).
@@ -2874,7 +2874,7 @@ startup.
 beside the save (`directory_consts::user_stage_directory`; the
 executable-relative `save/stages` when there is no `LOCALAPPDATA`, as for the
 screenshots and replays). The game does not create it. After the manifest
-loads, `load_user_stages` (`game/stage_loading.h`) reads every `*.json` directly
+loads, `load_user_stages` (`game/config/stage_loading.h`) reads every `*.json` directly
 in it, in file-name order, and checks each on its own:
 
 - the file name is the stage's id: 1 to 64 ASCII letters, digits, `_` or `-`,
@@ -2960,7 +2960,7 @@ copy of Close Quarters from an isolated profile.
   (Ctrl+M) opens a save dialog in the folder. It refuses a name the game
   would refuse, using the same code: the name rule, the case-blind
   comparison and the folder's place under `LOCALAPPDATA` moved into
-  `game/user_stage_contract.h`. That header uses the standard library only
+  `game/contracts/user_stage_contract.h`. That header uses the standard library only
   and is included by the game's scan, `directory_consts` and the editor, as
   `horizontal_motion_contract.h` is. Shipped names come from the source
   manifest (`ContentCatalog::stages`). The editor asks before it replaces
@@ -2968,7 +2968,7 @@ copy of Close Quarters from an isolated profile.
   (removing it again if a cancelled or refused save leaves it empty), and
   never touches the save. See
   [Play the level](level-editor.md#play-the-level).
-- **A rescan without a restart.** `UserStageFolder` (`game/stage_loading.h`)
+- **A rescan without a restart.** `UserStageFolder` (`game/config/stage_loading.h`)
   owns the folder for the session. `wWinMain` declares it above the
   `Application`, attaches it after the manifest and runs the startup scan
   through it. `GameMenu` takes it as an optional second argument and answers
@@ -2976,7 +2976,7 @@ copy of Close Quarters from an isolated profile.
   rescan as the page opens from the main menu. A match's owner, `GameLevel`,
   has none to lend, and the page also skips it between rounds, so the list holds
   still while a match or series could be using it. A rescan replaces the
-  user stages in the `StageCatalog` (`game/stage_catalog.h`), the only writer
+  user stages in the `StageCatalog` (`game/config/stage_catalog.h`), the only writer
   of the list and the registry: the manifest stages unchanged, then the
   folder's stages in file-name order, with the list it started from put back
   if the read throws. Each new or edited file is checked as at startup and
@@ -3075,7 +3075,7 @@ Select's picking heading and the Mode prompt are `presentation.json` text with
 startup fit checks ([Mode labels](menu-presentation.md#mode-and-player-count-labels)).
 
 What each rule does, decided on the round that just finished
-(`game/series_stage_rule.h`):
+(`game/match/series_stage_rule.h`):
 
 - **A draw replays its stage under every rule.** The End menu already calls it
   Replay Draw, and a round that settles nothing should be played again on
@@ -3256,15 +3256,15 @@ and `out/validation/menu-navigation-release/`.
 save that holds it is built from sections and carries a version key.
 
 **Save layout.** `Save` reads and writes a list of `SaveSection` objects
-(`game/save_section.h`) against one root object; each section's read is caught
+(`game/save/save_section.h`) against one root object; each section's read is caught
 on its own, so a malformed section falls back to its defaults, printing one
 stderr line with its key and the error, and leaves the others intact. There is
 no migration pass: each section reads every older layout in place, as
-[save_section.h](../game/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
+[save_section.h](../game/save/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
 `"save_version": 5` is written first (version 1 introduced records, version 2
 remembered setup, version 3 independent input bindings, version 4
-`"profiles"` and version 5 `"last_match.stage_rule"`; [save.h](../game/save.h)
+`"profiles"` and version 5 `"last_match.stage_rule"`; [save.h](../game/save/save.h)
 keeps the list). A missing key is version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
@@ -3272,7 +3272,7 @@ local save. New sections use nested keys: `"records"`, the last-match
 setup's `"last_match"` (`GAP#6.1`), `"input_bindings"` (`GAP#4.2`) and
 the player profiles' `"profiles"` (`ROAD#21`).
 
-**Records** (`game/match_records.h`) are an array of `{ "stage": ... }`
+**Records** (`game/save/match_records.h`) are an array of `{ "stage": ... }`
 objects, keyed by the manifest name, because the engine's JSON reader has no
 member iteration. Each holds versus matches played, wins by side (A/B), draws
 and the best winning share, plus practice matches played and the best
@@ -3409,7 +3409,7 @@ the keyboard's (A / D, Space, S / Down, left click, Esc). The pad contract is
 [below](#pad-buttons-slice-gap42), after the face-button slice it replaced; the
 keyboard's is the [keyboard actions slice](#keyboard-actions-slice-gap42). What
 is left is the author's call on that slice's provisional choices.
-[Action bindings](../game/action_bindings.h) name the existing gameplay actions
+[Action bindings](../game/input/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
 both `PlayerInput` and `MenuInput` use them immediately. There is no new service
@@ -3758,7 +3758,7 @@ rather than widened to digits, arrows or modifiers.
 **Implemented 2026-10-28.** `InputBindings` gains the five keyboard choices
 beside `keyboard_jump`, with `KeyboardAction`, a `DesktopControl` (a key or a
 mouse button) and per-action domain, name, label and conflict queries in
-[input_bindings.h](../game/input_bindings.h). `effective_action_bindings` writes
+[input_bindings.h](../game/input/input_bindings.h). `effective_action_bindings` writes
 the six into the desktop table, keeping Escape, Down, F1, the intro skip and
 every menu key; `PlayerInput` rebuilds its copy only when a keyboard choice
 changes, so adopting a held key still makes no edge. `KeyboardJumpCapture` now
@@ -4081,7 +4081,7 @@ the cited lines):
   (`application.h:295` at the pin, `:291` on master), so the client does no
   interpolation.
 
-**Receipt.** One Debug `overlay.perf` run (`game/debug/view_commands.cpp:55`)
+**Receipt.** One Debug `overlay.perf` run (`game/debug/commands/view_commands.cpp:55`)
 on MattPC: visible 1920×1080 window, D3D11, host load not controlled,
 `+seed 7 +stage movement_course +players 4 +bot all paint`, then `perf` and a
 600-interval `perf.capture`. Windows reports the display as 59 Hz, which is

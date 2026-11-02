@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/match_audio.h"
 #include "game/objects/level_inputs.h"
-#include "game/presentation.h"
-#include "game/tuning.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/tuning.h"
 #include <cmath>
 
 using namespace labrador;

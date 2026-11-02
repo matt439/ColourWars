@@ -1,9 +1,9 @@
 #pragma once
 
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 
 #include "game/objects/player.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/team_colour.h"
 #include "game/objects/weapon_builder.h"

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/math/rectanglef.h"
-#include "game/player_control.h"
-#include "game/input_slots.h"
+#include "game/match/player_control.h"
+#include "game/input/input_slots.h"
 
 #include <array>
 #include <cstddef>

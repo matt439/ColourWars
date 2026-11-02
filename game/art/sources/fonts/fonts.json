@@ -5,7 +5,7 @@
     "cmake/check_sprite_fonts.cmake reads the tracked atlases' headers against this file on every build, and needs neither the tool nor the faces.",
     "The faces are the OFL files beside this recipe (face_file), licences in licenses/. MakeSpriteFont reads only installed fonts, so build-fonts.ps1 installs them for the current user first.",
     "line_spacing_adjust is MakeSpriteFont's additive /LineSpacing. It rounds each face's own spacing to a value float sums keep exact (a whole pixel; 239.25 for Bowlby One, whose own 300.75 is mostly vertical-metric headroom and whose two-line title wordmark is laid out on the 239.25 of the face it replaced): 57.6 drifts when added to a position and subtracted back.",
-    "character_region is the range game/drawable_text.h accepts; widening it is a locale decision (GAP#L11), not a regeneration."
+    "character_region is the range game/config/drawable_text.h accepts; widening it is a locale decision (GAP#L11), not a regeneration."
   ],
   "tool": "game/art/tools/MakeSpriteFont.exe",
   "character_region": { "first": 32, "last": 126 },

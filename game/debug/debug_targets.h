@@ -3,8 +3,8 @@
 #include "engine/math/rectanglef.h"
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
-#include "game/match_setup.h"
-#include "game/round_tape.h"
+#include "game/match/match_setup.h"
+#include "game/match/round_tape.h"
 #include <string>
 #include <vector>
 

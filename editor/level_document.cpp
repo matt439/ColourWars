@@ -12,7 +12,7 @@
 #include "editor/level_json.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 #include <rapidjson/pointer.h>
 
 #include <algorithm>

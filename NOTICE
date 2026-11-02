@@ -25,7 +25,7 @@ names the parser, so a client that needs one asks for rapidjson on its own
 account. This one is asked for on account of the save file, which the game
 *writes* — the engine's assets module only reads, and its `JsonValue`
 deliberately keeps rapidjson out of a client's translation units, so the level
-files need no copy of their own. `game/save.cpp` is the only file here that
+files need no copy of their own. `game/save/save.cpp` is the only file here that
 includes it.
 
 ### Microsoft content tools (MIT)

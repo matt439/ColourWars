@@ -2,7 +2,7 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay.h"
+#include "game/debug/replay/replay.h"
 #include <objbase.h>
 #include <bit>
 #include <cstdint>

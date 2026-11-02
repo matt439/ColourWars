@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 
 struct MenuText;
 

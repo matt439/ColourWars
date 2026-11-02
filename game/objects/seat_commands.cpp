@@ -2,7 +2,7 @@
 #include "game/objects/seat_commands.h"
 #include "game/objects/level.h"
 #include "game/objects/player_camera.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "engine/input/mouse.h"
 #include "engine/render/viewport_manager.h"
 

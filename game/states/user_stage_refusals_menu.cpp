@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/user_stage_refusals_menu.h"
-#include "game/stage_scan_diagnostics.h"
+#include "game/config/stage_scan_diagnostics.h"
 #include "game/objects/crude_drawing.h"
 #include "engine/core/state_context.h"
 #include <algorithm>

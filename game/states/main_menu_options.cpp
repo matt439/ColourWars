@@ -2,7 +2,7 @@
 #include "game/states/controls_settings_menu.h"
 #include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/objects/crude_drawing.h"
 
 #include <stdexcept>

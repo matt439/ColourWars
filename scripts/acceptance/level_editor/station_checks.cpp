@@ -1,5 +1,5 @@
 // Stations (ED#23): the editor refuses a station the game refuses, by the
-// game's own rules (game/station_contract.h), on every edit and at load, in
+// game's own rules (game/contracts/station_contract.h), on every edit and at load, in
 // the game's words, before save rather than at game load.
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include <functional>

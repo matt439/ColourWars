@@ -3,7 +3,7 @@
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include "editor/blockout_aids.h"
 #include "editor/content_catalog.h"
-#include "game/paint_face_geometry.h"
+#include "game/contracts/paint_face_geometry.h"
 
 #include <iostream>
 #include <set>

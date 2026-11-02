@@ -2,7 +2,7 @@
 #include "game/states/end_menu.h"
 #include "game/states/menu_panel.h"
 #include "game/states/main_menu.h"
-#include "game/series_stage_rule.h"
+#include "game/match/series_stage_rule.h"
 
 using namespace mattmath;
 using namespace labrador;

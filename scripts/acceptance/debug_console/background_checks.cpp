@@ -2,7 +2,7 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_background.h"
+#include "game/debug/input/debug_background.h"
 #include "scripts/acceptance/debug_console/cpu_level.h"
 #include <array>
 #include <iostream>

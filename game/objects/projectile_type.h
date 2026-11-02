@@ -54,7 +54,7 @@ constexpr void for_each_projectile(Visit&& visit)
 // over between two endpoint samples. The roller is the one exception: it is a
 // one-step volume that never moves, and ProjectileRolling overrides
 // resolve_travel. A new kind is unswept until it is listed
-// here, and game/tunnelling_limits.cpp, which visits every kind before
+// here, and game/config/tunnelling_limits.cpp, which visits every kind before
 // ProjectileType::count, then refuses to compile until it is given a bound.
 constexpr bool is_swept(ProjectileType type)
 {

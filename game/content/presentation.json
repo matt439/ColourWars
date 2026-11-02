@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "What the shell looks like. game/presentation.h says what each key means",
+    "What the shell looks like. game/config/presentation/presentation.h says what each key means",
     "and why this is a second file beside tuning.json rather than a section of",
     "it. Colours are either a name the engine knows or RRGGBB / RRGGBBAA.",
     "Every key here is read at startup; a missing one stops the game with this",

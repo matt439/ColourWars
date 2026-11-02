@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game/match_award.h"
-#include "game/paint_owners.h"
+#include "game/match/match_award.h"
+#include "game/match/paint_owners.h"
 #include <array>
 #include <cstdint>
 #include <optional>

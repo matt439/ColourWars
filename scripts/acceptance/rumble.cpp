@@ -1,5 +1,5 @@
 #include "game/pch.h"
-#include "game/rumble.h"
+#include "game/input/rumble.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <iostream>

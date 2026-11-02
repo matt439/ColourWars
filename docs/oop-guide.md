@@ -15,7 +15,7 @@ direction, the services and the state stack these classes sit in.
 
 | Concept | Read | What to notice |
 |---|---|---|
-| Encapsulation and invariants | [Session](../game/session.h), [implementation](../game/session.cpp) | The win ledger is private. `finish_round` and `next_round` express allowed operations; repeating `finish_round` cannot award another win. |
+| Encapsulation and invariants | [Session](../game/match/session.h), [implementation](../game/match/session.cpp) | The win ledger is private. `finish_round` and `next_round` express allowed operations; repeating `finish_round` cannot award another win. |
 | Abstraction | [PaintableObject](../game/objects/paintable_object.h), [Projectile](../game/objects/projectile.h) | A consumer asks for paint totals or projectile behavior without knowing the concrete representation. Pure virtual functions make required behavior explicit. |
 | Single and multilevel inheritance | [WeaponBucket](../game/objects/weapon_bucket.h), [Weapon](../game/objects/weapon.h), [ProjectileMist](../game/objects/projectile_mist.h) | Bucket specializes `RelativeVelocityWeapon`, which specializes `Weapon`; mist specializes `DiffusingProjectile`, which specializes `Projectile`. Each intermediate class shares meaningful behavior. |
 | Multiple inheritance | [StructurePaintable](../game/objects/structure_paintable.h), [FixedSlabPaintable](../game/objects/fixed_slab_paintable.h), [Player](../game/objects/player.h) | A painted structure has both structure behavior and the scoring interface. `FixedSlabPaintable` takes the same two bases directly rather than deriving from `StructurePaintable`: its sloping face keeps paint in its own rigid frame, so it implements `paint_total` and `append_paint_surfaces` over its own tiles instead of inheriting the axis-aligned ones. A player combines movement, collision, animation and texture roles; its two drawing bases share an engine base, [explained below](#players-two-drawing-bases). |
@@ -222,12 +222,12 @@ colour and one frame, so it is not used here.
 7. [Level::level_end_info](../game/objects/level.cpp) requests `PaintTotal` from
    scored objects and builds [LevelEndInfo](../game/objects/level_end_info.h).
    [ResultsMenu](../game/states/results_menu.cpp) displays it, while
-   [Session::finish_round](../game/session.cpp) records a decisive round's win.
+   [Session::finish_round](../game/match/session.cpp) records a decisive round's win.
 
 The score is surface still held, not accumulated shots or paint events. A
 paintable object's totals must include neutral area in `total`, credited team
 area in `team_a`/`team_b`, and player area indexed by paint owner (device
-slots, then device-less views; [paint_owners.h](../game/paint_owners.h)). Read the
+slots, then device-less views; [paint_owners.h](../game/match/paint_owners.h)). Read the
 `PaintableObject` contract and Level's enrollment rule together: the object
 must be in Scene's collision collection and implement `PaintableObject`.
 That scoring role is independent of its collision tag: a painted one-way
@@ -288,7 +288,7 @@ For a new selectable primary weapon, keep these registrations together:
    concrete primaries, before `random_primary`. Selection cycles the contiguous
    range from the first primary through Random; random selection excludes
    Random itself. Update the concrete count in
-   [GameTuning](../game/tuning.h) if adding after its current last primary:
+   [GameTuning](../game/config/tuning.h) if adding after its current last primary:
    `WEAPON_COUNT` is currently `WeaponType::bucket + 1`. `max_prim_wep` aliases
    `random_primary`. Compile-time checks beside the enum enforce this contiguous
    order and the boundary after `bucket`; update them with the registrations.
@@ -296,8 +296,8 @@ For a new selectable primary weapon, keep these registrations together:
    marks an unset weapon. Neither belongs in the primary range.
 2. Add its record under `weapons` in [tuning.json](../game/content/tuning.json).
    Register it in both the constructor's `add_weapon` list in
-   [tuning.cpp](../game/tuning.cpp) and `validate_resources`' weapon list in
-   [tuning_validation.cpp](../game/tuning_validation.cpp). Supply the sprite,
+   [tuning.cpp](../game/config/tuning.cpp) and `validate_resources`' weapon list in
+   [tuning_validation.cpp](../game/config/tuning_validation.cpp). Supply the sprite,
    projectile kind, ammunition/timing values, sound names and relative-velocity
    settings required by its chosen implementation. A looping sound needs
    independent voices for each team and player position. Each weapon supplies
@@ -313,8 +313,8 @@ For a new selectable primary weapon, keep these registrations together:
    [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp).
    Add the description to `main_menu.weapon_descriptions` in
    [presentation.json](../game/content/presentation.json) and the corresponding
-   `describe` registration in [presentation_read_menu.cpp](../game/presentation_read_menu.cpp).
-   The description array in [presentation_menu.h](../game/presentation_menu.h) includes
+   `describe` registration in [presentation_read_menu.cpp](../game/config/presentation/presentation_read_menu.cpp).
+   The description array in [presentation_menu.h](../game/config/presentation/presentation_menu.h) includes
    `random_primary`; keep that relationship if reorganizing the enum.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
    and any new wave/effect names in the live
@@ -337,14 +337,14 @@ Every per-kind table is sized from that sentinel (`GameTuning`'s
 `PROJECTILE_COUNT`, PaintTuning's `splash_animations` and `impact_sounds`,
 PaintAudio, PaintTile and ProjectileBuilder's arrays), so no count is edited by
 hand; what the sentinel cannot do is fill a slot. Register the kind by name in
-[tuning.cpp](../game/tuning.cpp) (`read_projectile_type`, `add_projectile`,
+[tuning.cpp](../game/config/tuning.cpp) (`read_projectile_type`, `add_projectile`,
 and the `splash_animation` and `impact` lists) and in
-[tuning_validation.cpp](../game/tuning_validation.cpp) (`splash`, `projectile`
+[tuning_validation.cpp](../game/config/tuning_validation.cpp) (`splash`, `projectile`
 and `impact`), and add its records to tuning.json's projectiles,
 `paint.splash.animations` and `paint.impact_sounds`. Add its concrete class and
 a case in [ProjectileBuilder](../game/objects/projectile_builder.cpp). Decide
 whether it is swept: list it in `is_swept` beside the enum, or
-[tunnelling_limits.cpp](../game/tunnelling_limits.cpp) refuses to compile
+[tunnelling_limits.cpp](../game/config/tunnelling_limits.cpp) refuses to compile
 until the unswept kind has a tunnelling bound.
 Follow the existing team-tag mappings in
 [collision_object_type.h](../game/objects/collision_object_type.h) and
@@ -435,14 +435,14 @@ scored slab needed.
    the translating structure's relative sweep lives there too.
 7. Make it authorable and refused in the same words by game and editor: the
    format's vocabulary and tables in the engine-free
-   [level_format.h](../game/level_format.h), the
-   [level schema](../game/level.schema.json) and [level format](level-format.md), the
+   [level_format.h](../game/contracts/level_format.h), the
+   [level schema](../game/contracts/level.schema.json) and [level format](level-format.md), the
    editor's [level document](../editor/level_document.cpp) and
    [level JSON](../editor/level_json.cpp), and startup validation. The gate's
-   rules sit in the engine-free [team_gate_contract.h](../game/team_gate_contract.h),
-   read by the builder, [content_validation.cpp](../game/content_validation.cpp)
+   rules sit in the engine-free [team_gate_contract.h](../game/contracts/team_gate_contract.h),
+   read by the builder, [content_validation.cpp](../game/config/content_validation.cpp)
    and the editor; the slab's paint polygon in
-   [fixed_slab_paint_geometry.h](../game/fixed_slab_paint_geometry.h) is
+   [fixed_slab_paint_geometry.h](../game/contracts/fixed_slab_paint_geometry.h) is
    shared the same way.
 8. Add its `.cpp` to [game/CMakeLists.txt](../game/CMakeLists.txt), build Debug
    and Release, and run its acceptance case (the existing ones are

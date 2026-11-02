@@ -2,7 +2,7 @@
 
 #include "game/states/settings_panel_page.h"
 #include "game/states/option_row.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 
 #include <array>
 #include <optional>

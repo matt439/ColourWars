@@ -1,5 +1,5 @@
 #include "editor/user_stage_save.h"
-#include "game/user_stage_contract.h"
+#include "game/contracts/user_stage_contract.h"
 
 #include <windows.h>
 

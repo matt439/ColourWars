@@ -1,7 +1,7 @@
 #include "editor/blockout_aids.h"
 #include "editor/level_json.h"
-#include "game/paint_face_geometry.h"
-#include "game/fixed_slab_paint_geometry.h"
+#include "game/contracts/paint_face_geometry.h"
+#include "game/contracts/fixed_slab_paint_geometry.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
 

@@ -1735,7 +1735,7 @@ Left, for the author: look at Pause, End and Results at 1/2/4P and say whether
 the overlap is intended. If not, the choices are shorter overlay papers, centring
 them above the footer as the menu pages are, or not drawing the band over a
 match; each is a `presentation.json` or one-function change in
-[menu_geometry](../game/menu_geometry.h), plus a validator rule that keeps the
+[menu_geometry](../game/config/presentation/menu_geometry.h), plus a validator rule that keeps the
 chosen relation.
 
 A second overlay question, found 2026-10-31 while making the validator check
@@ -2185,7 +2185,7 @@ all four profiles. Back discards only unapplied edits, and returns to the
 covering page without resuming the match. The parent keeps pending shared
 preferences and preserves profiles applied in the child when it later saves.
 
-Profiles in [`PlaySettings`](../game/play_settings.h) and the save's `pad_sticks`
+Profiles in [`PlaySettings`](../game/config/play_settings.h) and the save's `pad_sticks`
 array belong to **XInput device slots**, labelled **Pad 1-4** on the page; they
 are independent of the roster/view's player number. Opening from a pad's pause
 selects that slot; otherwise the first connected pad, or Pad 1 when none is

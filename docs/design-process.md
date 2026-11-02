@@ -198,7 +198,7 @@ by** names the feature or row and, where one exists, the retained
 
 | Id | As ..., I want ..., so that ... | Acceptance criteria | Served by | Basis |
 |---|---|---|---|---|
-| C1 | P1: to play a best-of series, so one round is not the whole evening | Mode offers Single, Best of 3 and Best of 5; Results show the round, wins and target; a draw awards no win and is replayed | `Session` (`game/session.h`), Results, End menu; `series_stage_rule` | E6, E10 |
+| C1 | P1: to play a best-of series, so one round is not the whole evening | Mode offers Single, Best of 3 and Best of 5; Results show the round, wins and target; a draw awards no win and is replayed | `Session` (`game/match/session.h`), Results, End menu; `series_stage_rule` | E6, E10 |
 | C2 | P2: to see what I did, not only which team won | Results list each player's held coverage and at most one award; a lone player gets none | `ROAD#12`; `results_awards` | E8, E10 |
 | C3 | P1: to change weapons or arena between rounds, so the series stays fresh without losing its score | Change Weapons and Change Level open under Next Round; teams stay locked; Back returns to the End menu | `ROAD#20`; `series_stage_rule` | E11 |
 | C4 | P1: a series rule that moves the stage on, so nobody has to choose every round | Same stage, Rotate or Loser's pick on Mode; a draw replays its stage; Loser's pick lets only the losing seats choose | `ROAD#20` (attended: which default); `series_stage_rule` | E11 |
@@ -315,7 +315,7 @@ description in time; that is the fresh-player observation in `POL#24`.
 |---|---|---|
 | Open the editor; New, or Open a shipped stage to copy | `ColourWarsEditor.exe` | F1 |
 | Edit; check the paint guides and the symmetry report | Editor canvas, blockout aids | F4 |
-| File > Save to My Stages | `game/user_stage_contract.h` rules | F1 |
+| File > Save to My Stages | `game/contracts/user_stage_contract.h` rules | F1 |
 | In the running game, open Stage Select: it rescans | `UserStageFolder`, `MainMenuStageSelect` | F2 |
 | A refused file: the issue count, Down for details | `UserStageRefusalsMenu` | F3 |
 | Play it; records are keyed by the file name | `GameLevel`, `MatchRecords` | F2, F5 |

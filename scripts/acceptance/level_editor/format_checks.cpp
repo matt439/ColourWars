@@ -2,7 +2,7 @@
 // fields and rectangle encodings.
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include "editor/blockout_aids.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 #include <Windows.h>
 
 #include <array>

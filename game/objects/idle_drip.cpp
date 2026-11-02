@@ -2,7 +2,7 @@
 #include "game/objects/idle_drip.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/crude_drawing.h"
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 #include "engine/collision/narrow_phase.h"
 
 #include <cmath>

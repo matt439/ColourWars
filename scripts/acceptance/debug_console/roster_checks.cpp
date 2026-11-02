@@ -3,7 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/core/file_path.h"
-#include "game/debug/replay.h"
+#include "game/debug/replay/replay.h"
 #include "game/directory_consts.h"
 #include "scripts/acceptance/debug_console/cpu_level.h"
 #include <process.h>

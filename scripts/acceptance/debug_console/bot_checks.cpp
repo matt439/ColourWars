@@ -2,9 +2,9 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/bot.h"
-#include "game/debug/bot_driver.h"
-#include "game/debug/replay.h"
+#include "game/debug/replay/bot.h"
+#include "game/debug/replay/bot_driver.h"
+#include "game/debug/replay/replay.h"
 #include "game/states/pause_menu.h"
 #include "engine/input/gamepad_reader.h"
 #include "engine/input/gamepads.h"

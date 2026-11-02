@@ -1,6 +1,6 @@
 #include "game/pch.h"
-#include "game/save.h"
-#include "game/match_records.h"
+#include "game/save/save.h"
+#include "game/save/match_records.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/results_menu.h"
 #include "scripts/acceptance/support/probe.h"

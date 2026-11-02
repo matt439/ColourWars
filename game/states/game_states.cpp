@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
-#include "game/last_match_setup.h"
-#include "game/series_stage_rule.h"
-#include "game/stage_loading.h"
+#include "game/save/last_match_setup.h"
+#include "game/match/series_stage_rule.h"
+#include "game/config/stage_loading.h"
 using namespace labrador;
 
 GameMenu::GameMenu(GameData* game_data, UserStageFolder* user_stages) :

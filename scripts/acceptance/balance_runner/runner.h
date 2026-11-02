@@ -4,7 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
-#include "game/player_control.h"
+#include "game/match/player_control.h"
 #include "scripts/acceptance/balance_regions/metrics.h"
 #include <array>
 #include <cstdint>

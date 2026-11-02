@@ -306,7 +306,7 @@ optional step.
 [`sources/fonts/fonts.json`](sources/fonts/fonts.json) is the recipe: per atlas
 the face, size, style, the face file it came from, and the texture size and
 line spacing a regeneration must give; for all of them the character region
-`0x20-0x7E` (exactly what [`drawable_text`](../drawable_text.h) accepts), no
+`0x20-0x7E` (exactly what [`drawable_text`](../config/drawable_text.h) accepts), no
 default character, and MakeSpriteFont's `CompressedMono` (BC2) format.
 
 | Atlas | Face | Size | Style |

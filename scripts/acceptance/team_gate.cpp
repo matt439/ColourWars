@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/objects/team_gate_structure_paintable.h"
-#include "game/team_gate_contract.h"
+#include "game/contracts/team_gate_contract.h"
 #include "scripts/acceptance/support/probe.h"
 #include <algorithm>
 #include <array>

@@ -1,11 +1,11 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
-#include "game/content_value.h"
-#include "game/level_format.h"
+#include "game/config/content_value.h"
+#include "game/contracts/level_format.h"
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
-#include "game/drawable_text.h"
-#include "game/station_contract.h"
+#include "game/config/drawable_text.h"
+#include "game/contracts/station_contract.h"
 #include "engine/core/file_path.h"
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>

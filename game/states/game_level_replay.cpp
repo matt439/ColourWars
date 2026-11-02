@@ -1,11 +1,11 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
-#include "game/sound_groups.h"
+#include "game/config/sound_groups.h"
 #include <chrono>
 
 using namespace labrador;
 
-// The end-of-round instant replay (ROAD#19). The round's tape (game/round_tape.h)
+// The end-of-round instant replay (ROAD#19). The round's tape (game/match/round_tape.h)
 // holds the seed its level was built from and every seat's input on every
 // logic step, so the replay is the same round built again: the level is
 // rebuilt, its earlier steps run with the screen showing them at speed and

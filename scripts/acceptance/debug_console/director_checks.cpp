@@ -2,8 +2,8 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_chord.h"
-#include "game/debug/debug_screenshot.h"
+#include "game/debug/input/debug_chord.h"
+#include "game/debug/capture/debug_screenshot.h"
 #include "game/objects/level_loaded_info.h"
 #include <chrono>
 #include <fstream>

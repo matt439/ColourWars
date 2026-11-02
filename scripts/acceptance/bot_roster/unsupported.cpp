@@ -1,9 +1,9 @@
 #include "game/pch.h"
-#include "game/input_slots.h"
-#include "game/last_match_setup.h"
+#include "game/input/input_slots.h"
+#include "game/save/last_match_setup.h"
 #include "game/objects/level_builder.h"
-#include "game/presentation.h"
-#include "game/match_setup.h"
+#include "game/config/presentation/presentation.h"
+#include "game/match/match_setup.h"
 #include "game/states/player_label.h"
 #include "scripts/acceptance/support/probe.h"
 

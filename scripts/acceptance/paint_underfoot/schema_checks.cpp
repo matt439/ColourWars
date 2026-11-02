@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_underfoot/fixtures.h"
 #include "game/objects/level_object_builder.h"
-#include "game/tunnelling_limits.h"
+#include "game/config/tunnelling_limits.h"
 #include <iostream>
 
 namespace paint_underfoot_acceptance

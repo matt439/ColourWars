@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/interface_gameplay.h"
 #include "game/objects/crude_drawing.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 
 using namespace mattmath;
 using namespace labrador;

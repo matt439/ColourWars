@@ -3,7 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/core/file_path.h"
-#include "game/debug/debug_binds.h"
+#include "game/debug/input/debug_binds.h"
 #include <iostream>
 
 namespace debug_console_acceptance

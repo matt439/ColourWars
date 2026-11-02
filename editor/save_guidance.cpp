@@ -1,7 +1,7 @@
 #include "editor/save_guidance.h"
 #include "editor/content_catalog.h"
 #include "editor/user_stage_save.h"
-#include "game/user_stage_contract.h"
+#include "game/contracts/user_stage_contract.h"
 
 #include <algorithm>
 #include <cwctype>

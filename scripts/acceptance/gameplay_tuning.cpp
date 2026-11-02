@@ -395,7 +395,7 @@ namespace
         }
     }
 
-    // The shared content-value reads (game/content_value.h) and the
+    // The shared content-value reads (game/config/content_value.h) and the
     // cross-field rules written at the end of each reader.
     void check_rumble_tuning(Fixtures& fixtures, const GameTuning& defaults)
     {

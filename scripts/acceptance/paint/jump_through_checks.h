@@ -1,6 +1,6 @@
 // Actual Level integration: painting is a role, while one-way collision keeps
 // its existing jump/drop and projectile-blocking semantics.
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/objects/level.h"
 #include "game/objects/player_builder.h"
 #include "engine/core/step_timer.h"

@@ -47,10 +47,9 @@ Rows outside this sequence (audio, release, engine, tooling) are picked from OPE
 when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
-review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows are worked in order, and
-`HYG#51` is the one left; its owed reports `ENG#27`-`ENG#33` are drafted. Before them,
-the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
+review on 2026-10-30 and for every finding to be worked through: its rows are
+complete (`HYG#51` last, 2026-11-02), and its owed reports `ENG#27`-`ENG#33` are
+drafted. Before them, the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
 This does not change the arena/tuning order above. `ROAD#28`'s contract draft
@@ -109,15 +108,6 @@ comparison and physical-pad check; values remain provisional.
   `ENG#25`, `ENG#31` and `ENG#32` are answered on engine master and need no filing.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
-
-## Architecture review
-
-**Owner:** [docs/code-hygiene.md, Architecture review](docs/code-hygiene.md#architecture-review-2026-10-30); findings in the frozen
-[2026-10-30 review](docs/review/2026-10-30-architecture-review.md). Work the rows in the listed order.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `HYG#51` | OPEN | LOW | L | Last: give `game/` role folders, `game/debug` subsystem folders and the engine-free contracts an include check. [Scope](docs/code-hygiene.md#directories-by-role-hyg51). |
 
 ## Art direction, characters and the UI
 
@@ -294,12 +284,13 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Architecture review (2026-10-30) | [code-hygiene.md, Architecture review](docs/code-hygiene.md#architecture-review-2026-10-30) | a new review round, or a regression of a finished row |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Closed engine reports (1–22, 24) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |
-| Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
+| Startup content validation | gap audit 8.1, `game/config/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
 | OOP showcase (`OOP#1`) | [oop-guide.md](docs/oop-guide.md) | a new hierarchy, extension point or registration the guide no longer describes; never a request to flatten one |

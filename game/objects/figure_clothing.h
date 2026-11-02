@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "game/carried/animation_object.h"
 
 #include <optional>

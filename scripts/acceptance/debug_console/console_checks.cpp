@@ -2,12 +2,12 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_clock.h"
-#include "game/debug/debug_keys.h"
-#include "game/debug/debug_registry.h"
-#include "game/debug/debug_text_field.h"
-#include "game/debug/debug_tokenizer.h"
-#include "game/debug/match_plan.h"
+#include "game/debug/replay/debug_clock.h"
+#include "game/debug/input/debug_keys.h"
+#include "game/debug/commands/debug_registry.h"
+#include "game/debug/console/debug_text_field.h"
+#include "game/debug/commands/debug_tokenizer.h"
+#include "game/debug/replay/match_plan.h"
 #include <memory>
 #include <stdexcept>
 

@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/stick_settings_menu.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "game/objects/stick_response.h"
 #include "game/objects/crude_drawing.h"
 #include <algorithm>

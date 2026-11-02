@@ -15,15 +15,30 @@ records where the layout falls short of what is described here; its rows in
 game/                  the game executable and the colourwars_game library
   main.cpp             wWinMain: reads the save, tuning and presentation, builds
                        the Application and runs GameMenu
-  (root files)         configuration, persistence, input, rumble, paint
-                       geometry, the engine-free contracts and the match setup
+  (root files)         the shell: GameData, the fatal report, content paths,
+                       the display-idle adapter, the precompiled header
+  contracts/           the engine-free headers the editor shares, and the
+                       level schema; an include check holds them to it
+  match/               what a match is: setup, seats, the session, the series
+                       rule, the round tape, awards and paint owners
+  config/              tuning, content values and validation, the stage catalog
+                       and loading, settings, text fitting and sound groups
+    presentation/      presentation.json's records, readers and validators,
+                       and the menu geometry
+  save/                the save file, its sections, profiles, records and the
+                       remembered setup
+  input/               bindings, input slots, the controls text, and rumble
+                       with its XInput adapter
   states/              the engine states: GameMenu, GameLevel and the menu pages
   objects/             one match: Level, Player, weapons, projectiles,
                        structures, terrain, HUD and the builders
   ai/                  the shipping match bots (MatchBotDriver and its helpers),
                        and the RNG and ballistics the Debug bots share with them
   carried/             engine types removed after v0.2.0, copied here (colourwars::)
-  debug/               the Debug-only developer tools; compiled to nothing in Release
+  debug/               the Debug-only developer tools; compiled to nothing in Release.
+                       The director and the three seam headers sit at its root;
+                       commands/, console/, input/, script/, replay/, tune/
+                       and capture/ hold its subsystems
   content/             runtime assets staged beside the exe: manifest, tuning,
                        presentation, levels, fonts, textures, the sound bank
   art/, audio/         sources, recipes and provenance for that content; never staged
@@ -39,23 +54,36 @@ external/rapidjson/    vendored JSON reader for the save and level files
 
 [game/CMakeLists.txt](../game/CMakeLists.txt) builds every game source except
 `main.cpp` and the two platform adapters into the `colourwars_game` static
-library, `rumble_xinput.cpp` into `colourwars_rumble_xinput`,
+library, `input/rumble_xinput.cpp` into `colourwars_rumble_xinput`,
 `display_awake.cpp` into `colourwars_display_awake`, and links the three into
 the `ColourWars` executable. The acceptance probes link the same library.
 
-The `game/` root mixes several concerns:
+The role folders date from `HYG#51`:
 
-| Concern | Files (examples) |
+| Folder | Holds (examples) |
 |---|---|
-| Configuration and content checks | `tuning*`, `presentation*`, `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators), `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `drawable_text`, `text_wrap` |
-| Persistence | `save*`, `save_section.h`, `settings_session`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings.h` |
-| Input | `action_bindings`, `input_bindings`, `input_slots.h`, `player_control.h`, `controls_text` |
-| Rumble and display | `rumble*`, `rumble_xinput.cpp`, `display_awake` |
-| Sound | `sound_groups`, `sound_reference.h` |
-| Engine-free contracts | the nine headers [below](#the-engine-free-contract-headers) |
-| The match and the shell | `game_data`, `match_setup`, `seat_setup.h`, `session`, `series_stage_rule`, `round_tape`, `match_award.h`, `paint_owners.h`, `tunnelling_limits`, `fatal_report`, `directory_consts` |
+| the `game/` root | the shell: `main.cpp`, `game_data`, `fatal_report`, `directory_consts`, `display_awake`, `pch.h`, `resource.rc` |
+| `contracts/` | the nine engine-free headers [below](#the-engine-free-contract-headers) and `level.schema.json` |
+| `match/` | `match_setup`, `seat_setup.h`, `player_control.h`, `session`, `series_stage_rule`, `round_tape`, `match_award.h`, `paint_owners.h` |
+| `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |
+| `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators) |
+| `save/` | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles` |
+| `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `rumble*`, `rumble_xinput.cpp` |
 
-Giving these role folders is the last review row, `HYG#51`.
+`play_settings.h` and `settings_session` are in `config/` rather than `save/`:
+every gameplay object reads the play settings, and the save is one of their
+readers. `game/carried` keeps its name; see [below](#gamecarried).
+
+`game/debug` keeps at its root what the rest of the game may name
+(`dev_tools.h`, `debug_director.h`, `debug_targets.h`,
+`debug_overlay_draw.h`) and the director's implementation, which ties the
+subsystems together. `commands/` is the registry, the variables, the tokenizer,
+the log and the general commands; `console/` the console and the debug menu;
+`input/` keys, binds, the pad chord and the background policy; `script/` the
+scripts, waits and the developer files; `replay/` recording, plans,
+fingerprints, the developer clock and the Debug bots; `tune/` live tuning; and
+`capture/` the perf overlay and screenshots. Each subsystem's command file sits
+with the code it registers.
 
 ## Dependency direction
 
@@ -67,8 +95,8 @@ main.cpp
        -> objects/    (Level and everything in a match)
             -> ai/    (the bots read the match; Level drives them)
        -> carried/
-  -> configuration, persistence and input at the game/ root
-  -> the engine-free contracts, which depend on nothing but each other
+  -> match/, config/, save/ and input/
+  -> contracts/, which depends on nothing but itself
 everything -> external/labrador (never the other way)
 debug/ -> everything above; the rest reaches debug/ through three headers
 ```
@@ -97,7 +125,7 @@ What holds at `272ecb75`:
   `update`; the director only says how many steps run and with which
   developer filter.
 - **Gameplay headers see only the in-match presentation.** `objects/` headers
-  include [presentation_match.h](../game/presentation_match.h), and `level.h`
+  include [presentation_match.h](../game/config/presentation/presentation_match.h), and `level.h`
   and the builders forward-declare `Presentation`, so no `objects/` or `ai/`
   header reaches the menu records. Ten `objects/` sources do, by including
   `presentation.h` (or `presentation_menu_text.h`) themselves; since `HYG#38`
@@ -110,18 +138,18 @@ Where it does not hold yet:
 
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers,
   and `action_bindings.h` includes `states/menu_input_action.h`.
-- Nothing enforces the contract headers' independence; an include check is
-  part of `HYG#51`. The engine's `check_engine_includes` target only stops the
-  engine reaching into `game/`.
+- The role folders include each other: `save/` reads `config/`'s play
+  settings and `match/`'s setup, and `config/` names `match/` and `input/`
+  types. Only `contracts/` has a checked boundary.
 
 ## The engine-free contract headers
 
-Nine headers at the `game/` root hold rules the game and the editor must apply
+Nine headers in `game/contracts/` hold rules the game and the editor must apply
 in the same words, with no engine include:
 
 | Header | Holds |
 |---|---|
-| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/level.schema.json) sits beside it |
+| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/contracts/level.schema.json) sits beside it |
 | `simulation.h` | `SIMULATION_HZ`, the fixed step written once |
 | `horizontal_motion_contract.h` | authored horizontal motion and its envelope arithmetic (uses `simulation.h`) |
 | `station_contract.h` | a level's review stations and their lessons |
@@ -132,7 +160,11 @@ in the same words, with no engine include:
 
 They are header-only and include only the standard library and one another.
 The game's builders and startup validation read them; so do the editor's level
-document and JSON reader.
+document and JSON reader. The `colourwars_check_contract_includes` target
+([cmake/check_contract_includes.cmake](../cmake/check_contract_includes.cmake))
+fails the build when one includes anything else. Both `colourwars_game` and the
+editor's `colourwars_level_document` depend on it. The engine's
+`check_engine_includes` only stops the engine reaching into `game/`.
 
 ## `game/carried`
 
@@ -143,7 +175,9 @@ shape unchanged into `namespace colourwars` so they can never be ambiguous with
 an engine type. The folder is named
 for where the code came from, not for what it does; the removal without a
 deprecation release is report `ENG#28` in the
-[engine-report ledger](review/engine-reports.md).
+[engine-report ledger](review/engine-reports.md). `HYG#51` kept the name: the
+folder is that report's exhibit, and its contents are deleted, not renamed,
+when the engine answers it.
 
 ## Services: `GameData`
 
@@ -156,17 +190,17 @@ a forward to the `Application`. `wWinMain` in [game/main.cpp](../game/main.cpp)
 declares all seven before the `Application`, so they outlive every state that
 borrows them.
 
-The `Save` ([game/save.h](../game/save.h)) is what the file holds, each pad slot
-as itself. The [`SettingsSession`](../game/settings_session.h) borrows it and
+The `Save` ([game/save/save.h](../game/save/save.h)) is what the file holds, each pad slot
+as itself. The [`SettingsSession`](../game/config/settings_session.h) borrows it and
 owns what belongs to the run: which pad wears which player profile, and the
 settings in effect, the save's with each worn profile laid over its pad. Every
 reader of play settings or input bindings reads the session's, and the Controls
 pages write through it, so a worn pad's edits reach its profile.
 
-[game/stage_catalog.h](../game/stage_catalog.h) owns the ordered stage list
+[game/config/stage_catalog.h](../game/config/stage_catalog.h) owns the ordered stage list
 and the level registry and is their only writer: the manifest's `"level"` kind
 adds the shipped stages, and `UserStageFolder`
-([game/stage_loading.h](../game/stage_loading.h)) replaces the user stages
+([game/config/stage_loading.h](../game/config/stage_loading.h)) replaces the user stages
 after them. `GameData` lends it read-only, with `stages()` and `level_infos()`
 forwarding to its two halves.
 
@@ -282,9 +316,9 @@ Four JSON files are read at startup, before any asset:
 | File | What |
 |---|---|
 | `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
-| `tuning.json` | every number a match is balanced on ([game/tuning.h](../game/tuning.h)) |
-| `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/presentation.h](../game/presentation.h), with the in-match records in [presentation_match.h](../game/presentation_match.h), the menu-page layout records in [presentation_menu.h](../game/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/presentation_menu_text.h)) |
-| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records, in versioned `SaveSection`s ([game/save_section.h](../game/save_section.h)) |
+| `tuning.json` | every number a match is balanced on ([game/config/tuning.h](../game/config/tuning.h)) |
+| `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/config/presentation/presentation.h](../game/config/presentation/presentation.h), with the in-match records in [presentation_match.h](../game/config/presentation/presentation_match.h), the menu-page layout records in [presentation_menu.h](../game/config/presentation/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/config/presentation/presentation_menu_text.h)) |
+| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records, in versioned `SaveSection`s ([game/save/save_section.h](../game/save/save_section.h)) |
 
 Tuning and presentation are two files for two audiences (a balance pass and an
 art pass), and neither is a manifest entry: they are read before every asset

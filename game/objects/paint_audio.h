@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game/paint_owners.h"
-#include "game/tuning.h"
+#include "game/match/paint_owners.h"
+#include "game/config/tuning.h"
 #include "game/carried/sound_bank_object.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"

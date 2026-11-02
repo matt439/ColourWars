@@ -1,8 +1,8 @@
 #pragma once
 
 #include "game/objects/blocked_shot_contact.h"
-#include "game/paint_owners.h"
-#include "game/presentation_match.h"
+#include "game/match/paint_owners.h"
+#include "game/config/presentation/presentation_match.h"
 #include "engine/render/texture_object.h"
 
 #include <array>

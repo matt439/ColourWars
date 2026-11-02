@@ -3,7 +3,7 @@
 #include "game/states/settings_panel_page.h"
 #include "game/states/option_row.h"
 #include "game/states/keyboard_jump_capture.h"
-#include "game/input_bindings.h"
+#include "game/input/input_bindings.h"
 
 // The shared keyboard player's gameplay keys (the Keyboard Keys page, which
 // grew from Keyboard Jump): one capture row per KeyboardAction, then Reset,

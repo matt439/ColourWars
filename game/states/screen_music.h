@@ -2,8 +2,8 @@
 
 #include "game/carried/sound_bank_object.h"
 #include "game/objects/music_envelope.h"
-#include "game/play_settings.h"
-#include "game/presentation.h"
+#include "game/config/play_settings.h"
+#include "game/config/presentation/presentation.h"
 
 // One screen owner's music voice. Page navigation borrows its clock instead
 // of replaying the shared bank instance; an exit waits for silence.

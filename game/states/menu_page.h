@@ -14,7 +14,7 @@
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_frame.h"
 #include "game/debug/debug_targets.h"
-#include "game/menu_geometry.h"
+#include "game/config/presentation/menu_geometry.h"
 
 // A menu wave resolved once, with the volume presentation.json gives it.
 struct MenuSound
@@ -126,7 +126,7 @@ protected:
 	MenuSound resolve_sound(const PresentationSound& sound) const;
 
 	// Menu and results sounds play at their authored volumes; the user's SFX
-	// and Music volumes are their sound groups' (game/sound_groups.h).
+	// and Music volumes are their sound groups' (game/config/sound_groups.h).
 	using colourwars::SoundBankObject::play_wave;
 	void play_wave(const MenuSound& sound);
 

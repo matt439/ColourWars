@@ -1,8 +1,8 @@
 #pragma once
 
 #include "game/objects/level_end_info.h"
-#include "game/session.h"
-#include "game/match_records.h"
+#include "game/match/session.h"
+#include "game/save/match_records.h"
 #include "engine/render/colour.h"
 #include "game/states/menu_page.h"
 #include "game/states/ui_player_badge.h"

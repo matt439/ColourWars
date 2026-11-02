@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/player_label.h"
-#include "game/presentation_menu_text.h"
+#include "game/config/presentation/presentation_menu_text.h"
 
 std::wstring player_label(const MatchSetup& setup, int player_index, const MenuText& text)
 {

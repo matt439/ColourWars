@@ -2,10 +2,10 @@
 
 #include "game/objects/horizontal_motion.h"
 
-#include "game/play_settings.h"
-#include "game/paint_owners.h"
+#include "game/config/play_settings.h"
+#include "game/match/paint_owners.h"
 
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/player_team.h"
 #include "game/objects/player_input_data.h"
