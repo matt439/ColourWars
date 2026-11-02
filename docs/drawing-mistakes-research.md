@@ -137,7 +137,7 @@ Frequencies are not known. Study A exists to find them.
   - Nothing checks that a torso mistake is copied into the 10 action frames. Add a check, or state that actions may differ.
   - Probes affected: `quiet_character` and a MattPC `check-painter.ps1` run.
 - **Weapons:** vertex edits in `weapons.json`. The author has chosen shade and highlight roles there (`metal_light`/`metal_dark`), so changing them is a separate author question.
-- **Monitor and cursor:** `CrudeDrawing` code. A per-match hand would be derived from the existing `MatchRandom::persona()` draw (`match_random.h`), so it stays consistent with the bezel and silhouette.
+- **Monitor and cursor:** `CrudeDrawing` code. A per-match hand comes from the same round seed as the existing `MatchRandom::persona()` draw, as `MatchRandom::hand()` (`match_random.h`), so it stays consistent with the bezel and silhouette.
 
 ## 6. Options compared
 
@@ -203,13 +203,9 @@ it after the fact.
 - **Brick slips.** `brick_slip` in
   [terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)
   moves about one joint in five by one cell, left or right, keyed on the joint's
-  world position with splitmix64 and a constant seed. A slip that would break the
+  world position with splitmix64 and the match's hand (below). A slip that would break the
   3-cell clearance keeps the joint in place. The 2-cell variant for Study B is
   `BRICK_SLIP_CELLS = 2`, a rebuild.
-  **Not yet per person:** the slips are the same every match. Seeding them from
-  `persona()` needs the match seed passed through the level builder to the
-  materials; that waits for stage 2, which needs the same plumbing for the
-  figure.
 - **Mortar strokes** (added 2026-11-01, from the author's sketch below). Each
   course line is drawn as several strokes in 40-cell world bands, and about one
   band in three lands a row off, in a direction fixed for that line. Where two
@@ -218,8 +214,7 @@ it after the fact.
   author's rule for gaps is **diagonal only**. Joints meet the lines where the
   lines were drawn, and about one joint in four runs one or two cells past an
   interior line. A drift or overshoot that would come within 3 cells of the
-  outline is not drawn. Same constant-seed keying as the slips, so this is not
-  per person yet either.
+  outline is not drawn. Same keying as the slips.
 - **Doubled edges** (added 2026-11-01, the author's second example). Each brick
   is its own rectangle, and a few missed the edge they should have shared, so it
   came out twice: about one joint in eight gets a twin one or two cells to one
@@ -227,6 +222,20 @@ it after the fact.
   row under the line or two rows under it. A one-cell gap leaves a sliver of
   brick between the two lines. This is F4's "doubled joint". The "doubled
   keyline weight" exclusion in section 4 still holds for outlines.
+- **Per person** (added 2026-11-02, decision 3). Each kind of slip keeps its
+  own constant seed, mixed with the match's hand: `MatchRandom::hand()`
+  ([match_random.h](../game/objects/match_random.h)), a sibling of the persona
+  stream made from the same round seed, so taking it never moves the bezel's
+  or silhouette's draws. `LevelBuilder` passes it through
+  `LevelObjectBuilder::build_collision_objects` to `GroundMaterial`. Hand 0 is
+  the house hand: Stage Select's preview, startup validation and the `terrain`
+  probe's direct builds draw it, and it is the stage 1 wall exactly. A probe
+  that builds a match through `LevelBuilder` draws its seed's hand instead. A match never draws hand 0, so
+  every match's wall differs from the preview's, and a rematch's from the last.
+  Both teams share the match's hand, so fairness holds. Only ground takes a
+  hand; collision, scored area and every other material are unchanged, which
+  the `terrain` acceptance case checks on every shipped stage. Study B
+  captures at a fixed `+seed`, which fixes the hand too.
 - **Simpler tools** ([polish-tools.md](polish-tools.md#drawing-and-attachments)):
   highlight strips, shade marks, glints and the roller's drum shine are gone;
   every moving mechanism stays.
@@ -350,7 +359,9 @@ This is a screen for gross failures, not a measurement.
    [backstory.md](backstory.md#why-everyone-draws-the-same-box-heads) says;
    what varies is the slips. They are chosen per match from
    `MatchRandom::persona()` ([match_random.h](../game/objects/match_random.h)), so
-   they agree with that match's bezel and silhouette. One person drew both teams,
+   they agree with that match's bezel and silhouette. (Built 2026-11-02 as
+   `MatchRandom::hand()`, the persona's sibling stream from the same round
+   seed, so the slips never move the bezel's draws; see stage 1, "Per person".) One person drew both teams,
    so within a match both teams get the same mistakes, and fairness holds. This
    moves per-match hands from stage 3 into the main plan. Study A now supplies a
    pool of real mistakes to draw from, not one shared set.
@@ -369,8 +380,9 @@ This is a screen for gross failures, not a measurement.
    overboard. Study B still runs: its pass rules stand, and any variant or
    mistake that fails them is taken back out.
 
-Nothing in this research is open now. Stage 1 has shipped, and Study B checks it
-after the fact. Stage 2 waits on Study A.
+Nothing in this research is open now. Stage 1 has shipped, with per-match hands
+since 2026-11-02, and Study B checks it after the fact. Stage 2 waits on Study A.
+Both studies need participants, so `POL#46` waits on the author.
 
 ---
 

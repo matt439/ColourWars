@@ -39,8 +39,10 @@ namespace
 		return z ^ (z >> 31);
 	}
 
-	// A hash of a world cell and a constant seed: neighbouring pieces agree and
-	// every build draws the same wall. Never the match's random streams.
+	// A hash of a world cell and a seed: neighbouring pieces agree and every
+	// build of one match draws the same wall. The seed is a constant per kind
+	// of slip, mixed with the match's hand (MatchRandom::hand); hand 0 is the
+	// house hand. Never a draw from a gameplay stream.
 	std::uint64_t cell_key(float x, float y, std::uint64_t seed)
 	{
 		return splitmix((static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(x / CELL))) << 32) ^
@@ -54,9 +56,9 @@ namespace
 	constexpr unsigned BRICK_SLIP_ONE_IN = 5;
 	constexpr float BRICK_SLIP_CELLS = 1.0f;
 
-	float brick_slip(float joint_x, float course_top)
+	float brick_slip(float joint_x, float course_top, std::uint64_t hand)
 	{
-		const std::uint64_t z = cell_key(joint_x, course_top, 0x6272696B736C6970ULL);
+		const std::uint64_t z = cell_key(joint_x, course_top, 0x6272696B736C6970ULL ^ hand);
 		if (z % BRICK_SLIP_ONE_IN != 0) { return 0.0f; }
 		return ((z >> 32) & 1u) != 0 ? BRICK_SLIP_CELLS * CELL : -BRICK_SLIP_CELLS * CELL;
 	}
@@ -84,9 +86,9 @@ namespace
 		float left, right, y;
 	};
 
-	std::vector<MortarStroke> mortar_strokes(const RectangleF& rectangle, float y)
+	std::vector<MortarStroke> mortar_strokes(const RectangleF& rectangle, float y, std::uint64_t hand)
 	{
-		float drift = (cell_key(0.0f, y, 0x6D6F727461726479ULL) & 1u) != 0 ? CELL : -CELL;
+		float drift = (cell_key(0.0f, y, 0x6D6F727461726479ULL ^ hand) & 1u) != 0 ? CELL : -CELL;
 		if (y + drift < rectangle.top() + CELL * 3.0f || y + drift + CELL > rectangle.bottom() - CELL * 3.0f)
 		{
 			drift = 0.0f;
@@ -95,7 +97,7 @@ namespace
 		for (float band = std::floor(rectangle.left() / MORTAR_BAND) * MORTAR_BAND;
 			band < rectangle.right(); band += MORTAR_BAND)
 		{
-			const bool off = cell_key(band, y, 0x6D6F72746172626EULL) % MORTAR_DRIFT_ONE_IN == 0;
+			const bool off = cell_key(band, y, 0x6D6F72746172626EULL ^ hand) % MORTAR_DRIFT_ONE_IN == 0;
 			bands.push_back({ std::max(band, rectangle.left()), std::min(band + MORTAR_BAND, rectangle.right()),
 				y + (off ? drift : 0.0f) });
 		}
@@ -116,7 +118,7 @@ namespace
 		}
 		for (size_t i = 1; i < strokes.size(); ++i)
 		{
-			const std::uint64_t join = cell_key(strokes[i].left, y, 0x6D6F72746172636AULL);
+			const std::uint64_t join = cell_key(strokes[i].left, y, 0x6D6F72746172636AULL ^ hand);
 			strokes[i - 1].right += static_cast<float>(join % MORTAR_JOIN_CELLS) * CELL;
 			strokes[i].left -= static_cast<float>((join / MORTAR_JOIN_CELLS) % MORTAR_JOIN_CELLS) * CELL;
 		}
@@ -202,7 +204,7 @@ namespace
 }
 
 GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
-	RenderResources* render_resources) :
+	RenderResources* render_resources, std::uint64_t hand) :
 	TerrainMaterial("ground", render_resources)
 {
 	constexpr float course = 16.0f * CELL;
@@ -221,9 +223,9 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 		if (top >= tiled_bottom) { break; }
 		const float bottom = std::min(top + course, tiled_bottom);
 		const std::vector<MortarStroke> above = index > 0
-			? mortar_strokes(rectangle, top) : std::vector<MortarStroke>{};
+			? mortar_strokes(rectangle, top, hand) : std::vector<MortarStroke>{};
 		const std::vector<MortarStroke> below = bottom < tiled_bottom
-			? mortar_strokes(rectangle, bottom) : std::vector<MortarStroke>{};
+			? mortar_strokes(rectangle, bottom, hand) : std::vector<MortarStroke>{};
 		for (const MortarStroke& stroke : above)
 		{
 			this->add(RectangleF(stroke.left, stroke.y, stroke.right - stroke.left, CELL),
@@ -236,7 +238,7 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 		for (float x = grid_from(rectangle.left() - offset + CELL * 3.0f, brick) + offset;
 			x < rectangle.right() - CELL * 3.0f; x += brick)
 		{
-			float joint = x + brick_slip(x, top);
+			float joint = x + brick_slip(x, top, hand);
 			if (joint < rectangle.left() + CELL * 3.0f || joint >= rectangle.right() - CELL * 3.0f)
 			{
 				joint = x;
@@ -244,7 +246,7 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 			// A joint meets the lines where they were drawn, not where they were meant to be.
 			float joint_top = above.empty() ? top : mortar_at(above, joint, top).first;
 			float joint_bottom = below.empty() ? bottom : mortar_at(below, joint, bottom).second;
-			const std::uint64_t slip = cell_key(joint, top, 0x6A6F696E746F7672ULL);
+			const std::uint64_t slip = cell_key(joint, top, 0x6A6F696E746F7672ULL ^ hand);
 			if (slip % JOINT_OVERSHOOT_ONE_IN == 0)
 			{
 				const float tail = static_cast<float>(1u + ((slip >> 32) & 1u)) * CELL;
@@ -260,7 +262,7 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 			}
 			this->add(RectangleF(joint, joint_top, CELL, joint_bottom - joint_top), TerrainRole::keyline, rectangle);
 
-			const std::uint64_t doubled = cell_key(joint, top, 0x646F75626C656A74ULL);
+			const std::uint64_t doubled = cell_key(joint, top, 0x646F75626C656A74ULL ^ hand);
 			if (doubled % JOINT_DOUBLED_ONE_IN == 0)
 			{
 				const float apart = static_cast<float>(1u + ((doubled >> 32) & 1u)) * CELL;
@@ -277,7 +279,7 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 			// again, a row or two under the line it should have shared.
 			if (previous && !above.empty())
 			{
-				const std::uint64_t edge = cell_key(*previous, top, 0x646F75626C65746FULL);
+				const std::uint64_t edge = cell_key(*previous, top, 0x646F75626C65746FULL ^ hand);
 				if (edge % BRICK_TOP_DOUBLED_ONE_IN == 0)
 				{
 					const float line_bottom = std::max(mortar_at(above, *previous, top).second,

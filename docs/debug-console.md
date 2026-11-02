@@ -1030,8 +1030,9 @@ command or shipping bot policy.
 - **The round seed.** Every build under `seed n` is built from round seed `n`
   (`HYG#39`). A build draws only from the `MatchRandom` made from it
   (`game/objects/match_random.h`): one splitmix64 stream for a Random team
-  palette and another for the intro's monitor persona, and the shipping bots
-  get the seed itself. Which of them draw never moves another, and a build
+  palette, another for the intro's monitor persona and a third for that
+  person's hand (which brick and mortar slips the ground shows), and the
+  shipping bots get the seed itself. Which of them draw never moves another, and a build
   never reads or moves `rand()`.
 - **The menus' `rand()`.** The random teams, weapon and stage stay on `rand()`.
   `seed n` seeds it at once, and every seeded build seeds it again with the

@@ -84,6 +84,8 @@ comparison and physical-pad check; values remain provisional.
   Results papers, and whether practice Pause's focus cards may overlap their neighbours (`POL#45`).
 - **Design-process draft:** accept or amend the personas, stories and journeys, the
   hypotheses they mark and the three unserved stories (`DES#1`); `DES#2` waits on it.
+- **Drawing-mistake studies:** run Study B on the shipped stage 1 and Study A for the figure,
+  each with participants; the kits are ready (`POL#46`).
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
@@ -120,7 +122,7 @@ questions in the polish sub-docs are superseded, not open.
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
-| `POL#46` | OPEN | LOW | M | Deliberate drawing mistakes: stage 1 shipped before Study B by the author's call (backdrop skill ceiling and slips, brick slips, mortar strokes and doubled edges, simpler tools), and Study B checks it after the fact, taking out whatever fails; per-person seeding and figure slips wait on Study A. Both study kits are in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
+| `POL#46` | DECISION | LOW | M | Stage 1 of the drawing mistakes shipped, with per-match hands. Left: run Study B with participants and take out what fails; Study A then supplies stage 2's figure slips. Kits are in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
 
 ## Feel and feedback
 

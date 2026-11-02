@@ -3,6 +3,7 @@
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
 #include "game/objects/level_object_builder.h"
+#include "game/objects/match_random.h"
 #include "game/objects/structure.h"
 #include "game/objects/terrain_material.h"
 #include "game/objects/translating_structure_paintable.h"
@@ -294,6 +295,7 @@ namespace
 #include "scripts/acceptance/terrain/surface_finish_checks.h"
 #include "scripts/acceptance/terrain/landmark_checks.h"
 #include "scripts/acceptance/terrain/moving_checks.h"
+#include "scripts/acceptance/terrain/hand_checks.h"
 
 namespace
 {
@@ -401,6 +403,7 @@ namespace
 				stage + ": total score lost the preserved mover baseline or reciprocal crossover clipping");
 		}
 		check_moving_shadows(world, builder, collision_json, first, stage);
+		check_stage_hands(builder, collision_json, first, stage);
 
 		// Backdrop hues come from terrain texels; every authored tint stays grey.
 		const JsonValue decorations = document.root().array("non_collision_objects");
@@ -476,6 +479,8 @@ int main(int argc, char** argv)
 		}
 		check_rejections(world);
 		check_surface_finish(world);
+		check_match_hands();
+		check_ground_hands(world);
 		check_miniature_rulers(world);
 		check_miniature_faces(world);
 		check_miniature_ramps(world);
@@ -486,7 +491,7 @@ int main(int argc, char** argv)
 		std::cout << "PASS terrain: " << stages << " stages fully materialled, every drawing inside "
 			"its collision shape and deterministic, shadows under real undersides, untinted "
 			"backdrops on paper, shared sealed finishes clipped to exposed faces, quantized miniature silhouettes, "
-			"qualified native-size static landmarks with stable bounds/RNG/reduction, paper-only provisional blockouts, "
+			"per-match hands that move only ground slips, qualified native-size static landmarks with stable bounds/RNG/reduction, paper-only provisional blockouts, "
 			"bounded deterministic cloud drift with live reduction, and material/drift/camera refusals.\n";
 		return 0;
 	});

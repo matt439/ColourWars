@@ -20,6 +20,12 @@ BotRandom MatchRandom::persona() const
 	return this->stream(Stream::persona);
 }
 
+std::uint64_t MatchRandom::hand() const
+{
+	const std::uint64_t hand = this->stream(Stream::hand).next();
+	return hand != 0 ? hand : 1;
+}
+
 std::uint64_t MatchRandom::bot_seed() const
 {
 	return this->seed_;

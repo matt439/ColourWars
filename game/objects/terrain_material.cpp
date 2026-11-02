@@ -81,7 +81,7 @@ const char* terrain_role_name(TerrainRole role)
 
 std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& name,
 	CollisionObjectType type, const Shape& shape, const TerrainFaces& faces,
-	float mirror_x, RenderResources* render_resources)
+	float mirror_x, RenderResources* render_resources, std::uint64_t hand)
 {
 	const bool ramp = type == CollisionObjectType::structure_ramp_left ||
 		type == CollisionObjectType::structure_ramp_right;
@@ -107,7 +107,7 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 	const RectangleF rectangle = shape.bounding_box();
 	if (name == "ground")
 	{
-		return std::make_unique<GroundMaterial>(rectangle, faces, render_resources);
+		return std::make_unique<GroundMaterial>(rectangle, faces, render_resources, hand);
 	}
 	if (name == "ruler")
 	{

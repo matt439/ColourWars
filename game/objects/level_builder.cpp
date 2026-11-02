@@ -70,7 +70,7 @@ std::unique_ptr<Level>
 	}
 
 	auto collision_objects = this->level_object_builder_->build_collision_objects(
-		load_info->collision_objects_json(), team_colours);
+		load_info->collision_objects_json(), team_colours, random.hand());
 	for (std::unique_ptr<GameObject>& shadow :
 		this->level_object_builder_->build_moving_shadows(load_info->collision_objects_json(), collision_objects))
 	{
