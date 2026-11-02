@@ -86,4 +86,3 @@ private:
 // FNV-1a, 64-bit.
 std::uint64_t fnv1a(std::string_view bytes, std::uint64_t hash = 0xcbf29ce484222325ull);
 std::string hex64(std::uint64_t value);
-
