@@ -186,7 +186,13 @@ namespace
 		{ "presentation.movement_feedback.**", TuneScope::live },
 		// WeaponFeedback borrows its numeric presentation record.
 		{ "presentation.weapon_feedback.**", TuneScope::live },
-		// FigureAttachments borrows the geometry that the numeric tuner can edit.
+		// PlayerBuilder chooses the match's person (FigurePerson) when it builds;
+		// Player takes the band with its baked face frames, so a tuned band only
+		// fits faces rebaked to it.
+		{ "presentation.figure.slips.two_slip_chance", TuneScope::rebuild },
+		{ "presentation.figure.slips.band.**", TuneScope::rebuild },
+		// FigureAttachments borrows the geometry that the numeric tuner can edit;
+		// Player reads the slips' stroke edits on every draw.
 		{ "presentation.figure.**", TuneScope::live },
 		{ "presentation.respawn_redraw.**", TuneScope::live },
 		// Monitor, Silhouette and ScreenCursor keep a pointer; MatchOpening reads figure_grey.

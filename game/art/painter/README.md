@@ -82,6 +82,27 @@ the smirk cells 7-9 on row 10 with cell 9 raised on row 9. The neck is row 12
 and the overalls cells 4..12, rows 13-21, with the straps in cells 6 and 10
 on rows 14-15 above the bib and the leg split at cell 8, row 20.
 
+## Figure slips
+
+[slips.json](slips.json) holds the 11 face and head-outline slips the author
+picked for stage 2 of the drawing mistakes
+([research, decision 8](../../../docs/drawing-mistakes-research.md#9-author-decisions-and-open-questions)).
+Each match's person draws one or two of them, chosen from the match's hand.
+`presentation.json` `figure.slips` lists the slips in the same order, with the
+exclusive pairs and each slip's respawn stroke edits.
+
+The build checks every person: each slip alone, and each pair that is not
+exclusive. Every pose must keep the head outline closed to a 4-connected bucket
+fill, with no transparent pocket. Idle must keep a white row between the eyes
+and the brim. Each person's strokes must trace their black cells exactly. The
+build then bakes each person's 44x24 face band (rows 5-10, cells 3-13) for idle
+and the ten action frames. A band is named
+`face.<person>.<strip>.<frame>`, for example `face.front_ear_low+eyes_close_set.hurt.1`;
+every locomotion strip draws `face.<person>.idle.0`. Identical bands share a
+rectangle. They are packed on a 52x32 pitch right of the action strips (from
+x=288, y=1028) and in the empty block under them (from y=1668). `slips.png` is
+the authoring preview: every person's idle in blue.
+
 ## Respawn pen recipe
 
 These axis-aligned pen paths reproduce the black cells of idle with the rest

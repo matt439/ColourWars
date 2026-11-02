@@ -229,6 +229,60 @@ Presentation::Presentation(const JsonDocument& document)
 		// The pen draws over the same overhanging canvas as the figure.
 		throw std::runtime_error("respawn_redraw.canvas_size must equal figure.canvas_size.");
 	}
+	// A slip's stroke edits name respawn strokes by index, so they are checked
+	// against that list; a person's two slips may not both change one stroke.
+	const FigureSlipsPresentation& slips = this->figure_.slips;
+	const Vector2F last_nib = this->respawn_redraw_.canvas_size - Vector2F(this->respawn_redraw_.pen_width);
+	for (const FigureSlip& slip : slips.list)
+	{
+		for (const FigureSlipStroke& edit : slip.strokes)
+		{
+			const bool on_canvas = std::all_of(edit.points.begin(), edit.points.end(),
+				[&last_nib](const Vector2F& point)
+				{
+					return point.x >= 0.0f && point.y >= 0.0f && point.x <= last_nib.x && point.y <= last_nib.y;
+				});
+			if (edit.stroke >= this->respawn_redraw_.strokes.size() || !on_canvas)
+			{
+				throw std::runtime_error("figure.slips: slip '" + slip.id +
+					"' must edit an existing respawn_redraw stroke and keep the pen on the canvas.");
+			}
+		}
+	}
+	for (size_t first = 0; first < slips.list.size(); ++first)
+	{
+		for (size_t second = first; second < slips.list.size(); ++second)
+		{
+			if (first != second && slips.is_exclusive(first, second))
+			{
+				continue;
+			}
+			// A slip alone (first == second), or a pair a person may draw.
+			std::vector<size_t> person{ first };
+			if (second != first)
+			{
+				person.push_back(second);
+			}
+			std::vector<size_t> changed;
+			for (const size_t index : person)
+			{
+				for (const FigureSlipStroke& edit : slips.list[index].strokes)
+				{
+					if (edit.edit == FigureSlipStroke::Edit::insert_after)
+					{
+						continue;
+					}
+					if (std::find(changed.begin(), changed.end(), edit.stroke) != changed.end())
+					{
+						throw std::runtime_error("figure.slips: '" + slips.list[first].id + "' and '" +
+							slips.list[second].id + "' both change respawn stroke " +
+							std::to_string(edit.stroke) + "; make them exclusive.");
+					}
+					changed.push_back(edit.stroke);
+				}
+			}
+		}
+	}
 	this->opening_ = read_opening(root);
 	const JsonValue match = root.object("match");
 	this->match_.reference_size = read_positive_vector(match, "reference_size");

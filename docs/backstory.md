@@ -148,7 +148,7 @@ Decided with the author on 2026-10-12, while the first slice was built:
 
 | Beat | State |
 |---|---|
-| Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw` |
+| Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw`, with the match person's slips (`FigurePerson`) |
 | Respawn: the pop | Built. The accepted `player.pop` plays when the paint comes off, through `player.sounds.death` in the replacement bank (`STORY#1`) |
 | Muted scenery, no team hue in it, each team on its own half | Built. Authored tints are grey, enforced by the game and the level editor; the Muted Day terrain and backdrop take their muted tones from the terrain sheet's texels ([terrain kit](polish-terrain.md)) |
 | Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `MatchOpening` (`match_opening.cpp`); `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |

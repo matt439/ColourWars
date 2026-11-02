@@ -20,8 +20,10 @@ outside `out/`, and the reports are written where you point them.
 [study-a/](study-a/) holds everything Study A needs: the reference images, the
 sheets for participants and the experimenter, the codebook, and the analysis.
 The design is section 8 of
-[drawing-mistakes-research.md](../../docs/drawing-mistakes-research.md); stage 2
-(the figure) waits on its result.
+[drawing-mistakes-research.md](../../docs/drawing-mistakes-research.md). It was
+set aside on 2026-11-02: stage 2 (the figure) takes its slips from an authored
+pool instead (section 9, decision 8). The kit stays in case real drawings are
+wanted later.
 
 | File | What it is |
 |---|---|

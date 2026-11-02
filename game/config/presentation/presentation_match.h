@@ -12,6 +12,7 @@
 #include "game/objects/weapon_type.h"
 #include "game/objects/team_colour.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <string>
@@ -437,6 +438,50 @@ struct QuietCharacterPresentation
 	labrador::Colour face_colour;
 };
 
+// One change a slip makes to the respawn strokes, by index into
+// RespawnRedrawPresentation::strokes: a stroke drawn along other points, a
+// stroke not drawn at all, or a new stroke drawn straight after one.
+struct FigureSlipStroke
+{
+	enum class Edit { replace, remove, insert_after };
+	Edit edit = Edit::replace;
+	size_t stroke = 0;
+	// insert_after only; a replaced stroke keeps its part.
+	std::string part;
+	std::vector<mattmath::Vector2F> points;
+};
+
+// One face or head-outline slip a person can make and keep
+// (docs/drawing-mistakes-research.md, section 9, decision 8). Its cells live
+// in game/art/painter/slips.json, which build-painter-art.ps1 bakes.
+struct FigureSlip
+{
+	std::string id;
+	std::vector<FigureSlipStroke> strokes;
+};
+
+// The slips the person drawing a match made: one, or two that are not
+// exclusive, chosen by FigurePerson from the match's hand.
+struct FigureSlipsPresentation
+{
+	// The person's bands are frames <band_frame>.<person>.<strip>.<frame> on
+	// the figure's sheet: <person> is one id, or two joined by '+' in list
+	// order, and every locomotion strip draws the idle strip's band.
+	std::string band_frame;
+	// Canvas texels a person's band replaces, the same span facing either way.
+	mattmath::RectangleF band;
+	float two_slip_chance = 0.0f;
+	std::vector<FigureSlip> list;
+	// Index pairs into `list`, smaller first, never drawn together.
+	std::vector<std::array<size_t, 2>> exclusive;
+
+	bool is_exclusive(size_t first, size_t second) const
+	{
+		const std::array<size_t, 2> pair{ std::min(first, second), std::max(first, second) };
+		return std::find(this->exclusive.begin(), this->exclusive.end(), pair) != this->exclusive.end();
+	}
+};
+
 // Figure details in the painter's authored canvas. Grips belong to the tool,
 // while shoulders follow the posed figure canvas.
 struct FigurePresentation
@@ -461,6 +506,7 @@ struct FigurePresentation
 	labrador::Colour hand_colour;
 	std::array<FigureGripPresentation, static_cast<size_t>(WeaponType::bucket) + 1> grips;
 	QuietCharacterPresentation quiet;
+	FigureSlipsPresentation slips;
 
 	// Canvas texels the hitbox spans.
 	float body_width() const { return canvas_size.x - body_inset * 2.0f; }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "game/config/play_settings.h"
 
 #include "game/objects/player.h"
@@ -18,7 +20,9 @@ public:
 	PlayerBuilder(const GameTuning* tuning, const Presentation* presentation);
 
 	// Return participants in roster order. Only humans consume panes, in their
-	// roster order; input slots are the independent SeatSetup::num.
+	// roster order; input slots are the independent SeatSetup::num. `hand` is
+	// the match's (MatchRandom::hand): every figure carries that person's
+	// slips. 0, the house hand, draws the authored figure.
 	std::vector<std::unique_ptr<Player>> build_players(
 		const MatchSetup& settings,
 		const LevelLoadedInfo* load_info,
@@ -26,7 +30,8 @@ public:
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
-		const labrador::ViewportManager* viewport_manager) const;
+		const labrador::ViewportManager* viewport_manager,
+		std::uint64_t hand = 0) const;
 private:
 	const GameTuning* tuning_ = nullptr;
 	const Presentation* presentation_ = nullptr;

@@ -87,7 +87,7 @@ std::unique_ptr<Level>
 	for (std::unique_ptr<Player>& player :
 		this->player_builder_->build_players(settings, load_info, team_colours,
 			this->render_resources_, this->audio_resources_, this->preferences_,
-			this->viewport_manager_))
+			this->viewport_manager_, random.hand()))
 	{
 		players.push_back(scene->add(std::move(player)));
 	}

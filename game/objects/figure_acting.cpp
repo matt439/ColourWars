@@ -1,50 +1,11 @@
 #include "game/pch.h"
 #include "game/objects/figure_acting.h"
+#include "game/objects/figure_person.h"
 
 #include <vector>
 
 using namespace labrador;
 using namespace mattmath;
-
-namespace
-{
-    // Each eye, in texels of the canvas, from the strokes that drew it.
-    std::vector<RectangleF> eye_rectangles(const RespawnRedrawPresentation& strokes)
-    {
-        std::vector<RectangleF> eyes;
-        for (const RespawnStroke& stroke : strokes.strokes)
-        {
-            if (stroke.part != "eye")
-            {
-                continue;
-            }
-            for (size_t at = 1; at < stroke.points.size(); ++at)
-            {
-                const Vector2F& from = stroke.points[at - 1];
-                const Vector2F& to = stroke.points[at];
-                const RectangleF sweep(std::min(from.x, to.x), std::min(from.y, to.y),
-                    std::abs(to.x - from.x) + strokes.pen_width,
-                    std::abs(to.y - from.y) + strokes.pen_width);
-                // Strokes that touch are one eye.
-                bool merged = false;
-                for (RectangleF& eye : eyes)
-                {
-                    if (sweep.x <= eye.right() && eye.x <= sweep.right() &&
-                        sweep.y <= eye.bottom() && eye.y <= sweep.bottom())
-                    {
-                        eye = RectangleF::union_of(eye, sweep);
-                        merged = true;
-                    }
-                }
-                if (!merged)
-                {
-                    eyes.push_back(sweep);
-                }
-            }
-        }
-        return eyes;
-    }
-}
 
 FigureActing::FigureActing(const OpeningPresentation* look,
     const RespawnRedrawPresentation* strokes, RenderResources* render_resources) :
@@ -57,10 +18,16 @@ FigureActing::FigureActing(const OpeningPresentation* look,
 void FigureActing::draw_eyes(DrawList& draw_list, const RectangleF& figure,
     bool facing_right, const Vector2F& glance) const
 {
+    this->draw_eyes(draw_list, figure, facing_right, glance, this->strokes_->strokes);
+}
+
+void FigureActing::draw_eyes(DrawList& draw_list, const RectangleF& figure,
+    bool facing_right, const Vector2F& glance, const std::vector<RespawnStroke>& drawn) const
+{
     const RespawnRedrawPresentation& strokes = *this->strokes_;
     const Vector2F scale(figure.width / strokes.canvas_size.x,
         figure.height / strokes.canvas_size.y);
-    for (RectangleF eye : eye_rectangles(strokes))
+    for (RectangleF eye : eye_rectangles(drawn, strokes.pen_width))
     {
         if (!facing_right)
         {
