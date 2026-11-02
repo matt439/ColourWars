@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/terrain_material.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 
 #include <cmath>
 #include <optional>

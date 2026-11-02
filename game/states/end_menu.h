@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/states/end_menu_action.h"
-#include "game/session.h"
+#include "game/match/session.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"

@@ -57,7 +57,7 @@ to newly constructed shots; a flying pellet keeps its launch direction. See
 ## Accepted ranges
 
 Every number in `tuning.json` is read through the shared checks in
-`game/content_value.h`, which `presentation.json` and the level definitions use
+`game/config/content_value.h`, which `presentation.json` and the level definitions use
 too. A value outside its range fails at startup, and a `tune` edit is refused,
 with the file, the object path and the key, for example
 `'respawn_delay' must be finite and not negative, and is -1.` or

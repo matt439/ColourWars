@@ -2,9 +2,9 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_chord.h"
-#include "game/debug/debug_menu_model.h"
-#include "game/debug/debug_registry.h"
+#include "game/debug/input/debug_chord.h"
+#include "game/debug/console/debug_menu_model.h"
+#include "game/debug/commands/debug_registry.h"
 
 // The debug menu: the pad chord and its input blanking, the registry's menu
 // traits and the menu model.

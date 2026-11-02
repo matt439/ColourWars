@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/profiles_menu.h"
-#include "game/player_control.h"
+#include "game/match/player_control.h"
 #include <algorithm>
 
 using namespace labrador;

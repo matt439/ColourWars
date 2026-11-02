@@ -1,5 +1,5 @@
 #include "editor/slab_authoring.h"
-#include "game/fixed_slab_paint_geometry.h"
+#include "game/contracts/fixed_slab_paint_geometry.h"
 
 #include <algorithm>
 #include <cmath>

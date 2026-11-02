@@ -3,11 +3,11 @@
 #include "scripts/acceptance/debug_console/cpu_level.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/bot.h"
-#include "game/debug/match_fingerprint.h"
-#include "game/debug/replay.h"
-#include "game/debug/tune_document.h"
-#include "game/debug/tune_scope.h"
+#include "game/debug/replay/bot.h"
+#include "game/debug/replay/match_fingerprint.h"
+#include "game/debug/replay/replay.h"
+#include "game/debug/tune/tune_document.h"
+#include "game/debug/tune/tune_scope.h"
 #include "game/directory_consts.h"
 #include "engine/render/text_encoding.h"
 #include "engine/core/file_path.h"

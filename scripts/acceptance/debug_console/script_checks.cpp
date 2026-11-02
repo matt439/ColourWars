@@ -2,10 +2,10 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/bot.h"
-#include "game/debug/debug_script.h"
-#include "game/debug/debug_tokenizer.h"
-#include "game/debug/debug_wait.h"
+#include "game/debug/replay/bot.h"
+#include "game/debug/script/debug_script.h"
+#include "game/debug/commands/debug_tokenizer.h"
+#include "game/debug/script/debug_wait.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/source_paths.h"
 #include "engine/render/text_encoding.h"

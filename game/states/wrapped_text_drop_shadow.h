@@ -6,7 +6,7 @@
 #include "game/carried/ui_text_drop_shadow.h"
 
 // A UiTextDropShadow that wraps every string it is given to a width, in the
-// font and at the scale it draws with (game/text_wrap.h). Wrapping is the
+// font and at the scale it draws with (game/config/text_wrap.h). Wrapping is the
 // widget's choice, not the text's: a page opts in by building this instead of
 // the plain widget, and text_wrap::check_fits is the matching load-time check
 // for whatever content it will be handed.

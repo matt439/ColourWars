@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/carried/sound_bank_object.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 
 // One owned voice for the shared pause/reconnect count-in. Its owner cancels
 // it when the count-in is interrupted, so a later resume starts a fresh beat.

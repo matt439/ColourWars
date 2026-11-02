@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_runner/runner.h"
 #if COLOURWARS_DEV_TOOLS
-#include "game/input_slots.h"
-#include "game/paint_owners.h"
+#include "game/input/input_slots.h"
+#include "game/match/paint_owners.h"
 #include "game/objects/player.h"
 #include "engine/core/file_path.h"
 #include <algorithm>

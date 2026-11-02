@@ -2,9 +2,9 @@
 #include "game/objects/practice_lessons.h"
 #include "game/objects/paper_card.h"
 #include "game/objects/player.h"
-#include "game/presentation.h"
-#include "game/tuning.h"
-#include "game/drawable_text.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/tuning.h"
+#include "game/config/drawable_text.h"
 #include "engine/math/intersects.h"
 #include "engine/render/renderer.h"
 #include <algorithm>

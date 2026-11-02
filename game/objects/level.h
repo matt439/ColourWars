@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game/play_settings.h"
-#include "game/presentation_match.h"
+#include "game/config/play_settings.h"
+#include "game/config/presentation/presentation_match.h"
 
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
@@ -30,7 +30,7 @@
 #include "game/objects/practice_lessons.h"
 #include "game/objects/cursor_marker_overlay.h"
 #include "engine/ui/widget.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "game/objects/seat_input_filter.h"
 #include "game/objects/monitor.h"
 #include "game/objects/match_random.h"
@@ -48,7 +48,7 @@
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/objects/music_envelope.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "game/objects/level_state.h"
 #include <cstdint>
 #include <optional>
@@ -106,7 +106,7 @@ public:
 	// the menu is not taken as a new press.
 	void suspend();
 	// What suspend does to the players, without pausing a voice: an instant
-	// replay repeats a round's suspends where they happened (game/round_tape.h).
+	// replay repeats a round's suspends where they happened (game/match/round_tape.h).
 	void interrupt_players();
 	void resume();
 	// The top state supplies one active real-time tick, even under pause pages.

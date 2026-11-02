@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "scripts/acceptance/skirmish_bot/fixtures.h"
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/bot.h"
-#include "game/debug/replay.h"
+#include "game/debug/replay/bot.h"
+#include "game/debug/replay/replay.h"
 #include <cmath>
 #include <cstdlib>
 #include <vector>

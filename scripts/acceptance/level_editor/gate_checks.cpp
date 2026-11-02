@@ -1,6 +1,6 @@
 // The team gate (ROAD#15): the editor authors one from the palette, lists
 // its gate field in the inspector and refuses a bad gate by the game's own
-// rule (game/team_gate_contract.h), on every edit and at load, in the
+// rule (game/contracts/team_gate_contract.h), on every edit and at load, in the
 // game's words, before save rather than at game load.
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include <functional>

@@ -2,7 +2,7 @@
 
 #include "game/ai/bot_world.h"
 #include "game/ai/match_bot.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include <memory>
 #include <optional>
 #include <vector>

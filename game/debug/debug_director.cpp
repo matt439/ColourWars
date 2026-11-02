@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/debug/debug_director.h"
-#include "game/debug/debug_tokenizer.h"
+#include "game/debug/commands/debug_tokenizer.h"
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_director_impl.h"

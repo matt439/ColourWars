@@ -2,7 +2,7 @@
 
 #include "game/ai/match_bot.h"
 #include "game/objects/paintable_object.h"
-#include "game/simulation.h"
+#include "game/contracts/simulation.h"
 #include <algorithm>
 #include <cmath>
 #include <optional>

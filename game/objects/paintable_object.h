@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/paint_owners.h"
+#include "game/match/paint_owners.h"
 #include "game/objects/player_team.h"
 #include "engine/math/vector2f.h"
 #include <array>

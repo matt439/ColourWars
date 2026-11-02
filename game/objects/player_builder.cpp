@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/player_builder.h"
-#include "game/presentation.h"
-#include "game/paint_owners.h"
+#include "game/config/presentation/presentation.h"
+#include "game/match/paint_owners.h"
 
 using namespace mattmath;
 using namespace labrador;

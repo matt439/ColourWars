@@ -71,6 +71,7 @@ Cases = @(
     }
     @{ Name = 'turbulence_blockout' }
     @{ Name = 'resume_countdown' }
+    @{ Name = 'match_suspension' }
     @{
         Name = 'debug_console'
         StartRank = 4

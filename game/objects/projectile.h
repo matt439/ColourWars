@@ -4,7 +4,7 @@
 #include "game/objects/projectile_type.h"
 #include "game/objects/blocked_shot_contact.h"
 #include "game/objects/horizontal_motion.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "game/carried/animation_object.h"
 #include "game/carried/moving_object.h"
 #include "engine/collision/collision_object.h"

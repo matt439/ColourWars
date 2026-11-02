@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "game/states/pause_menu.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 #include "game/states/player_label.h"
 #include "scripts/acceptance/support/probe.h"
 #include <cstdlib>

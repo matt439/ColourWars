@@ -6,8 +6,8 @@
 // through a fresh Scene, the placement and drive helpers, and the trials
 // main calls. structure_paintable.h is included plainly here; tool_trials.cpp
 // includes it first with private opened, so this include is then a no-op.
-#include "game/play_settings.h"
-#include "game/tuning.h"
+#include "game/config/play_settings.h"
+#include "game/config/tuning.h"
 #include "game/objects/paintable_object.h"
 #include "game/objects/structure.h"
 #include "game/objects/paint_tile.h"
@@ -23,7 +23,7 @@
 #include "game/objects/projectile.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/weapon_builder.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/input/gamepad.h"

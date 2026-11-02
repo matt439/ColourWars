@@ -2,7 +2,7 @@
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/projectile.h"
 #include "engine/collision/narrow_phase.h"
-#include "game/fixed_slab_paint_geometry.h"
+#include "game/contracts/fixed_slab_paint_geometry.h"
 #include <cmath>
 
 using namespace mattmath;

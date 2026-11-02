@@ -6,7 +6,7 @@
 #include "game/objects/projectile_ball.h"
 #include "game/objects/projectile_mist.h"
 #include "game/objects/projectile_rolling.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "engine/render/colour.h"
 
 class ProjectileBuilder

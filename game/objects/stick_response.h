@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 #include "engine/input/gamepad.h"
 
 struct StickResponse

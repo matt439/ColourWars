@@ -4,8 +4,8 @@
 #include "game/states/keyboard_jump_menu.h"
 #include "game/states/pad_buttons_menu.h"
 #include "game/states/profiles_menu.h"
-#include "game/controls_text.h"
-#include "game/sound_groups.h"
+#include "game/input/controls_text.h"
+#include "game/config/sound_groups.h"
 #include <algorithm>
 
 using namespace labrador;

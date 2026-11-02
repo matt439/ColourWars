@@ -2,11 +2,11 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_menu_model.h"
-#include "game/debug/debug_tokenizer.h"
-#include "game/debug/json_spans.h"
-#include "game/debug/tune_document.h"
-#include "game/debug/tune_scope.h"
+#include "game/debug/console/debug_menu_model.h"
+#include "game/debug/commands/debug_tokenizer.h"
+#include "game/debug/tune/json_spans.h"
+#include "game/debug/tune/tune_document.h"
+#include "game/debug/tune/tune_scope.h"
 #include "engine/assets/json.h"
 #include "engine/math/scalar.h"
 #include <algorithm>

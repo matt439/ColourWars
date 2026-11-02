@@ -1,6 +1,6 @@
 // Station editing (ED#26): stations are listed, added, renamed, moved,
 // aligned, duplicated and deleted through the same validated, undoable edits
-// as every other entry, and the ED#23 shared rules (game/station_contract.h)
+// as every other entry, and the ED#23 shared rules (game/contracts/station_contract.h)
 // refuse what the game refuses. Lessons are preserved as written.
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include <functional>

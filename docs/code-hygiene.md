@@ -28,8 +28,8 @@ listed. Refresh line numbers before starting; they are from `96c65373`.
 ### Match setup out of the menu layer (`HYG#28`)
 
 **Done 2026-10-30.** `MenuLevelSettings` is now `MatchSetup` in
-[game/match_setup.h](../game/match_setup.h) and `MenuPlayerSettings` is
-`SeatSetup` in [game/seat_setup.h](../game/seat_setup.h), with no other
+[game/match/match_setup.h](../game/match/match_setup.h) and `MenuPlayerSettings` is
+`SeatSetup` in [game/match/seat_setup.h](../game/match/seat_setup.h), with no other
 change to either type; `GameMenu`'s member followed as `match_setup_`. The seat
 label left the class as the free function `player_label(const MatchSetup&, int,
 const MenuText&)` in [game/states/player_label.h](../game/states/player_label.h).
@@ -232,7 +232,7 @@ same-height ballistic cap, not from a full second of horizontal travel (said in
 the commit and in [the debug console](debug-console.md#skirmish-measurement-bot)).
 The bots' hard-coded `60` (step length, one-second loops, seconds-to-steps
 budgets, the one-step velocity look-ahead) now read `SIMULATION_HZ` or
-`SECONDS_PER_STEP` from [simulation.h](../game/simulation.h), each spelled to
+`SECONDS_PER_STEP` from [simulation.h](../game/contracts/simulation.h), each spelled to
 give the same value bit for bit; the Debug behaviours' step counts stay as
 written.
 
@@ -246,7 +246,7 @@ passes.
 ### One record and replay model (`HYG#35`)
 
 **Done 2026-10-30.** A Debug recording is now a
-[RoundTape](../game/round_tape.h): `ReplayFile` holds `tape` (setup, cheats,
+[RoundTape](../game/match/round_tape.h): `ReplayFile` holds `tape` (setup, cheats,
 every step's inputs and dt, every suspend and resume) in place of its own
 `settings`, `god`, `infinite_ammo`, per-seat `inputs` and `suspends`, and adds
 only what checks a replay: the developer seed, content and stage hashes, tune
@@ -309,7 +309,7 @@ executable and `check_doc_links.py` passes.
 `projectile_name`, `projectile_from_name` and `for_each_projectile`. The
 hand-written lists are gone: tuning's projectile parser (its refusal now lists
 the table), splash animations, impact sounds, weapons and projectiles in
-[tuning.cpp](../game/tuning.cpp) and their four checks in
+[tuning.cpp](../game/config/tuning.cpp) and their four checks in
 `tuning_validation.cpp`; the tool-motion frame check in
 `content_validation.cpp`; the idle drip, muzzle size, tool motion and grip
 readers and the weapon-select choice keys and descriptions in the presentation
@@ -331,7 +331,7 @@ that owns the design size, and have the reader, the validator and the pages call
 it; move `DESIGN_RESOLUTION` out of `states/menu_page.h`. Split presentation
 validation by page rather than by size where the shared geometry allows.
 
-**The module, done 2026-10-30.** [menu_geometry.h](../game/menu_geometry.h) at
+**The module, done 2026-10-30.** [menu_geometry.h](../game/config/presentation/menu_geometry.h) at
 the `game/` root owns `menu_consts::DESIGN_RESOLUTION` (moved unchanged;
 `menu_page.h` includes it, so no probe changed) and the reader's caps by name
 (`paper_max_width` 1760, `setup_paper_max_width` 1840, `scan_paper_max_width`
@@ -410,7 +410,7 @@ in `presentation.cpp`, so the controls reader only ever sees a checked value.
 
 **The split by page, done 2026-10-31.** `Validation::validate` and its phase
 functions stay the only owners of diagnostic order: the eight that check pages
-now live in [presentation_validation.cpp](../game/presentation_validation.cpp)
+now live in [presentation_validation.cpp](../game/config/presentation/presentation_validation.cpp)
 as lists of calls, and `validate_artwork_resources` (phase 4, assets, no page)
 keeps its walk in `presentation_validation_assets.cpp`. Each call is one page's
 block from that phase, moved verbatim into a private `Validation` member in its
@@ -487,7 +487,7 @@ probes that call it did not change. The setup and results checks call the
 record, and no `presentation*` source includes a `states/` header.
 
 The in-match records moved unchanged from `presentation.h` into
-[presentation_match.h](../game/presentation_match.h): HUD, identity, camera,
+[presentation_match.h](../game/config/presentation/presentation_match.h): HUD, identity, camera,
 feedback, figure, respawn, opening, debug overlay, music mix and the team
 palette. `presentation.h` includes it with the two menu headers and keeps the
 `Presentation` class. Twenty `game/objects` headers, `level.h` among them, and
@@ -607,7 +607,7 @@ the match state, every timer, the roster and pane maps, the scene and the order
 of `update`, `update_state`, `update_level_logic`, `draw`,
 `draw_player_overlay` and `refresh_layout`; each part keeps one concern's
 state and drawing, borrows the tuning and presentation and reads them per call
-(so `tune` stays live, and `game/debug/tune_scope.cpp` names the new readers),
+(so `tune` stays live, and `game/debug/tune/tune_scope.cpp` names the new readers),
 and is created at the point its members were. Every public `Level` member
 stays, as a forwarder where its body moved; `players_` and `timer_` keep their
 names for `movement_feedback_visual.cpp`, `cursor_marker_frames` stays a
@@ -711,10 +711,40 @@ passed, and the full run passed 716 checks, as it did after stage 7.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 
-Replace the four focus/pause booleans and their branches with one owned
-suspension object that answers whether audio may play and whether to count in,
-ask the director once per callback for its gate, and make the layout restore
-and Debug attachment scopes created in `init()`.
+**Done 2026-11-02.** `GameLevel`'s four booleans (`covered_`,
+`pause_menu_open_`, `focus_interrupted_`, `background_continuing_`) and its
+`ResumeCountdown` are now one owned
+[MatchSuspension](../game/states/match_suspension.h). It records each reason
+through named transitions (`cover`/`uncover`, `open_pause_menu`/
+`close_pause_menu`, `lose_focus`/`regain_focus`, `begin_count_in`,
+`background_changed`, and `reset` for a new level). It answers the questions
+the callbacks used to spell out each time: `audio_may_play`, `music_ducked`
+and `ducked_music_plays`, `rumble_paused`, `may_run_unfocused`,
+`suspends_level`, `live`, and whether a focus loss is owed a count-in
+(`take_focus_interruption`). `GameLevel` still makes the audio, rumble and
+`Level` calls, in the order it did before. Each callback reads the window's
+focus and the director's clock and background policy once, into a
+`SuspensionGate`. It reads them again only after a developer hook that may
+change them: `before_match_update`, the build hooks and the match steps.
+`sync_rumble`, `update_music`, `update_replay`, `drain_rumble` and
+`begin_resume_countdown` take the caller's gate. `init()` now creates the two
+scopes the destructor used to end by hand. One is
+[ScreenLayoutRestore](../game/states/screen_layout_restore.h); the other is
+`DebugMatchAttachment` in `debug_director.h`, which detaches again if
+`attach_match` throws. The destructor ends them in the old order, after it
+stops rumble. One behaviour changes deliberately: a `GameLevel` destroyed
+without `init()` no longer sets the layout to one player or detaches a match
+it never attached. A three-lens adversarial review compared the old and new
+code for each callback. Its three candidate differences were refuted by
+both of their verifiers: each was on an exception path out of `init()`, and
+that path ends the process. The new CPU case `match_suspension` covers the
+reasons, the focus hold, the count-in and background mode. Both presets build
+under `/W4 /WX`. The full default list passed in Release, and in Debug with
+`-SkipSlowDebug` plus `crossfeed`, `press_tower`, `menu_text` and
+`debug_console`. After the final attachment change, the cases that drive
+`GameLevel` (`debug_console`, `instant_replay`, `display_awake`,
+`cursor_marker`) passed again in both presets, and `check-startup.ps1` passed
+on both executables.
 
 ### Structure queries instead of casts (`HYG#42`)
 
@@ -868,7 +898,7 @@ executable.
 
 ### One owner for the level format (`HYG#46`)
 
-**Done 2026-10-30.** [game/level_format.h](../game/level_format.h), still
+**Done 2026-10-30.** [game/contracts/level_format.h](../game/contracts/level_format.h), still
 engine-free and header-only, is now the level format's one owner: beside the
 version it holds the key names (`level_format::key`), the bounds keys, the
 object types (`object_type`), the collision tags as `level_format::Collision`
@@ -885,7 +915,7 @@ motion and blockout helpers, the document, the canvas and the mechanism
 guide. Each side keeps its own messages and check order, so no level is
 accepted or refused differently; the one wording change is that the editor
 now names a fixed slab's refused `slab` fields in the game's order when two
-are present. [level.schema.json](../game/level.schema.json) moved from `docs/`
+are present. [level.schema.json](../game/contracts/level.schema.json) moved from `docs/`
 to beside it; the three schema checks and the live docs follow. Reading a
 level once into a typed record was considered and not done:
 `LevelLoadedInfo`'s reads go through `JsonValue`, which names the file and key
@@ -902,7 +932,7 @@ the DPI probe's thread keyboard-state check once and passed on a rerun), and
 
 ### One stage catalog (`HYG#47`)
 
-**Done 2026-10-30.** [game/stage_catalog.h](../game/stage_catalog.h) owns the
+**Done 2026-10-30.** [game/config/stage_catalog.h](../game/config/stage_catalog.h) owns the
 ordered stage list and the level registry and is their only writer:
 `StageDefinition` moved there from `stage_loading.h`, the manifest's `"level"`
 kind calls `add`, and `UserStageFolder` and `load_user_stages` take a
@@ -926,7 +956,7 @@ compiled, and `check-startup.ps1` passed on the Debug executable.
 
 ### Save and the active profile (`HYG#48`)
 
-**Done 2026-10-30.** [`SettingsSession`](../game/settings_session.h) now owns
+**Done 2026-10-30.** [`SettingsSession`](../game/config/settings_session.h) now owns
 what belongs to the run: which pad wears which profile and the effective play
 settings and input bindings, the save's with each worn profile laid over its
 pad, rebuilt in place so borrowed references stay current. It borrows the
@@ -942,7 +972,7 @@ session writes through once. Write order, checks and the effective
 references' identity are unchanged, and the file format is not touched. A
 malformed section now prints one stderr line naming the save, the section's
 key and the reader's error before it resets; sections that recover field by
-field print nothing. [save_section.h](../game/save_section.h) states the
+field print nothing. [save_section.h](../game/save/save_section.h) states the
 migration rule: no migration pass, each section reads every older layout in
 place, a version only adds, a key whose meaning changes gets a new name, and
 no section reads `"save_version"`. `match_records` gained
@@ -1028,11 +1058,42 @@ Debug executable.
 
 ### Directories by role (`HYG#51`)
 
-Last, because it moves files every other row touches. Give the `game/` root role
-folders (match types, configuration with a presentation subfolder, persistence,
-input, the engine-free shared contracts with an include check like the engine's
-`check_engine_includes`), give `game/debug` subsystem folders, and decide what
-`game/carried` becomes. Update `game/CMakeLists.txt`, the editor and the docs.
+**Done 2026-11-02.** It came last, because it moves files that every other row
+touches. 97 of the 111 files at the `game/` root moved into six role folders.
+`contracts/` holds the nine engine-free headers and `level.schema.json`, and
+`match/`, `config/`, `config/presentation/`, `save/` and `input/` hold the
+rest. The root keeps only the shell. 69 of `game/debug`'s 79 files moved into
+`commands/`, `console/`, `input/`, `script/`, `replay/`, `tune/` and
+`capture/`. The seam headers, `dev_tools.h` and the director's implementation
+stay at its root, so nothing outside `game/debug` changed what it includes.
+[docs/architecture.md](architecture.md#the-repository) gives the map and the
+two contested placements: `play_settings.h` and `settings_session` are in
+`config/`, not `save/`, and the Debug bots are in `replay/`. The map was drawn
+from the include graph. For each of the two areas, two independent proposals
+were made and a judge checked the code to choose between them. Nothing else
+changed: every include, CMake source entry, probe, script path, live-doc link
+and source comment was rewritten from one table. The frozen reviews keep the
+old paths. `game/carried` keeps its name. It is `ENG#28`'s exhibit, and it is
+deleted when the engine answers that report, so renaming it would only move
+the exhibit.
+
+The new `colourwars_check_contract_includes` target runs
+[cmake/check_contract_includes.cmake](../cmake/check_contract_includes.cmake).
+It refuses any include in `game/contracts/` other than a bare standard header
+or another header in that folder, and it names each offending line. It runs on
+every build because `colourwars_game` and the editor's
+`colourwars_level_document` both depend on it. It was tested on a copy of the
+folder with four planted includes (another game header, an engine header, a
+missing contract and `<windows.h>`), and it refused all four.
+
+Both presets build under `/W4 /WX`, and so do the editor's acceptance targets
+and `ColourWarsRegisterStage`. The full default list passed in Release (75
+cases) and in Debug (76, the slow four included). Both opt-in groups compile,
+and so do `check-painter.ps1 -CompileOnly` (both presets) and
+`check-frame-pacing.ps1 -CompileOnly`. `check-display-awake.ps1` and
+`check-startup.ps1` passed on both presets. `check-level-editor.ps1` passed in
+Release. In Debug it failed once at the close-cancel dialog step and passed on
+both re-runs; no source it builds changed except for include paths.
 
 ### Release package rules runnable locally (`CI#6`)
 
@@ -1066,7 +1127,7 @@ attended-play judgment it touches stays a `DECISION` row.
 ### Unreadable save preservation (`HYG#22`)
 
 **Done 2026-10-29.** `Save::load_save_data` now hands a save that fails as a
-whole to `keep_unreadable_save` ([save.cpp](../game/save.cpp)) before keeping
+whole to `keep_unreadable_save` ([save.cpp](../game/save/save.cpp)) before keeping
 the defaults. It copies the file beside itself as
 `save_data.unreadable-<n>.json`, taking the first free `n` (up to 999), through
 `std::filesystem::copy_file` with no overwrite, so an earlier copy is never
@@ -1087,7 +1148,7 @@ The record as filed:
 
 A save that exists but will not parse is silently
 replaced. `Save::load_save_data` catches the whole-file failure and keeps
-`SaveData()` with no message ([save.cpp](../game/save.cpp) lines 433-441), and
+`SaveData()` with no message ([save.cpp](../game/save/save.cpp) lines 433-441), and
 the next match start writes that default state over the file:
 `GameLevel` calls `remember_match_setup_and_save` on every match start
 ([game_states.cpp](../game/states/game_states.cpp) lines 237-239), which always
@@ -1105,7 +1166,7 @@ and changes nothing else. The missing-file and legacy-save paths are
 unchanged. In the same change, correct the save-layout record in
 [the roadmap](feature-roadmap.md#stage-records-and-the-sectioned-save-gap62),
 which still says `"save_version": 3` and lists versions up to 3, against
-[save.h](../game/save.h) lines 33-44: version 5, versions 4 (`"profiles"`) and
+[save.h](../game/save/save.h) lines 33-44: version 5, versions 4 (`"profiles"`) and
 5 (`"last_match.stage_rule"`) listed, `profiles` nested, and the display and
 play preferences flat.
 
@@ -1900,18 +1961,18 @@ gate. The earlier figure/animation and other source splits already exist.
 
 | file | lines | audit result |
 |---|---:|---|
-| [presentation_validation.cpp](../game/presentation_validation.cpp) | 25 | Ordered coordinator and nine family sources; `HYG#1` complete |
+| [presentation_validation.cpp](../game/config/presentation/presentation_validation.cpp) | 25 | Ordered coordinator and nine family sources; `HYG#1` complete |
 | [player.cpp](../game/objects/player.cpp) | 1,848 | Retain the coupled movement/contact/carrier core; figure code is already separate |
 | [input_bindings.cpp](../scripts/acceptance/input_bindings.cpp) | 56 | Four topic sources and shared fixtures; `HYG#5` complete |
 | [evidence-record.ps1](../scripts/check-painter/evidence-record.ps1) | 354 | Four explicit topic helpers; `HYG#6` complete |
 | [painter_visual.cpp](../scripts/acceptance/painter_visual.cpp) | 1,347 | Retain the explicit include/setup/dispatch entry; no registry redesign selected |
 | [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
 | [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 17 | Ordered topic coordinator; `HYG#7` complete |
-| [tuning.cpp](../game/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
+| [tuning.cpp](../game/config/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
 | [level_document.cpp](../editor/level_document.cpp) | 949 | Retain the shared document transaction; `ED#7` save protection complete |
 | [projectile.cpp](../game/objects/projectile.cpp) | 287 | Contacts/sweeps extracted (587 lines), `HYG#3` complete |
 | [weapon.cpp](../game/objects/weapon.cpp) | 855 | Retain the current firing/lifecycle core; motion already has its own file |
-| [save.cpp](../game/save.cpp) | 602 | Profile overlay extracted (209 lines), `HYG#4` complete |
+| [save.cpp](../game/save/save.cpp) | 602 | Profile overlay extracted (209 lines), `HYG#4` complete |
 
 ## Ordered presentation validation (`HYG#1`)
 
@@ -1976,7 +2037,7 @@ source and adjusts includes/registration. Debug and Release builds and
 
 **Done (2026-10-28).** Moved `copy_slot`, the play-preference/binding setters,
 effective-preference accessors and profile/wearing/Boost operations into
-`game/save_profiles.cpp` (209 lines). The 602-line `save.cpp` retains JSON
+`game/save/save_profiles.cpp` (209 lines). The 602-line `save.cpp` retains JSON
 sections, migration, loading and atomic writing. Display settings stay with
 the resolution conversion used by serialization; they have no profile overlay.
 

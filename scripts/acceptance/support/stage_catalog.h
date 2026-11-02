@@ -7,7 +7,7 @@
 #include "engine/core/registry.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
-#include "game/stage_catalog.h"
+#include "game/config/stage_catalog.h"
 #include <initializer_list>
 #include <memory>
 #include <string>

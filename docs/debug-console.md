@@ -373,7 +373,7 @@ room under the GET READY heading. Edits under
 of `tuning.player.x_initial_velocity` and `tuning.player.drop_down_velocity`,
 also run the startup check that builds every stage's objects, so a speed cap at
 which a player could step through a floor is refused
-(`game/tunnelling_limits.h`).
+(`game/config/tunnelling_limits.h`).
 Only then is the validated object copied over the live one: the
 records that weapons, projectiles, the HUD and movement feedback point at keep
 their addresses, and only the edited value changes. A colour edit also keeps
@@ -1077,7 +1077,7 @@ and the live tune edits, a semantic hash of the loaded stage definition
 (`stage_hash`; [how it is computed](debug-console-record.md#loaded-stage-replay-fingerprint-dbg8)), the step size, one run-length list of inputs per seat
 (floats as bit patterns), where the match was suspended and resumed, a state
 hash every 60 updates and the final state. In memory a recording is the same
-`RoundTape` the shipping instant replay keeps (`game/round_tape.h`); the file
+`RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
 Files use **format 6**, with explicit human/bot controller kind and

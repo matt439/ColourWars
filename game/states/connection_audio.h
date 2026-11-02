@@ -1,8 +1,8 @@
 #pragma once
 
 #include "game/carried/sound_bank_object.h"
-#include "game/input_slots.h"
-#include "game/presentation.h"
+#include "game/input/input_slots.h"
+#include "game/config/presentation/presentation.h"
 #include <array>
 
 // Shared by the match and all of its menu pages, so replacing a page cannot

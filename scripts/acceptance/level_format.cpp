@@ -1,12 +1,12 @@
 #include "game/pch.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
 #include "game/objects/translating_structure_paintable.h"
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/team_gate_structure_paintable.h"
-#include "game/content_validation.h"
-#include "game/simulation.h"
+#include "game/config/content_validation.h"
+#include "game/contracts/simulation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "editor/content_catalog.h"
@@ -687,7 +687,7 @@ int main(int argc, char** argv)
         const std::filesystem::path repo(argv[2]);
         const auto scratch = std::filesystem::absolute(argv[0]).parent_path() / "level-format-fixtures";
         std::filesystem::create_directories(scratch);
-        const auto schema_json = read_document(repo / "game/level.schema.json");
+        const auto schema_json = read_document(repo / "game/contracts/level.schema.json");
         const rapidjson::SchemaDocument schema(schema_json);
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(

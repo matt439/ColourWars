@@ -5,7 +5,7 @@
 #include <vector>
 
 // A pickable level: registered by the manifest, or a user stage found in the
-// player's stage folder (game/stage_loading.h). name is its registry key, the
+// player's stage folder (game/config/stage_loading.h). name is its registry key, the
 // file name without .json; display_name and icon_frame are copied from the
 // level file at load time. A user stage is never a Random candidate.
 struct Stage

@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/projectile.h"
-#include "game/paint_face_geometry.h"
+#include "game/contracts/paint_face_geometry.h"
 
 using namespace mattmath;
 using namespace labrador;

@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
-#include "game/presentation_menu_text.h"
+#include "game/config/presentation/presentation_menu_text.h"
 #include <algorithm>
 using namespace labrador;
 

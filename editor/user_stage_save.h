@@ -8,7 +8,7 @@
 
 // Save to My Stages (ROAD#16): writes the open level straight into the folder
 // the game reads a player's own stages from, under the game's own name rules
-// (game/user_stage_contract.h). The window shell asks for the file and the
+// (game/contracts/user_stage_contract.h). The window shell asks for the file and the
 // overwrite; this decides and writes, so acceptance can check it without a
 // dialog. Nothing here reads or writes the player's save.
 namespace colourwars_editor

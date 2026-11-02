@@ -2,7 +2,7 @@
 #include "game/directory_consts.h"
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
-#include "game/user_stage_contract.h"
+#include "game/contracts/user_stage_contract.h"
 
 #include <cstdlib>
 #include <memory>

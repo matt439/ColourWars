@@ -712,7 +712,7 @@ level or the player's save. A missing or invalid aid file displays a diagnostic.
   jump-through platforms, bury faces reached from their outward side. Ramps and
   decorations do not. Moving anchors never become permanent static blockers;
   their own scoring faces stay local to the body. The editor and game share the interval calculation in
-  `game/paint_face_geometry.h`. With aids off, cyan shows authored faces instead.
+  `game/contracts/paint_face_geometry.h`. With aids off, cyan shows authored faces instead.
   Fixed slabs clip their diagonal faces and neighbouring flat faces against
   the actual adjacency polygon, using the shared slab paint-geometry helper.
 - **Scoring area** shows the whole level and the part inside the selected
@@ -806,7 +806,7 @@ To play a level without rebuilding, choose **File > Save to My Stages...**
 the save, which is the folder the game reads player-made stages from. It
 offers the open file's name. A copy of a shipped stage is offered `my_<name>`,
 and a new level `my_stage`. The editor then applies the game's own rules
-(`game/user_stage_contract.h`, shared with the game's scan). The name must be
+(`game/contracts/user_stage_contract.h`, shared with the game's scan). The name must be
 1 to 64 ASCII letters, digits, `_` or `-`, not starting with `-`. It may not
 be a shipped stage's name in any case; the names come from the source
 manifest. The file must go directly in that folder: use Save As for any other
@@ -1069,7 +1069,7 @@ and `ED#26` builds on `ED#23`, both now done.
 ### Station validation in the editor (`ED#23`)
 
 **Done 2026-10-29.** The engine-free station and lesson rules now live in
-[station_contract.h](../game/station_contract.h), beside
+[station_contract.h](../game/contracts/station_contract.h), beside
 `user_stage_contract.h` and `team_gate_contract.h`.
 `LevelLoadedInfo::validate_stations` and `validate_lesson` call them with
 unchanged messages, and `level_json::validate_document` calls them too, so
@@ -1427,7 +1427,7 @@ document API pass that path to `LevelDocument(tuning_path)`. The default
 constructor still works for static documents, but cannot load or add a mover
 without this explicit context. Mover validation rereads current `player.size`
 and shares the runtime's float field, travel and standing-envelope arithmetic
-through the engine-free `game/horizontal_motion_contract.h`. Changes to source
+through the engine-free `game/contracts/horizontal_motion_contract.h`. Changes to source
 size can therefore invalidate a formerly usable corridor, including an undo
 candidate. No guessed player size is substituted.
 
@@ -1465,7 +1465,7 @@ the field and leaves an ordinary paintable block; any other value is written as
 typed and then refused. A gate cannot be added to an existing block in the
 inspector, which only edits fields a record already has; use the palette entry.
 
-The gate is checked by the game's own rule, `game/team_gate_contract.h`: an
+The gate is checked by the game's own rule, `game/contracts/team_gate_contract.h`: an
 unknown or non-text value, a gate on anything but a `StructurePaintable`, a
 one-way (`STRUCTURE_JUMP_THROUGH`) gate, a moving gate and a gate with no
 paintable face are refused in the game's words, as an edit (document and

@@ -4,7 +4,7 @@
 // and the rules for what a valid level is. Not included by main.cpp or the acceptance case.
 
 #include "editor/level_document.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 
 #include <rapidjson/document.h>
 
@@ -20,7 +20,7 @@ namespace colourwars_editor
         using Document = rapidjson::Document;
         using Allocator = Document::AllocatorType;
 
-        // The format's words and tables are game/level_format.h's.
+        // The format's words and tables are game/contracts/level_format.h's.
         namespace key = level_format::key;
         namespace object_type = level_format::object_type;
         inline constexpr const auto& bounds_names = level_format::bounds_keys;

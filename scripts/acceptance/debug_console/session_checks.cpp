@@ -2,14 +2,14 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/debug_binds.h"
-#include "game/debug/debug_console_view.h"
-#include "game/debug/debug_keys.h"
-#include "game/debug/debug_menu_model.h"
-#include "game/debug/debug_perf.h"
-#include "game/debug/debug_text_field.h"
+#include "game/debug/input/debug_binds.h"
+#include "game/debug/console/debug_console_view.h"
+#include "game/debug/input/debug_keys.h"
+#include "game/debug/console/debug_menu_model.h"
+#include "game/debug/capture/debug_perf.h"
+#include "game/debug/console/debug_text_field.h"
 #include "game/objects/debug_text.h"
-#include "game/session.h"
+#include "game/match/session.h"
 #include <cmath>
 #include <limits>
 #include <optional>

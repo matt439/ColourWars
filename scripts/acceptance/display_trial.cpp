@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/display_settings_trial.h"
-#include "game/settings_session.h"
+#include "game/config/settings_session.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cmath>

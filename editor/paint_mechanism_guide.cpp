@@ -1,5 +1,5 @@
 #include "editor/paint_mechanism_guide.h"
-#include "game/level_format.h"
+#include "game/contracts/level_format.h"
 
 #include <algorithm>
 #include <initializer_list>

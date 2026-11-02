@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_runner/runner.h"
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/bot.h"
+#include "game/debug/replay/bot.h"
 #include "engine/core/step_timer.h"
 #include "engine/core/file_path.h"
 #include <algorithm>

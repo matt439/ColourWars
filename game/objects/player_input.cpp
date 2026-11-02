@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player_input.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/objects/stick_response.h"
 
 using namespace mattmath;

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "game/play_settings.h"
-#include "game/input_bindings.h"
+#include "game/config/play_settings.h"
+#include "game/input/input_bindings.h"
 
 #include "engine/input/gamepads.h"
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
 #include "game/objects/slot_input.h"
-#include "game/tuning.h"
-#include "game/input_slots.h"
+#include "game/config/tuning.h"
+#include "game/input/input_slots.h"
 #include <array>
 #include <vector>
 

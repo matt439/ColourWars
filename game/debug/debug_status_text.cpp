@@ -3,13 +3,13 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
-#include "game/debug/bot_driver.h"
+#include "game/debug/replay/bot_driver.h"
 #include "game/debug/debug_director_impl.h"
-#include "game/debug/debug_variable.h"
-#include "game/debug/replay.h"
-#include "game/debug/tune_document.h"
-#include "game/input_slots.h"
-#include "game/presentation.h"
+#include "game/debug/commands/debug_variable.h"
+#include "game/debug/replay/replay.h"
+#include "game/debug/tune/tune_document.h"
+#include "game/input/input_slots.h"
+#include "game/config/presentation/presentation.h"
 #include <algorithm>
 #include <cstdio>
 #include <string>

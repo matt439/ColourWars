@@ -1,7 +1,7 @@
 #include "game/pch.h"
-#include "game/sound_groups.h"
+#include "game/config/sound_groups.h"
 #include "game/game_data.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 
 #include <dxgi1_3.h>
 #include <dxgidebug.h>

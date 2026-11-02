@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_blockout/fixtures.h"
 #include "game/objects/level_builder.h"
-#include "game/input_bindings.h"
+#include "game/input/input_bindings.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
 

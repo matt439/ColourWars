@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "game/objects/horizontal_motion.h"
-#include "game/simulation.h"
+#include "game/contracts/simulation.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>

@@ -294,10 +294,13 @@ they describe. The rules that follow from that structure:
 - **Nothing in `game/objects` or `game/ai` includes a `states/` header**, and
   code outside `game/debug/` reaches the developer tools only through
   `debug_director.h`, `debug_targets.h` and `debug_overlay_draw.h`.
-- **The engine-free contract headers** (`level_format.h`, `simulation.h`, the
-  `*_contract.h` and `*paint*_geometry.h` headers at the `game/` root) include
+- **The engine-free contract headers** (`game/contracts/`: `level_format.h`,
+  `simulation.h`, the `*_contract.h` and `*paint*_geometry.h` headers) include
   only the standard library and each other, because the editor compiles them
-  without the engine's include path.
+  without the engine's include path. A new one goes in that folder, where
+  `cmake/check_contract_includes.cmake` fails the build on any other include.
+  The `game/` root keeps only the shell; configuration, persistence, input and
+  the match types have their role folders (docs/architecture.md).
 - **A match is pushed above `GameMenu`, never in place of it.** When a page or
   state is added, add its stack shape to docs/architecture.md and to the
   comment at the top of `game/states/game_states.h`.

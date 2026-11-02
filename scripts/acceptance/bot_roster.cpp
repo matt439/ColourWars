@@ -1,6 +1,6 @@
 #include "game/pch.h"
-#include "game/input_slots.h"
-#include "game/match_setup.h"
+#include "game/input/input_slots.h"
+#include "game/match/match_setup.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cstdlib>

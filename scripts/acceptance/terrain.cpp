@@ -1,5 +1,5 @@
 #include "game/pch.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
 #include "game/objects/level_object_builder.h"

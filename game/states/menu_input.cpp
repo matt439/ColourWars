@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 
 using namespace mattmath;
 using namespace labrador;

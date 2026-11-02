@@ -5,12 +5,12 @@
 #include "engine/render/render_resources.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
-#include "game/play_settings.h"
-#include "game/presentation.h"
-#include "game/tuning.h"
+#include "game/config/play_settings.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/tuning.h"
 
 // The startup checks that need a menu page, kept here so the content checks in
-// game/content_validation.h never name one. Both build the Mode page's actual
+// game/config/content_validation.h never name one. Both build the Mode page's actual
 // setup row (MainMenuModeSelect) for every value it can show and refuse a value
 // the font cannot draw or a complete row that leaves main_menu.setup_box_size.
 // Duration words depend on actual tuning, not a Presentation-only sample.

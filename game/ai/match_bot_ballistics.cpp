@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_ballistics.h"
-#include "game/simulation.h"
+#include "game/contracts/simulation.h"
 #include "engine/core/step_timer.h"
 #include <cmath>
 #include <limits>

@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/objects/level_bot_world.h"
 #include "game/objects/teammate_markers.h"
@@ -46,7 +46,7 @@ void Level::resume()
 {
 	this->set_music_ducked(false);
 	// Nothing re-pushes the player's volume here: a change made while paused
-	// reached these voices through their sound group (game/sound_groups.h).
+	// reached these voices through their sound group (game/config/sound_groups.h).
 	// The music voice resumes through resume_music's rule (MusicVoice).
 	this->audio_->resume();
 }

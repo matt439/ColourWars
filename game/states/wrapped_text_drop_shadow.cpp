@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/wrapped_text_drop_shadow.h"
-#include "game/text_wrap.h"
+#include "game/config/text_wrap.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;

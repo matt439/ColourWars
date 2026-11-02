@@ -190,10 +190,10 @@ above:
 
 | Site | What it does with audio | What the replacement must keep in mind |
 |---|---|---|
-| `game/debug/debug_menu_page.cpp:103, 246, 251, 256, 264` | The Debug-only debug menu (`DebugMenuPage : MenuPage`, `debug_menu_page.h:22`) plays `menu_style` direction, confirm and cancel | `ui.move`, `ui.confirm` and `ui.cancel` are heard here too; nothing to change unless the debug menu wants its own cues |
+| `game/debug/console/debug_menu_page.cpp:103, 246, 251, 256, 264` | The Debug-only debug menu (`DebugMenuPage : MenuPage`, `debug_menu_page.h:22`) plays `menu_style` direction, confirm and cancel | `ui.move`, `ui.confirm` and `ui.cancel` are heard here too; nothing to change unless the debug menu wants its own cues |
 | `game/states/stage_preview.cpp` and `level_object_builder.cpp` | Stage previews build real `StructurePaintable`s. Since 2026-10-15 surfaces report contact results; Level owns paint audio, so previews resolve no paint voices and play none | Every paint cue is checked at startup; match construction resolves the same choices in `PaintAudio` |
-| `game/debug/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `debug_console/tune_document_checks.cpp` (`check_tune_scope`) pins the list |
-| `game/play_settings.h`; `save.cpp`; `controls_settings_menu.cpp` (`apply_settings`); `game/sound_groups.{h,cpp}`; `GameTuning::sound_references`, `match_sound_references`, `Presentation::sound_references` | The player's 0-100 music and SFX volumes are the `music` and `sfx` engine sound-group volumes. Every listed wave and effect is assigned one group at load, emitters play authored levels only, and Apply calls `sound_groups::apply`. The Controls volume preview is the one ungrouped sound | A new cue slot goes in a reference list with its group, or it plays at full volume whatever the setting. Room tone and stings need a deliberate choice of which. `story_audio`'s `check_sound_groups` plays every listed sound under each muted group; `scripts/acceptance/settings.cpp` pins the stored values |
+| `game/debug/tune/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `debug_console/tune_document_checks.cpp` (`check_tune_scope`) pins the list |
+| `game/config/play_settings.h`; `save.cpp`; `controls_settings_menu.cpp` (`apply_settings`); `game/sound_groups.{h,cpp}`; `GameTuning::sound_references`, `match_sound_references`, `Presentation::sound_references` | The player's 0-100 music and SFX volumes are the `music` and `sfx` engine sound-group volumes. Every listed wave and effect is assigned one group at load, emitters play authored levels only, and Apply calls `sound_groups::apply`. The Controls volume preview is the one ungrouped sound | A new cue slot goes in a reference list with its group, or it plays at full volume whatever the setting. Room tone and stings need a deliberate choice of which. `story_audio`'s `check_sound_groups` plays every listed sound under each muted group; `scripts/acceptance/settings.cpp` pins the stored values |
 | `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/states/game_level_dev_tools.cpp` (`debug_sync_audio`); `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level_audio.cpp`). Since `HYG#50` (2026-10-30) that means making it a `MatchVoice` and registering it with the match's `MatchVoices` ([match_voices.h](../game/objects/match_voices.h)), which the Level's `MatchAudio` owns ([match_audio.h](../game/objects/match_audio.h)). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
 | `game/main.cpp:107`; `content_validation.cpp:9-34`; `resource_validation.h:37-47` | Startup validation of every name above against the loaded banks | Unchanged in shape; extend it for every new slot (section 4) |
 
@@ -273,13 +273,13 @@ cue fails only on a machine that has the real bank.
    rely on DirectXTK treating Play on a playing instance as a no-op. That has not been verified here. Every stop is
    a hard `stop_effect(..., true)`, so a loop's tail is cut off.
 10. **Nothing limits voices.** The engine now mixes named sound-group volumes
-    (this game's Music and SFX, `game/sound_groups.h`), but it still has no
+    (this game's Music and SFX, `game/config/sound_groups.h`), but it still has no
     master gain or voice cap, and its decision on report 6 does not cover one.
     Splashes arrive every tick from the sprayer and roller, so any limit has
     to be in the client.
 11. **The first 0.25 s is damage-silent.** The damage timer starts at 0 and
     advances only while the player is alive (`Player::update`, `player.cpp`).
-12. **Debug speed does not scale audio** (`game/debug/game_commands.cpp:265`).
+12. **Debug speed does not scale audio** (`game/debug/commands/game_commands.cpp:265`).
     Do listening passes at 1×.
 13. **A named effect instance is one voice, shared by every owner.** The
     menu music, each level's music, the time-up cue and the results fill are

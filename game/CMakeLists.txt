@@ -15,96 +15,96 @@ add_library(colourwars_game STATIC
     carried/sound_bank_object.cpp
     carried/text_drop_shadow.cpp
     carried/ui_text_drop_shadow.cpp
-    action_bindings.cpp
-    input_bindings.cpp
-    player_profiles.cpp
-    content_validation.cpp
-    content_value.cpp
-    controls_text.cpp
+    input/action_bindings.cpp
+    input/input_bindings.cpp
+    save/player_profiles.cpp
+    config/content_validation.cpp
+    config/content_value.cpp
+    input/controls_text.cpp
     directory_consts.cpp
-    drawable_text.cpp
+    config/drawable_text.cpp
     fatal_report.cpp
     game_data.cpp
-    last_match_setup.cpp
-    match_records.cpp
-    match_setup.cpp
-    menu_geometry.cpp
-    presentation.cpp
-    presentation_menu_text.cpp
-    presentation_read_match.cpp
-    presentation_read_menu.cpp
-    presentation_validation.cpp
-    presentation_validation_assets.cpp
-    presentation_validation_catalog.cpp
-    presentation_validation_end.cpp
-    presentation_validation_menu.cpp
-    presentation_validation_metrics.cpp
-    presentation_validation_options.cpp
-    presentation_validation_pause.cpp
-    presentation_validation_results.cpp
-    presentation_validation_settings.cpp
-    presentation_validation_setup.cpp
-    presentation_validation_stage.cpp
-    presentation_validation_text.cpp
-    round_tape.cpp
-    rumble.cpp
-    save.cpp
-    save_profiles.cpp
-    series_stage_rule.cpp
-    session.cpp
-    settings_session.cpp
-    sound_groups.cpp
-    stage_catalog.cpp
-    stage_loading.cpp
-    stage_scan_diagnostics.cpp
-    presentation_validation_stage_scan.cpp
-    text_wrap.cpp
-    tuning.cpp
-    tuning_validation.cpp
-    tunnelling_limits.cpp
+    save/last_match_setup.cpp
+    save/match_records.cpp
+    match/match_setup.cpp
+    config/presentation/menu_geometry.cpp
+    config/presentation/presentation.cpp
+    config/presentation/presentation_menu_text.cpp
+    config/presentation/presentation_read_match.cpp
+    config/presentation/presentation_read_menu.cpp
+    config/presentation/presentation_validation.cpp
+    config/presentation/presentation_validation_assets.cpp
+    config/presentation/presentation_validation_catalog.cpp
+    config/presentation/presentation_validation_end.cpp
+    config/presentation/presentation_validation_menu.cpp
+    config/presentation/presentation_validation_metrics.cpp
+    config/presentation/presentation_validation_options.cpp
+    config/presentation/presentation_validation_pause.cpp
+    config/presentation/presentation_validation_results.cpp
+    config/presentation/presentation_validation_settings.cpp
+    config/presentation/presentation_validation_setup.cpp
+    config/presentation/presentation_validation_stage.cpp
+    config/presentation/presentation_validation_text.cpp
+    match/round_tape.cpp
+    input/rumble.cpp
+    save/save.cpp
+    save/save_profiles.cpp
+    match/series_stage_rule.cpp
+    match/session.cpp
+    config/settings_session.cpp
+    config/sound_groups.cpp
+    config/stage_catalog.cpp
+    config/stage_loading.cpp
+    config/stage_scan_diagnostics.cpp
+    config/presentation/presentation_validation_stage_scan.cpp
+    config/text_wrap.cpp
+    config/tuning.cpp
+    config/tuning_validation.cpp
+    config/tunnelling_limits.cpp
 
-    debug/bind_commands.cpp
-    debug/bot.cpp
-    debug/bot_driver.cpp
-    debug/debug_background.cpp
-    debug/debug_chord.cpp
-    debug/debug_clock.cpp
-    debug/debug_command.cpp
-    debug/debug_binds.cpp
-    debug/debug_console_state.cpp
-    debug/debug_console_view.cpp
+    debug/input/bind_commands.cpp
+    debug/replay/bot.cpp
+    debug/replay/bot_driver.cpp
+    debug/input/debug_background.cpp
+    debug/input/debug_chord.cpp
+    debug/replay/debug_clock.cpp
+    debug/commands/debug_command.cpp
+    debug/input/debug_binds.cpp
+    debug/console/debug_console_state.cpp
+    debug/console/debug_console_view.cpp
     debug/debug_director.cpp
     debug/debug_director_hooks.cpp
     debug/debug_director_impl.cpp
-    debug/debug_files.cpp
-    debug/debug_keys.cpp
-    debug/debug_log.cpp
-    debug/debug_perf.cpp
-    debug/debug_menu_model.cpp
-    debug/debug_menu_page.cpp
+    debug/script/debug_files.cpp
+    debug/input/debug_keys.cpp
+    debug/commands/debug_log.cpp
+    debug/capture/debug_perf.cpp
+    debug/console/debug_menu_model.cpp
+    debug/console/debug_menu_page.cpp
     debug/debug_overlay_draw.cpp
-    debug/debug_registry.cpp
-    debug/debug_screenshot.cpp
-    debug/debug_script.cpp
-    debug/debug_script_runner.cpp
+    debug/commands/debug_registry.cpp
+    debug/capture/debug_screenshot.cpp
+    debug/script/debug_script.cpp
+    debug/script/debug_script_runner.cpp
     debug/debug_status_text.cpp
-    debug/debug_text_field.cpp
-    debug/debug_tokenizer.cpp
-    debug/debug_variable.cpp
-    debug/debug_wait.cpp
-    debug/game_commands.cpp
-    debug/json_spans.cpp
-    debug/match_fingerprint.cpp
-    debug/match_plan.cpp
-    debug/player_commands.cpp
-    debug/replay.cpp
-    debug/replay_commands.cpp
-    debug/script_commands.cpp
-    debug/tune_commands.cpp
-    debug/tune_document.cpp
-    debug/tune_scope.cpp
-    debug/tune_target.cpp
-    debug/view_commands.cpp
+    debug/console/debug_text_field.cpp
+    debug/commands/debug_tokenizer.cpp
+    debug/commands/debug_variable.cpp
+    debug/script/debug_wait.cpp
+    debug/commands/game_commands.cpp
+    debug/tune/json_spans.cpp
+    debug/replay/match_fingerprint.cpp
+    debug/replay/match_plan.cpp
+    debug/commands/player_commands.cpp
+    debug/replay/replay.cpp
+    debug/replay/replay_commands.cpp
+    debug/script/script_commands.cpp
+    debug/tune/tune_commands.cpp
+    debug/tune/tune_document.cpp
+    debug/tune/tune_scope.cpp
+    debug/tune/tune_target.cpp
+    debug/commands/view_commands.cpp
 
     objects/blocked_shot_feedback.cpp
     objects/collider.cpp
@@ -196,6 +196,7 @@ add_library(colourwars_game STATIC
     states/screen_music.cpp
     states/results_audio.cpp
     states/resume_countdown.cpp
+    states/match_suspension.cpp
     states/controls_settings_menu.cpp
     states/keyboard_jump_capture.cpp
     states/keyboard_jump_menu.cpp
@@ -256,7 +257,7 @@ target_precompile_headers(colourwars_game PRIVATE pch.h)
 # adapter, DisplayAwake's default constructor for the display-idle request.
 # Each implements a seam the game library declares, so it builds against that
 # library's headers and precompiled header; the game library never names them.
-add_library(colourwars_rumble_xinput STATIC rumble_xinput.cpp)
+add_library(colourwars_rumble_xinput STATIC input/rumble_xinput.cpp)
 target_link_libraries(colourwars_rumble_xinput PRIVATE Xinput)
 add_library(colourwars_display_awake STATIC display_awake.cpp)
 foreach(adapter IN ITEMS colourwars_rumble_xinput colourwars_display_awake)
@@ -277,6 +278,17 @@ target_link_libraries(ColourWars PRIVATE
 )
 target_precompile_headers(ColourWars REUSE_FROM colourwars_game)
 
+# The engine-free contracts the editor shares include only the standard library
+# and each other. Building the game or the editor library runs the check.
+add_custom_target(colourwars_check_contract_includes ALL
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCONTRACTS_DIR=${CMAKE_CURRENT_SOURCE_DIR}/contracts"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_contract_includes.cmake"
+    COMMENT "Checking game/contracts/ includes"
+    VERBATIM
+)
+add_dependencies(colourwars_game colourwars_check_contract_includes)
+
 add_custom_target(colourwars_build_info
     COMMAND "${CMAKE_COMMAND}"
         "-DSOURCE_DIR=${PROJECT_SOURCE_DIR}"
@@ -296,14 +308,14 @@ add_dependencies(colourwars_game colourwars_build_info)
 # source tree, so edits apply without a rebuild, `tune.save` writes edits back
 # to it, and `exec` finds the shipped review scripts in scripts/debug. Generated
 # at configure time and included only by Debug-only translation units
-# (game/debug/game_commands.cpp, game/debug/tune_commands.cpp,
-# game/debug/script_commands.cpp); Release never includes it, so its executable
+# (game/debug/commands/game_commands.cpp, game/debug/tune/tune_commands.cpp,
+# game/debug/script/script_commands.cpp); Release never includes it, so its executable
 # carries no source path.
 file(CONFIGURE OUTPUT "${PROJECT_BINARY_DIR}/generated/game/source_paths.h"
     CONTENT "#pragma once
 
-// Generated by game/CMakeLists.txt. Debug-only: see game/debug/game_commands.cpp,
-// game/debug/tune_commands.cpp and game/debug/script_commands.cpp.
+// Generated by game/CMakeLists.txt. Debug-only: see game/debug/commands/game_commands.cpp,
+// game/debug/tune/tune_commands.cpp and game/debug/script/script_commands.cpp.
 namespace source_paths
 {
 	inline constexpr char content_directory[] = R\"colourwars(${CMAKE_CURRENT_SOURCE_DIR}/content)colourwars\";

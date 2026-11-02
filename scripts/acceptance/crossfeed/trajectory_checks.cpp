@@ -1,6 +1,6 @@
 #include "game/pch.h"
-#include "game/play_settings.h"
-#include "game/tuning.h"
+#include "game/config/play_settings.h"
+#include "game/config/tuning.h"
 #include "game/objects/paintable_object.h"
 #include "game/objects/structure.h"
 #include "game/objects/paint_tile.h"

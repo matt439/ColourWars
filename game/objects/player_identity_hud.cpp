@@ -4,9 +4,9 @@
 #include "game/objects/paper_card.h"
 #include "game/objects/player.h"
 #include "game/objects/player_badge.h"
-#include "game/play_settings.h"
-#include "game/presentation.h"
-#include "game/seat_setup.h"
+#include "game/config/play_settings.h"
+#include "game/config/presentation/presentation.h"
+#include "game/match/seat_setup.h"
 #include "engine/render/text.h"
 #include <algorithm>
 

@@ -3,7 +3,7 @@
 #include "scripts/acceptance/debug_console/cpu_level.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "game/debug/match_fingerprint.h"
+#include "game/debug/replay/match_fingerprint.h"
 #include "game/objects/crude_drawing.h"
 #include "game/states/pause_menu.h"
 #include "engine/render/text_encoding.h"

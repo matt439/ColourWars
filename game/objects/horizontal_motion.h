@@ -2,7 +2,7 @@
 
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
-#include "game/horizontal_motion_contract.h"
+#include "game/contracts/horizontal_motion_contract.h"
 #include "game/objects/paintable_object.h"
 #include <array>
 #include <cstdint>

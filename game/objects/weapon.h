@@ -1,13 +1,13 @@
 #pragma once
 
-#include "game/play_settings.h"
-#include "game/rumble_events.h"
+#include "game/config/play_settings.h"
+#include "game/input/rumble_events.h"
 
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/weapon_details.h"
-#include "game/tuning.h"
-#include "game/presentation_match.h"
+#include "game/config/tuning.h"
+#include "game/config/presentation/presentation_match.h"
 #include "game/objects/player_input_data.h"
 #include "engine/render/colour.h"
 #include "engine/render/texture_object.h"

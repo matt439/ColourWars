@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 
 #include "game/objects/paintable_object.h"
 #include "game/objects/structure.h"
@@ -9,8 +9,8 @@
 #include "game/objects/team_colour.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/render/colour.h"
-#include "game/tuning.h"
-#include "game/paint_polygon_geometry.h"
+#include "game/config/tuning.h"
+#include "game/contracts/paint_polygon_geometry.h"
 #include <span>
 #include <optional>
 #include <vector>

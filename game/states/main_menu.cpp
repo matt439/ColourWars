@@ -1,11 +1,11 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
-#include "game/series_stage_rule.h"
+#include "game/match/series_stage_rule.h"
 #include "game/states/match_start.h"
 #include "game/states/end_menu.h"
 #include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
-#include "game/drawable_text.h"
+#include "game/config/drawable_text.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace mattmath;

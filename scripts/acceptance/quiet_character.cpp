@@ -2,7 +2,7 @@
 #include "game/objects/player.h"
 #include "game/objects/structure.h"
 #include "game/objects/weapon_builder.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/probe.h"

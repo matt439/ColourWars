@@ -4,19 +4,19 @@
 // the acceptance case, always under COLOURWARS_DEV_TOOLS.
 
 #include "game/objects/opening_mode.h"
-#include "game/debug/debug_binds.h"
-#include "game/debug/debug_background.h"
-#include "game/debug/debug_chord.h"
-#include "game/debug/debug_clock.h"
+#include "game/debug/input/debug_binds.h"
+#include "game/debug/input/debug_background.h"
+#include "game/debug/input/debug_chord.h"
+#include "game/debug/replay/debug_clock.h"
 #include "game/debug/debug_director.h"
-#include "game/debug/debug_log.h"
-#include "game/debug/debug_perf.h"
-#include "game/debug/debug_registry.h"
-#include "game/debug/debug_script_runner.h"
+#include "game/debug/commands/debug_log.h"
+#include "game/debug/capture/debug_perf.h"
+#include "game/debug/commands/debug_registry.h"
+#include "game/debug/script/debug_script_runner.h"
 #include "game/debug/debug_targets.h"
-#include "game/debug/debug_text_field.h"
-#include "game/debug/match_plan.h"
-#include "game/debug/match_fingerprint.h"
+#include "game/debug/console/debug_text_field.h"
+#include "game/debug/replay/match_plan.h"
+#include "game/debug/replay/match_fingerprint.h"
 #include <array>
 #include <cstdint>
 #include <filesystem>

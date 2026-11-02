@@ -2,7 +2,7 @@
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_ballistics.h"
 #include "game/ai/match_bot_territory.h"
-#include "game/simulation.h"
+#include "game/contracts/simulation.h"
 #include <cmath>
 #include <limits>
 

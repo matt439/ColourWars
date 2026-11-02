@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_panel.h"
 #include "game/states/menu_focus_motion.h"
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;

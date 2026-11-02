@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/debug_console/fixtures.h"
-#include "game/debug/debug_tokenizer.h"
-#include "game/input_slots.h"
+#include "game/debug/commands/debug_tokenizer.h"
+#include "game/input/input_slots.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cstdio>

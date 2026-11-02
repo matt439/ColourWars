@@ -18,14 +18,14 @@
 // menu_end_heading_small_actions (End heading bounds -> End continuation
 // bounds) and menu_controls_row_overflow (controls text -> controls option
 // rows). A new check that needs a font from another file must run after it.
-#include "game/presentation.h"
-#include "game/controls_text.h"
+#include "game/config/presentation/presentation.h"
+#include "game/input/controls_text.h"
 #include "game/states/menu_content_validation.h"
-#include "game/play_settings.h"
+#include "game/config/play_settings.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/option_row.h"
 #include "game/states/main_menu.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "game/states/prompt_bar.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"

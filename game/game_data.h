@@ -4,11 +4,11 @@
 #include "engine/core/registry.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
-#include "game/save.h"
-#include "game/settings_session.h"
-#include "game/stage_catalog.h"
-#include "game/presentation.h"
-#include "game/tuning.h"
+#include "game/save/save.h"
+#include "game/config/settings_session.h"
+#include "game/config/stage_catalog.h"
+#include "game/config/presentation/presentation.h"
+#include "game/config/tuning.h"
 #include "game/debug/debug_director.h"
 
 // Borrowed application and game services shared with states and objects.
@@ -60,7 +60,7 @@ public:
     labrador::AudioResources* audio_resources() const;
     labrador::Gamepads* gamepads() const;
 
-    // Keyboard and mouse share one input slot; see game/input_slots.h.
+    // Keyboard and mouse share one input slot; see game/input/input_slots.h.
     labrador::Keyboard* keyboard() const;
     labrador::Mouse* mouse() const;
     labrador::ViewportManager* viewport_manager() const;

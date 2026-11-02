@@ -1,11 +1,11 @@
 #pragma once
 
 #include "game/debug/dev_tools.h"
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/projectile_spray.h"
-#include "game/presentation.h"
+#include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"

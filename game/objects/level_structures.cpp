@@ -5,10 +5,10 @@
 #include "game/objects/structure.h"
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/objects/translating_structure_paintable.h"
-#include "game/tuning.h"
+#include "game/config/tuning.h"
 #include "engine/scene/scene.h"
-#include "game/simulation.h"
-#include "game/horizontal_motion_contract.h"
+#include "game/contracts/simulation.h"
+#include "game/contracts/horizontal_motion_contract.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>

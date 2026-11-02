@@ -5,7 +5,7 @@
 #include "engine/render/text_encoding.h"
 #include "game/objects/player_team.h"
 #include "game/states/confirmation_state.h"
-#include "game/session.h"
+#include "game/match/session.h"
 #include "game/states/menu_page.h"
 #include "game/states/menu_panel.h"
 #include "game/states/option_row.h"

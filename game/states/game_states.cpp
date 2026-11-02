@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
-#include "game/last_match_setup.h"
-#include "game/series_stage_rule.h"
-#include "game/stage_loading.h"
+#include "game/save/last_match_setup.h"
+#include "game/match/series_stage_rule.h"
+#include "game/config/stage_loading.h"
 using namespace labrador;
 
 GameMenu::GameMenu(GameData* game_data, UserStageFolder* user_stages) :
@@ -144,8 +144,9 @@ GameLevel::~GameLevel()
 	// sink remains alive through this reset and through member unwind.
 	this->rumble_.reset();
 	if (this->level_ != nullptr) { this->level_->clear_rumble_events(); }
-	this->data()->debug().detach_match(*this);
-	this->data()->viewport_manager()->set_layout(this->previous_layout_);
+	// init()'s scopes, newest first, before any other member unwinds.
+	this->debug_attachment_.reset();
+	this->layout_restore_.reset();
 }
 
 GameData* GameLevel::data() const
@@ -153,10 +154,17 @@ GameData* GameLevel::data() const
 	return this->game_data_;
 }
 
+SuspensionGate GameLevel::gate() const
+{
+	const DebugDirector& debug = this->data()->debug();
+	return { this->context()->active(), debug.match_audio_paused(),
+		debug.background_updates_allowed() };
+}
+
 void GameLevel::init()
 {
 	// Restore this layout on every exit through the destructor.
-	this->previous_layout_ = this->data()->viewport_manager()->layout();
+	this->layout_restore_.emplace(*this->data()->viewport_manager());
 
 	this->player_input_ = std::make_unique<PlayerInput>(
 		this->data()->gamepads(),
@@ -188,7 +196,7 @@ void GameLevel::init()
 		&this->data()->settings_session()->input_bindings());
 
 	// Content reloaded from the menus is swapped in by the first build.
-	this->data()->debug().attach_match(*this);
+	this->debug_attachment_.emplace(this->data()->debug(), static_cast<DebugMatchTarget&>(*this));
 	this->build_and_enter_level();
 	// Remember only a normally confirmed setup, after its first complete build.
 	// Later restarts/series rounds use build_and_enter_level without this write.
@@ -218,15 +226,14 @@ void GameLevel::init()
 void GameLevel::build_and_enter_level()
 {
 	this->data()->debug().sync_background_audio(this->context()->active());
-	this->background_continuing_ = false;
+	// No count-in, focus hold or background run crosses into the new level.
+	this->suspension_.reset();
 	this->rumble_.reset();
 	if (this->level_ != nullptr) { this->level_->clear_rumble_events(); }
 	this->menu_context_->cancel_music_exit();
 	// Stop the old coda before a content reload can replace its bank.
 	this->results_audio_.reset();
-	this->resume_countdown_.cancel();
 	this->resume_audio_.reset();
-	this->focus_interrupted_ = false;
 	// Destroy the old level first: its destructor stops music in the shared bank
 	// and would otherwise stop the new level's track.
 	this->level_.reset();
@@ -272,7 +279,8 @@ void GameLevel::build_and_enter_level()
 	this->resume_audio_ = std::make_unique<ResumeAudio>(this->data()->audio_resources(),
 		*this->data()->presentation());
 	if (!this->context()->active()) { this->on_deactivated(); }
-	this->sync_rumble();
+	// The build hooks may have changed the director's gate.
+	this->sync_rumble(this->gate());
 
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.
@@ -283,47 +291,41 @@ void GameLevel::build_and_enter_level()
 // leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
+	const SuspensionGate gate = this->gate();
 	if (this->replay_phase_ != ReplayPhase::none)
 	{
 		this->data()->debug().sync_background_audio(true);
 		this->level_->resume();
-		this->sync_rumble();
+		this->sync_rumble(gate);
 		return;
 	}
 	this->data()->debug().sync_background_audio(true);
-	this->background_continuing_ = false;
+	this->suspension_.regain_focus();
 	this->level_->clear_rumble_events();
 	// Results and End cover this state, but their shared coda follows focus.
-	if (this->results_audio_ && !this->data()->debug().match_audio_paused())
+	if (this->results_audio_ && !gate.clock_paused)
 	{
 		this->results_audio_->resume();
 	}
-	if ((this->pause_menu_open_ && this->covered_) ||
-		(!this->covered_ && this->resume_countdown_.active()))
+	if (this->suspension_.music_ducked() && !gate.clock_paused)
 	{
-		if (!this->data()->debug().match_audio_paused()) { this->level_->resume_music(); }
+		this->level_->resume_music();
 	}
-	if (!this->covered_ && this->focus_interrupted_)
+	if (!this->suspension_.covered())
 	{
-		this->begin_resume_countdown();
+		if (this->suspension_.take_focus_interruption()) { this->begin_resume_countdown(gate); }
+		this->level_->emphasise_players();
 	}
-	if (!this->covered_) { this->focus_interrupted_ = false; }
-	if (!this->covered_) { this->level_->emphasise_players(); }
-	if (this->audio_may_play())
+	if (this->suspension_.audio_may_play(gate))
 	{
 		this->level_->resume();
 	}
-	this->sync_rumble();
+	this->sync_rumble(gate);
 }
 
-bool GameLevel::audio_may_play() const
-{
-	return !this->covered_ && !this->pause_menu_open_ &&
-		!this->resume_countdown_.active() && this->context()->active() &&
-		!this->data()->debug().match_audio_paused();
-}
 void GameLevel::on_deactivated()
 {
+	const SuspensionGate gate = this->gate();
 	if (this->replay_phase_ != ReplayPhase::none)
 	{
 		// A replay has no pause to come back to; it waits, silent, for focus.
@@ -335,17 +337,12 @@ void GameLevel::on_deactivated()
 	this->data()->debug().sync_background_audio(false);
 	this->stop_rumble();
 	if (this->results_audio_) { this->results_audio_->suspend(); }
-	if (!this->covered_ && !this->pause_menu_open_ &&
-		this->data()->debug().background_updates_allowed())
+	if (this->suspension_.lose_focus(gate, this->level_->state() == LevelState::active))
 	{
-		this->background_continuing_ = true;
-		this->focus_interrupted_ = false;
 		this->resume_audio_->stop();
 		this->level_->pause_audio();
 		return;
 	}
-	this->background_continuing_ = false;
-	this->focus_interrupted_ = this->level_->state() == LevelState::active;
 	this->resume_audio_->stop();
 	this->suspend_level();
 	this->data()->debug().match_suspended(*this);
@@ -353,38 +350,39 @@ void GameLevel::on_deactivated()
 
 void GameLevel::update(float dt)
 {
-	this->data()->debug().sync_background_audio(this->context()->active());
-	this->sync_rumble();
+	SuspensionGate gate = this->gate();
+	this->data()->debug().sync_background_audio(gate.focused);
+	this->sync_rumble(gate);
 	// Check current focus because a state created in the background has not
 	// received a deactivation callback.
-	if (!this->context()->active())
+	if (!gate.focused)
 	{
 		this->debug_background_changed();
-		if (this->covered_ || this->pause_menu_open_ ||
-			!this->data()->debug().background_updates_allowed()) { return; }
+		if (!this->suspension_.may_run_unfocused(gate)) { return; }
 	}
 	// An instant replay owns the screen: no console, pause or seat checks.
-	if (this->update_replay(dt)) { return; }
+	if (this->update_replay(dt, gate)) { return; }
 
 	// Console and debug-menu keys, a pending screenshot, F-key binds and
 	// queued debug requests, applied while no Level::update is on the call
 	// stack. Inert in Release.
-	if (this->data()->debug().before_match_update(*this, dt, this->context()->active()))
+	if (this->data()->debug().before_match_update(*this, dt, gate.focused))
 	{
 		// StateContext defers destruction until this update returns. A hook
 		// that just opened an overlay or rebuilt must publish its new gate now.
-		this->sync_rumble();
+		this->sync_rumble(this->gate());
 		return;
 	}
-	// A script can disable its own background mode in this hook.
-	this->data()->debug().sync_background_audio(this->context()->active());
-	if (!this->context()->active() && !this->data()->debug().background_updates_allowed()) { return; }
-	// The debug hook may have rebuilt the round or changed a driver/gate.
+	// The debug hook may have rebuilt the round or changed a driver or the
+	// gate: a script can disable its own background mode there.
+	gate = this->gate();
+	this->data()->debug().sync_background_audio(gate.focused);
+	if (!gate.focused && !gate.background_allowed) { return; }
 	// Motor time follows this real-time update once, not its 0..4 sim steps.
-	this->sync_rumble();
+	this->sync_rumble(gate);
 	if (dt > 0.0f && std::isfinite(dt)) { this->rumble_->update(dt); }
 	// This clock is outside the debug director's 0..4 simulation steps.
-	this->update_music(dt);
+	this->update_music(dt, gate);
 
 	if (this->level_->state() == LevelState::finished)
 	{
@@ -393,7 +391,7 @@ void GameLevel::update(float dt)
 	}
 
 	std::vector<SlotInput> player_inputs;
-	if (this->context()->active())
+	if (gate.focused)
 	{
 		player_inputs = this->player_input_->player_inputs(this->settings_.pad_devices());
 	}
@@ -416,7 +414,7 @@ void GameLevel::update(float dt)
 	// cannot open pause even if it is released after GO.
 	latch_intro_pause(this->level_->intro_playing(), player_inputs,
 		this->pause_over_intro_);
-	this->resume_countdown_.filter_inputs(player_inputs);
+	this->suspension_.countdown().filter_inputs(player_inputs);
 
 	// Check current presence, not just a disconnect edge: focus loss can hide
 	// the edge, and no participant may lose match time while reconnecting.
@@ -425,7 +423,7 @@ void GameLevel::update(float dt)
 		*this->data()->gamepads(), this->data()->debug());
 	// The pause page may have handed a seat to a returning pad (ROAD#4).
 	this->level_->set_pad_devices(this->settings_.pad_devices());
-	if (dt > 0.0f && this->context()->active())
+	if (dt > 0.0f && gate.focused)
 	{
 		this->menu_context_->update_connection_audio();
 	}
@@ -442,13 +440,13 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	if (this->resume_countdown_.active())
+	if (this->suspension_.counting_in())
 	{
 		// Enabling background work never consumes a manual/focus resume gate.
-		if (!this->context()->active()) { return; }
+		if (!gate.focused) { return; }
 		// Do not enter the debug clock, seat filters or Level at all: every
 		// simulation timer and cosmetic stays at its completed pre-pause tick.
-		if (this->resume_countdown_.advance(dt))
+		if (this->suspension_.countdown().advance(dt))
 		{
 			this->resume_audio_->stop();
 			const SeatCommands resumed = this->seat_commands(player_inputs);
@@ -456,11 +454,11 @@ void GameLevel::update(float dt)
 			this->level_->prepare_resume(resumed.seats);
 			this->data()->debug().match_resumed(*this, resumed.seats);
 			this->level_->emphasise_players();
-			if (this->audio_may_play()) { this->level_->resume(); }
+			if (this->suspension_.audio_may_play(gate)) { this->level_->resume(); }
 		}
 		else if (dt > 0.0f)
 		{
-			this->resume_audio_->update(this->resume_countdown_.remaining());
+			this->resume_audio_->update(this->suspension_.countdown().remaining());
 		}
 		// Even a long final tick is entirely count-in time, never catch-up play.
 		return;
@@ -483,16 +481,17 @@ void GameLevel::update(float dt)
 void GameLevel::step_match(const std::vector<SlotInput>& inputs, float dt,
 	SeatInputFilter* seats)
 {
-	this->data()->debug().sync_background_audio(this->context()->active());
-	this->sync_rumble();
+	const SuspensionGate gate = this->gate();
+	this->data()->debug().sync_background_audio(gate.focused);
+	this->sync_rumble(gate);
 	// The recorder always forwards the Debug filter; timed rounds also tape
 	// each step's final input. Untimed practice keeps no shipping tape.
 	this->tape_recorder_.prepare(seats, dt);
 	const SeatCommands commands = this->seat_commands(inputs);
 	if (commands.skip_intro) { this->level_->request_intro_skip(); }
 	this->level_->update(commands.seats, dt, &this->tape_recorder_);
-	if (!this->context()->active()) { this->level_->pause_audio(); }
-	this->drain_rumble(dt);
+	if (!gate.focused) { this->level_->pause_audio(); }
+	this->drain_rumble(dt, gate);
 }
 
 SeatCommands GameLevel::seat_commands(const std::vector<SlotInput>& inputs)
@@ -519,9 +518,9 @@ void GameLevel::draw(Renderer& renderer) const
 	this->level_->refresh_layout();
 	this->level_->set_debug_frame_time(this->data()->debug().frame_time_ms());
 	this->level_->draw(renderer);
-	if (this->resume_countdown_.active())
+	if (this->suspension_.counting_in())
 	{
-		this->level_->draw_resume_countdown(renderer, this->resume_countdown_.remaining());
+		this->level_->draw_resume_countdown(renderer, this->suspension_.countdown().remaining());
 	}
 	if (this->replay_phase_ != ReplayPhase::none) { this->level_->draw_replay_banner(renderer); }
 	this->data()->debug().draw_status(renderer);
@@ -529,13 +528,13 @@ void GameLevel::draw(Renderer& renderer) const
 
 void GameLevel::update_menu_music(float dt)
 {
-	this->update_music(dt);
+	this->update_music(dt, this->gate());
 }
 
-void GameLevel::update_music(float dt)
+void GameLevel::update_music(float dt, const SuspensionGate& gate)
 {
-	if (dt < 0.0f || !std::isfinite(dt) || !this->context()->active()) { return; }
-	if (this->data()->debug().match_audio_paused())
+	if (dt < 0.0f || !std::isfinite(dt) || !gate.focused) { return; }
+	if (gate.clock_paused)
 	{
 		// A replay can finish with the developer clock paused. Results/End are
 		// still interactive: leaving their suspended coda must not wait on a
@@ -561,8 +560,7 @@ void GameLevel::update_music(float dt)
 		this->menu_context_->complete_music_exit();
 		return;
 	}
-	if ((this->pause_menu_open_ && this->covered_) ||
-		(!this->covered_ && this->resume_countdown_.active()))
+	if (this->suspension_.music_ducked())
 	{
 		// Also recover the quiet voice after a developer clock pause is lifted
 		// while a gameplay pause or its count-in still covers simulation.
@@ -574,14 +572,13 @@ void GameLevel::update_music(float dt)
 
 void GameLevel::on_suspend()
 {
-	this->background_continuing_ = false;
-	this->covered_ = true;
+	const SuspensionGate gate = this->gate();
+	this->suspension_.cover();
 	this->stop_rumble();
 	this->resume_audio_->stop();
 	// Gameplay voices stop here; normal pause retains only quiet arena music.
 	this->suspend_level();
-	if (this->pause_menu_open_ && this->context()->active() &&
-		!this->data()->debug().match_audio_paused())
+	if (this->suspension_.ducked_music_plays(gate))
 	{
 		this->level_->set_music_ducked(true);
 		this->level_->resume_music();
@@ -591,28 +588,25 @@ void GameLevel::on_suspend()
 
 void GameLevel::on_resume()
 {
-	this->covered_ = false;
-	if (!this->context()->active()) { this->debug_background_changed(); }
+	const SuspensionGate gate = this->gate();
+	this->suspension_.uncover();
+	if (!gate.focused) { this->debug_background_changed(); }
 	this->level_->clear_rumble_events();
 	// StateContext uncovers us before delivering the menu's result. Only its
 	// Resume result may start a count-in; Restart and Quit take other paths.
-	if (this->pause_menu_open_) { this->sync_rumble(); return; }
-	if (this->focus_interrupted_)
-	{
-		this->begin_resume_countdown();
-		this->focus_interrupted_ = false;
-	}
+	if (this->suspension_.pause_menu_open()) { this->sync_rumble(gate); return; }
+	if (this->suspension_.take_focus_interruption()) { this->begin_resume_countdown(gate); }
 	this->level_->emphasise_players();
-	if (this->audio_may_play())
+	if (this->suspension_.audio_may_play(gate))
 	{
 		this->level_->resume();
 	}
-	this->sync_rumble();
+	this->sync_rumble(gate);
 }
 
 void GameLevel::open_pause_menu(int player_num)
 {
-	this->pause_menu_open_ = true;
+	this->suspension_.open_pause_menu();
 	this->stop_rumble();
 	this->menu_input_->reset_actions();
 	this->context()->push<PauseMenuAction>(
@@ -626,13 +620,16 @@ void GameLevel::open_pause_menu(int player_num)
 
 void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 {
-	this->pause_menu_open_ = false;
+	this->suspension_.close_pause_menu();
 	switch (action)
 	{
 	case PauseMenuAction::resume:
-		this->begin_resume_countdown();
-		if (this->audio_may_play()) { this->level_->resume(); }
+	{
+		const SuspensionGate gate = this->gate();
+		this->begin_resume_countdown(gate);
+		if (this->suspension_.audio_may_play(gate)) { this->level_->resume(); }
 		break;
+	}
 	case PauseMenuAction::restart:
 		this->build_and_enter_level();
 		break;
@@ -654,24 +651,23 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	}
 }
 
-void GameLevel::begin_resume_countdown()
+void GameLevel::begin_resume_countdown(const SuspensionGate& gate)
 {
 	this->stop_rumble();
-	this->focus_interrupted_ = false;
-	if (this->level_->state() != LevelState::active) { return; }
-	this->resume_countdown_.begin(this->data()->presentation()->pause_menu().resume_countdown);
+	if (!this->suspension_.begin_count_in(this->level_->state() == LevelState::active,
+		this->data()->presentation()->pause_menu().resume_countdown)) { return; }
 	this->resume_audio_->stop();
 	this->suspend_level();
 	this->level_->emphasise_players();
 	this->level_->set_music_ducked(true);
-	if (this->context()->active() && !this->data()->debug().match_audio_paused())
+	if (gate.focused && !gate.clock_paused)
 	{
 		this->level_->resume_music();
 	}
 }
 
 const Level& GameLevel::level() const { return *this->level_; }
-float GameLevel::resume_remaining() const { return this->resume_countdown_.remaining(); }
+float GameLevel::resume_remaining() const { return this->suspension_.countdown().remaining(); }
 
 void GameLevel::open_results_menu()
 {
@@ -689,7 +685,7 @@ void GameLevel::open_results_menu()
 	}
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
 		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
-	if (this->data()->debug().match_audio_paused()) { this->results_audio_->suspend(); }
+	if (this->gate().clock_paused) { this->results_audio_->suspend(); }
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),

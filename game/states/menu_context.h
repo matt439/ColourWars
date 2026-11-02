@@ -2,7 +2,7 @@
 
 #include "game/game_data.h"
 #include "game/states/menu_input.h"
-#include "game/match_setup.h"
+#include "game/match/match_setup.h"
 #include "game/states/connection_audio.h"
 #include "game/states/menu_owner.h"
 #include <functional>

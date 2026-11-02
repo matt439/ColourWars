@@ -1,6 +1,6 @@
 #include "game/pch.h"
-#include "game/simulation.h"
-#include "game/tunnelling_limits.h"
+#include "game/contracts/simulation.h"
+#include "game/config/tunnelling_limits.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
 #include "game/objects/projectile_builder.h"

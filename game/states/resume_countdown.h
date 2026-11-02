@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/input_slots.h"
+#include "game/input/input_slots.h"
 #include "game/objects/slot_input.h"
 #include <array>
 #include <vector>

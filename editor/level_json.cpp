@@ -1,8 +1,8 @@
 #include "editor/level_json.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
-#include "game/station_contract.h"
-#include "game/team_gate_contract.h"
+#include "game/contracts/station_contract.h"
+#include "game/contracts/team_gate_contract.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/prettywriter.h>
@@ -216,7 +216,7 @@ namespace colourwars_editor
             }
         }
 
-        // The startup check in game/content_validation.cpp: no spawn body may
+        // The startup check in game/config/content_validation.cpp: no spawn body may
         // overlap a gate, which could close on it.
         void validate_gate_spawns(const Document& document, const std::filesystem::path& tuning)
         {
