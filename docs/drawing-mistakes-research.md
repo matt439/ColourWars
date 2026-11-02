@@ -247,6 +247,51 @@ it after the fact.
 - The face must read the same in the hurt and elim states.
 - Make the respawn pen draw any kept outline mistake, and update `quiet.eyes`, the action face rows and the eye strokes in the same change.
 
+**Stage 2 as built (2026-11-02, branch `figure-slip-pool`).**
+
+- **Who draws what.** `FigurePerson` ([figure_person.h](../game/objects/figure_person.h))
+  picks the match's person from `MatchRandom::hand()`, with its own salt, so the
+  bricks' draws do not move. A person has one slip or, half the time
+  (`two_slip_chance`), two that are not exclusive. That gives 54 people: 11
+  singles and 43 pairs. Every figure in the match shares the person, both teams
+  alike. Hand 0, the house hand, draws the authored figure. `LevelBuilder` passes
+  the hand through `PlayerBuilder::build_players`. Probes that build players
+  directly get hand 0 by default, unless they pass one.
+- **Data.** The cells are in [slips.json](../game/art/painter/slips.json).
+  `presentation.json` `figure.slips` holds the rest: the list order, the band,
+  the exclusive pairs and each slip's respawn stroke edits. The edits replace,
+  remove or insert strokes by index.
+- **One mouth slip per person.** Two more pairs became exclusive, making 12.
+  `smirk_line_overshoot` would otherwise share the smirk stroke with
+  `smirk_overshoot_back` and `smirk_stops_short`.
+- **Atlas.** [build-painter-art.ps1](../scripts/build-painter-art.ps1) bakes one
+  44x24 face band per person and pose, over rows 5-10 and cells 3-13. Every
+  locomotion pose shares idle's band, so each person has 11: idle and the 10
+  action frames. Identical bands share one rectangle, which leaves 371 distinct
+  bands in the free space of the existing 1024x2048 atlas. Before writing
+  anything, the build checks every person's faces: the outline closed to a
+  4-connected fill, no pocket, and a white row under the brim on idle. It also
+  checks that each person's strokes trace their black cells exactly. The
+  authoring preview is [slips.png](../game/art/painter/slips.png).
+- **Drawing.** A slipped figure draws its neutral body in three pieces: the
+  frame above the band, the frame below it, and the person's band between. The
+  band spans the same texels facing either way, so the facing flip needs nothing
+  extra. Paint (team) frames have no cells in these rows and are unchanged.
+- **Respawn, blink and acting.** The respawn pen draws the person's own strokes.
+  The blink's eyes move with the eye strokes, which matters only for
+  `eyes_close_set`. The opening's eye acting finds the eyes from the same
+  strokes. All three read the presentation on every draw, so `tune` stays live.
+- **Checks.** Startup validation requires a band for every person and every body
+  frame. The `figure_slips` acceptance case checks:
+  - which person a hand draws (every allowed person turns up, and about half the
+    rounds draw two slips);
+  - that every band resolves at the band's size;
+  - the strokes and blink eyes.
+- **The flip rule is relaxed by the author's pick.** Several of the eleven are
+  left-right slips that read as facing features after the flip (`flip` in
+  `slips.json`). The author chose them by eye anyway, so "each must survive
+  the flip" above no longer holds for stage 2.
+
 **Stage 3: after Study B and an author call.**
 
 - Story beats: one small patched leak or overdraw inside a single backdrop prop.
@@ -408,14 +453,15 @@ This is a screen for gross failures, not a measurement.
 
    These are authored guesses chosen by eye, not measured frequencies. Section
    8's candidate rule (30% of drawings, from 3 people) was never applied to
-   them. Ten pairs change neighbouring cells of the same feature, and
-   `slips.json` lists them as `exclusive`: a person never draws both. The other
-   45 pairs combine cleanly.
+   them. Ten pairs change neighbouring cells of the same feature. Building
+   stage 2 added two more mouth pairs that would redraw the same smirk stroke.
+   All 12 are `exclusive` in `presentation.json` `figure.slips`: a person never
+   draws both. The other 43 pairs combine cleanly.
 
 Nothing in this research is open now. Stage 1 has shipped, with per-match hands
-since 2026-11-02, and Study B checks it after the fact. Stage 2 has its pool and
-waits only on being built. Study B needs participants, so that part of `POL#46`
-waits on the author.
+since 2026-11-02, and Study B checks it after the fact. Stage 2 is built from
+the authored pool (stage 2, "as built"). Study B needs participants, so
+`POL#46` waits on the author.
 
 ---
 

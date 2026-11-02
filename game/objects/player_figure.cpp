@@ -199,21 +199,27 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& body, bool idle)
             this->grey_.value_or(this->TextureObject::colour()),
             colourwars::AnimationObject::draw_rotation(), colourwars::AnimationObject::origin(), flip,
             colourwars::AnimationObject::layer_depth());
-        sheet->draw(draw_list, this->idle_body_, rectangle,
-            this->colourwars::AnimationObject::colour(), colourwars::AnimationObject::draw_rotation(),
-            colourwars::AnimationObject::origin(), flip, colourwars::AnimationObject::layer_depth());
+        this->draw_body(draw_list, this->idle_body_, rectangle, this->face_band(true), flip);
     }
     else
     {
         this->clothing_.draw(draw_list, rectangle,
             this->grey_.value_or(this->TextureObject::colour()), flip);
-        colourwars::AnimationObject::draw_with(draw_list, rectangle,
-            this->colourwars::AnimationObject::colour(), flip);
+        this->draw_body(draw_list, colourwars::AnimationObject::source_rectangle(), rectangle,
+            this->face_band(false), flip);
         if (!this->preferences_->reduce_effects && this->quiet_character_.state().blinking &&
             this->state_ == PlayerState::alive &&
             this->pose_.tool && !this->pose_.whole)
         {
-            this->attachments_.draw_blink(draw_list, rectangle, this->facing_right());
+            if (this->person_.slipped() && this->figure_ != nullptr && this->respawn_look_ != nullptr)
+            {
+                this->attachments_.draw_blink(draw_list, rectangle, this->facing_right(),
+                    this->person_.blink_eyes(*this->figure_, *this->respawn_look_));
+            }
+            else
+            {
+                this->attachments_.draw_blink(draw_list, rectangle, this->facing_right());
+            }
         }
     }
     if (!this->pose_.tool || this->state_ == PlayerState::dead)
@@ -231,8 +237,75 @@ void Player::draw_respawn(DrawList& draw_list) const
         this->draw_figure(draw_list, this->spawn_rectangle(), true);
         return;
     }
+    if (this->person_.slipped())
+    {
+        this->respawn_redraw_.draw(draw_list, this->figure_canvas(this->spawn_rectangle()),
+            this->facing_right(), progress, this->drawn_strokes());
+        return;
+    }
     this->respawn_redraw_.draw(draw_list, this->figure_canvas(this->spawn_rectangle()),
         this->facing_right(), progress);
+}
+
+const FigurePerson& Player::person() const { return this->person_; }
+
+std::vector<RespawnStroke> Player::drawn_strokes() const
+{
+    if (this->respawn_look_ == nullptr)
+    {
+        return {};
+    }
+    if (!this->person_.slipped() || this->figure_ == nullptr)
+    {
+        return this->respawn_look_->strokes;
+    }
+    return this->person_.strokes(*this->respawn_look_, this->figure_->slips);
+}
+
+const RectangleI* Player::face_band(bool idle) const
+{
+    const auto state = idle ? PlayerAnimationState::idle : this->animation_state_;
+    const std::vector<RectangleI>& bands = this->face_bands_[static_cast<size_t>(state)];
+    if (bands.empty())
+    {
+        return nullptr;
+    }
+    const int frame = idle || !this->action_.has_value() ? 0 : this->action_frame();
+    return &bands[std::min(static_cast<size_t>(std::max(frame, 0)), bands.size() - 1)];
+}
+
+void Player::draw_body(DrawList& draw_list, const RectangleI& source, const RectangleF& canvas,
+    const RectangleI* band, SpriteFlip flip) const
+{
+    const SpriteSheet* sheet = colourwars::AnimationObject::sprite_sheet();
+    const Colour colour = this->colourwars::AnimationObject::colour();
+    const float rotation = colourwars::AnimationObject::draw_rotation();
+    const Vector2F origin = colourwars::AnimationObject::origin();
+    const float depth = colourwars::AnimationObject::layer_depth();
+    if (band == nullptr)
+    {
+        sheet->draw(draw_list, source, canvas, colour, rotation, origin, flip, depth);
+        return;
+    }
+    // The person's face replaces the frame's own between the band's rows: the
+    // frame above and below it, then the band. The figure is drawn unrotated
+    // from its corner, and the band spans the same texels facing either way,
+    // so the three pieces meet exactly where the one frame would have been.
+    const RectangleF& texels = this->face_band_texels_;
+    const float scale_x = canvas.width / static_cast<float>(source.width);
+    const float scale_y = canvas.height / static_cast<float>(source.height);
+    const int top = static_cast<int>(texels.y);
+    const int bottom = static_cast<int>(texels.bottom());
+    sheet->draw(draw_list, RectangleI(source.x, source.y, source.width, top),
+        RectangleF(canvas.x, canvas.y, canvas.width, top * scale_y),
+        colour, rotation, origin, flip, depth);
+    sheet->draw(draw_list, RectangleI(source.x, source.y + bottom, source.width, source.height - bottom),
+        RectangleF(canvas.x, canvas.y + bottom * scale_y, canvas.width, (source.height - bottom) * scale_y),
+        colour, rotation, origin, flip, depth);
+    sheet->draw(draw_list, *band,
+        RectangleF(canvas.x + texels.x * scale_x, canvas.y + texels.y * scale_y,
+            texels.width * scale_x, texels.height * scale_y),
+        colour, rotation, origin, flip, depth);
 }
 
 RectangleF Player::bounds() const

@@ -3,6 +3,8 @@
 #include "game/objects/crude_drawing.h"
 #include "game/config/presentation/presentation_match.h"
 
+#include <vector>
+
 // What a figure is doing while the person is in the room, or has just left
 // (docs/backstory.md): looking at its hands and across at the other side as
 // it comes alive, and, under the person's eye, freezing but cheating.
@@ -29,6 +31,10 @@ public:
     // `glance` is where the pupils go within the eyes, -1..1 on each axis.
     void draw_eyes(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
         bool facing_right, const mattmath::Vector2F& glance) const;
+    // The same, for eyes the match's person drew elsewhere (FigurePerson).
+    void draw_eyes(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
+        bool facing_right, const mattmath::Vector2F& glance,
+        const std::vector<RespawnStroke>& strokes) const;
     // A drop running down beside the head; `time` loops it.
     void draw_sweat(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
         bool facing_right, float time) const;

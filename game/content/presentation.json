@@ -983,6 +983,76 @@
       "roller": { "rear": { "x": 0.0, "y": 0.0 }, "front": { "x": 16.0, "y": 0.0 } },
       "mister": { "rear": { "x": 0.0, "y": 8.0 }, "front": { "x": 18.0, "y": 4.0 } },
       "bucket": { "rear": { "x": 0.0, "y": -8.0 }, "front": { "x": 16.0, "y": -8.0 } }
+    },
+    "slips": {
+      "_comment": [
+        "The person's face and head-outline slips (docs/drawing-mistakes-research.md",
+        "section 9, decisions 5 and 8). Each match's person, chosen from its hand",
+        "(MatchRandom::hand), drew one slip or, with two_slip_chance, two that are not",
+        "exclusive; hand 0, the house hand, drew none. The cells are",
+        "game/art/painter/slips.json; build-painter-art.ps1 bakes each person's band",
+        "(canvas texels) as frames named <band_frame>.<person>.<strip>.<frame>, where",
+        "<person> is one id or two joined by '+' in list order and <strip> is a body",
+        "strip, idle standing for every locomotion strip. Stroke edits change",
+        "respawn_redraw.strokes by index for that person: 'stroke' replaces or removes",
+        "one, 'after' inserts one; the build checks that every person's strokes trace",
+        "their black cells exactly. The blink's eyes follow the eye strokes."
+      ],
+      "band_frame": "face",
+      "band": { "x": 12.0, "y": 20.0, "width": 44.0, "height": 24.0 },
+      "two_slip_chance": 0.5,
+      "list": [
+        { "id": "smirk_line_overshoot", "strokes": [
+          { "stroke": 11, "points": [ { "x": 28, "y": 40 }, { "x": 32, "y": 40 } ] },
+          { "after": 11, "part": "mouth", "points": [ { "x": 36, "y": 36 }, { "x": 40, "y": 36 } ] }
+        ] },
+        { "id": "back_ear_overshoot", "strokes": [
+          { "stroke": 5, "points": [ { "x": 16, "y": 32 }, { "x": 12, "y": 32 }, { "x": 12, "y": 36 } ] }
+        ] },
+        { "id": "front_ear_low", "strokes": [
+          { "stroke": 4, "points": [ { "x": 48, "y": 36 }, { "x": 52, "y": 36 } ] }
+        ] },
+        { "id": "front_side_stroke_out", "strokes": [
+          { "stroke": 7, "points": [ { "x": 16, "y": 44 }, { "x": 48, "y": 44 }, { "x": 48, "y": 28 } ] },
+          { "after": 7, "part": "head", "points": [ { "x": 52, "y": 20 }, { "x": 52, "y": 28 } ] }
+        ] },
+        { "id": "front_ear_short", "strokes": [
+          { "stroke": 6, "remove": true }
+        ] },
+        { "id": "front_ear_tall", "strokes": [
+          { "stroke": 4, "points": [ { "x": 48, "y": 28 }, { "x": 52, "y": 28 }, { "x": 52, "y": 24 } ] }
+        ] },
+        { "id": "mouth_off_centre", "strokes": [
+          { "stroke": 11, "points": [ { "x": 24, "y": 40 }, { "x": 32, "y": 40 }, { "x": 32, "y": 36 } ] }
+        ] },
+        { "id": "smirk_overshoot_back", "strokes": [
+          { "stroke": 11, "points": [ { "x": 24, "y": 40 }, { "x": 36, "y": 40 }, { "x": 36, "y": 36 } ] }
+        ] },
+        { "id": "smirk_stops_short", "strokes": [
+          { "stroke": 11, "points": [ { "x": 32, "y": 40 }, { "x": 36, "y": 40 }, { "x": 36, "y": 36 } ] }
+        ] },
+        { "id": "front_corner_click_in", "strokes": [
+          { "stroke": 7, "points": [ { "x": 16, "y": 44 }, { "x": 48, "y": 44 }, { "x": 48, "y": 24 } ] },
+          { "after": 7, "part": "head", "points": [ { "x": 44, "y": 16 }, { "x": 44, "y": 20 } ] }
+        ] },
+        { "id": "eyes_close_set", "strokes": [
+          { "stroke": 9, "points": [ { "x": 28, "y": 24 }, { "x": 28, "y": 28 } ] }
+        ] }
+      ],
+      "exclusive": [
+        [ "smirk_line_overshoot", "mouth_off_centre" ],
+        [ "smirk_line_overshoot", "smirk_overshoot_back" ],
+        [ "smirk_line_overshoot", "smirk_stops_short" ],
+        [ "front_ear_low", "front_side_stroke_out" ],
+        [ "front_ear_low", "front_ear_short" ],
+        [ "front_ear_low", "front_ear_tall" ],
+        [ "front_side_stroke_out", "front_ear_tall" ],
+        [ "front_side_stroke_out", "front_corner_click_in" ],
+        [ "front_ear_tall", "front_corner_click_in" ],
+        [ "mouth_off_centre", "smirk_overshoot_back" ],
+        [ "mouth_off_centre", "smirk_stops_short" ],
+        [ "smirk_overshoot_back", "smirk_stops_short" ]
+      ]
     }
   },
 

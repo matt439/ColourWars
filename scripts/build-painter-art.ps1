@@ -33,6 +33,65 @@ namespace ColourWars {
             }
         }
 
+        // The face rules a slip must keep (docs/drawing-mistakes-research.md,
+        // stage 2 and section 4): the head outline closed to a 4-connected
+        // bucket fill, no transparent pocket inside it, and on idle a white
+        // row between the eyes and the brim. Returns null when the face is fine.
+        public static string FaceProblem(string[] rows, bool idle) {
+            int height = rows.Length, width = rows[0].Length;
+            var outside = new bool[height, width];
+            var stack = new System.Collections.Generic.Stack<int[]>();
+            for (int row = 0; row < height; ++row)
+                for (int column = 0; column < width; ++column)
+                    if ((row == 0 || row == height - 1 || column == 0 || column == width - 1) &&
+                        rows[row][column] != 'K' && !outside[row, column]) {
+                        outside[row, column] = true;
+                        stack.Push(new[] { row, column });
+                    }
+            int[][] steps = { new[] { 1, 0 }, new[] { -1, 0 }, new[] { 0, 1 }, new[] { 0, -1 } };
+            while (stack.Count > 0) {
+                int[] at = stack.Pop();
+                foreach (int[] step in steps) {
+                    int row = at[0] + step[0], column = at[1] + step[1];
+                    if (row < 0 || row >= height || column < 0 || column >= width ||
+                        outside[row, column] || rows[row][column] == 'K') continue;
+                    outside[row, column] = true;
+                    stack.Push(new[] { row, column });
+                }
+            }
+            for (int row = 5; row <= 10; ++row)
+                for (int column = 0; column < width; ++column) {
+                    if (rows[row][column] == 'W' && outside[row, column])
+                        return "face cell (" + row + "," + column + ") is open to a bucket fill; the outline must close.";
+                    if (rows[row][column] == '.' && !outside[row, column])
+                        return "leaves a transparent pocket at (" + row + "," + column + ") inside the head.";
+                }
+            if (!idle) return null;
+            // A face feature inside the head box that reaches row 5 and below it.
+            var seen = new bool[height, width];
+            for (int row = 5; row <= 10; ++row)
+                for (int column = 5; column <= 11; ++column) {
+                    if (rows[row][column] != 'K' || seen[row, column]) continue;
+                    int top = row, bottom = row;
+                    seen[row, column] = true;
+                    stack.Push(new[] { row, column });
+                    while (stack.Count > 0) {
+                        int[] at = stack.Pop();
+                        top = Math.Min(top, at[0]);
+                        bottom = Math.Max(bottom, at[0]);
+                        foreach (int[] step in steps) {
+                            int r = at[0] + step[0], c = at[1] + step[1];
+                            if (r < 5 || r > 10 || c < 5 || c > 11 || seen[r, c] || rows[r][c] != 'K') continue;
+                            seen[r, c] = true;
+                            stack.Push(new[] { r, c });
+                        }
+                    }
+                    if (top == 5 && bottom >= 6)
+                        return "puts a face feature in row 5; keep a white row between the eyes and the brim.";
+                }
+            return null;
+        }
+
         public static void Grid(Bitmap bitmap, string[] rows, int x, int y,
             int cell, bool paint, Color team, bool combined) {
             for (int row = 0; row < rows.Length; ++row) {
@@ -127,53 +186,220 @@ foreach ($name in $actions) {
 
 # The fill must finish exactly where the live respawn pencil left its outline.
 # Validate the authored presentation before changing any generated output.
-$look = (Get-Content -Raw (Join-Path $repo 'game/content/presentation.json') |
-    ConvertFrom-Json).respawn_redraw
+$presentation = Get-Content -Raw (Join-Path $repo 'game/content/presentation.json') | ConvertFrom-Json
+$look = $presentation.respawn_redraw
 if ($look.canvas_size.x -ne $canvasWidth -or $look.canvas_size.y -ne 120 -or $look.pen_width -ne 4) {
     throw "Painter redraw requires respawn_redraw canvas_size ${canvasWidth}x120 and pen_width 4 in presentation.json."
 }
-# The rest arms are drawn over the body, so the finished figure is idle with
-# every opaque rest-arm cell on top.
-$expected = [Collections.Generic.HashSet[int]]::new()
-for ($row = 0; $row -lt 30; ++$row) {
-    for ($column = 0; $column -lt $cells; ++$column) {
-        $cell = $source.rest_arms[$row][$column]
-        if ($cell -eq '.') { $cell = $poses['idle'][$row][$column] }
-        if ($cell -ne 'K') { continue }
-        for ($dy = 0; $dy -lt 4; ++$dy) {
-            for ($dx = 0; $dx -lt 4; ++$dx) {
-                [void] $expected.Add((($row * 4 + $dy) * $canvasWidth + $column * 4 + $dx))
+
+# The rest arms are drawn over the body, so the finished figure is the pose
+# with every opaque rest-arm cell on top.
+function Get-Dressed {
+    param([string[]] $Rows)
+    $dressed = [string[]]::new(30)
+    for ($row = 0; $row -lt 30; ++$row) {
+        $line = [char[]] $Rows[$row]
+        for ($column = 0; $column -lt $cells; ++$column) {
+            if ($source.rest_arms[$row][$column] -ne '.') { $line[$column] = $source.rest_arms[$row][$column] }
+        }
+        $dressed[$row] = [string]::new($line)
+    }
+    return , $dressed
+}
+
+function Test-Pen {
+    param([string[]] $Rows, [object[]] $Strokes, [string] $Who)
+    $dressed = Get-Dressed $Rows
+    $expected = [Collections.Generic.HashSet[int]]::new()
+    for ($row = 0; $row -lt 30; ++$row) {
+        for ($column = 0; $column -lt $cells; ++$column) {
+            if ($dressed[$row][$column] -ne 'K') { continue }
+            for ($dy = 0; $dy -lt 4; ++$dy) {
+                for ($dx = 0; $dx -lt 4; ++$dx) {
+                    [void] $expected.Add((($row * 4 + $dy) * $canvasWidth + $column * 4 + $dx))
+                }
             }
         }
     }
-}
-$drawn = [Collections.Generic.HashSet[int]]::new()
-foreach ($stroke in $look.strokes) {
-    foreach ($point in $stroke.points) {
-        if ($point.x -lt 0 -or $point.x -gt $canvasWidth - 4 -or $point.y -lt 0 -or $point.y -gt 116 -or
-            $point.x % 4 -ne 0 -or $point.y % 4 -ne 0) {
-            throw "Painter redraw '$($stroke.part)' points must stay on the 4px grid inside the ${canvasWidth}x120 canvas."
+    $drawn = [Collections.Generic.HashSet[int]]::new()
+    foreach ($stroke in $Strokes) {
+        foreach ($point in $stroke.points) {
+            if ($point.x -lt 0 -or $point.x -gt $canvasWidth - 4 -or $point.y -lt 0 -or $point.y -gt 116 -or
+                $point.x % 4 -ne 0 -or $point.y % 4 -ne 0) {
+                throw "Painter redraw '$($stroke.part)' ($Who) points must stay on the 4px grid inside the ${canvasWidth}x120 canvas."
+            }
         }
-    }
-    for ($at = 1; $at -lt $stroke.points.Count; ++$at) {
-        $from = $stroke.points[$at - 1]
-        $to = $stroke.points[$at]
-        if (($from.x -eq $to.x) -eq ($from.y -eq $to.y)) {
-            throw "Painter redraw '$($stroke.part)' needs nonzero horizontal or vertical segments."
-        }
-        for ($y = [Math]::Min($from.y, $to.y); $y -lt [Math]::Max($from.y, $to.y) + 4; ++$y) {
-            for ($x = [Math]::Min($from.x, $to.x); $x -lt [Math]::Max($from.x, $to.x) + 4; ++$x) {
-                [void] $drawn.Add(($y * $canvasWidth + $x))
+        for ($at = 1; $at -lt $stroke.points.Count; ++$at) {
+            $from = $stroke.points[$at - 1]
+            $to = $stroke.points[$at]
+            if (($from.x -eq $to.x) -eq ($from.y -eq $to.y)) {
+                throw "Painter redraw '$($stroke.part)' ($Who) needs nonzero horizontal or vertical segments."
+            }
+            for ($y = [Math]::Min($from.y, $to.y); $y -lt [Math]::Max($from.y, $to.y) + 4; ++$y) {
+                for ($x = [Math]::Min($from.x, $to.x); $x -lt [Math]::Max($from.x, $to.x) + 4; ++$x) {
+                    [void] $drawn.Add(($y * $canvasWidth + $x))
+                }
             }
         }
     }
+    if (-not $expected.SetEquals($drawn)) {
+        $missing = @($expected | Where-Object { -not $drawn.Contains($_) }).Count
+        $extra = @($drawn | Where-Object { -not $expected.Contains($_) }).Count
+        throw "Painter redraw ($Who) differs from idle + rest_arms: $missing missing black texels, $extra extra. Update presentation.json respawn_redraw.strokes (or that person's figure.slips stroke edits) to match game/art/painter; see its README pen recipe."
+    }
+    return $expected.Count
 }
-if (-not $expected.SetEquals($drawn)) {
-    $missing = @($expected | Where-Object { -not $drawn.Contains($_) }).Count
-    $extra = @($drawn | Where-Object { -not $expected.Contains($_) }).Count
-    throw "Painter redraw differs from idle + rest_arms: $missing missing black texels, $extra extra. Update presentation.json respawn_redraw.strokes to match game/art/painter/painter.json; see its README pen recipe."
+$penTexels = Test-Pen $poses['idle'] @($look.strokes) 'the house hand'
+Write-Output "Validated respawn pencil against $penTexels authored black texels."
+
+# Figure slips (POL#46 stage 2): each match's person drew one slip, or two that
+# are not exclusive, over rows 5-10. Every person's face is checked like the
+# authored figure and baked into the atlas as a band; see presentation.json
+# figure.slips and docs/drawing-mistakes-research.md section 9, decision 8.
+$slipSource = Get-Content -Raw (Join-Path $sourceDir 'slips.json') | ConvertFrom-Json
+$slipLook = $presentation.figure.slips
+$band = $slipLook.band
+if ($band.x -ne 12 -or $band.y -ne 20 -or $band.width -ne 44 -or $band.height -ne 24) {
+    throw 'figure.slips.band must be canvas texels (12,20,44,24): rows 5-10, cells 3-13, symmetric under the facing flip.'
 }
-Write-Output "Validated respawn pencil against $($expected.Count) authored black texels."
+$bandRows = 5..10
+$bandFirst = 3
+$bandCells = 11
+$slipIds = @($slipSource.slips | ForEach-Object { $_.id })
+$lookIds = @($slipLook.list | ForEach-Object { $_.id })
+if (($slipIds -join ',') -ne ($lookIds -join ',')) {
+    throw "presentation.json figure.slips.list ($($lookIds -join ', ')) must name game/art/painter/slips.json's slips in the same order ($($slipIds -join ', '))."
+}
+$poseNames = @('idle') + @($actions | ForEach-Object { "${_}_0"; "${_}_1" })
+foreach ($name in $poseNames) {
+    foreach ($row in $bandRows) {
+        $line = $poses[$name][$row]
+        if ($line.Substring(0, $bandFirst) -ne '...' -or $line.Substring($bandFirst + $bandCells) -ne '...' -or $line -match 'T') {
+            throw "$name row $row must keep its face inside cells 3-13 with no team cells, so a band can replace it."
+        }
+    }
+}
+
+# A slip's rows for one pose: its own rows for an action it authored, else
+# idle's changed cells wherever that pose still draws idle's original cell.
+function Get-SlipPose {
+    param([object] $Slip, [string] $Name)
+    $rows = [string[]] @($poses[$Name])
+    $own = if ($Slip.PSObject.Properties['actions'] -and $Slip.actions.PSObject.Properties[$Name]) {
+        @($Slip.actions.$Name) } else { $null }
+    for ($index = 0; $index -lt 6; ++$index) {
+        $row = $bandRows[$index]
+        $authored = [string] $Slip.rows_5_10[$index]
+        if ($authored.Length -ne $cells -or $authored -match '[^.KW]') {
+            throw "Slip '$($Slip.id)' row $row must be $cells cells of . K W."
+        }
+        if ($null -ne $own) {
+            $rows[$row] = [string] $own[$index]
+            if ($rows[$row].Length -ne $cells -or $rows[$row] -match '[^.KW]') {
+                throw "Slip '$($Slip.id)' $Name row $row must be $cells cells of . K W."
+            }
+            continue
+        }
+        $line = [char[]] $rows[$row]
+        for ($column = 0; $column -lt $cells; ++$column) {
+            $was = $poses['idle'][$row][$column]
+            if ($authored[$column] -ne $was -and $line[$column] -eq $was) { $line[$column] = $authored[$column] }
+        }
+        $rows[$row] = [string]::new($line)
+    }
+    return , $rows
+}
+
+$exclusive = [Collections.Generic.HashSet[string]]::new()
+foreach ($pair in $slipLook.exclusive) {
+    if (@($pair).Count -ne 2 -or $slipIds -notcontains $pair[0] -or $slipIds -notcontains $pair[1] -or $pair[0] -eq $pair[1]) {
+        throw "figure.slips.exclusive pair '$($pair -join '+')' must name two different slips."
+    }
+    [void] $exclusive.Add("$($pair[0])+$($pair[1])")
+    [void] $exclusive.Add("$($pair[1])+$($pair[0])")
+}
+# People: every slip alone, then every pair that is not exclusive, in list order.
+$people = [Collections.Generic.List[object]]::new()
+for ($first = 0; $first -lt $slipIds.Count; ++$first) { $people.Add([int[]] @($first)) }
+for ($first = 0; $first -lt $slipIds.Count; ++$first) {
+    for ($second = $first + 1; $second -lt $slipIds.Count; ++$second) {
+        if (-not $exclusive.Contains("$($slipIds[$first])+$($slipIds[$second])")) {
+            $people.Add([int[]] @($first, $second))
+        }
+    }
+}
+
+# A person's strokes: the house strokes with each slip's edits, by index.
+function Get-PersonStrokes {
+    param([int[]] $Person, [string] $Who)
+    $replace = @{}
+    $insert = @{}
+    foreach ($index in $Person) {
+        foreach ($edit in $slipLook.list[$index].strokes) {
+            if ($edit.PSObject.Properties['after']) {
+                $at = [int] $edit.after
+                if ($at -lt 0 -or $at -ge $look.strokes.Count) { throw "$Who inserts after stroke $at, which does not exist." }
+                if (-not $insert.ContainsKey($at)) { $insert[$at] = [Collections.Generic.List[object]]::new() }
+                $insert[$at].Add([pscustomobject]@{ part = $edit.part; points = @($edit.points) })
+                continue
+            }
+            $at = [int] $edit.stroke
+            if ($at -lt 0 -or $at -ge $look.strokes.Count) { throw "$Who edits stroke $at, which does not exist." }
+            if ($replace.ContainsKey($at)) { throw "$Who edits stroke $at twice; make the two slips exclusive." }
+            $replace[$at] = if ($edit.PSObject.Properties['remove'] -and $edit.remove) { $null } else {
+                [pscustomobject]@{ part = $look.strokes[$at].part; points = @($edit.points) } }
+        }
+    }
+    $strokes = [Collections.Generic.List[object]]::new()
+    for ($at = 0; $at -lt $look.strokes.Count; ++$at) {
+        if (-not $replace.ContainsKey($at)) { $strokes.Add($look.strokes[$at]) }
+        elseif ($null -ne $replace[$at]) { $strokes.Add($replace[$at]) }
+        if ($insert.ContainsKey($at)) { $strokes.AddRange($insert[$at]) }
+    }
+    return , $strokes.ToArray()
+}
+
+$slipPoses = @{}
+foreach ($slip in $slipSource.slips) {
+    $slipPoses[$slip.id] = @{}
+    foreach ($name in $poseNames) { $slipPoses[$slip.id][$name] = Get-SlipPose $slip $name }
+}
+$personNames = [Collections.Generic.List[string]]::new()
+$personPoses = @{}
+foreach ($person in $people) {
+    $who = (@($person | ForEach-Object { $slipIds[$_] }) -join '+')
+    $personNames.Add($who)
+    $personPoses[$who] = @{}
+    foreach ($name in $poseNames) {
+        $rows = [string[]] @($poses[$name])
+        $changed = @{}
+        foreach ($index in $person) {
+            $slipped = $slipPoses[$slipIds[$index]][$name]
+            foreach ($row in $bandRows) {
+                $line = [char[]] $rows[$row]
+                for ($column = 0; $column -lt $cells; ++$column) {
+                    if ($slipped[$row][$column] -eq $poses[$name][$row][$column]) { continue }
+                    if ($changed.ContainsKey("$row,$column")) {
+                        throw "$who`: two slips change $name cell ($row,$column); make them exclusive."
+                    }
+                    $changed["$row,$column"] = $true
+                    $line[$column] = $slipped[$row][$column]
+                }
+                $rows[$row] = [string]::new($line)
+            }
+        }
+        foreach ($row in $bandRows) {
+            if ($rows[$row].Substring(0, $bandFirst) -ne '...' -or $rows[$row].Substring($bandFirst + $bandCells) -ne '...') {
+                throw "$who`: $name row $row reaches outside the band, cells 3-13."
+            }
+        }
+        $problem = [ColourWars.PainterArt]::FaceProblem((Get-Dressed $rows), $name -eq 'idle')
+        if ($problem) { throw "$who`: $name $problem" }
+        $personPoses[$who][$name] = $rows
+    }
+    [void] (Test-Pen $personPoses[$who]['idle'] (Get-PersonStrokes $person $who) $who)
+}
+Write-Output "Validated $($people.Count) people's faces and respawn pencils ($($slipIds.Count) slips, $($exclusive.Count / 2) exclusive pairs)."
 
 $atlas = [Drawing.Bitmap]::new(1024, 2048, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $strips = [Collections.Generic.List[object]]::new()
@@ -232,6 +458,36 @@ try {
                 looping = $false })
         }
     }
+
+    # Face bands: one 44x24 frame per distinct face, named for every person and
+    # pose that draws it, packed on a 52x32 pitch into the two free blocks right
+    # of the action strips and under them.
+    $slots = [Collections.Generic.List[object]]::new()
+    for ($y = 1024; $y + 32 -le 1664; $y += 32) {
+        for ($x = 12 + 4 * $canvasWidth; $x + 52 -le 1024; $x += 52) { $slots.Add(@($x, $y)) }
+    }
+    for ($y = 1664; $y + 32 -le 2048; $y += 32) {
+        for ($x = 0; $x + 52 -le 1024; $x += 52) { $slots.Add(@($x, $y)) }
+    }
+    $placed = @{}
+    foreach ($who in $personNames) {
+        foreach ($name in $poseNames) {
+            $face = [string[]] @($bandRows | ForEach-Object { $personPoses[$who][$name][$_].Substring($bandFirst, $bandCells) })
+            $key = $face -join '|'
+            if (-not $placed.ContainsKey($key)) {
+                if ($placed.Count -ge $slots.Count) { throw "The painter atlas has room for $($slots.Count) face bands." }
+                $slot = $slots[$placed.Count]
+                [ColourWars.PainterArt]::Grid($atlas, $face, $slot[0] + 4, $slot[1] + 4, 4,
+                    $false, [Drawing.Color]::White, $false)
+                $placed[$key] = $slot
+            }
+            $at = $placed[$key]
+            # Locomotion shares idle's torso rows, so every locomotion strip draws idle's band.
+            $pose = if ($name -eq 'idle') { 'idle.0' } else { $name -replace '_(\d)$', '.$1' }
+            Add-Frame "$($slipLook.band_frame).$who.$pose" ($at[0] + 4) ($at[1] + 4) ($bandCells * 4) 24
+        }
+    }
+    Write-Output "Baked $($placed.Count) distinct face bands for $($personNames.Count) people."
 
     $pixelX = 16 + 3 * $canvasWidth
     [ColourWars.PainterArt]::Grid($atlas, @('W'), $pixelX, 4, 4,
@@ -300,6 +556,34 @@ try {
 }
 finally {
     $ground.Dispose(); $brush.Dispose(); $font.Dispose(); $graphics.Dispose(); $preview.Dispose()
+}
+
+# Authoring preview of every person the figure slips allow: idle, as blue's
+# figure, with the rest arms over it.
+$columns = 9
+$preview = [Drawing.Bitmap]::new(12 + $columns * ($canvasWidth + 48),
+    40 + [Math]::Ceiling($personNames.Count / $columns) * 156, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$graphics = [Drawing.Graphics]::FromImage($preview)
+$font = [Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace, 7)
+$brush = [Drawing.SolidBrush]::new([Drawing.Color]::Black)
+try {
+    $graphics.Clear([Drawing.Color]::FromArgb(228, 228, 228))
+    $graphics.DrawString("Figure slips / $($personNames.Count) people from game/art/painter/slips.json", $font, $brush, 12, 8)
+    $blue = [Drawing.ColorTranslator]::FromHtml('#0634CC')
+    for ($index = 0; $index -lt $personNames.Count; ++$index) {
+        $who = $personNames[$index]
+        $x = 12 + ($index % $columns) * ($canvasWidth + 48)
+        $y = 52 + [Math]::Floor($index / $columns) * 156
+        $graphics.DrawString($who.Replace('+', "+`n"), $font, $brush, $x - 6, $y - 26)
+        $graphics.Flush()
+        [ColourWars.PainterArt]::Grid($preview, $personPoses[$who]['idle'], $x, $y, 4, $false, $blue, $true)
+        [ColourWars.PainterArt]::Grid($preview, $source.rest_arms, $x, $y, 4, $false, $blue, $true)
+    }
+    $graphics.Flush()
+    [ColourWars.PainterArt]::SavePng($preview, (Join-Path $sourceDir 'slips.png'))
+}
+finally {
+    $brush.Dispose(); $font.Dispose(); $graphics.Dispose(); $preview.Dispose()
 }
 
 # Labrador uses premultiplied alpha. RGBA8 and one mip retain the authored grid.

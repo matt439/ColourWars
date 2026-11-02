@@ -2,13 +2,13 @@
   "_comment": [
     "Figure slips: the per-match person's face and head-outline mistakes (POL#46 stage 2,",
     "docs/drawing-mistakes-research.md section 9, decision 8). Authored stand-ins for Study A's pool;",
-    "the author picked these 11 of 35 by eye on 2026-11-02. Not yet built into the atlas.",
-    "rows_5_10 replace idle's rows 5-10 (painter.json torso). Every locomotion frame shares them.",
+    "the author picked these 11 of 35 by eye on 2026-11-02.",
+    "rows_5_10 replace idle's rows 5-10 (painter.json torso), which every locomotion frame shares.",
     "An action frame listed under actions takes those rows; any other action frame takes idle's",
     "changed cells only where it still draws idle's original cell there.",
-    "A match's person takes one or two slips; a pair listed in exclusive changes neighbouring cells",
-    "(the same feature) and is never drawn together. Every slip and every other pair keeps the",
-    "outline closed to a 4-connected fill, no pocket, a white row under the brim, and 2-cell pen runs."
+    "Which person draws which slips, the exclusive pairs and each slip's respawn stroke edits are",
+    "presentation.json figure.slips; build-painter-art.ps1 checks the two agree and bakes every",
+    "person's face band into the painter atlas."
   ],
   "slips": [
     {
@@ -464,47 +464,5 @@
         ]
       }
     }
-  ],
-  "exclusive": [
-    [
-      "smirk_line_overshoot",
-      "mouth_off_centre"
-    ],
-    [
-      "front_ear_low",
-      "front_side_stroke_out"
-    ],
-    [
-      "front_ear_low",
-      "front_ear_short"
-    ],
-    [
-      "front_ear_low",
-      "front_ear_tall"
-    ],
-    [
-      "front_side_stroke_out",
-      "front_ear_tall"
-    ],
-    [
-      "front_side_stroke_out",
-      "front_corner_click_in"
-    ],
-    [
-      "front_ear_tall",
-      "front_corner_click_in"
-    ],
-    [
-      "mouth_off_centre",
-      "smirk_overshoot_back"
-    ],
-    [
-      "mouth_off_centre",
-      "smirk_stops_short"
-    ],
-    [
-      "smirk_overshoot_back",
-      "smirk_stops_short"
-    ]
   ]
 }

@@ -30,6 +30,12 @@ float RespawnRedraw::camera_hold() const
 void RespawnRedraw::draw(DrawList& draw_list, const RectangleF& figure,
     bool facing_right, float progress) const
 {
+    this->draw(draw_list, figure, facing_right, progress, this->presentation_->strokes);
+}
+
+void RespawnRedraw::draw(DrawList& draw_list, const RectangleF& figure,
+    bool facing_right, float progress, const std::vector<RespawnStroke>& strokes) const
+{
     const RespawnRedrawPresentation& look = *this->presentation_;
     if (progress < look.draw_from)
     {
@@ -39,7 +45,7 @@ void RespawnRedraw::draw(DrawList& draw_list, const RectangleF& figure,
     // The pen moves at one speed, so each stroke takes its share of the time
     // by length. The person drew it in this order; the replay keeps it.
     float total = 0.0f;
-    for (const RespawnStroke& stroke : look.strokes)
+    for (const RespawnStroke& stroke : strokes)
     {
         for (size_t at = 1; at < stroke.points.size(); ++at)
         {
@@ -49,7 +55,7 @@ void RespawnRedraw::draw(DrawList& draw_list, const RectangleF& figure,
     float remaining = total * std::clamp((progress - look.draw_from) /
         (look.fill_at - look.draw_from), 0.0f, 1.0f);
 
-    for (const RespawnStroke& stroke : look.strokes)
+    for (const RespawnStroke& stroke : strokes)
     {
         for (size_t at = 1; at < stroke.points.size(); ++at)
         {

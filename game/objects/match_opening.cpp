@@ -672,22 +672,24 @@ void MatchOpening::draw_acting(DrawList& list, const std::vector<Player*>& playe
 		const bool right = player->facing_right();
 		const float time = this->act_time_ + static_cast<float>(index) * 0.37f;
 		const float across = player->team() == PlayerTeam::a ? 1.0f : -1.0f;
+		// The eyes sit where the match's person drew them (FigurePerson).
+		const std::vector<RespawnStroke> strokes = player->drawn_strokes();
 		switch (act)
 		{
 		case FigureAct::look_at_hands:
-			this->acting_->draw_eyes(list, figure, right, Vector2F(right ? 0.6f : -0.6f, 1.0f));
+			this->acting_->draw_eyes(list, figure, right, Vector2F(right ? 0.6f : -0.6f, 1.0f), strokes);
 			break;
 		case FigureAct::look_across:
-			this->acting_->draw_eyes(list, figure, right, Vector2F(across, 0.0f));
+			this->acting_->draw_eyes(list, figure, right, Vector2F(across, 0.0f), strokes);
 			break;
 		case FigureAct::cheat:
 			// Darting: one side, then the other, never at the person.
 			this->acting_->draw_eyes(list, figure, right,
-				Vector2F(std::sin(time * 4.3f) > 0.0f ? 1.0f : -1.0f, -0.2f));
+				Vector2F(std::sin(time * 4.3f) > 0.0f ? 1.0f : -1.0f, -0.2f), strokes);
 			this->acting_->draw_sweat(list, figure, right, time);
 			break;
 		case FigureAct::slump:
-			this->acting_->draw_eyes(list, figure, right, Vector2F(0.0f, 1.0f));
+			this->acting_->draw_eyes(list, figure, right, Vector2F(0.0f, 1.0f), strokes);
 			break;
 		default:
 			break;

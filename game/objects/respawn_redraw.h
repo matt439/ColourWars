@@ -3,6 +3,8 @@
 #include "game/config/presentation/presentation_match.h"
 #include "engine/render/texture_object.h"
 
+#include <vector>
+
 // A splatted figure coming back. It has been painted over, so it is gone from
 // the picture, but the undo history still holds the strokes the person drew it
 // with: they replay fast-forward at the spawn, line by line, and the length of
@@ -22,6 +24,10 @@ public:
     // before draw_from; the whole outline from fill_at, when filled() is true.
     void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
         bool facing_right, float progress) const;
+    // The same, for strokes other than the house ones: those of the match's
+    // person, who made their own slips (FigurePerson).
+    void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
+        bool facing_right, float progress, const std::vector<RespawnStroke>& strokes) const;
 
     // The outline is finished and the figure is filled in: its own sprite takes over.
     bool filled(float progress) const;

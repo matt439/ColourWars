@@ -83,6 +83,10 @@ namespace colourwars
 			const labrador::Colour& colour,
 			labrador::SpriteFlip flip) const;
 
+		// The current frame's rectangle on the sheet, for a caller drawing it
+		// in pieces (Player's figure slips).
+		const mattmath::RectangleI& source_rectangle() const;
+
 	private:
 		labrador::SpriteSheet::strip_handle strip_;
 		int frame_index_ = 0;
@@ -90,6 +94,5 @@ namespace colourwars
 		float time_elapsed_ = 0.0f;
 		float frame_time_ = 0.0f;
 		const labrador::AnimationStrip& animation_strip() const;
-		const mattmath::RectangleI& source_rectangle() const;
 	};
 }

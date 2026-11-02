@@ -47,6 +47,7 @@ Cases = @(
     @{ Name = 'blocked_shot' }
     @{ Name = 'idle_drip' }
     @{ Name = 'quiet_character' }
+    @{ Name = 'figure_slips' }
     @{ Name = 'stage_selection' }
     @{ Name = 'team_palette' }
     @{ Name = 'team_selection' }

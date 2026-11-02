@@ -47,8 +47,16 @@ public:
     void draw_blink(labrador::DrawList& list, const mattmath::RectangleF& figure,
         bool facing_right) const
     {
+        if (look_ == nullptr) { return; }
+        this->draw_blink(list, figure, facing_right, look_->quiet.eyes);
+    }
+
+    // The same, over eyes the match's person drew elsewhere (FigurePerson).
+    void draw_blink(labrador::DrawList& list, const mattmath::RectangleF& figure,
+        bool facing_right, const std::array<mattmath::RectangleF, 2>& eyes) const
+    {
         if (look_ == nullptr || !look_->quiet.enabled) { return; }
-        for (const auto& eye : look_->quiet.eyes)
+        for (const auto& eye : eyes)
         {
             // Leave a short ink lid at the middle of the authored eye.
             // The eye paint-out follows the same posed canvas as the face.

@@ -117,6 +117,7 @@ add_library(colourwars_game STATIC
     objects/reveal_art.cpp
     objects/debug_text.cpp
     objects/figure_acting.cpp
+    objects/figure_person.cpp
     objects/fixed_slab_geometry.cpp
     objects/fixed_slab_paintable.cpp
     objects/fixed_slab_shadow.cpp

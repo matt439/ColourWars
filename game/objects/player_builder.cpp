@@ -37,9 +37,12 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
-	const ViewportManager* viewport_manager) const
+	const ViewportManager* viewport_manager,
+	std::uint64_t hand) const
 {
 	std::vector<std::unique_ptr<Player>> players;
+	// One person drew every figure in the match, both teams alike.
+	const FigurePerson person(this->presentation_->figure().slips, hand);
 
 	const std::vector<Vector2F> team_a_spawns = load_info->team_a_spawns();
 	const std::vector<Vector2F> team_b_spawns = load_info->team_b_spawns();
@@ -98,7 +101,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			viewport,
 			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
 			SpriteFlip::none, 0.0f, participant_index, &this->presentation_->figure(),
-			&this->presentation_->camera().shake);
+			&this->presentation_->camera().shake, person);
 		player->set_handicap(setting.handicap);
 
 		players.push_back(std::move(player));

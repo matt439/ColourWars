@@ -54,7 +54,8 @@ Player::Player(const RectangleF& rectangle,
     float layer_depth,
     int sound_index,
     const FigurePresentation* figure,
-    const ViewShakePresentation* view_shake) :
+    const ViewShakePresentation* view_shake,
+    const FigurePerson& person) :
     colourwars::MovingObject(velocity),
     colourwars::AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
@@ -87,6 +88,8 @@ Player::Player(const RectangleF& rectangle,
 {
     this->preferences_ = preferences;
     this->movement_feedback_look_ = movement_feedback;
+    this->person_ = person;
+    this->respawn_look_ = respawn_redraw;
     const PlayerTuning& player = tuning->player();
     this->idle_sheet_ = render_resources->resolve_sprite_sheet(player.idle.sheet);
     const SpriteSheet* idle_sheet = render_resources->sprite_sheet(this->idle_sheet_);
@@ -114,6 +117,49 @@ Player::Player(const RectangleF& rectangle,
         this->action_clips_[static_cast<size_t>(state) -
             static_cast<size_t>(PlayerAnimationState::taking_off)] =
             { strip.frame_count(), strip.frame_time() };
+    }
+    if (this->person_.slipped() && figure != nullptr)
+    {
+        // The person's bands, named for the body strips they sit over
+        // (presentation.json figure.slips); a missing one is an atlas bug.
+        const auto band = [&](const std::string& strip, int frame)
+        {
+            const SpriteSheet::frame_handle handle = idle_sheet->resolve_sprite_frame(
+                this->person_.band_frame(figure->slips, strip, frame));
+            return idle_sheet->sprite_frame(handle).source_rectangle();
+        };
+        const RectangleI idle_band = band(player.idle.strip, 0);
+        for (size_t index = 0; index < this->face_bands_.size(); ++index)
+        {
+            const auto state = static_cast<PlayerAnimationState>(index);
+            if (state < PlayerAnimationState::taking_off)
+            {
+                this->face_bands_[index] = { idle_band };
+                continue;
+            }
+            const ActionClip& clip = this->action_clips_[index -
+                static_cast<size_t>(PlayerAnimationState::taking_off)];
+            for (int frame = 0; frame < clip.frames; ++frame)
+            {
+                this->face_bands_[index].push_back(band(this->animation_info(state).strip, frame));
+            }
+        }
+        this->face_band_texels_ = figure->slips.band;
+        // Startup validation holds every band to this size. A band tuned since
+        // then no longer fits the baked faces, so draw the authored face whole
+        // rather than stretch them.
+        for (const std::vector<RectangleI>& bands : this->face_bands_)
+        {
+            for (const RectangleI& face : bands)
+            {
+                if (static_cast<float>(face.width) != this->face_band_texels_.width ||
+                    static_cast<float>(face.height) != this->face_band_texels_.height)
+                {
+                    this->face_bands_ = {};
+                    break;
+                }
+            }
+        }
     }
     if (player.idle.frame_time.has_value())
     {

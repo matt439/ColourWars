@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/content_validation.h"
 #include "game/config/drawable_text.h"
+#include "game/objects/figure_person.h"
 #include "game/objects/level_object_builder.h"
 #include "game/config/resource_validation.h"
 #include "game/config/text_wrap.h"
@@ -86,6 +87,37 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	// Optional silent banks remain valid; these checks do not play audio.
 	tuning.validate_resources(*render, *audio);
 	presentation.validate_resources(*render, *audio);
+	// Every person the figure slips allow has a face band over every body
+	// frame (presentation.json figure.slips, built by build-painter-art.ps1),
+	// so no match can draw a person the atlas lacks.
+	{
+		const PlayerTuning& player = tuning.player();
+		const FigureSlipsPresentation& slips = presentation.figure().slips;
+		const SpriteSheet* sheet = render->sprite_sheet(player.idle.sheet);
+		const ResourceValidation figure("presentation.json: figure.slips", *render, *audio);
+		for (const FigurePerson& person : FigurePerson::everyone(slips))
+		{
+			figure.frame(person.name(slips), player.idle.sheet, person.band_frame(slips, player.idle.strip, 0));
+			for (const PlayerAnimationTuning* action : { &player.takeoff, &player.land, &player.fire,
+				&player.hurt, &player.elimination })
+			{
+				const int frames = sheet->animation_strip(sheet->resolve_animation_strip(action->strip)).frame_count();
+				for (int frame = 0; frame < frames; ++frame)
+				{
+					figure.frame(person.name(slips), action->sheet, person.band_frame(slips, action->strip, frame));
+				}
+			}
+			// The band's frames replace exactly the band's texels.
+			const mattmath::RectangleI& face = sheet->sprite_frame(sheet->resolve_sprite_frame(
+				person.band_frame(slips, player.idle.strip, 0))).source_rectangle();
+			if (static_cast<float>(face.width) != slips.band.width ||
+				static_cast<float>(face.height) != slips.band.height)
+			{
+				throw std::runtime_error("presentation.json: figure.slips.band must match the baked face frames (" +
+					std::to_string(face.width) + "x" + std::to_string(face.height) + "); rebuild the painter art.");
+			}
+		}
+	}
 	const ResourceValidation check("presentation.json: tool_motion", *render, *audio);
 	for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
 	{

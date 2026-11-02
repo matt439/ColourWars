@@ -4,6 +4,7 @@
 
 #include "engine/assets/json.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <stdexcept>
@@ -21,6 +22,133 @@ using namespace presentation_read;
 
 namespace
 {
+	// A position in a list, which the caller checks against the list.
+	size_t read_index(const JsonValue& parent, const char* key)
+	{
+		const int value = parent.integer(key);
+		if (value < 0)
+		{
+			throw std::runtime_error(parent.where() + ": '" + key + "' must not be negative.");
+		}
+		return static_cast<size_t>(value);
+	}
+
+	// A pen path: two or more points, each step horizontal or vertical. Where
+	// the nib may go is the respawn canvas's to say, so Presentation checks it.
+	std::vector<Vector2F> read_pen_points(const JsonValue& parent)
+	{
+		const JsonValue points = parent.array("points");
+		if (points.size() < 2)
+		{
+			throw std::runtime_error(points.where() + ": a stroke needs at least two points.");
+		}
+		std::vector<Vector2F> path;
+		for (size_t at = 0; at < points.size(); ++at)
+		{
+			const JsonValue point_json = points.at(at);
+			const Vector2F point(point_json.number("x"), point_json.number("y"));
+			if (!path.empty())
+			{
+				const Vector2F step = point - path.back();
+				if ((step.x == 0.0f) == (step.y == 0.0f))
+				{
+					throw std::runtime_error(point_json.where() + ": the pen draws only "
+						"horizontal and vertical lines, and never stands still.");
+				}
+			}
+			path.push_back(point);
+		}
+		return path;
+	}
+
+	FigureSlipsPresentation read_figure_slips(const JsonValue& json, const Vector2F& canvas_size)
+	{
+		FigureSlipsPresentation slips;
+		slips.band_frame = json.identifier("band_frame");
+		const JsonValue band = json.object("band");
+		slips.band = RectangleF(band.number("x"), band.number("y"),
+			read_positive(band, "width"), read_positive(band, "height"));
+		// A facing-left figure mirrors its canvas, so the band must cover the
+		// same texels either way for one band rectangle to serve both.
+		if (!(slips.band.x >= 0.0f && slips.band.y >= 0.0f &&
+			slips.band.right() <= canvas_size.x && slips.band.bottom() <= canvas_size.y &&
+			slips.band.x + slips.band.right() == canvas_size.x))
+		{
+			throw std::runtime_error(band.where() +
+				": the band must sit in the canvas, centred across its width.");
+		}
+		slips.two_slip_chance = read_unit(json, "two_slip_chance");
+		const JsonValue list = json.array("list");
+		for (size_t index = 0; index < list.size(); ++index)
+		{
+			const JsonValue slip_json = list.at(index);
+			FigureSlip slip;
+			slip.id = slip_json.identifier("id");
+			if (slip.id.empty() || slip.id.find_first_of("+.") != std::string::npos)
+			{
+				throw std::runtime_error(slip_json.where() +
+					": a slip id names its band frames, so it needs no '+' or '.'.");
+			}
+			for (const FigureSlip& earlier : slips.list)
+			{
+				if (earlier.id == slip.id)
+				{
+					throw std::runtime_error(slip_json.where() + ": slip '" + slip.id + "' is listed twice.");
+				}
+			}
+			const JsonValue edits = slip_json.array("strokes");
+			for (size_t at = 0; at < edits.size(); ++at)
+			{
+				const JsonValue edit_json = edits.at(at);
+				FigureSlipStroke edit;
+				if (edit_json.has("after"))
+				{
+					edit.edit = FigureSlipStroke::Edit::insert_after;
+					edit.stroke = read_index(edit_json, "after");
+					edit.part = edit_json.string("part");
+					edit.points = read_pen_points(edit_json);
+				}
+				else
+				{
+					edit.stroke = read_index(edit_json, "stroke");
+					if (edit_json.has("remove") && edit_json.boolean("remove"))
+					{
+						edit.edit = FigureSlipStroke::Edit::remove;
+					}
+					else
+					{
+						edit.points = read_pen_points(edit_json);
+					}
+				}
+				slip.strokes.push_back(std::move(edit));
+			}
+			slips.list.push_back(std::move(slip));
+		}
+		const JsonValue exclusive = json.array("exclusive");
+		for (size_t index = 0; index < exclusive.size(); ++index)
+		{
+			const JsonValue pair = exclusive.at(index);
+			std::array<size_t, 2> indices{};
+			for (size_t side = 0; side < 2 && pair.size() == 2; ++side)
+			{
+				const std::string id = pair.at(side).as_identifier();
+				const auto found = std::find_if(slips.list.begin(), slips.list.end(),
+					[&id](const FigureSlip& slip) { return slip.id == id; });
+				if (found == slips.list.end())
+				{
+					throw std::runtime_error(pair.where() + ": no slip is called '" + id + "'.");
+				}
+				indices[side] = static_cast<size_t>(found - slips.list.begin());
+			}
+			if (pair.size() != 2 || indices[0] == indices[1])
+			{
+				throw std::runtime_error(pair.where() + ": an exclusive pair names two different slips.");
+			}
+			slips.exclusive.push_back({ std::min(indices[0], indices[1]), std::max(indices[0], indices[1]) });
+		}
+		return slips;
+	}
+
 	std::vector<Colour> read_colours(const JsonValue& parent, const char* key)
 	{
 		const JsonValue array = parent.array(key);
@@ -504,6 +632,7 @@ namespace presentation_read
 			const JsonValue grip = grips.object(WEAPON_NAMES[index]);
 			figure.grips[index] = { read_vector(grip, "rear"), read_vector(grip, "front") };
 		}
+		figure.slips = read_figure_slips(json.object("slips"), figure.canvas_size);
 		return figure;
 	}
 

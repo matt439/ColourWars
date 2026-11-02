@@ -122,7 +122,7 @@ questions in the polish sub-docs are superseded, not open.
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
-| `POL#46` | DECISION | LOW | M | Stage 1 of the drawing mistakes shipped, with per-match hands. The author picked stage 2's 11 figure slips from an authored pool in place of Study A ([slips.json](game/art/painter/slips.json)). Left: build them into the figure, one or two per match's hand; run Study B with participants and take out what fails. Kits are in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
+| `POL#46` | DECISION | LOW | M | Stage 1 of the drawing mistakes shipped, with per-match hands. Stage 2 is built: each match's hand draws one or two of the 11 figure slips the author picked from an authored pool in place of Study A ([slips.json](game/art/painter/slips.json)). Left: run Study B with participants and take out what fails. Kits are in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
 
 ## Feel and feedback
 

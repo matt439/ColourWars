@@ -18,6 +18,7 @@
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/figure_clothing.h"
 #include "game/objects/figure_attachments.h"
+#include "game/objects/figure_person.h"
 #include "game/objects/quiet_character.h"
 #include "game/objects/view_shake.h"
 #include "engine/math/rectanglef.h"
@@ -137,7 +138,8 @@ public:
         float layer_depth = 0.0f,
         int sound_index = -1,
         const FigurePresentation* figure = nullptr,
-        const ViewShakePresentation* view_shake = nullptr);
+        const ViewShakePresentation* view_shake = nullptr,
+        const FigurePerson& person = FigurePerson());
 
     ~Player() override;
 
@@ -196,6 +198,10 @@ public:
     PlayerAnimationState animation_state() const;
     float action_age() const;
     int action_frame() const;
+    // The match's person, whose slips this figure carries (FigurePerson), and
+    // the strokes they drew it with: the respawn pen's and the eyes' source.
+    const FigurePerson& person() const;
+    std::vector<RespawnStroke> drawn_strokes() const;
 
 	void set_player_input(const PlayerInputData& input);
     // Context changes discard queued jumps and require a release before a new
@@ -430,6 +436,20 @@ private:
     labrador::RenderResources::SpriteSheetHandle idle_sheet_;
     mattmath::RectangleI idle_body_;
     mattmath::RectangleI idle_paint_;
+    // The person's face band over each state's body frames, resolved once;
+    // empty for the house hand, whose faces are the body frames' own. Every
+    // locomotion state draws the idle band, as it shares idle's torso.
+    FigurePerson person_;
+    const RespawnRedrawPresentation* respawn_look_ = nullptr;
+    std::array<std::vector<mattmath::RectangleI>, ANIMATION_STATE_COUNT> face_bands_;
+    // The canvas texels the bands replace, taken with the bands: they are
+    // baked art, so a tuned band waits for the next build like they do.
+    mattmath::RectangleF face_band_texels_;
+    // A body frame, with the person's band over its face when they have one.
+    void draw_body(labrador::DrawList& draw_list, const mattmath::RectangleI& source,
+        const mattmath::RectangleF& canvas, const mattmath::RectangleI* band,
+        labrador::SpriteFlip flip) const;
+    const mattmath::RectangleI* face_band(bool idle) const;
 
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
