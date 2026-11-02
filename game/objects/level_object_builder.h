@@ -4,6 +4,7 @@
 
 #include "engine/assets/json.h"
 #include "engine/collision/collision_object.h"
+#include <cstdint>
 #include <memory>
 #include "game/objects/structure_paintable.h"
 #include "engine/audio/audio_resources.h"
@@ -25,9 +26,11 @@ public:
 		const GatePermissionPresentation* gate_cue = nullptr,
 		const FerryDirectionPresentation* ferry_cue = nullptr);
 
+	// `hand` is the match's person (MatchRandom::hand): which of the drawing's
+	// slips they made. 0, the house hand, is what previews and validation draw.
 	std::vector<std::unique_ptr<labrador::CollisionObject>>
 		build_collision_objects(const labrador::JsonValue& json,
-			const TeamColour& team_colours) const;
+			const TeamColour& team_colours, std::uint64_t hand = 0) const;
 
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_non_collision_objects(const labrador::JsonValue& json) const;
@@ -63,13 +66,14 @@ private:
 	// What every object in a stage needs from the others: the flat rectangles
 	// that bury paint, everything that buries an outline (ramps too: a ramp's
 	// leg against a face makes one surface, though paint passes through it),
-	// and the x of the stage's mirror line.
+	// the x of the stage's mirror line and whose hand drew it.
 	struct StageContext
 	{
 		std::vector<mattmath::RectangleF> flat;
 		std::vector<mattmath::RectangleF> solid;
 		std::vector<PaintPolygon> slabs;
 		float mirror_x = 0.0f;
+		std::uint64_t hand = 0;
 	};
 	static StageContext stage_context(const labrador::JsonValue& collision_objects);
 

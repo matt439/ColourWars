@@ -7,6 +7,7 @@
 #include "game/objects/collision_object_type.h"
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -58,10 +59,12 @@ public:
 
 	// Throws std::invalid_argument for an unknown name, or a name the
 	// collision type may not wear (the table is in docs/level-format.md).
+	// `hand` picks the person's slips (MatchRandom::hand); 0 is the house
+	// hand. It moves decoration only, never a collision or scoring edge.
 	static std::unique_ptr<const TerrainMaterial> make(const std::string& name,
 		CollisionObjectType type, const mattmath::Shape& shape,
 		const TerrainFaces& faces, float mirror_x,
-		labrador::RenderResources* render_resources);
+		labrador::RenderResources* render_resources, std::uint64_t hand = 0);
 
 	virtual ~TerrainMaterial() = default;
 
@@ -153,8 +156,9 @@ private:
 class GroundMaterial final : public TerrainMaterial
 {
 public:
+	// `hand` keys the brick slips, mortar strokes and doubled edges.
 	GroundMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
-		labrador::RenderResources* render_resources);
+		labrador::RenderResources* render_resources, std::uint64_t hand = 0);
 };
 
 // A long paintable pencil: eraser and ferrule at one end, a cut wood end with

@@ -254,7 +254,8 @@ namespace
 	// An optional Tool Props material; absent keeps the stretched frame.
 	std::unique_ptr<const TerrainMaterial> material_of(const JsonValue& json,
 		CollisionObjectType type, const Shape& shape, std::span<const RectangleF> flat,
-		float mirror_x, RenderResources* render_resources, std::span<const PaintPolygon> slabs = {})
+		float mirror_x, std::uint64_t hand, RenderResources* render_resources,
+		std::span<const PaintPolygon> slabs = {})
 	{
 		if (!json.has(key::material))
 		{
@@ -263,7 +264,7 @@ namespace
 		try
 		{
 			return TerrainMaterial::make(json.string(key::material), type, shape,
-				exposed_faces(shape.bounding_box(), flat, slabs), mirror_x, render_resources);
+				exposed_faces(shape.bounding_box(), flat, slabs), mirror_x, render_resources, hand);
 		}
 		catch (const std::invalid_argument& error)
 		{
@@ -356,7 +357,7 @@ std::unique_ptr<CollisionObject>
 			Vector2F::ZERO,
 			SpriteFlip::none,
 			0.0f,
-			material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+			material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
 				this->render_resources_, context.slabs));
 	}
 	if (type == object_type::structure_paintable)
@@ -380,7 +381,7 @@ std::unique_ptr<CollisionObject>
 				this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
 				collision_type, team_colours, faces, colour_of(json), Vector2F::ZERO,
 				SpriteFlip::none, 0.0f,
-				material_of(json, collision_type, rectangle, {}, context.mirror_x,
+				material_of(json, collision_type, rectangle, {}, context.mirror_x, context.hand,
 					this->render_resources_), this->ferry_cue_);
 		}
 
@@ -392,7 +393,7 @@ std::unique_ptr<CollisionObject>
 					json.string(key::sheet_name), json.string(key::frame_name), rectangle,
 					this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
 					team_colours, faces, context.flat, colour_of(json),
-					material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+					material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
 						this->render_resources_, context.slabs), context.slabs, this->gate_cue_);
 			}
 			catch (const std::invalid_argument& error)
@@ -419,7 +420,7 @@ std::unique_ptr<CollisionObject>
 			Vector2F::ZERO,
 			SpriteFlip::none,
 			0.0f,
-			material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+			material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
 				this->render_resources_, context.slabs), context.slabs);
 	}
 	if (type == object_type::structure_ramp)
@@ -453,7 +454,7 @@ std::unique_ptr<CollisionObject>
 			Vector2F::ZERO,
 			flip,
 			0.0f,
-			material_of(json, collision_type, triangle, context.solid, context.mirror_x,
+			material_of(json, collision_type, triangle, context.solid, context.mirror_x, context.hand,
 				this->render_resources_));
 	}
 
@@ -569,9 +570,10 @@ std::unique_ptr<FixedSlabPaintable>
 
 std::vector<std::unique_ptr<CollisionObject>>
 	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
-		const TeamColour& team_colours) const
+		const TeamColour& team_colours, std::uint64_t hand) const
 {
-	const StageContext context = stage_context(json);
+	StageContext context = stage_context(json);
+	context.hand = hand;
 	std::vector<std::unique_ptr<CollisionObject>> collision_objects;
 	collision_objects.reserve(json.size());
 	for (size_t index = 0; index < json.size(); ++index)
