@@ -82,6 +82,15 @@ the smirk cells 7-9 on row 10 with cell 9 raised on row 9. The neck is row 12
 and the overalls cells 4..12, rows 13-21, with the straps in cells 6 and 10
 on rows 14-15 above the bib and the leg split at cell 8, row 20.
 
+## Figure slips
+
+[slips.json](slips.json) holds the 11 face and head-outline slips the author
+picked for stage 2 of the drawing mistakes
+([research, decision 8](../../../docs/drawing-mistakes-research.md#9-author-decisions-and-open-questions)).
+Each match's person will draw one or two of them. They are not built yet. Building
+them means atlas variants, matching respawn pen paths for every slip that changes
+the outline, and moved `quiet.eyes` for `eyes_close_set`.
+
 ## Respawn pen recipe
 
 These axis-aligned pen paths reproduce the black cells of idle with the rest

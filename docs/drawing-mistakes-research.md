@@ -240,7 +240,7 @@ it after the fact.
   highlight strips, shade marks, glints and the roller's drum shine are gone;
   every moving mechanism stays.
 
-**Stage 2: figure, after Study A, and an author decision.** The figure was chosen part by part by the author on 2026-10-18 ([polish-plan.md](polish-plan.md) §1), so any change reopens that choice and should be shown with before and after images.
+**Stage 2: figure, from the authored slip pool (decision 8).** The figure was chosen part by part by the author on 2026-10-18 ([polish-plan.md](polish-plan.md) §1), so any change reopens that choice and should be shown with before and after images.
 
 - At most 1-2 shared face or head-keyline mistakes, the same for every seat and team, for example uneven eye height.
 - Each must survive the flip and keep a white row between the eyes and the brim.
@@ -250,7 +250,7 @@ it after the fact.
 **Stage 3: after Study B and an author call.**
 
 - Story beats: one small patched leak or overdraw inside a single backdrop prop.
-- Per-match hands are decided (section 9); their pool comes from Study A.
+- Per-match hands are decided (section 9); the figure's pool is the authored one in decision 8.
 
 **Guardrails for every stage:**
 
@@ -268,7 +268,7 @@ it after the fact.
 
 ## 8. Human tests
 
-No playtest with anyone other than the author is on record ([design-process.md](design-process.md)) [E]. Study B fits inside `POL#24`. Study A needs a new TODO row.
+No playtest with anyone other than the author is on record ([design-process.md](design-process.md)) [E]. Study B fits inside `POL#24`. Study A was set aside on 2026-11-02 (section 9, decision 8); its kit stays in case real drawings are wanted later.
 
 **Kits:** [scripts/studies/](../scripts/studies/README.md) holds both studies ready to run: Study A's reference images, participant and run sheets, consent sheet, codebook and analysis, and Study B's stimulus capture, test page and analysis. Two thresholds were fixed there before any data, beyond this section: `ASYM_MIN_PAIRS = 2` and `PROP_MIN_ERROR = 0.05` (a relative error).
 
@@ -369,7 +369,7 @@ This is a screen for gross failures, not a measurement.
    roller highlight) comes out, to the bucket's level.
 
 5. **The figure is reopened.** Each match's person may add 1-2 face or
-   head-outline slips, picked from the Study A pool, under the stage 2 rules.
+   head-outline slips, picked from the pool (decision 8), under the stage 2 rules.
    The respawn redraw shows no erased strokes: kept mistakes only.
 6. **Decoration need not be equal.** Brick drift and other backdrop mistakes are
    neither mirrored nor balanced per half. Collision, landing edges and scored
@@ -380,9 +380,42 @@ This is a screen for gross failures, not a measurement.
    overboard. Study B still runs: its pass rules stand, and any variant or
    mistake that fails them is taken back out.
 
+8. **Study A is replaced by an authored pool** (2026-11-02). The author had no
+   time to run it. Instead, 35 candidates were authored from six angles:
+   - motor slips while dragging;
+   - perceptual copying errors;
+   - literal Paint 98 tool behaviour;
+   - the author's own sample (section 8);
+   - face features;
+   - ears and head-outline proportion.
+
+   Each was checked against the stage 2 rules: rows 5-10 only, an outline
+   closed to a 4-connected fill, no pocket, a white row under the brim, and
+   2-cell runs for the respawn pen. Two critics reviewed each one, for realism
+   and for reading as a bug at 2 px. The author picked 11 by eye. They are in
+   [slips.json](../game/art/painter/slips.json), each with how a person makes it
+   and whether it survives the facing flip:
+
+   ![The eleven picked slips beside the original](images/drawing-mistakes/figure-slips.png)
+
+   - the mouth: `smirk_line_overshoot`, `smirk_overshoot_back`,
+     `smirk_stops_short` and `mouth_off_centre`;
+   - the ears: `back_ear_overshoot`, `front_ear_low`, `front_ear_short` and
+     `front_ear_tall`;
+   - the head's front top corner: `front_side_stroke_out` and
+     `front_corner_click_in`;
+   - the eyes: `eyes_close_set`.
+
+   These are authored guesses chosen by eye, not measured frequencies. Section
+   8's candidate rule (30% of drawings, from 3 people) was never applied to
+   them. Ten pairs change neighbouring cells of the same feature, and
+   `slips.json` lists them as `exclusive`: a person never draws both. The other
+   45 pairs combine cleanly.
+
 Nothing in this research is open now. Stage 1 has shipped, with per-match hands
-since 2026-11-02, and Study B checks it after the fact. Stage 2 waits on Study A.
-Both studies need participants, so `POL#46` waits on the author.
+since 2026-11-02, and Study B checks it after the fact. Stage 2 has its pool and
+waits only on being built. Study B needs participants, so that part of `POL#46`
+waits on the author.
 
 ---
 

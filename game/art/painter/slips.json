@@ -1,0 +1,510 @@
+{
+  "_comment": [
+    "Figure slips: the per-match person's face and head-outline mistakes (POL#46 stage 2,",
+    "docs/drawing-mistakes-research.md section 9, decision 8). Authored stand-ins for Study A's pool;",
+    "the author picked these 11 of 35 by eye on 2026-11-02. Not yet built into the atlas.",
+    "rows_5_10 replace idle's rows 5-10 (painter.json torso). Every locomotion frame shares them.",
+    "An action frame listed under actions takes those rows; any other action frame takes idle's",
+    "changed cells only where it still draws idle's original cell there.",
+    "A match's person takes one or two slips; a pair listed in exclusive changes neighbouring cells",
+    "(the same feature) and is never drawn together. Every slip and every other pair keeps the",
+    "outline closed to a 4-connected fill, no pocket, a white row under the brim, and 2-cell pen runs."
+  ],
+  "slips": [
+    {
+      "id": "smirk_line_overshoot",
+      "title": "Smirk Line dragged a cell too far",
+      "codes": [
+        "OVER",
+        "WOB"
+      ],
+      "flip": "facing feature",
+      "how": "Drew the smirk with the Line tool (no Shift) from its back end and released one grid cell too far right; Paint's line stepped up halfway, so the corner sits one cell forward and the low end loses a cell. It still reads as a smirk, so it stayed.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKKWK....",
+        "....KWWKKWWWK...."
+      ],
+      "actions": {
+        "takeoff_0": [
+          "....KWKWWWKWK....",
+          "....KWKWWWKWK....",
+          "...KKWWWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "takeoff_1": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "fire_0": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWKKKKKWK...."
+        ],
+        "fire_1": [
+          "....KWWWWWWWK....",
+          "....KWWWWWWWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "hurt_0": [
+          "....KWWWWWWWK....",
+          "....KKKWWWKWK....",
+          "...KKWWWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "hurt_1": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKKK....",
+          "...KKWKWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "elimination_0": [
+          "....KKWKWKWKK....",
+          "....KWKWWWKWK....",
+          "...KKKWKWKWKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "elimination_1": [
+          "....KKWKWKWKK....",
+          "....KWKWWWKWK....",
+          "...KKKWKWKWKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ]
+      }
+    },
+    {
+      "id": "back_ear_overshoot",
+      "title": "Back ear runs a row long",
+      "codes": [
+        "OVER"
+      ],
+      "flip": "facing feature",
+      "how": "The ear is a two-cell drag down; the mouse button came up a cell late, so the stroke runs past the ear's bottom row. One cell sticking out beside the head was not worth one of the three undos.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "...KKWWWWKWWK....",
+        "....KWWKKKWWK...."
+      ]
+    },
+    {
+      "id": "front_ear_low",
+      "title": "Front ear placed a row low",
+      "codes": [
+        "PLACE",
+        "ASYM"
+      ],
+      "flip": "survives",
+      "how": "The ear was drawn as its own little shape beside the head, meant to line up with the other ear, and landed one row lower. It still touches the side line, so nothing leaks, and the person did not notice the mismatch until later.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWK....",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWKK...",
+        "....KWWKKKWWK...."
+      ]
+    },
+    {
+      "id": "front_side_stroke_out",
+      "title": "Front side's top stroke a column out",
+      "codes": [
+        "WOB",
+        "GAP"
+      ],
+      "flip": "facing feature",
+      "how": "The front side went in as two strokes; the top one, from the brim to the ear, landed a column out, so it meets the brim's end only at a corner. The lower stroke is in the right place and the ear covers the join, so it looks like a step rather than an error.",
+      "rows_5_10": [
+        "....KWWWWWWWWK...",
+        "....KWKWWWKWWK...",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWK....",
+        "....KWWKKKWWK...."
+      ]
+    },
+    {
+      "id": "front_ear_short",
+      "title": "Front ear one row tall",
+      "codes": [
+        "UNDER",
+        "ASYM"
+      ],
+      "flip": "survives",
+      "how": "Clicked the front ear in with the pencil one cell at a time and stopped after the top cell, never noticing the second was missing because the head line is right beside it.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWK....",
+        "....KWWWWKWWK....",
+        "....KWWKKKWWK...."
+      ]
+    },
+    {
+      "id": "front_ear_tall",
+      "title": "Front ear a row taller",
+      "codes": [
+        "OVER",
+        "ASYM"
+      ],
+      "flip": "survives",
+      "how": "Dragged the pencil down the front ear starting from the eye row instead of the row below it, so the ear runs rows 6-8; the extra cell just made the ear look bigger and was kept.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWKK...",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWK....",
+        "....KWWKKKWWK...."
+      ]
+    },
+    {
+      "id": "mouth_off_centre",
+      "title": "Smirk one column toward the back",
+      "codes": [
+        "PLACE",
+        "ASYM"
+      ],
+      "flip": "facing feature",
+      "how": "Started the mouth under the back eye instead of between the eyes and drew it at the right length, so the whole smirk sits one column back; it reads as the face turned slightly away and was kept.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWKWWWK....",
+        "....KWKKKWWWK...."
+      ],
+      "actions": {
+        "hurt_0": [
+          "....KWWWWWWWK....",
+          "....KKKWWWKWK....",
+          "...KKWWWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "hurt_1": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKKK....",
+          "...KKWKWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "elimination_0": [
+          "....KKWKWKWKK....",
+          "....KWKWWWKWK....",
+          "...KKKWKWKWKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "elimination_1": [
+          "....KKWKWKWKK....",
+          "....KWKWWWKWK....",
+          "...KKKWKWKWKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "takeoff_0": [
+          "....KWKWWWKWK....",
+          "....KWKWWWKWK....",
+          "...KKWWWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWKKKWWWK....",
+          "....KWKKKWWWK...."
+        ],
+        "takeoff_1": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWKKKWWWK....",
+          "....KWKKKWWWK...."
+        ],
+        "fire_0": [
+          "....KWKWWWKWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWKKKKKWK...."
+        ],
+        "fire_1": [
+          "....KWWWWWWWK....",
+          "....KWWWWWWWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWKKKWWWK...."
+        ]
+      }
+    },
+    {
+      "id": "smirk_overshoot_back",
+      "title": "Smirk dragged a cell too far back",
+      "codes": [
+        "OVER"
+      ],
+      "flip": "facing feature",
+      "how": "The smirk's flat part was dragged right-to-left from the raised corner and the ballistic stroke overran by one cell into column 6; it still reads as a smirk, just wider, so it was kept.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWK....",
+        "....KWKKKKWWK...."
+      ],
+      "actions": {
+        "takeoff_0": [
+          "....KWKWWWKWK....",
+          "....KWKWWWKWK....",
+          "...KKWWWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "takeoff_1": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ]
+      }
+    },
+    {
+      "id": "smirk_stops_short",
+      "title": "Smirk stroke stops a cell short",
+      "codes": [
+        "UNDER"
+      ],
+      "flip": "facing feature",
+      "how": "The smirk was dragged back from the raised corner but the button came up a cell early, leaving it two cells long; the mouth still reads, so the gap at column 7 was never noticed.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWK....",
+        "....KWWWKKWWK...."
+      ],
+      "actions": {
+        "takeoff_0": [
+          "....KWKWWWKWK....",
+          "....KWKWWWKWK....",
+          "...KKWWWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "takeoff_1": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "fire_0": [
+          "....KWWWWWWWK....",
+          "....KWKWWWKWK....",
+          "...KKWKWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWKKKKKWK...."
+        ]
+      }
+    },
+    {
+      "id": "front_corner_click_in",
+      "title": "Front top corner clicked inside",
+      "codes": [
+        "PLACE",
+        "WOB"
+      ],
+      "flip": "facing feature",
+      "how": "Clicking the head's outline cell by cell, the last click at the front top corner landed one cell in from the grid corner. The bucket fill still held (only a diagonal touch), and the head looks rounded there.",
+      "rows_5_10": [
+        "....KWWWWWWK.....",
+        "....KWKWWWKWK....",
+        "...KKWKWWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWK....",
+        "....KWWKKKWWK...."
+      ]
+    },
+    {
+      "id": "eyes_close_set",
+      "title": "Eyes set a cell closer",
+      "codes": [
+        "PLACE",
+        "PROP"
+      ],
+      "flip": "facing feature",
+      "how": "Counted the gap between the eyes as two white cells instead of three (the usual undercount of empty space between features) and drew the back eye in column 7; the face just looks a little more focused.",
+      "rows_5_10": [
+        "....KWWWWWWWK....",
+        "....KWWKWWKWK....",
+        "...KKWWKWWKWKK...",
+        "...KKWWWWWWWKK...",
+        "....KWWWWKWWK....",
+        "....KWWKKKWWK...."
+      ],
+      "actions": {
+        "takeoff_0": [
+          "....KWWKWWKWK....",
+          "....KWWKWWKWK....",
+          "...KKWWWWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "takeoff_1": [
+          "....KWWWWWWWK....",
+          "....KWWKWWKWK....",
+          "...KKWWKWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "land_0": [
+          "....KWWWWWWWK....",
+          "....KWWWWWWWK....",
+          "...KKWKKWWKKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "land_1": [
+          "....KWWWWWWWK....",
+          "....KWWWWWWWK....",
+          "...KKWWKWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWKWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "fire_0": [
+          "....KWWWWWWWK....",
+          "....KWWKWWKWK....",
+          "...KKWWKWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWKKKKKWK...."
+        ],
+        "fire_1": [
+          "....KWWWWWWWK....",
+          "....KWWWWWWWK....",
+          "...KKWWKWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWWWWWWK....",
+          "....KWWKKKWWK...."
+        ],
+        "hurt_0": [
+          "....KWWWWWWWK....",
+          "....KWKKWWKWK....",
+          "...KKWWWWWKWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "hurt_1": [
+          "....KWWWWWWWK....",
+          "....KWWKWWKKK....",
+          "...KKWWKWWWWKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "elimination_0": [
+          "....KWKWKKWKK....",
+          "....KWWKWWKWK....",
+          "...KKWKWKKWKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ],
+        "elimination_1": [
+          "....KWKWKKWKK....",
+          "....KWWKWWKWK....",
+          "...KKWKWKKWKKK...",
+          "...KKWWWWWWWKK...",
+          "....KWWKKKWWK....",
+          "....KWKWWWKWK...."
+        ]
+      }
+    }
+  ],
+  "exclusive": [
+    [
+      "smirk_line_overshoot",
+      "mouth_off_centre"
+    ],
+    [
+      "front_ear_low",
+      "front_side_stroke_out"
+    ],
+    [
+      "front_ear_low",
+      "front_ear_short"
+    ],
+    [
+      "front_ear_low",
+      "front_ear_tall"
+    ],
+    [
+      "front_side_stroke_out",
+      "front_ear_tall"
+    ],
+    [
+      "front_side_stroke_out",
+      "front_corner_click_in"
+    ],
+    [
+      "front_ear_tall",
+      "front_corner_click_in"
+    ],
+    [
+      "mouth_off_centre",
+      "smirk_overshoot_back"
+    ],
+    [
+      "mouth_off_centre",
+      "smirk_stops_short"
+    ],
+    [
+      "smirk_overshoot_back",
+      "smirk_stops_short"
+    ]
+  ]
+}
