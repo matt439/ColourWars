@@ -54,22 +54,22 @@ void GameLevel::debug_apply_gap(const RoundTape::Gap& gap)
 
 void GameLevel::debug_sync_audio()
 {
-	this->data()->debug().sync_background_audio(this->context()->active());
-	this->sync_rumble();
+	const SuspensionGate gate = this->gate();
+	this->data()->debug().sync_background_audio(gate.focused);
+	this->sync_rumble(gate);
 	if (this->results_audio_)
 	{
-		if (this->context()->active() && !this->data()->debug().match_audio_paused())
+		if (gate.focused && !gate.clock_paused)
 		{
 			this->results_audio_->resume();
 		}
 		else { this->results_audio_->suspend(); }
 	}
-	if (this->audio_may_play())
+	if (this->suspension_.audio_may_play(gate))
 	{
 		this->level_->resume();
 	}
-	else if (this->covered_ || (!this->context()->active() &&
-		!this->data()->debug().background_updates_allowed()))
+	else if (this->suspension_.suspends_level(gate))
 	{
 		this->suspend_level();
 		this->data()->debug().match_suspended(*this);
@@ -85,26 +85,23 @@ void GameLevel::debug_sync_audio()
 
 void GameLevel::debug_background_changed()
 {
-	if (this->level_ == nullptr || this->context()->active()) { return; }
+	const SuspensionGate gate = this->gate();
+	if (this->level_ == nullptr || gate.focused) { return; }
 	this->data()->debug().sync_background_audio(false);
 	this->stop_rumble();
 	if (this->results_audio_) { this->results_audio_->suspend(); }
 	if (this->resume_audio_) { this->resume_audio_->stop(); }
-	if (!this->covered_ && !this->pause_menu_open_ &&
-		this->data()->debug().background_updates_allowed())
+	switch (this->suspension_.background_changed(gate, this->level_->state() == LevelState::active))
 	{
-		// A previous ordinary focus interruption is already recorded; enabling
-		// the policy releases that hold, never an existing resume countdown.
-		this->background_continuing_ = true;
-		this->focus_interrupted_ = false;
+	case MatchSuspension::BackgroundChange::continuing:
 		this->level_->pause_audio();
-	}
-	else if (this->background_continuing_)
-	{
-		this->background_continuing_ = false;
-		this->focus_interrupted_ = this->level_->state() == LevelState::active;
+		break;
+	case MatchSuspension::BackgroundChange::stopped:
 		this->suspend_level();
 		this->data()->debug().match_suspended(*this);
+		break;
+	case MatchSuspension::BackgroundChange::none:
+		break;
 	}
 }
 
@@ -189,8 +186,7 @@ bool GameLevel::debug_perf_ready() const
 {
 	// A typed capture closes its developer console before sampling. The
 	// director checks focus/clock/coverage; this answers the gameplay gates.
-	return this->level_->state() == LevelState::active && !this->pause_menu_open_ &&
-		!this->resume_countdown_.active();
+	return this->level_->state() == LevelState::active && this->suspension_.live();
 }
 
 void GameLevel::debug_set_seat_labels(const std::vector<std::wstring>& labels)

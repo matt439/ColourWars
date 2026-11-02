@@ -711,10 +711,40 @@ passed, and the full run passed 716 checks, as it did after stage 7.
 
 ### `GameLevel`'s suspension rules in one object (`HYG#41`)
 
-Replace the four focus/pause booleans and their branches with one owned
-suspension object that answers whether audio may play and whether to count in,
-ask the director once per callback for its gate, and make the layout restore
-and Debug attachment scopes created in `init()`.
+**Done 2026-11-02.** `GameLevel`'s four booleans (`covered_`,
+`pause_menu_open_`, `focus_interrupted_`, `background_continuing_`) and its
+`ResumeCountdown` are now one owned
+[MatchSuspension](../game/states/match_suspension.h). It records each reason
+through named transitions (`cover`/`uncover`, `open_pause_menu`/
+`close_pause_menu`, `lose_focus`/`regain_focus`, `begin_count_in`,
+`background_changed`, and `reset` for a new level). It answers the questions
+the callbacks used to spell out each time: `audio_may_play`, `music_ducked`
+and `ducked_music_plays`, `rumble_paused`, `may_run_unfocused`,
+`suspends_level`, `live`, and whether a focus loss is owed a count-in
+(`take_focus_interruption`). `GameLevel` still makes the audio, rumble and
+`Level` calls, in the order it did before. Each callback reads the window's
+focus and the director's clock and background policy once, into a
+`SuspensionGate`. It reads them again only after a developer hook that may
+change them: `before_match_update`, the build hooks and the match steps.
+`sync_rumble`, `update_music`, `update_replay`, `drain_rumble` and
+`begin_resume_countdown` take the caller's gate. `init()` now creates the two
+scopes the destructor used to end by hand. One is
+[ScreenLayoutRestore](../game/states/screen_layout_restore.h); the other is
+`DebugMatchAttachment` in `debug_director.h`, which detaches again if
+`attach_match` throws. The destructor ends them in the old order, after it
+stops rumble. One behaviour changes deliberately: a `GameLevel` destroyed
+without `init()` no longer sets the layout to one player or detaches a match
+it never attached. A three-lens adversarial review compared the old and new
+code for each callback. Its three candidate differences were refuted by
+both of their verifiers: each was on an exception path out of `init()`, and
+that path ends the process. The new CPU case `match_suspension` covers the
+reasons, the focus hold, the count-in and background mode. Both presets build
+under `/W4 /WX`. The full default list passed in Release, and in Debug with
+`-SkipSlowDebug` plus `crossfeed`, `press_tower`, `menu_text` and
+`debug_console`. After the final attachment change, the cases that drive
+`GameLevel` (`debug_console`, `instant_replay`, `display_awake`,
+`cursor_marker`) passed again in both presets, and `check-startup.ps1` passed
+on both executables.
 
 ### Structure queries instead of casts (`HYG#42`)
 

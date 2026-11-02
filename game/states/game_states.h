@@ -14,7 +14,8 @@
 #include "game/objects/seat_input_filter.h"
 #include "game/input_slots.h"
 #include "game/debug/debug_targets.h"
-#include "game/states/resume_countdown.h"
+#include "game/states/match_suspension.h"
+#include "game/states/screen_layout_restore.h"
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
 #include "game/states/match_start.h"
@@ -81,7 +82,8 @@ public:
 	GameLevel(GameData* game_data, const MatchSetup& settings,
 		MatchStart start = MatchStart::developer);
 
-	// Restores the screen layout that was active before the match.
+	// Stops rumble, detaches from the developer tools and restores the
+	// screen layout that was active before init().
 	~GameLevel() override;
 
 	void update(float dt) override;
@@ -135,7 +137,7 @@ private:
 	int replay_first_ = 0;
 	void start_replay();
 	// True while a replay owns this update.
-	bool update_replay(float dt);
+	bool update_replay(float dt, const SuspensionGate& gate);
 	void step_replay();
 	// Back to the End menu over the replay's last frame.
 	void finish_replay();
@@ -156,14 +158,16 @@ private:
 	// so a resized window's cameras are the ones the mouse aims through.
 	SeatCommands seat_commands(const std::vector<SlotInput>& inputs);
 
-	bool covered_ = false;
-	bool pause_menu_open_ = false;
-	bool focus_interrupted_ = false;
-	bool background_continuing_ = false;
-	ResumeCountdown resume_countdown_;
+	// Coverage, the pause menu, the count-in and focus: every reason the
+	// live round is suspended, and what each callback may do about it.
+	MatchSuspension suspension_;
+	// The window's focus and the debug director's clock and background
+	// policy, read once per callback (and again after a developer hook).
+	SuspensionGate gate() const;
 	std::unique_ptr<ResumeAudio> resume_audio_;
 	std::unique_ptr<ResultsAudio> results_audio_;
-	void begin_resume_countdown();
+	// Counts in a live round, ducking its music; `gate` is the caller's.
+	void begin_resume_countdown(const SuspensionGate& gate);
 	// Per device slot: a Start or Escape press that began over the intro. Its
 	// release never opens pause, even when it comes after GO.
 	std::array<bool, input_slots::count> pause_over_intro_{};
@@ -171,8 +175,11 @@ private:
 	// Shared context for menus above the match; settings_ outlives those pages.
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;
 
-	// Restored by the destructor.
-	labrador::ScreenLayout previous_layout_ = labrador::ScreenLayout::one_player;
+	// Made by init(), in this order; the destructor ends them in reverse
+	// after stopping rumble: detach from the developer tools, then put the
+	// layout back. A screen that never initialised does neither.
+	std::optional<ScreenLayoutRestore> layout_restore_;
+	std::optional<DebugMatchAttachment> debug_attachment_;
 
 	// Sets the layout before building a level, including every restart. The
 	// one build path: between destroying the old level and building the new
@@ -181,16 +188,14 @@ private:
 	// (no-ops in Release).
 	void build_and_enter_level();
 
-	// Gameplay voices play only when nothing covers the match, the window is
-	// active and the debug clock is not paused. Arena music may remain ducked.
-	bool audio_may_play() const;
-	void update_music(float dt);
+	void update_music(float dt, const SuspensionGate& gate);
 	// MenuOwner: a page above the match ticks the match's music. GameLevel
 	// lends no suspend and no stage folder.
 	void update_menu_music(float dt) override;
 	void stop_rumble() noexcept;
-	void sync_rumble();
-	void drain_rumble(float dt);
+	// Publishes the rumble session for `gate`, the caller's current one.
+	void sync_rumble(const SuspensionGate& gate);
+	void drain_rumble(float dt, const SuspensionGate& gate);
 
 	// DebugMatchTarget adapters, for the developer tools only
 	// (game_level_dev_tools.cpp): DebugMatchView, DebugMatchControl and

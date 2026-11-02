@@ -48,8 +48,8 @@ when they don't compete with it.
 
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: the
-[Architecture review](#architecture-review) rows (`HYG#41`-`HYG#51`) are `OPEN`,
-in the order listed there; its owed reports `ENG#27`-`ENG#33` are drafted. Before them,
+[Architecture review](#architecture-review) rows are worked in order, and
+`HYG#51` is the one left; its owed reports `ENG#27`-`ENG#33` are drafted. Before them,
 the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
@@ -117,7 +117,6 @@ comparison and physical-pad check; values remain provisional.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#41` | OPEN | MED | M | Put `GameLevel`'s focus, pause and audio rules in one owned suspension object; pair its scopes with `init()`. [Scope](docs/code-hygiene.md#gamelevels-suspension-rules-in-one-object-hyg41). |
 | `HYG#51` | OPEN | LOW | L | Last: give `game/` role folders, `game/debug` subsystem folders and the engine-free contracts an include check. [Scope](docs/code-hygiene.md#directories-by-role-hyg51). |
 
 ## Art direction, characters and the UI

@@ -26,7 +26,7 @@ void GameLevel::start_replay()
 	this->stop_rumble();
 	this->menu_context_->cancel_music_exit();
 	this->results_audio_.reset();
-	this->resume_countdown_.cancel();
+	this->suspension_.countdown().cancel();
 	this->resume_audio_->stop();
 	// As build_and_enter_level: the old level's destructor stops the shared
 	// bank's music, so it goes before the replay's starts.
@@ -53,16 +53,17 @@ void GameLevel::start_replay()
 	this->replay_first_ = this->tape_.step_before_end(this->data()->tuning()->match().replay);
 	this->replay_phase_ = ReplayPhase::preparing;
 	this->menu_input_->reset_actions();
-	if (!this->context()->active()) { this->level_->pause_audio(); }
-	this->sync_rumble();
+	const SuspensionGate gate = this->gate();
+	if (!gate.focused) { this->level_->pause_audio(); }
+	this->sync_rumble(gate);
 	this->data()->application()->reset_elapsed_time();
 }
 
-bool GameLevel::update_replay(float dt)
+bool GameLevel::update_replay(float dt, const SuspensionGate& gate)
 {
 	if (this->replay_phase_ == ReplayPhase::none) { return false; }
-	this->update_music(dt);
-	if (this->context()->active())
+	this->update_music(dt, gate);
+	if (gate.focused)
 	{
 		for (const ProcessedMenuInput& input : this->menu_input_->menu_inputs())
 		{
@@ -119,7 +120,8 @@ void GameLevel::finish_replay()
 	// Back to the End menu, with the results' coda again.
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
 		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
-	if (this->data()->debug().match_audio_paused() || !this->context()->active())
+	const SuspensionGate gate = this->gate();
+	if (gate.clock_paused || !gate.focused)
 	{
 		this->results_audio_->suspend();
 	}

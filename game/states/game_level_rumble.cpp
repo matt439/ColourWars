@@ -12,15 +12,14 @@ void GameLevel::stop_rumble() noexcept
     if (this->level_ != nullptr) { this->level_->clear_rumble_events(); }
 }
 
-void GameLevel::sync_rumble()
+void GameLevel::sync_rumble(const SuspensionGate& gate)
 {
     if (this->rumble_ == nullptr) { return; }
     // An instant replay's hits were felt when they happened.
     const bool playing = this->level_ != nullptr && this->level_->state() == LevelState::active &&
         this->replay_phase_ == ReplayPhase::none;
-    const bool paused = this->covered_ || this->pause_menu_open_ || this->resume_countdown_.active() ||
-        this->data()->debug().match_audio_paused();
-    const bool focused = this->context()->active();
+    const bool paused = this->suspension_.rumble_paused(gate);
+    const bool focused = gate.focused;
     this->rumble_->set_session({ playing, focused, paused });
     for (int device = 0; device < input_slots::pad_count; ++device)
     {
@@ -40,10 +39,10 @@ void GameLevel::sync_rumble()
     }
 }
 
-void GameLevel::drain_rumble(float dt)
+void GameLevel::drain_rumble(float dt, const SuspensionGate& gate)
 {
     if (this->rumble_ == nullptr || this->level_ == nullptr) { return; }
-    this->sync_rumble();
+    this->sync_rumble(gate);
     // Consume every source, including blocked, keyboard and unclaimed seats.
     // A zero step cannot release a cue accumulated outside live simulation.
     const auto records = this->level_->take_rumble_events();

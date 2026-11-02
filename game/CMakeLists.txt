@@ -196,6 +196,7 @@ add_library(colourwars_game STATIC
     states/screen_music.cpp
     states/results_audio.cpp
     states/resume_countdown.cpp
+    states/match_suspension.cpp
     states/controls_settings_menu.cpp
     states/keyboard_jump_capture.cpp
     states/keyboard_jump_menu.cpp

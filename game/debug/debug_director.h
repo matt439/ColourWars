@@ -211,3 +211,30 @@ inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 inline void DebugDirector::begin_match_draw() const {}
 inline double DebugDirector::frame_time_ms() const { return 0.0; }
 #endif
+
+// A match attached to the director for this object's lifetime. GameLevel::init
+// creates it before the first build, so a screen that never initialised never
+// detaches, and its destructor detaches before the level is torn down.
+class DebugMatchAttachment
+{
+public:
+	DebugMatchAttachment(DebugDirector& director, DebugMatchTarget& match) :
+		director_(director), match_(match)
+	{
+		// attach_match records the match before work that can throw; an
+		// attachment that never finished must not leave it recorded.
+		try { this->director_.attach_match(this->match_); }
+		catch (...)
+		{
+			this->director_.detach_match(this->match_);
+			throw;
+		}
+	}
+	~DebugMatchAttachment() { this->director_.detach_match(this->match_); }
+	DebugMatchAttachment(const DebugMatchAttachment&) = delete;
+	DebugMatchAttachment& operator=(const DebugMatchAttachment&) = delete;
+
+private:
+	DebugDirector& director_;
+	DebugMatchTarget& match_;
+};

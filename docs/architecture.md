@@ -229,8 +229,14 @@ the menu and returning from it lands on a screen that still exists. The
 results page pops and `GameLevel` pushes the end menu. Between rounds of a
 series the end menu replaces itself in its frame with Weapon Select or Stage
 Select (Back returns to it), and a page started from the pause menu's Options
-is the same `MainMenuOptions` class the main menu uses. `GameLevel` restores the
-screen layout it took in its destructor.
+is the same `MainMenuOptions` class the main menu uses. `GameLevel::init`
+creates two scopes the destructor ends: one restores the screen layout the
+match replaced, the other attaches the match to the developer tools. Every
+reason a match is suspended (a state over it, its pause menu, a resume
+count-in, lost focus, and Debug background running) is one
+[MatchSuspension](../game/states/match_suspension.h), which answers whether
+audio may play and whether to count in; each callback reads the window's focus
+and the director's clock and background policy into one `SuspensionGate`.
 
 ## Level and Scene
 
