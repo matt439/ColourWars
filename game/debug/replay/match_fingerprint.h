@@ -46,7 +46,9 @@ struct MatchFingerprint
     struct HorizontalStructurePrint
     {
         std::uint32_t id = 0;
-        std::array<std::uint32_t, 7> spec{};
+        // Anchor x/y/width/height, travel_x, period, initial phase, travel_y
+        // (schema 2: a lift's travel; zero for a horizontal mover).
+        std::array<std::uint32_t, 8> spec{};
         std::uint64_t phase = 0;
         int direction = 1;
         std::array<std::uint32_t, 4> offsets{};

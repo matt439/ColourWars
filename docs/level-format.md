@@ -184,8 +184,9 @@ distinct representable endpoint. The full period must span at least two fixed
 simulation steps (currently 1/30 second); phase must remain in [0,1) after float
 conversion. The anchor and endpoint must have finite, positive represented
 edges. Both solid and jump-through paintables are supported. Motion on plain
-structures, ramps or visuals, another motion `type`, and `axis`, `travel_y` or
-`rotation` in the record are errors, as are a `drive` other than the two above
+structures, ramps or visuals, a motion `type` other than `horizontal` or
+[`vertical`](#vertical-lift-motion), and `axis`, `travel_y` or `rotation` in a
+horizontal record are errors, as are a `drive` other than the two above
 and the paint-drive rules below. Other unknown keys remain ignored metadata,
 as elsewhere in format 1; they do not add motion capabilities.
 
@@ -228,6 +229,46 @@ and editor-save/public-loader checks pass. No shipped arena uses this field yet;
 public-loader record/play reconstruction is CPU-qualified in the
 `moving_structure` acceptance case. Useful arena placement and native/human
 acceptance remain separate.
+
+### Vertical lift motion
+
+A flat, **solid** `StructurePaintable` may instead travel up and down
+(`ROAD#28`):
+
+```json
+"motion": { "type": "vertical", "travel_y": 256, "period": 3.2, "phase": 0 }
+```
+
+The rectangle is the **topmost anchor**. The body travels down by `travel_y`,
+then returns up the same path; `period` and `phase` mean what they mean for a
+horizontal mover, with phase 0 the top departing down and 0.5 the bottom
+departing up. A lift has one axis: `travel_x`, `axis` and `rotation` in its
+record are errors. It cycles only, so `drive` may be omitted or `"cycle"`; a
+paint-driven lift (`up`/`down` headings and a cue of its own) is the next slice
+and is refused, as is `team_a_heads`. A lift must use `STRUCTURE_PAINTABLE`
+collision: a jump-through landing compares the rider's previous feet with the
+platform's current top, which a rising lift has already passed.
+
+A rider moves with the lift's top before its own movement, and a jump, drop or
+walk-off leaves with no lift velocity. On Level admission, as for a horizontal
+mover, the whole shaft and the standing corridor one body height above the
+**highest** pose must lie inside Scene bounds and clear every other structure.
+The lowest pose must also leave a full body height (plus the corridor's
+rounding pad) clear **beneath** it, widened by a body on each side, so a lift
+never meets its floor flush and no player can stand under it to be closed on.
+And nothing may stand within a body width **beside** the shaft anywhere
+between the two: a rider can overhang the lift's edge by almost a body, so a
+ledge closer than that would meet the rider's head or feet. Together these
+keep the lift's whole column clear, so a rider steps off at the top by hopping
+the body-wide gap rather than walking onto a flush ledge.
+The lift's own travel per step joins the vertical relative-displacement bound.
+If a step would still push a living player through geometry, the lift holds
+its phase for that step; with the clearance above, that should never happen.
+Paint and credit stay on the lift's local faces; splash, runoff, paint
+samples, culling and the translated shadow follow it on y. The editor's
+**Vertical lift** palette entry writes one, and its guides show the shaft, the
+corridor and the whole clear column. The explicit-only `turbulence_lift_trial`
+stage carries two.
 
 A ramp reads `triangle` instead of either rectangle:
 

@@ -1081,7 +1081,8 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 6**, with explicit human/bot controller kind and
+Files use **format 7** (`ROAD#28` moved the motion block to schema 2 for
+vertical lifts, so format 6 is refused), with explicit human/bot controller kind and
 Easy/Normal/Hard difficulty for each participant. `seed` is required and is the
 round seed, which `play` builds from, so a recording made without `seed`
 replays its Random palette too. Layout counts humans, while
@@ -1271,10 +1272,10 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `crossfeed_coupled` | Crossfeed P3: the provisional global compatibility movement and coupled tools |
 | `review_arena <stage>` | the [arena review pack](debug-console-record.md#arena-review-screenshot-pack-dbg18): seed 7, paint bots on every seat, a clean frame at GO and a heavy one after 20 match seconds at 4, 3, 2 and 1 players, each with its checksum, into `screens\review-<stage>-<time>\` |
 | `review_press_tower`, `review_close_quarters`, `review_crossfeed` | `review_arena` for that stage, then every station photographed on the one-player heavy frame with the station labels on |
-| `review_king_of_the_hill`, `review_turbulence`, `review_turbulence_blockout`, `review_turbulence_mover_trial`, `review_turbulence_slab_trial`, `review_turbulence_ferry_trial`, `review_turbulence_gate_trial` | `review_arena` for that stage |
+| `review_king_of_the_hill`, `review_turbulence`, `review_turbulence_blockout`, `review_turbulence_mover_trial`, `review_turbulence_slab_trial`, `review_turbulence_ferry_trial`, `review_turbulence_gate_trial`, `review_turbulence_lift_trial` | `review_arena` for that stage |
 | `review_arena_frames`, `review_arena_pass`, `review_arena_end` | helpers of `review_arena` and the wrappers |
-| `turbulence_station_tours` | every Turbulence variant's stations, one screenshot each with the collision overlay: `turbulence_station_tour <stage>` (the ten shared stations) on the blockout and gate trial, `turbulence_mover_station_tour <stage>` (plus the four mover ends, photographed paused as placed) on the mover, ferry and slab trials, into `screens\turbulence-stations-<stage>-<time>\` |
-| `turbulence_station_tour_shared` | helper of the two Turbulence tours |
+| `turbulence_station_tours` | every Turbulence variant's stations, one screenshot each with the collision overlay: `turbulence_station_tour <stage>` (the ten shared stations) on the blockout and gate trial, `turbulence_mover_station_tour <stage>` (plus the four mover ends, photographed paused as placed) on the mover, ferry and slab trials, and `turbulence_lift_station_tour <stage>` (plus each lift's top and foot) on the lift trial, into `screens\turbulence-stations-<stage>-<time>\` |
+| `turbulence_station_tour_shared` | helper of the three Turbulence tours |
 | `review_bots_boost` | seed 7, four seats on Crossfeed: P1 (a paint bot drives it; drop `bot 1 paint` to play) with a Hard shipping bot against an Easy bot on Boost +2 and a Normal bot on Boost +1; `status` lists the roster, then 30 match seconds at x4, the checksum and a paused screenshot, into `screens\review-bots-boost-<time>\` |
 
 The jump and Crossfeed scripts change tuning live and globally, and do not put
@@ -1777,7 +1778,10 @@ and their observation limits. Human `POL#27`/`POL#30`/`POL#31` decisions remain 
 ## Horizontal moving-state replay boundary
 
 A Level with horizontal movers appends an optional
-`final.horizontal_motion` object to replay format 3; its schema is 1. Stable
+`final.horizontal_motion` object to replay format 3; its schema was 1. Since
+`ROAD#28` (format 7) it is schema 2: eight specification words, the last a
+vertical lift's `travel_y` (zero for a horizontal mover), with each offset on
+its mover's own axis and the other offset word zero. Stable
 mover IDs, exact specification/phase/direction/offset and pose bits, ordered local
 face ownership/scored areas and seat-ordered carrier IDs contribute to the
 fingerprint. The decoder validates the optional domain strictly, including

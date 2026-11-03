@@ -29,6 +29,11 @@ namespace horizontal_motion_contract
     // either end, and holding still on a tie (including no paint at all).
     enum class Drive : std::uint8_t { cycle, paint };
 
+    // One axis per mover (ROAD#28, E1). A horizontal mover travels travel_x
+    // right of its leftmost anchor; a vertical lift travels travel_y down from
+    // its topmost anchor. Exactly one of the two is positive and the other is
+    // zero; diagonal or two-axis motion is refused. The namespace keeps the
+    // name of the capability it began as.
     struct Spec
     {
         Rectangle anchor;
@@ -37,6 +42,9 @@ namespace horizontal_motion_contract
         // Paint drive only: +1 when team A's paint carries the mover right, -1
         // when it carries it left. Team B's paint always heads the other way.
         int team_a_heading = 1;
+        float travel_y = 0.0f;
+        bool vertical() const { return travel_y != 0.0f; }
+        float travel() const { return vertical() ? travel_y : travel_x; }
     };
 
     struct DriveFields { Drive drive = Drive::cycle; int team_a_heading = 1; };
@@ -66,6 +74,10 @@ namespace horizontal_motion_contract
         if (spec.drive == Drive::cycle) { return; }
         if (spec.drive != Drive::paint)
         { throw std::invalid_argument("Horizontal motion drive must be a cycle or paint."); }
+        // A paint-driven lift is the next ROAD#28 slice, with up/down headings
+        // and a cue of its own; this slice cycles only.
+        if (spec.vertical())
+        { throw std::invalid_argument("A vertical lift cycles; a paint-driven lift is not supported yet."); }
         // A paint drive keeps to the outgoing leg, where phase 0 is the left end
         // and 0.5 the right, so phase alone still names its pose.
         if (!(spec.initial_phase <= 0.5f))
@@ -91,7 +103,16 @@ namespace horizontal_motion_contract
     inline void validate_spec(const Spec& spec)
     {
         require_rectangle(spec.anchor);
-        if (!std::isfinite(spec.travel_x) || !(spec.travel_x > 0.0f) ||
+        // The idle axis must be exactly zero: a NaN or a second travel is a
+        // two-axis request, not a lift.
+        const bool vertical = spec.travel_x == 0.0f && std::isfinite(spec.travel_y) && spec.travel_y > 0.0f;
+        const bool horizontal = spec.travel_y == 0.0f;
+        if (!vertical && !horizontal)
+        {
+            throw std::invalid_argument("Motion travels on one axis: travel_x for a horizontal mover or travel_y for a vertical lift.");
+        }
+        const float travel = vertical ? spec.travel_y : spec.travel_x;
+        if (!std::isfinite(travel) || !(travel > 0.0f) ||
             !std::isfinite(spec.period_seconds) ||
             static_cast<double>(spec.period_seconds) < 2.0 * static_cast<double>(SECONDS_PER_STEP) ||
             !std::isfinite(spec.initial_phase) ||
@@ -100,19 +121,21 @@ namespace horizontal_motion_contract
             throw std::invalid_argument("Horizontal motion needs positive finite travel, period >= two simulation steps and phase in [0,1).");
         }
         Rectangle finish = spec.anchor;
-        finish.x = spec.anchor.x + spec.travel_x;
+        if (vertical) { finish.y = spec.anchor.y + spec.travel_y; }
+        else { finish.x = spec.anchor.x + spec.travel_x; }
         require_rectangle(finish);
-        if (!(finish.x > spec.anchor.x))
+        if (vertical ? !(finish.y > spec.anchor.y) : !(finish.x > spec.anchor.x))
         {
             throw std::invalid_argument("Horizontal motion travel must reach a distinct representable endpoint.");
         }
         validate_drive(spec);
     }
 
+    // The scalar offset along the mover's own axis.
     inline float offset_at(const Spec& spec, double phase)
     {
         const double ratio = phase <= 0.5 ? phase * 2.0 : (1.0 - phase) * 2.0;
-        return static_cast<float>(static_cast<double>(spec.travel_x) * ratio);
+        return static_cast<float>(static_cast<double>(spec.travel()) * ratio);
     }
 
     inline double finite(double value)
@@ -156,23 +179,46 @@ namespace horizontal_motion_contract
         return result;
     }
 
+    // A scalar axis offset adds to x for a horizontal mover and to y for a lift.
     inline Rectangle pose(const Spec& spec, float offset)
     {
         Rectangle result = spec.anchor;
-        if (offset != 0.0f) { result.x += offset; }
+        if (offset != 0.0f)
+        {
+            if (spec.vertical()) { result.y += offset; }
+            else { result.x += offset; }
+        }
         box(result);
         return result;
     }
 
+    // Every pose's union. A horizontal path keeps the anchor's top and bottom
+    // and widens left/right; a lift's keeps its left and right and widens down.
     inline Box path(const Spec& spec)
     {
         validate_spec(spec);
         const Box first = box(spec.anchor);
-        const Box last = box(pose(spec, spec.travel_x));
+        const Box last = box(pose(spec, spec.travel()));
+        if (spec.vertical())
+        {
+            return { first.left, std::min(first.top, last.top),
+                first.right, std::max(first.bottom, last.bottom) };
+        }
         return { std::min(first.left, last.left), first.top,
             std::max(first.right, last.right), first.bottom };
     }
 
+    inline double corridor_pad(const Box& path, float body_width, float body_height)
+    {
+        const double scale = std::max({ std::abs(path.left), std::abs(path.right),
+            std::abs(path.top), std::abs(path.bottom),
+            static_cast<double>(body_width), static_cast<double>(body_height) });
+        return 2.0 * ulp(finite(2.0 * scale));
+    }
+
+    // One body height above the path's top, widened by a body each side. For
+    // a lift the path's top is its highest pose, so the corridor rises with it
+    // (E3a) and no ceiling can close on a rider.
     inline Box standing(const Box& path, float body_width, float body_height)
     {
         const double scale = std::max({ std::abs(path.left), std::abs(path.right),
@@ -181,6 +227,30 @@ namespace horizontal_motion_contract
         return { finite(path.left - body_width - pad),
             finite(path.top - body_height - pad),
             finite(path.right + body_width + pad), path.top };
+    }
+
+    // A lift only (E3a as amended 2026-11-03): the room its lowest pose must
+    // leave beneath it, a full body height plus the corridor pad, widened as the
+    // standing corridor is. Nothing may stand in it, so a descending underside
+    // never closes on a player; a lift that meets its floor flush is refused.
+    inline Box underside(const Box& path, float body_width, float body_height)
+    {
+        const double pad = corridor_pad(path, body_width, body_height);
+        return { finite(path.left - body_width - pad), path.bottom,
+            finite(path.right + body_width + pad), finite(path.bottom + body_height + pad) };
+    }
+
+    // A lift only: the whole column a rider or a player beside it can occupy.
+    // It is the shaft widened by a body each side (a rider may overhang the
+    // lift's edge by almost a body), from a body above the highest pose to a
+    // body below the lowest. It contains the standing corridor and the
+    // clearance beneath. With it clear, no step can push a body into geometry,
+    // so E3(a) alone rules out a crush and the hold (E3b) should never fire.
+    inline Box column(const Box& path, float body_width, float body_height)
+    {
+        const double pad = corridor_pad(path, body_width, body_height);
+        return { finite(path.left - body_width - pad), finite(path.top - body_height - pad),
+            finite(path.right + body_width + pad), finite(path.bottom + body_height + pad) };
     }
 
     inline bool contains(const Box& outer, const Box& inner)
@@ -193,5 +263,46 @@ namespace horizontal_motion_contract
     {
         return a.left < b.right && a.right > b.left &&
             a.top < b.bottom && a.bottom > b.top;
+    }
+
+    // A lift is solid (ROAD#28). A jump-through landing compares the rider's
+    // previous feet with the platform's current top, which a rising lift has
+    // already moved past, so it could drop its rider through.
+    inline void validate_collision(const Spec& spec, bool jump_through)
+    {
+        if (spec.vertical() && jump_through)
+        { throw std::invalid_argument("A vertical lift needs solid paintable collision, not jump-through."); }
+    }
+
+    // E3b: where a lift's step from before to after would put a player's body,
+    // nullopt when the step leaves it alone. A rider moves with the top; a body
+    // the moving lift would overlap is pushed clear of it along the lift's travel.
+    inline std::optional<Box> pushed_body(const Box& before, const Box& after,
+        const Box& body, bool rider)
+    {
+        const double dy = after.top - before.top;
+        if (dy == 0.0) { return std::nullopt; }
+        if (rider) { return Box{ body.left, body.top + dy, body.right, body.bottom + dy }; }
+        if (!intersects(after, body)) { return std::nullopt; }
+        const double height = body.bottom - body.top;
+        if (dy > 0.0) { return Box{ body.left, after.bottom, body.right, after.bottom + height }; }
+        return Box{ body.left, after.top - height, body.right, after.top };
+    }
+
+    // True when the step would push a player through blocking geometry or out
+    // of the scene: the lift then holds its phase for the step. Admission
+    // (E3a) leaves room above and below every lift, so this should never fire.
+    template<class Obstacles>
+    bool closes_on(const Box& before, const Box& after, const Box& body, bool rider,
+        const Box& world, const Obstacles& obstacles)
+    {
+        const std::optional<Box> pushed = pushed_body(before, after, body, rider);
+        if (!pushed) { return false; }
+        if (!contains(world, *pushed)) { return true; }
+        for (const Box& obstacle : obstacles)
+        {
+            if (intersects(*pushed, obstacle)) { return true; }
+        }
+        return false;
     }
 }

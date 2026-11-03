@@ -583,6 +583,9 @@ namespace
         check("motion-wrong-type", false, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"].SetBool(false); });
         check("motion-unsupported-kind", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["type"].SetString("diagonal"); });
+        // A lift names its own travel; a horizontal travel_x on one is refused.
+        check("motion-vertical-with-travel_x", false, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"]["type"].SetString("vertical"); });
         check("motion-string-travel", false, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"]["travel_x"].SetString("120"); });
@@ -629,6 +632,101 @@ namespace
             d["collision_objects"][0].RemoveMember("motion");
         });
         std::cout << "PASS horizontal motion schema/runtime fields, diagnostics and initial construction\n";
+    }
+
+    // A vertical lift (ROAD#28): "type": "vertical" with travel_y down from
+    // its top anchor, a cycle drive and solid collision only.
+    void check_lift_fixtures(const rapidjson::SchemaDocument& schema,
+        const rapidjson::Document& source, const std::filesystem::path& scratch,
+        const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
+    {
+        auto baseline = copy_document(source);
+        auto& allocator = baseline.GetAllocator();
+        rapidjson::Value lift;
+        lift.CopyFrom(baseline["collision_objects"][3], allocator);
+        lift["rectangle"]["x"].SetInt(600);
+        lift["rectangle"]["y"].SetInt(700);
+        lift["rectangle"]["width"].SetInt(120);
+        lift["rectangle"]["height"].SetInt(20);
+        rapidjson::Value motion(rapidjson::kObjectType);
+        motion.AddMember("type", "vertical", allocator);
+        motion.AddMember("travel_y", 256, allocator);
+        motion.AddMember("period", 3.2, allocator);
+        motion.AddMember("phase", 0.25, allocator);
+        lift.AddMember("motion", motion, allocator);
+        baseline["collision_objects"].Clear();
+        baseline["collision_objects"].PushBack(lift, allocator);
+        require(std::string(baseline["collision_objects"][0]["collision_type"].GetString()) == "STRUCTURE_PAINTABLE",
+            "The lift fixture must start from a solid paintable");
+
+        const auto check = [&](const char* name, bool schema_accepts, bool runtime_accepts, auto edit)
+        {
+            auto document = copy_document(baseline);
+            edit(document);
+            schema_is(schema, document, schema_accepts, name);
+            const auto path = scratch / (std::string(name) + ".json");
+            write_document(path, document);
+            if (!runtime_accepts)
+            {
+                runtime_rejects(path, "motion", builder, render, audio);
+                return;
+            }
+            const LevelLoadedInfo info(path.string().c_str());
+            info.validate(); info.validate_content(builder, render, audio);
+            const auto objects = builder.build_collision_objects(info.collision_objects_json(), TeamColour{});
+            const auto* moving = dynamic_cast<const TranslatingStructurePaintable*>(objects[0].get());
+            require(moving != nullptr, "An authored lift was silently built as static terrain");
+            const auto state = moving->motion_state();
+            // A quarter cycle is half the travel: 128 down from the top anchor.
+            require(state.spec.anchor == RectangleF(600.0f, 700.0f, 120.0f, 20.0f) &&
+                state.spec.vertical() && state.spec.travel_x == 0.0f && state.spec.travel_y == 256.0f &&
+                state.spec.period_seconds == 3.2f && state.spec.initial_phase == 0.25f &&
+                state.spec.drive == HorizontalDrive::cycle &&
+                moving->bounds() == RectangleF(600.0f, 828.0f, 120.0f, 20.0f) &&
+                moving->translation() == Vector2F(0.0f, 128.0f) && moving->motion_id() == 0,
+                "Lift fields, axis, initial phase or admission boundary changed");
+        };
+        check("lift-solid", true, true, [](rapidjson::Document&) {});
+        check("lift-metadata", true, true, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].AddMember("_comment", "retained metadata", d.GetAllocator()); });
+        check("lift-cycle-drive", true, true, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].AddMember("drive", "cycle", d.GetAllocator()); });
+        // The paint-driven lift is the next slice; this one cycles.
+        check("lift-paint-drive", false, false, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["motion"].AddMember("drive", "paint", d.GetAllocator());
+            d["collision_objects"][0]["motion"].AddMember("team_a_heads", "right", d.GetAllocator());
+        });
+        check("lift-heading", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].AddMember("team_a_heads", "left", d.GetAllocator()); });
+        // A rising jump-through top would pass its rider's previous feet.
+        check("lift-jump-through", true, false, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+            d["collision_objects"][0]["material"].SetString("ruler");
+        });
+        check("lift-travel_x", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].AddMember("travel_x", 120, d.GetAllocator()); });
+        check("lift-missing-travel_y", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].RemoveMember("travel_y"); });
+        check("lift-string-travel", false, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"]["travel_y"].SetString("256"); });
+        size_t travel_case = 0;
+        for (const double travel : { 0.0, -256.0, 1.0e-40, 1.0e40 })
+        {
+            const bool structural = travel > 0.0;
+            check((std::string("lift-travel-") + std::to_string(travel_case++)).c_str(), structural, false,
+                [travel](rapidjson::Document& d) { d["collision_objects"][0]["motion"]["travel_y"].SetDouble(travel); });
+        }
+        check("lift-indistinct-edges", true, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["rectangle"]["y"].SetDouble(1.0e20); });
+        for (const char* field : { "axis", "rotation" })
+        {
+            check((std::string("lift-unsupported-") + field).c_str(), false, false,
+                [field](rapidjson::Document& d)
+                { d["collision_objects"][0]["motion"].AddMember(rapidjson::StringRef(field), 0, d.GetAllocator()); });
+        }
+        std::cout << "PASS vertical lift schema/runtime fields, cycle-only and solid-only refusals, initial construction\n";
     }
 
     // The editor's warning-only resource check reads the sheet and bank formats
@@ -726,7 +824,7 @@ int main(int argc, char** argv)
         const auto staged_levels = manifest_levels(content);
         const auto source_levels = manifest_levels(repo / "game/content");
         require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
-        require(staged_levels.size() == 11, "Current format acceptance needs all eleven registered stages");
+        require(staged_levels.size() == 12, "Current format acceptance needs all twelve registered stages");
         for (const auto& file : staged_levels)
         {
             check_compatible(content / file);
@@ -742,6 +840,7 @@ int main(int argc, char** argv)
         check_versions(scratch);
         check_schema_fixtures(schema, source, scratch, builder, render, audio);
         check_motion_fixtures(schema, source, scratch, builder, render, audio);
+        check_lift_fixtures(schema, source, scratch, builder, render, audio);
         check_gate_fixtures(schema, source, scratch, builder, render, audio, tuning);
         check_editor_catalog(content);
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "

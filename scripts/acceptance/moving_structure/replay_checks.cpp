@@ -54,10 +54,11 @@ namespace
         return fixture;
     }
 
-    // Independent literal version-6 wire control; the dynamic domain stays absent.
+    // Independent literal version-7 wire control; the dynamic domain stays absent.
     // The version-3 literal (with the old zero shorthand), version 4, which
-    // added roster metadata, and version 5, whose seed was optional, are
-    // refused by version.
+    // added roster metadata, version 5, whose seed was optional, and version
+    // 6, whose motion block was schema 1 (before ROAD#28's lifts), are refused
+    // by version.
     void legacy_bytes(const std::filesystem::path& path)
     {
         ReplayFile file = header(); file.build = "legacy"; file.dt_bits = 0; file.seed = 0;
@@ -86,18 +87,21 @@ namespace
         const std::string old_tape = "\"suspends\": [],\n  \"inputs\": [\n  ],";
         version_5.replace(version_5.find(old_tape), old_tape.size(), "\"gaps\": [],\n  \"inputs\": [\n    []\n  ],");
         // Version 6 always writes the round seed (HYG#39).
-        std::string current = version_5;
-        current.replace(current.find("\"version\": 5"), 12, "\"version\": 6");
+        std::string version_6 = version_5;
+        version_6.replace(version_6.find("\"version\": 5"), 12, "\"version\": 6");
         const std::string old_dt = "\"dt\": \"0\",\n";
-        current.replace(current.find(old_dt), old_dt.size(), old_dt + "  \"seed\": \"0\",\n");
-        file.write(path); require(read_text(path) == current, "Static version-6 replay bytes changed");
+        version_6.replace(version_6.find(old_dt), old_dt.size(), old_dt + "  \"seed\": \"0\",\n");
+        // Version 7 changes only the motion block's schema; static bytes match 6's.
+        std::string current = version_6;
+        current.replace(current.find("\"version\": 6"), 12, "\"version\": 7");
+        file.write(path); require(read_text(path) == current, "Static version-7 replay bytes changed");
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = 1; file.final_print.seats[0].step_paint_team = 2;
         std::string active = current;
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL36-only version-6 replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL36-only version-7 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
@@ -106,15 +110,16 @@ namespace
         const ReplayFile static_read = ReplayFile::read(path);
         require(!static_read.final_print.horizontal_motion && static_read.tape.settings().human_count() == 1 &&
             static_read.tape.settings().bot_count() == 0 && static_read.seed == 0,
-            "Static domain, bot or seed changed on version-6 read");
+            "Static domain, bot or seed changed on version-7 read");
         // A replay holds only on the build that recorded it: older versions are refused, not read.
-        for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 }, std::pair{ version_5, 5 } })
+        for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 },
+            std::pair{ version_5, 5 }, std::pair{ version_6, 6 } })
         {
             write_text(path, text);
             throws_with([&] { static_cast<void>(ReplayFile::read(path)); },
-                "format version " + std::to_string(version) + "; this build reads only 6");
+                "format version " + std::to_string(version) + "; this build reads only 7");
         }
-        // The seed is required: a version-6 file without one is refused.
+        // The seed is required: a version-7 file without one is refused.
         std::string seedless = current;
         seedless.erase(seedless.find("  \"seed\": \"0\",\n"), std::string("  \"seed\": \"0\",\n").size());
         write_text(path, seedless);
@@ -201,7 +206,12 @@ namespace
             ReplayFile::read(path).write(path); require(read_text(path)==original,"Uppercase dynamic hex did not canonicalize");
         }
         // Every mutation starts from the same valid actual-Level final snapshot.
-        malformed(path, original, [](auto& d) { d["final"]["horizontal_motion"]["schema"].SetInt(2); });
+        malformed(path, original, [](auto& d) { d["final"]["horizontal_motion"]["schema"].SetInt(1); });
+        // Schema 2's eighth spec word is a lift's travel_y: a horizontal mover
+        // that also names one is a two-axis request, refused by the spec rule.
+        malformed(path, original, [](auto& d)
+        { d["final"]["horizontal_motion"]["structures"][0u]["spec"][7u].SetString("42800000", d.GetAllocator()); },
+            "Motion travels on one axis");
         malformed(path, original, [](auto& d) { d["final"]["horizontal_motion"].RemoveMember("structures"); });
         malformed(path, original, [](auto& d) { d["final"]["horizontal_motion"]["structures"].Clear(); });
         for (const char* text : { "0", "00000000000000000", "000000000000000g", "+000000000000000", "7ff0000000000000", "7ff8000000000000", "3ff0000000000000" })

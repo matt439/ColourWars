@@ -20,8 +20,9 @@ struct FerryCueState
     FerryMotionCue motion = FerryMotionCue::unstepped;
 };
 
-// Rigid horizontal translation of anchored scoring/material geometry. This
-// capability is fixed for a Level lifetime; it is not a lift or a rotating body.
+// Rigid translation of anchored scoring/material geometry on one axis: a
+// horizontal mover, or a vertical lift (ROAD#28) that cycles and is solid.
+// This capability is fixed for a Level lifetime; it is not a rotating body.
 // A paint-driven one (a paint ferry) reads its own held paint each step, before
 // any of the step's paint lands, to choose which way it travels.
 class TranslatingStructurePaintable final : public StructurePaintable
@@ -79,6 +80,7 @@ private:
     friend class Projectile;
     void bind_motion_id(HorizontalMotionId id);
     HorizontalPreparedStep prepare_motion(float dt) const;
+    HorizontalPreparedStep hold_motion(float dt) const;
     void commit_motion(const HorizontalPreparedStep& prepared) noexcept;
     void publish_zero_step() noexcept;
     // Accepted relative-sweep geometry stays local; it is never re-gated by

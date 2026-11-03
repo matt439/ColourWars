@@ -44,20 +44,28 @@ namespace
         return horizontal_motion_contract::box({ value.x, value.y, value.width, value.height });
     }
 
+    // A scalar offset along the mover's own axis: x, or y for a lift.
     RectangleF horizontal_pose(const HorizontalMotionSpec& spec, float offset)
     {
         RectangleF result = spec.anchor;
-        if (offset != 0.0f) { result.x += offset; }
+        if (offset != 0.0f)
+        {
+            if (spec.vertical()) { result.y += offset; }
+            else { result.x += offset; }
+        }
         horizontal_box(result);
         return result;
     }
 
+    float axis_part(const HorizontalMotionSpec& spec, const Vector2F& offset)
+    {
+        return spec.vertical() ? offset.y : offset.x;
+    }
+
     HorizontalBox horizontal_path(const TranslatingStructurePaintable& mover)
     {
-        const HorizontalMotionSpec spec = mover.motion_state().spec;
-        return horizontal_motion_contract::path({
-            { spec.anchor.x, spec.anchor.y, spec.anchor.width, spec.anchor.height },
-            spec.travel_x, spec.period_seconds, spec.initial_phase });
+        // The path's arithmetic reads only the anchor, travel, period and phase.
+        return horizontal_motion_contract::path(contract_spec(mover.motion_state().spec));
     }
 
     bool horizontal_contains(const HorizontalBox& outer, const HorizontalBox& inner)
@@ -247,6 +255,18 @@ void LevelStructures::validate_admission(const Scene& scene, std::span<Player* c
             const HorizontalBox standing = horizontal_motion_contract::standing(path, body.width, body.height);
             if (!horizontal_contains(world, standing))
             { throw std::invalid_argument("Horizontal motion standing envelope leaves Scene bounds."); }
+            // A lift's lowest pose leaves a full body height beneath it (E3a as
+            // amended): no floor meets it flush and no player stands under it.
+            const bool lift = mover->motion_state().spec.vertical();
+            const HorizontalBox underside = lift ?
+                horizontal_motion_contract::underside(path, body.width, body.height) : HorizontalBox{};
+            if (lift && !horizontal_contains(world, underside))
+            { throw std::invalid_argument("Vertical lift clearance beneath its lowest pose leaves Scene bounds."); }
+            // Beside its shaft too: a rider overhangs the lift's edge by up to a
+            // body, so no geometry may sit within a body of the shaft anywhere
+            // between the corridor and the clearance.
+            const HorizontalBox column = lift ?
+                horizontal_motion_contract::column(path, body.width, body.height) : HorizontalBox{};
             for (const CollisionObject* object : scene.collision_objects())
             {
                 const Structure* surface = Collider::of(*object).structure();
@@ -264,6 +284,10 @@ void LevelStructures::validate_admission(const Scene& scene, std::span<Player* c
                 { throw std::invalid_argument("Horizontal motion platform envelope intersects blocking geometry."); }
                 if (horizontal_intersects(standing, obstacle))
                 { throw std::invalid_argument("Horizontal motion standing envelope intersects blocking geometry."); }
+                if (lift && horizontal_intersects(underside, obstacle))
+                { throw std::invalid_argument("Vertical lift needs a full body height clear beneath its lowest pose."); }
+                if (lift && horizontal_intersects(column, obstacle))
+                { throw std::invalid_argument("Vertical lift needs a body width clear beside its whole shaft."); }
             }
         }
     }
@@ -277,12 +301,14 @@ void LevelStructures::validate_budget(const Frame* prepared, const Scene& scene,
     { throw std::invalid_argument("Horizontal motion preparation cardinality differs from admission."); }
     const double step = static_cast<double>(SECONDS_PER_STEP);
     double maximum_path = 0.0;
+    double maximum_lift = 0.0;
     for (const TranslatingStructurePaintable* mover : this->horizontal_structures_)
     {
         const HorizontalMotionSpec spec = mover->motion_state().spec;
         HorizontalMotion::validate_spec(spec);
-        maximum_path = std::max(maximum_path, horizontal_up(
-            2.0 * static_cast<double>(spec.travel_x) / static_cast<double>(spec.period_seconds) * step));
+        double& maximum = spec.vertical() ? maximum_lift : maximum_path;
+        maximum = std::max(maximum, horizontal_up(
+            2.0 * static_cast<double>(spec.travel()) / static_cast<double>(spec.period_seconds) * step));
     }
     const HorizontalBox world = horizontal_box(*scene.bounds());
     for (const Player* player : players)
@@ -294,8 +320,9 @@ void LevelStructures::validate_budget(const Frame* prepared, const Scene& scene,
         const double personal_y = horizontal_up(speed.y * step);
         const double x_scale = horizontal_finite(std::max({ std::abs(world.left), std::abs(world.right),
             std::abs(actual.left), std::abs(actual.right) }) + personal_x + maximum_path);
+        // A horizontal-only level adds a zero lift term, so its arithmetic is unchanged.
         const double y_scale = horizontal_finite(std::max({ std::abs(world.top), std::abs(world.bottom),
-            std::abs(actual.top), std::abs(actual.bottom) }) + personal_y);
+            std::abs(actual.top), std::abs(actual.bottom) }) + personal_y + maximum_lift);
         const double x_ulp = horizontal_ulp(horizontal_finite(2.0 * x_scale));
         const double y_ulp = horizontal_ulp(horizontal_finite(2.0 * y_scale));
         const double personal = horizontal_up(personal_x + 4.0 * x_ulp);
@@ -312,29 +339,35 @@ void LevelStructures::validate_budget(const Frame* prepared, const Scene& scene,
             horizontal_box(collision.before); horizontal_box(collision.after);
             if (collision.segment_count > collision.segments.size())
             { throw std::invalid_argument("Horizontal motion preparation has too many segments."); }
+            const bool lift = spec.vertical();
             double observed_path = 0.0;
             for (std::uint32_t segment = 0; segment < collision.segment_count; ++segment)
             {
                 const HorizontalMotionSegment& part = collision.segments[segment];
-                const RectangleF from = horizontal_pose(spec, part.from_x);
-                const RectangleF to = horizontal_pose(spec, part.to_x);
-                observed_path = horizontal_finite(observed_path + std::abs(static_cast<double>(to.x) - from.x));
+                const RectangleF from = horizontal_pose(spec, part.from);
+                const RectangleF to = horizontal_pose(spec, part.to);
+                observed_path = horizontal_finite(observed_path + (lift ?
+                    std::abs(static_cast<double>(to.y) - from.y) : std::abs(static_cast<double>(to.x) - from.x)));
             }
-            const float carry = collision.after.x - collision.before.x;
+            const float carry = lift ? collision.after.y - collision.before.y :
+                collision.after.x - collision.before.x;
             horizontal_finite(carry);
-            const double ideal = horizontal_up(2.0 * static_cast<double>(spec.travel_x) /
+            const double ideal = horizontal_up(2.0 * static_cast<double>(spec.travel()) /
                 static_cast<double>(spec.period_seconds) * step);
             // Four segment endpoints each incur offset/pose rounding; reserve
             // full ulps also for a copied carry subtraction and body addition.
             // The actual prepared WORLD path is included if it is larger.
             const double movement = horizontal_up(std::max({ ideal, observed_path,
-                std::abs(static_cast<double>(carry)) }) + 16.0 * x_ulp);
+                std::abs(static_cast<double>(carry)) }) + 16.0 * (lift ? y_ulp : x_ulp));
             const double mover_width = static_cast<double>(spec.anchor.width) - 2.0 * x_ulp;
             const double mover_height = static_cast<double>(spec.anchor.height) - 2.0 * y_ulp;
-            if (!(personal + movement < std::min(body_width, mover_width)))
+            // A lift's travel joins the vertical bound beside the player's own
+            // speed (E6); a horizontal mover's joins the horizontal one.
+            if (!(personal + (lift ? 16.0 * x_ulp : movement) < std::min(body_width, mover_width)))
             { throw std::invalid_argument("Horizontal motion relative horizontal displacement is unsafe."); }
             const double height_bound = horizontal_finite(body_height + mover_height);
-            if (!(body_height > 0.0) || !(mover_height > 0.0) || !(vertical < height_bound))
+            const double relative_vertical = lift ? horizontal_up(vertical + movement) : vertical;
+            if (!(body_height > 0.0) || !(mover_height > 0.0) || !(relative_vertical < height_bound))
             { throw std::invalid_argument("Horizontal motion relative vertical displacement is unsafe."); }
         }
     }
@@ -349,6 +382,7 @@ LevelStructures::Frame LevelStructures::prepare(float dt, const Scene& scene,
     frame.motions.reserve(this->horizontal_structures_.size());
     for (const TranslatingStructurePaintable* mover : this->horizontal_structures_)
     { frame.motions.push_back(mover->prepare_motion(dt)); }
+    this->hold_closing_lifts(frame, dt, scene, players);
     frame.carriers.resize(players.size());
     this->validate_budget(&frame, scene, players, player_tuning);
     for (std::size_t player = 0; player < players.size(); ++player)
@@ -360,11 +394,58 @@ LevelStructures::Frame LevelStructures::prepare(float dt, const Scene& scene,
             if (this->horizontal_structures_[index]->motion_id() != selected) { continue; }
             const HorizontalMotionStep& step = frame.motions[index].collision;
             frame.carriers[player] = HorizontalCarryStep{ selected, step.before, step.after,
-                step.after.x - step.before.x };
+                step.after.x - step.before.x, step.after.y - step.before.y };
             break;
         }
     }
     return frame;
+}
+
+void LevelStructures::hold_closing_lifts(Frame& frame, float dt, const Scene& scene,
+    std::span<Player* const> players) const
+{
+    if (!(dt > 0.0f)) { return; }
+    std::optional<HorizontalBox> world;
+    std::vector<std::pair<const CollisionObject*, HorizontalBox>> blocking;
+    for (std::size_t index = 0; index < this->horizontal_structures_.size(); ++index)
+    {
+        const TranslatingStructurePaintable& lift = *this->horizontal_structures_[index];
+        const HorizontalMotionStep& step = frame.motions[index].collision;
+        if (!lift.motion_state().spec.vertical() || step.after.y == step.before.y) { continue; }
+        if (!world)
+        {
+            // Settled from the state before the step, as a gate and a paint
+            // ferry's heading are: every other structure where it stands now,
+            // and every other mover across its whole path.
+            world = horizontal_box(*scene.bounds());
+            for (const CollisionObject* object : scene.collision_objects())
+            {
+                const Structure* surface = Collider::of(*object).structure();
+                if (surface == nullptr || object->shape() == nullptr) { continue; }
+                blocking.emplace_back(object, surface->mover() != nullptr ?
+                    horizontal_path(*surface->mover()) : horizontal_box(object->shape()->bounding_box()));
+            }
+        }
+        std::vector<HorizontalBox> others;
+        others.reserve(blocking.size());
+        for (const auto& [object, box] : blocking)
+        {
+            if (object != &lift) { others.push_back(box); }
+        }
+        const HorizontalBox before = horizontal_box(step.before);
+        const HorizontalBox after = horizontal_box(step.after);
+        for (const Player* player : players)
+        {
+            if (player->state() != PlayerState::alive || !(player->health() > 0.0f)) { continue; }
+            const bool rider = lift.motion_id() != 0 && player->carrier_id() == lift.motion_id();
+            if (horizontal_motion_contract::closes_on(before, after,
+                horizontal_box(player->rectangle()), rider, *world, others))
+            {
+                frame.motions[index] = lift.hold_motion(dt);
+                break;
+            }
+        }
+    }
 }
 
 void LevelStructures::commit(const Frame& prepared, std::span<Player* const> players) noexcept
@@ -387,7 +468,7 @@ void LevelStructures::publish_zero(std::span<Player* const> players) noexcept
             if (mover->motion_id() == player->carrier_id())
             {
                 const RectangleF current = mover->bounds();
-                zero = HorizontalCarryStep{ mover->motion_id(), current, current, 0.0f };
+                zero = HorizontalCarryStep{ mover->motion_id(), current, current, 0.0f, 0.0f };
                 break;
             }
         }
@@ -405,8 +486,10 @@ std::vector<HorizontalStructureState> LevelStructures::horizontal_structure_stat
         state.id = mover->motion_id();
         state.motion = mover->motion_state();
         // History is persisted pose state, never the transient zero collision step.
-        state.previous_bounds = horizontal_pose(state.motion.spec, state.motion.previous_offset.x);
-        state.current_bounds = horizontal_pose(state.motion.spec, state.motion.current_offset.x);
+        state.previous_bounds = horizontal_pose(state.motion.spec,
+            axis_part(state.motion.spec, state.motion.previous_offset));
+        state.current_bounds = horizontal_pose(state.motion.spec,
+            axis_part(state.motion.spec, state.motion.current_offset));
         mover->append_anchor_paint_surfaces(state.local_paint);
         result.push_back(std::move(state));
     }

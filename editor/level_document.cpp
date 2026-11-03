@@ -612,8 +612,10 @@ namespace colourwars_editor
         {
             for (Property& property : result)
             {
-                if (property.path == "motion/type") { property.label = "motion/type (horizontal)"; }
+                if (property.path == "motion/type") { property.label = "motion/type (horizontal or vertical)"; }
                 else if (property.path == "motion/travel_x") { property.label = "motion/travel_x (world units)"; }
+                else if (property.path == "motion/travel_y")
+                { property.label = "motion/travel_y (world units down from the top anchor)"; }
                 else if (property.path == "motion/period") { property.label = "motion/period (round-trip seconds)"; }
                 else if (property.path == "motion/phase") { property.label = "motion/phase (cycles [0,1))"; }
                 else if (property.path == "motion/drive") { property.label = "motion/drive (cycle or paint)"; }
@@ -810,7 +812,8 @@ namespace colourwars_editor
                 const bool visual = type == object_type::visual;
                 const bool ramp_right = type == "StructureRampRight";
                 const bool ramp_left = type == "StructureRampLeft";
-                const bool moving = type == "MovingPaintable" || type == "MovingJumpThrough";
+                const bool lift = type == "VerticalLift";
+                const bool moving = type == "MovingPaintable" || type == "MovingJumpThrough" || lift;
                 const bool gate = type == "TeamGate";
                 const bool paintable = type == object_type::structure_paintable || moving || gate;
                 const bool jump = type == "StructureJumpThrough" || type == "MovingJumpThrough";
@@ -864,10 +867,12 @@ namespace colourwars_editor
                 if (gate) { value.AddMember("gate", "paint", allocator); }
                 if (moving)
                 {
+                    // A lift starts at the slice's provisional storey: 320 up
+                    // and down over a 4 s round trip, 160 units/s (ROAD#28).
                     Json motion(rapidjson::kObjectType);
-                    motion.AddMember("type", "horizontal", allocator);
-                    motion.AddMember("travel_x", 120.0, allocator);
-                    motion.AddMember("period", 6.4, allocator);
+                    motion.AddMember("type", Json(lift ? "vertical" : "horizontal", allocator), allocator);
+                    motion.AddMember(Json(lift ? "travel_y" : "travel_x", allocator), Json(lift ? 320.0 : 120.0), allocator);
+                    motion.AddMember("period", lift ? 4.0 : 6.4, allocator);
                     motion.AddMember("phase", 0.0, allocator);
                     value.AddMember("motion", motion, allocator);
                 }
@@ -896,22 +901,37 @@ namespace colourwars_editor
                 Rect rectangle = this->rectangle(entry);
                 if (value.HasMember("motion"))
                 {
-                    // A copy retains horizontal travel/phase and moves down by
-                    // the whole source body plus standing corridor, not +50
+                    // A copy retains its travel/phase and moves down by the
+                    // whole source path plus standing corridor (and, for a
+                    // lift, the clear room beneath its lowest pose), not +50
                     // into the original sweep. Final validation checks all
                     // other geometry and bounds before publishing the copy.
                     const auto source = decode_horizontal_motion(value);
                     const auto player = load_motion_player_size(impl_->motion_tuning);
                     const auto source_path = horizontal_motion_contract::path(source);
+                    const double clear = source.vertical() ?
+                        horizontal_motion_contract::column(source_path, player.width, player.height).bottom :
+                        source_path.bottom;
+                    // A lift's copy keeps its whole column below the source's.
+                    const auto top_of = [&](const horizontal_motion_contract::Spec& spec)
+                    {
+                        const auto path = horizontal_motion_contract::path(spec);
+                        return spec.vertical() ? horizontal_motion_contract::column(path, player.width, player.height).top :
+                            horizontal_motion_contract::standing(path, player.width, player.height).top;
+                    };
                     auto copy = source;
-                    copy.anchor.y += copy.anchor.height + player.height;
+                    if (source.vertical())
+                    {
+                        copy.anchor.y = static_cast<float>(static_cast<double>(copy.anchor.y) +
+                            (source_path.bottom - source_path.top) + player.height);
+                    }
+                    else { copy.anchor.y += copy.anchor.height + player.height; }
                     for (int adjustment = 0; adjustment < 4; ++adjustment)
                     {
-                        const auto standing = horizontal_motion_contract::standing(
-                            horizontal_motion_contract::path(copy), player.width, player.height);
-                        if (standing.top >= source_path.bottom) { break; }
+                        const double top = top_of(copy);
+                        if (top >= clear) { break; }
                         copy.anchor.y = std::nextafter(static_cast<float>(static_cast<double>(copy.anchor.y) +
-                            source_path.bottom - standing.top), std::numeric_limits<float>::infinity());
+                            clear - top), std::numeric_limits<float>::infinity());
                     }
                     rectangle.y = copy.anchor.y;
                 }
@@ -1020,9 +1040,15 @@ namespace colourwars_editor
                         fail("Mirror copy does not copy paint ferries yet: their heading and paint-drive phase "
                             "need their own rule. Duplicate it and set the copy by hand.");
                     }
-                    // The rectangle is the leftmost anchor, so reflect the whole path.
-                    reach += number(motion, "travel_x");
-                    advance_half_cycle(motion);
+                    // A horizontal rectangle is the leftmost anchor, so reflect
+                    // the whole path and start it half a cycle on. A lift moves
+                    // straight up and down, so only its anchor reflects.
+                    if (!(motion.IsObject() && motion.HasMember("type") && motion["type"].IsString() &&
+                        string(motion, "type") == "vertical"))
+                    {
+                        reach += number(motion, "travel_x");
+                        advance_half_cycle(motion);
+                    }
                 }
                 if (object.HasMember("drift") && object["drift"].IsObject()) { advance_half_cycle(object["drift"]); }
                 rectangle.x = sum - rectangle.x - reach;

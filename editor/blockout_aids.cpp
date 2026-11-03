@@ -177,10 +177,12 @@ namespace colourwars_editor
             const PaintFaceRectangle rect = paint_rectangle(object);
             const bool moving = object.HasMember("motion");
             float offset = 0.0f;
+            bool vertical = false;
             if (moving)
             {
                 const auto spec = decode_horizontal_motion(object);
                 offset = horizontal_motion_contract::offset_at(spec, spec.initial_phase);
+                vertical = spec.vertical();
             }
             const float x = rect.left, y = rect.top, right = rect.right, bottom = rect.bottom;
             const level_json::Json& faces = level_json::member(object, "paintable_faces");
@@ -206,7 +208,8 @@ namespace colourwars_editor
                     // Runtime owns anchor-space scored areas. Translate only
                     // the displayed location: deriving a new width from world
                     // endpoints changes score when float spacing changes.
-                    if (moving && offset != 0.0f) { strip.x = static_cast<float>(strip.x) + offset; }
+                    if (moving && offset != 0.0f && vertical) { strip.y = static_cast<float>(strip.y) + offset; }
+                    else if (moving && offset != 0.0f) { strip.x = static_cast<float>(strip.x) + offset; }
                     result.push_back({entry, strip, along_x, leading});
                 }
             }

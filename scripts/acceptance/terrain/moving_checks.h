@@ -20,7 +20,7 @@ namespace
 		// The constructed collision owners above outlive these borrowed wrappers.
 		const auto shadows = builder.build_moving_shadows(collision_json, objects);
 		require(shadows.size() == casters.size(), stage + ": moving shadow/caster count differs");
-		if (stage == "turbulence_mover_trial" || stage == "turbulence_ferry_trial")
+		if (stage == "turbulence_mover_trial" || stage == "turbulence_ferry_trial" || stage == "turbulence_lift_trial")
 		{ require(casters.size() == 2, stage + ": comparison lost its paired moving shadow owners"); }
 		for (size_t index = 0; index < shadows.size(); ++index)
 		{
@@ -28,10 +28,11 @@ namespace
 			require(shadow != nullptr, stage + ": moving shadow is not an owner-following wrapper");
 			const auto& owner = *casters[index];
 			const RectangleF anchor = owner.motion_state().spec.anchor;
-			const float offset = owner.translation().x;
+			// A lift's shadow rides with it on y (ROAD#28).
+			const Vector2F offset = owner.translation();
 			const auto translated = [offset](RectangleF rectangle)
 			{
-				if (offset != 0.0f) { rectangle.offset(offset, 0.0f); }
+				if (offset.x != 0.0f || offset.y != 0.0f) { rectangle.offset(offset); }
 				return rectangle;
 			};
 			const AirbrushShadow local(anchor.left(), anchor.right(), anchor.bottom(), &world.render);

@@ -111,16 +111,20 @@ namespace
         double left, top, right, bottom;
     };
 
+    // The mover's offset comes off the projectile's edges on the mover's own
+    // axis: left/right for a horizontal mover, top/bottom for a lift.
     RelativeRectangle relative_rectangle_at(const RectangleF& start,
-        const RectangleF& finish, double time, double offset)
+        const RectangleF& finish, double time, double offset, bool vertical)
     {
         const auto edge = [time](float before, float after)
         { return static_cast<double>(before) +
             (static_cast<double>(after) - before) * time; };
-        return { edge(start.left(), finish.left()) - offset,
-            edge(start.top(), finish.top()),
-            edge(start.right(), finish.right()) - offset,
-            edge(start.bottom(), finish.bottom()) };
+        const double x = vertical ? 0.0 : offset;
+        const double y = vertical ? offset : 0.0;
+        return { edge(start.left(), finish.left()) - x,
+            edge(start.top(), finish.top()) - y,
+            edge(start.right(), finish.right()) - x,
+            edge(start.bottom(), finish.bottom()) - y };
     }
 
     RelativeRectangle relative_between(const RelativeRectangle& start,
@@ -267,13 +271,14 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
             if (!moving_ready) { continue; }
             const HorizontalMotionStep step = moving->collision_step();
             const RectangleF anchor = moving->motion_state().spec.anchor;
+            const bool vertical = moving->motion_state().spec.vertical();
             for (std::uint32_t index = 0; index < step.segment_count; ++index)
             {
                 const HorizontalMotionSegment& segment = step.segments[index];
                 const RelativeRectangle before = relative_rectangle_at(start, finish,
-                    segment.begin, segment.from_x);
+                    segment.begin, segment.from, vertical);
                 const RelativeRectangle after = relative_rectangle_at(start, finish,
-                    segment.end, segment.to_x);
+                    segment.end, segment.to, vertical);
                 const auto interval = relative_sweep_interval(before, after, anchor);
                 if (!interval) { continue; }
                 const double entry = segment.begin +
@@ -342,21 +347,31 @@ void Projectile::resolve_rolling_translating_contacts(std::span<CollisionObject*
             this->moving_paint_completed(moving->motion_id())) { continue; }
         const HorizontalMotionStep step = moving->collision_step();
         const RectangleF anchor = moving->motion_state().spec.anchor;
+        const bool vertical = moving->motion_state().spec.vertical();
         std::optional<RelativeRectangle> footprint;
         for (std::uint32_t index = 0; index < step.segment_count; ++index)
         {
             const HorizontalMotionSegment& segment = step.segments[index];
             const RelativeRectangle before = relative_rectangle_at(volume, volume,
-                segment.begin, segment.from_x);
+                segment.begin, segment.from, vertical);
             const RelativeRectangle after = relative_rectangle_at(volume, volume,
-                segment.end, segment.to_x);
+                segment.end, segment.to, vertical);
             const auto interval = relative_sweep_interval(before, after, anchor);
             if (!interval) { continue; }
             const RelativeRectangle entered = relative_between(before, after, interval->first);
             const RelativeRectangle exited = relative_between(before, after, interval->second);
-            const RelativeRectangle visited{ std::min(entered.left, exited.left), entered.top,
-                std::max(entered.right, exited.right), entered.bottom };
+            // The visited footprint grows along the mover's own axis.
+            const RelativeRectangle visited = vertical ?
+                RelativeRectangle{ entered.left, std::min(entered.top, exited.top),
+                    entered.right, std::max(entered.bottom, exited.bottom) } :
+                RelativeRectangle{ std::min(entered.left, exited.left), entered.top,
+                    std::max(entered.right, exited.right), entered.bottom };
             if (!footprint) { footprint = visited; }
+            else if (vertical)
+            {
+                footprint->top = std::min(footprint->top, visited.top);
+                footprint->bottom = std::max(footprint->bottom, visited.bottom);
+            }
             else
             {
                 footprint->left = std::min(footprint->left, visited.left);

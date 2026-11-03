@@ -136,22 +136,28 @@ namespace
 		throw std::logic_error("level_format::Collision has no CollisionObjectType");
 	}
 
-	HorizontalMotionSpec decode_motion(const JsonValue& object, const RectangleF& anchor)
+	HorizontalMotionSpec decode_motion(const JsonValue& object, const RectangleF& anchor,
+		bool jump_through)
 	{
 		const JsonValue motion = object.object(key::motion);
-		if (motion.string("type") != "horizontal")
+		// One axis per mover (ROAD#28, E1): a horizontal mover reads travel_x
+		// from its leftmost anchor, a vertical lift travel_y from its topmost.
+		const std::string type = motion.string("type");
+		if (type != "horizontal" && type != "vertical")
 		{
-			throw std::runtime_error(motion.where() + ": only 'horizontal' motion is supported");
+			throw std::runtime_error(motion.where() + ": motion type must be 'horizontal' or 'vertical'");
 		}
-		for (const char* field : { "axis", "travel_y", "rotation" })
+		const bool vertical = type == "vertical";
+		for (const char* field : { "axis", vertical ? "travel_x" : "travel_y", "rotation" })
 		{
 			if (motion.has(field))
 			{
 				throw std::runtime_error(motion.where() + ": unsupported motion field '" + field + "'");
 			}
 		}
-		HorizontalMotionSpec result{ anchor, motion.number("travel_x"),
+		HorizontalMotionSpec result{ anchor, vertical ? 0.0f : motion.number("travel_x"),
 			motion.number("period"), motion.number("phase") };
+		if (vertical) { result.travel_y = motion.number("travel_y"); }
 		// The drive rule is shared with the level editor; only the JSON typing
 		// and the message's location are the loader's.
 		const auto text = [&motion](const char* key)
@@ -166,7 +172,11 @@ namespace
 		{
 			throw std::runtime_error(motion.where() + ": " + error.what());
 		}
-		try { HorizontalMotion::validate_spec(result); }
+		try
+		{
+			HorizontalMotion::validate_spec(result);
+			horizontal_motion_contract::validate_collision(contract_spec(result), jump_through);
+		}
 		catch (const std::invalid_argument& error)
 		{
 			throw std::runtime_error(motion.where() + ": " + error.what());
@@ -375,7 +385,8 @@ std::unique_ptr<CollisionObject>
 
 		if (json.has(key::motion))
 		{
-			const HorizontalMotionSpec motion = decode_motion(json, rectangle);
+			const HorizontalMotionSpec motion = decode_motion(json, rectangle,
+				collision_type == CollisionObjectType::structure_jump_through);
 			return std::make_unique<TranslatingStructurePaintable>(
 				json.string(key::sheet_name), json.string(key::frame_name), motion,
 				this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,

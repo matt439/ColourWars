@@ -52,14 +52,15 @@ void TranslatedAirbrushShadow::draw(DrawList& list) const
 RectangleF TranslatedAirbrushShadow::bounds() const
 {
     RectangleF result = this->anchor_.bounds();
+    // The shadow rides with its mover on either axis.
     const Vector2F offset = this->source_.translation();
-    if (offset.x != 0.0f) { result.offset(offset.x, 0.0f); }
+    if (offset.x != 0.0f || offset.y != 0.0f) { result.offset(offset); }
     return result;
 }
 RectangleF TranslatedAirbrushShadow::cull_bounds(float units_per_pixel) const
 {
     RectangleF result = this->anchor_.cull_bounds(units_per_pixel);
     const Vector2F offset = this->source_.translation();
-    if (offset.x != 0.0f) { result.offset(offset.x, 0.0f); }
+    if (offset.x != 0.0f || offset.y != 0.0f) { result.offset(offset); }
     return result;
 }

@@ -21,6 +21,7 @@ int wmain(int argc, wchar_t* argv[])
         moving_structure_acceptance::check_replay(world);
         moving_structure_acceptance::check_public_replay(world);
         moving_structure_acceptance::check_editor_save(world);
+        moving_structure_acceptance::check_lift(world);
         std::cout << "PASS horizontal moving structure CPU checks: motion/owned paint/support/projectile/bounds; "
             "runtime/editor-save construction qualified; actual renderer pixels, arena placement and human acceptance remain separate\n";
 #if COLOURWARS_DEV_TOOLS

@@ -143,7 +143,7 @@ namespace
 				"-player layout (" + std::to_string(static_cast<int>(MatchPlanner::layout_for(humans))) + ")");
 		}
 	}
-    // Strict schema1 helpers are separate from the unchanged legacy codec.
+    // Strict horizontal_motion helpers are separate from the unchanged legacy codec.
     std::string motion_hex32(std::uint32_t value)
     {
         char buffer[9] = {}; std::snprintf(buffer, sizeof(buffer), "%08x", value); return buffer;
@@ -206,6 +206,7 @@ namespace
                 float_from_bits(value.spec[2]), float_from_bits(value.spec[3]) };
             spec.travel_x = float_from_bits(value.spec[4]);
             spec.period_seconds = float_from_bits(value.spec[5]); spec.initial_phase = float_from_bits(value.spec[6]);
+            spec.travel_y = float_from_bits(value.spec[7]);
             try { HorizontalMotion::validate_spec(spec); }
             catch (const std::exception& error) { fail(path, "horizontal_motion spec: " + std::string(error.what())); }
             const double phase = std::bit_cast<double>(value.phase);
@@ -215,11 +216,18 @@ namespace
             { fail(path, "horizontal_motion direction disagrees with phase"); }
             for (std::size_t frame = 0; frame < 2; ++frame)
             {
-                const float offset = float_from_bits(value.offsets[frame * 2]);
-                if (offset < 0.0f || offset > spec.travel_x || float_from_bits(value.offsets[frame * 2 + 1]) != 0.0f)
-                { fail(path, "horizontal_motion offset outside horizontal travel"); }
+                // The offset lies on the mover's own axis; the other word is zero.
+                const std::size_t axis = spec.vertical() ? 1 : 0;
+                const float offset = float_from_bits(value.offsets[frame * 2 + axis]);
+                if (offset < 0.0f || offset > spec.travel() ||
+                    float_from_bits(value.offsets[frame * 2 + (1 - axis)]) != 0.0f)
+                { fail(path, "horizontal_motion offset outside its axis travel"); }
                 mattmath::RectangleF pose = spec.anchor;
-                if (offset != 0.0f) { pose.x += offset; }
+                if (offset != 0.0f)
+                {
+                    if (spec.vertical()) { pose.y += offset; }
+                    else { pose.x += offset; }
+                }
                 const std::uint32_t expected[] = { bits_from_float(pose.x), bits_from_float(pose.y),
                     bits_from_float(pose.width), bits_from_float(pose.height) };
                 for (std::size_t field = 0; field < 4; ++field)
@@ -230,8 +238,8 @@ namespace
                 { fail(path, "horizontal_motion pose has unrepresentable edges"); }
             }
             const double ratio = phase <= 0.5 ? phase * 2.0 : (1.0 - phase) * 2.0;
-            const float current = static_cast<float>(static_cast<double>(spec.travel_x) * ratio);
-            if (value.offsets[2] != bits_from_float(current))
+            const float current = static_cast<float>(static_cast<double>(spec.travel()) * ratio);
+            if (value.offsets[2 + (spec.vertical() ? 1 : 0)] != bits_from_float(current))
             { fail(path, "horizontal_motion current offset disagrees with phase"); }
             bounded(value.tiles.size());
             int previous_face = -1;
@@ -254,7 +262,7 @@ namespace
     }
     void write_motion(std::ostream& out, const MatchFingerprint::HorizontalTerrainPrint& terrain)
     {
-        out << ",\n    \"horizontal_motion\": { \"schema\": 1, \"structures\": [";
+        out << ",\n    \"horizontal_motion\": { \"schema\": 2, \"structures\": [";
         for (std::size_t index = 0; index < terrain.structures.size(); ++index)
         {
             const auto& value = terrain.structures[index];
@@ -281,7 +289,7 @@ namespace
     MatchFingerprint::HorizontalTerrainPrint read_motion(const labrador::JsonValue& entry,
         std::size_t roster, std::size_t final_seats, const std::filesystem::path& path)
     {
-        if (entry.integer("schema") != 1) { fail(path, "horizontal_motion schema must be 1"); }
+        if (entry.integer("schema") != 2) { fail(path, "horizontal_motion schema must be 2"); }
         MatchFingerprint::HorizontalTerrainPrint terrain;
         const auto structures = entry.array("structures");
         for (std::size_t index = 0; index < structures.size(); ++index)
@@ -291,7 +299,7 @@ namespace
             const int id = source.integer("id");
             if (id <= 0) { fail(path, "horizontal_motion ID must be positive int32"); }
             value.id = static_cast<std::uint32_t>(id);
-            value.spec = motion_array<7>(source, "spec", path);
+            value.spec = motion_array<8>(source, "spec", path);
             value.phase = motion_hex<std::uint64_t>(source.string("phase"), 16, path);
             value.direction = source.integer("direction");
             value.offsets = motion_array<4>(source, "offsets", path); value.pose = motion_array<8>(source, "pose", path);

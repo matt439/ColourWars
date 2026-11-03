@@ -184,7 +184,7 @@ namespace moving_structure_acceptance
                 auto& moving = fixture.mover({ { 100.0f, 300.0f, 16.0f, 100.0f }, 2.0f, 1.0e20f, 0.25f });
                 fixture.build(); fixture.start(); fixture.tick();
                 const auto step = moving.collision_step();
-                require(step.segment_count == 1 && step.segments[0].from_x == step.segments[0].to_x,
+                require(step.segment_count == 1 && step.segments[0].from == step.segments[0].to,
                     "Positive equal-offset segment control was not established");
                 enemy.place_at({ moving.bounds().left(), 320.0f });
                 const float health = enemy.health();
