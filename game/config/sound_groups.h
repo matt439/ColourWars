@@ -32,7 +32,20 @@ namespace sound_groups
 		const labrador::Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
 		const LevelLoadedInfo& candidate, const Stage& stage);
 
-	// Sets both groups from the player's settings. Throws std::out_of_range
-	// before assign has added them.
+	// Sets both groups from the player's settings, or to zero while muted.
+	// Throws std::out_of_range before assign has added them.
 	void apply(labrador::AudioResources& audio, const PlaySettings& settings);
+
+	// A process-wide quiet switch for test runs, off unless something turns it
+	// on: never a player setting, never saved. While it is on, apply holds both
+	// groups at zero whatever the settings say, and assign puts the sounds in
+	// neither group (the volume preview) in a third group held at zero, so a
+	// muted process makes no sound at all. Set it before assign.
+	void set_muted(bool muted);
+	bool muted();
+
+	// Whether COLOURWARS_MUTE is set to anything but empty or "0". The game
+	// shell and the probes that open a real audio device ask this once at
+	// startup; the check scripts set it so their game processes stay silent.
+	bool muted_by_environment();
 }

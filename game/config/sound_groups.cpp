@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/sound_groups.h"
 
+#include <cstdlib>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -13,6 +14,9 @@ namespace
 {
 	const char* const music_group = "music";
 	const char* const sfx_group = "sfx";
+	const char* const muted_group = "muted";
+
+	bool muted_flag = false;
 
 	SoundGroupHandle group(AudioResources& audio, const char* name)
 	{
@@ -102,10 +106,16 @@ void sound_groups::assign(AudioResources& audio, const GameTuning& tuning,
 
 	const SoundGroupHandle music = group(audio, music_group);
 	const SoundGroupHandle sfx = group(audio, sfx_group);
+	// Only a muted process adds the third group, so an unmuted one keeps the
+	// preview in no group at all, exactly as the Controls page expects.
+	const bool silence_rest = muted_flag;
+	const SoundGroupHandle rest = silence_rest ? group(audio, muted_group) : SoundGroupHandle{};
+	if (silence_rest) { audio.set_group_volume(rest, 0.0f); }
 	for (const SoundReference& sound : sounds)
 	{
-		if (sound.group == SoundGroupRole::none) { continue; }
-		const SoundGroupHandle into = sound.group == SoundGroupRole::music ? music : sfx;
+		if (sound.group == SoundGroupRole::none && !silence_rest) { continue; }
+		const SoundGroupHandle into = sound.group == SoundGroupRole::music ? music :
+			sound.group == SoundGroupRole::sfx ? sfx : rest;
 		SoundBank* bank = audio.sound_bank(sound.bank);
 		if (sound.effect)
 		{
@@ -120,6 +130,28 @@ void sound_groups::assign(AudioResources& audio, const GameTuning& tuning,
 
 void sound_groups::apply(AudioResources& audio, const PlaySettings& settings)
 {
-	audio.set_group_volume(audio.resolve_sound_group(music_group), settings.music_gain());
-	audio.set_group_volume(audio.resolve_sound_group(sfx_group), settings.sfx_gain());
+	audio.set_group_volume(audio.resolve_sound_group(music_group),
+		muted_flag ? 0.0f : settings.music_gain());
+	audio.set_group_volume(audio.resolve_sound_group(sfx_group),
+		muted_flag ? 0.0f : settings.sfx_gain());
+}
+
+void sound_groups::set_muted(bool muted)
+{
+	muted_flag = muted;
+}
+
+bool sound_groups::muted()
+{
+	return muted_flag;
+}
+
+bool sound_groups::muted_by_environment()
+{
+	char* value = nullptr;
+	size_t length = 0;
+	if (_dupenv_s(&value, &length, "COLOURWARS_MUTE") != 0 || value == nullptr) { return false; }
+	const std::string text(value);
+	std::free(value);
+	return !text.empty() && text != "0";
 }

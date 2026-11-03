@@ -217,6 +217,7 @@ int wmain(int argc, wchar_t** argv)
         app.load_manifest((content / "manifest.json").string().c_str());
         validate_shell_content(tuning, presentation, app.render_resources(), app.audio_resources(),
             levels, stages, preferences_session.play_settings());
+        sound_groups::set_muted(sound_groups::muted_by_environment());
         sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
         sound_groups::apply(*app.audio_resources(), preferences_session.play_settings());
         data.set_application(&app);

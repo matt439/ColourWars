@@ -322,6 +322,9 @@ if (-not $env:INCLUDE -or -not $env:LIB -or
     throw 'This probe requires the x64 Visual Studio Developer environment.'
 }
 
+# Loaded after the tool preflight: the selection checker's fault copy stops there
+# and mirrors only the helpers needed to reach it.
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
 $previousLocalAppData = $env:LOCALAPPDATA
@@ -347,6 +350,7 @@ catch {
     Pop-Location
     throw
 }
+$previousQuietGame = Enter-QuietGame
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $run"
@@ -724,6 +728,7 @@ catch {
 finally {
     $env:PATH = $previousPath
     $env:LOCALAPPDATA = $previousLocalAppData
+    Exit-QuietGame $previousQuietGame
     if ($null -ne $process) {
         if (-not $process.HasExited) {
             # Only this isolated probe; it owns no player save or session.

@@ -120,7 +120,20 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     window_checks();
     const NestedSaveProfile profile(output / "debug-background-profile");
     Save preferences; SettingsSession preferences_session(preferences);
-    PlaySettings initial; initial.music_volume = 17; initial.sfx_volume = 23;
+    // A run quieted by COLOURWARS_MUTE would hold both groups at zero through
+    // sound_groups::apply, which would make every muted() check below pass
+    // whether or not the Debug background policy muted anything. So this
+    // fixture lifts the process switch (the guard restores it) and, when it
+    // was on, seeds the lowest distinct nonzero volumes instead: the policy's
+    // zeroing and the current-preference restore stay observable at -40 dB.
+    const bool was_muted = sound_groups::muted();
+    struct MuteGuard
+    {
+        bool previous;
+        ~MuteGuard() { sound_groups::set_muted(this->previous); }
+    } mute_guard{ was_muted };
+    sound_groups::set_muted(false);
+    PlaySettings initial; initial.music_volume = was_muted ? 1 : 17; initial.sfx_volume = was_muted ? 2 : 23;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed private background preferences");
     const auto save_path = output / "debug-background-profile" / "ColourWars" / "save_data.json";
     const auto save_bytes = [&]
@@ -372,7 +385,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     // A current in-memory preference change is an independent restoration
     // witness. This fixture deliberately does not call a Save writer here.
     auto& current = const_cast<PlaySettings&>(preferences_session.play_settings());
-    current.music_volume = 31; current.sfx_volume = 47;
+    current.music_volume = was_muted ? 3 : 31; current.sfx_volume = was_muted ? 4 : 47;
     painter_scripted_pads::states[3].buttons = static_cast<std::uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
     app.gamepads()->poll();
     stack.notify_activation(true);

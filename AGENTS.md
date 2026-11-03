@@ -138,6 +138,15 @@ or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
 and graceful shutdown.
 
+Check runs are silent. The game holds every sound at zero while
+`COLOURWARS_MUTE` is set to anything but `0` (`game/config/sound_groups.h`), and
+so do the opt-in probes that open a real audio device. Every script that starts
+one of those dot-sources `scripts/quiet-game.ps1`, sets the variable for its
+children and restores the caller's value afterwards. Set `COLOURWARS_MUTE=0`
+first to hear a run. The same variable also mutes a game you launch by hand.
+The one exception is the Debug painter background fixture, which plays at 1-4%
+so its mute checks still test something.
+
 Each case is declared once, in `scripts/acceptance/cases.psd1`: its name, its
 group (default, Debug-only or opt-in), extra sources, arguments, start rank and
 whether it is slow in Debug. A new case is a `.cpp` there plus one entry; the

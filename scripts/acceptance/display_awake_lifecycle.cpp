@@ -119,6 +119,7 @@ namespace
                 { auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str()); info->validate();
                     catalog.add(StageDefinition{ Stage{ name }, std::move(info) }); }, nullptr });
             app.load_manifest((content / "manifest.json").string().c_str());
+            sound_groups::set_muted(sound_groups::muted_by_environment());
             sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages); sound_groups::apply(*app.audio_resources(), play);
             tuning.validate_resources(*app.render_resources(), *app.audio_resources()); presentation.validate_resources(*app.render_resources(), *app.audio_resources());
             require(levels.get("movement_course") != nullptr, "Required valid fixture stage missing");

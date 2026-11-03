@@ -46,6 +46,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot '..\check-path.ps1')
+. (Join-Path $PSScriptRoot '..\quiet-game.ps1')
 
 # Splits comma lists, trims, refuses empty, unknown and repeated names, and
 # returns each name in the allowed set's own spelling.
@@ -350,12 +351,13 @@ foreach ($variant in $Variants) {
             Write-Host "capturing $run"
             $saved = $env:LOCALAPPDATA
             $env:LOCALAPPDATA = $isolated
+            $previousQuietGame = Enter-QuietGame
             try {
                 $process = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru `
                     -WorkingDirectory $isolated
                 $null = $process.Handle
             }
-            finally { $env:LOCALAPPDATA = $saved }
+            finally { $env:LOCALAPPDATA = $saved; Exit-QuietGame $previousQuietGame }
             try {
                 if (-not $process.WaitForExit($RunTimeoutSeconds * 1000)) {
                     throw "$run did not quit within $RunTimeoutSeconds s."

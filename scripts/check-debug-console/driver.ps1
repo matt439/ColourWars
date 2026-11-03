@@ -4,6 +4,7 @@
 # call time.
 
 . (Join-Path $PSScriptRoot '..\drawing-references.ps1')
+. (Join-Path $PSScriptRoot '..\quiet-game.ps1')
 if (-not ('ColourWars.ConsoleDriver4' -as [type])) {
     Add-Type -ReferencedAssemblies $DrawingReferences -TypeDefinition @'
 using System;
@@ -217,7 +218,8 @@ function Write-Script([string]$profile, [string]$name, [string[]]$lines) {
     Set-Content -LiteralPath (Join-Path $folder "$name.cfg") -Value $lines -Encoding ASCII
 }
 
-# Starts the game on an isolated profile (and, when given, an isolated TEMP).
+# Starts the game, muted, on an isolated profile (and, when given, an
+# isolated TEMP).
 function Start-Game([string]$profile, [string[]]$arguments, [string]$temp = '') {
     # These launches test the console, not the intro a match opens with:
     # every match starts at the split-screen countdown, after +logfile.
@@ -226,6 +228,7 @@ function Start-Game([string]$profile, [string[]]$arguments, [string]$temp = '') 
     $saved = @{ LOCALAPPDATA = $env:LOCALAPPDATA; TEMP = $env:TEMP; TMP = $env:TMP }
     $env:LOCALAPPDATA = $profile
     if ($temp) { $env:TEMP = $temp; $env:TMP = $temp }
+    $previousQuietGame = Enter-QuietGame
     try {
         $started = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru `
             -WorkingDirectory $output
@@ -233,6 +236,7 @@ function Start-Game([string]$profile, [string[]]$arguments, [string]$temp = '') 
     }
     finally {
         $env:LOCALAPPDATA = $saved.LOCALAPPDATA; $env:TEMP = $saved.TEMP; $env:TMP = $saved.TMP
+        Exit-QuietGame $previousQuietGame
     }
     return $started
 }
