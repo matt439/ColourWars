@@ -173,11 +173,12 @@ Seven engine types that Labrador v0.2.0 had and its master removes
 `UiTextDropShadow`, the camera tools and `RotationOrigin`), copied with their
 shape unchanged into `namespace colourwars` so they can never be ambiguous with
 an engine type. The folder is named
-for where the code came from, not for what it does; the removal without a
-deprecation release is report `ENG#28` in the
+for where the code came from, not for what it does; the removal with an
+engine-only caller count is report `ENG#28` in the
 [engine-report ledger](review/engine-reports.md). `HYG#51` kept the name: the
-folder is that report's exhibit, and its contents are deleted, not renamed,
-when the engine answers it.
+folder is that report's exhibit. The author's 2026-11-03 answer amends the
+engine's changelog, after which the folder is the documented migration; its
+contents are deleted, not renamed, only if the engine brings the types back.
 
 ## Services: `GameData`
 

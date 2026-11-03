@@ -13,8 +13,9 @@ On 2026-10-30 the author asked for an architecture review, since the project is
 read as an example, and then asked for every finding to go into TODO and be
 worked through. The findings are recorded, frozen, in
 [the review](review/2026-10-30-architecture-review.md); this section owns their
-status. Engine-side findings are ledger drafts `ENG#27` to `ENG#32` in
-[engine-reports.md](review/engine-reports.md).
+status. Engine-side findings are ledger reports `ENG#27` to `ENG#33` in
+[engine-reports.md](review/engine-reports.md); `ENG#29` was withdrawn on
+2026-11-03 and its client-side change is `HYG#52`.
 
 These rows are allowed to do what the [working rules](#scope-and-working-rules)
 below forbid for a source split: rename a type, add an abstraction, move files
@@ -756,8 +757,8 @@ new abstract [Collider](../game/objects/collider.h), a game-side
 longer decode the tag of what they touched, and the painted structures no longer
 cast it. `Collider` answers the roles `structure()`, `projectile()` and
 `paintable()`. `Collider::of` is the one conversion from the engine's type and
-refuses anything else. That cross-cast is now `ENG#29`'s exhibit in the
-[ledger](review/engine-reports.md). [Structure](../game/objects/structure.h)
+refuses anything else. That cross-cast was `ENG#29`'s exhibit in the
+[ledger](review/engine-reports.md) (withdrawn 2026-11-03; now `HYG#52`). [Structure](../game/objects/structure.h)
 answers `jump_through`, `ramp`, `ramp_rises_right`, `flat`, `slab_geometry`,
 `top_paint_team`/`top_paint_colour`, `holds_flat_top_paint`, `passable_for` and
 `cover_point`, and the roles `mover()` and `gate()`. With those, `Player`,
@@ -1115,6 +1116,45 @@ the package check passed twice on a fresh Release ZIP (34 checks, 66 files) and
 refused a copy with a stray `.pdb`; the export script, run with
 `-EnvironmentFile`, wrote 42 variables including `INCLUDE`, `LIB` and `Path`.
 The hosted run is the first test of the CI wiring.
+
+### A typed projectile list in `Level` (`HYG#52`)
+
+**Open, not started; low priority.** Added 2026-11-03, when the author withdrew
+engine report 29 ([Closed](review/engine-reports.md#closed)): its exhibit was
+this game's own choice, not something the API forced. It is a performance and
+clarity cleanup with no player-visible effect, so it does not jump TODO's
+level-first order.
+
+`Level::update_players` gives each new shot to `scene_->add` and discards the
+`Projectile*` it returns ([level.cpp](../game/objects/level.cpp) line 503).
+`Level` then finds its projectiles again by walking `collision_objects()` three
+times a tick: `resolve_projectile_movement` (lines 512-514) and the drain after
+`scene_->resolve()` (lines 391-394, before `end_tick()` at 424) each ask every
+object for its role through `Collider::of`, a cross-cast paid for every
+structure and player too, and `count_projectiles` (lines 720-723) tests every
+tag to count them.
+
+Scope: keep `add`'s typed pointers in a `Level` list, in the order they were
+added, as `LevelStructures` already keeps `projectile_targets_`. Drive the
+movement and drain loops and the count from it, and prune it in the PHASE 3
+loop between `resolve()` and `end_tick()` by
+`p->for_deletion() || !scene.in_bounds(*p)`. A pointer added this tick stays
+until the next `end_tick()` sweeps it. Shots that retire inside the weapon
+update keep their flush-before-retire rule ([player.h](../game/objects/player.h)).
+Drop the "Typed scene access is engine report 29" pointer from
+[collider.h](../game/objects/collider.h); `Collider::of` stays for a contact's
+other party (report 33). Behaviour, evaluation order and formats are
+unchanged; the list's order must match the scene order the walks used, so the
+replay and RNG streams do not move.
+
+First step: assert, in Debug, that the pruned list equals the scene's
+projectiles after each `end_tick()`, before the walks are removed. If the
+predicate ever disagrees with `end_tick()`'s retire set, stop and reopen report
+29 as a document-only ask, with that disagreement as its exhibit.
+
+Acceptance: both presets build under `/W4 /WX`; the full default acceptance
+list passes, since every match runs through `Level`, and a recorded replay plays
+back bit for bit.
 
 ## Open shortlist (2026-10-29)
 

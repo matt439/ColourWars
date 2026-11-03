@@ -6,14 +6,17 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Three are live (23, 25 and 26), all found after the engine's last tagged
-> answers.** Engine master answered 23 and 25 on 2026-10-27, after `v0.2.0`, so
-> they wait for the first minor tag carrying those answers; 26 is an unfiled
-> draft. **Twenty-three are closed** (1–22 and 24) and kept below as one paragraph
+> **Nine are live (23, 25-28 and 30-33), all found after the engine's last
+> tagged answers.** Engine master answered 23, 25, 31 and 32 after `v0.2.0`, so
+> they wait for the first minor tag carrying those answers. The author decided
+> the rest on 2026-11-03: 27, 30 and 33 are to be filed, with 26 riding on 27,
+> and 28 is fixed in the engine directly before that tag. None is posted yet.
+> **Twenty-four are closed** (1–22, 24 and 29) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
-> answer was the one asked for.
+> answer was the one asked for, or when this repository withdraws it with a
+> reason, as it did 29.
 >
 > They are drafted here rather than in the submodule on purpose. AGENTS.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -91,6 +94,17 @@ rewrote `Registry`'s comments). Master also has source breaks and a manifest
 rule that will stop this game at that bump; they are scoped under
 [Preparing the next bump (2026-10-29)](#preparing-the-next-bump-2026-10-29).
 
+**Decided 2026-11-03, against upstream master `aa8f5a2`** (2026-11-01), twelve
+commits past `47be5a3` and still no tag since `v0.2.0`. None of the twelve
+touches `registry.h`, `engine/collision` or the render backends' device
+creation, and none changes behaviour in `engine/scene` or `engine/input`:
+`ff24323` drops a no-op `using namespace labrador;` from `scene.cpp` and the
+input sources, and `2f1d4b7` corrects comments, `gamepad_reader.h` among
+them. On the author's 2026-11-03 decision, which accepted every
+recommendation put to it, 27, 30 and 33 are to be filed, 26 rides with 27, 28 is
+fixed in Labrador rather than filed, and 29 is withdrawn. Each report below
+records its call and what would reopen it.
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -138,6 +152,14 @@ This supporting work does not change TODO's level-first priority.
 answered both without a filing (see the 2026-10-29 recheck above), so the
 route now applies only to report 26 and to later drafts.
 
+**2026-11-03: filing authorized.** The author authorized 27, 30 and 33 as
+Engine requests, with 26 attached to 27 as a rider rather than filed alone.
+28 does not go through the route: the author maintains both repositories, so
+it is fixed by an engine commit instead of an issue the author would file
+against his own engine. 29 is withdrawn. The issues are not posted yet; their
+public drafts are written to the rules below, and each still needs the fresh
+upstream recheck before it goes.
+
 Before authorized filing, refresh engine master from upstream and recheck the
 concrete client exhibit against that revision. Record the checked commit with
 the report. A cached `origin/master` ref or local branch is not evidence of
@@ -180,11 +202,11 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 |---|---|---|---|
 | 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | answered on untagged master in `42bc478` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the guards go at the first minor tag carrying it |
 | 25 | No public controller vibration output | [Isolated XInput adapter](../../game/input/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
-| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; rechecked 2026-10-29 at master `b96bad6`, still unanswered; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); unfiled, awaiting separate authorization |
-| 27-32 | Six owed by the 2026-10-30 architecture review | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | found 2026-10-30; not yet drafted or rechecked against master |
+| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); still unanswered at master `aa8f5a2`; author's decision 2026-11-03: not filed alone, rides with report 27's filing |
+| 27, 28, 30-33 | Six still live from the 2026-10-30 architecture review (29 withdrawn) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | author's decision 2026-11-03: 27, 30 and 33 to be filed (drafted, not posted); 28 fixed in the engine before the tag; 31 and 32 answered on untagged master, no filing needed |
 
-Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six
-[owed by the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
+Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six still live
+[from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -201,15 +223,18 @@ and working its `HYG#49` found a seventh (33).
 Each is numbered here so TODO can point at it. All seven were drafted on
 2026-10-30 against engine master `47be5a3`, below report 26, each fact-checked
 by a second reader. 31 and 32 are already answered on untagged master and need
-no filing; they wait on the next minor tag like 23 and 25. 27-30 and 33 are
-drafts that wait for the author's authorization to file.
+no filing; they wait on the next minor tag like 23 and 25. The author decided
+the other five on 2026-11-03: 27, 30 and 33 are to be filed as Engine requests, with
+26 as a rider on 27; 28 is fixed in Labrador directly; 29 is withdrawn and
+[closed](#closed), its client-side change now `HYG#52` in
+[code hygiene](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52).
 
 | # | Report | Exhibit at `96c65373` |
 |---|---|---|
 | 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp` and `painter_visual.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
-| 28 | Public types removed without a deprecation release, after report 7's procedure | `game/carried/` and the `HYG#25` removed-member list |
-| 29 | `Scene` gives no typed access to short-lived objects and no retirement notice | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
-| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:113`, `scripts/check-startup.ps1:225` and `:248` |
+| 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
+| 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
+| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117`, `scripts/check-startup.ps1:225` and `:248` |
 | 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
 | 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
@@ -346,6 +371,22 @@ authorization and a fresh upstream recheck are required before filing.
 
 ## 26. `Registry` cannot forget a name - **draft with rescan exhibit**
 
+**Author's decision 2026-11-03: not filed alone; it rides with report 27.**
+Since `HYG#47` what is left is a comment and some unreachable definitions held
+until exit, and master now documents the opposite as deliberate ("a name owns
+its slot for the registry's lifetime"), so a filing of its own would spend a
+public issue on little. The ask is still true for any client that reloads user
+content, so it is not withdrawn: it goes with the report 27 filing as a rider,
+since both are state a test or a reload needs to reset, and it stays among the
+`ENG#PARKED` asks until an answer. The draft below is kept as written.
+Rechecked 2026-11-03 at master `aa8f5a2`: `registry.h` is unchanged since
+`3a14f11`. **Reopen** and file it alone if reloading user stages becomes a
+frequent or large flow (an editor hot-reload loop, or many large user stages)
+so the held memory or a stale `contains` has a measurable cost, or if a
+Labrador sample adds reloadable content and needs the same removal. Withdraw it
+if the author accepts "a name owns its slot" as the final design; the
+`stage_catalog.h` comment then becomes a permanent note.
+
 **Drafted against the pin** (`1e60fb2`, 2026-10-28). `labrador::Registry`
 (`engine/core/registry.h`) offers `add`, which replaces the resource of a name
 it already holds, plus `resolve`, `get` and `contains`. It has no way to remove
@@ -363,8 +404,7 @@ behaviour is the pin's code too; `3a14f11` only documents it. So the
 `contains` trap below is a client choice. The rescan could
 `add(name, nullptr)` a vanished stage, after which `contains` says no and
 `get` throws "released". The name and its slot would still stay, so the ask
-narrows to forgetting the name itself. Filing still needs separate author
-authorization.
+narrows to forgetting the name itself.
 
 **Exhibit.** `ROAD#16` rereads the player's stage folder each time Stage Select
 opens from the main menu ([`UserStageFolder::rescan`](../../game/config/stage_loading.cpp)).
@@ -390,11 +430,31 @@ whether stale handles throw or stay invalid, are engine decisions.
 unreachable definitions in `game/config/stage_catalog.h` and the roadmap's note
 about stale entries. `StageCatalog::remove_user_stages` would remove the
 names that left the list, so the registry would agree with it. This is a
-local draft, not a filed issue.
+local draft; it is posted only as report 27's rider.
 
 ---
 
 ## 27. No headless or recording pad backend - **draft with link-seam exhibit**
+
+**Author's decision 2026-11-03: file now as an Engine request, with report 26
+as a rider.** It is the strongest of the architecture-review drafts: four live
+workarounds that rest on link order rather than an API, a known growth point
+(`PI-21`'s `vibrate`/`stop_vibration`) at the next bump, and the engine's own
+OCA-45 note admitting the same gap for samples. Master's `gamepad_reader.h:14-16`
+keeps the concrete class because a vtable on the frame path is "a tax nothing
+has asked to pay"; the four exhibits are that ask. Filing before the tag that carries `PI-21` gives the engine the
+chance to land a seam beside vibration, so this repository deletes the blocks
+at that bump instead of extending them. The filing keeps the caveat below that
+the duplicate-symbol outcome is inferred, not built. Not posted yet. Rechecked
+2026-11-03 at master `aa8f5a2`: unanswered; in the input area `2f1d4b7`
+corrected comments and `ff24323` dropped no-op `using` directives, neither
+changing behaviour. The four blocks have drifted to
+`action_bindings.cpp:19`, `input_bindings.cpp:10`,
+`keyboard_jump_capture.cpp:23` and `painter_visual.cpp:85`. **Reopen** and
+hold the filing if a trial build against master (`HYG#24`) shows the four
+blocks need only two trivial extra definitions and the engine says the next tag
+is imminent; then file after the bump with the real extension as evidence.
+Drop it only if the probes stop needing to drive `Gamepads`.
 
 **Checked against upstream master `47be5a3` (2026-10-30): still unanswered.**
 `LABRADOR_INPUT_BACKEND` accepts only `xinput` and `web`
@@ -469,12 +529,28 @@ probes whenever `GamepadReader` gains a member. The PI-21 bump will be the first
 time that is needed. `COLOURWARS_PAINTER_SCRIPTED_PADS` can stay if it still
 selects scripted pads over physical ones.
 
-This is a local draft, not a filed issue. Filing it needs separate author
-authorization and a fresh check of upstream master.
+Filing is authorized (2026-11-03); the public issue is drafted from this text
+with synthetic content only, after a fresh check of upstream master.
 
 ---
 
 ## 28. Public types and members removed with an engine-only caller count - **draft with carried-copy exhibit**
+
+**Author's decision 2026-11-03: not filed; fixed in Labrador directly.** The
+author maintains the engine alone and the ask is an edit to two documentation
+entries, so a public issue would only have the maintainer report the
+maintainer. Before the tag that carries `730dd99` and `fdfc24e`, an engine
+commit amends their two Unreleased `CHANGES.md` entries with the three-place
+count, and for `730dd99` a cost statement or a restoration, as the ask below
+says. The tag is the deadline: once those entries ship under a version,
+"removed with no caller" is the precedent. This report closes when that engine
+commit lands, citing it. If the entries are only amended, nothing here changes
+in code and `game/carried/` becomes the documented migration. **Reopen** as a
+public Bug report if the author wants the count failure on record as a teaching
+example for adopters, or if Labrador gains other maintainers and the tracker
+becomes the real intake. Bringing the types back, rather than counting them, is
+a larger engine change that deletes `game/carried/` and its includes in 41
+files, and it gets a decision of its own.
 
 **The row's original ask, a deprecation release, is already answered on the pin
 and on master: it is declined by written policy. This report narrows to the
@@ -521,7 +597,7 @@ master commit revisits either removal. `gh issue list -R matt439/Labrador
 --state all` returned no issues at all.
 
 **Exhibit (HEAD `f5303302`, branch `arch-review-3`; the carried copies arrived
-in `cc0a2fff`, 2026-10-29, and are not on `master` yet).**
+in `cc0a2fff`, 2026-10-29, and have since reached `master`).**
 [game/carried/](../../game/carried/) holds 13 files and 1,028 lines copied
 from `v0.2.0` into `namespace colourwars`. Each file has a provenance note
 (`game/carried/moving_object.h:3`). The copies are hierarchy rungs, not
@@ -597,8 +673,8 @@ both before 1.0.
 - If the entries are only amended: nothing in code changes. The carried copies
   are then the documented migration, and this report closes as answered.
 
-This is a local draft, not a filed issue. Filing needs separate author
-authorization and a fresh upstream recheck.
+This is a local draft, not a filed issue, and on the 2026-11-03 decision it
+stays one: the engine commit is the answer.
 
 Ledger table row, refreshed:
 
@@ -606,123 +682,23 @@ Ledger table row, refreshed:
 
 ---
 
-## 29. `Scene` gives no typed access to short-lived objects and no retirement notice - **draft with scene-walk exhibit (narrowed: may not be owed)**
-
-**Checked 2026-10-30 against engine master `47be5a3` (2026-10-30): unanswered as asked, but the premise does not hold.**
-Between the pin (`1e60fb2`, `v0.2.0`) and master, `engine/scene/scene.h` and
-`engine/collision/collision_object.h` changed only cosmetically: include order,
-`Camera::default_camera`, and unqualified `RectangleF`/`Shape`/`Vector2F`.
-`Scene::add<T>` returns the object's own type ("the object's own type rather than
-the list's"). That pointer "stops being valid when the object leaves the
-scene". An object leaves through `remove()`, which the caller asks for, or
-through retirement. Retirement is checkable from public state. `end_tick()`
-(`engine/scene/scene.cpp:150-177` on master) clears the contacts. It then calls the
-object's virtual `set_for_deletion(true)` on every collision object that is
-`!in_bounds()`, and erases exactly those whose `for_deletion()` is true.
-`for_deletion()` and `Scene::in_bounds()` are both public. Between `resolve()`
-and `end_tick()`, a caller can therefore tell which kept pointers are about to die.
-The engine's backlog calls `set_for_deletion` "a collidable's retirement hook"
-(`docs/product/BACKLOG.md:154`, G49/OCA-59, done). On master, `scene.h` also
-states the engine's position on the phase this report wants. Under "PHASE 3 is
-the game's, and it has no function on this class", it declines a per-object
-virtual as the frame-loop tax T8 refuses, and prescribes "a loop over the objects
-it already holds pointers to, between resolve() and end_tick()". The
-`collision_objects()` comment says the game's own questions are "a walk, once,
-not a virtual on the object". `CHANGES.md` records the stable-erase order of
-retirement. No story, decision or plan covers typed access or a destroy-time
-notice. A read-only `gh` issue search on `matt439/Labrador` found no match.
-Filing needs separate author authorization. Read the next section before you
-ask for it.
-
-### What happens
-
-A projectile is the scene's commonest object and the shortest-lived. The game
-creates it as a `std::unique_ptr<Projectile>` and gives it to `Scene::add`,
-which returns a `Projectile*`. The game discards that pointer. Every tick it
-reaches the projectiles again by walking `collision_objects()`, which yields
-`CollisionObject*`, and recovering the game type from each element. It drains
-each projectile's pending output (paint audio, a blocked-shot cue) in a second
-such walk before `end_tick()`.
-
-None of this is forced by the engine. The game could keep `add`'s typed
-pointers in a list of its own and, in the documented PHASE 3 loop, drain and
-drop each one for which `for_deletion() || !scene.in_bounds(*p)`. Pointers that
-`add` returned this tick are still pending and are not swept until the next
-`end_tick()`. That is the pattern `Level` already uses for long-lived objects
-(`projectile_targets_`, `game/objects/level.h:351-353`). What the engine does
-not give is a single guarantee, stated as such, that this predicate *is* the
-retire set. Today a client relies on reading `end_tick()`'s order (bounds
-sweep, then retirement on `for_deletion()`) together with `set_bounds`'s and
-`add`'s comments.
-
-### Exhibit (client HEAD `f5303302`)
-
-- [`game/objects/level.cpp`](../../game/objects/level.cpp) `:555-569`
-  (`update_players`) gives each new projectile to `scene_->add` at `:566` and
-  discards the `Projectile*` it returns.
-- `:571-582` (`resolve_projectile_movement`) walks every collision object to
-  find the projectiles before contacts. The role query through `Collider::of`
-  is at `:577`.
-- `:454-464` (in `update_level_logic`, after `scene_->resolve()` at `:453`)
-  walks every collision object again through `Collider::of`. It drains each
-  projectile's paint audio and blocked contact before `end_tick()` at
-  `:485-487`.
-  [`game/objects/player.h`](../../game/objects/player.h) `:148-149` records the
-  same flush-before-retire rule for shots that retire inside the weapon update.
-- `:821-832` (`count_projectiles`) walks a third time, testing each tag
-  (`:826`, no cast), to count what a kept list's size would already say.
-- [`Collider::of`](../../game/objects/collider.cpp) `:9-19` is one
-  `dynamic_cast` from `labrador::CollisionObject` to the game's base type.
-  Since `HYG#42` (2026-10-30), the two role-query walks above pay it once per
-  object, for every structure and player as well as each projectile. That cost
-  comes from walking rather than keeping `add`'s typed return. The contact path
-  pays the same cast in `Collider::on_contact`, but that is report 33's
-  neighbourhood (`on_contact` hands over a `CollisionObject`), not this one.
-  [`collider.h`](../../game/objects/collider.h) `:25-28` names this report.
-
-### Reproduction
-
-This needs no game assets. Derive `Shot` from `CollisionObject`, overriding
-`for_deletion`/`set_for_deletion` to record the flag, and set it after one
-update. Give one to a `Scene` with `add` and keep the returned `Shot*`. Before
-each `end_tick()`, test `shot->for_deletion() || !scene.in_bounds(*shot)`. The
-test is true on exactly the tick whose `end_tick()` destroys the shot. So a
-typed pointer *can* be kept safely today, but only by restating the scene's
-retirement rule in client code.
-
-### The ask
-
-Narrowed to what the engine owns. A document-only answer would close it.
-
-1. **State the retire set as a contract**: between `resolve()` and
-   `end_tick()`, a collision object will be retired by that `end_tick()` if and
-   only if `for_deletion()` is true or `in_bounds()` is false (after the
-   object's own `set_for_deletion(true)` answer). Then a client keeping `add`'s
-   pointers may rely on it. Optionally, expose it as one query (for example a
-   `Scene` member answering "retires at this `end_tick()`") so the rule lives in
-   one place. The spelling is the engine's call.
-
-A destroy-time callback or a scene-kept per-type view is deliberately not
-asked. Master's PHASE 3 comment already declines the first under T8. The
-second would have the engine index game types that `add`'s typed return
-already lets the client keep.
-
-### What an answer lets this repository delete
-
-Nothing that cannot be deleted now. With or without (1), `Level` can keep a
-typed list of live projectiles, filled from `add`'s return and pruned in the
-PHASE 3 loop by the predicate above. That removes the three walks at `:454-464`,
-`:571-582` and `:821-832`, the per-object cross-cast the first two pay, and the
-tag test in `count_projectiles`. (1) only makes the pruning rule an engine
-promise rather than a reading of `end_tick()`. `Collider::of` would remain for
-the contact's other party (report 33). Its comment's pointer to this report
-can then go. Because the exhibit is the game's choice and not forced by the API,
-the author may prefer to withdraw this row and do the client-side change
-instead. This is a local draft, not a filed issue.
-
----
-
 ## 30. A device-unavailable startup failure can be classified only by its message text - **draft with string-match exhibit**
+
+**Author's decision 2026-11-03: file now as an Engine request.** The exhibit
+spans five places in two languages, and CI and the failure record both depend
+on it. The filing states the cost more exactly than the draft below: a reworded
+D3D11 message fails Release CI loudly on a host with no adapter, so the bump
+catches it; what fails quietly is `last-error.log` on players' machines, which
+stops recording `no_hardware_device`, and a change of backend does the same.
+The ask is narrow, matches the engine's own T6 "refuse loudly with a named
+reason" (`STORIES.md:1707`, `:1713`), and helps adopters whom the release guide
+teaches to match on prose. Not posted yet. Rechecked 2026-11-03 at master
+`aa8f5a2`: device creation unchanged since `47be5a3`; the client `strcmp` is
+at `game/fatal_report.cpp:117`. **Reopen** and hold the filing if the engine
+signals it is reworking device creation under T6 (for example a WARP or
+software-fallback policy change), then file against the new shape. Drop it if
+the author decides ColourWars will only ever ship D3D11 and accepts patching
+three files on a rewording.
 
 **Checked against upstream master `47be5a3` (2026-10-30): still unanswered.**
 That is 214 commits past the pin `1e60fb2` (`v0.2.0`). The Direct3D 11 backend
@@ -788,7 +764,8 @@ exact-text checks at `scripts/check-startup.ps1:225` and `:248` and
 `scripts/sandbox/logon.ps1:208` and `:238` also go. In their place the scripts
 would read the `cause_0_reason` that `last-error.log` already records, which
 neither script checks today. The acceptance check would test the reason instead
-of the literal. This is a local draft, not a filed issue.
+of the literal. Filing is authorized (2026-11-03); the public issue is drafted
+from this text with a synthetic repro.
 
 ---
 
@@ -983,6 +960,22 @@ while master answers it.
 
 ## 33. `on_contact` hands the other party over `const` - **draft with const_cast exhibit**
 
+**Author's decision 2026-11-03: file now as an Engine request.** The exhibit is
+small, live and the single exception to the rule `HYG#49` just enforced
+everywhere else; a grep on 2026-11-03 still finds it the only `const_cast` in
+`game/`. A client side channel is not taken instead: it is the worst answer for
+an OOP client, because it moves a pairwise response out of the virtual where it
+belongs. The engine may decline under T8 or the "told exactly once" rule. A
+decline closes this report and settles `HYG#49`'s exception: the `const_cast`
+stays for good, and the comments at `game/objects/collider.cpp:24-26` and
+`projectile.h:88-93` say so instead of pointing here. Filing now, beside the
+engine's open IDEA#9 contact-helper decision, lets it weigh both contact-shape
+questions together. Not posted yet. Rechecked 2026-11-03 at master `aa8f5a2`:
+nothing touches `engine/collision`. **Reopen** and withdraw it if the author
+decides the one documented `const_cast` is acceptable for good. Hold it, and
+attach it to that discussion, if Labrador opens IDEA#9 or contact-manifold work
+that would change `on_contact`'s shape anyway.
+
 **Drafted 2026-10-30. Upstream checked the same day at master `47be5a3` (2026-10-30): not raised or planned upstream.** On master, `CollisionObject::on_contact` (`engine/collision/collision_object.h:49-50`) is still `on_contact(const CollisionObject& other, const Vector2F& normal, float penetration)`. The pin `1e60fb2` (`v0.2.0`) has the same parameter. Since the pin, only `e0536cc` (constant spelling) and `afac4a9` (2026-10-27, which moved the math library into `namespace labrador`, so `mattmath::Vector2F` became `Vector2F`) have touched `collision_object.h`, `contacts.h` or `contacts.cpp`. Neither changes `other`. Master's `CHANGES.md`, `docs/product/BACKLOG.md` and `docs/product/STORIES.md` mention neither `on_contact` nor a mutable other party. Master's other `on_contact` mentions don't plan such a change either: `docs/api-teachability.md:143`, `docs/product/JOURNEYS.md:91`, `docs/review/all-findings.md:3750`, the rtcd notes on pair-once and NaN normals, and the website guides (`guides/your-collision.mdx:88,187,435`, `concepts/game.mdx`, `concepts/tick.mdx`). A `gh` search of `matt439/Labrador` issues for `on_contact` and `const_cast` returned nothing. This is a local draft, not a filed issue. Line numbers in this repository are at ColourWars `f5303302`.
 
 ### Exhibit
@@ -1021,26 +1014,29 @@ A defined way for a contact response to change the other party, through the cont
 
 After that, the game has no `const_cast` and no `mutable`.
 
-Filing requires separate author authorization. This draft does not file, comment on or open anything upstream.
+Filing is authorized (2026-11-03); the public issue is drafted from this text
+with the synthetic absorber-and-shot repro. This draft itself does not file,
+comment on or open anything upstream.
 
 ---
 
 # Closed
 
-Twenty-three reports, all answered. Sixteen were spent here in code. Seven
-spent nothing in code: 1 was fixed before it was filed; 9 and 10 were answered
-as document only, and those two changed only comments and
-docs; 15 was answered as document only, 17 changed only a manifest comment, 19
-needs more evidence and 21 was declined — an answer that leaves the workaround where it is still
-closes the report. Kept as outcomes rather than as
+Twenty-four reports: twenty-three answered and one withdrawn. Sixteen were
+spent here in code. Seven spent nothing in code: 1 was fixed before it was
+filed; 9 and 10 were answered as document only, and those two changed only
+comments and docs; 15 was answered as document only, 17 changed only a
+manifest comment, 19 needs more evidence and 21 was declined — an answer that
+leaves the workaround where it is still closes the report. 29 was withdrawn by
+this repository, because its exhibit was the game's own choice. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `a7da897`
 for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
 17 and 19, the parent of `d1c6063` for 9, 10 and 14, the parent of
 `83544c2` for 18, 20 and 22, the parents of `d647cf8`, `b4f2201` and
-`1553ba5` for 6, 12 and 15, and the parent of the commit that moved the pin
-to `1e60fb2` for 24.
+`1553ba5` for 6, 12 and 15, the parent of the commit that moved the pin
+to `1e60fb2` for 24, and `8bfa00f7` for 29.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1994,6 +1990,34 @@ and its stdout count were deleted. The handler stays, because it makes any
 other debug-layer break report its stack instead of ending the probe
 silently. The Debug startup check now passes on a runner with no change on
 this side.
+
+---
+
+## 29. ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ — withdrawn 2026-11-03
+
+Found by the 2026-10-30 architecture review and drafted the same day against
+master `47be5a3`. The exhibit was `Level` reaching its projectiles by walking
+`collision_objects()` three times a tick (movement, the drain before
+`end_tick()`, and `count_projectiles`), two of them paying `Collider::of`'s
+cross-cast per object. The draft itself found the premise did not hold:
+`Scene::add<T>` returns a typed pointer, `for_deletion()` and `in_bounds()` are
+public, `end_tick()` retires exactly the objects with
+`for_deletion() || !in_bounds()`, and master's `scene.h` ("PHASE 3 is the
+game's") prescribes a client loop over the pointers the client keeps and
+declines a per-object virtual under T8. The ask had narrowed to a document-only
+statement of that retire set, and an answer would have deleted nothing that
+cannot be deleted now. **Withdrawn by the author's decision of 2026-11-03**,
+unfiled: the game discards `add`'s `Projectile*` by its own choice, and a
+report without a forced workaround has no standing under
+[Why the exhibits matter more than the asks](#why-the-exhibits-matter-more-than-the-asks).
+
+**Spent:** nothing yet. The client-side change is
+[`HYG#52`](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52): keep
+`add`'s typed pointers in a `Level` list and prune it in the PHASE 3 loop.
+**Reopen** and file the document-only ask if, while doing that, the predicate
+disagrees with `end_tick()`'s actual retire set, for example for objects added
+this tick or after a change in the bounds-sweep order. That would be a real
+exhibit: client code restating an undocumented rule that broke.
 
 # What is deliberately not here
 

@@ -32,6 +32,16 @@ recorded in the [backstory](backstory.md#building-it). The original exclusion of
 shipping AI opponents was superseded by the author's 2026-10-27 request below;
 the existing Debug bots remain developer tools.
 
+Match options are not modes (the author's 2026-11-03 decision, `ROAD#22`). An
+option that keeps the win condition, most painted surface when the clock ends,
+is a match option inside the one ruleset, as Match length, the series formats,
+the [Series stage rule](#series-stage-rule-road20) and Boost handicaps already
+are. The `ROAD#14` pickups toggle and any later variant inherit this ruling. It
+does not bring back the `MatchRules` seam: an option adjusts values or loadout
+and adds no end condition or result path. Reopen if the 2026-10-15 decision is
+read as one fixed set of match rules rather than one way to win; `ROAD#14`'s
+toggle would then need its own ruling.
+
 ### AI bot players (ROAD#10)
 
 **ROAD#10 - DECISION (readiness audit, 2026-10-28).** Setup, the shipping
@@ -145,7 +155,8 @@ New captures and writes reject invalid metadata before changing the save.
 Debug replay format **4** records the same controller/difficulty metadata and
 human layout; its reader also accepts legacy human-only format 3. The version
 change prevents an older reader from silently treating a bot as a human dummy.
-(Since `HYG#35` the format is 5, which keeps this metadata and refuses 3 and 4.)
+(Since `HYG#35` the format is 5, which keeps this metadata and refuses 3 and 4;
+`HYG#39` moved it to 6.)
 Sparse human seats retain their roster indices. Recording still captures final
 per-participant inputs after its inner filter, and playback replaces those
 inputs; this is a codec/input-order check, not playable bot replay acceptance.
@@ -2021,7 +2032,7 @@ is a first slice, before attended review. The sections below record the slices
 since selected and their remaining gates.
 
 Two gaps were already tracked and get no new row: a special charged by
-painting is `POL#30`, and more arenas are the current aim (`POL#21`,
+painting was `POL#30` (answered no on 2026-11-03), and more arenas are the current aim (`POL#21`,
 `POL#31`).
 
 ### Combat and tools
@@ -2062,10 +2073,10 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
 
 ### Awareness and presentation
 
-- **Overview map (`ROAD#17`, decision).** Splatoon's map shows ink and
-  teammates. The three-player layout leaves the fourth quadrant unused, which
-  makes it the natural place. A map shows territory mid-match, which bends the
-  withheld-score decision (gap audit 1.1), so the author decides first.
+- **Overview map (`ROAD#17`, declined 2026-11-03).** Splatoon's map shows ink
+  and teammates, and the three-player layout leaves the fourth quadrant
+  unused. The author declined it; the reason is under
+  [Not tracked, by choice](#not-tracked-by-choice).
 - **Off-screen teammate and threat markers (`ROAD#18`).** Splatoon shows
   allies through walls. Teammate markers done 2026-10-28; threat markers are
   an author decision. See [Teammate markers](#teammate-markers-road18) below.
@@ -2095,11 +2106,17 @@ painting is `POL#30`, and more arenas are the current aim (`POL#21`,
   `GAP#4.2`), so swapping controllers swapped settings. A pad can now wear a
   named profile that carries them. See [Player profiles](#player-profiles-road21)
   below.
-- **Match variants (`ROAD#22`, decision).** TowerFall variants, Smash rules
-  and INVERSUS custom rules: low gravity, endless paint, tool roulette. Scoring
-  stays painted surface and many are tuning override sets, but the match scope
-  decisions rule out a speculative `MatchRules` seam. The author decides
-  whether variants count as modes.
+- **Match variants (`ROAD#22`, blocked on `POL#27`).** TowerFall variants,
+  Smash rules and INVERSUS custom rules: low gravity, endless paint, tool
+  roulette. The author ruled on 2026-11-03 that they are match options, not
+  modes (see [Match scope decisions](#match-scope-decisions-2026-10-15)). They
+  wait on `POL#27`, as `ROAD#11`, `ROAD#13` and `ROAD#14` do, because reserves
+  and tool balance decide what endless paint and roulette mean; tuning settling
+  is not a gate. The first slice is endless paint: a named variant owned by
+  C++ that overrides a few specific values, not a free-form override block, and
+  a refill switch for bots. Start it sooner if `POL#27` closes or a couch
+  session asks for variety beyond stage, tool and length; revisit treating tool
+  roulette separately if it is the variant people actually want.
 
 ### Input
 
@@ -2121,6 +2138,23 @@ way!"), a lifetime stats screen, and cosmetics or unlocks. New modes
 TowerFall's elimination and co-op modes, INVERSUS arcade, Smash stock
 battles) stay excluded by the [match scope decisions](#match-scope-decisions-2026-10-15).
 A later gap list should read these absences as intended.
+
+A live overview map (`ROAD#17`) was declined by the author on 2026-11-03.
+ColourWars withholds the whole picture along with the percentage, because the
+backstory [reveal](backstory.md#the-reveal-full-screen) is the first time
+anyone sees the drawing whole; a map showing it for four minutes would spend
+that beat. Only
+three-human matches have a spare quadrant, so what players could see would
+depend on how many pads are plugged in. The value was rated low, and
+[teammate markers](#teammate-markers-road18) answer "where is my team". The
+earlier draft also argued that a territory map is not Splatoon's; that was
+wrong, since Splatoon's map shows both teams' ink, and the decline does not
+rest on it. Reopen if the reveal no longer opens on the whole picture, if the
+author decides its payoff is the choice and the percentage rather than the
+picture, if attended 3P play shows players lost about where to paint despite
+teammate markers, or if `ROAD#18` takes threat markers. A territory-free use
+of the 3P quadrant (clock, team colours, the person's desk) would be its own
+row.
 
 
 ### Results awards (`ROAD#12`)
@@ -2422,7 +2456,8 @@ are controlled inspection states; attended clarity/preference remains
 
 ### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
 
-**UNSCOPED (2026-10-28).** These are the remaining capabilities from
+**UNSCOPED (2026-10-28); `ROAD#28`'s first slice was promoted on 2026-11-03,
+below.** These are the remaining capabilities from
 `ROAD#15`, not ready implementations or prerequisites of the three slices
 above:
 
@@ -2430,7 +2465,9 @@ above:
   displacement, rider support identity and carry, ceilings/crush refusal,
   projectiles, shadows, editor envelopes and replay before choosing a trial.
   The current horizontal carry contract does not answer these; the
-  [draft](#vertical-lift-contract-draft-road28) below does, pending the author.
+  [draft](#vertical-lift-contract-draft-road28) below does, and the author
+  accepted it with two amendments on 2026-11-03, promoting one cycling-lift
+  slice.
 - **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
@@ -2442,10 +2479,11 @@ arena while `POL#21` remains a geometry decision.
 
 #### Vertical-lift contract draft (`ROAD#28`)
 
-**DECISION: draft recorded, awaiting the author (2026-10-30).** The step was
-a written draft, not code; it is below. The capability stays unscoped until the
-author accepts the engineering answers and picks among the gameplay options.
-Acceptance of the draft step: every inventory row below resolved against the
+**OPEN: draft accepted with two amendments (the author's 2026-11-03
+decision).** The draft was recorded on 2026-10-30 as a written step, not code;
+it is below. The author accepted E1, E2, E4 and E6 as written, amended E3 and
+E5, and picked one option from each gameplay set; the calls and the promoted
+slice are in section 4. Acceptance of the draft step: every inventory row below resolved against the
 tree at the commit that records it, each engineering answer names its
 precedent, and no code, tuning or content changed. The draft chooses no trial
 and does not touch Turbulence's geometry (`POL#21`).
@@ -2491,7 +2529,7 @@ change a vertical mover would force there, not a design.
 | Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
 | Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-60`, `game/debug/replay/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
 | Replay codec | `game/debug/replay/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
-| Replay version | `game/debug/replay/replay.h:45`, `game/debug/replay/replay.cpp:686-690` | writes and reads 5 only (`HYG#35`) | writes 6 (answer E5) |
+| Replay version | `game/debug/replay/replay.h:46`, `game/debug/replay/replay.cpp:683-686` | writes and reads 6 only (`HYG#39`; corrected 2026-11-03, the draft said 5) | writes 7 (answer E5) |
 | Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
 
 **2. Engineering answers, each following existing practice.**
@@ -2528,6 +2566,14 @@ change a vertical mover would force there, not a design.
   out (`team_gate_structure_paintable.cpp:65-84`,
   [Team gate](#team-gate-road15-second-slice)), and is settled from the state
   before the step, as the gate and the paint ferry's heading are.
+  (Amended 2026-11-03: the first slice refuses the flush case. Every lift's
+  lowest pose must leave a full body height plus the corridor pad above the
+  floor beneath it, so (a) alone rules out a crush and (b)'s hold stays in the
+  code as a safety check that should never fire, not a gameplay rule. A
+  flush lift would let a player stand in the open space and stall it; nobody
+  has played that. The gate's settle, now `:70-90`, holds a permission while
+  nothing moves; the closer precedent for a mover holding its phase is the
+  paint ferry stopping on a tie or at an end stop, `horizontal_motion.cpp:140`.)
 - **E4. Sweeps and world queries generalise, they do not fork.** Flying paint,
   Roller footprints, splash, runoff, `top_paint_team`, shadows and culling take
   the full offset vector. Paint, credit and scored area stay on local anchor
@@ -2535,10 +2581,13 @@ change a vertical mover would force there, not a design.
   world queries; draws and the ferry cue already use the full vector
   (`translating_structure_paintable.cpp:111`, `:224`, `:230`).
 - **E5. Version the record.** The motion block's `schema` goes 1 → 2 with the
-  axis and travel, and `ReplayFile::format_version` 5 → 6. The reader refuses
-  5, as the 4 → 5 bump (`HYG#35`) refused 3 and 4: a replay holds only on the
+  axis and travel, and `ReplayFile::format_version` 6 → 7. The reader refuses
+  6, as the 4 → 5 bump (`HYG#35`) refused 3 and 4: a replay holds only on the
   build that recorded it. *Precedent:* that bump, and the motion block already
-  carries its own schema number.
+  carries its own schema number. (Amended 2026-11-03: the draft said 5 → 6,
+  but `HYG#39` had already moved the format to 6 the day after it. Only Debug
+  `record`/`play` files are affected; the shipping instant-replay tape is held
+  in memory and never versioned.)
 - **E6. Budget the relative motion.** The lift's per-step travel joins the
   vertical relative-displacement bound beside the player's own speed, refused
   at admission like the horizontal one. *Precedent:*
@@ -2563,10 +2612,54 @@ point; values stay provisional, and none of these gates the engineering.
   Ferry and Gate Trials; (b) an explicit variant of an existing trial. Neither
   joins Random nor touches Turbulence's selected geometry (`POL#21`).
 
-**Next step after acceptance.** Promote one bounded slice: E1-E6 with
-`moving_structure`, `level_format` and editor acceptance, behind the chosen
-G-options, in an explicit-only trial. Bot routing and attended play stay
-separate rows, as for the gate and ferry.
+**4. The author's calls (2026-11-03).** Accepted all recommendations:
+
+- **Engineering:** E1, E2, E4 and E6 as written; E3 and E5 as amended above.
+  E6 has a wide margin: about 2.7 units per step at 160 units/s against a
+  vertical bound of about 140 (120 body plus a 20-thick mover), which shrinks
+  if a lift is drawn much thinner than 20.
+- **G1, travel: (b) one storey**, starting at about 320 units (provisional),
+  well above a held jump's rise of about 196, so the lift reaches a ledge a
+  jump cannot. If the trial stage cannot fit a 320-unit shaft with E3(a)'s
+  clearance, use the largest travel above about 200 that fits; attended play
+  of Press Tower (`POL#31`) or Turbulence (`POL#21`) showing vertical routes
+  are the real problem would make (c) worth its cost.
+- **G2, speed: (a) 160 units/s**, the qualified movers' leg speed, so the axis
+  is the slice's only new variable. Start at about 100 instead if `ROAD#30`'s
+  Ferry Trial play shows riding at 160 is a free, risk-free escape.
+- **G3, drive: (a) a cycle** for this slice, as the Mover Trial came before
+  the Ferry Trial. **(b) paint drive is the next lift slice**: `up`/`down`
+  headings through the shared `decode_drive` and a cue of its own, modelled on
+  `ROAD#27`. Pick (b) now instead if the lift's first attended play is meant to
+  judge its paint value rather than its physics. (c) stays unscoped.
+- **G4, scoring: (a) scored, like the ferry**, which is
+  `TranslatingStructurePaintable`'s existing behaviour under E4. Choose (b), or
+  (c) if the sides are farmed, if `ROAD#30` shows scored moving surfaces swing
+  the score more than their area justifies.
+- **G5, trial: (a) a new explicit-only Lift Trial** derived from Turbulence
+  Yard like its siblings (for example `turbulence_lift_trial`), so the Ferry
+  and Gate Trials stay unchanged for `ROAD#30`. It joins neither Random nor
+  Turbulence's selected geometry (`POL#21`). A variant of the Mover Trial
+  becomes reasonable after `ROAD#30` if Stage Select crowds with trials or
+  lifts and ferries should meet.
+- Reopen the hold if `ROAD#30` shows held-open rules read as unfair, and E3 as
+  written if flush lifts that vanish into the floor are wanted as a look (then
+  (b) is required and the trial must test a player stalling the lift).
+
+**Promoted slice (2026-11-03).** One cycling vertical lift: E1-E6 as amended,
+G1-G5 as above, with `moving_structure`, `level_format` and editor acceptance,
+on the new explicit-only Lift Trial. Bot routing, the paint-driven lift and
+attended play stay separate rows, as for the gate and ferry. The capability
+remains XL; this slice is its physics.
+
+**Next local step.** Re-resolve the inventory against the tree, since
+`HYG#51` moved several sites (the loader refusal is now
+`level_object_builder.cpp:146`, `apply_carrier` is `player.cpp:571` with its
+call at `:1338`). Then land the engine-free half first: a vertical `Spec` with
+`travel_y` and its validation, pose, path, corridor and lowest-pose underside
+check in `horizontal_motion_contract.h`, the loader accepting
+`type: "vertical"`, and `level_format` fixtures for admission and the flush
+refusal. Carry, sweeps, replay and the trial stage follow.
 
 ### Paint-object trial play (`ROAD#30`)
 
@@ -3189,7 +3282,8 @@ model: rear threats are currently found by looking and listening (the `POL#3`
 C2 rear-threat recognition review in [polish-crossfeed.md](polish-crossfeed.md)).
 The author decides whether threats get any marker (always, only recent damage
 sources, only within some distance) and how that fits the withheld-score
-decision (gap audit 1.1) and `ROAD#17`'s overview map. Until then only teammates
+decision (gap audit 1.1), on whose grounds the author declined a live overview
+map (`ROAD#17`, 2026-11-03). Until then only teammates
 are marked.
 
 CPU acceptance: `teammate_markers` builds real Levels on Movement Course at 1,

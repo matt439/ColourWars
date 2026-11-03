@@ -49,7 +49,8 @@ tuning, reopen closed Splatoon borrowings or close any attended gate.
 
 ## Draft personas, stories and journeys (`DES#1`)
 
-**Drafted 2026-10-30; waits on the author (`DECISION`).** Deliverables 1-3
+**Drafted 2026-10-30; accepted with amendments by the author on
+2026-11-03.** Deliverables 1-3
 are below: an evidence inventory, six personas, 49 stories in seven journey
 stages and four journeys. The draft describes the game at this revision and
 changes no code, content, tuning or order. Every persona claim and story
@@ -61,9 +62,10 @@ numbers are handles for `DES#2`, not priorities.
 
 The draft's acceptance (every persona and story cites a source or is marked a
 hypothesis; every story has acceptance criteria and a mapping or "none") was
-checked row by row when it was written. What the author's review decides is
-listed under [Open points for the author](#open-points-for-the-author). Until
-then the personas and stories are a proposal, and `DES#2` stays blocked.
+checked row by row when it was written. The author's calls on it are under
+[Open points for the author](#open-points-for-the-author); the text fixes they
+asked for (P5, P6, B8, F6, F7 and J4) are made in place below. The personas
+and stories are now the accepted set `DES#2` starts from.
 
 ### Evidence inventory
 
@@ -101,7 +103,10 @@ claim of that kind below is therefore **(H)**.
 ### Personas
 
 Each persona is a role a person takes in a session, not a demographic; one
-person can be P1 on Friday and P3 on Sunday. P4 is a facet any seat can carry.
+person can be P1 on Friday and P3 on Sunday. P4 is a facet any seat can carry,
+kept as a named persona so its shared requirement is traced as one. P6 is a
+non-player persona. P2 is the primary persona and P1 the second (the author,
+2026-11-03).
 
 **P1, the host.** *Context:* owns the Windows PC (E1) and starts the session;
 the device that leaves Player Count is P1 and confirms the roster (E3). Often
@@ -143,15 +148,17 @@ slot rather than the person (E17, answered by profiles). *A good session:*
 **(H)** sets it once on a profile and never thinks about it again.
 
 **P5, the stage author.** *Context:* builds an arena in `ColourWarsEditor.exe`
-(E20). Today that is mainly the game's author; a player making stages for
-their own group is the case `ROAD#16` was built for (E20) **(H: that such
-players exist)**. *Goals:* edit, save and play without a rebuild; learn why a
+(E20). The editor is built from source and is not in the Release ZIP
+(`cmake/release_package.cmake` installs only `ColourWars`; the README's "Your
+own stages" says so), so today P5 is the game's author. A player making
+stages for their own group is the case `ROAD#16` was built for (E20) **(H:
+that such players exist)**, and it cannot happen until the editor ships. *Goals:* edit, save and play without a rebuild; learn why a
 stage was refused; keep records on their stage. *Frustrations the record
 names:* the manifest/CMake/rebuild cycle and a broken stage stopping the game
 (E20, answered). *A good session:* edits, saves to My Stages, opens Stage
 Select in the running game and plays the new version (E20).
 
-**P6, the Labrador developer.** *Context:* reads the source, not the screen
+**P6, the Labrador developer** (non-player). *Context:* reads the source, not the screen
 (E21). *Goals:* see the full-OOP end of the engine's dial at work, follow one
 shot from input to score, add a weapon or paint object without breaking a
 contract (E21), and find where the engine API was awkward (the
@@ -159,7 +166,9 @@ contract (E21), and find where the engine API was awkward (the
 refactored toward the engine's own style, which would delete the
 demonstration (AGENTS.md). *A good session:* finds a concept in the OOP
 guide's table and the code where the guide says. P6 has stories but no
-journey; deliverable 3 names only player journeys.
+journey; deliverable 3 names only player journeys. Its stories are traced to
+docs only (the OOP guide and the report ledger) and take no part in ordering
+player features.
 
 ### User stories
 
@@ -192,7 +201,7 @@ by** names the feature or row and, where one exists, the retained
 | B5 | P1: a dropped pad to stop the match, so nobody loses a player to a cable | Disconnect pauses and names the missing seat; Resume waits for its return; a pad in another slot reclaims with Start | `ROAD#4`; `menu_navigation` (physical pads: `ROAD#2`) | E3 |
 | B6 | Any seat: resuming not to surprise anyone, so nobody dies on the first frame | Resume and focus return count in before play; held fire or jump needs a release | `POL#18` (attended); `resume_countdown` | E18 |
 | B7 | P1 on the mouse: to find my pointer over busy paint, so I aim where I mean | A marker follows the pointer in matches over pale, dark and painted scenes | `POL#39` (attended); `cursor_marker` | E24 |
-| B8 | P2 on a pad: aim that holds its own against the mouse seat, so the device does not decide the match | **(H)** In mixed-device play, pad seats are not consistently outscored for aim alone | none (`ROAD#24` is `UNSCOPED`); Boost (`ROAD#5`) is a partial lever | E2, E11 |
+| B8 | P2 on a pad: aim that holds its own against the mouse seat, so the device does not decide the match | **(H)** In mixed-device play, pad seats are not consistently outscored for aim alone | none; traced to `ROAD#24` (`UNSCOPED`, no new row); Boost (`ROAD#5`) is a partial lever | E2, E11 |
 
 #### C. Between rounds and across a series
 
@@ -239,8 +248,8 @@ by** names the feature or row and, where one exists, the retained
 | F3 | P5: a broken stage to cost one stage and tell me why | A refused file is left out with a reason on stderr and in Stage Select's issue details | `ROAD#16`, `ROAD#32`; `user_stages` | E20 |
 | F4 | P5: to check my arena's fairness before playing it | The editor's blockout aids show paint-mechanism guides and a symmetry report | `ED#9`, `ED#25`; `level_editor` | E20 |
 | F5 | P5: my stage to keep its records | Records are keyed by the file name and survive later registration | `ROAD#16`; `user_stages`, `match_records` | E20 |
-| F6 | P5: my finished stage in Random | **(H)** An opted-in user stage can be drawn by Random | none: user stages are never Random (provisional, `ROAD#16`) | E20 |
-| F7 | P5: to give my stage to a friend | **(H)** A stage file copied into another player's folder plays there | Copying by hand works (E20); no in-game sharing | E20 |
+| F6 | P5: my finished stage in Random | **(H)** An opted-in user stage can be drawn by Random | none: user stages are never Random (provisional); the yes/no is `ROAD#16`'s Random call, no new row | E20 |
+| F7 | P5: to give my stage to a friend | **(H)** A stage file copied into another player's folder plays there | Copying the file by hand, with the README's "Your own stages"; `ROAD#16`; `user_stages`. In-game sharing is deliberately absent while the editor stays out of the ZIP | E20 |
 
 #### G. Reading the code
 
@@ -309,42 +318,93 @@ description in time; that is the fresh-player observation in `POL#24`.
 *Unobserved:* whether the workshop prepares a fresh player (S6) is the
 `POL#19` observation.
 
-**J4, authoring and playing a user stage** (P5).
+**J4, authoring and playing a user stage** (P5). The editor is built from
+source and is not in the Release ZIP, so a ZIP player can follow this journey
+from Stage Select on, with a file someone else made.
 
 | Step | Screen or state | Stories |
 |---|---|---|
-| Open the editor; New, or Open a shipped stage to copy | `ColourWarsEditor.exe` | F1 |
+| Open the editor (a source build); New, or Open a shipped stage to copy | `ColourWarsEditor.exe` | F1 |
 | Edit; check the paint guides and the symmetry report | Editor canvas, blockout aids | F4 |
 | File > Save to My Stages | `game/contracts/user_stage_contract.h` rules | F1 |
 | In the running game, open Stage Select: it rescans | `UserStageFolder`, `MainMenuStageSelect` | F2 |
 | A refused file: the issue count, Down for details | `UserStageRefusalsMenu` | F3 |
 | Play it; records are keyed by the file name | `GameLevel`, `MatchRecords` | F2, F5 |
 | Edit, save, reopen Stage Select: the new version plays | Rescan on open | F2 |
-| Share it, or put it in Random | none | F6, F7 |
+| Share it: copy the file into a friend's stages folder | By hand, per the README's "Your own stages"; no in-game sharing | F7 |
+| Put it in Random | none: never Random (provisional, `ROAD#16`) | F6 |
 
 ### Open points for the author
 
-The review is the author's `DECISION`; the draft takes no position on these:
+The draft took no position on these. **The author decided them on
+2026-11-03,** accepting the draft with the amendments below; as "What this
+does not decide" says, that reorders nothing and closes no gate.
 
 1. **The persona set.** Keep the six, fold P4 into P1-P3 as a facet, or drop
    P6 (it has no journey and its stories describe the code, not play).
+   *Decided:* keep all six. P4 stays a named facet, because D1-D4, D6 and B4
+   share one requirement (change my own seat without changing anyone else's)
+   that `DES#2` should trace as one. P6 is labelled non-player: it is left out
+   of `DES#2`'s ordering of player features and its stories are traced to
+   docs only. *Reopen* to drop P6 if the pass should cover players only and
+   leave the engine-client role to AGENTS.md and the OOP guide, or to fold P4
+   if `DES#2`'s table becomes unwieldy with a facet persona.
 2. **The hypotheses.** Every **(H)** above is unobserved. The largest are who
    P2 is (shooter experience, age, how often a group meets), the host's
    device, and whether players other than the author make stages (P5).
-3. **The unserved stories.** B8 (pad aim against the mouse seat), F6 (user
-   stages in Random) and F7 (sharing) map to "none". Accepting one makes it a
-   `DES#2` candidate; rejecting it records the absence as intended, as the
-   comparable-game gaps' "Not tracked, by choice" list does.
+   *Decided:* keep every (H) and strike none. Each goes to the attended
+   session that can settle it: who P2 is, and whether a good session needs
+   no manual, to `POL#24`; the host's device and B8 to `ROAD#2`; S6 and P3's
+   good session to `POL#19` and `ROAD#10`; P5's player authors to
+   `ROAD#16`/`ED#5`, blocked while the editor is unshipped. POL#46's Study B
+   is not one of them: its participants judge screenshots and never play.
+   *Reopen* if a later study kit gains a background questionnaire on play
+   habits, which could then be a P2 source.
+3. **The unserved stories.** B8 (pad aim against the mouse seat) and F6
+   (user stages in Random) map to "none"; F7 (sharing) is served by copying
+   the file by hand. Accepting an unserved story makes it a `DES#2`
+   candidate, unless an owner row already holds it, in which case `DES#2`
+   traces it to that row and files nothing new. Rejecting one records the
+   absence as intended here, not in the comparable-game gaps' "Not tracked,
+   by choice" list, which belongs to that comparison. *Decided:* all three
+   accepted.
+   - **B8** is traced to `ROAD#24`, which stays `UNSCOPED` and `LOW`. The
+     `ROAD#2` pad session, and any `POL#24` session that mixes the mouse seat
+     with pads, notes whether pad seats lose fights to the mouse seat.
+     *Reopen:* if they consistently do at 2P or 4P, raise and scope
+     `ROAD#24`; if the mouse seat is an accepted host advantage, or play is
+     expected to be mostly all-pad, reject B8 and close `ROAD#24` with it.
+   - **F6** is left to `ROAD#16`'s Random call, with a lean to keeping
+     "never Random" for now: today only the author authors, and can pick a
+     stage by hand. *Reopen* towards the opt-in if the editor ships, if the
+     `ROAD#16`/`ED#5` saved-stage play shows finished stages worth rotating,
+     or if groups collect enough user stages that picking each is a chore.
+   - **F7** is served by hand-copying and the README; in-game sharing is
+     deliberately absent while the editor stays out of the ZIP. *Reopen* as
+     a candidate if the editor ships in the ZIP or players other than the
+     author start making stages; the smallest slice would be an "open My
+     Stages folder" item.
 4. **Priorities.** The draft ranks no persona or story. If the author names a
    primary persona, `DES#2` can order its candidates by it; NOW does not
-   change.
+   change. *Decided:* P2, the couch guest, is primary and P1 second, since
+   the attended gates that judge the finish ask what a fresh player
+   understands without help. *Reopen* for P3 if the ZIP mostly reaches people
+   playing alone, or for P1 if playtests show guests cope and hosts struggle
+   with setup.
+
+The whole acceptance would be redrafted if the main audience turns out not to
+be a couch group, or if a planned release ships the editor, which changes P5,
+J4, F6 and F7 materially.
 
 ## Traceability and gap pass (`DES#2`)
 
-**Blocked on the author's acceptance of `DES#1`.** Its draft is above; the
-pass starts from the stories the author accepts, not from the draft. Map the
-accepted stories to features, TODO rows and
-`scripts/acceptance/` cases. File each unserved story as a candidate in the
-owner doc it belongs to, with its own row. List features that no story
-explains. Acceptance: one table covers every story, and each new candidate
-follows TODO.md rule 4.
+**Ready since 2026-11-03,** when the author accepted `DES#1` with the
+amendments above; the pass starts from that accepted set. Next step: build
+one table of all 49 stories against features, TODO rows and
+`scripts/acceptance/` cases, starting from each story's Served by column.
+Trace B8 to `ROAD#24` and F6 to `ROAD#16`, and note F7 as served by
+hand-copying. File an unserved story as a candidate in its owner doc, with
+its own row, only when no owner row already holds it. Order candidates by
+P2, then P1; P6's stories are traced to docs only and are not ordered. List
+features that no story explains. Acceptance: one table covers every story,
+and each new candidate follows TODO.md rule 4.
