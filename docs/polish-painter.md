@@ -96,10 +96,16 @@ puff: spawn settling and ground seams stay quiet. A new takeoff interrupts
 landing or firing recovery. Every action leaves movement and firing responsive;
 no control waits for an animation to finish.
 Firing follows a paid shot before launch-obstruction retirement; an empty tank
-or a held button during cooldown cannot invent another shot. Automatic fire
-lets each short brace reach its recovery frame. The shared body phrase covers
-all five tools; their individual mechanisms and secondary motion are implemented
-in the [tool pass](polish-tools.md).
+or a held button during cooldown cannot invent another shot. The firing pose
+changes only the face: its legs and hips are idle's, so a shot never redraws
+the stance. It shows only on a standing body. Walking, running and air keep
+their own legs, and setting off mid-shot drops the pose at once. Sustained
+automatic fire reaches the recovery frame and holds it while shots keep coming,
+instead of flicking back to the first frame each shot (the first build's braced,
+shifted legs did that at about 12 Hz under the sprayer, and read as noodling
+legs; changed 2026-11-03). The shared face covers all five tools; their
+individual mechanisms and secondary motion are implemented in the
+[tool pass](polish-tools.md).
 Hurt takes visual priority over the other live actions and follows accepted
 damage, independently of the rate-limited hurt sound.
 

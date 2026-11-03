@@ -25,6 +25,13 @@ namespace
 
 void Player::update_animation_state()
 {
+    // Setting off mid-shot hands the legs straight back to locomotion.
+    if (this->action_ == PlayerAnimationState::firing && this->state_ == PlayerState::alive &&
+        this->calculate_animation_state() != PlayerAnimationState::idle)
+    {
+        this->action_.reset();
+        this->action_age_ = 0.0f;
+    }
     this->set_animation_state(this->action_.value_or(
         this->state_ == PlayerState::dead ? PlayerAnimationState::idle :
         this->calculate_animation_state()));
@@ -67,12 +74,27 @@ Player::ActionClip Player::action_clip(PlayerAnimationState state) const
 
 void Player::start_action(PlayerAnimationState state)
 {
+    // The firing face only takes a standing body: walking, running and air
+    // keep their own legs, which the tool's motion already answers.
+    if (state == PlayerAnimationState::firing &&
+        this->calculate_animation_state() != PlayerAnimationState::idle)
+    {
+        return;
+    }
     if (this->action_.has_value())
     {
-        // Automatic fire must reach its recovery frame instead of resetting on
-        // every shot. New contact/jump/hurt events can interrupt lower poses.
-        if ((state == PlayerAnimationState::firing && this->action_ == state) ||
-            action_priority(state) < action_priority(*this->action_))
+        if (state == PlayerAnimationState::firing && this->action_ == state)
+        {
+            // Sustained fire holds the recovery frame rather than flicking
+            // back to the brace on every shot.
+            const ActionClip clip = this->action_clip(state);
+            this->action_age_ = std::min(this->action_age_,
+                clip.frame_time * static_cast<float>(clip.frames - 1));
+            this->update_action_frame();
+            return;
+        }
+        // New contact/jump/hurt events can interrupt lower poses.
+        if (action_priority(state) < action_priority(*this->action_))
         {
             return;
         }

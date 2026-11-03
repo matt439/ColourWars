@@ -151,6 +151,34 @@ namespace movement_acceptance
             }
             require(automatic.emitted_projectiles > 1 && held_second_frame,
                 "sustained paid automatic fire reset the firing clip before its second frame");
+            // Once there, held fire stays on the recovery frame: the brace does
+            // not flicker back on each later shot.
+            const size_t held_projectiles = automatic.emitted_projectiles;
+            for (int tick = 0; tick < 30; ++tick)
+            {
+                automatic.tick(hold_fire);
+                require(automatic.player->animation_state() == PlayerAnimationState::firing &&
+                    automatic.player->action_frame() == 1,
+                    "sustained automatic fire left the held recovery frame");
+            }
+            require(automatic.emitted_projectiles > held_projectiles,
+                "held automatic fire stopped paying shots");
+
+            // Walking while firing keeps the walk's legs, and setting off
+            // mid-shot drops the firing pose at once.
+            PlayerInputData walk_fire = hold_fire;
+            walk_fire.x_movement = 1.0f;
+            const size_t standing_projectiles = automatic.emitted_projectiles;
+            const float standing_x = automatic.player->rectangle().x;
+            for (int tick = 0; tick < 30; ++tick)
+            {
+                automatic.tick(walk_fire);
+                require(automatic.player->animation_state() != PlayerAnimationState::firing,
+                    "a moving player displayed the standing firing pose");
+            }
+            require(automatic.emitted_projectiles > standing_projectiles &&
+                automatic.player->rectangle().x > standing_x,
+                "walking automatic fire fixture did not move and shoot");
         }
 
         ContentVariant action_variant(content / "tuning.json");

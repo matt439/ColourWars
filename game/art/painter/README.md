@@ -48,13 +48,14 @@ action after its two frames and returns to locomotion.
 |---|---:|---:|---|
 | `takeoff` | 1028 | 0.05 | Eyes up, flared bib and bent push-off knees, then tucked feet above the baseline; open mouth. |
 | `land` | 1156 | 0.05 | Wide contact squat and squeezed flat eyes, then lowered eyes and straighter recovery legs. |
-| `fire` | 1284 | 0.04 | Leaning bib and asymmetric braced legs with a wide clenched mouth, then recoil recovery. |
+| `fire` | 1284 | 0.04 | Squinted eyes and a wide clenched mouth, then the recovery face; idle's legs and hips in both frames. |
 | `hurt` | 1412 | 0.06 | Sideways lower-bib shift, one squeezed eye and a frown with one lifted foot, then the opposite wince. |
 | `elimination` | 1540 | 0.07 | Crossed eyes and a frown with a buckling leg, then both knees fold beneath the flared bib. |
 
-These are deliberately full-body phrases. Repeated accepted shots repeat the
-braced firing gesture while physics and the muzzle continue to use their existing
-positions. Action timing and moving-fire readability still need human review.
+These are full-body drawings, but `fire` changes only the face so repeated
+shots never redraw the legs. Runtime shows it only on a standing body and holds
+its second frame under sustained fire; physics and the muzzle continue to use
+their existing positions. Action timing and moving-fire readability still need human review.
 
 Each frame reserves four transparent texels on both horizontal edges, giving
 eight texels between visible art in contiguous animation frames. There are
