@@ -1015,7 +1015,11 @@ the separate controls item font or shared menu detail font.
 including the authored line breaks and spacing. The template spells the
 keyboard keys as `{jump}` (required once) and `{left}`, `{right}`, `{drop}`,
 `{shoot}` and `{pause}` (each optional, at most once); the page substitutes the
-saved keys, and `{pause}` is `Esc` followed by any extra Pause key:
+saved keys, and `{pause}` is `Esc` followed by any extra Pause key. The pad
+lines spell `{pad_jump}`, `{pad_shoot}` and `{pad_pause}` (each optional, at
+most once): the pads' shared Pad buttons choice, such as `A / LT`, or `per pad`
+when the slots' profiles differ, whose buttons the countdown card and Pad
+buttons name per pad. The defaults read as below:
 
 ```text
 CONTROLLER

@@ -216,6 +216,9 @@ public:
 	bool player_identity_visible(int participant) const;
 	float player_identity_emphasis(int participant) const;
 	mattmath::RectangleF player_identity_bounds(int participant) const;
+	// The pane's HUD identity line: seat, team, then the device or bot label
+	// (B1). Empty for an invalid participant.
+	std::wstring_view player_identity_text(int participant) const;
 	// The same badge as seen by the pad in viewer_slot: a bot's badge in a
 	// human pane follows that pane's Reduce effects, not the bot's.
 	float player_identity_emphasis_for(int participant, int viewer_slot) const;

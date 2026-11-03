@@ -46,7 +46,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
 
     std::optional<EndMenuAction> choice;
     int delivered = 0;
-    const auto open = [&](const Session& round = Session())
+    const auto open = [&](const Session& round = Session(), bool replay = false)
     {
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : keys) { app.keyboard()->on_key_up(key); }
@@ -54,7 +54,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
         app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); choice.reset(); delivered = 0;
         stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
-        stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, round.is_series() ? round : series),
+        stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, round.is_series() ? round : series, replay),
             [&](const EndMenuAction& result) { choice = result; ++delivered; });
         tick(); tick();
         require(stack.depth() == 2 && !choice, "Series End menu did not open on neutral input");
@@ -143,6 +143,28 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     next_round("Back from the stages did not return to the End menu's Next Round");
     require(settings.stage() == "king_of_the_hill", "Backing out of the stages committed an unlocked stage");
 
+    // With a playable tape Watch Replay is the second row, and it is still
+    // offered after Back from either page, including the stage page reached
+    // through readied tools (C5).
+    const auto replay_offered = [&](const char* message)
+    {
+        tap(Key::down); tap(Key::enter);
+        require(choice == EndMenuAction::watch_replay && delivered == 1 && stack.depth() == 1, message);
+    };
+    open(Session(), true); tap(Key::down); tap(Key::down); tap(Key::enter); tap(Key::left); tap(Key::escape);
+    still_open("Back from the tools with a replay on offer left the End frame");
+    replay_offered("Back from the between-rounds tools dropped Watch Replay");
+    open(Session(), true); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter); tap(Key::left);
+    tap(Key::escape);
+    still_open("Back from the stages with a replay on offer left the End frame");
+    replay_offered("Back from the between-rounds stages dropped Watch Replay");
+    open(Session(), true); tap(Key::down); tap(Key::down); tap(Key::enter);
+    tap(Key::enter); tap(Key::down); tap(Key::enter); // Both seats ready on their tools.
+    still_open("Readied tools with a replay on offer skipped the stage page");
+    tap(Key::escape);
+    still_open("Back from the stage after the tools left the End frame");
+    replay_offered("Back from the stage reached through the tools dropped Watch Replay");
+
     // Exit is the last row; Change Teams is not reachable between rounds.
     open(); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter);
     require(choice == EndMenuAction::exit && delivered == 1 && stack.depth() == 1,
@@ -206,7 +228,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     settings.set_series_stage_rule(SeriesStageRule::same);
     std::cout << "PASS series re-pick: actual End menu between rounds opens Weapon then Stage Select in its frame; "
         "re-picked tools and Boost, then the stage, play the next round as chosen; Back returns to the End menu "
-        "without committing; teams, roster, bot and best-of stay; Exit follows Change Level; Rotate opens Change "
+        "without committing and still offers Watch Replay; teams, roster, bot and best-of stay; Exit follows Change Level; Rotate opens Change "
         "Level on the rotated stage; Loser's pick plays on for a bot loser and a draw, and otherwise opens Stage "
         "Select for the losing team alone under its heading\n";
 }

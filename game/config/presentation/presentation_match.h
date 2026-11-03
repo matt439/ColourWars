@@ -338,7 +338,7 @@ struct WeaponFeedbackPresentation
 	float aim_marker_distance = 0.0f;
 	float aim_marker_size = 0.0f;
 	float aim_marker_stroke = 0.0f;
-	std::array<mattmath::Vector2F, static_cast<size_t>(WeaponType::bucket) + 1> muzzle_sizes;
+	std::array<mattmath::Vector2F, TUNED_WEAPON_COUNT> muzzle_sizes;
 	// A keylined tank beside the status slot while the tool is low (POL#38),
 	// offset clear of the owner's identity badge. It blinks to
 	// `low_paint_dim_alpha`; Reduce effects holds it steady.
@@ -404,7 +404,7 @@ struct ToolMotionStyle
 struct ToolMotionPresentation
 {
 	bool enabled = true;
-	std::array<ToolMotionStyle, static_cast<size_t>(WeaponType::bucket) + 1> tools;
+	std::array<ToolMotionStyle, TUNED_WEAPON_COUNT> tools;
 	float shot_pose_split = 0.0f;
 	float roller_travel_per_turn = 0.0f;
 	float roller_lift_time = 0.0f;
@@ -508,7 +508,7 @@ struct FigurePresentation
 	float hand_edge = 0.0f;
 	labrador::Colour arm_colour;
 	labrador::Colour hand_colour;
-	std::array<FigureGripPresentation, static_cast<size_t>(WeaponType::bucket) + 1> grips;
+	std::array<FigureGripPresentation, TUNED_WEAPON_COUNT> grips;
 	QuietCharacterPresentation quiet;
 	FigureSlipsPresentation slips;
 

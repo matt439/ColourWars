@@ -221,8 +221,10 @@ colour and one frame, so it is not used here.
    retirement. This feedback does not alter paint credit or collision response.
 7. [Level::level_end_info](../game/objects/level.cpp) requests `PaintTotal` from
    scored objects and builds [LevelEndInfo](../game/objects/level_end_info.h).
-   [ResultsMenu](../game/states/results_menu.cpp) displays it, while
-   [Session::finish_round](../game/match/session.cpp) records a decisive round's win.
+   [GameLevel::open_results_menu](../game/states/game_states.cpp) takes it and
+   passes it to [Session::finish_round](../game/match/session.cpp), which records
+   a decisive round's win, and [ResultsMenuPage](../game/states/results_menu.h)
+   displays it.
 
 The score is surface still held, not accumulated shots or paint events. A
 paintable object's totals must include neutral area in `total`, credited team
@@ -287,11 +289,12 @@ For a new selectable primary weapon, keep these registrations together:
 1. Add its enumerator in [weapon_type.h](../game/objects/weapon_type.h) among
    concrete primaries, before `random_primary`. Selection cycles the contiguous
    range from the first primary through Random; random selection excludes
-   Random itself. Update the concrete count in
-   [GameTuning](../game/config/tuning.h) if adding after its current last primary:
-   `WEAPON_COUNT` is currently `WeaponType::bucket + 1`. `max_prim_wep` aliases
-   `random_primary`. Compile-time checks beside the enum enforce this contiguous
-   order and the boundary after `bucket`; update them with the registrations.
+   Random itself. `TUNED_WEAPON_COUNT` beside the enum counts the concrete
+   primaries; [GameTuning](../game/config/tuning.h)'s `WEAPON_COUNT` and the
+   presentation's per-weapon arrays are sized from it, so no count is edited by
+   hand. `max_prim_wep` aliases `random_primary`. Compile-time checks beside the
+   enum enforce this contiguous order and the boundary after `bucket`; update
+   them with the registrations.
    `grenade_std` is still passed as an ignored secondary placeholder, and `none`
    marks an unset weapon. Neither belongs in the primary range. Give it a name
    in `WEAPON_NAMES` beside the enum, at the same position: that one spelling
@@ -322,7 +325,15 @@ For a new selectable primary weapon, keep these registrations together:
    [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp)
    only draws what they hold. The choice and description arrays in
    [presentation_menu.h](../game/config/presentation/presentation_menu.h) include
-   `random_primary`; keep that relationship if reorganizing the enum.
+   `random_primary`; keep that relationship if reorganizing the enum. The match
+   presentation needs a record keyed by the name in three more tables, which
+   [presentation_read_match.cpp](../game/config/presentation/presentation_read_match.cpp)
+   reads for every tuned weapon and refuses a missing one: the muzzle size under
+   `weapon_feedback.muzzle_sizes`, the tool motion under `tool_motion.tools`
+   (`shot_recovery`, `valve_time`) and the figure's grip under `figure.grips`
+   (`rear`, `front`). Idle drips are read only for the tools
+   `read_idle_drips` names (sprayer, sniper and bucket); a new tool has none
+   until it is added there.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
    and any new wave/effect names in the live
    [sound-bank definition](../game/content/sounds/paint_exe.json). New audio
@@ -346,11 +357,13 @@ snake_case scoped enumerators) before the `ProjectileType::count` sentinel.
 Every per-kind table is sized from that sentinel (`GameTuning`'s
 `PROJECTILE_COUNT`, PaintTuning's `splash_animations` and `impact_sounds`,
 PaintAudio, PaintTile and ProjectileBuilder's arrays), so no count is edited by
-hand; what the sentinel cannot do is fill a slot. Register the kind by name in
-[tuning.cpp](../game/config/tuning.cpp) (`read_projectile_type`, `add_projectile`,
-and the `splash_animation` and `impact` lists) and in
-[tuning_validation.cpp](../game/config/tuning_validation.cpp) (`splash`, `projectile`
-and `impact`), and add its records to tuning.json's projectiles,
+hand; what the sentinel cannot do is fill a slot. Give the kind its spelling
+in `PROJECTILE_NAMES` beside the enum, at the same position: that name is its
+key in tuning.json, and every reader and validator in
+[tuning.cpp](../game/config/tuning.cpp) and
+[tuning_validation.cpp](../game/config/tuning_validation.cpp) walks
+`projectile_from_name` or `for_each_projectile`, so there is no per-name list to
+extend. Add its records under that name to tuning.json's projectiles,
 `paint.splash.animations` and `paint.impact_sounds`. Add its concrete class and
 a case in [ProjectileBuilder](../game/objects/projectile_builder.cpp). Decide
 whether it is swept: list it in `is_swept` beside the enum, or

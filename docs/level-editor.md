@@ -529,14 +529,14 @@ and `out/acceptance/x64-release/level-editor/c7a3f648b379493b881b4947abf635fb`.
 editor/game contract now enforces the documented
 [reserved-name rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
 alongside the existing ASCII/length/leading-character rules. It rejects `CON`,
-`PRN`, `AUX`, `NUL`, `COM1`-`COM9` and `LPT1`-`LPT9` without case; their
+`PRN`, `AUX`, `NUL`, `COM0`-`COM9` and `LPT0`-`LPT9` without case; their
 `.json` extension does not make them ordinary files. Non-ASCII spellings
 remain covered by the existing ASCII-only rule. Explicit ASCII folding keeps
 the new match independent of locale. Valid neighboring identifiers, name
 collisions, source registration and folder policy are unchanged.
 
 The pure old-source contract first reproduced accepting `CON`, before any
-reserved path access. Tests now cover 22 reserved stems in three ASCII cases,
+reserved path access. Tests now cover 24 reserved stems in three ASCII cases,
 17 valid neighbors and prior character/length rules. Sixty-six actual editor
 target refusals preserve an absent ordinary folder, private source and full
 history; only safe `console_map.json` performs save/reopen. The shared refusal

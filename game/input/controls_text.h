@@ -13,8 +13,10 @@ namespace controls_text
     // gameplay actions. Formatting is not input-preference validation.
     std::array<labrador::Key, 27> jump_keys();
     // {jump} is required exactly once; {left}, {right}, {drop}, {shoot} and
-    // {pause} (Esc, then any extra key) are optional, each at most once. The
-    // Key overloads format the defaults with that Jump label.
+    // {pause} (Esc, then any extra key) are optional, each at most once, and
+    // so are {pad_jump}, {pad_shoot} and {pad_pause}: the pads' shared choice
+    // ("A / LT"), or "per pad" when the slots' profiles differ. The Key
+    // overload formats the defaults with that Jump label.
     std::wstring controls_help(std::wstring_view authored, labrador::Key jump);
     std::wstring controls_help(std::wstring_view authored, const InputBindings& bindings);
     std::wstring keyboard_controls_reminder(labrador::Key jump);

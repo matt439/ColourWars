@@ -17,8 +17,8 @@ using namespace labrador;
 #pragma region MainMenuStageSelect
 
 MainMenuStageSelect::MainMenuStageSelect(MenuContext* context,
-	std::optional<Session> between_rounds, PlayerTeam picker) :
-	RosterSetupPage(context, std::move(between_rounds)),
+	std::optional<Session> between_rounds, PlayerTeam picker, bool replay) :
+	RosterSetupPage(context, std::move(between_rounds), replay),
 	picker_(this->between_rounds() ? picker : PlayerTeam::none),
 	stage_motion_(context->data()->presentation()->menu().motion)
 {

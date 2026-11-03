@@ -87,6 +87,29 @@ namespace
         return text;
     }
 
+    // The pad lines name the shared profile's choices. Profiles that differ
+    // by slot are named per pad on the countdown and on Pad buttons instead.
+    std::vector<Token> pad_tokens(const InputBindings& bindings)
+    {
+        const PadProfile& first = bindings.pads.front();
+        const bool common = std::all_of(bindings.pads.begin(), bindings.pads.end(),
+            [&](const PadProfile& pad) { return pad == first; });
+        const auto pad_label = [&](PadAction action)
+        {
+            return common ? controls_text::pad_choice_label(first[action]) : std::wstring(L"per pad");
+        };
+        return {
+            { L"{pad_jump}", pad_label(PadAction::jump), false },
+            { L"{pad_shoot}", pad_label(PadAction::shoot), false },
+            { L"{pad_pause}", pad_label(PadAction::pause), false } };
+    }
+
+    std::vector<Token> with_pad_tokens(std::vector<Token> tokens, const InputBindings& bindings)
+    {
+        for (Token& token : pad_tokens(bindings)) { tokens.push_back(std::move(token)); }
+        return tokens;
+    }
+
     InputBindings with_jump(labrador::Key jump)
     {
         InputBindings bindings;
@@ -106,25 +129,25 @@ std::wstring controls_text::controls_help(std::wstring_view authored, labrador::
     // default still formats, as label coverage includes A/D/S.
     InputBindings bindings;
     std::wstring jump_label(input_key_label(jump));
-    return replace_tokens(authored, {
+    return replace_tokens(authored, with_pad_tokens({
         { L"{jump}", jump_label },
         { L"{left}", label(bindings, KeyboardAction::move_left), false },
         { L"{right}", label(bindings, KeyboardAction::move_right), false },
         { L"{drop}", label(bindings, KeyboardAction::drop), false },
         { L"{shoot}", label(bindings, KeyboardAction::shoot), false },
-        { L"{pause}", pause_label(bindings), false } }, true);
+        { L"{pause}", pause_label(bindings), false } }, bindings), true);
 }
 
 std::wstring controls_text::controls_help(std::wstring_view authored, const InputBindings& bindings)
 {
     bindings.validate_keyboard();
-    return replace_tokens(authored, {
+    return replace_tokens(authored, with_pad_tokens({
         { L"{jump}", label(bindings, KeyboardAction::jump) },
         { L"{left}", label(bindings, KeyboardAction::move_left), false },
         { L"{right}", label(bindings, KeyboardAction::move_right), false },
         { L"{drop}", label(bindings, KeyboardAction::drop), false },
         { L"{shoot}", label(bindings, KeyboardAction::shoot), false },
-        { L"{pause}", pause_label(bindings), false } }, true);
+        { L"{pause}", pause_label(bindings), false } }, bindings), true);
 }
 
 std::wstring controls_text::keyboard_controls_reminder(labrador::Key jump)

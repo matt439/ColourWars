@@ -37,11 +37,12 @@ MainMenuRoute MainMenuRoute::home(MainMenuHome::InitialFocus focus)
 }
 
 MainMenuRoute MainMenuRoute::re_pick(MainMenuScreen screen, std::optional<Session> between_rounds,
-	PlayerTeam picker)
+	PlayerTeam picker, bool replay)
 {
 	MainMenuRoute route(screen);
 	route.between_rounds = std::move(between_rounds);
 	route.picker = picker;
+	route.replay = replay;
 	return route;
 }
 
@@ -64,9 +65,10 @@ std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const Ma
 	case MainMenuScreen::team_select:
 		return std::make_unique<MainMenuTeamSelect>(context);
 	case MainMenuScreen::weapon_select:
-		return std::make_unique<MainMenuWeaponSelect>(context, route.between_rounds);
+		return std::make_unique<MainMenuWeaponSelect>(context, route.between_rounds, route.replay);
 	case MainMenuScreen::stage_select:
-		return std::make_unique<MainMenuStageSelect>(context, route.between_rounds, route.picker);
+		return std::make_unique<MainMenuStageSelect>(context, route.between_rounds, route.picker,
+			route.replay);
 	case MainMenuScreen::title:
 	default:
 		return std::make_unique<MainMenuTitle>(context);

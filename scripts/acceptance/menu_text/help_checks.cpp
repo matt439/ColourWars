@@ -19,14 +19,17 @@ namespace menu_text_acceptance
     // Substitutes {jump} and, where present, the optional keyboard tokens.
     std::wstring expected_keys_help(std::wstring authored, const wchar_t* jump, const wchar_t* left = L"A",
         const wchar_t* right = L"D", const wchar_t* drop = L"S", const wchar_t* shoot = L"Left click",
-        const wchar_t* pause = L"Esc")
+        const wchar_t* pause = L"Esc", const wchar_t* pad_jump = L"A / LT", const wchar_t* pad_shoot = L"RT",
+        const wchar_t* pad_pause = L"Start")
     {
         const auto at = authored.find(L"{jump}");
         require(at != std::wstring::npos, "Controls help oracle requires its declared token");
         authored = authored.substr(0, at) + jump + authored.substr(at + 6);
         for (const auto& [token, label] : { std::pair{ std::wstring_view(L"{left}"), left },
             std::pair{ std::wstring_view(L"{right}"), right }, std::pair{ std::wstring_view(L"{drop}"), drop },
-            std::pair{ std::wstring_view(L"{shoot}"), shoot }, std::pair{ std::wstring_view(L"{pause}"), pause } })
+            std::pair{ std::wstring_view(L"{shoot}"), shoot }, std::pair{ std::wstring_view(L"{pause}"), pause },
+            std::pair{ std::wstring_view(L"{pad_jump}"), pad_jump }, std::pair{ std::wstring_view(L"{pad_shoot}"), pad_shoot },
+            std::pair{ std::wstring_view(L"{pad_pause}"), pad_pause } })
         {
             const auto found = authored.find(token);
             if (found != std::wstring::npos) { authored.replace(found, token.size(), label); }
@@ -275,6 +278,23 @@ namespace menu_text_acceptance
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected, "Controls help accepted a repeated, missing-Jump or malformed keyboard token");
         }
+        // The pad lines follow the pads' shared Jump, Shoot and Pause (A8), and
+        // say "per pad" once any slot's profile differs.
+        InputBindings pads;
+        for (PadProfile& pad : pads.pads)
+        {
+            pad[PadAction::jump] = { PadControl::b, PadControl::none };
+            pad[PadAction::shoot] = { PadControl::right_shoulder, PadControl::right_trigger };
+            pad[PadAction::pause] = { PadControl::y, PadControl::none };
+        }
+        require(controls_text::controls_help(shipped.menu_text().help.controls, pads) ==
+            expected_keys_help(help_text[0].text, L"Space", L"A", L"D", L"S", L"Left click", L"Esc", L"B", L"RB / RT", L"Y") &&
+            controls_text::controls_help(L"{jump} {pad_jump} {pad_shoot} {pad_pause}", pads) == L"Space B RB / RT Y",
+            "Controls help did not name the pads' shared rebound Jump, Shoot and Pause");
+        pads.pads[2][PadAction::jump] = { PadControl::a, PadControl::none };
+        require(controls_text::controls_help(L"{jump} {pad_jump} {pad_shoot} {pad_pause}", pads) ==
+            L"Space per pad per pad per pad",
+            "Controls help named one pad's buttons although the slots' profiles differ");
         InputBindings conflicting; conflicting.keyboard_move_left = Key::space;
         bool conflict_rejected = false;
         try { std::ignore = controls_text::controls_help(shipped.menu_text().help.controls, conflicting); }

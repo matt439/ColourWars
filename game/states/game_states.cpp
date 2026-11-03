@@ -257,12 +257,11 @@ void GameLevel::build_and_enter_level()
 	this->settings_.set_screen_layout(static_cast<ScreenLayout>(this->settings_.human_count() - 1));
 	this->data()->viewport_manager()->
 		set_layout(this->settings_.screen_layout());
-	// The first match of this screen has the whole intro; a rematch starts
-	// with the colours being tried. The developer tools may choose otherwise.
-	// Solo practice has no person at either end: it is not a real match.
+	// round_opening is the rule; the developer tools may choose otherwise,
+	// except for solo, which never has an opening.
 	const bool solo = this->settings_.player_count() == 1;
-	const OpeningMode opening = solo ? OpeningMode::off : this->data()->debug().opening_mode(
-		this->builds_ == 0 ? OpeningMode::full : OpeningMode::quick);
+	const OpeningMode chosen = round_opening(solo, this->builds_);
+	const OpeningMode opening = solo ? chosen : this->data()->debug().opening_mode(chosen);
 	++this->builds_;
 	// Untimed practice is what the menus' solo practice reaches on a stage
 	// with lessons; a developer start keeps the timed course for testing.

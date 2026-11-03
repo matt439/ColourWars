@@ -29,8 +29,10 @@ const MainMenuPresentation& MainMenuPage::look() const
 	return this->presentation().main_menu();
 }
 
-RosterSetupPage::RosterSetupPage(MenuContext* context, std::optional<Session> between_rounds) :
-	MainMenuPage(context), between_rounds_(std::move(between_rounds))
+RosterSetupPage::RosterSetupPage(MenuContext* context, std::optional<Session> between_rounds,
+	bool replay) :
+	MainMenuPage(context), between_rounds_(std::move(between_rounds)),
+	replay_(between_rounds_.has_value() && replay)
 {
 	const MainMenuPresentation& look = this->look();
 
@@ -61,10 +63,15 @@ const std::optional<Session>& RosterSetupPage::between_rounds() const
 	return this->between_rounds_;
 }
 
+bool RosterSetupPage::round_replay() const
+{
+	return this->replay_;
+}
+
 void RosterSetupPage::return_to_round_menu()
 {
-	this->context()->transition_to(
-		std::make_unique<EndMenuInitial>(this->menu_context(), *this->between_rounds_));
+	this->context()->transition_to(std::make_unique<EndMenuInitial>(
+		this->menu_context(), *this->between_rounds_, this->replay_));
 }
 
 int RosterSetupPage::player_count() const

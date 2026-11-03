@@ -385,7 +385,7 @@ namespace presentation_read
 		return cue;
 	}
 
-	std::array<IdleDripPresentation, 5> read_idle_drips(const JsonValue& root)
+	std::array<IdleDripPresentation, TUNED_WEAPON_COUNT> read_idle_drips(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");
 		IdleDripPresentation drip;
@@ -398,7 +398,7 @@ namespace presentation_read
 		drip.lifetime = read_positive(json, "lifetime");
 		drip.gravity = read_positive(json, "gravity");
 		drip.keyline_width = read_positive(json, "keyline_width");
-		std::array<IdleDripPresentation, 5> tools;
+		std::array<IdleDripPresentation, TUNED_WEAPON_COUNT> tools;
 		for (IdleDripPresentation& tool : tools)
 		{
 			tool = drip;

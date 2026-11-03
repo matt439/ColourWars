@@ -312,7 +312,9 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             controls_help.replace(token, 6, L"Space");
             for (const auto& [name, words] : { std::pair{ std::wstring_view(L"{left}"), L"A" },
                 std::pair{ std::wstring_view(L"{right}"), L"D" }, std::pair{ std::wstring_view(L"{drop}"), L"S" },
-                std::pair{ std::wstring_view(L"{shoot}"), L"Left click" }, std::pair{ std::wstring_view(L"{pause}"), L"Esc" } })
+                std::pair{ std::wstring_view(L"{shoot}"), L"Left click" }, std::pair{ std::wstring_view(L"{pause}"), L"Esc" },
+                std::pair{ std::wstring_view(L"{pad_jump}"), L"A / LT" }, std::pair{ std::wstring_view(L"{pad_shoot}"), L"RT" },
+                std::pair{ std::wstring_view(L"{pad_pause}"), L"Start" } })
             {
                 const size_t at = controls_help.find(name);
                 if (at != std::wstring::npos) { controls_help.replace(at, name.size(), words); }

@@ -83,6 +83,13 @@
 
 	void check_skip_quick_and_solo(World& world)
 	{
+		// C6: a GameLevel's first round has the whole opening and each rebuild
+		// (rematch, next round, restart) the quick one; solo has none.
+		static_assert(round_opening(false, 0) == OpeningMode::full);
+		require(round_opening(false, 0) == OpeningMode::full && round_opening(false, 1) == OpeningMode::quick &&
+			round_opening(false, 7) == OpeningMode::quick && round_opening(true, 0) == OpeningMode::off &&
+			round_opening(true, 3) == OpeningMode::off,
+			"A rematch did not start at the quick opening, or solo was given one");
 		const MatchTuning& match = world.tuning.match();
 		const auto& timing = match.opening;
 		const float leave = timing.settle + timing.preview * 2.0f + timing.undo;

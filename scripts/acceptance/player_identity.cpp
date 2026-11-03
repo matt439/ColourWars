@@ -162,6 +162,13 @@ namespace
                 require(level->place_player(view, { static_cast<float>(view * 250),
                     static_cast<float>(-view * 100) }), "Could not place identity player");
                 require(level->player_identity_visible(view), "Countdown hid an alive local identity");
+                // B1: the pane's HUD names its seat, its team and its device.
+                const std::wstring expected_identity = L"P" + std::to_wstring(view + 1) +
+                    (level->player(view).team() == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
+                    std::wstring(input_slots::device_name(slots[index]));
+                require(level->player_identity_text(view) == expected_identity &&
+                    level->player_identity_text(-1).empty() && level->player_identity_text(count).empty(),
+                    "The HUD identity line did not name the seat, team and device");
                 const auto body = level->player(view).rectangle();
                 const auto bounds = level->player_identity_bounds(view);
                 const float emphasis = level->player_identity_emphasis(view);
