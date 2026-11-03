@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/input/input_slots.h"
 #include "game/objects/level_builder.h"
+#include "game/states/pause_menu.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
@@ -12,6 +13,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -221,15 +223,100 @@ namespace
             "Two humans are a match, never the solo workshop");
     }
 
+    float painted(const Level& level)
+    {
+        const LevelEndInfo info = level.level_end_info();
+        return info.team_a_area + info.team_b_area;
+    }
+
+    // S2: the Tool row's rebuild as GameLevel's change_tool handler runs it
+    // (game_states.cpp): the old level's tool_change_place, a fresh build
+    // from settings holding the chosen tool, then enter_after_tool_change.
     void check_tool_change_start(World& world)
     {
-        std::unique_ptr<Level> level = world.build(true, 1, 1.0f, WeaponType::bucket);
-        level->start_without_countdown();
+        const int lesson = lesson_index(*world.build(true), "long_gap");
+        const Vector2F stood = world.course().stations()[static_cast<size_t>(lesson)].position;
+        for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper,
+            WeaponType::roller, WeaponType::mister, WeaponType::bucket })
+        {
+            const std::string name(weapon_name(tool));
+            std::unique_ptr<Level> old = world.build(true);
+            step(*old, world.tuning.match().countdown + 0.1f);
+            require(old->place_player(old->participant_for_view(0), stood), name + ": goto long_gap");
+            step(*old, 1.0f); // settled where they stand
+            const std::optional<Vector2F> place = old->tool_change_place();
+            require(place.has_value(), name + ": a living player has no place to return to");
+            const Vector2F before = *place;
+
+            std::unique_ptr<Level> level = world.build(true, 1, 1.0f, tool);
+            require(level->state() == LevelState::start_countdown,
+                name + ": the rebuilt course starts in its countdown");
+            level->enter_after_tool_change(place);
+            step(*level, dt);
+            const int rebuilt = level->participant_for_view(0);
+            require(level->state() == LevelState::active && level->match_started(),
+                name + ": a tool change goes straight to GO");
+            require(level->player(rebuilt).primary_weapon().type() == tool,
+                name + ": the rebuilt player holds the chosen tool");
+            require(painted(*level) == 0.0f, name + ": the rebuilt course is not clean");
+            const Vector2F back = level->player(rebuilt).rectangle().position();
+            require(std::abs(back.x - before.x) < 0.5f && std::abs(back.y - before.y) < 0.5f,
+                name + ": the player is not back where they stood");
+            require(level->active_lesson() == lesson, name + ": the lesson where they stood shows");
+        }
+
+        // A dead player has no place: the rebuilt course keeps the spawn.
+        std::unique_ptr<Level> old = world.build(true);
+        step(*old, world.tuning.match().countdown + 0.1f);
+        require(old->place_player(old->participant_for_view(0), stood), "goto long_gap");
+        require(old->kill_player(old->participant_for_view(0)), "kill");
+        step(*old, dt);
+        require(old->player(old->participant_for_view(0)).state() != PlayerState::alive,
+            "The killed player is still alive");
+        const std::optional<Vector2F> place = old->tool_change_place();
+        require(!place.has_value(), "A dead player returns to where they died");
+        std::unique_ptr<Level> fresh = world.build(true);
+        fresh->start_without_countdown();
+        step(*fresh, dt);
+        const Vector2F spawn = fresh->player(fresh->participant_for_view(0)).rectangle().position();
+        std::unique_ptr<Level> level = world.build(true, 1, 1.0f, WeaponType::roller);
+        level->enter_after_tool_change(place);
         step(*level, dt);
+        const int rebuilt = level->participant_for_view(0);
+        const Vector2F back = level->player(rebuilt).rectangle().position();
         require(level->state() == LevelState::active && level->match_started(),
-            "A tool change goes straight to GO");
-        require(level->player(0).primary_weapon().type() == WeaponType::bucket,
-            "The rebuilt player holds the chosen tool");
+            "After a death the tool change still goes straight to GO");
+        require(level->player(rebuilt).state() == PlayerState::alive &&
+            std::abs(back.x - spawn.x) < 0.5f && std::abs(back.y - spawn.y) < 0.5f,
+            "After a death the rebuilt player does not start at the spawn");
+        require(level->active_lesson() == lesson_index(*level, "workshop"),
+            "After a death the spawn's lesson does not show");
+    }
+
+    // S2: PauseMenuInitial::cycle_tool's step over the five real tools, both
+    // ways, wrapping at each end and never landing on Random.
+    void check_tool_row_wraps()
+    {
+        constexpr std::array<WeaponType, 5> tools{ WeaponType::sprayer, WeaponType::sniper,
+            WeaponType::roller, WeaponType::mister, WeaponType::bucket };
+        for (size_t index = 0; index < tools.size(); ++index)
+        {
+            const std::string name(weapon_name(tools[index]));
+            require(practice_tool_after(tools[index], Direction::right) ==
+                tools[(index + 1) % tools.size()], name + ": right is not the next tool");
+            require(practice_tool_after(tools[index], Direction::left) ==
+                tools[(index + tools.size() - 1) % tools.size()], name + ": left is not the previous tool");
+        }
+        for (const Direction direction : { Direction::right, Direction::left })
+        {
+            WeaponType tool = WeaponType::sprayer;
+            for (int press = 0; press < 5; ++press)
+            {
+                tool = practice_tool_after(tool, direction);
+                require(tool != WeaponType::random_primary, "The Tool row offers Random");
+            }
+            require(tool == WeaponType::sprayer, "Five presses one way do not come back to the Sprayer");
+        }
     }
 
     void check_tool_label(const World& world)
@@ -299,6 +386,7 @@ int main(int argc, char** argv)
         check_practice_level(world);
         check_who_gets_practice(world);
         check_tool_change_start(world);
+        check_tool_row_wraps();
         check_tool_label(world);
         check_rejected_lessons(content);
         std::cout << "PASS practice workshop\n";

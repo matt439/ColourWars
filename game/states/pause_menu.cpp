@@ -153,13 +153,16 @@ PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool op
 
 }
 
-void PauseMenuInitial::cycle_tool(Direction direction)
+WeaponType practice_tool_after(WeaponType tool, Direction direction)
 {
-	// The five real tools; Random is a setup choice, not something to hold.
 	const int count = static_cast<int>(WeaponType::max_prim_wep);
 	const int step = direction == Direction::left ? count - 1 : 1;
-	this->tool_choice_ = static_cast<WeaponType>(
-		(static_cast<int>(this->tool_choice_) + step) % count);
+	return static_cast<WeaponType>((static_cast<int>(tool) + step) % count);
+}
+
+void PauseMenuInitial::cycle_tool(Direction direction)
+{
+	this->tool_choice_ = practice_tool_after(this->tool_choice_, direction);
 	this->tool_->set_text(this->text().practice_tool_label(
 		this->presentation().main_menu().weapon_select_art.choice(this->tool_choice_).name));
 }

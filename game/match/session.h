@@ -33,3 +33,8 @@ private:
 	bool round_finished_ = false;
 	PlayerTeam round_winner_ = PlayerTeam::none;
 };
+
+// The ledger the End menu's continuation plays next: a complete session starts
+// afresh at best_of (Play Series Again, Rematch); otherwise the next round of
+// the same ledger (Next Round, Replay Draw). Throws while the round is unfinished.
+Session next_session(const Session& finished, int best_of);

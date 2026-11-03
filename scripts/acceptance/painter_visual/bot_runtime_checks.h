@@ -103,6 +103,8 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     tap(Key::down); tap(Key::enter); tick(0.0f); tap(Key::up); tap(Key::enter);
     require(stack.depth() == 2 && game->level().state() != LevelState::active,
         "Mixed-roster Pause Restart did not rebuild the actual match");
+    require(game->session().round() == 1 && game->session().team_a_wins() == 0 &&
+        game->session().team_b_wins() == 0, "Pause Restart moved the round-one ledger");
     mapping("restart"); live();
     stack.notify_activation(false);
     const auto unfocused = simulation();
@@ -158,20 +160,68 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
         std::ignore = app.renderer()->window_size_changed(1280, 720);
     };
-    for (int round = 1; round <= 2; ++round)
+    // C6 (DES#3): the GameLevel's ledger across its own continuations. Pause
+    // Restart replays the round in progress on the same ledger; Next Round and
+    // Replay Draw keep it; Play Series Again starts a fresh best-of-5.
+    const auto ledger = [&](int round, int a_wins, int b_wins)
     {
+        const Session& session = game->session();
+        return session.round() == round && session.team_a_wins() == a_wins &&
+            session.team_b_wins() == b_wins;
+    };
+    bool restarted_after_win = false, series_again = false;
+    for (int round = 1; !series_again; ++round)
+    {
+        require(round <= 12, "Mixed best-of-5 did not complete within twelve rounds");
+        const int a_before = game->session().team_a_wins(), b_before = game->session().team_b_wins();
+        require(ledger(round, a_before, b_before) && !game->session().complete(),
+            "Mixed series round number drifted from its continuations");
+        if (!restarted_after_win && a_before + b_before > 0)
+        {
+            live();
+            for (int step = 0; step < 20; ++step) { tick(); }
+            tap(Key::escape); tick(0.0f);
+            require(stack.depth() == 3, "Mixed series could not open Pause after a won round");
+            tap(Key::down); tap(Key::enter); tick(0.0f); tap(Key::up); tap(Key::enter);
+            require(stack.depth() == 2 && game->level().state() != LevelState::active,
+                "Mid-series Pause Restart did not rebuild the actual match");
+            require(ledger(round, a_before, b_before) && !game->session().complete(),
+                "Pause Restart after a won round changed the round or the wins");
+            mapping("series-restart");
+            restarted_after_win = true;
+        }
         if (game->level().intro_playing()) { tap(Key::enter); }
         for (int step = 0; step < 3000 && stack.depth() == 2; ++step) { tick(); }
         require(stack.depth() == 3 && game->level().state() == LevelState::finished,
             "Mixed match did not reach Results");
-        mapping(round == 1 ? "round-one-results" : "round-two-results");
+        const Session finished = game->session();
+        require(finished.round() == round &&
+            finished.team_a_wins() + finished.team_b_wins() - a_before - b_before ==
+            (finished.round_winner() == PlayerTeam::none ? 0 : 1),
+            "Results did not count the finished round exactly once");
+        mapping(round == 1 ? "round-one-results" : "round-results");
         for (int step = 0; step < 360; ++step) { tick(); }
         if (round == 1) { capture("results"); }
         tap(Key::enter); tick(0.0f); tap(Key::enter);
         for (int step = 0; step < 180 && stack.depth() == 3; ++step) { tick(); }
         require(stack.depth() == 2, "Mixed series did not continue from End");
-        mapping(round == 1 ? "round-two-rebuild" : "round-three-rebuild");
+        if (finished.complete())
+        {
+            require(ledger(1, 0, 0) && game->session().is_series() && !game->session().complete() &&
+                game->session().score_string(presentation.menu_text().results) ==
+                Session(5).score_string(presentation.menu_text().results),
+                "Play Series Again did not reset the GameLevel to a fresh best-of-5 at round 1, 0-0");
+            mapping("series-again-rebuild");
+            series_again = true;
+        }
+        else
+        {
+            require(ledger(round + 1, finished.team_a_wins(), finished.team_b_wins()),
+                "Next Round did not advance the GameLevel's round with its wins kept");
+            mapping("next-round-rebuild");
+        }
     }
+    require(restarted_after_win, "Mixed series never reached a Pause Restart after a won round");
     require(evidence.good(), "Bot runtime evidence failed to write");
     require(preferences.last_match_setup() &&
         remembered_setup_matches(*preferences.last_match_setup(), settings),
@@ -197,5 +247,5 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         game->level().bot_identity(2) == L"P3 - Bot (Hard)", "One-pane bot match lost its pane or bot labels");
     capture("one-pane");
     stack.clear();
-    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at720/1080, Pause/Restart, focus count-in, human disconnect/reconnect and two Results/series continuations; one-pane bot match and Results captured\n";
+    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at720/1080, Pause/Restart, focus count-in, human disconnect/reconnect, a best-of-5 played to Play Series Again with its ledger kept by Pause Restart and Next Round and reset by Play Series Again; one-pane bot match and Results captured\n";
 }

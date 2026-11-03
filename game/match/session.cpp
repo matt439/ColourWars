@@ -67,3 +67,11 @@ std::wstring Session::continue_string(const MenuEndText& text) const
 	if (this->complete()) return text.play_series_again;
 	return this->round_winner_ == PlayerTeam::none ? text.replay_draw : text.next_round;
 }
+
+Session next_session(const Session& finished, int best_of)
+{
+	if (finished.complete()) { return Session(best_of); }
+	Session next = finished;
+	next.next_round();
+	return next;
+}

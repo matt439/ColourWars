@@ -267,14 +267,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 |---|---|---|---|---|
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
-## Design process
-
-**Owner:** [docs/design-process.md](docs/design-process.md): personas, user stories and journeys, opened 2026-10-29 at the author's request.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `DES#3` | OPEN | LOW | S | Five check gaps from the `DES#2` trace, in order: A3 claim refused at full count, C6 ledger reset/kept, A1 Title device label, C5 replay back to End, S2 practice Tool row. No feature candidates. [Check gaps](docs/design-process.md#check-gaps-des3) |
-
 ## Areas with no open rows
 
 A new row for one of these gets its section back.
@@ -282,6 +274,7 @@ A new row for one of these gets its section back.
 | area | owner | a row returns with |
 |---|---|---|
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
+| Design process (`DES#1`-`DES#3`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#3` was the last (2026-11-03) |
 | Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#52` was the last (2026-11-03) |
 | Closed engine reports (1–22, 24, 29) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |

@@ -38,6 +38,11 @@ bool RoundTape::playable() const
 	return this->started_ && !this->spoiled_ && !this->seats_.empty();
 }
 
+bool offers_watch_replay(const RoundTape& tape, const Level& on_screen)
+{
+	return tape.playable() && !on_screen.practice();
+}
+
 int RoundTape::steps() const
 {
 	return static_cast<int>(this->seats_.size());

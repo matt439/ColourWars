@@ -640,12 +640,9 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	{
 		// The page wrote the tool into settings_. The rebuild cleans the
 		// paint; a living player keeps their place and goes straight to GO.
-		const Player& player = this->level_->player(this->level_->participant_for_view(0));
-		const std::optional<mattmath::Vector2F> place = player.state() == PlayerState::alive ?
-			std::optional<mattmath::Vector2F>(player.rectangle().position()) : std::nullopt;
+		const std::optional<mattmath::Vector2F> place = this->level_->tool_change_place();
 		this->build_and_enter_level();
-		this->level_->start_without_countdown();
-		if (place) { this->level_->place_player(this->level_->participant_for_view(0), *place); }
+		this->level_->enter_after_tool_change(place);
 		break;
 	}
 	}
@@ -667,6 +664,7 @@ void GameLevel::begin_resume_countdown(const SuspensionGate& gate)
 }
 
 const Level& GameLevel::level() const { return *this->level_; }
+const Session& GameLevel::session() const { return this->session_; }
 float GameLevel::resume_remaining() const { return this->suspension_.countdown().remaining(); }
 
 void GameLevel::open_results_menu()
@@ -697,7 +695,7 @@ void GameLevel::open_end_menu()
 {
 	this->context()->push<EndMenuAction>(
 		std::make_unique<EndMenuInitial>(this->menu_context_.get(), this->session_,
-			this->tape_.playable() && !this->level_->practice()),
+			offers_watch_replay(this->tape_, *this->level_)),
 		[this](const EndMenuAction& action)
 		{
 			this->on_end_menu_closed(action);
@@ -716,15 +714,8 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 		// Decided on the finished round, before the ledger moves on.
 		this->settings_.set_stage(series_next_stage(this->settings_, *this->data()->stages(),
 			this->session_, action == EndMenuAction::play_chosen_stage));
-		if (this->session_.complete())
-		{
-			this->session_ = Session(this->settings_.player_count() == 1 ?
-				1 : this->settings_.best_of());
-		}
-		else
-		{
-			this->session_.next_round();
-		}
+		this->session_ = next_session(this->session_,
+			this->settings_.player_count() == 1 ? 1 : this->settings_.best_of());
 		this->build_and_enter_level();
 		return;
 	}

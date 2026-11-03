@@ -42,6 +42,11 @@ int reclaim_missing_seat(MatchSetup& settings,
 void latch_intro_pause(bool intro_playing, std::vector<SlotInput>& player_inputs,
 	std::array<bool, input_slots::count>& latched);
 
+// The practice Tool row's step: the next of the five real tools to the right
+// or left, wrapping at each end. Random is a setup choice, not something to
+// hold, so it is never offered.
+WeaponType practice_tool_after(WeaponType tool, labrador::Direction direction);
+
 
 class PauseMenuPage : public MenuPage
 {

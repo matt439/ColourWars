@@ -14,6 +14,11 @@ namespace practice_replay_acceptance
     struct EndMenuTag { using Type = void (GameLevel::*)(); friend Type member(EndMenuTag); };
     struct StepReplayTag { using Type = void (GameLevel::*)(); friend Type member(StepReplayTag); };
     struct EndReplayTag { using Type = void (GameLevel::*)(); friend Type member(EndReplayTag); };
+    struct ReplayPlayerTag
+    {
+        using Type = std::unique_ptr<RoundTapePlayer> GameLevel::*;
+        friend Type member(ReplayPlayerTag);
+    };
     struct UpdateTag
     {
         using Type = void (GameLevel::*)(const std::vector<SlotInput>&, float, SeatInputFilter*);
@@ -26,9 +31,12 @@ namespace practice_replay_acceptance
     template struct Access<EndMenuTag, &GameLevel::open_end_menu>;
     template struct Access<StepReplayTag, &GameLevel::step_replay>;
     template struct Access<EndReplayTag, &GameLevel::end_replay>;
+    template struct Access<ReplayPlayerTag, &GameLevel::replay_player_>;
     template struct Access<UpdateTag, &GameLevel::step_match>;
 
     const RoundTape& tape(const GameLevel& game) { return game.*member(TapeTag{}); }
+    // The replay's tape player while a viewing owns the GameLevel, else null.
+    const RoundTapePlayer* replay(const GameLevel& game) { return (game.*member(ReplayPlayerTag{})).get(); }
     size_t gaps(const GameLevel& game) { return tape(game).gaps().size(); }
     void empty(const GameLevel& game)
     {
@@ -224,14 +232,54 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(Key::down); tap(Key::enter);
         require(stack.depth() == 2 && game->level().state() == LevelState::start_countdown,
             "Actual End page did not offer/launch Watch Replay on row one");
-        for (int step = 0; step < recorded.steps(); ++step)
+        // Viewing one: every step but the last through step_replay, checked
+        // bit for bit; the last through GameLevel::update's own replay path,
+        // which finishes the viewing and must put the End menu back on top.
+        for (int step = 0; step + 1 < recorded.steps(); ++step)
         {
             (game->*member(StepReplayTag{}))();
             require(moment(game->level()) == seen.at(static_cast<size_t>(step)),
                 "Actual GameLevel replay diverged in public gameplay bits or exact paint-tile hash");
             ++replay_steps;
         }
-        require(game->level().state() == LevelState::zoom_out, "Actual replay did not reach time up");
+        for (int frame = 0; frame < 4 && stack.depth() == 2; ++frame) { tick(); }
+        ++replay_steps;
+        require(stack.depth() == 3 && replay(*game) == nullptr && game->level().state() == LevelState::zoom_out &&
+            moment(game->level()) == seen.back(), "A finished actual replay did not return to the End menu at time up");
+        // Viewing two, chosen again from that End menu and run only by
+        // GameLevel::update: it prepares, plays and returns by itself.
+        const auto choose_watch_replay = [&](const char* viewing)
+        {
+            tick(0.0f); tap(Key::down); tap(Key::enter);
+            require(stack.depth() == 2 && replay(*game) != nullptr && replay(*game)->step() == 0 &&
+                game->level().state() == LevelState::start_countdown,
+                std::string("The End menu did not offer/launch Watch Replay for viewing ") + viewing);
+        };
+        choose_watch_replay("two");
+        int frames = 0;
+        for (; frames < recorded.steps() + 600 && stack.depth() == 2; ++frames) { tick(); }
+        require(stack.depth() == 3 && replay(*game) == nullptr && game->level().state() == LevelState::zoom_out &&
+            moment(game->level()) == seen.back(),
+            "A second actual viewing did not replay to the round's final moment and return to the End menu");
+        replay_steps += recorded.steps();
+        // Viewing three, left with a confirm press part-way: the End menu
+        // comes back over the frame it was left on, and offers it once more.
+        choose_watch_replay("three");
+        int left_at = 0;
+        for (int frame = 0; frame < recorded.steps() + 600 && stack.depth() == 2; ++frame)
+        {
+            tick();
+            if (replay(*game) != nullptr && replay(*game)->step() >= recorded.steps() / 2)
+            { left_at = replay(*game)->step(); break; }
+        }
+        require(left_at > 0 && left_at < recorded.steps() && stack.depth() == 2, "Viewing three never reached half way");
+        tap(Key::enter);
+        require(stack.depth() == 3 && replay(*game) == nullptr && game->level().state() != LevelState::zoom_out,
+            "A confirm press part-way through the actual replay did not return to the End menu");
+        choose_watch_replay("four");
+        std::cout << "Actual Watch Replay loop " << name << ": viewing two returned after " << frames <<
+            " frames; viewing three left at step " << left_at << " of " << recorded.steps() << '\n';
+        require(game->level().state() == LevelState::start_countdown, "Actual replay did not rebuild for viewing four");
         note(name, *game, recorded.steps()); ++timed_cases;
         (game->*member(EndReplayTag{}))();
     }
@@ -254,5 +302,6 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         << "}\n";
     require(summary.good(), "Cannot retain actual GameLevel replay summary");
     std::cout << "PASS actual GameLevel practice replay: " << practice_steps << " practice steps retain zero inputs/gaps; " <<
-        timed_cases << " timed controls offer Watch Replay and reproduce " << replay_steps << " steps. No raster or physical-pad claim.\n";
+        timed_cases << " timed controls offer Watch Replay and reproduce " << replay_steps << " steps; each returns to an End menu "
+        "that offers it again, played through or left with a press. No raster or physical-pad claim.\n";
 }

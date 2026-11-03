@@ -29,20 +29,6 @@ const MainMenuPresentation& MainMenuPage::look() const
 	return this->presentation().main_menu();
 }
 
-std::vector<int> MainMenuPage::connected_slots() const
-{
-	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	std::vector<int> result;
-	for (int slot = 0; slot < static_cast<int>(inputs.size()); slot++)
-	{
-		if (inputs[slot].connected)
-		{
-			result.push_back(slot);
-		}
-	}
-	return result;
-}
-
 RosterSetupPage::RosterSetupPage(MenuContext* context, std::optional<Session> between_rounds) :
 	MainMenuPage(context), between_rounds_(std::move(between_rounds))
 {
@@ -192,6 +178,12 @@ bool RosterSetupPage::wait_for_players(
 
 #pragma region MainMenuTitle
 
+bool title_shows_no_controller(const std::vector<ProcessedMenuInput>& inputs)
+{
+	return std::none_of(inputs.begin(), inputs.end(),
+		[](const ProcessedMenuInput& input) { return input.connected; });
+}
+
 MainMenuTitle::MainMenuTitle(MenuContext* context) :
 	MainMenuPage(context)
 {
@@ -202,7 +194,7 @@ void MainMenuTitle::update_page(float /*dt*/)
 {
 	if (this->context()->active())
 	{
-		this->no_pad_->set_hidden(!this->connected_slots().empty());
+		this->no_pad_->set_hidden(!title_shows_no_controller(this->menu_inputs()));
 	}
 
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();

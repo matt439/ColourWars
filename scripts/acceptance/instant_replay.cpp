@@ -113,6 +113,41 @@ namespace
         return input;
     }
 
+    // One viewing, as GameLevel::start_replay builds it and step_replay steps
+    // it: the level built again from the tape and stepped from the tape's
+    // first step to its last, each step checked against the round.
+    struct Viewing
+    {
+        std::unique_ptr<Level> level;
+        RoundTapePlayer player;
+    };
+
+    Viewing watch(World& world, const RoundTape& tape, const std::vector<Moment>& seen, const char* stage,
+        int viewing)
+    {
+        Viewing shown{ world.build(tape.settings(), OpeningMode::off, MatchRandom(tape.seed())),
+            RoundTapePlayer(&tape, 0) };
+        shown.level->set_player_cheats(tape.damage_immune(), tape.infinite_ammo());
+        shown.level->start_without_countdown();
+        require(shown.player.replaces_bot_inputs(), "The replay let the rebuilt level's bots decide");
+        std::vector<PlayerInputData> neutral(input_slots::count);
+        for (auto& device : neutral) { device.connected = true; }
+        while (!shown.player.finished())
+        {
+            const int at = shown.player.step();
+            tape.apply_gaps(*shown.level, at);
+            shown.level->update(neutral, tape.dt(at), &shown.player);
+            require(shown.player.step() == at + 1, "A replay update did not consume exactly one taped step");
+            if (!(moment(*shown.level) == seen[static_cast<size_t>(at)]))
+            {
+                throw std::runtime_error(std::string(stage) + ": viewing " + std::to_string(viewing) +
+                    " of the replay diverged at taped step " + std::to_string(at) + " of " +
+                    std::to_string(tape.steps()));
+            }
+        }
+        return shown;
+    }
+
     void check_stage(World& world, const char* stage, unsigned int seed)
     {
         const MatchSetup settings = roster(stage);
@@ -154,34 +189,28 @@ namespace
             "The replay's first step is not eight seconds before time up");
         const LevelEndInfo played = level->level_end_info();
         const std::vector<PaintSurfaceSample> played_surfaces = level->paint_surfaces();
+
+        // The level the round leaves under the End menu offers Watch Replay.
+        require(offers_watch_replay(tape, *level), "A finished timed round did not offer Watch Replay");
         level.reset();
 
-        // The replay, as GameLevel::start_replay builds and steps it.
-        auto replay = world.build(tape.settings(), OpeningMode::off, MatchRandom(tape.seed()));
-        replay->set_player_cheats(tape.damage_immune(), tape.infinite_ammo());
-        replay->start_without_countdown();
-        RoundTapePlayer player(&tape, 0);
-        require(player.replaces_bot_inputs(), "The replay let the rebuilt level's bots decide");
-        std::vector<PlayerInputData> neutral(input_slots::count);
-        for (auto& device : neutral) { device.connected = true; }
-        while (!player.finished())
+        // Watch Replay, then, from the End menu it returns to, twice more: each
+        // viewing builds the stage again from the same tape and must repeat the
+        // round bit for bit to its final paint. The End menu loop itself is
+        // the painter's (-PracticeReplayOnly), on a real GameLevel.
+        for (int viewing = 1; viewing <= 3; ++viewing)
         {
-            const int at = player.step();
-            tape.apply_gaps(*replay, at);
-            replay->update(neutral, tape.dt(at), &player);
-            require(player.step() == at + 1, "A replay update did not consume exactly one taped step");
-            if (!(moment(*replay) == seen[static_cast<size_t>(at)]))
-            {
-                throw std::runtime_error(std::string(stage) + ": the replay diverged at taped step " +
-                    std::to_string(at) + " of " + std::to_string(tape.steps()));
-            }
+            const Viewing watched = watch(world, tape, seen, stage, viewing);
+            const auto& replay = watched.level;
+            require(replay->state() == LevelState::zoom_out, "The replay did not end where time ran out");
+            require(same_paint(replay->level_end_info(), played), "The replay's paint differs from the round's");
+            require(replay->paint_surfaces().size() == played_surfaces.size(), "The replay's paint surfaces differ");
         }
-        require(replay->state() == LevelState::zoom_out, "The replay did not end where time ran out");
-        require(same_paint(replay->level_end_info(), played), "The replay's paint differs from the round's");
-        const std::vector<PaintSurfaceSample> replay_surfaces = replay->paint_surfaces();
-        require(replay_surfaces.size() == played_surfaces.size(), "The replay's paint surfaces differ");
+        RoundTape spoiled = tape; spoiled.spoil();
+        require(!offers_watch_replay(spoiled, *world.build(settings, OpeningMode::off, MatchRandom(seed))),
+            "A spoiled tape's round still offered Watch Replay");
         std::cout << "PASS " << stage << ": " << tape.steps() << " taped steps replay bit for bit "
-            "from a full-intro round with a pause, through to the final paint\n";
+            "from a full-intro round with a pause, through to the final paint, on three viewings of one tape\n";
     }
 
     void check_tape_rules()

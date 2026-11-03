@@ -57,9 +57,6 @@ protected:
 	// Replaces this page with the route's page. Every page change inside the
 	// main menu's frame goes through here (main_menu_route.cpp).
 	void go_to(const MainMenuRoute& route);
-
-	// Available input slots, including keyboard/mouse.
-	std::vector<int> connected_slots() const;
 };
 
 // A page that builds the roster: Player Count, Join, and the per-seat Team,
@@ -110,6 +107,10 @@ private:
 	bool waiting_for_players_ = false;
 	std::optional<Session> between_rounds_;
 };
+
+// Whether the title shows "Connect a controller": only while no device slot,
+// keyboard/mouse included, reads as connected.
+bool title_shows_no_controller(const std::vector<ProcessedMenuInput>& inputs);
 
 class MainMenuTitle final : public MainMenuPage
 {

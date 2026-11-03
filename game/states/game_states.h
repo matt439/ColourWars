@@ -91,6 +91,7 @@ public:
 	void init() override;
 	// Read-only match/transition status; observing it never advances either clock.
 	const Level& level() const;
+	const Session& session() const;
 	float resume_remaining() const;
 
 	// Stack coverage stops simulation updates; these callbacks suspend and

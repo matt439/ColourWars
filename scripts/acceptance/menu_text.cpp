@@ -62,6 +62,7 @@ int main(int argc, char** argv)
         check_stage_cue_bounds(variants, world);
         check_title_and_home_text(variants, world, defaults);
         check_title_and_home_bounds(variants, world);
+        check_title_connection_hint(content);
         check_help_text(variants, world);
         check_help_fitting(variants, world);
         check_help_bounds(variants, world);
