@@ -640,12 +640,9 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	{
 		// The page wrote the tool into settings_. The rebuild cleans the
 		// paint; a living player keeps their place and goes straight to GO.
-		const Player& player = this->level_->player(this->level_->participant_for_view(0));
-		const std::optional<mattmath::Vector2F> place = player.state() == PlayerState::alive ?
-			std::optional<mattmath::Vector2F>(player.rectangle().position()) : std::nullopt;
+		const std::optional<mattmath::Vector2F> place = this->level_->tool_change_place();
 		this->build_and_enter_level();
-		this->level_->start_without_countdown();
-		if (place) { this->level_->place_player(this->level_->participant_for_view(0), *place); }
+		this->level_->enter_after_tool_change(place);
 		break;
 	}
 	}

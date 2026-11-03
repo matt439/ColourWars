@@ -23,6 +23,19 @@ void Level::start_without_countdown()
 	this->cards_->set_label(L"GO!");
 }
 
+std::optional<Vector2F> Level::tool_change_place() const
+{
+	const Player& player = this->player(this->participant_for_view(0));
+	if (player.state() != PlayerState::alive) { return std::nullopt; }
+	return player.rectangle().position();
+}
+
+void Level::enter_after_tool_change(const std::optional<Vector2F>& place)
+{
+	this->start_without_countdown();
+	if (place) { this->place_player(this->participant_for_view(0), *place); }
+}
+
 int Level::active_lesson() const
 {
 	return this->lessons_.active();

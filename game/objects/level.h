@@ -159,6 +159,12 @@ public:
 	// Skip the countdown to GO!, for a practice rebuild that keeps the
 	// player's place. Call before the first update.
 	void start_without_countdown();
+	// The practice Tool row's rebuild (POL#19). Read from the old level: where
+	// the human stands if alive; a dead player has no place and keeps the spawn.
+	std::optional<mattmath::Vector2F> tool_change_place() const;
+	// Called on the rebuilt level before its first update: straight to GO,
+	// with the human back at `place` when there is one.
+	void enter_after_tool_change(const std::optional<mattmath::Vector2F>& place);
 	// Untimed solo practice (POL#19): the level was built with lessons, so its
 	// clock never runs out and the HUD shows no clock. The player leaves
 	// through the pause menu.

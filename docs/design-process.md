@@ -420,9 +420,9 @@ CPU-checkable criterion that no case asserts; they are collected under
 
 | Id | Persona | Serving feature | Row | Cases | Result |
 |---|---|---|---|---|---|
-| A1 | P1 | `MainMenuTitle` to `MainMenuStageSelect` ([main_menu.h](../game/states/main_menu.h)); Title's no-device label | none | `menu_navigation`, `menu_text`; painter drives the pages | Served; check gap: Title's show/hide of "Connect a controller" |
+| A1 | P1 | `MainMenuTitle` to `MainMenuStageSelect` ([main_menu.h](../game/states/main_menu.h)); Title's no-device label | none | `menu_navigation`, `menu_text` (the hint rule, `DES#3`); painter drives the pages | Served; the hint cannot show in the shipped game (see `DES#3`) |
 | A2 | P1 | The save's `last_match` ([last_match_setup.h](../game/save/last_match_setup.h)), restored by `GameMenu` | `GAP#6.1` done | `remembered_setup`; painter for Mode/Count focus | Served |
-| A3 | P2 | `MainMenuJoin`; `MatchSetup::claim_input_slot`/`release_input_slot` | `ROAD#4` done | `bot_roster`, `menu_navigation` | Served; check gap: a claim refused once the chosen count is full |
+| A3 | P2 | `MainMenuJoin`; `MatchSetup::claim_input_slot`/`release_input_slot` | `ROAD#4` done | `bot_roster` (incl. the full-count refusal, `DES#3`), `menu_navigation` | Served |
 | A4 | P1 | `MatchSetup::shuffle_teams`; Team Select's one-sided refusal | `GAP#1.5` done | `team_selection`; painter for the refusal message | Served |
 | A5 | P1 | Join's bot rows, `set_player_bot`, the `game/ai` driver, `player_label` | `ROAD#10` | `bot_roster`, `bot_runtime`, `bot_driver`, `menu_text` | Attended |
 | A6 | P2 | Weapon Select choices and descriptions | `POL#24` | `weapon_catalog`, `text_wrap` | Attended |
@@ -441,8 +441,8 @@ CPU-checkable criterion that no case asserts; they are collected under
 | C2 | P2 | Results contributions and awards | `ROAD#12` done | `results_awards` | Served |
 | C3 | P1 | Change Weapons / Change Level under Next Round | `ROAD#20`'s re-pick slice done | `series_stage_rule`; painter for rows, lock and Back | Served |
 | C4 | P1 | Series stage rule on Mode | `ROAD#20` | `series_stage_rule`; painter for losing-seats-only | Attended |
-| C5 | any | Watch Replay | `ROAD#19` done | `instant_replay` | Served; check gap: return to the End menu, and a second viewing |
-| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `debug_console` | Served; check gap: the ledger reset, and Restart keeping it |
+| C5 | any | Watch Replay | `ROAD#19` done | `instant_replay` (three viewings of one tape); painter `-PracticeReplayOnly` for the End-menu loop (`DES#3`) | Served |
+| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `debug_console` (`next_session`, `DES#3`); painter `-BotPlayersOnly` for Restart and Play Series Again on a real `GameLevel` | Served |
 | C7 | P1 | End to Main Menu, `MainMenuExitConfirmation`, the save | none | `settings`, `match_records`, `remembered_setup`; painter for the confirmation | Served |
 | D1 | P4 | Per-pad View shake, Aim marker, Reduce effects | `ROAD#7` | `view_shake`, `aim_marker`, `settings`, `player_identity` | Attended |
 | D2 | P4 | Options team palette | none | `team_palette`, `settings`, `display_trial`; painter for the HUD team text | Served |
@@ -453,7 +453,7 @@ CPU-checkable criterion that no case asserts; they are collected under
 | D7 | any | Music/SFX volume, per-pad rumble | `ROAD#9` | `settings`, `rumble`, `story_audio` | Attended |
 | D8 | P1 | `DisplaySettingsTrial` | none | `display_trial` | Served |
 | S1 | P3 | Untimed Movement Course practice and its lessons | `POL#19` | `practice_workshop` (`movement_course` proves only the routes) | Attended |
-| S2 | P3 | Practice Pause's Tool row (`PauseMenuInitial::cycle_tool`, `GameLevel`'s change-tool rebuild) | `POL#19` | `practice_workshop` (start with a chosen tool only) | Attended; check gap: the row's wrap and the clean rebuild |
+| S2 | P3 | Practice Pause's Tool row (`PauseMenuInitial::cycle_tool`, `GameLevel`'s change-tool rebuild) | `POL#19` | `practice_workshop` (the row's wrap and the change-tool rebuild, `DES#3`) | Attended |
 | S3 | P3 | One human with bots | `ROAD#10` | `bot_runtime`, `bot_roster` | Attended |
 | S4 | P3 | Stage records | `GAP#6.2` done | `match_records`; painter for Stage Select's line | Served |
 | S5 | P3 | Solo opening off ([game_states.cpp](../game/states/game_states.cpp)), `LevelEndInfo`'s solo coverage | none | `paint`, `menu_text`, `match_records`; `check-display-awake.ps1` for the opening | Served |
@@ -497,28 +497,58 @@ fix it takes no row.
 
 ### Check gaps (`DES#3`)
 
-**Open, not started.** Filed by `DES#2` on 2026-11-03. These are
-CPU-checkable criteria that no case asserts. The features work, but nothing
-would notice if one stopped. Next step: add the first check below to its case
-and run that case in both presets; each later item is its own commit. Painter-only coverage is not counted as a gap,
-since it does check the behaviour, if only on MattPC. Ordered by P2, then P1,
-then the rest:
+**Done 2026-11-03.** Filed by `DES#2` the same day: five CPU-checkable
+criteria that no case asserted. Each is now asserted, and each check was
+mutation-tested (the guarded line broken, the require seen to fire, the line
+restored). Four of the five could not be reached as filed, because
+`GameLevel` and the menu pages need a graphics device. So the rule each one
+decides is now a named function that the shipped code calls and the case
+calls too, and where the call site mattered, a painter check drives a real
+`GameLevel`. Painter-only coverage counts as checked (above).
 
-1. **A3 (P2):** `MatchSetup::claim_input_slot` refuses a fresh device once the
-   chosen count is full (`match_setup.cpp`, the no-human-gap return); a
-   `require` beside `bot_roster`'s device-conversion checks.
-2. **C6 (P1):** Play Series Again resets the series ledger, and Restart replays
-   the round without touching it (`GameLevel`'s End-menu handlers in
-   `game_states.cpp`); beside `debug_console`'s session checks.
-3. **A1 (P1):** Title hides "Connect a controller" while any slot is connected
-   and shows it otherwise (`MainMenuTitle`, `main_menu.cpp`); `menu_text`
-   checks only its wording.
-4. **C5 (any seat):** Watch Replay returns to the End menu and can be watched
-   again; `instant_replay` checks the rebuilt round and the tape, not the
-   menu loop.
-5. **S2 (P3):** the practice Pause Tool row wraps over the five tools, and the
-   rebuild starts clean with the chosen tool and the player back in place;
-   `practice_workshop` checks only a level built with a chosen tool.
+1. **A3 (P2):** `bot_roster` asserts that `MatchSetup::claim_input_slot`
+   refuses a fresh device once the chosen count is full, with four seats and
+   a bot, two humans, and two seats with a bot. A claim below the count must
+   still land, and a refused claim must leave the setup unchanged.
+2. **C6 (P1):** the End menu's continuation is `next_session`
+   ([session.h](../game/match/session.h)), which `debug_console` checks for
+   best-of-3, best-of-5 and a single match: Next Round and Replay Draw keep
+   the ledger, and Play Series Again and Rematch start a fresh one of the same
+   length. Painter `-BotPlayersOnly` plays a best-of-5 to completion on a real
+   `GameLevel` (through the new `GameLevel::session()`). Pause Restart after a
+   won round must leave round and wins as they were, and Play Series Again
+   must reset to round 1, 0-0. Not on a real `GameLevel`: the solo Rematch's
+   best-of-1 argument and Play Chosen Stage, which `next_session` covers only
+   on the CPU.
+3. **A1 (P1):** the Title hint's rule is `title_shows_no_controller`
+   ([main_menu.h](../game/states/main_menu.h); it replaced
+   `MainMenuPage::connected_slots`), and `menu_text` checks it: shown with no
+   slot connected, hidden with any one slot. The case also pins down what the
+   game actually does. `MenuInput` always reports the keyboard-and-mouse slot
+   as connected, so **"Connect a controller" can never show** in the shipped
+   game. Whether the hint should stay is a design question, not a check gap.
+   The wiring in `MainMenuTitle::update_page` (one line) is covered only by
+   reading it.
+4. **C5 (any seat):** Watch Replay's offer is `offers_watch_replay`
+   ([round_tape.h](../game/match/round_tape.h)), which `GameLevel::open_end_menu`
+   calls. `instant_replay` plays three viewings of one tape on every stage,
+   each rebuilt and matched bit for bit to the final paint. Painter
+   `-PracticeReplayOnly` drives the loop on a real `GameLevel`. A finished
+   replay must return to the End menu by itself, Watch Replay must play again,
+   a confirm press part-way must leave to the End menu, and a fourth viewing
+   must start. Not covered: Back or Pause as the leave press, the multi-frame
+   preparing phase (the painter's tapes are shorter than the replay window),
+   and practice refusing a playable tape.
+5. **S2 (P3):** the Tool row's step is `practice_tool_after`
+   ([pause_menu.h](../game/states/pause_menu.h)), and `practice_workshop`
+   checks that it wraps both ways over the five tools and never offers Random.
+   The change-tool rebuild is now `Level::tool_change_place` and
+   `Level::enter_after_tool_change`, which the case runs for each tool: the
+   rebuilt course is active, unpainted, holds the chosen tool and shows the
+   lesson where the player stood, and a living player is back in place while
+   a dead one starts at the spawn. The handler's order in
+   `GameLevel::on_pause_menu_closed` (three lines) is covered only by reading
+   it.
 
 F5 (user-stage records) and D3 (Boost never changes the score) hold by
 construction, with a shared stage key and no scoring read of the handicap, and
