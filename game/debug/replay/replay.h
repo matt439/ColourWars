@@ -18,8 +18,10 @@
 // hashes. Written as JSON to %LOCALAPPDATA%\ColourWars\replays\<name>.json.
 // Debug-only.
 //
-// Format version 6 (versions 3 to 5 are refused: a replay holds only on the
+// Format version 7 (versions 3 to 6 are refused: a replay holds only on the
 // build that recorded it, DBG#2):
+//   horizontal_motion is schema 2: eight spec words, the last a vertical
+//   lift's travel_y (ROAD#28), and offsets on the mover's own axis;
 //   settings preserves each seat's controller kind, bot difficulty and
 //   handicap (written only when a seat has one);
 //   layout counts human views, while inputs remain indexed by participant.
@@ -43,7 +45,7 @@
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 6;
+	static constexpr int format_version = 7;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint

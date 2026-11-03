@@ -47,6 +47,9 @@ namespace colourwars_editor
         Rect initial_pose;
         Rect travel_envelope;
         Rect standing_envelope;
+        // A vertical lift only: the column it keeps clear, a body beside its
+        // shaft and a body above its highest and below its lowest pose.
+        std::optional<Rect> clearance_envelope;
     };
 
     // The document owns source JSON, including fields the editor does not understand.
@@ -86,7 +89,8 @@ namespace colourwars_editor
         // Palette: Structure, StructureJumpThrough, StructurePaintable,
         // MovingPaintable, MovingJumpThrough, StructureRampRight,
         // StructureRampLeft, FixedSlabRight, FixedSlabLeft, TeamGate, Visual, SpawnA,
-        // SpawnB, Station. A TeamGate is a solid eraser StructurePaintable with
+        // SpawnB, Station, VerticalLift. A VerticalLift is a solid moving
+        // StructurePaintable with vertical motion (ROAD#28). A TeamGate is a solid eraser StructurePaintable with
         // "gate": "paint" and its bottom face unpainted, as it stands on the
         // floor. A Station is {name, x, y} at the rectangle's top-left, named
         // station_<n> with the first unused n; it never gains a lesson.

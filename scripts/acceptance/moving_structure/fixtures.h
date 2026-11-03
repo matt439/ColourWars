@@ -92,7 +92,8 @@ namespace moving_structure_acceptance
         std::vector<std::uint64_t> out;
         rectangle_bits(out, state.spec.anchor);
         out.push_back(bits(state.spec.travel_x)); out.push_back(bits(state.spec.period_seconds));
-        out.push_back(bits(state.spec.initial_phase)); out.push_back(double_bits(state.phase));
+        out.push_back(bits(state.spec.initial_phase)); out.push_back(bits(state.spec.travel_y));
+        out.push_back(double_bits(state.phase));
         out.push_back(static_cast<std::uint32_t>(state.direction));
         for (float value : { state.previous_offset.x, state.previous_offset.y,
             state.current_offset.x, state.current_offset.y }) { out.push_back(bits(value)); }
@@ -106,7 +107,7 @@ namespace moving_structure_acceptance
         {
             const HorizontalMotionSegment& segment = step.segments.at(index);
             out.push_back(double_bits(segment.begin)); out.push_back(double_bits(segment.end));
-            out.push_back(bits(segment.from_x)); out.push_back(bits(segment.to_x));
+            out.push_back(bits(segment.from)); out.push_back(bits(segment.to));
         }
         return out;
     }
@@ -370,4 +371,5 @@ namespace moving_structure_acceptance
     void check_replay(World& world);
     void check_public_replay(World& world);
     void check_editor_save(World& world);
+    void check_lift(World& world);
 }

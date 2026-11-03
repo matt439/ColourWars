@@ -133,6 +133,8 @@ namespace colourwars_editor
         {
             outline(dc, screen_rect(motion->travel_envelope), RGB(131, 190, 236), 1, PS_DASH);
             outline(dc, screen_rect(motion->standing_envelope), RGB(240, 197, 95), 1, PS_DOT);
+            if (motion->clearance_envelope)
+            { outline(dc, screen_rect(*motion->clearance_envelope), RGB(240, 197, 95), 1, PS_DOT); }
             outline(dc, screen_rect(motion->anchor), RGB(220, 225, 230), 1, PS_DASH);
         }
         RECT screen = screen_rect(motion ? motion->initial_pose : rectangle);

@@ -37,7 +37,7 @@ namespace
 		// slice; it is cloudless for that reason, rather than an interior.
         const bool paper_blockout = stage == "turbulence_blockout" || stage == "turbulence_mover_trial" ||
             stage == "turbulence_slab_trial" || stage == "turbulence_ferry_trial" ||
-            stage == "turbulence_gate_trial";
+            stage == "turbulence_gate_trial" || stage == "turbulence_lift_trial";
 		if (paper_blockout)
 		{
 			require(decorations.size() == 1 && decorations.at(0).string("name") == "paper_sky" &&

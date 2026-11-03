@@ -154,20 +154,33 @@
             "additionalProperties": true
         },
         "motion": {
-            "description": "Horizontal triangular translation of a flat paintable from its left anchor; period is the full round trip in seconds and phase is cycles. Float representability and scene/player admission remain runtime checks. drive is cycle (default) or paint; a paint drive moves only while one team holds more of its paint, toward team_a_heads for team A and the other way for team B, and starts at phase 0 to 0.5. Unknown metadata is ignored; axis, travel_y and rotation are unsupported requests.",
+            "description": "Triangular translation of a flat paintable on one axis; period is the full round trip in seconds and phase is cycles. Float representability and scene/player admission remain runtime checks. A horizontal mover travels travel_x right of its left anchor; drive is cycle (default) or paint, and a paint drive moves only while one team holds more of its paint, toward team_a_heads for team A and the other way for team B, and starts at phase 0 to 0.5. A vertical lift travels travel_y down from its top anchor, cycles, is solid (not jump-through) and must leave a full player height clear beneath its lowest pose. Unknown metadata is ignored; axis, rotation and the other axis's travel are unsupported requests.",
             "type": "object",
-            "required": ["type", "travel_x", "period", "phase"],
+            "required": ["type", "period", "phase"],
             "properties": {
-                "type": { "enum": ["horizontal"] },
+                "type": { "enum": ["horizontal", "vertical"] },
                 "travel_x": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
+                "travel_y": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
                 "period": { "type": "number", "minimum": 0.03333333333333333 },
                 "phase": { "type": "number", "minimum": 0, "maximum": 1, "exclusiveMaximum": true },
                 "drive": { "enum": ["cycle", "paint"] },
                 "team_a_heads": { "enum": ["right", "left"] },
                 "axis": { "not": {} },
-                "travel_y": { "not": {} },
                 "rotation": { "not": {} }
             },
+            "oneOf": [
+                {
+                    "properties": { "type": { "enum": ["horizontal"] }, "travel_y": { "not": {} } },
+                    "required": ["travel_x"]
+                },
+                {
+                    "properties": {
+                        "type": { "enum": ["vertical"] }, "travel_x": { "not": {} },
+                        "drive": { "enum": ["cycle"] }, "team_a_heads": { "not": {} }
+                    },
+                    "required": ["travel_y"]
+                }
+            ],
             "additionalProperties": true
         },
         "object_common": {

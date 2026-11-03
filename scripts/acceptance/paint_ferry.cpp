@@ -85,7 +85,7 @@ namespace
         // Unpainted, it holds still but still publishes its positive-time step.
         Driven driven(right);
         HorizontalMotionStep held = driven.advance(0);
-        require(held.segment_count == 1 && held.segments[0].from_x == 0.0f && held.segments[0].to_x == 0.0f &&
+        require(held.segment_count == 1 && held.segments[0].from == 0.0f && held.segments[0].to == 0.0f &&
             held.before.x == held.after.x && driven.state().phase == 0.0, "An unpainted ferry moved");
         held = driven.advance(-1);
         require(held.before.x == held.after.x && driven.state().phase == 0.0, "A ferry left its left end stop");
@@ -105,7 +105,7 @@ namespace
             require(next.after.x >= next.before.x, "A ferry heading right moved left");
             if (stopped)
             {
-                require(next.segments[next.segment_count - 1].to_x == 120.0f &&
+                require(next.segments[next.segment_count - 1].to == 120.0f &&
                     driven.state().current_offset.x == 120.0f, "A ferry overran its right end stop");
             }
         }
@@ -125,7 +125,7 @@ namespace
         HorizontalMotionSpec near_end = ferry(0.49609375f);
         const HorizontalPreparedStep split = HorizontalMotion(near_end).prepare(step, 1);
         require(split.collision.segment_count == 2 && split.collision.segments[0].end < 1.0 &&
-            split.collision.segments[1].from_x == 120.0f && split.collision.segments[1].to_x == 120.0f &&
+            split.collision.segments[1].from == 120.0f && split.collision.segments[1].to == 120.0f &&
             split.after_state.phase == 0.5, "A ferry reaching its end mid-step did not split travel and hold");
 
         // Zero-time updates keep history, as for a cycle.

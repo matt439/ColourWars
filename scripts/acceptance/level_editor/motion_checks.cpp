@@ -175,5 +175,110 @@ namespace level_editor_acceptance
         require(moved_face, "Float-binade control did not inspect an actual moving scoring face");
         std::cout << "PASS mover palette/phase/travel/standing guides, transactional anchor/duplicate/history, metadata/TLBR and saved local scoring\n";
         std::cout << "PASS fractional float-binade phases retain local scoring dimensions and translate guide locations\n";
+        check_lift_motion(repo, scratch);
+    }
+
+    // A vertical lift (ROAD#28): its own palette entry, a top anchor and
+    // travel_y, the clear room beneath its lowest pose, solid and cycle only,
+    // duplicates past that room and a mirror that reflects only the anchor.
+    void check_lift_motion(const fs::path& repo, const fs::path& scratch)
+    {
+        const auto tuning = repo / "game/content/tuning.json";
+        const auto size_json = parse(contents(tuning));
+        const double body_width = size_json["player"]["size"]["x"].GetDouble();
+        const double body_height = size_json["player"]["size"]["y"].GetDouble();
+        LevelDocument document(tuning);
+        const Entry lift = document.add_object("VerticalLift", { 600, 600, 120, 20 });
+        const auto saved = parse(document.serialize());
+        const auto& record = saved["collision_objects"][static_cast<rapidjson::SizeType>(lift.index)];
+        require(std::string(record["type"].GetString()) == "StructurePaintable" &&
+            std::string(record["collision_type"].GetString()) == "STRUCTURE_PAINTABLE" &&
+            std::string(record["motion"]["type"].GetString()) == "vertical" &&
+            record["motion"]["travel_y"].GetDouble() == 320 && !record["motion"].HasMember("travel_x") &&
+            record["motion"]["period"].GetDouble() == 4 && record["motion"]["phase"].GetDouble() == 0,
+            "The lift palette entry did not write a solid cycling one-storey lift");
+        bool travel_field = false;
+        for (const Property& property : document.properties(lift))
+        { travel_field |= property.path == "motion/travel_y" && property.numeric && property.label.find("down") != std::string::npos; }
+        require(travel_field, "The lift inspector lacks its labelled numeric travel_y field");
+
+        document.set_property(lift, "motion/phase", "0.25");
+        const auto guide = *document.motion_guide(lift);
+        require(equal(guide.anchor, { 600, 600, 120, 20 }) && equal(guide.initial_pose, { 600, 760, 120, 20 }) &&
+            equal(guide.travel_envelope, { 600, 600, 120, 340 }) &&
+            guide.standing_envelope.y < 600 - body_height && guide.standing_envelope.x < 600 - body_width &&
+            guide.clearance_envelope && guide.clearance_envelope->y < 600 - body_height &&
+            guide.clearance_envelope->y + guide.clearance_envelope->height > 940 + body_height &&
+            guide.clearance_envelope->y + guide.clearance_envelope->height < 940 + body_height + 0.01 &&
+            guide.clearance_envelope->x < 600 - body_width && guide.clearance_envelope->x > 600 - body_width - 0.01 &&
+            guide.clearance_envelope->width > 120 + 2 * body_width,
+            "Lift guides omitted its phase, shaft, corridor above or clearance beneath");
+        const Entry mover = document.add_object("MovingPaintable", { 1600, 500, 320, 20 });
+        require(!document.motion_guide(mover)->clearance_envelope, "A horizontal mover drew a lift's clearance");
+        // A ledge within a body of the shaft is refused; a body and a little more is not.
+        reject_without_change(document, [&] { document.add_object("Structure", { 730, 800, 100, 40 }); },
+            "Editor accepted geometry within a body of a lift's shaft");
+
+        // The floor is at 1200: a lowest bottom past 1080 leaves less than a body.
+        reject_without_change(document, [&] { document.set_rectangle(lift, { 600, 800, 120, 20 }); },
+            "Editor accepted a lift with less than a body height beneath its lowest pose");
+        for (const auto& [path, invalid] : {
+            std::pair{ "motion/travel_y", "0" }, { "motion/travel_y", "-1" }, { "motion/travel_y", "1e40" },
+            { "motion/drive", "paint" }, { "motion/type", "horizontal" },
+            { "collision_type", "STRUCTURE_JUMP_THROUGH" } })
+        {
+            reject_without_change(document, [&] { document.set_property(lift, path, invalid); },
+                "Editor accepted an unsupported lift field or changed transactional state");
+        }
+        document.set_property(lift, "motion/travel_y", "256");
+        require(document.motion_guide(lift)->travel_envelope.height == 276, "A lift's travel edit was not applied");
+
+        // Here a copy cannot clear the clearance above the 1200 floor, so it is refused.
+        reject_without_change(document, [&] { document.duplicate(lift); },
+            "A lift duplicate that would meet the floor was published");
+        // Raised to 150, a copy fits below the source's clearance (its path ends 942).
+        document.set_rectangle(lift, { 600, 150, 120, 20 });
+        const Entry copy = document.duplicate(lift);
+        const auto source = *document.motion_guide(lift);
+        const auto duplicate = *document.motion_guide(copy);
+        require(duplicate.clearance_envelope->y >= source.clearance_envelope->y + source.clearance_envelope->height &&
+            duplicate.anchor.x == source.anchor.x && duplicate.travel_envelope.height == source.travel_envelope.height,
+            "A lift duplicate overlaps its original's shaft, corridor or clearance");
+        require(document.undo(), "Lift duplicate lacked undo");
+
+        // Mirror: x = 1500 for the template. A lift's anchor reflects; its phase stays.
+        const Entry mirrored = document.mirror_copy(lift);
+        const auto mirror_document = parse(document.serialize());
+        const auto& reflected = mirror_document["collision_objects"][static_cast<rapidjson::SizeType>(mirrored.index)];
+        require(reflected["rectangle"]["x"].GetDouble() == 3000 - 600 - 120 &&
+            reflected["rectangle"]["y"].GetDouble() == 150 && reflected["motion"]["phase"].GetDouble() == 0.25 &&
+            reflected["motion"]["travel_y"].GetDouble() == 256,
+            "A lift's mirror reflected its travel or advanced its phase");
+
+        // Blockout scoring faces move with the initial phase on y, keeping their size.
+        const BlockoutTuning scoring = load_blockout_tuning(tuning, repo / "editor/movement-baseline.json");
+        const auto at_quarter = scoring_faces(document, scoring);
+        document.set_property(lift, "motion/phase", "0");
+        const auto at_top = scoring_faces(document, scoring);
+        require(at_quarter.size() == at_top.size() && scoring_area(at_quarter) == scoring_area(at_top),
+            "A lift's phase changed its local scoring faces");
+        bool moved = false;
+        for (std::size_t index = 0; index < at_top.size(); ++index)
+        {
+            if (at_top[index].entry.index != lift.index || at_top[index].entry.kind != lift.kind) { continue; }
+            require(at_quarter[index].strip.x == at_top[index].strip.x &&
+                at_quarter[index].strip.y == static_cast<float>(at_top[index].strip.y) + 128.0f &&
+                at_quarter[index].strip.width == at_top[index].strip.width,
+                "A lift's scoring guide did not translate on y alone");
+            moved = true;
+        }
+        require(moved, "The lift scoring control inspected no lift face");
+
+        const auto saved_path = scratch / "lift-authored.json";
+        document.save(saved_path);
+        LevelDocument reopened(tuning); reopened.load(saved_path);
+        require(parse(reopened.serialize()) == parse(document.serialize()), "An authored lift did not save and reopen");
+        std::cout << "PASS lift palette, travel_y inspector, shaft/corridor/clearance guides and refusals, "
+            "duplicate past the clearance, anchor-only mirror, y-translated scoring and saved lifts\n";
     }
 }

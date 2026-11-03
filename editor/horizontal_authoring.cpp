@@ -67,13 +67,17 @@ namespace colourwars_editor
         if (string(object, key::type) != object_type::structure_paintable)
         { fail("motion belongs only on flat StructurePaintable entries."); }
         const Json& fields = member(object, "motion");
-        if (string(fields, "type") != "horizontal") { fail("motion.type supports only horizontal."); }
-        for (const char* field : { "axis", "travel_y", "rotation" })
+        // One axis per mover (ROAD#28, E1), read as the game's loader reads it.
+        const std::string type = string(fields, "type");
+        if (type != "horizontal" && type != "vertical") { fail("motion.type must be horizontal or vertical."); }
+        const bool vertical = type == "vertical";
+        for (const char* field : { "axis", vertical ? "travel_x" : "travel_y", "rotation" })
         {
             if (fields.HasMember(field)) { fail(std::string("Unsupported motion field: ") + field); }
         }
-        motion::Spec spec{ motion_rectangle(object), static_cast<float>(number(fields, "travel_x")),
+        motion::Spec spec{ motion_rectangle(object), vertical ? 0.0f : static_cast<float>(number(fields, "travel_x")),
             static_cast<float>(number(fields, "period")), static_cast<float>(number(fields, "phase")) };
+        if (vertical) { spec.travel_y = static_cast<float>(number(fields, "travel_y")); }
         // The drive is read by the game's own rule, so the editor refuses
         // exactly the drives the game would refuse at load.
         const auto text = [&fields](const char* key)
@@ -85,7 +89,12 @@ namespace colourwars_editor
             spec.team_a_heading = drive.team_a_heading;
         }
         catch (const std::invalid_argument& error) { fail(std::string("motion: ") + error.what()); }
-        try { motion::validate_spec(spec); }
+        try
+        {
+            motion::validate_spec(spec);
+            motion::validate_collision(spec, object.HasMember(key::collision_type) &&
+                string(object, key::collision_type) == "STRUCTURE_JUMP_THROUGH");
+        }
         catch (const std::invalid_argument& error) { fail(std::string("motion: ") + error.what()); }
         return spec;
     }
@@ -116,7 +125,10 @@ namespace colourwars_editor
         }
         const auto path = motion::path(spec);
         const auto initial = motion::pose(spec, motion::offset_at(spec, spec.initial_phase));
-        return { rect(spec.anchor), rect(initial), rect(path), rect(motion::standing(path, player.width, player.height)) };
+        MotionGuide guide{ rect(spec.anchor), rect(initial), rect(path),
+            rect(motion::standing(path, player.width, player.height)), std::nullopt };
+        if (spec.vertical()) { guide.clearance_envelope = rect(motion::column(path, player.width, player.height)); }
+        return guide;
     }
 
     void validate_motion_geometry(const Document& document, const std::filesystem::path& tuning)
@@ -133,10 +145,18 @@ namespace colourwars_editor
             if (!object.HasMember("motion")) { continue; }
             try
             {
-                const auto path = motion::path(decode_horizontal_motion(object));
+                const auto spec = decode_horizontal_motion(object);
+                const auto path = motion::path(spec);
                 if (!motion::contains(world, path)) { fail("motion platform envelope leaves Scene bounds."); }
                 const auto standing = motion::standing(path, player.width, player.height);
                 if (!motion::contains(world, standing)) { fail("motion standing envelope leaves Scene bounds."); }
+                // A lift's lowest pose leaves a body height clear beneath it (E3a).
+                const bool lift = spec.vertical();
+                const auto underside = lift ? motion::underside(path, player.width, player.height) : motion::Box{};
+                if (lift && !motion::contains(world, underside))
+                { fail("lift clearance beneath its lowest pose leaves Scene bounds."); }
+                // And a body beside the shaft, where a rider overhangs the lift's edge.
+                const auto column = lift ? motion::column(path, player.width, player.height) : motion::Box{};
                 for (rapidjson::SizeType other = 0; other < objects.Size(); ++other)
                 {
                     if (other == index) { continue; }
@@ -149,6 +169,12 @@ namespace colourwars_editor
                     { fail("motion platform envelope intersects " + object_name(objects[other], other) + "."); }
                     if (motion::intersects(standing, obstacle))
                     { fail("motion standing envelope intersects " + object_name(objects[other], other) + "."); }
+                    if (lift && motion::intersects(underside, obstacle))
+                    { fail("lift needs a body height clear beneath its lowest pose; it meets " +
+                        object_name(objects[other], other) + "."); }
+                    if (lift && motion::intersects(column, obstacle))
+                    { fail("lift needs a body width clear beside its whole shaft; it meets " +
+                        object_name(objects[other], other) + "."); }
                 }
             }
             catch (const std::exception& error) { fail(object_name(object, index) + ": " + error.what()); }

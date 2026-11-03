@@ -34,7 +34,7 @@ namespace moving_structure_acceptance
                 "An equal-net interior reversal was collapsed to an endpoint chord");
             require(turn.collision.segments[0].begin == 0.0 && turn.collision.segments[0].end == 0.5 &&
                 turn.collision.segments[1].begin == 0.5 && turn.collision.segments[1].end == 1.0 &&
-                turn.collision.segments[0].to_x == 40.0f && turn.collision.segments[1].from_x == 40.0f,
+                turn.collision.segments[0].to == 40.0f && turn.collision.segments[1].from == 40.0f,
                 "Interior reversal does not retain both chronological paths");
             const HorizontalMotion wrapped({ anchor, 40.0f, 2.0f * SECONDS_PER_STEP, 0.5f });
             const auto wrap = wrapped.prepare(SECONDS_PER_STEP);
@@ -44,7 +44,7 @@ namespace moving_structure_acceptance
             const auto rounded_step = rounded.prepare(dt);
             require(rounded_step.collision.segment_count == 1 && rounded_step.collision.segments[0].begin == 0.0 &&
                 rounded_step.collision.segments[0].end == 1.0 &&
-                rounded_step.collision.segments[0].from_x == rounded_step.collision.segments[0].to_x,
+                rounded_step.collision.segments[0].from == rounded_step.collision.segments[0].to,
                 "A positive-duration rounded-stationary step lost flying-projectile coverage");
             const float nan = std::numeric_limits<float>::quiet_NaN();
             const float infinity = std::numeric_limits<float>::infinity();

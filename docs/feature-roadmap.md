@@ -2479,58 +2479,67 @@ arena while `POL#21` remains a geometry decision.
 
 #### Vertical-lift contract draft (`ROAD#28`)
 
-**OPEN: draft accepted with two amendments (the author's 2026-11-03
-decision).** The draft was recorded on 2026-10-30 as a written step, not code;
-it is below. The author accepted E1, E2, E4 and E6 as written, amended E3 and
+**Draft accepted with two amendments (the author's 2026-11-03 decision); its
+first slice is [built](#vertical-lift-first-slice-road28).** The draft was
+recorded on 2026-10-30 as a written step, not code; it is below. The author accepted E1, E2, E4 and E6 as written, amended E3 and
 E5, and picked one option from each gameplay set; the calls and the promoted
 slice are in section 4. Acceptance of the draft step: every inventory row below resolved against the
 tree at the commit that records it, each engineering answer names its
 precedent, and no code, tuning or content changed. The draft chooses no trial
 and does not touch Turbulence's geometry (`POL#21`).
 
-**1. Inventory of horizontal-only sites.** Line numbers are as of this commit.
-"Assumes" is what the site takes for granted today; "A lift needs" is the
-change a vertical mover would force there, not a design.
+**1. Inventory of horizontal-only sites.** Re-resolved on 2026-11-03 against
+`82b8bdb6`, the tree before the first lift slice; line numbers are that
+tree's, and the slice has since moved most of them. "Assumes" is what the site
+took for granted; "A lift needs" is the change a vertical mover forced there.
+Rows marked *(new)* were missed by the 2026-10-30 draft and found by the
+re-resolution. Every row still held; only line numbers had moved, mostly by
+`HYG#40` (the opening out of `Level`) and `HYG#51`.
 
 | Area | Site | Assumes | A lift needs |
 |---|---|---|---|
 | Capability note | `game/objects/translating_structure_paintable.h:23-24` | "not a lift or a rotating body" | the note rewritten for the accepted axis |
 | Engine-free spec | `game/contracts/horizontal_motion_contract.h:32-40` (`Spec::travel_x`) | one travel along +x | a vertical travel (see answer E1) |
 | Spec validation | `game/contracts/horizontal_motion_contract.h:91-110` | the endpoint is `anchor.x + travel_x` and must exceed `anchor.x` | the same distinct-endpoint check on y |
-| Paint-drive heading | `game/contracts/horizontal_motion_contract.h:26-75` (`team_a_heading`, `decode_drive`) | headings are `right`/`left`; phase 0 is the left end | `up`/`down` naming, if a lift is paint-driven (option G3) |
+| Offset scalar *(new)* | `game/contracts/horizontal_motion_contract.h:112-116` (`offset_at`), `game/objects/horizontal_motion.cpp:12-16` (`contract_spec`) | the triangular offset scales `travel_x` | the axis's travel |
+| Paint-drive heading | `game/contracts/horizontal_motion_contract.h:26-75` (`team_a_heading`, `decode_drive`, `validate_drive`) | headings are `right`/`left`; phase 0 is the left end | `up`/`down` naming, if a lift is paint-driven (option G3) |
 | Pose | `game/contracts/horizontal_motion_contract.h:159-165`, `game/objects/horizontal_motion.cpp:59-64` | an offset adds to x only | an offset adds to y for a lift |
 | Path | `game/contracts/horizontal_motion_contract.h:167-174` | the path keeps the anchor's top and bottom and widens left/right | widen top/bottom instead |
-| Standing corridor | `game/contracts/horizontal_motion_contract.h:176-184` | one body height above a fixed `path.top` | the corridor rises with the highest pose (answer E3) |
+| Standing corridor | `game/contracts/horizontal_motion_contract.h:176-184` | one body height above a fixed `path.top`; its pad scale reads only `path.top` | the corridor rises with the highest pose (answer E3) |
 | Motion state | `game/objects/horizontal_motion.h:22-60` | `HorizontalMotionSpec::travel_x`; segments carry `from_x`/`to_x` | segment offsets on the lift's axis; `Vector2F` offsets already hold a y that is always 0 |
+| Offset construction *(new)* | `game/objects/horizontal_motion.cpp:45`, `:66-69`, `:109`, `:131`, `:155` | the constructor, `bounds()` and both prepare paths build `{ x, 0 }` or read `.x` | the offset on the lift's axis |
 | Segment building | `game/objects/horizontal_motion.cpp:97-103`, `:142-149` | reads `current_offset.x` | read the lift's axis |
 | Carry step | `game/objects/horizontal_motion.h:71-77` (`HorizontalCarryStep::displacement_x`) | x displacement only | a y displacement (answer E2) |
-| Admission | `game/objects/level_structures.cpp:47-61`, `:230-270` | pose/path are horizontal; standing envelope and obstacle refusals use that path | the lift's path and corridor, same refusals |
-| Displacement budget | `game/objects/level_structures.cpp:272-340`, refusals at `:334-338` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound |
-| Frame preparation | `game/objects/level_structures.cpp:350-362` | carrier displacement is `after.x - before.x` | `after.y - before.y` too |
+| Admission | `game/objects/level_structures.cpp:47-61`, `:230-270` | pose/path are horizontal; standing envelope and obstacle refusals use that path; nothing is checked below the path | the lift's path and corridor, same refusals, and the new clearance below the lowest pose (E3a as amended) |
+| Displacement budget | `game/objects/level_structures.cpp:272-340`, refusals at `:334-338` | mover travel enters only the horizontal bound; the vertical bound counts the player's own y speed | the lift's per-step travel added to the vertical bound (E6) |
+| Frame preparation | `game/objects/level_structures.cpp:354-366` (displacement `:362-363`), zero step `:378-396` *(new)* | carrier displacement is `after.x - before.x`; the zero step carries x 0 | `after.y - before.y` too, and a zero y |
 | Persisted pose | `game/objects/level_structures.cpp:398-414` | poses rebuilt from `previous_offset.x`/`current_offset.x` | rebuild from the lift's axis |
-| Rider carry | `game/objects/player.h:169-171`, `game/objects/player.cpp:531-550` | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before the rider's own integration (answer E2) |
-| Carrier choice | `game/objects/player.cpp:552-605` | a support is a measured or resolved top contact under the feet | unchanged rule; the top moves each step |
-| Movement feedback | `game/objects/player.cpp:455-460`, `game/objects/player.h:307-308`, `:365` | subtracts carried x from resolved x | a carried y kept out of landing/fall feedback |
-| Level step order | `game/objects/level.cpp:203-210`, `:457-459` | prepare before input, supports after contacts | unchanged order |
-| Flying-paint sweep | `game/objects/projectile_contacts.cpp:115-124` (`relative_rectangle_at`) | subtracts the mover offset from left/right only | subtract it from top/bottom |
-| Swept response | `game/objects/projectile_contacts.cpp:251-326`, response `:318` | segments are x offsets; response offsets by the full translation | segment offsets on the lift's axis |
-| Roller footprint | `game/objects/projectile_contacts.cpp:332-368`, union `:355-361` | the visited footprint grows left/right, keeping `entered.top`/`bottom` | grow top/bottom |
-| Mover world queries | `game/objects/translating_structure_paintable.cpp:248-249`, `:266-267`, `:272-273`, `:278-286`, `:300-305` | bounds, splash, `top_paint_team`, runoff and paint samples shift by `translation().x` | shift by y as well (draws at `:224`, `:230` and the cue at `:111` already use the full vector) |
-| Ferry cue | `game/objects/translating_structure_paintable.cpp:195-201` | movement heading is the sign of `after.x - before.x` | a lift's cue, if any, is its own presentation (option G3) |
+| Rider carry | `game/objects/player.h:182-184`, `:380-387`, `game/objects/player.cpp:571-590` (call `:1336-1338`) | offsets the body by `displacement_x` and records `movement_carried_x_` | a y offset applied before the rider's own integration (answer E2) |
+| Carrier choice | `game/objects/player.cpp:592-641` | a support is a measured or resolved top contact under the feet | unchanged rule; the top moves each step |
+| Jump-through landing *(new)* | `game/objects/player.cpp:942-963` | a landing needs the previous feet above the platform's current top | a rising top can pass the feet, so a lift is solid only |
+| Movement feedback | `game/objects/player.cpp:496-500`, `:1045-1048`, `game/objects/player.h:326-328`, `:385` | subtracts carried x from resolved x; landing reads the rider's own `velocity().y` | nothing: a carried y never enters velocity or the footstep distance |
+| Level step order | `game/objects/level.cpp:139-149`, `:380-384`, `:404-409` | prepare before input, commit after it, supports after contacts | unchanged order |
+| Flying-paint sweep | `game/objects/projectile_contacts.cpp:114-124` (`relative_rectangle_at`) | subtracts the mover offset from left/right only | subtract it from top/bottom |
+| Swept response | `game/objects/projectile_contacts.cpp:251-331`, segments `:270-289`, response `:315-323` | segments are x offsets; response offsets by the full translation | segment offsets on the lift's axis |
+| Roller footprint | `game/objects/projectile_contacts.cpp:333-372`, union `:355-364` | the visited footprint grows left/right, keeping `entered.top`/`bottom` | grow top/bottom |
+| Mover world queries | `game/objects/translating_structure_paintable.cpp:248-249`, `:266-267`, `:272-273`, `:278-286`, `:300-306` | bounds, splash, runoff and paint samples shift by `translation().x`; `top_paint_team` queries by x | shift by y as well; `top_paint_team` is already right for a lift (draws at `:224`, `:230` and the cue at `:111` already use the full vector) |
+| Ferry cue | `game/objects/translating_structure_paintable.cpp:195-208`, glyphs `:153-158`, `:182-187` *(new)* | heading is the sign of `after.x - before.x`; arrows and end stops are left/right | a lift's cue, if any, is its own presentation (option G3) |
 | Translated shadow | `game/objects/translated_airbrush_shadow.cpp:52-65` | bounds/cull shift by `offset.x` only; anchored at the anchor's bottom | shift by y; the shadow rides with the lift |
-| Shadow admission | `game/objects/level_object_builder.cpp:645-662` | casts for wide, thin movers | unchanged rule |
-| Loader | `game/objects/level_object_builder.cpp:150-185` | only `type: "horizontal"`; `axis`, `travel_y` and `rotation` are refused by name | a second type (answer E1) |
-| Editor guide and checks | `editor/horizontal_authoring.cpp:105-155` | guide and refusals use the horizontal path/corridor | the shared contract's lift path |
-| Editor duplicate | `editor/level_document.cpp:895-915` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path |
-| Editor mirror | `editor/level_document.cpp:1005-1018` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
-| Editor fields | `editor/level_document.cpp:616`, `:866` | `motion/travel_x` label and default | the lift's field |
-| Blockout aids | `editor/blockout_aids.cpp:175-190` | initial-phase offset added to x | added to y |
-| Bot supports | `game/objects/level.cpp:787-808` | `moving` marks a support whose bounds change | unchanged flag |
-| Bot riding | `game/ai/match_bot.cpp:83-120`, `:285-300`, `:437-460`; `game/ai/match_bot.h:117-134` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
-| Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-60`, `game/debug/replay/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words |
-| Replay codec | `game/debug/replay/replay.cpp:147-318` (y offset must be 0 at `:219-220`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
-| Replay version | `game/debug/replay/replay.h:46`, `game/debug/replay/replay.cpp:683-686` | writes and reads 6 only (`HYG#39`; corrected 2026-11-03, the draft said 5) | writes 7 (answer E5) |
-| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:450-600`, `level_editor/motion_checks.cpp` | horizontal fixtures | lift fixtures beside them |
+| Shadow admission | `game/objects/level_object_builder.cpp:649-674` (rule `:663-664`) | casts for wide, thin movers | unchanged rule |
+| Loader | `game/objects/level_object_builder.cpp:139-175` (refusals `:146-152`) | only `type: "horizontal"`; `axis`, `travel_y` and `rotation` are refused by name | a second type (answer E1) |
+| Editor decode *(new)* | `editor/horizontal_authoring.cpp:65-91` | the editor's twin of the loader refusal | the same second type |
+| Editor guide and checks | `editor/horizontal_authoring.cpp:108-156` | guide and refusals use the horizontal path/corridor | the shared contract's lift path and clearance |
+| Editor duplicate | `editor/level_document.cpp:897-917` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path and clearance |
+| Editor mirror | `editor/level_document.cpp:1012-1029` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
+| Editor fields | `editor/level_document.cpp:615-631`, `:865-873` | `motion/type (horizontal)` and `motion/travel_x` labels and default | the lift's field and palette entry |
+| Blockout aids | `editor/blockout_aids.cpp:177-184`, `:209` | initial-phase offset added to x | added to y |
+| Bot supports | `game/objects/level_bot_world.cpp:111-130` (flag `:124-126`) | `moving` marks a support whose bounds change | unchanged flag |
+| Bot riding | `game/ai/match_bot.cpp:81-113`, `:283-311`, `:449-459`; `game/ai/match_bot.h:118-138`; `game/ai/match_bot_ascent.cpp:174-187` | a ride is a feet-on-top match, and the bot paints/holds while carried sideways; `local_goal` keeps the y it chose at replan | the same match; deliberate lift routing is a later slice, as `ROAD#15` was for gates |
+| Bot progress *(new)* | `game/ai/match_bot.cpp:425-444` | carried distance (including y) counts as progress | nothing for this slice; lift routing will need to discount it |
+| Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-99` (spec words `:47-50`, domain tag `:76`, labels `:112`), `game/debug/replay/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words, and a new domain tag |
+| Replay codec | `game/debug/replay/replay.cpp:146-317` (spec word 4 is `travel_x` at `:207`; y offset must be 0 at `:219-220`; pose x-only at `:222`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
+| Replay version | `game/debug/replay/replay.h:21-22`, `:46`, `game/debug/replay/replay.cpp:682-686` | writes and reads 6 only (`HYG#39`) | writes 7 (answer E5) |
+| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:492-631`, `level_editor/motion_checks.cpp`, `debug_console/replay_checks.cpp`, `debug_console/bot_replay_checks.cpp` | horizontal fixtures; `type: "vertical"` and schema 2 asserted as refusals; version 6 | lift fixtures beside them; flipped refusals; version 7 |
 
 **2. Engineering answers, each following existing practice.**
 
@@ -2539,16 +2548,16 @@ change a vertical mover would force there, not a design.
   on the same `TranslatingStructurePaintable`, with the triangular path,
   phase and drive rules unchanged; diagonal or two-axis motion stays refused.
   *Precedent:* the loader already reserves `travel_y` and `axis` by name
-  (`level_object_builder.cpp:157-163`), and the paint ferry joined the same
+  (`level_object_builder.cpp:146-152` at `82b8bdb6`), and the paint ferry joined the same
   class as a new `drive` value rather than a subclass. The rectangle is the
   **topmost** anchor, as the horizontal one is the leftmost.
 - **E2. Carry a rider by its support's identity, before its own motion.** The
   carrier step gains a y displacement; `apply_carrier` moves the body by both
   components after its velocity update and before its own integration, where
-  the x carry sits now (`player.cpp:1301-1303`), under the same checks (alive,
+  the x carry sits now (`player.cpp:1336-1338` at `82b8bdb6`), under the same checks (alive,
   flat, overlapping, feet at the previous top). Jump, drop, walk-off, death and
   placement release it, and release adds no lift velocity to the rider.
-  *Precedent:* the x carry (`player.cpp:531-550`), keyed by
+  *Precedent:* the x carry (`player.cpp:571-590` at `82b8bdb6`), keyed by
   `HorizontalMotionId`, "without adding personal velocity or tool travel"
   ([capability](#horizontal-movement-capability-2026-10-26)).
 - **E3. Refuse a crush; never push a player through geometry.** Two parts:
@@ -2652,22 +2661,110 @@ on the new explicit-only Lift Trial. Bot routing, the paint-driven lift and
 attended play stay separate rows, as for the gate and ferry. The capability
 remains XL; this slice is its physics.
 
-**Next local step.** Re-resolve the inventory against the tree, since
-`HYG#51` moved several sites (the loader refusal is now
-`level_object_builder.cpp:146`, `apply_carrier` is `player.cpp:571` with its
-call at `:1338`). Then land the engine-free half first: a vertical `Spec` with
-`travel_y` and its validation, pose, path, corridor and lowest-pose underside
-check in `horizontal_motion_contract.h`, the loader accepting
-`type: "vertical"`, and `level_format` fixtures for admission and the flush
-refusal. Carry, sweeps, replay and the trial stage follow.
+#### Vertical lift, first slice (`ROAD#28`)
+
+**Done 2026-11-03.** The promoted slice above, built on the re-resolved
+inventory. A lift is `"motion": { "type": "vertical", "travel_y", "period",
+"phase" }` on the same `TranslatingStructurePaintable`
+([format](level-format.md#vertical-lift-motion)). What each answer became:
+
+- **E1.** `HorizontalMotionSpec` and the contract's `Spec` gain `travel_y`;
+  exactly one of the two travels is positive and the other exactly zero, so a
+  NaN or a second travel is refused as a two-axis request. Offsets stay a
+  scalar on the mover's own axis: segments carry `from`/`to` (renamed from
+  `from_x`/`to_x`), and `axis_offset` turns one into a world translation. The
+  loader and the editor accept `vertical` and refuse `travel_x`, `axis` and
+  `rotation` on it; the schema's `motion` is now a `oneOf`. The type names keep
+  their `Horizontal` prefix: renaming the family would touch every probe for no
+  behaviour, so the prefix now names where the capability began.
+- **E2.** `HorizontalCarryStep` gains `displacement_y`; `apply_carrier` offsets
+  the rider by both, before its own integration, under the unchanged checks.
+  Only carried x enters footstep distance; landing reads the rider's own
+  velocity, which carry never touches, so a jump from a rising lift leaves at
+  exactly the still-ground launch.
+- **E3, as amended, and one more refusal.** Admission refuses a lift whose
+  shaft, its corridor above the highest pose or its padded body-height
+  clearance beneath the lowest pose leaves the Scene or meets geometry, so the
+  flush case is refused. The independent review of the slice found that this
+  was not enough: a rider may overhang a lift's edge by almost a body, so a
+  ledge within a body width of the shaft, between the corridor and the
+  clearance, would meet a rising rider's head or a descending rider's overhang
+  and make the hold fire in ordinary play (the first trial draft had one 10
+  units away). Admission therefore keeps the lift's whole **column** clear: the
+  shaft widened by a body each side, from a body above its highest pose to a
+  body below its lowest. With the column clear, `LevelStructures::hold_closing_lifts`,
+  which holds a lift's phase for a step that would push a living player through
+  geometry or out of the Scene (`HorizontalMotion::hold`, the ferry's held
+  step), cannot fire in an admitted level; the `moving_structure` case checks
+  that a ridden lift never holds and tests the hold itself on the contract.
+  The column means a rider leaves a lift at its top by hopping a body-wide gap,
+  not by walking onto a flush ledge.
+- **Solid only.** A jump-through landing compares the rider's previous feet
+  with the platform's current top, which a rising lift has already passed, so a
+  jump-through lift is refused (`validate_collision`) by the loader, the editor
+  and the constructor.
+- **E4.** Splash, runoff, paint samples, culling and the translated shadow take
+  the full offset; flying-paint sweeps subtract the offset from the projectile's
+  top and bottom for a lift, and a roller's visited footprint grows on y.
+  `top_paint_team` already queried by x alone. Paint, credit and scored area
+  stay on anchor faces.
+- **E5.** The motion block is schema 2: eight spec words, the last `travel_y`,
+  each offset on its own axis with the other word zero, and the fingerprint
+  domain tag is `colourwars-horizontal-terrain-2`. `ReplayFile::format_version`
+  is 7 and 6 is refused. Static replays write version 7's otherwise unchanged
+  bytes.
+- **E6.** A lift's per-step travel joins the vertical bound and leaves the
+  horizontal one with only its rounding reserve; a horizontal-only level's
+  admission arithmetic is unchanged (its lift term is zero).
+
+**The Lift Trial.** `turbulence_lift_trial` ("Turbulence Yard - Lift Trial")
+is the Mover Trial with its two movers replaced by two mirrored lifts and their
+four stations by `lift_top_a/b` and `lift_foot_a/b`; it is explicit-only and
+not in Random. Each lift is 48 by 20, solid `pencil`, centred in the 160-unit
+gap between the upper approach and the crossover (x 1296 and 2656), with its
+top anchor flush with the crossover at y 800. G1 asked for one storey of about
+320 or the largest above about 200 that fits: below, the lower bed (top 1200)
+leaves room for a lowest pose whose bottom is 1076, so the travel is **256**,
+from the crossover's level to 144 above the bed, a hop from it; the bed to the
+crossover is 400, which no jump reaches. The period is 3.2 s, 160 units/s (G2).
+Both lifts start at the top (phase 0), since a lift's mirror keeps its phase.
+The column fixes the width: a body width plus its pad each side of a 48-wide
+lift is the whole gap. The trial's shadows ride with the lifts, and
+`review_turbulence_lift_trial` and `turbulence_lift_station_tour` give it the
+siblings' review frames.
+
+**Not in this slice.** The paint-driven lift (G3b, the next slice); deliberate
+bot lift routing (bots ride a lift they happen to stand on, as they ride a
+mover, but plan no route by it; their stuck check also counts carried y as
+progress, which routing will need to discount); and attended play, now part of
+`ROAD#30`.
+
+**Qualification (MattPC, 2026-11-03).** Debug and Release builds pass. The
+full default acceptance list passes in both presets (77 cases in Debug, 76 in
+Release), including the new `moving_structure` lift checks (axis, contract,
+admission refusals including the flush floor, a ledge 10 and 51 units beside
+the shaft and the acceptance of one 53 away, a 300-step ride with no hold, a
+still-ground jump launch, world queries), `level_format`'s lift fixtures, the
+replay format-7 controls in `moving_structure` and `debug_console`, and
+`instant_replay`, which now also replays a 20 s Lift Trial round with bots step
+for step. `scripts/check-level-editor.ps1` passes in Release, with
+`check_lift_motion`; in Debug its document checks pass and its native DPI
+window probe failed twice locally on keyboard-focus checks this change does not
+touch (different checks each time; the Release run of the same probe passes).
+Hidden startup passes. A one-player Debug ride of the Lift Trial was inspected
+at both ends of the storey. Attended play is `ROAD#30`.
 
 ### Paint-object trial play (`ROAD#30`)
 
 **DECISION, M (2026-10-28).** Play the explicit-only Ferry and Gate Trials
-from both sides at 1-4P. Judge whether ownership-driven travel and selective
+from both sides at 1-4P, and since 2026-11-03 the Lift Trial
+([`ROAD#28`](#vertical-lift-first-slice-road28)). Judge whether ownership-driven travel and selective
 passage create useful painting/route choices, whether the gate's held-open
 rule is understandable, and whether the open share and ferry headings feel
-fair. Record keep/change/cut decisions and any value changes. The gate and
+fair. For the lifts, judge whether riding at 160 units/s is a free, risk-free
+escape (the author's trigger for trying about 100), whether scored moving
+surfaces swing the score more than their area justifies (the trigger for an
+unscored or top-only lift), and whether the top-dock hop reads. Record keep/change/cut decisions and any value changes. The gate and
 ferry cues (`ROAD#26`, `ROAD#27`) are ready for review. Current
 trial play is already available. Neither automated matches nor this review opts a trial into Random
 or selects Turbulence's geometry (`POL#21`).

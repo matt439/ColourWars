@@ -64,6 +64,10 @@ private:
         std::span<Player* const> players) const;
     void validate_budget(const Frame* prepared, const labrador::Scene& scene,
         std::span<Player* const> players, const PlayerTuning& player_tuning) const;
+    // E3b: a lift whose prepared step would close on a living player holds
+    // still for that step instead; replaced before the budget check.
+    void hold_closing_lifts(Frame& frame, float dt, const labrador::Scene& scene,
+        std::span<Player* const> players) const;
 
     std::vector<TranslatingStructurePaintable*> horizontal_structures_;
     std::vector<HorizontalSupportRef> horizontal_supports_;

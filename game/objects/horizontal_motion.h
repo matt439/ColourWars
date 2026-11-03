@@ -29,14 +29,24 @@ struct HorizontalMotionSpec
     // Paint drive only: +1 when team A's paint carries the mover right, -1
     // when it carries it left. Team B's paint always heads the other way.
     int team_a_heading = 1;
+    // A vertical lift (ROAD#28) travels travel_y down from its topmost anchor
+    // and leaves travel_x zero; a horizontal mover leaves this zero.
+    float travel_y = 0.0f;
+    bool vertical() const { return this->travel_y != 0.0f; }
+    // The travel along the mover's own axis.
+    float travel() const { return this->vertical() ? this->travel_y : this->travel_x; }
+    // A scalar axis offset as a world translation.
+    mattmath::Vector2F axis_offset(float offset) const
+    { return this->vertical() ? mattmath::Vector2F(0.0f, offset) : mattmath::Vector2F(offset, 0.0f); }
 };
 
+// Offsets along the mover's own axis: x for a horizontal mover, y for a lift.
 struct HorizontalMotionSegment
 {
     double begin = 0.0;
     double end = 0.0;
-    float from_x = 0.0f;
-    float to_x = 0.0f;
+    float from = 0.0f;
+    float to = 0.0f;
 };
 
 struct HorizontalMotionStep
@@ -74,6 +84,8 @@ struct HorizontalCarryStep
     mattmath::RectangleF previous_top = mattmath::RectangleF::ZERO;
     mattmath::RectangleF current_top = mattmath::RectangleF::ZERO;
     float displacement_x = 0.0f;
+    // A lift's rider moves with its top (E2), before its own integration.
+    float displacement_y = 0.0f;
 };
 
 struct HorizontalSupportRef
@@ -100,8 +112,12 @@ struct HorizontalStructureState
     std::vector<PaintSurfaceSample> local_paint;
 };
 
-// One bounded horizontal triangular trajectory. A Level prepares every token
-// before any fallible/input work, then its concrete owners commit copies only.
+// The engine-free contract's copy of a spec, which the level editor shares.
+horizontal_motion_contract::Spec contract_spec(const HorizontalMotionSpec& spec);
+
+// One bounded triangular trajectory on one axis: horizontal, or vertical for
+// a lift (ROAD#28). A Level prepares every token before any fallible/input
+// work, then its concrete owners commit copies only.
 class HorizontalMotion final
 {
 public:
@@ -111,6 +127,9 @@ public:
     HorizontalMotionState state() const;
     // heading is read only by a paint drive: +1 right, -1 left, 0 hold.
     HorizontalPreparedStep prepare(float dt, int heading = 0) const;
+    // The same positive-time step with the phase held: a lift that would
+    // close on a player stays where it is for this step (E3b).
+    HorizontalPreparedStep hold(float dt) const;
     mattmath::RectangleF bounds() const;
     // The paint drive's heading for this paint, before any end stop.
     static int paint_heading(const HorizontalMotionSpec& spec, float team_a, float team_b);

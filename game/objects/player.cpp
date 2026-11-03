@@ -585,7 +585,8 @@ void Player::apply_carrier(float dt)
         return;
     }
     const float before = this->rectangle_.x;
-    this->rectangle_.offset(step.displacement_x, 0.0f);
+    // A lift carries its rider by y (E2); footsteps subtract only carried x.
+    this->rectangle_.offset(step.displacement_x, step.displacement_y);
     this->movement_carried_x_ = this->rectangle_.x - before;
 }
 

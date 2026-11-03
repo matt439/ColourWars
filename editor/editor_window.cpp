@@ -185,7 +185,7 @@ namespace colourwars_editor
         const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
             L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
             L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left",
-            L"Team gate", L"Station (goto target)"};
+            L"Team gate", L"Station (goto target)", L"Vertical lift"};
         for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
@@ -606,8 +606,8 @@ namespace colourwars_editor
                 L"Edit > Align origin to grid rounds both origin coordinates to the current grid, regardless of Shift. "
                 L"For scored slabs it aligns the starting endpoint. "
                 L"New objects appear in the centre of the current view.\n\n"
-                L"Moving paintables use the rectangle as their left anchor. Drag/resize edits that anchor; travel stays in world units. "
-                L"Blue shows full travel, gold the source-tuned standing corridor, and the filled body its initial phase. "
+                L"Moving paintables use the rectangle as their left anchor (a vertical lift's top one). Drag/resize edits that anchor; travel stays in world units. "
+                L"Blue shows full travel, gold the source-tuned standing corridor (for a lift, the whole column it keeps clear), and the filled body its initial phase. "
                 L"Duplicate places a copy below the complete corridor; blocked edits/copies are refused. Guides do not simulate riding or qualify runtime rate limits.\n\n"
                 L"Scored slabs have a fixed 160 by 80 slope and 24-unit normal thickness. Drag moves them; their slab/rise property selects left or right. They cannot be resized.\n\n"
                 L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
@@ -651,7 +651,9 @@ namespace colourwars_editor
                         if (item.motion)
                         {
                             area = item.motion->standing_envelope;
-                            area.height = item.motion->travel_envelope.y + item.motion->travel_envelope.height - area.y;
+                            const Rect& below = item.motion->clearance_envelope ?
+                                *item.motion->clearance_envelope : item.motion->travel_envelope;
+                            area.height = below.y + below.height - area.y;
                         }
                         fit(area); break;
                     }
@@ -668,7 +670,7 @@ namespace colourwars_editor
         {
             const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
                 "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft",
-                "TeamGate", "Station"};
+                "TeamGate", "Station", "VerticalLift"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
             if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
             RECT client{}; GetClientRect(canvas_, &client);

@@ -19,6 +19,8 @@ const RectangleF& TranslatingStructurePaintable::checked_anchor(
     {
         throw std::invalid_argument("A translating paintable needs solid or jump-through flat collision.");
     }
+    horizontal_motion_contract::validate_collision(contract_spec(spec),
+        collision_type == CollisionObjectType::structure_jump_through);
     return spec.anchor;
 }
 
@@ -71,6 +73,10 @@ void TranslatingStructurePaintable::bind_motion_id(HorizontalMotionId id)
 HorizontalPreparedStep TranslatingStructurePaintable::prepare_motion(float dt) const
 {
     return this->motion_.prepare(dt, this->drive_heading());
+}
+HorizontalPreparedStep TranslatingStructurePaintable::hold_motion(float dt) const
+{
+    return this->motion_.hold(dt);
 }
 int TranslatingStructurePaintable::drive_heading() const
 {
@@ -246,7 +252,7 @@ RectangleF TranslatingStructurePaintable::cull_bounds(float units_per_pixel) con
         result = RectangleF::union_of(result, expanded);
     }
     const Vector2F offset = this->translation();
-    if (offset.x != 0.0f) { result.offset(offset.x, 0.0f); }
+    if (offset.x != 0.0f || offset.y != 0.0f) { result.offset(offset); }
     return result;
 }
 const Shape* TranslatingStructurePaintable::shape() const
@@ -263,27 +269,29 @@ void TranslatingStructurePaintable::on_projectile_contact(const Projectile& sour
     // other projectile answers false.
     if (this->motion_id_ != 0 && source.moving_paint_completed(this->motion_id_)) { return; }
     RectangleF splash = source.shape()->bounding_box();
-    const float offset = this->translation().x;
-    if (offset != 0.0f) { splash.x -= offset; }
+    const Vector2F offset = this->translation();
+    if (offset.x != 0.0f) { splash.x -= offset.x; }
+    if (offset.y != 0.0f) { splash.y -= offset.y; }
     this->paint_from_projectile(source, splash);
 }
 PlayerTeam TranslatingStructurePaintable::top_paint_team(float world_x) const
 {
+    // The top face is queried by x alone; a lift's y offset cannot change it.
     const float offset = this->translation().x;
     return this->StructurePaintable::top_paint_team_translated(world_x, offset);
 }
 std::vector<PaintRunoffVisual> TranslatingStructurePaintable::runoff_visuals() const
 {
     std::vector<PaintRunoffVisual> visuals = this->StructurePaintable::runoff_visuals();
-    const float offset = this->translation().x;
-    if (offset == 0.0f) { return visuals; }
+    const Vector2F offset = this->translation();
+    if (offset.x == 0.0f && offset.y == 0.0f) { return visuals; }
     for (PaintRunoffVisual& visual : visuals)
     {
-        visual.owned_band.offset(offset, 0.0f);
+        visual.owned_band.offset(offset.x, offset.y);
         if (visual.trail.width > 0.0f && visual.trail.height > 0.0f)
-        { visual.trail.offset(offset, 0.0f); }
+        { visual.trail.offset(offset.x, offset.y); }
         if (visual.bead.width > 0.0f && visual.bead.height > 0.0f)
-        { visual.bead.offset(offset, 0.0f); }
+        { visual.bead.offset(offset.x, offset.y); }
     }
     return visuals;
 }
@@ -297,12 +305,16 @@ void TranslatingStructurePaintable::append_paint_surfaces(
 {
     const std::size_t begin = samples.size();
     this->StructurePaintable::append_paint_surfaces(samples, source_index);
-    const float offset = this->translation().x;
-    if (offset != 0.0f)
+    const Vector2F offset = this->translation();
+    if (offset.x != 0.0f || offset.y != 0.0f)
     {
         for (std::size_t index = begin; index < samples.size(); ++index)
         {
-            for (Vector2F& corner : samples[index].corners) { corner.x += offset; }
+            for (Vector2F& corner : samples[index].corners)
+            {
+                if (offset.x != 0.0f) { corner.x += offset.x; }
+                if (offset.y != 0.0f) { corner.y += offset.y; }
+            }
         }
     }
 }

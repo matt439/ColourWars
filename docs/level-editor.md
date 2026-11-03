@@ -1107,6 +1107,8 @@ same validated, single-undo-step edit as Duplicate, and selects it. With
   phase moves half a cycle (+0.5, wrapping, rounded to 12 places so a decimal
   stays a short decimal, and wrapping again if the rounding reaches 1); a drifting `Visual` shifts its drift phase the same
   way, since its sine offset half a cycle on is its reflection;
+- a vertical lift reflects only its anchor (`sum - x - width`) and keeps its
+  phase, since it moves straight up and down (`ROAD#28`);
 - paintable `left` and `right` faces swap;
 - a Team A spawn becomes a Team B spawn and back, reflecting the whole body at
   source `player.size` width (the editor's 52-unit box when no tuning is
@@ -1453,6 +1455,27 @@ No new GUI, native-pixel or human acceptance is claimed here.
 
 Human GUI handling and saved-stage play remain `ED#5`; Turbulence
 route/readability acceptance remains `POL#21`.
+
+### Vertical lifts (`ROAD#28`)
+
+**Added 2026-11-03.** The palette's **Vertical lift** entry writes a solid
+`StructurePaintable` with a [vertical motion record](level-format.md#vertical-lift-motion):
+`travel_y` 320, period 4 and phase 0, the slice's provisional one storey at
+160 units/s. The rectangle is the lift's **topmost** anchor; the inspector
+labels `motion/type (horizontal or vertical)` and
+`motion/travel_y (world units down from the top anchor)`. The editor decodes a
+lift by the same rule the loader uses, so it refuses `travel_x` on a lift, a
+paint drive or heading, and jump-through collision, each before the edit lands.
+
+The guides add a second gold dotted box around a lift: the column it keeps
+clear, a body width (and rounding pad) beside its whole shaft, from a body
+above its highest pose to a body below its lowest. An edit, a duplicate or a
+bounds change that puts geometry in it, or takes it out of the Scene, is
+refused, as the game's admission refuses it. Duplicate places the copy's column
+below the source's rather than below its path. Mirror copy reflects a lift's anchor and keeps its phase. Blockout
+aids translate a lift's scoring faces on y by its initial phase, keeping their
+local size. The `level_editor` document checks cover all of this
+(`check_lift_motion`).
 
 ## Team gate authoring (`ROAD#15`)
 

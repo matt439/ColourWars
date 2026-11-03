@@ -29,7 +29,7 @@ namespace
     std::uint32_t motion_count(std::size_t count)
     {
         if (count > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
-        { throw std::length_error("Horizontal fingerprint count exceeds schema1 int32 range"); }
+        { throw std::length_error("Horizontal fingerprint count exceeds schema int32 range"); }
         return static_cast<std::uint32_t>(count);
     }
 
@@ -47,7 +47,7 @@ namespace
             structure.spec = { bits_from_float(spec.anchor.x), bits_from_float(spec.anchor.y),
                 bits_from_float(spec.anchor.width), bits_from_float(spec.anchor.height),
                 bits_from_float(spec.travel_x), bits_from_float(spec.period_seconds),
-                bits_from_float(spec.initial_phase) };
+                bits_from_float(spec.initial_phase), bits_from_float(spec.travel_y) };
             structure.phase = std::bit_cast<std::uint64_t>(state.motion.phase);
             structure.direction = state.motion.direction;
             structure.offsets = { bits_from_float(state.motion.previous_offset.x),
@@ -73,7 +73,7 @@ namespace
         }
         for (int view = 0; view < level.player_count(); ++view)
         { terrain.carriers.push_back(level.player(view).carrier_id()); }
-        hash = fnv1a("colourwars-horizontal-terrain-1", hash);
+        hash = fnv1a("colourwars-horizontal-terrain-2", hash);
         hash = mix(hash, motion_count(terrain.structures.size()));
         for (const auto& structure : terrain.structures)
         {
@@ -109,7 +109,8 @@ namespace
             const auto& e = expected.structures[index]; const auto& a = actual.structures[index];
             const std::string prefix = "horizontal motion " + std::to_string(index + 1) + " ";
             if (e.id != a.id) { return prefix + "id differs"; }
-            const char* specs[] = { "anchor x", "anchor y", "width", "height", "travel", "period", "initial phase" };
+            const char* specs[] = { "anchor x", "anchor y", "width", "height", "travel x", "period",
+                "initial phase", "travel y" };
             for (std::size_t field = 0; field < e.spec.size(); ++field)
             { if (e.spec[field] != a.spec[field]) { return prefix + "spec " + specs[field] + " differs"; } }
             if (e.phase != a.phase) { return prefix + "phase differs"; }
