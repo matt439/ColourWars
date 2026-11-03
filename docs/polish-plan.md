@@ -1892,20 +1892,49 @@ blockout; they do not replace playing it.
 
 ### Decide which Splatoon mechanics to borrow (`POL#30`)
 
-**DECISION, answered with or after the coupled `POL#27` pass.** ColourWars
-follows Splatoon on purpose in places (no live score, random pairs). The
-[level research](level-design-research.md) lists the mechanics it does not
-borrow as constraints on maps, but nothing records whether that absence is a
-decision. A 2026-10-24 review named three. Each changes balance, so none should
-be added ahead of `POL#27`. The splat tally has since been answered.
+**DECISION; only paint underfoot is left, and it is the first fork of the
+`POL#27` sessions.** ColourWars follows Splatoon on purpose in places (no live
+score, random pairs). The [level research](level-design-research.md) lists the
+mechanics it does not borrow as constraints on maps, but nothing records whether
+that absence is a decision. A 2026-10-24 review named three. Each changes
+balance, so none should be added ahead of `POL#27`. The splat tally and the
+special have since been answered "no".
 
-- **Paint underfoot.** Shipped tuning keeps movement and ammunition recovery
+- **Paint underfoot. Open; decided 2026-11-03 to settle it first in the
+  `POL#27` sessions.** Shipped tuning keeps movement and ammunition recovery
   independent of paint. The default-off trial below lets the author judge whether
   own-colour speed/recovery and enemy-colour slowdown should make territory
-  matter during the round. It adds no paint damage.
-- **A special charged by painting.** There are five primaries and nothing else.
-  Splatoon uses a special to answer "why keep painting when nobody is here".
-  The arena briefs currently answer that with geometry alone.
+  matter during the round. It adds no paint damage. The author's 2026-11-03
+  decision: underfoot on or off is the first thing the `POL#27` sessions answer,
+  before the five tools are tuned inside whichever answer wins, because zero
+  enemy-paint recovery reprices every tool's reserve (the Sniper's supply most).
+  Play it on Crossfeed at 1P, 2P and 4P with the stored amounts (`1.10`/`1.25`/
+  `0.85`/`0`), `enemy_blocks_health_regen` off and `bots.refill_off_enemy_paint`
+  on. The lean is "yes, movement and recovery only", but it is a lean, not a
+  default. Keep underfoot off during the `POL#21` and `POL#31` arena sessions,
+  so their geometry reads stay comparable with the baseline already recorded; a
+  "yes" then earns a short recheck of the chosen arena, since crossing speed
+  moves by roughly 10-15%. Reopen the call:
+  - towards "no" or milder amounts if 4P split-screen players cannot tell why
+    they slowed, if the losing team snowballs (slower, no ammunition on enemy
+    turf, unable to reclaim ground), or if the five tools already feel balanced
+    with territory contested through geometry alone;
+  - towards "yes", perhaps with the health lockout, if coverage barely moves
+    mid-round and players ignore enemy paint;
+  - towards settling it before `POL#27` if the arena choice (`POL#21`/`POL#31`)
+    turns out to need the final movement model.
+- **A special charged by painting. Answered 2026-11-03: no special.** There are
+  five primaries and nothing else, and that absence is deliberate. Splatoon uses
+  a special to answer "why keep painting when nobody is here"; here the arenas
+  answer it with geometry, and paint underfoot would answer it more cheaply if
+  it ships. Nothing was built, so there was nothing to play, and a "no" changes
+  nothing `POL#27` tunes. Extra per-player actions are revisited under the sub
+  weapons (`ROAD#11`, [comparable-game gaps](feature-roadmap.md#comparable-game-gaps-2026-10-27)) after
+  `POL#27`, so a special and a sub weapon never compete for the same input and
+  reserve. Reopen it, as a design row after `POL#27` planned with `ROAD#11`, if
+  attended sessions show players stop painting once nobody is near and paint
+  underfoot is rejected or does not fix it, or if the author wants a comeback
+  or highlight moment the results awards (`ROAD#12`) do not give.
 - **A splat tally on results. Answered 2026-10-27: no tally.** A per-owner
   count on the contribution rows would nudge the game toward the kill emphasis
   it has avoided ("eliminations make space to paint", below). The results
@@ -1919,8 +1948,8 @@ gap list reads the absence as intended.
 **Paint-underfoot prototype (`POL#36`, implemented 2026-10-26).** The default-off
 trial is available for an isolated Debug match through `tune`. Implementation
 does not answer `POL#30`: the author decides whether to keep the mechanic and
-its amounts after playing it with or after `POL#27`. Shipped tuning keeps the
-current P3/five-tool baseline.
+its amounts as the first fork of the `POL#27` sessions (above). Shipped tuning
+keeps the current P3/five-tool baseline.
 
 #### Experimental underfoot prototype
 
@@ -1952,8 +1981,8 @@ edges so rounded translation cannot lose a half-open edge. The selected fixed
 scored slabs sample the actual support corner in the slab's local top frame.
 That bounded rotated support and public moving-stage construction are now
 qualified in the [completed capability record](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
-Arbitrary moving rotation remains outside the contract; the mechanic still
-needs the author's `POL#30` decision.
+Arbitrary moving rotation remains outside the contract; whether the mechanic
+ships is still the open half of `POL#30`.
 
 Two further switches, added 2026-10-27, act only while `enabled` is on, so the
 shipped game is unchanged by either:
@@ -2022,8 +2051,9 @@ failed during asset loading before commands, then reached its wrapper deadline.
 Its failed result and missing-`sprite_sheet_1.dds` stderr remain preserved; v3
 corrected the private runtime inventory without a game rebuild or guard change.
 The Debug, Release recovery, off-state and real-Application receipts retain
-these scopes and failures. Human acceptance of the mechanic, its trial factors
-and `POL#27`/`POL#30`/`POL#31` remains open.
+these scopes and failures. Human acceptance of the mechanic and its trial
+factors remains open, in the `POL#27` sessions as recorded above; `POL#31` is
+judged with underfoot off.
 
 ### Let players learn by making a mess
 
