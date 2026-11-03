@@ -1,5 +1,11 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
+#include "engine/input/gamepad_reader.h"
+#include "game/states/menu_input.h"
+
+#include <algorithm>
+#include <string>
+#include <vector>
 
 // The title and home screens.
 namespace menu_text_acceptance
@@ -202,5 +208,47 @@ namespace menu_text_acceptance
             home_edge(d);
             d["main_menu"]["home_subtitle_position"]["x"].SetFloat(1596.25f);
         }, &world);
+    }
+
+    // DES#3 A1: MainMenuTitle::update_page hides "Connect a controller" while
+    // any device slot reads as connected and shows it otherwise, through
+    // title_shows_no_controller (main_menu.h). The real MenuInput always
+    // reports the keyboard/mouse slot connected, so in the shipped game the
+    // shown state is unreachable; the last check pins that.
+    void check_title_connection_hint(const std::filesystem::path& content)
+    {
+        std::vector<ProcessedMenuInput> inputs(input_slots::count);
+        require(!inputs.empty() && std::none_of(inputs.begin(), inputs.end(),
+            [](const ProcessedMenuInput& input) { return input.connected; }),
+            "Title hint fixture did not start with every slot disconnected");
+        require(title_shows_no_controller(inputs),
+            "Title hid \"Connect a controller\" with no slot connected");
+        for (int slot = 0; slot < input_slots::count; ++slot)
+        {
+            std::vector<ProcessedMenuInput> one(input_slots::count);
+            one[static_cast<size_t>(slot)].connected = true;
+            require(!title_shows_no_controller(one),
+                "Title showed \"Connect a controller\" with only slot " + std::to_string(slot) + " connected");
+        }
+        std::vector<ProcessedMenuInput> all(input_slots::count);
+        for (ProcessedMenuInput& input : all) { input.connected = true; }
+        require(!title_shows_no_controller(all),
+            "Title showed \"Connect a controller\" with every slot connected");
+
+        // What the page reads: the real MenuInput always reports the keyboard
+        // slot connected, so with no pad the hint stays hidden.
+        const GameTuning tuning((content / "tuning.json").string().c_str());
+        GamepadReader reader;
+        Gamepads pads(&reader);
+        Keyboard keyboard;
+        MenuInput menu(&pads, &keyboard, &tuning);
+        const std::vector<ProcessedMenuInput> read = menu.menu_inputs();
+        require(read.size() == static_cast<size_t>(input_slots::count) &&
+            read[input_slots::keyboard_and_mouse].connected &&
+            std::none_of(read.begin(), read.begin() + input_slots::pad_count,
+                [](const ProcessedMenuInput& input) { return input.connected; }),
+            "MenuInput with no pads no longer reads as keyboard-only");
+        require(!title_shows_no_controller(read),
+            "Title showed \"Connect a controller\" while the keyboard/mouse slot was connected");
     }
 }

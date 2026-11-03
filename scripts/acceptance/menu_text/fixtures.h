@@ -487,6 +487,7 @@ namespace menu_text_acceptance
     void check_stage_cue_bounds(Variants& variants, World& world);
     void check_title_and_home_text(Variants& variants, World& world, const Presentation& defaults);
     void check_title_and_home_bounds(Variants& variants, World& world);
+    void check_title_connection_hint(const std::filesystem::path& content);
     void check_help_text(Variants& variants, World& world);
     void check_help_fitting(Variants& variants, World& world);
     void check_help_bounds(Variants& variants, World& world);
