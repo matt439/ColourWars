@@ -226,7 +226,7 @@ by a second reader. 31 and 32 are already answered on untagged master and need
 no filing; they wait on the next minor tag like 23 and 25. The author decided
 the other five on 2026-11-03: 27, 30 and 33 are to be filed as Engine requests, with
 26 as a rider on 27; 28 is fixed in Labrador directly; 29 is withdrawn and
-[closed](#closed), its client-side change now `HYG#52` in
+[closed](#closed), its client-side change `HYG#52` (done 2026-11-03) in
 [code hygiene](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52).
 
 | # | Report | Exhibit at `96c65373` |
@@ -2011,13 +2011,15 @@ unfiled: the game discards `add`'s `Projectile*` by its own choice, and a
 report without a forced workaround has no standing under
 [Why the exhibits matter more than the asks](#why-the-exhibits-matter-more-than-the-asks).
 
-**Spent:** nothing yet. The client-side change is
-[`HYG#52`](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52): keep
-`add`'s typed pointers in a `Level` list and prune it in the PHASE 3 loop.
-**Reopen** and file the document-only ask if, while doing that, the predicate
-disagrees with `end_tick()`'s actual retire set, for example for objects added
-this tick or after a change in the bounds-sweep order. That would be a real
-exhibit: client code restating an undocumented rule that broke.
+**Spent** 2026-11-03 by
+[`HYG#52`](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52): `Level`
+keeps `add`'s typed pointers and prunes them just before `end_tick()`, and the
+three walks are gone. In Debug, `Level::check_projectiles` compares the list
+with the scene after every `end_tick()`. The predicate has not disagreed with
+the retire set, including for shots added this tick, which `scene.h` already
+documents. **Reopen** and file the document-only ask if that check ever fires
+on game code, for example after a change in the bounds-sweep order. That
+would be a real exhibit: client code restating an undocumented rule that broke.
 
 # What is deliberately not here
 

@@ -9,7 +9,7 @@ using namespace labrador;
 void Level::build_opening_frame()
 {
 	// Admit the builder's pending objects before the first frame is drawn.
-	this->scene_->end_tick();
+	this->end_scene_tick();
 	this->structures_.admit(*this->scene_, this->players_, this->tuning_->player());
 	this->projectile_count_ = this->count_projectiles();
 

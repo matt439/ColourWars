@@ -65,7 +65,9 @@ hypothesis; every story has acceptance criteria and a mapping or "none") was
 checked row by row when it was written. The author's calls on it are under
 [Open points for the author](#open-points-for-the-author); the text fixes they
 asked for (P5, P6, B8, F6, F7 and J4) are made in place below. The personas
-and stories are now the accepted set `DES#2` starts from.
+and stories are now the accepted set `DES#2` starts from. `DES#2` re-traced every
+story against the tree; where its [table](#the-table) differs from a **Served
+by** cell below, the table is current.
 
 ### Evidence inventory
 
@@ -398,13 +400,191 @@ J4, F6 and F7 materially.
 
 ## Traceability and gap pass (`DES#2`)
 
-**Ready since 2026-11-03,** when the author accepted `DES#1` with the
-amendments above; the pass starts from that accepted set. Next step: build
-one table of all 49 stories against features, TODO rows and
-`scripts/acceptance/` cases, starting from each story's Served by column.
-Trace B8 to `ROAD#24` and F6 to `ROAD#16`, and note F7 as served by
-hand-copying. File an unserved story as a candidate in its owner doc, with
-its own row, only when no owner row already holds it. Order candidates by
-P2, then P1; P6's stories are traced to docs only and are not ordered. List
-features that no story explains. Acceptance: one table covers every story,
-and each new candidate follows TODO.md rule 4.
+**Done 2026-11-03.** One pass over all 49 accepted stories, each mapped against
+the tree as it stands: the serving feature in code, its TODO row and that row's
+current status, and the `scripts/acceptance/` cases that check it (names from
+[cases.psd1](../scripts/acceptance/cases.psd1)). The table below supersedes the
+stories' **Served by** column where the two differ; that column is kept as the
+accepted draft, and the differences are under [Corrections](#corrections-to-served-by).
+
+**How to read it.** *Served*: built, and nothing open holds it. *Attended*:
+built, and an open `DECISION` row holds its human review (the mapping closes no
+gate). *Held*: unserved, and an existing owner row already holds the call.
+*Docs*: a P6 story, traced to docs only and not ordered. A row named "done" is
+closed and no longer in TODO. "Painter" means the check runs only under
+`check-painter.ps1` on MattPC, not in the default case list. A **check gap** is a
+CPU-checkable criterion that no case asserts; they are collected under
+[Check gaps](#check-gaps-des3) as `DES#3`.
+
+### The table
+
+| Id | Persona | Serving feature | Row | Cases | Result |
+|---|---|---|---|---|---|
+| A1 | P1 | `MainMenuTitle` to `MainMenuStageSelect` ([main_menu.h](../game/states/main_menu.h)); Title's no-device label | none | `menu_navigation`, `menu_text`; painter drives the pages | Served; check gap: Title's show/hide of "Connect a controller" |
+| A2 | P1 | The save's `last_match` ([last_match_setup.h](../game/save/last_match_setup.h)), restored by `GameMenu` | `GAP#6.1` done | `remembered_setup`; painter for Mode/Count focus | Served |
+| A3 | P2 | `MainMenuJoin`; `MatchSetup::claim_input_slot`/`release_input_slot` | `ROAD#4` done | `bot_roster`, `menu_navigation` | Served; check gap: a claim refused once the chosen count is full |
+| A4 | P1 | `MatchSetup::shuffle_teams`; Team Select's one-sided refusal | `GAP#1.5` done | `team_selection`; painter for the refusal message | Served |
+| A5 | P1 | Join's bot rows, `set_player_bot`, the `game/ai` driver, `player_label` | `ROAD#10` | `bot_roster`, `bot_runtime`, `bot_driver`, `menu_text` | Attended |
+| A6 | P2 | Weapon Select choices and descriptions | `POL#24` | `weapon_catalog`, `text_wrap` | Attended |
+| A7 | P1 | `StagePreview`, `MainMenuStageSelect::record_line`, Random eligibility | `GAP#6.2` done | `stage_selection`, `match_records`; painter for the record line | Served |
+| A8 | P2 | Countdown controls cards; Controls / audio | `POL#24` | `menu_text`; painter for one card per device | Attended |
+| A9 | P1 | `MatchOpening::skip`, `latch_intro_pause` | none | `debug_console`, `action_bindings` | Served |
+| B1 | P2 | `PlayerIdentityHud`, `PlayerBadge` | gap audit 2.4 answered; readability in `POL#24` | `player_identity`; painter for the HUD line | Served |
+| B2 | P2 | `TeammateMarkers` | `ROAD#18` | `teammate_markers` | Attended |
+| B3 | P2 | No live score; the reveal | deliberate (gap audit 1.1) | `story_audio` (reveal beats); painter for the coverage display | Served, by design |
+| B4 | P4 | Low-paint tag, tank and `tool.drip` | `POL#38` | `low_paint` | Attended |
+| B5 | P1 | Disconnect pause, `reclaim_missing_seat` | `ROAD#4` done; pads `ROAD#2` | `menu_navigation`, `debug_console`, `story_audio`; painter for the naming text | Served |
+| B6 | any | Resume and focus count-in | `POL#18` | `resume_countdown`, `match_suspension` | Attended |
+| B7 | P1 | `CursorMarkerOverlay` | `POL#39` | `cursor_marker` | Attended |
+| B8 | P2 | none | `ROAD#24` (`UNSCOPED`); observed in `ROAD#2`/`POL#24` | none | Held |
+| C1 | P1 | `Session`, Results, End menu | none | `series_stage_rule`, `debug_console` | Served |
+| C2 | P2 | Results contributions and awards | `ROAD#12` done | `results_awards` | Served |
+| C3 | P1 | Change Weapons / Change Level under Next Round | `ROAD#20`'s re-pick slice done | `series_stage_rule`; painter for rows, lock and Back | Served |
+| C4 | P1 | Series stage rule on Mode | `ROAD#20` | `series_stage_rule`; painter for losing-seats-only | Attended |
+| C5 | any | Watch Replay | `ROAD#19` done | `instant_replay` | Served; check gap: return to the End menu, and a second viewing |
+| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `debug_console` | Served; check gap: the ledger reset, and Restart keeping it |
+| C7 | P1 | End to Main Menu, `MainMenuExitConfirmation`, the save | none | `settings`, `match_records`, `remembered_setup`; painter for the confirmation | Served |
+| D1 | P4 | Per-pad View shake, Aim marker, Reduce effects | `ROAD#7` | `view_shake`, `aim_marker`, `settings`, `player_identity` | Attended |
+| D2 | P4 | Options team palette | none | `team_palette`, `settings`, `display_trial`; painter for the HUD team text | Served |
+| D3 | P4 | Boost Off/+1/+2 | `ROAD#5` | `handicap` (scoring never reads it) | Attended |
+| D4 | P4 | Pad sticks page | `POL#18`, `ROAD#2` | `stick_settings`, `settings`; painter for the preview and Apply/Back | Attended |
+| D5 | any | Keyboard keys, Pad buttons | `GAP#4.2` | `action_bindings`, `input_bindings`, `keyboard_jump_capture` | Attended |
+| D6 | P4 | Player profiles | `ROAD#21` | `player_profiles` | Attended |
+| D7 | any | Music/SFX volume, per-pad rumble | `ROAD#9` | `settings`, `rumble`, `story_audio` | Attended |
+| D8 | P1 | `DisplaySettingsTrial` | none | `display_trial` | Served |
+| S1 | P3 | Untimed Movement Course practice and its lessons | `POL#19` | `practice_workshop` (`movement_course` proves only the routes) | Attended |
+| S2 | P3 | Practice Pause's Tool row (`PauseMenuInitial::cycle_tool`, `GameLevel`'s change-tool rebuild) | `POL#19` | `practice_workshop` (start with a chosen tool only) | Attended; check gap: the row's wrap and the clean rebuild |
+| S3 | P3 | One human with bots | `ROAD#10` | `bot_runtime`, `bot_roster` | Attended |
+| S4 | P3 | Stage records | `GAP#6.2` done | `match_records`; painter for Stage Select's line | Served |
+| S5 | P3 | Solo opening off ([game_states.cpp](../game/states/game_states.cpp)), `LevelEndInfo`'s solo coverage | none | `paint`, `menu_text`, `match_records`; `check-display-awake.ps1` for the opening | Served |
+| S6 | P3 | **(H)** | `POL#19`, `ROAD#10` | none | Attended |
+| F1 | P5 | Save to My Stages | `ROAD#16`, `ED#5` | `user_stages`; the editor's acceptance (`check-level-editor.ps1`) | Attended |
+| F2 | P5 | Stage Select's rescan, "Built by you." | `ROAD#16`, `ED#5` | `user_stages`; painter `-StageScanOnly` for the page-open trigger | Attended |
+| F3 | P5 | Refused files, scan details | `ROAD#32` done; wording `ROAD#16` | `user_stages`; `check-startup.ps1 -UserStageFixture` for stderr | Attended |
+| F4 | P5 | Mechanism guides, symmetry report | `ED#9`, `ED#25` done; `ED#5` | the editor's acceptance | Served |
+| F5 | P5 | Records keyed by file name | `ROAD#16` | `match_records` (generic stage keys) | Served by construction |
+| F6 | P5 | none: user stages are never Random | `ROAD#16`'s Random call | `user_stages` checks the opposite | Held |
+| F7 | P5 | Hand-copying, the README's "Your own stages" | `ROAD#16`, `ED#5` | `user_stages` | Attended, **(H)** |
+| G1 | P6 | [OOP guide](oop-guide.md#where-the-concepts-live) | none | none (a reading review) | Docs |
+| G2 | P6 | [Follow one shot](oop-guide.md#follow-one-shot-from-input-to-score) | none | none | Docs |
+| G3 | P6 | [Add a weapon](oop-guide.md#add-a-weapon-without-losing-the-contracts) | none | `weapon_catalog` | Docs; the guide was stale and is fixed in this pass |
+| G4 | P6 | [Engine reports](review/engine-reports.md) | the `ENG#` rows | none | Docs; `GAP#F*` and `ENG#PARKED` are the deliberate holding places |
+
+**Totals:** 21 served (B3 by design, F5 by construction), 22 attended,
+2 held (B8, F6) and 4 docs. The P4
+facet's shared requirement, changing my own seat without changing anyone
+else's (D1-D4, D6, B4), traces as one: each is per slot in the save and
+checked per pad (`view_shake`, `aim_marker`, `player_identity`,
+`stick_settings`, `player_profiles`, `settings`), and its comfort is the
+`ROAD#2` pad session.
+
+### Candidates
+
+**No new player-feature candidate.** Every story but B8 and F6 has a serving
+feature, and those two are held where the author placed them: B8 by `ROAD#24`,
+F6 by `ROAD#16`'s Random call. F7 is served by hand-copying. So TODO gains no
+feature row from this pass, and the ordering by P2 then P1 applies to the check
+gaps below.
+
+The one stale serving feature was P6's: [the OOP guide's Add a weapon
+steps](oop-guide.md#add-a-weapon-without-losing-the-contracts) still described
+per-weapon registration lists in `tuning.cpp`, `tuning_validation.cpp` and
+`presentation_read_menu.cpp` and the menu visuals in `MainMenuWeaponSelect`.
+Those now come from `WEAPON_NAMES`, `for_each_tuned_weapon` and
+`main_menu.weapon_select.choices`. The steps are rewritten in this pass, and the
+last one now names `weapon_catalog`, which pins the existing choices. As a docs
+fix it takes no row.
+
+### Check gaps (`DES#3`)
+
+**Open, not started.** Filed by `DES#2` on 2026-11-03. These are
+CPU-checkable criteria that no case asserts. The features work, but nothing
+would notice if one stopped. Next step: add the first check below to its case
+and run that case in both presets; each later item is its own commit. Painter-only coverage is not counted as a gap,
+since it does check the behaviour, if only on MattPC. Ordered by P2, then P1,
+then the rest:
+
+1. **A3 (P2):** `MatchSetup::claim_input_slot` refuses a fresh device once the
+   chosen count is full (`match_setup.cpp`, the no-human-gap return); a
+   `require` beside `bot_roster`'s device-conversion checks.
+2. **C6 (P1):** Play Series Again resets the series ledger, and Restart replays
+   the round without touching it (`GameLevel`'s End-menu handlers in
+   `game_states.cpp`); beside `debug_console`'s session checks.
+3. **A1 (P1):** Title hides "Connect a controller" while any slot is connected
+   and shows it otherwise (`MainMenuTitle`, `main_menu.cpp`); `menu_text`
+   checks only its wording.
+4. **C5 (any seat):** Watch Replay returns to the End menu and can be watched
+   again; `instant_replay` checks the rebuilt round and the tape, not the
+   menu loop.
+5. **S2 (P3):** the practice Pause Tool row wraps over the five tools, and the
+   rebuild starts clean with the chosen tool and the player back in place;
+   `practice_workshop` checks only a level built with a chosen tool.
+
+F5 (user-stage records) and D3 (Boost never changes the score) hold by
+construction, with a shared stage key and no scoring read of the handicap, and
+are left as notes, not gaps.
+
+### Corrections to Served by
+
+Where the stories' column above disagrees with the tree:
+
+- **A1:** `team_selection` checks the shuffle, not reachability; `menu_text`
+  carries the Title clause.
+- **A3:** `team_selection` only builds fixtures with `claim_input_slot`; the
+  checks are `bot_roster` (device conversion) and `menu_navigation` (seat
+  reclaim).
+- **A5:** add `menu_text`, whose bot-label checks cover number and difficulty.
+- **B5:** add `debug_console` (an unplugged seat pauses) and `story_audio`
+  (lost and back cues).
+- **B6:** add `match_suspension`, which checks that focus return is owed one
+  count-in.
+- **C1, C6:** add `debug_console`, whose session checks cover the draw ledger
+  and the End-menu choices.
+- **C3:** `ROAD#20`'s open part is the stage rule; the re-pick C3 needs is done.
+- **C4:** `ROAD#20` also leaves the draw, explicit-only and bot-loser calls,
+  not only the default.
+- **D2:** add `settings` and `display_trial`, which check that the palette is
+  saved and commits with Keep.
+- **D4:** add `settings` (per-pad deadzone persistence).
+- **D7:** add `story_audio`, which checks that the volumes reach their sound
+  groups.
+- **S1:** `practice_workshop` is the case; `movement_course` runs route trials.
+- **S3:** add `bot_roster`.
+- **S5:** "Match scope decisions" names no feature; the features are the solo
+  opening-off rule and `LevelEndInfo`'s solo coverage.
+- **F1, F4:** `level_editor` is the editor's own acceptance target
+  (`check-level-editor.ps1`), not a `cases.psd1` case.
+- **F2, F7:** `ED#5` (play a saved stage) holds them beside `ROAD#16`.
+- **F3:** `ROAD#32` is done; the open part is `ROAD#16`'s wording.
+
+### Features no story explains
+
+Listed, not removed (deliverable 4). None is a defect. Several are the
+premise and art direction, which the stories take for granted, and most of the
+rest are developer tools.
+
+- **Player-facing:** the Credits page and the shipped NOTICE and licence
+  files; Mode Select's Match length row; Options' Restore Defaults; the End
+  menu's Change Teams after a single match; paint underfoot (default off,
+  `POL#30`); the paint-object and mover stages (the Ferry, Gate, Lift, Paint
+  Lift, Mover and Slab Trials); which surfaces score (slabs, ramps, one-way
+  floors); the respawn redraw; combat, blocked-shot and movement feedback;
+  match music and cues; the error dialog and `last-error.log`;
+  `HOW-TO-PLAY.txt`; the save's per-user location, migration and version
+  handling; the display held awake during a match; the hybrid-GPU request; and
+  the F1/Back per-player debug panel, which ships in Release.
+- **Content and premise:** the backstory opening and reveal, the drawing
+  mistakes and figure slips, the quiet character and idle drip, and the
+  Paint.exe terrain, backdrops and crude shapes.
+- **Developer-only:** the Debug console, launch arguments, debug menu,
+  overlays, F-key controls, cheats, live tuning, scripted bots, seeded record
+  and play, screenshots, scripts and binds; Release ignoring developer
+  arguments; startup content validation; the silent-bank fallback; build
+  identity; the balance and bot-trial harnesses; the level editor's core
+  editing, special-object authoring, file safety and mirror copy; and
+  `ColourWarsRegisterStage`.
+
+Stories could be written for several of the player-facing ones: Match length
+and Restore Defaults under setup and settings, respawning in the match, and
+the error dialog and updating the game at launch. That widens the accepted
+set, so it is the author's call, not this pass's.

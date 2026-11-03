@@ -15,7 +15,7 @@ worked through. The findings are recorded, frozen, in
 [the review](review/2026-10-30-architecture-review.md); this section owns their
 status. Engine-side findings are ledger reports `ENG#27` to `ENG#33` in
 [engine-reports.md](review/engine-reports.md); `ENG#29` was withdrawn on
-2026-11-03 and its client-side change is `HYG#52`.
+2026-11-03 and its client-side change, `HYG#52`, is done.
 
 These rows are allowed to do what the [working rules](#scope-and-working-rules)
 below forbid for a source split: rename a type, add an abstraction, move files
@@ -1119,42 +1119,52 @@ The hosted run is the first test of the CI wiring.
 
 ### A typed projectile list in `Level` (`HYG#52`)
 
-**Open, not started; low priority.** Added 2026-11-03, when the author withdrew
-engine report 29 ([Closed](review/engine-reports.md#closed)): its exhibit was
-this game's own choice, not something the API forced. It is a performance and
-clarity cleanup with no player-visible effect, so it does not jump TODO's
-level-first order.
+**Done 2026-11-03.** Added that day, when the author withdrew engine report 29
+([Closed](review/engine-reports.md#closed)): its exhibit was this game's own
+choice, not something the API forced. A performance and clarity cleanup with
+no player-visible effect.
 
-`Level::update_players` gives each new shot to `scene_->add` and discards the
-`Projectile*` it returns ([level.cpp](../game/objects/level.cpp) line 503).
-`Level` then finds its projectiles again by walking `collision_objects()` three
-times a tick: `resolve_projectile_movement` (lines 512-514) and the drain after
-`scene_->resolve()` (lines 391-394, before `end_tick()` at 424) each ask every
-object for its role through `Collider::of`, a cross-cast paid for every
-structure and player too, and `count_projectiles` (lines 720-723) tests every
-tag to count them.
+[Level](../game/objects/level.h) now keeps the `Projectile*` that `Scene::add`
+returns, in two lists: `projectiles_`, the admitted shots in scene order, and
+`pending_projectiles_`, those added this tick. `resolve_projectile_movement`,
+the drain after `scene_->resolve()` and `count_projectiles` walk
+`projectiles_`, so the three `collision_objects()` walks and their
+`Collider::of` cross-casts and tag tests per object are gone. Each walk sees
+the same shots as before: the admitted ones, in scene order, never this tick's.
 
-Scope: keep `add`'s typed pointers in a `Level` list, in the order they were
-added, as `LevelStructures` already keeps `projectile_targets_`. Drive the
-movement and drain loops and the count from it, and prune it in the PHASE 3
-loop between `resolve()` and `end_tick()` by
-`p->for_deletion() || !scene.in_bounds(*p)`. A pointer added this tick stays
-until the next `end_tick()` sweeps it. Shots that retire inside the weapon
-update keep their flush-before-retire rule ([player.h](../game/objects/player.h)).
-Drop the "Typed scene access is engine report 29" pointer from
-[collider.h](../game/objects/collider.h); `Collider::of` stays for a contact's
-other party (report 33). Behaviour, evaluation order and formats are
-unchanged; the list's order must match the scene order the walks used, so the
-replay and RNG streams do not move.
+Every `end_tick()` in `Level` now goes through `end_scene_tick()`. That calls
+`retire_projectiles()` first, while the pointers it drops are still valid: it
+erases from `projectiles_` each shot with
+`for_deletion() || !scene_->in_bounds(*p)`, which is the coming `end_tick()`'s
+retire set, since its bounds sweep flags an object outside the scene and every
+`Projectile` records the flag. Then it appends this tick's shots, as
+`end_tick()` appends its pending list. A shot added this tick is not pruned,
+because `end_tick()` admits it whatever its flags and the next one sweeps it
+(`scene.h`: "retired by the first end_tick() after its insertion"). The
+prune runs immediately before `end_tick()`, after the idle drips, rather than
+in the drain loop, so nothing between the two can flag a shot unseen.
+`check_projectiles()` follows `end_tick()`. In Debug it throws
+`std::logic_error` unless `projectiles_` is exactly the scene's projectiles in
+scene order, its size equals the projectile-tag count the overlay used to
+read, and nothing is left pending. It is kept as the guard, not removed after
+the first run. The predicate never disagreed with `end_tick()`, so report 29
+stays withdrawn.
 
-First step: assert, in Debug, that the pruned list equals the scene's
-projectiles after each `end_tick()`, before the walks are removed. If the
-predicate ever disagrees with `end_tick()`'s retire set, stop and reopen report
-29 as a document-only ask, with that disagreement as its exhibit.
+The guard found one disagreement, and it was a probe's. `moving_structure`'s
+two Roller checks added a shot straight to a built `Level`'s scene and called
+its `end_tick()`, which a `Level` cannot see. `Level::admit_projectile` is the
+seam for that now: between updates it adds a shot made outside a weapon and
+admits it at once, as the station labels are admitted. The two checks call
+it, and the third hand `end_tick()`, which retired the spent Roller, is a
+zero-step `tick()`. No game code adds a shot any other way. `collider.h` no
+longer points at report 29; `Collider::of` stays for a contact's other party
+(report 33) and for the scene walks that remain. Behaviour, evaluation order,
+RNG streams and formats are unchanged.
 
-Acceptance: both presets build under `/W4 /WX`; the full default acceptance
-list passes, since every match runs through `Level`, and a recorded replay plays
-back bit for bit.
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (76 cases) and in Debug (77, with the slow cases), including the bot trials' replay fingerprints and
+`debug_console`'s record and play, which replay matches bit for bit with the
+Debug guard running. `check-startup.ps1` passed on the Debug executable.
 
 ## Open shortlist (2026-10-29)
 

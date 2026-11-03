@@ -233,7 +233,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 `GAP#F*`. `ENG#23`, `ENG#25`, `ENG#31` and `ENG#32` are answered on untagged master and
 wait on the next minor tag. On 2026-11-03 the author authorized filing `ENG#27`, `ENG#30` and
 `ENG#33` (with `ENG#26` riding on `ENG#27`), chose to fix `ENG#28` in Labrador directly and
-withdrew `ENG#29` (`HYG#52`). Minimal engine-focused reports with
+withdrew `ENG#29` (its client-side change, `HYG#52`, is done). Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
@@ -246,14 +246,6 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#28` | DECISION | LOW | S | Not filed (2026-11-03): an engine commit amends the two Unreleased `CHANGES.md` entries (`730dd99`, `fdfc24e`) with the three-place count (and, for `730dd99`, a cost statement or restoration) before the next tag. Close when it lands. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `ENG#31`, `ENG#32` | BLOCKED | LOW | S | Answered on untagged master: `JsonValue::keys()` (`e166dcc`) and `Font::wrap` (`80024e5`), neither in v0.2.0; no filing needed. Waits on the next Labrador minor tag, then spend each as its report says. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
-
-## Code hygiene
-
-**Owner:** [docs/code-hygiene.md](docs/code-hygiene.md).
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `HYG#52` | OPEN | LOW | S | Keep `Scene::add`'s typed `Projectile*` in a `Level` list pruned in PHASE 3, replacing three `collision_objects()` walks. From withdrawn `ENG#29`; does not jump the level-first order. [Record](docs/code-hygiene.md#a-typed-projectile-list-in-level-hyg52) |
 
 ## Developer console
 
@@ -281,7 +273,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DES#2` | OPEN | LOW | M | `DES#1` accepted with amendments 2026-11-03. Trace the 49 stories to features, rows and acceptance cases (B8→`ROAD#24`, F6→`ROAD#16`, F7 served); file a candidate only where no owner row holds the story; order by P2 then P1; P6 to docs only. [Traceability](docs/design-process.md#traceability-and-gap-pass-des2) |
+| `DES#3` | OPEN | LOW | S | Five check gaps from the `DES#2` trace, in order: A3 claim refused at full count, C6 ledger reset/kept, A1 Title device label, C5 replay back to End, S2 practice Tool row. No feature candidates. [Check gaps](docs/design-process.md#check-gaps-des3) |
 
 ## Areas with no open rows
 
@@ -290,6 +282,7 @@ A new row for one of these gets its section back.
 | area | owner | a row returns with |
 |---|---|---|
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
+| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#52` was the last (2026-11-03) |
 | Closed engine reports (1–22, 24, 29) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |

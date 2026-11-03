@@ -24,7 +24,8 @@ class Collider : public labrador::CollisionObject
 public:
 	// The one conversion back from the engine's type. A ColourWars scene holds
 	// nothing that is not a Collider; anything else is refused with
-	// std::logic_error. Typed scene access is engine report 29.
+	// std::logic_error. Level keeps its shots typed from Scene::add, so this
+	// is for what a contact or a scene walk hands back (report 33).
 	static Collider& of(labrador::CollisionObject& object);
 	static const Collider& of(const labrador::CollisionObject& object);
 

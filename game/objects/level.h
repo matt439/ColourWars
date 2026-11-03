@@ -278,6 +278,13 @@ public:
 	// turned on and only hidden after that. None until then, so none in Release.
 	int station_label_count() const;
 	const labrador::UiText& station_label(int index) const;
+	// Between updates, adds a shot made outside a weapon and admits it now,
+	// as the station labels are, so the next update moves, drains and retires
+	// it like any other. For probes that place a shot by hand; a shot added to
+	// the scene directly is one this Level never walks. Throws
+	// std::invalid_argument for null.
+	Projectile* admit_projectile(std::unique_ptr<Projectile> projectile);
+
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -309,6 +316,11 @@ private:
 	std::unique_ptr<MatchBotDriver> bot_driver_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
 	std::vector<IdleDrip*> idle_drips_;
+	// Borrowed from scene_: the admitted shots in scene order, and those added
+	// this tick, which end_tick() admits after them. retire_projectiles() drops
+	// what the coming end_tick() retires, so neither holds a dead pointer.
+	std::vector<Projectile*> projectiles_;
+	std::vector<Projectile*> pending_projectiles_;
 
 	// What overlay.stations names: the authored stations, then the spawns.
 	std::vector<LevelStation> stations_;
@@ -424,6 +436,14 @@ private:
 	// Update player cameras and submit projectiles produced by their weapons.
 	void update_players(float dt);
 	void resolve_projectile_movement();
+	// Every scene end_tick() in Level goes through end_scene_tick(), which keeps
+	// projectiles_ in step: retire_projectiles() first prunes it to the shots
+	// the end_tick() keeps and appends this tick's, and check_projectiles()
+	// then throws std::logic_error, in Debug only, unless it is the scene's
+	// projectiles in scene order.
+	void end_scene_tick();
+	void retire_projectiles();
+	void check_projectiles() const;
 	void refresh_player_cameras();
 
 	// After collision resolution, align each weapon with its corrected player position.

@@ -269,7 +269,7 @@ namespace moving_structure_acceptance
                 "Real Roller launch must relocate its cover-blocked published volume without consuming it");
             world.paint(moving, moving.bounds(), PlayerTeam::b, repaint_owner);
             require(moving.paint_total().team_a == 0.0f, "Roller launch paint reset did not establish enemy control");
-            Projectile* active = fixture.scene->add(std::move(projectile)); fixture.scene->end_tick();
+            Projectile* active = fixture.level->admit_projectile(std::move(projectile));
             const float first_health = first.health(), second_health = second.health(), friendly_health = friendly.health();
             fixture.tick();
             require(!active->for_deletion() && active->shape()->bounding_box() == published &&
@@ -289,7 +289,7 @@ namespace moving_structure_acceptance
             active->update(dt); // Actual second update must keep the original short lifetime rule.
             require(active->for_deletion() && !active->moving_paint_completed(moving.motion_id()),
                 "Next positive update did not clear pair completion and preserve Roller retirement");
-            fixture.scene->end_tick(); // No dereference of active after retirement.
+            fixture.tick(input(), 0.0f); // Retires it; no dereference of active after.
         }
 
         void check_roller_endpoint_duplicate(World& world)
@@ -299,7 +299,7 @@ namespace moving_structure_acceptance
             auto& moving = *fixture->movers.front();
             auto projectile = shot(world, values, ProjectileType::rolling,
                 { moving.bounds().left() + 1.0f, 340.0f, 4.0f, 1.0f }, Vector2F::ZERO);
-            Projectile* active = fixture->scene->add(std::move(projectile)); fixture->scene->end_tick();
+            Projectile* active = fixture->level->admit_projectile(std::move(projectile));
             fixture->tick();
             require(active->shape()->bounding_box().intersects(moving.bounds()) &&
                 active->moving_paint_completed(moving.motion_id()),
