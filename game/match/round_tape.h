@@ -85,6 +85,11 @@ private:
 	std::vector<Gap> gaps_;
 };
 
+// Whether the End menu offers Watch Replay over `on_screen`, the level the
+// round (or its last viewing) left: while the tape is playable, as often as
+// it is chosen, and never for untimed practice, which keeps no tape.
+bool offers_watch_replay(const RoundTape& tape, const Level& on_screen);
+
 // Records the final input of every logic step into a tape, after `next` (the
 // Debug bots, record or play, or nothing) has had its say. Observes only.
 class RoundTapeRecorder final : public SeatInputFilter

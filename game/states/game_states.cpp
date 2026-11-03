@@ -698,7 +698,7 @@ void GameLevel::open_end_menu()
 {
 	this->context()->push<EndMenuAction>(
 		std::make_unique<EndMenuInitial>(this->menu_context_.get(), this->session_,
-			this->tape_.playable() && !this->level_->practice()),
+			offers_watch_replay(this->tape_, *this->level_)),
 		[this](const EndMenuAction& action)
 		{
 			this->on_end_menu_closed(action);
