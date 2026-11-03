@@ -667,6 +667,7 @@ void GameLevel::begin_resume_countdown(const SuspensionGate& gate)
 }
 
 const Level& GameLevel::level() const { return *this->level_; }
+const Session& GameLevel::session() const { return this->session_; }
 float GameLevel::resume_remaining() const { return this->suspension_.countdown().remaining(); }
 
 void GameLevel::open_results_menu()
@@ -716,15 +717,8 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 		// Decided on the finished round, before the ledger moves on.
 		this->settings_.set_stage(series_next_stage(this->settings_, *this->data()->stages(),
 			this->session_, action == EndMenuAction::play_chosen_stage));
-		if (this->session_.complete())
-		{
-			this->session_ = Session(this->settings_.player_count() == 1 ?
-				1 : this->settings_.best_of());
-		}
-		else
-		{
-			this->session_.next_round();
-		}
+		this->session_ = next_session(this->session_,
+			this->settings_.player_count() == 1 ? 1 : this->settings_.best_of());
 		this->build_and_enter_level();
 		return;
 	}

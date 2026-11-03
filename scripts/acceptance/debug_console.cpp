@@ -192,7 +192,11 @@ int main(int argc, char** argv)
 		check_live_console_input(tuning, presentation);
 		if (!background_only) { check_perf(); }
 		check_wait_failures();
-		if (!background_only) { check_polish(tuning, presentation); }
+		if (!background_only)
+		{
+			check_polish(tuning, presentation);
+			check_session_continuation(presentation);
+		}
 
 		// Phase 3. The real content files are only read; replays go to a
 		// temporary LOCALAPPDATA.

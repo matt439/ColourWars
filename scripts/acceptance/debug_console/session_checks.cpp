@@ -491,5 +491,88 @@ namespace debug_console_acceptance
 				"Valid capture arguments still require a live focused Application match");
 		}
 	}
+
+	// C6 (DES#3): next_session is the ledger GameLevel::on_end_menu_closed
+	// builds the next match against. Next Round and Replay Draw keep the
+	// ledger; once the series is complete, Play Series Again (and Rematch)
+	// start afresh at the chosen length. Pause > Restart does not call it, and
+	// painter_visual's bot_runtime_checks covers that side on a real GameLevel.
+	void check_session_continuation(const Presentation& presentation)
+	{
+		const MenuResultsText& results = presentation.menu_text().results;
+		LevelEndInfo win_a;
+		win_a.team_a_area = 1.0f;
+		LevelEndInfo win_b;
+		win_b.team_b_area = 1.0f;
+		LevelEndInfo draw;
+		draw.team_a_area = draw.team_b_area = 0.5f;
+		const auto ledger = [](const Session& session, int round, int a_wins, int b_wins)
+			{
+				return session.round() == round && session.team_a_wins() == a_wins &&
+					session.team_b_wins() == b_wins;
+			};
+
+		for (const int length : { 3, 5 })
+		{
+			const int target = length / 2 + 1;
+			Session series(length);
+			series.finish_round(win_a);
+			require(ledger(series, 1, 1, 0) && !series.complete(), "Fixture: Team A takes round 1");
+
+			// Next Round keeps the ledger and opens round 2.
+			Session playing = next_session(series, length);
+			require(ledger(playing, 2, 1, 0) && playing.is_series() && !playing.complete() &&
+				playing.round_winner() == PlayerTeam::none,
+				"Next Round keeps the series ledger and moves to round 2");
+			require(ledger(series, 1, 1, 0), "Next Round leaves the ledger it was given alone");
+			playing.finish_round(win_b);
+			require(ledger(playing, 2, 1, 1), "Round 2 counts on the kept ledger");
+
+			// A drawn round is replayed on the next round, ledger unchanged.
+			Session drawn = next_session(playing, length);
+			drawn.finish_round(draw);
+			const Session replay_draw = next_session(drawn, length);
+			require(ledger(replay_draw, 4, 1, 1) && !replay_draw.complete(),
+				"Replay Draw keeps the ledger");
+
+			// An unfinished round has no continuation.
+			bool refused = false;
+			try { (void)next_session(replay_draw, length); }
+			catch (const std::logic_error&) { refused = true; }
+			require(refused, "An unfinished round offers no next session");
+
+			// Play to completion, then Play Series Again.
+			Session finishing = replay_draw;
+			while (!finishing.complete())
+			{
+				finishing.finish_round(win_a);
+				if (!finishing.complete()) { finishing = next_session(finishing, length); }
+			}
+			require(finishing.complete() && finishing.team_a_wins() == target && finishing.team_b_wins() == 1 &&
+				finishing.round() > 1, "Fixture: Team A wins the series");
+			const Session again = next_session(finishing, length);
+			require(ledger(again, 1, 0, 0) && again.is_series() && !again.complete() &&
+				again.round_winner() == PlayerTeam::none,
+				"Play Series Again starts a fresh series at round 1 with no wins");
+			require(again.score_string(results) == Session(length).score_string(results),
+				"Play Series Again keeps the series length");
+			require(finishing.complete() && finishing.team_a_wins() == target,
+				"Play Series Again leaves the finished ledger it was given alone");
+			Session fresh = again;
+			fresh.finish_round(win_b);
+			require(ledger(fresh, 1, 0, 1) && !fresh.complete(),
+				"The fresh series counts its first round");
+		}
+
+		// A single match: Rematch is a fresh one-round ledger.
+		Session single;
+		single.finish_round(win_b);
+		require(single.complete() && ledger(single, 1, 0, 1), "Fixture: Team B wins the single match");
+		Session rematch = next_session(single, 1);
+		require(ledger(rematch, 1, 0, 0) && !rematch.complete() && !rematch.is_series(),
+			"Rematch starts a fresh single match");
+		rematch.finish_round(win_a);
+		require(rematch.complete() && ledger(rematch, 1, 1, 0), "The rematch is scored afresh");
+	}
 }
 #endif
