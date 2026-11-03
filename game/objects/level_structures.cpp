@@ -232,7 +232,16 @@ void LevelStructures::admit_horizontal(const Scene& scene, std::span<Player* con
     this->validate_budget(nullptr, scene, players, player_tuning);
     // All counts/geometry were checked before the first binding operation.
     for (std::size_t index = 0; index < this->horizontal_structures_.size(); ++index)
-    { this->horizontal_structures_[index]->bind_motion_id(static_cast<HorizontalMotionId>(index + 1)); }
+    {
+        TranslatingStructurePaintable& mover = *this->horizontal_structures_[index];
+        mover.bind_motion_id(static_cast<HorizontalMotionId>(index + 1));
+        // A lift's sign stays within the column its admission just checked:
+        // the lift plus the narrowest body's width each side (ROAD#28).
+        if (!mover.motion_state().spec.vertical()) { continue; }
+        float body = (std::numeric_limits<float>::max)();
+        for (const Player* player : players) { body = std::min(body, player->rectangle().width); }
+        mover.fit_cue_to_column(mover.motion_state().spec.anchor.width + 2.0f * body);
+    }
 }
 
 void LevelStructures::validate_admission(const Scene& scene, std::span<Player* const> players) const

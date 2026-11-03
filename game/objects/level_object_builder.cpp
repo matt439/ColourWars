@@ -164,7 +164,7 @@ namespace
 		{ return motion.has(key) ? std::optional<std::string>(motion.string(key)) : std::nullopt; };
 		try
 		{
-			const auto drive = horizontal_motion_contract::decode_drive(text("drive"), text("team_a_heads"));
+			const auto drive = horizontal_motion_contract::decode_drive(text("drive"), text("team_a_heads"), vertical);
 			result.drive = drive.drive;
 			result.team_a_heading = drive.team_a_heading;
 		}

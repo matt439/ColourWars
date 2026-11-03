@@ -243,9 +243,15 @@ The rectangle is the **topmost anchor**. The body travels down by `travel_y`,
 then returns up the same path; `period` and `phase` mean what they mean for a
 horizontal mover, with phase 0 the top departing down and 0.5 the bottom
 departing up. A lift has one axis: `travel_x`, `axis` and `rotation` in its
-record are errors. It cycles only, so `drive` may be omitted or `"cycle"`; a
-paint-driven lift (`up`/`down` headings and a cue of its own) is the next slice
-and is refused, as is `team_a_heads`. A lift must use `STRUCTURE_PAINTABLE`
+record are errors. `drive` may be omitted or `"cycle"`, or `"paint"` with
+`"team_a_heads": "up"` or `"down"` (`ROAD#28`'s second slice): the lift then
+follows the [paint ferry's rule](#horizontal-paintable-motion) on y, moving at
+its cycle's leg speed only while one team holds more of its paint, team A's
+paint toward `team_a_heads` and team B's the other way, holding on a tie and
+stopping at either end. A paint lift starts at phase 0 (top) to 0.5 (bottom);
+`right` and `left` are a ferry's headings and are refused on a lift, as `up`
+and `down` are on a ferry. It hangs a sign below itself, `ferry_direction.lift_width`
+wide in `presentation.json`. A lift must use `STRUCTURE_PAINTABLE`
 collision: a jump-through landing compares the rider's previous feet with the
 platform's current top, which a rising lift has already passed.
 
@@ -268,7 +274,8 @@ Paint and credit stay on the lift's local faces; splash, runoff, paint
 samples, culling and the translated shadow follow it on y. The editor's
 **Vertical lift** palette entry writes one, and its guides show the shaft, the
 corridor and the whole clear column. The explicit-only `turbulence_lift_trial`
-stage carries two.
+stage carries two cycling lifts, and `turbulence_paint_lift_trial` two paint
+lifts, each starting at its foot and raised by its own side's team.
 
 A ramp reads `triangle` instead of either rectangle:
 

@@ -11,9 +11,11 @@ void check_ferry_cue(const std::filesystem::path& content);
 
 // ROAD#15's first paint-activated stage object: the paint ferry, a horizontal
 // mover that travels only while one team holds more of its own paint, toward
-// that team's heading. The motion checks drive HorizontalMotion directly; the
-// stage checks run bots on the explicit Turbulence Yard ferry trial and hold
-// every step of both ferries to the rule, from the paint held before the step.
+// that team's heading; and ROAD#28's paint lift, the same rule on y, heading
+// up or down. The motion checks drive HorizontalMotion directly; the stage
+// checks run bots on the explicit Turbulence Yard ferry and paint lift trials
+// and hold every step of both movers to the rule, from the paint held before
+// the step.
 namespace
 {
     using namespace labrador;
@@ -136,6 +138,73 @@ namespace
             "speed, turns mid-path and splits a mid-step stop\n";
     }
 
+    // The Paint Lift Trial's lift: 256 down from a top anchor at y 800 over
+    // a 3.2 s round trip, 160 units/s; team A heading up unless told otherwise.
+    HorizontalMotionSpec paint_lift(float phase, int team_a_heading = -1)
+    {
+        HorizontalMotionSpec spec{ RectangleF(1296.0f, 800.0f, 48.0f, 20.0f), 0.0f, 3.2f, phase };
+        spec.travel_y = 256.0f;
+        spec.drive = HorizontalDrive::paint;
+        spec.team_a_heading = team_a_heading;
+        return spec;
+    }
+
+    void check_lift_motion()
+    {
+        require(!refused(paint_lift(0.0f)) && !refused(paint_lift(0.5f)) && !refused(paint_lift(0.25f, 1)),
+            "A paint lift on its outgoing leg was refused");
+        require(refused(paint_lift(0.75f)), "A paint lift accepted a return-leg phase");
+        require(refused(paint_lift(0.5f, 0)) && refused(paint_lift(0.5f, 2)), "A paint lift accepted no team A heading");
+
+        // Team A heading up is -1: toward phase 0, the top. Team B pushes it down.
+        const HorizontalMotionSpec up = paint_lift(0.5f);
+        require(HorizontalMotion::paint_heading(up, 3.0f, 1.0f) == -1 &&
+            HorizontalMotion::paint_heading(up, 1.0f, 3.0f) == 1 &&
+            HorizontalMotion::paint_heading(up, 2.0f, 2.0f) == 0, "Team A heading up misread paint");
+
+        // From the foot: unpainted it holds, and a downward push holds at the end stop.
+        Driven driven(up);
+        HorizontalMotionStep held = driven.advance(0);
+        require(held.segment_count == 1 && held.segments[0].from == 256.0f && held.segments[0].to == 256.0f &&
+            held.before == held.after && driven.state().phase == 0.5, "An unpainted lift moved");
+        held = driven.advance(1);
+        require(held.before == held.after && driven.state().phase == 0.5, "A lift left its bottom end stop");
+
+        // Upward at a cycle leg's speed, on y only: 256 units in half of 3.2 s.
+        const HorizontalMotionStep first = driven.advance(-1);
+        require(first.segment_count == 1 && std::fabs(first.before.y - first.after.y - 160.0f * step) < 1.0e-3f &&
+            first.before.x == first.after.x && driven.state().current_offset.x == 0.0f,
+            "A team A lift did not rise at the leg speed on y alone");
+        int steps = 1;
+        bool stopped = false;
+        const int crossing = static_cast<int>(std::lround(1.6f / step));
+        while (!stopped && steps < crossing * 2)
+        {
+            const HorizontalMotionStep next = driven.advance(-1);
+            ++steps;
+            stopped = driven.state().phase == 0.0;
+            require(next.after.y <= next.before.y, "A lift heading up moved down");
+            if (stopped)
+            {
+                require(next.segments[next.segment_count - 1].to == 0.0f &&
+                    driven.state().current_offset.y == 0.0f && next.after.y == 800.0f, "A lift overran its top end stop");
+            }
+        }
+        require(stopped && std::abs(steps - crossing) <= 1, "A lift took the wrong time to rise");
+        held = driven.advance(-1);
+        require(held.before == held.after && driven.state().phase == 0.0, "A lift left its top end stop");
+
+        // Team B takes it back down; a turn mid-shaft reverses with no end stop.
+        for (int index = 0; index < crossing / 4; ++index) { driven.advance(1); }
+        require(driven.state().phase > 0.0 && driven.state().phase < 0.5 && driven.state().current_offset.y > 0.0f,
+            "A team B lift did not head back down");
+        const float turned = driven.state().current_offset.y;
+        driven.advance(-1);
+        require(driven.state().current_offset.y < turned, "A lift did not turn mid-shaft");
+        std::cout << "PASS paint lift motion: holds unpainted and at both end stops, rises and falls on y "
+            "at leg speed for either team and turns mid-shaft\n";
+    }
+
     struct Roster
     {
         unsigned int seed;
@@ -143,14 +212,25 @@ namespace
         BotDifficulty difficulty;
     };
 
+    // A paint-driven trial stage, and the axis its movers travel on.
+    struct Trial
+    {
+        const char* stage;
+        bool vertical;
+        // Team A's heading on the first mover. Both ferries share it; the
+        // second lift, on team B's side, heads the other way.
+        int a_heading;
+        const char* noun;
+    };
+
     // Seat 0 is an idle human on team A; seats 1-3 are bots, two of them on B.
-    MatchSetup roster(const Roster& variant)
+    MatchSetup roster(const Roster& variant, const Trial& trial)
     {
         MatchSetup settings;
         settings.set_player_count(4);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage("turbulence_ferry_trial");
+        settings.set_stage(trial.stage);
         settings.set_duration(120.0f);
         for (int seat = 0; seat < 4; ++seat)
         {
@@ -181,27 +261,41 @@ namespace
         int carried_moving = 0;
     };
 
-    void check_stage(World& world, const Roster& variant, Totals& totals)
+    void check_stage(World& world, const Roster& variant, const Trial& trial, Totals& totals)
     {
-        std::unique_ptr<Level> level = world.build(roster(variant), variant.seed);
-        require(level->has_horizontal_motion(), "The ferry trial lost its movers");
+        std::unique_ptr<Level> level = world.build(roster(variant, trial), variant.seed);
+        require(level->has_horizontal_motion(), std::string("The ") + trial.stage + " lost its movers");
         std::vector<HorizontalStructureState> states = level->horizontal_structure_states();
-        require(states.size() == 2, "The ferry trial needs exactly two ferries");
-        for (const HorizontalStructureState& state : states)
+        require(states.size() == 2, std::string("The ") + trial.stage + " needs exactly two paint movers");
+        // The offset on the mover's own axis.
+        const auto along = [&trial](const Vector2F& offset) { return trial.vertical ? offset.y : offset.x; };
+        for (std::size_t index = 0; index < 2; ++index)
         {
-            require(state.motion.spec.drive == HorizontalDrive::paint && state.motion.spec.team_a_heading == 1,
-                "A ferry trial mover is not a team-A-right paint ferry");
+            const HorizontalMotionSpec& spec = states[index].motion.spec;
+            const int expected = index == 0 || !trial.vertical ? trial.a_heading : -trial.a_heading;
+            require(spec.drive == HorizontalDrive::paint && spec.vertical() == trial.vertical &&
+                spec.team_a_heading == expected,
+                std::string("A ") + trial.stage + " mover lost its axis, drive or team A heading");
         }
-        const float start_a = states[0].motion.current_offset.x, start_b = states[1].motion.current_offset.x;
-        require(start_a == 0.0f && start_b == states[1].motion.spec.travel_x,
-            "Each ferry must start at its own team's end");
+        const float start_a = along(states[0].motion.current_offset), start_b = along(states[1].motion.current_offset);
+        if (trial.vertical)
+        {
+            // Both lifts wait at their foot, so a team raises its own side's lift.
+            require(start_a == states[0].motion.spec.travel_y && start_b == states[1].motion.spec.travel_y,
+                "Each paint lift must start at its foot");
+        }
+        else
+        {
+            require(start_a == 0.0f && start_b == states[1].motion.spec.travel_x,
+                "Each ferry must start at its own team's end");
+        }
 
         const std::vector<PlayerInputData> physical = physical_inputs();
         for (int tick = 0; tick < 900 && level->state() != LevelState::active; ++tick) { level->update(physical, dt); }
-        require(level->state() == LevelState::active, "The ferry trial did not finish its countdown");
+        require(level->state() == LevelState::active, std::string("The ") + trial.stage + " did not finish its countdown");
         states = level->horizontal_structure_states();
-        require(states[0].motion.current_offset.x == start_a && states[1].motion.current_offset.x == start_b,
-            "An unpainted ferry moved during the countdown");
+        require(along(states[0].motion.current_offset) == start_a && along(states[1].motion.current_offset) == start_b,
+            std::string("An unpainted ") + trial.noun + " moved during the countdown");
 
         int moved_steps = 0, carried_steps = 0, carried_moving = 0, reversals = 0, deaths = 0;
         std::array<int, 2> last_heading{};
@@ -217,16 +311,20 @@ namespace
             {
                 bool decisive = false;
                 const int heading = expected_heading(before[index], decisive);
-                const float from = before[index].motion.current_offset.x, to = after[index].motion.current_offset.x;
+                const float from = along(before[index].motion.current_offset), to = along(after[index].motion.current_offset);
                 const float delta = to - from;
+                require(trial.vertical ? after[index].motion.current_offset.x == 0.0f :
+                    after[index].motion.current_offset.y == 0.0f, std::string("A ") + trial.noun + " left its axis");
                 if (decisive)
                 {
-                    require(heading != 0 || delta == 0.0f, "A tied or unpainted ferry moved");
-                    require(heading <= 0 || delta >= 0.0f, "A ferry moved against its painted heading (right)");
-                    require(heading >= 0 || delta <= 0.0f, "A ferry moved against its painted heading (left)");
-                    const bool at_stop = (heading > 0 && from == after[index].motion.spec.travel_x) ||
+                    const std::string noun = trial.noun;
+                    require(heading != 0 || delta == 0.0f, "A tied or unpainted " + noun + " moved");
+                    require(heading <= 0 || delta >= 0.0f, "A " + noun + " moved against its painted heading (+1)");
+                    require(heading >= 0 || delta <= 0.0f, "A " + noun + " moved against its painted heading (-1)");
+                    const bool at_stop = (heading > 0 && from == after[index].motion.spec.travel()) ||
                         (heading < 0 && from == 0.0f);
-                    require(heading == 0 || at_stop || delta != 0.0f, "A painted ferry away from its end stop held");
+                    // A held lift (E3b) would fail here too: admission keeps it from firing.
+                    require(heading == 0 || at_stop || delta != 0.0f, "A painted " + noun + " away from its end stop held");
                 }
                 if (delta != 0.0f)
                 {
@@ -242,18 +340,18 @@ namespace
             {
                 const Player& player = level->player(seat);
                 require(std::isfinite(player.center().x) && std::isfinite(player.center().y),
-                    "A ferry trial player reached an invalid position");
+                    std::string("A ") + trial.stage + " player reached an invalid position");
                 const bool now = player.state() == PlayerState::alive;
                 deaths += alive[static_cast<std::size_t>(seat)] && !now ? 1 : 0;
                 alive[static_cast<std::size_t>(seat)] = now;
                 if (seat == 0 || player.carrier_id() == 0) { continue; }
                 ++carried_steps;
                 const HorizontalStructureState& ride = after[player.carrier_id() - 1];
-                carried_moving += ride.motion.current_offset.x != ride.motion.previous_offset.x ? 1 : 0;
+                carried_moving += along(ride.motion.current_offset) != along(ride.motion.previous_offset) ? 1 : 0;
             }
         }
-        std::cout << "MEASURE paint ferry trial seed=" << variant.seed << " steps=" << trial_steps <<
-            " ferry_moving_steps=" << moved_steps << " reversals=" << reversals << " span_a=" << span_min[0] <<
+        std::cout << "MEASURE " << trial.stage << " seed=" << variant.seed << " steps=" << trial_steps <<
+            " moving_steps=" << moved_steps << " reversals=" << reversals << " span_a=" << span_min[0] <<
             ".." << span_max[0] << " span_b=" << span_min[1] << ".." << span_max[1] << " bot_carried_steps=" <<
             carried_steps << " bot_carried_while_moving=" << carried_moving << " deaths=" << deaths << '\n';
         totals.moved_steps += moved_steps;
@@ -267,9 +365,15 @@ int main(int argc, char** argv)
     {
         require(argc == 2, "usage: paint_ferry <content>");
         check_motion();
+        check_lift_motion();
         check_ferry_cue(std::filesystem::absolute(argv[1]));
         World world(std::filesystem::absolute(argv[1]), "paint-ferry",
             "Paint ferry trial needs authored support '", "turbulence_ferry_trial");
+        World lifts(std::filesystem::absolute(argv[1]), "paint-lift",
+            "Paint lift trial needs authored support '", "turbulence_paint_lift_trial");
+        const Trial ferries{ "turbulence_ferry_trial", false, 1, "ferry" };
+        // The team A lift (left) rises for team A; the team B lift rises for team B.
+        const Trial paint_lifts{ "turbulence_paint_lift_trial", true, -1, "paint lift" };
         // The bot seeds srand(41731), srand(9127) and srand(30011) gave
         // before HYG#39, so the trials' bots are unchanged.
         const Roster rosters[] = {
@@ -280,10 +384,16 @@ int main(int argc, char** argv)
             { 32505, { WeaponType::sprayer, WeaponType::mister, WeaponType::sprayer, WeaponType::bucket },
                 BotDifficulty::easy } };
         Totals totals;
-        for (const Roster& variant : rosters) { check_stage(world, variant, totals); }
+        for (const Roster& variant : rosters) { check_stage(world, variant, ferries, totals); }
         require(totals.moved_steps > 0, "No bot painted a ferry into motion in any trial");
         std::cout << "PASS paint ferry trial: two team-A-right ferries load and hold through the countdown; "
             "every step of three whole 3-bot matches follows the paint held before it; riding is a measurement\n";
+        Totals lift_totals;
+        for (const Roster& variant : rosters) { check_stage(lifts, variant, paint_lifts, lift_totals); }
+        require(lift_totals.moved_steps > 0, "No bot painted a lift into motion in any trial");
+        std::cout << "PASS paint lift trial: two lifts load at their foot, each rising for its own side's team, and "
+            "hold through the countdown; every step of three whole 3-bot matches follows the paint held before it "
+            "on y; riding is a measurement\n";
         return 0;
     });
 }

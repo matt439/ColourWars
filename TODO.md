@@ -53,9 +53,9 @@ complete (`HYG#51` last, 2026-11-02), and its owed reports `ENG#27`-`ENG#33` are
 drafted, with the author's filing calls made on 2026-11-03. Before them, the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
 preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
-This does not change the arena/tuning order above. `ROAD#28`'s first lift slice
-(cycling lifts on the explicit-only Lift Trial) landed on 2026-11-03; the
-paint-driven lift is its next slice. Growing sponges (`ROAD#29`) are not ready work. Functional trial cues do not widen the
+This does not change the arena/tuning order above. `ROAD#28`'s two lift slices
+(cycling lifts on the Lift Trial, paint-driven ones on the Paint Lift Trial,
+both explicit-only) landed on 2026-11-03; bot lift routing is unscoped. Growing sponges (`ROAD#29`) are not ready work. Functional trial cues do not widen the
 deferred production-art pass.
 
 **Bots (`ROAD#10`):** Easy/Normal/Hard setup and the shipping driver are integrated,
@@ -70,7 +70,7 @@ comparison and physical-pad check; values remain provisional.
 - **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`);
   the shipping-bot evidence is in its owner.
 - **Bots and paint-object trials:** compare Easy/Normal/Hard usefulness (`ROAD#10`)
-  and play the explicit Ferry/Gate/Lift Trials from both sides at 1-4P (`ROAD#30`).
+  and play the explicit Ferry/Gate/Lift/Paint Lift Trials from both sides at 1-4P (`ROAD#30`).
 - **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
   recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
   five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
@@ -205,9 +205,9 @@ excluded modes.
 | `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#28` | OPEN | MED | XL | First slice done 2026-11-03: solid cycling lifts (one axis, a clear column, rider carry, replay format 7) on the explicit-only Lift Trial. Next: the paint-driven lift, `up`/`down` through `decode_drive` with its own cue. Bot lift routing is unscoped. [Slice](docs/feature-roadmap.md#vertical-lift-first-slice-road28) |
+| `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. Play is `ROAD#30`. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |
 | `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
-| `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate/Lift Trials from both sides at 1-4P; judge route value, held-open clarity, whether a lift at 160 u/s is a free escape, and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30) |
+| `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate/Lift/Paint Lift Trials from both sides at 1-4P; judge route value, held-open clarity, whether a lift at 160 u/s is a free escape, the paint lifts' sign and side assignment, and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30) |
 | `ROAD#16` | DECISION | LOW | S | User stages and scan details are implemented. Left: attended saved-stage play, Random opt-in and hint-only marker choices, and provisional scan-details wording. [Owner](docs/feature-roadmap.md#user-stages-road16). |
 | `ROAD#18` | DECISION | LOW | S | Off-screen teammate markers are in. Left: decide whether enemies get threat markers (an information-model change; see `POL#3` rear threats), and an attended readability look at 1/2/4P. [Owner](docs/feature-roadmap.md#teammate-markers-road18). |
 | `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |

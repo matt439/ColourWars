@@ -40,7 +40,8 @@
                 "turbulence_slab_trial",
                 "turbulence_ferry_trial",
                 "turbulence_gate_trial",
-                "turbulence_lift_trial"
+                "turbulence_lift_trial",
+                "turbulence_paint_lift_trial"
             ]
         },
         {

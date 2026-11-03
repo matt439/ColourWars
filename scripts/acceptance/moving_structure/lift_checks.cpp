@@ -99,8 +99,15 @@ namespace moving_structure_acceptance
             refused(nan, "Motion travels on one axis");
             contract::Spec negative = spec; negative.travel_y = -256.0f;
             refused(negative, "Motion travels on one axis");
+            // A paint-driven lift (ROAD#28's second slice) keeps a ferry's
+            // outgoing-leg and heading rules, in its own words.
             contract::Spec painted = spec; painted.drive = contract::Drive::paint;
-            refused(painted, "a paint-driven lift is not supported yet");
+            painted.initial_phase = 0.5f; painted.team_a_heading = -1;
+            contract::validate_spec(painted);
+            contract::Spec returning = painted; returning.initial_phase = 0.75f;
+            refused(returning, "A paint-driven lift starts at phase 0 (top) to 0.5 (bottom)");
+            contract::Spec headless = painted; headless.team_a_heading = 0;
+            refused(headless, "A paint-driven lift needs team A heading up or down");
             // At y 1e8 floats are 8 apart: a 1-unit travel rounds back to the anchor.
             contract::Spec off_grid = spec; off_grid.anchor.y = 1.0e8f; off_grid.travel_y = 1.0f;
             refused(off_grid, "distinct representable endpoint");

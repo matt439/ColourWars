@@ -38,6 +38,7 @@ set(COLOURWARS_RUNTIME_ASSETS
     levels/turbulence_ferry_trial.json
     levels/turbulence_gate_trial.json
     levels/turbulence_lift_trial.json
+    levels/turbulence_paint_lift_trial.json
 )
 
 # Only these directories belong to the staging mirror. Root files such as

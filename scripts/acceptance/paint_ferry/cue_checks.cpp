@@ -131,11 +131,106 @@ namespace
     }
 }
 
+namespace
+{
+    using namespace labrador;
+    using namespace mattmath;
+    using namespace moving_structure_acceptance;
+
+    // A paint lift's cue (ROAD#28): the ferry's plaque with vertical arrows,
+    // its committed movement read on y (+1 down) and its own end stops.
+    void check_lift_heading(World& world, int a_heading, float width)
+    {
+        HorizontalMotionSpec spec{ { 512.0f, 800.0f, width, 20.0f }, 0.0f, 3.2f, 0.25f };
+        spec.travel_y = 256.0f;
+        spec.drive = HorizontalDrive::paint; spec.team_a_heading = a_heading;
+        Fixture fixture(world), control(world);
+        const auto add = [&](Fixture& target, const FerryDirectionPresentation* look)
+        {
+            target.plain({ -512.0f, 1200.0f, 4000.0f, 80.0f });
+            auto* lift = target.scene->add(std::make_unique<TranslatingStructurePaintable>(
+                "sprite_sheet_1", "square_white_4", spec, &world.render, &world.audio,
+                &world.preferences, &world.tuning.paint(), CollisionObjectType::structure_paintable,
+                world.palette, PaintableFaces{ true, true, true, true }, Colour::white,
+                Vector2F::ZERO, SpriteFlip::none, 0.0f, nullptr, look));
+            target.add_player(100.0f, 1200.0f); target.build();
+            return lift;
+        };
+        auto& cued = *add(fixture, &world.presentation.ferry_direction());
+        auto& plain = *add(control, nullptr);
+        require(cued.cue_state().paint_driven && cued.cue_state().motion == FerryMotionCue::unstepped,
+            "An initial lift cue claimed a committed movement");
+        fixture.start(); control.start();
+        const auto unchanged = [&]()
+        {
+            require(motion_bits(cued.motion_state()) == motion_bits(plain.motion_state()) &&
+                step_bits(cued.collision_step()) == step_bits(plain.collision_step()),
+                "Lift cue changed the exact committed motion/collision trace");
+            require(sample_bits(snapshot(cued)) == sample_bits(snapshot(plain)),
+                "Lift cue changed exact paint geometry, team or participant credit");
+            const RectangleF plaque = cued.cue_bounds();
+            // A lift is narrower than a readable sign: its own is lift_width
+            // wide, centred under the body and within the shaft's clear column.
+            const FerryDirectionPresentation& look = world.presentation.ferry_direction();
+            const float column = width + 2.0f * world.tuning.player().size.x;
+            const float expected = std::min({ look.size.x, look.lift_width, column });
+            require(std::fabs(plaque.width - expected) < 1.0e-3f && plaque.top() >= cued.bounds().bottom() &&
+                std::fabs(plaque.center().x - cued.bounds().center().x) < 1.0e-3f &&
+                plaque.width <= column,
+                "Lift plaque obscured its own paintable faces, left its shaft's clear column or lost its own width");
+            for (const float units : { 0.5f, 1.0f, 4.0f })
+            { require(contains(cued.cull_bounds(units), plaque), "Lift plaque escaped declared cull bounds"); }
+        };
+        const auto tick = [&]() { fixture.tick(); control.tick(); unchanged(); };
+        const auto paint = [&](PlayerTeam team, bool half = false)
+        {
+            for (TranslatingStructurePaintable* lift : { &cued, &plain })
+            {
+                RectangleF splash = lift->bounds(); splash.inflate(24.0f);
+                if (half)
+                {
+                    splash.x = lift->bounds().center().x + 0.25f;
+                    splash.width = lift->bounds().right() + 24.0f - splash.x;
+                }
+                world.paint(*lift, splash, team, team == PlayerTeam::a ? 0 : 1);
+            }
+            unchanged();
+        };
+        tick();
+        require(cued.cue_state().motion == FerryMotionCue::held, "An unpainted committed lift did not show a hold");
+        paint(PlayerTeam::a);
+        const float top = cued.bounds().y;
+        tick();
+        require(cued.cue_state().motion == FerryMotionCue::moving &&
+            cued.cue_state().committed_heading == a_heading && cued.cue_state().movement_heading == a_heading &&
+            (a_heading > 0 ? cued.bounds().y > top : cued.bounds().y < top) && cued.bounds().x == 512.0f,
+            "A paint lift did not report its committed movement on y");
+        paint(PlayerTeam::b);
+        tick();
+        require(cued.cue_state().committed_heading == -a_heading && cued.cue_state().movement_heading == -a_heading,
+            "A paint lift failed to publish the committed repaint reversal");
+        for (int index = 0; index < 80; ++index) { tick(); }
+        const FerryMotionCue b_stop = a_heading > 0 ? FerryMotionCue::top_stop : FerryMotionCue::bottom_stop;
+        require(cued.cue_state().motion == b_stop && cued.cue_state().movement_heading == 0,
+            "A paint lift did not show team B's reached end stop as its own");
+        paint(PlayerTeam::a); paint(PlayerTeam::b, true);
+        tick();
+        require(cued.cue_state().motion == FerryMotionCue::held && cued.cue_state().committed_heading == 0,
+            "A committed tie at a lift's end still claimed end-stop pressure");
+        paint(PlayerTeam::a);
+        for (int index = 0; index < 120; ++index) { tick(); }
+        require(cued.cue_state().motion == (a_heading > 0 ? FerryMotionCue::bottom_stop : FerryMotionCue::top_stop),
+            "A paint lift did not publish the opposite reached end stop");
+    }
+}
+
 void check_ferry_cue(const std::filesystem::path& content)
 {
     using namespace moving_structure_acceptance;
     World world(content);
     check_heading(world, 1); check_heading(world, -1);
+    // The trial's 48-wide lift, and a 24-wide one whose column is narrower than lift_width.
+    check_lift_heading(world, 1, 48.0f); check_lift_heading(world, -1, 48.0f); check_lift_heading(world, 1, 24.0f);
     check_rounded_world_hold(world);
     HorizontalMotionSpec cycle{ { 512.0f, 500.0f, 320.0f, 20.0f }, 120.0f, 1.0f, 0.25f };
     TranslatingStructurePaintable cycling("sprite_sheet_1", "square_white_4", cycle,
@@ -145,6 +240,6 @@ void check_ferry_cue(const std::filesystem::path& content)
         nullptr, &world.presentation.ferry_direction());
     require(!cycling.cue_state().paint_driven && cycling.cue_bounds() == mattmath::RectangleF::ZERO,
         "A cyclic mover falsely displayed paint-driven directions");
-    std::cout << "PASS ferry cue CPU: both team-A headings, current paint vs committed movement/zero updates, "
+    std::cout << "PASS ferry and lift cue CPU: both team-A headings on each axis, a lift's own end stops, current paint vs committed movement/zero updates, "
         "tie and endpoint holds, no cycle cue, contained translated cull and exact uncued motion/paint/credit controls\n";
 }

@@ -369,6 +369,7 @@ namespace presentation_read
 		cue.size = read_positive_vector(json, "size");
 		cue.gap = read_non_negative(json, "gap");
 		cue.keyline_width = read_positive(json, "keyline_width");
+		cue.lift_width = read_positive(json, "lift_width");
 		const auto brightness = [](const Colour& colour)
 		{
 			return 0.2126f * colour.r + 0.7152f * colour.g + 0.0722f * colour.b;

@@ -1168,11 +1168,12 @@ Symmetry: left 70200.0 / right 70200.0  |  every play object has a mirror partne
   are not mirrored; Press Tower's left `brush_pot` is the one example there.
   This is a deliberate split, made because the scope's "no unmatched objects"
   on Press Tower holds for play objects but not for that pot.
-- **Authored: paint-ferry heading** lists paint ferries whose path has a
-  partner. A ferry's heading and phase have no mirror rule, so they are
-  ignored and the pair is reported as authored, not unmatched: the Ferry
-  Trial's two ferries both use `"team_a_heads": "right"`. A ferry without a
-  path partner is unmatched.
+- **Authored: paint-drive heading** lists paint ferries and paint lifts whose
+  path has a partner. A paint drive's heading and phase have no mirror rule,
+  so they are ignored and the pair is reported as authored, not unmatched: the
+  Ferry Trial's two ferries both use `"team_a_heads": "right"`, and the Paint
+  Lift Trial's lifts `"up"` and `"down"`. One without a path partner is
+  unmatched.
 
 During a drag the line reads "Symmetry updates on drop", like the measurements.
 
@@ -1184,7 +1185,8 @@ mirror-copying it restores equal halves. A Team A spawn moved 10 units reports
 it and its Team B partner. A 300-unit object 100 units left of centre is the
 one unmatched object and adds more area right than left; centred, it is its own
 partner. The Ferry Trial lists `ferry_a` and `ferry_b` as authored with
-nothing unmatched. Every other shipped stage is read and its line printed,
+nothing unmatched, and since 2026-11-03 the Paint Lift Trial lists `lift_a`
+and `lift_b` the same way (`ROAD#28`). Every other shipped stage is read and its line printed,
 judging nothing: the Turbulence blockout and trials and Close Quarters and
 Crossfeed have every play object partnered; King of the Hill, Turbulence and
 the Movement Course report unmatched spawns and objects. Debug and Release
@@ -1465,7 +1467,7 @@ route/readability acceptance remains `POL#21`.
 labels `motion/type (horizontal or vertical)` and
 `motion/travel_y (world units down from the top anchor)`. The editor decodes a
 lift by the same rule the loader uses, so it refuses `travel_x` on a lift, a
-paint drive or heading, and jump-through collision, each before the edit lands.
+heading on a cycle, and jump-through collision, each before the edit lands.
 
 The guides add a second gold dotted box around a lift: the column it keeps
 clear, a body width (and rounding pad) beside its whole shaft, from a body
@@ -1476,6 +1478,17 @@ below the source's rather than below its path. Mirror copy reflects a lift's anc
 aids translate a lift's scoring faces on y by its initial phase, keeping their
 local size. The `level_editor` document checks cover all of this
 (`check_lift_motion`).
+
+**Paint lifts (2026-11-03).** Setting a lift's `motion/drive` to `paint` adds
+`"team_a_heads": "up"`; the inspector labels the heading
+`motion/team_a_heads (up or down)` and the phase
+`motion/phase (paint: 0 top to 0.5 bottom)`. `right`, `left` and a return-leg
+phase are refused in the game's words, at load and on every edit, by the
+shared `decode_drive`/`validate_drive`. The canvas draws a **PAINT LIFT**
+panel above the body: the ferry panel's A and B rows with vertical arrows,
+down for a `down` heading. Mirror copy refuses a paint lift as it refuses a
+paint ferry. `drive_checks` and `mechanism_guide_checks` cover the fields,
+refusals, save/reopen and guide shapes.
 
 ## Team gate authoring (`ROAD#15`)
 

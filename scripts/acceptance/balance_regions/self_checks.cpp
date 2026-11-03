@@ -290,10 +290,10 @@ namespace balance_regions
             const mattmath::RectangleF yard_camera = yard.camera_bounds_rectangle();
             require_near(turbulence.bands.front().left, yard_camera.left(), 0);
             require_near(turbulence.bands.back().right, yard_camera.right(), 0);
-            // The five trials keep the blockout's bounds, so they resolve to the
+            // The six trials keep the blockout's bounds, so they resolve to the
             // same x_band partition, band for band.
-            const std::array<const char*, 5> trials{ "turbulence_mover_trial", "turbulence_gate_trial",
-                "turbulence_ferry_trial", "turbulence_slab_trial", "turbulence_lift_trial" };
+            const std::array<const char*, 6> trials{ "turbulence_mover_trial", "turbulence_gate_trial",
+                "turbulence_ferry_trial", "turbulence_slab_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" };
             for (const char* trial : trials)
             {
                 const LevelLoadedInfo info(labrador::path_to_utf8(content / "levels" / (std::string(trial) + ".json")).c_str());

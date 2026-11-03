@@ -39,8 +39,9 @@ namespace horizontal_motion_contract
         Rectangle anchor;
         float travel_x, period_seconds, initial_phase;
         Drive drive = Drive::cycle;
-        // Paint drive only: +1 when team A's paint carries the mover right, -1
-        // when it carries it left. Team B's paint always heads the other way.
+        // Paint drive only: +1 when team A's paint carries the mover right (a
+        // lift down), -1 when it carries it left (a lift up). Team B's paint
+        // always heads the other way.
         int team_a_heading = 1;
         float travel_y = 0.0f;
         bool vertical() const { return travel_y != 0.0f; }
@@ -52,9 +53,11 @@ namespace horizontal_motion_contract
     // The authored text of motion.drive and motion.team_a_heads, nullopt when
     // absent. The game's loader and the level editor both read their JSON
     // through this, so a record one accepts the other accepts; each adds its
-    // own location to the message.
+    // own location to the message. A horizontal mover heads 'right' or 'left';
+    // a vertical lift (ROAD#28) heads 'up' or 'down'. In both, +1 runs toward
+    // phase 0.5 (the right end, or the lift's bottom) and -1 toward phase 0.
     inline DriveFields decode_drive(const std::optional<std::string>& drive,
-        const std::optional<std::string>& team_a_heads)
+        const std::optional<std::string>& team_a_heads, bool vertical = false)
     {
         const std::string name = drive.value_or("cycle");
         if (name == "cycle")
@@ -63,10 +66,26 @@ namespace horizontal_motion_contract
             return {};
         }
         if (name != "paint") { throw std::invalid_argument("drive must be 'cycle' or 'paint'"); }
-        if (!team_a_heads) { throw std::invalid_argument("a paint drive needs team_a_heads 'right' or 'left'"); }
-        if (*team_a_heads != "right" && *team_a_heads != "left")
-        { throw std::invalid_argument("team_a_heads must be 'right' or 'left'"); }
-        return { Drive::paint, *team_a_heads == "right" ? 1 : -1 };
+        const char* toward = vertical ? "down" : "right";
+        const char* back = vertical ? "up" : "left";
+        const std::string pair = vertical ? "'up' or 'down'" : "'right' or 'left'";
+        if (!team_a_heads)
+        {
+            throw std::invalid_argument(vertical ? "a paint-driven lift needs team_a_heads " + pair
+                : "a paint drive needs team_a_heads " + pair);
+        }
+        if (*team_a_heads != toward && *team_a_heads != back)
+        {
+            throw std::invalid_argument(std::string(vertical ? "a lift's " : "") + "team_a_heads must be " + pair);
+        }
+        return { Drive::paint, *team_a_heads == toward ? 1 : -1 };
+    }
+
+    // The authored name of a paint heading: the inverse of decode_drive.
+    inline const char* heading_name(bool vertical, int heading)
+    {
+        if (vertical) { return heading > 0 ? "down" : "up"; }
+        return heading > 0 ? "right" : "left";
     }
 
     inline void validate_drive(const Spec& spec)
@@ -74,16 +93,20 @@ namespace horizontal_motion_contract
         if (spec.drive == Drive::cycle) { return; }
         if (spec.drive != Drive::paint)
         { throw std::invalid_argument("Horizontal motion drive must be a cycle or paint."); }
-        // A paint-driven lift is the next ROAD#28 slice, with up/down headings
-        // and a cue of its own; this slice cycles only.
-        if (spec.vertical())
-        { throw std::invalid_argument("A vertical lift cycles; a paint-driven lift is not supported yet."); }
-        // A paint drive keeps to the outgoing leg, where phase 0 is the left end
-        // and 0.5 the right, so phase alone still names its pose.
+        // A paint drive keeps to the outgoing leg, where phase 0 is the left
+        // end (a lift's top) and 0.5 the right (its bottom), so phase alone
+        // still names its pose.
         if (!(spec.initial_phase <= 0.5f))
-        { throw std::invalid_argument("A paint-driven mover starts at phase 0 (left end) to 0.5 (right end)."); }
+        {
+            throw std::invalid_argument(spec.vertical()
+                ? "A paint-driven lift starts at phase 0 (top) to 0.5 (bottom)."
+                : "A paint-driven mover starts at phase 0 (left end) to 0.5 (right end).");
+        }
         if (spec.team_a_heading != 1 && spec.team_a_heading != -1)
-        { throw std::invalid_argument("A paint-driven mover needs team A heading right or left."); }
+        {
+            throw std::invalid_argument(spec.vertical() ? "A paint-driven lift needs team A heading up or down."
+                : "A paint-driven mover needs team A heading right or left.");
+        }
     }
 
     struct Box { double left, top, right, bottom; };

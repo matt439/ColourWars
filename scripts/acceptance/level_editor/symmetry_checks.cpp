@@ -139,18 +139,35 @@ namespace level_editor_acceptance
                 "The Ferry Trial's ferries were not listed as authored: " + labels(reading.report.paint_ferries));
             for (const Entry& entry : reading.report.unmatched)
                 require(entry.label.find("ferry") == std::string::npos, "A paint ferry was reported unmatched");
-            require(reading.line.find("Authored: paint-ferry heading (ferry_a, ferry_b)") != std::string::npos,
+            require(reading.line.find("Authored: paint-drive heading (ferry_a, ferry_b)") != std::string::npos,
                 "The Ferry Trial's line does not list the ferries as authored: " + reading.line);
             std::cout << "  turbulence_ferry_trial: " << reading.line << '\n';
         }
 
+        // The Paint Lift Trial: its lifts head up and down for Team A, which
+        // has no mirror rule either; they pair by path and are listed as authored.
+        {
+            LevelDocument document(tuning_path);
+            document.load(levels / "turbulence_paint_lift_trial.json");
+            const Reading reading = read(document, tuning);
+            require(reading.report.paint_ferries.size() == 2 &&
+                reading.report.paint_ferries[0].label == "lift_a" && reading.report.paint_ferries[1].label == "lift_b",
+                "The Paint Lift Trial's lifts were not listed as authored: " + labels(reading.report.paint_ferries));
+            for (const Entry& entry : reading.report.unmatched)
+                require(entry.label != "lift_a" && entry.label != "lift_b", "A paint lift was reported unmatched");
+            require(reading.line.find("Authored: paint-drive heading (lift_a, lift_b)") != std::string::npos,
+                "The Paint Lift Trial's line does not list the lifts as authored: " + reading.line);
+            std::cout << "  turbulence_paint_lift_trial: " << reading.line << '\n';
+        }
+
         // Every shipped stage reads; the lines are printed for the record and
-        // judge nothing beyond the two cases above.
+        // judge nothing beyond the cases above.
         for (const auto& file : fs::directory_iterator(levels))
         {
             if (file.path().extension() != ".json") continue;
             const std::string stage = file.path().stem().string();
-            if (stage == "press_tower" || stage == "turbulence_ferry_trial") continue;
+            if (stage == "press_tower" || stage == "turbulence_ferry_trial" ||
+                stage == "turbulence_paint_lift_trial") continue;
             LevelDocument document(tuning_path);
             document.load(file.path());
             std::cout << "  " << stage << ": " << read(document, tuning).line << '\n';

@@ -70,6 +70,10 @@ void TranslatingStructurePaintable::bind_motion_id(HorizontalMotionId id)
     }
     this->motion_id_ = id;
 }
+void TranslatingStructurePaintable::fit_cue_to_column(float width) noexcept
+{
+    this->cue_column_ = width;
+}
 HorizontalPreparedStep TranslatingStructurePaintable::prepare_motion(float dt) const
 {
     return this->motion_.prepare(dt, this->drive_heading());
@@ -105,7 +109,16 @@ RectangleF TranslatingStructurePaintable::anchor_cue_bounds() const
 {
     if (this->cue_ == nullptr) { return RectangleF::ZERO; }
     const RectangleF& body = this->motion_.state_.spec.anchor;
-    const float scale = std::min(1.0f, body.width / this->cue_->size.x);
+    // A ferry's sign fits under its body; a lift is narrower than any sign
+    // that can be read, so its own is lift_width wide (ROAD#28).
+    // Admission then keeps it inside the shaft's clear column.
+    float width = body.width;
+    if (this->motion_.state_.spec.vertical())
+    {
+        width = this->cue_->lift_width;
+        if (this->cue_column_ > 0.0f) { width = std::min(width, this->cue_column_); }
+    }
+    const float scale = std::min(1.0f, width / this->cue_->size.x);
     const Vector2F size = this->cue_->size * scale;
     return RectangleF(body.center().x - size.x * 0.5f,
         body.bottom() + this->cue_->gap, size.x, size.y);
@@ -156,11 +169,23 @@ void TranslatingStructurePaintable::draw_direction(DrawList& list) const
             }
         }
     };
+    // A lift's arrows point down for +1 and up for -1 (ROAD#28): the same
+    // 3-by-5 cell as a ferry's chevrons, a head on a shaft.
+    const bool lift = this->motion_.state_.spec.vertical();
     const auto arrow = [&](int x, int y, int heading, const Colour& colour)
     {
         constexpr std::array<unsigned int, 5> right{ 4u, 2u, 1u, 2u, 4u };
         constexpr std::array<unsigned int, 5> left{ 1u, 2u, 4u, 2u, 1u };
-        glyph(heading > 0 ? right : left, x, y, colour);
+        constexpr std::array<unsigned int, 5> down{ 2u, 2u, 2u, 7u, 2u };
+        constexpr std::array<unsigned int, 5> up{ 2u, 7u, 2u, 2u, 2u };
+        glyph(lift ? (heading > 0 ? down : up) : (heading > 0 ? right : left), x, y, colour);
+    };
+    // The lower glyph's shorter vertical arrow, which leaves a row for a stop bar.
+    const auto short_arrow = [&](int x, int y, int heading, const Colour& colour)
+    {
+        constexpr std::array<unsigned int, 5> down{ 2u, 2u, 7u, 2u, 0u };
+        constexpr std::array<unsigned int, 5> up{ 2u, 7u, 2u, 2u, 0u };
+        glyph(heading > 0 ? down : up, x, y, colour);
     };
     for (const PlayerTeam team : { PlayerTeam::a, PlayerTeam::b })
     {
@@ -191,6 +216,12 @@ void TranslatingStructurePaintable::draw_direction(DrawList& list) const
     case FerryMotionCue::right_stop:
         arrow(7, 6, 1, look.ink); mark(11, 6, 1, 5, look.ink);
         break;
+    case FerryMotionCue::top_stop:
+        mark(7, 6, 3, 1, look.ink); short_arrow(7, 7, -1, look.ink);
+        break;
+    case FerryMotionCue::bottom_stop:
+        short_arrow(7, 6, 1, look.ink); mark(7, 10, 3, 1, look.ink);
+        break;
     }
 }
 void TranslatingStructurePaintable::commit_motion(const HorizontalPreparedStep& prepared) noexcept
@@ -202,14 +233,17 @@ void TranslatingStructurePaintable::commit_motion(const HorizontalPreparedStep& 
     {
         this->committed_heading_ = prepared.paint_heading;
         // Carry and collision use these rounded world poses. A positive local
-        // offset advance can still round to the same world X at a distant
-        // anchor, so it must not claim actual displacement here.
-        const float delta = prepared.collision.after.x - prepared.collision.before.x;
+        // offset advance can still round to the same world coordinate at a
+        // distant anchor, so it must not claim actual displacement here. A
+        // lift's displacement is on y, where +1 is down.
+        const bool lift = this->motion_.state_.spec.vertical();
+        const float delta = lift ? prepared.collision.after.y - prepared.collision.before.y
+            : prepared.collision.after.x - prepared.collision.before.x;
         this->movement_heading_ = delta > 0.0f ? 1 : delta < 0.0f ? -1 : 0;
         if (prepared.paint_heading < 0 && prepared.after_state.phase == 0.0)
-        { this->motion_cue_ = FerryMotionCue::left_stop; }
+        { this->motion_cue_ = lift ? FerryMotionCue::top_stop : FerryMotionCue::left_stop; }
         else if (prepared.paint_heading > 0 && prepared.after_state.phase == 0.5)
-        { this->motion_cue_ = FerryMotionCue::right_stop; }
+        { this->motion_cue_ = lift ? FerryMotionCue::bottom_stop : FerryMotionCue::right_stop; }
         else
         { this->motion_cue_ = delta == 0.0f ? FerryMotionCue::held : FerryMotionCue::moving; }
     }

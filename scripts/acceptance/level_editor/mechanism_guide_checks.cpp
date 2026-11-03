@@ -71,6 +71,29 @@ namespace level_editor_acceptance
                     "The monochrome arrowheads do not point in their team's authored direction");
             }
         }
+
+        // A paint lift's guide (ROAD#28): the ferry's two team rows, with
+        // vertical arrows, down for +1.
+        void lift_arrows(const PaintMechanismDrawing& drawing, bool a_down)
+        {
+            require(drawing.labels.size() == 3 && drawing.labels[0].text == L"PAINT LIFT" &&
+                drawing.labels[1].text == L"A" && drawing.labels[2].text == L"B" && drawing.strokes.size() == 6,
+                "A lift guide needs its explicit rule name, A/B letters and two arrow shapes");
+            for (std::size_t team = 0; team < 2; ++team)
+            {
+                const auto& shaft = drawing.strokes[team * 3];
+                const auto& first = drawing.strokes[team * 3 + 1];
+                const auto& second = drawing.strokes[team * 3 + 2];
+                const bool down = team == 0 ? a_down : !a_down;
+                require((down ? shaft.y2 > shaft.y1 : shaft.y2 < shaft.y1) && close(shaft.x1, shaft.x2) &&
+                    close(first.x2, shaft.x2) && close(second.x2, shaft.x2) &&
+                    close(first.y2, shaft.y2) && close(second.y2, shaft.y2) &&
+                    first.x1 < shaft.x1 && second.x1 > shaft.x1 &&
+                    (down ? first.y1 < shaft.y2 && second.y1 < shaft.y2 :
+                        first.y1 > shaft.y2 && second.y1 > shaft.y2),
+                    "The monochrome lift arrowheads do not point in their team's authored direction");
+            }
+        }
     }
 
     void check_paint_mechanism_guides(const fs::path& repo, const fs::path& scratch)
@@ -149,7 +172,25 @@ namespace level_editor_acceptance
         require(gate_reopened.serialize() == saved_gate_json && !guide(gate_reopened, gate) &&
             guide(gate_reopened, gate_copy) == gate_rule,
             "Save/reopen did not distinguish an ordinary eraser from the retained gate");
-        std::cout << "PASS authored paint gate/ferry guides, both team headings, monochrome shapes, "
+
+        LevelDocument lifts(repo / "game/content/tuning.json");
+        const Entry lift = lifts.add_object("VerticalLift", { 600.0, 600.0, 120.0, 20.0 });
+        require(!guide(lifts, lift), "A cycling lift gained a paint-ownership guide");
+        lifts.set_property(lift, "motion/drive", "paint");
+        const PaintMechanismGuide up{ PaintMechanismKind::lift, -1 };
+        const PaintMechanismGuide down{ PaintMechanismKind::lift, 1 };
+        require(guide(lifts, lift) == up, "A lift's new paint drive did not show A up/B down");
+        const auto lift_motion = lifts.motion_guide(lift);
+        require(lift_motion.has_value(), "The paint lift has no initial motion envelope");
+        lift_arrows(paint_mechanism_drawing(up, lift_motion->initial_pose), false);
+        lifts.set_property(lift, "motion/team_a_heads", "down");
+        require(guide(lifts, lift) == down, "A lift heading edit did not refresh both team arrows");
+        lift_arrows(paint_mechanism_drawing(down, lift_motion->initial_pose), true);
+        reject_without_change(lifts, [&] { lifts.set_property(lift, "motion/team_a_heads", "right"); },
+            "The editor accepted a horizontal heading on a lift");
+        lifts.set_property(lift, "motion/drive", "cycle");
+        require(!guide(lifts, lift), "A cycling lift retained the former paint lift's arrows");
+        std::cout << "PASS authored paint gate/ferry/lift guides, both team headings, monochrome shapes, "
             "provisional poses, inspector/history/duplication and save/reopen\n";
     }
 }

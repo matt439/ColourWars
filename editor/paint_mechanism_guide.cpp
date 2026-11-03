@@ -23,6 +23,13 @@ namespace colourwars_editor
             if (heading == "left" || heading == "right")
             { return PaintMechanismGuide{ PaintMechanismKind::ferry, heading == "right" ? 1 : -1 }; }
         }
+        // A paint lift (ROAD#28): +1 is down, as in the shared drive rule.
+        if (value("motion/type") == "vertical" && value("motion/drive") == "paint")
+        {
+            const std::string heading = value("motion/team_a_heads");
+            if (heading == "up" || heading == "down")
+            { return PaintMechanismGuide{ PaintMechanismKind::lift, heading == "down" ? 1 : -1 }; }
+        }
         return std::nullopt;
     }
 
@@ -31,7 +38,8 @@ namespace colourwars_editor
     {
         PaintMechanismDrawing drawing;
         const double width = 132.0;
-        const bool ferry = guide.kind == PaintMechanismKind::ferry;
+        // A lift's panel has the ferry's two team rows, with vertical arrows.
+        const bool ferry = guide.kind != PaintMechanismKind::gate;
         const double first_row = std::max(ferry ? 24.0 : 22.0, 4.0 + line_height + 4.0);
         const double second_row = ferry ? std::max(42.0, first_row + line_height + 4.0) : first_row + 4.0;
         const double gate_feet = std::max(39.0, second_row + line_height + 4.0);
@@ -50,6 +58,23 @@ namespace colourwars_editor
                 { x + 108.0, y + first_row, x + 108.0, y + gate_feet },
                 { x + 24.0, y + gate_feet, x + 39.0, y + gate_feet },
                 { x + 93.0, y + gate_feet, x + 108.0, y + gate_feet } };
+        }
+        else if (guide.kind == PaintMechanismKind::lift)
+        {
+            drawing.labels = { { x + 8.0, y + 4.0, L"PAINT LIFT" },
+                { x + 10.0, y + first_row, L"A" }, { x + 10.0, y + second_row, L"B" } };
+            for (const int team : { 1, -1 })
+            {
+                // Down for +1, up for -1, as a short shaft within the team's row.
+                const int heading = team * guide.team_a_heading;
+                const double column = x + 66.0;
+                const double row = y + (team == 1 ? first_row : second_row);
+                const double tail = row + (heading > 0 ? 0.0 : line_height);
+                const double tip = row + (heading > 0 ? line_height : 0.0);
+                drawing.strokes.push_back({ column, tail, column, tip });
+                drawing.strokes.push_back({ column - 5.0, tip - heading * 7.0, column, tip });
+                drawing.strokes.push_back({ column + 5.0, tip - heading * 7.0, column, tip });
+            }
         }
         else
         {

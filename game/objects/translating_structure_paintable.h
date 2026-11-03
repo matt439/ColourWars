@@ -7,7 +7,9 @@ class LevelStructures;
 class Projectile;
 struct FerryDirectionPresentation;
 
-enum class FerryMotionCue { unstepped, held, moving, left_stop, right_stop };
+// A lift's end stops are its own (ROAD#28): top_stop at phase 0, bottom_stop
+// at phase 0.5, where a horizontal mover has left_stop and right_stop.
+enum class FerryMotionCue { unstepped, held, moving, left_stop, right_stop, top_stop, bottom_stop };
 
 struct FerryCueState
 {
@@ -15,16 +17,17 @@ struct FerryCueState
     PlayerTeam demand_team = PlayerTeam::none;
     int demand_heading = 0;
     int committed_heading = 0;
-    // Sign of committed world-body displacement, after pose rounding.
+    // Sign of committed world-body displacement on the mover's own axis, after
+    // pose rounding: +1 right (a lift down), -1 left (a lift up).
     int movement_heading = 0;
     FerryMotionCue motion = FerryMotionCue::unstepped;
 };
 
 // Rigid translation of anchored scoring/material geometry on one axis: a
-// horizontal mover, or a vertical lift (ROAD#28) that cycles and is solid.
+// horizontal mover, or a vertical lift (ROAD#28), which is solid.
 // This capability is fixed for a Level lifetime; it is not a rotating body.
-// A paint-driven one (a paint ferry) reads its own held paint each step, before
-// any of the step's paint lands, to choose which way it travels.
+// A paint-driven one (a paint ferry, or a paint lift) reads its own held paint
+// each step, before any of the step's paint lands, to choose which way it travels.
 class TranslatingStructurePaintable final : public StructurePaintable
 {
 public:
@@ -49,7 +52,8 @@ public:
     HorizontalMotionState motion_state() const;
     HorizontalMotionStep collision_step() const;
     mattmath::Vector2F translation() const;
-    // +1 right, -1 left or 0 still, from the paint held now; 0 for a cycle.
+    // +1 right (a lift down), -1 left (a lift up) or 0 still, from the paint
+    // held now; 0 for a cycle.
     int drive_heading() const;
     // Current paint demand and last positive committed step are separate
     // clocks. Drawing and zero steps never turn new paint into claimed motion.
@@ -79,6 +83,9 @@ private:
     friend class LevelStructures;
     friend class Projectile;
     void bind_motion_id(HorizontalMotionId id);
+    // A lift's sign is no wider than the clear column admission keeps beside
+    // its shaft (the lift plus a body width each side); Level admission sets it.
+    void fit_cue_to_column(float width) noexcept;
     HorizontalPreparedStep prepare_motion(float dt) const;
     HorizontalPreparedStep hold_motion(float dt) const;
     void commit_motion(const HorizontalPreparedStep& prepared) noexcept;
@@ -97,6 +104,7 @@ private:
     const FerryDirectionPresentation* cue_ = nullptr;
     TeamColour team_colours_;
     labrador::RenderResources::SheetFrame cue_frame_;
+    float cue_column_ = 0.0f; // Zero until admission: no column limit yet.
     int committed_heading_ = 0;
     int movement_heading_ = 0;
     FerryMotionCue motion_cue_ = FerryMotionCue::unstepped;
