@@ -161,6 +161,28 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 			controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, bindings));
 		}
 	}
+	// Each pad action's every primary, with and without the widest
+	// alternate, the others at their defaults where valid, and "per pad".
+	for (size_t index = 0; index < pad_action_count; ++index)
+	{
+		const PadAction action = static_cast<PadAction>(index);
+		for (const PadControl primary : { PadControl::a, PadControl::b, PadControl::x, PadControl::y,
+			PadControl::left_shoulder, PadControl::right_shoulder, PadControl::left_trigger,
+			PadControl::right_trigger, PadControl::left_stick, PadControl::right_stick, PadControl::start })
+		{
+			for (const PadControl alternate : { PadControl::none, PadControl::start, PadControl::right_shoulder })
+			{
+				InputBindings bindings;
+				for (PadProfile& pad : bindings.pads) { pad[action] = { primary, alternate }; }
+				try { bindings.validate(); }
+				catch (const std::invalid_argument&) { continue; }
+				controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, bindings));
+			}
+		}
+	}
+	InputBindings mixed;
+	mixed.pads.back()[PadAction::pause] = { PadControl::y, PadControl::none };
+	controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, mixed));
 	return controls_help;
 }
 

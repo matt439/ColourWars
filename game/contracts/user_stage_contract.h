@@ -26,7 +26,8 @@ namespace user_stage_contract
 	// The file name, without .json, is the stage's id: 1 to 64 ASCII letters,
 	// digits, '_' or '-', not starting with '-' (the registration helper's
 	// character rule, so the file can later be registered unchanged). Windows
-	// reserved device stems are refused in every ASCII spelling.
+	// reserved device stems are refused in every ASCII spelling, COM0 and LPT0
+	// included, as the registration helper refuses them.
 	inline constexpr std::size_t max_name_length = 64;
 
 	inline bool usable_name(std::string_view name)
@@ -56,7 +57,7 @@ namespace user_stage_contract
 			{
 				return false;
 			}
-			if (name.size() == 4 && (stem == "COM" || stem == "LPT") && name[3] >= '1' && name[3] <= '9')
+			if (name.size() == 4 && (stem == "COM" || stem == "LPT") && name[3] >= '0' && name[3] <= '9')
 			{
 				return false;
 			}
@@ -69,7 +70,7 @@ namespace user_stage_contract
 	{
 		return "the file name must be 1 to " + std::to_string(max_name_length) +
 			" ASCII letters, digits, '_' or '-', not starting with '-', and must not be a reserved Windows name"
-			" (CON, PRN, AUX, NUL, COM1-COM9 or LPT1-LPT9)";
+			" (CON, PRN, AUX, NUL, COM0-COM9 or LPT0-LPT9)";
 	}
 
 	// Stage ids collide without case: a user stage cannot take a shipped

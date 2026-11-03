@@ -93,8 +93,8 @@ namespace menu_text_acceptance
     };
     struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
     constexpr HelpText help_text[]{
-        { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\n"
-            L"Jump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
+        { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\n"
+            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Debug: Back / View\nKEYBOARD + MOUSE\n"
             L"Move: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\n"
             L"Jump: {jump} (hold for height)\nPause: {pause}    Debug: F1\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"

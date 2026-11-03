@@ -91,11 +91,11 @@ by** cell below, the table is current.
 | E16 | [Handicaps](feature-roadmap.md#handicaps) | Per-seat Boost (Off/+1/+2), chosen by the author 2026-10-27; values unattended (`ROAD#5`). |
 | E17 | [Pause controls/settings](feature-roadmap.md#fourth-increment-pause-controlssettings), [action bindings](feature-roadmap.md#action-bindings-gap42), [player profiles](feature-roadmap.md#player-profiles-road21) | A controls reference, per-pad deadzones, music/SFX volume, rebinding, and named profiles that carry a person's settings between pads. |
 | E18 | [Make couch play comfortable](polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds) | The resume count-in, so a resume or focus return does not surprise anyone (`POL#18`). |
-| E19 | [Backstory: Building it](backstory.md#building-it), [countdown](polish-countdown.md) | The opening and reveal, skippable with A, B or Start; solo practice skips both; the countdown shows a controls card per device present. |
+| E19 | [Backstory: Building it](backstory.md#building-it), [countdown](polish-countdown.md) | The opening, skippable with A, B or Start (the reveal plays in full); solo practice skips both; the countdown shows one controls card per kind of device present (keyboard and mouse, pad). |
 | E20 | [Level editor](level-editor.md#play-the-level), [User stages](feature-roadmap.md#user-stages-road16) | A player who saves a stage should play it without a rebuild; a broken file costs one stage; user stages are never Random (provisional). |
 | E21 | [OOP guide](oop-guide.md), AGENTS.md "What this game is for" | A second audience: Labrador developers reading the game as the engine's full-OOP client. |
 | E22 | [Polish plan: the indie standard](polish-plan.md#what-the-indie-game-standard-means-in-practice) | Moving and painting in an empty room should be enjoyable; the finish must hold through pause, death, respawn and rematch. |
-| E23 | `game/states/main_menu.h`, `game/states/game_states.h`, `game/states/main_menu_players.cpp:497` | The menu path Title, Home, Mode, Player Count, Join, Team, Weapon, Stage; one player skips Team Select; a match is a `GameLevel` pushed above `GameMenu`. |
+| E23 | `game/states/main_menu.h`, `game/states/game_states.h`, `MainMenuJoin::update_page` (`game/states/main_menu_players.cpp`) | The menu path Title, Home, Mode, Player Count, Join, Team, Weapon, Stage; one player skips Team Select; a match is a `GameLevel` pushed above `GameMenu`. |
 | E24 | [TODO.md](../TODO.md), NOW "Waiting on the author" | Which of the above are still attended gates. |
 
 Nothing in the repository records a playtest with people other than the
@@ -143,7 +143,8 @@ loses a match against a bot that played by the same rules (E5).
 motion-sensitive (E14), has a colour-vision deficiency (E15), is weaker than
 the others (E16), or finds the default stick response or rumble
 uncomfortable (E17). *Goals:* change their own seat without changing anyone
-else's (E14's reason), and lose no information when effects are reduced
+else's (E14's reason; per pad, since the one keyboard seat follows the shared
+Options switches, `ROAD#7`), and lose no information when effects are reduced
 (E14). *Frustrations the record names:* a palette nobody chose, whose re-roll
 cost the match (E15, answered by fixed pairs); settings that followed the pad
 slot rather than the person (E17, answered by profiles). *A good session:*
@@ -189,7 +190,7 @@ by** names the feature or row and, where one exists, the retained
 | A5 | P1: to fill empty seats with bots at a chosen difficulty, so a short group still has a match | P1 turns an unclaimed row into an Easy, Normal or Hard bot; bots use the same movement, tools, paint and scoring; their label shows number and difficulty | `ROAD#10` (attended: difficulty usefulness); `bot_roster`, `bot_runtime`, `bot_driver` | E5 |
 | A6 | P2: to know what each tool does before I pick it, so I pick one that suits me | Weapon Select names and describes all five tools in text that fits; the choice can change before Stage Select | Weapon Select descriptions; `weapon_catalog`, `text_wrap`; whether the text is enough is `POL#24` | E12, E23 |
 | A7 | P1: to see the arena and its record before locking it, so the choice is informed | Stage Select draws the live arena and its best record; Random draws only from Random stages | Stage Select, `GAP#6.2`; `stage_selection`, `match_records` | E1, E20 |
-| A8 | P2: the controls before my first shot, so I do not learn them by dying | The countdown shows a controls card for each device in the match; Controls / audio carries a full reference, also from Pause | Countdown cards, Controls / audio; `menu_text`; observation is `POL#24` | E17, E19 |
+| A8 | P2: the controls before my first shot, so I do not learn them by dying | The countdown shows one controls card for each kind of device in the match (keyboard and mouse, pad), shared by all panes; Controls / audio carries a full reference that names the rebound keys and pad buttons, also from Pause | Countdown cards, Controls / audio; `menu_text`; observation is `POL#24` | E17, E19 |
 | A9 | P1: to skip the opening once everyone has seen it, so rematches start fast | A, B or Start (Space, Escape or Enter) skips; a skip press is never a pause; a rematch starts at the preview | `MatchOpening::skip` (`game/objects/match_opening.cpp`), `latch_intro_pause` (`game/states/pause_menu.cpp`, called from `game_states.cpp`); `debug_console` (skip, latch), `action_bindings` (skip keys) | E19 |
 
 #### B. In the match
@@ -198,7 +199,7 @@ by** names the feature or row and, where one exists, the retained
 |---|---|---|---|---|
 | B1 | P2: to know which figure is mine, so I never steer the wrong one | My pane's HUD names my seat, device and team; my figure carries a badge readable over paint; Reduce effects keeps it | HUD identity, `PlayerBadge`; `player_identity` | E3, E15, gap audit 2.4 |
 | B2 | P2: to know where my teammates are when they are off my pane, so we can work together | An off-screen teammate is marked at my pane's edge in their direction, bots included | `ROAD#18` (attended: readability); `teammate_markers` | E11 |
-| B3 | P2: to learn who won only at the end, so the reveal is the payoff | No coverage figure is shown during play; the reveal shows both teams' coverage | The reveal (`game/objects/match_opening.cpp`); deliberate (E8) | E8, E19 |
+| B3 | P2: to learn who won only at the end, so the reveal is the payoff | No coverage figure is shown during play; when a team wins, the reveal shows both teams' coverage; a draw (equal or no paint) closes without one, and Results still lists both shares | The reveal (`game/objects/match_opening.cpp`); deliberate (E8) | E8, E19 |
 | B4 | P4: warning before my paint runs out, even with the sound off, so I am not caught dry | A HUD tag and the tank change before exhaustion, and a cue sounds once per descent | `POL#38` (attended); `low_paint` | E24 |
 | B5 | P1: a dropped pad to stop the match, so nobody loses a player to a cable | Disconnect pauses and names the missing seat; Resume waits for its return; a pad in another slot reclaims with Start | `ROAD#4`; `menu_navigation` (physical pads: `ROAD#2`) | E3 |
 | B6 | Any seat: resuming not to surprise anyone, so nobody dies on the first frame | Resume and focus return count in before play; held fire or jump needs a release | `POL#18` (attended); `resume_countdown` | E18 |
@@ -221,7 +222,7 @@ by** names the feature or row and, where one exists, the retained
 
 | Id | As ..., I want ..., so that ... | Acceptance criteria | Served by | Basis |
 |---|---|---|---|---|
-| D1 | P4: to turn off shake and effects for my pane only, so I can play without changing anyone else's screen | Per-pad Off/Shared/On for View shake, Aim marker and Reduce effects; other panes unchanged; no state signal lost | `ROAD#7` (attended); `view_shake`, `aim_marker`, `settings`, `player_identity` | E14 |
+| D1 | P4: to turn off shake and effects for my pane only, so I can play without changing anyone else's screen | Per-pad Off/Shared/On for View shake, Aim marker and Reduce effects; other panes unchanged; no state signal lost; the keyboard seat follows the Options switches (`ROAD#7`), so a pad that must keep an effect sets it On | `ROAD#7` (attended); `view_shake`, `aim_marker`, `settings`, `player_identity` | E14 |
 | D2 | P4: to avoid a palette I cannot read, so I can tell the teams apart | Options offers fixed pairs beside Random; the choice is saved; the HUD spells out the team | Team palette option; `team_palette` | E15 |
 | D3 | P4: a handicap that keeps me in the game, without changing what wins | Boost Off/+1/+2 per seat on Weapon Select; less damage taken and faster refill; score stays painted surface | `ROAD#5` (attended); `handicap` | E16 |
 | D4 | P4: stick response that suits my pad, so movement and aim feel right | Per-pad movement and aim deadzones with a live preview; Apply or Back | `POL#18` (attended, with pads: `ROAD#2`); `stick_settings` | E17 |
@@ -238,7 +239,7 @@ by** names the feature or row and, where one exists, the retained
 | S2 | P3: to try every tool on the same wall and start clean, so I can compare them | The practice pause has a Tool row that rebuilds the course clean with the chosen tool | `POL#19` (attended); `practice_workshop` | E13 |
 | S3 | P3: an opponent when nobody else is here | One human with one to three bots on either team | `ROAD#10` (attended); `bot_runtime` | E5 |
 | S4 | P3: something to beat next time | A finished round records under its stage; Stage Select and Results show the best | `GAP#6.2`; `match_records` | E10 |
-| S5 | P3: a timed solo run on a real arena that reports coverage honestly | Solo on any stage ends with coverage and no opponent, and skips the opening and reveal | Match scope decisions; `paint` covers coverage | E6, E19 |
+| S5 | P3: a timed solo run on a real arena that reports coverage honestly | Solo on any stage without lessons ends with coverage and no opponent (a stage with lessons is S1's untimed practice); every solo start skips the opening and reveal | Match scope decisions; `paint` covers coverage | E6, E19 |
 | S6 | P3, after practice: to know I am ready for a group | **(H)** After the workshop I can move, recover paint and pick a tool in an ordinary match | `POL#19`'s keep test (attended) | E13 |
 
 #### F. Authoring and playing a user stage
@@ -246,7 +247,7 @@ by** names the feature or row and, where one exists, the retained
 | Id | As ..., I want ..., so that ... | Acceptance criteria | Served by | Basis |
 |---|---|---|---|---|
 | F1 | P5: to save from the editor straight into the game's stage folder | Save to My Stages names a valid file in the per-user folder and refuses a shipped name | `ROAD#16`; `level_editor`, `user_stages` | E20 |
-| F2 | P5: to play my stage without rebuilding or restarting the game | The game rescans when Stage Select opens; the stage appears marked "Built by you." | `ROAD#16` (attended: saved-stage play); `user_stages` | E20 |
+| F2 | P5: to play my stage without rebuilding or restarting the game | The game rescans when Stage Select opens outside a series (between rounds the list holds still); the stage appears marked "Built by you." | `ROAD#16` (attended: saved-stage play); `user_stages` | E20 |
 | F3 | P5: a broken stage to cost one stage and tell me why | A refused file is left out with a reason on stderr and in Stage Select's issue details | `ROAD#16`, `ROAD#32`; `user_stages` | E20 |
 | F4 | P5: to check my arena's fairness before playing it | The editor's blockout aids show paint-mechanism guides and a symmetry report | `ED#9`, `ED#25`; `level_editor` | E20 |
 | F5 | P5: my stage to keep its records | Records are keyed by the file name and survive later registration | `ROAD#16`; `user_stages`, `match_records` | E20 |
@@ -300,7 +301,7 @@ description in time; that is the fresh-player observation in `POL#24`.
 | Mid-match: a pad drops and is reclaimed; someone pauses to change volume | Reconnect wait, Pause, Options under Pause | B5, B6, D7 |
 | Round ends: results, awards, series score | `ResultsMenuPage` | C1, C2 |
 | Between rounds: replay, change weapons or arena, or let the rule pick | `EndMenuPage` | C3, C4, C5 |
-| Series won: Play Series Again or change teams | `EndMenuPage` | C6 |
+| Series won: Play Series Again | `EndMenuPage` | C6 |
 | Leave: Exit to Main Menu, Home Exit | `EndMenuPage`, `MainMenuExitConfirmation` | C7 |
 
 *Unobserved:* whether the evening felt good is the attended `ROAD#2`,
@@ -311,10 +312,10 @@ description in time; that is the fresh-player observation in `POL#24`.
 | Step | Screen or state | Stories |
 |---|---|---|
 | Mode: Single Match (with its practice hint); Count: 1 Player | `MainMenuModeSelect`, `MainMenuPlayerCount` | A1 |
-| Team Select is skipped for one player | `game/states/main_menu_players.cpp:497` | A1 |
+| Join: the activating device already holds the one seat; Continue skips Team Select | `MainMenuJoin::update_page` (`game/states/main_menu_players.cpp`) | A1, A3 |
 | Weapon, then the Movement Course | `MainMenuWeaponSelect`, `MainMenuStageSelect` | A6, S1 |
 | Untimed workshop: a lesson per station, pause Tool row, Restart, Quit | `GameLevel` in practice; lessons in `movement_course.json` | S1, S2 |
-| Or a timed solo run on an arena: coverage results, no opening or reveal | `GameLevel`, `ResultsMenuPage` | S4, S5 |
+| Or a timed solo run on an arena without lessons: coverage results, no opening or reveal | `GameLevel`, `ResultsMenuPage` | S4, S5 |
 | Or Count 2-4 with bots for a real opponent | `MainMenuJoin` | S3, A5 |
 
 *Unobserved:* whether the workshop prepares a fresh player (S6) is the
@@ -332,7 +333,7 @@ from Stage Select on, with a file someone else made.
 | In the running game, open Stage Select: it rescans | `UserStageFolder`, `MainMenuStageSelect` | F2 |
 | A refused file: the issue count, Down for details | `UserStageRefusalsMenu` | F3 |
 | Play it; records are keyed by the file name | `GameLevel`, `MatchRecords` | F2, F5 |
-| Edit, save, reopen Stage Select: the new version plays | Rescan on open | F2 |
+| Edit, save, reopen Stage Select from the main menu: the new version plays | Rescan on open (not between rounds) | F2 |
 | Share it: copy the file into a friend's stages folder | By hand, per the README's "Your own stages"; no in-game sharing | F7 |
 | Put it in Random | none: never Random (provisional, `ROAD#16`) | F6 |
 
@@ -427,9 +428,9 @@ CPU-checkable criterion that no case asserts; they are collected under
 | A5 | P1 | Join's bot rows, `set_player_bot`, the `game/ai` driver, `player_label` | `ROAD#10` | `bot_roster`, `bot_runtime`, `bot_driver`, `menu_text` | Attended |
 | A6 | P2 | Weapon Select choices and descriptions | `POL#24` | `weapon_catalog`, `text_wrap` | Attended |
 | A7 | P1 | `StagePreview`, `MainMenuStageSelect::record_line`, Random eligibility | `GAP#6.2` done | `stage_selection`, `match_records`; painter for the record line | Served |
-| A8 | P2 | Countdown controls cards; Controls / audio | `POL#24` | `menu_text`; painter for one card per device | Attended |
+| A8 | P2 | Countdown controls cards; Controls / audio | `POL#24` | `menu_text` (incl. rebound pad buttons, `DES#4`); painter for one card per device kind | Attended |
 | A9 | P1 | `MatchOpening::skip`, `latch_intro_pause` | none | `debug_console`, `action_bindings` | Served |
-| B1 | P2 | `PlayerIdentityHud`, `PlayerBadge` | gap audit 2.4 answered; readability in `POL#24` | `player_identity`; painter for the HUD line | Served |
+| B1 | P2 | `PlayerIdentityHud`, `PlayerBadge` | gap audit 2.4 answered; readability in `POL#24` | `player_identity` (incl. the HUD line's words, `DES#4`); painter for the HUD line | Served |
 | B2 | P2 | `TeammateMarkers` | `ROAD#18` | `teammate_markers` | Attended |
 | B3 | P2 | No live score; the reveal | deliberate (gap audit 1.1) | `story_audio` (reveal beats); painter for the coverage display | Served, by design |
 | B4 | P4 | Low-paint tag, tank and `tool.drip` | `POL#38` | `low_paint` | Attended |
@@ -441,8 +442,8 @@ CPU-checkable criterion that no case asserts; they are collected under
 | C2 | P2 | Results contributions and awards | `ROAD#12` done | `results_awards` | Served |
 | C3 | P1 | Change Weapons / Change Level under Next Round | `ROAD#20`'s re-pick slice done | `series_stage_rule`; painter for rows, lock and Back | Served |
 | C4 | P1 | Series stage rule on Mode | `ROAD#20` | `series_stage_rule`; painter for losing-seats-only | Attended |
-| C5 | any | Watch Replay | `ROAD#19` done | `instant_replay` (three viewings of one tape); painter `-PracticeReplayOnly` for the End-menu loop (`DES#3`) | Served |
-| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `debug_console` (`next_session`, `DES#3`); painter `-BotPlayersOnly` for Restart and Play Series Again on a real `GameLevel` | Served |
+| C5 | any | Watch Replay | `ROAD#19` done | `instant_replay` (three viewings of one tape); painter `-PracticeReplayOnly` for the End-menu loop (`DES#3`); painter `-EndMenuOnly` for Watch Replay after Back from a re-pick (`DES#4`) | Served |
+| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `debug_console` (`next_session`, `DES#3`), `story_audio` (`round_opening`, `DES#4`); painter `-BotPlayersOnly` for Restart and Play Series Again on a real `GameLevel` | Served |
 | C7 | P1 | End to Main Menu, `MainMenuExitConfirmation`, the save | none | `settings`, `match_records`, `remembered_setup`; painter for the confirmation | Served |
 | D1 | P4 | Per-pad View shake, Aim marker, Reduce effects | `ROAD#7` | `view_shake`, `aim_marker`, `settings`, `player_identity` | Attended |
 | D2 | P4 | Options team palette | none | `team_palette`, `settings`, `display_trial`; painter for the HUD team text | Served |
@@ -473,9 +474,14 @@ CPU-checkable criterion that no case asserts; they are collected under
 **Totals:** 21 served (B3 by design, F5 by construction), 22 attended,
 2 held (B8, F6) and 4 docs. The P4
 facet's shared requirement, changing my own seat without changing anyone
-else's (D1-D4, D6, B4), traces as one: each is per slot in the save and
-checked per pad (`view_shake`, `aim_marker`, `player_identity`,
-`stick_settings`, `player_profiles`, `settings`), and its comfort is the
+else's (D1-D4, D6, B4), traces as one, but its storage differs by story
+(corrected by `DES#4`). D1, D4 and D6 are per pad slot in the save
+(`view_shake`, `aim_marker`, `player_identity`, `stick_settings`,
+`player_profiles`, `settings`); the keyboard seat follows the shared switches.
+D3's Boost is per seat on Weapon Select and is carried to a pad by its profile
+(`handicap`, `player_profiles`). D2's palette is one shared Options choice,
+readable through fixed pairs and the HUD team text (`team_palette`). B4's
+low-paint signal is the same for every seat (`low_paint`). Its comfort is the
 `ROAD#2` pad session.
 
 ### Candidates
@@ -582,8 +588,9 @@ Where the stories' column above disagrees with the tree:
 - **S3:** add `bot_roster`.
 - **S5:** "Match scope decisions" names no feature; the features are the solo
   opening-off rule and `LevelEndInfo`'s solo coverage.
-- **F1, F4:** `level_editor` is the editor's own acceptance target
-  (`check-level-editor.ps1`), not a `cases.psd1` case.
+- **F1, F4:** `level_editor` is the editor's own acceptance probe
+  (`scripts/acceptance/level_editor.cpp`, built as `colourwars_editor_acceptance`
+  and run by `check-level-editor.ps1`), not a `cases.psd1` case.
 - **F2, F7:** `ED#5` (play a saved stage) holds them beside `ROAD#16`.
 - **F3:** `ROAD#32` is done; the open part is `ROAD#16`'s wording.
 
@@ -595,11 +602,16 @@ rest are developer tools.
 
 - **Player-facing:** the Credits page and the shipped NOTICE and licence
   files; Mode Select's Match length row; Options' Restore Defaults; the End
-  menu's Change Teams after a single match; paint underfoot (default off,
-  `POL#30`); the paint-object and mover stages (the Ferry, Gate, Lift, Paint
-  Lift, Mover and Slab Trials); which surfaces score (slabs, ramps, one-way
-  floors); the respawn redraw; combat, blocked-shot and movement feedback;
-  match music and cues; the error dialog and `last-error.log`;
+  menu's Change Teams, Change Weapons and Change Level after a single match or
+  a finished series; the setup pages' missing-controller wait (Team, Weapon
+  and Stage Select hold on the missing-player prompt, and Back returns to
+  Player Count, or between rounds to the End menu); leaving a versus match
+  from Pause with Quit and its confirmation; paint underfoot (default off,
+  `POL#30`); Turbulence Yard and its paint-object and mover stages (the Ferry,
+  Gate, Lift, Paint Lift, Mover and Slab Trials); which surfaces score (slabs,
+  ramps, one-way floors); the respawn redraw; combat, blocked-shot and movement
+  feedback; menu and match music, the results coda and cues; the error dialog
+  and `last-error.log`;
   `HOW-TO-PLAY.txt`; the save's per-user location, migration and version
   handling; the display held awake during a match; the hybrid-GPU request; and
   the F1/Back per-player debug panel, which ships in Release.
@@ -618,3 +630,63 @@ Stories could be written for several of the player-facing ones: Match length
 and Restore Defaults under setup and settings, respawning in the match, and
 the error dialog and updating the game at launch. That widens the accepted
 set, so it is the author's call, not this pass's.
+
+## Code re-review (`DES#4`)
+
+**Done 2026-11-03,** at the author's request to re-review the personas and
+stories and make the app align with them. `DES#2` traced each story to a
+feature and a case by name. This pass read the code behind each acceptance
+criterion clause by clause, re-checked every persona and evidence claim, and
+walked the four journeys page by page. Each claimed mismatch was put to an
+independent skeptic, who tried to refute it against the tree. Of 41 claims, 31
+survived (some were the same finding from two angles) and the completeness
+pass added two more. The personas and stories themselves still stand; no
+persona, story or decision was changed, only criteria that overstated what the
+accepted behaviour is.
+
+**Code that did not do what its story says, now fixed:**
+
+- **C5 (and C3):** between rounds, Back from Change Weapons or Change Level
+  rebuilt the End menu without Watch Replay, though the round's tape was still
+  playable. The re-pick route now carries the offer
+  (`MainMenuRoute::replay`, `RosterSetupPage::round_replay`), including the
+  stage page reached through readied tools. Painter `-EndMenuOnly`
+  (`series_repick_checks.h`) checks all three paths.
+- **A8:** the Controls / audio reference named the default pad buttons after a
+  pad rebind. Its pad lines are now `{pad_jump}`, `{pad_shoot}` and
+  `{pad_pause}`, which name the pads' shared choice or say "per pad" when the
+  slots' profiles differ ([menu-presentation.md](menu-presentation.md)).
+  Startup validation fits every pad label; `menu_text` checks both cases.
+- **F5:** the game's user-stage names accepted `COM0` and `LPT0`, which the
+  registration helper refuses, so such a stage could not be registered
+  unchanged with its records. The contract now refuses them too
+  (`user_stages`), and the README states the reserved names.
+
+**Criteria with no assertion, now checked:** B1's HUD line words
+(`Level::player_identity_text`, `player_identity`) and C6's "a rematch starts at
+the preview" (`round_opening` in `opening_mode.h`, `story_audio`).
+
+**Docs that no longer matched the tree, now corrected:** the README's
+reconnect rule (it still said to quit when a pad comes back in another slot;
+the game reclaims with Start); E19 (only the opening skips; the reveal plays in
+full); A8 and E19 (one card per kind of device, not per device); B3 (a draw's
+reveal shows no figures); D1, P4 and the `DES#2` totals (the keyboard seat
+follows the shared switches; the P4 stories differ in where they are stored);
+S5 (a solo stage with lessons is untimed practice); F2 and J4 (Stage Select
+does not rescan between rounds, by design); J2 and J3 (no Change Teams story; a
+solo start still passes through Join); E23 and J3's stale line citation; the
+F1/F4 correction's target name; the "Features no story explains" list; and,
+in [the OOP guide](oop-guide.md), the shot walk-through's results step and the
+add-a-weapon and add-a-projectile steps (the match presentation's per-weapon
+tables, which are now sized from `TUNED_WEAPON_COUNT`, and `PROJECTILE_NAMES`).
+The open-points decisions that send B8 and the P1/P2 hypotheses to attended
+sessions are now in those sessions' checklists: `ROAD#2`'s list in
+[feature-roadmap.md](feature-roadmap.md#review-follow-up-ammunition-coverage-and-release-checks),
+`ROAD#24`'s reopen trigger, and the finish review's step 5 in
+[polish-plan.md](polish-plan.md#7-acceptance-and-delivery).
+
+**Left for the author.** A1's "Title says when nothing is connected" still
+cannot happen, because the keyboard always reads as connected (`DES#3` item 3).
+Either the hint counts pads only and reads as information ("No controller
+found - keyboard and mouse ready"), or the hint and the clause go. Nothing
+else from this pass waits on a decision, and it reorders nothing in NOW.

@@ -98,7 +98,7 @@ private:
 	CombatFeedbackPresentation combat_feedback_;
 	WeaponFeedbackPresentation weapon_feedback_;
 	BlockedShotPresentation blocked_shot_;
-	std::array<IdleDripPresentation, 5> idle_drips_;
+	std::array<IdleDripPresentation, TUNED_WEAPON_COUNT> idle_drips_;
 	FigurePresentation figure_;
 	ToolMotionPresentation tool_motion_;
 	RespawnRedrawPresentation respawn_redraw_;

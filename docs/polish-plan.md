@@ -1520,6 +1520,10 @@ Use a repeatable finish review for each major pass:
    Quiet details must not multiply with view count, pile up or obscure action.
 5. Get fresh-player observations about responsiveness, readability, tool identity
    and what still feels unfinished. Record concrete changes and repeat the review.
+   Note each fresh player's shooter experience and how often their group plays,
+   and whether they needed anyone to explain the game (persona P2's hypotheses),
+   and, when the mouse seat plays with pads, whether pads lose fights to it
+   (story B8); see [design-process.md](design-process.md#open-points-for-the-author).
 
 The finish gate combines technical acceptance with this play-and-observe review.
 The reference match must look coherent, feel satisfying in repeated ordinary play,

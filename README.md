@@ -97,9 +97,10 @@ reconnecting alone never resumes play. Quit remains available, including from
 the keyboard if all participating controllers are gone.
 
 Controller identity follows the XInput slot shown as Pad 1-4. Reconnect to the
-same slot to keep playing; if Windows assigns a different slot, quit and claim
-devices again. Spare controllers do not pause a match or take over an occupied
-player's seat.
+same slot to keep playing. If Windows gives the pad a different slot, press
+Start on it while the pause names the missing player: it takes back the first
+missing seat, keeping that seat's settings. Spare controllers do not pause a
+match or take over an occupied player's seat.
 
 Options > Team palette keeps Random as the default, or fixes Team A/B to
 blue/orange, pink/green, blue/yellow, purple/gold, red/azure or
@@ -171,8 +172,9 @@ To play a stage of your own, put its level file in
 `%LOCALAPPDATA%\ColourWars\stages\` (paste that into Explorer's address bar;
 create the `stages` folder if it is not there). The file name is the stage's
 name: up to 64 plain letters (A to Z, no accents), digits, `_` or `-`, not
-starting with `-`, ending in `.json`, and not the name of a stage the game
-already has in any mix of capitals. Your stages come after the built-in ones
+starting with `-`, ending in `.json`, not a reserved Windows name (`CON`,
+`PRN`, `AUX`, `NUL`, `COM0`-`COM9`, `LPT0`-`LPT9`), and not the name of a stage
+the game already has in any mix of capitals. Your stages come after the built-in ones
 in Stage Select, marked "Built by you." Random never picks them.
 
 The game reads the folder when it starts and again each time Stage Select opens

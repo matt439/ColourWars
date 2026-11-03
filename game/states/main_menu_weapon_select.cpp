@@ -10,8 +10,8 @@ using namespace labrador;
 #pragma region MainMenuWeaponSelect
 
 MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context,
-	std::optional<Session> between_rounds) :
-	RosterSetupPage(context, std::move(between_rounds))
+	std::optional<Session> between_rounds, bool replay) :
+	RosterSetupPage(context, std::move(between_rounds), replay)
 {
 
 }
@@ -109,7 +109,8 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 			}
 		}
 		this->set_level_settings();
-		this->go_to(MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->between_rounds()));
+		this->go_to(MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->between_rounds(),
+			PlayerTeam::none, this->round_replay()));
 		return;
 	}
 	this->update_weapon_select_visuals();

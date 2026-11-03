@@ -1765,6 +1765,9 @@ The next acceptance work requires hardware and is still outstanding:
 1. Run the extracted Release ZIP on a clean Windows 10/11 x64 machine.
 2. Play two- and four-player sessions across the three arenas and five weapons,
    checking ammo exhaustion/recovery, paint coverage, readable HUDs and controls.
+   In a match that mixes the mouse seat with pads, note whether pad seats
+   consistently lose fights to it (story B8 and `ROAD#24`'s trigger in
+   [design-process.md](design-process.md#open-points-for-the-author)).
 3. Exercise joining, disconnect/reconnect during setup and play, pause/settings,
    focus changes, fullscreen/resize, series draws, rematches and return to menu.
 4. Complete the [replacement-audio acceptance](polish-plan.md#5-replace-the-entire-audio-set)
@@ -1775,7 +1778,8 @@ The next acceptance work requires hardware and is still outstanding:
    so record what is heard. The ZIP now includes the
    replacement bank; qualify actual playback from the extracted release and the
    missing-bank silent fallback separately.
-5. Relaunch and confirm saved settings; record device models, display layout,
+5. Relaunch and confirm saved settings; record device models, which device the
+   host played on (persona P1's hypothesis), display layout,
    build revision and observed failures before choosing the next feature increment.
 6. Leave a pad-only series running past the configured display-idle timer and
    observe display behaviour, then normal idle behaviour after leaving the match.
@@ -2126,7 +2130,9 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   report with an exhibit; Steam Input covers it if the game ships on Steam.
 - **Pad aim assist (`ROAD#24`).** One mouse player can join pad players, and
   mouse aim is much more precise. Relates to `POL#3`, `POL#18` and the
-  `ROAD#5` handicaps.
+  `ROAD#5` handicaps. Story B8 holds it: raise and scope it if the `ROAD#2` or
+  `POL#24` sessions show pad seats consistently losing to the mouse seat
+  ([decision](design-process.md#open-points-for-the-author)).
 
 ### Not tracked, by choice
 

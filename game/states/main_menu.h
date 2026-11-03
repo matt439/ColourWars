@@ -68,9 +68,10 @@ class RosterSetupPage : public MainMenuPage
 public:
 	// A series between rounds reopens Weapon and Stage Select above its
 	// match, in the End menu's frame: Back returns to that menu and the
-	// Stage confirmation plays the next round (ROAD#20).
+	// Stage confirmation plays the next round (ROAD#20). `replay`: that End
+	// menu offered Watch Replay, so Back offers it again.
 	explicit RosterSetupPage(MenuContext* context,
-		std::optional<Session> between_rounds = std::nullopt);
+		std::optional<Session> between_rounds = std::nullopt, bool replay = false);
 	~RosterSetupPage() override = default;
 
 	// Between rounds this frame belongs to the match, which takes the plan.
@@ -85,6 +86,8 @@ protected:
 
 	// The unfinished series this page re-picks for, or empty during setup.
 	const std::optional<Session>& between_rounds() const;
+	// Whether the End menu this page replaced offered Watch Replay.
+	bool round_replay() const;
 	// Back to the End menu this page replaced; only between rounds.
 	void return_to_round_menu();
 
@@ -106,6 +109,7 @@ private:
 	MenuPrompt player_prompts_ = MenuPrompt::select_back;
 	bool waiting_for_players_ = false;
 	std::optional<Session> between_rounds_;
+	bool replay_ = false;
 };
 
 // Whether the title shows "Connect a controller": only while no device slot,
@@ -421,7 +425,7 @@ class MainMenuWeaponSelect final : public RosterSetupPage
 {
 public:
 	explicit MainMenuWeaponSelect(MenuContext* context,
-		std::optional<Session> between_rounds = std::nullopt);
+		std::optional<Session> between_rounds = std::nullopt, bool replay = false);
 	void update_page(float dt) override;
 	void init() override;
 protected:
@@ -480,7 +484,7 @@ public:
 	// choose, named in the heading. None lets every seat choose.
 	explicit MainMenuStageSelect(MenuContext* context,
 		std::optional<Session> between_rounds = std::nullopt,
-		PlayerTeam picker = PlayerTeam::none);
+		PlayerTeam picker = PlayerTeam::none, bool replay = false);
 	void update_page(float dt) override;
 	void init() override;
 	void on_resume() override;
@@ -552,14 +556,15 @@ struct MainMenuRoute
 	static MainMenuRoute home(MainMenuHome::InitialFocus focus);
 	// Weapon or Stage Select re-picking for an unfinished series (ROAD#20);
 	// an empty `between_rounds` is ordinary setup. `picker` as for
-	// MainMenuStageSelect.
+	// MainMenuStageSelect; `replay`: the End menu offered Watch Replay.
 	static MainMenuRoute re_pick(MainMenuScreen screen, std::optional<Session> between_rounds,
-		PlayerTeam picker = PlayerTeam::none);
+		PlayerTeam picker = PlayerTeam::none, bool replay = false);
 
 	MainMenuScreen screen = MainMenuScreen::title;
 	MainMenuHome::InitialFocus home_focus = MainMenuHome::InitialFocus::play;
 	std::optional<Session> between_rounds;
 	PlayerTeam picker = PlayerTeam::none;
+	bool replay = false;
 };
 
 // The one place a main-menu page is built for a route.

@@ -173,12 +173,14 @@ void EndMenuInitial::init()
 			if (tools)
 			{
 				this->context()->transition_to(make_main_menu_page(this->menu_context(),
-					MainMenuRoute::re_pick(MainMenuScreen::weapon_select, this->session_)));
+					MainMenuRoute::re_pick(MainMenuScreen::weapon_select, this->session_,
+						PlayerTeam::none, this->replay_)));
 			}
 			else
 			{
 				this->context()->transition_to(make_main_menu_page(this->menu_context(),
-					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_)));
+					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_,
+						PlayerTeam::none, this->replay_)));
 			}
 		};
 
@@ -198,7 +200,8 @@ void EndMenuInitial::init()
 			{
 				this->play_wave(this->confirm_sound_);
 				this->context()->transition_to(make_main_menu_page(this->menu_context(),
-					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_, picker)));
+					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_, picker,
+						this->replay_)));
 			});
 	}
 	if (this->replay_)

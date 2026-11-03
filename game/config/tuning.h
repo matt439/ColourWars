@@ -424,8 +424,7 @@ private:
 
 	// Store only concrete primary weapons; random choices and unsupported types
 	// must not resolve to empty tuning records.
-	static constexpr size_t WEAPON_COUNT =
-		static_cast<size_t>(WeaponType::bucket) + 1;
+	static constexpr size_t WEAPON_COUNT = TUNED_WEAPON_COUNT;
 	static constexpr size_t PROJECTILE_COUNT =
 		static_cast<size_t>(ProjectileType::count);
 

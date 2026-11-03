@@ -51,8 +51,8 @@ namespace
 		// constructing any reserved destination. Never exercise a device path.
 		require(!user_stage_contract::usable_name("CON"), "Reserved Windows stage name was accepted");
 		const char* reserved[] = { "CON", "PRN", "AUX", "NUL",
-			"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-			"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+			"COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+			"LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
 		for (const char* name : reserved)
 		{
 			std::string lower(name), mixed(name);
@@ -70,10 +70,12 @@ namespace
 					"A reserved Windows stage stem was accepted: " + spelling);
 			}
 		}
-		// These are identifier checks only, especially COM10/LPT0; no path or
+		// COM0 and LPT0 are refused like the registration helper refuses them
+		// (F5: a user stage registers unchanged), so its records follow it.
+		// These are identifier checks only, especially COM10/LPT10; no path or
 		// filesystem operation is used to decide what Windows would open.
 		for (const char* name : { "console", "console_map", "nul_map", "con_1", "prn1", "auxiliary",
-			"COM10", "LPT0", "my_con", "_lpt9", "lpt_9", "A0b9_-", "a-", "_", "con_", "nul-stage", "COM1_copy" })
+			"COM10", "LPT10", "my_con", "_lpt9", "lpt_9", "A0b9_-", "a-", "_", "con_", "nul-stage", "COM1_copy" })
 		{
 			require(user_stage_contract::usable_name(name), "A valid neighboring stage identifier was refused: " + std::string(name));
 		}
@@ -91,7 +93,7 @@ namespace
 		require(explanation.find("ascii") != std::string::npos && explanation.find("64") != std::string::npos &&
 			(explanation.find("reserv") != std::string::npos || explanation.find("device") != std::string::npos),
 			"The shared name-rule diagnostic does not explain reserved stems and existing character limits");
-		std::cout << "PASS stage name contract: 22 reserved ASCII stems in three cases, valid neighbors, "
+		std::cout << "PASS stage name contract: 24 reserved ASCII stems in three cases, valid neighbors, "
 			"length/ASCII/leading rules and explanatory diagnostics; no reserved path I/O\n";
 	}
 

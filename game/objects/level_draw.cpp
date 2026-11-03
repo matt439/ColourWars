@@ -197,6 +197,12 @@ bool Level::player_identity_visible(int participant) const
 		this->identity_->visible(this->player(participant), this->identity_showing());
 }
 
+std::wstring_view Level::player_identity_text(int participant) const
+{
+	if (participant < 0 || participant >= this->player_count()) { return {}; }
+	return this->identity_->identity_text(static_cast<std::size_t>(participant));
+}
+
 float Level::player_identity_emphasis(int participant) const
 {
 	return this->player_identity_emphasis_for(participant, this->player(participant).player_num());
