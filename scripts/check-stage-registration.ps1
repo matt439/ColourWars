@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 
 function Assert-Check {
     param([bool] $Condition, [string] $Message)
@@ -281,8 +282,12 @@ include(cmake/release_assets.cmake)
     $startupOutput = Join-Path $run 'startup'
     $startupArgs = @{ Executable = Join-Path $staged 'ColourWars.exe'; OutputDirectory = $startupOutput; RequireAudio = $true }
     if ($Preset -eq 'x64-release') { $startupArgs.AllowNoHardwareAdapter = $true }
-    & (Join-Path $PSScriptRoot 'check-startup.ps1') @startupArgs |
-        Out-File -LiteralPath (Join-Path $run 'startup-script.log') -Encoding utf8
+    $previousQuietGame = Enter-QuietGame
+    try {
+        & (Join-Path $PSScriptRoot 'check-startup.ps1') @startupArgs |
+            Out-File -LiteralPath (Join-Path $run 'startup-script.log') -Encoding utf8
+    }
+    finally { Exit-QuietGame $previousQuietGame }
     $receipts = @(Get-ChildItem -LiteralPath $startupOutput -Filter result.json -Recurse -File)
     Assert-Check ($receipts.Count -eq 1) 'Expected exactly one fresh startup result receipt.'
     $startup = Get-Content -LiteralPath $receipts[0].FullName -Raw | ConvertFrom-Json

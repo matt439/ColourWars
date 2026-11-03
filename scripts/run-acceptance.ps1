@@ -117,6 +117,7 @@ function Quote-ResponsePath {
 }
 
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 $repo = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
 $evidence = if ($OutputDirectory) {
@@ -191,6 +192,7 @@ Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
 $probeControl = $null
 $caseCancellation = [Threading.CancellationTokenSource]::new()
+$previousQuietGame = Enter-QuietGame
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $evidence"
@@ -517,6 +519,7 @@ finally {
         } finally {
             $caseCancellation.Dispose()
             $env:PATH = $previousPath
+            Exit-QuietGame $previousQuietGame
             Pop-Location
         }
     }

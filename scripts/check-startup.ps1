@@ -20,6 +20,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -195,6 +196,7 @@ try {
     # Launch hidden and enumerate by class: MainWindowHandle ignores hidden
     # windows and could otherwise mistake an error MessageBox for the game.
     $env:LOCALAPPDATA = $profileDirectory
+    $previousQuietGame = Enter-QuietGame
     try {
         if ($SystemOnlyPath) {
             # A release must not find missing redistributables in developer tools.
@@ -210,6 +212,7 @@ try {
     finally {
         $env:LOCALAPPDATA = $originalLocalAppData
         $env:PATH = $originalPath
+        Exit-QuietGame $previousQuietGame
     }
 
     $timer = [Diagnostics.Stopwatch]::StartNew()

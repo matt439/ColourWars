@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (!$OutputDirectory) { $OutputDirectory=Join-Path $repo 'out/validation/display-awake' }
 $run=Join-Path (Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) $Preset) ([Guid]::NewGuid().ToString('N'))
@@ -72,9 +73,9 @@ try {
         Invoke-NativeLogged 'dumpbin' @('/nologo','/imports',$exe) (Join-Path $run 'imports.log')
         if(Select-String -LiteralPath (Join-Path $run 'imports.log') -Pattern '\bSetThreadExecutionState\b' -Quiet){throw 'Recording probe unexpectedly imports the real display-idle API'}
         $result.real_idle_import_absent=$true;$result.probe_sha256=(Get-FileHash $exe).Hash;$result.response_file_sha256=(Get-FileHash $rsp).Hash
-        $env:PATH="$game;$previousPath";$env:LOCALAPPDATA=$profile
+        $env:PATH="$game;$previousPath";$env:LOCALAPPDATA=$profile;$previousQuietGame=Enter-QuietGame
         try {$process=Start-Process -FilePath $exe -WindowStyle Hidden -PassThru -WorkingDirectory $working -ArgumentList @((Quote-LiteralPath $game),(Quote-LiteralPath $evidence)) -RedirectStandardOutput (Join-Path $run 'run.log') -RedirectStandardError (Join-Path $run 'run.err');$null=$process.Handle;$result.process_id=$process.Id;$result.probe_executable=$exe;$result.process_started_utc=[DateTime]::UtcNow.ToString('o');Save-LifecycleResult}
-        finally {$env:PATH=$previousPath;$env:LOCALAPPDATA=$previousProfile}
+        finally {$env:PATH=$previousPath;$env:LOCALAPPDATA=$previousProfile;Exit-QuietGame $previousQuietGame}
         $timer=[Diagnostics.Stopwatch]::StartNew()
         while(!$process.WaitForExit(1000)){if($timer.Elapsed.TotalSeconds -gt 180){throw 'Owned lifecycle probe exceeded180 seconds'}}
         $process.WaitForExit();$result.process_id=$process.Id;$result.exit_code=$process.ExitCode

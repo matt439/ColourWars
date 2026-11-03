@@ -19,6 +19,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 
 if ($AllowSoftwareAdapter -and $Preset -eq 'x64-release') {
     throw '-AllowSoftwareAdapter is supported only by the x64-debug probe.'
@@ -101,6 +102,7 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
+$previousQuietGame = Enter-QuietGame
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $run"
@@ -233,6 +235,7 @@ catch {
 finally {
     $env:PATH = $previousPath
     $env:LOCALAPPDATA = $previousLocalAppData
+    Exit-QuietGame $previousQuietGame
     if ($null -ne $process) {
         if (-not $process.HasExited) {
             # Only this isolated probe; it owns no player save or session.

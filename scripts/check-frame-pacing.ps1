@@ -31,6 +31,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/frame-pacing' }
 if ([string]::IsNullOrWhiteSpace($LoadNote)) {
     if (-not $CompileOnly) { throw 'Record the concurrent workload or quiet-run conditions explicitly with -LoadNote.' }
@@ -116,6 +117,7 @@ $previousLocalAppData = $env:LOCALAPPDATA
 $process = $null
 $failure = $null
 Push-Location -LiteralPath $repo
+$previousQuietGame = Enter-QuietGame
 try {
     foreach ($command in 'cmake', 'cl', 'git') {
         if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
@@ -343,6 +345,7 @@ catch {
 finally {
     $env:PATH = $previousPath
     $env:LOCALAPPDATA = $previousLocalAppData
+    Exit-QuietGame $previousQuietGame
     Write-Json (Join-Path $run 'result.json') $result
     Write-Host "Frame-pacing evidence: $run"
     Pop-Location

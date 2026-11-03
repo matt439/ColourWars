@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'quiet-game.ps1')
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -169,6 +170,7 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
+$previousQuietGame = Enter-QuietGame
 try {
     if (-not $SkipBuild) {
         Write-Host "Configure and build $Preset; logs: $run"
@@ -290,6 +292,7 @@ catch {
 finally {
     $env:PATH = $previousPath
     $env:LOCALAPPDATA = $previousLocalAppData
+    Exit-QuietGame $previousQuietGame
     if ($null -ne $process) {
         if (-not $process.HasExited) {
             # Only this isolated probe; it owns no player save or session.

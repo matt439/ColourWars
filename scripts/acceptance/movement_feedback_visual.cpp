@@ -709,6 +709,7 @@ int wmain(int argc, wchar_t** argv)
             }, nullptr });
         app.load_manifest((content / "manifest.json").string().c_str());
         // Silence through the groups the game assigns, as main.cpp does.
+        sound_groups::set_muted(sound_groups::muted_by_environment());
         sound_groups::assign(*app.audio_resources(), tuning, presentation, levels, stages);
         sound_groups::apply(*app.audio_resources(), preferences);
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());

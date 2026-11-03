@@ -8,11 +8,12 @@
 # folders, so its logic is exercised without starting a sandbox.
 #
 # It is self-contained: nothing from the checkout exists inside the sandbox.
-# It starts ColourWars.exe with LOCALAPPDATA in the results folder, waits for
-# the window, closes it with WM_CLOSE as check-startup.ps1 does and records the
-# ZIP's SHA-256, the exit code, what the game wrote to stderr (and its
-# last-error.log, if any), the Windows version, whether the Visual C++ runtime
-# is in System32 and the display adapters. Windows PowerShell 5.1 is what a
+# It starts ColourWars.exe muted (COLOURWARS_MUTE=1 unless the caller set it)
+# with LOCALAPPDATA in the results folder, waits for the window, closes it
+# with WM_CLOSE as check-startup.ps1 does and records the ZIP's SHA-256, the
+# exit code, what the game wrote to stderr (and its last-error.log, if any),
+# the Windows version, whether the Visual C++ runtime is in System32 and the
+# display adapters. Windows PowerShell 5.1 is what a
 # sandbox has, so this must stay 5.1-compatible.
 [CmdletBinding()]
 param(
@@ -192,13 +193,22 @@ namespace ColourWarsSandbox
     $refusal = 'startup failure: No Direct3D hardware device found'
 
     $originalLocalAppData = $env:LOCALAPPDATA
+    $originalMute = [Environment]::GetEnvironmentVariable('COLOURWARS_MUTE', 'Process')
     $env:LOCALAPPDATA = $profileDirectory
+    # Silent, as the checkout's check scripts keep the game (quiet-game.ps1).
+    # A sandbox inherits nothing from the host and plays through its speakers,
+    # so the switch is set here; a host trial keeps an explicit
+    # COLOURWARS_MUTE=0 it inherited.
+    if ($null -eq $originalMute) { [Environment]::SetEnvironmentVariable('COLOURWARS_MUTE', '1', 'Process') }
     try {
         $process = Start-Process -FilePath $executable -WorkingDirectory $workingDirectory -PassThru `
             -RedirectStandardError $stderrPath -RedirectStandardOutput $stdoutPath
         $null = $process.Handle
     }
-    finally { $env:LOCALAPPDATA = $originalLocalAppData }
+    finally {
+        $env:LOCALAPPDATA = $originalLocalAppData
+        [Environment]::SetEnvironmentVariable('COLOURWARS_MUTE', $originalMute, 'Process')
+    }
 
     $timer = [Diagnostics.Stopwatch]::StartNew()
     $refused = $false

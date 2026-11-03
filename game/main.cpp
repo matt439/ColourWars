@@ -117,7 +117,9 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 			app.audio_resources(), stage_catalog.level_infos(), stage_catalog.stages(),
 			settings_session.play_settings());
 		// The saved Music and SFX volumes are group volumes from here on;
-		// the Controls page pushes a change through the same call.
+		// the Controls page pushes a change through the same call. The check
+		// scripts set COLOURWARS_MUTE so the processes they start stay silent.
+		sound_groups::set_muted(sound_groups::muted_by_environment());
 		sound_groups::assign(*app.audio_resources(), tuning, presentation,
 			stage_catalog.level_infos(), stage_catalog.stages());
 		sound_groups::apply(*app.audio_resources(), settings_session.play_settings());
