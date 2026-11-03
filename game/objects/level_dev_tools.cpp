@@ -34,7 +34,7 @@ void Level::refresh_station_labels()
 		// Admit them now, so a paused match shows them too. This runs between
 		// world updates, when every tick's own additions have been admitted
 		// and its retirements made, so the labels are all this tick ends.
-		this->scene_->end_tick();
+		this->end_scene_tick();
 	}
 	// The scene never retires a plain object, so off is set_hidden, which
 	// skips the draw and keeps the words, the box and the colour. The colour

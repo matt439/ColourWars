@@ -389,15 +389,13 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	this->update_players(dt);
 
 	this->scene_->resolve();
-	for (CollisionObject* object : this->scene_->collision_objects())
+	// The admitted shots only: this tick's are still pending, and drain next tick.
+	for (Projectile* projectile : this->projectiles_)
 	{
-		if (Projectile* projectile = Collider::of(*object).projectile())
+		projectile->flush_paint_audio(*this->paint_audio_);
+		if (const auto contact = projectile->take_blocked_contact())
 		{
-			projectile->flush_paint_audio(*this->paint_audio_);
-			if (const auto contact = projectile->take_blocked_contact())
-			{
-				this->blocked_shot_feedback_->emit(*contact);
-			}
+			this->blocked_shot_feedback_->emit(*contact);
 		}
 	}
 
@@ -421,7 +419,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 
 	// Retire deleted/out-of-bounds objects and admit this tick's projectiles.
 	// Deferred admission keeps the scene stable during iteration.
-	this->scene_->end_tick();
+	this->end_scene_tick();
 
 	// Count once per tick for all debug overlays.
 	this->projectile_count_ = this->count_projectiles();
@@ -498,9 +496,9 @@ void Level::update_players(float dt)
 			player->update_weapon_and_get_projectiles(
 				dt, this->structures_.projectile_targets()))
 		{
-			// The game keeps the projectile interface until Scene takes ownership
-			// through its engine collision interface.
-			this->scene_->add(std::move(projectile));
+			// Scene owns the shot; the typed pointer add() returns is what the
+			// tick's projectile walks use. Pending until end_tick() admits it.
+			this->pending_projectiles_.push_back(this->scene_->add(std::move(projectile)));
 		}
 	}
 }
@@ -509,13 +507,80 @@ void Level::resolve_projectile_movement()
 {
 	// Resolve the first hit along each projectile's travel before endpoint contacts
 	// can consume it in scene order or miss a thin paintable face.
-	for (CollisionObject* object : this->scene_->collision_objects())
+	for (Projectile* projectile : this->projectiles_)
 	{
-		if (Projectile* projectile = Collider::of(*object).projectile())
+		projectile->resolve_movement_contacts(this->structures_.projectile_targets());
+	}
+}
+
+void Level::end_scene_tick()
+{
+	// The shot list follows first, while the pointers it drops are still valid.
+	this->retire_projectiles();
+	this->scene_->end_tick();
+	this->check_projectiles();
+}
+
+Projectile* Level::admit_projectile(std::unique_ptr<Projectile> projectile)
+{
+	if (projectile == nullptr)
+	{
+		throw std::invalid_argument("Level::admit_projectile: no projectile");
+	}
+	Projectile* admitted = this->scene_->add(std::move(projectile));
+	this->pending_projectiles_.push_back(admitted);
+	this->end_scene_tick();
+	return admitted;
+}
+
+void Level::retire_projectiles()
+{
+	// What the coming end_tick() retires among the admitted collision objects:
+	// its bounds sweep flags an object outside the scene, and every Projectile
+	// records the flag, so both readings are this one predicate. A shot added
+	// this tick is still pending, and end_tick() admits it whatever its flags;
+	// the next end_tick() sweeps it.
+	std::erase_if(this->projectiles_,
+		[this](const Projectile* projectile)
 		{
-			projectile->resolve_movement_contacts(this->structures_.projectile_targets());
+			return projectile->for_deletion() || !this->scene_->in_bounds(*projectile);
+		});
+	// Admitted after the survivors, in the order they were added, as end_tick()
+	// appends its pending list, so this list keeps the scene's order.
+	this->projectiles_.insert(this->projectiles_.end(),
+		this->pending_projectiles_.begin(), this->pending_projectiles_.end());
+	this->pending_projectiles_.clear();
+}
+
+void Level::check_projectiles() const
+{
+#ifdef _DEBUG
+	// The list must be the scene's projectiles, in scene order; a disagreement
+	// would make the walks above skip, repeat or reorder a shot.
+	// The perf overlay counted projectile tags, so the count must agree too.
+	size_t index = 0;
+	size_t tagged = 0;
+	for (const CollisionObject* object : this->scene_->collision_objects())
+	{
+		if (is_projectile(to_collision_type(object->tag())))
+		{
+			++tagged;
+		}
+		if (const Projectile* projectile = Collider::of(*object).projectile())
+		{
+			if (index >= this->projectiles_.size() || this->projectiles_[index] != projectile)
+			{
+				throw std::logic_error("Level: the projectile list disagrees with the scene");
+			}
+			++index;
 		}
 	}
+	if (index != this->projectiles_.size() || tagged != index ||
+		!this->pending_projectiles_.empty())
+	{
+		throw std::logic_error("Level: the projectile list disagrees with the scene");
+	}
+#endif
 }
 
 void Level::refresh_player_cameras()
@@ -719,15 +784,7 @@ bool Level::match_started() const
 
 int Level::count_projectiles() const
 {
-	int count = 0;
-	for (const CollisionObject* object : this->scene_->collision_objects())
-	{
-		if (is_projectile(to_collision_type(object->tag())))
-		{
-			count++;
-		}
-	}
-	return count;
+	return static_cast<int>(this->projectiles_.size());
 }
 
 LevelEndInfo Level::level_end_info() const

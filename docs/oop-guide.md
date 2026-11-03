@@ -293,11 +293,15 @@ For a new selectable primary weapon, keep these registrations together:
    `random_primary`. Compile-time checks beside the enum enforce this contiguous
    order and the boundary after `bucket`; update them with the registrations.
    `grenade_std` is still passed as an ignored secondary placeholder, and `none`
-   marks an unset weapon. Neither belongs in the primary range.
-2. Add its record under `weapons` in [tuning.json](../game/content/tuning.json).
-   Register it in both the constructor's `add_weapon` list in
-   [tuning.cpp](../game/config/tuning.cpp) and `validate_resources`' weapon list in
-   [tuning_validation.cpp](../game/config/tuning_validation.cpp). Supply the sprite,
+   marks an unset weapon. Neither belongs in the primary range. Give it a name
+   in `WEAPON_NAMES` beside the enum, at the same position: that one spelling
+   is its key in tuning.json and presentation.json, in the save's `last_match`
+   and in the Debug match plan.
+2. Add its record under `weapons` in [tuning.json](../game/content/tuning.json),
+   keyed by that name. There is no list to extend: the reader in
+   [tuning.cpp](../game/config/tuning.cpp) and `validate_resources` in
+   [tuning_validation.cpp](../game/config/tuning_validation.cpp) both walk
+   `for_each_tuned_weapon`, so the name makes the record required. Supply the sprite,
    projectile kind, ammunition/timing values, sound names and relative-velocity
    settings required by its chosen implementation. A looping sound needs
    independent voices for each team and player position. Each weapon supplies
@@ -309,12 +313,15 @@ For a new selectable primary weapon, keep these registrations together:
    declare changed hooks with `override`; add its `.cpp` to
    [game/CMakeLists.txt](../game/CMakeLists.txt). Return Projectile objects from
    firing hooks, and preserve the base's ammunition, sound and lifetime rules.
-4. Add its menu icon and displayed name in
-   [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp).
-   Add the description to `main_menu.weapon_descriptions` in
-   [presentation.json](../game/content/presentation.json) and the corresponding
-   `describe` registration in [presentation_read_menu.cpp](../game/config/presentation/presentation_read_menu.cpp).
-   The description array in [presentation_menu.h](../game/config/presentation/presentation_menu.h) includes
+4. Add its Weapon Select entry under `main_menu.weapon_select.choices` in
+   [presentation.json](../game/content/presentation.json) (`name`, `frame`,
+   `paint_frame`, `supply_strip`) and its description under
+   `main_menu.weapon_descriptions`, both keyed by that name.
+   [presentation_read_menu.cpp](../game/config/presentation/presentation_read_menu.cpp)
+   reads both for every `WEAPON_NAMES` entry and refuses a missing one, and
+   [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp)
+   only draws what they hold. The choice and description arrays in
+   [presentation_menu.h](../game/config/presentation/presentation_menu.h) include
    `random_primary`; keep that relationship if reorganizing the enum.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
    and any new wave/effect names in the live
@@ -327,7 +334,10 @@ For a new selectable primary weapon, keep these registrations together:
 6. Build Debug and Release, cycle through the new menu choice and Random, and
    start a match. Check its distinctive hook, ammo exhaustion/regeneration,
    obstruction and paint behavior, death/respawn, pause/resume and restart.
-   Compare with an existing weapon to catch shared-workflow regressions. This
+   Compare with an existing weapon to catch shared-workflow regressions. The
+   `weapon_catalog` acceptance case pins the existing choices (`keys`, `names`
+   and `types` in [weapon_catalog.cpp](../scripts/acceptance/weapon_catalog.cpp)),
+   so extend it with the new one, then run the default acceptance list. This
    repository deliberately has no `ctest` suite; engine tests cover the engine.
 
 If the weapon introduces a new projectile kind, add its enumerator to
