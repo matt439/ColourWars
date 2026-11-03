@@ -278,7 +278,7 @@ namespace colourwars_editor
         if (!report.unmatched_art.empty())
             text += "  |  Art without partner: " + names(report.unmatched_art);
         if (!report.paint_ferries.empty())
-            text += "  |  Authored: paint-ferry heading (" + names(report.paint_ferries) + ")";
+            text += "  |  Authored: paint-drive heading (" + names(report.paint_ferries) + ")";
         return text;
     }
 }

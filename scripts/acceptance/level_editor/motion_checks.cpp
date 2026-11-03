@@ -224,7 +224,8 @@ namespace level_editor_acceptance
             "Editor accepted a lift with less than a body height beneath its lowest pose");
         for (const auto& [path, invalid] : {
             std::pair{ "motion/travel_y", "0" }, { "motion/travel_y", "-1" }, { "motion/travel_y", "1e40" },
-            { "motion/drive", "paint" }, { "motion/type", "horizontal" },
+            // A paint drive is a lift's own (drive_checks); a heading on its cycle is not.
+            { "motion/team_a_heads", "up" }, { "motion/type", "horizontal" },
             { "collision_type", "STRUCTURE_JUMP_THROUGH" } })
         {
             reject_without_change(document, [&] { document.set_property(lift, path, invalid); },

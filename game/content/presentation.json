@@ -855,12 +855,13 @@
     "keyline_width": 4
   },
   "ferry_direction": {
-    "_comment": "ROAD#27: steady hanging sign below paint ferries, in world units. A/B arrows show the fixed opposing team directions; an ink-backed team shows current paint demand. The lower glyph shows the last committed movement, pause or reached end stop, separately from later paint. Retained in miniatures and with Reduce effects; cycles have no sign.",
+    "_comment": "ROAD#27: steady hanging sign below paint ferries, in world units. A/B arrows show the fixed opposing team directions; an ink-backed team shows current paint demand. The lower glyph shows the last committed movement, pause or reached end stop, separately from later paint. Retained in miniatures and with Reduce effects; cycles have no sign. A paint lift's sign (ROAD#28) points up and down and is lift_width wide, up to size.x and never wider than the lift's clear column (the lift plus a body width each side), which Level admission sets.",
     "ink": "17171C",
     "paper": "FFFFFF",
     "size": { "x": 176, "y": 104 },
     "gap": 8,
-    "keyline_width": 3
+    "keyline_width": 3,
+    "lift_width": 144
   },
   "weapon_feedback": {
     "_comment": "Cosmetic shot/supply pulses and optional local aim/readiness marker. The marker shows direction, not a predicted hit; the roller keeps its contact effect and has no marker.",

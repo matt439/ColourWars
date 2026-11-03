@@ -242,14 +242,14 @@ namespace
         require(reversed.ferry_direction().ink == Colour::white &&
             reversed.ferry_direction().paper == Colour::black && reversed.ferry_direction().gap == 0.0f,
             "Ferry direction rejected reversed opaque high-contrast colours or a zero gap");
-        for (const char* key : { "ink", "paper", "size", "gap", "keyline_width" })
+        for (const char* key : { "ink", "paper", "size", "gap", "keyline_width", "lift_width" })
         {
             variants.rejects("ferry_direction", key, [key](rapidjson::Document& d)
                 { d["ferry_direction"].RemoveMember(key); });
             variants.rejects("ferry_direction", key, [key](rapidjson::Document& d)
                 { d["ferry_direction"][key].SetNull(); });
         }
-        for (const char* key : { "gap", "keyline_width" })
+        for (const char* key : { "gap", "keyline_width", "lift_width" })
         {
             variants.rejects("ferry_direction", key, [key](rapidjson::Document& d)
                 { d["ferry_direction"][key].SetFloat(-1.0f); });
@@ -258,6 +258,8 @@ namespace
         }
         variants.rejects("ferry_direction", "keyline_width", [](rapidjson::Document& d)
             { d["ferry_direction"]["keyline_width"].SetFloat(0.0f); });
+        variants.rejects("ferry_direction", "lift_width", [](rapidjson::Document& d)
+            { d["ferry_direction"]["lift_width"].SetFloat(0.0f); });
         variants.rejects("ferry_direction", "keyline_width", [](rapidjson::Document& d)
         {
             auto& cue = d["ferry_direction"];

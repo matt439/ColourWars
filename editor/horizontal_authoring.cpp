@@ -84,7 +84,7 @@ namespace colourwars_editor
         { return fields.HasMember(key) ? std::optional<std::string>(string(fields, key)) : std::nullopt; };
         try
         {
-            const auto drive = motion::decode_drive(text("drive"), text("team_a_heads"));
+            const auto drive = motion::decode_drive(text("drive"), text("team_a_heads"), vertical);
             spec.drive = drive.drive;
             spec.team_a_heading = drive.team_a_heading;
         }

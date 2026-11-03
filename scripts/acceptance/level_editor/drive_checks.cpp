@@ -173,6 +173,54 @@ namespace level_editor_acceptance
             { motion["drive"].SetInt(1); }), "drive must be text", "A numeric drive opened");
         refuses_file(checker, variant("number-heading", [](rapidjson::Value& motion, rapidjson::Document&)
             { motion["team_a_heads"].SetInt(1); }), "team_a_heads must be text", "A numeric heading opened");
-        std::cout << "PASS paint ferry drive inspector edits, shared drive refusals and Ferry Trial save/reopen\n";
+
+        // A lift's paint drive (ROAD#28) heads up or down, by the same rule.
+        LevelDocument lifts(tuning);
+        const Entry lift = lifts.add_object("VerticalLift", { 600, 600, 120, 20 });
+        lifts.set_property(lift, "motion/drive", "paint");
+        {
+            const auto fields = lifts.properties(lift);
+            const Property* heads = property(fields, "motion/team_a_heads");
+            const Property* phase = property(fields, "motion/phase");
+            require(std::string(motion_of(lifts, lift)["team_a_heads"].GetString()) == "up" &&
+                heads != nullptr && heads->label == "motion/team_a_heads (up or down)" &&
+                phase != nullptr && phase->label == "motion/phase (paint: 0 top to 0.5 bottom)" &&
+                lifts.validate().empty(), "A palette lift's paint drive did not default to team A heading up");
+        }
+        lifts.set_property(lift, "motion/team_a_heads", "down");
+        lifts.set_property(lift, "motion/phase", "0.5");
+        require(std::string(motion_of(lifts, lift)["team_a_heads"].GetString()) == "down" && lifts.validate().empty(),
+            "A lift could not be authored heading down from its foot");
+        for (const auto& [path, invalid] : {
+            std::pair{ "motion/team_a_heads", "right" }, { "motion/team_a_heads", "left" },
+            { "motion/team_a_heads", "Up" }, { "motion/phase", "0.75" } })
+        {
+            reject_without_change(lifts, [&] { lifts.set_property(lift, path, invalid); },
+                "The editor accepted a lift drive the game refuses");
+        }
+        const fs::path lift_file = scratch / "drive-lift.json";
+        const std::string lift_json = lifts.serialize();
+        lifts.save(lift_file);
+        LevelDocument lift_reopened(tuning);
+        lift_reopened.load(lift_file);
+        require(lift_reopened.serialize() == lift_json, "Save/reopen changed a paint lift's bytes");
+        const auto lift_variant = [&](const char* name, const std::function<void(rapidjson::Value&)>& edit)
+        {
+            auto document_json = parse(lift_json);
+            edit(document_json["collision_objects"][static_cast<rapidjson::SizeType>(lift.index)]["motion"]);
+            const auto path = scratch / (std::string("drive-lift-") + name + ".json");
+            write(path, encode(document_json));
+            return path;
+        };
+        refuses_file(checker, lift_variant("right", [](rapidjson::Value& motion)
+            { motion["team_a_heads"].SetString("right"); }), "a lift's team_a_heads must be 'up' or 'down'",
+            "A paint lift heading right opened");
+        refuses_file(checker, lift_variant("no-heading", [](rapidjson::Value& motion)
+            { motion.RemoveMember("team_a_heads"); }), "a paint-driven lift needs team_a_heads 'up' or 'down'",
+            "A paint lift without a heading opened");
+        refuses_file(checker, lift_variant("return-leg", [](rapidjson::Value& motion)
+            { motion["phase"].SetDouble(0.75); }), "A paint-driven lift starts at phase 0 (top) to 0.5 (bottom)",
+            "A paint lift on its return leg opened");
+        std::cout << "PASS paint ferry and paint lift drive inspector edits, shared drive refusals and Ferry Trial save/reopen\n";
     }
 }

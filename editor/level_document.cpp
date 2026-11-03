@@ -610,6 +610,10 @@ namespace colourwars_editor
         else { append_properties(value, "", result); }
         if (entry.kind == EntryKind::collision && value.HasMember("motion"))
         {
+            const Json& motion = value["motion"];
+            // A lift heads up or down (ROAD#28); a horizontal mover right or left.
+            const bool lift = motion.IsObject() && motion.HasMember("type") && motion["type"].IsString() &&
+                string(motion, "type") == "vertical";
             for (Property& property : result)
             {
                 if (property.path == "motion/type") { property.label = "motion/type (horizontal or vertical)"; }
@@ -620,9 +624,8 @@ namespace colourwars_editor
                 else if (property.path == "motion/phase") { property.label = "motion/phase (cycles [0,1))"; }
                 else if (property.path == "motion/drive") { property.label = "motion/drive (cycle or paint)"; }
                 else if (property.path == "motion/team_a_heads")
-                { property.label = "motion/team_a_heads (right or left)"; }
+                { property.label = lift ? "motion/team_a_heads (up or down)" : "motion/team_a_heads (right or left)"; }
             }
-            const Json& motion = value["motion"];
             const bool paint = motion.IsObject() && motion.HasMember("drive") && motion["drive"].IsString() &&
                 string(motion, "drive") == "paint";
             if (paint)
@@ -630,7 +633,10 @@ namespace colourwars_editor
                 for (Property& property : result)
                 {
                     if (property.path == "motion/phase")
-                    { property.label = "motion/phase (paint: 0 left end to 0.5 right end)"; }
+                    {
+                        property.label = lift ? "motion/phase (paint: 0 top to 0.5 bottom)"
+                            : "motion/phase (paint: 0 left end to 0.5 right end)";
+                    }
                 }
             }
             // An absent drive is the runtime's cycle; show it so the drive can
@@ -709,7 +715,7 @@ namespace colourwars_editor
                 (pointer_text == "/motion/drive" || pointer_text == "/motion/team_a_heads"))
             {
                 // A drive switch carries its heading with it: paint gains team A
-                // heading right unless it already has one, and cycle (or a
+                // heading right (a lift, up) unless it already has one, and cycle (or a
                 // cleared drive, which is the cycle default) sheds it. Anything
                 // else is written as typed and the shared drive rule refuses it.
                 Json& motion = object["motion"];
@@ -738,7 +744,12 @@ namespace colourwars_editor
                 { target->SetString(value.data(), static_cast<rapidjson::SizeType>(value.size()), allocator); }
                 else { put("drive", value); }
                 if (value == "cycle") { motion.RemoveMember("team_a_heads"); }
-                if (value == "paint" && !motion.HasMember("team_a_heads")) { put("team_a_heads", "right"); }
+                if (value == "paint" && !motion.HasMember("team_a_heads"))
+                {
+                    const bool lift = motion.HasMember("type") && motion["type"].IsString() &&
+                        string(motion, "type") == "vertical";
+                    put("team_a_heads", lift ? "up" : "right");
+                }
                 return;
             }
             if (target == nullptr) { fail("The selected property no longer exists."); }
@@ -1037,8 +1048,8 @@ namespace colourwars_editor
                     if (motion.IsObject() && motion.HasMember("drive") && motion["drive"].IsString() &&
                         string(motion, "drive") == "paint")
                     {
-                        fail("Mirror copy does not copy paint ferries yet: their heading and paint-drive phase "
-                            "need their own rule. Duplicate it and set the copy by hand.");
+                        fail("Mirror copy does not copy paint ferries or paint lifts yet: their heading and "
+                            "paint-drive phase need their own rule. Duplicate it and set the copy by hand.");
                     }
                     // A horizontal rectangle is the leftmost anchor, so reflect
                     // the whole path and start it half a cycle on. A lift moves

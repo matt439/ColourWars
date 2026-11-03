@@ -69,6 +69,9 @@ struct GatePermissionPresentation
 
 // ROAD#27: a steady sign below a paint ferry. The upper row shows paint's
 // current demand; the lower row reports the last committed motion step.
+// A paint lift's sign (ROAD#28) is the same sign scaled to lift_width, since a
+// lift is narrower than the sign, and clamped to the lift's clear column at
+// Level admission; a ferry's never grows past its body.
 struct FerryDirectionPresentation
 {
 	labrador::Colour ink;
@@ -76,6 +79,7 @@ struct FerryDirectionPresentation
 	mattmath::Vector2F size;
 	float gap = 0.0f;
 	float keyline_width = 0.0f;
+	float lift_width = 0.0f;
 };
 
 // World-camera accent sizes in world units, and their timing in seconds.

@@ -2457,17 +2457,20 @@ are controlled inspection states; attended clarity/preference remains
 ### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
 
 **UNSCOPED (2026-10-28); `ROAD#28`'s first slice was promoted on 2026-11-03,
-below.** These are the remaining capabilities from
+below, and its paint-driven second slice built the same day.** These are the remaining capabilities from
 `ROAD#15`, not ready implementations or prerequisites of the three slices
 above:
 
-- **Vertical lifts (`ROAD#28`, XL):** define vertical admission and swept
+- **Vertical lifts (`ROAD#28`, L left):** define vertical admission and swept
   displacement, rider support identity and carry, ceilings/crush refusal,
   projectiles, shadows, editor envelopes and replay before choosing a trial.
-  The current horizontal carry contract does not answer these; the
+  The horizontal carry contract did not answer these; the
   [draft](#vertical-lift-contract-draft-road28) below does, and the author
-  accepted it with two amendments on 2026-11-03, promoting one cycling-lift
-  slice.
+  accepted it with two amendments on 2026-11-03. The
+  [cycling](#vertical-lift-first-slice-road28) and
+  [paint-driven](#paint-driven-lift-second-slice-road28) slices are built;
+  deliberate bot lift routing, including a stuck check that discounts carried
+  y, is left and unscoped.
 - **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
@@ -2733,7 +2736,8 @@ lift is the whole gap. The trial's shadows ride with the lifts, and
 `review_turbulence_lift_trial` and `turbulence_lift_station_tour` give it the
 siblings' review frames.
 
-**Not in this slice.** The paint-driven lift (G3b, the next slice); deliberate
+**Not in this slice.** The paint-driven lift (G3b, the
+[second slice](#paint-driven-lift-second-slice-road28)); deliberate
 bot lift routing (bots ride a lift they happen to stand on, as they ride a
 mover, but plan no route by it; their stuck check also counts carried y as
 progress, which routing will need to discount); and attended play, now part of
@@ -2754,17 +2758,122 @@ touch (different checks each time; the Release run of the same probe passes).
 Hidden startup passes. A one-player Debug ride of the Lift Trial was inspected
 at both ends of the storey. Attended play is `ROAD#30`.
 
+#### Paint-driven lift, second slice (`ROAD#28`)
+
+**Done 2026-11-03.** G3(b) from section 4: a lift that travels only while one
+team holds more of its own paint, as the [paint ferry](#paint-ferry-road15-first-slice)
+does, with `up`/`down` headings through the shared `decode_drive` and a sign
+of its own modelled on [`ROAD#27`](#ferry-direction-and-stop-cue-road27). It is
+`"drive": "paint"` and `"team_a_heads": "up"` or `"down"` on a vertical motion
+record ([format](level-format.md#vertical-lift-motion)). Nothing else about a
+lift changed: it is the same `TranslatingStructurePaintable`, admitted,
+carried, swept and replayed as the first slice made it.
+
+- **The rule is the ferry's.** `+1` still runs toward phase 0.5, which for a
+  lift is its bottom, so `down` decodes to `+1` and `up` to `-1`; team B's
+  paint heads the other way, a tie or no paint holds it, and it stops at
+  either end. It moves at the cycle's leg speed (160 units/s on the trial), so
+  the admission column and E6's budget are unchanged. Each step reads the paint
+  held before the step. A paint-driven lift keeps to the outgoing leg, phase 0
+  (top) to 0.5 (bottom), as a ferry does. `decode_drive` takes the axis, so a
+  lift refuses `right`/`left` and a ferry `up`/`down`, each in its own words;
+  the loader and the editor both call it. The level schema's two `motion`
+  branches carry their own heading enums.
+- **E3(b) is untouched.** A paint lift's step can still only be held by the
+  safety check, which the column keeps from firing; a hold commits no heading,
+  so its sign would show pause bars rather than claim travel.
+- **The sign.** The ferry plaque's grammar, hung below the lift and moving with
+  it: fixed A/B letters with up/down arrows (a head on a shaft, in the same
+  3-by-5 cell as the ferry's chevrons), the current paint leader inverted, and
+  a lower glyph for the last positive committed step. A lift's end stops are
+  its own (`top_stop`, `bottom_stop`): a bar above an up arrow, or below a down
+  arrow. Committed movement is read on y, so `movement_heading` is `+1` for
+  down. A ferry's sign is never wider than its body, but a 48-wide lift would
+  shrink the 176-wide sign to about a quarter, below a readable glyph cell, so
+  a lift's sign is `ferry_direction.lift_width` wide (144 in
+  `presentation.json`, required and positive), and never wider than the
+  shaft's clear column, the lift plus a body width each side (152 on the
+  trial). Level admission sets that limit after it checks the column, so a
+  narrow lift or a larger `lift_width` cannot draw its sign over a ledge.
+  Cycling lifts have no sign.
+- **The editor.** Switching a lift's drive to `paint` adds `"team_a_heads":
+  "up"`; the inspector labels the heading `(up or down)` and the phase `(paint:
+  0 top to 0.5 bottom)`, and refuses `right`/`left` and a return-leg phase in
+  the game's words. The canvas guide is a **PAINT LIFT** panel with the
+  ferry's two team rows and vertical arrows. Mirror copy still refuses a
+  paint-driven mover; the symmetry line reports a partnered pair as
+  "Authored: paint-drive heading", as it did for ferries.
+- **Bots** need no new policy, as for the ferry: a bot that rides a lift holds
+  there to paint it, which drives it. They still plan no route by a lift.
+
+**The Paint Lift Trial.** `turbulence_paint_lift_trial` ("Turbulence Yard -
+Paint Lift Trial", explicit-only, not in Random) is the Lift Trial with both
+lifts paint-driven, so the Lift Trial stays the cycle for `ROAD#30`'s physics
+questions. Both lifts start at their **foot** (phase 0.5). The left lift,
+`lift_a` on team A's side, has `"team_a_heads": "up"`; the right, `lift_b`,
+`"down"`, so each team's paint raises the lift on its own side and the other
+team's paint brings it down. Painting your own lift is the route from the bed
+to the crossover; painting theirs takes it away. It has the siblings' review
+pack (`review_turbulence_paint_lift_trial`) and joins `turbulence_station_tours`
+through `turbulence_lift_station_tour`.
+
+**Provisional, open to the author** (`ROAD#30`): the foot start, which side's
+team raises which lift, the 144-unit sign, and the speed, which is the cycle's
+160 units/s.
+
+**Not in this slice.** Deliberate bot lift routing, still unscoped (bots ride a
+lift they happen to stand on and paint it, but plan no route by it; their
+stuck check counts carried y as progress, which routing will need to
+discount); a mirror rule for paint-driven movers; and attended play, which
+joins `ROAD#30`.
+
+**Qualification (MattPC, 2026-11-03).** Debug and Release builds pass. The
+full default acceptance list passes in both presets (77 cases in Debug, 76 in
+Release). `paint_ferry` now also checks the paint lift's motion directly (both
+end stops, leg speed on y alone, the mid-shaft turn), its sign on both team A
+headings (moving on y, a lift's own end stops, ties, exact uncued
+motion/paint/credit controls, the lift-width plaque on the trial's 48-wide
+lift and clamped to the column of a 24-wide one, inside the cull bounds), and plays the ferry rosters' three whole 120-second 3-bot
+matches on the Paint Lift Trial, holding every step of both lifts to the paint
+held before it. The lifts moved in all three (291, 679 and 388 steps, with 1 to
+5 reversals), bots rode one while it moved in each (3 to 42 steps), and Debug
+and Release measured the same. `level_format` loads up and down paint lifts and
+refuses `right`/`left`, a missing heading, a return-leg phase and a cycle's
+heading; `moving_structure`'s contract checks take the lift's own refusals;
+`instant_replay` replays a Paint Lift Trial round with bots step for step;
+`menu_presentation` refuses a missing, null, zero, negative or huge
+`lift_width`; and the stage lists count thirteen. The `terrain` case's
+translated-material check read only x; the trial's foot start exposed that and
+it now takes the whole offset. `scripts/check-level-editor.ps1` passes in
+both presets, with the drive, guide and Paint Lift Trial symmetry checks
+above. Its native DPI probe's clipboard checks failed intermittently in each
+preset (paste once, copy once, both under load, as recorded for the first
+slice) and passed on rerun. The
+`check-painter.ps1` `-FerryDirectionOnly`, `-StagePaperOnly`,
+`-StageCountsOnly` and `-StageSummaryOnly` checks pass in Release, so the
+ferry's sign is unchanged and Stage Select holds the thirteenth stage. Hidden
+startup passes in both presets. Seed-7 Debug screenshots of both lifts showed
+the signs reading `A↑ B↓` and `A↓ B↑` with pause bars while unpainted. At a
+lift's foot the sign hangs over a player waiting beneath it: players draw over
+it, and the clearance beneath the lowest pose keeps it off terrain, but whether
+it reads there, or should be a fixed indicator above the shaft instead, is a
+`ROAD#30` question.
+
 ### Paint-object trial play (`ROAD#30`)
 
 **DECISION, M (2026-10-28).** Play the explicit-only Ferry and Gate Trials
 from both sides at 1-4P, and since 2026-11-03 the Lift Trial
-([`ROAD#28`](#vertical-lift-first-slice-road28)). Judge whether ownership-driven travel and selective
+([`ROAD#28`](#vertical-lift-first-slice-road28)) and the Paint Lift Trial
+([second slice](#paint-driven-lift-second-slice-road28)). Judge whether ownership-driven travel and selective
 passage create useful painting/route choices, whether the gate's held-open
 rule is understandable, and whether the open share and ferry headings feel
 fair. For the lifts, judge whether riding at 160 units/s is a free, risk-free
 escape (the author's trigger for trying about 100), whether scored moving
 surfaces swing the score more than their area justifies (the trigger for an
-unscored or top-only lift), and whether the top-dock hop reads. Record keep/change/cut decisions and any value changes. The gate and
+unscored or top-only lift), and whether the top-dock hop reads. For the paint
+lifts, judge whether raising your own side's lift is worth the paint, whether
+the foot start and side assignment are right, and whether the lift's sign
+reads at 1-4P. Record keep/change/cut decisions and any value changes. The gate and
 ferry cues (`ROAD#26`, `ROAD#27`) are ready for review. Current
 trial play is already available. Neither automated matches nor this review opts a trial into Random
 or selects Turbulence's geometry (`POL#21`).

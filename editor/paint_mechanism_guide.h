@@ -9,7 +9,7 @@
 
 namespace colourwars_editor
 {
-    enum class PaintMechanismKind { gate, ferry };
+    enum class PaintMechanismKind { gate, ferry, lift };
 
     // Authored rules from the inspector's current property snapshot. No paint,
     // permission or runtime motion state is observed or predicted.

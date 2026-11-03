@@ -635,7 +635,8 @@ namespace
     }
 
     // A vertical lift (ROAD#28): "type": "vertical" with travel_y down from
-    // its top anchor, a cycle drive and solid collision only.
+    // its top anchor and solid collision only; a cycle, or a paint drive
+    // heading up or down.
     void check_lift_fixtures(const rapidjson::SchemaDocument& schema,
         const rapidjson::Document& source, const std::filesystem::path& scratch,
         const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
@@ -677,11 +678,15 @@ namespace
             const auto* moving = dynamic_cast<const TranslatingStructurePaintable*>(objects[0].get());
             require(moving != nullptr, "An authored lift was silently built as static terrain");
             const auto state = moving->motion_state();
+            const auto& fields = document["collision_objects"][0]["motion"];
+            const bool paint = fields.HasMember("drive") && std::string(fields["drive"].GetString()) == "paint";
             // A quarter cycle is half the travel: 128 down from the top anchor.
             require(state.spec.anchor == RectangleF(600.0f, 700.0f, 120.0f, 20.0f) &&
                 state.spec.vertical() && state.spec.travel_x == 0.0f && state.spec.travel_y == 256.0f &&
                 state.spec.period_seconds == 3.2f && state.spec.initial_phase == 0.25f &&
-                state.spec.drive == HorizontalDrive::cycle &&
+                state.spec.drive == (paint ? HorizontalDrive::paint : HorizontalDrive::cycle) &&
+                (!paint || state.spec.team_a_heading ==
+                    (std::string(fields["team_a_heads"].GetString()) == "down" ? 1 : -1)) &&
                 moving->bounds() == RectangleF(600.0f, 828.0f, 120.0f, 20.0f) &&
                 moving->translation() == Vector2F(0.0f, 128.0f) && moving->motion_id() == 0,
                 "Lift fields, axis, initial phase or admission boundary changed");
@@ -691,12 +696,25 @@ namespace
         { d["collision_objects"][0]["motion"].AddMember("_comment", "retained metadata", d.GetAllocator()); });
         check("lift-cycle-drive", true, true, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"].AddMember("drive", "cycle", d.GetAllocator()); });
-        // The paint-driven lift is the next slice; this one cycles.
-        check("lift-paint-drive", false, false, [](rapidjson::Document& d)
+        // A paint lift heads up or down; right and left are a ferry's.
+        const auto lift_drive = [](rapidjson::Document& d, const char* heads)
         {
             d["collision_objects"][0]["motion"].AddMember("drive", "paint", d.GetAllocator());
-            d["collision_objects"][0]["motion"].AddMember("team_a_heads", "right", d.GetAllocator());
+            if (heads != nullptr)
+            { d["collision_objects"][0]["motion"].AddMember("team_a_heads", rapidjson::StringRef(heads), d.GetAllocator()); }
+        };
+        check("lift-paint-up", true, true, [&](rapidjson::Document& d) { lift_drive(d, "up"); });
+        check("lift-paint-down", true, true, [&](rapidjson::Document& d) { lift_drive(d, "down"); });
+        check("lift-paint-right", false, false, [&](rapidjson::Document& d) { lift_drive(d, "right"); });
+        check("lift-paint-left", false, false, [&](rapidjson::Document& d) { lift_drive(d, "left"); });
+        check("lift-paint-no-heading", true, false, [&](rapidjson::Document& d) { lift_drive(d, nullptr); });
+        check("lift-paint-return-leg", true, false, [&](rapidjson::Document& d)
+        {
+            lift_drive(d, "up");
+            d["collision_objects"][0]["motion"]["phase"].SetDouble(0.75);
         });
+        check("lift-cycle-up", true, false, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["motion"].AddMember("team_a_heads", "up", d.GetAllocator()); });
         check("lift-heading", false, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"].AddMember("team_a_heads", "left", d.GetAllocator()); });
         // A rising jump-through top would pass its rider's previous feet.
@@ -726,7 +744,7 @@ namespace
                 [field](rapidjson::Document& d)
                 { d["collision_objects"][0]["motion"].AddMember(rapidjson::StringRef(field), 0, d.GetAllocator()); });
         }
-        std::cout << "PASS vertical lift schema/runtime fields, cycle-only and solid-only refusals, initial construction\n";
+        std::cout << "PASS vertical lift schema/runtime fields, cycle and up/down paint drives, solid-only refusals, initial construction\n";
     }
 
     // The editor's warning-only resource check reads the sheet and bank formats
@@ -824,7 +842,7 @@ int main(int argc, char** argv)
         const auto staged_levels = manifest_levels(content);
         const auto source_levels = manifest_levels(repo / "game/content");
         require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
-        require(staged_levels.size() == 12, "Current format acceptance needs all twelve registered stages");
+        require(staged_levels.size() == 13, "Current format acceptance needs all thirteen registered stages");
         for (const auto& file : staged_levels)
         {
             check_compatible(content / file);
