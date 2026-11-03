@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_object_builder.h"
+#include "game/carried/removed_members.h"
 #include "engine/math/triangle.h"
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
@@ -18,7 +19,6 @@
 #include <initializer_list>
 #include <optional>
 
-using namespace mattmath;
 using namespace labrador;
 namespace key = level_format::key;
 namespace object_type = level_format::object_type;
@@ -114,7 +114,7 @@ namespace
 		if (json.has(key::rectangle_tlbr))
 		{
 			const JsonValue rectangle = json.object(key::rectangle_tlbr);
-			return checked_rectangle(rectangle, RectangleF::from_top_left_bottom_right(
+			return checked_rectangle(rectangle, colourwars::from_top_left_bottom_right(
 				Vector2F(rectangle.number("left"), rectangle.number("top")),
 				Vector2F(rectangle.number("right"), rectangle.number("bottom"))));
 		}
@@ -364,7 +364,7 @@ std::unique_ptr<CollisionObject>
 			collision_type,
 			colour_of(json),
 			0.0f,
-			Vector2F::ZERO,
+			Vector2F::zero,
 			SpriteFlip::none,
 			0.0f,
 			material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
@@ -390,7 +390,7 @@ std::unique_ptr<CollisionObject>
 			return std::make_unique<TranslatingStructurePaintable>(
 				json.string(key::sheet_name), json.string(key::frame_name), motion,
 				this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
-				collision_type, team_colours, faces, colour_of(json), Vector2F::ZERO,
+				collision_type, team_colours, faces, colour_of(json), Vector2F::zero,
 				SpriteFlip::none, 0.0f,
 				material_of(json, collision_type, rectangle, {}, context.mirror_x, context.hand,
 					this->render_resources_), this->ferry_cue_);
@@ -428,7 +428,7 @@ std::unique_ptr<CollisionObject>
 			context.flat,
 			colour_of(json),
 			0.0f,
-			Vector2F::ZERO,
+			Vector2F::zero,
 			SpriteFlip::none,
 			0.0f,
 			material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
@@ -462,7 +462,7 @@ std::unique_ptr<CollisionObject>
 			collision_type,
 			colour_of(json),
 			0.0f,
-			Vector2F::ZERO,
+			Vector2F::zero,
 			flip,
 			0.0f,
 			material_of(json, collision_type, triangle, context.solid, context.mirror_x, context.hand,

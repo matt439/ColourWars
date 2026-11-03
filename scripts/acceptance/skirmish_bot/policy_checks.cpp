@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <vector>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace skirmish_acceptance
 {

@@ -31,7 +31,7 @@ public:
             menu.rule_height == 2 && menu.panel_edge_colour == Colour(68, 82, 104) &&
             geometry.selected == Colour(117, 237, 215) && menu.panel_edge_colour.a == 1 && geometry.selected.a == 1 &&
             menu.sprite_sheet == "sprite_sheet_1" && menu.fill_frame == "pixel" &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO &&
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app.viewport_manager()->fullscreen_viewport().pixel_rect() == RectangleI(0, 0, 1920, 1080),
             "Preview backing authored RGBA, underlay, layout or native viewport hypothesis changed");
         for (const char* name : { "crossfeed", "close_quarters" })
@@ -58,7 +58,7 @@ public:
         for (size_t i = 0; i < font_names_.size(); ++i)
         { fonts_[i] = app.render_resources()->resolve_sprite_font(font_names_[i]); font_pointers_[i] = app.render_resources()->font(fonts_[i]); }
         const RectangleF preview(150, 330, 1010, 500), sample(180, 350, 64, 32);
-        colourwars::UiTextDropShadow question("source-preview-question-bound", L"?", font_names_[4], Vector2F::ZERO,
+        colourwars::UiTextDropShadow question("source-preview-question-bound", L"?", font_names_[4], Vector2F::zero,
             app.render_resources(), menu.highlight, menu.shadow_colour, menu.title_shadow_offset);
         question.set_position(preview.center() - question.bounds().center());
         require(preview.contains(sample) && !sample.intersects(question.bounds()), "Source backing ROI intersects the Random question");
@@ -85,13 +85,13 @@ public:
             hud_track_same_palette(presentation_.team_palette(), palette_) && preference_values() == preferences_before_ &&
             resources->sprite_sheet(presentation_.menu().sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(presentation_.menu().fill_frame)) == &pixel_ &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO &&
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app_.viewport_manager()->fullscreen_viewport().pixel_rect() == RectangleI(0, 0, 1920, 1080),
             "Preview backing changed unselected HUD, identity, palette, preferences, relevant menu geometry or resources");
         for (size_t i = 0; i < fonts_.size(); ++i)
         { require(fonts_[i] == resources->resolve_sprite_font(font_names_[i]) && font_pointers_[i] == resources->font(fonts_[i]), "Preview backing replaced a captured font resource"); }
         for (const auto& pad : painter_scripted_pads::states)
-        { require(!pad.connected && pad.buttons == 0 && pad.left_stick == Vector2F::ZERO && pad.right_stick == Vector2F::ZERO &&
+        { require(!pad.connected && pad.buttons == 0 && pad.left_stick == Vector2F::zero && pad.right_stick == Vector2F::zero &&
             pad.left_trigger == 0 && pad.right_trigger == 0, "Preview backing altered disconnected scripted pad inputs"); }
         if (opened_ && !closed_)
         {
@@ -224,7 +224,7 @@ private:
     void rectangle(DrawList& list, const RectangleI& b, const Colour& colour) const
     { list.set_filter(TextureFilter::point); list.draw_sprite(sheet_->texture(), pixel_.source_rectangle(),
         RectangleF(static_cast<float>(b.x), static_cast<float>(b.y), static_cast<float>(b.width), static_cast<float>(b.height)),
-        colour, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f); }
+        colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f); }
     Frame draw(bool actual, const std::function<void(DrawList&)>& raw)
     {
         unchanged(); require(counts_.reads < (phase_ == "shared" ? 68U : 24U), "Preview backing exceeded its finite read budget");
@@ -234,7 +234,7 @@ private:
         Renderer& renderer = *app_.renderer(); renderer.begin_frame();
         if (actual) { stack_.draw(renderer); } else { renderer.set_view_count(1); }
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         if (!actual) { canvas_.draw(list, { 0, 0, 1920, 1080 }); raw(list); }
         rectangle(list, { 20, 20, 4, 4 }, Colour::white); rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame frame = read(renderer); ++counts_.reads;

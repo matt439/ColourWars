@@ -111,7 +111,7 @@ std::vector<std::string> GameLevel::debug_status() const
 	for (int view = 0; view < this->level_->player_count(); ++view)
 	{
 		const Player& player = this->level_->player(view);
-		const mattmath::Vector2F centre = player.center();
+		const labrador::Vector2F centre = player.center();
 		char position[64] = {};
 		std::snprintf(position, sizeof(position), "at (%.0f, %.0f) ",
 			static_cast<double>(centre.x), static_cast<double>(centre.y));
@@ -143,7 +143,7 @@ std::vector<LevelStation> GameLevel::debug_stations() const
 }
 
 // A player moved between steps is a round the tape cannot build again.
-bool GameLevel::debug_place(int seat, const mattmath::Vector2F& top_left)
+bool GameLevel::debug_place(int seat, const labrador::Vector2F& top_left)
 {
 	this->tape_.spoil();
 	return this->level_->place_player(seat, top_left);
@@ -197,8 +197,8 @@ void GameLevel::debug_set_seat_labels(const std::vector<std::wstring>& labels)
 	}
 }
 
-std::vector<mattmath::RectangleF> GameLevel::debug_screen_obstacles() const
+std::vector<labrador::RectangleF> GameLevel::debug_screen_obstacles() const
 {
 	return this->level_ != nullptr ? this->level_->opening_cards() :
-		std::vector<mattmath::RectangleF>();
+		std::vector<labrador::RectangleF>();
 }

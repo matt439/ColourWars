@@ -50,10 +50,10 @@ namespace menu_text_acceptance
                 const auto measured = world.render.measure_text(font, source);
                 const auto retained = source;
                 UiText question(entry.key, source, style.detail_font,
-                    mattmath::Vector2F(0.0f, pause.status_y), &world.render, pause.art.ink);
+                    labrador::Vector2F(0.0f, pause.status_y), &world.render, pause.art.ink);
                 source = L"Changed after construction";
-                question.set_position(mattmath::Vector2F((1920.0f - question.bounds().width) / 2.0f, pause.status_y));
-                const mattmath::RectangleF expected((1920.0f - measured.x) / 2.0f, pause.status_y, measured.x, measured.y);
+                question.set_position(labrador::Vector2F((1920.0f - question.bounds().width) / 2.0f, pause.status_y));
+                const labrador::RectangleF expected((1920.0f - measured.x) / 2.0f, pause.status_y, measured.x, measured.y);
                 require(std::isfinite(measured.x) && std::isfinite(measured.y) && measured.x > 0.0f && measured.y > 0.0f &&
                     question.text() == retained && question.bounds() == expected,
                     std::string("Actual confirmation UiText borrowed text, scaled, wrapped or changed centering: ") + entry.key);
@@ -88,7 +88,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool boundary = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
                     boundary ? x_offset : 0.0f, boundary ? y_offset : 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
@@ -127,10 +127,10 @@ namespace menu_text_acceptance
             });
             width_edge.validate_resources(world.render, world.audio);
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(width_edge.menu().detail_font), L"~");
-            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
-            const mattmath::RectangleF face(paper.position(), paper.size() -
-                mattmath::Vector2F(original.main_menu().setup_shadow_offset));
-            const mattmath::RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
+            const labrador::RectangleF paper((labrador::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+            const labrador::RectangleF face(paper.position(), paper.size() -
+                labrador::Vector2F(original.main_menu().setup_shadow_offset));
+            const labrador::RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
             require(on_display ? bounds.right() == face.right() && face.contains(bounds) :
                 bounds.x == paper.x && bounds.right() == paper.right() && paper.contains(bounds),
                 "Confirmation's unpadded centered text no longer touches both inclusive paper edges");
@@ -178,11 +178,11 @@ namespace menu_text_acceptance
         std::wstring heading_source = heading_width.menu_text().item(MenuItem::exit);
         const std::string retained_font = heading_width.menu().heading_font;
         UiText heading("exit-heading", heading_source, retained_font,
-            mattmath::Vector2F(0.0f, pause.heading_y), &world.render, pause.art.ink);
+            labrador::Vector2F(0.0f, pause.heading_y), &world.render, pause.art.ink);
         heading_source = L"Changed after construction";
-        heading.set_position(mattmath::Vector2F((1920.0f - heading.bounds().width) / 2.0f, pause.heading_y));
+        heading.set_position(labrador::Vector2F((1920.0f - heading.bounds().width) / 2.0f, pause.heading_y));
         require(heading.text() == L"~" && heading.bounds() ==
-            mattmath::RectangleF((1920.0f - pause.box_size.x) / 2.0f, pause.heading_y, pause.box_size.x, 20.0f),
+            labrador::RectangleF((1920.0f - pause.box_size.x) / 2.0f, pause.heading_y, pause.box_size.x, 20.0f),
             "Exit heading borrowed its copy, scaled, used the item font or missed the inclusive paper edges");
         heading.set_hidden(true);
         DrawList no_device;
@@ -229,7 +229,7 @@ namespace menu_text_acceptance
         std::vector<Glyph> small_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            small_glyphs.push_back({ character, mattmath::RectangleI(0, 0, 1, 2), 0.0f, 0.0f, 0.0f });
+            small_glyphs.push_back({ character, labrador::RectangleI(0, 0, 1, 2), 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_confirmation_small_actions",
             std::make_unique<Font>(TextureHandle{}, std::move(small_glyphs), 2.0f));
@@ -294,7 +294,7 @@ namespace menu_text_acceptance
         {
             const bool descender = character == U'g' || character == U'j' || character == U'p' ||
                 character == U'q' || character == U'y';
-            descender_glyphs.push_back({ character, mattmath::RectangleI(0, 0, 8, descender ? 82 : 60),
+            descender_glyphs.push_back({ character, labrador::RectangleI(0, 0, 8, descender ? 82 : 60),
                 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_text_descender",
@@ -402,7 +402,7 @@ namespace menu_text_acceptance
         std::vector<Glyph> missing_digit;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            if (character != U'9') { missing_digit.push_back({ character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f }); }
+            if (character != U'9') { missing_digit.push_back({ character, labrador::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f }); }
         }
         auto limited = std::make_unique<Font>(TextureHandle{}, std::move(missing_digit), 20.0f);
         limited->set_stand_in(U'?');
@@ -414,7 +414,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? width : 8,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'~' ? width : 8,
                     character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -444,8 +444,8 @@ namespace menu_text_acceptance
                 &world.render, pause.art.ink);
             copy.display_trial_countdown = L"Changed {seconds}";
             countdown.set_position({ (1920.0f - countdown.bounds().width) / 2.0f, countdown.bounds().y });
-            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f,
-                pause.box_size - mattmath::Vector2F(shade));
+            const labrador::RectangleF paper((labrador::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f,
+                pause.box_size - labrador::Vector2F(shade));
             require(countdown.text() == L"~15" && paper.contains(countdown.bounds()) &&
                 (std::string(font) == "display_countdown_width_edge" ? countdown.bounds().width == 1046.0f : countdown.bounds().bottom() == 988.0f),
                 "Display countdown borrowed copy, fitted its text, used line spacing instead of tall glyphs or missed inclusive paper edges");

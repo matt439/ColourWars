@@ -13,7 +13,6 @@
 #include <iostream>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -71,7 +70,7 @@ namespace
         std::unique_ptr<Weapon> weapon(WeaponType type, bool motion = true)
         {
             auto result = WeaponBuilder::build_weapon(&this->tuning, PlayerTeam::a,
-                0, 0, Colour::white, type, Vector2F::ZERO,
+                0, 0, Colour::white, type, Vector2F::zero,
                 &this->render, &this->audio, &this->preferences);
             result->set_motion_presentation(motion ? &this->presentation.tool_motion() : nullptr);
             return result;
@@ -79,8 +78,8 @@ namespace
     };
 
     auto update(Weapon& weapon, const PlayerInputData& actions, float elapsed = dt,
-        const Vector2F& position = Vector2F::ZERO,
-        const Vector2F& velocity = Vector2F::ZERO)
+        const Vector2F& position = Vector2F::zero,
+        const Vector2F& velocity = Vector2F::zero)
     {
         return weapon.update_and_get_projectiles(actions, position, velocity,
             actions.x_movement >= 0.0f, elapsed);
@@ -228,7 +227,7 @@ namespace
             for (int tick = 0; tick < 1200; ++tick)
             {
                 const float movement = tick % 180 < 90 ? 1.0f : -1.0f;
-                const float angle = PI * static_cast<float>((tick / 15) % 8 - 4) / 4.0f;
+                const float angle = pi * static_cast<float>((tick / 15) % 8 - 4) / 4.0f;
                 const auto actions = input(tick % 240 < 150, movement, angle);
                 const Vector2F center(static_cast<float>(tick % 71), static_cast<float>(tick % 37));
                 const Vector2F velocity(movement * 300.0f, static_cast<float>(tick % 5) * 40.0f);

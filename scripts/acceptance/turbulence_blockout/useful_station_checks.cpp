@@ -14,7 +14,7 @@ namespace turbulence_blockout_acceptance
             float after = 0.0f;
         };
 
-        float reflect_angle(bool right, float angle) { return right ? angle : PI - angle; }
+        float reflect_angle(bool right, float angle) { return right ? angle : pi - angle; }
 
         float receiver_area(const Run& run, PlayerTeam team, const std::string& owner, float left, float right)
         {
@@ -53,7 +53,7 @@ namespace turbulence_blockout_acceptance
             const int first = run.ticks;
             float angle = 0.0f;
             if (tool == WeaponType::sniper) { angle = (target.center() - run.player->center()).angle(); }
-            else if (tool == WeaponType::bucket) { angle = reflect_angle(right, -PI / 6.0f); }
+            else if (tool == WeaponType::bucket) { angle = reflect_angle(right, -pi / 6.0f); }
             else { angle = reflect_angle(right, 0.0f); }
             const float direction = right ? 1.0f : -1.0f;
             for (int tick = 0; tick < 180 && target.health() == initial_health; ++tick)
@@ -105,8 +105,8 @@ namespace turbulence_blockout_acceptance
                         const Vector2F point(reflected(right, upper ? 1840.0f : 1900.0f), upper ? 800.0f : 1280.0f);
                         angle = (point - run.player->center()).angle();
                     }
-                    else if (tool == WeaponType::bucket) { angle = reflect_angle(right, upper ? 0.0f : -PI / 6.0f); }
-                    else if (tool == WeaponType::sprayer) { angle = reflect_angle(right, upper ? PI / 18.0f : 0.0f); }
+                    else if (tool == WeaponType::bucket) { angle = reflect_angle(right, upper ? 0.0f : -pi / 6.0f); }
+                    else if (tool == WeaponType::sprayer) { angle = reflect_angle(right, upper ? pi / 18.0f : 0.0f); }
                     else { angle = reflect_angle(right, 0.0f); }
                     const float roller_goal = reflected(right, upper ? 1840.0f : 1780.0f);
                     require(receiver_area(run, team, receiver, left, edge) == 0.0f, "Useful receiver starts prepainted");

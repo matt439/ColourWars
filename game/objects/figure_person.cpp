@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace
 {

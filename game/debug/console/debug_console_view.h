@@ -55,8 +55,8 @@ public:
 	// `screen` window: the padded backing rectangle, lifted above every
 	// rectangle in `avoid` it would overlap (up to four times), and never above
 	// the top margin. Pure.
-	static mattmath::RectangleF place_panel(const mattmath::Vector2F& size, Anchor anchor,
-		const mattmath::Vector2F& screen, const std::vector<mattmath::RectangleF>& avoid);
+	static labrador::RectangleF place_panel(const labrador::Vector2F& size, Anchor anchor,
+		const labrador::Vector2F& screen, const std::vector<labrador::RectangleF>& avoid);
 
 	// The panels' resources by handle: the overlay font, the sheet and its
 	// "pixel" frame. Each is a search by name, so a caller drawing every frame
@@ -75,20 +75,20 @@ public:
 	// panels drawn before it): the non-default strip (x0.25, PAUSED, GOD ...)
 	// and the paint coverage. Draws nothing for no lines. Returns the panel's
 	// rectangle, empty when nothing was drawn. Without `handles`, resolves them.
-	static mattmath::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
+	static labrador::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
 		const std::vector<std::string>& lines, Anchor anchor,
-		const std::vector<mattmath::RectangleF>& avoid = {});
-	static mattmath::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
+		const std::vector<labrador::RectangleF>& avoid = {});
+	static labrador::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
 		const OverlayHandles& handles, const std::vector<std::string>& lines, Anchor anchor,
-		const std::vector<mattmath::RectangleF>& avoid);
+		const std::vector<labrador::RectangleF>& avoid);
 
 	// The perf overlay, bottom left: a bar graph of the last frames' frame
 	// time over its min / avg / max lines.
-	static mattmath::RectangleF draw_perf(labrador::Renderer& renderer, const GameData& data,
-		const DebugPerf& perf, const std::vector<mattmath::RectangleF>& avoid);
-	static mattmath::RectangleF draw_perf(labrador::Renderer& renderer, const GameData& data,
+	static labrador::RectangleF draw_perf(labrador::Renderer& renderer, const GameData& data,
+		const DebugPerf& perf, const std::vector<labrador::RectangleF>& avoid);
+	static labrador::RectangleF draw_perf(labrador::Renderer& renderer, const GameData& data,
 		const OverlayHandles& handles, const DebugPerf& perf,
-		const std::vector<mattmath::RectangleF>& avoid);
+		const std::vector<labrador::RectangleF>& avoid);
 
 private:
 	bool live_ = false;

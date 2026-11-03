@@ -2,7 +2,6 @@
 #include "game/objects/paint_tile.h"
 #include "game/objects/fixed_slab_geometry.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 PaintSplashClips PaintSplashClips::resolve(const PaintTuning& paint,
@@ -43,7 +42,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 		paint->thickness * paint->splash_scale,
 		paint->thickness * paint->splash_scale),
 		splash_clips->initial, render_resources, Colour::white,
-		along_x ? (leading ? 0.0f : PI) : (leading ? -PI / 2.0f : PI / 2.0f))
+		along_x ? (leading ? 0.0f : pi) : (leading ? -pi / 2.0f : pi / 2.0f))
 {
 	// The tile is stationary, so the splash centre is fixed at construction.
 	this->splash_.set_rectangle_center(rectangle.center());
@@ -86,7 +85,7 @@ void PaintTile::draw_surface(DrawList& draw_list) const
 	const float depth = this->along_x_ ? this->rectangle_.height : this->rectangle_.width;
 	const float edge = std::min(this->paint_->edge_width, depth);
 	this->TextureObject::draw_with(draw_list, this->face_band(depth - edge, edge),
-		this->frame(), Colour::black, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+		this->frame(), Colour::black, Vector2F::zero, SpriteFlip::none, 0.0f);
 
 	if (this->wet_age_ < this->paint_->wet_duration)
 	{
@@ -102,7 +101,7 @@ void PaintTile::draw_surface(DrawList& draw_list) const
 				tint.g + (1.0f - tint.g) * amount,
 				tint.b + (1.0f - tint.b) * amount, 1.0f);
 			this->TextureObject::draw_with(draw_list, this->face_band(offset, shine_depth),
-				this->frame(), shine, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+				this->frame(), shine, Vector2F::zero, SpriteFlip::none, 0.0f);
 		}
 	}
 }
@@ -130,7 +129,7 @@ void PaintTile::draw_rectangle_rigid(DrawList& draw_list,
 	// source rect deliberately supplies no authored sprite-frame pivot.
 	this->sprite_sheet()->draw(draw_list,
 		this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle(),
-		RectangleF(anchor, local.size()), tint, geometry.tangent().angle(), Vector2F::ZERO,
+		RectangleF(anchor, local.size()), tint, geometry.tangent().angle(), Vector2F::zero,
 		SpriteFlip::none, this->layer_depth());
 }
 

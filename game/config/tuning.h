@@ -144,7 +144,7 @@ struct MatchTuning
 	std::string controls_font;
 	labrador::Colour controls_colour = labrador::Colour::white;
 	labrador::Colour controls_shadow_colour = labrador::Colour::black;
-	mattmath::Vector2F controls_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F controls_shadow_offset = { 0.0f, 0.0f };
 
 	// Down the screen, as a fraction of its height, so the legend clears the
 	// countdown at any resolution.
@@ -206,7 +206,7 @@ struct PaintRunoffTuning
 struct PaintTuning
 {
 	// Target tile lengths along horizontal and vertical painted faces.
-	mattmath::Vector2F size = { 0.0f, 0.0f };
+	labrador::Vector2F size = { 0.0f, 0.0f };
 
 	// How far paint reaches in from a painted face.
 	float thickness = 0.0f;
@@ -271,8 +271,8 @@ struct PaintUnderfootTuning
 struct PlayerTuning
 {
 	PaintUnderfootTuning paint_underfoot;
-	mattmath::Vector2F size = { 0.0f, 0.0f };
-	mattmath::Vector2F max_velocity = { 0.0f, 0.0f };
+	labrador::Vector2F size = { 0.0f, 0.0f };
+	labrador::Vector2F max_velocity = { 0.0f, 0.0f };
 
 	float x_initial_velocity = 0.0f;
 	float x_acceleration = 0.0f;
@@ -367,7 +367,7 @@ struct ProjectileTuning
 	DiffusionDetails diffusion;
 
 	// Common integrator velocity cap, copied into each projectile record.
-	mattmath::Vector2F max_velocity = { 0.0f, 0.0f };
+	labrador::Vector2F max_velocity = { 0.0f, 0.0f };
 
 	// Horizontal snap-to-zero speed is wind_resistance times this shared factor.
 	float wind_stop_factor = 0.0f;

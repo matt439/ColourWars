@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 
 Camera PlayerCamera::follow(const Vector2F& player_center,
 	const Viewport& viewport, float screen_height,
@@ -102,7 +101,7 @@ Vector2F PlayerCamera::mouse_direction(const Vector2F& player_center,
 	const Vector2F direction = cursor - player_on_screen;
 	// A positive uniform camera scale preserves angles; no aim quantization or
 	// second, potentially inconsistent inverse transform is needed.
-	return direction == Vector2F::ZERO ? Vector2F::ZERO : direction.normalized();
+	return direction == Vector2F::zero ? Vector2F::zero : direction.normalized();
 }
 
 Camera PlayerCamera::displaced(const Camera& base, const Viewport& viewport,

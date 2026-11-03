@@ -164,9 +164,9 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
             const auto team = source_index++ % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
             const auto& shot_tuning = tuning.projectile(ProjectileType::spray);
-            const ProjectileSpray shot(splash, Vector2F::ZERO, team, team == PlayerTeam::a ? 3 : 1,
+            const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 3 : 1,
                 colours.team_colour(team), app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
-            object->on_contact(shot, Vector2F::ZERO, 0); object->update(10); ++heavy_contacts;
+            object->on_contact(shot, Vector2F::zero, 0); object->update(10); ++heavy_contacts;
         }
     };
     const auto supported = [](const Player& player)
@@ -191,8 +191,8 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         const bool widget = fixture == nullptr; const auto side = static_cast<std::size_t>(view % 2);
         const Player* player = widget ? nullptr : &fixture->level->player(view);
-        const RectangleF shape = widget ? RectangleF::ZERO : player->rectangle();
-        const auto velocity = widget ? Vector2F::ZERO : player->velocity();
+        const RectangleF shape = widget ? RectangleF::zero : player->rectangle();
+        const auto velocity = widget ? Vector2F::zero : player->velocity();
         const RectangleF overview = info.zoom_out_finish_bounds_rectangle();
         const auto& slope_patch = widget ? overview : slope_patches[side];
         const auto& flat_patch = widget ? overview : flat_patches[side];
@@ -427,9 +427,9 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 RectangleF splash = slab->bounds(); splash.inflate(32);
                 splash.offset(shot_tuning.details.col_rect_size / 2.0f);
                 const auto team = side == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::ZERO, team, side == 0 ? 3 : 1, colours.team_colour(team),
+                const ProjectileSpray shot(splash, Vector2F::zero, team, side == 0 ? 3 : 1, colours.team_colour(team),
                     app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
-                slab->on_contact(shot, Vector2F::ZERO, 0); ++heavy_contacts; ++wet_contacts;
+                slab->on_contact(shot, Vector2F::zero, 0); ++heavy_contacts; ++wet_contacts;
             }
             require(before_paint == turbulence_slab_surface_state(fixture) && before_players == observation(*fixture.level),
                 "Friendly wet repaint changed actual slab ownership/score or personal poses");
@@ -447,11 +447,11 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_slab_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation); const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size); StagePreview preview("explicit-slab-preview", box, &data); preview.set_stage("turbulence_slab_trial");
-        const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
         const auto draw_preview = [&](bool shown)
         {
             auto& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); auto list = renderer.view(0);
-            list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION));
+            list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
             if (shown) { preview.draw(list); } ++reads; return read(renderer);
         };
         std::srand(2911); const int expected = std::rand(); std::srand(2911); const auto frame = draw_preview(true);

@@ -15,7 +15,6 @@
 #include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -207,12 +206,12 @@ namespace
             for (int direction = 0; direction < 8; ++direction)
             {
                 ShotMatrix groups;
-                const float angle = static_cast<float>(direction) * PI / 4;
+                const float angle = static_cast<float>(direction) * pi / 4;
                 for (size_t index = 0; index < flying.size(); ++index)
                 {
                     // Match Weapon::shoot: projectile sprites receive no aim
                     // rotation; movement velocity supplies the firing direction.
-                    groups[index] = builder.build_projectiles(Vector2F::ZERO,
+                    groups[index] = builder.build_projectiles(Vector2F::zero,
                         Vector2F::unit_vec_from_angle(angle) *
                             tuning.weapon(flying_tools[index]).details.starting_vel_length, team, 0,
                         colours.team_colour(team), flying[index], app.render_resources());
@@ -289,7 +288,7 @@ namespace
             Vector2F(0, block.height * fraction), Vector2F(90, block.height * fraction) };
         for (size_t view = 0; view < objects.size(); ++view)
         {
-            const auto projectiles = builder.build_projectiles(centres[view], Vector2F::ZERO,
+            const auto projectiles = builder.build_projectiles(centres[view], Vector2F::zero,
                 team, owner, colours.team_colour(team), type, app.render_resources());
             for (const auto& projectile : projectiles)
             {
@@ -432,9 +431,9 @@ namespace
         {
             const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
             area.offset(half.x, half.y);
-            const ProjectileSpray shot(area, Vector2F::ZERO, team, owner,
+            const ProjectileSpray shot(area, Vector2F::zero, team, owner,
                 colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-            object.on_contact(shot, Vector2F::ZERO, 0);
+            object.on_contact(shot, Vector2F::zero, 0);
         };
         const std::array<std::vector<RectangleF>, 4> obstacles = {{ {}, {},
             {{-10, 63.5f, 10, 31.5f}}, {{-10, -1, 10, 46.25f}, {-10, 63.5f, 10, 100}} }};
@@ -459,7 +458,7 @@ namespace
             objects[index]->update(10);
             const Vector2F centre(view == 1 ? 90.0f : 0.0f,
                 view == 2 ? 0.0f : (view == 3 ? 48.0f : 32.0f));
-            const auto shots = builder.build_projectiles(centre, Vector2F::ZERO,
+            const auto shots = builder.build_projectiles(centre, Vector2F::zero,
                 team, 2, colours.team_colour(team), ProjectileType::spray,
                 app.render_resources());
             for (const auto& shot : shots)
@@ -642,7 +641,7 @@ int wmain(int argc, wchar_t** argv)
                 for (auto& input : inputs)
                 {
                     input.connected = true;
-                    input.shoot_angle = -PI / 4;
+                    input.shoot_angle = -pi / 4;
                     input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
                     input.shoot_direction_requested = true;
                 }

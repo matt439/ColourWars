@@ -4,25 +4,25 @@
 // Use an actual rectangular projectile with an explicit splash footprint so
 // boundary checks do not depend on a particular tool's authored shot size.
 void paint_box(World& world, StructurePaintable& surface,
-    const mattmath::RectangleF& box, PlayerTeam team = PlayerTeam::a)
+    const labrador::RectangleF& box, PlayerTeam team = PlayerTeam::a)
 {
-    using namespace mattmath;
+    using namespace labrador;
     const auto& tuning = world.tuning.projectile(ProjectileType::jet);
     const RectangleF supplied(box.x + tuning.details.col_rect_size.x / 2.0f,
         box.y + tuning.details.col_rect_size.y / 2.0f, box.width, box.height);
-    ProjectileJet shot(supplied, Vector2F::ZERO, team, 0, Colour::blue,
+    ProjectileJet shot(supplied, Vector2F::zero, team, 0, Colour::blue,
         &world.render, resolve_projectile_strip(tuning, world.render), &tuning);
     paint_contact(shot, surface);
 }
 
 StructurePaintable& painted_course_surface(MovementCourse& course,
-    const mattmath::RectangleF& rectangle,
+    const labrador::RectangleF& rectangle,
     const PaintableFaces& faces = { false, true, false, false },
-    std::span<const mattmath::RectangleF> obstacles = {})
+    std::span<const labrador::RectangleF> obstacles = {})
 {
     auto* surface = course.scene.add(std::make_unique<StructurePaintable>(
         "sprite_sheet_1", "square_white_4", rectangle,
-        std::make_unique<mattmath::RectangleF>(rectangle), &course.world.render,
+        std::make_unique<labrador::RectangleF>(rectangle), &course.world.render,
         &course.world.audio, &course.world.preferences, &course.tuning.paint(),
         CollisionObjectType::structure_paintable, TeamColour{}, faces, obstacles));
     course.scene.end_tick();
@@ -44,7 +44,7 @@ void await_painted_landing(MovementCourse& course)
 
 void check_painted_support_query(World& world)
 {
-    using namespace mattmath;
+    using namespace labrador;
     const float pitch = world.tuning.paint().size.x;
     auto tiles = paint_surface(world, { 0, 0, pitch * 4.0f, 100 });
     require(tiles->top_paint_team(0.0f) == PlayerTeam::none,
@@ -87,7 +87,7 @@ void check_painted_support_query(World& world)
 
 void check_painted_player_contacts(World& world)
 {
-    using namespace mattmath;
+    using namespace labrador;
     const auto& sounds = world.tuning.player().movement_sounds;
     world.set_sfx_volume(40);
     for (const auto team : { PlayerTeam::none, PlayerTeam::a, PlayerTeam::b })

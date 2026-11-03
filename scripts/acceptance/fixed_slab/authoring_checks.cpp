@@ -16,7 +16,6 @@ namespace fixed_slab_acceptance
     namespace
     {
         namespace fs = std::filesystem;
-        using namespace mattmath;
         using namespace labrador;
         using namespace colourwars_editor;
         using moving_structure_acceptance::World;

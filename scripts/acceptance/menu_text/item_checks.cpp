@@ -65,8 +65,8 @@ namespace menu_text_acceptance
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
         const auto art = options_art(main);
-        require(main.options_spacing == mattmath::Vector2F(540.0f, 100.0f) &&
-            art.focus_padding == mattmath::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
+        require(main.options_spacing == labrador::Vector2F(540.0f, 100.0f) &&
+            art.focus_padding == labrador::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
             original.menu().item_font == "lato_black_48",
             "Seven-row Options changed its reviewed compact geometry or existing item font");
         const auto normalized = variants.load([](rapidjson::Document& d)
@@ -93,7 +93,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? width : 8, 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'~' ? width : 8, 16),
                     0.0f, 0.0f, 0.0f });
             }
             const std::string name = "restore_defaults_width_" + std::to_string(width);
@@ -108,7 +108,7 @@ namespace menu_text_acceptance
             edge.validate_resources(world.render, world.audio);
             std::wstring source = edge.menu_text().item(MenuItem::restore_defaults);
             UiText text("restore_defaults", source, name,
-                main.options_position + mattmath::Vector2F(0.0f, main.options_spacing.y * 4.0f), &world.render, art.ink);
+                main.options_position + labrador::Vector2F(0.0f, main.options_spacing.y * 4.0f), &world.render, art.ink);
             source = L"Changed after construction";
             auto card = text.bounds(); card.inflate(art.focus_padding);
             require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 620.0f &&
@@ -323,8 +323,8 @@ namespace menu_text_acceptance
         {
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(options_height, 0.0f));
         }, &world);
-        const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f;
-        const auto bottom = top + pause.box_size - mattmath::Vector2F(pause.art.shadow_offset);
+        const auto top = (labrador::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f;
+        const auto bottom = top + pause.box_size - labrador::Vector2F(pause.art.shadow_offset);
         const float left_position = top.x + pause.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
         // Practice's Quit is the deepest row: the fifth, at 0.8 spacing.

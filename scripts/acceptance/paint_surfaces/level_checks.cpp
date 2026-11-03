@@ -80,8 +80,8 @@ namespace paint_surfaces_acceptance
             for (std::size_t slot = 0; slot < ammo.size(); ++slot)
             {
                 inputs[slot].shoot_direction_requested = true;
-                inputs[slot].shoot_direction = mattmath::Vector2F::DIRECTION_DOWN;
-                inputs[slot].shoot_angle = mattmath::PI / 2.0f;
+                inputs[slot].shoot_direction = labrador::Vector2F::direction_down;
+                inputs[slot].shoot_angle = labrador::pi / 2.0f;
                 inputs[slot].primary_shoot = true;
             }
             for (int tick = 0; tick < 120; ++tick) { level->update(inputs, dt); ++updates; }

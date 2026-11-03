@@ -32,10 +32,10 @@ public:
 	// tighter axis. Read live, so it follows the window.
 	float scale() const;
 	// The window in pixels, from the borrowed resolution manager.
-	mattmath::Vector2F resolution() const;
+	labrador::Vector2F resolution() const;
 	// A shadowed, edged card with the menu's accent rule along its top.
 	void draw(labrador::DrawList& draw_list,
-		const mattmath::RectangleF& rectangle, float scale) const;
+		const labrador::RectangleF& rectangle, float scale) const;
 
 	const labrador::SpriteSheet* sheet() const;
 	labrador::SpriteSheet::frame_handle fill() const { return this->fill_; }

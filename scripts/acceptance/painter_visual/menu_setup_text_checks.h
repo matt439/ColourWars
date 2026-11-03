@@ -136,16 +136,16 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport);
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto fill = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
         const UiTexture background("reference-setup-background", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
+            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
             look.home_background_colour);
         background.draw(list);
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
@@ -185,7 +185,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                 delta.width << ',' << delta.height << ")\n";
             throw std::runtime_error("Actual Mode/Player Count differs from the independent setup text fixture");
         }
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         for (RectangleF bounds : text_bounds)
         {

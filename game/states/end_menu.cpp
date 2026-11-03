@@ -4,7 +4,6 @@
 #include "game/states/main_menu.h"
 #include "game/match/series_stage_rule.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 EndMenuPage::EndMenuPage(MenuContext* context) :

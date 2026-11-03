@@ -20,7 +20,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -165,10 +164,10 @@ namespace
         const auto& tuning = world.tuning.projectile(ProjectileType::jet);
         const RectangleF supplied(box.x + tuning.details.col_rect_size.x / 2.0f,
             box.y + tuning.details.col_rect_size.y / 2.0f, box.width, box.height);
-        ProjectileJet shot(supplied, Vector2F::ZERO, team, team == PlayerTeam::a ? 0 : 1,
+        ProjectileJet shot(supplied, Vector2F::zero, team, team == PlayerTeam::a ? 0 : 1,
             surface_colours.team_colour(team), &world.render, resolve_projectile_strip(tuning, world.render), &tuning);
-        surface.on_contact(shot, Vector2F::ZERO, 0.0f);
-        shot.on_contact(surface, Vector2F::ZERO, 0.0f);
+        surface.on_contact(shot, Vector2F::zero, 0.0f);
+        shot.on_contact(surface, Vector2F::zero, 0.0f);
     }
 
     const Course::Event& first_step(const Course& course)
@@ -437,13 +436,13 @@ namespace
         require(course.events.empty(), "Placement settling emitted contact effects");
         course.walk();
         require(course.count(MovementFeedbackKind::step) > 0, "Placement failed to rearm walking effects");
-        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero,
             PlayerTeam::b, 1, Colour::white, &world.render,
             resolve_projectile_strip(world.tuning.projectile(ProjectileType::spray), world.render),
             &world.tuning.projectile(ProjectileType::spray));
         for (int hit = 0; hit < 10000 && course.player->health() > 0; ++hit)
         {
-            course.player->on_contact(shot, Vector2F::ZERO, 0);
+            course.player->on_contact(shot, Vector2F::zero, 0);
         }
         course.player->end_contacts();
         require(course.player->health() <= 0 && course.player->movement_feedback().effects().empty(),

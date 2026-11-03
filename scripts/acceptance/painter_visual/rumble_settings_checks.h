@@ -117,7 +117,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
         look.layout.position.y + look.layout.spacing.y * 3.0f - 24.0f,
         look.controls_position.x - look.layout.position.x + look.art.focus_padding.x + look.art.keyline_width * 10.0f,
         look.layout.spacing.y + 48.0f);
-    const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
         app.viewport_manager()->fullscreen_viewport());
     camera.calculate_view_rectangle(changed);
     const RectangleI delta = foreground_delta_bounds(on, off);

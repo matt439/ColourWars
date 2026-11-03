@@ -7,7 +7,7 @@ namespace paint_underfoot_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         void held(const Course& course, PlayerTeam team)
         { require(course.player->paint_underfoot_state().support_team == team, "Final foot-center support classification differs"); }
         void overlap(World& world, bool reverse, bool seam)
@@ -169,10 +169,10 @@ namespace paint_underfoot_acceptance
             world.paint(floor, floor.shape()->bounding_box(), PlayerTeam::a, 0); course.settle(); course.tick();
             const auto& details = world.tuning.projectile(ProjectileType::jet);
             require(details.details.player_damage > 0.0f, "Fatal-context control needs actual positive projectile damage");
-            ProjectileJet hit(course.player->rectangle(), Vector2F::ZERO, PlayerTeam::b, 1, labrador::Colour::white,
+            ProjectileJet hit(course.player->rectangle(), Vector2F::zero, PlayerTeam::b, 1, labrador::Colour::white,
                 &world.render, resolve_projectile_strip(details, world.render), &details);
             for (int hit_count = 0; hit_count < 100 && course.player->health() > 0; ++hit_count)
-            { course.player->on_contact(hit, Vector2F::ZERO, 0.0f); }
+            { course.player->on_contact(hit, Vector2F::zero, 0.0f); }
             require(course.player->health() <= 0.0f && course.player->state() == PlayerState::alive &&
                 course.player->paint_underfoot_state().support_team == PlayerTeam::none &&
                 course.player->paint_underfoot_state().step_team == PlayerTeam::none,

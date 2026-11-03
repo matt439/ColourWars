@@ -72,7 +72,7 @@ public:
             look_.player_identity_padding == Vector2F(16, 10) && look_.paper.keyline_width == 2 &&
             look_.paper.paper == Colour(255, 245, 223) && look_.sprite_sheet == "sprite_sheet_1" &&
             look_.fill_frame == "pixel" && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
-            pixel_.origin() == Vector2F::ZERO && font_->line_spacing() == hud_timer_line_spacing,
+            pixel_.origin() == Vector2F::zero && font_->line_spacing() == hud_timer_line_spacing,
             "Timer fixture requires authored normal-clock geometry, paper, shadow and font");
         if (subject_ == HudTimerSubject::closing_text)
         {
@@ -101,7 +101,7 @@ public:
             hud_track_same_palette(presentation_.team_palette(), palette_) &&
             resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO &&
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
             "Timer edit changed unselected HUD/shadow/closing/identity/palette, resources or viewport");
         const std::array<std::string, 3> font_names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
@@ -224,11 +224,11 @@ public:
                 if (mode == HudTimerReference::added_normal_shadow)
                 {
                     list.draw_text(timer_font_, item.text, position + Vector2F(2, 2), Colour(0, 0, 0, 34),
-                        1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+                        1.0f, 0.0f, Vector2F::zero, 0.0f);
                 }
                 list.draw_text(timer_font_, item.text, position,
                     mode == HudTimerReference::wrong_opaque ? Colour(255, 0, 0) : colour,
-                    1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+                    1.0f, 0.0f, Vector2F::zero, 0.0f);
                 return; // The actual closing branch never calls normal shadow.
             }
             const Colour selected_tint = mode == HudTimerReference::straight ? colour : mode == HudTimerReference::squared ?
@@ -242,9 +242,9 @@ public:
             const Colour shadow_tint = subject_ == HudTimerSubject::shadow ? selected_tint :
                 Colour(shadow.r * shadow.a, shadow.g * shadow.a, shadow.b * shadow.a, shadow.a);
             const auto draw_foreground = [&]()
-            { list.draw_text(timer_font_, item.text, position, foreground_tint, 1.0f, 0.0f, Vector2F::ZERO, 0.0f); };
+            { list.draw_text(timer_font_, item.text, position, foreground_tint, 1.0f, 0.0f, Vector2F::zero, 0.0f); };
             const auto draw_shadow = [&]()
-            { list.draw_text(timer_font_, item.text, position + Vector2F(2, 2), shadow_tint, 1.0f, 0.0f, Vector2F::ZERO, 0.0f); };
+            { list.draw_text(timer_font_, item.text, position + Vector2F(2, 2), shadow_tint, 1.0f, 0.0f, Vector2F::zero, 0.0f); };
             if (mode == HudTimerReference::reversed_order)
             {
                 require(subject_ == HudTimerSubject::shadow, "Reversed timer order is a shadow overlap control only");
@@ -392,7 +392,7 @@ private:
         list.set_filter(TextureFilter::point);
         list.draw_sprite(sheet_->texture(), pixel_.source_rectangle(),
             RectangleF(static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height)),
-            colour, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f);
     }
     Frame render(const std::function<void(DrawList&)>& draw)
     {
@@ -403,7 +403,7 @@ private:
         std::srand(46017); const int next = std::rand(); std::srand(46017);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->player_viewport(0));
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas_.draw(list, { 0, 0, 1920, 1080 }); draw(list);
         rectangle(list, { 20, 20, 4, 4 }, Colour::white); rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame result = read(renderer); ++readbacks_;

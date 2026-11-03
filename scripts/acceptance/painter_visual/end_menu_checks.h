@@ -11,9 +11,9 @@ public:
         renderer.set_view_count(1);
         DrawList list = renderer.view(0);
         list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        this->canvas_.draw(list, RectangleF(Vector2F::ZERO,
+        this->canvas_.draw(list, RectangleF(Vector2F::zero,
             this->app_.resolution_manager()->resolution_vec()));
     }
 private:
@@ -110,7 +110,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const auto& style = snapshot.menu(); const auto& look = snapshot.end_menu(); const auto& art = look.art;
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
         const Frame actual = end_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> rows;
         rows.push_back(std::make_unique<UiText>("reference-continuation", fixture.continuation, style.item_font,
@@ -465,7 +465,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             app.resolution_manager()->set_resolution_exactly(size);
             std::ignore = app.renderer()->window_size_changed(size.x, size.y);
             open(fixture.session);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO,
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero,
                 menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
             RectangleF frame_bounds = panel;
             frame_bounds.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
@@ -634,7 +634,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             if (selected == 1)
             {
                 save(moved, output / (std::string("end-menu-") + fixture.name + "-secondary-720p.ppm"));
-                const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO,
+                const Camera camera = Camera::frame(RectangleF(Vector2F::zero,
                     menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
                 save(foreground_crop(moved, countdown_crop_bounds(camera.calculate_view_rectangle(panel))),
                     output / (std::string("end-menu-") + fixture.name + "-secondary-720p-detail.ppm"));

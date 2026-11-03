@@ -23,7 +23,6 @@
 #include <vector>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 
 // A Controls or Sticks action row, clear of the help column and status line.
@@ -128,7 +127,7 @@ RectangleF Presentation::Validation::check_help_fit(const std::string& key, cons
 RectangleF Presentation::Validation::validate_controls_help(const RectangleF& help_area) const
 {
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	check_fixed_paper("menu_text.help.controls", help_area, controls.box_size, Vector2F::ZERO);
+	check_fixed_paper("menu_text.help.controls", help_area, controls.box_size, Vector2F::zero);
 	RectangleF controls_help;
 	bool first_help = true;
 	const auto controls_variant = [&](const std::wstring& words)
@@ -205,7 +204,7 @@ void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& hel
 			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted action bounds."); }
 			size *= scale;
 		}
-		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::ZERO);
+		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
 		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
 			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
 		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must fit its controls column and row."); }
@@ -262,7 +261,7 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted bounds."); }
 			size *= scale;
 		}
-		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::ZERO);
+		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
 		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
 			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
 		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must fit its controls column and row."); }
@@ -314,7 +313,7 @@ RectangleF Presentation::Validation::validate_profiles_text(const RectangleF& he
 			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted bounds."); }
 			size *= scale;
 		}
-		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::ZERO);
+		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
 		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
 			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
 		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must fit its controls column and row."); }
@@ -481,7 +480,7 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 		{
 			float x = 0.0f;
 			float y = 0.0f;
-			Vector2F extent = Vector2F::ZERO;
+			Vector2F extent = Vector2F::zero;
 		};
 		const auto walk = [&](Pen& pen, std::wstring_view words)
 		{

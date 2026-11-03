@@ -96,7 +96,7 @@ void check_quiet_face_colour_tunes(const std::filesystem::path& game_directory)
         for (const auto& grip : look->grips) { result.insert(result.end(), { grip.rear.x, grip.rear.y, grip.front.x, grip.front.y }); }
         return result;
     };
-    const mattmath::RectangleF body(100, 120, 104, 240);
+    const labrador::RectangleF body(100, 120, 104, 240);
     const auto canvas = look->canvas_rectangle(body);
     const auto held_geometry = geometry(), held_art = art_metadata();
     const auto* const document = impl.tune_document("presentation");

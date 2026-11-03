@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/carried/removed_members.h"
 #include "game/config/presentation/presentation.h"
 #include "game/input/input_slots.h"
 #include "game/objects/structure.h"
@@ -18,7 +19,6 @@
 #include <cmath>
 #include <stdexcept>
 
-using namespace mattmath;
 using namespace labrador;
 
 
@@ -328,7 +328,7 @@ void Level::update_state(const std::vector<PlayerInputData>& commands,
 		}
 
 		// refresh_layout refits the endpoints when the window changes size.
-		this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
+		this->zoom_out_camera_ = colourwars::intermediate_camera(
 			this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 			this->zoom_out_camera_ratio());
 	}
@@ -623,10 +623,10 @@ void Level::refresh_layout()
 		return;
 	}
 
-	const Viewport screen(RectangleF(Vector2F::ZERO, size));
+	const Viewport screen(RectangleF(Vector2F::zero, size));
 	this->zoom_out_start_camera_ = Camera::frame(this->zoom_out_start_bounds_, screen);
 	this->zoom_out_finish_camera_ = Camera::frame(this->zoom_out_finish_bounds_, screen);
-	this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
+	this->zoom_out_camera_ = colourwars::intermediate_camera(
 		this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 		this->zoom_out_camera_ratio());
 	this->cards_->centre(this->paper_);
@@ -650,7 +650,7 @@ Camera Level::view_camera(int participant) const
 	const Player& player = *this->players_.at(static_cast<size_t>(participant));
 	const int pane = this->view_for_participant(participant);
 	if (this->state_ != LevelState::active || !this->preferences_->view_shake_enabled(player.player_num()) ||
-		pane < 0 || player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
+		pane < 0 || player.view_shake().offset() == Vector2F::zero) { return player.camera(); }
 	return PlayerCamera::displaced(player.camera(),
 		this->viewport_manager_->player_viewport(pane), player.view_shake().offset(),
 		this->camera_bounds_);

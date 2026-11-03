@@ -3,7 +3,6 @@
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 MainMenuExitConfirmation::MainMenuExitConfirmation(MenuContext* context) :
 	MenuPage(context), look_(context->data()->presentation()->pause_menu())

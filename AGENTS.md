@@ -30,10 +30,12 @@ renaming the executable to `ColourWars.exe`, its Win32 class to
 `ColourWarsWindowClass` and the content target to `colourwars_content`. Nothing
 in either tree is named for the paint-shooter's middle name any more.
 
-Two things deliberately still spell it. `mattmath::` is the author's name, not
-the game's. And the historical documents — `docs/review/` here and in the
-engine — are the reviews as written, so rewriting them would make a record stop
-matching what was actually reviewed.
+One thing deliberately still spells it: the historical documents —
+`docs/review/` here and in the engine — are the reviews as written, so
+rewriting them would make a record stop matching what was actually reviewed.
+They also still say `mattmath::`, the math library's old namespace (the
+author's name, not the game's), which became `labrador::` in engine `v0.3.0`;
+this tree followed at that pin bump.
 
 ## Open work
 

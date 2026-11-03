@@ -49,8 +49,8 @@ public:
             look.lean_acceleration, -1.0f, 1.0f) * look.lean_distance : 0.0f;
         if (settled)
         {
-            target += std::sin(shift_phase_ * 2.0f * mattmath::PI) * look.shift_distance;
-            state_.breath = (1.0f - std::cos(phase_ * 2.0f * mattmath::PI)) *
+            target += std::sin(shift_phase_ * 2.0f * labrador::pi) * look.shift_distance;
+            state_.breath = (1.0f - std::cos(phase_ * 2.0f * labrador::pi)) *
                 0.5f * look.breath_height;
             blink_wait_ -= dt;
             if (blink_remaining_ > 0.0f)
@@ -84,7 +84,7 @@ public:
 
     // Breathing compresses from the feet up. A small asymmetric width change
     // suggests weight shifting without rotation lifting a foot off its baseline.
-    mattmath::RectangleF rectangle(const mattmath::RectangleF& body) const
+    labrador::RectangleF rectangle(const labrador::RectangleF& body) const
     {
         if (figure_ == nullptr || !figure_->quiet.enabled) { return body; }
         const float compression = state_.breath * body.height / figure_->canvas_size.y;

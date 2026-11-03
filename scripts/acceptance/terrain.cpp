@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/tuning.h"
+#include "game/carried/removed_members.h"
 #include "game/objects/airbrush_shadow.h"
 #include "game/objects/drifting_visual.h"
 #include "game/objects/level_object_builder.h"
@@ -26,7 +27,6 @@
 #include <limits>
 
 using namespace labrador;
-using namespace mattmath;
 
 // The Tool Props kit on every shipped stage (docs/polish-terrain.md): every
 // collision object wears a material that fits its collision type, its drawing
@@ -108,7 +108,7 @@ namespace
 			return RectangleF(r.number("x"), r.number("y"), r.number("width"), r.number("height"));
 		}
 		const JsonValue r = json.object("rectangle_tlbr");
-		return RectangleF::from_top_left_bottom_right(
+		return colourwars::from_top_left_bottom_right(
 			Vector2F(r.number("left"), r.number("top")),
 			Vector2F(r.number("right"), r.number("bottom")));
 	}
@@ -130,7 +130,7 @@ namespace
 		const auto* mover = dynamic_cast<const TranslatingStructurePaintable*>(&structure);
 		// A mover retains its material in anchor space; drawing translates the
 		// camera. Static structures keep their original collision-shape path.
-		const RectangleF anchor = mover != nullptr ? mover->motion_state().spec.anchor : RectangleF::ZERO;
+		const RectangleF anchor = mover != nullptr ? mover->motion_state().spec.anchor : RectangleF::zero;
 		const Shape* material_shape = mover != nullptr ? &anchor : structure.shape();
 		const auto& quads = material->quads();
 		require(!quads.empty(), where + " draws nothing");

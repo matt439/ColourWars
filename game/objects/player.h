@@ -96,7 +96,7 @@ enum class PlayerAnimationState
 // simulation: drawn shifted, squashed from the feet up, without its tool.
 struct FigurePose
 {
-    mattmath::Vector2F offset = mattmath::Vector2F::ZERO;
+    labrador::Vector2F offset = labrador::Vector2F::zero;
     float squash = 0.0f;
     bool tool = true;
     // A dead figure drawn finished at its spawn: in the reveal everyone is
@@ -115,7 +115,7 @@ public:
     // secondary is currently accepted but ignored; players carry one weapon.
     // The builder supplies sound_index as the roster participant, independently
     // of sparse input slots and device-less bots or Debug dummy players.
-    Player(const mattmath::RectangleF& rectangle,
+    Player(const labrador::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
         const CombatFeedbackPresentation* combat_feedback,
@@ -130,10 +130,10 @@ public:
         WeaponType secondary,
         const labrador::Colour& team_colour,
         const labrador::Viewport& view_port,
-        const mattmath::Vector2F& respawn_position,
-        const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
+        const labrador::Vector2F& respawn_position,
+        const labrador::Vector2F& velocity = labrador::Vector2F::zero,
         float rotation = 0.0f,
-        const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+        const labrador::Vector2F& origin = labrador::Vector2F::zero,
         labrador::SpriteFlip flip = labrador::SpriteFlip::none,
         float layer_depth = 0.0f,
         int sound_index = -1,
@@ -153,24 +153,24 @@ public:
     void set_blocked_shot_feedback(BlockedShotFeedback* feedback);
     void draw(labrador::DrawList& draw_list) const override;
 
-    mattmath::RectangleF bounds() const override;
+    labrador::RectangleF bounds() const override;
     // While dead, the spawn too: the redraw is there, wherever the player fell.
-    mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
+    labrador::RectangleF cull_bounds(float units_per_pixel) const override;
 
-    const mattmath::Shape* shape() const override;
+    const labrador::Shape* shape() const override;
     labrador::CollisionLayer layer() const override;
     labrador::CollisionMask mask() const override;
     labrador::CollisionTag tag() const override;
     // Lands on, climbs or is stopped by the structure, as it answers
     // jump_through, slab_geometry and ramp.
     void on_structure_contact(const Structure& other,
-        const mattmath::Vector2F& normal, float penetration) override;
+        const labrador::Vector2F& normal, float penetration) override;
     // Players never touch: the collision masks exclude them, so this throws.
     void on_player_contact(const Player& other,
-        const mattmath::Vector2F& normal, float penetration) override;
+        const labrador::Vector2F& normal, float penetration) override;
     // Takes the shot's damage, unless immune; the paint still lands.
     void on_projectile_contact(const Projectile& source,
-        const mattmath::Vector2F& normal, float penetration) override;
+        const labrador::Vector2F& normal, float penetration) override;
     // Always false: Level holds borrowed Player pointers for the entire match.
     // A dead player respawns rather than being retired by Scene.
     bool for_deletion() const override;
@@ -211,14 +211,14 @@ public:
     void observe_jump_release(bool held);
     void set_camera(const labrador::Camera& camera);
 
-	const mattmath::RectangleF& rectangle() const;
-	mattmath::Vector2F center() const;
+	const labrador::RectangleF& rectangle() const;
+	labrador::Vector2F center() const;
     // Expose MovingObject's protected accessor.
-    const mattmath::Vector2F& velocity() const;
+    const labrador::Vector2F& velocity() const;
 	const labrador::Camera& camera() const;
 	const labrador::Viewport& viewport() const;
 	float input_x_movement() const;
-	const mattmath::Vector2F& input_shoot_direction() const;
+	const labrador::Vector2F& input_shoot_direction() const;
 	bool input_primary_shoot() const;
 	bool input_jump_pressed() const;
 	bool input_jump_held() const;
@@ -260,10 +260,10 @@ public:
     // How far the redraw at the spawn has come: 0 at death, 1 at respawn.
     float respawn_progress() const;
     // Where the player is drawn while dead, and appears again.
-    mattmath::RectangleF spawn_rectangle() const;
+    labrador::RectangleF spawn_rectangle() const;
     // What the camera follows: the player, or, a moment after death, the
     // spawn where the figure is being redrawn.
-    mattmath::Vector2F camera_focus() const;
+    labrador::Vector2F camera_focus() const;
 
     void update_weapon_position();
     void update_prev_rectangle();
@@ -286,7 +286,7 @@ public:
     void set_infinite_ammo(bool infinite);
     // At rest at `top_left` (the character's top-left), placed exactly as a
     // respawn places it, without the respawn's health, ammo, state or sound.
-    void place_at(const mattmath::Vector2F& top_left);
+    void place_at(const labrador::Vector2F& top_left);
     // Respawns now, at the spawn, as the respawn timer would.
     void force_respawn();
     // Health to zero, ignoring god: the next update dies as a fatal hit does.
@@ -299,16 +299,16 @@ public:
     void set_pose(const FigurePose& pose);
     // Where the figure is drawn, with its pose: at its spawn if it is dead
     // and drawn whole.
-    mattmath::RectangleF posed_rectangle() const;
+    labrador::RectangleF posed_rectangle() const;
     // The painter's whole canvas around a hitbox rectangle, overhang included.
-    mattmath::RectangleF figure_canvas(const mattmath::RectangleF& body) const;
+    labrador::RectangleF figure_canvas(const labrador::RectangleF& body) const;
     // Dead, but in the picture because the reveal draws everyone.
     bool drawn_whole() const;
 
 private:
     PaintAudio* paint_audio_ = nullptr;
     BlockedShotFeedback* blocked_shot_feedback_ = nullptr;
-    labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
+    labrador::Camera camera_ = labrador::Camera::default_camera;
 
     // Borrowed, never null. Includes player movement/health and projectile damage tuning.
     const GameTuning* tuning_ = nullptr;
@@ -334,33 +334,33 @@ private:
     float weapon_contact_dt_ = 0.0f;
     float support_impact_speed_ = 0.0f;
     const MovementFeedbackPresentation* movement_feedback_look_ = nullptr;
-    mattmath::Vector2F support_position_;
+    labrador::Vector2F support_position_;
     // The last resolved upright ramp, copied rather than borrowed from Scene.
     // Grounded travel follows this surface before contacts so a continuous
     // crest cannot become a wall merely because gravity was applied first.
     struct RampSupport
     {
-        mattmath::RectangleF bounds;
+        labrador::RectangleF bounds;
         bool rises_right = false;
     };
     std::optional<RampSupport> ramp_support_;
     bool projected_ramp_support_ = false;
-    std::optional<mattmath::Vector2F> ramp_support_at(
-        const mattmath::RectangleF& body) const;
+    std::optional<labrador::Vector2F> ramp_support_at(
+        const labrador::RectangleF& body) const;
     // Fixed slabs are immutable, non-retiring Scene objects for the round.
     // The owning Level outlives its Players; no destructor dereferences this
     // borrow. Retaining it also permits post-paint queries when exact tangent
     // projection leaves no penetrating contact in the current phase.
     struct FixedSlabSupport
     {
-        mattmath::Vector2F start;
-        mattmath::Vector2F end;
+        labrador::Vector2F start;
+        labrador::Vector2F end;
         const Structure* surface = nullptr;
     };
     std::optional<FixedSlabSupport> fixed_slab_support_;
     bool projected_fixed_slab_support_ = false;
-    std::optional<mattmath::Vector2F> fixed_slab_support_at(
-        const mattmath::RectangleF& body) const;
+    std::optional<labrador::Vector2F> fixed_slab_support_at(
+        const labrador::RectangleF& body) const;
     void remember_fixed_slab_support(const Structure& slab, const FixedSlabGeometry& geometry);
     // Supports holding paint on a flat top (holds_flat_top_paint), borrowed
     // only for this contact phase; query after every paint callback.
@@ -371,7 +371,7 @@ private:
     struct PaintedSupport
     {
         labrador::Colour colour;
-        mattmath::Vector2F position;
+        labrador::Vector2F position;
     };
     std::optional<PaintedSupport> painted_support() const;
     PlayerTeam gameplay_support_team() const;
@@ -434,22 +434,22 @@ private:
         static_cast<size_t>(PlayerAnimationState::elimination) + 1;
     std::array<FigureClip, ANIMATION_STATE_COUNT> figure_clips_;
     labrador::RenderResources::SpriteSheetHandle idle_sheet_;
-    mattmath::RectangleI idle_body_;
-    mattmath::RectangleI idle_paint_;
+    labrador::RectangleI idle_body_;
+    labrador::RectangleI idle_paint_;
     // The person's face band over each state's body frames, resolved once;
     // empty for the house hand, whose faces are the body frames' own. Every
     // locomotion state draws the idle band, as it shares idle's torso.
     FigurePerson person_;
     const RespawnRedrawPresentation* respawn_look_ = nullptr;
-    std::array<std::vector<mattmath::RectangleI>, ANIMATION_STATE_COUNT> face_bands_;
+    std::array<std::vector<labrador::RectangleI>, ANIMATION_STATE_COUNT> face_bands_;
     // The canvas texels the bands replace, taken with the bands: they are
     // baked art, so a tuned band waits for the next build like they do.
-    mattmath::RectangleF face_band_texels_;
+    labrador::RectangleF face_band_texels_;
     // A body frame, with the person's band over its face when they have one.
-    void draw_body(labrador::DrawList& draw_list, const mattmath::RectangleI& source,
-        const mattmath::RectangleF& canvas, const mattmath::RectangleI* band,
+    void draw_body(labrador::DrawList& draw_list, const labrador::RectangleI& source,
+        const labrador::RectangleF& canvas, const labrador::RectangleI* band,
         labrador::SpriteFlip flip) const;
-    const mattmath::RectangleI* face_band(bool idle) const;
+    const labrador::RectangleI* face_band(bool idle) const;
 
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
@@ -457,10 +457,10 @@ private:
     labrador::Colour team_colour_ = labrador::Colour::gray;
     labrador::Viewport viewport_ = labrador::Viewport();
 
-    mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
-    mattmath::RectangleF prev_rectangle_ = mattmath::RectangleF::ZERO;
+    labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
+    labrador::RectangleF prev_rectangle_ = labrador::RectangleF::zero;
 
-    mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
+    labrador::Vector2F respawn_position_ = labrador::Vector2F::zero;
 
     const PlaySettings* preferences_ = nullptr;
 
@@ -496,7 +496,7 @@ private:
 
     float health_regen_timer_ = 0.0f;
 
-	const mattmath::RectangleF* collision_rectangle() const;
+	const labrador::RectangleF* collision_rectangle() const;
 
 	CollisionObjectType collision_type() const;
 
@@ -506,18 +506,18 @@ private:
 	bool hit_ceiling_this_tick_ = false;
 
 	void touch(Collider& receiver,
-		const mattmath::Vector2F& normal, float penetration) const override;
+		const labrador::Vector2F& normal, float penetration) const override;
 
 	// Resolve flat surfaces using the contact normal and penetration depth.
 	void on_solid_contact(const Structure& other,
-		const mattmath::Vector2F& normal,
+		const labrador::Vector2F& normal,
 		float penetration);
 
 	void on_ramp_contact(const Structure& ramp,
-		const mattmath::Vector2F& normal, float penetration);
+		const labrador::Vector2F& normal, float penetration);
 
     void on_fixed_slab_contact(const Structure& slab, const FixedSlabGeometry& geometry,
-        const mattmath::Vector2F& normal, float penetration);
+        const labrador::Vector2F& normal, float penetration);
 
 	void on_jump_through_contact(const Structure& other);
 
@@ -535,7 +535,7 @@ private:
     void update_action_frame();
     ActionClip action_clip(PlayerAnimationState state) const;
     void draw_figure(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& rectangle, bool idle = false) const;
+        const labrador::RectangleF& rectangle, bool idle = false) const;
     void draw_respawn(labrador::DrawList& draw_list) const;
 
     const PlayerAnimationTuning& animation_info(PlayerAnimationState state) const;

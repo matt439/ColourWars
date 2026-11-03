@@ -8,7 +8,6 @@
 #include "game/config/drawable_text.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 MainMenuPage::MainMenuPage(MenuContext* context) :

@@ -113,7 +113,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::srand(7331); const int next = std::rand(); std::srand(7331);
         require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next,
             "Frozen Pad Jump draw mutated pixels or consumed RNG");
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
@@ -271,7 +271,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const RectangleF card = game->level().gamepad_controls_card_bounds();
         const RectangleF bounds = game->level().gamepad_controls_text_bounds();
         require(game->level().gamepad_controls_text().find(L"X / LT  Jump") != std::wstring_view::npos &&
-            card.width > 0.0f && card.contains(bounds) && RectangleF(Vector2F::ZERO, Vector2F(size)).contains(card) &&
+            card.width > 0.0f && card.contains(bounds) && RectangleF(Vector2F::zero, Vector2F(size)).contains(card) &&
             game->resume_remaining() == 0.0f && frozen == resume_observation(game->level()),
             "Paused pad reminder missed its live mapping, escaped its card or advanced the covered match");
         const RectangleI crop = countdown_crop_bounds(card);
@@ -311,7 +311,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             "Mixed four-pad opening reminder lost a physical slot's selected face or LT"); }
         const RectangleF four_card = level->gamepad_controls_card_bounds(), four_text = level->gamepad_controls_text_bounds();
         require(four_text.width > 0.0f && four_text.height > 0.0f && four_card.contains(four_text) &&
-            RectangleF(Vector2F::ZERO, Vector2F(size)).contains(four_card),
+            RectangleF(Vector2F::zero, Vector2F(size)).contains(four_card),
             "Mixed four-pad native-font reminder escaped its card or supported screen");
         require(four.pixels == render(*level, *app.renderer()).pixels, "Mixed four-pad reminder changed on frozen redraw");
         save(foreground_crop(four, countdown_crop_bounds(four_card)), output /

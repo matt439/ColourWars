@@ -10,7 +10,6 @@
 // them in order.
 
 using namespace labrador;
-using namespace mattmath;
 using namespace movement_course_acceptance;
 
 int main(int argc, char** argv)

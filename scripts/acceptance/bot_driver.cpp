@@ -16,7 +16,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace
 {

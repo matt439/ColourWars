@@ -10,7 +10,7 @@ class RevealArt final : public CrudeDrawing
 {
 public:
     RevealArt(const OpeningPresentation* look, labrador::RenderResources* resources);
-    void draw(labrador::DrawList& list, const mattmath::RectangleF& bounds,
+    void draw(labrador::DrawList& list, const labrador::RectangleF& bounds,
         std::wstring_view text, const labrador::Colour& team,
         float click_age, bool reduced_effects) const;
 

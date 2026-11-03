@@ -89,7 +89,7 @@
 
 		Player& add(float x = 0.0f, float bottom = 0.0f, float speed = 0.0f)
 		{
-			using namespace mattmath;
+			using namespace labrador;
 			const int index = static_cast<int>(this->players.size());
 			const auto team = index < 2 ? PlayerTeam::a : PlayerTeam::b;
 			const RectangleF rectangle(x, bottom - this->tuning.player().size.y,
@@ -104,21 +104,21 @@
 			return *player;
 		}
 
-		void surface(const mattmath::RectangleF& rectangle,
+		void surface(const labrador::RectangleF& rectangle,
 			CollisionObjectType type = CollisionObjectType::structure)
 		{
 			this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", rectangle,
-				std::make_unique<mattmath::RectangleF>(rectangle), &this->world.render,
+				std::make_unique<labrador::RectangleF>(rectangle), &this->world.render,
 				type));
 			this->scene.end_tick();
 		}
 
 		void floor() { this->surface({ -10000.0f, 0.0f, 20000.0f, 100.0f }); }
 
-		void ramp(const mattmath::TriangleRightAxisAligned& shape, CollisionObjectType type)
+		void ramp(const labrador::TriangleRightAxisAligned& shape, CollisionObjectType type)
 		{
 			this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", shape.bounding_box(),
-				std::make_unique<mattmath::TriangleRightAxisAligned>(shape), &this->world.render, type));
+				std::make_unique<labrador::TriangleRightAxisAligned>(shape), &this->world.render, type));
 			this->scene.end_tick();
 		}
 
@@ -324,7 +324,7 @@
 
 	void check_movement_contact_kinds(World& world)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		const auto& sounds = world.tuning.player().movement_sounds;
 		MovementCourse buffered(world, world.tuning);
 		Player& player = buffered.add();

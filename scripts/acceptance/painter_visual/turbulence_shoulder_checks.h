@@ -95,8 +95,8 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     {
         const bool widget = fixture == nullptr; const auto side = static_cast<std::size_t>(view % 2);
         const Player* player = widget ? nullptr : &fixture->level->player(view);
-        const RectangleF shape = widget ? RectangleF::ZERO : player->rectangle();
-        const auto velocity = widget ? Vector2F::ZERO : player->velocity();
+        const RectangleF shape = widget ? RectangleF::zero : player->rectangle();
+        const auto velocity = widget ? Vector2F::zero : player->velocity();
         const RectangleF overview = info.zoom_out_finish_bounds_rectangle();
         const auto& ramp_patch = widget ? overview : ramp_patches[side];
         const auto& flat_patch = widget ? overview : flat_patches[side];
@@ -263,11 +263,11 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_shoulder_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation); const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size); StagePreview preview("explicit-shoulder-preview", box, &data); preview.set_stage("turbulence_shoulder_trial");
-        const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
         const auto draw_preview = [&](bool shown)
         {
             auto& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); auto list = renderer.view(0);
-            list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION));
+            list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
             if (shown) { preview.draw(list); } ++reads; return read(renderer);
         };
         std::srand(2911); const int expected = std::rand(); std::srand(2911); const auto frame = draw_preview(true);

@@ -57,13 +57,13 @@ public:
 		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
-		const mattmath::Vector2F& player_center,
+		const labrador::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
@@ -80,8 +80,8 @@ public:
 	// Transfers ownership of live, non-null projectiles to the caller.
 	virtual std::vector<std::unique_ptr<Projectile>>
 		update_and_get_projectiles(PlayerInputData input,
-			const mattmath::Vector2F& player_center,
-			const mattmath::Vector2F& player_velocity,
+			const labrador::Vector2F& player_center,
+			const labrador::Vector2F& player_velocity,
 			bool player_facing_right,
 		float dt, float ammo_regen_multiplier = 1.0f);
 
@@ -111,11 +111,11 @@ public:
 	// The roller has no marker.
 	virtual bool has_aim_marker() const { return true; }
 	void draw_aim_marker(labrador::DrawList& draw_list) const;
-	mattmath::RectangleF aim_marker_bounds() const;
+	labrador::RectangleF aim_marker_bounds() const;
 	// Infinite-ammo refills preserve the paid shot's cooldown notification.
 	// Respawn uses the default to clear all feedback silently.
 	void reset_ammo(bool reset_feedback = true);
-	void set_player_center(const mattmath::Vector2F& player_center);
+	void set_player_center(const labrador::Vector2F& player_center);
 
 	// Optional for direct CPU clients; the game builder supplies presentation.
 	// Switching the borrowed record resets visual history, never gameplay.
@@ -145,14 +145,14 @@ public:
 
 	// Visual bounds cover every rotated pose and any detached release haze.
 	// Player::bounds unions this with the body for scene culling.
-	mattmath::RectangleF draw_bounds() const;
+	labrador::RectangleF draw_bounds() const;
 
 	// Read-only attachment points for game-owned character artwork. These remain
 	// the same continuous simulation aim and muzzle used to launch projectiles.
 	WeaponType type() const;
 	float rotation() const;
-	mattmath::Vector2F draw_pos() const;
-	mattmath::Vector2F nozzle_pos() const;
+	labrador::Vector2F draw_pos() const;
+	labrador::Vector2F nozzle_pos() const;
 	bool shooting_this_update() const;
 	void draw_nozzle_debug(labrador::DrawList& draw_list) const;
 
@@ -194,18 +194,18 @@ protected:
 	// Whether the last resolved travel was supported; cleared with the motion.
 	bool motion_supported_ = false;
 
-	const mattmath::Vector2F& player_center() const;
+	const labrador::Vector2F& player_center() const;
 
 
 	PlayerTeam team() const;
 	int player_num() const;
 	const labrador::Colour& team_colour() const;
-	mattmath::RectangleF nozzle_rectangle() const;
+	labrador::RectangleF nozzle_rectangle() const;
 
 
 	const WeaponDetails& details() const;
-	const mattmath::Vector2F& offset() const;
-	const mattmath::Vector2F& nozzle_offset() const;
+	const labrador::Vector2F& offset() const;
+	const labrador::Vector2F& nozzle_offset() const;
 	float shoot_interval() const;
 	float starting_vel_length() const;
 	float ammo_usage() const;
@@ -225,29 +225,29 @@ protected:
 	void alter_ammo_timer(float dt);
 
 
-	static mattmath::Vector2F nozzle_size();
+	static labrador::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
 	virtual std::vector<std::unique_ptr<Projectile>> shoot(
-		const mattmath::Vector2F& shoot_direction,
-		const mattmath::Vector2F& player_velocity) const;
+		const labrador::Vector2F& shoot_direction,
+		const labrador::Vector2F& player_velocity) const;
 
-	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
-		const mattmath::Vector2F& shoot_direction,
+	virtual labrador::Vector2F calculate_projectile_launch_velocity(
+		const labrador::Vector2F& shoot_direction,
 		float starting_velocity,
-		const mattmath::Vector2F& player_velocity) const;
+		const labrador::Vector2F& player_velocity) const;
 
-	static mattmath::Vector2F calculate_sprite_origin(
-		const mattmath::Vector2F& size, colourwars::RotationOrigin origin);
+	static labrador::Vector2F calculate_sprite_origin(
+		const labrador::Vector2F& size, colourwars::RotationOrigin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
-		const mattmath::Vector2F& player_center,
-		const mattmath::Vector2F& player_velocity,
+		const labrador::Vector2F& player_center,
+		const labrador::Vector2F& player_velocity,
 		float dt, float ammo_regen_multiplier);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
-		const mattmath::Vector2F& player_center,
-		const mattmath::Vector2F& player_velocity,
+		const labrador::Vector2F& player_center,
+		const labrador::Vector2F& player_velocity,
 		bool player_facing_right);
 
 	ProjectileBuilder* projectile_builder() const;
@@ -284,7 +284,7 @@ private:
 	labrador::RenderResources::SpriteSheetHandle mist_sheet_;
 	labrador::SpriteSheet::frame_handle mist_frame_;
 	bool motion_firing_ = false;
-	mattmath::Vector2F mist_release_position_;
+	labrador::Vector2F mist_release_position_;
 	float mist_release_rotation_ = 0.0f;
 	labrador::SoundBank::WaveHandle empty_sound_;
 	labrador::SoundBank::WaveHandle recovered_sound_;
@@ -316,9 +316,9 @@ private:
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
 	WeaponType type_ = WeaponType::none;
-	mattmath::Vector2F player_center_ = { 0.0f, 0.0f };
+	labrador::Vector2F player_center_ = { 0.0f, 0.0f };
 
-	mattmath::Vector2F wep_rotation_origin_offset(
+	labrador::Vector2F wep_rotation_origin_offset(
 		bool facing_left) const;
 	// Set while the opening draws the figures grey.
 	std::optional<labrador::Colour> paint_override_;
@@ -335,21 +335,21 @@ public:
 		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
-		const mattmath::Vector2F& player_center,
+		const labrador::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 protected:
-	mattmath::Vector2F calculate_projectile_launch_velocity(
-		const mattmath::Vector2F& shoot_direction,
+	labrador::Vector2F calculate_projectile_launch_velocity(
+		const labrador::Vector2F& shoot_direction,
 		float starting_velocity,
-		const mattmath::Vector2F& player_velocity) const override;
+		const labrador::Vector2F& player_velocity) const override;
 
 private:
 	// Velocity settings from the same borrowed record as the base weapon.

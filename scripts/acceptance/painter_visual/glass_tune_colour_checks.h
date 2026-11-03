@@ -39,7 +39,7 @@ public:
             look_.bezel_shadow == Colour(0, 0, 0, 89) && look_.program_colour == Colour(44, 44, 44) &&
             look_.slot_outline == Colour(255, 255, 255) && look_.palette_frames.size() == 26 &&
             look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel" &&
-            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::ZERO,
+            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::zero,
             "Glass fixture lost shipped geometry, ordered underlayers, atlas or white-frame assumptions");
         for (const auto& name : look_.palette_frames)
         { palette_frames_.push_back(&palette_sheet_->sprite_frame(palette_sheet_->resolve_sprite_frame(name))); }
@@ -205,7 +205,7 @@ private:
     {
         std::srand(31737); const int next=std::rand(); std::srand(31737);
         const Canvas canvas(app_.render_resources(),background); Renderer& renderer=*app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list=renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list=renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list,{0,0,1280,720}); draw(list); ++readbacks_;
         Frame result=read(renderer); require(std::rand()==next,"Glass actual/reference drawing consumed RNG"); return result;
     }

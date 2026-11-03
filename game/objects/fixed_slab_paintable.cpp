@@ -5,7 +5,6 @@
 #include "game/contracts/fixed_slab_paint_geometry.h"
 #include <cmath>
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -98,7 +97,7 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
                     : RectangleF(band.x, position, band.width, pitch);
                 this->tiles_.push_back({ face, PaintTile(tile, this->paint_, &this->splash_clips_,
                     render_resources, this->team_colours_, Colour::white, 0.0f,
-                    Vector2F::ZERO, SpriteFlip::none, 0.0f, along_x, leading) });
+                    Vector2F::zero, SpriteFlip::none, 0.0f, along_x, leading) });
             }
         }
     };
@@ -124,7 +123,7 @@ void FixedSlabPaintable::draw_local(DrawList& draw_list,
     this->sprite_sheet()->draw(draw_list,
         this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle(),
         RectangleF(this->geometry_.to_world(rectangle.top_left()), rectangle.size()),
-        colour, this->geometry_.tangent().angle(), Vector2F::ZERO);
+        colour, this->geometry_.tangent().angle(), Vector2F::zero);
 }
 
 void FixedSlabPaintable::draw(DrawList& draw_list) const
@@ -135,7 +134,7 @@ void FixedSlabPaintable::draw(DrawList& draw_list) const
         terrain->draw(draw_list, terrain->sprite_frame(this->terrain_swatches_[
             static_cast<std::size_t>(quad.role)]).source_rectangle(),
             RectangleF(this->geometry_.to_world(quad.rectangle.top_left()), quad.rectangle.size()),
-            Colour::white, this->geometry_.tangent().angle(), Vector2F::ZERO);
+            Colour::white, this->geometry_.tangent().angle(), Vector2F::zero);
     }
     for (const Strip& strip : this->strips_)
     {

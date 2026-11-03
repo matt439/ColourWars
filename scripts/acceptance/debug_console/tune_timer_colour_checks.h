@@ -141,7 +141,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     };
     const auto font_measurements = [&]
     {
-        return std::vector<mattmath::Vector2F>{ resources.measure_text(resources.resolve_sprite_font(fonts[0]), L"HEALTH"),
+        return std::vector<labrador::Vector2F>{ resources.measure_text(resources.resolve_sprite_font(fonts[0]), L"HEALTH"),
             resources.measure_text(resources.resolve_sprite_font(fonts[0]), L"PAINT"),
             resources.measure_text(resources.resolve_sprite_font(fonts[1]), L"2:04"),
             resources.measure_text(resources.resolve_sprite_font(fonts[2]), L"P1  /  TEAM A\nKeyboard + mouse") };

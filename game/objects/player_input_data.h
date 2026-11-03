@@ -13,7 +13,7 @@ struct PlayerInputData
 	bool jump_pressed = false;
 	bool jump_held = false;
 	float shoot_angle = 0.0f;
-	mattmath::Vector2F shoot_direction = { 0.0f, 0.0f };
+	labrador::Vector2F shoot_direction = { 0.0f, 0.0f };
 	bool shoot_direction_requested = false;
 	bool primary_shoot = false;
 
@@ -28,6 +28,6 @@ struct PlayerInputData
 	// drives nobody until it reclaims a missing seat with Start (ROAD#4).
 	bool connected = false;
 
-	mattmath::Vector2F left_analog_stick = { 0.0f, 0.0f };
-	mattmath::Vector2F right_analog_stick = { 0.0f, 0.0f };
+	labrador::Vector2F left_analog_stick = { 0.0f, 0.0f };
+	labrador::Vector2F right_analog_stick = { 0.0f, 0.0f };
 };

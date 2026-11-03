@@ -10,8 +10,8 @@
 class TranslatedDrawScope final
 {
 public:
-    TranslatedDrawScope(labrador::DrawList& list, const mattmath::Vector2F& offset) :
-        list_(list), saved_(checked_camera(list)), active_(offset != mattmath::Vector2F::ZERO)
+    TranslatedDrawScope(labrador::DrawList& list, const labrador::Vector2F& offset) :
+        list_(list), saved_(checked_camera(list)), active_(offset != labrador::Vector2F::zero)
     {
         if (this->active_)
         {

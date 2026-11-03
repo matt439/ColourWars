@@ -104,9 +104,9 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const bool landing_visible = visible.contains(landing), escape_visible = visible.contains(escape);
         require(escape_visible && (!landing_required || landing_visible),
             "Mover native pane clips a required whole-body warning patch");
-        const auto position = player != nullptr ? player->rectangle().position() : Vector2F::ZERO;
-        const auto velocity = player != nullptr ? player->velocity() : Vector2F::ZERO;
-        const RectangleF deck = owner != nullptr ? owner->current_bounds : RectangleF::ZERO;
+        const auto position = player != nullptr ? player->rectangle().position() : Vector2F::zero;
+        const auto velocity = player != nullptr ? player->velocity() : Vector2F::zero;
+        const RectangleF deck = owner != nullptr ? owner->current_bounds : RectangleF::zero;
         double owned = 0.0, credited = 0.0;
         if (owner != nullptr)
         {
@@ -316,12 +316,12 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const auto& look = presentation.main_menu().stage_select; const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("private-turbulence-mover-preview", box, &data); preview.set_stage("turbulence_mover_trial");
         const Viewport fullscreen = app.viewport_manager()->fullscreen_viewport();
-        const Camera menu = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const Camera menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
         const auto draw_preview = [&](bool shown)
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point);
-            canvas.draw(list, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION)); if (shown) { preview.draw(list); }
+            canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION)); if (shown) { preview.draw(list); }
             ++readbacks; return read(renderer);
         };
         std::srand(2711); const int expected = std::rand(); std::srand(2711); const Frame frame = draw_preview(true);
@@ -333,7 +333,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const std::string stem = "hidden-inspection-turbulence-mover-stage-preview-clean-720p";
         save(frame, output / (stem + ".ppm")); ++frames; save_crop(frame, crop, stem + "-view1-native");
         write_row(stem, "actual-StagePreview-isolated", "miniature", "static-authored-initial-pose", false, 0, 0, nullptr,
-            nullptr, RectangleF::ZERO, camera, viewport, crop, 0.0f, true, overview, overview);
+            nullptr, RectangleF::zero, camera, viewport, crop, 0.0f, true, overview, overview);
     }
     records.close();
     require(source_bytes() == source && records.good() && builds == 8 && frames == 33 && crops == 81 && rows == 81 && readbacks == 67,

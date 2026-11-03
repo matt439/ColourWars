@@ -49,8 +49,8 @@ namespace menu_text_acceptance
         };
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& end = original.end_menu();
-        const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f;
-        const auto bottom = top + end.box_size - mattmath::Vector2F(end.art.shadow_offset);
+        const auto top = (labrador::Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f;
+        const auto bottom = top + end.box_size - labrador::Vector2F(end.art.shadow_offset);
         const float left_position = top.x + end.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - end.art.focus_padding.x;
         // The first static label is row 1. Exit sits on row 3 between a
@@ -163,10 +163,10 @@ namespace menu_text_acceptance
                 const auto measured = world.render.measure_text(font, source);
                 const auto retained = source;
                 UiText heading(entry.key, source, style.heading_font,
-                    mattmath::Vector2F(0.0f, end.heading_y), &world.render, end.art.ink);
+                    labrador::Vector2F(0.0f, end.heading_y), &world.render, end.art.ink);
                 source = L"Changed after construction";
-                heading.set_position(mattmath::Vector2F((1920.0f - heading.bounds().width) / 2.0f, end.heading_y));
-                const mattmath::RectangleF expected((1920.0f - measured.x) / 2.0f, end.heading_y, measured.x, measured.y);
+                heading.set_position(labrador::Vector2F((1920.0f - heading.bounds().width) / 2.0f, end.heading_y));
+                const labrador::RectangleF expected((1920.0f - measured.x) / 2.0f, end.heading_y, measured.x, measured.y);
                 require(std::isfinite(measured.x) && std::isfinite(measured.y) && measured.x > 0.0f && measured.y > 0.0f &&
                     heading.text() == retained && heading.bounds() == expected,
                     std::string("Actual End heading borrowed text, scaled, wrapped or changed centering: ") + entry.key);
@@ -200,7 +200,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool boundary = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
                     boundary ? x_offset : 0.0f, boundary ? y_offset : 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
@@ -213,7 +213,7 @@ namespace menu_text_acceptance
         };
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& end = original.end_menu();
-        require(end.box_size == mattmath::Vector2F(980.0f, 900.0f),
+        require(end.box_size == labrador::Vector2F(980.0f, 900.0f),
             "End heading fixtures no longer exercise the shipped full-height paper");
         add_font("menu_end_heading_width_edge", 980, 20);
         add_font("menu_end_heading_width_overflow", 981, 20);
@@ -228,8 +228,8 @@ namespace menu_text_acceptance
             });
             width_edge.validate_resources(world.render, world.audio);
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(width_edge.menu().heading_font), L"~");
-            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f, end.box_size);
-            const mattmath::RectangleF bounds((1920.0f - size.x) / 2.0f, end.heading_y, size.x, size.y);
+            const labrador::RectangleF paper((labrador::Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f, end.box_size);
+            const labrador::RectangleF bounds((1920.0f - size.x) / 2.0f, end.heading_y, size.x, size.y);
             require(bounds.x == paper.x && bounds.right() == paper.right() && paper.contains(bounds),
                 "End heading's unpadded centered text no longer touches both inclusive paper edges");
             variants.rejects(field, [&](rapidjson::Document& d)
@@ -271,7 +271,7 @@ namespace menu_text_acceptance
         std::vector<Glyph> small_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            small_glyphs.push_back({ character, mattmath::RectangleI(0, 0, 1, 2), 0.0f, 0.0f, 0.0f });
+            small_glyphs.push_back({ character, labrador::RectangleI(0, 0, 1, 2), 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_end_heading_small_actions",
             std::make_unique<Font>(TextureHandle{}, std::move(small_glyphs), 2.0f));
@@ -337,7 +337,7 @@ namespace menu_text_acceptance
             const auto measured = world.render.measure_text(world.render.resolve_sprite_font(plain.menu().item_font), L"{next} % [again]");
             UiText text(entry.key, source, plain.menu().item_font, position, &world.render, plain.end_menu().art.ink);
             source = L"Changed after construction";
-            require(text.text() == L"{next} % [again]" && text.bounds() == mattmath::RectangleF(position, measured),
+            require(text.text() == L"{next} % [again]" && text.bounds() == labrador::RectangleF(position, measured),
                 "Plain End continuation interpreted braces/percent, borrowed text, scaled or retained a text shadow: " + field);
             text.set_hidden(true); DrawList no_device; text.draw(no_device);
             for (const char* invalid : { "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak", "tab\ttext",
@@ -384,7 +384,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool marker = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
                     marker ? x_offset : 0.0f, marker ? y_offset : 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
@@ -413,11 +413,11 @@ namespace menu_text_acceptance
                 const auto& end = edge.end_menu();
                 const auto measured = world.render.measure_text(world.render.resolve_sprite_font(edge.menu().item_font), L"~");
                 UiText value("continuation", L"~", edge.menu().item_font, end.layout.position, &world.render, end.art.ink);
-                const mattmath::RectangleF paper(470.0f, 90.0f, 980.0f, 900.0f);
+                const labrador::RectangleF paper(470.0f, 90.0f, 980.0f, 900.0f);
                 // Like every End row, the first stops at the face, short of
                 // the paper's shade.
-                const mattmath::RectangleF face(paper.position(), paper.size() - mattmath::Vector2F(end.art.shadow_offset));
-                require(value.bounds() == mattmath::RectangleF(700.0f, 300.0f,
+                const labrador::RectangleF face(paper.position(), paper.size() - labrador::Vector2F(end.art.shadow_offset));
+                require(value.bounds() == labrador::RectangleF(700.0f, 300.0f,
                     height_edge ? 8.0f : 714.0f, height_edge ? 81.0f : 20.0f) &&
                     value.bounds().size() == measured, "Continuation edge fixture changed the actual plain unscaled UiText bounds");
                 auto padded = value.bounds(); padded.inflate(end.art.focus_padding);

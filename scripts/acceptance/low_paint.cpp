@@ -17,7 +17,6 @@
 // POL#38: the advance low-paint warning. Every decision runs through the
 // production weapon update; the fixture only reads its results.
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -64,7 +63,7 @@ namespace
         std::unique_ptr<Weapon> weapon(WeaponType type)
         {
             return WeaponBuilder::build_weapon(&this->tuning, PlayerTeam::a,
-                2, 0, Colour::white, type, Vector2F::ZERO, &this->render, &this->audio,
+                2, 0, Colour::white, type, Vector2F::zero, &this->render, &this->audio,
                 &this->preferences, &this->presentation.tool_motion(),
                 &this->presentation.weapon_feedback());
         }
@@ -72,8 +71,8 @@ namespace
 
     bool update(Weapon& weapon, bool held, float elapsed = dt)
     {
-        return !weapon.update_and_get_projectiles(input(held), Vector2F::ZERO,
-            Vector2F::ZERO, true, elapsed).empty();
+        return !weapon.update_and_get_projectiles(input(held), Vector2F::zero,
+            Vector2F::zero, true, elapsed).empty();
     }
 
     void check_lines(World& world)

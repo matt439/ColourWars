@@ -41,7 +41,7 @@ RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resour
     const Vector2F shadow = fitted.menu().detail_shadow_offset;
     colourwars::UiTextDropShadow hint_text("independent-stage-paper-hint", hint, style.brand_font,
         info + row * 7.0f, &resources, art.ink, clear_shadow, shadow);
-    const RectangleF raw = RectangleF::union_of(hint_text.text_bounds_at(Vector2F::ZERO, 1.0f),
+    const RectangleF raw = RectangleF::union_of(hint_text.text_bounds_at(Vector2F::zero, 1.0f),
         hint_text.text_bounds_at(shadow, 1.0f));
     const auto& live = fitted.main_menu().stage_select;
     const float scale = std::min(1.0f, (live.briefing.size.x - live.briefing_padding.x * 2.0f) / raw.width);
@@ -50,7 +50,7 @@ RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resour
 
     list.set_filter(TextureFilter::point);
     const UiTexture background("independent-stage-paper-background", style.sprite_sheet, style.fill_frame,
-        RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), &resources, main.home_background_colour);
+        RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), &resources, main.home_background_colour);
     background.draw(list);
     const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
         main.stage_box_size);
@@ -147,7 +147,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         colourwars::UiTextDropShadow expected("reference-stage-name", text, style.item_font, geometry.name_position,
             app.render_resources(), locked ? live.selected_ink : live.unselected,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
-        const RectangleF raw = RectangleF::union_of(expected.text_bounds_at(Vector2F::ZERO, 1.0f),
+        const RectangleF raw = RectangleF::union_of(expected.text_bounds_at(Vector2F::zero, 1.0f),
             expected.text_bounds_at(shadow, 1.0f));
         const float scale = std::min(1.0f, live.preview_size.x / raw.width);
         require(scale > 0.0f && (fit_kind != 1 || scale < 1.0f) && (fit_kind != 2 || scale == 1.0f),
@@ -158,11 +158,11 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
             "Independent stage name and shadow escape the preview's width budget");
         const Frame actual = frame();
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);
@@ -227,16 +227,16 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
                 presentation.main_menu().stage_select.unselected, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
         const RectangleF bounds = expected.bounds();
         const RectangleF panel(geometry.briefing.position, geometry.briefing.size);
-        require(panel.contains(bounds) && RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION).contains(bounds) &&
+        require(panel.contains(bounds) && RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION).contains(bounds) &&
             bounds.bottom() <= (info + geometry.briefing.spacing * 7.0f).y,
             "Independent unscaled stage status/shadow escapes the full briefing or reaches its hint row");
         const Frame actual = frame();
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);

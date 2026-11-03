@@ -10,7 +10,6 @@
 #include "engine/render/text.h"
 #include <algorithm>
 
-using namespace mattmath;
 using namespace labrador;
 
 PlayerIdentityHud::PlayerIdentityHud(const Presentation* presentation, RenderResources* render_resources,
@@ -29,7 +28,7 @@ void PlayerIdentityHud::add_bot_text(std::size_t participant, BotDifficulty diff
 	this->bot_texts_[participant] = std::make_unique<Text>(
 		this->presentation_->menu_text().bot_roster_label(static_cast<int>(participant),
 			difficulty), this->presentation_->hud().player_identity_font,
-		Vector2F::ZERO, this->render_resources_, this->presentation_->player_identity().ink_colour);
+		Vector2F::zero, this->render_resources_, this->presentation_->player_identity().ink_colour);
 }
 
 void PlayerIdentityHud::create_badge()
@@ -151,7 +150,7 @@ void PlayerIdentityHud::draw_bot(DrawList& list, RectangleF badge, int bot,
 	const RectangleF& visible, const PaperCard& paper) const
 {
 	const Text& text = *this->bot_texts_[static_cast<std::size_t>(bot)];
-	const RectangleF measured = text.text_bounds_at(Vector2F::ZERO, 1.0f);
+	const RectangleF measured = text.text_bounds_at(Vector2F::zero, 1.0f);
 	const PlayerIdentityPresentation& look = this->presentation_->player_identity();
 	const float emphasis = badge.width / look.world_size.x;
 	const float scale = emphasis * std::min(

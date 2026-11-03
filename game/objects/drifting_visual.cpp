@@ -5,7 +5,6 @@
 #include <numbers>
 
 using namespace labrador;
-using namespace mattmath;
 
 DriftingVisual::DriftingVisual(const std::string& sheet_name, const std::string& frame_name,
 	const RectangleF& anchor, RenderResources* render_resources,
@@ -30,7 +29,7 @@ DriftingVisual::DriftingVisual(const std::string& sheet_name, const std::string&
 	const SpriteFrame& frame = this->sprite_sheet()->sprite_frame(this->frame());
 	this->anchor_bounds_ = sprite_world_bounds(anchor, frame.source_rectangle(),
 		0.0f, frame.origin());
-	const RectangleF error = sprite_world_bounds(RectangleF::ZERO,
+	const RectangleF error = sprite_world_bounds(RectangleF::zero,
 		frame.source_rectangle(), 0.0f, frame.origin(), 1.0f);
 	this->pixel_padding_ = Vector2F(-error.x, -error.y);
 	this->refresh_offset();

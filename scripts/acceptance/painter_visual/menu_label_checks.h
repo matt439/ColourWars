@@ -104,7 +104,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         MenuPaperArtPresentation art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
         Vector2F size = role == 1 ? main.team_box_size : role == 2 ? main.weapon_box_size : main.setup_box_size;
         RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - size) / 2.0f, size);
-        Vector2F position, shadow = Vector2F::ZERO; std::string font; Colour ink = art.ink; bool plain = false;
+        Vector2F position, shadow = Vector2F::zero; std::string font; Colour ink = art.ink; bool plain = false;
         if (role <= 2)
         {
             const auto spacing = role == 0 ? main.player_count_spacing : role == 1 ? main.team_select.spacing : main.weapon_select.spacing;
@@ -157,7 +157,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             "Results label/unchanged percentage overlaps another row or prompt"); }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup focus;
         std::unique_ptr<UiTexture> focus_bounds;

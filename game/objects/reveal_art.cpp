@@ -2,7 +2,6 @@
 #include "game/objects/reveal_art.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 RevealArt::RevealArt(const OpeningPresentation* look, RenderResources* resources) :
     CrudeDrawing(look->sprite_sheet, look->fill_frame, resources),
@@ -64,9 +63,9 @@ void RevealArt::draw(DrawList& list, const RectangleF& bounds, std::wstring_view
         Vector2F(outline, -outline), Vector2F(-outline, outline), Vector2F(outline, outline) })
     {
         list.draw_text(this->font_, label, at + offset, premultiplied(art.ink),
-            scale, 0.0f, Vector2F::ZERO, 0.0f);
+            scale, 0.0f, Vector2F::zero, 0.0f);
     }
-    list.draw_text(this->font_, label, at, premultiplied(team), scale, 0.0f, Vector2F::ZERO, 0.0f);
+    list.draw_text(this->font_, label, at, premultiplied(team), scale, 0.0f, Vector2F::zero, 0.0f);
     list.set_filter(TextureFilter::point);
 
     if (!reduced_effects && click_age >= 0.0f && click_age < art.beat_duration)

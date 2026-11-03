@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-using namespace mattmath;
+using namespace labrador;
 
 // Phase 1: End's actions in every row they can take.
 void Presentation::Validation::validate_end_actions() const

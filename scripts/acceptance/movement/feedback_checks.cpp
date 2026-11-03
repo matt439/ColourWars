@@ -20,7 +20,7 @@ namespace movement_acceptance
         const ProjectileSpray& shot = suite.shot;
         const int fatal_hits = suite.fatal_hits;
         const auto course = [&](float bottom = 0.0f,
-            const Vector2F& velocity = Vector2F::ZERO)
+            const Vector2F& velocity = Vector2F::zero)
         {
             return suite.course(bottom, velocity);
         };
@@ -208,7 +208,7 @@ namespace movement_acceptance
 
         for (int hit = 0; hit < fatal_hits && frozen->player->health() > 0; ++hit)
         {
-            frozen->player->on_contact(shot, Vector2F::ZERO, 0);
+            frozen->player->on_contact(shot, Vector2F::zero, 0);
         }
         frozen->player->end_contacts();
         require(frozen->player->movement_feedback().effects().empty(),

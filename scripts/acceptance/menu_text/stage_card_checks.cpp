@@ -142,7 +142,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 if (omit_digit && character == digit) { continue; }
-                glyphs.push_back({character, mattmath::RectangleI(0, 0, character == U'~' ? tilde_width : 8,
+                glyphs.push_back({character, labrador::RectangleI(0, 0, character == U'~' ? tilde_width : 8,
                     character == U'~' ? tilde_height : character == digit ? digit_height : 16),
                     character == digit ? digit_x : 0.0f, character == digit ? digit_y : 0.0f, 0.0f});
             }
@@ -172,9 +172,9 @@ namespace menu_text_acceptance
             colourwars::UiTextDropShadow label(entry.key, source, font, point, &world.render,
                 Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.detail_shadow_offset);
             source = L"Changed after construction";
-            const auto bounds = mattmath::RectangleF::union_of(mattmath::RectangleF(point, size),
-                mattmath::RectangleF(point + style.detail_shadow_offset, size));
-            require(label.text() == literal && label.text_bounds() == mattmath::RectangleF(point, size) &&
+            const auto bounds = labrador::RectangleF::union_of(labrador::RectangleF(point, size),
+                labrador::RectangleF(point + style.detail_shadow_offset, size));
+            require(label.text() == literal && label.text_bounds() == labrador::RectangleF(point, size) &&
                 label.bounds() == bounds && label.shadow_scale() == 1.0f &&
                 label.shadow_offset() == style.detail_shadow_offset,
                 "Arena summary did not retain literal text, actual role font and unscaled transparent shadow bounds");
@@ -338,12 +338,12 @@ namespace menu_text_acceptance
                 source = L"Changed after construction";
                 style.brand_font = "lato_black_48";
                 style.detail_font = "lato_black_48";
-                style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
+                style.detail_shadow_offset = labrador::Vector2F(10.0f, 10.0f);
                 style.shadow_colour = style.warning;
-                stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
-                const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
-                    mattmath::RectangleF(point + shadow, measured));
-                require(text.text() == retained && text.text_bounds() == mattmath::RectangleF(point, measured) &&
+                stage.briefing.position += labrador::Vector2F(40.0f, 40.0f);
+                const auto expected = labrador::RectangleF::union_of(labrador::RectangleF(point, measured),
+                    labrador::RectangleF(point + shadow, measured));
+                require(text.text() == retained && text.text_bounds() == labrador::RectangleF(point, measured) &&
                     text.bounds() == expected && text.shadow_offset() == shadow && text.shadow_scale() == 1.0f &&
                     text.shadow_color() == shadow_colour &&
                     std::isfinite(expected.width) && std::isfinite(expected.height) && expected.width > 0.0f && expected.height > 0.0f,
@@ -408,7 +408,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool boundary = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
                     boundary ? x_offset : 0.0f, boundary ? y_offset : 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));

@@ -3,7 +3,6 @@
 #include <algorithm>
 
 using namespace labrador;
-using namespace mattmath;
 
 PadButtonsMenu::PadButtonsMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
 

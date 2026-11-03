@@ -63,22 +63,22 @@ namespace paint_surfaces_acceptance
             builder_ = std::make_unique<LevelBuilder>(&viewports_, &render, &audio, &preferences,
                 &levels_, &tuning, &presentation, &resolution_, nullptr, &partitioner_);
         }
-        std::unique_ptr<StructurePaintable> surface(const mattmath::RectangleF& rectangle,
-            const PaintableFaces& faces, std::span<const mattmath::RectangleF> obstacles = {})
+        std::unique_ptr<StructurePaintable> surface(const labrador::RectangleF& rectangle,
+            const PaintableFaces& faces, std::span<const labrador::RectangleF> obstacles = {})
         {
             return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", rectangle,
-                std::make_unique<mattmath::RectangleF>(rectangle), &render, &audio, &preferences,
+                std::make_unique<labrador::RectangleF>(rectangle), &render, &audio, &preferences,
                 &tuning.paint(), CollisionObjectType::structure_paintable, TeamColour{}, faces, obstacles);
         }
-        void paint(StructurePaintable& surface, const mattmath::RectangleF& splash, PlayerTeam team, int owner)
+        void paint(StructurePaintable& surface, const labrador::RectangleF& splash, PlayerTeam team, int owner)
         {
             const ProjectileTuning& spray = tuning.projectile(ProjectileType::spray);
-            mattmath::RectangleF launch = splash;
-            const mattmath::Vector2F half = spray.details.col_rect_size / 2.0f;
+            labrador::RectangleF launch = splash;
+            const labrador::Vector2F half = spray.details.col_rect_size / 2.0f;
             launch.offset(half.x, half.y);
-            const ProjectileSpray shot(launch, mattmath::Vector2F::ZERO, team, owner, labrador::Colour::white,
+            const ProjectileSpray shot(launch, labrador::Vector2F::zero, team, owner, labrador::Colour::white,
                 &render, resolve_projectile_strip(spray, render), &spray);
-            surface.on_contact(shot, mattmath::Vector2F::ZERO, 0.0f);
+            surface.on_contact(shot, labrador::Vector2F::zero, 0.0f);
         }
         std::unique_ptr<Level> level(const std::string& stage, unsigned int seed)
         {
@@ -116,7 +116,7 @@ namespace paint_surfaces_acceptance
         std::vector<std::uint64_t> result{ static_cast<std::uint64_t>(samples.size()) };
         for (const PaintSurfaceSample& sample : samples)
         {
-            for (const mattmath::Vector2F& corner : sample.corners)
+            for (const labrador::Vector2F& corner : sample.corners)
             { result.push_back(bits(corner.x)); result.push_back(bits(corner.y)); }
             result.push_back(static_cast<std::uint64_t>(sample.face));
             result.push_back(static_cast<std::uint64_t>(sample.team));
@@ -165,14 +165,14 @@ namespace paint_surfaces_acceptance
         result.player_areas = info.player_areas;
         return result;
     }
-    inline mattmath::RectangleF static_rectangle(const PaintSurfaceSample& sample)
+    inline labrador::RectangleF static_rectangle(const PaintSurfaceSample& sample)
     {
         const auto& p = sample.corners;
-        for (const mattmath::Vector2F& corner : p)
+        for (const labrador::Vector2F& corner : p)
         { require(std::isfinite(corner.x) && std::isfinite(corner.y), "Snapshot corner is not finite"); }
         require(p[0].y == p[1].y && p[1].x == p[2].x && p[2].y == p[3].y && p[3].x == p[0].x &&
             p[1].x > p[0].x && p[2].y > p[1].y, "Current static sample lost its ordered exact rectangle corners");
-        return mattmath::RectangleF(p[0].x, p[0].y, p[1].x - p[0].x, p[3].y - p[0].y);
+        return labrador::RectangleF(p[0].x, p[0].y, p[1].x - p[0].x, p[3].y - p[0].y);
     }
     inline std::vector<PaintSurfaceSample> snapshot(const PaintableObject& object, std::size_t source = 0)
     { std::vector<PaintSurfaceSample> samples; object.append_paint_surfaces(samples, source); return samples; }

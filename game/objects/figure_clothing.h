@@ -12,7 +12,7 @@ class FigureClothing final : public colourwars::AnimationObject
 public:
     FigureClothing(const PlayerAnimationTuning& clip,
         labrador::RenderResources* resources, const labrador::Colour& colour,
-        float rotation, const mattmath::Vector2F& origin,
+        float rotation, const labrador::Vector2F& origin,
         labrador::SpriteFlip flip, float layer_depth) :
         colourwars::AnimationObject(clip.sheet, clip.paint_strip, resources, colour,
             rotation, origin, flip, layer_depth)
@@ -32,7 +32,7 @@ public:
     void advance(float dt) { colourwars::AnimationObject::update(dt); }
     void select_frame(int frame) { this->set_frame_index(frame); }
 
-    void draw(labrador::DrawList& list, const mattmath::RectangleF& rectangle,
+    void draw(labrador::DrawList& list, const labrador::RectangleF& rectangle,
         const labrador::Colour& colour, labrador::SpriteFlip flip) const
     {
         this->draw_with(list, rectangle, colour, flip);

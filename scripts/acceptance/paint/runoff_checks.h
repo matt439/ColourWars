@@ -24,9 +24,9 @@ namespace
         {
             const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
             area.offset(half.x, half.y);
-            const ProjectileSpray shot(area, Vector2F::ZERO, team, owner,
+            const ProjectileSpray shot(area, Vector2F::zero, team, owner,
                 colours.team_colour(team), &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render), &tuning.projectile(ProjectileType::spray));
-            object.on_contact(shot, Vector2F::ZERO, 0);
+            object.on_contact(shot, Vector2F::zero, 0);
         };
         const auto prime = [&](StructurePaintable& object, float x, float bottom = 160.0f)
         {
@@ -66,8 +66,8 @@ namespace
             require(visuals.size() == 1 && visuals[0].team == PlayerTeam::a,
                 "A projectile contact did not allocate one runoff on its wall strip");
             const float source = visuals[0].source_y;
-            require(visuals[0].head_y == source && visuals[0].bead == RectangleF::ZERO &&
-                visuals[0].trail == RectangleF::ZERO, "Runoff moved before its authored delay");
+            require(visuals[0].head_y == source && visuals[0].bead == RectangleF::zero &&
+                visuals[0].trail == RectangleF::zero, "Runoff moved before its authored delay");
             const float black_edge = is_left ? x + look.thickness - look.edge_width : x + look.edge_width;
             require(is_left ? visuals[0].owned_band.right() <= black_edge :
                 visuals[0].owned_band.left() >= black_edge, "Runoff covers the inward black edge");

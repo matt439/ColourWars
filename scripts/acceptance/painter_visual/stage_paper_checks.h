@@ -95,7 +95,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const Frame actual = frame(); const auto& style = captured.menu(); const auto& look = captured.main_menu(); const auto& geometry = look.stage_select; const auto& live = refreshed.main_menu().stage_select;
         const auto& text = captured.menu_text(); auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
         const bool random = slot == static_cast<int>(stages.size()); const size_t candidate_count = eligible().size();
-        const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), preview(geometry.preview_position, geometry.preview_size);
+        const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), preview(geometry.preview_position, geometry.preview_size);
         RectangleF edge = preview; edge.inflate(style.rule_height);
         const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.stage_box_size) / 2.0f, look.stage_box_size);
         const float border = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(border), paper.size() - Vector2F(border * 2.0f + art.shadow_offset));
@@ -108,10 +108,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const auto& display = stages[static_cast<size_t>(random ? 0 : slot)].display_name;
         const std::wstring arena = random ? text.values.random : std::wstring(display.cbegin(), display.cend());
         auto* arena_name = label(arena, style.item_font, geometry.name_position, locked ? live.selected_ink : live.unselected, refreshed.menu().item_shadow_offset);
-        const RectangleF raw_name = RectangleF::union_of(arena_name->text_bounds_at(Vector2F::ZERO, 1.0f), arena_name->text_bounds_at(refreshed.menu().item_shadow_offset, 1.0f));
+        const RectangleF raw_name = RectangleF::union_of(arena_name->text_bounds_at(Vector2F::zero, 1.0f), arena_name->text_bounds_at(refreshed.menu().item_shadow_offset, 1.0f));
         const float name_scale = std::min(1.0f, live.preview_size.x / raw_name.width); arena_name->set_scale(name_scale); arena_name->set_shadow_scale(name_scale); arena_name->set_shadow_offset(refreshed.menu().item_shadow_offset * name_scale);
         label(random ? text.stage.random_navigation : L"<   ARENA " + std::to_wstring(slot + 1) + L" / " + std::to_wstring(stages.size()) + L"   >", style.detail_font, geometry.navigation_position, art.ink, style.detail_shadow_offset);
-        colourwars::UiTextDropShadow question("independent-stage-question", L"?", look.announcement_font, Vector2F::ZERO, app.render_resources(), style.highlight, style.shadow_colour, style.title_shadow_offset);
+        colourwars::UiTextDropShadow question("independent-stage-question", L"?", look.announcement_font, Vector2F::zero, app.render_resources(), style.highlight, style.shadow_colour, style.title_shadow_offset);
         question.set_position(preview.center() - question.bounds().center());
         const Vector2F info = geometry.briefing.position + geometry.briefing_padding, row = geometry.briefing.spacing;
         const bool solo = settings.player_count() == 1; const int best_of = settings.best_of();
@@ -128,15 +128,15 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         brief(locked ? text.stage.locked_status : text.stage.browse_status, style.detail_font, 6.0f, locked ? live.selected_ink : live.unselected);
         const std::wstring hint = locked ? text.stage.locked_hint : random ? L"Random: " + std::to_wstring(candidate_count) + L" available arenas.\nConfirm to lock your choice." : text.stage.browse_hint;
         auto* hint_text = label(hint, style.brand_font, info + row * 7.0f, art.ink, refreshed.menu().detail_shadow_offset);
-        const RectangleF raw_hint = RectangleF::union_of(hint_text->text_bounds_at(Vector2F::ZERO, 1.0f), hint_text->text_bounds_at(refreshed.menu().detail_shadow_offset, 1.0f));
+        const RectangleF raw_hint = RectangleF::union_of(hint_text->text_bounds_at(Vector2F::zero, 1.0f), hint_text->text_bounds_at(refreshed.menu().detail_shadow_offset, 1.0f));
         const float hint_scale = std::min(1.0f, (live.briefing.size.x - live.briefing_padding.x * 2.0f) / raw_hint.width);
         hint_text->set_scale(hint_scale); hint_text->set_shadow_scale(hint_scale); hint_text->set_shadow_offset(refreshed.menu().detail_shadow_offset * hint_scale); briefing_bounds.push_back(hint_text->bounds());
         RectangleF expected_card(geometry.briefing.position, geometry.briefing.size);
         for (auto bounds : briefing_bounds) { bounds.inflate(art.keyline_width * 3.0f + art.shadow_offset); expected_card = RectangleF::union_of(expected_card, bounds); }
         require(inside.contains(expected_card) && inside.contains(heading->bounds()) && inside.contains(arena_name->bounds()) && !expected_card.intersects(edge), "Independent Stage paper/card/text escapes its captured outer paper or crosses the preview");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(design, viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Camera camera = Camera::frame(design, viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* fill_sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto fill = fill_sheet->resolve_sprite_frame(style.fill_frame);
         fill_sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
         const float offset = std::min(style.accent_width * (arrow + press), std::max(0.0f, geometry.briefing_padding.y - style.accent_width));
@@ -269,7 +269,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
         {
             app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
             const auto pixels = [&](RectangleF bounds) { bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds); };
             const auto expect = [&](const char* name, int count, int selected, const std::wstring& line)
             {

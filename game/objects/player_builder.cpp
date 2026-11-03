@@ -3,7 +3,6 @@
 #include "game/config/presentation/presentation.h"
 #include "game/match/paint_owners.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -60,7 +59,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 		const Viewport viewport = setting.controller == PlayerController::bot ?
 			viewport_manager->fullscreen_viewport() : viewport_manager->player_viewport(human_view++);
 
-		Vector2F position = Vector2F::ZERO;
+		Vector2F position = Vector2F::zero;
 		if (setting.team == PlayerTeam::a)
 		{
 			position = team_spawn(team_a_spawns, team_a_index++, "team_a",
@@ -99,7 +98,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			WeaponType::grenade_std,
 			team_colours.team_colour(setting.team),
 			viewport,
-			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
+			position, Vector2F::zero, 0.0f, Vector2F::zero,
 			SpriteFlip::none, 0.0f, participant_index, &this->presentation_->figure(),
 			&this->presentation_->camera().shake, person);
 		player->set_handicap(setting.handicap);

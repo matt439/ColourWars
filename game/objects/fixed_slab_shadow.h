@@ -15,11 +15,11 @@ public:
         labrador::RenderResources* resources);
     void update(float) override {}
     void draw(labrador::DrawList& list) const override;
-    mattmath::RectangleF bounds() const override;
-    mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
+    labrador::RectangleF bounds() const override;
+    labrador::RectangleF cull_bounds(float units_per_pixel) const override;
 private:
     FixedSlabGeometry geometry_;
     std::vector<std::pair<float, float>> intervals_;
-    std::array<mattmath::RectangleI, AirbrushShadow::VARIANTS> tiles_{};
-    mattmath::RectangleF bounds_;
+    std::array<labrador::RectangleI, AirbrushShadow::VARIANTS> tiles_{};
+    labrador::RectangleF bounds_;
 };

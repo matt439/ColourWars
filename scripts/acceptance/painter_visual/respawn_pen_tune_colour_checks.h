@@ -183,7 +183,7 @@ public:
 
     void whole(bool value)
     {
-        if (value) { whole_saved_state_ = player_state_; player_->set_pose({ Vector2F::ZERO, 0.0f, false, true }); }
+        if (value) { whole_saved_state_ = player_state_; player_->set_pose({ Vector2F::zero, 0.0f, false, true }); }
         else { player_->set_pose({}); require(snapshot() == whole_saved_state_, "Whole pose failed to restore the frozen Player"); }
         player_state_ = snapshot();
     }
@@ -224,7 +224,7 @@ private:
         const Canvas canvas(app_.render_resources(), background);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++readbacks_; return read(renderer);
     }
     Application& app_; const GameTuning& tuning_; const Presentation& presentation_;

@@ -16,7 +16,7 @@ namespace stage_scan_diagnostics
 {
 	struct Layout
 	{
-		mattmath::RectangleF paper, heading, unicode_hint, body, progress;
+		labrador::RectangleF paper, heading, unicode_hint, body, progress;
 	};
 	Layout layout(const StageScanPresentation& look, const MenuPaperArtPresentation& art,
 		float content_height, const labrador::Font& font, const StageScanMenuText& copy);

@@ -214,8 +214,8 @@ namespace debug_console_acceptance
 
 	void check_polish(GameTuning& tuning, Presentation& presentation)
 	{
-		using mattmath::RectangleF;
-		using mattmath::Vector2F;
+		using labrador::RectangleF;
+		using labrador::Vector2F;
 		// The end page offers the next playable action for each kind of finish.
 		const MenuResultsText original_results = presentation.menu_text().results;
 		LevelEndInfo win;

@@ -143,7 +143,7 @@
             {
                 Renderer& renderer = *this->app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
                 DrawList list = renderer.view(0); list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-                list.set_camera(Camera::DEFAULT_CAMERA);
+                list.set_camera(Camera::default_camera);
                 const Canvas background(this->app_.render_resources(), Colour(32, 64, 96));
                 background.draw(list, { 0, 0, 1280, 720 });
                 for (size_t roster = 0; roster < this->ui_.size(); ++roster)

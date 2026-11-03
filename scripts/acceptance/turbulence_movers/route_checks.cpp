@@ -18,7 +18,7 @@ namespace turbulence_movers_acceptance
                 std::to_string(trial.player().carrier_id());
         }
 
-        void on_static(const Trial& trial, const mattmath::RectangleF& support, const std::string& label)
+        void on_static(const Trial& trial, const labrador::RectangleF& support, const std::string& label)
         {
             const auto& body = trial.player().rectangle();
             require(supported(trial.player()) && trial.player().carrier_id() == 0 &&

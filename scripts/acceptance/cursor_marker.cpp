@@ -23,7 +23,6 @@
 // at 720, 1080 and 1440 lines, and every presentation refusal. No device.
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -263,7 +262,7 @@ namespace
         const CursorMarkerFrame& inner = frames[2];
         const RectangleF hole(inner.box.x + inner.width, inner.box.y + inner.width,
             inner.box.width - inner.width * 2.0f, inner.box.height - inner.width * 2.0f);
-        require(hole.width >= 2.0f && hole.contains(RectangleF(at, Vector2F::ZERO)),
+        require(hole.width >= 2.0f && hole.contains(RectangleF(at, Vector2F::zero)),
             where + ": the hollow centre closed over the hotspot");
         ++checked_frames;
     }

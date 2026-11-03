@@ -49,9 +49,6 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     MenuContext context(&data, &input, &plan);
     const HWND window = static_cast<HWND>(app.window());
     require(IsWindow(window) != FALSE && !app.fullscreen(), "Home alpha fixture needs its own windowed process");
-    // set_resolution would activate the hidden window; trials resize it too, so
-    // the veto stays until every retained trial is destroyed.
-    const SettingsProbeActivationGuard activation(window);
     app.set_resolution(ScreenResolution::s_1280_720);
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     require(app.resolution_manager()->resolution_ivec() == Vector2I(1280, 720) &&
@@ -128,8 +125,8 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
     const SpriteFrame& pixel = sheet->sprite_frame(sheet->resolve_sprite_frame(style.fill_frame));
     const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-    const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
-    const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION);
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+    const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
     const RectangleI corner(8, 8, 16, 16);
     const std::array<Colour, 2> backgrounds{ Colour(0, 0, 0), Colour(32, 64, 96) };
     const std::array<Colour, 3> palettes{ Colour(176, 176, 168), Colour(32, 96, 192, 128), Colour(165, 50, 214, 0) };
@@ -138,7 +135,7 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         require(readbacks < 235, "Home alpha fixture exceeded its explicit readback budget");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
         Canvas(app.render_resources(), backgrounds[background]).draw(list, RectangleF(0.0f, 0.0f, 1280.0f, 720.0f));
         list.set_camera(camera); draw(list); ++readbacks;

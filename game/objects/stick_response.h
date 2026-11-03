@@ -6,13 +6,13 @@
 struct StickResponse
 {
 	float movement = 0.0f;
-	mattmath::Vector2F aim = mattmath::Vector2F::ZERO;
+	labrador::Vector2F aim = labrador::Vector2F::zero;
 };
 
 // Shared by gameplay and the live settings preview. Movement uses horizontal
 // travel; aiming uses a radial cutoff and preserves the stick's direction.
-inline StickResponse stick_response(const mattmath::Vector2F& left,
-	const mattmath::Vector2F& right, float authored_movement,
+inline StickResponse stick_response(const labrador::Vector2F& left,
+	const labrador::Vector2F& right, float authored_movement,
 	const PlaySettings& preferences, int slot)
 {
 	return {

@@ -125,7 +125,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     };
     const auto apply = [&](Vector2I size, bool success)
     {
-        go(5); const HWND window = static_cast<HWND>(app.window()); const SettingsProbeActivationGuard guard(window);
+        go(5); const HWND window = static_cast<HWND>(app.window());
         const auto before = bytes(); const auto resolution = preferences.resolution();
         const bool fullscreen = preferences.fullscreen(); const auto palette = preferences.team_palette();
         const bool display_trial = resolution != ScreenResolution::s_1920_1080 || fullscreen || app.fullscreen();
@@ -145,7 +145,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     std::ofstream records(output / "options-defaults.csv"); records << "case,width,height,input_slot,row,staged,active_fullscreen,status,full_frame_matches\n";
     const auto compare = [&](const std::string& name, bool capture = false)
     {
-        preserved(preferences_session.play_settings()); const Frame actual = frame(); const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION);
+        preserved(preferences_session.play_settings()); const Frame actual = frame(); const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
         const RectangleF paper((Vector2F(1920.0f, style.footer_y) - look.options_box_size) / 2.0f, look.options_box_size);
         const float height = look.options_spacing.y - art.focus_padding.y * 2.0f;
         const std::array<std::wstring, 3> values{ saved_fullscreen ? std::to_wstring(actual.width) + L"x" + std::to_wstring(actual.height) : staged ? L"1920x1080" : L"1280x720",
@@ -177,8 +177,8 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         const float available = paper.right() - art.shadow_offset - art.focus_padding.x - look.options_status_position.x;
         if (message->bounds().width > available) { message->set_scale(available / message->bounds().width); }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const auto viewport = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(design, viewport);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto pixel = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour); sheet->draw(list, pixel, design, look.home_background_colour);
         setup_paper_reference(list, *app.render_resources(), style, art, paper, bounds[static_cast<size_t>(row)]);

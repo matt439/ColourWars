@@ -29,7 +29,7 @@ namespace turbulence_movers_acceptance
             return result;
         }
 
-        bool on_static(const Trial& trial, const mattmath::RectangleF& support)
+        bool on_static(const Trial& trial, const labrador::RectangleF& support)
         {
             const auto& body = trial.player().rectangle();
             return supported(trial.player()) && trial.player().carrier_id() == 0 &&

@@ -86,14 +86,14 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
             {
                 DrawList list = renderer.view(view);
                 list.set_viewport(level->player(view).viewport());
-                list.set_camera(Camera::DEFAULT_CAMERA);
+                list.set_camera(Camera::default_camera);
                 list.set_filter(TextureFilter::linear);
                 const auto line = [&](const std::wstring& text, int row)
                 {
                     list.draw_text(font, text, position(row) + look.shadow_offset,
-                        restore.shadow, look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+                        restore.shadow, look.shadow_scale, 0.0f, Vector2F::zero, 0.0f);
                     list.draw_text(font, text, position(row), restore.ink, look.font_scale,
-                        0.0f, Vector2F::ZERO, 0.0f);
+                        0.0f, Vector2F::zero, 0.0f);
                 };
                 line(level->player(view).input_primary_shoot() ?
                     L"primary-shooting: true" : L"primary-shooting: false", simulation_row - 1);

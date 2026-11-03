@@ -20,7 +20,6 @@
 #include <memory>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace skirmish_acceptance
 {

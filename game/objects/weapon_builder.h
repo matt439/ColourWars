@@ -23,7 +23,7 @@ public:
 		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
-		const mattmath::Vector2F& player_center,
+		const labrador::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,

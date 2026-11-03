@@ -89,7 +89,7 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         "Console alpha independent caret advance differs from the captured font");
     const SpriteSheet* const sheet = resources->sprite_sheet("sprite_sheet_1");
     const SpriteFrame& pixel = sheet->sprite_frame(sheet->resolve_sprite_frame("pixel"));
-    require(pixel.origin() == Vector2F::ZERO, "Console alpha raw pixel fixture needs zero source origin");
+    require(pixel.origin() == Vector2F::zero, "Console alpha raw pixel fixture needs zero source origin");
     DebugConsoleView frozen(false), live(true); frozen.init(data); live.init(data);
     DebugPerf perf; perf.set_counts(17, 3); perf.begin_draw(0.0); perf.end_draw(0.5);
     perf.add_update(0.5); perf.begin_draw(16.0); perf.end_draw(18.0);
@@ -171,7 +171,7 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         std::srand(9287); const int next_random = std::rand(); std::srand(9287);
         const Canvas canvas(resources, backgrounds[background]); Renderer& renderer = *app.renderer();
         renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 });
         if (consumer == 0) { frozen.draw(renderer, data, impl); }
         else if (consumer == 1) { live.draw(renderer, data, impl); }
@@ -199,20 +199,20 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
     {
         const Canvas canvas(resources, backgrounds[background]); Renderer& renderer = *app.renderer();
         renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 });
         const auto rectangle = [&](const RectangleF& box, const Colour& tint)
         { list.draw_sprite(sheet->texture(), pixel.source_rectangle(), box, tint,
-            0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f); };
+            0.0f, Vector2F::zero, SpriteFlip::none, 0.0f); };
         const auto premultiplied = [](const Colour& tint)
         { return Colour(tint.r * tint.a, tint.g * tint.a, tint.b * tint.a, tint.a); };
         const auto text = [&](const std::string& value, const Vector2F& position, const Colour& tint)
         {
             const std::wstring wide(value.begin(), value.end());
             list.draw_text(font_handle, wide, position + geometry.shadow_offset, premultiplied(shadow),
-                geometry.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+                geometry.shadow_scale, 0.0f, Vector2F::zero, 0.0f);
             list.draw_text(font_handle, wide, position, premultiplied(tint),
-                geometry.font_scale, 0.0f, Vector2F::ZERO, 0.0f);
+                geometry.font_scale, 0.0f, Vector2F::zero, 0.0f);
         };
         const auto width = [&](const std::string& value)
         { return resources->measure_text(font_handle, std::wstring(value.begin(), value.end())).x * geometry.font_scale; };

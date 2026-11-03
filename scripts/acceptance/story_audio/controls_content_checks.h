@@ -260,7 +260,7 @@ namespace
 
 		// The maximum paper size preserves the menu margins; the last row and its
 		// focus card still end above the status. Text fitting uses real fonts.
-		require(menu.box_size == mattmath::Vector2F(1760.0f, content_height - 40.0f) &&
+		require(menu.box_size == labrador::Vector2F(1760.0f, content_height - 40.0f) &&
 			menu.layout.position.y + menu.layout.spacing.y * 10.0f + menu.layout.size.y +
 				menu.art.focus_padding.y + menu.art.shadow_offset < menu.status_position.y &&
 			menu.controls_position.x + menu.controls_size.x < (1920.0f + menu.box_size.x) / 2.0f &&

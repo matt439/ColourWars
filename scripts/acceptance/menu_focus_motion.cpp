@@ -15,7 +15,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

@@ -14,7 +14,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -101,7 +100,7 @@ namespace
         std::unique_ptr<Weapon> weapon(const GameTuning& tuning, WeaponType type)
         {
             return WeaponBuilder::build_weapon(&tuning, PlayerTeam::a, 0, 0,
-                Colour::white, type, Vector2F::ZERO, &render, &audio, &preferences);
+                Colour::white, type, Vector2F::zero, &render, &audio, &preferences);
         }
     };
 
@@ -115,7 +114,7 @@ namespace
             const Vector2F& velocity, RenderResources* render) :
             Projectile(velocity, PlayerTeam::a, 0, Colour::white, type, render,
                 resolve_projectile_strip(*tuning, *render), tuning),
-            rectangle_(Vector2F::ZERO, tuning->details.col_rect_size)
+            rectangle_(Vector2F::zero, tuning->details.col_rect_size)
         {
         }
         void update(float dt) override
@@ -191,7 +190,7 @@ namespace
                     }
                 }
             }
-            IntegratorProbe lifetime(&record, type, Vector2F::ZERO, &world.render);
+            IntegratorProbe lifetime(&record, type, Vector2F::zero, &world.render);
             lifetime.update(record.details.delete_timer);
             require(!lifetime.for_deletion(), "First projectile sweep was retired at its lifetime boundary");
             lifetime.update(0.0f);
@@ -208,7 +207,7 @@ namespace
         constexpr float dt = 0.01f; // Before authored diffusion begins.
         for (size_t index = 0; index < shots.size(); ++index)
         {
-            const float angle = legacy ? fan_order[index] * PI / 12.0f : fan_order[index] * tuning.spread_step;
+            const float angle = legacy ? fan_order[index] * pi / 12.0f : fan_order[index] * tuning.spread_step;
             const Vector2F launch = Vector2F::rotate_vector(velocity, angle);
             Reference expected{ launch, shots[index]->shape()->bounding_box() };
             expected.update(tuning, tuning.wind_stop_factor, dt);
@@ -236,13 +235,13 @@ namespace
         PlayerInputData input;
         input.connected = true;
         input.shoot_direction_requested = true;
-        input.shoot_angle = -PI / 2.0f; // Roller deliberately follows facing.
+        input.shoot_angle = -pi / 2.0f; // Roller deliberately follows facing.
         for (const bool right : { true, false })
         {
             require(weapon.update_and_get_projectiles(input, center, {100.0f, -80.0f}, right, 0.0f).empty(),
                 "A released roller fired during its aim check");
-            const float rotation = legacy ? (right ? PI / 4.0f : 3.0f * PI / 4.0f) :
-                (right ? tuning.aim_tilt : PI - tuning.aim_tilt);
+            const float rotation = legacy ? (right ? pi / 4.0f : 3.0f * pi / 4.0f) :
+                (right ? tuning.aim_tilt : pi - tuning.aim_tilt);
             require(weapon.rotation() == rotation &&
                 weapon.nozzle_pos() == expected_nozzle(tuning.details, center, rotation, right),
                 "Actual roller angle or mirrored launch nozzle changed from its reference formula");
@@ -256,7 +255,7 @@ namespace
         const ProjectileBuilder builder(&tuning, &world.render);
         for (const Vector2F velocity : { Vector2F(1000.0f, 0.0f), Vector2F(-750.0f, 200.0f) })
         {
-            auto mist = builder.build_projectiles(Vector2F::ZERO, velocity,
+            auto mist = builder.build_projectiles(Vector2F::zero, velocity,
                 PlayerTeam::a, 0, Colour::white, ProjectileType::mist, &world.render);
             check_mist(mist, tuning.projectile(ProjectileType::mist), velocity, legacy);
         }
@@ -266,10 +265,10 @@ namespace
         input.connected = true;
         input.shoot_direction_requested = true;
         input.shoot_angle = 0.35f;
-        require(mister->update_and_get_projectiles(input, Vector2F::ZERO, Vector2F::ZERO, true,
+        require(mister->update_and_get_projectiles(input, Vector2F::zero, Vector2F::zero, true,
             tuning.weapon(WeaponType::mister).details.shoot_interval + 1.0f).empty(), "Released mister fired while priming");
         input.primary_shoot = true;
-        auto fired = mister->update_and_get_projectiles(input, Vector2F::ZERO, Vector2F::ZERO, true, 0.0f);
+        auto fired = mister->update_and_get_projectiles(input, Vector2F::zero, Vector2F::zero, true, 0.0f);
         const Vector2F velocity = Vector2F::unit_vec_from_angle(mister->rotation()) *
             tuning.weapon(WeaponType::mister).details.starting_vel_length;
         check_mist(fired, tuning.projectile(ProjectileType::mist), velocity, legacy);
@@ -277,7 +276,7 @@ namespace
         for (const ProjectileType type : projectile_types)
         {
             const auto& record = tuning.projectile(type);
-            auto objects = builder.build_projectiles(Vector2F::ZERO, {1200.0f, -300.0f},
+            auto objects = builder.build_projectiles(Vector2F::zero, {1200.0f, -300.0f},
                 PlayerTeam::a, 0, Colour::white, type, &world.render);
             Projectile& object = *objects.front();
             const RectangleF initial = object.shape()->bounding_box();
@@ -298,12 +297,12 @@ namespace
         const ProjectileTuning* mist_record = &live.projectile(ProjectileType::mist);
         auto roller = world.weapon(live, WeaponType::roller);
         const ProjectileBuilder builder(&live, &world.render);
-        auto existing_mist = builder.build_projectiles(Vector2F::ZERO, {1000.0f, 0.0f},
+        auto existing_mist = builder.build_projectiles(Vector2F::zero, {1000.0f, 0.0f},
             PlayerTeam::a, 0, Colour::white, ProjectileType::mist, &world.render);
         IntegratorProbe flying(&live.projectile(ProjectileType::spray), ProjectileType::spray,
             {60.0f, 0.0f}, &world.render);
         const ProjectileTuning* flying_record = flying.borrowed_record();
-        auto existing = builder.build_projectiles(Vector2F::ZERO, {60.0f, 0.0f},
+        auto existing = builder.build_projectiles(Vector2F::zero, {60.0f, 0.0f},
             PlayerTeam::a, 0, Colour::white, ProjectileType::ball, &world.render);
         const RectangleF initial = existing.front()->shape()->bounding_box();
         live = custom; // Same operation used by developer live tuning.
@@ -318,7 +317,7 @@ namespace
         flying.update(0.01f);
         require(flying.current_velocity().x == 60.0f - custom.projectile(ProjectileType::spray).details.wind_resistance * 0.01f,
             "An existing projectile ignored its live wind cutoff record");
-        auto new_mist = builder.build_projectiles(Vector2F::ZERO, {1000.0f, 0.0f},
+        auto new_mist = builder.build_projectiles(Vector2F::zero, {1000.0f, 0.0f},
             PlayerTeam::a, 0, Colour::white, ProjectileType::mist, &world.render);
         check_mist(new_mist, live.projectile(ProjectileType::mist), {1000.0f, 0.0f}, false);
         Reference expected{ {60.0f, 0.0f}, initial };
@@ -341,11 +340,11 @@ namespace
             "Zero aim/spread boundaries must be accepted");
         const auto angle_upper = fixtures.load([](rapidjson::Document& d)
         {
-            d["weapons"]["roller"]["aim_tilt"].SetFloat(std::nextafter(PI / 2.0f, 0.0f));
-            d["projectiles"]["mist"]["spread_step"].SetFloat(PI / 4.0f);
+            d["weapons"]["roller"]["aim_tilt"].SetFloat(std::nextafter(pi / 2.0f, 0.0f));
+            d["projectiles"]["mist"]["spread_step"].SetFloat(pi / 4.0f);
         });
-        require(angle_upper.weapon(WeaponType::roller).aim_tilt < PI / 2.0f &&
-            angle_upper.projectile(ProjectileType::mist).spread_step == PI / 4.0f,
+        require(angle_upper.weapon(WeaponType::roller).aim_tilt < pi / 2.0f &&
+            angle_upper.projectile(ProjectileType::mist).spread_step == pi / 4.0f,
             "The valid upper angle boundaries were rejected or changed");
         const auto max_factor = fixtures.load([](rapidjson::Document& d)
         {
@@ -375,9 +374,9 @@ namespace
             fixtures.rejects(owner, field, [&](rapidjson::Document& d) { container(d)[field].SetDouble(1e100); });
         }
         fixtures.rejects("roller", "aim_tilt", [](rapidjson::Document& d)
-            { d["weapons"]["roller"]["aim_tilt"].SetFloat(PI / 2.0f); });
+            { d["weapons"]["roller"]["aim_tilt"].SetFloat(pi / 2.0f); });
         fixtures.rejects("mist", "spread_step", [](rapidjson::Document& d)
-            { d["projectiles"]["mist"]["spread_step"].SetFloat(std::nextafter(PI / 4.0f, PI)); });
+            { d["projectiles"]["mist"]["spread_step"].SetFloat(std::nextafter(pi / 4.0f, pi)); });
         fixtures.rejects("projectiles", "wind_stop_factor", [](rapidjson::Document& d)
             { d["projectiles"]["wind_stop_factor"].SetFloat(std::numeric_limits<float>::max()); });
         for (const char* name : projectile_names)
@@ -532,12 +531,12 @@ int main(int argc, char** argv)
         Fixtures fixtures(content, std::filesystem::absolute(argv[0]).parent_path() / "gameplay-tuning-fixtures");
         World world(content);
         const GameTuning defaults((content / "tuning.json").string().c_str());
-        require(defaults.weapon(WeaponType::roller).aim_tilt == PI / 4.0f &&
-            defaults.projectile(ProjectileType::mist).spread_step == PI / 12.0f,
+        require(defaults.weapon(WeaponType::roller).aim_tilt == pi / 4.0f &&
+            defaults.projectile(ProjectileType::mist).spread_step == pi / 12.0f,
             "Authored aim/spread values do not preserve the previous binary32 constants");
         for (const float step : fan_order)
         {
-            require(step * defaults.projectile(ProjectileType::mist).spread_step == step * PI / 12.0f,
+            require(step * defaults.projectile(ProjectileType::mist).spread_step == step * pi / 12.0f,
                 "Default mist fan changed a legacy binary32 rotation angle");
         }
         for (const ProjectileType type : projectile_types)

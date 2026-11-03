@@ -15,28 +15,28 @@ public:
     // Accepted damage may arrive more often than a readable visual accent.
     // Returns whether this hit started a new accent.
     bool hurt();
-    void eliminate(const mattmath::RectangleF& death_rectangle);
+    void eliminate(const labrador::RectangleF& death_rectangle);
     void clear();
 
     void draw(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& current_body,
+        const labrador::RectangleF& current_body,
         const labrador::Colour& team_colour) const;
-    mattmath::RectangleF bounds(const mattmath::RectangleF& current_body) const;
+    labrador::RectangleF bounds(const labrador::RectangleF& current_body) const;
 
     float hurt_remaining() const;
     float elimination_remaining() const;
-    const mattmath::RectangleF& death_rectangle() const;
+    const labrador::RectangleF& death_rectangle() const;
 
 private:
     const CombatFeedbackPresentation* presentation_;
     float hurt_remaining_ = 0.0f;
     float hurt_delay_remaining_ = 0.0f;
     float elimination_remaining_ = 0.0f;
-    mattmath::RectangleF death_rectangle_ = mattmath::RectangleF::ZERO;
+    labrador::RectangleF death_rectangle_ = labrador::RectangleF::zero;
 
     void draw_fill(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& rectangle,
+        const labrador::RectangleF& rectangle,
         const labrador::Colour& colour, float alpha) const;
     void draw_keyline(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& rectangle, float alpha) const;
+        const labrador::RectangleF& rectangle, float alpha) const;
 };

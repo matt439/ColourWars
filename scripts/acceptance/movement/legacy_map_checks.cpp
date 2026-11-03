@@ -109,7 +109,7 @@ namespace movement_acceptance
                     WeaponType::none, Colour::white, Viewport{}, body.position()));
                 this->scene.end_tick();
                 for (int tick = 0; tick < 8; ++tick) { this->tick(); }
-                require(supported(*this->player) && this->player->velocity() == Vector2F::ZERO &&
+                require(supported(*this->player) && this->player->velocity() == Vector2F::zero &&
                     std::fabs(this->player->rectangle().bottom() - lower.top()) <= position_tolerance,
                     (this->context + ": player did not settle on its actual lower surface").c_str());
                 require(this->takeoffs == 0, (this->context + ": settling produced a takeoff").c_str());
@@ -216,7 +216,7 @@ namespace movement_acceptance
             const std::string final_support = run.support_name();
             const bool reached = first_landing == route.target && final_support == route.target &&
                 run.player->move_state() == PlayerMoveState::on_drop_down_ground &&
-                run.player->velocity() == Vector2F::ZERO;
+                run.player->velocity() == Vector2F::zero;
             std::ostringstream report;
             report << std::fixed << std::setprecision(3) << "MEASURE legacy-route stage=" << route.stage
                 << " lower=" << route.lower << " target=" << route.target << " required_rise=" << route.rise

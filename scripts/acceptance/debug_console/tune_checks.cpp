@@ -93,18 +93,18 @@ namespace debug_console_acceptance
 		const std::string source_before = read_text(scratch.source / L"tuning.json");
 		const std::string staged_before = read_text(scratch.staged / L"tuning.json");
 		const auto initial = state();
-		const std::string spread_limit = tune_format(mattmath::PI / 4.0f, spread_base);
-		const std::string tilt_limit = tune_format(mattmath::PI / 2.0f, tilt_base);
+		const std::string spread_limit = tune_format(labrador::pi / 4.0f, spread_base);
+		const std::string tilt_limit = tune_format(labrador::pi / 2.0f, tilt_base);
 		set(spread_path, "0");
 		require(mist->spread_step == 0.0f, "Mist spread accepts its inclusive zero boundary");
 		set(spread_path, spread_limit);
-		require(mist->spread_step == mattmath::PI / 4.0f, "Mist spread accepts its inclusive PI/4 boundary");
+		require(mist->spread_step == labrador::pi / 4.0f, "Mist spread accepts its inclusive PI/4 boundary");
 		set(tilt_path, "0");
 		require(roller->aim_tilt == 0.0f, "Roller tilt accepts its inclusive zero boundary");
-		const float below_vertical = std::nextafter(mattmath::PI / 2.0f, 0.0f);
+		const float below_vertical = std::nextafter(labrador::pi / 2.0f, 0.0f);
 		set(tilt_path, tune_format(below_vertical, tilt_base));
 		require(roller->aim_tilt == below_vertical, "Roller tilt accepts the float immediately below PI/2");
-		reject(spread_path, tune_format(std::nextafter(mattmath::PI / 4.0f, mattmath::PI), spread_base));
+		reject(spread_path, tune_format(std::nextafter(labrador::pi / 4.0f, labrador::pi), spread_base));
 		reject(tilt_path, tilt_limit);
 		for (const std::string& path : { spread_path, tilt_path, wind_path })
 		{

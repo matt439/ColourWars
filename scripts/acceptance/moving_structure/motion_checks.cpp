@@ -7,7 +7,7 @@ namespace moving_structure_acceptance
     {
         void constructor_and_segments()
         {
-            const mattmath::RectangleF anchor(300.0f, 500.0f, 200.0f, 10.0f);
+            const labrador::RectangleF anchor(300.0f, 500.0f, 200.0f, 10.0f);
             for (int quarter = 0; quarter < 4; ++quarter)
             {
                 const HorizontalMotion motion({ anchor, 100.0f, 1.0f, quarter * 0.25f });

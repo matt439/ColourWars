@@ -14,7 +14,6 @@
 // menu style, main menu, controls settings, pause, end, results and prompt bar.
 
 using namespace labrador;
-using namespace mattmath;
 using namespace content_value;
 using namespace presentation_read;
 using menu_consts::DESIGN_RESOLUTION;

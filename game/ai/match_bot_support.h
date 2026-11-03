@@ -6,7 +6,7 @@
 // Current rectangular top supports, separate from upright ramp surfaces.
 struct MatchBotSupport
 {
-	mattmath::RectangleF bounds;
+	labrador::RectangleF bounds;
 	bool one_way = false;
 	bool paintable = false;
 	// The level object's stable identity, nonzero; zero compares by bounds.
@@ -18,7 +18,7 @@ struct MatchBotSupport
 
 struct MatchBotRamp
 {
-	mattmath::RectangleF bounds;
+	labrador::RectangleF bounds;
 	bool rises_right = false;
 };
 

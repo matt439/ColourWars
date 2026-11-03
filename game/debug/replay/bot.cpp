@@ -5,7 +5,7 @@
 #include "game/debug/replay/bot.h"
 #include <cmath>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace
 {
@@ -19,7 +19,6 @@ namespace
 
 	constexpr float chase_range = 900.0f;
 	constexpr float paint_engage_range = 400.0f;
-	constexpr float pi = 3.14159265f;
 }
 
 Bot::Bot(std::uint64_t seed) : random_(seed)
@@ -71,7 +70,7 @@ void Bot::hold_jump(PlayerInputData& input, bool held)
 
 void Bot::aim(PlayerInputData& input, const Vector2F& direction)
 {
-	if (direction == Vector2F::ZERO)
+	if (direction == Vector2F::zero)
 	{
 		return;
 	}
@@ -314,8 +313,8 @@ PlayerInputData SkirmishBot::think(const BotSeatView& view)
 		this->was_alive_ = false;
 		this->mode_ = Mode::paint;
 		this->target_near_ = false;
-		this->target_offset_ = Vector2F::ZERO;
-		this->return_point_ = Vector2F::ZERO;
+		this->target_offset_ = Vector2F::zero;
+		this->return_point_ = Vector2F::zero;
 		BotSeatView inactive = view;
 		inactive.self.alive = false;
 		return JumpBot::think(inactive);
@@ -327,7 +326,7 @@ PlayerInputData SkirmishBot::think(const BotSeatView& view)
 		this->return_point_ = view.self.center;
 	}
 	const BotSeatView::Seat* target = nearest_enemy(view);
-	this->target_offset_ = target != nullptr ? target->center - view.self.center : Vector2F::ZERO;
+	this->target_offset_ = target != nullptr ? target->center - view.self.center : Vector2F::zero;
 	this->target_near_ = target != nullptr && view.engage_distance > 0.0f &&
 		this->target_offset_.length() <= view.engage_distance;
 

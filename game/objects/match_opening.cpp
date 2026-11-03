@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/match_opening.h"
+#include "game/carried/removed_members.h"
 #include "game/objects/level_inputs.h"
 #include "game/objects/match_audio.h"
 #include "game/objects/player.h"
@@ -13,7 +14,6 @@
 #include <algorithm>
 #include <cmath>
 
-using namespace mattmath;
 using namespace labrador;
 
 // The opening before the split (docs/backstory.md, "Opening"): the person's
@@ -162,7 +162,7 @@ float MatchOpening::glass_push(const OpeningClock& clock) const
 RectangleF MatchOpening::intro_screen(const OpeningClock& clock) const
 {
 	// The glass grows to fill the window as the view pushes through it.
-	const RectangleF window(Vector2F::ZERO, this->resolution_manager_->resolution_vec());
+	const RectangleF window(Vector2F::zero, this->resolution_manager_->resolution_vec());
 	return this->monitor_->screen_for_glass(
 		lerp(this->monitor_->glass(window), window, this->glass_push(clock)));
 }
@@ -263,7 +263,7 @@ void MatchOpening::add_intro_views(Scene& scene, const std::vector<int>& view_pa
 		const RectangleF pane = Viewport(this->viewport_manager_->player_viewport(
 			static_cast<int>(i)).pixel_rect()).rectangle();
 		const Viewport view(lerp(picture, pane, push));
-		scene.add_view(view, Camera::calculate_intermediate_camera(
+		scene.add_view(view, colourwars::intermediate_camera(
 			Camera::frame(this->picture_bounds_, view),
 			players[static_cast<std::size_t>(view_participants[i])]->camera(), push));
 	}
@@ -274,7 +274,7 @@ void MatchOpening::draw(Renderer& renderer, const Scene& scene, const OpeningClo
 	const std::function<void(DrawList&)>& draw_countdown) const
 {
 	const Viewport fullscreen = this->viewport_manager_->fullscreen_viewport();
-	const RectangleF window(Vector2F::ZERO, this->resolution_manager_->resolution_vec());
+	const RectangleF window(Vector2F::zero, this->resolution_manager_->resolution_vec());
 	const RectangleF screen = this->intro_screen(clock);
 
 	// Behind the picture: the scene's first view continues this list.
@@ -284,7 +284,7 @@ void MatchOpening::draw(Renderer& renderer, const Scene& scene, const OpeningClo
 	}
 	DrawList behind = renderer.view(renderer.view_count() - 1);
 	behind.set_viewport(fullscreen);
-	behind.set_camera(Camera::DEFAULT_CAMERA);
+	behind.set_camera(Camera::default_camera);
 	behind.set_filter(TextureFilter::point);
 	this->monitor_->draw(behind, screen);
 
@@ -302,7 +302,7 @@ void MatchOpening::draw(Renderer& renderer, const Scene& scene, const OpeningClo
 	if (clock.state != LevelState::opening)
 	{
 		front.set_viewport(fullscreen);
-		front.set_camera(Camera::DEFAULT_CAMERA);
+		front.set_camera(Camera::default_camera);
 		front.set_filter(TextureFilter::point);
 		this->monitor_->draw_front_details(front, screen);
 		draw_countdown(front);
@@ -328,7 +328,7 @@ void MatchOpening::draw(Renderer& renderer, const Scene& scene, const OpeningClo
 				beat.previewing_a ? PlayerTeam::a : PlayerTeam::b));
 	}
 	front.set_viewport(fullscreen);
-	front.set_camera(Camera::DEFAULT_CAMERA);
+	front.set_camera(Camera::default_camera);
 	front.set_filter(TextureFilter::point);
 	this->monitor_->draw_front_details(front, screen);
 	this->monitor_->draw_close_button(front, screen);
@@ -487,12 +487,12 @@ void MatchOpening::draw_reveal(DrawList& front, const RectangleF& screen,
 	if (clock.state == LevelState::zoom_out)
 	{
 		front.set_viewport(this->viewport_manager_->fullscreen_viewport());
-		front.set_camera(Camera::DEFAULT_CAMERA);
+		front.set_camera(Camera::default_camera);
 		front.set_filter(TextureFilter::point);
 		this->monitor_->draw_front_details(front, screen);
 		return;
 	}
-	const RectangleF window(Vector2F::ZERO, this->resolution_manager_->resolution_vec());
+	const RectangleF window(Vector2F::zero, this->resolution_manager_->resolution_vec());
 	const Viewport fullscreen = this->viewport_manager_->fullscreen_viewport();
 	const RevealBeat beat = this->reveal_beat();
 	const RevealTuning& timing = this->match_->reveal;
@@ -514,7 +514,7 @@ void MatchOpening::draw_reveal(DrawList& front, const RectangleF& screen,
 			beat.showing_a ? colour_a : colour_b);
 	}
 	front.set_viewport(fullscreen);
-	front.set_camera(Camera::DEFAULT_CAMERA);
+	front.set_camera(Camera::default_camera);
 	front.set_filter(TextureFilter::point);
 	const Vector2F rest = picture.position() + Vector2F(picture.width * 0.62f, picture.height * 0.4f);
 	if (closing)

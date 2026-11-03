@@ -1,12 +1,12 @@
 #include "game/pch.h"
 #include "game/config/presentation/menu_geometry.h"
 
-using namespace mattmath;
+using namespace labrador;
 using menu_consts::DESIGN_RESOLUTION;
 
 RectangleF menu_geometry::design_area()
 {
-	return RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION);
+	return RectangleF(Vector2F::zero, DESIGN_RESOLUTION);
 }
 
 float menu_geometry::centred(float size, float extent)

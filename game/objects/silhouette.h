@@ -24,7 +24,7 @@ public:
     Silhouette(const OpeningPresentation* look, labrador::RenderResources* render_resources);
 
     // `screen` is the window's rectangle; the person does not move with the glass.
-    void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
+    void draw(labrador::DrawList& draw_list, const labrador::RectangleF& screen,
         const MonitorPersona& persona, const SilhouettePose& pose) const;
 
 private:

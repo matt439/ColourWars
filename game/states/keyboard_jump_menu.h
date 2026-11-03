@@ -53,8 +53,8 @@ private:
 	// What the help text was last built from; it is rebuilt only on a change.
 	bool help_shown_ = false;
 	bool shown_collision_ = false;
-	mattmath::RectangleF help_limit_;
-	mattmath::RectangleF status_limit_;
+	labrador::RectangleF help_limit_;
+	labrador::RectangleF status_limit_;
 	labrador::Colour status_ink_;
 	labrador::Colour warning_ink_;
 };

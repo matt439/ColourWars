@@ -6,13 +6,13 @@ namespace
     std::unique_ptr<Player> redraw_player(World& world, const GameTuning& tuning,
         const RespawnRedrawPresentation& presentation, int index = 0, int device = 0)
     {
-        using namespace mattmath;
-        return std::make_unique<Player>(RectangleF(Vector2F::ZERO, tuning.player().size),
+        using namespace labrador;
+        return std::make_unique<Player>(RectangleF(Vector2F::zero, tuning.player().size),
             &tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(), &presentation,
             &world.render, &world.audio, &world.preferences, device, PlayerTeam::a,
             WeaponType::sprayer, world.weapon(tuning, WeaponType::sprayer, index),
-            WeaponType::none, Colour::blue, Viewport{}, Vector2F::ZERO,
-            Vector2F::ZERO, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f, index);
+            WeaponType::none, Colour::blue, Viewport{}, Vector2F::zero,
+            Vector2F::zero, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f, index);
     }
 
     size_t redraw_calls(const World& world, const std::string& name)

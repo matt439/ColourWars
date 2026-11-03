@@ -5,7 +5,6 @@
 #include <string_view>
 
 using namespace labrador;
-using namespace mattmath;
 
 ScreenCursor::ScreenCursor(const OpeningPresentation* look, RenderResources* render_resources) :
     CrudeDrawing(look->sprite_sheet, look->fill_frame, render_resources),

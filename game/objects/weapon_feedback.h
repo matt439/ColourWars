@@ -46,24 +46,24 @@ public:
     const WeaponFeedbackState& state() const;
 
     // The low-paint tank shares the status slot and yields to the pulses.
-    void draw(labrador::DrawList& draw_list, const mattmath::Vector2F& nozzle,
-        const mattmath::Vector2F& pivot, float angle, WeaponType type,
+    void draw(labrador::DrawList& draw_list, const labrador::Vector2F& nozzle,
+        const labrador::Vector2F& pivot, float angle, WeaponType type,
         const labrador::Colour& team_colour, bool reduce_effects = false,
         const LowPaintCue& low = {}) const;
-    mattmath::RectangleF bounds(const mattmath::Vector2F& nozzle,
-        const mattmath::Vector2F& pivot, WeaponType type, const LowPaintCue& low = {}) const;
+    labrador::RectangleF bounds(const labrador::Vector2F& nozzle,
+        const labrador::Vector2F& pivot, WeaponType type, const LowPaintCue& low = {}) const;
 
     // Persistent, directional information, separate from the event pulses.
     // Level draws it only in the owning player's pane while that player can act.
     void draw_aim_marker(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& nozzle, float angle, WeaponReadiness readiness,
+        const labrador::Vector2F& nozzle, float angle, WeaponReadiness readiness,
         const labrador::Colour& team_colour) const;
-    mattmath::RectangleF aim_marker_bounds(const mattmath::Vector2F& nozzle,
+    labrador::RectangleF aim_marker_bounds(const labrador::Vector2F& nozzle,
         float angle) const;
 
 private:
     void draw_block(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& center, const mattmath::Vector2F& size,
+        const labrador::Vector2F& center, const labrador::Vector2F& size,
         float angle, const labrador::Colour& colour, float alpha) const;
 
     const WeaponFeedbackPresentation* presentation_ = nullptr;

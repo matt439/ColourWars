@@ -10,7 +10,6 @@
 
 #include <limits>
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -46,7 +45,7 @@ Player::Player(const RectangleF& rectangle,
     WeaponType /*secondary*/,
     const Colour& team_colour,
     const Viewport& view_port,
-    const mattmath::Vector2F& respawn_position,
+    const labrador::Vector2F& respawn_position,
     const Vector2F& velocity,
     float rotation,
     const Vector2F& origin,
@@ -851,7 +850,7 @@ void Player::on_ramp_contact(const Structure& other,
     // Separate vertically on slopes; separation along the normal would slide
     // the player downhill and prevent climbing.
     this->rectangle_.offset(
-        separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
+        separation_along(normal, penetration, Vector2F::direction_down));
 
     this->fixed_slab_support_.reset();
     this->projected_fixed_slab_support_ = false;
@@ -900,7 +899,7 @@ void Player::on_fixed_slab_contact(const Structure& slab, const FixedSlabGeometr
         return;
     }
 
-    this->rectangle_.offset(separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
+    this->rectangle_.offset(separation_along(normal, penetration, Vector2F::direction_down));
     this->remember_fixed_slab_support(slab, geometry);
     const bool rises_right = end.y < start.y;
     this->set_move_state(rises_right ? PlayerMoveState::on_ramp_right : PlayerMoveState::on_ramp_left);
@@ -954,7 +953,7 @@ void Player::on_jump_through_contact(const Structure& other)
         this->support_impact_speed_ = std::max(this->support_impact_speed_,
             this->velocity().y);
         colourwars::MovingObject::set_velocity_y(0.0f);
-        this->rectangle_.set_position_y_from_bottom(other_rect.top());
+        this->rectangle_.y = other_rect.top() - this->rectangle_.height;
         this->support_position_ = { (std::max(this->rectangle_.left(), other_rect.left()) +
             std::min(this->rectangle_.right(), other_rect.right())) / 2.0f, other_rect.top() };
         this->set_move_state(PlayerMoveState::on_drop_down_ground);
@@ -1352,7 +1351,7 @@ void Player::update_movement(float dt)
     {
         if (const auto support = this->ramp_support_at(this->rectangle_))
         {
-            this->rectangle_.set_position_y_from_bottom(support->y);
+            this->rectangle_.y = support->y - this->rectangle_.height;
             colourwars::MovingObject::set_velocity_y(0.0f);
             this->projected_ramp_support_ = true;
         }
@@ -1361,7 +1360,7 @@ void Player::update_movement(float dt)
     {
         if (const auto support = this->fixed_slab_support_at(this->rectangle_))
         {
-            this->rectangle_.set_position_y_from_bottom(support->y);
+            this->rectangle_.y = support->y - this->rectangle_.height;
             colourwars::MovingObject::set_velocity_y(0.0f);
             this->projected_fixed_slab_support_ = true;
         }
@@ -1577,7 +1576,7 @@ void Player::place_at(const Vector2F& top_left)
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
     colourwars::MovingObject::set_rotation(0.0f);
-    colourwars::MovingObject::set_velocity(Vector2F::ZERO);
+    colourwars::MovingObject::set_velocity(Vector2F::zero);
 }
 
 RumbleEvents Player::take_rumble_events() noexcept

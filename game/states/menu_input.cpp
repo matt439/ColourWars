@@ -2,7 +2,6 @@
 #include "game/states/menu_input.h"
 #include "game/match/match_setup.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 ProcessedMenuInput menu_input_for_owner(

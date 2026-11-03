@@ -352,11 +352,11 @@ namespace menu_text_acceptance
         std::vector<Glyph> glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f });
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_text_exact", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
         require(world.render.measure_text(world.render.resolve_sprite_font("menu_text_exact"), L"Fit") ==
-            mattmath::Vector2F(24.0f, 20.0f), "Exact-boundary fixture font has unexpected metrics");
+            labrador::Vector2F(24.0f, 20.0f), "Exact-boundary fixture font has unexpected metrics");
         const auto edge = [](rapidjson::Document& d)
         {
             d["prompt_bar"]["font"].SetString("menu_text_exact");

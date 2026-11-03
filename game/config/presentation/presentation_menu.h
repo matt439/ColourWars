@@ -23,9 +23,9 @@ struct PresentationSound
 // Widget position, size and spacing in menu design coordinates.
 struct WidgetLayout
 {
-	mattmath::Vector2F position = { 0.0f, 0.0f };
-	mattmath::Vector2F size = { 0.0f, 0.0f };
-	mattmath::Vector2F spacing = { 0.0f, 0.0f };
+	labrador::Vector2F position = { 0.0f, 0.0f };
+	labrador::Vector2F size = { 0.0f, 0.0f };
+	labrador::Vector2F spacing = { 0.0f, 0.0f };
 };
 
 // Optional focus ornaments, captured when a menu page is constructed.
@@ -51,10 +51,10 @@ struct MenuStyle
 	std::string detail_font;
 
 	labrador::Colour shadow_colour = labrador::Colour::black;
-	mattmath::Vector2F title_shadow_offset = { 0.0f, 0.0f };
-	mattmath::Vector2F heading_shadow_offset = { 0.0f, 0.0f };
-	mattmath::Vector2F item_shadow_offset = { 0.0f, 0.0f };
-	mattmath::Vector2F detail_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F title_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F heading_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F item_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F detail_shadow_offset = { 0.0f, 0.0f };
 
 	labrador::Colour highlight = labrador::Colour::white;
 	labrador::Colour unhighlight = labrador::Colour::blue;
@@ -69,19 +69,19 @@ struct MenuStyle
 
 	// Shared arcade chrome. Focus geometry follows the actual widget bounds.
 	labrador::Colour focus_panel_colour;
-	mattmath::Vector2F focus_padding;
+	labrador::Vector2F focus_padding;
 	float accent_width = 0.0f;
 	labrador::Colour panel_edge_colour;
-	mattmath::Vector2F panel_shadow_offset;
+	labrador::Vector2F panel_shadow_offset;
 	labrador::Colour scrim_colour;
-	mattmath::Vector2F brand_position;
+	labrador::Vector2F brand_position;
 	std::string brand_font;
 	float footer_y = 0.0f;
 	float rule_height = 0.0f;
-	mattmath::Vector2F icon_padding;
+	labrador::Vector2F icon_padding;
 
 	// The box a modal menu is drawn in. Pause, end and results all use it.
-	mattmath::Vector2F box_size = { 0.0f, 0.0f };
+	labrador::Vector2F box_size = { 0.0f, 0.0f };
 
 	std::string sound_bank;
 	float repeat_delay = 0.0f;
@@ -94,23 +94,23 @@ struct MenuStyle
 // Per-player choice layout, positioned by row and column indices.
 struct SelectPresentation
 {
-	mattmath::Vector2F spacing = { 0.0f, 0.0f };
-	mattmath::Vector2F size = { 0.0f, 0.0f };
+	labrador::Vector2F spacing = { 0.0f, 0.0f };
+	labrador::Vector2F size = { 0.0f, 0.0f };
 	labrador::Colour selected = labrador::Colour::white;
 	labrador::Colour unselected = labrador::Colour::white;
 };
 
 struct StageSelectPresentation
 {
-	mattmath::Vector2F preview_position;
-	mattmath::Vector2F preview_size;
-	mattmath::Vector2F name_position;
-	mattmath::Vector2F navigation_position;
+	labrador::Vector2F preview_position;
+	labrador::Vector2F preview_size;
+	labrador::Vector2F name_position;
+	labrador::Vector2F navigation_position;
 	// The stage's record, on the navigation row, right-aligned to the preview.
 	float record_y = 0.0f;
 	std::string record_font;
 	WidgetLayout briefing;
-	mattmath::Vector2F briefing_padding;
+	labrador::Vector2F briefing_padding;
 	labrador::Colour selected;
 	labrador::Colour unselected;
 	labrador::Colour selected_ink;
@@ -128,16 +128,16 @@ struct MenuPaperArtPresentation
 	labrador::Colour disabled_ink;
 	float keyline_width = 0.0f;
 	float shadow_offset = 0.0f;
-	mattmath::Vector2F focus_padding;
+	labrador::Vector2F focus_padding;
 };
 
 struct StickPreviewPresentation
 {
-	mattmath::RectangleF raw_movement;
-	mattmath::RectangleF movement_response;
-	mattmath::RectangleF aim;
-	mattmath::Vector2F aim_readout_position;
-	mattmath::Vector2F association_position;
+	labrador::RectangleF raw_movement;
+	labrador::RectangleF movement_response;
+	labrador::RectangleF aim;
+	labrador::Vector2F aim_readout_position;
+	labrador::Vector2F association_position;
 	float marker_size = 0.0f;
 	float line_width = 0.0f;
 };
@@ -145,12 +145,12 @@ struct StickPreviewPresentation
 struct ControlsSettingsPresentation
 {
 	MenuPaperArtPresentation art;
-	mattmath::Vector2F box_size;
+	labrador::Vector2F box_size;
 	WidgetLayout layout;
-	mattmath::Vector2F heading_position;
-	mattmath::Vector2F controls_position;
-	mattmath::Vector2F controls_size;
-	mattmath::Vector2F status_position;
+	labrador::Vector2F heading_position;
+	labrador::Vector2F controls_position;
+	labrador::Vector2F controls_size;
+	labrador::Vector2F status_position;
 	std::string item_font;
 	std::string help_font;
 	PresentationSound volume_preview_sound;
@@ -184,10 +184,10 @@ struct StageScanPresentation
 	float text_scale = 1.5f;
 	float status_scale = 1.0f;
 	// Footer text positions are offsets from menu_style.chrome.footer_y.
-	mattmath::Vector2F prompt_position = { 150.0f, 30.0f };
-	mattmath::Vector2F prompt_shadow_offset = { 1.0f, 1.0f };
-	mattmath::Vector2F box_size = { 1840.0f, 920.0f };
-	mattmath::Vector2F padding = { 36.0f, 24.0f };
+	labrador::Vector2F prompt_position = { 150.0f, 30.0f };
+	labrador::Vector2F prompt_shadow_offset = { 1.0f, 1.0f };
+	labrador::Vector2F box_size = { 1840.0f, 920.0f };
+	labrador::Vector2F padding = { 36.0f, 24.0f };
 	float gap = 16.0f;
 	WidgetLayout status{ { 160.0f, 4.0f }, { 1600.0f, 24.0f }, {} };
 };
@@ -198,15 +198,15 @@ struct MainMenuPresentation
 	std::string backdrop_frame;
 	// Entry, settings and setup pages share the paper treatment.
 	MenuPaperArtPresentation art;
-	mattmath::Vector2F title_box_size;
-	mattmath::Vector2F home_box_size;
-	mattmath::Vector2F options_box_size;
-	mattmath::Vector2F credits_box_size;
-	mattmath::Vector2F setup_box_size;
-	mattmath::Vector2F team_box_size;
-	mattmath::Vector2F weapon_box_size;
-	mattmath::Vector2F stage_box_size;
-	mattmath::Vector2F setup_focus_padding;
+	labrador::Vector2F title_box_size;
+	labrador::Vector2F home_box_size;
+	labrador::Vector2F options_box_size;
+	labrador::Vector2F credits_box_size;
+	labrador::Vector2F setup_box_size;
+	labrador::Vector2F team_box_size;
+	labrador::Vector2F weapon_box_size;
+	labrador::Vector2F stage_box_size;
+	labrador::Vector2F setup_focus_padding;
 	float setup_shadow_offset = 0.0f;
 	float display_trial_seconds = 0.0f;
 	// Title text is centered using its measured width; y positions are authored.
@@ -214,9 +214,9 @@ struct MainMenuPresentation
 	float title_subtitle_y = 0.0f;
 	float title_start_y = 0.0f;
 	float title_no_pad_y = 0.0f;
-	mattmath::Vector2F home_position;
-	mattmath::Vector2F home_subtitle_position;
-	mattmath::Vector2F home_spacing;
+	labrador::Vector2F home_position;
+	labrador::Vector2F home_subtitle_position;
+	labrador::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;
 	std::string weapon_description_font;
@@ -230,24 +230,24 @@ struct MainMenuPresentation
 
 	labrador::Colour options_value_colour = labrador::Colour::white;
 	labrador::Colour options_warning_colour;
-	mattmath::Vector2F options_heading_position;
-	mattmath::Vector2F options_position;
-	mattmath::Vector2F options_status_position;
+	labrador::Vector2F options_heading_position;
+	labrador::Vector2F options_position;
+	labrador::Vector2F options_status_position;
 	float options_value_x = 0.0f;
-	mattmath::Vector2F options_spacing = { 0.0f, 0.0f };
+	labrador::Vector2F options_spacing = { 0.0f, 0.0f };
 
 	labrador::Colour weapon_description_colour = labrador::Colour::white;
-	mattmath::Vector2F weapon_description_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F weapon_description_shadow_offset = { 0.0f, 0.0f };
 	float weapon_description_x_offset = 0.0f;
-	// The width each description wraps to, from its column (game/config/text_wrap.h).
+	// The width each description wraps to, from its column (RenderResources::wrap_text).
 	// Authored breaks are kept, so text that already fits draws as authored.
 	float weapon_description_max_width = 0.0f;
 
-	mattmath::Vector2F mode_select_spacing = { 0.0f, 0.0f };
-	mattmath::Vector2F player_count_spacing = { 0.0f, 0.0f };
+	labrador::Vector2F mode_select_spacing = { 0.0f, 0.0f };
+	labrador::Vector2F player_count_spacing = { 0.0f, 0.0f };
 
 	SelectPresentation team_select;
-	mattmath::Vector2F team_warning_position;
+	labrador::Vector2F team_warning_position;
 	// Three fixed roles: Team A, unassigned, Team B. The current choice selects a frame.
 	std::string team_select_sheet;
 	std::array<std::string, 3> team_select_frames;
@@ -257,9 +257,9 @@ struct MainMenuPresentation
 	StageSelectPresentation stage_select;
 	StageScanPresentation stage_scan;
 	std::string credits_font;
-	mattmath::Vector2F credits_heading_position;
-	mattmath::Vector2F credits_position;
-	mattmath::Vector2F credits_back_position;
+	labrador::Vector2F credits_heading_position;
+	labrador::Vector2F credits_position;
+	labrador::Vector2F credits_back_position;
 	std::wstring credits_text;
 
 	PresentationSound music;
@@ -280,7 +280,7 @@ struct PauseMenuPresentation
 	float resume_countdown = 0.0f;
 	PresentationSound resume_sound;
 	MenuPaperArtPresentation art;
-	mattmath::Vector2F box_size;
+	labrador::Vector2F box_size;
 	float heading_y = 0.0f;
 	float status_y = 0.0f;
 	WidgetLayout layout;
@@ -292,7 +292,7 @@ struct PauseMenuPresentation
 struct EndMenuPresentation
 {
 	MenuPaperArtPresentation art;
-	mattmath::Vector2F box_size;
+	labrador::Vector2F box_size;
 	float heading_y = 0.0f;
 	// The first action, independent of the centered heading above it.
 	WidgetLayout layout;
@@ -302,28 +302,28 @@ struct EndMenuPresentation
 struct ResultsMenuPresentation
 {
 	MenuPaperArtPresentation art;
-	mattmath::Vector2F box_size = { 0.0f, 0.0f };
+	labrador::Vector2F box_size = { 0.0f, 0.0f };
 	float session_score_y = 0.0f;
 	float session_result_y = 0.0f;
 	// The stage record line, right-aligned to the score bar, below it.
 	float record_y = 0.0f;
-	mattmath::Vector2F contribution_position = { 0.0f, 0.0f };
+	labrador::Vector2F contribution_position = { 0.0f, 0.0f };
 	float contribution_spacing = 0.0f;
 	std::string contribution_font;
-	mattmath::Vector2F fill_box_size = { 0.0f, 0.0f };
+	labrador::Vector2F fill_box_size = { 0.0f, 0.0f };
 	float fill_box_y_offset = 0.0f;
 	labrador::Colour track_colour;
 
 	// Fill size is derived from the box size and border.
-	mattmath::Vector2F team_fill_border = { 0.0f, 0.0f };
-	mattmath::Vector2F team_fill_size = { 0.0f, 0.0f };
+	labrador::Vector2F team_fill_border = { 0.0f, 0.0f };
+	labrador::Vector2F team_fill_size = { 0.0f, 0.0f };
 
 	float team_fill_delay = 0.0f;
 	float team_fill_time = 0.0f;
 	float show_results_delay = 0.0f;
 
 	// Placement boxes for native team-letter labels beside the results bar.
-	mattmath::Vector2F team_mark_size = { 0.0f, 0.0f };
+	labrador::Vector2F team_mark_size = { 0.0f, 0.0f };
 	float team_mark_gap = 0.0f;
 
 	// Shared centered lettering, placed from actual font measurements.
@@ -341,8 +341,8 @@ struct ResultsMenuPresentation
 struct PromptBarPresentation
 {
 	std::string font;
-	mattmath::Vector2F position = { 0.0f, 0.0f };
+	labrador::Vector2F position = { 0.0f, 0.0f };
 	labrador::Colour colour = labrador::Colour::white;
 	labrador::Colour shadow_colour = labrador::Colour::black;
-	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F shadow_offset = { 0.0f, 0.0f };
 };

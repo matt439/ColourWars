@@ -50,7 +50,7 @@ namespace menu_text_acceptance
             {
                 if (character == missing) { continue; }
                 const bool marker = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? marker_width : 8,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, marker ? marker_width : 8,
                     marker ? marker_height : 16), marker ? marker_x : 0.0f, marker ? marker_y : 0.0f, 0.0f });
             }
             auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
@@ -74,8 +74,8 @@ namespace menu_text_acceptance
         {
             const MainMenuPresentation& main = look.main_menu(); MenuStyle style = look.menu();
             style.shadow_colour = Colour{};
-            const mattmath::Vector2F label_position = style.layout.position + mattmath::Vector2F(0.0f, main.mode_select_spacing.y * 5.0f);
-            const mattmath::Vector2F value_position = label_position + mattmath::Vector2F(main.mode_select_spacing.x * 2.0f, 0.0f);
+            const labrador::Vector2F label_position = style.layout.position + labrador::Vector2F(0.0f, main.mode_select_spacing.y * 5.0f);
+            const labrador::Vector2F value_position = label_position + labrador::Vector2F(main.mode_select_spacing.x * 2.0f, 0.0f);
             int adjustments = 0;
             OptionRow row("duration", L"Match Length", label_position, value_position, style, main.art.ink, &world.render,
                 [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; });
@@ -87,17 +87,17 @@ namespace menu_text_acceptance
             const auto measured = world.render.measure_text(world.render.resolve_sprite_font(style.item_font), L"~4");
             const auto value_bounds = value_widget->bounds();
             require(value_widget->text() == L"~4" && value_bounds.position() == value_position &&
-                value_bounds.size() == measured + mattmath::Vector2F(1.5f, 1.5f) &&
-                label_position == mattmath::Vector2F(150.0f, 630.0f) && value_position == mattmath::Vector2F(650.0f, 630.0f),
+                value_bounds.size() == measured + labrador::Vector2F(1.5f, 1.5f) &&
+                label_position == labrador::Vector2F(150.0f, 630.0f) && value_position == labrador::Vector2F(650.0f, 630.0f),
                 "Duration value changed copied text, unscaled font, inherited invisible shadow or authored columns");
             auto padded = row.bounds(); padded.inflate(main.setup_focus_padding);
-            require(!right_edge || (measured == mattmath::Vector2F(1144.5f, 20.0f) &&
+            require(!right_edge || (measured == labrador::Vector2F(1144.5f, 20.0f) &&
                 padded.right() + main.setup_shadow_offset == 1826.0f),
                 "Duration right-edge oracle no longer touches the actual setup interior at 1826");
-            require(!height_edge || (measured == mattmath::Vector2F(16.0f, 78.5f) &&
+            require(!height_edge || (measured == labrador::Vector2F(16.0f, 78.5f) &&
                 padded.height + main.setup_shadow_offset == 96.0f),
                 "Duration height oracle no longer exactly touches its 96-unit complete-row limit");
-            const mattmath::RectangleF panel((mattmath::Vector2F(1920.0f, style.footer_y) - main.setup_box_size) / 2.0f,
+            const labrador::RectangleF panel((labrador::Vector2F(1920.0f, style.footer_y) - main.setup_box_size) / 2.0f,
                 main.setup_box_size);
             MenuPaperArtPresentation art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
             MainMenuModeSelect::check_duration_row(row, panel, art, main.mode_select_spacing.y);
@@ -119,9 +119,9 @@ namespace menu_text_acceptance
         right_overflow.validate_resources(world.render, world.audio);
         height_overflow.validate_resources(world.render, world.audio);
         require(world.render.measure_text(world.render.resolve_sprite_font("menu_duration_right_overflow"), L"~4") ==
-            mattmath::Vector2F(1144.75f, 20.0f) &&
+            labrador::Vector2F(1144.75f, 20.0f) &&
             world.render.measure_text(world.render.resolve_sprite_font("menu_duration_height_overflow"), L"~4") ==
-            mattmath::Vector2F(16.0f, 78.75f), "Duration overflow fixtures no longer add exactly one quarter unit");
+            labrador::Vector2F(16.0f, 78.75f), "Duration overflow fixtures no longer add exactly one quarter unit");
         rejected("mode_select_spacing", [&] { complete(authored, right_overflow); });
         rejected("mode_select_spacing", [&] { complete(authored, height_overflow); });
 
@@ -139,7 +139,7 @@ namespace menu_text_acceptance
             require(row.bounds().left() == label_x - 1.5f && row.bounds().top() == 648.5f &&
                 padded.left() - art.keyline_width * 7.0f == expected_arrow_left,
                 "Duration negative-shadow oracle lost its inherited extent or exact arrow edge");
-            const mattmath::RectangleF panel(80.0f, 20.0f, 1760.0f, 920.0f);
+            const labrador::RectangleF panel(80.0f, 20.0f, 1760.0f, 920.0f);
             if (fits) { MainMenuModeSelect::check_duration_row(row, panel, art, 100.0f); }
             else { rejected("mode_select_spacing", [&] { MainMenuModeSelect::check_duration_row(row, panel, art, 100.0f); }); }
         };
@@ -320,7 +320,7 @@ namespace menu_text_acceptance
                 if (character == missing) { continue; }
                 const bool eight = character == U'8';
                 const bool zero = zero_resolution && ((character >= U'0' && character <= U'9') || character == U'x');
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, zero ? 0 : eight ? eight_width : 8,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, zero ? 0 : eight ? eight_width : 8,
                     eight ? eight_height : 16), eight ? eight_offset : 0.0f, 0.0f, 0.0f });
             }
             auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
@@ -336,12 +336,12 @@ namespace menu_text_acceptance
         {
             const MainMenuPresentation& main = look.main_menu(); const MenuStyle& style = look.menu();
             const MenuPaperArtPresentation art = options_art(main);
-            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, style.footer_y) - main.options_box_size) / 2.0f,
+            const labrador::RectangleF paper((labrador::Vector2F(1920.0f, style.footer_y) - main.options_box_size) / 2.0f,
                 main.options_box_size);
-            const mattmath::Vector2F value_position(main.options_value_x, main.options_position.y);
-            const mattmath::Vector2F limit(paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
+            const labrador::Vector2F value_position(main.options_value_x, main.options_position.y);
+            const labrador::Vector2F limit(paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
                 main.options_spacing.y - art.focus_padding.y * 2.0f);
-            require(value_position == mattmath::Vector2F(820.0f, 220.0f) && limit == mattmath::Vector2F(930.0f, 86.0f),
+            require(value_position == labrador::Vector2F(820.0f, 220.0f) && limit == labrador::Vector2F(930.0f, 86.0f),
                 "Resolution fixture no longer exercises the actual Options value column and row");
             const FontHandle font_handle = world.render.resolve_sprite_font(style.item_font);
             const std::wstring expected = L"1280x720";
@@ -372,9 +372,9 @@ namespace menu_text_acceptance
                 "Resolution value or focus padding escaped the actual Options paper/row");
             if (height_limited) { require(std::abs(bounds.height - 86.0f) <= 0.01f, "Resolution height fitting lost inclusive row contact"); }
             else if (width_limited) { require(std::abs(bounds.width - 930.0f) <= 0.01f, "Resolution width fitting lost inclusive column contact"); }
-            else { require(bounds == mattmath::RectangleF(value_position, measured), "Short resolution value was enlarged"); }
+            else { require(bounds == labrador::RectangleF(value_position, measured), "Short resolution value was enlarged"); }
             row.set_value(look.menu_text().setting_resolution(1, 1));
-            require(value->text() == L"1x1" && value->bounds() == mattmath::RectangleF(value_position,
+            require(value->text() == L"1x1" && value->bounds() == labrador::RectangleF(value_position,
                 world.render.measure_text(font_handle, L"1x1")) && label->bounds() == retained_label,
                 "Short resolution retained the previous long/tall shrink scale or changed its label");
             row.adjust(Direction::right); require(adjustments == 1, "Resolution row lost its right adjustment callback");
@@ -395,8 +395,8 @@ namespace menu_text_acceptance
             else { variants.rejects("results.solo_coverage", [&](rapidjson::Document& d)
                 { d["menu_style"]["fonts"]["item"].SetString(names[mode], d.GetAllocator()); }, &world); }
             const auto raw = world.render.measure_text(world.render.resolve_sprite_font(names[mode]), L"1280x720");
-            require(raw == (mode == 0 ? mattmath::Vector2F(2056.0f, 20.0f) : mode == 1 ?
-                mattmath::Vector2F(64.0f, 200.0f) : mattmath::Vector2F(2056.0f, 2000.0f)),
+            require(raw == (mode == 0 ? labrador::Vector2F(2056.0f, 20.0f) : mode == 1 ?
+                labrador::Vector2F(64.0f, 200.0f) : labrador::Vector2F(2056.0f, 2000.0f)),
                 "Adversarial resolution glyph fixture changed its independent literal dimensions");
             check_row(look, mode != 1, mode != 0);
         }

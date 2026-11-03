@@ -5,7 +5,6 @@
 #include <vector>
 
 using namespace labrador;
-using namespace mattmath;
 
 FigureActing::FigureActing(const OpeningPresentation* look,
     const RespawnRedrawPresentation* strokes, RenderResources* render_resources) :

@@ -15,7 +15,6 @@
 
 using namespace rapidjson;
 using namespace directory_consts;
-using namespace mattmath;
 using namespace labrador;
 
 namespace

@@ -19,9 +19,9 @@
             const Viewport& viewport = app.viewport_manager()->player_viewport(view);
             DrawList list = renderer.view(view);
             list.set_viewport(viewport);
-            list.set_camera(Camera::DEFAULT_CAMERA);
+            list.set_camera(Camera::default_camera);
             list.set_filter(TextureFilter::point);
-            canvas.draw(list, RectangleF(Vector2F::ZERO, viewport.size()));
+            canvas.draw(list, RectangleF(Vector2F::zero, viewport.size()));
             // Identity and meters use the real frozen values. Any timer ink
             // selected below must also match the full frame's current clock.
             hud.draw_gameplay_interface(list, viewport.size(), view, player.player_num(),
@@ -165,10 +165,10 @@
                 };
                 phase("before", false);
                 Player& player = const_cast<Player&>(level->player(0));
-                const ProjectileSpray hit(player.rectangle(), Vector2F::ZERO, PlayerTeam::b,
+                const ProjectileSpray hit(player.rectangle(), Vector2F::zero, PlayerTeam::b,
                     0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
                 const float health = player.health();
-                player.on_contact(hit, Vector2F::ZERO, 0);
+                player.on_contact(hit, Vector2F::zero, 0);
                 require(player.health() < health && player.state() == PlayerState::alive,
                     "view shake fixture did not take a real nonfatal enemy projectile hit");
                 phase("hurt", true);

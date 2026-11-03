@@ -7,8 +7,8 @@ class ProjectileRolling final : public Projectile
 {
 public:
 	ProjectileRolling() = delete;
-	ProjectileRolling(const mattmath::RectangleF& rectangle,
-		const mattmath::Vector2F& velocity,
+	ProjectileRolling(const labrador::RectangleF& rectangle,
+		const labrador::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
@@ -16,7 +16,7 @@ public:
 		labrador::RenderResources::SheetStrip strip,
 		const ProjectileTuning* tuning,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
@@ -25,13 +25,13 @@ public:
 	// collision sweep. The floor must not consume it before a nearby player.
 	// Its short lifetime retires it on the following update.
 	void on_structure_contact(const Structure& other,
-		const mattmath::Vector2F& normal, float penetration) override;
+		const labrador::Vector2F& normal, float penetration) override;
 	void on_player_contact(const Player& other,
-		const mattmath::Vector2F& normal, float penetration) override;
+		const labrador::Vector2F& normal, float penetration) override;
 	void draw(labrador::DrawList& draw_list) const override;
-	mattmath::RectangleF bounds() const override;
+	labrador::RectangleF bounds() const override;
 
-	const mattmath::Shape* shape() const override;
+	const labrador::Shape* shape() const override;
 protected:
 	// It never moves, so only moving surfaces passing through it are resolved.
 	void resolve_travel(std::span<labrador::CollisionObject* const> objects) override;
@@ -40,6 +40,6 @@ protected:
 	// Touching bare geometry leaves it active to reach exposed paint.
 	bool duds_on_bare_cover() const override { return false; }
 private:
-	void set_rectangle(const mattmath::RectangleF& rectangle) override;
-	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
+	void set_rectangle(const labrador::RectangleF& rectangle) override;
+	labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
 };

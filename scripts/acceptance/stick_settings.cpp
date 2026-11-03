@@ -7,7 +7,7 @@
 #include <limits>
 #include <stdexcept>
 
-using mattmath::Vector2F;
+using labrador::Vector2F;
 
 namespace
 {
@@ -33,7 +33,7 @@ namespace
 			{
 				const StickResponse response = stick_response({ travel * sign, 1.0f },
 					{ 0.4f * sign, 0.0f }, 0.5f, preferences, 0);
-				require(response.movement == 0.0f && response.aim == Vector2F::ZERO,
+				require(response.movement == 0.0f && response.aim == Vector2F::zero,
 					"A stick at or below its selected threshold produced a response");
 			}
 			const StickResponse first = stick_response({ 0.250075f * sign, 0.0f },
@@ -61,7 +61,7 @@ namespace
 				require(diagonal.movement == 0.0f &&
 					approximately(diagonal.aim, { 0.3f * x, 0.4f * y }),
 					"Radial aiming changed direction or vertical stick travel caused horizontal movement");
-				const StickResponse full_diagonal = stick_response(Vector2F::ZERO,
+				const StickResponse full_diagonal = stick_response(Vector2F::zero,
 					{ 0.6f * x, 0.8f * y }, 0.5f, preferences, 0);
 				require(approximately(full_diagonal.aim, { 0.6f * x, 0.8f * y }) &&
 					approximately(full_diagonal.aim.length(), 1.0f),
@@ -70,11 +70,11 @@ namespace
 		}
 		// Equal radial distances have the same cutoff, including a diagonal
 		// whose components are individually smaller than the radial threshold.
-		const StickResponse diagonal_below = stick_response(Vector2F::ZERO,
+		const StickResponse diagonal_below = stick_response(Vector2F::zero,
 			{ 0.234f, 0.312f }, 0.5f, preferences, 0);
-		const StickResponse diagonal_above = stick_response(Vector2F::ZERO,
+		const StickResponse diagonal_above = stick_response(Vector2F::zero,
 			{ 0.246f, 0.328f }, 0.5f, preferences, 0);
-		require(diagonal_below.aim == Vector2F::ZERO && diagonal_above.aim.length() > 0.0f &&
+		require(diagonal_below.aim == Vector2F::zero && diagonal_above.aim.length() > 0.0f &&
 			approximately(diagonal_above.aim.normalized(), { 0.6f, 0.8f }),
 			"Aiming used separate axis cutoffs instead of a radial cutoff");
 	}
@@ -87,7 +87,7 @@ namespace
 		preferences.sticks[2] = { 50, 25 };
 		preferences.sticks[3] = { 90, 0 };
 		const float movement[] = { 0.625f, 0.5f, 0.25f, 0.0f };
-		const Vector2F aim[] = { Vector2F::ZERO, { 0.15f, 0.2f },
+		const Vector2F aim[] = { Vector2F::zero, { 0.15f, 0.2f },
 			{ 0.3f, 0.4f }, { 0.375f, 0.5f } };
 		for (int slot = 0; slot < input_slots::pad_count; ++slot)
 		{
@@ -101,7 +101,7 @@ namespace
 			{ 0.375f, 0.5f }, 0.8f, preferences, 1);
 		const StickResponse sibling = stick_response({ 0.625f, 0.0f },
 			{ 0.375f, 0.5f }, 0.8f, preferences, 2);
-		require(changed.movement == 0.0f && changed.aim == Vector2F::ZERO &&
+		require(changed.movement == 0.0f && changed.aim == Vector2F::zero &&
 			approximately(sibling.movement, 0.25f) && approximately(sibling.aim, { 0.3f, 0.4f }),
 			"Changing a live preference failed to apply immediately or affected another slot");
 

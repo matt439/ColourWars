@@ -3,7 +3,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

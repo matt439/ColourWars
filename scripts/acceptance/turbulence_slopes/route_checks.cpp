@@ -9,7 +9,7 @@ namespace turbulence_slopes_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         constexpr float tolerance = 0.06f;
         constexpr int maximum_trial_updates = 2400;
 

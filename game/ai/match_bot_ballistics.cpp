@@ -5,7 +5,7 @@
 #include <cmath>
 #include <limits>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace
 {
@@ -109,7 +109,7 @@ Vector2F match_bot_ballistics::aim_direction(const WeaponTuning& tool, const Pro
 	// A fixed coarse ring and eight local refinements bound the work to 32
 	// trajectories (1920 integration steps) per reaction, independent of arena size.
 	constexpr int directions = 16;
-	const float increment = 2.0f * PI / static_cast<float>(directions);
+	const float increment = 2.0f * pi / static_cast<float>(directions);
 	for (int index = 1; index < directions; ++index)
 	{
 		const float angle = direct + increment * static_cast<float>(index);

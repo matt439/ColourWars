@@ -16,7 +16,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -384,7 +383,7 @@ namespace
             d["menu_style"]["layout"]["spacing"]["x"].SetInt(0);
             d["menu_style"]["layout"]["spacing"]["y"].SetInt(0);
         });
-        require(one_item.menu().layout.spacing == Vector2F::ZERO, "A one-item base layout cannot use zero spacing");
+        require(one_item.menu().layout.spacing == Vector2F::zero, "A one-item base layout cannot use zero spacing");
         variants.rejects("menu_style", "layout", [](rapidjson::Document& d) { d["menu_style"].RemoveMember("layout"); });
         for (const char* section : { "position", "size", "spacing" })
         {

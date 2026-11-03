@@ -91,8 +91,8 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         require(readbacks < 76, "Resolution text probe exceeded its fixed readback budget");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         stack.draw(renderer); ++readbacks; return read(renderer);
     };
     const RectangleF first_rows(132.0f, 204.0f, 1668.0f, 216.0f);
@@ -169,7 +169,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             "Independent resolution/fullscreen row, focus card, shade or arrow escaped its complete comparison area");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         Canvas(app.render_resources(), look.home_background_colour).draw(list, camera.visible_rectangle(viewport));
         // Full resting paper, including its bevel, is reconstructed under both
@@ -181,7 +181,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     const auto project = [&](RectangleF rectangle)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(rectangle); return countdown_crop_bounds(rectangle);
     };

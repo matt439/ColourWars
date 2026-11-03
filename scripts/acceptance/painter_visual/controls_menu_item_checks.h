@@ -93,7 +93,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
         const Frame actual = main_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const auto project = [&](RectangleF bounds)
             { camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds); };

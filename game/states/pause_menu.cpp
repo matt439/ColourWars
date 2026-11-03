@@ -5,7 +5,6 @@
 #include "game/debug/debug_director.h"
 #include "game/states/player_label.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 bool match_owns_pad_slot(const MatchSetup& settings, int slot)

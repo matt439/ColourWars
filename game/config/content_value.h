@@ -36,13 +36,13 @@ namespace content_value
 	float read_unit(const labrador::JsonValue& parent, const char* key);
 
 	// An {"x", "y"} object. Both components must be finite.
-	mattmath::Vector2F read_vector(const labrador::JsonValue& parent, const char* key);
+	labrador::Vector2F read_vector(const labrador::JsonValue& parent, const char* key);
 	// The same object as authored, with no check here. For a position or
 	// offset a later layout rule checks, so the failure names the screen or
 	// text it breaks rather than only the number.
-	mattmath::Vector2F read_vector_unchecked(const labrador::JsonValue& parent,
+	labrador::Vector2F read_vector_unchecked(const labrador::JsonValue& parent,
 		const char* key);
 	// Both components finite and greater than zero: an extent or a cap.
-	mattmath::Vector2F read_positive_vector(const labrador::JsonValue& parent,
+	labrador::Vector2F read_positive_vector(const labrador::JsonValue& parent,
 		const char* key);
 }

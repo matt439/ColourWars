@@ -96,14 +96,14 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         colourwars::UiTextDropShadow expected_hint("reference-stage-hint", hint, style.brand_font, hint_position,
             app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), fitted.menu().detail_shadow_offset);
         const Vector2F shadow = fitted.menu().detail_shadow_offset;
-        const RectangleF raw = RectangleF::union_of(expected_hint.text_bounds_at(Vector2F::ZERO, 1.0f),
+        const RectangleF raw = RectangleF::union_of(expected_hint.text_bounds_at(Vector2F::zero, 1.0f),
             expected_hint.text_bounds_at(shadow, 1.0f));
         const float budget = live.briefing.size.x - live.briefing_padding.x * 2.0f;
         const float scale = std::min(1.0f, budget / raw.width);
         require(budget > 0.0f && scale > 0.0f && (fit_kind != 1 || scale < 1.0f) &&
             (fit_kind != 2 || scale == 1.0f), "Stage cue fixture failed to exercise width-only hint fit/reset");
         expected_hint.set_scale(scale); expected_hint.set_shadow_scale(scale); expected_hint.set_shadow_offset(shadow * scale);
-        const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION);
+        const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
         require(design.contains(expected_navigation.bounds()) && design.contains(expected_hint.bounds()) &&
             expected_navigation.bounds().bottom() <= style.footer_y && expected_hint.bounds().bottom() <= style.footer_y &&
             expected_hint.bounds().width <= budget + 0.01f,
@@ -112,9 +112,9 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
         const Camera camera = Camera::frame(design, viewport);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);

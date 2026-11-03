@@ -244,7 +244,7 @@ namespace crossfeed_acceptance
                 // Production respawn places the body and clears its support
                 // state; gravity re-establishes contact on the following tick.
                 const bool just_respawned = previous == PlayerState::dead && opponent->state() == PlayerState::alive &&
-                    opponent->rectangle() == opponent->spawn_rectangle() && opponent->velocity() == Vector2F::ZERO;
+                    opponent->rectangle() == opponent->spawn_rectangle() && opponent->velocity() == Vector2F::zero;
                 const float canonical_x = x(opponent->center().x);
                 if (from_spawn)
                 {
@@ -304,7 +304,7 @@ namespace crossfeed_acceptance
             {
                 const float goal = x(advancing ? (far_goal ? 2450.0f : 1150.0f) : (far_goal ? 500.0f : 120.0f));
                 const float direction = goal >= run.player->center().x ? 1.0f : -1.0f;
-                PlayerInputData actions = aimed(direction > 0.0f ? PI / 3.0f : 2.0f * PI / 3.0f,
+                PlayerInputData actions = aimed(direction > 0.0f ? pi / 3.0f : 2.0f * pi / 3.0f,
                     input(dropping ? 0.0f : steer(*run.player, goal, services.tuning.player()), false, false, dropping));
                 actions.primary_shoot = fire;
                 const float before = run.player->health(), opponent_before = opponent->health();

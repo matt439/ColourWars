@@ -43,7 +43,7 @@ public:
 
     // The quiet blink's eyes, moved wherever this person's eye strokes moved
     // from the house strokes.
-    std::array<mattmath::RectangleF, 2> blink_eyes(const FigurePresentation& figure,
+    std::array<labrador::RectangleF, 2> blink_eyes(const FigurePresentation& figure,
         const RespawnRedrawPresentation& redraw) const;
 
 private:
@@ -54,5 +54,5 @@ private:
 
 // Each eye, in texels of the canvas, from the strokes whose part is "eye";
 // strokes that touch are one eye. In stroke order.
-std::vector<mattmath::RectangleF> eye_rectangles(const std::vector<RespawnStroke>& strokes,
+std::vector<labrador::RectangleF> eye_rectangles(const std::vector<RespawnStroke>& strokes,
     float pen_width);

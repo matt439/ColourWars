@@ -23,7 +23,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -43,7 +42,7 @@ namespace
         inert.eliminate();
         inert.land(look.landing_full_speed);
         inert.update(dt, true);
-        require(inert.remaining() == 0.0f && inert.offset() == Vector2F::ZERO,
+        require(inert.remaining() == 0.0f && inert.offset() == Vector2F::zero,
             "Missing presentation emitted view shake");
 
         ViewShake a(&look), b(&look);
@@ -61,9 +60,9 @@ namespace
                 "Hurt view shake escaped its authored amplitude");
             require(offset == b.offset() && a.remaining() == b.remaining(),
                 "Equal simulation events produced different camera displacement");
-            moved = moved || offset != Vector2F::ZERO;
+            moved = moved || offset != Vector2F::zero;
         }
-        require(moved && a.remaining() == 0.0f && a.offset() == Vector2F::ZERO,
+        require(moved && a.remaining() == 0.0f && a.offset() == Vector2F::zero,
             "View shake did not move and return exactly to its base camera");
 
         a.hurt();
@@ -101,12 +100,12 @@ namespace
                 "Combined events accumulated unbounded camera displacement");
         }
         a.update(1000.0f, true);
-        require(a.remaining() == 0.0f && a.offset() == Vector2F::ZERO,
+        require(a.remaining() == 0.0f && a.offset() == Vector2F::zero,
             "Long simulation tick retained view shake");
         a.hurt();
         require(close_to(a.remaining(), look.duration), "Expired hurt limiter failed to rearm");
         a.update(dt, false);
-        require(a.remaining() == 0.0f && a.offset() == Vector2F::ZERO,
+        require(a.remaining() == 0.0f && a.offset() == Vector2F::zero,
             "Disabling view shake retained active displacement");
         a.clear();
         a.clear();
@@ -153,7 +152,7 @@ namespace
             std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN() })
         {
             shake.land(speed);
-            require(shake.remaining() == 0.0f && shake.offset() == Vector2F::ZERO,
+            require(shake.remaining() == 0.0f && shake.offset() == Vector2F::zero,
                 "Small, invalid or threshold landing emitted view shake");
         }
         ViewShake half(&look), full(&look), extreme(&look);
@@ -170,9 +169,9 @@ namespace
                 magnitude(full.offset()) <= look.landing_amplitude + 0.0001f &&
                 full.offset() == extreme.offset(),
                 "Landing strength failed to scale and clamp to its authored maximum");
-            moved = moved || full.offset() != Vector2F::ZERO;
+            moved = moved || full.offset() != Vector2F::zero;
         }
-        require(moved && full.offset() == Vector2F::ZERO && half.offset() == Vector2F::ZERO,
+        require(moved && full.offset() == Vector2F::zero && half.offset() == Vector2F::zero,
             "Accepted landing failed to move and settle");
         std::cout << "PASS view shake landing: speed threshold, proportional strength and maximum impact clamp\n";
     }
@@ -202,7 +201,7 @@ namespace
                             bounds.y + (bounds.height - world_size.y) / 2.0f, scale);
                         const Camera saved = base;
                         for (const Vector2F offset : { Vector2F(3, -2), Vector2F(-10000, -10000),
-                            Vector2F(10000, 10000), Vector2F::ZERO })
+                            Vector2F(10000, 10000), Vector2F::zero })
                         {
                             const Camera rendered = PlayerCamera::displaced(base, pane, offset, bounds);
                             const RectangleF visible = rendered.visible_rectangle(pane);
@@ -237,7 +236,7 @@ namespace
                                     visible.bottom() <= bounds.bottom() + 0.001f,
                                     "Displaced vertical view escaped arena bounds");
                             }
-                            require(PlayerCamera::displaced(base, pane, Vector2F::ZERO, bounds) == saved,
+                            require(PlayerCamera::displaced(base, pane, Vector2F::zero, bounds) == saved,
                                 "Zero shake failed to return exactly to the base camera");
                         }
                     }
@@ -269,7 +268,7 @@ namespace
 
         ProjectileSpray shot()
         {
-            return ProjectileSpray(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+            return ProjectileSpray(RectangleF(0, 0, 10, 10), Vector2F::zero,
                 PlayerTeam::b, 1, Colour::white, &this->render,
                 resolve_projectile_strip(this->tuning.projectile(ProjectileType::spray), this->render),
                 &this->tuning.projectile(ProjectileType::spray));
@@ -298,7 +297,7 @@ namespace
                 &world.presentation.combat_feedback(), &world.presentation.respawn_redraw(),
                 &world.render, &world.audio, &this->preferences, slot, PlayerTeam::a,
                 WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
-                Viewport{}, rectangle.top_left(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
+                Viewport{}, rectangle.top_left(), Vector2F::zero, 0.0f, Vector2F::zero,
                 SpriteFlip::none, 0.0f, -1, nullptr, &world.presentation.camera().shake));
             const RectangleF floor(-10000, 0, 20000, 100);
             this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
@@ -329,7 +328,7 @@ namespace
 
         void hit(const ProjectileSpray& shot)
         {
-            this->player->on_contact(shot, Vector2F::ZERO, 0.0f);
+            this->player->on_contact(shot, Vector2F::zero, 0.0f);
         }
 
         void eliminate(const ProjectileSpray& shot)
@@ -395,7 +394,7 @@ namespace
             "Dead contact restarted view shake");
         affected.player->force_respawn();
         require(affected.player->view_shake().remaining() == 0.0f &&
-            affected.player->view_shake().offset() == Vector2F::ZERO,
+            affected.player->view_shake().offset() == Vector2F::zero,
             "Forced respawn retained previous-life displacement");
         affected.hit(shot);
         affected.player->clear_view_shake();
@@ -406,7 +405,7 @@ namespace
         affected.tick();
         affected.hit(shot);
         require(affected.player->view_shake().remaining() == 0.0f &&
-            affected.player->view_shake().offset() == Vector2F::ZERO,
+            affected.player->view_shake().offset() == Vector2F::zero,
             "Live preference disable retained or admitted a player shake event");
         affected.preferences.view_shake = true;
         affected.tick();
@@ -438,7 +437,7 @@ namespace
         course.tick();
         course.hit(shot);
         require(course.preferences.view_shake && course.player->view_shake().remaining() == 0.0f &&
-            course.player->view_shake().offset() == Vector2F::ZERO,
+            course.player->view_shake().offset() == Vector2F::zero,
             "Reduced effects retained or admitted shake, or overwrote the independent preference");
         course.eliminate(shot);
         course.tick();
@@ -527,9 +526,9 @@ namespace
                 a.primary_weapon().nozzle_pos() == b.primary_weapon().nozzle_pos() &&
                 moving.emitted_projectiles == quiet.emitted_projectiles,
                 "View shake changed movement, aiming, damage, ammunition or respawn simulation");
-            require(b.view_shake().remaining() == 0.0f && b.view_shake().offset() == Vector2F::ZERO,
+            require(b.view_shake().remaining() == 0.0f && b.view_shake().offset() == Vector2F::zero,
                 "Disabled player view accumulated shake");
-            shake_seen = shake_seen || a.view_shake().offset() != Vector2F::ZERO;
+            shake_seen = shake_seen || a.view_shake().offset() != Vector2F::zero;
             respawned = respawned || (tick > 70 && a.state() == PlayerState::alive);
         }
         require(shake_seen && respawned && moving.emitted_projectiles > 0,

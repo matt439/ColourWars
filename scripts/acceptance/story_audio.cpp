@@ -50,8 +50,8 @@ namespace
 	{
 		PlayerInputData input;
 		input.primary_shoot = held;
-		return weapon.update_and_get_projectiles(input, mattmath::Vector2F::ZERO,
-			mattmath::Vector2F::ZERO, true, dt);
+		return weapon.update_and_get_projectiles(input, labrador::Vector2F::zero,
+			labrador::Vector2F::zero, true, dt);
 	}
 
 	// Content variants keep real factory weapons and their paid-shot workflow.
@@ -264,7 +264,7 @@ namespace
 			int index = 0, PlayerTeam team = PlayerTeam::a)
 		{
 			return WeaponBuilder::build_weapon(&balance, team, index, index, Colour::blue,
-				type, mattmath::Vector2F::ZERO, &this->render, &this->audio, &this->preferences);
+				type, labrador::Vector2F::zero, &this->render, &this->audio, &this->preferences);
 		}
 
 		SoundState state(const std::string& name) const

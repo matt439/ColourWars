@@ -40,7 +40,7 @@ public:
             look_.paper.paper == Colour(255, 245, 223) && look_.paper.shade == Colour(0, 0, 0, 85) &&
             identity_.enabled && identity_.ui_size == Vector2F(54, 42) && identity_.ui_gap == 12 &&
             look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel" &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO,
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero,
             "HUD label fixture requires its pinned authored font/layout/paper/badge profile");
         const std::array<std::string, 3> names{ look_.player_identity_font, look_.meter_label_font, look_.timer_font };
         for (size_t i = 0; i < names.size(); ++i)
@@ -57,7 +57,7 @@ public:
             hud_track_same_palette(presentation_.team_palette(), palette_) &&
             resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO &&
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
             "HUD label edit changed unselected UI, badge, clock, fills, palette, resource or viewport");
         const std::array<std::string, 3> names{ look_.player_identity_font, look_.meter_label_font, look_.timer_font };
@@ -86,8 +86,8 @@ public:
             static_cast<int>(inside_bottom - 4) == hud_label_rois()[0].bottom() && identity_face.right() - 2 - 6 > hud_label_rois()[0].right() &&
             look_.paper.shade.a * .12f == .04f, "HUD identity paper lower strip hypothesis changed");
         bounds(font_pointers_[0], hud_label_identity(), positions[0], Vector2F(2, 2), hud_label_rois()[0]);
-        bounds(font_pointers_[1], L"HEALTH", positions[1], Vector2F::ZERO, hud_label_rois()[1]);
-        bounds(font_pointers_[1], L"PAINT", positions[2], Vector2F::ZERO, hud_label_rois()[2]);
+        bounds(font_pointers_[1], L"HEALTH", positions[1], Vector2F::zero, hud_label_rois()[1]);
+        bounds(font_pointers_[1], L"PAINT", positions[2], Vector2F::zero, hud_label_rois()[2]);
     }
     std::array<Vector2F, 3> origins() const
     {
@@ -126,14 +126,14 @@ public:
             const Colour shadow = tint(look_.player_identity_shadow_colour, subject_ != HudLabelSubject::foreground);
             const auto positions = origins();
             const auto draw_foreground = [&]()
-            { list.draw_text(fonts_[0], hud_label_identity(), positions[0], foreground, 1.0f, 0.0f, Vector2F::ZERO, 0.0f); };
+            { list.draw_text(fonts_[0], hud_label_identity(), positions[0], foreground, 1.0f, 0.0f, Vector2F::zero, 0.0f); };
             const auto draw_shadow = [&]()
-            { list.draw_text(fonts_[0], hud_label_identity(), positions[0] + Vector2F(2, 2), shadow, 1.0f, 0.0f, Vector2F::ZERO, 0.0f); };
+            { list.draw_text(fonts_[0], hud_label_identity(), positions[0] + Vector2F(2, 2), shadow, 1.0f, 0.0f, Vector2F::zero, 0.0f); };
             if (mode == HudLabelReference::reversed_order)
             { require(subject_ == HudLabelSubject::shadow, "HUD reversed order is an identity-shadow control"); draw_foreground(); draw_shadow(); }
             else { draw_shadow(); draw_foreground(); }
-            list.draw_text(fonts_[1], L"HEALTH", positions[1], foreground, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
-            list.draw_text(fonts_[1], L"PAINT", positions[2], foreground, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+            list.draw_text(fonts_[1], L"HEALTH", positions[1], foreground, 1.0f, 0.0f, Vector2F::zero, 0.0f);
+            list.draw_text(fonts_[1], L"PAINT", positions[2], foreground, 1.0f, 0.0f, Vector2F::zero, 0.0f);
         });
     }
     Frame observe()
@@ -254,7 +254,7 @@ private:
     {
         list.set_filter(TextureFilter::point);
         list.draw_sprite(sheet_->texture(), pixel_.source_rectangle(), RectangleF(static_cast<float>(box.x), static_cast<float>(box.y),
-            static_cast<float>(box.width), static_cast<float>(box.height)), colour, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            static_cast<float>(box.width), static_cast<float>(box.height)), colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f);
     }
     Frame render(const std::function<void(DrawList&)>& draw)
     {
@@ -265,7 +265,7 @@ private:
         std::srand(495017); const int next = std::rand(); std::srand(495017);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->player_viewport(0));
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas_.draw(list, { 0, 0, 1920, 1080 }); draw(list);
         rectangle(list, { 20, 20, 4, 4 }, Colour::white); rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame frame = read(renderer); ++readbacks_;

@@ -62,18 +62,18 @@ namespace
         const float initial = first.interval_remaining();
         for (int tick = 0; tick < 1200; ++tick)
         {
-            first.advance(false, Vector2F::ZERO, 0.0f, dt, {});
+            first.advance(false, Vector2F::zero, 0.0f, dt, {});
             require(!first.attached() && first.drops().empty() && first.interval_remaining() == initial,
                 "Unsettled time consumed the next quiet interval or created a drip");
         }
-        first.advance(true, Vector2F::ZERO, 0.0f, initial * 0.5f, {});
+        first.advance(true, Vector2F::zero, 0.0f, initial * 0.5f, {});
         require(!first.attached() && first.interval_remaining() < initial,
             "Settled sprayer skipped the wait or failed to age its quiet interval");
-        first.advance(false, Vector2F::ZERO, 0.0f, dt, {});
+        first.advance(false, Vector2F::zero, 0.0f, dt, {});
         const float restarted = first.interval_remaining();
         require(restarted >= look.interval_min && restarted <= look.interval_max,
             "Activity did not schedule a complete new quiet interval");
-        first.advance(true, Vector2F::ZERO, 0.0f, restarted * 0.5f, {});
+        first.advance(true, Vector2F::zero, 0.0f, restarted * 0.5f, {});
         require(!first.attached(), "Interrupted quiet time leaked into the next idle interval");
 
         std::srand(8123);
@@ -119,7 +119,7 @@ namespace
         IdleDrip right(&look, &world.render, Colour::white, 0);
         IdleDrip left(&look, &world.render, Colour::white, 0);
         attach(right, nozzle);
-        attach(left, nozzle, PI);
+        attach(left, nozzle, pi);
         require(nearly_equal(right.bead_rectangle().center().x, nozzle.x - look.nozzle_inset) &&
             nearly_equal(left.bead_rectangle().center().x, nozzle.x + look.nozzle_inset) &&
             nearly_equal(right.bead_rectangle().y, nozzle.y + look.nozzle_underside) &&
@@ -136,7 +136,7 @@ namespace
         require(nearly_equal(stretched.width, look.size) && stretched.height > stretched.width &&
             nearly_equal(stretched.y, initial_bead.y), "Grown bead did not stretch downwards before release");
         const Vector2F moved_nozzle(140.0f, 50.0f);
-        const float angle = PI * 0.25f;
+        const float angle = pi * 0.25f;
         left.advance(true, moved_nozzle, angle, look.grow_time * 0.25f, {});
         const Vector2F expected_anchor = moved_nozzle +
             Vector2F::rotate_vector(Vector2F(-look.nozzle_inset, look.nozzle_underside), angle);
@@ -148,13 +148,13 @@ namespace
         require(!right.attached() && right.drops().size() == 1, "Stretched bead failed to release");
         const Vector2F released = right.drops()[0].position;
         const float fall_step = std::min(0.05f, look.lifetime * 0.1f);
-        right.advance(false, Vector2F(900, -900), PI, fall_step, {});
+        right.advance(false, Vector2F(900, -900), pi, fall_step, {});
         require(right.drops().size() == 1 && right.drops()[0].position.x == released.x &&
             right.drops()[0].position.y > released.y,
             "Detached paint followed later aim or failed to fall under gravity");
         const float first_fall = right.drops()[0].position.y - released.y;
         const float before_second = right.drops()[0].position.y;
-        right.advance(false, Vector2F(-900, 900), -PI * 0.5f, fall_step, {});
+        right.advance(false, Vector2F(-900, 900), -pi * 0.5f, fall_step, {});
         require(right.drops()[0].position.y - before_second > first_fall,
             "Falling residual paint did not accelerate under gravity");
 
@@ -175,7 +175,7 @@ namespace
         auto platform = world.structure(std::make_unique<RectangleF>(x - 20.0f, top, 40.0f, 0.1f),
             CollisionObjectType::structure_jump_through);
         const std::array<CollisionObject*, 1> platform_targets{ platform.get() };
-        thin.advance(false, Vector2F::ZERO, 0.0f, 0.5f, platform_targets);
+        thin.advance(false, Vector2F::zero, 0.0f, 0.5f, platform_targets);
         require(thin.drops().empty(), "Residual paint tunnelled through a thin jump-through platform");
 
         IdleDrip ramp(&look, &world.render, Colour::white, 0);
@@ -183,16 +183,16 @@ namespace
         auto slope = world.structure(std::make_unique<Triangle>(0.0f, 100.0f, 100.0f, 0.0f, 100.0f, 100.0f),
             CollisionObjectType::structure_ramp_right);
         const std::array<CollisionObject*, 1> ramp_targets{ slope.get() };
-        ramp.advance(false, Vector2F::ZERO, 0.0f, 0.35f, ramp_targets);
+        ramp.advance(false, Vector2F::zero, 0.0f, 0.35f, ramp_targets);
         require(ramp.drops().size() == 1,
             "Ramp bounding box retired a drop still above its actual sloping surface");
-        ramp.advance(false, Vector2F::ZERO, 0.0f, 0.25f, ramp_targets);
+        ramp.advance(false, Vector2F::zero, 0.0f, 0.25f, ramp_targets);
         require(ramp.drops().empty(), "Residual paint passed through the ramp's actual surface");
 
         IdleDrip blocked(&look, &world.render, Colour::white, 0);
         auto wall = world.structure(std::make_unique<RectangleF>(-20.0f, 0.0f, 40.0f, 30.0f));
         const std::array<CollisionObject*, 1> wall_targets{ wall.get() };
-        blocked.advance(true, Vector2F::ZERO, 0.0f, blocked.interval_remaining() + 0.001f, wall_targets);
+        blocked.advance(true, Vector2F::zero, 0.0f, blocked.interval_remaining() + 0.001f, wall_targets);
         require(!blocked.attached() && blocked.drops().empty(),
             "Attached paint grew inside terrain instead of disappearing on contact");
 
@@ -200,7 +200,7 @@ namespace
         auto projectile_tag = world.structure(std::make_unique<RectangleF>(-20.0f, 0.0f, 40.0f, 30.0f),
             CollisionObjectType::projectile_spray_team_a);
         const std::array<CollisionObject*, 1> ignored_targets{ projectile_tag.get() };
-        ignored.advance(true, Vector2F::ZERO, 0.0f, ignored.interval_remaining() + 0.001f, ignored_targets);
+        ignored.advance(true, Vector2F::zero, 0.0f, ignored.interval_remaining() + 0.001f, ignored_targets);
         require(ignored.attached(), "Residual paint treated a non-terrain collision object as scenery");
         std::cout << "PASS idle drip: swept thin-platform contact, true ramp geometry, attached contact and terrain filtering\n";
     }
@@ -218,13 +218,13 @@ namespace
         for (float elapsed : { 0.0f, -1.0f, std::numeric_limits<float>::infinity(),
             std::numeric_limits<float>::quiet_NaN() })
         {
-            drip.advance(false, Vector2F(900, 900), PI, elapsed, {});
+            drip.advance(false, Vector2F(900, 900), pi, elapsed, {});
             drip.update(elapsed);
             require(observation(drip) == before, "Frozen or invalid delta advanced residual-paint state");
         }
 
         const auto falling = drip.drops()[0];
-        drip.advance(false, Vector2F(900, 900), PI, dt, {});
+        drip.advance(false, Vector2F(900, 900), pi, dt, {});
         require(!drip.attached() && drip.drops().size() == 1 &&
             drip.drops()[0].position.x == falling.position.x &&
             drip.drops()[0].position.y > falling.position.y,
@@ -236,9 +236,9 @@ namespace
         DrawList unused;
         for (int view = 0; view < 4; ++view) { drip.draw(unused); }
         require(observation(drip) == before_draw, "Disabled draw fan-out mutated simulation state");
-        drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+        drip.advance(true, Vector2F::zero, 0.0f, dt, {});
         require(!drip.attached() && drip.drops().empty(), "Disabled presentation retained active residual paint");
-        for (int tick = 0; tick < 600; ++tick) { drip.advance(true, Vector2F::ZERO, 0.0f, dt, {}); }
+        for (int tick = 0; tick < 600; ++tick) { drip.advance(true, Vector2F::zero, 0.0f, dt, {}); }
         require(!drip.attached() && drip.drops().empty(), "Disabled presentation emitted residual paint");
 
         look.enabled = true;
@@ -251,13 +251,13 @@ namespace
         IdleDrip crowded(&look, &world.render, Colour::white, 0);
         for (int tick = 0; tick < 1000; ++tick)
         {
-            crowded.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+            crowded.advance(true, Vector2F::zero, 0.0f, dt, {});
             require(crowded.drops().size() <= 4, "Residual paint exceeded its fixed four-drop storage");
         }
         require(crowded.drops().size() == 4, "Capacity fixture never exercised full residual-paint storage");
         attach(crowded);
         crowded.clear();
-        require(!crowded.attached() && crowded.drops().empty() && crowded.bounds() == RectangleF::ZERO,
+        require(!crowded.attached() && crowded.drops().empty() && crowded.bounds() == RectangleF::zero,
             "Explicit scene-ending clear retained attached or falling residual paint");
         crowded.clear();
         require(!crowded.attached() && crowded.drops().empty(), "Residual-paint clear was not idempotent");
@@ -280,19 +280,19 @@ namespace
         for (int view = 0; view < 4; ++view) { drip.draw(suppressed); }
         require(observation(drip) == before,
             "Reduced-effects draw mutated the frozen residual-paint state");
-        drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
-        require(!drip.attached() && drip.drops().empty() && drip.bounds() == RectangleF::ZERO,
+        drip.advance(true, Vector2F::zero, 0.0f, dt, {});
+        require(!drip.attached() && drip.drops().empty() && drip.bounds() == RectangleF::zero,
             "Reduced-effects update retained attached or detached residual paint");
         for (int tick = 0; tick < 600; ++tick)
         {
-            drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+            drip.advance(true, Vector2F::zero, 0.0f, dt, {});
         }
         require(!drip.attached() && drip.drops().empty(),
             "Reduced-effects sprayer generated new residual paint");
         preferences.reduce_effects = false;
         require(!drip.attached() && drip.drops().empty(),
             "Restoring effects resurrected an old attached or detached drip");
-        drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+        drip.advance(true, Vector2F::zero, 0.0f, dt, {});
         require(!drip.attached() && drip.drops().empty() &&
             drip.interval_remaining() >= look.interval_min - dt,
             "Restoring effects skipped the fresh residual-paint wait");

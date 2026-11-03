@@ -135,7 +135,7 @@ namespace menu_text_acceptance
             UiText widget("controls-key-variant", copy, controls.help_font, controls.controls_position, &world.render, controls.art.ink);
             widget.set_scale(scale);
             require(std::isfinite(scale) && scale > 0.0f && scale <= 1.0f &&
-                mattmath::RectangleF(controls.controls_position, controls.controls_size).contains(widget.bounds()),
+                labrador::RectangleF(controls.controls_position, controls.controls_size).contains(widget.bounds()),
                 "An actual-font Controls key variant lost its finite positive uniform fitting contract");
             const std::wstring expected_reminder = std::wstring(L"A / D  Move    |    S  Drop through\n") + entry.label +
                 L"  Jump    |    Left click  Shoot\nMouse  Aim    |    Esc  Pause";
@@ -239,7 +239,7 @@ namespace menu_text_acceptance
             UiText full_widget("complete-controls-key-variant", full_help, look.help_font, look.controls_position, &world.render, look.art.ink);
             full_widget.set_scale(full_scale);
             require(std::isfinite(full_scale) && full_scale > 0.0f && full_scale <= 1.0f &&
-                mattmath::RectangleF(look.controls_position, look.controls_size).contains(full_widget.bounds()),
+                labrador::RectangleF(look.controls_position, look.controls_size).contains(full_widget.bounds()),
                 "A complete actual-font Controls variant escaped its fitted help rectangle");
             const std::wstring release = std::wstring(L"Release ") + label + L" to keep this choice.";
             require(jump.release_key(label) == release && world.render.can_render(jump_font, release),
@@ -338,7 +338,7 @@ namespace menu_text_acceptance
                 UiText text(entry.key, authored, controls.help_font, position, &world.render, controls.art.ink);
                 const auto retained = authored;
                 authored = L"Changed after construction";
-                require(text.text() == retained && text.bounds() == mattmath::RectangleF(position, measured),
+                require(text.text() == retained && text.bounds() == labrador::RectangleF(position, measured),
                     "Actual help UiText borrowed its source or changed its unscaled measurement");
                 text.set_scale(std::min({ 1.0f, available.x / measured.x, available.y / measured.y }));
                 require(text.text() == retained && text.bounds().position() == position &&
@@ -353,7 +353,7 @@ namespace menu_text_acceptance
                 }
                 else
                 {
-                    require(text.bounds() == mattmath::RectangleF(position, measured),
+                    require(text.bounds() == labrador::RectangleF(position, measured),
                         "Short help blocks were enlarged above their authored font size");
                 }
                 text.set_hidden(true);
@@ -408,12 +408,12 @@ namespace menu_text_acceptance
         const auto caption_size = world.render.measure_text(font, fits_caption.menu_text().help.aim_cutoff);
         require(caption_size.x > controls.stick_preview.aim.width && caption_size.x <= controls.controls_size.x,
             "Aim caption fixture does not distinguish the full help column from the square aim preview");
-        const auto caption_position = controls.stick_preview.aim.position() - mattmath::Vector2F(0.0f,
+        const auto caption_position = controls.stick_preview.aim.position() - labrador::Vector2F(0.0f,
             world.render.measure_text(font, L"Move").y + controls.art.focus_padding.y);
         UiText caption("caption", fits_caption.menu_text().help.aim_cutoff, controls.help_font,
             caption_position, &world.render, controls.art.ink);
         require(caption.text() == fits_caption.menu_text().help.aim_cutoff &&
-            caption.bounds() == mattmath::RectangleF(caption_position, caption_size),
+            caption.bounds() == labrador::RectangleF(caption_position, caption_size),
             "Actual aim caption changed its unscaled font or placement above the aim box");
         caption.set_hidden(true);
         DrawList no_device;
@@ -433,7 +433,7 @@ namespace menu_text_acceptance
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
             const bool boundary_glyph = character == U'F' || character == U'G';
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary_glyph ? 620 : 8,
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, boundary_glyph ? 620 : 8,
                 character == U'F' ? 28 : character == U'G' ? 29 : 16), 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_help_caption_exact", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -448,7 +448,7 @@ namespace menu_text_acceptance
         const auto touches_right_and_aim = variants.load(exact_caption);
         touches_right_and_aim.validate_resources(world.render, world.audio);
         require(world.render.measure_text(world.render.resolve_sprite_font("menu_help_caption_exact"), L"F") ==
-            mattmath::Vector2F(620.0f, 28.0f), "Caption boundary glyph has unexpected metrics");
+            labrador::Vector2F(620.0f, 28.0f), "Caption boundary glyph has unexpected metrics");
         for (const char* overflow : { "Fi", "G" })
         {
             variants.rejects("help.aim_cutoff", [&](rapidjson::Document& d)

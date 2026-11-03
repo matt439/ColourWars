@@ -26,5 +26,5 @@ private:
 	std::unique_ptr<OptionRow> aim_marker_;
 	std::unique_ptr<OptionRow> reduce_effects_;
 	labrador::UiText* controls_ = nullptr;
-	mattmath::RectangleF controls_limit_;
+	labrador::RectangleF controls_limit_;
 };

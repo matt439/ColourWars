@@ -240,7 +240,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& box) { return camera().calculate_view_rectangle(box); };

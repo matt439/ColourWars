@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 
 #include "game/objects/terrain_material_internal.h"
 
@@ -141,7 +140,7 @@ void TerrainMaterial::paint(DrawList& draw_list) const
 	{
 		this->draw_with(draw_list, quad.rectangle,
 			this->swatches_[static_cast<size_t>(quad.role)], Colour::white,
-			Vector2F::ZERO, SpriteFlip::none, 0.0f);
+			Vector2F::zero, SpriteFlip::none, 0.0f);
 	}
 }
 
@@ -157,14 +156,14 @@ void TerrainMaterial::paint_miniature(DrawList& draw_list) const
 		return;
 	}
 	const std::vector<TerrainQuad> projected = this->projected_miniature_quads(camera);
-	draw_list.set_camera(Camera::DEFAULT_CAMERA);
+	draw_list.set_camera(Camera::default_camera);
 	try
 	{
 		for (const TerrainQuad& quad : projected)
 		{
 			this->draw_with(draw_list, quad.rectangle,
 				this->swatches_[static_cast<size_t>(quad.role)], Colour::white,
-				Vector2F::ZERO, SpriteFlip::none, 0.0f);
+				Vector2F::zero, SpriteFlip::none, 0.0f);
 		}
 	}
 	catch (...)
@@ -180,7 +179,7 @@ std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera
 	validate_miniature_camera(camera);
 	const bool miniature = camera.scale < 1.0f / CELL;
 	const RectangleF ruler = this->miniature_ruler_
-		? projected_pixels(this->ruler_rectangle_, camera) : RectangleF::ZERO;
+		? projected_pixels(this->ruler_rectangle_, camera) : RectangleF::zero;
 	const float ruler_thickness = this->ruler_vertical_ ? ruler.width : ruler.height;
 	std::vector<TerrainQuad> result;
 	result.reserve(this->quads_.size());

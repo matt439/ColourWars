@@ -137,12 +137,12 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             name_position, app.render_resources(), look.art.ink,
             Colour{}, style.detail_shadow_offset);
         const UiTexture background("expected-weapon-background", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
+            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
             look.home_background_colour);
         RectangleF icon_bounds = icon_box;
         icon_bounds.inflate(style.icon_padding + Vector2F(style.rule_height + 3.0f));
         RectangleF name_bounds = name.bounds(); name_bounds.inflate(Vector2F(3.0f));
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const auto pixels = [&](const RectangleF& box)
             { return countdown_crop_bounds(camera.calculate_view_rectangle(box)); };

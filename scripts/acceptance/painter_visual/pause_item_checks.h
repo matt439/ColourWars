@@ -68,7 +68,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         const auto& style = snapshot.menu(); const auto& look = snapshot.pause_menu();
         const auto& art = look.art;
         const Frame actual = pause_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const int rows = phase == 1 || phase == 2 ? 2 : 4;
         for (int row = 0; row < rows; ++row)

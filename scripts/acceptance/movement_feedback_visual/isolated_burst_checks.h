@@ -193,10 +193,10 @@
                         effects[index] = std::make_unique<MovementFeedback>(
                             index == 3 ? &same_style : &look, app.render_resources());
                     }
-                    effects[0]->takeoff(Vector2F::ZERO);
-                    effects[1]->land(Vector2F::ZERO, look.landing_min_speed);
-                    effects[2]->land(Vector2F::ZERO, look.full_impact_speed);
-                    effects[3]->land(Vector2F::ZERO, same_style.full_impact_speed);
+                    effects[0]->takeoff(Vector2F::zero);
+                    effects[1]->land(Vector2F::zero, look.landing_min_speed);
+                    effects[2]->land(Vector2F::zero, look.full_impact_speed);
+                    effects[3]->land(Vector2F::zero, same_style.full_impact_speed);
                     require(effects[1]->effects().size() == 1 &&
                         effects[1]->effects()[0].strength == look.minimum_strength &&
                         effects[2]->effects().size() == 1 &&

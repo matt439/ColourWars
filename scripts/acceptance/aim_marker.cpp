@@ -19,7 +19,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -121,8 +120,8 @@ namespace
 
     auto update(Weapon& weapon, const PlayerInputData& actions, float elapsed = 0.0f)
     {
-        return weapon.update_and_get_projectiles(actions, Vector2F::ZERO,
-            Vector2F::ZERO, true, elapsed);
+        return weapon.update_and_get_projectiles(actions, Vector2F::zero,
+            Vector2F::zero, true, elapsed);
     }
 
     void check_readiness(World& world)
@@ -131,7 +130,7 @@ namespace
             WeaponType::roller, WeaponType::mister, WeaponType::bucket })
         {
             ProbeWeapon weapon(&world.tuning, PlayerTeam::a, 3, 0, Colour::white,
-                type, Vector2F::ZERO, &world.render, &world.audio, &world.preferences);
+                type, Vector2F::zero, &world.render, &world.audio, &world.preferences);
             weapon.set_feedback_presentation(&world.presentation.weapon_feedback());
             const auto& details = world.tuning.weapon(type).details;
             const float interval = details.shoot_interval;
@@ -184,14 +183,14 @@ namespace
         const Vector2F nozzle(123.0f, -87.0f);
         for (int direction = 0; direction < 32; ++direction)
         {
-            const float angle = static_cast<float>(direction) * PI / 16.0f;
+            const float angle = static_cast<float>(direction) * pi / 16.0f;
             const Vector2F center = nozzle + Vector2F::unit_vec_from_angle(angle) * look.aim_marker_distance;
             const RectangleF bounds = feedback.aim_marker_bounds(nozzle, angle);
             require(bounds.width > 0.0f && bounds.height > 0.0f &&
-                bounds.contains(RectangleF(center, Vector2F::ZERO)) &&
+                bounds.contains(RectangleF(center, Vector2F::zero)) &&
                 std::isfinite(bounds.x) && std::isfinite(bounds.y),
                 "Marker bounds omitted the continuous aim-ray center or became invalid");
-            require(!bounds.contains(RectangleF(nozzle, Vector2F::ZERO)),
+            require(!bounds.contains(RectangleF(nozzle, Vector2F::zero)),
                 "Marker bounds included its muzzle instead of remaining beyond it");
         }
         require(feedback.state() == initial, "Marker bounds mutated event feedback");
@@ -200,7 +199,7 @@ namespace
         DrawList unused;
         for (const auto state : { WeaponReadiness::ready, WeaponReadiness::recovering, WeaponReadiness::empty })
         {
-            feedback.draw_aim_marker(unused, nozzle, PI, state, Colour::white);
+            feedback.draw_aim_marker(unused, nozzle, pi, state, Colour::white);
         }
         require(feedback.state() == initial, "Disabled marker drawing mutated feedback state");
         disabled.enabled = true;
@@ -254,8 +253,8 @@ namespace
         require(!level->aim_marker_visible(0), "Disabled presentation retained the marker");
         look.enabled = true;
         Player& player = const_cast<Player&>(level->player(0));
-        for (const FigurePose pose : { FigurePose{ Vector2F::ZERO, 0.0f, false, false },
-            FigurePose{ Vector2F::ZERO, 0.0f, true, true } })
+        for (const FigurePose pose : { FigurePose{ Vector2F::zero, 0.0f, false, false },
+            FigurePose{ Vector2F::zero, 0.0f, true, true } })
         {
             player.set_pose(pose);
             require(!level->aim_marker_visible(0), "Tool-free or whole story pose showed a marker");
@@ -330,7 +329,7 @@ namespace
         {
             for (auto& actions : inputs)
             {
-                actions = input(tick < 150, static_cast<float>(tick % 16) * PI / 8.0f);
+                actions = input(tick < 150, static_cast<float>(tick % 16) * pi / 8.0f);
                 actions.x_movement = tick < 40 ? 1.0f : 0.0f;
                 actions.jump_pressed = tick == 15;
                 actions.jump_held = tick >= 15 && tick < 30;

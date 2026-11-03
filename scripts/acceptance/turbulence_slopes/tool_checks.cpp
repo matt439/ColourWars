@@ -8,7 +8,7 @@ namespace turbulence_slopes_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         using namespace colourwars_editor;
         constexpr int observation_updates = 180, maximum_readiness = 135;
         constexpr int maximum_trial_updates = 181 + maximum_readiness + observation_updates;

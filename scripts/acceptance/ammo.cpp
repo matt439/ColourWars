@@ -9,7 +9,6 @@
 #include <limits>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -72,8 +71,8 @@ namespace
     {
         PlayerInputData input;
         input.primary_shoot = held;
-        return weapon.update_and_get_projectiles(input, Vector2F::ZERO,
-            Vector2F::ZERO, true, dt);
+        return weapon.update_and_get_projectiles(input, Vector2F::zero,
+            Vector2F::zero, true, dt);
     }
 }
 
@@ -110,7 +109,7 @@ int main(int argc, char** argv)
         {
             const float cost = tuning.weapon(item.type).details.ammo_usage;
             ProbeWeapon boundary(&tuning, PlayerTeam::a, 0, 0, Colour::white,
-                item.type, Vector2F::ZERO, &render, &audio, &preferences);
+                item.type, Vector2F::zero, &render, &audio, &preferences);
 
             // Exact and adjacent representable values exercise the full-shot
             // boundary independently of regeneration and firing cadence.
@@ -166,7 +165,7 @@ int main(int argc, char** argv)
             // Exercise the actual stock subclasses through their factory. A long
             // hold reaches exhaustion even for the slow-firing sniper.
             auto stock = builder.build_weapon(&tuning, PlayerTeam::a, 0, 0,
-                Colour::white, item.type, Vector2F::ZERO, &render, &audio,
+                Colour::white, item.type, Vector2F::zero, &render, &audio,
                 &preferences);
             bool saw_insufficient = false;
             bool recovered = false;
@@ -205,7 +204,7 @@ int main(int argc, char** argv)
         }
 
         ProbeWeapon tiny(&tuning, PlayerTeam::a, 0, 0, Colour::white,
-            WeaponType::sprayer, Vector2F::ZERO, &render, &audio, &preferences);
+            WeaponType::sprayer, Vector2F::zero, &render, &audio, &preferences);
         tiny.override_cost(0.000000001f);
         tiny.prime(0.000000000001f);
         require(update(tiny, true, 0.0f).empty(),

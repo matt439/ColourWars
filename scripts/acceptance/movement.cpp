@@ -21,7 +21,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace movement_acceptance;
 
 // The checks are in movement/; main builds the Suite they share and runs them
@@ -84,14 +83,14 @@ int main(int argc, char** argv)
         std::cout << "PASS figure animation content: aligned body/paint strips and rejection of mismatched strips or zero frame time\n";
         // Built once, up front: the action and feedback checks both use them,
         // and constructing them has no side effect on any run.
-        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero,
             PlayerTeam::b, 1, Colour::white, &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render), &tuning.projectile(ProjectileType::spray));
         const int fatal_hits = static_cast<int>(std::ceil(tuning.player().starting_health /
             tuning.projectile(ProjectileType::spray).details.player_damage)) + 1;
         const Suite suite{ content, render, audio, preferences, tuning, presentation, feedback,
             shot, fatal_hits };
         const auto course = [&](float bottom = 0.0f,
-            const Vector2F& velocity = Vector2F::ZERO)
+            const Vector2F& velocity = Vector2F::zero)
         {
             return suite.course(bottom, velocity);
         };

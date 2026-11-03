@@ -66,7 +66,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
             look.layout.position.y - art.focus_padding.y,
             "Question reference escapes its paper or reaches the first padded action");
         const Frame actual = pause_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

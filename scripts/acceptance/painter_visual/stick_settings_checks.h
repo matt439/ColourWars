@@ -164,7 +164,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)
@@ -228,8 +228,8 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
             status_bounds(status).width / measure(look.help_font, status).x);
         const int slot = static_cast<int>(values[0].back() - L'1');
         const GamepadState& state = app.gamepads()->state(slot);
-        const Vector2F left = state.connected ? state.left_stick : Vector2F::ZERO;
-        const Vector2F right = state.connected ? state.right_stick : Vector2F::ZERO;
+        const Vector2F left = state.connected ? state.left_stick : Vector2F::zero;
+        const Vector2F right = state.connected ? state.right_stick : Vector2F::zero;
         PlaySettings expected_play = play;
         expected_play.sticks[static_cast<size_t>(slot)] = { std::stoi(values[1]), std::stoi(values[2]) };
         const StickResponse response = stick_response(left, right, tuning.input().movement_deadzone, expected_play, slot);
@@ -248,7 +248,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
             Vector2F(0.0f, label_height + art.focus_padding.y), art.ink);
         const Vector2F aim = response.aim.normalized();
         add(L"Raw X: " + percent(right.x) + L"\nRaw Y: " + percent(right.y) + L"\n" +
-            (response.aim == Vector2F::ZERO ? std::wstring(L"No new aim") :
+            (response.aim == Vector2F::zero ? std::wstring(L"No new aim") :
                 L"Aim X: " + percent(aim.x) + L"\nAim Y: " + percent(aim.y)) + L"\nRaw: hollow\nAim: solid",
             look.help_font, preview.aim_readout_position, art.ink);
         const std::wstring association = L"Profiles follow Pad 1-4 slots,\nnot the player number or device.\n"

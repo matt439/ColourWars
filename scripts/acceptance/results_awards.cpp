@@ -19,7 +19,6 @@
 #include <vector>
 
 using namespace labrador;
-using namespace mattmath;
 
 // ROAD#12: the results call-outs. The tallies are passive and the choice of
 // award is a pure function of LevelEndInfo; the layout is validated with the

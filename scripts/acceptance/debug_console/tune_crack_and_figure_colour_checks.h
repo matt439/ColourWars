@@ -55,10 +55,10 @@
 				opening->slot_outline, opening->glass_colour, opening->coffee, opening->scribble,
 				reveal->ink, reveal->paper, reveal->shade, opening->figure_grey, opening->face, opening->sweat };
 		};
-		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const labrador::RectangleF screen(0, 0, 1280, 720);
 		const auto rectangles = [&]
 		{
-			return std::vector<mattmath::RectangleF>{ opening->glass, art->vent_area, art->power_button,
+			return std::vector<labrador::RectangleF>{ opening->glass, art->vent_area, art->power_button,
 				art->power_indicator, screen, monitor.glass(screen), monitor.picture(screen), monitor.swatch(screen, 0),
 				monitor.swatch(screen, 1), monitor.empty_slot(screen), monitor.close_button(screen), monitor.screen_for_glass(screen) };
 		};
@@ -204,11 +204,11 @@
 			for (const auto& grip : look->grips) { result.insert(result.end(), { grip.rear.x, grip.rear.y, grip.front.x, grip.front.y }); }
 			return result;
 		};
-		const mattmath::RectangleF body(100, 120, 104, 240);
+		const labrador::RectangleF body(100, 120, 104, 240);
 		const auto public_geometry = [&]
 		{
 			const auto canvas = look->canvas_rectangle(body);
-			return std::array<mattmath::RectangleF, 3>{ canvas, attachments.bounds(canvas, true, nullptr), attachments.bounds(canvas, false, nullptr) };
+			return std::array<labrador::RectangleF, 3>{ canvas, attachments.bounds(canvas, true, nullptr), attachments.bounds(canvas, false, nullptr) };
 		};
 		const auto held_geometry = geometry(), held_art_metadata = art_metadata();
 		const auto held_handles = art_handles();const auto held_public_geometry = public_geometry();
@@ -373,7 +373,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator };
 		};
 		const auto stroke_parts = [&]
@@ -393,9 +393,9 @@
 			}
 			return result;
 		};
-		const std::array<mattmath::RectangleF, 2> figures{
-			mattmath::RectangleF(100, 100, 340, 600), mattmath::RectangleF(500, 80, 170, 300) };
-		const std::array<mattmath::Vector2F, 2> glances{ mattmath::Vector2F(0.6f, 1.0f), mattmath::Vector2F(-0.6f, 1.0f) };
+		const std::array<labrador::RectangleF, 2> figures{
+			labrador::RectangleF(100, 100, 340, 600), labrador::RectangleF(500, 80, 170, 300) };
+		const std::array<labrador::Vector2F, 2> glances{ labrador::Vector2F(0.6f, 1.0f), labrador::Vector2F(-0.6f, 1.0f) };
 		const std::array<float, 2> times{ 0.2f, 0.6f };
 		const std::array<bool, 2> facings{ true, false };
 		const auto inputs = [&]

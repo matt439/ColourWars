@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -34,7 +33,7 @@ std::optional<TeammateMarkerPlacement> TeammateMarker::place(
 {
     if (pane_size.x <= 0.0f || pane_size.y <= 0.0f || !(scale > 0.0f)) { return std::nullopt; }
     const RectangleF visible = camera.visible_rectangle(
-        Viewport(RectangleF(Vector2F::ZERO, pane_size)));
+        Viewport(RectangleF(Vector2F::zero, pane_size)));
     if (body.intersects(visible)) { return std::nullopt; }
 
     const Vector2F middle = pane_size * 0.5f;

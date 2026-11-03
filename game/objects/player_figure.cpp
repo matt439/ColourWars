@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // Player's figure: animation clip and action selection, drawing, and the

@@ -227,12 +227,12 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
         const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("cq-blockout-actual-preview", box, &data); preview.set_stage("close_quarters");
         const Viewport fullscreen = app.viewport_manager()->fullscreen_viewport();
-        const Camera menu_camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const Camera menu_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
         const auto draw = [&](bool visible)
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(fullscreen); list.set_camera(menu_camera);
-            list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION));
+            list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
             if (visible) { preview.draw(list); }
             ++readbacks; return read(renderer);
         };
@@ -247,7 +247,7 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
         save(frame, output / "hidden-inspection-cq-actual-stage-preview-720p.ppm"); ++full_frames;
         save(cq_blockout_crop(frame, crop), output / "hidden-inspection-cq-actual-stage-preview-native.ppm"); ++crops;
         record("hidden-inspection-cq-actual-stage-preview-720p", "actual-StagePreview-isolated", "menu-miniature",
-            0, -1, Vector2F::ZERO, Camera::frame(overview, Viewport(crop)), crop, false);
+            0, -1, Vector2F::zero, Camera::frame(overview, Viewport(crop)), crop, false);
     }
     require(full_frames == 5 && crops == 8 && readbacks == 23 && records.good(),
         "CQ focused capture set exceeded or missed its five-frame/eight-crop/twenty-three-readback budget");

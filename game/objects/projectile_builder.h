@@ -21,15 +21,15 @@ public:
 	// Transfers non-null projectiles to the weapon, then Player checks launch
 	// obstruction before Level transfers ownership to Scene.
 	std::vector<std::unique_ptr<Projectile>> build_projectiles(
-		const mattmath::Vector2F& position,
-		const mattmath::Vector2F& velocity,
+		const labrador::Vector2F& position,
+		const labrador::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
 		ProjectileType type,
 		labrador::RenderResources* render_resources,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f) const;
 
@@ -41,8 +41,8 @@ private:
 	// Fan five mist projectiles using the same tuning record.
 	static std::vector<std::unique_ptr<Projectile>>
 		build_mist_projectiles(
-			const mattmath::Vector2F& position,
-			const mattmath::Vector2F& velocity,
+			const labrador::Vector2F& position,
+			const labrador::Vector2F& velocity,
 			PlayerTeam team,
 			int player_num,
 			const labrador::Colour& team_colour,
@@ -50,7 +50,7 @@ private:
 			labrador::RenderResources* render_resources,
 			labrador::RenderResources::SheetStrip strip,
 			float rotation = 0.0f,
-			const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+			const labrador::Vector2F& origin = labrador::Vector2F::zero,
 			labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 			float layer_depth = 0.0f);
 };

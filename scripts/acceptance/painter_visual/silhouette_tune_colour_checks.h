@@ -19,7 +19,7 @@ public:
         require(look_.silhouette == Colour(14, 14, 14) && look_.adult_height == 0.62f &&
             look_.child_height == 0.44f && look_.silhouette_art.pen_width == 0.008f &&
             look_.silhouette_art.shade_width == 0.025f &&
-            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::ZERO,
+            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::zero,
             "Silhouette mug-patch fixture no longer has its reviewed opaque body/height/width geometry");
         adult_.mug = true; child_.child = true;
         adult_before_ = monitor_persona_observation(adult_); child_before_ = monitor_persona_observation(child_);
@@ -174,7 +174,7 @@ private:
     {
         const Canvas canvas(app_.render_resources(), background); Renderer& renderer = *app_.renderer();
         renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 }); draw(list);
         ++readbacks_; return read(renderer);
     }

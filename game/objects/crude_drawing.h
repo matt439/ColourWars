@@ -22,22 +22,22 @@ protected:
     CrudeDrawing(const std::string& sheet_name, const std::string& fill_frame,
         labrador::RenderResources* render_resources);
 
-    void fill(labrador::DrawList& draw_list, const mattmath::RectangleF& rectangle,
+    void fill(labrador::DrawList& draw_list, const labrador::RectangleF& rectangle,
         const labrador::Colour& colour) const;
     // An outline drawn inside the rectangle.
     void frame_rectangle(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& rectangle, float width,
+        const labrador::RectangleF& rectangle, float width,
         const labrador::Colour& colour) const;
     // A filled circle or ellipse in horizontal bands `step` high.
-    void blob(labrador::DrawList& draw_list, const mattmath::Vector2F& centre,
-        const mattmath::Vector2F& radius, float step, const labrador::Colour& colour) const;
+    void blob(labrador::DrawList& draw_list, const labrador::Vector2F& centre,
+        const labrador::Vector2F& radius, float step, const labrador::Colour& colour) const;
     // Only the top half of blob(): shoulders, a mound.
-    void dome(labrador::DrawList& draw_list, const mattmath::Vector2F& base_centre,
-        const mattmath::Vector2F& radius, float step, const labrador::Colour& colour) const;
+    void dome(labrador::DrawList& draw_list, const labrador::Vector2F& base_centre,
+        const labrador::Vector2F& radius, float step, const labrador::Colour& colour) const;
     // A ring of square dabs.
-    void ring(labrador::DrawList& draw_list, const mattmath::Vector2F& centre,
+    void ring(labrador::DrawList& draw_list, const labrador::Vector2F& centre,
         float radius, float width, const labrador::Colour& colour) const;
     // A line of square dabs, as a mouse drags it.
-    void line(labrador::DrawList& draw_list, const mattmath::Vector2F& from,
-        const mattmath::Vector2F& to, float width, const labrador::Colour& colour) const;
+    void line(labrador::DrawList& draw_list, const labrador::Vector2F& from,
+        const labrador::Vector2F& to, float width, const labrador::Colour& colour) const;
 };

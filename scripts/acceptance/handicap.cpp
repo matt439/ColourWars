@@ -36,7 +36,6 @@
 // underfoot trial enabled. The shipped tuning is not changed.
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -77,7 +76,7 @@ namespace
         }
         std::unique_ptr<ProjectileSpray> enemy_shot()
         {
-            return std::make_unique<ProjectileSpray>(RectangleF(0, 0, 200, 200), Vector2F::ZERO, PlayerTeam::b,
+            return std::make_unique<ProjectileSpray>(RectangleF(0, 0, 200, 200), Vector2F::zero, PlayerTeam::b,
                 paint_owners::index(-1, 1), Colour::white, &render,
                 resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render),
                 &tuning.projectile(ProjectileType::spray));
@@ -198,7 +197,7 @@ namespace
             auto player = world.player(level);
             require(player->handicap() == level, "The player did not keep its handicap");
             const float before = player->health();
-            player->on_contact(*shot, Vector2F::ZERO, 0.0f);
+            player->on_contact(*shot, Vector2F::zero, 0.0f);
             const float expected = before - damage * world.tuning.handicap(level).damage_taken;
             require(std::bit_cast<std::uint32_t>(player->health()) == std::bit_cast<std::uint32_t>(expected),
                 "A hit did not scale by the handicap's damage_taken");
@@ -220,8 +219,8 @@ namespace
         auto boosted = world.player(handicaps::count - 1);
         for (int hit = 0; hit < 2; ++hit)
         {
-            plain->on_contact(*shot, Vector2F::ZERO, 0.0f);
-            boosted->on_contact(*shot, Vector2F::ZERO, 0.0f);
+            plain->on_contact(*shot, Vector2F::zero, 0.0f);
+            boosted->on_contact(*shot, Vector2F::zero, 0.0f);
         }
         require(boosted->health() > plain->health(), "The top handicap did not help survival");
     }
@@ -304,10 +303,10 @@ namespace
                 // fatal path is the one a match takes.
                 const auto& jet = world.tuning.projectile(ProjectileType::jet);
                 require(jet.details.player_damage > 0.0f, "The Boost-underfoot fatal fixture needs positive projectile damage");
-                ProjectileJet hit(player.rectangle(), Vector2F::ZERO, PlayerTeam::b, 1, labrador::Colour::white,
+                ProjectileJet hit(player.rectangle(), Vector2F::zero, PlayerTeam::b, 1, labrador::Colour::white,
                     &world.render, resolve_projectile_strip(jet, world.render), &jet);
                 for (int hit_count = 0; hit_count < 1000 && player.health() > 0.0f; ++hit_count)
-                { player.on_contact(hit, Vector2F::ZERO, 0.0f); }
+                { player.on_contact(hit, Vector2F::zero, 0.0f); }
                 require(player.health() <= 0.0f && player.state() == PlayerState::alive,
                     "The Boost-underfoot fatal fixture did not reach zero health through actual hits");
                 require(bits(player.ammo_regen_multiplier()) == bits(refill),

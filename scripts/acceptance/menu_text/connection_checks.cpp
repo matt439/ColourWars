@@ -117,7 +117,7 @@ namespace menu_text_acceptance
         {
             if (character != U'4')
             {
-                missing_four.push_back({character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f});
+                missing_four.push_back({character, labrador::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f});
             }
         }
         world.render.add_font("menu_connection_no_four",
@@ -275,7 +275,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({character, mattmath::RectangleI(0, 0, character == U'~' ? tilde_width : 8, 16),
+                glyphs.push_back({character, labrador::RectangleI(0, 0, character == U'~' ? tilde_width : 8, 16),
                     0.0f, 0.0f, 0.0f});
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -300,8 +300,8 @@ namespace menu_text_acceptance
         // Pause is plain UiText. Its three-space separator and LF are part of
         // the complete measured list; a one-row-only bound misses this edge.
         UiText missing("missing", L"P11~   P22~\nP33~   P44~", edge.menu().detail_font,
-            mattmath::Vector2F(435.0f, 315.0f), &world.render, Colour::black);
-        require(missing.bounds() == mattmath::RectangleF(435.0f, 315.0f, 1050.0f, 40.0f),
+            labrador::Vector2F(435.0f, 315.0f), &world.render, Colour::black);
+        require(missing.bounds() == labrador::RectangleF(435.0f, 315.0f, 1050.0f, 40.0f),
             "Complete Pause missing-pad list lost its exact full-paper width, separator or second line");
         variants.rejects("labels.roster_row", [&](rapidjson::Document& d)
             { pause(d, "menu_labels_pause_over"); }, &world);
@@ -323,12 +323,12 @@ namespace menu_text_acceptance
         const auto weapon_edge = variants.load([&](rapidjson::Document& d) { weapon(d, false); });
         weapon_edge.validate_resources(world.render, world.audio);
         colourwars::UiTextDropShadow weapon_label("weapon-label", L"P11~", weapon_edge.menu().detail_font,
-            mattmath::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour());
+            labrador::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour());
         colourwars::UiTextDropShadow authored_shadow("team-label", L"P11~", weapon_edge.menu().detail_font,
-            mattmath::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour(), weapon_edge.menu().item_shadow_offset);
+            labrador::Vector2F(150.0f, 400.0f), &world.render, Colour::black, Colour(), weapon_edge.menu().item_shadow_offset);
         // The weapon tile starts at 650 minus six units of icon padding and
         // the two-unit rule. Its implicit shadow differs from Team's 1.5.
-        require(weapon_label.bounds() == mattmath::RectangleF(150.0f, 400.0f, 492.0f, 22.0f) &&
+        require(weapon_label.bounds() == labrador::RectangleF(150.0f, 400.0f, 492.0f, 22.0f) &&
             authored_shadow.bounds().right() == 641.5f && weapon_label.bounds().right() == 642.0f,
             "Weapon label lost its retained default two-unit shadow at the exact padded tile boundary");
         variants.rejects("labels.roster_row", [&](rapidjson::Document& d) { weapon(d, true); }, &world);
@@ -343,7 +343,7 @@ namespace menu_text_acceptance
         {
             const bool digit = character >= U'0' && character <= U'9';
             const int width = character == U'8' ? 80 : digit ? 1 : 16;
-            glyphs.push_back({character, mattmath::RectangleI(0, 0, width, character == U'8' ? 24 : 16),
+            glyphs.push_back({character, labrador::RectangleI(0, 0, width, character == U'8' ? 24 : 16),
                 character == U'8' ? 0.00003f : character == U'6' ? -5.0f : 0.0f, 0.0f,
                 character == U'8' ? -80.0f : character == U'1' || character == U'7' ? 19.0f : 0.0f});
         }
@@ -388,7 +388,7 @@ namespace menu_text_acceptance
         const auto fits = variants.load([&](rapidjson::Document& d) { edit(d, false); });
         fits.validate_resources(world.render, world.audio);
         colourwars::UiTextDropShadow row("results-row", attained, fits.results_menu().contribution_font,
-            mattmath::Vector2F(x, 815.0f), &world.render, Colour::black, Colour(), mattmath::Vector2F::ZERO);
+            labrador::Vector2F(x, 815.0f), &world.render, Colour::black, Colour(), labrador::Vector2F::zero);
         require(row.bounds().right() == 1610.0f && row.bounds().height == 24.0f,
             "Complete Results row lost its unscaled zero-shadow bounds or inclusive full suffix width");
         variants.rejects("labels.roster_row", [&](rapidjson::Document& d) { edit(d, true); }, &world);
@@ -401,7 +401,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({character, mattmath::RectangleI(0, 0,
+                glyphs.push_back({character, labrador::RectangleI(0, 0,
                     character == U'~' ? width : 8, character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f});
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -414,11 +414,11 @@ namespace menu_text_acceptance
                 std::string(key) == "pause_player_title" ? "~{player}" : "~", d.GetAllocator());
         };
         const auto original = variants.load([](rapidjson::Document&) {});
-        require(original.main_menu().setup_box_size == mattmath::Vector2F(1760.0f, 920.0f) &&
-            original.main_menu().team_box_size == mattmath::Vector2F(1840.0f, 920.0f) &&
-            original.menu().layout.position == mattmath::Vector2F(150.0f, 150.0f) &&
+        require(original.main_menu().setup_box_size == labrador::Vector2F(1760.0f, 920.0f) &&
+            original.main_menu().team_box_size == labrador::Vector2F(1840.0f, 920.0f) &&
+            original.menu().layout.position == labrador::Vector2F(150.0f, 150.0f) &&
             original.main_menu().player_count_spacing.y == 100.0f &&
-            original.pause_menu().box_size == mattmath::Vector2F(1050.0f, 900.0f),
+            original.pause_menu().box_size == labrador::Vector2F(1050.0f, 900.0f),
             "Connection boundary fixtures no longer match the shipped setup/team/Pause papers");
 
         // Known eight-unit ordinary glyphs isolate one long supported field.
@@ -462,8 +462,8 @@ namespace menu_text_acceptance
                 const auto& pause = width_edge.pause_menu();
                 const float y = pause_heading ? pause.heading_y : pause.status_y;
                 UiText text("connection", words, pause_heading ? width_edge.menu().heading_font : width_edge.menu().detail_font,
-                    mattmath::Vector2F(0.0f, y), &world.render, pause.art.ink);
-                text.set_position(mattmath::Vector2F((1920.0f - text.bounds().width) / 2.0f, y));
+                    labrador::Vector2F(0.0f, y), &world.render, pause.art.ink);
+                text.set_position(labrador::Vector2F((1920.0f - text.bounds().width) / 2.0f, y));
                 require(text.bounds().x == 435.0f && text.bounds().right() == 1485.0f &&
                     text.bounds().width == 1050.0f && text.bounds().height == 20.0f,
                     "Plain centered connection text changed its unscaled inclusive full-paper width");
@@ -472,7 +472,7 @@ namespace menu_text_acceptance
             {
                 const bool team = std::string(entry.key) == "teams_required";
                 const auto& style = width_edge.menu();
-                const mattmath::Vector2F position(150.0f, team ? 860.0f : 850.0f);
+                const labrador::Vector2F position(150.0f, team ? 860.0f : 850.0f);
                 colourwars::UiTextDropShadow text("connection", L"~", style.detail_font, position, &world.render,
                     Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.detail_shadow_offset);
                 require(text.bounds().x == 150.0f && text.bounds().right() == (team ? 1866.0f : 1826.0f),
@@ -501,9 +501,9 @@ namespace menu_text_acceptance
             { suffix(d, "menu_connection_suffix_edge"); });
         suffix_edge.validate_resources(world.render, world.audio);
         colourwars::UiTextDropShadow reserved("reserved-pad", L"P4 - Pad 4~", suffix_edge.menu().item_font,
-            mattmath::Vector2F(150.0f, 650.0f), &world.render, Colour::black,
+            labrador::Vector2F(150.0f, 650.0f), &world.render, Colour::black,
             Colour(0.0f, 0.0f, 0.0f, 0.0f), suffix_edge.menu().item_shadow_offset);
-        require(reserved.bounds() == mattmath::RectangleF(150.0f, 650.0f, 1676.0f, 100.0f),
+        require(reserved.bounds() == labrador::RectangleF(150.0f, 650.0f, 1676.0f, 100.0f),
             "Reserved-pad suffix no longer touches the exact inclusive paper edge and next row");
         for (const char* overflow : {"menu_connection_suffix_width_over", "menu_connection_suffix_height_over"})
         {
@@ -517,9 +517,9 @@ namespace menu_text_acceptance
         };
         const auto touches_heading = variants.load(team_order);
         colourwars::UiTextDropShadow team_heading("team-heading", L"Fit", touches_heading.menu().heading_font,
-            mattmath::Vector2F(150.0f, 150.0f), &world.render, Colour::black, Colour(), touches_heading.menu().heading_shadow_offset);
+            labrador::Vector2F(150.0f, 150.0f), &world.render, Colour::black, Colour(), touches_heading.menu().heading_shadow_offset);
         colourwars::UiTextDropShadow heading_warning("heading-warning", L"Fit", touches_heading.menu().detail_font,
-            mattmath::Vector2F(150.0f, 172.5f), &world.render, Colour::black, Colour(), touches_heading.menu().detail_shadow_offset);
+            labrador::Vector2F(150.0f, 172.5f), &world.render, Colour::black, Colour(), touches_heading.menu().detail_shadow_offset);
         require(team_heading.bounds().bottom() == 172.5f && heading_warning.bounds().y == team_heading.bounds().bottom(),
             "Team warning lost its exact heading-contact geometry");
         // Heading contact leaves no space for the four complete player cards.
@@ -536,20 +536,20 @@ namespace menu_text_acceptance
         };
         const auto touches_final_card = variants.load(full_row_edge);
         touches_final_card.validate_resources(world.render, world.audio);
-        require(touches_final_card.main_menu().team_select.spacing == mattmath::Vector2F(250.0f, 125.0f) &&
-            touches_final_card.main_menu().team_select.size == mattmath::Vector2F(50.0f, 50.0f) &&
-            touches_final_card.main_menu().setup_focus_padding == mattmath::Vector2F(28.0f, 7.0f) &&
-            touches_final_card.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) &&
+        require(touches_final_card.main_menu().team_select.spacing == labrador::Vector2F(250.0f, 125.0f) &&
+            touches_final_card.main_menu().team_select.size == labrador::Vector2F(50.0f, 50.0f) &&
+            touches_final_card.main_menu().setup_focus_padding == labrador::Vector2F(28.0f, 7.0f) &&
+            touches_final_card.player_identity().ui_size == labrador::Vector2F(54.0f, 42.0f) &&
             touches_final_card.player_identity().ui_gap == 12.0f,
             "Team complete-row boundary fixture no longer matches the authored icons, spacing, focus or badge");
         colourwars::UiTextDropShadow final_label("final-label", L"P4 - Pad 4", touches_final_card.menu().detail_font,
-            mattmath::Vector2F(150.0f, 775.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().item_shadow_offset);
-        mattmath::RectangleF final_card = mattmath::RectangleF::union_of(final_label.bounds(),
-            mattmath::RectangleF(84.0f, 764.75f, 54.0f, 42.0f));
-        final_card = mattmath::RectangleF::union_of(final_card, mattmath::RectangleF(650.0f, 775.0f, 150.0f, 50.0f));
-        final_card.inflate(mattmath::Vector2F(28.0f, 7.0f));
+            labrador::Vector2F(150.0f, 775.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().item_shadow_offset);
+        labrador::RectangleF final_card = labrador::RectangleF::union_of(final_label.bounds(),
+            labrador::RectangleF(84.0f, 764.75f, 54.0f, 42.0f));
+        final_card = labrador::RectangleF::union_of(final_card, labrador::RectangleF(650.0f, 775.0f, 150.0f, 50.0f));
+        final_card.inflate(labrador::Vector2F(28.0f, 7.0f));
         colourwars::UiTextDropShadow final_warning("final-warning", L"Fit", touches_final_card.menu().detail_font,
-            mattmath::Vector2F(150.0f, 832.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().detail_shadow_offset);
+            labrador::Vector2F(150.0f, 832.0f), &world.render, Colour::black, Colour(), touches_final_card.menu().detail_shadow_offset);
         require(final_card.bottom() == 832.0f && final_warning.bounds().y == final_card.bottom() &&
             final_warning.bounds().bottom() == 853.0f,
             "Team warning lost exact complete-card contact including the badge, icons and focus padding");

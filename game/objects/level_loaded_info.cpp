@@ -15,7 +15,6 @@
 #include <limits>
 #include <string_view>
 
-using namespace mattmath;
 using namespace labrador;
 namespace key = level_format::key;
 
@@ -135,13 +134,8 @@ namespace
 				"' is not valid JSON: " + rapidjson::GetParseError_En(parsed.GetParseError()) +
 				" (offset " + std::to_string(parsed.GetErrorOffset()) + ")");
 		}
-		// An explicit-length parse can still stop at raw NUL; inspect the entire snapshot.
-		const std::size_t nul = snapshot.find('\0');
-		if (nul != std::string_view::npos)
-		{
-			throw std::runtime_error(std::string("LevelLoadedInfo - '") + source_path +
-				"' is not valid JSON: Unescaped NUL byte. (offset " + std::to_string(nul) + ")");
-		}
+		// No raw-NUL check here: the constructor's parse_json runs first on the
+		// same snapshot and refuses a raw NUL anywhere in it (engine v0.3.0).
 		return StageSemanticHash{}.of(parsed);
 	}
 }

@@ -47,14 +47,14 @@ protected:
 	// Adds a text widget owned by this page to the text tree, in the panel's
 	// ink unless a colour is given.
 	labrador::UiText* add_text(const char* name, const std::wstring& value,
-		const std::string& font, const mattmath::Vector2F& position);
+		const std::string& font, const labrador::Vector2F& position);
 	labrador::UiText* add_text(const char* name, const std::wstring& value,
-		const std::string& font, const mattmath::Vector2F& position, const labrador::Colour& colour);
+		const std::string& font, const labrador::Vector2F& position, const labrador::Colour& colour);
 	// Scales `widget` down, never up, to fit `available`.
-	static void fit_text(labrador::UiText& widget, const mattmath::RectangleF& available);
+	static void fit_text(labrador::UiText& widget, const labrador::RectangleF& available);
 	// The status line's box: from controls_settings.status_position to the
 	// paper's padded right edge and down to the footer.
-	mattmath::RectangleF status_limit(const MenuStyle& style) const;
+	labrador::RectangleF status_limit(const MenuStyle& style) const;
 
 	// Plays the cancel sound, forgets armed presses and pops this page.
 	void close();

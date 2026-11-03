@@ -24,8 +24,8 @@ private:
 	std::size_t file_index_ = 0;
 	std::size_t page_index_ = 0;
 	labrador::FontHandle font_;
-	mattmath::RectangleF body_bounds_;
-	mattmath::RectangleF progress_bounds_;
+	labrador::RectangleF body_bounds_;
+	labrador::RectangleF progress_bounds_;
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiText> heading_;

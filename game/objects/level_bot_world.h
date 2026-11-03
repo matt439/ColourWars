@@ -30,11 +30,11 @@ public:
     std::vector<PlayerTeam> gate_permissions() const override;
     // Exact scoring tiles in Scene paintable-role order (Level::paint_surfaces).
     std::vector<PaintSurfaceSample> paint_surfaces() const override;
-    std::vector<mattmath::RectangleF> obstacles(PlayerTeam permitted) const override;
+    std::vector<labrador::RectangleF> obstacles(PlayerTeam permitted) const override;
     std::vector<MatchBotSupport> supports(PlayerTeam permitted) const override;
     std::vector<MatchBotRamp> ramps() const override;
-    bool line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const override;
-    bool traversal_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to,
+    bool line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const override;
+    bool traversal_line_of_sight(labrador::Vector2F from, labrador::Vector2F to,
         PlayerTeam team) const override;
 
 private:

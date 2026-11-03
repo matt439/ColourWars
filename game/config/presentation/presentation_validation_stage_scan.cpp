@@ -33,7 +33,7 @@ void Presentation::validate_stage_scan_resources(const labrador::RenderResources
 		}
 		std::ignore = copy.summary(1);
 		std::ignore = copy.progress(1, 1, 1, 1);
-		const mattmath::Vector2F empty_size = font.measure(copy.no_refusals) * look.text_scale;
+		const labrador::Vector2F empty_size = font.measure(copy.no_refusals) * look.text_scale;
 		if (empty_size.x > layout.body.width || empty_size.y > layout.body.height)
 		{ throw std::invalid_argument("no_refusals must fit the diagnostic body."); }
 		for (const wchar_t character : alphabet)
@@ -41,13 +41,13 @@ void Presentation::validate_stage_scan_resources(const labrador::RenderResources
 			std::ignore = stage_scan_diagnostics::pages(font, std::string(1, static_cast<char>(character)),
 				layout.body.width / look.text_scale, layout.body.height / look.text_scale);
 		}
-		const mattmath::RectangleF status(look.status.position + mattmath::Vector2F(0.0f, this->menu_.footer_y),
+		const labrador::RectangleF status(look.status.position + labrador::Vector2F(0.0f, this->menu_.footer_y),
 			look.status.size);
 		const auto prompt_fits = [&](const std::wstring& text)
 		{
-			const mattmath::Vector2F size = font.measure(text) * look.text_scale;
-			const mattmath::Vector2F shadow = look.prompt_shadow_offset * look.text_scale;
-			const mattmath::Vector2F origin = look.prompt_position + mattmath::Vector2F(0.0f, this->menu_.footer_y);
+			const labrador::Vector2F size = font.measure(text) * look.text_scale;
+			const labrador::Vector2F shadow = look.prompt_shadow_offset * look.text_scale;
+			const labrador::Vector2F origin = look.prompt_position + labrador::Vector2F(0.0f, this->menu_.footer_y);
 			return origin.x + std::min(0.0f, shadow.x) >= 0.0f &&
 				origin.y + std::min(0.0f, shadow.y) >= status.bottom() &&
 				origin.x + size.x + std::max(0.0f, shadow.x) <= menu_consts::DESIGN_RESOLUTION.x &&

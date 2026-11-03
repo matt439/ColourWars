@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/press_tower/fixtures.h"
+#include "game/carried/removed_members.h"
 #include "engine/math/triangle.h"
 
 namespace press_tower_acceptance
@@ -97,7 +98,7 @@ namespace press_tower_acceptance
             else
             {
                 const JsonValue shape = object.object("rectangle_tlbr");
-                surface.rectangle = RectangleF::from_top_left_bottom_right(
+                surface.rectangle = colourwars::from_top_left_bottom_right(
                     { shape.number("left"), shape.number("top") },
                     { shape.number("right"), shape.number("bottom") });
             }
@@ -275,13 +276,13 @@ namespace press_tower_acceptance
     {
         this->death_expected = true;
         const PlayerTeam enemy = this->player->team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO, enemy, 1,
+        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
             Colour::white, &this->services.render,
             resolve_projectile_strip(this->services.tuning.projectile(ProjectileType::spray), this->services.render),
             &this->services.tuning.projectile(ProjectileType::spray));
         for (int hit = 0; hit < 1000 && this->player->health() > 0.0f; ++hit)
         {
-            this->player->on_contact(shot, Vector2F::ZERO, 0.0f);
+            this->player->on_contact(shot, Vector2F::zero, 0.0f);
         }
         require(this->player->health() <= 0.0f, "Press Tower damage fixture did not eliminate the player");
     }

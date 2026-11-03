@@ -9,7 +9,6 @@
 #include "game/objects/player.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

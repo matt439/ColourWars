@@ -17,7 +17,7 @@ namespace movement_acceptance
         const PlaySettings& preferences = suite.preferences;
         const std::filesystem::path& content = suite.content;
         const auto course = [&](float bottom = 0.0f,
-            const Vector2F& velocity = Vector2F::ZERO)
+            const Vector2F& velocity = Vector2F::zero)
         {
             return suite.course(bottom, velocity);
         };

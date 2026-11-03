@@ -13,7 +13,7 @@ public:
     void eliminate();
     void land(float speed);
     void clear();
-    mattmath::Vector2F offset() const;
+    labrador::Vector2F offset() const;
     float remaining() const;
 
 private:

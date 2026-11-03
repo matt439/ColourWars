@@ -44,7 +44,7 @@
         // renderer still draws the pane's UI badge, so every delta below must
         // belong to the owner above the figure, not its HUD or another player.
         const Vector2F world_size = look.world_size;
-        look.world_size = Vector2F::ZERO;
+        look.world_size = Vector2F::zero;
         const Frame disabled = render(level, *app.renderer());
         look.world_size = world_size;
         require(enabled.pixels == render(level, *app.renderer()).pixels,
@@ -131,8 +131,8 @@
                     renderer.set_view_count(1);
                     DrawList list = renderer.view(0);
                     list.set_viewport(viewport);
-                    list.set_camera(Camera::DEFAULT_CAMERA);
-                    canvas.draw(list, RectangleF(Vector2F::ZERO, viewport.size()));
+                    list.set_camera(Camera::default_camera);
+                    canvas.draw(list, RectangleF(Vector2F::zero, viewport.size()));
                     if (roster >= 0) { badge.draw(list, box, roster); }
                     return read(renderer);
                 };

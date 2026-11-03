@@ -4,7 +4,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 #include "game/states/player_label.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 #pragma region MainMenuTeamSelect

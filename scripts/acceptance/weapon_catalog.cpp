@@ -15,7 +15,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -267,8 +266,8 @@ namespace
         }, &world);
     }
 
-    std::unique_ptr<SpriteSheet> make_catalog_sheet(const Vector2F& body_origin = Vector2F::ZERO,
-        const Vector2F& paint_origin = Vector2F::ZERO, bool wrong_paint_size = false,
+    std::unique_ptr<SpriteSheet> make_catalog_sheet(const Vector2F& body_origin = Vector2F::zero,
+        const Vector2F& paint_origin = Vector2F::zero, bool wrong_paint_size = false,
         int supply_count = 2, bool wrong_supply_size = false, int body_width = 40, int body_height = 24)
     {
         NameTable<SpriteFrame> frames("sprite frame");

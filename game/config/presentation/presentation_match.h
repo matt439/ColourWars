@@ -45,13 +45,13 @@ struct CountdownArtPresentation
 // Screen-space layout for the start signal and device-specific reminders.
 struct MatchPresentation
 {
-	mattmath::Vector2F reference_size;
-	mattmath::Vector2F countdown_size;
+	labrador::Vector2F reference_size;
+	labrador::Vector2F countdown_size;
 	float countdown_center_y = 0.0f;
-	mattmath::Vector2F stage_entry_size;
+	labrador::Vector2F stage_entry_size;
 	float stage_entry_top = 0.0f;
-	mattmath::Vector2F controls_margin;
-	mattmath::Vector2F controls_padding;
+	labrador::Vector2F controls_margin;
+	labrador::Vector2F controls_padding;
 	float controls_gap = 0.0f;
 	CountdownArtPresentation countdown_art;
 };
@@ -62,7 +62,7 @@ struct GatePermissionPresentation
 {
 	labrador::Colour ink;
 	labrador::Colour paper;
-	mattmath::Vector2F size;
+	labrador::Vector2F size;
 	float inset = 0.0f;
 	float keyline_width = 0.0f;
 };
@@ -76,7 +76,7 @@ struct FerryDirectionPresentation
 {
 	labrador::Colour ink;
 	labrador::Colour paper;
-	mattmath::Vector2F size;
+	labrador::Vector2F size;
 	float gap = 0.0f;
 	float keyline_width = 0.0f;
 	float lift_width = 0.0f;
@@ -113,15 +113,15 @@ struct CameraPresentation
 struct PlayerIdentityPresentation
 {
 	bool enabled = true;
-	mattmath::Vector2F world_size;
+	labrador::Vector2F world_size;
 	// Bottom-centre offset above the player's collision rectangle.
-	mattmath::Vector2F world_offset;
+	labrador::Vector2F world_offset;
 	// The bot's full roster/difficulty label above its ordinary world badge.
-	mattmath::Vector2F bot_label_size;
+	labrador::Vector2F bot_label_size;
 	float bot_label_gap = 0.0f;
 	float emphasis_duration = 0.0f;
 	float emphasis_scale = 1.0f;
-	mattmath::Vector2F ui_size;
+	labrador::Vector2F ui_size;
 	float ui_gap = 0.0f;
 	labrador::Colour background_colour = labrador::Colour::white;
 	labrador::Colour ink_colour = labrador::Colour::black;
@@ -129,9 +129,9 @@ struct PlayerIdentityPresentation
 
 	// The UI badge just before a label, centred on it vertically. The label
 	// keeps its geometry; UiPlayerBadge and the roster-label checks share this.
-	mattmath::RectangleF ui_badge_before(const mattmath::RectangleF& label) const
+	labrador::RectangleF ui_badge_before(const labrador::RectangleF& label) const
 	{
-		return mattmath::RectangleF(label.x - ui_size.x - ui_gap,
+		return labrador::RectangleF(label.x - ui_size.x - ui_gap,
 			label.y + (label.height - ui_size.y) / 2.0f,
 			ui_size.x, ui_size.y);
 	}
@@ -158,7 +158,7 @@ struct HudLowPaintPresentation
 {
 	labrador::Colour tag;
 	labrador::Colour text;
-	mattmath::Vector2F padding;
+	labrador::Vector2F padding;
 	float blink_period = 0.0f;
 };
 
@@ -185,7 +185,7 @@ struct TeammateMarkerPresentation
 {
 	bool enabled = true;
 	labrador::Colour ink;
-	mattmath::Vector2F size;
+	labrador::Vector2F size;
 	float keyline_width = 0.0f;
 	float badge_inset = 0.0f;
 	float pointer_length = 0.0f;
@@ -218,7 +218,7 @@ struct HudPresentation
 	float right_margin = 0.0f;
 	float ammo_top_margin = 0.0f;
 	float health_top_margin = 0.0f;
-	mattmath::Vector2F box_size = { 0.0f, 0.0f };
+	labrador::Vector2F box_size = { 0.0f, 0.0f };
 	float box_fill_border = 0.0f;
 	labrador::Colour health_colour = labrador::Colour::green;
 
@@ -226,8 +226,8 @@ struct HudPresentation
 	std::string fill_frame;
 
 	std::string timer_font;
-	mattmath::Vector2F timer_offset = { 0.0f, 0.0f };
-	mattmath::Vector2F timer_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F timer_offset = { 0.0f, 0.0f };
+	labrador::Vector2F timer_shadow_offset = { 0.0f, 0.0f };
 	labrador::Colour timer_colour = labrador::Colour::gray;
 	labrador::Colour timer_shadow_colour = labrador::Colour::black;
 
@@ -239,12 +239,12 @@ struct HudPresentation
 	TeammateMarkerPresentation teammate_marker;
 
 	std::string player_identity_font;
-	mattmath::Vector2F player_identity_offset = { 0.0f, 0.0f };
-	mattmath::Vector2F player_identity_shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F player_identity_offset = { 0.0f, 0.0f };
+	labrador::Vector2F player_identity_shadow_offset = { 0.0f, 0.0f };
 	labrador::Colour player_identity_colour = labrador::Colour::white;
 	labrador::Colour player_identity_shadow_colour = labrador::Colour::black;
 	labrador::Colour player_identity_background_colour = labrador::Colour::black;
-	mattmath::Vector2F player_identity_padding = { 0.0f, 0.0f };
+	labrador::Vector2F player_identity_padding = { 0.0f, 0.0f };
 	float player_identity_reference_width = 1920.0f;
 };
 
@@ -255,7 +255,7 @@ struct StationLabelPresentation
 {
 	std::string font;
 	float scale = 1.0f;
-	mattmath::Vector2F offset = { 0.0f, 0.0f };
+	labrador::Vector2F offset = { 0.0f, 0.0f };
 	labrador::Colour colour = labrador::Colour::black;
 };
 
@@ -264,10 +264,10 @@ struct DebugOverlayPresentation
 	std::string font;
 	float font_scale = 1.0f;
 	float line_spacing = 0.0f;
-	mattmath::Vector2F position = { 0.0f, 0.0f };
+	labrador::Vector2F position = { 0.0f, 0.0f };
 	labrador::Colour colour = labrador::Colour::light_gray;
 	labrador::Colour shadow_colour = labrador::Colour::black;
-	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
+	labrador::Vector2F shadow_offset = { 0.0f, 0.0f };
 	float shadow_scale = 1.0f;
 	StationLabelPresentation station_label;
 };
@@ -338,12 +338,12 @@ struct WeaponFeedbackPresentation
 	float aim_marker_distance = 0.0f;
 	float aim_marker_size = 0.0f;
 	float aim_marker_stroke = 0.0f;
-	std::array<mattmath::Vector2F, TUNED_WEAPON_COUNT> muzzle_sizes;
+	std::array<labrador::Vector2F, TUNED_WEAPON_COUNT> muzzle_sizes;
 	// A keylined tank beside the status slot while the tool is low (POL#38),
 	// offset clear of the owner's identity badge. It blinks to
 	// `low_paint_dim_alpha`; Reduce effects holds it steady.
-	mattmath::Vector2F low_paint_size;
-	mattmath::Vector2F low_paint_offset;
+	labrador::Vector2F low_paint_size;
+	labrador::Vector2F low_paint_offset;
 	float low_paint_blink_period = 0.0f;
 	float low_paint_dim_alpha = 0.0f;
 };
@@ -389,8 +389,8 @@ struct IdleDripPresentation
 struct FigureGripPresentation
 {
 	// World-space offsets from the weapon's actual draw pivot before rotation.
-	mattmath::Vector2F rear;
-	mattmath::Vector2F front;
+	labrador::Vector2F rear;
+	labrador::Vector2F front;
 };
 
 // Seconds and distances for the held tools' mechanisms. They select authored
@@ -417,7 +417,7 @@ struct ToolMotionPresentation
 	std::string mist_frame;
 	float mist_tail_duration = 0.0f;
 	float mist_tail_distance = 0.0f;
-	mattmath::Vector2F mist_tail_size;
+	labrador::Vector2F mist_tail_size;
 	float mist_tail_opacity = 0.0f;
 };
 
@@ -437,7 +437,7 @@ struct QuietCharacterPresentation
 	float lean_distance = 0.0f;
 	float lean_acceleration = 0.0f;
 	float lean_settle_time = 0.0f;
-	std::array<mattmath::RectangleF, 2> eyes;
+	std::array<labrador::RectangleF, 2> eyes;
 	float eyelid_height = 0.0f;
 	labrador::Colour face_colour;
 };
@@ -452,7 +452,7 @@ struct FigureSlipStroke
 	size_t stroke = 0;
 	// insert_after only; a replaced stroke keeps its part.
 	std::string part;
-	std::vector<mattmath::Vector2F> points;
+	std::vector<labrador::Vector2F> points;
 };
 
 // One face or head-outline slip a person can make and keep
@@ -473,7 +473,7 @@ struct FigureSlipsPresentation
 	// order, and every locomotion strip draws the idle strip's band.
 	std::string band_frame;
 	// Canvas texels a person's band replaces, the same span facing either way.
-	mattmath::RectangleF band;
+	labrador::RectangleF band;
 	float two_slip_chance = 0.0f;
 	std::vector<FigureSlip> list;
 	// Index pairs into `list`, smaller first, never drawn together.
@@ -497,11 +497,11 @@ struct FigurePresentation
 	std::string rest_arms_paint_frame;
 	std::string sleeves_frame;
 	std::string sleeves_paint_frame;
-	mattmath::Vector2F canvas_size;
+	labrador::Vector2F canvas_size;
 	// Canvas texels either side of the hitbox: the brim and hands overhang it.
 	float body_inset = 0.0f;
-	mattmath::Vector2F rear_shoulder;
-	mattmath::Vector2F front_shoulder;
+	labrador::Vector2F rear_shoulder;
+	labrador::Vector2F front_shoulder;
 	float arm_width = 0.0f;
 	float elbow_drop = 0.0f;
 	float hand_size = 0.0f;
@@ -516,7 +516,7 @@ struct FigurePresentation
 	float body_width() const { return canvas_size.x - body_inset * 2.0f; }
 
 	// The whole canvas around a figure's hitbox rectangle, overhang included.
-	mattmath::RectangleF canvas_rectangle(const mattmath::RectangleF& body) const
+	labrador::RectangleF canvas_rectangle(const labrador::RectangleF& body) const
 	{
 		const float overhang = body_inset * body.width / this->body_width();
 		return { body.x - overhang, body.y, body.width + overhang * 2.0f, body.height };
@@ -529,7 +529,7 @@ struct FigurePresentation
 struct RespawnStroke
 {
 	std::string part;
-	std::vector<mattmath::Vector2F> points;
+	std::vector<labrador::Vector2F> points;
 };
 
 // The undo history redrawing a splatted figure at its spawn, fast-forward,
@@ -542,7 +542,7 @@ struct RespawnRedrawPresentation
 	std::string pen_frame;
 	labrador::Colour pen_colour;
 	// The texels of the frame the strokes trace, stretched over the player.
-	mattmath::Vector2F canvas_size;
+	labrador::Vector2F canvas_size;
 	float pen_width = 0.0f;
 	// Fractions of the wait: empty after the pop until draw_from, the outline
 	// drawn by draw_from..fill_at, then the filled figure until it respawns.
@@ -564,10 +564,10 @@ struct MonitorArtPresentation
 	float pen_width = 0.0f;
 	float corner_step = 0.0f;
 	float shadow_width = 0.0f;
-	mattmath::RectangleF vent_area;
+	labrador::RectangleF vent_area;
 	int vent_count = 0;
-	mattmath::RectangleF power_button;
-	mattmath::RectangleF power_indicator;
+	labrador::RectangleF power_button;
+	labrador::RectangleF power_indicator;
 };
 
 // Low-value, anonymous rear silhouette. Widths use the person's seated height.
@@ -617,7 +617,7 @@ struct OpeningPresentation
 	std::vector<labrador::Colour> bezel_shades;
 	labrador::Colour bezel_shadow;
 	MonitorArtPresentation monitor_art;
-	mattmath::RectangleF glass;
+	labrador::RectangleF glass;
 	labrador::Colour glass_colour;
 	// Behind the picture, where it does not fill the glass.
 	labrador::Colour program_colour;

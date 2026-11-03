@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-using namespace mattmath;
+using namespace labrador;
 using menu_consts::DESIGN_RESOLUTION;
 
 // Phase 2: the Random name, the briefing's status and summary rows and the
@@ -35,7 +35,7 @@ void Presentation::Validation::validate_stage_select_briefing(StageGeometry& geo
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + random_name_key +
 			" must have a finite shadow, positive preview width and positive name area.");
 	}
-	const RectangleF random_name_union = RectangleF::union_of(RectangleF(Vector2F::ZERO, random_name_size),
+	const RectangleF random_name_union = RectangleF::union_of(RectangleF(Vector2F::zero, random_name_size),
 		RectangleF(name_shadow, random_name_size));
 	if (!std::isfinite(random_name_union.x) || !std::isfinite(random_name_union.y) ||
 		!std::isfinite(random_name_union.width) || !std::isfinite(random_name_union.height) ||
@@ -157,7 +157,7 @@ void Presentation::Validation::validate_stage_select_navigation(StageGeometry& g
 	{
 		const std::string key = std::string("menu_text.stage.") + role;
 		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.brand_font);
-		const RectangleF raw = RectangleF::union_of(RectangleF(Vector2F::ZERO, size),
+		const RectangleF raw = RectangleF::union_of(RectangleF(Vector2F::zero, size),
 			RectangleF(stage_detail_shadow, size));
 		if (!std::isfinite(stage_hint_width) || stage_hint_width <= 0.0f || !finite_stage_rectangle(raw))
 		{

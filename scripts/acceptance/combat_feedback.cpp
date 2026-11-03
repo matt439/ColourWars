@@ -19,7 +19,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -69,7 +68,7 @@ namespace
 
         ProjectileSpray shot()
         {
-            return ProjectileSpray(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+            return ProjectileSpray(RectangleF(0, 0, 10, 10), Vector2F::zero,
                 PlayerTeam::b, 1, Colour::white, &this->render,
                 resolve_projectile_strip(this->tuning.projectile(ProjectileType::spray), this->render),
                 &this->tuning.projectile(ProjectileType::spray));
@@ -117,7 +116,7 @@ namespace
 
         void hit(const ProjectileSpray& shot)
         {
-            this->player->on_contact(shot, Vector2F::ZERO, 0.0f);
+            this->player->on_contact(shot, Vector2F::zero, 0.0f);
         }
 
         void eliminate(const ProjectileSpray& shot)
@@ -228,7 +227,7 @@ namespace
         }
         require(course.player->state() == PlayerState::alive &&
             cue.hurt_remaining() == 0.0f && cue.elimination_remaining() == 0.0f &&
-            cue.death_rectangle() == RectangleF::ZERO,
+            cue.death_rectangle() == RectangleF::zero,
             "Natural respawn retained a previous life's combat cue");
         std::cout << "PASS combat elimination: fatal input suppression, one detached burst, dead contacts and natural respawn\n";
     }
@@ -266,7 +265,7 @@ namespace
             "Long update retained expired elimination bounds");
         feedback.clear();
         feedback.clear();
-        require(feedback.death_rectangle() == RectangleF::ZERO && feedback.hurt(),
+        require(feedback.death_rectangle() == RectangleF::zero && feedback.hurt(),
             "Idempotent clear retained the death snapshot or contact limiter");
 
         Course course(world, look);
@@ -287,7 +286,7 @@ namespace
         require(course.player->state() == PlayerState::alive &&
             course.player->combat_feedback().hurt_remaining() == 0.0f &&
             course.player->combat_feedback().elimination_remaining() == 0.0f &&
-            course.player->combat_feedback().death_rectangle() == RectangleF::ZERO,
+            course.player->combat_feedback().death_rectangle() == RectangleF::zero,
             "Forced respawn retained combat feedback");
         std::cout << "PASS combat lifecycle: frozen/invalid/long deltas, idempotent clear, placement and forced respawn\n";
     }

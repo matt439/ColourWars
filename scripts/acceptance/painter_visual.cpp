@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/sound_groups.h"
+#include "game/carried/removed_members.h"
 #include "engine/app/application.h"
 #include "engine/core/file_path.h"
 #include "game/input/input_slots.h"
@@ -36,7 +37,6 @@
 #include "game/states/results_menu.h"
 #include "game/states/main_menu.h"
 #include "game/states/menu_content_validation.h"
-#include "game/config/text_wrap.h"
 #include "game/states/display_confirmation.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
@@ -105,11 +105,13 @@ namespace labrador
     }
     void GamepadReader::suspend() { this->impl_->suspended = true; }
     void GamepadReader::resume() { this->impl_->suspended = false; }
+    // Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
+    bool GamepadReader::vibrate(int, const Vibration&) { return false; }
+    void GamepadReader::stop_vibration(int) {}
 }
 #endif
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -1243,7 +1245,7 @@ int wmain(int argc, wchar_t** argv)
                 }
                 for (int tick = 0; tick < 8; ++tick)
                 {
-                    const float angle = PI * (-0.25f + 0.5f * static_cast<float>(phase % 4) +
+                    const float angle = pi * (-0.25f + 0.5f * static_cast<float>(phase % 4) +
                         0.5f * static_cast<float>(tick + 1) / 8.0f);
                     for (auto& input : inputs)
                     {
@@ -1288,7 +1290,7 @@ int wmain(int argc, wchar_t** argv)
             resize(app, *teammates, { 1280, 720 });
             for (bool right : { true, false })
             {
-                const float angle = right ? PI * 0.25f : PI * 0.75f;
+                const float angle = right ? pi * 0.25f : pi * 0.75f;
                 for (auto& input : teammate_inputs)
                 {
                     input.x_movement = right ? 1.0f : -1.0f;
@@ -1322,7 +1324,7 @@ int wmain(int argc, wchar_t** argv)
         level->update(acceptance::slot_seats(*level, inputs), dt);
         require(player.state() == PlayerState::dead, "elimination did not enter death");
         const Camera whole_camera = player.camera();
-        player.set_pose({ Vector2F::ZERO, 0, false, true });
+        player.set_pose({ Vector2F::zero, 0, false, true });
         const Frame early_whole = isolated(&player, player,
             app.viewport_manager()->player_viewport(0), *app.renderer(), canvas);
         player.set_pose({});
@@ -1336,7 +1338,7 @@ int wmain(int argc, wchar_t** argv)
             "elimination pose/burst did not finish before the outline redraw");
         const Camera live_camera = player.camera();
         player.set_camera(whole_camera);
-        player.set_pose({ Vector2F::ZERO, 0, false, true });
+        player.set_pose({ Vector2F::zero, 0, false, true });
         const Frame settled_whole = isolated(&player, player,
             app.viewport_manager()->player_viewport(0), *app.renderer(), canvas);
         require(early_whole.pixels == settled_whole.pixels,
@@ -1349,7 +1351,7 @@ int wmain(int argc, wchar_t** argv)
         while (player.state() == PlayerState::dead && player.respawn_progress() < outline_at) { level->update(acceptance::slot_seats(*level, inputs), dt); }
         require(player.state() == PlayerState::dead, "outline phase missed the respawn wait");
         capture(app, *level, canvas, output, "1p-redraw-outline", records);
-        player.set_pose({ Vector2F::ZERO, 0.0f, false, true });
+        player.set_pose({ Vector2F::zero, 0.0f, false, true });
         capture(app, *level, canvas, output, "1p-story-dead-whole", records);
         player.set_pose({});
         while (player.state() == PlayerState::dead && player.respawn_progress() < presentation.respawn_redraw().fill_at)

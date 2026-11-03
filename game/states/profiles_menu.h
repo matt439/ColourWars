@@ -50,5 +50,5 @@ private:
 	labrador::UiText* delete_ = nullptr;
 	labrador::UiText* new_ = nullptr;
 	labrador::UiText* help_ = nullptr;
-	mattmath::RectangleF status_limit_;
+	labrador::RectangleF status_limit_;
 };

@@ -69,8 +69,8 @@ private:
 	// the x of the stage's mirror line and whose hand drew it.
 	struct StageContext
 	{
-		std::vector<mattmath::RectangleF> flat;
-		std::vector<mattmath::RectangleF> solid;
+		std::vector<labrador::RectangleF> flat;
+		std::vector<labrador::RectangleF> solid;
 		std::vector<PaintPolygon> slabs;
 		float mirror_x = 0.0f;
 		std::uint64_t hand = 0;

@@ -12,7 +12,6 @@ namespace fixed_slab_acceptance
 {
     namespace
     {
-        using namespace mattmath;
         using namespace labrador;
         using moving_structure_acceptance::World;
         using moving_structure_acceptance::Fixture;
@@ -72,8 +71,8 @@ namespace fixed_slab_acceptance
         {
             const auto values = shot_values(world, ProjectileType::jet);
             const auto projectile = shot(world, values, ProjectileType::jet, footprint,
-                Vector2F::ZERO, team, paint_owner);
-            surface.on_contact(*projectile, Vector2F::ZERO, 0.0f);
+                Vector2F::zero, team, paint_owner);
+            surface.on_contact(*projectile, Vector2F::zero, 0.0f);
         }
 
         void local_score_and_credit(World& world)
@@ -281,7 +280,7 @@ namespace fixed_slab_acceptance
                     growth.diffusion.type = DiffusionType::linear_size_and_col_rect;
                     growth.diffusion.start_time = 0.0f; growth.diffusion.end_time = dt;
                     growth.diffusion.end_scale = { 21.0f, 21.0f };
-                    auto cloud = shot(world, growth, type, { 79.0f, 19.0f, 2.0f, 2.0f }, Vector2F::ZERO);
+                    auto cloud = shot(world, growth, type, { 79.0f, 19.0f, 2.0f, 2.0f }, Vector2F::zero);
                     std::array<CollisionObject*, 1> growth_targets{ growing_surface.get() };
                     cloud->update(dt); cloud->resolve_movement_contacts(growth_targets);
                     require(cloud->for_deletion() && growing_surface->paint_total().player_areas.at(owner) > 0.0f,
@@ -301,7 +300,7 @@ namespace fixed_slab_acceptance
                 {
                     auto surface = slab(world, rise);
                     auto projectile = shot(world, values, ProjectileType::jet,
-                        { 79.0f, crosses ? 89.0f : 9.0f, 2.0f, 2.0f }, Vector2F::ZERO);
+                        { 79.0f, crosses ? 89.0f : 9.0f, 2.0f, 2.0f }, Vector2F::zero);
                     std::array<CollisionObject*, 1> targets{ surface.get() };
                     projectile->resolve_launch_obstruction({ 80.0f, 39.5f }, targets);
                     require(projectile->for_deletion() == crosses,
@@ -321,7 +320,7 @@ namespace fixed_slab_acceptance
                             const float health = enemy.health();
                             auto projectile = shot(world, values, ProjectileType::jet,
                                 { 79.0f, launch ? 100.0f : 0.0f, 2.0f, 2.0f },
-                                launch ? Vector2F::ZERO : Vector2F(0.0f, 100.0f / moving_structure_acceptance::dt));
+                                launch ? Vector2F::zero : Vector2F(0.0f, 100.0f / moving_structure_acceptance::dt));
                             std::array<CollisionObject*, 2> targets{ surface.get(), &enemy };
                             if (reverse) { std::reverse(targets.begin(), targets.end()); }
                             if (launch) { projectile->resolve_launch_obstruction({ 80.0f, 1.0f }, targets); }

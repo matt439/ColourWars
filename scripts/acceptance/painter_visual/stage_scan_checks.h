@@ -92,7 +92,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     {
         unchanged(); const Frame actual = frame(); std::srand(93232); const int next = std::rand(); std::srand(93232);
         require(actual.pixels == frame().pixels && std::rand() == next, "Stage diagnostic drawing changed frozen pixels or RNG");
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
         const std::array<RectangleF, 4> boxes{ layout.heading, layout.unicode_hint, layout.body, layout.progress };
         const std::array<std::wstring, 4> words{ copy.heading, copy.unicode_hint, body, progress(file, files, page, pages) };
         constexpr std::array<const char*, 4> roles{ "heading", "unicode", "body", "progress" };
@@ -108,7 +108,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
             list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(camera); list.set_filter(TextureFilter::point);
             const UiTexture background("diagnostic-reference-background", style.sprite_sheet, style.fill_frame,
-                RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), CrudeDrawing::premultiplied(presentation.main_menu().home_background_colour));
+                RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), CrudeDrawing::premultiplied(presentation.main_menu().home_background_colour));
             background.draw(list); FocusGroup no_focus;
             const MenuPaperArtwork paper(layout.paper, app.render_resources(), &style, &art, &no_focus); paper.draw(list);
             list.set_filter(TextureFilter::linear); text.draw(list); const Frame wanted = read(renderer); ++reads;
@@ -134,7 +134,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
         list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(camera); list.set_filter(TextureFilter::point);
         const UiTexture background("prompt-reference-background", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), CrudeDrawing::premultiplied(presentation.main_menu().home_background_colour));
+            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), CrudeDrawing::premultiplied(presentation.main_menu().home_background_colour));
         background.draw(list);
         const UiTexture dim("prompt-reference-footer", style.sprite_sheet, style.fill_frame, footer, app.render_resources(), style.scrim_colour); dim.draw(list);
         list.set_filter(TextureFilter::linear); prompt.draw(list); const Frame wanted = read(renderer); ++reads;
@@ -168,10 +168,10 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             status.bounds().top() >= style.footer_y + style.rule_height && status.bounds().bottom() < browse_prompt.bounds().top(),
             "Parent scan summary complete font bounds escape their box/footer or collide with the rule/prompt");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
         list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(camera); list.set_filter(TextureFilter::point);
         const UiTexture background("status-reference-background", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), CrudeDrawing::premultiplied(presentation.main_menu().home_background_colour));
+            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), CrudeDrawing::premultiplied(presentation.main_menu().home_background_colour));
         background.draw(list);
         const UiTexture dim("status-reference-footer", style.sprite_sheet, style.fill_frame, footer, app.render_resources(), style.scrim_colour); dim.draw(list);
         const UiTexture rule("status-reference-rule", style.sprite_sheet, style.fill_frame,

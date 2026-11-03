@@ -109,12 +109,12 @@ Frame monitor_fixture(Application& app, const Monitor& monitor, const RectangleF
     bool front_details = true, const Silhouette* silhouette = nullptr)
 {
     Renderer& renderer = *app.renderer();
-    const RectangleF window(Vector2F::ZERO, app.resolution_manager()->resolution_vec());
+    const RectangleF window(Vector2F::zero, app.resolution_manager()->resolution_vec());
     renderer.begin_frame();
     renderer.set_view_count(1);
     DrawList list = renderer.view(0);
     list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-    list.set_camera(Camera::DEFAULT_CAMERA);
+    list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);
     canvas.draw(list, window);
     monitor.draw(list, screen);

@@ -88,7 +88,7 @@ namespace menu_text_acceptance
             {
                 if (character == missing) { continue; }
                 const bool zero = zero_digits && ((character >= U'0' && character <= U'9') || character == U'%');
-                glyphs.push_back({character, mattmath::RectangleI(0, 0, zero ? 0 : character == U'~' ? width : 8,
+                glyphs.push_back({character, labrador::RectangleI(0, 0, zero ? 0 : character == U'~' ? width : 8,
                     character == U'~' ? height : 16), character == U'~' ? tilde_offset : 0.0f, 0.0f, 0.0f});
             }
             auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
@@ -109,18 +109,18 @@ namespace menu_text_acceptance
             MenuStyle style = look.menu();
             style.item_font = controls.item_font;
             const auto& art = controls.art;
-            const mattmath::Vector2F limit(controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset -
+            const labrador::Vector2F limit(controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset -
                 controls.layout.position.x - controls.layout.spacing.x,
                 controls.layout.spacing.y - art.focus_padding.y * 2.0f);
-            require(limit == mattmath::Vector2F(332.0f, 48.0f), "Percentage rows lost the actual Controls/Sticks value limits");
+            require(limit == labrador::Vector2F(332.0f, 48.0f), "Percentage rows lost the actual Controls/Sticks value limits");
             struct Use { int row; MenuItem label; };
             constexpr Use uses[]{{3, MenuItem::music_volume}, {4, MenuItem::sfx_volume},
                 {1, MenuItem::move_deadzone}, {2, MenuItem::aim_deadzone}};
             for (const auto& use : uses)
             {
-                const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
+                const auto position = controls.layout.position + labrador::Vector2F(0.0f,
                     controls.layout.spacing.y * static_cast<float>(use.row));
-                const auto value_position = position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f);
+                const auto value_position = position + labrador::Vector2F(controls.layout.spacing.x, 0.0f);
                 OptionRow row("percentage", look.menu_text().item(use.label), position, value_position,
                     style, art.ink, &world.render, {}, &art, limit);
                 UiText* value = row_text(row, "percentage_value");
@@ -138,26 +138,26 @@ namespace menu_text_acceptance
                     "Percentage OptionRow lost its copied text, fixed position/label or fitted dimensions");
                 if (fit == 1)
                 {
-                    require(raw == mattmath::Vector2F(1024.0f, 20.0f) && std::abs(bounds.width - 332.0f) <= 0.01f &&
+                    require(raw == labrador::Vector2F(1024.0f, 20.0f) && std::abs(bounds.width - 332.0f) <= 0.01f &&
                         std::abs(bounds.height - 6.484375f) <= 0.01f,
                         "Long percentage copy did not retain its independent width-only fit");
                 }
                 else if (fit == 2 || fit == 3)
                 {
                     const float expected_width = fit == 2 ? 7.68f : 48.576f;
-                    require(raw == (fit == 2 ? mattmath::Vector2F(32.0f, 200.0f) : mattmath::Vector2F(2024.0f, 2000.0f)) &&
+                    require(raw == (fit == 2 ? labrador::Vector2F(32.0f, 200.0f) : labrador::Vector2F(2024.0f, 2000.0f)) &&
                         std::abs(bounds.height - 48.0f) <= 0.01f && std::abs(bounds.width - expected_width) <= 0.01f,
                         "Percentage copy did not fit height after its independent width decision");
                 }
                 else if (fit == 4)
                 {
-                    require(raw == mattmath::Vector2F(332.0f, 48.0f) && bounds == mattmath::RectangleF(value_position, raw),
+                    require(raw == labrador::Vector2F(332.0f, 48.0f) && bounds == labrador::RectangleF(value_position, raw),
                         "Exact percentage copy lost inclusive contact with its unscaled column and row limits");
                 }
-                else { require(bounds == mattmath::RectangleF(value_position, raw), "Default percentage was enlarged or unnecessarily shrunk"); }
+                else { require(bounds == labrador::RectangleF(value_position, raw), "Default percentage was enlarged or unnecessarily shrunk"); }
                 auto padded = bounds;
                 padded.inflate(art.focus_padding);
-                const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, style.footer_y) - controls.box_size) / 2.0f,
+                const labrador::RectangleF paper((labrador::Vector2F(1920.0f, style.footer_y) - controls.box_size) / 2.0f,
                     controls.box_size);
                 require(paper.contains(padded) && padded.right() <= controls.controls_position.x &&
                     padded.bottom() <= controls.status_position.y && bounds.height + art.focus_padding.y * 2.0f <= controls.layout.spacing.y + 0.01f,
@@ -166,7 +166,7 @@ namespace menu_text_acceptance
                 short_copy.values.percentage = L"{value}%";
                 row.set_value(short_copy.setting_percentage(0));
                 const auto short_size = world.render.measure_text(world.render.resolve_sprite_font(style.item_font), L"0%");
-                require(value->text() == L"0%" && value->bounds() == mattmath::RectangleF(value_position, short_size) &&
+                require(value->text() == L"0%" && value->bounds() == labrador::RectangleF(value_position, short_size) &&
                     label->bounds() == label_bounds, "Short percentage replacement retained a stale shrink scale or changed its label");
             }
         };
@@ -258,7 +258,7 @@ namespace menu_text_acceptance
         std::vector<Glyph> glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? 0 : 8, 16),
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'~' ? 0 : 8, 16),
                 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_value_zero_width", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -310,15 +310,15 @@ namespace menu_text_acceptance
                 const auto box_size = use.options ? main.options_box_size : controls.box_size;
                 const auto spacing = use.options ? main.options_spacing : controls.layout.spacing;
                 const auto label_position = (use.options ? main.options_position : controls.layout.position) +
-                    mattmath::Vector2F(0.0f, spacing.y * static_cast<float>(use.row));
-                const auto value_position = use.options ? mattmath::Vector2F(main.options_value_x, label_position.y) :
-                    label_position + mattmath::Vector2F(spacing.x, 0.0f);
-                const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, look.menu().footer_y) - box_size) / 2.0f, box_size);
-                const mattmath::Vector2F limit(use.options ?
+                    labrador::Vector2F(0.0f, spacing.y * static_cast<float>(use.row));
+                const auto value_position = use.options ? labrador::Vector2F(main.options_value_x, label_position.y) :
+                    label_position + labrador::Vector2F(spacing.x, 0.0f);
+                const labrador::RectangleF paper((labrador::Vector2F(1920.0f, look.menu().footer_y) - box_size) / 2.0f, box_size);
+                const labrador::Vector2F limit(use.options ?
                     paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x :
                     controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - value_position.x,
                     spacing.y - art.focus_padding.y * 2.0f);
-                require(limit == (use.options ? mattmath::Vector2F(930.0f, 86.0f) : mattmath::Vector2F(332.0f, 48.0f)),
+                require(limit == (use.options ? labrador::Vector2F(930.0f, 86.0f) : labrador::Vector2F(332.0f, 48.0f)),
                     "Authored value fixture no longer exercises the shipped Options/Controls fitting limits");
                 const auto font = world.render.resolve_sprite_font(style.item_font);
                 std::wstring authored = look.menu_text().values.*use.field;
@@ -364,9 +364,9 @@ namespace menu_text_acceptance
                     require(std::abs(bounds.width - limit.x) <= 0.01f,
                         "Width-fitted value did not retain inclusive contact with its column limit");
                 }
-                else { require(bounds == mattmath::RectangleF(value_position, measured), "Short values were enlarged"); }
+                else { require(bounds == labrador::RectangleF(value_position, measured), "Short values were enlarged"); }
                 row.set_value(L"Fit");
-                require(value->text() == L"Fit" && value->bounds() == mattmath::RectangleF(value_position,
+                require(value->text() == L"Fit" && value->bounds() == labrador::RectangleF(value_position,
                     world.render.measure_text(font, L"Fit")) && label->bounds() == retained_label,
                     "Changing a long/tall value retained its old scale or changed the authored label");
                 row.adjust(Direction::right);
@@ -397,7 +397,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0,
                     character == U'~' && wide_glyph ? 2000 : 8,
                     character == U'~' ? (wide_glyph ? 2000 : 200) : 16), 0.0f, 0.0f, 0.0f });
             }

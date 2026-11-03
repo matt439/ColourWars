@@ -74,15 +74,15 @@ namespace menu_text_acceptance
                 source = L"Changed after set_text";
                 style.brand_font = "lato_black_48";
                 style.detail_font = "lato_black_48";
-                stage.navigation_position += mattmath::Vector2F(40.0f, 40.0f);
-                stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
+                stage.navigation_position += labrador::Vector2F(40.0f, 40.0f);
+                stage.briefing.position += labrador::Vector2F(40.0f, 40.0f);
                 if (!entry.hint)
                 {
-                    style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
+                    style.detail_shadow_offset = labrador::Vector2F(10.0f, 10.0f);
                     text.set_text(retained);
-                    require(text.text() == retained && text.text_bounds() == mattmath::RectangleF(point, measured) &&
-                        text.bounds() == mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
-                            mattmath::RectangleF(point + captured_shadow, measured)) &&
+                    require(text.text() == retained && text.text_bounds() == labrador::RectangleF(point, measured) &&
+                        text.bounds() == labrador::RectangleF::union_of(labrador::RectangleF(point, measured),
+                            labrador::RectangleF(point + captured_shadow, measured)) &&
                         text.shadow_offset() == captured_shadow && text.shadow_scale() == 1.0f,
                         "Actual arena navigation lost its copied text, captured font/position/shadow or unscaled bounds");
                 }
@@ -91,7 +91,7 @@ namespace menu_text_acceptance
                     const float original_budget = stage.briefing.size.x - stage.briefing_padding.x * 2.0f;
                     const auto fit = [&]()
                     {
-                        const auto raw = mattmath::RectangleF::union_of(text.text_bounds_at(mattmath::Vector2F::ZERO, 1.0f),
+                        const auto raw = labrador::RectangleF::union_of(text.text_bounds_at(labrador::Vector2F::zero, 1.0f),
                             text.text_bounds_at(style.detail_shadow_offset, 1.0f));
                         const float budget = stage.briefing.size.x - stage.briefing_padding.x * 2.0f;
                         const float scale = std::min(1.0f, budget / raw.width);
@@ -105,12 +105,12 @@ namespace menu_text_acceptance
                         if (changed_fit)
                         {
                             stage.briefing.size.x = stage.briefing_padding.x * 2.0f + original_budget / 2.0f;
-                            style.detail_shadow_offset = mattmath::Vector2F(-1.5f, -1.5f);
+                            style.detail_shadow_offset = labrador::Vector2F(-1.5f, -1.5f);
                         }
                         text.set_text(retained);
                         const float scale = fit();
-                        const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured * scale),
-                            mattmath::RectangleF(point + style.detail_shadow_offset * scale, measured * scale));
+                        const auto expected = labrador::RectangleF::union_of(labrador::RectangleF(point, measured * scale),
+                            labrador::RectangleF(point + style.detail_shadow_offset * scale, measured * scale));
                         const auto actual = text.bounds();
                         require(text.text() == retained && std::abs(actual.x - expected.x) <= 0.01f &&
                             std::abs(actual.y - expected.y) <= 0.01f && std::abs(actual.width - expected.width) <= 0.01f &&
@@ -124,7 +124,7 @@ namespace menu_text_acceptance
                     replacement = L"Changed after replacement";
                     require(fit() == 1.0f && text.text() == L"Fit" && text.shadow_scale() == 1.0f &&
                         text.shadow_offset() == style.detail_shadow_offset &&
-                        text.text_bounds() == mattmath::RectangleF(point, world.render.measure_text(font, L"Fit")),
+                        text.text_bounds() == labrador::RectangleF(point, world.render.measure_text(font, L"Fit")),
                         "A short arena hint retained its old shrink scale, lost its copied text or used a replacement font/position");
                 }
                 text.set_hidden(true);
@@ -223,7 +223,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? width : 8,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'~' ? width : 8,
                     character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 16.0f));
@@ -374,14 +374,14 @@ namespace menu_text_acceptance
                     style.heading_colour, style.shadow_colour, shadow);
                 status.set_text(source);
                 source = L"Changed after set_text";
-                const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
-                    mattmath::RectangleF(point + shadow, measured));
+                const auto expected = labrador::RectangleF::union_of(labrador::RectangleF(point, measured),
+                    labrador::RectangleF(point + shadow, measured));
                 style.detail_font = "lato_black_24";
-                style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
-                stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
+                style.detail_shadow_offset = labrador::Vector2F(10.0f, 10.0f);
+                stage.briefing.position += labrador::Vector2F(40.0f, 40.0f);
                 status.set_text(retained);
                 status.set_colour(look.main_menu().stage_select.selected);
-                require(status.text() == retained && status.text_bounds() == mattmath::RectangleF(point, measured) &&
+                require(status.text() == retained && status.text_bounds() == labrador::RectangleF(point, measured) &&
                     status.bounds() == expected && status.shadow_offset() == shadow && status.shadow_scale() == 1.0f &&
                     std::isfinite(expected.width) && std::isfinite(expected.height) && expected.width > 0.0f && expected.height > 0.0f,
                     std::string("Actual arena status lost its copied text, captured font/position/shadow, or unscaled bounds: ") + entry.key);
@@ -423,7 +423,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool boundary = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
                     boundary ? x_offset : 0.0f, boundary ? y_offset : 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));

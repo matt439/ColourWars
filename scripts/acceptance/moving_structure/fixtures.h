@@ -63,7 +63,7 @@ namespace moving_structure_acceptance
         value.shoot_angle = 0.0f;
         return value;
     }
-    inline PlayerInputData aimed_input(const mattmath::Vector2F& direction, float angle,
+    inline PlayerInputData aimed_input(const labrador::Vector2F& direction, float angle,
         bool fire = true, float movement = 0.0f)
     {
         PlayerInputData value = input(movement, false, fire);
@@ -82,7 +82,7 @@ namespace moving_structure_acceptance
         }
         require(rejected, "Unsupported moving input was accepted: " + fragment);
     }
-    inline void rectangle_bits(std::vector<std::uint64_t>& out, const mattmath::RectangleF& rectangle)
+    inline void rectangle_bits(std::vector<std::uint64_t>& out, const labrador::RectangleF& rectangle)
     {
         for (float value : { rectangle.x, rectangle.y, rectangle.width, rectangle.height })
         { out.push_back(bits(value)); }
@@ -185,25 +185,25 @@ namespace moving_structure_acceptance
             return GameTuning(labrador::parse_json(buffer.GetString(), "moving-fixture-variant.json"));
         }
         std::unique_ptr<Weapon> weapon(const GameTuning& values, WeaponType tool,
-            PlayerTeam team, int owner, const mattmath::Vector2F& center = mattmath::Vector2F::ZERO, int view = 0)
+            PlayerTeam team, int owner, const labrador::Vector2F& center = labrador::Vector2F::zero, int view = 0)
         {
             return WeaponBuilder::build_weapon(&values, team, owner, view, palette.team_colour(team),
                 tool, center, &render, &audio, &preferences, &presentation.tool_motion(), &presentation.weapon_feedback());
         }
         std::unique_ptr<Weapon> weapon(WeaponType tool, PlayerTeam team = PlayerTeam::a,
-            int owner = 5, const mattmath::Vector2F& center = mattmath::Vector2F::ZERO)
+            int owner = 5, const labrador::Vector2F& center = labrador::Vector2F::zero)
         { return weapon(tuning, tool, team, owner, center); }
         std::unique_ptr<StructurePaintable> surface(const GameTuning& values,
-            const mattmath::RectangleF& rectangle, const PaintableFaces& faces,
-            std::span<const mattmath::RectangleF> obstacles = {},
+            const labrador::RectangleF& rectangle, const PaintableFaces& faces,
+            std::span<const labrador::RectangleF> obstacles = {},
             CollisionObjectType type = CollisionObjectType::structure_paintable)
         {
             return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", rectangle,
-                std::make_unique<mattmath::RectangleF>(rectangle), &render, &audio, &preferences,
+                std::make_unique<labrador::RectangleF>(rectangle), &render, &audio, &preferences,
                 &values.paint(), type, palette, faces, obstacles);
         }
-        std::unique_ptr<StructurePaintable> surface(const mattmath::RectangleF& rectangle,
-            const PaintableFaces& faces, std::span<const mattmath::RectangleF> obstacles = {},
+        std::unique_ptr<StructurePaintable> surface(const labrador::RectangleF& rectangle,
+            const PaintableFaces& faces, std::span<const labrador::RectangleF> obstacles = {},
             CollisionObjectType type = CollisionObjectType::structure_paintable)
         { return surface(tuning, rectangle, faces, obstacles, type); }
         std::unique_ptr<TranslatingStructurePaintable> mover(const GameTuning& values,
@@ -213,21 +213,21 @@ namespace moving_structure_acceptance
         {
             return std::make_unique<TranslatingStructurePaintable>("sprite_sheet_1", "square_white_4", spec,
                 &render, &audio, &preferences, &values.paint(), type, palette, faces,
-                labrador::Colour::white, mattmath::Vector2F::ZERO, labrador::SpriteFlip::none, 0.0f, std::move(material));
+                labrador::Colour::white, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f, std::move(material));
         }
         std::unique_ptr<TranslatingStructurePaintable> mover(const HorizontalMotionSpec& spec,
             const PaintableFaces& faces = { true, true, true, true },
             CollisionObjectType type = CollisionObjectType::structure_paintable,
             std::unique_ptr<const TerrainMaterial> material = nullptr)
         { return mover(tuning, spec, faces, type, std::move(material)); }
-        void paint(StructurePaintable& surface, const mattmath::RectangleF& splash,
+        void paint(StructurePaintable& surface, const labrador::RectangleF& splash,
             PlayerTeam team, int owner = -1)
         {
             const ProjectileTuning& jet = tuning.projectile(ProjectileType::jet);
             auto launch = splash; const auto half = jet.details.col_rect_size / 2.0f; launch.offset(half.x, half.y);
-            const ProjectileJet shot(launch, mattmath::Vector2F::ZERO, team, owner, palette.team_colour(team),
+            const ProjectileJet shot(launch, labrador::Vector2F::zero, team, owner, palette.team_colour(team),
                 &render, resolve_projectile_strip(jet, render), &jet);
-            surface.on_contact(shot, mattmath::Vector2F::ZERO, 0.0f);
+            surface.on_contact(shot, labrador::Vector2F::zero, 0.0f);
         }
         GameTuning tuning;
         Presentation presentation;
@@ -244,7 +244,7 @@ namespace moving_structure_acceptance
     {
     public:
         explicit Fixture(World& resources, int player_count = 1,
-            const mattmath::RectangleF& bounds = { -1024.0f, -1024.0f, 8192.0f, 4096.0f },
+            const labrador::RectangleF& bounds = { -1024.0f, -1024.0f, 8192.0f, 4096.0f },
             unsigned int seed = 17) : world(resources), tuning(resources.tuning),
             viewports(&resolution), pending_(std::make_unique<labrador::Scene>(nullptr, nullptr)),
             expected_players_(player_count), bounds_(bounds)
@@ -255,19 +255,19 @@ namespace moving_structure_acceptance
                 player_count == 3 ? labrador::ScreenLayout::three_player : labrador::ScreenLayout::four_player);
             std::srand(seed); scene = pending_.get(); scene->set_bounds(bounds);
         }
-        StructurePaintable& surface(const mattmath::RectangleF& rectangle,
+        StructurePaintable& surface(const labrador::RectangleF& rectangle,
             const PaintableFaces& faces = { true, true, true, true },
-            std::span<const mattmath::RectangleF> obstacles = {},
+            std::span<const labrador::RectangleF> obstacles = {},
             CollisionObjectType type = CollisionObjectType::structure_paintable)
         {
             require(pending_ != nullptr, "Terrain cannot be added after Level admission");
             return *scene->add(world.surface(tuning, rectangle, faces, obstacles, type));
         }
-        Structure& plain(const mattmath::RectangleF& rectangle)
+        Structure& plain(const labrador::RectangleF& rectangle)
         {
             require(pending_ != nullptr, "Terrain cannot be added after Level admission");
             return *scene->add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", rectangle,
-                std::make_unique<mattmath::RectangleF>(rectangle), &world.render, CollisionObjectType::structure));
+                std::make_unique<labrador::RectangleF>(rectangle), &world.render, CollisionObjectType::structure));
         }
         TranslatingStructurePaintable& mover(const HorizontalMotionSpec& spec,
             const PaintableFaces& faces = { true, true, true, true },
@@ -278,9 +278,9 @@ namespace moving_structure_acceptance
             auto* result = scene->add(world.mover(tuning, spec, faces, type, std::move(material)));
             movers.push_back(result); return *result;
         }
-        Player& add_player(const mattmath::RectangleF& body, PlayerTeam team = PlayerTeam::a,
+        Player& add_player(const labrador::RectangleF& body, PlayerTeam team = PlayerTeam::a,
             WeaponType tool = WeaponType::sprayer, int slot = -1,
-            const mattmath::Vector2F& initial_velocity = mattmath::Vector2F::ZERO)
+            const labrador::Vector2F& initial_velocity = labrador::Vector2F::zero)
         {
             require(pending_ != nullptr && players.size() < static_cast<std::size_t>(expected_players_),
                 "Players must be constructed before Level admission");
@@ -291,13 +291,13 @@ namespace moving_structure_acceptance
                 &world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
                 slot, team, tool, std::move(primary), WeaponType::grenade_std, world.palette.team_colour(team),
                 viewports.player_viewport(view), body.top_left(), initial_velocity,
-                0.0f, mattmath::Vector2F::ZERO, labrador::SpriteFlip::none, 0.0f, view,
+                0.0f, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f, view,
                 &world.presentation.figure(), &world.presentation.camera().shake));
             players.push_back(result); return *result;
         }
         Player& add_player(float center_x, float feet_y, PlayerTeam team = PlayerTeam::a,
             WeaponType tool = WeaponType::sprayer, int slot = -1,
-            const mattmath::Vector2F& initial_velocity = mattmath::Vector2F::ZERO)
+            const labrador::Vector2F& initial_velocity = labrador::Vector2F::zero)
         {
             const auto size = tuning.player().size;
             return add_player({ center_x - size.x / 2.0f, feet_y - size.y, size.x, size.y }, team, tool, slot, initial_velocity);
@@ -359,7 +359,7 @@ namespace moving_structure_acceptance
         };
         std::unique_ptr<labrador::Scene> pending_;
         int expected_players_;
-        mattmath::RectangleF bounds_;
+        labrador::RectangleF bounds_;
     };
 
     void check_motion(World& world);

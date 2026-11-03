@@ -12,7 +12,7 @@ namespace bot_ascent_approach_acceptance
         float distance = 800.0f)
     {
         MatchBotObservation view = floor_fixture(tuning);
-        view.obstacles.front() = mattmath::RectangleF(-2500.0f, view.size.y * 0.5f, 5000.0f, 100.0f);
+        view.obstacles.front() = labrador::RectangleF(-2500.0f, view.size.y * 0.5f, 5000.0f, 100.0f);
         view.supports.front().bounds = view.obstacles.front();
         const float left = direction > 0.0f ? distance : -distance - 300.0f;
         view.obstacles.emplace_back(left, view.size.y * 0.5f - 140.0f, 300.0f, 10.0f);
@@ -31,7 +31,7 @@ namespace bot_ascent_approach_acceptance
             {
                 MatchBot nearby(&tuning, difficulty, 7);
                 MatchBotObservation alternatives = floor_fixture(tuning);
-                alternatives.obstacles.front() = mattmath::RectangleF(-2500.0f,
+                alternatives.obstacles.front() = labrador::RectangleF(-2500.0f,
                     alternatives.size.y * 0.5f, 5000.0f, 100.0f);
                 alternatives.supports.front().bounds = alternatives.obstacles.front();
                 const float feet = alternatives.size.y * 0.5f;
@@ -59,7 +59,7 @@ namespace bot_ascent_approach_acceptance
                 PlayerInputData input = first_decision(bot, view, tuning, difficulty);
                 require(input.x_movement == direction && !input.jump_pressed && !input.drop_through,
                     "A long supported approach was rejected using the airborne jump reach");
-                const mattmath::RectangleF& destination = view.supports.back().bounds;
+                const labrador::RectangleF& destination = view.supports.back().bounds;
                 const float takeoff = direction > 0.0f ? destination.left() + view.size.x * 0.5f :
                     destination.right() - view.size.x * 0.5f;
                 const float stride = tuning.player().x_initial_velocity / 60.0f;
@@ -116,8 +116,8 @@ namespace bot_ascent_approach_acceptance
                         // The walk is short, but the airborne gap from this
                         // source lip exceeds normal jump reach.
                         view.obstacles.front() = direction > 0.0f ?
-                            mattmath::RectangleF(-500.0f, view.size.y * 0.5f, 800.0f, 100.0f) :
-                            mattmath::RectangleF(-300.0f, view.size.y * 0.5f, 800.0f, 100.0f);
+                            labrador::RectangleF(-500.0f, view.size.y * 0.5f, 800.0f, 100.0f) :
+                            labrador::RectangleF(-300.0f, view.size.y * 0.5f, 800.0f, 100.0f);
                         view.supports.front().bounds = view.obstacles.front();
                     }
                     input = first_decision(rejected, view, tuning, difficulty);

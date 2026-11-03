@@ -68,8 +68,8 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         for (size_t slot = 0; slot < painter_scripted_pads::states.size(); ++slot)
         {
             const auto& pad = painter_scripted_pads::states[slot];
-            require(pad.connected == (slot == 3 && pad_connected) && pad.buttons == 0 && pad.left_stick == Vector2F::ZERO &&
-                pad.right_stick == Vector2F::ZERO && pad.left_trigger == 0.0f && pad.right_trigger == 0.0f,
+            require(pad.connected == (slot == 3 && pad_connected) && pad.buttons == 0 && pad.left_stick == Vector2F::zero &&
+                pad.right_stick == Vector2F::zero && pad.left_trigger == 0.0f && pad.right_trigger == 0.0f,
                 "Weapon tint commands changed neutral scripted input");
         }
         require(preferences.team_palette() == TeamColourPair::blue_orange && tune_colour_bytes(save_path) == saved,
@@ -82,7 +82,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         { L"Mister", "mister", "mister_paint", "mister_supply" } }};
     std::array<RectangleF, 2> boxes, envelopes; std::array<RectangleI, 2> card_pixels, canvas_pixels;
     const auto viewport = app.viewport_manager()->fullscreen_viewport();
-    const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
     for (size_t seat = 0; seat < boxes.size(); ++seat)
     {
         boxes[seat] = RectangleF(style.layout.position + Vector2F(look.weapon_select.spacing.x * 2.0f,

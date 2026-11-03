@@ -151,7 +151,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup no_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &art, &no_focus); paper.draw(list);

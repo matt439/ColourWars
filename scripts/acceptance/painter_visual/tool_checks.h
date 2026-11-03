@@ -98,7 +98,7 @@
             {
                 auto& input = inputs[static_cast<size_t>(level->player(view).player_num())];
                 input.primary_shoot = false;
-                input.shoot_angle = -3.0f * PI / 4.0f + PI * 0.5f *
+                input.shoot_angle = -3.0f * pi / 4.0f + pi * 0.5f *
                     static_cast<float>((quadrant + view) % 4);
                 input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
             }
@@ -140,8 +140,8 @@
             for (auto& input : inputs)
             {
                 input.primary_shoot = false;
-                input.shoot_angle = std::atan2(std::sin(input.shoot_angle + PI),
-                    std::cos(input.shoot_angle + PI));
+                input.shoot_angle = std::atan2(std::sin(input.shoot_angle + pi),
+                    std::cos(input.shoot_angle + pi));
                 input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
             }
             for (int view = 0; view < count; ++view)
@@ -188,7 +188,7 @@
         for (int view = 0; view < level->player_count(); ++view)
         {
             auto& input = inputs[static_cast<size_t>(level->player(view).player_num())];
-            input.shoot_angle = -3.0f * PI / 4.0f + PI * 0.5f * static_cast<float>(view);
+            input.shoot_angle = -3.0f * pi / 4.0f + pi * 0.5f * static_cast<float>(view);
             input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
         }
         level->update(acceptance::slot_seats(*level, inputs), dt);
@@ -248,7 +248,7 @@
         for (auto& input : inputs)
         {
             input.x_movement = right ? 1.0f : -1.0f;
-            input.shoot_angle = right ? -PI / 4.0f : -3.0f * PI / 4.0f;
+            input.shoot_angle = right ? -pi / 4.0f : -3.0f * pi / 4.0f;
             input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
         }
         level->update(acceptance::slot_seats(*level, inputs), dt);

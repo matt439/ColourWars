@@ -43,14 +43,22 @@ not runtime assets.
 
 **Done (2026-10-28).** The runtime now enforces the documented UTF-8,
 single-object source contract, including unknown keys and values. Its existing
-private fingerprint parse validates encoding, then checks the complete owned
+private fingerprint parse validates encoding, then checked the complete owned
 snapshot for raw NUL bytes that an explicit-length parse can otherwise treat
-as end-of-input. Newly rejected data names the source and original byte offset.
+as end-of-input (the engine has done that since `v0.3.0`; see below). Newly rejected data names the source and original byte offset.
 
 The engine syntax parse and format check still run first, preserving their
-diagnostic precedence. The two parses, one owned snapshot, BOM behavior,
+diagnostic precedence.
+
+**Changed at the engine `v0.3.0` bump (2026-11-03).** The engine's own
+`parse_json` now refuses a raw NUL anywhere in its input ("Reject raw NUL
+bytes throughout JSON input" in the engine's `CHANGES.md`), so the client's
+NUL scan in `hash_stage_snapshot` could no longer be reached and is deleted.
+A raw NUL is now an engine syntax refusal, so it outranks the format check:
+`{"format":2}` followed by NUL and more bytes reports the NUL, not the
+unsupported format. `user_stages` pins the new order. The two parses, one owned snapshot, BOM behavior,
 decoded values and semantic hash algorithm/version are unchanged. No engine,
-submodule, schema or gameplay change was needed.
+submodule, schema or gameplay change was needed at the time.
 
 The actual private-file baseline reproduced acceptance of a complete stage
 followed by raw NUL and suffix bytes. Both presets now pass raw-NUL/BOM suffix

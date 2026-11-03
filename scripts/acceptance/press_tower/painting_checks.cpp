@@ -49,7 +49,7 @@ namespace press_tower_acceptance
             const auto x = [&](float value) { return reflected_x(s, right, value); };
             const auto side = [&](const std::string& base, bool own) { return base + (own == right ? "_a" : "_b"); };
             // Forward and down along the direction of travel.
-            const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+            const float angle = right ? pi / 3.0f : 2.0f * pi / 3.0f;
 
             // R2 while firing: three legs, refilling between them, so the
             // far yard is reached with ammunition to spend on it.

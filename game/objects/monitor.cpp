@@ -2,7 +2,6 @@
 #include "game/objects/monitor.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

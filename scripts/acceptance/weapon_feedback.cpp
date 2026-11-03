@@ -18,7 +18,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -74,7 +73,7 @@ namespace
             const PlaySettings* preference_override = nullptr)
         {
             return WeaponBuilder::build_weapon(&this->tuning, PlayerTeam::a,
-                2, 0, Colour::white, type, Vector2F::ZERO,
+                2, 0, Colour::white, type, Vector2F::zero,
                 &this->render, &this->audio,
                 preference_override != nullptr ? preference_override : &this->preferences,
                 &this->presentation.tool_motion(), look);
@@ -108,8 +107,8 @@ namespace
     };
 
     auto update(Weapon& weapon, const PlayerInputData& actions = input(),
-        float elapsed = dt, const Vector2F& center = Vector2F::ZERO,
-        const Vector2F& velocity = Vector2F::ZERO)
+        float elapsed = dt, const Vector2F& center = Vector2F::zero,
+        const Vector2F& velocity = Vector2F::zero)
     {
         return weapon.update_and_get_projectiles(actions, center, velocity,
             actions.x_movement >= 0.0f, elapsed);
@@ -196,8 +195,8 @@ namespace
             DrawList suppressed;
             for (int view = 0; view < 4; ++view)
             {
-                feedback.draw(suppressed, Vector2F(40.0f, -20.0f), Vector2F::ZERO,
-                    PI / 3.0f, type, Colour::white, true);
+                feedback.draw(suppressed, Vector2F(40.0f, -20.0f), Vector2F::zero,
+                    pi / 3.0f, type, Colour::white, true);
             }
             require(feedback.state() == before,
                 "Reduced-effects muzzle drawing mutated the shared shot event");
@@ -253,7 +252,7 @@ namespace
         const auto& tuning = world.tuning.weapon(WeaponType::sniper);
         const float cost = tuning.details.ammo_usage;
         ProbeWeapon weapon(&world.tuning, PlayerTeam::a, 2, 0, Colour::white,
-            WeaponType::sniper, Vector2F::ZERO, &world.render, &world.audio, &world.preferences);
+            WeaponType::sniper, Vector2F::zero, &world.render, &world.audio, &world.preferences);
         weapon.set_feedback_presentation(&look);
         weapon.prime(0.0f);
         require(update(weapon, input(true)).empty() && state(weapon).empty_remaining > 0.0f &&
@@ -473,7 +472,7 @@ namespace
             for (int tick = 0; tick < 2400; ++tick)
             {
                 const float movement = tick % 180 < 90 ? 1.0f : -1.0f;
-                const float angle = PI * static_cast<float>((tick / 15) % 8 - 4) / 4.0f;
+                const float angle = pi * static_cast<float>((tick / 15) % 8 - 4) / 4.0f;
                 const auto actions = input(tick < 1800 || tick >= 2100, movement, angle);
                 const Vector2F center(static_cast<float>(tick % 71), static_cast<float>(tick % 37));
                 const Vector2F velocity(movement * 300.0f, static_cast<float>(tick % 5) * 40.0f);

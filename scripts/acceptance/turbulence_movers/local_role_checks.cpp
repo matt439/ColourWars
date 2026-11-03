@@ -8,7 +8,7 @@ namespace turbulence_movers_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         using namespace colourwars_editor;
         constexpr std::array<WeaponType, 5> tools{ WeaponType::sprayer, WeaponType::sniper,
             WeaponType::roller, WeaponType::mister, WeaponType::bucket };

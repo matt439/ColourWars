@@ -1954,7 +1954,7 @@ presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) is prepared against published engine master `c03a6f6`. Filing needs separate author authorization and a fresh upstream recheck. |
+| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962) was answered unfiled (`cadc962`, released in `v0.3.0`); spending it is `ENG#25`. |
 
 **Owner, settings page and native adapter qualified.**
 Pad sticks now has a per-slot Rumble row, with pending/Apply/Back semantics.
@@ -2014,9 +2014,8 @@ now has a row.
 - **XInput only.** DualShock, DualSense and Switch Pro pads work only through
   Steam Input or a wrapper. The engine's reader seam
   (`engine/input/gamepad_reader.h`) is a concrete class chosen at build time:
-  `sample`, `read`, `suspend` and `resume`, with XInput and browser backends at
-  the pin. Labrador master (`cadc962`, untagged; rechecked 2026-10-29 at
-  `b96bad6`) also sends vibration through it. A GameInput backend is still
+  `sample`, `read`, `suspend`, `resume`, `vibrate` and `stop_vibration`, with
+  XInput and browser backends at the pin (`v0.3.0`; vibration from `cadc962`). A GameInput backend is still
   Labrador work and would need an exhibit before it is a report. `ROAD#2` observes the limit
   (item 6 above). The author asked for it to be tracked on 2026-10-27
   (`ROAD#23`, [comparable-game gaps](#comparable-game-gaps-2026-10-27)).

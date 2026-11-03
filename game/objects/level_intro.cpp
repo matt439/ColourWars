@@ -2,7 +2,6 @@
 #include "game/objects/level.h"
 #include "game/objects/match_opening.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // What Level keeps of the opening and the reveal (HYG#40): the state the

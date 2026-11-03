@@ -206,7 +206,7 @@ namespace balance_regions
         return split(sample, partition);
     }
 
-    Partition stage_partition(std::string_view stage, const mattmath::RectangleF& arena)
+    Partition stage_partition(std::string_view stage, const labrador::RectangleF& arena)
     {
         check(std::isfinite(arena.left()) && std::isfinite(arena.right()) && std::isfinite(arena.top()) &&
             std::isfinite(arena.bottom()) && arena.left() < arena.right() && arena.top() < arena.bottom(),

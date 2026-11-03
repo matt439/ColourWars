@@ -18,7 +18,6 @@
 #include <limits>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -142,7 +141,7 @@ namespace
                 &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
                 &world.presentation.respawn_redraw(), &world.render, &world.audio, &this->preferences,
                 0, PlayerTeam::a, type, std::move(weapon), WeaponType::none, Colour::white,
-                Viewport{}, body.position(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
+                Viewport{}, body.position(), Vector2F::zero, 0.0f, Vector2F::zero,
                 SpriteFlip::none, 0.0f, 0, figure));
             const RectangleF floor(-10000.0f, 0.0f, 20000.0f, 100.0f);
             scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", floor,
@@ -184,7 +183,7 @@ namespace
                 input.jump_held = tick >= 650 && tick < 660;
                 input.primary_shoot = tick >= 850 && tick < 1000;
                 input.shoot_direction_requested = true;
-                input.shoot_angle = static_cast<float>(tick % 9 - 4) * PI / 4.0f;
+                input.shoot_angle = static_cast<float>(tick % 9 - 4) * pi / 4.0f;
                 input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
                 if (tick == 1050) { animated.player->kill(); plain.player->kill(); }
                 if (tick == 1100) { animated.player->force_respawn(); plain.player->force_respawn(); }

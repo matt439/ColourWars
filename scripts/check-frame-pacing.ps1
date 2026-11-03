@@ -155,7 +155,7 @@ try {
         (Join-Path $gameDirectory 'colourwars_game.lib'),
         (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
+        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
         (Join-Path $installed 'debug/lib/DirectXTK.lib'),
         (Join-Path $installed 'debug/lib/xaudio2_9redist.lib')
     )
@@ -165,7 +165,7 @@ try {
     $source = Join-Path $PSScriptRoot 'acceptance/frame_pacing.cpp'
     $executable = Join-Path $run 'frame_pacing.exe'
     $responseFile = Join-Path $run 'compile.rsp'
-    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/MDd',
+    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8', '/MDd',
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {

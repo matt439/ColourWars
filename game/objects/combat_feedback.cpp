@@ -6,7 +6,6 @@
 #include <cmath>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -79,7 +78,7 @@ void CombatFeedback::clear()
     this->hurt_remaining_ = 0.0f;
     this->hurt_delay_remaining_ = 0.0f;
     this->elimination_remaining_ = 0.0f;
-    this->death_rectangle_ = RectangleF::ZERO;
+    this->death_rectangle_ = RectangleF::zero;
 }
 
 float CombatFeedback::hurt_remaining() const { return this->hurt_remaining_; }
@@ -90,7 +89,7 @@ void CombatFeedback::draw_fill(DrawList& draw_list, const RectangleF& rectangle,
     const Colour& colour, float alpha) const
 {
     this->draw_with(draw_list, rectangle, this->frame(), CrudeDrawing::premultiplied(colour) * alpha,
-        Vector2F::ZERO, SpriteFlip::none, 0.0f);
+        Vector2F::zero, SpriteFlip::none, 0.0f);
 }
 
 void CombatFeedback::draw_keyline(DrawList& draw_list, const RectangleF& rectangle,

@@ -7,7 +7,6 @@
 namespace turbulence_movers_acceptance
 {
     using namespace labrador;
-    using namespace mattmath;
 
     std::string read_text(const fs::path& path)
     {

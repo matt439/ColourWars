@@ -40,21 +40,21 @@ public:
 
 	// The engine's contact. Final: a contact is answered by the handlers below.
 	void on_contact(const labrador::CollisionObject& other,
-		const mattmath::Vector2F& normal, float penetration) final;
+		const labrador::Vector2F& normal, float penetration) final;
 
 	// Second dispatch, called by the other party's touch. other is what this
 	// object touched; normal points from this object towards it, as in
 	// on_contact. Call on_contact rather than these.
 	virtual void on_structure_contact(const Structure& other,
-		const mattmath::Vector2F& normal, float penetration);
+		const labrador::Vector2F& normal, float penetration);
 	virtual void on_player_contact(const Player& other,
-		const mattmath::Vector2F& normal, float penetration);
+		const labrador::Vector2F& normal, float penetration);
 	virtual void on_projectile_contact(const Projectile& other,
-		const mattmath::Vector2F& normal, float penetration);
+		const labrador::Vector2F& normal, float penetration);
 
 protected:
 	// Name this object's class to receiver by calling the receiver's handler
 	// for it with *this.
 	virtual void touch(Collider& receiver,
-		const mattmath::Vector2F& normal, float penetration) const = 0;
+		const labrador::Vector2F& normal, float penetration) const = 0;
 };

@@ -10,7 +10,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 
 #include "game/objects/terrain_material_internal.h"
 

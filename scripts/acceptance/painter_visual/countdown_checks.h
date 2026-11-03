@@ -9,9 +9,9 @@ Frame countdown_fixture(Application& app, const Canvas& canvas, const CountdownA
     renderer.set_view_count(1);
     DrawList list = renderer.view(0);
     list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-    list.set_camera(Camera::DEFAULT_CAMERA);
+    list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);
-    canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+    canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
     if (art != nullptr) { art->draw(list, bounds, text, age, reduced); }
     return read(renderer);
 }

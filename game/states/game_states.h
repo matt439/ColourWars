@@ -209,7 +209,7 @@ private:
 	MatchPaint debug_paint() const override;
 	bool debug_countdown_over() const override;
 	bool debug_perf_ready() const override;
-	std::vector<mattmath::RectangleF> debug_screen_obstacles() const override;
+	std::vector<labrador::RectangleF> debug_screen_obstacles() const override;
 
 	void debug_rebuild(const MatchSetup& plan, bool reset_session) override;
 	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
@@ -221,7 +221,7 @@ private:
 	void debug_set_overlays(const LevelOverlays& overlays) override;
 	void debug_set_player_text(bool showing) override;
 	void debug_set_cheats(bool damage_immune, bool infinite_ammo) override;
-	bool debug_place(int seat, const mattmath::Vector2F& top_left) override;
+	bool debug_place(int seat, const labrador::Vector2F& top_left) override;
 	bool debug_respawn(int seat) override;
 	bool debug_kill(int seat) override;
 	void debug_set_seat_labels(const std::vector<std::wstring>& labels) override;

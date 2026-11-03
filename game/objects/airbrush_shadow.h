@@ -23,10 +23,10 @@ public:
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
-	mattmath::RectangleF bounds() const override;
-	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
+	labrador::RectangleF bounds() const override;
+	labrador::RectangleF cull_bounds(float units_per_pixel) const override;
 
 private:
-	mattmath::RectangleF span_;
-	std::array<mattmath::RectangleI, VARIANTS> tiles_{};
+	labrador::RectangleF span_;
+	std::array<labrador::RectangleI, VARIANTS> tiles_{};
 };

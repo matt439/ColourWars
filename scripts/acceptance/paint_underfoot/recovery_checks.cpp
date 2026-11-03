@@ -7,14 +7,14 @@ namespace paint_underfoot_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         constexpr WeaponType tools[]{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
             WeaponType::mister, WeaponType::bucket };
         auto update(Weapon& weapon, bool fire, float factor, bool default_argument = false, float elapsed = dt)
         {
             if (default_argument)
-            { return weapon.update_and_get_projectiles(input(0, false, fire), Vector2F::ZERO, Vector2F::ZERO, true, elapsed); }
-            return weapon.update_and_get_projectiles(input(0, false, fire), Vector2F::ZERO, Vector2F::ZERO, true, elapsed, factor);
+            { return weapon.update_and_get_projectiles(input(0, false, fire), Vector2F::zero, Vector2F::zero, true, elapsed); }
+            return weapon.update_and_get_projectiles(input(0, false, fire), Vector2F::zero, Vector2F::zero, true, elapsed, factor);
         }
         void deplete(Weapon& weapon)
         {

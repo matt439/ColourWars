@@ -13,7 +13,7 @@ namespace
 		const auto tape = sheet->resolve_sprite_frame("tape_roll");
 		require(brush != tape && sheet->sprite_frame(brush).source_rectangle() == RectangleI(4, 596, 256, 320) &&
 			sheet->sprite_frame(tape).source_rectangle() == RectangleI(264, 596, 256, 160) &&
-			sheet->sprite_frame(brush).origin() == Vector2F::ZERO && sheet->sprite_frame(tape).origin() == Vector2F::ZERO,
+			sheet->sprite_frame(brush).origin() == Vector2F::zero && sheet->sprite_frame(tape).origin() == Vector2F::zero,
 			"Landmarks did not resolve to their distinct native-size, zero-origin atlas frames");
 
 		// Read the actual staged runtime DDS through the CPU asset reader; no

@@ -132,7 +132,7 @@ ParallaxWorld parallax_world(Application& app, const LevelLoadedInfo& info,
                 "Parallax nondrifting role is no longer an ordinary Visual");
             const SpriteFrame& actual = sheet->sprite_frame(sheet->resolve_sprite_frame(frame));
             sprite.source = parallax_source(frame);
-            require(actual.source_rectangle() == sprite.source && actual.origin() == Vector2F::ZERO &&
+            require(actual.source_rectangle() == sprite.source && actual.origin() == Vector2F::zero &&
                 sprite.anchor.width == static_cast<float>(sprite.source.width) &&
                 sprite.anchor.height == static_cast<float>(sprite.source.height),
                 "Parallax literal atlas/native-size assumptions changed");
@@ -167,7 +167,7 @@ Frame parallax_frame(Application& app, const ParallaxWorld& world, const Paralla
             list.set_viewport(pane.viewport); list.set_filter(TextureFilter::point);
             if (pass.foreground >= 0)
             {
-                list.set_camera(Camera::DEFAULT_CAMERA); canvas.draw(list, RectangleF(0, 0, pane.viewport.width, pane.viewport.height));
+                list.set_camera(Camera::default_camera); canvas.draw(list, RectangleF(0, 0, pane.viewport.width, pane.viewport.height));
             }
             list.set_camera(pane.camera);
             if (pass.prop >= 0)

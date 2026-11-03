@@ -162,7 +162,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         metrics.selected = artifact(metrics.selected);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport));
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
@@ -209,7 +209,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     };
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
     };

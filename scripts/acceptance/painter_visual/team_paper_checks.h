@@ -100,11 +100,11 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             "Independent Team title/rows/warning overlap or escape paper");
         for (size_t i = 1; i < rows.size(); ++i) { require(rows[i - 1].bottom() <= rows[i].y, "Independent Team cards overlap"); }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* fill_sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto fill = fill_sheet->resolve_sprite_frame(style.fill_frame);
         fill_sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture surround("independent-team-surround", style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour); surround.draw(list);
+        const UiTexture surround("independent-team-surround", style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour); surround.draw(list);
         setup_paper_reference(list, *app.render_resources(), style, art, paper, RectangleF());
         for (size_t i = 0; i < teams.size(); ++i)
         {

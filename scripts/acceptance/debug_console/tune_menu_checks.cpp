@@ -98,7 +98,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         return result;
     };
     const auto held_fonts = font_handles();
-    const mattmath::RectangleF rectangle(mattmath::Vector2F(150.0f, 330.0f), mattmath::Vector2F(1010.0f, 500.0f));
+    const labrador::RectangleF rectangle(labrador::Vector2F(150.0f, 330.0f), labrador::Vector2F(1010.0f, 500.0f));
     require(document != nullptr && impl.tune_token(path) == "\"121827EE\"" &&
         hud->player_identity_background_colour == labrador::Colour(18, 24, 39, 238) &&
         presentation.main_menu().stage_select.preview_position == rectangle.position() &&

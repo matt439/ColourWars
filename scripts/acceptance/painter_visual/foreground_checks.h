@@ -14,9 +14,9 @@ Frame foreground_fixture(Application& app, const Canvas& canvas, const Rectangle
     renderer.set_view_count(1);
     DrawList list = renderer.view(0);
     list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-    list.set_camera(Camera::DEFAULT_CAMERA);
+    list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);
-    canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+    canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
     if (person != nullptr) { person->draw(list, screen, persona, pose); }
     if (cursor != nullptr) { cursor->draw(list, tip, screen.height, click_age, reduced_effects); }
     return read(renderer);

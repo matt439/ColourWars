@@ -19,7 +19,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace bot_navigation_acceptance;
     namespace gate_rule = team_gate_contract;
 
@@ -121,7 +120,7 @@ namespace
         };
         const GatePermissionPresentation& authored = assets.presentation.gate_permission();
         const RectangleF large(400.0f, 300.0f, 400.0f, 400.0f);
-        require(build(large, nullptr)->permission_bounds() == RectangleF::ZERO,
+        require(build(large, nullptr)->permission_bounds() == RectangleF::zero,
             "A gate without a cue published a permission plaque");
         require(build(large, &authored)->permission_bounds() ==
             RectangleF(large.center().x - authored.size.x * 0.5f,
@@ -142,7 +141,7 @@ namespace
                 RectangleF(31.0f, 47.0f, inset, 240.0f),
                 RectangleF(31.0f, 47.0f, 240.0f, inset) })
             {
-                require(build(body, cue)->permission_bounds() == RectangleF::ZERO,
+                require(build(body, cue)->permission_bounds() == RectangleF::zero,
                     "A gate without a paint-free interior published a permission plaque");
             }
             for (const RectangleF& body : {

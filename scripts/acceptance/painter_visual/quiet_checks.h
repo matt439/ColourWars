@@ -301,7 +301,7 @@
                     // from the left-centre draw pivot, independently of the
                     // projectile launch point used by the runtime attachment.
                     int quadrant = 0;
-                    for (const float angle : { PI / 4.0f, 3.0f * PI / 4.0f, -3.0f * PI / 4.0f, -PI / 4.0f })
+                    for (const float angle : { pi / 4.0f, 3.0f * pi / 4.0f, -3.0f * pi / 4.0f, -pi / 4.0f })
                     {
                         const float age = drip->bead_age();
                         for (auto& input : inputs)
@@ -317,7 +317,7 @@
                             const IdleDrip* attached = level->idle_drip(view);
                             if (!attached->attached()) { continue; }
                             const Weapon& weapon = level->player(view).primary_weapon();
-                            const float side = std::abs(angle) > PI / 2.0f ? -1.0f : 1.0f;
+                            const float side = std::abs(angle) > pi / 2.0f ? -1.0f : 1.0f;
                             const Vector2F local = tool.first == WeaponType::sniper ? Vector2F(99, 3) : Vector2F(46, 8);
                             const Vector2F expected = weapon.draw_pos() + Vector2F::rotate_vector(
                                 Vector2F(local.x, side * local.y), weapon.rotation());
@@ -341,7 +341,7 @@
                     for (auto& input : inputs)
                     {
                         input.x_movement = 0;
-                        input.shoot_angle = PI;
+                        input.shoot_angle = pi;
                         input.shoot_direction = Vector2F(-1, 0);
                     }
                     advance_until([&] { return drip->attached() && drip->bead_age() >= look.grow_time; },

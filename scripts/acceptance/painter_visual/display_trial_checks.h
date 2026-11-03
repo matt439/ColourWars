@@ -20,10 +20,8 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto save_path = output / "display-trial-profile" / "ColourWars" / "save_data.json";
     const std::filesystem::path blocked(save_path.wstring() + L".tmp");
     const HWND window = static_cast<HWND>(app.window());
-    // Trials resize the hidden window, which would activate it (see the guard).
-    // Rollback may run from notification or destruction, so guard the whole
-    // fixture, including explicit stack cleanup; this guard must never nest.
-    const SettingsProbeActivationGuard activation(window);
+    // Trials and rollbacks resize the hidden window; the engine keeps it hidden
+    // and inactive (v0.3.0), which the checks on `window` below pin.
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
     for (size_t slot = 0; slot < expected.sticks.size(); ++slot)
@@ -157,11 +155,11 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         const float countdown_y = look.layout.position.y + look.layout.spacing.y * 2.0f;
         UiText countdown("independent-display-countdown", L"Reverting in " + std::to_wstring(seconds) + L"s", style.detail_font, Vector2F(0.0f, countdown_y), app.render_resources(), art.ink);
         countdown.set_position(Vector2F((1920.0f - countdown.bounds().width) / 2.0f, countdown_y));
-        const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
         require(paper.contains(heading.bounds()) && paper.contains(question.bounds()) && paper.contains(countdown.bounds()), "Independent display trial copy escaped its captured paper");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const auto viewport = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(design, viewport);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto pixel = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour); sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
         sheet->draw(list, pixel, design, original.main_menu().home_background_colour);
@@ -180,7 +178,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         if (actual.pixels != expected_frame.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected_frame, output / (stem + "-failure-expected.ppm")); const auto delta = foreground_delta_bounds(actual, expected_frame); std::cerr << "DISPLAY TRIAL " << name << " seconds=" << seconds << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(stack.depth() == 3 && actual.pixels == expected_frame.pixels, "Actual display trial differs from independent complete paper/question/choices/countdown reference");
         std::srand(8231); const int next = std::rand(); std::srand(8231); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next, "Frozen display trial changed pixels or draw RNG");
-        if (capture) { save(actual, output / (stem + ".ppm")); const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size); const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport()); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
+        if (capture) { save(actual, output / (stem + ".ppm")); const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport()); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << keep << ',' << seconds << ",true\n"; return actual;
     };
     const auto select_keep = [&] { tap(GamepadButton::dpad_up); tick(settled); };
@@ -212,7 +210,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         seed(); begin(true); stack.clear(); old(true); hide(); require(stack.depth() == 0 && direct_results == 0, "Display trial clear delivered a callback or retained a frame");
         seed(); begin(); tap(GamepadButton::dpad_up); Frame moving = frame(); require(moving.pixels != reference(true, static_cast<int>(std::ceil(timeout - age))).pixels, "Display trial cursor response did not start");
         tick(0.0f); tick(-0.5f); const Frame after_nonpositive = frame(); const auto delta = foreground_delta_bounds(moving, after_nonpositive);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
         const float countdown_y = look.layout.position.y + look.layout.spacing.y * 2.0f;
         const auto line_size = app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(style.detail_font), L"Reverting in 60s");
         const RectangleF clock_band(0.0f, countdown_y - 2.0f, 1920.0f, line_size.y + 4.0f);

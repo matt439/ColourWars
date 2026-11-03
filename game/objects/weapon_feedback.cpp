@@ -5,7 +5,6 @@
 #include <cmath>
 
 using namespace labrador;
-using namespace mattmath;
 
 WeaponFeedback::WeaponFeedback(const WeaponFeedbackPresentation* presentation,
     RenderResources* render_resources) :
@@ -143,7 +142,7 @@ void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
         const float alpha = std::clamp(this->state_.empty_remaining / look.empty_duration, 0.0f, 1.0f);
         // A dry white cross has no team-paint centre and is never a cooldown
         // warning. Its event shares the existing empty-fire repetition budget.
-        for (const float turn : { -PI / 4.0f, PI / 4.0f })
+        for (const float turn : { -pi / 4.0f, pi / 4.0f })
         {
             this->draw_block(draw_list, status, Vector2F(size, size * 0.25f),
                 turn, look.highlight, alpha);
@@ -168,7 +167,7 @@ void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
 RectangleF WeaponFeedback::bounds(const Vector2F& nozzle, const Vector2F& pivot,
     WeaponType type, const LowPaintCue& low) const
 {
-    RectangleF result(pivot, Vector2F::ZERO);
+    RectangleF result(pivot, Vector2F::zero);
     if (!this->presentation_->enabled) { return result; }
     const auto& look = *this->presentation_;
     if (this->state_.muzzle_remaining > 0.0f && type != WeaponType::roller)
@@ -215,9 +214,9 @@ void WeaponFeedback::draw_aim_marker(DrawList& draw_list, const Vector2F& nozzle
         // A forward chevron with a small paint bead. Shape, rather than team
         // hue alone, separates readiness from recovery and a dry tool.
         mark(Vector2F(-size * 0.1f, -size * 0.22f),
-            Vector2F(size * 0.72f, stroke), PI / 4.0f, look.highlight);
+            Vector2F(size * 0.72f, stroke), pi / 4.0f, look.highlight);
         mark(Vector2F(-size * 0.1f, size * 0.22f),
-            Vector2F(size * 0.72f, stroke), -PI / 4.0f, look.highlight);
+            Vector2F(size * 0.72f, stroke), -pi / 4.0f, look.highlight);
         mark(Vector2F(-size * 0.45f, 0.0f), Vector2F(stroke, stroke),
             0.0f, team_colour);
         break;
@@ -229,9 +228,9 @@ void WeaponFeedback::draw_aim_marker(DrawList& draw_list, const Vector2F& nozzle
         }
         break;
     case WeaponReadiness::empty:
-        for (const float turn : { -PI / 4.0f, PI / 4.0f })
+        for (const float turn : { -pi / 4.0f, pi / 4.0f })
         {
-            mark(Vector2F::ZERO, Vector2F(size * 0.85f, stroke), turn, look.highlight);
+            mark(Vector2F::zero, Vector2F(size * 0.85f, stroke), turn, look.highlight);
         }
         break;
     }
@@ -239,7 +238,7 @@ void WeaponFeedback::draw_aim_marker(DrawList& draw_list, const Vector2F& nozzle
 
 RectangleF WeaponFeedback::aim_marker_bounds(const Vector2F& nozzle, float angle) const
 {
-    if (!this->presentation_->enabled) { return RectangleF(nozzle, Vector2F::ZERO); }
+    if (!this->presentation_->enabled) { return RectangleF(nozzle, Vector2F::zero); }
     const auto& look = *this->presentation_;
     const Vector2F center = nozzle + Vector2F::unit_vec_from_angle(angle) *
         look.aim_marker_distance;

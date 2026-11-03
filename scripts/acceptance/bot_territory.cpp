@@ -7,7 +7,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace bot_navigation_acceptance;
 
     void same_navigation(const PlayerInputData& a, const PlayerInputData& b)
@@ -98,7 +97,7 @@ namespace
             MatchBotObservation view;
             view.alive = view.grounded = true; view.ammo = 1.0f;
             view.size = tuning.player().size; view.engage_distance = 800.0f;
-            view.enemies.push_back({ Vector2F(100.0f, 0.0f), Vector2F::ZERO });
+            view.enemies.push_back({ Vector2F(100.0f, 0.0f), Vector2F::zero });
             for (int step = 0; step < 60; ++step)
             {
                 const PlayerInputData a = plain.think(view);
@@ -176,10 +175,10 @@ namespace
             view.center = Vector2F(x, 0.0f);
             for (int index = 0; index < 720; ++index)
             {
-                const float angle = -PI + PI * 2.0f * static_cast<float>(index) / 720.0f;
+                const float angle = -pi + pi * 2.0f * static_cast<float>(index) / 720.0f;
                 if (!match_bot_territory::top_launch_lands(view, support, angle, tuning)) { continue; }
                 ++landing;
-                const bool left = angle > PI * 0.5f || angle < -PI * 0.5f;
+                const bool left = angle > pi * 0.5f || angle < -pi * 0.5f;
                 Vector2F corner = view.center + Vector2F(left ? -tool.details.offset.x : tool.details.offset.x,
                     tool.details.offset.y) + Vector2F::rotate_vector(tool.details.nozzle_offset +
                     Vector2F(tool.details.size.x, 0.0f), angle);
@@ -192,15 +191,15 @@ namespace
                     corner.x + half.x <= support.right() + 0.5f,
                     "An accepted straight support shot first reached the top outside its support");
             }
-            require(!match_bot_territory::top_launch_lands(view, support, PI * 0.5f, tuning),
+            require(!match_bot_territory::top_launch_lands(view, support, pi * 0.5f, tuning),
                 "A straight-down Sniper muzzle buried below the top was accepted");
-            require(!match_bot_territory::top_launch_lands(view, support, -PI * 0.25f, tuning) &&
+            require(!match_bot_territory::top_launch_lands(view, support, -pi * 0.25f, tuning) &&
                 !match_bot_territory::top_launch_lands(view, support, 0.0f, tuning),
                 "A rising or level straight shot was accepted as a support landing");
         }
         require(landing > 0, "No straight Sniper angle could land on a 280-wide current support");
         view.weapon = WeaponType::bucket;
-        require(match_bot_territory::top_launch_lands(view, support, PI * 0.5f, tuning),
+        require(match_bot_territory::top_launch_lands(view, support, pi * 0.5f, tuning),
             "A curved tool was judged by the straight-launch landing test");
     }
 
@@ -221,7 +220,7 @@ namespace
                 view.alive = view.grounded = true; view.ammo = 1.0f;
                 view.size = tuning.player().size; view.engage_distance = 800.0f;
                 view.weapon = WeaponType::sniper;
-                if (enemy) { view.enemies.push_back({ Vector2F(300.0f, 0.0f), Vector2F::ZERO }); }
+                if (enemy) { view.enemies.push_back({ Vector2F(300.0f, 0.0f), Vector2F::zero }); }
                 bool held = false, fired = false;
                 for (int step = 0; step < 240; ++step)
                 {

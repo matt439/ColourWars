@@ -32,7 +32,7 @@ namespace crossfeed_acceptance
                     {
                         for (const bool retreat : { false, true })
                         {
-                            const float angle = (right != retreat) ? 0.0f : PI;
+                            const float angle = (right != retreat) ? 0.0f : pi;
                             const Vector2F injected(right ? speed : -speed, 0.0f);
                             const Vector2F origin(right ? 1250.0f : 2350.0f, 1220.0f);
                             auto weapon = WeaponBuilder::build_weapon(&s.tuning, right ? PlayerTeam::a : PlayerTeam::b,
@@ -90,7 +90,7 @@ namespace crossfeed_acceptance
                 Run run(s, standing_on(s, floor, reflected(1050.0f, right)), team, type);
                 run.settle();
                 const float initial = run.player->weapon_ammo();
-                const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+                const float angle = right ? pi / 3.0f : 2.0f * pi / 3.0f;
                 std::array<float, 4> recovery{};
                 for (int tick = 0; tick < 240; ++tick)
                 {
@@ -136,7 +136,7 @@ namespace crossfeed_acceptance
                     run.settle();
                     const float forward = type == WeaponType::bucket ? -0.4f :
                         type == WeaponType::sprayer ? -0.25f : 0.0f;
-                    const float angle = right ? forward : PI - forward;
+                    const float angle = right ? forward : pi - forward;
                     for (int tick = 0; moving && tick < 12; ++tick)
                     { run.tick(aimed(angle, input(right ? 1.0f : -1.0f))); }
                     run.tick(aimed(angle, input(moving ? (right ? 1.0f : -1.0f) : 0.0f)));

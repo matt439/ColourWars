@@ -8,7 +8,6 @@
 #include "game/objects/player_identity_hud.h"
 #include "game/objects/match_opening.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // Level's drawing: the match and overview passes, the per-pane overlay,
@@ -39,21 +38,21 @@ void Level::draw(Renderer& renderer) const
 		{
 			DrawList list = renderer.view(renderer.view_count() - 1);
 			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
-			list.set_camera(Camera::DEFAULT_CAMERA);
+			list.set_camera(Camera::default_camera);
 			this->draw_countdown_text(list);
 		}
 		if (this->lesson_card_bounds().width > 0.0f)
 		{
 			DrawList list = renderer.view(renderer.view_count() - 1);
 			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
-			list.set_camera(Camera::DEFAULT_CAMERA);
+			list.set_camera(Camera::default_camera);
 			this->lessons_.draw(list, this->paper_);
 		}
 		if (this->cursor_marker_visible())
 		{
 			DrawList list = renderer.view(renderer.view_count() - 1);
 			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
-			list.set_camera(Camera::DEFAULT_CAMERA);
+			list.set_camera(Camera::default_camera);
 			this->cursor_marker_.draw(list, this->paper_);
 		}
 	}
@@ -116,7 +115,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	}
 
 	// The HUD uses pane-local coordinates, so draw it with the identity camera.
-	list.set_camera(Camera::DEFAULT_CAMERA);
+	list.set_camera(Camera::default_camera);
 
 	// Teammates out of this pane's view, under the HUD so a pane's own health,
 	// paint and clock stay on top where a chip reaches a corner.

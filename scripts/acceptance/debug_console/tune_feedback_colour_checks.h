@@ -14,7 +14,7 @@
 		resources.add_sprite_sheet(look->sprite_sheet, labrador::read_sprite_sheet(
 			(game_directory / L"textures" / (look->sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		CombatFeedback hurt(look, &resources), burst(look, &resources);
-		const mattmath::RectangleF body(80, 120, 56, 96), detached(240, 120, 56, 96);
+		const labrador::RectangleF body(80, 120, 56, 96), detached(240, 120, 56, 96);
 		require(hurt.hurt(), "Combat colour fixture starts an actual hurt cue before editing");
 		hurt.update(look->hurt_duration * 0.5f);
 		burst.eliminate(detached);
@@ -29,7 +29,7 @@
 		const auto unchanged = [&]
 		{
 			require(&presentation.combat_feedback() == look && timers() == held_timers &&
-				hurt.death_rectangle() == mattmath::RectangleF::ZERO && burst.death_rectangle() == detached &&
+				hurt.death_rectangle() == labrador::RectangleF::zero && burst.death_rectangle() == detached &&
 				hurt.bounds(body) == hurt_bounds && burst.bounds(body) == burst_bounds,
 				"Combat colour adoption retains the borrowed record, active cue timers, detached body and cull bounds");
 		};
@@ -97,11 +97,11 @@
 		resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
 			(game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		BlockedShotFeedback feedback(look, &resources);
-		const std::array<mattmath::Vector2F, 4> normals{ mattmath::Vector2F(2.0f, 0.0f),
-			mattmath::Vector2F(0.0f, -2.0f), mattmath::Vector2F(-2.0f, 0.0f), mattmath::Vector2F(0.0f, 2.0f) };
+		const std::array<labrador::Vector2F, 4> normals{ labrador::Vector2F(2.0f, 0.0f),
+			labrador::Vector2F(0.0f, -2.0f), labrador::Vector2F(-2.0f, 0.0f), labrador::Vector2F(0.0f, 2.0f) };
 		for (int index = 0; index <= paint_owners::count; ++index)
 		{
-			feedback.emit({ mattmath::Vector2F(120.0f + static_cast<float>(index) * 40.0f, 200.0f),
+			feedback.emit({ labrador::Vector2F(120.0f + static_cast<float>(index) * 40.0f, 200.0f),
 				normals[static_cast<std::size_t>(index) % normals.size()],
 				labrador::Colour(32 + index * 12, 192 - index * 9, 80 + index * 7, 160),
 				index == paint_owners::count ? -1 : index });
@@ -110,7 +110,7 @@
 		// a reset to zero must not pass this retained-state check vacuously.
 		feedback.update(std::min(look->duration, look->repeat_delay) * 0.5f);
 		require(feedback.cues().size() == static_cast<std::size_t>(paint_owners::count + 1) &&
-			feedback.bounds() != mattmath::RectangleF::ZERO &&
+			feedback.bounds() != labrador::RectangleF::zero &&
 			std::all_of(feedback.cues().begin(), feedback.cues().end(), [&](const BlockedShotFeedback::Cue& cue)
 				{ return cue.age > 0.0f && cue.age < look->duration; }),
 			"Blocked colour fixture retains an actual aged cue for every paint owner and the invalid-owner bucket");
@@ -245,12 +245,12 @@
 				index % 2 == 0 ? labrador::Colour(224, 48, 80) : labrador::Colour(48, 160, 224),
 				static_cast<uint32_t>(index));
 			IdleDrip& cue = *cues[index];
-			const mattmath::Vector2F nozzle(160.0f + static_cast<float>(index) * 48.0f, 160.0f);
+			const labrador::Vector2F nozzle(160.0f + static_cast<float>(index) * 48.0f, 160.0f);
 			cue.advance(true, nozzle, 0.0f, cue.interval_remaining() + 0.001f, {});
 			cue.advance(true, nozzle, 0.0f, look.grow_time + look.stretch_time *
 				(index % 2 == 0 ? 0.5f : 1.1f), {});
 			if (index % 2 != 0) { cue.advance(false, nozzle, 0.0f, look.lifetime * 0.5f, {}); }
-			require(cue.bounds() != mattmath::RectangleF::ZERO &&
+			require(cue.bounds() != labrador::RectangleF::zero &&
 				(index % 2 == 0 ? cue.attached() && cue.bead_age() > 0.0f && cue.drops().empty() :
 					!cue.attached() && cue.drops().size() == 1 && cue.drops().front().age > 0.0f &&
 					cue.drops().front().age < look.lifetime),
@@ -259,7 +259,7 @@
 		const auto state = [&]
 		{
 			std::vector<float> values;
-			const auto append_rectangle = [&](const mattmath::RectangleF& rectangle)
+			const auto append_rectangle = [&](const labrador::RectangleF& rectangle)
 				{ values.insert(values.end(), { rectangle.x, rectangle.y, rectangle.width, rectangle.height }); };
 			for (const auto& cue : cues)
 			{

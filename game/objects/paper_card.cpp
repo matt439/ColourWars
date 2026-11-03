@@ -5,7 +5,6 @@
 #include "engine/render/resolution_manager.h"
 #include <algorithm>
 
-using namespace mattmath;
 using namespace labrador;
 
 PaperCard::PaperCard(const Presentation* presentation,

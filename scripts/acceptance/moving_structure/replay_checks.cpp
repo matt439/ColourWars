@@ -40,7 +40,7 @@ namespace
     std::unique_ptr<Fixture> ferry(World& world)
     {
         auto fixture = std::make_unique<Fixture>(world, 1,
-            mattmath::RectangleF{ -1024.0f, -1024.0f, 8192.0f, 4096.0f }, 17u);
+            labrador::RectangleF{ -1024.0f, -1024.0f, 8192.0f, 4096.0f }, 17u);
         fixture->tuning = world.variant([](rapidjson::Document& document)
         { set_countdown(document, dt / 4.0f); });
         // A static role precedes both movers: motion IDs are not paint-source

@@ -3,7 +3,6 @@
 #include "game/objects/crude_drawing.h"
 #include "game/input/input_slots.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -134,10 +133,10 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	draw_list.draw_text(this->player_identity_font_, identity,
 		label_pos + look.player_identity_shadow_offset * scale,
 		CrudeDrawing::premultiplied(look.player_identity_shadow_colour), scale,
-		0.0f, Vector2F::ZERO, 0.0f);
+		0.0f, Vector2F::zero, 0.0f);
 	draw_list.draw_text(this->player_identity_font_, identity, label_pos,
 		CrudeDrawing::premultiplied(look.player_identity_colour), scale,
-		0.0f, Vector2F::ZERO, 0.0f);
+		0.0f, Vector2F::zero, 0.0f);
 
 	const float x_pos = resolution.x - resolution.x * look.right_margin;
 	const Vector2F ammo_pos(x_pos,
@@ -255,7 +254,7 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 	}
 	draw_list.set_filter(TextureFilter::linear);
 	draw_list.draw_text(this->meter_label_font_, label, label_position,
-		CrudeDrawing::premultiplied(label_colour), scale, 0.0f, Vector2F::ZERO, 0.0f);
+		CrudeDrawing::premultiplied(label_colour), scale, 0.0f, Vector2F::zero, 0.0f);
 }
 void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	const Vector2F& resolution, float timer, float scale, bool reduced_effects, bool clock_running) const
@@ -275,7 +274,7 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 			std::ceil(timer) - timer, reduced_effects);
 		draw_list.set_filter(TextureFilter::linear);
 		draw_list.draw_text(this->timer_font_, text, pos, look.closing_clock.text, timer_scale,
-			0.0f, Vector2F::ZERO, 0.0f);
+			0.0f, Vector2F::zero, 0.0f);
 		return;
 	}
 	const Vector2F padding = look.player_identity_padding * scale;
@@ -287,10 +286,10 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	draw_list.draw_text(this->timer_font_, text,
 		pos + (look.timer_shadow_offset * timer_scale),
 		CrudeDrawing::premultiplied(look.timer_shadow_colour), timer_scale,
-		0.0f, Vector2F::ZERO, 0.0f);
+		0.0f, Vector2F::zero, 0.0f);
 
 	draw_list.draw_text(this->timer_font_, text, pos, CrudeDrawing::premultiplied(look.timer_colour), timer_scale,
-		0.0f, Vector2F::ZERO, 0.0f);
+		0.0f, Vector2F::zero, 0.0f);
 }
 
 void InterfaceGameplay::draw_closing_clock_panel(DrawList& draw_list,

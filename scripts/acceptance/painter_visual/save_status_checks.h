@@ -1,38 +1,3 @@
-// Application::set_resolution resizes the window with SetWindowPos and no
-// SWP_NOACTIVATE, which activates even a hidden window and makes it the
-// foreground (Labrador 19cf650; report 16 kept the window hidden but not this,
-// and report 23 asks for it).
-// A thread-local CBT hook refuses activation of only that probe while
-// preserving every other application's activation and the production call.
-class SettingsProbeActivationGuard
-{
-public:
-    explicit SettingsProbeActivationGuard(HWND window)
-    {
-        require(target_ == nullptr, "Settings activation guards must not nest");
-        target_ = window;
-        this->hook_ = SetWindowsHookExW(WH_CBT, &SettingsProbeActivationGuard::filter, nullptr, GetCurrentThreadId());
-        if (this->hook_ == nullptr) { target_ = nullptr; }
-        require(this->hook_ != nullptr, "Cannot prevent the settings probe from taking foreground");
-    }
-    ~SettingsProbeActivationGuard()
-    {
-        UnhookWindowsHookEx(this->hook_);
-        target_ = nullptr;
-    }
-    SettingsProbeActivationGuard(const SettingsProbeActivationGuard&) = delete;
-    SettingsProbeActivationGuard& operator=(const SettingsProbeActivationGuard&) = delete;
-private:
-    static LRESULT CALLBACK filter(int code, WPARAM word, LPARAM parameter)
-    {
-        if (code == HCBT_ACTIVATE && reinterpret_cast<HWND>(word) == target_) { return 1; }
-        return CallNextHookEx(nullptr, code, word, parameter);
-    }
-    inline static thread_local HWND target_ = nullptr;
-    HHOOK hook_ = nullptr;
-};
-
-
 // Independent status copy, fitting and save/reload checks use their own profile.
 // They deliberately exercise callbacks after replacing the source text/font.
 void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
@@ -141,8 +106,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         {
             // The real windowed Apply path keeps a hidden window hidden and
             // inactive; this pins that engine contract. It is the direct-save
-            // route: a display trial would call set_resolution, whose resize
-            // activates a hidden window (report 23).
+            // route; a display trial is covered by display_trial_checks.h.
             const HWND window = static_cast<HWND>(app.window());
             tap(Key::enter); tick();
             require(stack.depth() == 2, "Status Apply pushed a display trial; it must take the direct-save route");
@@ -184,7 +148,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         // paper's bevel. The reference reconstructs that complete background.
         const RectangleF region = text.bounds();
         const Frame actual = main_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

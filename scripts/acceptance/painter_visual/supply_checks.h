@@ -14,7 +14,7 @@ public:
         input.shoot_angle = angle;
         input.shoot_direction = Vector2F::unit_vec_from_angle(angle);
         input.shoot_direction_requested = true;
-        this->update_movement_and_rotation(input, this->player_center(), Vector2F::ZERO, right);
+        this->update_movement_and_rotation(input, this->player_center(), Vector2F::zero, right);
     }
 
     void pose(ToolMotionPose value)
@@ -167,7 +167,7 @@ void supply_paid_cycle(Application& app, const Canvas& canvas, SupplyWeapon& too
     for (int tick = 0; tick < 3000 && tool.ammo() >= cost; ++tick)
     {
         const float previous = tool.ammo();
-        auto projectiles = tool.update_and_get_projectiles(input, Vector2F(400, 400), Vector2F::ZERO, true, dt);
+        auto projectiles = tool.update_and_get_projectiles(input, Vector2F(400, 400), Vector2F::zero, true, dt);
         if (!projectiles.empty())
         {
             ++paid;
@@ -190,7 +190,7 @@ void supply_paid_cycle(Application& app, const Canvas& canvas, SupplyWeapon& too
     bool captured_recovery = false;
     for (int tick = 0; tick < 600 && tool.ammo() < tuning.starting_ammo(); ++tick)
     {
-        auto projectiles = tool.update_and_get_projectiles(input, Vector2F(400, 400), Vector2F::ZERO, true, dt);
+        auto projectiles = tool.update_and_get_projectiles(input, Vector2F(400, 400), Vector2F::zero, true, dt);
         require(projectiles.empty(), "Supply regeneration fixture emitted an unpaid projectile");
         if (!captured_recovery && tool.ammo() >= tuning.starting_ammo() * 0.5f)
         {
@@ -225,7 +225,7 @@ void supply_menu_checks(Application& app, const Canvas& canvas, const Presentati
         renderer.set_view_count(1);
         DrawList list = renderer.view(0);
         list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(0, 0, 1280, 720));
         icon.draw(list);
@@ -306,7 +306,7 @@ void supply_art_checks(Application& app, LevelBuilder& builder, const Canvas& ca
                             player.team_colour(), type, Vector2F(400, 400), app.render_resources(),
                             &audio, &preferences);
                         tool.set_motion_presentation(&presentation.tool_motion());
-                        const float angle = PI * (-0.75f + 0.5f * static_cast<float>(quadrant));
+                        const float angle = pi * (-0.75f + 0.5f * static_cast<float>(quadrant));
                         for (const bool right : { false, true })
                         {
                             tool.aim(angle, right);

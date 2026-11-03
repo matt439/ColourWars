@@ -3,7 +3,7 @@
 
 #include <numbers>
 
-using namespace mattmath;
+using namespace labrador;
 
 ViewShake::ViewShake(const ViewShakePresentation* presentation) :
     presentation_(presentation) {}
@@ -65,7 +65,7 @@ void ViewShake::clear()
 
 Vector2F ViewShake::offset() const
 {
-    if (this->presentation_ == nullptr || this->remaining_ <= 0.0f) { return Vector2F::ZERO; }
+    if (this->presentation_ == nullptr || this->remaining_ <= 0.0f) { return Vector2F::zero; }
     const float remaining = this->remaining_ / this->duration_;
     const float phase = (1.0f - remaining) * this->cycles_ *
         2.0f * std::numbers::pi_v<float>;

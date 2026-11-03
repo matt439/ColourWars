@@ -15,7 +15,7 @@ public:
         const auto& a = baseline_.cursor_art;
         require(baseline_.cursor_size == 0.045f && a.shadow_offset == 0.08f && a.click_duration == 0.18f && a.click_reach == 0.3f &&
             a.ink == Colour(0, 0, 0) && a.fill == Colour(243, 243, 243) && a.shade == Colour(180, 180, 180) && a.shadow == Colour(0, 0, 0, 102) &&
-            frame_.origin() == Vector2F::ZERO && frame_.source_rectangle() == RectangleI(32, 0, 4, 4), "Cursor material sample dependencies changed; re-audit");
+            frame_.origin() == Vector2F::zero && frame_.source_rectangle() == RectangleI(32, 0, 4, 4), "Cursor material sample dependencies changed; re-audit");
     }
     void set(const Colour& shade, const Colour& shadow) { look_.cursor_art.shade = shade; look_.cursor_art.shadow = shadow; }
     void expect(const Colour& shade, const Colour& shadow)
@@ -98,7 +98,7 @@ private:
     Frame render(const Colour& background, const std::function<void(DrawList&)>& draw)
     {
         const Canvas canvas(app_.render_resources(), background); Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++readbacks_; return read(renderer);
     }
     Application& app_; Presentation& presentation_; OpeningPresentation& look_; const OpeningPresentation baseline_; OpeningPresentation expected_;

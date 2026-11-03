@@ -26,7 +26,7 @@ public:
 		const labrador::ResolutionManager* resolution_manager);
 
 	// See Level::set_pointer.
-	void set_pointer(std::optional<mattmath::Vector2F> window_point);
+	void set_pointer(std::optional<labrador::Vector2F> window_point);
 	// Enabled, the pointer focused inside the window, and
 	// `keyboard_and_mouse_seat`: a human seat uses keyboard/mouse.
 	bool visible(bool keyboard_and_mouse_seat) const;
@@ -37,5 +37,5 @@ public:
 private:
 	const Presentation* presentation_ = nullptr;
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
-	std::optional<mattmath::Vector2F> pointer_;
+	std::optional<labrador::Vector2F> pointer_;
 };

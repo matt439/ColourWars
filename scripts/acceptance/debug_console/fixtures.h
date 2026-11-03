@@ -64,7 +64,7 @@ namespace debug_console_acceptance
 		bool damage_immune = false;
 		bool infinite_ammo = false;
 		int adopts = 0;
-		std::vector<std::pair<int, mattmath::Vector2F>> placed;
+		std::vector<std::pair<int, labrador::Vector2F>> placed;
 		std::vector<int> respawned;
 		std::vector<int> killed;
 
@@ -108,7 +108,7 @@ namespace debug_console_acceptance
 		{
 			return { { "high_step", { 4404.0f, 535.0f } }, { "spawn_a", { 100.0f, 875.0f } } };
 		}
-		bool debug_place(int seat, const mattmath::Vector2F& top_left) override
+		bool debug_place(int seat, const labrador::Vector2F& top_left) override
 		{
 			if (seat < 0 || seat >= this->settings.player_count()) { return false; }
 			this->placed.push_back({ seat, top_left });
@@ -163,14 +163,14 @@ namespace debug_console_acceptance
 		bool countdown_over = true;
 		std::vector<std::wstring> seat_labels;
 		int seat_label_sets = 0;
-		std::vector<mattmath::RectangleF> obstacles;
+		std::vector<labrador::RectangleF> obstacles;
 		bool debug_countdown_over() const override { return this->countdown_over; }
 		void debug_set_seat_labels(const std::vector<std::wstring>& labels) override
 		{
 			this->seat_labels = labels;
 			++this->seat_label_sets;
 		}
-		std::vector<mattmath::RectangleF> debug_screen_obstacles() const override
+		std::vector<labrador::RectangleF> debug_screen_obstacles() const override
 		{
 			return this->obstacles;
 		}

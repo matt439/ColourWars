@@ -137,7 +137,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto actual_frame = [&] { ++readbacks; return main_menu_frame(app); };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](RectangleF bounds)

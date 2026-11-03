@@ -12,7 +12,7 @@ namespace movement_acceptance
     {
         const GameTuning& tuning = suite.tuning;
         const auto course = [&](float bottom = 0.0f,
-            const Vector2F& velocity = Vector2F::ZERO)
+            const Vector2F& velocity = Vector2F::zero)
         {
             return suite.course(bottom, velocity);
         };

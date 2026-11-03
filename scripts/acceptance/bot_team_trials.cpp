@@ -18,7 +18,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace bot_navigation_acceptance;
 
     constexpr int trial_steps = 1800;

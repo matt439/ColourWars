@@ -11,7 +11,6 @@
 #include <string>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 using namespace presentation_validation;
 using menu_consts::DESIGN_RESOLUTION;

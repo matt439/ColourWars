@@ -105,7 +105,7 @@ namespace crossfeed_acceptance
                     (far_goal ? 2450.0f : 1150.0f);
                 const float goal = x(canonical_goal);
                 const float direction = goal >= run.player->center().x ? 1.0f : -1.0f;
-                PlayerInputData actions = aimed(direction > 0.0f ? PI / 3.0f : 2.0f * PI / 3.0f,
+                PlayerInputData actions = aimed(direction > 0.0f ? pi / 3.0f : 2.0f * pi / 3.0f,
                     input(dropping ? 0.0f : loop_steer(*run.player, goal, services.tuning.player()),
                         false, false, dropping));
                 actions.primary_shoot = fire;

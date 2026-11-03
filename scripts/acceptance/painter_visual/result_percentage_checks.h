@@ -162,7 +162,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read_frame(*app.renderer()); };
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
     };
@@ -184,32 +184,32 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         for (size_t role = 0; role < labels.size(); ++role)
         {
             labels[role] = std::make_unique<colourwars::UiTextDropShadow>("independent-result-percentage", words[role],
-                role == 0 ? item_font : detail_font, Vector2F::ZERO, app.render_resources(), look.art.ink,
-                Colour(), Vector2F::ZERO, !visible[role]);
+                role == 0 ? item_font : detail_font, Vector2F::zero, app.render_resources(), look.art.ink,
+                Colour(), Vector2F::zero, !visible[role]);
             const Vector2F raw = labels[role]->bounds().size();
             const Vector2F at = role == 0 ? Vector2F((1920.0f - raw.x) / 2.0f, 255.0f) :
                 Vector2F(role == 1 ? 620.0f : 1300.0f - raw.x, 500.0f);
             labels[role]->set_position(at); result_metrics[role] = { raw, at, 1.0f };
         }
         colourwars::UiTextDropShadow heading("independent-result-percentage-title", fixture.heading, style.heading_font,
-            Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
+            Vector2F::zero, app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
         heading.set_position({ (1920.0f - heading.bounds().width) / 2.0f, 125.0f });
         // The fixed A mark extends into this complete plate band even before
         // the percentages appear. Include both literal marks at their original
         // centers, with the same absent-team and already-revealed gates.
         colourwars::UiTextDropShadow mark_a("independent-result-percentage-mark-a", L"A", item_font,
-            Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO,
+            Vector2F::zero, app.render_resources(), look.art.ink, Colour(), Vector2F::zero,
             revealed || !fixture.info.team_a_played);
         colourwars::UiTextDropShadow mark_b("independent-result-percentage-mark-b", L"B", item_font,
-            Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO,
+            Vector2F::zero, app.render_resources(), look.art.ink, Colour(), Vector2F::zero,
             revealed || !fixture.info.team_b_played);
         mark_a.set_position(Vector2F(562.0f, 550.0f) - mark_a.bounds().center());
         mark_b.set_position(Vector2F(1358.0f, 550.0f) - mark_b.bounds().center());
         colourwars::UiTextDropShadow score("independent-result-percentage-score", fixture.score, style.detail_font,
-            Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details || !fixture.session.is_series());
+            Vector2F::zero, app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details || !fixture.session.is_series());
         score.set_position({ (1920.0f - score.bounds().width) / 2.0f, 340.0f });
         colourwars::UiTextDropShadow outcome("independent-result-percentage-outcome", fixture.outcome, style.detail_font,
-            Vector2F::ZERO, app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details || !fixture.session.is_series());
+            Vector2F::zero, app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details || !fixture.session.is_series());
         outcome.set_position({ (1920.0f - outcome.bounds().width) / 2.0f, 405.0f });
         const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
         const RectangleF fill_box(610.0f, 490.0f, 700.0f, 120.0f);
@@ -225,7 +225,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
             "Independent result percentage or unchanged neighbor escaped the measured zero-offset band");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus); paper.draw(list);
@@ -492,16 +492,16 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     const auto monitor_reference = [&](const Presentation& snapshot, const std::array<const wchar_t*, 2>& words, bool wrong_font = false)
     {
         const auto& look = snapshot.opening(); const auto& art = look.reveal_art;
-        const RectangleF window(Vector2F::ZERO, app.resolution_manager()->resolution_vec());
+        const RectangleF window(Vector2F::zero, app.resolution_manager()->resolution_vec());
         const Monitor geometry(&look, app.render_resources(), {});
         const RectangleF screen = geometry.screen_for_glass(geometry.glass(window));
         const RectangleF picture = geometry.picture(screen); const auto regions = monitor_regions();
         const auto font = app.render_resources()->resolve_sprite_font(wrong_font ? original.opening().percent_font : look.percent_font);
-        require(app.render_resources()->measure_text(font, L" ") == Vector2F::ZERO && art.ink.a == 1.0f && art.paper.a == 1.0f,
+        require(app.render_resources()->measure_text(font, L" ") == Vector2F::zero && art.ink.a == 1.0f && art.paper.a == 1.0f,
             "Monitor paper-only reference lost its zero-size SPACE or opaque face contract");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point); canvas.draw(list, window);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point); canvas.draw(list, window);
         const RevealArt paper(&look, app.render_resources());
         const std::array<Colour, 2> colours{ solo_a.team_colours.team_a, solo_a.team_colours.team_b };
         const auto tint = [](const Colour& colour)
@@ -532,8 +532,8 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
             monitor_metrics[side] = { raw, at, scale }; list.set_filter(TextureFilter::linear);
             for (const Vector2F offset : { Vector2F(-outline, 0), Vector2F(outline, 0), Vector2F(0, -outline), Vector2F(0, outline),
                 Vector2F(-outline, -outline), Vector2F(outline, -outline), Vector2F(-outline, outline), Vector2F(outline, outline) })
-                { list.draw_text(font, words[side], at + offset, tint(art.ink), scale, 0.0f, Vector2F::ZERO, 0.0f); }
-            list.draw_text(font, words[side], at, tint(colours[side]), scale, 0.0f, Vector2F::ZERO, 0.0f); list.set_filter(TextureFilter::point);
+                { list.draw_text(font, words[side], at + offset, tint(art.ink), scale, 0.0f, Vector2F::zero, 0.0f); }
+            list.draw_text(font, words[side], at, tint(colours[side]), scale, 0.0f, Vector2F::zero, 0.0f); list.set_filter(TextureFilter::point);
         }
         return read_frame(renderer);
     };

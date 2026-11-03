@@ -18,15 +18,15 @@ struct MatchBotObservation
 {
 	struct Enemy
 	{
-		mattmath::Vector2F center;
-		mattmath::Vector2F velocity;
+		labrador::Vector2F center;
+		labrador::Vector2F velocity;
 		// The enemy's own engagement distance with its visible tool.
 		float engage_distance = 0.0f;
 	};
 
-	mattmath::Vector2F center;
-	mattmath::Vector2F velocity;
-	mattmath::Vector2F size;
+	labrador::Vector2F center;
+	labrador::Vector2F velocity;
+	labrador::Vector2F size;
 	bool alive = false;
 	bool grounded = false;
 	bool on_platform = false;
@@ -42,21 +42,21 @@ struct MatchBotObservation
 	WeaponType weapon = WeaponType::sprayer;
 	std::vector<Enemy> enemies;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
-	std::vector<mattmath::Vector2F> territory;
+	std::vector<labrador::Vector2F> territory;
 	// Non-team paint beyond a permitted gate: useful route destinations, but
 	// occluded by projectile cover and never offered as paint aim targets.
-	std::vector<mattmath::Vector2F> route_territory;
+	std::vector<labrador::Vector2F> route_territory;
 	// Deterministic visible top paint on the current support, aim only. It
 	// never supplies a standing/descent goal or consumes the navigation RNG.
 	// A deliberate tool with none there may take another scoring top whose
 	// straight launch from this pose, grounded or airborne, lands on it.
-	std::optional<mattmath::Vector2F> support_paint;
+	std::optional<labrador::Vector2F> support_paint;
 	// The support that support_paint lies on; valid only with it.
-	mattmath::RectangleF support_bounds;
+	labrador::RectangleF support_bounds;
 	// Visible in-range non-team top paint on the current support, even where
 	// this pose's launch clearance rejects every tile. Refreshed with it.
 	bool support_open = false;
-	std::vector<mattmath::RectangleF> obstacles;
+	std::vector<labrador::RectangleF> obstacles;
 	// Rectangular standing surfaces, distinct from conservative sight bounds.
 	// One-way supports may be crossed by a deliberate downward route.
 	std::vector<MatchBotSupport> supports;
@@ -95,15 +95,15 @@ private:
 	int blocked_steps_ = 0;
 	int recovery_left_ = 0;
 	int progress_steps_ = 0;
-	mattmath::Vector2F progress_origin_;
+	labrador::Vector2F progress_origin_;
 	int jump_left_ = 0;
 	bool jump_was_held_ = false;
 	bool refilling_ = false;
 	bool had_alive_step_ = false;
 	bool has_goal_ = false;
-	mattmath::Vector2F goal_;
+	labrador::Vector2F goal_;
 	bool has_paint_goal_ = false;
-	mattmath::Vector2F paint_goal_;
+	labrador::Vector2F paint_goal_;
 	float heading_ = 1.0f;
 	PlayerInputData decision_;
 	// The decision's single error draw, reapplied when a slow tool re-aims.
@@ -117,12 +117,12 @@ private:
 	int descent_turns_ = 0;
 	// Supports are tracked by identity; a moving one refreshes its bounds.
 	MatchBotSupport ascent_support_;
-	mattmath::Vector2F ascent_takeoff_;
+	labrador::Vector2F ascent_takeoff_;
 	std::vector<MatchBotSupport> visited_supports_;
 	bool climbing_ramp_ = false;
 	int ramp_steps_left_ = 0;
 	MatchBotRamp ramp_;
-	mattmath::Vector2F ramp_exit_;
+	labrador::Vector2F ramp_exit_;
 	// A chain's final scoring landing holds the bot there for a finite window
 	// long enough to recover its reserve and pass one cooldown.
 	bool finish_pending_ = false;
@@ -138,27 +138,27 @@ private:
 	int ride_hold_left_ = 0;
 	// The last grounded centre that was not enemy paint, for a refill's way back.
 	bool has_off_enemy_ = false;
-	mattmath::Vector2F off_enemy_center_;
+	labrador::Vector2F off_enemy_center_;
 
 	float random_unit();
 	void decide(const MatchBotObservation& view);
 	void choose_territory(const MatchBotObservation& view);
-	bool standing_goal(const MatchBotObservation& view, mattmath::Vector2F aim,
-		mattmath::Vector2F& standing) const;
-	bool clear_standing(const MatchBotObservation& view, mattmath::Vector2F center) const;
-	bool clear_route(const MatchBotObservation& view, mattmath::Vector2F center) const;
-	bool clear_route(const MatchBotObservation& view, mattmath::Vector2F from, mattmath::Vector2F to) const;
+	bool standing_goal(const MatchBotObservation& view, labrador::Vector2F aim,
+		labrador::Vector2F& standing) const;
+	bool clear_standing(const MatchBotObservation& view, labrador::Vector2F center) const;
+	bool clear_route(const MatchBotObservation& view, labrador::Vector2F center) const;
+	bool clear_route(const MatchBotObservation& view, labrador::Vector2F from, labrador::Vector2F to) const;
 	void choose_descent(const MatchBotObservation& view);
 	void choose_ascent(const MatchBotObservation& view);
 	void steer_ascent(const MatchBotObservation& view, PlayerInputData& input);
-	void remember_descent(const MatchBotObservation& view, mattmath::Vector2F goal);
+	void remember_descent(const MatchBotObservation& view, labrador::Vector2F goal);
 	void choose_ramp(const MatchBotObservation& view);
 	void steer_ramp(const MatchBotObservation& view, PlayerInputData& input);
 	void open_finish(const MatchBotObservation& view, const MatchBotSupport& support);
 	const MatchBotSupport* moving_support(const MatchBotObservation& view) const;
 	void steer_finish(const MatchBotObservation& view, PlayerInputData& input);
-	bool clear_ramp_path(const MatchBotObservation& view, mattmath::Vector2F from,
-		mattmath::Vector2F to, const MatchBotRamp& ramp) const;
+	bool clear_ramp_path(const MatchBotObservation& view, labrador::Vector2F from,
+		labrador::Vector2F to, const MatchBotRamp& ramp) const;
 	bool obstacle_ahead(const MatchBotObservation& view) const;
 	bool ledge_ahead(const MatchBotObservation& view) const;
 	bool unscored_floor(const MatchBotObservation& view) const;

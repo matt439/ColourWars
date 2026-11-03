@@ -26,7 +26,7 @@ namespace press_tower_acceptance
             Run run(s, standing_on(s, support, centre), team, type);
             run.settle();
             const float initial = run.player->weapon_ammo();
-            const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+            const float angle = right ? pi / 3.0f : 2.0f * pi / 3.0f;
             for (int tick = 0; tick < 240; ++tick)
             {
                 PlayerInputData actions = aimed(angle, input(tick < 12 ? (right ? 1.0f : -1.0f) : 0.0f));

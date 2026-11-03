@@ -5,7 +5,6 @@
 #include "game/match/series_stage_rule.h"
 #include "game/states/main_menu.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 void validate_mode_stage_rules(RenderResources* render, const Presentation& presentation)

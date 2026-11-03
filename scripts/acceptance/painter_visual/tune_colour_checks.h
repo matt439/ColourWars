@@ -52,11 +52,11 @@ size_t tune_colour_pixels(const Frame& frame, std::uint32_t colour)
 }
 
 Frame tune_colour_draw(Application& app, const Canvas& canvas,
-    const std::function<void(DrawList&)>& draw, const Camera& camera = Camera::DEFAULT_CAMERA)
+    const std::function<void(DrawList&)>& draw, const Camera& camera = Camera::default_camera)
 {
     Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
     DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-    list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+    list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
     canvas.draw(list, { 0, 0, 1280, 720 }); list.set_camera(camera); draw(list);
     return read(renderer);
 }

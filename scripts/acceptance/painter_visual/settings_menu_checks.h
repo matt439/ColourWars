@@ -177,13 +177,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto apply = [&](bool display_trial = false)
     {
-        // The direct-save route keeps the hidden probe hidden and inactive
-        // unaided. The display trial calls set_resolution, whose resize has no
-        // SWP_NOACTIVATE and activates a hidden window (report 23), so only
-        // that route keeps the activation veto.
+        // Both routes keep the hidden probe hidden and inactive unaided; the
+        // display trial's set_resolution resize no longer activates (v0.3.0).
         const HWND window = static_cast<HWND>(app.window());
-        std::optional<SettingsProbeActivationGuard> activation;
-        if (display_trial) { activation.emplace(window); }
         const auto before = saved_bytes();
         const auto resolution = preferences.resolution();
         const bool fullscreen = preferences.fullscreen();
@@ -218,7 +214,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)
@@ -253,7 +249,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             app.render_resources(), art.ink);
         const Canvas paper(app.render_resources(), art.paper);
         UiTexture focus_widget("expected-focus", "sprite_sheet_1", "pixel",
-            focused.value_or(RectangleF::ZERO), app.render_resources());
+            focused.value_or(RectangleF::zero), app.render_resources());
         FocusGroup focus;
         if (focused.has_value()) { focus.add(&focus_widget); }
         const auto& page_art = focused.has_value() ? options_art : art;

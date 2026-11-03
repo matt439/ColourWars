@@ -84,7 +84,7 @@ namespace turbulence_blockout_acceptance
             {
                 const PlayerTeam team = right ? PlayerTeam::a : PlayerTeam::b;
                 const float direction = right ? 1.0f : -1.0f;
-                const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+                const float angle = right ? pi / 3.0f : 2.0f * pi / 3.0f;
                 for (const bool upper : { false, true })
                 {
                     const std::string station = std::string(upper ? "crossover" : "lower_bed") + (right ? "_a" : "_b");

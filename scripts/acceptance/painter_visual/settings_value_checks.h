@@ -86,8 +86,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     {
         if (controls) { tap(Key::enter); return; }
         // Fullscreen stays Off and the resolution is the saved one, so Apply
-        // takes the direct-save route: no display trial and no set_resolution,
-        // whose resize would activate the hidden probe (report 23).
+        // takes the direct-save route: no display trial and no set_resolution.
         const HWND window = static_cast<HWND>(app.window());
         tap(Key::enter); tick();
         require(stack.depth() == 2, "Value Apply pushed a display trial; it must take the direct-save route");
@@ -134,7 +133,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             "Independent setting value escaped its available column or row");
         const RectangleF row_bounds = RectangleF::union_of(label_text.bounds(), text.bounds());
         const Frame actual = main_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

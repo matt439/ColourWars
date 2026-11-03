@@ -51,7 +51,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu(); const auto& art = look.art;
         const Frame actual = main_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> text;
         const auto add = [&](const std::wstring& copy, const std::string& font, const Vector2F& position,

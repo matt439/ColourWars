@@ -8,7 +8,6 @@
 #include <cmath>
 
 using namespace labrador;
-using namespace mattmath;
 
 IdleDrip::IdleDrip(const IdleDripPresentation* presentation,
     RenderResources* resources, const Colour& colour, uint32_t identity,
@@ -105,7 +104,7 @@ void IdleDrip::advance(bool settled, const Vector2F& nozzle, float rotation,
 
     // Match the tool's vertical flip when facing left. Gravity stretches the
     // bead downwards even while its attachment follows continuous aiming.
-    const float side = rotation > PI * 0.5f || rotation < -PI * 0.5f ? -1.0f : 1.0f;
+    const float side = rotation > pi * 0.5f || rotation < -pi * 0.5f ? -1.0f : 1.0f;
     this->attachment_ = nozzle + Vector2F::rotate_vector(
         Vector2F(-look.nozzle_inset, side * look.nozzle_underside), rotation);
     if (!this->attached())
@@ -164,9 +163,9 @@ void IdleDrip::draw_bead(DrawList& list, const RectangleF& rectangle) const
     // Coarse keylined liquid from the existing neutral fill texel.
     // No new atlas or collision silhouette is required.
     this->draw_with(list, outer, this->frame(), CrudeDrawing::premultiplied(this->presentation_->keyline),
-        Vector2F::ZERO, SpriteFlip::none, 0.0f);
+        Vector2F::zero, SpriteFlip::none, 0.0f);
     this->draw_with(list, rectangle, this->frame(), this->paint_,
-        Vector2F::ZERO, SpriteFlip::none, 0.0f);
+        Vector2F::zero, SpriteFlip::none, 0.0f);
 }
 
 void IdleDrip::draw(DrawList& list) const
@@ -179,7 +178,7 @@ void IdleDrip::draw(DrawList& list) const
 
 RectangleF IdleDrip::bounds() const
 {
-    RectangleF bounds = this->attached() ? this->bead_rectangle() : RectangleF::ZERO;
+    RectangleF bounds = this->attached() ? this->bead_rectangle() : RectangleF::zero;
     bool any = this->attached();
     for (const Drop& drop : this->drops())
     {

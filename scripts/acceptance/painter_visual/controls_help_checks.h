@@ -100,7 +100,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     {
         const auto& look = snapshot.controls_settings(); const auto& art = look.art;
         const Frame actual = main_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> text;
         std::vector<RectangleF> regions;
@@ -287,7 +287,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         "Actual Keyboard Jump child did not apply its captured key");
     tap(Key::escape); tick(); require(stack.depth() == 2, "Keyboard Jump did not return to its retained Controls parent");
     const Frame old_after_jump = compare("old-parent-refreshed-jump", false, old, old_words, true);
-    const Camera help_camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+    const Camera help_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
         app.viewport_manager()->fullscreen_viewport());
     const RectangleF retained_help(old.controls_settings().controls_position, old.controls_settings().controls_size);
     const RectangleI permitted_delta = countdown_crop_bounds(help_camera.calculate_view_rectangle(retained_help));

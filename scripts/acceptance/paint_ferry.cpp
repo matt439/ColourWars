@@ -19,7 +19,6 @@ void check_ferry_cue(const std::filesystem::path& content);
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace bot_navigation_acceptance;
 
     constexpr float step = SECONDS_PER_STEP;

@@ -65,17 +65,17 @@ public:
 
 	// The countdown card, each reminder's and the stage title's when it has
 	// one, as of the last layout.
-	std::vector<mattmath::RectangleF> cards() const;
+	std::vector<labrador::RectangleF> cards() const;
 	std::wstring_view stage_entry_name() const;
-	const mattmath::RectangleF& stage_entry_card() const { return this->stage_entry_card_; }
-	const mattmath::RectangleF& stage_entry_text_bounds() const { return this->stage_entry_text_bounds_; }
+	const labrador::RectangleF& stage_entry_card() const { return this->stage_entry_card_; }
+	const labrador::RectangleF& stage_entry_text_bounds() const { return this->stage_entry_text_bounds_; }
 	// Empty, and zero bounds, when no player uses that device.
 	std::wstring_view keyboard_controls_text() const;
-	mattmath::RectangleF keyboard_controls_text_bounds() const;
-	mattmath::RectangleF keyboard_controls_card_bounds() const;
+	labrador::RectangleF keyboard_controls_text_bounds() const;
+	labrador::RectangleF keyboard_controls_card_bounds() const;
 	std::wstring_view gamepad_controls_text() const;
-	mattmath::RectangleF gamepad_controls_text_bounds() const;
-	mattmath::RectangleF gamepad_controls_card_bounds() const;
+	labrador::RectangleF gamepad_controls_text_bounds() const;
+	labrador::RectangleF gamepad_controls_card_bounds() const;
 
 private:
 	void centre_countdown_text(const PaperCard& paper);
@@ -89,23 +89,23 @@ private:
 
 	std::unique_ptr<CountdownArt> countdown_art_;
 	std::wstring countdown_label_;
-	mattmath::RectangleF countdown_number_box_;
+	labrador::RectangleF countdown_number_box_;
 	std::unique_ptr<colourwars::TextDropShadow> countdown_heading_ = nullptr;
 	std::unique_ptr<colourwars::TextDropShadow> resume_heading_;
 	std::unique_ptr<colourwars::TextDropShadow> replay_heading_;
-	mattmath::RectangleF replay_card_;
-	mattmath::RectangleF countdown_card_;
+	labrador::RectangleF replay_card_;
+	labrador::RectangleF countdown_card_;
 	std::unique_ptr<colourwars::TextDropShadow> stage_entry_;
-	mattmath::RectangleF stage_entry_card_;
-	mattmath::RectangleF stage_entry_text_bounds_;
+	labrador::RectangleF stage_entry_card_;
+	labrador::RectangleF stage_entry_text_bounds_;
 
 	// One shared reminder per input device type present in the match.
 	struct ControlsReminder
 	{
 		std::unique_ptr<colourwars::TextDropShadow> heading;
 		std::unique_ptr<colourwars::TextDropShadow> text;
-		mattmath::RectangleF card;
-		mattmath::RectangleF text_bounds;
+		labrador::RectangleF card;
+		labrador::RectangleF text_bounds;
 	};
 	std::vector<ControlsReminder> controls_reminders_;
 	// Save owns the effective binding; a paused draw refreshes only its cached
@@ -118,7 +118,7 @@ private:
 	std::array<PadProfile, input_slots::pad_count> gamepad_pads_{};
 	struct ControlsReminderLook
 	{
-		mattmath::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;
+		labrador::Vector2F reference_size, margin, padding, heading_shadow, text_shadow;
 		float gap = 0.0f, y = 0.0f;
 	} controls_look_;
 };

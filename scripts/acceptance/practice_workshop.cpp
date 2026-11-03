@@ -24,7 +24,6 @@
 // content rules that reject a bad lesson. Real objects, no device or save.
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

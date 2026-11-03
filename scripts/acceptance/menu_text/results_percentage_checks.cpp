@@ -153,7 +153,7 @@ namespace menu_text_acceptance
                 if (character == omitted) { continue; }
                 const bool numeric = (character >= U'0' && character <= U'9') || character == U'.' || character == U'%';
                 const int width = character == U'~' ? marker_width : zero_numeric && numeric ? 0 : character == U'8' ? eight_width : 8;
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, width, character == U'~' ? marker_height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, width, character == U'~' ? marker_height : 16),
                     character == U'~' ? marker_x : 0.0f, character == U'~' ? marker_y : 0.0f, 0.0f });
             }
             auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f); font->set_stand_in(U'?');
@@ -192,25 +192,25 @@ namespace menu_text_acceptance
                 maximum = std::max(maximum, world.render.measure_text(handle, literal).x);
             }
             const float width = solo ? 1300.0f : 962.0f;
-            require(maximum == width && world.render.measure_text(handle, L"~88.8%") == mattmath::Vector2F(width, 20.0f) &&
+            require(maximum == width && world.render.measure_text(handle, L"~88.8%") == labrador::Vector2F(width, 20.0f) &&
                 world.render.measure_text(handle, L"~100.0%").x == width - 88.0f,
                 "Reference percentage geometry must include the wider earlier string, rather than assume100.0% is widest");
             const auto& look = edge.results_menu();
-            require(look.box_size == mattmath::Vector2F(1300.0f, 860.0f) && look.fill_box_size == mattmath::Vector2F(700.0f, 120.0f) &&
-                look.fill_box_y_offset == 380.0f && look.team_fill_border == mattmath::Vector2F(10.0f) && look.art.focus_padding == mattmath::Vector2F(28.0f, 18.0f),
+            require(look.box_size == labrador::Vector2F(1300.0f, 860.0f) && look.fill_box_size == labrador::Vector2F(700.0f, 120.0f) &&
+                look.fill_box_y_offset == 380.0f && look.team_fill_border == labrador::Vector2F(10.0f) && look.art.focus_padding == labrador::Vector2F(28.0f, 18.0f),
                 "Percentage boundary fixture changed the actual fill anchors, full paper or single plate padding");
-            const mattmath::Vector2F position = solo ? mattmath::Vector2F(310.0f, 255.0f) :
-                right ? mattmath::Vector2F(338.0f, 500.0f) : mattmath::Vector2F(620.0f, 500.0f);
+            const labrador::Vector2F position = solo ? labrador::Vector2F(310.0f, 255.0f) :
+                right ? labrador::Vector2F(338.0f, 500.0f) : labrador::Vector2F(620.0f, 500.0f);
             std::wstring source = (edge.menu_text().results.*entry.line)(L"88.8%");
-            colourwars::UiTextDropShadow widget(entry.key, source, font_name, position, &world.render, look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            colourwars::UiTextDropShadow widget(entry.key, source, font_name, position, &world.render, look.art.ink, Colour{}, labrador::Vector2F::zero, true);
             source.clear();
-            require(widget.text() == L"~88.8%" && widget.bounds() == mattmath::RectangleF(position, { width, 20.0f }) &&
-                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            require(widget.text() == L"~88.8%" && widget.bounds() == labrador::RectangleF(position, { width, 20.0f }) &&
+                widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
                 "Percentage widget lost full unscaled text, captured copy, actual anchor or zero shadow");
             if (!solo)
             {
                 auto plate = widget.bounds(); plate.inflate(look.art.focus_padding);
-                require(plate == mattmath::RectangleF(right ? 310.0f : 592.0f, 482.0f, 1018.0f, 56.0f),
+                require(plate == labrador::RectangleF(right ? 310.0f : 592.0f, 482.0f, 1018.0f, 56.0f),
                     "Actual left/right percentage plate must meet its paper edge after exactly one padding inflation");
             }
             DrawList no_device; widget.draw(no_device);
@@ -220,7 +220,7 @@ namespace menu_text_acceptance
                 { select(d, entry, solo ? "menu_percentage_solo_bottom" : "menu_percentage_team_bottom"); });
             bottom.validate_resources(world.render, world.audio);
             const auto bottom_font = world.render.resolve_sprite_font(solo ? bottom.menu().item_font : bottom.menu().detail_font);
-            require(world.render.measure_text(bottom_font, L"~100.0%") == mattmath::Vector2F(56.0f, solo ? 715.0f : 452.0f) &&
+            require(world.render.measure_text(bottom_font, L"~100.0%") == labrador::Vector2F(56.0f, solo ? 715.0f : 452.0f) &&
                 (solo ? 255.0f + 715.0f : 500.0f + 452.0f + 18.0f) == 970.0f,
                 "Percentage height boundary must use its full solo paper or the actual percentage plate padding");
             variants.rejects(field, [&](rapidjson::Document& d)

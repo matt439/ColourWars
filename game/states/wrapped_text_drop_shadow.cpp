@@ -1,10 +1,9 @@
 #include "game/pch.h"
 #include "game/states/wrapped_text_drop_shadow.h"
-#include "game/config/text_wrap.h"
+#include "engine/render/render_resources.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -13,7 +12,7 @@ namespace
 	std::wstring wrap_for(RenderResources* render_resources,
 		const std::string& font_name, const std::wstring& text, float max_width)
 	{
-		return text_wrap::wrap(*render_resources,
+		return render_resources->wrap_text(
 			render_resources->resolve_sprite_font(font_name), text, max_width);
 	}
 }
@@ -44,15 +43,16 @@ WrappedTextDropShadow::WrappedTextDropShadow(const std::string& name,
 void WrappedTextDropShadow::set_text(const std::wstring& text)
 {
 	this->authored_text_ = text;
-	colourwars::UiTextDropShadow::set_text(text_wrap::wrap(*this->render_resources_,
-		this->font(), text, this->max_width_, this->scale()));
+	colourwars::UiTextDropShadow::set_text(this->render_resources_->wrap_text(
+		this->font(), text, this->max_width_ / this->scale()));
 }
 
 void WrappedTextDropShadow::set_scale(float scale)
 {
 	colourwars::UiTextDropShadow::set_scale(scale);
-	colourwars::UiTextDropShadow::set_text(text_wrap::wrap(*this->render_resources_,
-		this->font(), this->authored_text_, this->max_width_, this->scale()));
+	// The engine's width is unscaled font texels; max_width_ is drawn width.
+	colourwars::UiTextDropShadow::set_text(this->render_resources_->wrap_text(
+		this->font(), this->authored_text_, this->max_width_ / this->scale()));
 }
 
 const std::wstring& WrappedTextDropShadow::authored_text() const

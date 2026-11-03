@@ -69,7 +69,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         }
         const Frame actual = frame();
         const int rows = page == 0 ? 4 : page == 1 ? static_cast<int>(options_items.size()) : 1;
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         for (int row = 0; row < rows; ++row)
         {

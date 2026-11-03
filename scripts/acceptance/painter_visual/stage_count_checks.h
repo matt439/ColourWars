@@ -26,7 +26,7 @@ RectangleF stage_count_surface_reference(DrawList& list, RenderResources& resour
         "Independent count hint expanded its complete paper beyond the outer panel or into the preview");
     list.set_filter(TextureFilter::point);
     const UiTexture surround("count-paper-surround", style.sprite_sheet, style.fill_frame,
-        RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), &resources, main.home_background_colour); surround.draw(list);
+        RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), &resources, main.home_background_colour); surround.draw(list);
     setup_paper_reference(list, resources, style, art, outer, RectangleF());
     auto briefing = art; briefing.paper = art.focus_fill; setup_paper_reference(list, resources, style, briefing, card, RectangleF());
     const UiTexture accent("count-paper-accent", style.sprite_sheet, style.fill_frame,
@@ -134,14 +134,14 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         colourwars::UiTextDropShadow hint("independent-count-hint", hint_words, style.brand_font, info + geometry.briefing.spacing * 7.0f, app.render_resources(), main.art.ink, clear, shadow);
         colourwars::UiTextDropShadow status("independent-count-status", locked ? L"ARENA LOCKED" : L"FIND YOUR ARENA", style.detail_font, info + geometry.briefing.spacing * 6.0f,
             app.render_resources(), locked ? presentation.main_menu().stage_select.selected_ink : presentation.main_menu().stage_select.unselected, clear, style.detail_shadow_offset);
-        const RectangleF raw_hint = RectangleF::union_of(hint.text_bounds_at(Vector2F::ZERO, 1.0f), hint.text_bounds_at(shadow, 1.0f));
+        const RectangleF raw_hint = RectangleF::union_of(hint.text_bounds_at(Vector2F::zero, 1.0f), hint.text_bounds_at(shadow, 1.0f));
         const float budget = live.briefing.size.x - live.briefing_padding.x * 2.0f, scale = std::min(1.0f, budget / raw_hint.width);
         require(std::isfinite(budget) && budget > 0.0f && std::isfinite(scale) && scale > 0.0f && (fit_kind != 1 || scale < 1.0f) && (fit_kind != 2 || scale == 1.0f),
             "Count hint did not exercise its independent width-only fit or no-upscale reset"); hint.set_scale(scale); hint.set_shadow_scale(scale); hint.set_shadow_offset(shadow * scale);
         const float preview_right = live.preview_position.x + live.preview_size.x, room = preview_right - nav.bounds().right() - fitted.menu().focus_padding.x;
         require(std::isfinite(room) && room > 0.0f, "Independent numbered/Random navigation left no finite positive record room");
-        colourwars::UiTextDropShadow record("independent-count-record", L"BEST COVER 62.5% / 2147483647 PLAYED", geometry.record_font, Vector2F::ZERO, app.render_resources(), main.art.ink, clear, shadow);
-        const RectangleF raw_record = RectangleF::union_of(record.text_bounds_at(Vector2F::ZERO, 1.0f), record.text_bounds_at(shadow, 1.0f));
+        colourwars::UiTextDropShadow record("independent-count-record", L"BEST COVER 62.5% / 2147483647 PLAYED", geometry.record_font, Vector2F::zero, app.render_resources(), main.art.ink, clear, shadow);
+        const RectangleF raw_record = RectangleF::union_of(record.text_bounds_at(Vector2F::zero, 1.0f), record.text_bounds_at(shadow, 1.0f));
         require(std::isfinite(raw_record.width) && raw_record.width > 0.0f, "Independent count record has no finite positive measured width");
         const float record_scale = std::min(1.0f, room / raw_record.width); require(std::isfinite(record_scale) && record_scale > 0.0f, "Independent count record fit is not finite and positive");
         if (std::string(name) == "mixed-four") { require(record_scale < 1.0f, "The seeded long practice record did not exercise actual width fitting"); }
@@ -150,9 +150,9 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             record.bounds().y >= live.preview_position.y + live.preview_size.y + style.rule_height, "Independent record fit crossed the navigation gutter or preview");
         std::srand(9143); const int next_random = std::rand(); std::srand(9143); const Frame actual = main_menu_frame(app);
         require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random, "Frozen Stage count drawing changed pixels or match RNG");
-        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), pane);
-        Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0); list.set_viewport(pane); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
+        Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0); list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); sheet->draw(list, sheet->resolve_sprite_frame(style.fill_frame), camera.visible_rectangle(pane), style.scrim_colour);
         const RectangleF card = stage_count_surface_reference(list, *app.render_resources(), captured, hint, status);
         require(card.contains(hint.bounds()) && hint.bounds().width <= budget + 0.01f && hint.bounds().bottom() <= style.footer_y,

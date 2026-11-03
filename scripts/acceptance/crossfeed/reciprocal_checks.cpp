@@ -90,13 +90,13 @@ namespace crossfeed_acceptance
         void lethal_contact(Services& services, Player& victim)
         {
             const PlayerTeam enemy = victim.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-            const ProjectileSpray projectile(RectangleF(0, 0, 10, 10), Vector2F::ZERO, enemy, 1,
+            const ProjectileSpray projectile(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
                 Colour::white, &services.render,
                 resolve_projectile_strip(services.tuning.projectile(ProjectileType::spray), services.render),
                 &services.tuning.projectile(ProjectileType::spray));
             for (int hit = 0; hit < 1000 && victim.health() > 0.0f; ++hit)
             {
-                victim.on_contact(projectile, Vector2F::ZERO, 0.0f);
+                victim.on_contact(projectile, Vector2F::zero, 0.0f);
             }
             require(victim.state() == PlayerState::alive && victim.health() <= 0.0f,
                 "Crossfeed lethal-contact control did not establish health-zero before the next Player update");

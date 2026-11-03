@@ -24,7 +24,6 @@
 // fade, Reduce effects, enemies, death and the presentation contract.
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -153,7 +152,7 @@ namespace
         result.scale = std::min(result.size.x / hud.player_identity_reference_width,
             result.size.y / hud.reference_height);
         result.visible = level.player(result.viewer).camera().visible_rectangle(
-            Viewport(RectangleF(Vector2F::ZERO, result.size)));
+            Viewport(RectangleF(Vector2F::zero, result.size)));
         return result;
     }
 
@@ -210,7 +209,7 @@ namespace
         const bool on_x = std::abs(std::abs(from.x) - (middle.x - reach)) < 0.05f;
         const bool on_y = std::abs(std::abs(from.y) - (middle.y - reach)) < 0.05f;
         require(on_x || on_y, where + ": marker is not clamped to the pane edge");
-        require(!chip.contains(RectangleF(target, Vector2F::ZERO)), where + ": chip covers its own target");
+        require(!chip.contains(RectangleF(target, Vector2F::zero)), where + ": chip covers its own target");
     }
 
     int checked_markers = 0;

@@ -57,7 +57,7 @@ stage_scan_diagnostics::Layout stage_scan_diagnostics::layout(const StageScanPre
 	const MenuPaperArtPresentation& art, float content_height, const labrador::Font& font,
 	const StageScanMenuText& copy)
 {
-	using namespace mattmath;
+	using namespace labrador;
 	const auto positive = [](float value) { return std::isfinite(value) && value > 0.0f; };
 	if (!positive(look.heading_scale) || !positive(look.text_scale) || !positive(look.gap) ||
 		!positive(look.padding.x) || !positive(look.padding.y) || !positive(look.box_size.x) ||

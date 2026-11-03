@@ -102,7 +102,7 @@ struct RouteTrial
     bool previous_full = false, previous_whole = false, whole_before_commit = false;
     RectangleF target, strip;
     std::array<RectangleF, 3> hud_boxes{};
-    Vector2F aim = Vector2F::ZERO;
+    Vector2F aim = Vector2F::zero;
     float initial_owned = 0.0f, initial_health = 0.0f;
 };
 

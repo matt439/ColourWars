@@ -12,7 +12,7 @@ namespace match_bot_ballistics
 	// Finite local free-flight search against a constant-velocity observation.
 	// Includes the muzzle, inherited motion and normal projectile integration;
 	// cover, bounces and future changes to the target's motion are not predicted.
-	mattmath::Vector2F aim_direction(const WeaponTuning& tool, const ProjectileTuning& projectile,
-		mattmath::Vector2F shooter_velocity, mattmath::Vector2F target_offset,
-		mattmath::Vector2F target_velocity);
+	labrador::Vector2F aim_direction(const WeaponTuning& tool, const ProjectileTuning& projectile,
+		labrador::Vector2F shooter_velocity, labrador::Vector2F target_offset,
+		labrador::Vector2F target_velocity);
 }

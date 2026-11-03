@@ -32,7 +32,7 @@ public:
 	// GameTuning, avoiding a copy of the asset names on each spawn. strip is
 	// the tuning's sheet and animation strip, resolved once by whoever spawns
 	// it (resolve_projectile_strip), so a spawn resolves no name.
-	Projectile(const mattmath::Vector2F& velocity,
+	Projectile(const labrador::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
@@ -42,24 +42,24 @@ public:
 		const ProjectileTuning* tuning,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void update(float dt) override = 0;
 	void draw(labrador::DrawList& draw_list) const override = 0;
-	mattmath::RectangleF bounds() const override = 0;
+	labrador::RectangleF bounds() const override = 0;
 
-	const mattmath::Shape* shape() const override = 0;
+	const labrador::Shape* shape() const override = 0;
 	labrador::CollisionLayer layer() const override;
 	labrador::CollisionMask mask() const override;
 	labrador::CollisionTag tag() const override;
 	// A flying shot dies on its first contact with flat cover or an enemy,
 	// marking where cover stopped it.
 	void on_structure_contact(const Structure& other,
-		const mattmath::Vector2F& normal, float penetration) override;
+		const labrador::Vector2F& normal, float penetration) override;
 	void on_player_contact(const Player& other,
-		const mattmath::Vector2F& normal, float penetration) override;
+		const labrador::Vector2F& normal, float penetration) override;
 	bool for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
 
@@ -73,7 +73,7 @@ public:
 
 	// A muzzle can extend through cover even when its owner cannot. Check
 	// the launch volume before Scene defers its first collision sweep.
-	void resolve_launch_obstruction(const mattmath::Vector2F& origin,
+	void resolve_launch_obstruction(const labrador::Vector2F& origin,
 		std::span<labrador::CollisionObject* const> objects);
 	// Resolve this tick's travel (resolve_travel) before the scene dispatches
 	// endpoint contacts in object-list order, once per actual update.
@@ -98,9 +98,9 @@ public:
 	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
 	std::optional<BlockedShotContact> take_blocked_contact();
 protected:
-	virtual void set_rectangle(const mattmath::RectangleF& rectangle) = 0;
+	virtual void set_rectangle(const labrador::RectangleF& rectangle) = 0;
 	void touch(Collider& receiver,
-		const mattmath::Vector2F& normal, float penetration) const override;
+		const labrador::Vector2F& normal, float penetration) const override;
 
 	// A flying shot stops at its first impact along this tick's travel, if
 	// its kind is swept (is_swept). Rollers keep their one-step volume.
@@ -124,7 +124,7 @@ protected:
 	const ProjectileDetails& details() const;
 
 	// Integrator velocity limit shared by all projectile kinds.
-	const mattmath::Vector2F& max_velocity() const;
+	const labrador::Vector2F& max_velocity() const;
 
 	PlayerTeam team() const;
 
@@ -137,7 +137,7 @@ protected:
 	void alter_timer(float time);
 
 	// Return this step's displacement for the subclass to apply.
-	virtual mattmath::Vector2F update_movement(float gravity,
+	virtual labrador::Vector2F update_movement(float gravity,
 		float wind_resistance, float dt);
 private:
 	// Borrowed, never null; the builder requires a valid tuning record.
@@ -152,21 +152,21 @@ private:
 	bool captured_contact_ = false;
 	std::optional<BlockedShotContact> blocked_contact_;
 	bool wet_contact_ = false;
-	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
+	labrador::RectangleF previous_rectangle_ = labrador::RectangleF::zero;
 	// One complete target span consumes each positive actual projectile update.
 	bool moving_contact_ready_ = false;
 	std::vector<HorizontalMotionId> moving_paint_completed_;
 
 
-	void resolve_sweep(const mattmath::RectangleF& start,
-		const mattmath::RectangleF& finish,
+	void resolve_sweep(const labrador::RectangleF& start,
+		const labrador::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch);
-	void resolve_fixed_slab_sweep(const mattmath::RectangleF& start,
-		const mattmath::RectangleF& finish,
+	void resolve_fixed_slab_sweep(const labrador::RectangleF& start,
+		const labrador::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch);
 
-    void resolve_translating_contacts(const mattmath::RectangleF& start,
-        const mattmath::RectangleF& finish,
+    void resolve_translating_contacts(const labrador::RectangleF& start,
+        const labrador::RectangleF& finish,
         std::span<labrador::CollisionObject* const> objects, bool moving_ready);
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
@@ -182,7 +182,7 @@ private:
 class DiffusingProjectile : public Projectile
 {
 public:
-	DiffusingProjectile(const mattmath::Vector2F& velocity,
+	DiffusingProjectile(const labrador::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
@@ -192,7 +192,7 @@ public:
 		const ProjectileTuning* tuning,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 	~DiffusingProjectile() override = default;
@@ -200,18 +200,18 @@ public:
 
 	void update(float dt) override = 0;
 	void draw(labrador::DrawList& draw_list) const override = 0;
-	mattmath::RectangleF bounds() const override = 0;
+	labrador::RectangleF bounds() const override = 0;
 
-	const mattmath::Shape* shape() const override = 0;
+	const labrador::Shape* shape() const override = 0;
 protected:
 	// The sprite follows the collision rectangle's centre, but has its own
 	// authored size. linear_size changes only the sprite; the combined mode
 	// also scales the collision rectangle around that same centre.
-	mattmath::RectangleF sprite_rectangle(
-		const mattmath::RectangleF& collision_rectangle) const;
-	void diffuse_collision_rectangle(mattmath::RectangleF& rectangle) const;
+	labrador::RectangleF sprite_rectangle(
+		const labrador::RectangleF& collision_rectangle) const;
+	void diffuse_collision_rectangle(labrador::RectangleF& rectangle) const;
 private:
 	// Read diffusion settings from the borrowed projectile tuning record.
 	const DiffusionDetails& diffusion_details() const;
-	mattmath::Vector2F calculate_diffusion_scale() const;
+	labrador::Vector2F calculate_diffusion_scale() const;
 };

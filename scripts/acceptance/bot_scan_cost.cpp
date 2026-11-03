@@ -12,7 +12,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using paint_surfaces_acceptance::require;
     using Clock = std::chrono::steady_clock;
 

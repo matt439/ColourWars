@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/collision_object_type.h"
+#include "game/carried/removed_members.h"
 #include "scripts/acceptance/press_tower/fixtures.h"
 #include <algorithm>
 #include <limits>
@@ -35,7 +36,7 @@ namespace press_tower_acceptance
                 right = std::max(right, point.x + size.x);
                 bottom = std::max(bottom, point.y + size.y);
             }
-            return RectangleF::from_top_left_bottom_right({ left, top }, { right, bottom });
+            return colourwars::from_top_left_bottom_right({ left, top }, { right, bottom });
         }
 
         float gap_between(const RectangleF& a, const RectangleF& b)
@@ -125,11 +126,11 @@ namespace press_tower_acceptance
             const float interval = s.tuning.weapon(type).details.shoot_interval;
             const int hold = std::max(1, static_cast<int>(std::ceil(interval / dt)) + 1);
             // Team A overlooks the west home: down, through west, to up.
-            const float base = team_a ? PI / 2.0f : -PI / 2.0f;
+            const float base = team_a ? pi / 2.0f : -pi / 2.0f;
             const int steps = static_cast<int>(std::lround(180.0f / step_degrees));
             for (int step = 0; step <= steps; ++step)
             {
-                const float angle = base + (team_a ? 1.0f : -1.0f) * step * step_degrees * PI / 180.0f;
+                const float angle = base + (team_a ? 1.0f : -1.0f) * step * step_degrees * pi / 180.0f;
                 for (int tick = 0; tick < hold; ++tick)
                 {
                     PlayerInputData actions = aimed(angle);
