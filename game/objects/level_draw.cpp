@@ -140,7 +140,10 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		// The weapon stops updating while its player is dead, which would
 		// freeze the blink mid-phase until the respawn refill.
 		player->state() == PlayerState::alive && player->primary_weapon().low_paint(),
-		player->primary_weapon().low_paint_elapsed(), !this->practice());
+		player->primary_weapon().low_paint_elapsed(),
+		// The stage title's card sits over the top of the window, where the
+		// clock is; the clock is frozen until GO, so it waits for the card to go.
+		!this->practice() && this->stage_entry_bounds().width <= 0.0f);
 
 	if (player->showing_debug())
 	{

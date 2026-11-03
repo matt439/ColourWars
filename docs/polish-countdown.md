@@ -92,7 +92,9 @@ dark ink. No new atlas or authoring tool is needed.
 The header appears only during the frozen start countdown: after a full/quick
 story opening, after either kind of intro skip, and directly for solo practice
 or an opening-off match. It clears at GO while the existing GO signal finishes
-its one-second beat. It adds no story elements to solo practice. Pause and
+its one-second beat. The header covers the top of the window where each pane's
+clock sits, so the clock stays hidden while the header shows (2026-11-03) and
+appears at GO. It adds no story elements to solo practice. Pause and
 nonpositive updates retain the frozen header. Reduce effects retains the same
 static information. Match timing, input release and sound cues are unchanged.
 
