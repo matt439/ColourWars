@@ -5,7 +5,6 @@
 namespace bot_navigation_acceptance
 {
     using namespace labrador;
-    using namespace mattmath;
     using paint_surfaces_acceptance::require;
 
     // The bot seed srand(41731) gave before HYG#39: the round seed is now the

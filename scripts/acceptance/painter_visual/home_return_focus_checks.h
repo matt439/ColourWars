@@ -91,12 +91,12 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto pixel = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
-        sheet->draw(list, pixel, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), look.home_background_colour);
+        sheet->draw(list, pixel, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), look.home_background_colour);
         const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
         setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         // Only the focused action has a card; Play is not pinned (POL#37).
@@ -146,7 +146,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         {
             save(actual, output / (stem + ".ppm"));
             const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
             save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(panel)), 0), output / (stem + "-detail.ppm"));
         }
         records << name << ',' << actual.width << ',' << actual.height << ',' << (pad ? 3 : input_slots::keyboard_and_mouse) << ',' << selected << ",true\n";

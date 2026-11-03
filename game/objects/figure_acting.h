@@ -29,14 +29,14 @@ public:
         labrador::RenderResources* render_resources);
 
     // `glance` is where the pupils go within the eyes, -1..1 on each axis.
-    void draw_eyes(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
-        bool facing_right, const mattmath::Vector2F& glance) const;
+    void draw_eyes(labrador::DrawList& draw_list, const labrador::RectangleF& figure,
+        bool facing_right, const labrador::Vector2F& glance) const;
     // The same, for eyes the match's person drew elsewhere (FigurePerson).
-    void draw_eyes(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
-        bool facing_right, const mattmath::Vector2F& glance,
+    void draw_eyes(labrador::DrawList& draw_list, const labrador::RectangleF& figure,
+        bool facing_right, const labrador::Vector2F& glance,
         const std::vector<RespawnStroke>& strokes) const;
     // A drop running down beside the head; `time` loops it.
-    void draw_sweat(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
+    void draw_sweat(labrador::DrawList& draw_list, const labrador::RectangleF& figure,
         bool facing_right, float time) const;
 
 private:

@@ -1,6 +1,16 @@
 # Hidden-window resize activation request (ENG#23)
 
-This prepared report remains **unfiled**. `sanitized-request.md` is the small
+**Closed 2026-11-03, never filed.** Engine `42bc478`, released in `v0.3.0`,
+answered it before filing: `Window::resize_client` now passes
+`SWP_NOACTIVATE`. The probes' activation guard was deleted at that pin bump
+([report 23](../engine-reports.md#23-resizing-a-hidden-window-activates-it--42bc478)).
+This folder is kept as the record of what was prepared. Its recipe was written
+against `v0.2.0` (it links `MattMath.lib`, since renamed `LabradorMath.lib`) and
+is not maintained, and it was not rebuilt against `v0.3.0`, where the example
+would be expected to observe no activation request (an inconclusive result by
+the contract below).
+
+The rest of this page is as written before the answer. This prepared report remained **unfiled**. `sanitized-request.md` is the small
 request; `hidden_resize_exhibit.cpp` is its synthetic native example.
 
 The example constructs the real Labrador `Window` and requests an 800x600

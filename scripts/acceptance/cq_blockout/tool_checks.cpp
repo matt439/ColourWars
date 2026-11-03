@@ -19,7 +19,7 @@ namespace cq_blockout_acceptance
                 Run run(s, standing_on(s, main, centre), team, type);
                 run.settle();
                 const float initial_ammo = run.player->weapon_ammo();
-                const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+                const float angle = right ? pi / 3.0f : 2.0f * pi / 3.0f;
                 // A short paid painting push uses the actual main scoring
                 // surface. Flying shots are measured separately from launch
                 // obstruction/contact paint; neither is fabricated contact.
@@ -58,7 +58,7 @@ namespace cq_blockout_acceptance
                 // falling blob off the floor before it reaches the baffle.
                 // The three other tools use the level firing line.
                 const float forward_angle = type == WeaponType::bucket ? -0.2f : 0.0f;
-                const float angle = right ? forward_angle : PI - forward_angle;
+                const float angle = right ? forward_angle : pi - forward_angle;
                 run.tick(aimed(angle));
                 const Vector2F nozzle = run.player->primary_weapon().nozzle_pos();
                 const Vector2F half = s.tuning.projectile(s.tuning.weapon(type).details.proj_type).

@@ -4,7 +4,6 @@
 #include <array>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

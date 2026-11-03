@@ -42,7 +42,7 @@ public:
         const TeamColour& team_colours,
         const PaintableFaces& faces,
         const labrador::Colour& colour = labrador::Colour::white,
-        const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+        const labrador::Vector2F& origin = labrador::Vector2F::zero,
         labrador::SpriteFlip flip = labrador::SpriteFlip::none,
         float layer_depth = 0.0f,
         std::unique_ptr<const TerrainMaterial> material = nullptr,
@@ -51,7 +51,7 @@ public:
     HorizontalMotionId motion_id() const;
     HorizontalMotionState motion_state() const;
     HorizontalMotionStep collision_step() const;
-    mattmath::Vector2F translation() const;
+    labrador::Vector2F translation() const;
     // +1 right (a lift down), -1 left (a lift up) or 0 still, from the paint
     // held now; 0 for a cycle.
     int drive_heading() const;
@@ -59,17 +59,17 @@ public:
     // clocks. Drawing and zero steps never turn new paint into claimed motion.
     FerryCueState cue_state() const;
     // World-space hanging plaque; empty for cycles and uncued objects.
-    mattmath::RectangleF cue_bounds() const;
+    labrador::RectangleF cue_bounds() const;
     void append_anchor_paint_surfaces(std::vector<PaintSurfaceSample>& samples) const;
 
     void draw(labrador::DrawList& draw_list) const override;
     void draw_miniature(labrador::DrawList& draw_list) const override;
-    mattmath::RectangleF bounds() const override;
-    mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
-    const mattmath::Shape* shape() const override;
+    labrador::RectangleF bounds() const override;
+    labrador::RectangleF cull_bounds(float units_per_pixel) const override;
+    const labrador::Shape* shape() const override;
     // Paint lands in the rest frame: the splash is shifted back by the pose.
     void on_projectile_contact(const Projectile& other,
-        const mattmath::Vector2F& normal, float penetration) override;
+        const labrador::Vector2F& normal, float penetration) override;
     PlayerTeam top_paint_team(float world_x) const override;
     std::vector<PaintRunoffVisual> runoff_visuals() const override;
     void append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
@@ -93,12 +93,12 @@ private:
     // Accepted relative-sweep geometry stays local; it is never re-gated by
     // a final-world narrow phase or reconstructed from a rounded world copy.
     void paint_projectile_at(const Projectile& source,
-        const mattmath::RectangleF& anchor_rectangle);
-    static const mattmath::RectangleF& checked_anchor(const HorizontalMotionSpec& spec,
+        const labrador::RectangleF& anchor_rectangle);
+    static const labrador::RectangleF& checked_anchor(const HorizontalMotionSpec& spec,
         CollisionObjectType collision_type);
 
     HorizontalMotion motion_;
-    mattmath::RectangleF world_rectangle_ = mattmath::RectangleF::ZERO;
+    labrador::RectangleF world_rectangle_ = labrador::RectangleF::zero;
     HorizontalMotionStep collision_step_;
     HorizontalMotionId motion_id_ = 0;
     const FerryDirectionPresentation* cue_ = nullptr;
@@ -108,6 +108,6 @@ private:
     int committed_heading_ = 0;
     int movement_heading_ = 0;
     FerryMotionCue motion_cue_ = FerryMotionCue::unstepped;
-    mattmath::RectangleF anchor_cue_bounds() const;
+    labrador::RectangleF anchor_cue_bounds() const;
     void draw_direction(labrador::DrawList& draw_list) const;
 };

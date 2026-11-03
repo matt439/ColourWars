@@ -51,9 +51,9 @@ namespace menu_text_acceptance
         const auto& copy = shipped.menu_text().pad_buttons;
         const auto& look = shipped.controls_settings();
         const auto help_font = world.render.resolve_sprite_font(look.help_font);
-        const mattmath::RectangleF help_bounds(look.controls_position, look.controls_size);
+        const labrador::RectangleF help_bounds(look.controls_position, look.controls_size);
         MenuStyle style = shipped.menu(); style.item_font = look.item_font;
-        const mattmath::Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
+        const labrador::Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
             look.art.shadow_offset - look.layout.position.x - look.layout.spacing.x,
             look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
         const std::array<const std::wstring*, 6> rows{ &copy.jump, &copy.jump_alternate, &copy.shoot,
@@ -64,9 +64,9 @@ namespace menu_text_acceptance
         for (size_t index = 0; index < rows.size(); ++index)
         {
             require(&copy.row(index) == rows[index], "Pad Buttons row order changed");
-            const mattmath::Vector2F position = look.layout.position +
-                mattmath::Vector2F(0.0f, look.layout.spacing.y * static_cast<float>(index + 1));
-            OptionRow row("pad_buttons", copy.row(index), position, position + mattmath::Vector2F(look.layout.spacing.x, 0.0f),
+            const labrador::Vector2F position = look.layout.position +
+                labrador::Vector2F(0.0f, look.layout.spacing.y * static_cast<float>(index + 1));
+            OptionRow row("pad_buttons", copy.row(index), position, position + labrador::Vector2F(look.layout.spacing.x, 0.0f),
                 style, look.art.ink, &world.render, {}, &look.art, value_limit);
             for (PadControl control : values)
             {

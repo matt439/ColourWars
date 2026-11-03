@@ -16,12 +16,12 @@ namespace debug_overlay
 #if COLOURWARS_DEV_TOOLS
 	void draw_pane(labrador::DrawList& list, const LevelOverlays& overlays,
 		const labrador::Scene& scene, const labrador::Scene::View& view,
-		const Player& player, const mattmath::RectangleF& camera_bounds,
+		const Player& player, const labrador::RectangleF& camera_bounds,
 		const labrador::SpriteSheet& sheet, labrador::SpriteSheet::frame_handle fill);
 #else
 	inline void draw_pane(labrador::DrawList&, const LevelOverlays&,
 		const labrador::Scene&, const labrador::Scene::View&,
-		const Player&, const mattmath::RectangleF&,
+		const Player&, const labrador::RectangleF&,
 		const labrador::SpriteSheet&, labrador::SpriteSheet::frame_handle)
 	{
 	}

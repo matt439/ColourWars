@@ -5,7 +5,7 @@
 #include <cmath>
 #include <stdexcept>
 
-using namespace mattmath;
+using namespace labrador;
 
 horizontal_motion_contract::Spec contract_spec(const HorizontalMotionSpec& spec)
 {

@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_jet.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 ProjectileJet::ProjectileJet(const RectangleF& rectangle,

@@ -5,7 +5,6 @@
 #include "game/config/presentation/presentation_match.h"
 #include <array>
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -35,7 +34,7 @@ TeamGateStructurePaintable::TeamGateStructurePaintable(const std::string& sheet_
     StructurePaintable(sheet_name, frame_name, rectangle, std::make_unique<RectangleF>(rectangle),
         render_resources, audio_resources, preferences, paint,
         CollisionObjectType::structure_paintable, team_colours, faces, paint_obstacles,
-        colour, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f, std::move(material), paint_polygons),
+        colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f, std::move(material), paint_polygons),
     open_share_(checked_share(paint)), paint_thickness_(paint->thickness),
     cue_(cue), team_colours_(team_colours)
 {
@@ -96,12 +95,12 @@ bool TeamGateStructurePaintable::held_open() const
 
 RectangleF TeamGateStructurePaintable::permission_bounds() const
 {
-    if (this->cue_ == nullptr) { return RectangleF::ZERO; }
+    if (this->cue_ == nullptr) { return RectangleF::zero; }
     const RectangleF& body = this->rectangle();
     const float inset = std::max(this->cue_->inset, this->paint_thickness_);
     const float width = body.width - inset * 2.0f;
     const float height = body.height - inset * 2.0f;
-    if (!(width > 0.0f && height > 0.0f)) { return RectangleF::ZERO; }
+    if (!(width > 0.0f && height > 0.0f)) { return RectangleF::zero; }
     const float scale = std::min({ 1.0f, width / this->cue_->size.x,
         height / this->cue_->size.y });
     const Vector2F size = this->cue_->size * scale;

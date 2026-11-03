@@ -9,7 +9,6 @@
 #include <algorithm>
 
 using namespace labrador;
-using namespace mattmath;
 
 ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
 	SettingsPanelPage(context, player)

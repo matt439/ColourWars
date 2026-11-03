@@ -127,7 +127,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         for (size_t seat = 0; seat < teams.size(); ++seat)
@@ -284,7 +284,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (const auto* names : { &look.team_select_frames, &look.team_select_selected_frames })
         {
             const auto& sprite = shipped->sprite_frame(shipped->resolve_sprite_frame((*names)[choice]));
-            require(sprite.source_rectangle().width == 64 && sprite.source_rectangle().height == 64 && sprite.origin() == Vector2F::ZERO,
+            require(sprite.source_rectangle().width == 64 && sprite.source_rectangle().height == 64 && sprite.origin() == Vector2F::zero,
                 "The nonzero-origin oracle needs the shipped 64 square zero-pivot Team frames");
             frames.add((*names)[choice], SpriteFrame(sprite.source_rectangle(), pivot));
         }
@@ -402,7 +402,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
     RectangleF evidence(position(2, 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.spacing.y + look.team_select.size.y));
     evidence.inflate(Vector2F(2.0f)); const auto viewport = app.viewport_manager()->fullscreen_viewport();
-    const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
     camera.calculate_view_rectangle(evidence); const RectangleI crop = countdown_crop_bounds(evidence);
     // Fixed A/B choices and P1-only readiness are specified independently of
     // FocusGroup. Only the two literal tints vary in this oracle.

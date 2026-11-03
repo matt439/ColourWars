@@ -14,7 +14,7 @@ public:
         labrador::RenderResources* render_resources);
 
     // `opacity` below 1 fades the whole badge (a teammate marker fading in).
-    void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& rectangle,
+    void draw(labrador::DrawList& draw_list, const labrador::RectangleF& rectangle,
         int roster_index, float opacity = 1.0f) const;
     static std::wstring label(int roster_index);
 

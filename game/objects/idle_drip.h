@@ -18,7 +18,7 @@ class IdleDrip final : public labrador::GameObject, public labrador::TextureObje
 public:
     struct Drop
     {
-        mattmath::Vector2F position;
+        labrador::Vector2F position;
         float age = 0.0f;
         bool operator==(const Drop&) const = default;
     };
@@ -30,15 +30,15 @@ public:
     // Scene's ordinary update precedes final player contacts. Level calls
     // advance exactly once afterwards, including for eliminated players.
     void update(float) override {}
-    void advance(bool settled, const mattmath::Vector2F& nozzle, float rotation,
+    void advance(bool settled, const labrador::Vector2F& nozzle, float rotation,
         float dt, std::span<labrador::CollisionObject* const> terrain);
     void clear();
     void draw(labrador::DrawList& list) const override;
-    mattmath::RectangleF bounds() const override;
+    labrador::RectangleF bounds() const override;
     bool attached() const;
     float bead_age() const;
     float interval_remaining() const;
-    mattmath::RectangleF bead_rectangle() const;
+    labrador::RectangleF bead_rectangle() const;
     std::span<const Drop> drops() const;
 
 private:
@@ -49,14 +49,14 @@ private:
     float interval_ = 0.0f;
     float bead_age_ = -1.0f;
     bool was_settled_ = false;
-    mattmath::Vector2F attachment_;
+    labrador::Vector2F attachment_;
     std::array<Drop, 4> drops_{};
     size_t count_ = 0;
 
     float next_interval();
-    mattmath::RectangleF drop_rectangle(const Drop& drop) const;
-    bool touches(const mattmath::RectangleF& rectangle,
+    labrador::RectangleF drop_rectangle(const Drop& drop) const;
+    bool touches(const labrador::RectangleF& rectangle,
         std::span<labrador::CollisionObject* const> terrain) const;
     void draw_bead(labrador::DrawList& list,
-        const mattmath::RectangleF& rectangle) const;
+        const labrador::RectangleF& rectangle) const;
 };

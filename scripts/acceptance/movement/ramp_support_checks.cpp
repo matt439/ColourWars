@@ -164,7 +164,7 @@ namespace movement_acceptance
                 observe_walk(course, travel, context);
             }
             check(course.player->move_state() == PlayerMoveState::on_ground &&
-                course.player->velocity() == Vector2F::ZERO &&
+                course.player->velocity() == Vector2F::zero &&
                 std::fabs(course.player->rectangle().bottom()) <= tolerance,
                 context + " did not recover to rest on the far floor");
         }
@@ -201,7 +201,7 @@ namespace movement_acceptance
                         check(supported(*course->player), label + " lost its grounded support");
                     }
                     check(furthest_corner > 410.0f &&
-                        course->player->velocity() == Vector2F::ZERO,
+                        course->player->velocity() == Vector2F::zero,
                         label + " did not advance into a blocked uphill step");
                     // Reversing away must remain a walk, rather than requiring
                     // a jump or placement reset to escape a ceiling/ramp wedge.
@@ -262,7 +262,7 @@ namespace movement_acceptance
                     crest->player->place_at({ crest_x, crest_y - suite.tuning.player().size.y });
                     for (int tick = 0; tick < 8; ++tick) { crest->tick(); clear(*crest, crest_label); }
                     check(crest->player->move_state() == PlayerMoveState::on_ground &&
-                        crest->player->velocity() == Vector2F::ZERO &&
+                        crest->player->velocity() == Vector2F::zero &&
                         crest->player->rectangle().x == crest_x &&
                         std::fabs(crest->player->rectangle().bottom() - crest_y) <= tolerance,
                         crest_label + " did not settle at rest on the deck endpoint");
@@ -336,7 +336,7 @@ namespace movement_acceptance
                 place_on_approach(*reset, suite, right, 400.0f, label + " placement reset");
                 reset->player->place_at({ 0.0f, -suite.tuning.player().size.y });
                 check(reset->player->move_state() == PlayerMoveState::in_air &&
-                    reset->player->velocity() == Vector2F::ZERO,
+                    reset->player->velocity() == Vector2F::zero,
                     label + " placement retained ramp movement state");
                 reset->tick(input(false, false, 1.0f));
                 clear(*reset, label + " placement reset");
@@ -355,7 +355,7 @@ namespace movement_acceptance
                 check(reset->player->state() == PlayerState::alive &&
                     reset->player->move_state() == PlayerMoveState::in_air &&
                     reset->player->rectangle() == reset->player->spawn_rectangle() &&
-                    reset->player->velocity() == Vector2F::ZERO,
+                    reset->player->velocity() == Vector2F::zero,
                     label + " forced respawn retained prior ramp support");
                 reset->tick();
                 clear(*reset, label + " respawn reset");

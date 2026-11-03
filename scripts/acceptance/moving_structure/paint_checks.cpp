@@ -5,7 +5,7 @@ namespace moving_structure_acceptance
 {
     namespace
     {
-        mattmath::RectangleF sample_box(const PaintSurfaceSample& sample)
+        labrador::RectangleF sample_box(const PaintSurfaceSample& sample)
         {
             return { sample.corners[0].x, sample.corners[0].y,
                 sample.corners[2].x - sample.corners[0].x,
@@ -57,7 +57,7 @@ namespace moving_structure_acceptance
                 require(!candidates.empty(), "A requested actual moving scoring face is missing");
                 const auto tile = sample_box(candidates[candidates.size() / 2]);
                 const auto center = tile.center();
-                const mattmath::RectangleF local(center.x - 0.25f, center.y - 0.25f, 0.5f, 0.5f);
+                const labrador::RectangleF local(center.x - 0.25f, center.y - 0.25f, 0.5f, 0.5f);
                 auto actual = local; actual.offset(moving->translation());
                 for (const auto& capture : { std::pair{PlayerTeam::a, 5}, std::pair{PlayerTeam::a, 6},
                     std::pair{PlayerTeam::b, 7} })

@@ -3,7 +3,6 @@
 #include "game/input/input_slots.h"
 #include "game/objects/stick_response.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
@@ -81,7 +80,7 @@ SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot)
 
 	// Apply a radial deadzone, then retain only the non-zero aim direction.
 	const Vector2F aim = response.aim;
-	result.shoot_direction_requested = aim != Vector2F::ZERO;
+	result.shoot_direction_requested = aim != Vector2F::zero;
 	if (result.shoot_direction_requested)
 	{
 		result.shoot_direction = aim.normalized();

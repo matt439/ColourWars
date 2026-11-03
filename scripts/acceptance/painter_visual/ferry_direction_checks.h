@@ -83,9 +83,9 @@ void ferry_direction_paint(Application& app, TranslatingStructurePaintable& ferr
     if (half) { splash.x = ferry.bounds().center().x + 0.25f; splash.width = ferry.bounds().right() + 24.0f - splash.x; }
     const ProjectileTuning& paint = tuning.projectile(ProjectileType::spray);
     splash.offset(paint.details.col_rect_size / 2.0f);
-    const ProjectileSpray shot(splash, Vector2F::ZERO, team, team == PlayerTeam::a ? 0 : 1, Colour::white,
+    const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 0 : 1, Colour::white,
         app.render_resources(), resolve_projectile_strip(paint, *app.render_resources()), &paint);
-    ferry.on_contact(shot, Vector2F::ZERO, 0.0f); ferry.update(10.0f);
+    ferry.on_contact(shot, Vector2F::zero, 0.0f); ferry.update(10.0f);
 }
 
 void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
@@ -119,7 +119,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const LevelLoadedInfo& right_info = *levels.get("turbulence_ferry_trial");
     const auto& stage_look = presentation.main_menu().stage_select;
     const RectangleF preview_box(stage_look.preview_position, stage_look.preview_size);
-    const Camera menu_camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+    const Camera menu_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
     const Viewport miniature_pane(menu_camera.calculate_view_rectangle(preview_box));
     const Camera miniature_camera = Camera::frame(right_info.zoom_out_finish_bounds_rectangle(), miniature_pane);
     constexpr std::array<const char*, 7> names{ "unpainted", "a-moving", "late-b", "b-moving", "b-stop", "tie", "a-stop" };
@@ -250,7 +250,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto preview_frame = [&]()
     {
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); preview.draw(list); ++reads; return read(renderer);
     };
     const Frame miniature = preview_frame(); require(miniature.pixels == preview_frame().pixels, "Ferry StagePreview redraw changed pixels");

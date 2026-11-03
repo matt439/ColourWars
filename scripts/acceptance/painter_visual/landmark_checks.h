@@ -76,9 +76,9 @@ LandmarkWorld landmark_world(Application& app, const LevelLoadedInfo& info, cons
                 RectangleF splash = object->shape()->bounding_box(); splash.inflate(32.0f);
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = surfaces % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::ZERO, team, surfaces % 2 == 0 ? 3 : 1,
+                const ProjectileSpray shot(splash, Vector2F::zero, team, surfaces % 2 == 0 ? 3 : 1,
                     colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-                painted->on_contact(shot, Vector2F::ZERO, 0.0f); painted->update(10.0f);
+                painted->on_contact(shot, Vector2F::zero, 0.0f); painted->update(10.0f);
             }
             const PaintTotal paint = painted->paint_total(); total += paint.total; owned += paint.team_a + paint.team_b; ++surfaces;
         }
@@ -266,7 +266,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
             const auto draw_preview = [&]
             {
                 ++rendered; Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-                list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point); preview.draw(list); return read(renderer);
+                list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point); preview.draw(list); return read(renderer);
             };
             std::srand(5021); const int expected_random = std::rand(); std::srand(5021); const Frame actual = draw_preview();
             require(actual.pixels == expected.pixels && actual.pixels == draw_preview().pixels && std::rand() == expected_random,
@@ -327,7 +327,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
     for (size_t prop = 0; prop < sources.size(); ++prop)
     {
         const SpriteFrame& frame = sheet->sprite_frame(sheet->resolve_sprite_frame(landmark_names[prop])); sources[prop] = frame.source_rectangle();
-        require(frame.origin() == Vector2F::ZERO && sources[prop].width == 256 && sources[prop].height == (prop == 0 ? 320 : 160), "Landmark atlas changed native frame size/origin");
+        require(frame.origin() == Vector2F::zero && sources[prop].width == 256 && sources[prop].height == (prop == 0 ? 320 : 160), "Landmark atlas changed native frame size/origin");
     }
     std::ofstream records(output / "landmarks.csv"), extra(output / "landmark-integrations.csv");
     records << "stage,palette,panes,width,height,framing,heavy_owned_fraction,clean_visible_pot,clean_visible_tape,heavy_visible_pot,heavy_visible_tape,paint_changed_pixels,atlas_and_cull_match,frozen_state_rng\n";

@@ -122,7 +122,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
         RectangleF(450.0f, 633.0f, 900.0f, 45.0f), RectangleF(360.0f, 870.0f, 1200.0f, 81.0f) };
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
     };
@@ -135,16 +135,16 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
             std::array<std::string, 3>{ original.menu().heading_font, original.results_menu().contribution_font,
                 original.menu().detail_font } :
             std::array<std::string, 3>{ style.heading_font, look.contribution_font, style.detail_font };
-        colourwars::UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::ZERO,
-            app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO);
+        colourwars::UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::zero,
+            app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
         heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
         colourwars::UiTextDropShadow contribution("independent-results-contribution", words[1], fonts[1], look.contribution_position,
-            app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
-        colourwars::UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::ZERO,
-            app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !proceed_visible);
+            app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
+        colourwars::UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::zero,
+            app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !proceed_visible);
         prompt.set_position({ (menu_consts::DESIGN_RESOLUTION.x - prompt.bounds().width) / 2.0f, look.proceed_y });
-        colourwars::UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::ZERO,
-            app.render_resources(), look.art.ink, Colour(), Vector2F::ZERO, !details_visible);
+        colourwars::UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::zero,
+            app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
         const float fill_right = (menu_consts::DESIGN_RESOLUTION.x + look.fill_box_size.x) / 2.0f;
         record_line.set_position({ fill_right - record_line.bounds().width, look.record_y });
         metrics.bounds = { heading.bounds(), contribution.bounds(), prompt.bounds() };
@@ -160,7 +160,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
             "Authored Results contribution heading lost strict clearance from the unchanged record or next roster row");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);

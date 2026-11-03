@@ -1,5 +1,5 @@
 #include "game/pch.h"
-// Carried from Labrador v0.2.0, which removes this type on master (730dd99,
+// Carried from Labrador v0.2.0; v0.3.0 removes this type (730dd99,
 // "A game that used one should copy the class ... into its own source").
 // Shape unchanged; it lives in colourwars:: so it can never be ambiguous with
 // an engine type. See docs/review/engine-reports.md, HYG#25.
@@ -7,9 +7,8 @@
 
 #include <algorithm>
 
-using namespace mattmath;
-
 using namespace labrador;
+
 
 namespace colourwars
 {
@@ -115,7 +114,7 @@ namespace colourwars
 		// left_edge/right_edge and top_edge/bottom_edge from them and assumes
 		// the first of each pair is the smaller.
 		//
-		// mattmath::clamp cannot express this. With a floor above the ceiling
+		// labrador::clamp cannot express this. With a floor above the ceiling
 		// it returns the floor for a value below the floor and the ceiling for
 		// anything else, so which bound wins depends on the value. At 1280x720
 		// two-player - the default resolution, and what an unparseable save

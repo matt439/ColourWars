@@ -34,7 +34,7 @@ namespace
 		const WeaponTuning& tool = tuning.weapon(weapon.type());
 		const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
 		return match_bot_ballistics::horizontal_reach(tool, projectile) +
-			mattmath::Vector2F::distance(weapon.nozzle_pos(), player.center()) +
+			labrador::Vector2F::distance(weapon.nozzle_pos(), player.center()) +
 			projectile.details.col_rect_size.x * 0.5f + tuning.player().size.x * 0.5f;
 	}
 

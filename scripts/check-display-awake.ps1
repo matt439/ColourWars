@@ -54,14 +54,14 @@ try {
         if(@($members|Where-Object{$_ -match '(^|[\\/])(main|display_awake|rumble_xinput)\.cpp\.obj$'}).Count -ne 0){throw 'The game library carries the entrypoint or a platform adapter'}
         $result.library_partition=[ordered]@{linked_game_library=[ordered]@{path=$gameLibrary;sha256=(Get-FileHash $gameLibrary).Hash;member_count=$members.Count};entrypoint='game/main.cpp is built only into ColourWars.exe';display_request_adapter_omission=[ordered]@{path=$platform;sha256=(Get-FileHash $platform).Hash;source='game/display_awake.cpp';source_sha256=(Get-FileHash (Join-Path $repo 'game/display_awake.cpp')).Hash};motor_adapter_omission=[ordered]@{path=$motors;sha256=(Get-FileHash $motors).Hash;source='game/input/rumble_xinput.cpp';replacement='recording default factory; no native motor call'}}
         $installed=Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET;$dep=if($debug){Join-Path $installed 'debug/lib'}else{Join-Path $installed 'lib'}
-        $libraries=@((Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),(Join-Path $build 'external/labrador/engine/math/MattMath.lib'),(Join-Path $dep 'DirectXTK.lib'),(Join-Path $dep 'xaudio2_9redist.lib'))
+        $libraries=@((Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),(Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),(Join-Path $dep 'DirectXTK.lib'),(Join-Path $dep 'xaudio2_9redist.lib'))
         $source=Join-Path $PSScriptRoot 'acceptance/display_awake_lifecycle.cpp';$exe=Join-Path $run 'display_awake_lifecycle.exe';$rsp=Join-Path $run 'compile.rsp'
         $sourcePaths=@('game/display_awake.h','game/display_awake.cpp','game/input/rumble_sink.h','game/input/rumble_xinput.cpp','game/states/game_states.h','game/states/game_states.cpp','scripts/acceptance/display_awake_lifecycle.cpp','scripts/acceptance/painter_visual/rumble_sink_fixture.h','scripts/check-display-awake.ps1')
         $result.source_hashes=@(foreach($path in $sourcePaths){[ordered]@{path=$path;sha256=(Get-FileHash (Join-Path $repo $path)).Hash}})
         $result.library_hashes=@(foreach($path in $libraries){[ordered]@{path=$path;sha256=(Get-FileHash $path).Hash}})
         $contentPaths=@('manifest.json','tuning.json','presentation.json','levels/movement_course.json')
         $result.content_hashes=@(foreach($path in $contentPaths){[ordered]@{path=$path;sha256=(Get-FileHash (Join-Path $game $path)).Hash}})
-        $arguments=@('/nologo','/EHsc','/std:c++20','/W4','/WX','/permissive-','/DDIRECTX_TOOLKIT_IMPORT','/DUSING_XAUDIO2_REDIST','/DUSING_XINPUT','/DUNICODE','/D_UNICODE','/external:W0')
+        $arguments=@('/nologo','/EHsc','/std:c++20','/W4','/WX','/permissive-','/utf-8','/DDIRECTX_TOOLKIT_IMPORT','/DUSING_XAUDIO2_REDIST','/DUSING_XINPUT','/DUNICODE','/D_UNICODE','/external:W0')
         if($debug){$arguments+='/MDd'}else{$arguments+=@('/MD','/DNDEBUG')}
         foreach($include in @($repo,(Join-Path $repo 'external/labrador'),(Join-Path $build 'generated'))){$arguments+='/I'+(Quote-LiteralPath $include)}
         foreach($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),(Join-Path $installed 'include/directxtk'),(Join-Path $installed 'include/xaudio2redist'),(Join-Path $installed 'include'))){$arguments+='/external:I'+(Quote-LiteralPath $include)}

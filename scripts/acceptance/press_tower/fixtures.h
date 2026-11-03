@@ -28,7 +28,6 @@
 namespace press_tower_acceptance
 {
     using namespace labrador;
-    using namespace mattmath;
 
     inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(
         StepTimer::SecondsToTicks(1.0 / 60.0)));

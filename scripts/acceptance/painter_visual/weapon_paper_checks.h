@@ -111,11 +111,11 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         require(inside.contains(title.bounds()) && title.bounds().bottom() <= rows.front().y, "Independent Weapon heading escapes paper or overlaps rows");
         for (size_t i = 1; i < rows.size(); ++i) { require(rows[i - 1].bottom() <= rows[i].y, "Independent Weapon rows overlap"); }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* fill_sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto fill = fill_sheet->resolve_sprite_frame(style.fill_frame);
         fill_sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture surround("independent-weapon-surround", style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour); surround.draw(list);
+        const UiTexture surround("independent-weapon-surround", style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour); surround.draw(list);
         setup_paper_reference(list, *app.render_resources(), style, art, paper, RectangleF());
         const TeamColour palette = opened_palette == TeamColourPair::random ? TeamColour(Colour::white, Colour::white) : snapshot.team_palette().fixed_pair(opened_palette).colours;
         for (size_t i = 0; i < choices.size(); ++i)
@@ -209,7 +209,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         tick(0.0f); tick(-0.5f); require(moving.pixels == frame().pixels, "Nonpositive time advanced Weapon paper motion");
         play.reduce_effects = true; compare("reduced-immediate", original); play.reduce_effects = false; require(moving.pixels == frame().pixels, "Reduced drawing consumed Weapon choice motion");
         tick(motion.focus_duration * 0.4f); compare("choice-middle", original, L"Weapon Select", { motion.selection_inset_fraction * 0.36f, motion.selection_inset_fraction * 0.36f, 0, 0 }, true); tick(settled); const Frame resting = compare("choice-rest", original, L"Weapon Select", {}, true);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
         for (int player = 0; player < 4; ++player)
         {
             RectangleF box(original.menu().layout.position + Vector2F(original.main_menu().weapon_select.spacing.x * 2.0f, original.main_menu().weapon_select.spacing.y * static_cast<float>(player + 2)), original.main_menu().weapon_select.size); box.inflate(-1.0f);
@@ -259,7 +259,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         std::wstring words = L"paint"; for (int i = 1; i < 22; ++i) { words += L" paint"; }
         const FontHandle font = app.render_resources()->resolve_sprite_font(look.weapon_description_font);
         require(app.render_resources()->measure_text(font, words).x > 1920.0f - look.weapon_description_x_offset, "The wrapping fixture would fit the paper unwrapped");
-        const std::wstring lines = text_wrap::wrap(*app.render_resources(), font, words, look.weapon_description_max_width);
+        const std::wstring lines = app.render_resources()->wrap_text(font, words, look.weapon_description_max_width);
         require(std::count(lines.begin(), lines.end(), L'\n') == 1, "The wrapping fixture no longer wraps to two lines");
         look.weapon_descriptions[3] = words; presentation = wrapped; StateContext wrap_stack;
         wrap_stack.push(std::make_unique<MainMenuWeaponSelect>(&context));

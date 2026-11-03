@@ -7,7 +7,6 @@
 #include <limits>
 #include <stdexcept>
 
-using namespace mattmath;
 using namespace labrador;
 
 float TranslatedAirbrushShadow::checked_left(const TranslatingStructurePaintable& source,

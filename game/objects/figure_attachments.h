@@ -29,7 +29,7 @@ public:
     }
 
     // Arms and hands while no tool is held; the sleeves take the team colour.
-    void draw_rest_arms(labrador::DrawList& list, const mattmath::RectangleF& figure,
+    void draw_rest_arms(labrador::DrawList& list, const labrador::RectangleF& figure,
         bool facing_right, const labrador::Colour& team) const
     {
         if (look_ == nullptr) { return; }
@@ -37,14 +37,14 @@ public:
     }
 
     // The sleeves alone while a tool is held, over the roots of the live arms.
-    void draw_sleeves(labrador::DrawList& list, const mattmath::RectangleF& figure,
+    void draw_sleeves(labrador::DrawList& list, const labrador::RectangleF& figure,
         bool facing_right, const labrador::Colour& team) const
     {
         if (look_ == nullptr) { return; }
         this->draw_layers(list, sleeves_, figure, facing_right, team);
     }
 
-    void draw_blink(labrador::DrawList& list, const mattmath::RectangleF& figure,
+    void draw_blink(labrador::DrawList& list, const labrador::RectangleF& figure,
         bool facing_right) const
     {
         if (look_ == nullptr) { return; }
@@ -52,8 +52,8 @@ public:
     }
 
     // The same, over eyes the match's person drew elsewhere (FigurePerson).
-    void draw_blink(labrador::DrawList& list, const mattmath::RectangleF& figure,
-        bool facing_right, const std::array<mattmath::RectangleF, 2>& eyes) const
+    void draw_blink(labrador::DrawList& list, const labrador::RectangleF& figure,
+        bool facing_right, const std::array<labrador::RectangleF, 2>& eyes) const
     {
         if (look_ == nullptr || !look_->quiet.enabled) { return; }
         for (const auto& eye : eyes)
@@ -62,18 +62,18 @@ public:
             // The eye paint-out follows the same posed canvas as the face.
             auto local = eye;
             if (!facing_right) { local.x = look_->canvas_size.x - local.right(); }
-            const mattmath::Vector2F scale(figure.width / look_->canvas_size.x,
+            const labrador::Vector2F scale(figure.width / look_->canvas_size.x,
                 figure.height / look_->canvas_size.y);
-            const mattmath::RectangleF target(figure.x + local.x * scale.x,
+            const labrador::RectangleF target(figure.x + local.x * scale.x,
                 figure.y + local.y * scale.y, local.width * scale.x, local.height * scale.y);
             this->fill(list, target, premultiplied(look_->quiet.face_colour));
             const float lid = look_->quiet.eyelid_height * scale.y;
-            this->fill(list, mattmath::RectangleF(target.x,
+            this->fill(list, labrador::RectangleF(target.x,
                 target.y + (target.height - lid) / 2.0f, target.width, lid), premultiplied(look_->arm_colour));
         }
     }
 
-    void draw_arms(labrador::DrawList& list, const mattmath::RectangleF& figure,
+    void draw_arms(labrador::DrawList& list, const labrador::RectangleF& figure,
         bool facing_right, const Weapon& weapon) const
     {
         if (look_ == nullptr) { return; }
@@ -90,7 +90,7 @@ public:
 
     // Hands are drawn after the tool, so the grip reads as held, not pasted
     // over the forearm. Both are centred on the same points the arms reach.
-    void draw_hands(labrador::DrawList& list, const mattmath::RectangleF& figure,
+    void draw_hands(labrador::DrawList& list, const labrador::RectangleF& figure,
         const Weapon& weapon) const
     {
         if (look_ == nullptr) { return; }
@@ -99,14 +99,14 @@ public:
         const float edge = look_->hand_edge * scale;
         for (const auto& hand : this->hands(weapon))
         {
-            this->fill(list, mattmath::RectangleF(hand - mattmath::Vector2F(size / 2.0f),
-                mattmath::Vector2F(size)), premultiplied(look_->arm_colour));
-            this->fill(list, mattmath::RectangleF(hand - mattmath::Vector2F(size / 2.0f - edge),
-                mattmath::Vector2F(size - edge * 2.0f)), premultiplied(look_->hand_colour));
+            this->fill(list, labrador::RectangleF(hand - labrador::Vector2F(size / 2.0f),
+                labrador::Vector2F(size)), premultiplied(look_->arm_colour));
+            this->fill(list, labrador::RectangleF(hand - labrador::Vector2F(size / 2.0f - edge),
+                labrador::Vector2F(size - edge * 2.0f)), premultiplied(look_->hand_colour));
         }
     }
 
-    mattmath::RectangleF bounds(const mattmath::RectangleF& figure, bool facing_right,
+    labrador::RectangleF bounds(const labrador::RectangleF& figure, bool facing_right,
         const Weapon* held_weapon) const
     {
         if (look_ == nullptr || held_weapon == nullptr) { return figure; }
@@ -120,9 +120,9 @@ public:
             for (const auto& point : { shoulders[arm], hands[arm],
                 this->elbow(shoulders[arm], hands[arm], figure) })
             {
-                result = mattmath::RectangleF::union_of(result,
-                    mattmath::RectangleF(point - mattmath::Vector2F(radius),
-                        mattmath::Vector2F(radius * 2.0f)));
+                result = labrador::RectangleF::union_of(result,
+                    labrador::RectangleF(point - labrador::Vector2F(radius),
+                        labrador::Vector2F(radius * 2.0f)));
             }
         }
         return result;
@@ -142,52 +142,52 @@ private:
 
     void draw_layers(labrador::DrawList& list,
         const std::array<labrador::SpriteSheet::frame_handle, 2>& layers,
-        const mattmath::RectangleF& figure, bool facing_right, const labrador::Colour& team) const
+        const labrador::RectangleF& figure, bool facing_right, const labrador::Colour& team) const
     {
         const auto flip = facing_right ? labrador::SpriteFlip::none : labrador::SpriteFlip::horizontal;
-        this->art_sheet()->draw(list, layers[1], figure, team, 0.0f, mattmath::Vector2F::ZERO, flip);
+        this->art_sheet()->draw(list, layers[1], figure, team, 0.0f, labrador::Vector2F::zero, flip);
         this->art_sheet()->draw(list, layers[0], figure, labrador::Colour::white,
-            0.0f, mattmath::Vector2F::ZERO, flip);
+            0.0f, labrador::Vector2F::zero, flip);
     }
 
-    float scale(const mattmath::RectangleF& figure) const
+    float scale(const labrador::RectangleF& figure) const
     {
         return std::min(figure.width / look_->canvas_size.x,
             figure.height / look_->canvas_size.y);
     }
 
-    mattmath::Vector2F figure_point(const mattmath::RectangleF& figure,
-        bool facing_right, mattmath::Vector2F point) const
+    labrador::Vector2F figure_point(const labrador::RectangleF& figure,
+        bool facing_right, labrador::Vector2F point) const
     {
         if (!facing_right) { point.x = look_->canvas_size.x - point.x; }
-        return figure.position() + mattmath::Vector2F(point.x * figure.width / look_->canvas_size.x,
+        return figure.position() + labrador::Vector2F(point.x * figure.width / look_->canvas_size.x,
             point.y * figure.height / look_->canvas_size.y);
     }
 
-    std::array<mattmath::Vector2F, 2> shoulders(const mattmath::RectangleF& figure,
+    std::array<labrador::Vector2F, 2> shoulders(const labrador::RectangleF& figure,
         bool facing_right) const
     {
         return { this->figure_point(figure, facing_right, look_->rear_shoulder),
             this->figure_point(figure, facing_right, look_->front_shoulder) };
     }
 
-    std::array<mattmath::Vector2F, 2> hands(const Weapon& weapon) const
+    std::array<labrador::Vector2F, 2> hands(const Weapon& weapon) const
     {
         const auto& grip = look_->grips.at(static_cast<size_t>(weapon.type()));
         const float rotation = weapon.rotation();
-        const bool flip = rotation > mattmath::PI_OVER_2 || rotation < -mattmath::PI_OVER_2;
-        const auto point = [&](mattmath::Vector2F local)
+        const bool flip = rotation > labrador::pi_over_2 || rotation < -labrador::pi_over_2;
+        const auto point = [&](labrador::Vector2F local)
         {
             if (flip) { local.y = -local.y; }
-            return weapon.draw_pos() + mattmath::Vector2F::rotate_vector(local, rotation);
+            return weapon.draw_pos() + labrador::Vector2F::rotate_vector(local, rotation);
         };
         return { point(grip.rear), point(grip.front) };
     }
 
-    mattmath::Vector2F elbow(const mattmath::Vector2F& shoulder,
-        const mattmath::Vector2F& hand, const mattmath::RectangleF& figure) const
+    labrador::Vector2F elbow(const labrador::Vector2F& shoulder,
+        const labrador::Vector2F& hand, const labrador::RectangleF& figure) const
     {
         return (shoulder + hand) / 2.0f +
-            mattmath::Vector2F(0.0f, look_->elbow_drop * this->scale(figure));
+            labrador::Vector2F(0.0f, look_->elbow_drop * this->scale(figure));
     }
 };

@@ -11,9 +11,9 @@ public:
         renderer.set_view_count(1);
         DrawList list = renderer.view(0);
         list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        this->canvas_.draw(list, RectangleF(Vector2F::ZERO,
+        this->canvas_.draw(list, RectangleF(Vector2F::zero,
             this->app_.resolution_manager()->resolution_vec()));
     }
 private:
@@ -176,7 +176,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto assert_focus = [&](const Frame& baseline, const RectangleF& expected)

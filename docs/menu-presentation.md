@@ -463,14 +463,18 @@ remains point-filtered and lettering linear-filtered.
 Descriptions wrap to the required `main_menu.weapon_description.max_width`,
 shipped as `920`, which must be finite and positive. The page draws them with
 `WrappedTextDropShadow` ([`game/states/wrapped_text_drop_shadow.h`](../game/states/wrapped_text_drop_shadow.h)),
-a `UiTextDropShadow` that passes every string through `text_wrap::wrap`
-([`game/config/text_wrap.h`](../game/config/text_wrap.h)) in its own font and scale. The wrap
-is greedy and measured with the engine's `measure_text`; it only adds breaks at
-spaces, keeps every authored `\n`, and never splits a word. Every shipped
+a `UiTextDropShadow` that passes every string through the engine's
+`RenderResources::wrap_text` (`Font::wrap`, engine `v0.3.0`) in its own font, at
+its width divided by its scale. The wrap is greedy and measured as `measure_text`
+measures; it only adds breaks at spaces, keeps every authored `\n`, and never
+splits a word. At a break the last space before the overflow becomes the line
+break and any other spaces stay, so repeated, leading or trailing spaces can
+start or end a line; shipped descriptions are single-spaced and have none. Every shipped
 description's widest line (`859` for the Mister) is inside the width, so each
 draws exactly as authored and no pixel moved when wrapping was turned on.
 Startup refuses a description holding a single word wider than the width,
-naming the key and the word; the paper containment above still bounds the
+naming the key and the word (`text_wrap::check_fits`,
+[`game/config/text_wrap.h`](../game/config/text_wrap.h)); the paper containment above still bounds the
 wrapped block. Wrapping is opt-in per widget: every other menu text keeps its
 authored breaks and width-only scale fitting. `scripts/acceptance/text_wrap.cpp`
 pins the breaks, and the Weapon paper probe opens the real page with a

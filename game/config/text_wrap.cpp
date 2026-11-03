@@ -36,66 +36,6 @@ namespace
 		}
 	}
 
-	void wrap_line(const labrador::RenderResources& render,
-		labrador::FontHandle font, std::wstring_view line, float max_width,
-		float scale, std::wstring& output)
-	{
-		std::wstring current;
-		size_t index = 0;
-		while (index < line.size())
-		{
-			const size_t word_start = line.find_first_not_of(L' ', index);
-			if (word_start == std::wstring_view::npos)
-			{
-				// Trailing spaces draw nothing; keep them as authored.
-				current.append(line.substr(index));
-				break;
-			}
-			size_t word_end = line.find(L' ', word_start);
-			if (word_end == std::wstring_view::npos)
-			{
-				word_end = line.size();
-			}
-			std::wstring candidate = current;
-			candidate.append(line.substr(index, word_end - index));
-			if (!current.empty() &&
-				measured_width(render, font, candidate, scale) > max_width)
-			{
-				output.append(current);
-				output.push_back(L'\n');
-				current.assign(line.substr(word_start, word_end - word_start));
-			}
-			else
-			{
-				current = std::move(candidate);
-			}
-			index = word_end;
-		}
-		output.append(current);
-	}
-}
-
-std::wstring text_wrap::wrap(const labrador::RenderResources& render,
-	labrador::FontHandle font, std::wstring_view text, float max_width,
-	float scale)
-{
-	require_width(max_width, "wrap");
-	std::wstring output;
-	output.reserve(text.size());
-	size_t line_start = 0;
-	while (true)
-	{
-		const size_t line_end = text.find(L'\n', line_start);
-		wrap_line(render, font, text.substr(line_start,
-			line_end == std::wstring_view::npos ? std::wstring_view::npos
-				: line_end - line_start), max_width, scale, output);
-		if (line_end == std::wstring_view::npos)
-		{
-			return output;
-		}
-		output.push_back(L'\n');
-		line_start = line_end + 1;
-	}
 }
 
 void text_wrap::check_fits(const labrador::RenderResources& render,

@@ -57,7 +57,7 @@ public:
 	}
 	// Window-pixel rectangles the debug panels must not cover: the opening
 	// cards during the countdown.
-	virtual std::vector<mattmath::RectangleF> debug_screen_obstacles() const = 0;
+	virtual std::vector<labrador::RectangleF> debug_screen_obstacles() const = 0;
 
 protected:
 	DebugMatchView() = default;
@@ -115,7 +115,7 @@ public:
 	virtual void debug_set_player_text(bool showing) = 0;
 	virtual void debug_set_cheats(bool damage_immune, bool infinite_ammo) = 0;
 	// False: no such seat.
-	virtual bool debug_place(int seat, const mattmath::Vector2F& top_left) = 0;
+	virtual bool debug_place(int seat, const labrador::Vector2F& top_left) = 0;
 	virtual bool debug_respawn(int seat) = 0;
 	virtual bool debug_kill(int seat) = 0;
 	// What each seat's HUD says instead of its device ("Bot: paint",

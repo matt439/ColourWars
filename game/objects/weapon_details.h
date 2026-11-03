@@ -37,9 +37,9 @@ struct WeaponLoopSounds
 
 struct WeaponDetails
 {
-	mattmath::Vector2F offset = { 0.0f, 0.0f }; // From player centre to weapon sprite top-left.
-	mattmath::Vector2F size = { 0.0f, 0.0f };
-	mattmath::Vector2F nozzle_offset = { 0.0f, 0.0f }; // From weapon sprite right-centre to nozzle.
+	labrador::Vector2F offset = { 0.0f, 0.0f }; // From player centre to weapon sprite top-left.
+	labrador::Vector2F size = { 0.0f, 0.0f };
+	labrador::Vector2F nozzle_offset = { 0.0f, 0.0f }; // From weapon sprite right-centre to nozzle.
 	float shoot_interval = 0.0f;
 	float starting_vel_length = 1100.0f;
 	float ammo_usage = 0.0f;

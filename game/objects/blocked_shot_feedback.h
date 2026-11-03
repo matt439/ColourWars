@@ -31,8 +31,8 @@ public:
 
     std::span<const Cue> cues() const;
     float repeat_remaining(int owner) const;
-    mattmath::RectangleF bounds() const;
-    mattmath::RectangleF cue_bounds(const Cue& cue) const;
+    labrador::RectangleF bounds() const;
+    labrador::RectangleF cue_bounds(const Cue& cue) const;
 
 private:
     const BlockedShotPresentation* presentation_;
@@ -42,6 +42,6 @@ private:
 
     static size_t owner_index(int owner);
     void draw_block(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& center, const mattmath::Vector2F& size,
+        const labrador::Vector2F& center, const labrador::Vector2F& size,
         float angle, const labrador::Colour& colour, float alpha) const;
 };

@@ -4,7 +4,6 @@
 #include <algorithm>
 
 using namespace labrador;
-using namespace mattmath;
 
 SettingsPanelPage::SettingsPanelPage(MenuContext* context, int opening_slot) :
 	MenuPage(context), opening_slot_(opening_slot)

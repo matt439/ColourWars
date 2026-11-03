@@ -6,7 +6,7 @@
 
 namespace
 {
-    using namespace mattmath;
+    using namespace labrador;
 
     using acceptance::require;
 

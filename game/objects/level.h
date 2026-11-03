@@ -73,7 +73,7 @@ struct MatchBotRamp;
 // Drawn as four edges `width` thick just inside `box`.
 struct CursorMarkerFrame
 {
-	mattmath::RectangleF box;
+	labrador::RectangleF box;
 	float width = 0.0f;
 	labrador::Colour colour;
 };
@@ -161,10 +161,10 @@ public:
 	void start_without_countdown();
 	// The practice Tool row's rebuild (POL#19). Read from the old level: where
 	// the human stands if alive; a dead player has no place and keeps the spawn.
-	std::optional<mattmath::Vector2F> tool_change_place() const;
+	std::optional<labrador::Vector2F> tool_change_place() const;
 	// Called on the rebuilt level before its first update: straight to GO,
 	// with the human back at `place` when there is one.
-	void enter_after_tool_change(const std::optional<mattmath::Vector2F>& place);
+	void enter_after_tool_change(const std::optional<labrador::Vector2F>& place);
 	// Untimed solo practice (POL#19): the level was built with lessons, so its
 	// clock never runs out and the HUD shows no clock. The player leaves
 	// through the pause menu.
@@ -175,7 +175,7 @@ public:
 	int lesson_count() const;
 	const LevelLesson& lesson(int index) const;
 	// The shown lesson's card in window pixels, else none.
-	mattmath::RectangleF lesson_card_bounds() const;
+	labrador::RectangleF lesson_card_bounds() const;
 	// The countdown is over and the players move.
 	bool match_started() const;
 	// The intro is on screen: A, B or Start skips it rather than pausing.
@@ -200,13 +200,13 @@ public:
 	const BotWorld& bot_world() const;
 	// Conservative traversal bounds. A permitted team's open gates are neither
 	// obstacles nor standing supports; none retains all structural bounds.
-	std::vector<mattmath::RectangleF> bot_obstacles(PlayerTeam team = PlayerTeam::none) const;
+	std::vector<labrador::RectangleF> bot_obstacles(PlayerTeam team = PlayerTeam::none) const;
 	std::vector<MatchBotSupport> bot_supports(PlayerTeam team = PlayerTeam::none) const;
 	std::vector<MatchBotRamp> bot_ramps() const;
 	// Projectile cover includes every gate, even one the bot can walk through.
-	bool bot_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const;
+	bool bot_line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const;
 	// Candidate route visibility only; the policy separately sweeps its body.
-	bool bot_traversal_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to, PlayerTeam team) const;
+	bool bot_traversal_line_of_sight(labrador::Vector2F from, labrador::Vector2F to, PlayerTeam team) const;
 	// Cosmetic camera by participant; player(index).camera() remains the stable aim/follow camera.
 	labrador::Camera view_camera(int participant) const;
 	// Null for tools without an idle drip. Index follows player(participant).
@@ -215,14 +215,14 @@ public:
 	bool aim_marker_visible(int participant) const;
 	bool player_identity_visible(int participant) const;
 	float player_identity_emphasis(int participant) const;
-	mattmath::RectangleF player_identity_bounds(int participant) const;
+	labrador::RectangleF player_identity_bounds(int participant) const;
 	// The pane's HUD identity line: seat, team, then the device or bot label
 	// (B1). Empty for an invalid participant.
 	std::wstring_view player_identity_text(int participant) const;
 	// The same badge as seen by the pad in viewer_slot: a bot's badge in a
 	// human pane follows that pane's Reduce effects, not the bot's.
 	float player_identity_emphasis_for(int participant, int viewer_slot) const;
-	mattmath::RectangleF player_identity_bounds_for(int participant, int viewer_slot) const;
+	labrador::RectangleF player_identity_bounds_for(int participant, int viewer_slot) const;
 	// ROAD#18: one marker per living teammate (human or bot) whose body is
 	// outside human pane `view`'s camera, during live play only, in that pane's
 	// HUD pixels and roster order. Empty for an invalid pane. Opacity follows
@@ -236,11 +236,11 @@ public:
 	bool cursor_marker_visible() const;
 	// Where the focused mouse pointer is, in window pixels, or none while the
 	// mouse is unfocused. The shell sets it before each draw; none until then.
-	void set_pointer(std::optional<mattmath::Vector2F> window_point);
+	void set_pointer(std::optional<labrador::Vector2F> window_point);
 	// Its frames (outer ink, paper rim, inner ink) centred on window pixel
 	// `at` in a window `window_height` lines tall, rounded to whole pixels.
 	static std::array<CursorMarkerFrame, 3> cursor_marker_frames(
-		const CursorMarkerPresentation& look, const mattmath::Vector2F& at, float window_height);
+		const CursorMarkerPresentation& look, const labrador::Vector2F& at, float window_height);
 
 	LevelEndInfo level_end_info() const;
 	// Exact scoring tiles in Scene paintable-role order, then per-source tile
@@ -260,7 +260,7 @@ public:
 	// At rest at `top_left`, respawning first if dead; the weapon and the
 	// cameras follow at once, so the move shows even while the clock is
 	// paused. False: no such participant.
-	bool place_player(int participant, const mattmath::Vector2F& top_left);
+	bool place_player(int participant, const labrador::Vector2F& top_left);
 	bool respawn_player(int participant);
 	// Dies on the next world update, at the spawn's redraw. False: no such participant.
 	bool kill_player(int participant);
@@ -272,16 +272,16 @@ public:
 	void set_pad_devices(const std::array<int, input_slots::pad_count>& devices);
 	// The countdown's opening cards in window pixels while they are drawn,
 	// else none: what a developer panel must not cover.
-	std::vector<mattmath::RectangleF> opening_cards() const;
+	std::vector<labrador::RectangleF> opening_cards() const;
 	std::wstring_view stage_entry_name() const;
-	mattmath::RectangleF stage_entry_bounds() const;
-	mattmath::RectangleF stage_entry_text_bounds() const;
+	labrador::RectangleF stage_entry_bounds() const;
+	labrador::RectangleF stage_entry_text_bounds() const;
 	std::wstring_view keyboard_controls_text() const;
-	mattmath::RectangleF keyboard_controls_text_bounds() const;
-	mattmath::RectangleF keyboard_controls_card_bounds() const;
+	labrador::RectangleF keyboard_controls_text_bounds() const;
+	labrador::RectangleF keyboard_controls_card_bounds() const;
 	std::wstring_view gamepad_controls_text() const;
-	mattmath::RectangleF gamepad_controls_text_bounds() const;
-	mattmath::RectangleF gamepad_controls_card_bounds() const;
+	labrador::RectangleF gamepad_controls_text_bounds() const;
+	labrador::RectangleF gamepad_controls_card_bounds() const;
 	// overlay.stations as the scene holds it: one UiText per station, in
 	// LevelLoadedInfo::stations() order, made the first time the overlay is
 	// turned on and only hidden after that. None until then, so none in Release.
@@ -394,22 +394,22 @@ private:
 	float zoom_out_timer_ = 0.0f;
 	float overview_timer_ = 0.0f;
 
-	labrador::Camera zoom_out_camera_ = labrador::Camera::DEFAULT_CAMERA;
+	labrador::Camera zoom_out_camera_ = labrador::Camera::default_camera;
 
 	TeamColour team_colours_ = TeamColour();
 
 	// Borrowed, never null: match durations, countdown presentation and sounds.
 	const GameTuning* tuning_ = nullptr;
 
-	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;
+	labrador::RectangleF camera_bounds_ = labrador::RectangleF::zero;
 
 	// Authored world bounds survive a resize; the cameras are refitted whenever
 	// the actual screen size changes, including during the results overview.
-	mattmath::RectangleF zoom_out_start_bounds_;
-	mattmath::RectangleF zoom_out_finish_bounds_;
-	mattmath::Vector2F layout_size_ = mattmath::Vector2F::ZERO;
-	labrador::Camera zoom_out_start_camera_ = labrador::Camera::DEFAULT_CAMERA;
-	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::DEFAULT_CAMERA;
+	labrador::RectangleF zoom_out_start_bounds_;
+	labrador::RectangleF zoom_out_finish_bounds_;
+	labrador::Vector2F layout_size_ = labrador::Vector2F::zero;
+	labrador::Camera zoom_out_start_camera_ = labrador::Camera::default_camera;
+	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::default_camera;
 
 	LevelState state_ = LevelState::start_countdown;
 

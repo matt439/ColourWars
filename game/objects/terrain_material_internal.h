@@ -12,7 +12,7 @@ namespace
 		const float top = std::max(a.top(), b.top());
 		const float right = std::min(a.right(), b.right());
 		const float bottom = std::min(a.bottom(), b.bottom());
-		if (!(right > left && bottom > top)) { return RectangleF::ZERO; }
+		if (!(right > left && bottom > top)) { return RectangleF::zero; }
 		return RectangleF(left, top, right - left, bottom - top);
 	}
 }

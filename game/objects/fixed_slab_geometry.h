@@ -12,7 +12,7 @@ struct FixedSlabSpec
 {
     // The endpoint with the smaller world X, not the smaller Y. Both top
     // endpoints must remain finite and within +/-65536 on each world axis.
-    mattmath::Vector2F top_left = mattmath::Vector2F::ZERO;
+    labrador::Vector2F top_left = labrador::Vector2F::zero;
     FixedSlabRise rise = FixedSlabRise::right;
 };
 
@@ -22,7 +22,7 @@ struct FixedSlabSweep
     double exit = 1.0;
     // From the slab towards the swept rectangle at entry. Initial overlap
     // instead reports the minimum-translation direction at the initial pose.
-    mattmath::Vector2F normal_to_rectangle = mattmath::Vector2F::ZERO;
+    labrador::Vector2F normal_to_rectangle = labrador::Vector2F::zero;
     bool initially_overlapping = false;
     // Closed SAT also admits pure touching (including a whole step along an
     // edge). Such an interval must not create projectile paint or damage.
@@ -41,30 +41,30 @@ public:
 
     explicit FixedSlabGeometry(const FixedSlabSpec& spec);
     const FixedSlabSpec& spec() const;
-    const mattmath::RectangleRotated& shape() const;
-    mattmath::RectangleF bounds() const;
-    mattmath::Vector2F top_start() const;
-    mattmath::Vector2F top_end() const;
-    mattmath::Segment top() const;
-    mattmath::Vector2F tangent() const;
-    mattmath::Vector2F inward_normal() const;
+    const labrador::RectangleRotated& shape() const;
+    labrador::RectangleF bounds() const;
+    labrador::Vector2F top_start() const;
+    labrador::Vector2F top_end() const;
+    labrador::Segment top() const;
+    labrador::Vector2F tangent() const;
+    labrador::Vector2F inward_normal() const;
     float length() const;
-    mattmath::RectangleF local_rectangle() const;
-    mattmath::Vector2F to_world(const mattmath::Vector2F& local) const;
-    mattmath::Vector2F to_local(const mattmath::Vector2F& world) const;
-    mattmath::Quad world_quad(const mattmath::RectangleF& local) const;
+    labrador::RectangleF local_rectangle() const;
+    labrador::Vector2F to_world(const labrador::Vector2F& local) const;
+    labrador::Vector2F to_local(const labrador::Vector2F& world) const;
+    labrador::Quad world_quad(const labrador::RectangleF& local) const;
     // Preserve the actual rotated footprint: using its inverse AABB would
     // paint tiles outside a diagonal projectile's footprint.
-    mattmath::Quad local_quad(const mattmath::RectangleF& world) const;
+    labrador::Quad local_quad(const labrador::RectangleF& world) const;
 
-    bool overlaps(const mattmath::RectangleF& rectangle) const;
+    bool overlaps(const labrador::RectangleF& rectangle) const;
     // Each of the four rectangle bounds interpolates linearly. This handles
     // the current growing Sprayer/Mister boxes as well as rigid translation.
     // Includes closed endpoint/tangent intervals; consult positive_overlap.
-    std::optional<FixedSlabSweep> sweep(const mattmath::RectangleF& start,
-        const mattmath::RectangleF& finish) const;
+    std::optional<FixedSlabSweep> sweep(const labrador::RectangleF& start,
+        const labrador::RectangleF& finish) const;
 
 private:
     FixedSlabSpec spec_;
-    mattmath::RectangleRotated shape_;
+    labrador::RectangleRotated shape_;
 };

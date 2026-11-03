@@ -78,7 +78,7 @@
             for (int tick = 0; tick < 60; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
             for (int direction = 0; direction < 4; ++direction)
             {
-                const float angle = -3.0f * PI / 4.0f + static_cast<float>(direction) * PI / 2.0f;
+                const float angle = -3.0f * pi / 4.0f + static_cast<float>(direction) * pi / 2.0f;
                 std::array<std::vector<Frame>, 3> ready_rasters;
                 std::array<std::vector<Frame>, 3> recovering_rasters;
                 for (int phase = 0; phase < 3; ++phase)
@@ -169,7 +169,7 @@
                     PlayerInputData aim;
                     aim.connected = true;
                     aim.shoot_direction_requested = true;
-                    aim.shoot_angle = -PI / 4.0f + static_cast<float>(view) * PI / 2.0f;
+                    aim.shoot_angle = -pi / 4.0f + static_cast<float>(view) * pi / 2.0f;
                     aim.shoot_direction = Vector2F::unit_vec_from_angle(aim.shoot_angle);
                     const auto fire = [&](bool held, float elapsed)
                     {

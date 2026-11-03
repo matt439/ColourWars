@@ -3,7 +3,6 @@
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 RespawnRedraw::RespawnRedraw(const RespawnRedrawPresentation* presentation,
     RenderResources* render_resources) :
@@ -92,5 +91,5 @@ void RespawnRedraw::draw_pen(DrawList& draw_list, const RectangleF& figure,
         RectangleF(figure.position() + Vector2F(top_left.x * scale.x, top_left.y * scale.y),
             Vector2F(size.x * scale.x, size.y * scale.y)),
         this->frame(), CrudeDrawing::premultiplied(look.pen_colour),
-        Vector2F::ZERO, SpriteFlip::none, 0.0f);
+        Vector2F::zero, SpriteFlip::none, 0.0f);
 }

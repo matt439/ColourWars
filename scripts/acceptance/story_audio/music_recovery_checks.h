@@ -1,6 +1,6 @@
 #pragma once
 
-// ROAD#36: Labrador's device recovery (engine 2b3b97b, past the pinned v0.2.0)
+// ROAD#36: Labrador's device recovery (engine 2b3b97b, in v0.3.0)
 // stops persistent voices without an event. Stopping each music effect through
 // its own sound bank stands in for that; the recorder has no device to lose.
 // Included after music_mix_checks.h and results_music_checks.h.

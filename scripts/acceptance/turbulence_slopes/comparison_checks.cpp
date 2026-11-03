@@ -8,7 +8,7 @@ namespace turbulence_slopes_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         constexpr std::array<WeaponType, 5> tools{ WeaponType::sprayer, WeaponType::sniper,
             WeaponType::roller, WeaponType::mister, WeaponType::bucket };
         constexpr std::array<const char*, 4> group_names{ "crossover", "lower_bed", "shoe", "slab_local" };

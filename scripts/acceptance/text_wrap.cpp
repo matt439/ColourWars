@@ -19,7 +19,7 @@
 
 using namespace labrador;
 
-// text_wrap and WrappedTextDropShadow against the engine's own measurement,
+// The engine's wrap_text, text_wrap::check_fits and WrappedTextDropShadow,
 // with no device: a monospace stand-in font for exact greedy breaks, and the
 // shipped atlases for the weapon descriptions the game wraps today.
 namespace
@@ -41,7 +41,7 @@ namespace
         std::vector<Glyph> glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, 10, 16), 0.0f, 0.0f, 0.0f });
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, 10, 16), 0.0f, 0.0f, 0.0f });
         }
         render.add_font("wrap_mono", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
     }
@@ -52,45 +52,52 @@ namespace
         require(render.measure_text(mono, L"abcde").x == 50.0f, "The monospace fixture no longer measures 10 per character");
 
         // "aaa bbb ccc" at 70: "aaa bbb" is exactly 70 and fits; "ccc" does not join it.
-        require(text_wrap::wrap(render, mono, L"aaa bbb ccc", 70.0f) == L"aaa bbb\nccc",
+        require(render.wrap_text(mono, L"aaa bbb ccc", 70.0f) == L"aaa bbb\nccc",
             "Greedy wrap did not fill a line to exactly its width or broke at the wrong space");
-        require(text_wrap::wrap(render, mono, L"aaa bbb ccc", 69.0f) == L"aaa\nbbb\nccc",
+        require(render.wrap_text(mono, L"aaa bbb ccc", 69.0f) == L"aaa\nbbb\nccc",
             "Greedy wrap let a line exceed its width by one unit");
-        require(text_wrap::wrap(render, mono, L"aaa bbb ccc", 110.0f) == L"aaa bbb ccc",
+        require(render.wrap_text(mono, L"aaa bbb ccc", 110.0f) == L"aaa bbb ccc",
             "Text that fits was changed");
 
         // Authored breaks are kept and never joined, even with room to spare.
-        require(text_wrap::wrap(render, mono, L"aa\nbb", 1000.0f) == L"aa\nbb",
+        require(render.wrap_text(mono, L"aa\nbb", 1000.0f) == L"aa\nbb",
             "An authored line break was removed");
-        require(text_wrap::wrap(render, mono, L"aaa bbb\nccc ddd eee", 70.0f) == L"aaa bbb\nccc ddd\neee",
+        require(render.wrap_text(mono, L"aaa bbb\nccc ddd eee", 70.0f) == L"aaa bbb\nccc ddd\neee",
             "Wrapping after an authored break did not restart the line");
-        require(text_wrap::wrap(render, mono, L"\n\naa\n", 30.0f) == L"\n\naa\n",
+        require(render.wrap_text(mono, L"\n\naa\n", 30.0f) == L"\n\naa\n",
             "Empty authored lines were not kept");
 
-        // Spaces: the one at a break is dropped, every other one is kept.
-        require(text_wrap::wrap(render, mono, L"  aa  bb", 1000.0f) == L"  aa  bb",
+        // Spaces: the engine turns the last space before the overflow into the
+        // break and keeps every other one (Font::wrap, engine v0.3.0).
+        require(render.wrap_text(mono, L"  aa  bb", 1000.0f) == L"  aa  bb",
             "Leading or repeated spaces in a fitting line changed");
-        require(text_wrap::wrap(render, mono, L"aaa  bbb", 50.0f) == L"aaa\nbbb",
-            "The spaces at a break were not dropped");
-        require(text_wrap::wrap(render, mono, L"aa ", 1000.0f) == L"aa ",
+        require(render.wrap_text(mono, L"aaa  bbb", 50.0f) == L"aaa \nbbb",
+            "A repeated space at a break did not keep all but the breaking one");
+        require(render.wrap_text(mono, L"aaaaa  b", 50.0f) == L"aaaaa\n b",
+            "A run whose first space overflows did not break at that space");
+        require(render.wrap_text(mono, L"aaaaa ", 50.0f) == L"aaaaa\n",
+            "An overflowing trailing space did not become the break");
+        require(render.wrap_text(mono, L" wwwwww", 50.0f) == L"\nwwwwww",
+            "A leading space before an over-long word did not become the break");
+        require(render.wrap_text(mono, L"aa ", 1000.0f) == L"aa ",
             "Trailing spaces changed");
-        require(text_wrap::wrap(render, mono, L"", 10.0f).empty(), "Empty text did not stay empty");
+        require(render.wrap_text(mono, L"", 10.0f).empty(), "Empty text did not stay empty");
 
         // A word wider than the line stays whole on its own line.
-        require(text_wrap::wrap(render, mono, L"a wwwwwwww b", 50.0f) == L"a\nwwwwwwww\nb",
+        require(render.wrap_text(mono, L"a wwwwwwww b", 50.0f) == L"a\nwwwwwwww\nb",
             "An over-long word was split or joined to its neighbours");
 
-        // Scale multiplies every measured width.
-        require(text_wrap::wrap(render, mono, L"aaa bbb ccc", 140.0f, 2.0f) == L"aaa bbb\nccc",
+        // The engine width is unscaled, so a drawn width divides by the scale.
+        require(render.wrap_text(mono, L"aaa bbb ccc", 140.0f / 2.0f) == L"aaa bbb\nccc",
             "The wrap width did not apply at the drawn scale");
-        require(text_wrap::wrap(render, mono, L"aaa bbb ccc", 35.0f, 0.5f) == L"aaa bbb\nccc",
+        require(render.wrap_text(mono, L"aaa bbb ccc", 35.0f / 0.5f) == L"aaa bbb\nccc",
             "The wrap width did not apply at a reduced scale");
 
         for (const float bad : { 0.0f, -1.0f, std::numeric_limits<float>::infinity(),
             std::numeric_limits<float>::quiet_NaN() })
         {
-            require(!thrown([&] { std::ignore = text_wrap::wrap(render, mono, L"a", bad); }).empty(),
-                "wrap accepted a width that is not finite and positive");
+            require(!thrown([&] { std::ignore = render.wrap_text(mono, L"a", bad); }).empty(),
+                "wrap_text accepted a width that is not finite and positive");
         }
     }
 
@@ -164,7 +171,7 @@ namespace
         for (size_t i = 0; i < look.weapon_descriptions.size(); ++i)
         {
             const std::wstring& description = look.weapon_descriptions[i];
-            require(text_wrap::wrap(render, font, description, look.weapon_description_max_width) == description,
+            require(render.wrap_text(font, description, look.weapon_description_max_width) == description,
                 "Wrapping changed shipped weapon description " + std::to_string(i));
             text_wrap::check_fits(render, font, description, look.weapon_description_max_width, 1.0f,
                 "shipped weapon description " + std::to_string(i));
@@ -206,7 +213,7 @@ int main(int argc, char** argv)
         check_fits(render);
         check_widget(render);
         check_shipped(render, content, scratch);
-        std::cout << "PASS text wrap: greedy breaks at the measured width and scale, authored breaks and spaces kept, "
+        std::cout << "PASS text wrap: the engine's greedy breaks at the measured width and scale, authored breaks kept, its space rule pinned, "
             "over-long words whole and refused at load with their key, the wrapping widget rewraps on text and scale, "
             "and every shipped weapon description draws exactly as authored at its width.\n";
         return 0;

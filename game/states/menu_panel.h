@@ -11,7 +11,7 @@ struct PlaySettings;
 class MenuJoinAccent final : public labrador::UiTexture
 {
 public:
-	MenuJoinAccent(const std::string& name, const mattmath::RectangleF& rectangle,
+	MenuJoinAccent(const std::string& name, const labrador::RectangleF& rectangle,
 		labrador::RenderResources* resources, const MenuStyle* style,
 		const MenuFocusMotion* motion, const PlaySettings* settings);
 	void draw(labrador::DrawList& list) const override;
@@ -25,7 +25,7 @@ private:
 class MenuStageAccent final : public labrador::UiTexture
 {
 public:
-	MenuStageAccent(const std::string& name, const mattmath::RectangleF& rectangle,
+	MenuStageAccent(const std::string& name, const labrador::RectangleF& rectangle,
 		labrador::RenderResources* resources, const MenuStyle* style,
 		const MenuFocusMotion* motion, const PlaySettings* settings, float max_inward);
 	void draw(labrador::DrawList& list) const override;
@@ -41,7 +41,7 @@ class MenuChoiceIcon final : public labrador::UiTexture
 {
 public:
 	MenuChoiceIcon(const std::string& name, const std::string& sheet,
-		const std::string& frame, const mattmath::RectangleF& rectangle,
+		const std::string& frame, const labrador::RectangleF& rectangle,
 		labrador::RenderResources* resources, const MenuFocusMotion* motion,
 		const PlaySettings* settings);
 	void set_motion_selected(bool selected);
@@ -57,7 +57,7 @@ class MenuIcon final : public labrador::UiTexture
 {
 public:
 	MenuIcon(const std::string& name, const std::string& frame,
-		const mattmath::RectangleF& rectangle, labrador::RenderResources* resources,
+		const labrador::RectangleF& rectangle, labrador::RenderResources* resources,
 		const labrador::Colour& colour, const MenuStyle* style,
 		const std::string& sheet_name, const std::string& fill_frame,
 		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr,
@@ -67,7 +67,7 @@ public:
 		const std::string& supply_strip = "");
 	void set_paint_colour(const labrador::Colour& colour);
 	// Resting tile and border include the complete optional paper envelope.
-	mattmath::RectangleF artwork_bounds() const;
+	labrador::RectangleF artwork_bounds() const;
 	void draw(labrador::DrawList& list) const override;
 private:
 	const MenuStyle* style_;
@@ -86,16 +86,16 @@ private:
 class MenuPaperArtwork final : public labrador::UiTexture
 {
 public:
-	MenuPaperArtwork(const mattmath::RectangleF& rectangle,
+	MenuPaperArtwork(const labrador::RectangleF& rectangle,
 		labrador::RenderResources* resources, const MenuStyle* style, const MenuPaperArtPresentation* art,
 		const labrador::FocusGroup* focus, const labrador::UiWidget* primary = nullptr,
 		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr,
 		const MenuPaperArtPresentation* geometry = nullptr);
 	void draw(labrador::DrawList& list) const override;
 private:
-	void fill(labrador::DrawList& list, const mattmath::RectangleF& rectangle,
+	void fill(labrador::DrawList& list, const labrador::RectangleF& rectangle,
 		const labrador::Colour& colour) const;
-	void draw_card(labrador::DrawList& list, const mattmath::RectangleF& bounds,
+	void draw_card(labrador::DrawList& list, const labrador::RectangleF& bounds,
 		const labrador::Colour& colour, float press_fraction = 0.0f) const;
 	const MenuPaperArtPresentation* art_;
 	const MenuPaperArtPresentation* geometry_;

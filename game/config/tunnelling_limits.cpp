@@ -11,7 +11,6 @@
 #include <vector>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -89,7 +88,7 @@ namespace
 				player.size, player_speed * seconds_per_step,
 				collision_layer(player_type), collision_mask(player_type) },
 			{ "a rolling projectile", "projectiles.max_velocity.x", "projectiles.max_velocity.y",
-				tuning.projectile(ProjectileType::rolling).details.col_rect_size, Vector2F::ZERO,
+				tuning.projectile(ProjectileType::rolling).details.col_rect_size, Vector2F::zero,
 				collision_layer(roller_type), collision_mask(roller_type) },
 		};
 	}

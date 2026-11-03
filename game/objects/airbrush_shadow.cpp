@@ -5,7 +5,6 @@
 #include <cmath>
 
 using namespace labrador;
-using namespace mattmath;
 
 AirbrushShadow::AirbrushShadow(float left, float right, float top,
 	RenderResources* render_resources) :

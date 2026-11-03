@@ -418,7 +418,7 @@ namespace debug_console_acceptance
 		director.attach_match(match);
 		director.after_level_build(match);
 		require(match.placed.size() == 1 && match.placed[0].first == 0 &&
-			match.placed[0].second == mattmath::Vector2F(4404.0f, 535.0f),
+			match.placed[0].second == labrador::Vector2F(4404.0f, 535.0f),
 			"A goto stored with `stage` applies at that match's first build");
 		match.placed.clear();
 
@@ -453,7 +453,7 @@ namespace debug_console_acceptance
 			log_contains(impl.log(), "respawn: the queued restart respawns every seat anyway",
 				DebugSeverity::error), "respawn is refused while a rebuild is queued");
 		require(director.before_match_update(match, 1.0f / 60.0f) && match.placed.size() == 1 &&
-			match.placed[0].second == mattmath::Vector2F(4404.0f, 535.0f),
+			match.placed[0].second == labrador::Vector2F(4404.0f, 535.0f),
 			"The queued goto applies after the rebuild");
 		match.placed.clear();
 		impl.execute("restart");
@@ -705,27 +705,27 @@ namespace debug_console_acceptance
 		require(stations[10].position == info.team_a_spawns()[0] &&
 			stations[11].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
 
-		struct Surface { std::string name; mattmath::RectangleF rectangle; bool jump_through; };
+		struct Surface { std::string name; labrador::RectangleF rectangle; bool jump_through; };
 		std::vector<Surface> surfaces;
 		const labrador::JsonValue objects = info.collision_objects_json();
 		for (std::size_t index = 0; index < objects.size(); ++index)
 		{
 			const labrador::JsonValue object = objects.at(index);
 			const labrador::JsonValue shape = object.object("rectangle");
-			surfaces.push_back({ object.string("name"), mattmath::RectangleF(shape.number("x"),
+			surfaces.push_back({ object.string("name"), labrador::RectangleF(shape.number("x"),
 				shape.number("y"), shape.number("width"), shape.number("height")),
 				object.string("collision_type") == "STRUCTURE_JUMP_THROUGH" });
 		}
-		const mattmath::Vector2F size = tuning.player().size;
-		const mattmath::RectangleF bounds = info.out_of_bounds_rectangle();
+		const labrador::Vector2F size = tuning.player().size;
+		const labrador::RectangleF bounds = info.out_of_bounds_rectangle();
 		for (std::size_t i = 0; i < 10; ++i)
 		{
-			const mattmath::RectangleF body(stations[i].position, size);
+			const labrador::RectangleF body(stations[i].position, size);
 			require(bounds.contains(body), stations[i].name + " is inside the level");
 			bool supported = false;
 			for (const Surface& surface : surfaces)
 			{
-				const mattmath::RectangleF& r = surface.rectangle;
+				const labrador::RectangleF& r = surface.rectangle;
 				require(surface.jump_through || !r.intersects(body),
 					stations[i].name + " overlaps " + surface.name);
 				const float drop = r.top() - body.bottom();

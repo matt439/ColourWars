@@ -87,7 +87,7 @@ namespace balance_runner
             }
 
             bool has_stage(const std::string& stage) const { return this->stages_.contains(stage); }
-            mattmath::RectangleF arena(const std::string& stage) const
+            labrador::RectangleF arena(const std::string& stage) const
             { return this->levels_.get(stage)->out_of_bounds_rectangle(); }
             const GameTuning& tuning() const { return this->tuning_; }
             std::unique_ptr<Level> build(const Options& options, const std::string& stage, std::uint32_t seed)
@@ -225,7 +225,7 @@ namespace balance_runner
             for (; updates < max_steps; ++updates)
             {
                 std::array<PlayerState, 4> before{};
-                std::array<mattmath::Vector2F, 4> before_centers{};
+                std::array<labrador::Vector2F, 4> before_centers{};
                 std::array<float, 4> before_ammo{};
                 for (int view = 0; view < level->player_count(); ++view)
                 {

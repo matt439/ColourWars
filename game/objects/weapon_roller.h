@@ -14,13 +14,13 @@ public:
 		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
-		const mattmath::Vector2F& player_center,
+		const labrador::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
@@ -42,8 +42,8 @@ private:
 	bool had_ground_support_ = false;
 
 	void update_movement_and_rotation(PlayerInputData input,
-		const mattmath::Vector2F& player_center,
-		const mattmath::Vector2F& player_velocity,
+		const labrador::Vector2F& player_center,
+		const labrador::Vector2F& player_velocity,
 		bool player_facing_right) override;
 
 	// The sleeve takes the team colour only while it is laying paint.

@@ -8,7 +8,7 @@ namespace moving_structure_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         constexpr std::array<WeaponType, 5> tools{ WeaponType::sprayer, WeaponType::sniper,
             WeaponType::roller, WeaponType::mister, WeaponType::bucket };
         HorizontalMotionSpec ferry(float phase = 0.25f)
@@ -506,12 +506,12 @@ namespace moving_structure_acceptance
                 const auto& tuning = f.tuning.projectile(ProjectileType::jet);
                 RectangleF launch = f.players[0]->rectangle(); const auto half = tuning.details.col_rect_size / 2.0f;
                 launch.offset(half.x, half.y);
-                ProjectileJet shot(launch, Vector2F::ZERO, PlayerTeam::b, 6, world.palette.team_b,
+                ProjectileJet shot(launch, Vector2F::zero, PlayerTeam::b, 6, world.palette.team_b,
                     &world.render, resolve_projectile_strip(tuning, world.render), &tuning);
                 // Typed actual damage callback tests immediate release specifically;
                 // moving projectile sweep/provenance are separately tested in their module.
                 for (int hit = 0; f.players[0]->health() > 0.0f && hit < 64; ++hit)
-                { f.players[0]->on_contact(shot, Vector2F::ZERO, 0.0f); }
+                { f.players[0]->on_contact(shot, Vector2F::zero, 0.0f); }
                 require(f.players[0]->state() == PlayerState::alive && f.players[0]->health() <= 0.0f &&
                     f.players[0]->carrier_id() == 0, "Projectile-fatal health kept carrier before state transition");
             }
@@ -575,10 +575,10 @@ namespace moving_structure_acceptance
                 manifold = labrador::narrow_phase(*this->player_.shape(), *this->platform_.shape());
             }
             void draw(labrador::DrawList&) const override {}
-            RectangleF bounds() const override { return RectangleF::ZERO; }
+            RectangleF bounds() const override { return RectangleF::zero; }
             int updates = 0;
-            RectangleF body = RectangleF::ZERO;
-            RectangleF surface = RectangleF::ZERO;
+            RectangleF body = RectangleF::zero;
+            RectangleF surface = RectangleF::zero;
             float descending_speed = 0.0f;
             std::optional<labrador::Manifold> manifold;
         private:

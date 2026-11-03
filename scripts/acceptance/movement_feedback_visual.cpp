@@ -26,7 +26,6 @@
 #undef private
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -276,7 +275,7 @@ namespace
             resize(app, level, size);
             const Vector2F extent = level.players_.front()->camera().visible_rectangle(
                 app.viewport_manager()->player_viewport(0)).size();
-            if (reference_extent == Vector2F::ZERO) { reference_extent = extent; }
+            if (reference_extent == Vector2F::zero) { reference_extent = extent; }
             require((extent - reference_extent).length() < 0.01f,
                 "world framing changed across resolutions");
             const std::string stem = std::to_string(count) + "p-" + phase + "-" +
@@ -481,8 +480,8 @@ namespace
                 const Player& player = *level->players_[index];
                 PlayerInputData& input = inputs.at(static_cast<size_t>(player.player_num()));
                 // Sweep aim through a full turn every 90 ticks.
-                input.shoot_angle = static_cast<float>(tick) * 2.0f * PI / 90.0f;
-                if (index % 2 != 0) { input.shoot_angle = PI - input.shoot_angle; }
+                input.shoot_angle = static_cast<float>(tick) * 2.0f * pi / 90.0f;
+                if (index % 2 != 0) { input.shoot_angle = pi - input.shoot_angle; }
                 input.shoot_angle = std::atan2(std::sin(input.shoot_angle), std::cos(input.shoot_angle));
                 input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
                 input.jump_pressed = false;

@@ -20,7 +20,7 @@ namespace movement_acceptance
         const ProjectileSpray& shot = suite.shot;
         const int fatal_hits = suite.fatal_hits;
         const auto course = [&](float bottom = 0.0f,
-            const Vector2F& velocity = Vector2F::ZERO)
+            const Vector2F& velocity = Vector2F::zero)
         {
             return suite.course(bottom, velocity);
         };
@@ -30,7 +30,7 @@ namespace movement_acceptance
         killed->tick(input(true, true));
         for (int hit = 0; hit < fatal_hits && killed->player->health() > 0; ++hit)
         {
-            killed->player->on_contact(shot, Vector2F::ZERO, 0);
+            killed->player->on_contact(shot, Vector2F::zero, 0);
         }
         require(killed->player->health() <= 0, "damage fixture did not eliminate player");
         const Vector2F death_position = killed->player->rectangle().position();
@@ -94,7 +94,7 @@ namespace movement_acceptance
             WeaponType::mister, WeaponType::bucket, WeaponType::roller })
         {
             Course armed(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
-                0.0f, Vector2F::ZERO, { 0, -120 }, tool);
+                0.0f, Vector2F::zero, { 0, -120 }, tool);
             armed.floor();
             for (int tick = 0; tick < 65; ++tick) { armed.tick(); }
             PlayerInputData fire = input();
@@ -117,7 +117,7 @@ namespace movement_acceptance
                 "firing skipped its recovery frame or failed to finish after release");
         }
         Course cooldown(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
-            0.0f, Vector2F::ZERO, { 0, -120 }, WeaponType::sniper);
+            0.0f, Vector2F::zero, { 0, -120 }, WeaponType::sniper);
         cooldown.floor();
         for (int tick = 0; tick < 65; ++tick) { cooldown.tick(); }
         PlayerInputData hold_fire = input();
@@ -138,7 +138,7 @@ namespace movement_acceptance
         for (const WeaponType tool : { WeaponType::sprayer, WeaponType::roller })
         {
             Course automatic(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
-                0.0f, Vector2F::ZERO, { 0, -120 }, tool);
+                0.0f, Vector2F::zero, { 0, -120 }, tool);
             automatic.floor();
             automatic.tick();
             bool held_second_frame = false;
@@ -192,7 +192,7 @@ namespace movement_acceptance
             WeaponType::mister, WeaponType::bucket, WeaponType::roller })
         {
             Course empty(empty_tank, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
-                0.0f, Vector2F::ZERO, { 0, -120 }, tool);
+                0.0f, Vector2F::zero, { 0, -120 }, tool);
             empty.floor();
             for (int tick = 0; tick < 90; ++tick)
             {
@@ -207,7 +207,7 @@ namespace movement_acceptance
         hurt->floor();
         hurt->tick();
         const float health_before_hit = hurt->player->health();
-        hurt->player->on_contact(shot, Vector2F::ZERO, 0);
+        hurt->player->on_contact(shot, Vector2F::zero, 0);
         require(hurt->player->health() < health_before_hit && hurt->player->health() > 0 &&
             hurt->player->animation_state() == PlayerAnimationState::hurt &&
             hurt->player->action_age() == 0.0f && hurt->player->action_frame() == 0,
@@ -223,7 +223,7 @@ namespace movement_acceptance
         require(hurt_second_frame && hurt->player->animation_state() == PlayerAnimationState::idle,
             "hurt skipped recovery or failed to finish");
         hurt->player->set_damage_immune(true);
-        hurt->player->on_contact(shot, Vector2F::ZERO, 0);
+        hurt->player->on_contact(shot, Vector2F::zero, 0);
         require(hurt->player->animation_state() == PlayerAnimationState::idle,
             "ignored paint damage displayed hurt");
         std::cout << "PASS action events: five paid tools and releases, held cooldown, empty tanks, accepted/ignored hurt\n";
@@ -249,8 +249,8 @@ namespace movement_acceptance
         {
             if (tick == 11)
             {
-                normal_actions.player->on_contact(shot, Vector2F::ZERO, 0);
-                brief_actions.player->on_contact(shot, Vector2F::ZERO, 0);
+                normal_actions.player->on_contact(shot, Vector2F::zero, 0);
+                brief_actions.player->on_contact(shot, Vector2F::zero, 0);
             }
             if (tick == 70)
             {

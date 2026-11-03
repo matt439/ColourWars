@@ -12,7 +12,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using paint_surfaces_acceptance::require;
 
     // The bot seed srand(8301) gave before HYG#39.

@@ -9,7 +9,6 @@
 #include <vector>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 using namespace presentation_validation;
 
@@ -131,7 +130,7 @@ void Presentation::validate_stage_counts(const RenderResources& render, size_t t
 		throw std::runtime_error(this->source_path_ + ": " + hint_key + ": " + error.what());
 	}
 	const Vector2F size = size_of(hint_key, hint, this->menu_.brand_font);
-	const RectangleF raw = RectangleF::union_of(RectangleF(Vector2F::ZERO, size), RectangleF(shadow, size));
+	const RectangleF raw = RectangleF::union_of(RectangleF(Vector2F::zero, size), RectangleF(shadow, size));
 	const float width = stage.briefing.size.x - 2.0f * stage.briefing_padding.x;
 	if (!std::isfinite(width) || width <= 0.0f || !finite_rectangle(raw))
 	{

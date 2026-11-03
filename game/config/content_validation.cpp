@@ -22,9 +22,9 @@ namespace
 		bool any = false;
 		for (size_t index = 0; index < objects.size(); ++index) { any = any || objects.at(index).has("gate"); }
 		if (!any) { return; }
-		const mattmath::Vector2F body = tuning.player().size;
-		std::vector<mattmath::Vector2F> spawns = info.team_a_spawns();
-		for (const mattmath::Vector2F& spawn : info.team_b_spawns()) { spawns.push_back(spawn); }
+		const labrador::Vector2F body = tuning.player().size;
+		std::vector<labrador::Vector2F> spawns = info.team_a_spawns();
+		for (const labrador::Vector2F& spawn : info.team_b_spawns()) { spawns.push_back(spawn); }
 		// The built gates, so either authored rectangle spelling is read once.
 		const auto built = builder.build_collision_objects(objects, TeamColour{});
 		for (size_t index = 0; index < built.size(); ++index)
@@ -32,8 +32,8 @@ namespace
 			const Structure* structure = Collider::of(*built[index]).structure();
 			const TeamGateStructurePaintable* gate = structure != nullptr ? structure->gate() : nullptr;
 			if (gate == nullptr) { continue; }
-			const mattmath::RectangleF bounds = gate->bounds();
-			for (const mattmath::Vector2F& spawn : spawns)
+			const labrador::RectangleF bounds = gate->bounds();
+			for (const labrador::Vector2F& spawn : spawns)
 			{
 				try
 				{
@@ -108,7 +108,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 				}
 			}
 			// The band's frames replace exactly the band's texels.
-			const mattmath::RectangleI& face = sheet->sprite_frame(sheet->resolve_sprite_frame(
+			const labrador::RectangleI& face = sheet->sprite_frame(sheet->resolve_sprite_frame(
 				person.band_frame(slips, player.idle.strip, 0))).source_rectangle();
 			if (static_cast<float>(face.width) != slips.band.width ||
 				static_cast<float>(face.height) != slips.band.height)
@@ -153,7 +153,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 			for (int level = 0; level < supply.frame_count(); ++level)
 			{
 				if (supply.frame_rect(level).size() != idle.source_rectangle().size() ||
-					idle.origin() != mattmath::Vector2F::ZERO)
+					idle.origin() != labrador::Vector2F::zero)
 				{
 					throw std::runtime_error("weapon supply " + name +
 						": levels must retain the body canvas and zero authored origin.");

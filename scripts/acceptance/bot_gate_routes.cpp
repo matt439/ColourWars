@@ -14,7 +14,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace bot_navigation_acceptance;
 
     PlayerTeam other_team(PlayerTeam team)
@@ -212,7 +211,7 @@ namespace
             for (const PlayerTeam shooter : { PlayerTeam::a, PlayerTeam::b })
             {
                 const float before = shooter == PlayerTeam::a ? gate.paint_total().team_a : gate.paint_total().team_b;
-                ProjectileSpray shot(RectangleF(550.0f, 540.0f, 20.0f, 20.0f), Vector2F::ZERO,
+                ProjectileSpray shot(RectangleF(550.0f, 540.0f, 20.0f, 20.0f), Vector2F::zero,
                     shooter, shooter == PlayerTeam::a ? 0 : 1, Colour::white, &world.assets.render,
                     resolve_projectile_strip(tuning, world.assets.render), &tuning);
                 shot.resolve_launch_obstruction(Vector2F(300.0f, 550.0f), std::span<CollisionObject* const>(&target, 1));

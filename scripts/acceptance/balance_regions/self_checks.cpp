@@ -35,8 +35,8 @@ namespace balance_regions
             PaintSurfaceFace face = PaintSurfaceFace::top)
         {
             PaintSurfaceSample result;
-            result.corners = { mattmath::Vector2F(x, y), mattmath::Vector2F(x + width, y),
-                mattmath::Vector2F(x + width, y + height), mattmath::Vector2F(x, y + height) };
+            result.corners = { labrador::Vector2F(x, y), labrador::Vector2F(x + width, y),
+                labrador::Vector2F(x + width, y + height), labrador::Vector2F(x, y + height) };
             result.scored_area = area; result.team = team; result.paint_owner = owner;
             result.source_index = source; result.face = face;
             return result;
@@ -75,7 +75,7 @@ namespace balance_regions
             // A 45-degree rigid quad has geometric area200, versus AABB area400.
             // Its authoritative score20 must split10/10 without being redefined.
             PaintSurfaceSample diamond = rectangle(0, 0, 1, 1, 20, PlayerTeam::a, 5, 0, PaintSurfaceFace::left);
-            diamond.corners = { mattmath::Vector2F(10, 0), mattmath::Vector2F(20, 10), mattmath::Vector2F(10, 20), mattmath::Vector2F(0, 10) };
+            diamond.corners = { labrador::Vector2F(10, 0), labrador::Vector2F(20, 10), labrador::Vector2F(10, 20), labrador::Vector2F(0, 10) };
             Measurement rotated(std::array{ diamond }, roster(), bands());
             require_near(capacity(rotated, 0, PaintSurfaceFace::left), 10); require_near(capacity(rotated, 1, PaintSurfaceFace::left), 10);
             require_near(capacity(rotated, 0), 0); require_near(rotated.sample_totals().total, 20);
@@ -157,7 +157,7 @@ namespace balance_regions
             const auto valid = rectangle(0, 0, 10, 10, 100);
             const auto bad_quad = [&](auto change) { auto bad = valid; change(bad); rejected([&] { Measurement invalid(std::array{ bad }, roster(), bands()); }); };
             bad_quad([](auto& value) { value.corners[2] = value.corners[1]; });
-            bad_quad([](auto& value) { value.corners[2] = mattmath::Vector2F(2, 2); });
+            bad_quad([](auto& value) { value.corners[2] = labrador::Vector2F(2, 2); });
             bad_quad([](auto& value) { std::swap(value.corners[1], value.corners[3]); });
             bad_quad([](auto& value) { std::swap(value.corners[2], value.corners[3]); });
             bad_quad([](auto& value) { value.corners[0].x = std::numeric_limits<float>::quiet_NaN(); });
@@ -184,7 +184,7 @@ namespace balance_regions
             bad_roster([](auto& value) { value[0].tool = "random_primary"; });
             bad_roster([](auto& value) { value.push_back(value[0]); });
             bad_roster([](auto& value) { value.clear(); });
-            rejected([] { (void)stage_partition("press_tower", mattmath::RectangleF(std::numeric_limits<float>::quiet_NaN(), 0, 10, 10)); });
+            rejected([] { (void)stage_partition("press_tower", labrador::RectangleF(std::numeric_limits<float>::quiet_NaN(), 0, 10, 10)); });
         }
         class CommaDecimal final : public std::numpunct<char>
         { protected: char do_decimal_point() const override { return ','; } };
@@ -260,7 +260,7 @@ namespace balance_regions
             const std::array tail{ rectangle(-50, 0, 10, 10, 100) };
             Measurement cross_tail(tail, roster(), cross), press_tail(tail, roster(), press);
             require_near(capacity(cross_tail, 0), 100); require_near(capacity(press_tail, 7), 100);
-            const auto whole = stage_partition("other_stage", mattmath::RectangleF(0, 0, 30, 20));
+            const auto whole = stage_partition("other_stage", labrador::RectangleF(0, 0, 30, 20));
             require(whole.name == "whole_arena" && whole.bands.size() == 1, "Generic stage lost its explicit whole-arena fallback");
             const LevelLoadedInfo yard(labrador::path_to_utf8(content / "levels/turbulence_blockout.json").c_str());
             yard.validate();
@@ -286,8 +286,8 @@ namespace balance_regions
             require_near(capacity(yard_split, 4), 200); require_near(capacity(yard_split, 5), 200);
             // The bands cover the blockout's camera extent exactly; only the
             // out-of-bounds margin outside it is `outside_partition`.
-            const mattmath::RectangleF yard_bounds = yard.out_of_bounds_rectangle();
-            const mattmath::RectangleF yard_camera = yard.camera_bounds_rectangle();
+            const labrador::RectangleF yard_bounds = yard.out_of_bounds_rectangle();
+            const labrador::RectangleF yard_camera = yard.camera_bounds_rectangle();
             require_near(turbulence.bands.front().left, yard_camera.left(), 0);
             require_near(turbulence.bands.back().right, yard_camera.right(), 0);
             // The six trials keep the blockout's bounds, so they resolve to the
@@ -298,8 +298,8 @@ namespace balance_regions
             {
                 const LevelLoadedInfo info(labrador::path_to_utf8(content / "levels" / (std::string(trial) + ".json")).c_str());
                 info.validate();
-                const mattmath::RectangleF bounds = info.out_of_bounds_rectangle();
-                const mattmath::RectangleF camera = info.camera_bounds_rectangle();
+                const labrador::RectangleF bounds = info.out_of_bounds_rectangle();
+                const labrador::RectangleF camera = info.camera_bounds_rectangle();
                 require(bounds.left() == yard_bounds.left() && bounds.right() == yard_bounds.right() &&
                     bounds.top() == yard_bounds.top() && bounds.bottom() == yard_bounds.bottom(),
                     "A Turbulence trial's out-of-bounds rectangle no longer matches the blockout's");

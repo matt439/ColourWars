@@ -53,7 +53,7 @@ namespace movement_course_acceptance
         PlayerInputData actions)
     {
         const Vector2F aim = apply_deadzone(raw, preferences.aim_deadzone());
-        actions.shoot_direction_requested = aim != Vector2F::ZERO;
+        actions.shoot_direction_requested = aim != Vector2F::zero;
         if (actions.shoot_direction_requested)
         {
             actions.shoot_direction = aim.normalized();

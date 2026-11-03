@@ -72,7 +72,7 @@ private:
 	float fill_timer_ = 0.0f;
 	float show_results_timer_ = 0.0f;
 	float fill_time_ratio() const;
-	mattmath::Vector2F calculate_team_b_fill_top_right_position() const;
+	labrador::Vector2F calculate_team_b_fill_top_right_position() const;
 	static int check_for_continue_input(const std::vector<ProcessedMenuInput>& menu_input);
 	void update_fill_box() const;
 	void update_team_a_fill() const;

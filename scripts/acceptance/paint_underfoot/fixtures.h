@@ -86,18 +86,18 @@ namespace paint_underfoot_acceptance
         std::unique_ptr<Weapon> weapon(WeaponType tool, PlayerTeam team = PlayerTeam::a, int owner = 5)
         {
             return WeaponBuilder::build_weapon(&tuning, team, owner, 0, labrador::Colour::white,
-                tool, mattmath::Vector2F::ZERO, &render, &audio, &preferences);
+                tool, labrador::Vector2F::zero, &render, &audio, &preferences);
         }
-        void paint(StructurePaintable& surface, const mattmath::RectangleF& splash,
+        void paint(StructurePaintable& surface, const labrador::RectangleF& splash,
             PlayerTeam team, int owner = -1)
         {
             const auto& projectile = tuning.projectile(ProjectileType::jet);
             auto launch = splash;
             const auto half = projectile.details.col_rect_size / 2.0f;
             launch.offset(half.x, half.y);
-            ProjectileJet shot(launch, mattmath::Vector2F::ZERO, team, owner,
+            ProjectileJet shot(launch, labrador::Vector2F::zero, team, owner,
                 labrador::Colour::white, &render, resolve_projectile_strip(projectile, render), &projectile);
-            surface.on_contact(shot, mattmath::Vector2F::ZERO, 0.0f);
+            surface.on_contact(shot, labrador::Vector2F::zero, 0.0f);
         }
         labrador::RenderResources render;
         labrador::AudioResources audio;
@@ -115,32 +115,32 @@ namespace paint_underfoot_acceptance
         Course(World& resources, PlayerTeam team = PlayerTeam::a, WeaponType tool = WeaponType::sprayer,
             float center_x = 0.0f, float feet_y = 0.0f, int device_slot = -1) : world(resources)
         {
-            const mattmath::RectangleF body(center_x - world.tuning.player().size.x / 2.0f,
+            const labrador::RectangleF body(center_x - world.tuning.player().size.x / 2.0f,
                 feet_y - world.tuning.player().size.y, world.tuning.player().size.x, world.tuning.player().size.y);
             auto primary = world.weapon(tool, team, paint_owners::index(device_slot, 0));
             player = scene.add(std::make_unique<Player>(body, &world.tuning,
                 &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
                 &world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
                 device_slot, team, tool, std::move(primary), WeaponType::none,
-                labrador::Colour::white, labrador::Viewport{}, body.top_left(), mattmath::Vector2F::ZERO,
-                0.0f, mattmath::Vector2F::ZERO, labrador::SpriteFlip::none, 0.0f, 0));
+                labrador::Colour::white, labrador::Viewport{}, body.top_left(), labrador::Vector2F::zero,
+                0.0f, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f, 0));
             scene.end_tick();
         }
-        StructurePaintable& surface(const mattmath::RectangleF& bounds = { -10000, 0, 20000, 100 },
+        StructurePaintable& surface(const labrador::RectangleF& bounds = { -10000, 0, 20000, 100 },
             const PaintableFaces& faces = { false, true, false, false },
-            std::span<const mattmath::RectangleF> obstacles = {},
+            std::span<const labrador::RectangleF> obstacles = {},
             CollisionObjectType type = CollisionObjectType::structure_paintable)
         {
             auto* result = scene.add(std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
-                bounds, std::make_unique<mattmath::RectangleF>(bounds), &world.render, &world.audio,
+                bounds, std::make_unique<labrador::RectangleF>(bounds), &world.render, &world.audio,
                 &world.preferences, &world.tuning.paint(), type,
                 TeamColour{ labrador::Colour::white, labrador::Colour::white }, faces, obstacles));
             scene.end_tick(); return *result;
         }
-        void plain(const mattmath::RectangleF& bounds)
+        void plain(const labrador::RectangleF& bounds)
         {
             scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", bounds,
-                std::make_unique<mattmath::RectangleF>(bounds), &world.render, CollisionObjectType::structure));
+                std::make_unique<labrador::RectangleF>(bounds), &world.render, CollisionObjectType::structure));
             scene.end_tick();
         }
         void begin(const PlayerInputData& actions = input())

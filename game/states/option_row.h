@@ -19,14 +19,14 @@ public:
 	// retain their existing shadow treatment. A zero limit leaves that axis free.
 	OptionRow(const std::string& name,
 		const std::wstring& label,
-		const mattmath::Vector2F& label_position,
-		const mattmath::Vector2F& value_position,
+		const labrador::Vector2F& label_position,
+		const labrador::Vector2F& value_position,
 		const MenuStyle& style,
 		const labrador::Colour& value_colour,
 		labrador::RenderResources* render_resources,
 		Adjust on_adjust,
 		const MenuPaperArtPresentation* paper_art = nullptr,
-		const mattmath::Vector2F& value_limit = mattmath::Vector2F::ZERO);
+		const labrador::Vector2F& value_limit = labrador::Vector2F::zero);
 
 	void set_value(const std::wstring& value);
 	void adjust(labrador::Direction direction) const;
@@ -39,6 +39,6 @@ private:
 	std::unique_ptr<labrador::UiWidget> value_ = nullptr;
 	// Borrowed from value_; both text treatments expose the same text setters.
 	labrador::Text* value_text_ = nullptr;
-	mattmath::Vector2F value_limit_ = mattmath::Vector2F::ZERO;
+	labrador::Vector2F value_limit_ = labrador::Vector2F::zero;
 	Adjust on_adjust_;
 };

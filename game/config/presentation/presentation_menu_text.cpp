@@ -22,7 +22,6 @@
 // MenuResultsText from it: label and stick-readout templates.
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 
 namespace

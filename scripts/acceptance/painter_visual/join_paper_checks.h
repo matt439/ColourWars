@@ -141,13 +141,13 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             "Independent Join heading, final roster row and status overlap");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto fill = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
         const UiTexture background("independent-join-surround", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour);
+            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour);
         background.draw(list); setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         if (responding >= 0 && fraction > 0.0f)
         {

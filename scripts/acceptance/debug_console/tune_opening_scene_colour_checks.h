@@ -19,13 +19,13 @@
 		}
 		MonitorPersona persona;
 		persona.mug = true;
-		persona.coffee_ring = mattmath::Vector2F(0.85f, 0.9f);
-		persona.sticky_notes.push_back({ mattmath::Vector2F(0.015f, 0.12f), 0, 0.1f });
-		persona.stickers.push_back({ mattmath::Vector2F(0.2f, 0.9f), 1, 0.0f });
-		persona.crack = { mattmath::Vector2F(0.004f, 0.6f), mattmath::Vector2F(0.02f, 0.62f) };
+		persona.coffee_ring = labrador::Vector2F(0.85f, 0.9f);
+		persona.sticky_notes.push_back({ labrador::Vector2F(0.015f, 0.12f), 0, 0.1f });
+		persona.stickers.push_back({ labrador::Vector2F(0.2f, 0.9f), 1, 0.0f });
+		persona.crack = { labrador::Vector2F(0.004f, 0.6f), labrador::Vector2F(0.02f, 0.62f) };
 		const Monitor monitor(opening, &resources, persona);
 		const MonitorPersona* const captured_persona = &monitor.persona();
-		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const labrador::RectangleF screen(0, 0, 1280, 720);
 		const auto geometry = [&]
 		{
 			return std::vector<float>{ opening->cursor_art.shadow_offset, opening->cursor_art.click_duration,
@@ -50,7 +50,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator,
 				monitor.glass(screen), monitor.picture(screen), monitor.swatch(screen, 0), monitor.swatch(screen, 1),
 				monitor.empty_slot(screen), monitor.close_button(screen) };
@@ -175,13 +175,13 @@
 		}
 		MonitorPersona persona;
 		persona.mug = true;
-		persona.coffee_ring = mattmath::Vector2F(0.85f, 0.9f);
-		persona.sticky_notes.push_back({ mattmath::Vector2F(0.015f, 0.12f), 0, 0.1f });
-		persona.stickers.push_back({ mattmath::Vector2F(0.2f, 0.9f), 1, 0.0f });
-		persona.crack = { mattmath::Vector2F(0.004f, 0.6f), mattmath::Vector2F(0.02f, 0.62f) };
+		persona.coffee_ring = labrador::Vector2F(0.85f, 0.9f);
+		persona.sticky_notes.push_back({ labrador::Vector2F(0.015f, 0.12f), 0, 0.1f });
+		persona.stickers.push_back({ labrador::Vector2F(0.2f, 0.9f), 1, 0.0f });
+		persona.crack = { labrador::Vector2F(0.004f, 0.6f), labrador::Vector2F(0.02f, 0.62f) };
 		const Monitor monitor(opening, &resources, persona);
 		const MonitorPersona* const captured_persona = &monitor.persona();
-		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const labrador::RectangleF screen(0, 0, 1280, 720);
 		const auto geometry = [&]
 		{
 			return std::vector<float>{ opening->cursor_art.shadow_offset, opening->cursor_art.click_duration,
@@ -206,7 +206,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator,
 				monitor.glass(screen), monitor.picture(screen), monitor.swatch(screen, 0), monitor.swatch(screen, 1),
 				monitor.empty_slot(screen), monitor.close_button(screen) };
@@ -335,13 +335,13 @@
 		}
 		MonitorPersona persona;
 		persona.mug = true;
-		persona.coffee_ring = mattmath::Vector2F(0.85f, 0.9f);
-		persona.sticky_notes.push_back({ mattmath::Vector2F(0.015f, 0.12f), 0, 0.1f });
-		persona.stickers.push_back({ mattmath::Vector2F(0.2f, 0.9f), 1, 0.0f });
-		persona.crack = { mattmath::Vector2F(0.004f, 0.6f), mattmath::Vector2F(0.02f, 0.62f) };
+		persona.coffee_ring = labrador::Vector2F(0.85f, 0.9f);
+		persona.sticky_notes.push_back({ labrador::Vector2F(0.015f, 0.12f), 0, 0.1f });
+		persona.stickers.push_back({ labrador::Vector2F(0.2f, 0.9f), 1, 0.0f });
+		persona.crack = { labrador::Vector2F(0.004f, 0.6f), labrador::Vector2F(0.02f, 0.62f) };
 		const Monitor monitor(opening, &resources, persona);
 		const MonitorPersona* const captured_persona = &monitor.persona();
-		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const labrador::RectangleF screen(0, 0, 1280, 720);
 		const auto geometry = [&]
 		{
 			return std::vector<float>{ opening->cursor_art.shadow_offset, opening->cursor_art.click_duration,
@@ -366,7 +366,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator,
 				monitor.glass(screen), monitor.picture(screen), monitor.swatch(screen, 0), monitor.swatch(screen, 1),
 				monitor.empty_slot(screen), monitor.close_button(screen) };
@@ -495,13 +495,13 @@
 		}
 		MonitorPersona persona;
 		persona.mug = true;
-		persona.coffee_ring = mattmath::Vector2F(0.85f, 0.9f);
-		persona.sticky_notes.push_back({ mattmath::Vector2F(0.015f, 0.12f), 0, 0.1f });
-		persona.stickers.push_back({ mattmath::Vector2F(0.2f, 0.9f), 1, 0.0f });
-		persona.crack = { mattmath::Vector2F(0.004f, 0.6f), mattmath::Vector2F(0.02f, 0.62f) };
+		persona.coffee_ring = labrador::Vector2F(0.85f, 0.9f);
+		persona.sticky_notes.push_back({ labrador::Vector2F(0.015f, 0.12f), 0, 0.1f });
+		persona.stickers.push_back({ labrador::Vector2F(0.2f, 0.9f), 1, 0.0f });
+		persona.crack = { labrador::Vector2F(0.004f, 0.6f), labrador::Vector2F(0.02f, 0.62f) };
 		const Monitor monitor(opening, &resources, persona);
 		const MonitorPersona* const captured_persona = &monitor.persona();
-		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const labrador::RectangleF screen(0, 0, 1280, 720);
 		const auto geometry = [&]
 		{
 			return std::vector<float>{ opening->cursor_art.shadow_offset, opening->cursor_art.click_duration,
@@ -526,7 +526,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 10>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator,
 				monitor.glass(screen), monitor.picture(screen), monitor.swatch(screen, 0), monitor.swatch(screen, 1),
 				monitor.empty_slot(screen), monitor.close_button(screen) };

@@ -245,7 +245,7 @@ try {
         (Join-Path $gameDirectory 'colourwars_rumble_xinput.lib'),
         (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
+        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
         (Join-Path $dependencyLibraries 'xaudio2_9redist.lib')
     )
@@ -258,7 +258,7 @@ try {
     $windowsLibraries = @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib',
         'user32.lib', 'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib',
         'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib', 'Xinput.lib')
-    $common = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-',
+    $common = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8',
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $common += '/MDd' } else { $common += @('/MD', '/DNDEBUG') }

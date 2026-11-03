@@ -79,7 +79,7 @@ namespace
 		require(!input.jump_pressed && input.jump_held && !input.primary_shoot && !input.drop_through,
 			"Counting leaked an action or changed the existing held jump");
 		require(input.connected && input.x_movement == -0.75f && input.shoot_direction_requested &&
-			input.shoot_direction == mattmath::Vector2F(0.6f, 0.8f) && input.shoot_angle == 0.9f,
+			input.shoot_direction == labrador::Vector2F(0.6f, 0.8f) && input.shoot_angle == 0.9f,
 			"Counting changed movement, continuous aim or device identity");
 		require(count.advance(1.0f), "The final sampled tick did not complete");
 		input.jump_pressed = input.primary_shoot = input.drop_through = true;

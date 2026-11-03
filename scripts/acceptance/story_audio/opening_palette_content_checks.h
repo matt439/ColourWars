@@ -6,10 +6,10 @@
 namespace
 {
 	std::unique_ptr<SpriteSheet> make_palette_sheet(int width, int height,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO)
+		const labrador::Vector2F& origin = labrador::Vector2F::zero)
 	{
 		NameTable<SpriteFrame> frames("sprite frame");
-		frames.add("fixture_swatch", SpriteFrame(mattmath::RectangleI(4, 8, width, height), origin));
+		frames.add("fixture_swatch", SpriteFrame(labrador::RectangleI(4, 8, width, height), origin));
 		return std::make_unique<SpriteSheet>(TextureHandle{}, std::move(frames),
 			NameTable<AnimationStrip>("animation strip"));
 	}
@@ -77,13 +77,13 @@ namespace
 			opening["palette_frames"].SetArray();
 			opening["palette_frames"].PushBack(rapidjson::Value("fixture_swatch", json.GetAllocator()), json.GetAllocator());
 		};
-		for (const mattmath::Vector2I size : { mattmath::Vector2I(0, 4), mattmath::Vector2I(-1, 4),
-			mattmath::Vector2I(4, 0), mattmath::Vector2I(4, -1), mattmath::Vector2I(4, 8), mattmath::Vector2I(8, 4) })
+		for (const labrador::Vector2I size : { labrador::Vector2I(0, 4), labrador::Vector2I(-1, 4),
+			labrador::Vector2I(4, 0), labrador::Vector2I(4, -1), labrador::Vector2I(4, 8), labrador::Vector2I(8, 4) })
 		{
 			world.render.add_sprite_sheet("palette_fixture", make_palette_sheet(size.x, size.y));
 			rejected("palette_frames[0]", fixture, true);
 		}
-		for (const mattmath::Vector2F origin : { mattmath::Vector2F(1.0f, 0.0f), mattmath::Vector2F(0.0f, -1.0f) })
+		for (const labrador::Vector2F origin : { labrador::Vector2F(1.0f, 0.0f), labrador::Vector2F(0.0f, -1.0f) })
 		{
 			world.render.add_sprite_sheet("palette_fixture", make_palette_sheet(4, 4, origin));
 			rejected("palette_frames[0]", fixture, true);

@@ -21,14 +21,14 @@ class TeamGateStructurePaintable final : public StructurePaintable
 public:
     TeamGateStructurePaintable(const std::string& sheet_name,
         const std::string& frame_name,
-        const mattmath::RectangleF& rectangle,
+        const labrador::RectangleF& rectangle,
         labrador::RenderResources* render_resources,
         const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
         const PaintTuning* paint,
         const TeamColour& team_colours,
         const PaintableFaces& faces,
-        std::span<const mattmath::RectangleF> paint_obstacles = {},
+        std::span<const labrador::RectangleF> paint_obstacles = {},
         const labrador::Colour& colour = labrador::Colour::white,
         std::unique_ptr<const TerrainMaterial> material = nullptr,
         std::span<const PaintPolygon> paint_polygons = {},
@@ -54,7 +54,7 @@ public:
     void draw_miniature(labrador::DrawList& draw_list) const override;
     // Cosmetic plaque, wholly inside the body and clear of its paint bands.
     // Empty when no cue was supplied or the body has no unpainted interior.
-    mattmath::RectangleF permission_bounds() const;
+    labrador::RectangleF permission_bounds() const;
 
 private:
     PlayerTeam open_for_ = PlayerTeam::none;

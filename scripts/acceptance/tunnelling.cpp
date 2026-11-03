@@ -19,7 +19,6 @@
 #include <rapidjson/writer.h>
 
 using namespace labrador;
-using namespace mattmath;
 
 // The engine's anti-tunnelling bound, evaluated by the game against the real
 // tuning and every shipped stage, and the one place it says "unsafe" and the

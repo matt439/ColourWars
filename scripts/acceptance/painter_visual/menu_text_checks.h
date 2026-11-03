@@ -122,7 +122,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     {
         const MenuStyle& style = snapshot.menu(); const auto& footer = snapshot.prompt_bar();
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         const colourwars::UiTextDropShadow heading_text("reference-heading", heading, style.heading_font,
             style.layout.position, app.render_resources(), stage ? snapshot.main_menu().art.ink : style.heading_colour,
             stage ? Colour(0.0f, 0.0f, 0.0f, 0.0f) : style.shadow_colour,
@@ -131,8 +131,8 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(viewport);
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto fill = sheet->resolve_sprite_frame(style.fill_frame);
@@ -158,7 +158,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
                 look.name_position, app.render_resources(), locked ? presentation.main_menu().stage_select.selected_ink :
                     presentation.main_menu().stage_select.unselected,
                 Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
-            const RectangleF bounds = RectangleF::union_of(stage_name.text_bounds_at(Vector2F::ZERO, 1.0f),
+            const RectangleF bounds = RectangleF::union_of(stage_name.text_bounds_at(Vector2F::zero, 1.0f),
                 stage_name.text_bounds_at(style.item_shadow_offset, 1.0f));
             const float scale = std::min(1.0f, look.preview_size.x / bounds.width);
             stage_name.set_scale(scale); stage_name.set_shadow_scale(scale);
@@ -175,7 +175,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     {
         const Frame actual = frame();
         const TextReference expected = reference(snapshot, heading, prompt, stage, locked);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         for (size_t index = 0; index < expected.bounds.size(); ++index)
         {

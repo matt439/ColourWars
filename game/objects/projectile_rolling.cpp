@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_rolling.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,

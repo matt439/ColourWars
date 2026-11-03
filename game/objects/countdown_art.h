@@ -13,9 +13,9 @@ public:
         labrador::RenderResources* render_resources);
 
     // The complete drawing, including shade and detached ticks, fits bounds.
-    void draw(labrador::DrawList& list, const mattmath::RectangleF& bounds,
+    void draw(labrador::DrawList& list, const labrador::RectangleF& bounds,
         std::wstring_view text, float beat_age, bool reduced_effects) const;
-    void draw_card(labrador::DrawList& list, const mattmath::RectangleF& bounds,
+    void draw_card(labrador::DrawList& list, const labrador::RectangleF& bounds,
         float scale) const;
 
 private:

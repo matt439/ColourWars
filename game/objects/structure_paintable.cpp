@@ -3,7 +3,6 @@
 #include "game/objects/projectile.h"
 #include "game/contracts/paint_face_geometry.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -14,7 +13,7 @@ namespace
 		const float y = std::max(rectangle.top(), limit.top());
 		const float right = std::min(rectangle.right(), limit.right());
 		const float bottom = std::min(rectangle.bottom(), limit.bottom());
-		if (!(right > x && bottom > y)) { return RectangleF::ZERO; }
+		if (!(right > x && bottom > y)) { return RectangleF::zero; }
 		return RectangleF(x, y, right - x, bottom - y);
 	}
 }
@@ -382,7 +381,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
                         paint.thickness, pitch);
                 paint_tiles.emplace_back(tile, this->paint_, &this->splash_clips_,
                     this->render_resources(), this->team_colours_, Colour::white,
-                    0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f, along_x, leading);
+                    0.0f, Vector2F::zero, SpriteFlip::none, 0.0f, along_x, leading);
             }
         };
 

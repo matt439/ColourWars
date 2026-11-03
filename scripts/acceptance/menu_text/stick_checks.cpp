@@ -214,7 +214,7 @@ namespace menu_text_acceptance
         {
             if (character != U'8')
             {
-                missing_eight.push_back({character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f});
+                missing_eight.push_back({character, labrador::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f});
             }
         }
         auto limited = std::make_unique<Font>(TextureHandle{}, std::move(missing_eight), 20.0f);
@@ -233,7 +233,7 @@ namespace menu_text_acceptance
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
-                glyphs.push_back({character, mattmath::RectangleI(0, 0,
+                glyphs.push_back({character, labrador::RectangleI(0, 0,
                     character == U'~' ? width : 8, character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f});
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -245,7 +245,7 @@ namespace menu_text_acceptance
             const char* height_template;
             int glyph_width;
             int glyph_height;
-            mattmath::Vector2F position;
+            labrador::Vector2F position;
             float width;
             float height;
         };
@@ -316,7 +316,7 @@ namespace menu_text_acceptance
             const bool digit = character >= U'0' && character <= U'9';
             const int width = character == U'|' ? 1000 : character == U'8' ? 80 : digit || character == U'-' ? 1 : 8;
             const float advance = character == U'8' ? -80.0f : character == U'7' || character == U'1' ? 19.0f : 0.0f;
-            glyphs.push_back({character, mattmath::RectangleI(0, 0, width, 16),
+            glyphs.push_back({character, labrador::RectangleI(0, 0, width, 16),
                 character == U'6' ? -5.0f : 0.0f, 0.0f, advance});
         }
         world.render.add_font("menu_stick_adversarial", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));

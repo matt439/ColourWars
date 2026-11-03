@@ -19,13 +19,13 @@ public:
 	// Take ownership of the collision shape; it must not be null.
 	Structure(const std::string& sheet_name,
 		const std::string& frame_name,
-		const mattmath::RectangleF& sprite_rectangle,
-		std::unique_ptr<mattmath::Shape> collision_shape,
+		const labrador::RectangleF& sprite_rectangle,
+		std::unique_ptr<labrador::Shape> collision_shape,
 		labrador::RenderResources* render_resources,
 		CollisionObjectType collision_type,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f,
 		std::unique_ptr<const TerrainMaterial> material = nullptr);
@@ -39,9 +39,9 @@ public:
 	// Explicit legacy painter retained for independent renderer references.
 	// Runtime views select their mode before calling the ordinary draw().
 	virtual void draw_miniature(labrador::DrawList& draw_list) const;
-	mattmath::RectangleF bounds() const override;
+	labrador::RectangleF bounds() const override;
 
-	const mattmath::Shape* shape() const override;
+	const labrador::Shape* shape() const override;
 	labrador::CollisionLayer layer() const override;
 	labrador::CollisionMask mask() const override;
 	labrador::CollisionTag tag() const override;
@@ -80,8 +80,8 @@ public:
 	// Where a shot centred at shot_centre, stopped by this cover, marks the
 	// cover's face. normal is the shot's contact normal, from the shot into
 	// the cover.
-	virtual mattmath::Vector2F cover_point(const mattmath::Vector2F& shot_centre,
-		const mattmath::Vector2F& normal) const;
+	virtual labrador::Vector2F cover_point(const labrador::Vector2F& shot_centre,
+		const labrador::Vector2F& normal) const;
 
 	// The roles Level borrows for per-step work. Null unless this is one.
 	virtual TranslatingStructurePaintable* mover() { return nullptr; }
@@ -90,18 +90,18 @@ public:
 	virtual const TeamGateStructurePaintable* gate() const { return nullptr; }
 
 protected:
-	const mattmath::RectangleF& rectangle() const;
+	const labrador::RectangleF& rectangle() const;
 	CollisionObjectType collision_type() const;
 	// Tell the receiver it touched a structure. A structure's own handlers
 	// keep the defaults, so bare geometry stays fixed on contact; a painted
 	// one answers projectiles (StructurePaintable).
 	void touch(Collider& receiver,
-		const mattmath::Vector2F& normal, float penetration) const override;
+		const labrador::Vector2F& normal, float penetration) const override;
 private:
 	bool miniature_ = false;
 	CollisionObjectType collision_type_ =
 		CollisionObjectType::structure;
-	mattmath::RectangleF sprite_rectangle_ = mattmath::RectangleF::ZERO;
-	std::unique_ptr<mattmath::Shape> collision_shape_ = nullptr;
+	labrador::RectangleF sprite_rectangle_ = labrador::RectangleF::zero;
+	std::unique_ptr<labrador::Shape> collision_shape_ = nullptr;
 	std::unique_ptr<const TerrainMaterial> material_ = nullptr;
 };

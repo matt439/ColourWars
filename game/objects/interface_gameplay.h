@@ -19,7 +19,7 @@ public:
     // Shared by render workers. Keep per-view state in parameters and locals;
     // const on the owning unique_ptr does not make its pointee const.
 	void draw_gameplay_interface(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
+        const labrador::Vector2F& resolution,
         int player_index,
         int input_slot,
         PlayerTeam team,
@@ -33,7 +33,7 @@ public:
     // The same, with the identity box's second line given ("Bot: paint")
     // instead of the device the input slot names.
 	void draw_gameplay_interface(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
+        const labrador::Vector2F& resolution,
         int player_index,
         const std::wstring& device_label,
         PlayerTeam team,
@@ -51,7 +51,7 @@ public:
     // simulated low-paint age unless effects are reduced. Untimed practice
     // passes show_clock false and the clock panel is not drawn at all.
     void draw_gameplay_interface_prepared(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
+        const labrador::Vector2F& resolution,
         int player_index,
         const std::wstring& identity,
         float health,
@@ -73,23 +73,23 @@ private:
     // pixel: a thinner rectangle can fall between pixel centres and vanish.
     float paper_pen(float scale) const;
     void draw_paper_panel(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& face, float scale) const;
+        const labrador::RectangleF& face, float scale) const;
     void draw_meter(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
+        const labrador::Vector2F& resolution,
         float amount,
         const labrador::Colour& colour,
-        const mattmath::Vector2F& position,
+        const labrador::Vector2F& position,
         const std::wstring& label,
         float scale,
         bool tagged = false) const;
     void draw_timer(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
+        const labrador::Vector2F& resolution,
         float timer,
         float scale,
         bool reduced_effects,
         bool clock_running) const;
     void draw_closing_clock_panel(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& text_bounds,
+        const labrador::RectangleF& text_bounds,
         float scale,
         float beat_age,
         bool reduced_effects) const;

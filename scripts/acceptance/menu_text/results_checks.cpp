@@ -56,13 +56,13 @@ namespace menu_text_acceptance
             const bool contribution = entry.field == &MenuResultsText::contribution_heading;
             const std::string font = contribution ? look.contribution_font : heading ? style.heading_font : style.detail_font;
             const auto measured = world.render.measure_text(world.render.resolve_sprite_font(font), L"{copy} % again");
-            const mattmath::Vector2F position = contribution ? look.contribution_position :
-                mattmath::Vector2F((1920.0f - measured.x) / 2.0f, heading ? look.heading_y : look.proceed_y);
+            const labrador::Vector2F position = contribution ? look.contribution_position :
+                labrador::Vector2F((1920.0f - measured.x) / 2.0f, heading ? look.heading_y : look.proceed_y);
             colourwars::UiTextDropShadow widget(entry.key, source, font, position, &world.render,
-                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+                look.art.ink, Colour{}, labrador::Vector2F::zero, true);
             source = L"Changed after construction";
-            require(widget.text() == L"{copy} % again" && widget.bounds() == mattmath::RectangleF(position, measured) &&
-                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            require(widget.text() == L"{copy} % again" && widget.bounds() == labrador::RectangleF(position, measured) &&
+                widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
                 "Actual Results text interpreted plain braces/percent, borrowed source, scaled or retained a shadow: " + field);
             DrawList no_device; widget.draw(no_device);
             variants.rejects(field, [&](rapidjson::Document& d)
@@ -90,7 +90,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool marker = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
                     marker ? x_offset : 0.0f, marker ? y_offset : 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -120,8 +120,8 @@ namespace menu_text_acceptance
             const float y = heading ? 125.0f : 880.0f;
             const std::string font = heading ? edge.menu().heading_font : edge.menu().detail_font;
             colourwars::UiTextDropShadow widget("results-edge", L"~", font, { 310.0f, y }, &world.render,
-                edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO);
-            require(widget.bounds() == mattmath::RectangleF(310.0f, y, 1300.0f, 20.0f),
+                edge.results_menu().art.ink, Colour{}, labrador::Vector2F::zero);
+            require(widget.bounds() == labrador::RectangleF(310.0f, y, 1300.0f, 20.0f),
                 "Centered Results edge lost its unscaled zero-offset shadow bounds");
             variants.rejects(field, [&](rapidjson::Document& d) { centered(d, heading, "menu_results_width_overflow"); }, &world);
             for (const char* font_name : { "menu_results_zero_width", "menu_results_infinite_width", "menu_results_infinite_height" })
@@ -148,8 +148,8 @@ namespace menu_text_acceptance
         const auto record_gap = variants.load([&](rapidjson::Document& d) { contribution(d, "menu_results_record_gap"); });
         record_gap.validate_resources(world.render, world.audio);
         const auto font_handle = world.render.resolve_sprite_font(record_gap.results_menu().contribution_font);
-        require(world.render.measure_text(font_handle, L"R 100.0%") == mattmath::Vector2F(64.0f, 20.0f) &&
-            world.render.measure_text(font_handle, L"~") == mattmath::Vector2F(765.75f, 20.0f) &&
+        require(world.render.measure_text(font_handle, L"R 100.0%") == labrador::Vector2F(64.0f, 20.0f) &&
+            world.render.measure_text(font_handle, L"~") == labrador::Vector2F(765.75f, 20.0f) &&
             480.0f + 765.75f == 1246.0f - 0.25f,
             "Authored contribution heading lost its independent quarter-unit strict record gap");
         // Record clearance is STRICT: contact already rejects before overlap.
@@ -159,7 +159,7 @@ namespace menu_text_acceptance
         roster_contact.validate_resources(world.render, world.audio);
         const auto& look = roster_contact.results_menu();
         const auto raw = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), L"P1 - Pad 1 | Team A | 0.0%");
-        require(raw.y == 20.0f && roster_contact.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) &&
+        require(raw.y == 20.0f && roster_contact.player_identity().ui_size == labrador::Vector2F(54.0f, 42.0f) &&
             look.contribution_position.y + 34.0f == 669.0f &&
             look.contribution_position.y + look.contribution_spacing + (20.0f - 42.0f) / 2.0f == 669.0f,
             "Authored contribution heading lost exact contact with the first complete roster/badge row");
@@ -218,12 +218,12 @@ namespace menu_text_acceptance
             std::wstring source = plain.menu_text().results.*entry.field;
             const auto& look = plain.results_menu(); const auto& style = plain.menu();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(style.detail_font), L"{outcome} 100%");
-            const mattmath::Vector2F position((1920.0f - size.x) / 2.0f, look.session_result_y);
+            const labrador::Vector2F position((1920.0f - size.x) / 2.0f, look.session_result_y);
             colourwars::UiTextDropShadow widget(entry.key, source, style.detail_font, position, &world.render,
-                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+                look.art.ink, Colour{}, labrador::Vector2F::zero, true);
             source = L"Changed after construction";
-            require(widget.text() == L"{outcome} 100%" && widget.bounds() == mattmath::RectangleF(position, size) &&
-                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            require(widget.text() == L"{outcome} 100%" && widget.bounds() == labrador::RectangleF(position, size) &&
+                widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
                 "Session result widget borrowed copy, formatted braces, fitted text or retained a shadow: " + field);
             DrawList no_device; widget.draw(no_device);
             variants.rejects(field, [&](rapidjson::Document& d)
@@ -251,7 +251,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool marker = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, marker ? width : 8, marker ? height : 16),
                     marker ? x_offset : 0.0f, marker ? y_offset : 0.0f, 0.0f });
             }
             // Positive line spacing keeps unrelated shared-font guards valid.
@@ -275,21 +275,21 @@ namespace menu_text_acceptance
             const std::string field = std::string("results.") + entry.key;
             const auto edge = variants.load([&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_width"); });
             edge.validate_resources(world.render, world.audio);
-            require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) &&
+            require(edge.results_menu().box_size == labrador::Vector2F(1300.0f, 860.0f) &&
                 edge.results_menu().session_result_y == 405.0f, "Session result boundary fixture changed the shipped paper/row");
             colourwars::UiTextDropShadow widget("session-result-edge", L"~", edge.menu().detail_font, { 310.0f, 405.0f },
-                &world.render, edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
-            require(widget.bounds() == mattmath::RectangleF(310.0f, 405.0f, 1300.0f, 20.0f),
+                &world.render, edge.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
+            require(widget.bounds() == labrador::RectangleF(310.0f, 405.0f, 1300.0f, 20.0f),
                 "Session result width must meet both paper edges at its actual unscaled row with no shadow");
             variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_width_overflow"); }, &world);
             const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_bottom"); });
             bottom.validate_resources(world.render, world.audio);
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(bottom.menu().detail_font), L"~");
-            require(size == mattmath::Vector2F(8.0f, 565.0f) && 405.0f + size.y == 970.0f,
+            require(size == labrador::Vector2F(8.0f, 565.0f) && 405.0f + size.y == 970.0f,
                 "Session result bottom edge must use the full-height paper without an extra collision/row-fit policy");
             colourwars::UiTextDropShadow tall("session-result-bottom", L"~", bottom.menu().detail_font, { 956.0f, 405.0f },
-                &world.render, bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
-            require(tall.bounds() == mattmath::RectangleF(956.0f, 405.0f, 8.0f, 565.0f),
+                &world.render, bottom.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
+            require(tall.bounds() == labrador::RectangleF(956.0f, 405.0f, 8.0f, 565.0f),
                 "Session result height boundary was fitted or measured with a shadow");
             variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, "menu_session_result_bottom_overflow"); }, &world);
             for (const char* font_name : { "menu_session_result_zero_width", "menu_session_result_infinite_width",
@@ -348,12 +348,12 @@ namespace menu_text_acceptance
             std::wstring source = plain.menu_text().results.*entry.field;
             const auto& look = plain.results_menu();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(plain.menu().item_font), L"{team} 100%!");
-            const mattmath::Vector2F position((1920.0f - size.x) / 2.0f, look.winner_y);
+            const labrador::Vector2F position((1920.0f - size.x) / 2.0f, look.winner_y);
             colourwars::UiTextDropShadow widget(entry.key, source, plain.menu().item_font, position, &world.render,
-                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+                look.art.ink, Colour{}, labrador::Vector2F::zero, true);
             source.clear();
-            require(widget.text() == L"{team} 100%!" && widget.bounds() == mattmath::RectangleF(position, size) &&
-                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            require(widget.text() == L"{team} 100%!" && widget.bounds() == labrador::RectangleF(position, size) &&
+                widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
                 "Competitive winner widget interpreted literal braces, borrowed copy, fitted text or retained a shadow: " + field);
             DrawList no_device; widget.draw(no_device);
             variants.rejects(field, [&](rapidjson::Document& d)
@@ -460,7 +460,7 @@ namespace menu_text_acceptance
         {
             std::vector<Glyph> glyphs;
             for (char32_t character = U' '; character <= U'~'; ++character)
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? marker_width : 8, character == U'~' ? marker_height : 16),
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'~' ? marker_width : 8, character == U'~' ? marker_height : 16),
                     character == U'~' ? marker_x : 0.0f, character == U'~' ? marker_y : 0.0f, 0.0f });
             auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f);
             font->set_stand_in(U'?'); world.render.add_font(name, std::move(font));
@@ -481,16 +481,16 @@ namespace menu_text_acceptance
             const std::string field = std::string("results.") + entry.key;
             const auto edge = variants.load([&](rapidjson::Document& d) { select(d, entry.key, "menu_competitive_width"); });
             edge.validate_resources(world.render, world.audio);
-            require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) && edge.results_menu().winner_y == 255.0f,
+            require(edge.results_menu().box_size == labrador::Vector2F(1300.0f, 860.0f) && edge.results_menu().winner_y == 255.0f,
                 "Competitive winner boundary fixture changed the actual paper or row");
             colourwars::UiTextDropShadow widget("competitive-edge", L"~", edge.menu().item_font, { 310.0f, 255.0f }, &world.render,
-                edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
-            require(widget.bounds() == mattmath::RectangleF(310.0f, 255.0f, 1300.0f, 20.0f),
+                edge.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
+            require(widget.bounds() == labrador::RectangleF(310.0f, 255.0f, 1300.0f, 20.0f),
                 "Competitive winner must meet both full-paper horizontal edges without fitting or an ornament inset");
             variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, "menu_competitive_width_overflow"); }, &world);
             const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, entry.key, "menu_competitive_bottom"); });
             bottom.validate_resources(world.render, world.audio);
-            require(world.render.measure_text(world.render.resolve_sprite_font(bottom.menu().item_font), L"~") == mattmath::Vector2F(8.0f, 715.0f) &&
+            require(world.render.measure_text(world.render.resolve_sprite_font(bottom.menu().item_font), L"~") == labrador::Vector2F(8.0f, 715.0f) &&
                 255.0f + 715.0f == 970.0f, "Competitive winner height must meet full paper without a new collision or row-fit restriction");
             variants.rejects(field, [&](rapidjson::Document& d) { select(d, entry.key, "menu_competitive_bottom_overflow"); }, &world);
             for (const char* font_name : { "menu_competitive_zero_width", "menu_competitive_infinite_width", "menu_competitive_nan_width", "menu_competitive_infinite_height" })
@@ -551,12 +551,12 @@ namespace menu_text_acceptance
             std::wstring source = L"P1 - Pad 1" + (plain.menu_text().results.*entry.field) + L"12.5%";
             const auto& look = plain.results_menu();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), L"P1 - Pad 1  {side} %  12.5%");
-            const auto position = look.contribution_position + mattmath::Vector2F(0.0f, look.contribution_spacing);
+            const auto position = look.contribution_position + labrador::Vector2F(0.0f, look.contribution_spacing);
             colourwars::UiTextDropShadow widget(entry.key, source, look.contribution_font, position, &world.render,
-                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+                look.art.ink, Colour{}, labrador::Vector2F::zero, true);
             source.clear();
-            require(widget.text() == L"P1 - Pad 1  {side} %  12.5%" && widget.bounds() == mattmath::RectangleF(position, size) &&
-                widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+            require(widget.text() == L"P1 - Pad 1  {side} %  12.5%" && widget.bounds() == labrador::RectangleF(position, size) &&
+                widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
                 "Contribution row lost full literal composition, owned text, its actual font or explicit zero shadow");
             DrawList no_device; widget.draw(no_device);
             variants.rejects(resource_role, [&](rapidjson::Document& d)
@@ -596,13 +596,13 @@ namespace menu_text_acceptance
             require(compose(index, defaults.menu_text()) == canonical[index] && compose(index, custom) == authored[index],
                 "Contribution composition changed default bytes, authored team selection or sparse owner credit");
             const auto& look = defaults.results_menu();
-            const auto position = look.contribution_position + mattmath::Vector2F(0.0f, look.contribution_spacing * static_cast<float>(index + 1));
+            const auto position = look.contribution_position + labrador::Vector2F(0.0f, look.contribution_spacing * static_cast<float>(index + 1));
             std::wstring source = compose(index, custom);
             colourwars::UiTextDropShadow widget("sparse-contribution", source, look.contribution_font, position, &world.render,
-                look.art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+                look.art.ink, Colour{}, labrador::Vector2F::zero, true);
             source.clear();
             const auto size = world.render.measure_text(world.render.resolve_sprite_font(look.contribution_font), authored[index]);
-            require(widget.text() == authored[index] && widget.bounds() == mattmath::RectangleF(position, size),
+            require(widget.text() == authored[index] && widget.bounds() == labrador::RectangleF(position, size),
                 "Sparse contribution widget lost literal authored row ownership or its full measured suffix");
             const auto current = settings.player_settings().at(static_cast<size_t>(index));
             require(current.num == original_roster[static_cast<size_t>(index)].num && current.team == original_roster[static_cast<size_t>(index)].team &&
@@ -622,7 +622,7 @@ namespace menu_text_acceptance
         {
             const bool digit = character >= U'0' && character <= U'9';
             const bool marker = character == U'~' || character == U'^';
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, marker ? 240 : character == U'8' ? 80 : digit ? 1 : 16,
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, marker ? 240 : character == U'8' ? 80 : digit ? 1 : 16,
                 character == U'^' ? 32 : character == U'~' || character == U'8' ? 24 : 16),
                 marker ? 0.375f : character == U'8' ? 0.00003f : character == U'6' ? -5.0f : 0.0f, 0.0f,
                 marker ? 0.625f : character == U'8' ? -80.0f : character == U'1' || character == U'7' ? 19.0f : 0.0f });
@@ -673,24 +673,24 @@ namespace menu_text_acceptance
             };
             const auto edge = variants.load([&](rapidjson::Document& d) { select_team(d, false); });
             edge.validate_resources(world.render, world.audio);
-            require(edge.player_identity().ui_size == mattmath::Vector2F(54.0f, 42.0f) && edge.player_identity().ui_gap == 12.0f,
+            require(edge.player_identity().ui_size == labrador::Vector2F(54.0f, 42.0f) && edge.player_identity().ui_gap == 12.0f,
                 "Contribution badge boundary fixture changed the shipped badge size/gap");
             const float y = 635.0f + 46.0f * static_cast<float>(attained_player[team]);
             colourwars::UiTextDropShadow row("authored-contribution-edge", attained[team], edge.results_menu().contribution_font,
-                { x, y }, &world.render, Colour::black, Colour{}, mattmath::Vector2F::ZERO, true);
+                { x, y }, &world.render, Colour::black, Colour{}, labrador::Vector2F::zero, true);
             const auto badge = UiPlayerBadge::before(row.bounds(), edge.player_identity());
-            const auto full_row = mattmath::RectangleF::union_of(row.bounds(), badge);
+            const auto full_row = labrador::RectangleF::union_of(row.bounds(), badge);
             const float top = y - (team == 0 ? 9.0f : 5.0f);
-            require(row.bounds().right() == 1610.0f && badge == mattmath::RectangleF(x - 66.0f, top, 54.0f, 42.0f) &&
-                full_row == mattmath::RectangleF(x - 66.0f, top, 1610.0f - (x - 66.0f), 42.0f),
+            require(row.bounds().right() == 1610.0f && badge == labrador::RectangleF(x - 66.0f, top, 54.0f, 42.0f) &&
+                full_row == labrador::RectangleF(x - 66.0f, top, 1610.0f - (x - 66.0f), 42.0f),
                 "Complete contribution text and actual badge lost exact full-paper contact or team-specific vertical placement");
             const std::string owner = std::string("labels.roster_row.Results.menu_text.results.") + contribution_team_text[team].key;
             variants.rejects(owner, [&](rapidjson::Document& d) { select_team(d, true); }, &world);
         }
         const auto left = variants.load([&](rapidjson::Document& d) { edit(d, 376.0f); });
         left.validate_resources(world.render, world.audio);
-        require(UiPlayerBadge::before(mattmath::RectangleF(376.0f, 681.0f, 100.0f, 24.0f), left.player_identity()) ==
-            mattmath::RectangleF(310.0f, 672.0f, 54.0f, 42.0f), "Complete first-row badge must meet the Results paper left edge");
+        require(UiPlayerBadge::before(labrador::RectangleF(376.0f, 681.0f, 100.0f, 24.0f), left.player_identity()) ==
+            labrador::RectangleF(310.0f, 672.0f, 54.0f, 42.0f), "Complete first-row badge must meet the Results paper left edge");
         variants.rejects("labels.roster_row.Results.menu_text.results.contribution_team_a", [&](rapidjson::Document& d) { edit(d, 375.75f); }, &world);
         // A's shorter text gives the higher badge top, while B's taller text
         // gives the lower badge bottom: their legal-team envelope is 46 high.

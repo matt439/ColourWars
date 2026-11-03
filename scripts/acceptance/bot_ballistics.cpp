@@ -85,7 +85,7 @@ namespace
 
 	void check_actual_flight(paint_surfaces_acceptance::World& world)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
 			labrador::StepTimer::TicksPerSecond / 60));
 		int contacts = 0;
@@ -146,13 +146,13 @@ namespace
 
 	void check_finite_fallbacks(const GameTuning& tuning)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
 			WeaponType::mister, WeaponType::bucket })
 		{
 			const WeaponTuning& tool = tuning.weapon(type);
 			const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
-			for (const Vector2F target : { Vector2F::ZERO, Vector2F(1.0f, 0.0f),
+			for (const Vector2F target : { Vector2F::zero, Vector2F(1.0f, 0.0f),
 				Vector2F(-1.0f, 0.0f), Vector2F(0.0f, -300.0f), Vector2F(0.0f, 300.0f),
 				Vector2F(100000.0f, -100000.0f) })
 			{

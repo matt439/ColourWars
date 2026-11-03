@@ -13,7 +13,7 @@ struct MonitorPersona
 {
     struct Decoration
     {
-        mattmath::Vector2F at;
+        labrador::Vector2F at;
         size_t colour = 0;
         float tilt = 0.0f;
     };
@@ -26,8 +26,8 @@ struct MonitorPersona
     bool mug = false;
     std::vector<Decoration> sticky_notes;
     std::vector<Decoration> stickers;
-    mattmath::Vector2F coffee_ring;
-    std::vector<mattmath::Vector2F> crack;
+    labrador::Vector2F coffee_ring;
+    std::vector<labrador::Vector2F> crack;
 
     // Draws from the round's persona stream (MatchRandom::persona), so the
     // same round seed rolls the same person whatever else the build drew.
@@ -51,33 +51,33 @@ public:
     const MonitorPersona& persona() const;
 
     // The screen rectangle that puts the glass exactly over `target`.
-    mattmath::RectangleF screen_for_glass(const mattmath::RectangleF& target) const;
+    labrador::RectangleF screen_for_glass(const labrador::RectangleF& target) const;
 
-    mattmath::RectangleF glass(const mattmath::RectangleF& screen) const;
+    labrador::RectangleF glass(const labrador::RectangleF& screen) const;
     // Where the picture is shown, above the palette.
-    mattmath::RectangleF picture(const mattmath::RectangleF& screen) const;
+    labrador::RectangleF picture(const labrador::RectangleF& screen) const;
     // The two colours being tried, in a little picker over the empty slot.
-    mattmath::RectangleF swatch(const mattmath::RectangleF& screen, int which) const;
-    mattmath::RectangleF empty_slot(const mattmath::RectangleF& screen) const;
+    labrador::RectangleF swatch(const labrador::RectangleF& screen, int which) const;
+    labrador::RectangleF empty_slot(const labrador::RectangleF& screen) const;
     // The program's close button, in the top corner of the glass.
-    mattmath::RectangleF close_button(const mattmath::RectangleF& screen) const;
+    labrador::RectangleF close_button(const labrador::RectangleF& screen) const;
 
     // The bezel, the glass, the program and its palette, behind the world.
-    void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
+    void draw(labrador::DrawList& draw_list, const labrador::RectangleF& screen) const;
     // Physical keylines, controls and decorations, above the world/preview but
     // below its cursor and the person. Notes may overlap the glass's edge.
     void draw_front_details(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& screen) const;
-    void draw_picker(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
+        const labrador::RectangleF& screen) const;
+    void draw_picker(labrador::DrawList& draw_list, const labrador::RectangleF& screen,
         const labrador::Colour& first, const labrador::Colour& second) const;
     // The empty slot, filled: the colour has been saved.
-    void draw_saved(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
+    void draw_saved(labrador::DrawList& draw_list, const labrador::RectangleF& screen,
         const labrador::Colour& colour) const;
-    void draw_close_button(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
+    void draw_close_button(labrador::DrawList& draw_list, const labrador::RectangleF& screen) const;
     // The program closed without saving: the glass shows the desktop.
-    void draw_closed(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
+    void draw_closed(labrador::DrawList& draw_list, const labrador::RectangleF& screen) const;
     // Shows `colour` over part of the picture, in whatever space the list is in.
-    void draw_preview(labrador::DrawList& draw_list, const mattmath::RectangleF& area,
+    void draw_preview(labrador::DrawList& draw_list, const labrador::RectangleF& area,
         const labrador::Colour& colour) const;
 
 private:
@@ -94,10 +94,10 @@ private:
     MonitorPersona persona_;
     std::vector<PaletteSwatch> palette_swatches_;
 
-    mattmath::RectangleF program(const mattmath::RectangleF& screen) const;
-    mattmath::RectangleF palette(const mattmath::RectangleF& screen) const;
-    mattmath::RectangleF palette_swatch(const mattmath::RectangleF& screen, size_t index) const;
+    labrador::RectangleF program(const labrador::RectangleF& screen) const;
+    labrador::RectangleF palette(const labrador::RectangleF& screen) const;
+    labrador::RectangleF palette_swatch(const labrador::RectangleF& screen, size_t index) const;
     void draw_bezel_shading(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& screen) const;
-    void draw_decorations(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
+        const labrador::RectangleF& screen) const;
+    void draw_decorations(labrador::DrawList& draw_list, const labrador::RectangleF& screen) const;
 };

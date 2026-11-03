@@ -3,7 +3,6 @@
 #include <algorithm>
 
 using namespace labrador;
-using namespace mattmath;
 
 KeyboardJumpMenu::KeyboardJumpMenu(MenuContext* context, int player) :
 	SettingsPanelPage(context, player),

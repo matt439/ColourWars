@@ -3,7 +3,6 @@
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 MovementFeedback::MovementFeedback(const MovementFeedbackPresentation* presentation,
     RenderResources* render_resources) :
@@ -121,7 +120,7 @@ void MovementFeedback::draw_contact(DrawList& draw_list, const Effect& effect) c
     const auto fill = [&](const RectangleF& rectangle, const Colour& tint)
     {
         this->draw_with(draw_list, rectangle, this->frame(), CrudeDrawing::premultiplied(tint) * fade,
-            Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            Vector2F::zero, SpriteFlip::none, 0.0f);
     };
     const auto border = [&](const RectangleF& rectangle)
     {
@@ -304,7 +303,7 @@ void MovementFeedback::draw_puff(DrawList& draw_list,
         const Span& span = spans[index];
         this->draw_with(draw_list, span.rectangle, this->frame(),
             CrudeDrawing::premultiplied(colours[static_cast<size_t>(span.ink)]) * fade,
-            Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            Vector2F::zero, SpriteFlip::none, 0.0f);
     }
 }
 

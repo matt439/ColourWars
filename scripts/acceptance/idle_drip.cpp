@@ -22,7 +22,6 @@
 #include <type_traits>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -43,7 +42,7 @@ namespace
             std::vector<IdleDrip::Drop>(drip.drops().begin(), drip.drops().end()) };
     }
 
-    void attach(IdleDrip& drip, const Vector2F& nozzle = Vector2F::ZERO,
+    void attach(IdleDrip& drip, const Vector2F& nozzle = Vector2F::zero,
         float angle = 0.0f)
     {
         drip.advance(true, nozzle, angle, drip.interval_remaining() + 0.001f, {});
@@ -52,7 +51,7 @@ namespace
     }
 
     void detach(IdleDrip& drip, const IdleDripPresentation& look,
-        const Vector2F& nozzle = Vector2F::ZERO)
+        const Vector2F& nozzle = Vector2F::zero)
     {
         attach(drip, nozzle);
         drip.advance(true, nozzle, 0.0f, look.grow_time + look.stretch_time + 0.001f, {});

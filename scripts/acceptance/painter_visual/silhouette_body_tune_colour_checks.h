@@ -63,7 +63,7 @@ SilhouetteBodyColourProbe::SilhouetteBodyColourProbe(Application& app,const Pres
         look_.silhouette_art.shade_width==.025f && look_.silhouette_art.ink==Colour(0,0,0) &&
         look_.silhouette_art.rim==Colour(52,52,52) && look_.silhouette_art.shade==Colour(8,8,8) &&
         look_.sprite_sheet=="sprite_sheet_1" && look_.fill_frame=="pixel" &&
-        frame_.source_rectangle()==RectangleI(32,0,4,4) && frame_.origin()==Vector2F::ZERO,
+        frame_.source_rectangle()==RectangleI(32,0,4,4) && frame_.origin()==Vector2F::zero,
         "Body fixture lost fixed caller geometry, opaque black ink or white-frame assumptions");
     personas_[0].mug=true; poses_[1].stand=.5f; personas_[2].child=true;
     for(size_t c=0;c<personas_.size();++c){persona_before_[c]=monitor_persona_observation(personas_[c]);}
@@ -83,13 +83,13 @@ void SilhouetteBodyColourProbe::unchanged() const
     require(child_camera_.translation==Vector2F(-800,-40) && child_camera_.scale==1.0f,"Body child camera changed");
 }
 void SilhouetteBodyColourProbe::draw_person(const Silhouette& person,DrawList& list,size_t context) const
-{ list.set_camera(context==2?child_camera_:Camera::DEFAULT_CAMERA); person.draw(list,screens_.at(context),personas_.at(context),poses_.at(context)); }
+{ list.set_camera(context==2?child_camera_:Camera::default_camera); person.draw(list,screens_.at(context),personas_.at(context),poses_.at(context)); }
 Frame SilhouetteBodyColourProbe::render(const std::function<void(DrawList&)>& draw)
 {
     unchanged(); const Colour selected=look_.silhouette,expected_selected=expected_.silhouette;
     std::srand(31817);const int next=std::rand();std::srand(31817);
     const Canvas canvas(app_.render_resources(),Colour(32,64,96));Renderer& renderer=*app_.renderer();renderer.begin_frame();renderer.set_view_count(1);
-    DrawList list=renderer.view(0);list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::DEFAULT_CAMERA);
+    DrawList list=renderer.view(0);list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);canvas.draw(list,{0,0,1280,720});draw(list);++readbacks_;Frame result=read(renderer);
     if(result.width!=1280||result.height!=720){failure(0,"backbuffer-size",result);throw std::runtime_error("Body proof requires exact1280x720 backbuffer");}
     require(std::rand()==next && look_.silhouette==selected && expected_.silhouette==expected_selected,"Body draw consumed RNG or changed selected records");

@@ -30,7 +30,6 @@ namespace moving_structure_acceptance
     void check_loader(World& world)
     {
         using namespace labrador;
-        using namespace mattmath;
         const JsonDocument document = parse_json(loaded_objects, "moving-loader-fixture.json");
         const JsonValue entries = document.root().array("objects");
         const LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &world.tuning.paint());

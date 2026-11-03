@@ -9,7 +9,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace content_value;
 
 namespace
@@ -188,7 +187,7 @@ namespace
 			{
 				throw std::runtime_error(entry.where() + ": territory_candidates must be between 1 and 256.");
 			}
-			difficulty.aim_error_radians = read_number_in(entry, "aim_error_radians", 0.0f, PI);
+			difficulty.aim_error_radians = read_number_in(entry, "aim_error_radians", 0.0f, pi);
 		}
 		return bots;
 	}
@@ -632,8 +631,8 @@ namespace
 		details.sound_bank_name = json.string("sound_bank");
 		if (type == WeaponType::roller)
 		{
-			weapon.aim_tilt = read_number_in(json, "aim_tilt", 0.0f, PI_OVER_2);
-			if (!(weapon.aim_tilt < PI_OVER_2))
+			weapon.aim_tilt = read_number_in(json, "aim_tilt", 0.0f, pi_over_2);
+			if (!(weapon.aim_tilt < pi_over_2))
 			{
 				throw std::runtime_error(json.where() +
 					": 'aim_tilt' must be less than pi/2 radians to keep left and right facing distinct.");
@@ -688,7 +687,7 @@ namespace
 		if (type == ProjectileType::mist)
 		{
 			// The two outer pellets stay within a half-turn forward fan.
-			projectile.spread_step = read_number_in(json, "spread_step", 0.0f, PI / 4.0f);
+			projectile.spread_step = read_number_in(json, "spread_step", 0.0f, pi / 4.0f);
 		}
 		details.rotat_origin = read_rotation_origin(json, "rotation_origin");
 		// A shot that is deleted the update it is made never exists.

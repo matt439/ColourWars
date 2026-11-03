@@ -5,7 +5,7 @@
 // same rectangles before any page exists, so a box, an interior or a fitted
 // width has one formula. It owns the design size the menus are authored in.
 //
-// It includes only mattmath and the menu records, so the reader and the
+// It includes only labrador and the menu records, so the reader and the
 // validators reach it from the game/ root without including states/.
 
 #include "engine/math/rectanglef.h"
@@ -15,7 +15,7 @@
 namespace menu_consts
 {
 	// Menu geometry stays in these design units; ui_camera() maps it to the window.
-	inline const mattmath::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
+	inline const labrador::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
 }
 
 namespace menu_geometry
@@ -30,10 +30,10 @@ namespace menu_geometry
 	inline constexpr float paper_footer_margin = 40.0f;
 	// Overlay papers (Pause, End, Results) and the y values placed on them.
 	inline constexpr float overlay_max_y = 900.0f;
-	inline const mattmath::Vector2F overlay_paper_max = { 1600.0f, 900.0f };
+	inline const labrador::Vector2F overlay_paper_max = { 1600.0f, 900.0f };
 
 	// The whole design: backgrounds fill it and the UI camera frames it.
-	mattmath::RectangleF design_area();
+	labrador::RectangleF design_area();
 
 	// The x that centres a span of `size` in `extent`, and in the design width.
 	float centred(float size, float extent);
@@ -41,18 +41,18 @@ namespace menu_geometry
 
 	// A paper centred above the footer (menu pages), or on the whole design
 	// (Exit, Display and the match overlays).
-	mattmath::RectangleF footer_paper(const mattmath::Vector2F& box, float footer_y);
-	mattmath::RectangleF screen_paper(const mattmath::Vector2F& box);
+	labrador::RectangleF footer_paper(const labrador::Vector2F& box, float footer_y);
+	labrador::RectangleF screen_paper(const labrador::Vector2F& box);
 
 	// The paper's face inside its keyline edge (three keylines) and shade.
-	mattmath::RectangleF paper_interior(const mattmath::RectangleF& paper,
+	labrador::RectangleF paper_interior(const labrador::RectangleF& paper,
 		const MenuPaperArtPresentation& art);
 	// The rightmost x text may reach on a paper, clear of shade and focus card.
-	float paper_text_right(const mattmath::RectangleF& paper, const MenuPaperArtPresentation& art);
+	float paper_text_right(const labrador::RectangleF& paper, const MenuPaperArtPresentation& art);
 
 	// The chrome every page draws: the footer band below footer_y and its rule.
-	mattmath::RectangleF footer_band(const MenuStyle& style);
-	mattmath::RectangleF footer_rule(const MenuStyle& style);
+	labrador::RectangleF footer_band(const MenuStyle& style);
+	labrador::RectangleF footer_rule(const MenuStyle& style);
 
 	// The setup pages' paper: the main art with the setup focus card and shade.
 	MenuPaperArtPresentation setup_art(const MainMenuPresentation& main);
@@ -64,5 +64,5 @@ namespace menu_geometry
 	float settings_action_width(const ControlsSettingsPresentation& look, float x);
 
 	// The Results score bar, centred on the design and offset from the paper top.
-	mattmath::RectangleF results_fill_box(const ResultsMenuPresentation& look);
+	labrador::RectangleF results_fill_box(const ResultsMenuPresentation& look);
 }

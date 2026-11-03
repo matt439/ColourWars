@@ -1100,6 +1100,14 @@ POL#23, listening remains ROAD#3 and visual transitions/loading remain GAP#5.1.
 case landed while the pin is still `v0.2.0`; see the result at the end of this
 section. The record below is the scope as written.
 
+**Live since 2026-11-03.** The pin is now `v0.3.0`, which carries `2b3b97b`, so
+the handling below is what a lost output reaches in play. Still not covered,
+and left as found: the opening's room tone (`set_room_tone` ignores a repeated
+state, so it stays silent for the rest of the opening), the weapon loop and
+`Player::RedrawVoice` (silent until their next trigger), and the short-lived
+results fill loop. Whether they should replay too is a listening call for
+`ROAD#3`.
+
 Labrador `2b3b97b` (on engine
 `master`, not in the pinned `v0.2.0`) retries a lost XAudio2 output, and its
 contract (`engine/audio/audio_device.h:147-151` there) says recovery "stops

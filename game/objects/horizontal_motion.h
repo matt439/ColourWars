@@ -21,7 +21,7 @@ using HorizontalDrive = horizontal_motion_contract::Drive;
 
 struct HorizontalMotionSpec
 {
-    mattmath::RectangleF anchor = mattmath::RectangleF::ZERO;
+    labrador::RectangleF anchor = labrador::RectangleF::zero;
     float travel_x = 0.0f;
     float period_seconds = 0.0f;
     float initial_phase = 0.0f;
@@ -36,8 +36,8 @@ struct HorizontalMotionSpec
     // The travel along the mover's own axis.
     float travel() const { return this->vertical() ? this->travel_y : this->travel_x; }
     // A scalar axis offset as a world translation.
-    mattmath::Vector2F axis_offset(float offset) const
-    { return this->vertical() ? mattmath::Vector2F(0.0f, offset) : mattmath::Vector2F(offset, 0.0f); }
+    labrador::Vector2F axis_offset(float offset) const
+    { return this->vertical() ? labrador::Vector2F(0.0f, offset) : labrador::Vector2F(offset, 0.0f); }
 };
 
 // Offsets along the mover's own axis: x for a horizontal mover, y for a lift.
@@ -52,8 +52,8 @@ struct HorizontalMotionSegment
 struct HorizontalMotionStep
 {
     float dt = 0.0f;
-    mattmath::RectangleF before = mattmath::RectangleF::ZERO;
-    mattmath::RectangleF after = mattmath::RectangleF::ZERO;
+    labrador::RectangleF before = labrador::RectangleF::zero;
+    labrador::RectangleF after = labrador::RectangleF::zero;
     std::array<HorizontalMotionSegment, 2> segments{};
     // Positive-duration intervals survive even if float endpoint offsets agree.
     // A zero step has no intervals and before == after == the current pose.
@@ -65,8 +65,8 @@ struct HorizontalMotionState
     HorizontalMotionSpec spec;
     double phase = 0.0;
     int direction = 1; // Outgoing: +1 at phase0, -1 at phase0.5.
-    mattmath::Vector2F previous_offset = mattmath::Vector2F::ZERO;
-    mattmath::Vector2F current_offset = mattmath::Vector2F::ZERO;
+    labrador::Vector2F previous_offset = labrador::Vector2F::zero;
+    labrador::Vector2F current_offset = labrador::Vector2F::zero;
 };
 
 struct HorizontalPreparedStep
@@ -81,8 +81,8 @@ struct HorizontalPreparedStep
 struct HorizontalCarryStep
 {
     HorizontalMotionId id = 0;
-    mattmath::RectangleF previous_top = mattmath::RectangleF::ZERO;
-    mattmath::RectangleF current_top = mattmath::RectangleF::ZERO;
+    labrador::RectangleF previous_top = labrador::RectangleF::zero;
+    labrador::RectangleF current_top = labrador::RectangleF::zero;
     float displacement_x = 0.0f;
     // A lift's rider moves with its top (E2), before its own integration.
     float displacement_y = 0.0f;
@@ -97,8 +97,8 @@ struct HorizontalSupportRef
 
 struct HorizontalPaintImpact
 {
-    mattmath::RectangleF anchor_rectangle = mattmath::RectangleF::ZERO;
-    mattmath::Vector2F normal_to_projectile = mattmath::Vector2F::ZERO;
+    labrador::RectangleF anchor_rectangle = labrador::RectangleF::zero;
+    labrador::Vector2F normal_to_projectile = labrador::Vector2F::zero;
     float penetration = 0.0f;
     double global_entry = 0.0;
 };
@@ -107,8 +107,8 @@ struct HorizontalStructureState
 {
     HorizontalMotionId id = 0;
     HorizontalMotionState motion;
-    mattmath::RectangleF previous_bounds = mattmath::RectangleF::ZERO;
-    mattmath::RectangleF current_bounds = mattmath::RectangleF::ZERO;
+    labrador::RectangleF previous_bounds = labrador::RectangleF::zero;
+    labrador::RectangleF current_bounds = labrador::RectangleF::zero;
     std::vector<PaintSurfaceSample> local_paint;
 };
 
@@ -130,7 +130,7 @@ public:
     // The same positive-time step with the phase held: a lift that would
     // close on a player stays where it is for this step (E3b).
     HorizontalPreparedStep hold(float dt) const;
-    mattmath::RectangleF bounds() const;
+    labrador::RectangleF bounds() const;
     // The paint drive's heading for this paint, before any end stop.
     static int paint_heading(const HorizontalMotionSpec& spec, float team_a, float team_b);
 
@@ -138,7 +138,7 @@ private:
     friend class TranslatingStructurePaintable;
     void apply(const HorizontalPreparedStep& prepared) noexcept;
     static float offset_at(const HorizontalMotionSpec& spec, double phase);
-    static mattmath::RectangleF at_offset(const HorizontalMotionSpec& spec, float offset);
+    static labrador::RectangleF at_offset(const HorizontalMotionSpec& spec, float offset);
     HorizontalPreparedStep prepare_driven(float dt, int heading) const;
     HorizontalMotionState state_;
 };

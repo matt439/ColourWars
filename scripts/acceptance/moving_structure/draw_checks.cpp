@@ -5,7 +5,7 @@ namespace moving_structure_acceptance
 {
     namespace
     {
-        void shifted(const mattmath::RectangleF& actual, mattmath::RectangleF anchor, float offset)
+        void shifted(const labrador::RectangleF& actual, labrador::RectangleF anchor, float offset)
         {
             anchor.offset(offset, 0.0f);
             require(bits(actual.x) == bits(anchor.x) && bits(actual.y) == bits(anchor.y) &&
@@ -23,7 +23,7 @@ namespace moving_structure_acceptance
         require(moving->shape()->bounding_box() == moving->bounds(), "World collider and visual bounds disagree");
         for (float pixel : { 0.25f, 1.0f, 4.0f })
         { shifted(moving->cull_bounds(pixel), stationary->cull_bounds(pixel), offset); }
-        const mattmath::RectangleF local(spec.anchor.left() + 20.0f, spec.anchor.top() - 2.0f, 12.0f, 6.0f);
+        const labrador::RectangleF local(spec.anchor.left() + 20.0f, spec.anchor.top() - 2.0f, 12.0f, 6.0f);
         auto contact = local; contact.offset(offset, 0.0f);
         world.paint(*moving, contact, PlayerTeam::a, 5); world.paint(*stationary, local, PlayerTeam::a, 5);
         for (float pixel : { 0.25f, 1.0f, 4.0f })

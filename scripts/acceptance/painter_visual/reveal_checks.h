@@ -10,9 +10,9 @@ Frame reveal_fixture(Application& app, const Canvas& canvas, const RevealArt* ar
     renderer.set_view_count(1);
     DrawList list = renderer.view(0);
     list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-    list.set_camera(Camera::DEFAULT_CAMERA);
+    list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);
-    canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+    canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
     if (art != nullptr) { art->draw(list, bounds, text, colour, age, reduced); }
     return read(renderer);
 }
@@ -98,9 +98,9 @@ Frame closing_hud_fixture(Application& app, const Canvas& canvas,
         const Viewport& viewport = app.viewport_manager()->player_viewport(view);
         DrawList list = renderer.view(view);
         list.set_viewport(viewport);
-        list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, viewport.size()));
+        canvas.draw(list, RectangleF(Vector2F::zero, viewport.size()));
         hud.draw_gameplay_interface(list, viewport.size(), view, view, PlayerTeam::a,
             0.75f, 0.5f, timer, Colour::blue, reduced, clock_running);
     }

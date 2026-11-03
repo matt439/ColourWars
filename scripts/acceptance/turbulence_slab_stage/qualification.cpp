@@ -11,7 +11,6 @@ namespace turbulence_slab_stage_acceptance
 {
     namespace
     {
-        using namespace mattmath;
         using namespace labrador;
         using moving_structure_acceptance::World;
         constexpr const char* stage_name = "turbulence_slab_trial";

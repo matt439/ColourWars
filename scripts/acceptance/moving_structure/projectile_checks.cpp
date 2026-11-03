@@ -9,7 +9,6 @@ namespace moving_structure_acceptance
 {
     namespace
     {
-        using namespace mattmath;
         using namespace labrador;
         constexpr int source_owner = 5;
         constexpr int repaint_owner = 6;
@@ -114,7 +113,7 @@ namespace moving_structure_acceptance
                     "Reversal fixture did not approach the authored extremum from below");
                 const float x = (before.right() + peak_right) / 2.0f;
                 auto projectile = shot(world, values, ProjectileType::jet,
-                    { x, miss ? 290.0f : 350.0f, 0.025f, 0.025f }, Vector2F::ZERO);
+                    { x, miss ? 290.0f : 350.0f, 0.025f, 0.025f }, Vector2F::zero);
                 const RectangleF volume = projectile->shape()->bounding_box();
                 require(!volume.intersects(before), "Stationary reversal shot must start clear");
                 external_step(*fixture, *projectile);
@@ -135,7 +134,7 @@ namespace moving_structure_acceptance
             auto& moving = *fixture->movers.front();
             const float x = moving.bounds().right() + 0.6f;
             auto projectile = shot(world, values, ProjectileType::jet,
-                { x, 350.0f, 0.1f, 0.1f }, Vector2F::ZERO);
+                { x, 350.0f, 0.1f, 0.1f }, Vector2F::zero);
             external_step(*fixture, *projectile);
             require(!projectile->for_deletion(), "Readiness miss control unexpectedly contacted moving cover");
             const auto history = motion_bits(moving.motion_state());
@@ -260,7 +259,7 @@ namespace moving_structure_acceptance
             auto& moving = fixture.mover({ { 100.0f, 300.0f, 16.0f, 100.0f }, 12.0f, 1.0f, 0.25f });
             fixture.build(); fixture.start();
             auto projectile = shot(world, values, ProjectileType::rolling,
-                { moving.bounds().left() - 2.0f, 349.5f, 4.0f, 1.0f }, Vector2F::ZERO);
+                { moving.bounds().left() - 2.0f, 349.5f, 4.0f, 1.0f }, Vector2F::zero);
             const RectangleF constructor_volume = projectile->shape()->bounding_box();
             // Clear the floor at launch; the path meets the mover after passing the floor edge.
             projectile->resolve_launch_obstruction({ 80.0f, 340.0f }, fixture.scene->collision_objects());
@@ -298,7 +297,7 @@ namespace moving_structure_acceptance
             auto fixture = course(world, { { 100.0f, 300.0f, 16.0f, 100.0f }, 12.0f, 1.0f, 0.25f });
             auto& moving = *fixture->movers.front();
             auto projectile = shot(world, values, ProjectileType::rolling,
-                { moving.bounds().left() + 1.0f, 340.0f, 4.0f, 1.0f }, Vector2F::ZERO);
+                { moving.bounds().left() + 1.0f, 340.0f, 4.0f, 1.0f }, Vector2F::zero);
             Projectile* active = fixture->level->admit_projectile(std::move(projectile));
             fixture->tick();
             require(active->shape()->bounding_box().intersects(moving.bounds()) &&

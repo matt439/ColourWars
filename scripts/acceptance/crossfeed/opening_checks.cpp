@@ -77,7 +77,7 @@ namespace crossfeed_acceptance
             // departure gate independently of the lower floor's scored extent.
             const float gate_x = right ? home.rectangle.right() : home.rectangle.left();
             const Vector2F target(floor.rectangle.center().x, floor.rectangle.top());
-            const float forward_down = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+            const float forward_down = right ? pi / 3.0f : 2.0f * pi / 3.0f;
             Run run(s, points[spawn], team, WeaponType::sniper);
             const float starting_ammo = run.player->weapon_ammo();
             require(run.ticks == 0 && run.paid_events == 0 && run.team_area(team) == 0.0f &&

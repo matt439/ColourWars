@@ -1,13 +1,12 @@
 #include "game/pch.h"
 #include "game/objects/structure.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 Structure::Structure(const std::string& sheet_name,
 	const std::string& frame_name,
 	const RectangleF& sprite_rectangle,
-	std::unique_ptr<mattmath::Shape> collision_shape,
+	std::unique_ptr<labrador::Shape> collision_shape,
 	RenderResources* render_resources,
 	CollisionObjectType collision_type,
 	const Colour& color,

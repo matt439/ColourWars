@@ -33,7 +33,7 @@ public:
         persona_(monitor_persona_observation(monitor_.persona()))
     {
         require(look_.glass == RectangleF(0.1f, 0.07f, 0.8f, 0.76f) &&
-            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::ZERO,
+            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::zero,
             "Desktop fixture lost shipped glass/solid-frame assumptions");
     }
     void unchanged() const
@@ -93,7 +93,7 @@ private:
     Frame render(const Colour& background, const std::function<void(DrawList&)>& draw)
     {
         const Canvas canvas(app_.render_resources(), background); Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++readbacks_; return read(renderer);
     }
     Application& app_; const Presentation& presentation_; const OpeningPresentation& look_; OpeningPresentation baseline_, expected_;

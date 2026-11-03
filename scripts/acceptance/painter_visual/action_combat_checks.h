@@ -123,7 +123,7 @@
         for (auto& input : inputs)
         {
             input.primary_shoot = true;
-            input.shoot_angle = -PI / 2.0f;
+            input.shoot_angle = -pi / 2.0f;
             input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
         }
         level->update(acceptance::slot_seats(*level, inputs), dt);
@@ -133,10 +133,10 @@
         for (int view = 0; view < count; ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
-            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::zero,
                 player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a,
                 0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-            player.on_contact(hit, Vector2F::ZERO, 0);
+            player.on_contact(hit, Vector2F::zero, 0);
         }
         action_frames(app, *level, canvas, output, prefix + "hurt", records, inputs,
             PlayerAnimationState::hurt, presentation);
@@ -170,10 +170,10 @@
         for (int view = 0; view < level->player_count(); ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
-            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::zero,
                 player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a,
                 0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-            player.on_contact(hit, Vector2F::ZERO, 0);
+            player.on_contact(hit, Vector2F::zero, 0);
         }
         phase("hurt-initial", true);
         while (level->player(0).combat_feedback().hurt_remaining() >
@@ -192,7 +192,7 @@
         phase("elimination-initial", true);
         for (int view = 0; view < level->player_count(); ++view)
         {
-            const_cast<Player&>(level->player(view)).set_pose({ Vector2F::ZERO, 0, false, true });
+            const_cast<Player&>(level->player(view)).set_pose({ Vector2F::zero, 0, false, true });
         }
         compare_combat(app, *level, canvas, presentation, false);
         for (int view = 0; view < level->player_count(); ++view)

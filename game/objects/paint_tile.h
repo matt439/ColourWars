@@ -31,16 +31,16 @@ class PaintTileSplash final : public colourwars::AnimationObject, public labrado
 public:
 	PaintTileSplash() = delete;
 	PaintTileSplash(
-		const mattmath::RectangleF& rectangle,
+		const labrador::RectangleF& rectangle,
 		labrador::RenderResources::SheetStrip clip,
 		labrador::RenderResources* render_resources,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
-	void set_rectangle_center(const mattmath::Vector2F& center);
+	void set_rectangle_center(const labrador::Vector2F& center);
 	void reset_and_play();
 	void reset_and_play(labrador::RenderResources::SheetStrip clip);
 	bool active() const;
@@ -56,9 +56,9 @@ public:
 	void draw_with_colour_rigid(labrador::DrawList& draw_list,
 		const labrador::Colour& colour, const FixedSlabGeometry& geometry) const;
 
-	mattmath::RectangleF bounds() const override;
+	labrador::RectangleF bounds() const override;
 private:
-	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
+	labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
 	float age_ = 0.0f;
 	float frame_time_ = 0.0f;
 	int frame_count_ = 0;
@@ -77,14 +77,14 @@ public:
 	PaintTile() = delete;
 	// Borrowed tuning and clips must outlive the tile; they supply the splash
 	// size and the splash animations, resolved against render_resources.
-	PaintTile(const mattmath::RectangleF& rectangle,
+	PaintTile(const labrador::RectangleF& rectangle,
 		const PaintTuning* paint,
 		const PaintSplashClips* splash_clips,
 		labrador::RenderResources* render_resources,
 		const TeamColour& team_colours,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f,
 		bool along_x = true, bool leading = true);
@@ -100,7 +100,7 @@ public:
 	// A rigid structure may join same-team tiles into one opaque visual base.
 	// Wet highlights stay per tile; scoring rectangles and credit never join.
 	void draw_surface_base_rigid(labrador::DrawList& draw_list,
-		const FixedSlabGeometry& geometry, const mattmath::RectangleF& local_band) const;
+		const FixedSlabGeometry& geometry, const labrador::RectangleF& local_band) const;
 	void draw_surface_wet_rigid(labrador::DrawList& draw_list,
 		const FixedSlabGeometry& geometry) const;
 	void update(float dt) override;
@@ -114,12 +114,12 @@ public:
 		ProjectileType type = ProjectileType::spray);
 	int player_num() const;
 
-	mattmath::RectangleF bounds() const override;
+	labrador::RectangleF bounds() const override;
 	// Contact/score bounds remain exact; this includes temporary splash overhang
 	// for the owning structure's Scene culling bounds.
-	mattmath::RectangleF visual_bounds() const;
+	labrador::RectangleF visual_bounds() const;
 private:
-	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
+	labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;
 	TeamColour team_colours_ = TeamColour();
@@ -129,8 +129,8 @@ private:
 	bool along_x_ = true;
 	bool leading_ = true;
 	PaintTileSplash splash_;
-	mattmath::RectangleF face_band(float offset, float depth) const;
+	labrador::RectangleF face_band(float offset, float depth) const;
 	void draw_rectangle_rigid(labrador::DrawList& draw_list,
-		const FixedSlabGeometry& geometry, const mattmath::RectangleF& local,
+		const FixedSlabGeometry& geometry, const labrador::RectangleF& local,
 		const labrador::Colour& tint) const;
 };

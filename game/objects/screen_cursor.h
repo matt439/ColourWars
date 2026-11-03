@@ -13,7 +13,7 @@ public:
 
     // The arrow's fixed tip at `tip`, sized by the screen's height. A negative
     // click age is resting; the existing reveal timeline owns the click age.
-    void draw(labrador::DrawList& draw_list, const mattmath::Vector2F& tip,
+    void draw(labrador::DrawList& draw_list, const labrador::Vector2F& tip,
         float screen_height, float click_age = -1.0f, bool reduced_effects = false) const;
 
 private:

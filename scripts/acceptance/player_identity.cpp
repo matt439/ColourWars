@@ -24,7 +24,6 @@
 #include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -338,7 +337,7 @@ namespace
         {
             for (auto& actions : inputs)
             {
-                actions = input(tick < 150, static_cast<float>(tick % 16) * PI / 8.0f);
+                actions = input(tick < 150, static_cast<float>(tick % 16) * pi / 8.0f);
                 actions.x_movement = tick < 40 ? 1.0f : 0.0f;
                 actions.jump_pressed = tick == 15;
                 actions.jump_held = tick >= 15 && tick < 30;
@@ -460,7 +459,7 @@ namespace
                         "Suspended C2 resize projected mouse aim from the virtual lead focus");
                 }
                 const Vector2F cursor = camera.calculate_view_position(p.center()) + pane.position();
-                require(PlayerCamera::mouse_direction(p.center(), cursor, pane, camera) == Vector2F::ZERO,
+                require(PlayerCamera::mouse_direction(p.center(), cursor, pane, camera) == Vector2F::zero,
                     "Suspended C2 resize invented aim at the physical player centre");
                 level->refresh_layout();
                 require(p.camera() == camera, "Repeated suspended resize/restore refresh drifted the camera");
@@ -488,7 +487,7 @@ namespace
             level->update(acceptance::slot_seats(*level, neutral), dt);
             if (player.state() == PlayerState::alive)
             {
-                require(player.health() == world.tuning.player().starting_health && player.velocity() == Vector2F::ZERO &&
+                require(player.health() == world.tuning.player().starting_health && player.velocity() == Vector2F::zero &&
                     player.rectangle() == player.spawn_rectangle(), "Natural camera respawn did not reset the actual player");
                 refresh({ 1920, 1080 }, false); respawned = true; break;
             }

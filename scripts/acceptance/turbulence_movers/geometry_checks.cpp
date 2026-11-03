@@ -57,8 +57,8 @@ namespace turbulence_movers_acceptance
             Trial trial(context, context.stage, settings(count));
             const auto initial = trial.level->horizontal_structure_states();
             require(initial.size() == 2 && initial[0].id == 1 && initial[1].id == 2 &&
-                initial[0].current_bounds == mattmath::RectangleF(600, 720, 320, 20) &&
-                initial[1].current_bounds == mattmath::RectangleF(3080, 720, 320, 20),
+                initial[0].current_bounds == labrador::RectangleF(600, 720, 320, 20) &&
+                initial[1].current_bounds == labrador::RectangleF(3080, 720, 320, 20),
                 "Authored paired mover phases/IDs/initial world rectangles changed");
             const auto first_bits = moving_structure_acceptance::motion_bits(initial[0].motion);
             trial.tick(input(), nullptr, 0.0f);

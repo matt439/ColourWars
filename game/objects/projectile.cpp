@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 RenderResources::SheetStrip resolve_projectile_strip(
@@ -68,7 +67,7 @@ Vector2F DiffusingProjectile::calculate_diffusion_scale() const
     if (details.type == DiffusionType::no_diffusion ||
         time < details.start_time)
     {
-        multiple = Vector2F::ONE;
+        multiple = Vector2F::one;
     }
     else if (time >= details.end_time)
     {
@@ -85,8 +84,8 @@ Vector2F DiffusingProjectile::calculate_diffusion_scale() const
 
         // Interpolate to end_scale exactly so the sprite and any scaled collider
         // remain continuous at end_time.
-        multiple = Vector2F::ONE +
-            (details.end_scale - Vector2F::ONE) * ratio;
+        multiple = Vector2F::one +
+            (details.end_scale - Vector2F::one) * ratio;
     }
     return multiple;
 }

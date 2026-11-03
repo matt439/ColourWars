@@ -31,7 +31,7 @@ public:
             art.click_duration == 0.18f && art.click_reach == 0.3f &&
             art.ink == Colour(0, 0, 0) && art.fill == Colour(243, 243, 243) &&
             art.shade == Colour(180, 180, 180) && art.shadow == Colour(0, 0, 0, 102) &&
-            this->frame_.origin() == Vector2F::ZERO,
+            this->frame_.origin() == Vector2F::zero,
             "Cursor fixed sample geometry/material dependencies changed; audit before widening the fixture");
     }
     void set(const Colour& ink, const Colour& fill)
@@ -185,7 +185,7 @@ private:
         const Canvas canvas(this->app_.render_resources(), background);
         Renderer& renderer = *this->app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++this->readbacks_;
         return read(renderer);
     }

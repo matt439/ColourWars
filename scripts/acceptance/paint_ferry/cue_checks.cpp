@@ -5,7 +5,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace moving_structure_acceptance;
 
     bool contains(const RectangleF& outer, const RectangleF& inner)
@@ -49,7 +48,7 @@ namespace
                 "sprite_sheet_1", "square_white_4", spec, &world.render, &world.audio,
                 &world.preferences, &world.tuning.paint(), CollisionObjectType::structure_jump_through,
                 world.palette, PaintableFaces{ true, true, true, true }, Colour::white,
-                Vector2F::ZERO, SpriteFlip::none, 0.0f, nullptr, look));
+                Vector2F::zero, SpriteFlip::none, 0.0f, nullptr, look));
             target.add_player(100.0f, 1200.0f); target.build();
             return mover;
         };
@@ -58,7 +57,7 @@ namespace
         require(cued.cue_state().paint_driven && cued.cue_state().motion == FerryMotionCue::unstepped &&
             cued.cue_state().demand_team == PlayerTeam::none && cued.cue_state().committed_heading == 0,
             "An initial ferry cue claimed a committed movement");
-        require(plain.cue_bounds() == RectangleF::ZERO, "An uncued ferry gained a plaque");
+        require(plain.cue_bounds() == RectangleF::zero, "An uncued ferry gained a plaque");
         fixture.start(); control.start();
         const auto unchanged = [&]()
         {
@@ -134,7 +133,6 @@ namespace
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using namespace moving_structure_acceptance;
 
     // A paint lift's cue (ROAD#28): the ferry's plaque with vertical arrows,
@@ -152,7 +150,7 @@ namespace
                 "sprite_sheet_1", "square_white_4", spec, &world.render, &world.audio,
                 &world.preferences, &world.tuning.paint(), CollisionObjectType::structure_paintable,
                 world.palette, PaintableFaces{ true, true, true, true }, Colour::white,
-                Vector2F::ZERO, SpriteFlip::none, 0.0f, nullptr, look));
+                Vector2F::zero, SpriteFlip::none, 0.0f, nullptr, look));
             target.add_player(100.0f, 1200.0f); target.build();
             return lift;
         };
@@ -236,9 +234,9 @@ void check_ferry_cue(const std::filesystem::path& content)
     TranslatingStructurePaintable cycling("sprite_sheet_1", "square_white_4", cycle,
         &world.render, &world.audio, &world.preferences, &world.tuning.paint(),
         CollisionObjectType::structure_jump_through, world.palette, { true, true, true, true },
-        labrador::Colour::white, mattmath::Vector2F::ZERO, labrador::SpriteFlip::none, 0.0f,
+        labrador::Colour::white, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f,
         nullptr, &world.presentation.ferry_direction());
-    require(!cycling.cue_state().paint_driven && cycling.cue_bounds() == mattmath::RectangleF::ZERO,
+    require(!cycling.cue_state().paint_driven && cycling.cue_bounds() == labrador::RectangleF::zero,
         "A cyclic mover falsely displayed paint-driven directions");
     std::cout << "PASS ferry and lift cue CPU: both team-A headings on each axis, a lift's own end stops, current paint vs committed movement/zero updates, "
         "tie and endpoint holds, no cycle cue, contained translated cull and exact uncued motion/paint/credit controls\n";

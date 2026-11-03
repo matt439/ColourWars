@@ -7,7 +7,6 @@
 #include <string>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 using namespace presentation_validation;
 
@@ -48,7 +47,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 		const SpriteFrame& swatch = palette_sheet->sprite_frame(palette_sheet->resolve_sprite_frame(name));
 		const RectangleI& source = swatch.source_rectangle();
 		if (source.width <= 0 || source.height <= 0 || source.width != source.height ||
-			swatch.origin() != Vector2F::ZERO)
+			swatch.origin() != Vector2F::zero)
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must name a positive square swatch with zero authored origin.");
@@ -120,7 +119,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 			check.animation(key + ".supply_strip", artwork.sheet, choice.supply_strip);
 			const AnimationStrip& supply = weapon_sheet->animation_strip(
 				weapon_sheet->resolve_animation_strip(choice.supply_strip));
-			if (supply.frame_count() <= 0 || body.origin() != Vector2F::ZERO)
+			if (supply.frame_count() <= 0 || body.origin() != Vector2F::zero)
 			{
 				throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 					".supply_strip needs at least one frame and a body with zero authored origin.");

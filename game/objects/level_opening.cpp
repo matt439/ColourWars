@@ -3,7 +3,6 @@
 #include "game/objects/countdown_cards.h"
 #include "game/objects/match_opening.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 void Level::build_opening_frame()
@@ -48,13 +47,13 @@ std::wstring_view Level::gamepad_controls_text() const
 RectangleF Level::gamepad_controls_text_bounds() const
 {
 	return this->state_ == LevelState::start_countdown ?
-		this->cards_->gamepad_controls_text_bounds() : RectangleF::ZERO;
+		this->cards_->gamepad_controls_text_bounds() : RectangleF::zero;
 }
 
 RectangleF Level::gamepad_controls_card_bounds() const
 {
 	return this->state_ == LevelState::start_countdown ?
-		this->cards_->gamepad_controls_card_bounds() : RectangleF::ZERO;
+		this->cards_->gamepad_controls_card_bounds() : RectangleF::zero;
 }
 
 std::wstring_view Level::keyboard_controls_text() const
@@ -63,13 +62,13 @@ std::wstring_view Level::keyboard_controls_text() const
 RectangleF Level::keyboard_controls_text_bounds() const
 {
 	return this->state_ == LevelState::start_countdown ?
-		this->cards_->keyboard_controls_text_bounds() : RectangleF::ZERO;
+		this->cards_->keyboard_controls_text_bounds() : RectangleF::zero;
 }
 
 RectangleF Level::keyboard_controls_card_bounds() const
 {
 	return this->state_ == LevelState::start_countdown ?
-		this->cards_->keyboard_controls_card_bounds() : RectangleF::ZERO;
+		this->cards_->keyboard_controls_card_bounds() : RectangleF::zero;
 }
 
 std::wstring_view Level::stage_entry_name() const
@@ -80,13 +79,13 @@ std::wstring_view Level::stage_entry_name() const
 RectangleF Level::stage_entry_bounds() const
 {
 	return this->state_ == LevelState::start_countdown && !this->stage_entry_name().empty() ?
-		this->cards_->stage_entry_card() : RectangleF::ZERO;
+		this->cards_->stage_entry_card() : RectangleF::zero;
 }
 
 RectangleF Level::stage_entry_text_bounds() const
 {
 	return this->stage_entry_bounds().width > 0.0f ?
-		this->cards_->stage_entry_text_bounds() : RectangleF::ZERO;
+		this->cards_->stage_entry_text_bounds() : RectangleF::zero;
 }
 
 std::vector<RectangleF> Level::opening_cards() const
@@ -103,7 +102,7 @@ void Level::draw_resume_countdown(Renderer& renderer, float remaining) const
 	if (!(remaining > 0.0f) || this->state_ != LevelState::active) { return; }
 	DrawList list = renderer.view(renderer.view_count() - 1);
 	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
-	list.set_camera(Camera::DEFAULT_CAMERA);
+	list.set_camera(Camera::default_camera);
 	this->cards_->draw_resume(list, this->paper_, remaining, this->preferences_->reduce_effects);
 }
 
@@ -111,7 +110,7 @@ void Level::draw_replay_banner(Renderer& renderer) const
 {
 	DrawList list = renderer.view(renderer.view_count() - 1);
 	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
-	list.set_camera(Camera::DEFAULT_CAMERA);
+	list.set_camera(Camera::default_camera);
 	this->cards_->draw_replay_banner(list, this->paper_);
 }
 

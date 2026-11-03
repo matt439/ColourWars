@@ -7,7 +7,6 @@
 #include <cmath>
 
 using namespace labrador;
-using namespace mattmath;
 
 // Snapshot-only drawing: repeated draws and resize never poll or change input.
 class StickResponsePreview final : public UiTexture
@@ -34,7 +33,7 @@ public:
 		const MenuPaperArtPresentation& art = this->look_->art;
 		const auto fill = [&](const RectangleF& box, const Colour& colour)
 		{
-			this->draw_with(list, box, this->frame(), colour, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+			this->draw_with(list, box, this->frame(), colour, Vector2F::zero, SpriteFlip::none, 0.0f);
 		};
 		const float line = view.line_width;
 		const auto track = [&](const RectangleF& box)
@@ -75,7 +74,7 @@ public:
 		fill(RectangleF(raw_point - Vector2F(view.marker_size / 2.0f), Vector2F(view.marker_size)), art.ink);
 		fill(RectangleF(raw_point - Vector2F(view.marker_size / 2.0f - line),
 			Vector2F(view.marker_size - line * 2.0f)), art.paper);
-		if (this->response_.aim != Vector2F::ZERO)
+		if (this->response_.aim != Vector2F::zero)
 		{
 			const Vector2F active = centre + this->response_.aim.normalized() * radius;
 			fill(RectangleF(active - Vector2F(view.marker_size / 2.0f), Vector2F(view.marker_size)), art.ink);
@@ -260,8 +259,8 @@ int StickSettingsMenu::preview_device(int slot) const
 void StickSettingsMenu::refresh_preview()
 {
 	const GamepadState& pad = this->data()->gamepads()->state(this->preview_device(this->slot_));
-	const Vector2F left = pad.connected ? pad.left_stick : Vector2F::ZERO;
-	const Vector2F right = pad.connected ? pad.right_stick : Vector2F::ZERO;
+	const Vector2F left = pad.connected ? pad.left_stick : Vector2F::zero;
+	const Vector2F right = pad.connected ? pad.right_stick : Vector2F::zero;
 	const float authored = this->data()->tuning()->input().movement_deadzone;
 	const StickResponse response = stick_response(left, right, authored, this->selection_, this->slot_);
 	this->preview_->set_response(left, right, response, this->selection_.movement_deadzone(this->slot_, authored),
@@ -286,7 +285,7 @@ void StickSettingsMenu::refresh_preview()
 		this->movement_response_->set_text(this->text().stick_movement_response(movement_response));
 		this->shown_movement_response_ = movement_response;
 	}
-	const bool aim_active = !(response.aim == Vector2F::ZERO);
+	const bool aim_active = !(response.aim == Vector2F::zero);
 	const Vector2F aim = response.aim.normalized();
 	const int raw_x = rounded_percent(right.x), raw_y = rounded_percent(right.y);
 	const std::array<int, 5> aim_inputs = { aim_active ? 1 : 0, raw_x, raw_y,

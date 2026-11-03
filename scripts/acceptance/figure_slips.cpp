@@ -20,7 +20,6 @@
 // checks what the game reads.
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -59,7 +58,7 @@ namespace
             &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
             &world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
             0, PlayerTeam::a, WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
-            Viewport{}, body.position(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
+            Viewport{}, body.position(), Vector2F::zero, 0.0f, Vector2F::zero,
             SpriteFlip::none, 0.0f, 0, &world.presentation.figure(), nullptr, person);
     }
 

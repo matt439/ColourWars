@@ -157,7 +157,7 @@ private:
         const Canvas canvas(this->app_.render_resources(), background);
         Renderer& renderer = *this->app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++this->readbacks_;
         return read(renderer);
     }

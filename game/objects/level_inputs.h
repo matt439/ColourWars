@@ -69,9 +69,9 @@ struct StageAudio
 struct LevelStage
 {
 	std::wstring name;
-	mattmath::RectangleF camera_bounds;
-	mattmath::RectangleF zoom_out_start_bounds;
-	mattmath::RectangleF zoom_out_finish_bounds;
+	labrador::RectangleF camera_bounds;
+	labrador::RectangleF zoom_out_start_bounds;
+	labrador::RectangleF zoom_out_finish_bounds;
 	StageAudio audio;
 	std::vector<LevelStation> stations;
 	// Empty unless a solo practice match asked for its lessons.

@@ -82,8 +82,8 @@ namespace turbulence_blockout_acceptance
             if (tool == WeaponType::sniper) { result.angle = (target.center() - run.player->center()).angle(); }
             else
             {
-                const float angle = tool == WeaponType::bucket ? -PI / 6.0f : 0.0f;
-                result.angle = right ? angle : PI - angle;
+                const float angle = tool == WeaponType::bucket ? -pi / 6.0f : 0.0f;
+                result.angle = right ? angle : pi - angle;
             }
             const int epoch = run.ticks;
             int local_update = 0;

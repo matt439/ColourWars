@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon_roller.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 
@@ -67,7 +66,7 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     }
     else
     {
-        this->set_rotation(PI - this->weapon_tuning_->aim_tilt);
+        this->set_rotation(pi - this->weapon_tuning_->aim_tilt);
     }
     this->set_player_center(player_center);
 

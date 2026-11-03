@@ -32,7 +32,7 @@ public:
         frame_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))), fixed_(acting_fixed_style(look_))
     {
         require(look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel" &&
-            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::ZERO &&
+            frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::zero &&
             strokes_.canvas_size == Vector2F(68, 120) && strokes_.pen_width == 4.0f,
             "Acting fixture lost captured solid frame or literal68x120/nib4 geometry");
         const std::vector<RespawnStroke> authored{
@@ -180,7 +180,7 @@ private:
     Frame render(const Colour& background, const std::function<void(DrawList&)>& draw)
     {
         const Canvas canvas(app_.render_resources(), background); Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list, { 0,0,1280,720 }); draw(list); ++readbacks_; return read(renderer);
     }
     Application& app_; const Presentation& presentation_; const OpeningPresentation& look_; OpeningPresentation baseline_, expected_;

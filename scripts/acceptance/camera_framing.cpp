@@ -14,7 +14,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -157,7 +156,7 @@ namespace
 						offset.normalized()), "Mouse aim drifted after scale, aspect or pane change");
 				}
 				const Vector2F on_player = camera.calculate_view_position(player) + pixels.position();
-				require(PlayerCamera::mouse_direction(player, on_player, pane, camera) == Vector2F::ZERO,
+				require(PlayerCamera::mouse_direction(player, on_player, pane, camera) == Vector2F::zero,
 					"A cursor on the player must not normalize zero or invent an aim direction");
 			}
 		}
@@ -253,7 +252,7 @@ namespace
 						const Vector2F offset(direction * 350.0f, -120.0f);
 						const Vector2F cursor = camera.calculate_view_position(player + offset) + pane.position();
 						require(close_to(PlayerCamera::mouse_direction(player, cursor, pane, camera), offset.normalized()) &&
-							PlayerCamera::mouse_direction(player, camera.calculate_view_position(player) + pane.position(), pane, camera) == Vector2F::ZERO,
+							PlayerCamera::mouse_direction(player, camera.calculate_view_position(player) + pane.position(), pane, camera) == Vector2F::zero,
 							"Mouse projection used virtual lead focus instead of the physical player");
 						const Camera stopped = follow.follow(player, pane, static_cast<float>(size.y), framing, camera, bounds);
 						require(exact(stopped, follow.follow(player, pane, static_cast<float>(size.y), framing, stopped, bounds)),

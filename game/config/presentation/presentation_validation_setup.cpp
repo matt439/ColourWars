@@ -9,7 +9,6 @@
 #include "game/input/input_slots.h"
 #include "game/config/presentation/menu_geometry.h"
 #include "game/save/player_profiles.h"
-#include "game/config/text_wrap.h"
 
 #include <algorithm>
 #include <cmath>
@@ -21,7 +20,6 @@
 #include <vector>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 
 // Phase 1: the Mode and Player Count headings and rows, the Join heading
@@ -354,7 +352,7 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 			weapon_contents = RectangleF::union_of(weapon_contents,
 				shadow_bounds(name_position, name_size, this->presentation_.menu_.detail_shadow_offset));
 			const Vector2F description_position = weapon_canvas_position + Vector2F(main.weapon_description_x_offset, 0.0f);
-			const std::wstring wrapped = text_wrap::wrap(render, name_font, main.weapon_descriptions[choice], main.weapon_description_max_width);
+			const std::wstring wrapped = render.wrap_text(name_font, main.weapon_descriptions[choice], main.weapon_description_max_width);
 			const Vector2F description_size = render.measure_text(name_font, wrapped);
 			weapon_contents = RectangleF::union_of(weapon_contents,
 				shadow_bounds(description_position, description_size, main.weapon_description_shadow_offset));

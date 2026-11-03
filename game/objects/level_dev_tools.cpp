@@ -5,7 +5,6 @@
 #include "game/objects/player_identity_hud.h"
 #include "engine/render/text_encoding.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // Level's developer tools (level.h, "Developer tools"): overlays, station

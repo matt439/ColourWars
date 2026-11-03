@@ -1,6 +1,6 @@
 #pragma once
 
-// Carried from Labrador v0.2.0, which removes this type on master (730dd99,
+// Carried from Labrador v0.2.0; v0.3.0 removes this type (730dd99,
 // "A game that used one should copy the class ... into its own source").
 // Shape unchanged; it lives in colourwars:: so it can never be ambiguous with
 // an engine type. See docs/review/engine-reports.md, HYG#25.
@@ -34,7 +34,7 @@ namespace colourwars
 			labrador::RenderResources* render_resources,
 			const labrador::Colour& color = labrador::Colour::white,
 			float rotation = 0.0f,
-			const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+			const labrador::Vector2F& origin = labrador::Vector2F::zero,
 			labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 			float layer_depth = 0.0f);
 
@@ -44,7 +44,7 @@ namespace colourwars
 			labrador::RenderResources* render_resources,
 			const labrador::Colour& color = labrador::Colour::white,
 			float rotation = 0.0f,
-			const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+			const labrador::Vector2F& origin = labrador::Vector2F::zero,
 			labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 			float layer_depth = 0.0f);
 	protected:
@@ -72,20 +72,20 @@ namespace colourwars
 
 		// No camera parameter; see TextureObject.
 		virtual void draw(labrador::DrawList& draw_list,
-			const mattmath::RectangleF& destination_rectangle) const;
+			const labrador::RectangleF& destination_rectangle) const;
 		virtual void draw(labrador::DrawList& draw_list,
-			const mattmath::Vector2F& position, float scale = 1.0f) const;
+			const labrador::Vector2F& position, float scale = 1.0f) const;
 
 		// See TextureObject::draw_with - lets a caller vary colour and flip per
 		// draw without assigning them to this shared object first.
 		void draw_with(labrador::DrawList& draw_list,
-			const mattmath::RectangleF& destination_rectangle,
+			const labrador::RectangleF& destination_rectangle,
 			const labrador::Colour& colour,
 			labrador::SpriteFlip flip) const;
 
 		// The current frame's rectangle on the sheet, for a caller drawing it
 		// in pieces (Player's figure slips).
-		const mattmath::RectangleI& source_rectangle() const;
+		const labrador::RectangleI& source_rectangle() const;
 
 	private:
 		labrador::SpriteSheet::strip_handle strip_;

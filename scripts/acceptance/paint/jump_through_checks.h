@@ -110,8 +110,8 @@ namespace
         area_is(level.level_end_info().total_area, expected_total);
         area_is(level.level_end_info().team_a_area, 0.0f);
         inputs[3].shoot_direction_requested = true;
-        inputs[3].shoot_angle = PI / 2.0f;
-        inputs[3].shoot_direction = Vector2F::DIRECTION_DOWN;
+        inputs[3].shoot_angle = pi / 2.0f;
+        inputs[3].shoot_direction = Vector2F::direction_down;
         inputs[3].primary_shoot = true;
         int paid = 0;
         for (int ticks = 0; ticks < 60; ++ticks)

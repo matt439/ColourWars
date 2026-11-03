@@ -8,7 +8,7 @@ namespace turbulence_slopes_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         constexpr std::array<const char*, 4> face_names{ "top", "bottom", "left", "right" };
         struct FaceBudget
         {

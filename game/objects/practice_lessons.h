@@ -37,7 +37,7 @@ public:
 	// update, else -1.
 	int active() const { return this->active_; }
 	// Lesson `index`'s card in window pixels, as of the last centre.
-	const mattmath::RectangleF& card(int index) const;
+	const labrador::RectangleF& card(int index) const;
 
 	// Bottom centre of the window, clear of the HUD along the top. Every
 	// card is laid out on resize, so choosing one never measures text.
@@ -52,7 +52,7 @@ private:
 	{
 		std::unique_ptr<colourwars::TextDropShadow> title;
 		std::unique_ptr<colourwars::TextDropShadow> text;
-		mattmath::RectangleF card;
+		labrador::RectangleF card;
 	};
 	const GameTuning* tuning_ = nullptr;
 	const Presentation* presentation_ = nullptr;

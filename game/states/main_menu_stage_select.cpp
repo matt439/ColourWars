@@ -11,7 +11,6 @@
 #include "game/config/stage_loading.h"
 #include "game/carried/ui_text_drop_shadow.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 #pragma region MainMenuStageSelect
@@ -194,7 +193,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->stage_name_->set_text(this->slot_display_name(slot));
 	// User-authored stage names share the preview's width with the briefing.
 	const RectangleF name_bounds = RectangleF::union_of(
-		this->stage_name_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->stage_name_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->stage_name_->text_bounds_at(this->menu_style().item_shadow_offset, 1.0f));
 	const float name_scale = std::min(1.0f, look.preview_size.x / name_bounds.width);
 	this->stage_name_->set_scale(name_scale);
@@ -216,7 +215,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		const float room = preview_right - this->navigation_->bounds().right() -
 			this->menu_style().focus_padding.x;
 		const RectangleF record_bounds = RectangleF::union_of(
-			this->stage_record_->text_bounds_at(Vector2F::ZERO, 1.0f),
+			this->stage_record_->text_bounds_at(Vector2F::zero, 1.0f),
 			this->stage_record_->text_bounds_at(this->menu_style().detail_shadow_offset, 1.0f));
 		const float record_scale = std::min(1.0f, room / record_bounds.width);
 		this->stage_record_->set_scale(record_scale);
@@ -236,7 +235,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		this->is_user_stage(slot) ? this->text().stage.user_hint :
 		this->text().stage.browse_hint);
 	const RectangleF hint_bounds = RectangleF::union_of(
-		this->selection_hint_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->selection_hint_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->selection_hint_->text_bounds_at(this->menu_style().detail_shadow_offset, 1.0f));
 	const float hint_scale = std::min(1.0f,
 		(look.briefing.size.x - 2.0f * look.briefing_padding.x) / hint_bounds.width);
@@ -382,7 +381,7 @@ void MainMenuStageSelect::init()
 		L"", look.record_font, Vector2F(0.0f, look.record_y), resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset, true);
 	this->random_mark_ = std::make_unique<colourwars::UiTextDropShadow>("random_mark",
-		L"?", this->look().announcement_font, Vector2F::ZERO, resources,
+		L"?", this->look().announcement_font, Vector2F::zero, resources,
 		style.highlight, style.shadow_colour, style.title_shadow_offset);
 	this->random_mark_->set_position(preview.center() -
 		this->random_mark_->bounds().center());

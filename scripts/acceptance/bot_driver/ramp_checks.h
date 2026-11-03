@@ -9,9 +9,9 @@ namespace bot_ramp_acceptance
         MatchBotObservation view = bot_ascent_acceptance::floor_fixture(tuning);
         const float feet = view.size.y * 0.5f;
         view.obstacles.clear(); view.supports.clear();
-        const mattmath::RectangleF floor(rises_right ? -1000.0f : -100.0f, feet, 1100.0f, 100.0f);
-        const mattmath::RectangleF ramp(rises_right ? 100.0f : -1500.0f, feet - 450.0f, 1400.0f, 450.0f);
-        const mattmath::RectangleF summit(rises_right ? 1500.0f : -2500.0f, feet - 450.0f, 1000.0f, 450.0f);
+        const labrador::RectangleF floor(rises_right ? -1000.0f : -100.0f, feet, 1100.0f, 100.0f);
+        const labrador::RectangleF ramp(rises_right ? 100.0f : -1500.0f, feet - 450.0f, 1400.0f, 450.0f);
+        const labrador::RectangleF summit(rises_right ? 1500.0f : -2500.0f, feet - 450.0f, 1000.0f, 450.0f);
         view.obstacles = { floor, ramp, summit };
         view.supports = { { floor, false }, { summit, false } };
         view.ramps.push_back({ ramp, rises_right });
@@ -103,7 +103,7 @@ namespace bot_ramp_acceptance
                     {
                         // The current floor is known, but it ends before
                         // reaching the toe: walking there would cross a gap.
-                        view.obstacles.front() = mattmath::RectangleF(right ? -1000.0f : -50.0f,
+                        view.obstacles.front() = labrador::RectangleF(right ? -1000.0f : -50.0f,
                             view.size.y * 0.5f, 1050.0f, 100.0f);
                         view.supports.front().bounds = view.obstacles.front();
                     }

@@ -214,7 +214,7 @@ private:
     const SpriteSheet* sheet_;const SpriteSheet* palette_sheet_;const SpriteFrame& frame_;
     std::vector<const SpriteFrame*> palette_frames_;const std::filesystem::path output_;std::vector<float> fixed_;
     std::array<std::vector<float>,2> geometry_{};
-    const RectangleF screen_{0,0,1280,720};const Camera camera_=Camera::DEFAULT_CAMERA;size_t readbacks_=0;
+    const RectangleF screen_{0,0,1280,720};const Camera camera_=Camera::default_camera;size_t readbacks_=0;
 };
 
 std::array<int,3> scribble_single_counts(size_t context)
@@ -259,7 +259,7 @@ ScribbleColourProbe::ScribbleColourProbe(Application& app,const Presentation& pr
     frame_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))),output_(output),fixed_(scribble_fixed_style(look_))
 {
     require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&
-        frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::ZERO&&
+        frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero&&
         look_.monitor_art.pen_width==.004f&&look_.monitor_art.corner_step==.012f&&
         look_.bezel_shadow==Colour(0,0,0,89)&&look_.monitor_art.ink==Colour(0,0,0)&&look_.monitor_art.highlight==Colour(238,238,238)&&
         look_.sticky_notes.size()==4&&look_.sticky_notes[0]==Colour(255,242,122)&&look_.sticky_notes[2]==Colour(174,235,255),
@@ -278,7 +278,7 @@ void ScribbleColourProbe::unchanged() const
         look_.bezel_shades==baseline_.bezel_shades&&look_.sticky_notes==baseline_.sticky_notes&&look_.stickers==baseline_.stickers&&
         sheet_==app_.render_resources()->sprite_sheet(look_.sprite_sheet)&&palette_sheet_==app_.render_resources()->sprite_sheet(look_.palette_sheet)&&
         &frame_==&sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))&&
-        screen_==RectangleF(0,0,1280,720)&&camera_.translation==Vector2F::ZERO&&camera_.scale==1.0f,
+        screen_==RectangleF(0,0,1280,720)&&camera_.translation==Vector2F::zero&&camera_.scale==1.0f,
         "Scribble edit/draw changed borrowed records, unselected style, arrays/resources or caller screen/camera");
     for(size_t c=0;c<2;++c)
     {

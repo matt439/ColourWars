@@ -14,8 +14,8 @@ public:
     ~TranslatedAirbrushShadow() override = default;
     void update(float dt) override;
     void draw(labrador::DrawList& list) const override;
-    mattmath::RectangleF bounds() const override;
-    mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
+    labrador::RectangleF bounds() const override;
+    labrador::RectangleF cull_bounds(float units_per_pixel) const override;
 private:
     static float checked_left(const TranslatingStructurePaintable& source,
         labrador::RenderResources* resources);

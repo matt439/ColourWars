@@ -71,16 +71,16 @@ public:
 	bool visible(const Player& player, bool showing) const;
 	// As seen by the pad in viewer_slot; see Level::player_identity_emphasis_for.
 	float emphasis(std::size_t participant, const Player& player, bool showing, int viewer_slot) const;
-	mattmath::RectangleF bounds(std::size_t participant, const Player& player, bool showing,
+	labrador::RectangleF bounds(std::size_t participant, const Player& player, bool showing,
 		int viewer_slot) const;
 
 	// The badge at `bounds`.
-	void draw_badge(labrador::DrawList& draw_list, const mattmath::RectangleF& bounds,
+	void draw_badge(labrador::DrawList& draw_list, const labrador::RectangleF& bounds,
 		int participant) const;
 	// Bot `bot`'s badge at `badge` and its label above, both shifted to stay
 	// inside the pane's `visible` world rectangle, the label on the card's paper.
-	void draw_bot(labrador::DrawList& draw_list, mattmath::RectangleF badge, int bot,
-		const mattmath::RectangleF& visible, const PaperCard& paper) const;
+	void draw_bot(labrador::DrawList& draw_list, labrador::RectangleF badge, int bot,
+		const labrador::RectangleF& visible, const PaperCard& paper) const;
 
 private:
 	int pad_device(int slot) const;

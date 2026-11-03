@@ -22,9 +22,9 @@ Frame hud_fixture(Application& app, const Canvas& canvas, const InterfaceGamepla
         DrawList list = renderer.view(view);
         const Viewport viewport = app.viewport_manager()->player_viewport(view);
         list.set_viewport(viewport);
-        list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, viewport.size()));
+        canvas.draw(list, RectangleF(Vector2F::zero, viewport.size()));
         if (view >= count || only_view == -2 || (only_view >= 0 && only_view != view)) { continue; }
         const PlayerTeam team = view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
         hud.draw_gameplay_interface(list, viewport.size(), view, slots[view], team,

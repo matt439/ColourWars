@@ -9,7 +9,7 @@ namespace
 		const MenuPresentationVariant variants(content);
 		const Presentation shipped = variants.load([](rapidjson::Document&) {});
 		const auto& pause = shipped.pause_menu();
-		require(pause.box_size == mattmath::Vector2F(1050.0f, 900.0f) &&
+		require(pause.box_size == labrador::Vector2F(1050.0f, 900.0f) &&
 			pause.heading_y == 180.0f && pause.status_y == 315.0f &&
 			pause.art.disabled_ink == Colour("62635F"),
 			"Shipped pause artwork was not retained by the presentation reader");
@@ -114,8 +114,8 @@ namespace
 			const auto& menu = boundary.pause_menu();
 			require(menu.heading_y == (upper ? 899.999f : 0.001f) &&
 				menu.status_y == (upper ? 900.0f : 0.002f) &&
-				menu.box_size == (upper ? mattmath::Vector2F(1600.0f, 900.0f) :
-					mattmath::Vector2F(0.007f, 0.007f)) && menu.art.disabled_ink == pause.art.disabled_ink,
+				menu.box_size == (upper ? labrador::Vector2F(1600.0f, 900.0f) :
+					labrador::Vector2F(0.007f, 0.007f)) && menu.art.disabled_ink == pause.art.disabled_ink,
 				"Valid pause artwork boundaries or opaque disabled ink were changed");
 		}
 	}

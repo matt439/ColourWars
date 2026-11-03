@@ -20,6 +20,9 @@ namespace labrador
     { return slot >= 0 && slot < 4 ? this->impl_->states[static_cast<size_t>(slot)] : GamepadState{}; }
     void GamepadReader::suspend() { this->impl_->suspended = true; }
     void GamepadReader::resume() { this->impl_->suspended = false; }
+    // Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
+    bool GamepadReader::vibrate(int, const Vibration&) { return false; }
+    void GamepadReader::stop_vibration(int) {}
 }
 
 using namespace input_bindings_acceptance;

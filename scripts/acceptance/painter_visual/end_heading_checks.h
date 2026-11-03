@@ -81,7 +81,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             expected.bounds().bottom() <= look.layout.position.y - art.focus_padding.y,
             "End heading reference changed its unscaled paper containment or reached its primary action");
         const Frame actual = end_menu_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

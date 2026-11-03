@@ -22,11 +22,11 @@ public:
     // `progress` runs from 0 at the pop to 1 when the figure is back. Draws the
     // outline drawn so far over `figure`, mirrored when facing left. Nothing
     // before draw_from; the whole outline from fill_at, when filled() is true.
-    void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
+    void draw(labrador::DrawList& draw_list, const labrador::RectangleF& figure,
         bool facing_right, float progress) const;
     // The same, for strokes other than the house ones: those of the match's
     // person, who made their own slips (FigurePerson).
-    void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
+    void draw(labrador::DrawList& draw_list, const labrador::RectangleF& figure,
         bool facing_right, float progress, const std::vector<RespawnStroke>& strokes) const;
 
     // The outline is finished and the figure is filled in: its own sprite takes over.
@@ -41,7 +41,7 @@ public:
 private:
     const RespawnRedrawPresentation* presentation_;
 
-    void draw_pen(labrador::DrawList& draw_list, const mattmath::RectangleF& figure,
-        bool facing_right, const mattmath::Vector2F& from,
-        const mattmath::Vector2F& to) const;
+    void draw_pen(labrador::DrawList& draw_list, const labrador::RectangleF& figure,
+        bool facing_right, const labrador::Vector2F& from,
+        const labrador::Vector2F& to) const;
 };

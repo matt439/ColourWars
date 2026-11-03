@@ -14,7 +14,6 @@
 #include <utility>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 using namespace presentation_validation;
 

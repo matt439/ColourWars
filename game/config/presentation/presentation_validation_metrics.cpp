@@ -9,7 +9,6 @@
 #include <string_view>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_validation;
 
 namespace presentation_validation

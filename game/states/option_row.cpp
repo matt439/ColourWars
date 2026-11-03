@@ -3,7 +3,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 OptionRow::OptionRow(const std::string& name,
 	const std::wstring& label,
@@ -75,7 +74,7 @@ OptionRow::OptionRow(const std::string& name,
 void OptionRow::set_value(const std::wstring& value)
 {
 	this->value_text_->set_text(value);
-	if (this->value_limit_ != Vector2F::ZERO)
+	if (this->value_limit_ != Vector2F::zero)
 	{
 		// Refit from the authored font size when a longer or shorter choice appears.
 		this->value_text_->set_scale(1.0f);

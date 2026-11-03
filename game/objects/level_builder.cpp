@@ -3,7 +3,6 @@
 #include "game/config/presentation/presentation.h"
 #include "game/config/drawable_text.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,

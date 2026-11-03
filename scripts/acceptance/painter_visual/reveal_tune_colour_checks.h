@@ -21,11 +21,11 @@ public:
         const auto& a = baseline_.reveal_art;
         require(a.ink == Colour(0, 0, 0) && a.paper == Colour(240, 235, 221) && a.shade == Colour(0, 0, 0, 85) &&
             a.keyline_width == 0.035f && a.padding == 0.12f && a.shadow_offset == 0.06f &&
-            a.tick_length == 0.14f && a.beat_duration == 0.18f && frame_.origin() == Vector2F::ZERO &&
+            a.tick_length == 0.14f && a.beat_duration == 0.18f && frame_.origin() == Vector2F::zero &&
             frame_.source_rectangle() == RectangleI(32, 0, 4, 4), "Reveal sampled geometry/resources changed; re-audit sites");
         // An empty string returns before the body. SPACE is a real nonempty
         // material-only route only when the actual captured font measures ZERO.
-        require(app.render_resources()->measure_text(font_, L" ") == Vector2F::ZERO &&
+        require(app.render_resources()->measure_text(font_, L" ") == Vector2F::zero &&
             app.render_resources()->measure_text(font_, labels_[0]).x > 0.0f &&
             app.render_resources()->measure_text(font_, labels_[1]).y > 0.0f,
             "Reveal material SPACE must actually measure ZERO; no empty-text or glyph-pixel substitution");
@@ -170,7 +170,7 @@ private:
     {
         const Canvas canvas(app_.render_resources(), background); Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 }); draw(list);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 }); draw(list);
         ++readbacks_; return read(renderer);
     }
     Application& app_; Presentation& presentation_; OpeningPresentation& look_;

@@ -16,8 +16,8 @@ struct BotSeatView
 {
 	struct Seat
 	{
-		mattmath::Vector2F center = mattmath::Vector2F::ZERO;
-		mattmath::Vector2F velocity = mattmath::Vector2F::ZERO;
+		labrador::Vector2F center = labrador::Vector2F::zero;
+		labrador::Vector2F velocity = labrador::Vector2F::zero;
 		PlayerTeam team = PlayerTeam::none;
 		bool alive = true;
 		bool on_ground = false;
@@ -76,7 +76,7 @@ protected:
 	void hold_jump(PlayerInputData& input, bool held);
 
 	// Aim along `direction` (normalised here; zero aims nowhere).
-	static void aim(PlayerInputData& input, const mattmath::Vector2F& direction);
+	static void aim(PlayerInputData& input, const labrador::Vector2F& direction);
 
 private:
 	bool jump_was_held_ = false;
@@ -181,8 +181,8 @@ private:
 	Mode mode_ = Mode::paint;
 	bool was_alive_ = false;
 	bool target_near_ = false;
-	mattmath::Vector2F target_offset_ = mattmath::Vector2F::ZERO;
-	mattmath::Vector2F return_point_ = mattmath::Vector2F::ZERO;
+	labrador::Vector2F target_offset_ = labrador::Vector2F::zero;
+	labrador::Vector2F return_point_ = labrador::Vector2F::zero;
 	float retreat_heading_ = 1.0f;
 	float sweep_ = 0.6f;
 

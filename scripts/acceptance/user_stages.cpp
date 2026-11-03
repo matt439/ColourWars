@@ -264,8 +264,14 @@ namespace
 		{
 			const std::string base = "{\"format\":" + format + '}';
 			const std::string expected = refusal(base);
+			// A raw NUL is a syntax error the engine parser owns (v0.3.0), so it
+			// outranks the format check, like the syntax cases above.
+			const std::string nul_bytes = base + '\0' + "suffix";
+			std::string nul_expected;
+			try { const auto document = parse_json(nul_bytes, name); }
+			catch (const std::runtime_error& error) { nul_expected = error.what(); }
 			require(expected.find("format") != std::string::npos &&
-				refusal(base + '\0' + "suffix") == expected &&
+				!nul_expected.empty() && refusal(nul_bytes) == nul_expected &&
 				refusal("{\"format\":" + format + ",\"unknown\":\"" + malformed[1] + "\"}") == expected,
 				"Complete-source validation changed unsupported/malformed format diagnostic precedence");
 		}
@@ -682,14 +688,14 @@ namespace
 		std::vector<Glyph> glyphs;
 		for (char32_t character = U' '; character <= U'~'; ++character)
 		{
-			glyphs.push_back({ character, mattmath::RectangleI(0, 0, 10, 8), 0.0f, 0.0f, 0.0f });
+			glyphs.push_back({ character, labrador::RectangleI(0, 0, 10, 8), 0.0f, 0.0f, 0.0f });
 		}
 		const Font fixed(TextureHandle{}, std::move(glyphs), 10.0f);
 		const Font proportional(TextureHandle{}, std::vector<Glyph>{
-			{ U'a', mattmath::RectangleI(0, 0, 1, 8), 0.0f, 0.0f, 0.0f },
-			{ U' ', mattmath::RectangleI(0, 0, 1, 8), 0.0f, 0.0f, 0.0f },
-			{ U'b', mattmath::RectangleI(0, 0, 3, 8), 0.0f, 0.0f, 0.5f },
-			{ U'X', mattmath::RectangleI(0, 0, 5, 8), 0.0f, 0.0f, 0.0f } }, 10.0f);
+			{ U'a', labrador::RectangleI(0, 0, 1, 8), 0.0f, 0.0f, 0.0f },
+			{ U' ', labrador::RectangleI(0, 0, 1, 8), 0.0f, 0.0f, 0.0f },
+			{ U'b', labrador::RectangleI(0, 0, 3, 8), 0.0f, 0.0f, 0.5f },
+			{ U'X', labrador::RectangleI(0, 0, 5, 8), 0.0f, 0.0f, 0.0f } }, 10.0f);
 		require(pages(proportional, "a bbX", 10.0f, 10.0f) ==
 			std::vector<std::wstring>{ L"a ", L"bb", L"X" },
 			"A wide final proportional glyph left an overwide suffix after word wrapping");
@@ -697,8 +703,8 @@ namespace
 			std::vector<std::wstring>{ L"ab\ncd", L"ef\ngh" }, "Exact diagnostic width/height edges did not paginate inclusively");
 		require(pages(fixed, "", 20.0f, 20.0f) == std::vector<std::wstring>{ L"" },
 			"An empty diagnostic did not provide a safe empty page");
-		for (const auto area : { mattmath::Vector2F(0.0f, 20.0f), mattmath::Vector2F(20.0f, -1.0f),
-			mattmath::Vector2F(9.0f, 20.0f), mattmath::Vector2F(20.0f, 9.0f) })
+		for (const auto area : { labrador::Vector2F(0.0f, 20.0f), labrador::Vector2F(20.0f, -1.0f),
+			labrador::Vector2F(9.0f, 20.0f), labrador::Vector2F(20.0f, 9.0f) })
 		{
 			bool rejected = false;
 			try { pages(fixed, "W", area.x, area.y); }

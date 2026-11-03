@@ -113,7 +113,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)

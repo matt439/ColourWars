@@ -222,7 +222,7 @@ namespace
                 if (offset < 0.0f || offset > spec.travel() ||
                     float_from_bits(value.offsets[frame * 2 + (1 - axis)]) != 0.0f)
                 { fail(path, "horizontal_motion offset outside its axis travel"); }
-                mattmath::RectangleF pose = spec.anchor;
+                labrador::RectangleF pose = spec.anchor;
                 if (offset != 0.0f)
                 {
                     if (spec.vertical()) { pose.y += offset; }

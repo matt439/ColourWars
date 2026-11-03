@@ -94,8 +94,8 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
         require(readbacks < 76, "Duration leaf probe exceeded its readback budget");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         stack.draw(renderer); ++readbacks; return read(renderer);
     };
     struct RowMetrics { RectangleF row; RectangleF ornament; Vector2F value; };
@@ -128,7 +128,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
             "Independent unscaled duration row, invisible shadow, card, shade or arrow escaped its paper/column");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         Canvas(app.render_resources(), main.home_background_colour).draw(list, camera.visible_rectangle(viewport));
         // This independent paper helper redraws the complete resting bevel and

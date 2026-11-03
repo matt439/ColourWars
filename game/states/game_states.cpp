@@ -505,10 +505,10 @@ void GameLevel::draw(Renderer& renderer) const
 	this->data()->debug().begin_match_draw();
 	// The cursor marker follows the pointer as this frame shows it.
 	const labrador::Mouse& mouse = *this->data()->mouse();
-	std::optional<mattmath::Vector2F> pointer;
+	std::optional<labrador::Vector2F> pointer;
 	if (mouse.focused())
 	{
-		pointer = mattmath::Vector2F(static_cast<float>(mouse.state().position.x),
+		pointer = labrador::Vector2F(static_cast<float>(mouse.state().position.x),
 			static_cast<float>(mouse.state().position.y));
 	}
 	this->level_->set_pointer(pointer);
@@ -639,7 +639,7 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	{
 		// The page wrote the tool into settings_. The rebuild cleans the
 		// paint; a living player keeps their place and goes straight to GO.
-		const std::optional<mattmath::Vector2F> place = this->level_->tool_change_place();
+		const std::optional<labrador::Vector2F> place = this->level_->tool_change_place();
 		this->build_and_enter_level();
 		this->level_->enter_after_tool_change(place);
 		break;

@@ -57,7 +57,7 @@ namespace
             d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(0.0f);
             d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(0.0f);
         });
-        require(warning_definition_origin.main_menu().team_warning_position == Vector2F::ZERO,
+        require(warning_definition_origin.main_menu().team_warning_position == Vector2F::zero,
             "Nonnegative Team warning position definitions rejected zero before resource bounds were checked");
         const auto footer_boundary = variants.load([](rapidjson::Document& d)
         {

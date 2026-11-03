@@ -12,7 +12,6 @@
 #include <string>
 
 using namespace labrador;
-using namespace mattmath;
 
 // Phase 1: Pause's actions, practice Pause's five rows in the same paper and
 // the Tool row's name for every tool.

@@ -30,7 +30,7 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
             "Paused Options action drifted from its independent literal");
     }
 
-    const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION);
+    const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
     const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
         look.options_box_size) / 2.0f, look.options_box_size);
     const float row_height = look.options_spacing.y - art.focus_padding.y * 2.0f;
@@ -102,10 +102,10 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
     const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
     const Camera camera = Camera::frame(design, viewport);
     DrawList list = renderer.view(0); list.set_viewport(viewport);
-    list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+    list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
     if (canvas_underlay)
     {
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
     }
     list.set_camera(camera);
     const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
@@ -158,7 +158,6 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     const auto save_path = output / "paused-options-profile" / "ColourWars" / "save_data.json";
     const std::filesystem::path blocked(save_path.wstring() + L".tmp");
     const HWND window = static_cast<HWND>(app.window());
-    const SettingsProbeActivationGuard activation(window);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
     for (size_t slot = 0; slot < expected.sticks.size(); ++slot)
@@ -273,7 +272,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         else { auto& pad = painter_scripted_pads::states[static_cast<size_t>(owner)]; pad.right_stick = Vector2F(1.0f, 0.5f); pad.right_trigger = 1.0f; }
         for (int i = 0; i < 90; ++i) { tick(dt); }
         app.mouse()->on_button_up(MouseButton::left);
-        if (owner != keyboard) { painter_scripted_pads::states[static_cast<size_t>(owner)].right_trigger = 0.0f; painter_scripted_pads::states[static_cast<size_t>(owner)].right_stick = Vector2F::ZERO; }
+        if (owner != keyboard) { painter_scripted_pads::states[static_cast<size_t>(owner)].right_trigger = 0.0f; painter_scripted_pads::states[static_cast<size_t>(owner)].right_stick = Vector2F::zero; }
         tick(); tap(GamepadButton::start); require(stack.depth() == 3, "Participant did not open actual Pause"); tick(); open_options();
         level_identity = &game->level(); world = render(game->level(), *app.renderer()); frozen = resume_observation(game->level());
 #if COLOURWARS_DEV_TOOLS
@@ -300,7 +299,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
             "Frozen paused Options changed pixels or consumed draw RNG");
         if (capture) { save(actual, output / (stem + ".ppm")); const auto& look = captured.main_menu();
             const RectangleF paper((Vector2F(1920.0f, captured.menu().footer_y) - look.options_box_size) / 2.0f, look.options_box_size);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
             save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         records << name << ',' << actual.width << ',' << actual.height << ',' << players << ',' << owner << ',' << device << ',' << row << ',' << stack.depth() << ",true,true,true\n";
         return actual;
@@ -324,7 +323,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     tick(settled); const Frame resting = compare("motion-settled");
     require(moving.pixels != resting.pixels, "Paused Options focus had no authored motion response");
     const auto delta = foreground_delta_bounds(moving, resting);
-    const Camera motion_camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+    const Camera motion_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
     const RectangleF motion_paper((Vector2F(1920.0f, original.menu().footer_y) - original.main_menu().options_box_size) / 2.0f, original.main_menu().options_box_size);
     require(countdown_crop_bounds(motion_camera.calculate_view_rectangle(motion_paper)).contains(delta), "Paused Options motion escaped its paper");
     go(3); hold(device, GamepadButton::a, true); tick();

@@ -2,7 +2,7 @@
 #include "game/config/presentation/presentation_validation.h"
 #include "game/config/presentation/menu_geometry.h"
 
-using namespace mattmath;
+using namespace labrador;
 
 void Presentation::validate_resources(const labrador::RenderResources& render,
     const labrador::AudioResources& audio) const

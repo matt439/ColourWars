@@ -43,7 +43,7 @@ Frame miniature_material_frame(Application& app, const Canvas& canvas,
         DrawList list = renderer.view(view);
         const Viewport pane = app.viewport_manager()->player_viewport(view);
         list.set_viewport(pane);
-        list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(0, 0, pane.width, pane.height));
         list.set_camera(camera);
@@ -266,8 +266,8 @@ Frame miniature_structure_frame(Application& app, const Canvas& canvas,
     Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
     DrawList list = renderer.view(0);
     list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-    list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-    canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+    list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+    canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
     list.set_camera(camera);
     if (adapted) { structure.draw_miniature(list); } else { structure.draw(list); }
     return read(renderer);
@@ -288,16 +288,16 @@ void miniature_paint_matrix(Application& app, const Canvas& canvas, const GameTu
             std::make_unique<RectangleF>(body), app.render_resources(), app.audio_resources(), &preferences,
             &tuning.paint(), CollisionObjectType::structure_paintable, colours,
             PaintableFaces{ false, true, false, false }, std::span<const RectangleF>{}, Colour::white,
-            0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f,
+            0.0f, Vector2F::zero, SpriteFlip::none, 0.0f,
             material ? std::make_unique<MiniatureFixtureMaterial>(app.render_resources()) : nullptr);
     };
     auto painted = make(true); auto overlay_reference = make(false);
     RectangleF splash(64, 60, 320, 16);
     const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
     splash.offset(half.x, half.y);
-    const ProjectileSpray shot(splash, Vector2F::ZERO, PlayerTeam::a, 3, colours.team_a,
+    const ProjectileSpray shot(splash, Vector2F::zero, PlayerTeam::a, 3, colours.team_a,
         app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-    painted->on_contact(shot, Vector2F::ZERO, 0); overlay_reference->on_contact(shot, Vector2F::ZERO, 0);
+    painted->on_contact(shot, Vector2F::zero, 0); overlay_reference->on_contact(shot, Vector2F::zero, 0);
     painted->update(10); overlay_reference->update(10);
     const PaintTotal before = painted->paint_total();
     require(before.team_a > 0 && before.team_b == 0, "miniature paint fixture did not establish actual owned paint");
@@ -400,7 +400,7 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-            list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point); preview.draw(list);
+            list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point); preview.draw(list);
             return read(renderer);
         };
         std::srand(1469); const int expected_random = std::rand(); std::srand(1469);
@@ -461,7 +461,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.render_resources(), app.audio_resources(), &preferences, app.viewport_manager()))
         { scene.add(std::move(player)); }
         scene.add(std::make_unique<ProjectileSpray>(RectangleF(spawn + Vector2F(24, 48), Vector2F(64, 64)),
-            Vector2F::ZERO, PlayerTeam::a, 3, Colour(0.2f, 0.5f, 0.9f), app.render_resources(),
+            Vector2F::zero, PlayerTeam::a, 3, Colour(0.2f, 0.5f, 0.9f), app.render_resources(),
             resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()),
             &tuning.projectile(ProjectileType::spray)));
         scene.end_tick();

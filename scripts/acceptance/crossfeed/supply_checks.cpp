@@ -43,7 +43,7 @@ namespace crossfeed_acceptance
             for (; !weapon->ready_to_shoot() && priming_ticks < 1800; ++priming_ticks)
             {
                 const auto objects = weapon->update_and_get_projectiles(aimed(0.0f),
-                    origin, Vector2F::ZERO, true, dt);
+                    origin, Vector2F::zero, true, dt);
                 require(objects.empty(), "Crossfeed supply priming emitted without fire input");
                 observed_cooldown += dt;
             }
@@ -83,7 +83,7 @@ namespace crossfeed_acceptance
                 // counted and then discarded. No Scene, collision, damage,
                 // paint, flight distance or range is inferred from this assay.
                 const auto objects = weapon->update_and_get_projectiles(actions,
-                    origin, Vector2F::ZERO, true, dt);
+                    origin, Vector2F::zero, true, dt);
                 const float after = weapon->ammo();
                 const bool paid_this_tick = after < before;
                 require(paid_this_tick == !objects.empty(),
@@ -177,7 +177,7 @@ namespace crossfeed_acceptance
             {
                 const float before = weapon->ammo();
                 const auto objects = weapon->update_and_get_projectiles(aimed(0.0f),
-                    origin, Vector2F::ZERO, true, dt);
+                    origin, Vector2F::zero, true, dt);
                 require(objects.empty() && weapon->ammo() >= before,
                     "Crossfeed supply released input paid or reduced ammunition");
                 if (tick == 30) { release_samples[0] = weapon->ammo(); }

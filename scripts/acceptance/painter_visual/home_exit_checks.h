@@ -94,15 +94,15 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             "Independent Home Exit heading/question no longer fit the authored paper and action spacing");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
-        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto pixel = sheet->resolve_sprite_frame(style.fill_frame);
         // Home and its pushed child each dim the extra aspect-ratio margins.
         // The child's opaque design background covers all underlying Home art.
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
-        sheet->draw(list, pixel, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), original.main_menu().home_background_colour);
+        sheet->draw(list, pixel, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), original.main_menu().home_background_colour);
         setup_paper_reference(list, *app.render_resources(), style, art, paper, yes ? accept.bounds() : cancel.bounds());
         sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
             menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
@@ -135,7 +135,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         {
             save(actual, output / (stem + ".ppm"));
             const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
             save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm"));
         }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << yes << ',' << context.music_exit_pending() << ",true\n";

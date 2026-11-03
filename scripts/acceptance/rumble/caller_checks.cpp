@@ -13,7 +13,6 @@ namespace rumble_acceptance
 {
 namespace
 {
-    using namespace mattmath;
     using namespace labrador;
     using moving_structure_acceptance::World;
     using moving_structure_acceptance::Fixture;
@@ -41,7 +40,7 @@ namespace
         int owner = input_slots::keyboard_and_mouse)
     {
         const ProjectileTuning& tuning = world.tuning.projectile(ProjectileType::spray);
-        return ProjectileSpray(RectangleF(0.0f, 0.0f, 10.0f, 10.0f), Vector2F::ZERO,
+        return ProjectileSpray(RectangleF(0.0f, 0.0f, 10.0f, 10.0f), Vector2F::zero,
             team, owner, world.palette.team_colour(team),
             &world.render, resolve_projectile_strip(tuning, world.render), &tuning);
     }
@@ -101,17 +100,17 @@ namespace
         const ProjectileSpray projectile = shot(world);
         first.set_damage_immune(true);
         const float initial_health = first.health();
-        first.on_contact(projectile, Vector2F::ZERO, 0.0f);
+        first.on_contact(projectile, Vector2F::zero, 0.0f);
         require(first.health() == initial_health, "Immune damage control changed health");
         all_empty(fixture.level->take_rumble_events());
         const ProjectileSpray keyboard_threat = shot(world, PlayerTeam::a, 3);
-        fixture.players[2]->on_contact(keyboard_threat, Vector2F::ZERO, 0.0f);
+        fixture.players[2]->on_contact(keyboard_threat, Vector2F::zero, 0.0f);
         records = fixture.level->take_rumble_events();
         require(records[2].input_slot == input_slots::keyboard_and_mouse && records[2].events.hit &&
             records[0].events.empty() && records[1].events.empty(),
             "Level discarded or reassigned a keyboard event before the output policy could gate it");
         first.set_damage_immune(false);
-        first.on_contact(projectile, Vector2F::ZERO, 0.0f);
+        first.on_contact(projectile, Vector2F::zero, 0.0f);
         require(first.health() > 0.0f && first.health() < initial_health,
             "Nonfatal rumble fixture did not use production projectile damage");
         records = drain_without_gameplay_change(*fixture.level);
@@ -124,7 +123,7 @@ namespace
         // existing once-only dead-state transition on the next positive tick.
         for (int hit = 0; hit < 10000 && first.health() > 0.0f; ++hit)
         {
-            first.on_contact(projectile, Vector2F::ZERO, 0.0f);
+            first.on_contact(projectile, Vector2F::zero, 0.0f);
         }
         require(first.health() <= 0.0f && first.state() == PlayerState::alive,
             "Fatal contact fixture skipped the production death transition");
@@ -136,10 +135,10 @@ namespace
         fixture.tick();
         all_empty(fixture.level->take_rumble_events());
         first.force_respawn();
-        first.on_contact(projectile, Vector2F::ZERO, 0.0f);
+        first.on_contact(projectile, Vector2F::zero, 0.0f);
         first.place_at(first.rectangle().top_left());
         all_empty(fixture.level->take_rumble_events());
-        first.on_contact(projectile, Vector2F::ZERO, 0.0f);
+        first.on_contact(projectile, Vector2F::zero, 0.0f);
         first.force_respawn();
         all_empty(fixture.level->take_rumble_events());
         fixture.tick(input(), 0.0f);
@@ -185,7 +184,7 @@ namespace
     public:
         EmptyWeapon(World& world, WeaponType tool) :
             Weapon(&world.tuning, PlayerTeam::a, 3, 0, world.palette.team_colour(PlayerTeam::a),
-                tool, Vector2F::ZERO, &world.render, &world.audio, &world.preferences) {}
+                tool, Vector2F::zero, &world.render, &world.audio, &world.preferences) {}
         void empty()
         {
             this->set_ammo(0.0f);
@@ -209,7 +208,7 @@ namespace
             const auto update = [&](bool holding, float elapsed)
             {
                 return weapon.update_and_get_projectiles(input(0.0f, false, holding),
-                    Vector2F::ZERO, Vector2F::ZERO, true, elapsed);
+                    Vector2F::zero, Vector2F::zero, true, elapsed);
             };
             require(update(true, 0.0f).empty() && weapon.take_rumble_events().empty(),
                 "Frozen empty weapon emitted rumble");
@@ -249,7 +248,7 @@ namespace
         world.preferences.pad_rumble[3] = false;
         fixture.tick(input(0.0f, false, true));
         const ProjectileSpray projectile = shot(world);
-        player.on_contact(projectile, Vector2F::ZERO, 0.0f);
+        player.on_contact(projectile, Vector2F::zero, 0.0f);
         const auto records = fixture.level->take_rumble_events();
         require(records.size() == 1 && records[0].input_slot == 3 &&
             records[0].events == RumbleEvents{ true, false, false, true },

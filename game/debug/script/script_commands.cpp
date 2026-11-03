@@ -434,7 +434,7 @@ DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
 	}
 	const auto directory = this->user_directory();
 	if (!directory) { return DebugStatus::failure("perf.capture: no developer output directory"); }
-	const mattmath::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
+	const labrador::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
 	this->perf_width_ = size.x;
 	this->perf_height_ = size.y;
 	this->break_perf_interval();
@@ -513,7 +513,7 @@ void DebugDirectorImpl::begin_match_draw()
 		this->break_perf_interval();
 		return;
 	}
-	const mattmath::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
+	const labrador::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
 	if (this->perf_.capture_active() && (!this->clock_.is_default() || this->live_open_ ||
 		this->match_ == nullptr || !this->match_->debug_perf_ready() ||
 		size.x != this->perf_width_ || size.y != this->perf_height_))
@@ -536,12 +536,12 @@ void DebugDirectorImpl::draw_status(labrador::Renderer& renderer)
 	// Bottom corners, clear of the opening cards and of each other: the paint
 	// panel, the perf panel above it, then the strip bottom right (or above
 	// both when a narrow window cannot hold them on one row).
-	std::vector<mattmath::RectangleF> avoid = this->match_ != nullptr ?
-		this->match_->debug_screen_obstacles() : std::vector<mattmath::RectangleF>();
+	std::vector<labrador::RectangleF> avoid = this->match_ != nullptr ?
+		this->match_->debug_screen_obstacles() : std::vector<labrador::RectangleF>();
 	// Resolved once here for every panel below, not once per panel.
 	const DebugConsoleView::OverlayHandles handles =
 		DebugConsoleView::OverlayHandles::resolve(data);
-	const mattmath::RectangleF paint = DebugConsoleView::draw_panel(renderer, data, handles,
+	const labrador::RectangleF paint = DebugConsoleView::draw_panel(renderer, data, handles,
 		this->paint_lines(), Anchor::bottom_left, avoid);
 	avoid.push_back(paint);
 	if (this->overlay_perf_)

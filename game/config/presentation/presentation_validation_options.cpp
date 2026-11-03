@@ -14,7 +14,6 @@
 #include <string>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace presentation_read;
 
 // Phase 1: Options' seven actions; the three option rows fit their labels.
@@ -82,7 +81,7 @@ void Presentation::Validation::validate_options_palette_timing(const SetupGeomet
 	const Vector2F palette_timing_size = fixed_menu_size(palette_timing_key,
 		this->presentation_.menu_text_.options_palette_timing, this->presentation_.menu_.detail_font);
 	const RectangleF palette_timing(Vector2F(main.options_value_x, main.options_heading_position.y), palette_timing_size);
-	check_fixed_paper(palette_timing_key, palette_timing, main.options_box_size, Vector2F::ZERO);
+	check_fixed_paper(palette_timing_key, palette_timing, main.options_box_size, Vector2F::zero);
 	const RectangleF options_heading(main.options_heading_position,
 		fixed_menu_size("menu_text.headings.options", this->presentation_.menu_text_.heading(MenuHeading::options), this->presentation_.menu_.heading_font));
 	if (palette_timing.x < options_heading.right() ||

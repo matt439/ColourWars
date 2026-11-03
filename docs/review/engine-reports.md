@@ -6,12 +6,11 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Nine are live (23, 25-28 and 30-33), all found after the engine's last
-> tagged answers.** Engine master answered 23, 25, 31 and 32 after `v0.2.0`, so
-> they wait for the first minor tag carrying those answers. The author decided
-> the rest on 2026-11-03: 27, 30 and 33 are to be filed, with 26 riding on 27,
-> and 28 is fixed in the engine directly before that tag. None is posted yet.
-> **Twenty-four are closed** (1–22, 24 and 29) and kept below as one paragraph
+> **Five are live (26-28, 30 and 33).** On the author's 2026-11-03 decision,
+> 27, 30 and 33 are to be filed, with 26 riding on 27; none is posted yet. 28
+> was to be fixed in the engine before `v0.3.0`, but the tag shipped without
+> the fix, so it is back with the author.
+> **Twenty-eight are closed** (1–25, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -104,6 +103,11 @@ them. On the author's 2026-11-03 decision, which accepted every
 recommendation put to it, 27, 30 and 33 are to be filed, 26 rides with 27, 28 is
 fixed in Labrador rather than filed, and 29 is withdrawn. Each report below
 records its call and what would reopen it.
+
+**Moved 2026-11-03 to `v0.3.0`** (`0f4f503`), the tag's day, 243 commits past
+`v0.2.0`. It carries the answers to 23, 25, 31 and 32. 23 and 32 are spent,
+and 25 and 31 are left as their own TODO rows. 28's engine fix did not ship.
+See [What the 2026-11-03 bump changed](#what-the-2026-11-03-bump-changed).
 
 ## The rule that governs this file
 
@@ -200,12 +204,10 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 23 | Resizing a hidden window activates it | Five `SettingsProbeActivationGuard` uses and a [guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp) | answered on untagged master in `42bc478` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the guards go at the first minor tag carrying it |
-| 25 | No public controller vibration output | [Isolated XInput adapter](../../game/input/rumble_xinput.cpp) and [callback-only checks](../../scripts/acceptance/rumble_adapter.cpp) | answered, narrowed, on untagged master in `cadc962` (2026-10-27), rechecked 2026-10-29 at `b96bad6`; no filing needed; the native transport goes at the first minor tag carrying it |
 | 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); still unanswered at master `aa8f5a2`; author's decision 2026-11-03: not filed alone, rides with report 27's filing |
-| 27, 28, 30-33 | Six still live from the 2026-10-30 architecture review (29 withdrawn) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | author's decision 2026-11-03: 27, 30 and 33 to be filed (drafted, not posted); 28 fixed in the engine before the tag; 31 and 32 answered on untagged master, no filing needed |
+| 27, 28, 30, 33 | Four still live from the 2026-10-30 architecture review (29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | author's decision 2026-11-03: 27, 30 and 33 to be filed (drafted, not posted); 28 was to be fixed in the engine before the tag, but `v0.3.0` shipped without it, so it is back with the author |
 
-Nothing else is outstanding, on either side, beyond reports 23, 25 and 26 below, the six still live
+Nothing else is outstanding, on either side, beyond report 26 below, the four still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -222,10 +224,11 @@ found six places where the engine's API forced the answer this repository has,
 and working its `HYG#49` found a seventh (33).
 Each is numbered here so TODO can point at it. All seven were drafted on
 2026-10-30 against engine master `47be5a3`, below report 26, each fact-checked
-by a second reader. 31 and 32 are already answered on untagged master and need
-no filing; they wait on the next minor tag like 23 and 25. The author decided
+by a second reader. 31 and 32 were answered unfiled and released in `v0.3.0`,
+and are [closed](#closed). The author decided
 the other five on 2026-11-03: 27, 30 and 33 are to be filed as Engine requests, with
-26 as a rider on 27; 28 is fixed in Labrador directly; 29 is withdrawn and
+26 as a rider on 27; 28 was to be fixed in Labrador directly, and `v0.3.0`
+shipped without the fix; 29 is withdrawn and
 [closed](#closed), its client-side change `HYG#52` (done 2026-11-03) in
 [code hygiene](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52).
 
@@ -235,139 +238,9 @@ the other five on 2026-11-03: 27, 30 and 33 are to be filed as Engine requests, 
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117`, `scripts/check-startup.ps1:225` and `:248` |
-| 31 | `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
-| 32 | Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
+| 31 | ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ answered in `v0.3.0`, see [Closed](#closed) | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
+| 32 | ~~Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false~~ answered and spent in `v0.3.0`, see [Closed](#closed) | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
-
-## 23. Resizing a hidden window activates it — **draft with activation-guard exhibit**
-
-**Answered on untagged master (rechecked 2026-10-29 at `b96bad6`).**
-`42bc478` (2026-10-27, *Keep window resizing from requesting activation*)
-adds `SWP_NOACTIVATE` to `resize_client`'s `SetWindowPos` call, with an engine
-regression for both hidden window modes. Engine `CHANGES.md` lists it as a
-silent behaviour change under Unreleased. It is not in `v0.2.0`, so the pin
-does not have it. No filing is needed. At the first minor tag that carries
-it, delete the guard and its five uses as below, then close this report.
-The text below is the draft as prepared.
-
-Found 2026-10-22 while spending [report 16](#16-windowed-apply-shows-a-deliberately-hidden-window--7db3d5c),
-against the pin `19cf650`. A read-only upstream check on 2026-10-24 at
-02:24:30 UTC resolved master to the same full pinned revision.
-
-**Prepared locally (2026-10-24), unfiled:** the
-[sanitized request](hidden-window-resize/sanitized-request.md),
-[guarded Window-only example](hidden-window-resize/hidden_resize_exhibit.cpp)
-and [portable build recipe](hidden-window-resize/build-exhibit.ps1) are ready.
-Debug and Release builds from that repository location each observe one
-activation request and veto it, count zero focus requests, report an 800x600
-client, and preserve sampled foreground equality after resize and destruction.
-The caller's console-free launch preserves the foreground too. No renderer,
-audio device, game assets or unguarded takeover control is used.
-Exact source/compiler/cache/library/binary pins and results are under
-`out/validation/hidden-resize-20261024/final-v5/qualification-v5.json`; the
-earlier private source-review and qualification records remain separate.
-
-Filing requires separate author authorization; the current task forbids it.
-This preparation records the client's request, not an engine answer. Keep the
-five activation guards until an answer is consumed and requalified.
-
-### What happens
-
-`Application::set_resolution` calls `Window::resize_client`
-(`engine/app/win32/window.cpp`), which sizes with
-`SetWindowPos(handle, HWND_TOP, 0, 0, w, h, SWP_NOMOVE | SWP_NOZORDER)`. With
-no `SWP_NOACTIVATE`, the call activates the window even while it is hidden, and
-it becomes the foreground window when the process has foreground rights.
-Report 16's answer made `enter_fullscreen` and `leave_fullscreen` size a hidden
-window with `SWP_NOACTIVATE`, and the `visible` comments now say the engine
-never shows a window created hidden; this is the one resize path that still
-takes focus. Home alpha's fixture shows it directly: hidden, inactive and not
-foreground before `app.set_resolution(1280x720)`; hidden, active and foreground
-after.
-
-### Exhibit
-
-The synthetic example above installs a current-thread CBT veto before Window
-construction and retains it through destruction. It filters activation/focus
-requests by its own process and thread so it can guard the not-yet-returned
-HWND. Exit 0 records a vetoed activation request and the sampled isolation
-conditions; exit 2 is explicitly inconclusive. It does not demonstrate actual
-foreground/focus theft. The README records the Windows-reported OS version,
-compiler/runtime and build/run instructions without machine or user identifiers.
-
-`SettingsProbeActivationGuard` in
-[save_status_checks.h](../../scripts/acceptance/painter_visual/save_status_checks.h):
-a thread-local `WH_CBT` hook that refuses `HCBT_ACTIVATE` for the probe's
-window only. Five painter fixtures hold it around a real `set_resolution` -
-display trial, Home alpha, Options defaults, paused Options, and settings menu
-around its display-trial Applies - because every display trial's callback in
-[display_confirmation.cpp](../../game/states/display_confirmation.cpp) calls
-`set_resolution`. Without it a hidden probe would steal the desktop's
-foreground whenever it had the rights to.
-
-### The ask
-
-That `resize_client` pass `SWP_NOACTIVATE`, or more narrowly that it does so
-when the window is hidden, matching `leave_fullscreen`.
-
-### What an answer lets this repository delete
-
-`SettingsProbeActivationGuard` and its five uses; each fixture keeps its
-hidden/not-foreground requirement as the regression check.
-
----
-
-## 25. No public controller vibration output - **draft with isolated adapter exhibit**
-
-**Answered, narrowed, on untagged master (rechecked 2026-10-29 at `b96bad6`).**
-`42bc478` recorded the decision (slot-addressed output belongs behind the
-input seam, as engine story `PI-21`). `cadc962` (2026-10-27) implements it:
-`Gamepads::vibrate(slot, Vibration)` returns a `VibrationResult` and
-`stop_vibration(slot)` stops the pad. Each request is bounded to
-`max_vibration_seconds` (5 s), and the engine ends requests at a stop, a newer
-request, a pad leaving its slot, suspension or destruction. Neither commit is
-in `v0.2.0`. No filing is needed. At the first minor tag that carries it,
-replace the native request and factory and the `Xinput.lib` link with that
-call. Pulse timing, preferences and the pause, replay and bot gates stay in
-the client. Then close this report. The text below is the draft as prepared.
-
-**Upstream checked 2026-10-26, 14:55 UTC.** GitHub's published `master` resolved
-to [`c03a6f653f3d524fae53b6cb662074ec3f2bb48a`](https://github.com/matt439/Labrador/commit/c03a6f653f3d524fae53b6cb662074ec3f2bb48a).
-The immutable [Gamepads header](https://github.com/matt439/Labrador/blob/c03a6f653f3d524fae53b6cb662074ec3f2bb48a/engine/input/gamepads.h),
-[reader header](https://github.com/matt439/Labrador/blob/c03a6f653f3d524fae53b6cb662074ec3f2bb48a/engine/input/gamepad_reader.h),
-`gamepad.h` and XInput reader implementation still expose snapshots, edges,
-connection and suspend/resume, with no vibration output or capability query.
-Separate repository issue searches for rumble and vibration returned no match.
-This check did not move the client's engine pin or change the engine checkout.
-
-**Exhibit.** [game/input/rumble_xinput.cpp](../../game/input/rumble_xinput.cpp) converts two
-normalized motor amplitudes into 16-bit speeds and calls `XInputSetState` using
-the same physical user indices as the engine's reader. ColourWars consequently
-names a native pad API and links SDK `Xinput.lib` outside that reader's backend.
-The [factory seam](../../game/input/rumble_sink.h) isolates this exception. Its injected
-transport exercises conversion, invalid-value stop, slot bounds, unavailable
-devices, failure and lifetime stop through the same adapter code.
-
-**Reproduction and expected result.** A client can read slot 0 through
-`Application::gamepads()->state(0)`, but neither that service nor its reader has
-an operation for setting that slot's motor output. The client must add a second
-native transport, as this exhibit does. A small engine output operation using
-the existing slot contract would remove that transport. Keep pulse timing,
-game events, per-slot preferences, pause/replay/bot gates and ownership in the
-client; they are not part of this request. Unsupported/disconnected output
-should be a defined harmless result. Zero output must have an explicit stop
-meaning. Exact spelling, validation and backend support remain engine decisions.
-Capability discovery is a separate proposal: this client has no demonstrated
-capability-dependent caller, so the report does not require one.
-
-**Qualification and limits.** Both game presets and `rumble_adapter` pass;
-the callback-only case never invokes XInput. Both-preset actual-GameLevel and
-settings probes use a recording factory, including lifecycle and automation
-gates. No physical motor or feel acceptance is claimed. Receipts are under
-`out/validation/overnight-20261026/phase5/`. An engine answer could replace the
-native request/factory and direct SDK dependency; the client policy and its
-regressions remain useful. This is a local draft, not a filed issue. Separate
-authorization and a fresh upstream recheck are required before filing.
 
 ## 26. `Registry` cannot forget a name - **draft with rescan exhibit**
 
@@ -435,6 +308,17 @@ local draft; it is posted only as report 27's rider.
 ---
 
 ## 27. No headless or recording pad backend - **draft with link-seam exhibit**
+
+**Shipped unanswered, 2026-11-03.** `v0.3.0` carries `PI-21`'s vibration with
+no pad seam beside it, so the growth this draft predicted has happened. At the
+bump each of the four blocks gained `vibrate` and `stop_vibration` (two lines
+each), and the rehearsal (`HYG#24`) had built the duplicate-symbol failure
+that the caveats below call inferred: with the members missing, the linker
+pulled `gamepad_reader.cpp.obj` and reported `LNK2005`/`LNK1169`. The blocks
+now end two or three lines later than the ranges cited under the exhibit. The
+filing still stands: the extension is now evidence rather than a prediction,
+and the "file before the tag" reason and the **Reopen** condition below are
+spent. The record below is as decided before the tag.
 
 **Author's decision 2026-11-03: file now as an Engine request, with report 26
 as a rider.** It is the strongest of the architecture-review drafts: four live
@@ -535,6 +419,20 @@ with synthetic content only, after a fresh check of upstream master.
 ---
 
 ## 28. Public types and members removed with an engine-only caller count - **draft with carried-copy exhibit**
+
+**Shipped unanswered, 2026-11-03.** `v0.3.0` carries `730dd99` and `fdfc24e`
+with their `CHANGES.md` entries as they were. They still count only "the
+engine, the samples, the tests or the benchmark" and "No sample, tool or engine
+code", and `git log v0.2.0..v0.3.0 -- CHANGES.md` shows no commit amending
+them. The decision below set the tag as the deadline, so the next step is the
+author's: amend the entries in a later release and close this report; accept
+them as shipped and close it as declined, with `game/carried/` as the
+documented migration; or reopen it as a public Bug report. The bump also
+carried the two removed members this repository called, as
+[`game/carried/removed_members.h`](../../game/carried/removed_members.h).
+`set_position_y_from_bottom` and `UiTexture::set_position_from_top_right_origin`
+are written out at their four call sites. The record below is as decided
+before the tag.
 
 **Author's decision 2026-11-03: not filed; fixed in Labrador directly.** The
 author maintains the engine alone and the ask is an edit to two documentation
@@ -769,195 +667,6 @@ from this text with a synthetic repro.
 
 ---
 
-## 31. `JsonValue` cannot report keys nobody read, so a misspelled optional key is silent - **draft with optional-read exhibit**
-
-**Answered on untagged master (checked 2026-10-30 at `47be5a3`, 214 commits
-past the pin).** `e166dcc` (2026-10-29, *Reject unknown manifest and
-sprite-sheet keys*) adds `std::vector<std::string> JsonValue::keys() const` to
-`engine/assets/json.h`. It copies an object's member names in stored order,
-duplicates included, and throws unless the node is an object. This is engine
-story `PI-20`, split out of
-[report 12](#12-json-is-read-only-path-only-and-opaque--split-3af746b) on
-2026-10-22. The engine's `docs/product/BACKLOG.md` now ticks it, and
-`docs/2026-10-29-strict-asset-keys.md` plus `CHANGES.md` (Unreleased) record
-it. The engine's own refusal, `asset_details::reject_unknown_keys` in
-`engine/assets/json_object_keys.h`, stays private to the manifest and
-sprite-sheet loaders. The backlog says plainly that "game-owned JSON remain
-unrestricted". Which fields a game file accepts is the game's to say. Report
-12's split already made that decision. `e166dcc` is not in `v0.2.0`
-(`1e60fb2`), so the pin does not have `keys()`. A `gh` issue search of
-`matt439/Labrador` for this found nothing. **No filing is needed.** At the
-first minor tag that carries `keys()`, spend it as described below, then
-close this report. The text below is the draft as prepared.
-
-Found by the [2026-10-30 architecture review](2026-10-30-architecture-review.md#engine-reports-owed).
-The exhibit is cited at HEAD `f5303302`.
-
-### Exhibit
-
-`GameTuning` reads every optional field of `tuning.json` with `has()` and
-then a typed accessor, because that is all the pin's `JsonValue` offers. The
-reads are at:
-
-- `game/config/tuning.cpp:109`: `frame_time`
-- `:455`: `paint_underfoot`
-- `:471`: `enemy_blocks_health_regen`
-- `:478` and `:756`: `paint_underfoot` again, for validation
-- `:585`: `loop_sounds`
-- `:648`: `add_player_velocity`
-- `:663`: the optional feedback sounds `stop`, `ready`, `lift`, `settle` and `low`
-- `:702`: `diffusion`
-
-The only guard is in acceptance. `check_tune_consumed`
-(`scripts/acceptance/debug_console/tune_document_checks.cpp:319`) uses the
-client's own span scanner, `JsonSpanDocument`, to replace each number and
-boolean leaf of the shipped `tuning.json` and `presentation.json` with a
-string, one leaf at a time. It reparses each candidate and requires the
-loader to throw and name the key. It skips string leaves and any path with a
-`_`-prefixed segment, so a misspelt key whose leaves are all strings passes.
-The check is compiled only under `COLOURWARS_DEV_TOOLS`
-(`tune_document_checks.cpp:4`), so it runs only in Debug. It runs there inside
-the `debug_console` case, which is declared `SlowInDebug`
-(`scripts/acceptance/cases.psd1:74-78`). It checks the shipped file at test
-time, not the file the game loads at startup, and it is quadratic in the
-file's size.
-
-### Reproduction
-
-This synthetic example uses the pin's `JsonValue`:
-
-```cpp
-const auto doc = labrador::parse_json(
-    R"({"player":{"paint_undrfoot":{"enabled":true}}})", "tuning.json");
-const labrador::JsonValue player = doc.root().object("player");
-const bool on = player.has("paint_underfoot");   // false: misspelt key ignored
-```
-
-Actual: the loader takes the default (here the effect is off), and nothing
-reports the key it never read. Expected: the loader can refuse with
-`'tuning.json': player has unknown key 'paint_undrfoot'`. With the pin, it
-cannot list `player`'s members to find this out.
-
-### The ask
-
-A way to list an object's member names, so a client loader can refuse names
-outside its own field list. Master's `keys()` is exactly that. This report does
-not ask for two related things: making the engine's private
-`reject_unknown_keys` public, and any record of which members were read. Either
-would need an exhibit of its own, made after the client has spent `keys()` and
-has its own copy of that helper to show.
-
-### What an answer lets this repository delete
-
-After the bump, each `tuning.json` object reader can check its own members
-against its field list with `keys()`, at load time and in every build. The
-optional `has()` reads stay, because leaving a field out is still allowed; a
-misspelling becomes a load failure. `check_tune_consumed` could then shrink to
-the part `keys()` does not cover: proving that each listed field really
-changes the loaded value. Whether that part is worth its Debug cost is the
-bump's decision, as report 12 already said of `PI-20`. `JsonSpanDocument` and
-`TuneDocument` stay, because report 12's decline of spans still stands.
-
-Filing would need separate author authorization and a fresh upstream recheck.
-Because master already answers this report, no filing is planned.
-
----
-
-## 32. Word wrap by measured width is client code - **draft with text-wrap exhibit**
-
-**Answered on untagged master (checked 2026-10-30 at `47be5a3`).**
-`80024e5` (2026-10-29, *Wrap translated text with the font's measured glyph
-layout*) closes engine story OCA-77. It adds `Font::wrap(std::wstring_view
-text, float width)` (`engine/render/font.h:149` on master) and the handle
-query `RenderResources::wrap_text(FontHandle, std::wstring_view, float)`
-(`engine/render/render_resources.h:260`). Each returns an owned copy of the
-text. Selected U+0020 spaces become LF, and the lines are measured with the
-same glyph walk `measure` uses. Existing line feeds are kept. Words are never
-split, and a word wider than the width on its own is let through. The width is
-in unscaled font texels and must be finite and positive. Engine `CHANGES.md`
-does not list the change. `80024e5` is not in `v0.2.0` and no tag carries it,
-so the pin does not have it. A read-only search of the engine's issues for
-"wrap" found nothing. The same search over pull requests finds only #44, the
-weighing that split out OCA-77. No filing is needed. At the first minor tag
-that carries it, delete as below and close this report. The text below is the
-draft as prepared.
-
-**The premise this corrects.** OCA-77 was weighed on 2026-10-24. It is still
-recorded on master in `docs/product/STORIES.md` (OCA-77, Notes) as:
-
-> No caller in either client wraps by width: ColourWars' debug console cuts at
-> a column count derived from a monospaced advance, deliberately.
-
-`docs/product/BACKLOG.md`'s closed OCA-77 row says the same: "no caller in
-either client wraps by width yet: the one wrap there is a debug console
-cutting at a column count on purpose". That was not true when it was written.
-This repository had wrapped by measured width since `e1e17178` (2026-10-17).
-The story then gave OCA-42's translated strings as the first caller. The
-answer doesn't depend on which caller came first, so this asks for nothing.
-The engine may want to correct the note the next time it touches the story.
-
-### Exhibit
-
-The exhibit is at HEAD `25af4d16`.
-
-- [`game/config/text_wrap.h`](../../game/config/text_wrap.h):28-32 declares
-  `text_wrap::wrap(render, font, text, max_width, scale)`. Its body in
-  `game/config/text_wrap.cpp`:39-99 does a greedy wrap. For each authored line it
-  builds the next candidate line and measures it with
-  `RenderResources::measure_text` (`:11-15`). It breaks before the next word
-  when the candidate's measured width times `scale` would be greater than
-  `max_width`.
-- [`WrappedTextDropShadow`](../../game/states/wrapped_text_drop_shadow.h) is the
-  caller. It wraps in its constructor (`wrapped_text_drop_shadow.cpp:13-18`,
-  because the base constructor measures), in `set_text` (`:44-49`) and in
-  `set_scale` (`:51-56`). It is built for the weapon description at
-  `game/states/main_menu_weapon_select.cpp:363`.
-- `text_wrap::check_fits` (`text_wrap.h:37-42`, `text_wrap.cpp:101-130`)
-  refuses at load time any word wider than the width. It is called from
-  `game/config/content_validation.cpp:172`. The `text_wrap` acceptance case
-  (`scripts/acceptance/text_wrap.cpp`) checks both against the engine's own
-  measurement.
-
-### What happens
-
-At the pin, a client whose text must fit a panel has `measure_text` and
-nothing else. So it carries its own break loop, re-measuring a growing prefix
-once per word. It also carries its own rules for authored line feeds, spaces at
-a break and words that do not fit. Two clients would carry two loops that
-disagree at the edges.
-
-### The ask
-
-That the font that measures a string can also break it to a width, measured by
-the same walk. Master's `Font::wrap`/`RenderResources::wrap_text` is that
-answer. No further ask.
-
-### What an answer lets this repository delete
-
-- `text_wrap::wrap` (`text_wrap.h:23-32`, `text_wrap.cpp:78-99`) and its helper
-  `wrap_line` (`text_wrap.cpp:39-75`). `WrappedTextDropShadow` would call
-  `render_resources_->wrap_text(font, text, max_width / scale)`, because the
-  engine's width is unscaled and the client's is the drawn width.
-- The wrap half of the `text_wrap` acceptance case, re-pointed at the engine
-  call.
-
-These stay:
-
-- `check_fits` and its load-time diagnostic, with the helpers it uses
-  (`measured_width`, `require_width`, `narrow`). The engine lets an overlong
-  word through, and refusing it with the content key's name is client policy.
-- `WrappedTextDropShadow` itself, which keeps the authored text.
-
-**Edge differences to requalify, not to report.** At a break, the client drops
-the whole run of spaces. The engine replaces one selected space and documents
-that repeated or leading spaces "can become empty lines at narrow widths".
-Today's weapon descriptions use one space between words, so the output should
-match. The painter's weapon-paper check and `text_wrap` confirm that when the
-pin moves. Filing would need separate author authorization, but none is needed
-while master answers it.
-
----
-
 ## 33. `on_contact` hands the other party over `const` - **draft with const_cast exhibit**
 
 **Author's decision 2026-11-03: file now as an Engine request.** The exhibit is
@@ -1022,8 +731,9 @@ comment on or open anything upstream.
 
 # Closed
 
-Twenty-four reports: twenty-three answered and one withdrawn. Sixteen were
-spent here in code. Seven spent nothing in code: 1 was fixed before it was
+Twenty-eight reports: twenty-seven answered and one withdrawn. Eighteen were
+spent here in code, the last two (23 and 32) at the 2026-11-03 bump. Two (25
+and 31) are answered and not yet spent; each keeps a TODO row. Seven spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
@@ -1036,7 +746,8 @@ for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
 17 and 19, the parent of `d1c6063` for 9, 10 and 14, the parent of
 `83544c2` for 18, 20 and 22, the parents of `d647cf8`, `b4f2201` and
 `1553ba5` for 6, 12 and 15, the parent of the commit that moved the pin
-to `1e60fb2` for 24, and `8bfa00f7` for 29.
+to `1e60fb2` for 24, `8bfa00f7` for 29, and the parent of the commit that
+moved the pin to `v0.3.0` for 23, 25, 31 and 32.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1637,7 +1348,7 @@ Production code needed nothing; the game is visible and
 `display_confirmation.cpp` already calls the ordinary `set_fullscreen`.
 
 **The guard stays in five fixtures, and why is a new finding** — now
-[report 23](#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit).
+[report 23](#23-resizing-a-hidden-window-activates-it--42bc478).
 Display trial, Home alpha, Options defaults and paused Options each resize the
 hidden window, and without the veto all four failed their foreground check.
 Settings menu keeps it around its two display-trial Applies only: every trial's
@@ -1968,6 +1679,30 @@ not foresee the atomic name setters.
 
 ---
 
+## 23. ~~Resizing a hidden window activates it~~ — `42bc478`
+
+Found 2026-10-22 while spending report 16. `Application::set_resolution`
+resized through `SetWindowPos` without `SWP_NOACTIVATE`, so it activated a
+hidden window and made it the foreground. The painter probes vetoed that with a
+thread-local CBT hook, `SettingsProbeActivationGuard`, in five fixtures. The ask
+was a resize that leaves activation alone. **Answered unfiled** on 2026-10-27
+in `42bc478`, *Keep window resizing from requesting activation*, released in
+`v0.3.0`. `Window::resize_client` passes `SWP_NOACTIVATE` unconditionally
+(`engine/app/win32/window.cpp:509`), so a hidden window stays hidden and
+inactive and a shown one is not brought forward. The engine tests it in
+`tests/app/window_tests.cpp`. The prepared request and example stay, unfiled,
+in [hidden-window-resize](hidden-window-resize/README.md).
+
+**Spent** at the [2026-11-03 bump](#what-the-2026-11-03-bump-changed). The guard
+and its five uses are deleted: display trial, Home alpha, Options defaults,
+paused Options and the Settings menu. So are the comments and two painter
+evidence-record strings that cited this report. Each fixture keeps its
+`IsWindowVisible == FALSE && GetForegroundWindow() != window` requirement,
+which now pins the engine's contract rather than the guard's. The prediction
+held exactly: five uses and no other caller.
+
+---
+
 ## 24. ~~A Debug `AudioDevice` breaks into the debugger on a machine with no audio endpoint~~ — `814f2ee`
 
 Found 2026-10-25, when the Debug CI job's movement feedback probe and then
@@ -1990,6 +1725,43 @@ and its stdout count were deleted. The handler stays, because it makes any
 other debug-layer break report its stack instead of ending the probe
 silently. The Debug startup check now passes on a runner with no change on
 this side.
+
+---
+
+## 25. ~~No public controller vibration output~~ — accepted, narrowed, `cadc962`
+
+Drafted 2026-10-26. The engine's pad reader had no output, so rumble went out
+through this client's own adapter, `game/input/rumble_xinput.cpp`. It calls
+`XInputSetState` and links `Xinput.lib`, behind the `make_rumble_sink`
+factory. **Answered unfiled** on 2026-10-27 in `cadc962`, *Send controller
+vibration through the input seam*, released in `v0.3.0`. The answer is
+`Gamepads::vibrate(slot, Vibration)` and `stop_vibration`
+(`engine/input/gamepads.h:81`, `:86`), with `Vibration`, `VibrationResult`,
+`check_vibration` and `max_vibration_seconds` (5 s) in `gamepad.h`. It is
+narrowed: every request carries a deadline the engine enforces; pad loss,
+suspension and destruction stop it and nothing is replayed; and `submitted`
+means only that the pad API took the request, not that a motor turned.
+
+**Not spent yet**, by choice: TODO `ENG#25` stays open with the measured scope.
+The bump found the swap is more than a transport change:
+
+- The prediction that the factory goes was wrong. `make_rumble_sink` is the
+  link seam that keeps the painter, frame-pacing and display-awake probes off
+  real motors (`rumble_sink_fixture.h`). It stays, and only its production
+  body moves onto `labrador::Gamepads`.
+- The client's model does not map one to one. `Rumble` sends a level only when
+  it changes and holds it with no deadline, and a retrigger extends its timer
+  without resending (the `rumble` case pins that). Under the engine, a level
+  held by repeated hits would stop after the first request's `seconds`. So
+  `RumbleSink::set_vibration` needs a deadline, `Rumble::publish` must resend
+  when that deadline grows, the `rumble` traces change, and `rumble_adapter`
+  is rewritten or deleted.
+- Physical output cannot be checked here: there is no pad on this machine, and
+  the engine has not checked it either. That stays with `ROAD#3`.
+
+The four probe `GamepadReader` fakes needed exactly the two members
+[report 27](#27-no-headless-or-recording-pad-backend---draft-with-link-seam-exhibit)
+predicted, and got them at the bump.
 
 ---
 
@@ -2020,6 +1792,61 @@ the retire set, including for shots added this tick, which `scene.h` already
 documents. **Reopen** and file the document-only ask if that check ever fires
 on game code, for example after a change in the bounds-sweep order. That
 would be a real exhibit: client code restating an undocumented rule that broke.
+
+---
+
+## 31. ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ — `e166dcc`
+
+Drafted 2026-10-30. The exhibit was `tuning.json`'s optional `has()` reads: a
+misspelt optional key such as `paint_undrfoot` was silently ignored, because
+`JsonValue` could not list an object's members. **Answered unfiled** in
+`e166dcc`, *Reject unknown manifest and sprite-sheet keys*, released in
+`v0.3.0`. `JsonValue::keys()` (`engine/assets/json.h:66`) copies an object's
+member names in stored order, duplicates included. The engine's own refusal
+helper is private and applies only to its manifest and sprite-sheet loaders.
+
+**Not spent yet**: TODO `ENG#31` stays open. The spend is new client code, not a
+deletion. A `require_known_keys` beside the content readers would be called on
+every fixed-schema `tuning.json` object, with `_`-prefixed comment keys allowed,
+plus refusals in the `gameplay_tuning` case. Three choices are left for that
+row: what to do with duplicate names (the engine is silent, and `has()` reads
+the first), per-weapon field lists or a union, and whether `presentation.json`
+follows. One prediction was wrong: `keys()` lists names but does not record
+reads, so `check_tune_consumed` cannot shrink on its account. It stays.
+
+---
+
+## 32. ~~Word wrap by measured width is client code~~ — `80024e5`
+
+Drafted 2026-10-30. The exhibit was `text_wrap::wrap`, a greedy wrap over
+`measure_text`, and the engine backlog's OCA-77 premise that no client wraps by
+width. **Answered unfiled** in `80024e5`, *Wrap translated text with the
+font's measured glyph layout*, released in `v0.3.0`. The answer is
+`Font::wrap(text, width)` and `RenderResources::wrap_text(font, text, width)`
+(`engine/render/render_resources.h:260`), with the width in unscaled texels.
+No `CHANGES.md` entry, because an addition is not consumer-visible under the
+engine's rule.
+
+**Spent** at the [2026-11-03 bump](#what-the-2026-11-03-bump-changed).
+`text_wrap::wrap` and `wrap_line` are deleted. Three callers now use
+`wrap_text`: `WrappedTextDropShadow`, at `max_width / scale`; the startup
+paper-containment check in `presentation_validation_setup.cpp`; and the
+painter Weapon paper fixture. The exhibit named only the first. `text_wrap.h`
+keeps only `check_fits`, the load-time refusal that names the key. The
+engine's space rule differs from the client's in four edge cases. All four are
+requalified in the `text_wrap` case rather than reported, and shipped
+descriptions are single-spaced, so none of them reach content:
+
+- A repeated space at a break keeps every space but the one that becomes the
+  break (`"aaa  bbb"` now gives `"aaa \nbbb"`). This is the case the draft
+  predicted.
+- A run whose first space overflows leaves a leading space on the next line.
+- An overflowing trailing space becomes a trailing line break.
+- A leading space before an over-long word becomes an empty first line.
+
+The draft missed the last three. Client code still wraps by width in one place:
+`stage_scan_diagnostics::pages` breaks inside over-long tokens and paginates,
+which `Font::wrap` does not do, so it stays.
 
 # What is deliberately not here
 
@@ -2130,7 +1957,8 @@ still only reads.
   is owed. Both music owners now replay a looping voice stopped from outside
   ([`ROAD#36`](../audio-inventory.md#looping-music-after-device-recovery-road36),
   done 2026-10-29 ahead of the bump), so the bump leaves nothing here for music.
-  Other persistent loops are outside that scope.
+  Other persistent loops are outside that scope. **Pinned 2026-11-03** in
+  `v0.3.0`: the recovery and the music handling are live in play.
 
 - **The display-idle owner is client-side** (added 2026-10-24).
   `ROAD#6` now supplies the [client exhibit](../../game/display_awake.cpp):
@@ -2676,7 +2504,7 @@ Breaks by class, measured:
   `input_bindings` and `keyboard_jump_capture` each define a fake
   `labrador::GamepadReader`, and `painter_visual.cpp` has the same kind of
   fake. Master's reader adds `vibrate` and `stop_vibration` (`cadc962`, the
-  [report 25](#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit)
+  [report 25](#25-no-public-controller-vibration-output--accepted-narrowed-cadc962)
   answer), and `Gamepads` calls them. The fakes lack them, so the linker pulls
   the engine's `gamepad_reader.cpp.obj` as well, and every reader member is
   defined twice (`LNK2005`, `LNK1169`). At the bump the fakes need both
@@ -2786,3 +2614,118 @@ headers and their sources come to about 860 lines.
 - **Does not decide:** whether any of these rungs should become an engine
   report. A copied class that keeps forcing a bad answer gets its own report
   in [Live](#live), with the copy as its exhibit.
+
+# What the 2026-11-03 bump changed
+
+**Moved 2026-11-03 to `v0.3.0`** (`0f4f503`, *Prepare v0.3.0*), on the day
+the tag was cut and within the week AGENTS.md allows. That is 243 commits past
+`v0.2.0`, the 182 that [Preparing the next bump](#preparing-the-next-bump-2026-10-29)
+rehearsed against plus 61 more. Configure needed no change. The rehearsal's
+work list held, and the bump spent it:
+
+- **Renames:** `mattmath` became `labrador` in all 411 files under `game/` and
+  `scripts/` that named it, and the constant table was applied: `zero`, `one`,
+  `direction_*`, `pi`, `pi_over_2`, `default_epsilon` and `default_camera`.
+  Comments and string literals were left alone, so `ONE, INV_SRC_ALPHA` and
+  copy text are untouched. `terrain.cpp`'s own `EPSILON` is a local constant
+  and stays.
+- **Duplicate `using` lines:** where a file already had `using namespace
+  labrador;`, the sweep left two adjacent copies. They were removed, the same
+  cleanup the engine made in `ff24323`.
+- **Library name:** `MattMath.lib` became `LabradorMath.lib` in the six
+  scripts listed. `docs/review/hidden-window-resize/build-exhibit.ps1` is a
+  seventh, left as recorded because that folder is now history.
+- **`pi` collision:** the local `pi` in `game/debug/replay/bot.cpp` is deleted.
+  `3.14159265f` and `labrador::pi` round to the same float, so seeded replays
+  still match bit for bit.
+- **Removed members:** `RectangleF::from_top_left_bottom_right` became
+  `colourwars::from_top_left_bottom_right` and
+  `Camera::calculate_intermediate_camera` became
+  `colourwars::intermediate_camera`, free functions in
+  [`game/carried/removed_members.h`](../../game/carried/removed_members.h)
+  with the engine's bodies. `set_position_y_from_bottom` (three sites in
+  `player.cpp`) and `UiTexture::set_position_from_top_right_origin` (one in
+  `results_menu.cpp`) are written out where they were called. The
+  `painter_visual/surface_finish_checks.h` site that report 28 added was real.
+- **Fake pad readers:** the four `GamepadReader` fakes gained `vibrate`, which
+  returns `false`, and an empty `stop_vibration`.
+- **`/utf-8`:** added to the probe flag lists in `run-acceptance.ps1` and the
+  five check scripts that compile probes, matching `labrador_settings`.
+
+One break was not predicted, because the rehearsal never ran a probe. The
+engine's *Reject raw NUL bytes throughout JSON input* makes `parse_json`
+refuse a raw NUL anywhere, before `LevelLoadedInfo` checks `format`.
+`user_stages` expected `{"format":2}` followed by NUL and a suffix to report
+the unsupported format. It now reports the NUL, a syntax refusal ahead of the
+format check, as the case's other syntax diagnostics already were. The NUL scan
+`ROAD#33` had added to `hash_stage_snapshot` could no longer be reached and is
+deleted. [level-format.md](../level-format.md#complete-runtime-source-admission-road33)
+records it.
+
+Answers, report by report:
+
+- **23** spent: the activation guard and its five uses
+  ([Closed](#23-resizing-a-hidden-window-activates-it--42bc478)).
+- **32** spent: `text_wrap::wrap` deleted, three callers on `wrap_text`, and
+  four edge cases requalified
+  ([Closed](#32-word-wrap-by-measured-width-is-client-code--80024e5)).
+- **25** and **31** answered, closed and not yet spent. Each stays a TODO row
+  with its measured scope, because each is new client work with choices in it.
+- **28** wrong: the tag shipped both entries unamended, and the report is back
+  with the author.
+
+Every other `CHANGES.md` entry under `v0.3.0` was read against this tree. None
+needs a change here:
+
+- `FocusStyle::disabled`: every page with disabled rows passes its own
+  colour.
+- Full screen keeps the window shown: no client workaround existed. One manual
+  On-then-Off check belongs to `ROAD#2`.
+- Text cull bounds: no shipped font has a glyph cell outside `measure()`. The
+  only overhanging cell is the 1x1 space, which the walk skips, so `bounds()`
+  is unchanged.
+- The strict manifest, sprite-sheet and sprite-font loaders: all content
+  passes.
+- No draw after `quit()`: the Debug screenshot renders its own frame.
+- Modifier keys: Shift, Ctrl and Alt cannot be bound to a keyboard seat.
+- D3D adapter names: the "No Direct3D hardware device found" text that
+  `fatal_report.cpp` and `check-startup.ps1` match is unchanged, so report 30
+  stands.
+- XAudio2 recovery: `ROAD#36`'s music handling is now live. The four loops it
+  does not cover are recorded in
+  [audio-inventory.md](../audio-inventory.md#looping-music-after-device-recovery-road36).
+
+## What was offered and not taken
+
+- `LABRADOR_SOURCE_REVISION`: `cmake/write_build_info.cmake` already reads the
+  engine revision on every build and counts untracked files as dirty. The
+  engine's value is a configure-time snapshot that does not.
+- `Application::set_cursor_visible` and `set_cursor_confined` (`5864bac`):
+  these bear on `POL#39`'s pointer marquee, so using them is the author's call
+  within that row.
+- `labrador::Random` (`37ad369`): the client's generators are seeded for
+  replays, and swapping them would change every recording.
+- `Font::wrap` for `stage_scan_diagnostics::pages`: that function breaks inside
+  over-long tokens and paginates, and `Font::wrap` does neither.
+
+## Verification
+
+Run on MattPC (no pad), 2026-11-03, with the pin at `v0.3.0`:
+
+- Both presets configure and build. Consumer acceptance passes with no
+  exclusions: 77 cases in x64-debug and 76 in x64-release.
+- CI's compile gate passes in both presets: the opt-in cases (`-OptIn
+  -CompileOnly`), `check-painter.ps1 -CompileOnly`, and in Debug
+  `check-frame-pacing.ps1 -CompileOnly`.
+- `check-startup.ps1 -RequireAudio` and `-UserStageFixture` pass on both
+  executables.
+- Six painter runs in Debug pass. Five cover the fixtures that lost the
+  activation guard: `-DisplayTrialOnly`, `-ExposedColourAlphaOnly` (Home
+  alpha), `-OptionsDefaultsOnly`, `-PausedOptionsOnly` and `-SettingsMenuOnly`.
+  The sixth, `-WeaponPaperOnly`, covers the `wrap_text` caller. The first try
+  of three of them failed only on "capture write failed": the evidence path
+  under the session scratch folder was past `MAX_PATH`. A short output
+  directory passed.
+- `scripts/ci/check_doc_links.py` passes.
+- Not run: the missing-bank startup check, the Release ZIP inspection, and
+  anything needing a pad or a listener.

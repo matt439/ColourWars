@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_builder.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 ProjectileBuilder::ProjectileBuilder(const GameTuning* tuning,

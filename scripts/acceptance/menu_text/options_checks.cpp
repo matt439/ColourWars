@@ -28,8 +28,8 @@ namespace menu_text_acceptance
         }
         const MenuStyle& style = look.menu();
         const auto art = options_art(look.main_menu());
-        const mattmath::Vector2F label_position(100.0f, 100.0f);
-        const mattmath::Vector2F value_position(420.0f, 100.0f);
+        const labrador::Vector2F label_position(100.0f, 100.0f);
+        const labrador::Vector2F value_position(420.0f, 100.0f);
         const float label_column = value_position.x - label_position.x - art.focus_padding.x;
         const auto font = world.render.resolve_sprite_font(style.item_font);
         for (const MenuItem item : { MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette })
@@ -106,7 +106,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 const bool edge = character == U'~';
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0, edge ? glyph_width : 8,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0, edge ? glyph_width : 8,
                     edge ? glyph_height : 16), 0.0f, 0.0f, 0.0f });
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
@@ -211,7 +211,7 @@ namespace menu_text_acceptance
                 UiText text(entry.key, authored, font_name, position, &world.render, art.ink);
                 const auto retained = authored;
                 authored = L"Changed after construction";
-                require(text.text() == retained && text.bounds() == mattmath::RectangleF(position, measured),
+                require(text.text() == retained && text.bounds() == labrador::RectangleF(position, measured),
                     "Actual status UiText borrowed its source or changed its unscaled measurement");
                 text.set_scale(1.0f);
                 const float scale = std::min(1.0f, available / measured.x);
@@ -230,12 +230,12 @@ namespace menu_text_acceptance
                     text.set_text(L"Fit");
                     text.set_scale(1.0f);
                     require(text.text() == L"Fit" && text.bounds() ==
-                        mattmath::RectangleF(position, world.render.measure_text(font, L"Fit")),
+                        labrador::RectangleF(position, world.render.measure_text(font, L"Fit")),
                         "Replacing a fitted save status retained its old shrink scale");
                 }
                 else
                 {
-                    require(text.bounds() == mattmath::RectangleF(position, measured),
+                    require(text.bounds() == labrador::RectangleF(position, measured),
                         "Short save statuses were enlarged above their authored font size");
                 }
                 text.set_hidden(true);
@@ -293,7 +293,7 @@ namespace menu_text_acceptance
                 std::vector<Glyph> glyphs;
                 for (char32_t character = U' '; character <= U'~'; ++character)
                 {
-                    glyphs.push_back({ character, mattmath::RectangleI(0, 0, 8,
+                    glyphs.push_back({ character, labrador::RectangleI(0, 0, 8,
                         character == U'~' ? height + excess : 16), 0.0f, 0.0f, 0.0f });
                 }
                 const std::string font_name = std::string("menu_status_") + entry.key +
@@ -311,7 +311,7 @@ namespace menu_text_acceptance
                     const auto touches_bottom = variants.load(edit);
                     touches_bottom.validate_resources(world.render, world.audio);
                     const auto size = world.render.measure_text(world.render.resolve_sprite_font(font_name), L"~");
-                    require(size == mattmath::Vector2F(8.0f, static_cast<float>(height)),
+                    require(size == labrador::Vector2F(8.0f, static_cast<float>(height)),
                         "Save-status inclusive paper fixture has unexpected glyph metrics");
                 }
                 else { variants.rejects(std::string("status.") + entry.key, edit, &world); }

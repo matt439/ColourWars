@@ -13,8 +13,8 @@ struct ProjectileDetails
     // Health removed on a hit, expressed as a positive amount.
     float player_damage = 0.0f;
 
-    mattmath::Vector2F size = { 0.0f, 0.0f };
-    mattmath::Vector2F col_rect_size = { 0.0f, 0.0f };
+    labrador::Vector2F size = { 0.0f, 0.0f };
+    labrador::Vector2F col_rect_size = { 0.0f, 0.0f };
     std::string sheet_name = "";
     std::string animation_strip_name = "";
 };
@@ -30,6 +30,6 @@ struct DiffusionDetails
 {
     float start_time = 0.0f;
     float end_time = 0.0f;
-    mattmath::Vector2F end_scale = { 1.0f, 1.0f };
+    labrador::Vector2F end_scale = { 1.0f, 1.0f };
     DiffusionType type = DiffusionType::no_diffusion;
 };

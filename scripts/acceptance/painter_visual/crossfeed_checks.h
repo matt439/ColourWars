@@ -96,9 +96,9 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
                 RectangleF splash = object->shape()->bounding_box(); splash.inflate(32.0f);
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = fixture.paintables.size() % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::ZERO, team, team == PlayerTeam::a ? 3 : 1,
+                const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 3 : 1,
                     colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-                surface->on_contact(shot, Vector2F::ZERO, 0.0f); surface->update(10.0f); ++heavy_contacts;
+                surface->on_contact(shot, Vector2F::zero, 0.0f); surface->update(10.0f); ++heavy_contacts;
             }
             fixture.paintables.push_back(surface);
         }
@@ -226,8 +226,8 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         float fraction, const RectangleF& target)
     {
         const RectangleI pane = viewport.pixel_rect();
-        const Vector2F position = player != nullptr ? player->rectangle().position() : Vector2F::ZERO;
-        const Vector2F velocity = player != nullptr ? player->velocity() : Vector2F::ZERO;
+        const Vector2F position = player != nullptr ? player->rectangle().position() : Vector2F::zero;
+        const Vector2F velocity = player != nullptr ? player->velocity() : Vector2F::zero;
         const bool target_visible = camera.visible_rectangle(viewport).contains(target);
         records << stem << ',' << kind << ',' << phase << ',' << (heavy ? "heavy" : "clean") << ',' << count << ',' <<
             view + 1 << ',' << (player != nullptr ? player->player_num() : -1) << ',' << position.x << ',' << position.y << ',' <<
@@ -359,12 +359,12 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         const auto& look = presentation.main_menu().stage_select; const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("crossfeed-actual-stage-preview", box, &data); preview.set_stage("crossfeed");
         const Viewport fullscreen = app.viewport_manager()->fullscreen_viewport();
-        const Camera menu = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const Camera menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
         const auto draw = [&](bool shown)
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point);
-            canvas.draw(list, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION));
+            canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
             if (shown) { preview.draw(list); } ++readbacks; return read(renderer);
         };
         std::srand(883); const int expected = std::rand(); std::srand(883); const Frame frame = draw(true);

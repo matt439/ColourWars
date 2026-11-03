@@ -86,7 +86,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
     };

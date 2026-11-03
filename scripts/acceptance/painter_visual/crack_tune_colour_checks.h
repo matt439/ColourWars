@@ -34,7 +34,7 @@ private:
     RenderResources::SpriteSheetHandle sheet_handle_,palette_handle_;const SpriteSheet* sheet_;const SpriteSheet* palette_sheet_;
     SpriteSheet::frame_handle frame_handle_;const SpriteFrame& frame_;std::vector<SpriteSheet::frame_handle> palette_handles_;
     std::vector<const SpriteFrame*> palette_frames_;const std::filesystem::path output_;std::vector<float> fixed_;
-    std::array<std::vector<float>,2> geometry_{};const RectangleF screen_{0,0,1280,720};const Camera camera_=Camera::DEFAULT_CAMERA;
+    std::array<std::vector<float>,2> geometry_{};const RectangleF screen_{0,0,1280,720};const Camera camera_=Camera::default_camera;
     size_t readbacks_=0,calibration_checks_=0;
 };
 CrackColourProbe::CrackColourProbe(Application& app,const Presentation& presentation,const std::filesystem::path& output):
@@ -46,7 +46,7 @@ CrackColourProbe::CrackColourProbe(Application& app,const Presentation& presenta
     palette_sheet_(app.render_resources()->sprite_sheet(palette_handle_)),frame_handle_(sheet_->resolve_sprite_frame(look_.fill_frame)),
     frame_(sheet_->sprite_frame(frame_handle_)),output_(output),fixed_(crack_fixed_style(look_))
 {
-    require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::ZERO&&
+    require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero&&
         look_.monitor_art.pen_width==.004f&&look_.monitor_art.corner_step==.012f&&look_.monitor_art.ink==Colour(0,0,0)&&look_.monitor_art.highlight==Colour(238,238,238),
         "Crack fixture lost white-frame metadata, guarded geometry or BLACK/EEEEEE materials");
     for(const auto& name:look_.palette_frames)
@@ -60,7 +60,7 @@ void CrackColourProbe::unchanged() const
         sheet_handle_==resources->resolve_sprite_sheet(look_.sprite_sheet)&&palette_handle_==resources->resolve_sprite_sheet(look_.palette_sheet)&&
         sheet_==resources->sprite_sheet(sheet_handle_)&&palette_sheet_==resources->sprite_sheet(palette_handle_)&&
         frame_handle_==sheet_->resolve_sprite_frame(look_.fill_frame)&& &frame_==&sheet_->sprite_frame(frame_handle_)&&
-        screen_==RectangleF(0,0,1280,720)&&camera_.translation==Vector2F::ZERO&&camera_.scale==1.0f&&
+        screen_==RectangleF(0,0,1280,720)&&camera_.translation==Vector2F::zero&&camera_.scale==1.0f&&
         app_.viewport_manager()->fullscreen_viewport().pixel_rect()==RectangleI(0,0,1280,720),"Crack changed borrowed addresses/resources/caller screen/camera");
     for(const OpeningPresentation* style:{&look_,&expected_a_,&expected_b_})
     {

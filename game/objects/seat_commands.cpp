@@ -6,7 +6,7 @@
 #include "engine/input/mouse.h"
 #include "engine/render/viewport_manager.h"
 
-using namespace mattmath;
+using namespace labrador;
 
 SeatCommandBuilder::SeatCommandBuilder(const labrador::Mouse* mouse,
 	const labrador::ViewportManager* viewports) :
@@ -53,7 +53,7 @@ void SeatCommandBuilder::resolve_mouse_aim(const Player& player, int view,
 		player.center(), cursor, viewport, player.camera());
 
 	// A cursor exactly on the player requests no direction; do not normalize zero.
-	if (aim == Vector2F::ZERO)
+	if (aim == Vector2F::zero)
 	{
 		return;
 	}

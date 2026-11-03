@@ -2,7 +2,6 @@
 #include "game/objects/level.h"
 #include "game/objects/countdown_cards.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // Level's untimed solo practice (POL#19). PracticeLessons owns the lessons
@@ -55,7 +54,7 @@ RectangleF Level::lesson_card_bounds() const
 {
 	if (this->state_ != LevelState::active || this->lessons_.active() < 0)
 	{
-		return RectangleF::ZERO;
+		return RectangleF::zero;
 	}
 	return this->lessons_.card(this->lessons_.active());
 }

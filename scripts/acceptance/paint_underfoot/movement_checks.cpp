@@ -7,7 +7,7 @@ namespace paint_underfoot_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         std::vector<std::uint32_t> trace(World& world, int mode)
         {
             if (mode == 0) { world.configure(false); }

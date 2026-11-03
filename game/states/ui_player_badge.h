@@ -7,7 +7,7 @@
 class UiPlayerBadge final : public labrador::UiObject
 {
 public:
-    UiPlayerBadge(const std::string& name, const mattmath::RectangleF& rectangle,
+    UiPlayerBadge(const std::string& name, const labrador::RectangleF& rectangle,
         int roster_index, const PlayerIdentityPresentation* look,
         labrador::RenderResources* render_resources, bool hidden = false) :
         UiObject(name, hidden), badge_(look, render_resources), rectangle_(rectangle),
@@ -20,11 +20,11 @@ public:
     {
         if (!this->hidden()) { this->badge_.draw(draw_list, rectangle_, roster_index_); }
     }
-    mattmath::RectangleF bounds() const override { return rectangle_; }
+    labrador::RectangleF bounds() const override { return rectangle_; }
 
     // Existing labels retain their geometry; the same badge sits just before them.
     // The geometry is PlayerIdentityPresentation's, which the content checks share.
-    static mattmath::RectangleF before(const mattmath::RectangleF& label,
+    static labrador::RectangleF before(const labrador::RectangleF& label,
         const PlayerIdentityPresentation& look)
     {
         return look.ui_badge_before(label);
@@ -32,6 +32,6 @@ public:
 
 private:
     PlayerBadge badge_;
-    mattmath::RectangleF rectangle_;
+    labrador::RectangleF rectangle_;
     int roster_index_;
 };

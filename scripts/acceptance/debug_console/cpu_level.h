@@ -163,7 +163,7 @@ namespace debug_console_acceptance
 		{
 			return this->world_.levels.get(this->settings.stage())->stations();
 		}
-		bool debug_place(int seat, const mattmath::Vector2F& top_left) override
+		bool debug_place(int seat, const labrador::Vector2F& top_left) override
 		{
 			return this->level->place_player(seat, top_left);
 		}
@@ -187,7 +187,7 @@ namespace debug_console_acceptance
 			this->seat_labels = labels;
 			this->level->set_seat_labels(labels);
 		}
-		std::vector<mattmath::RectangleF> debug_screen_obstacles() const override
+		std::vector<labrador::RectangleF> debug_screen_obstacles() const override
 		{
 			return this->level->opening_cards();
 		}

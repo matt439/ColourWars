@@ -39,11 +39,11 @@ namespace crossfeed_acceptance
                     RectangleF splash = object->shape()->bounding_box();
                     splash.inflate(32.0f);
                     splash.offset(run.services.tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
-                    const ProjectileSpray shot(splash, Vector2F::ZERO, initial, 1, Colour::white,
+                    const ProjectileSpray shot(splash, Vector2F::zero, initial, 1, Colour::white,
                         &run.services.render, resolve_projectile_strip(
                             run.services.tuning.projectile(ProjectileType::spray), run.services.render),
                         &run.services.tuning.projectile(ProjectileType::spray));
-                    paintable->on_contact(shot, Vector2F::ZERO, 0.0f);
+                    paintable->on_contact(shot, Vector2F::zero, 0.0f);
                 }
             }
             require(approximately(run.team_area(initial), run.total_area()),
@@ -139,7 +139,7 @@ namespace crossfeed_acceptance
             {
                 const float goal = x(phase == 0 ? 2450.0f : 1150.0f);
                 const float direction = (right != (phase == 1)) ? 1.0f : -1.0f;
-                PlayerInputData actions = aimed(direction > 0.0f ? PI / 3.0f : 2.0f * PI / 3.0f,
+                PlayerInputData actions = aimed(direction > 0.0f ? pi / 3.0f : 2.0f * pi / 3.0f,
                     input(steer(run, goal)));
                 actions.primary_shoot = fire;
                 run.tick(actions);

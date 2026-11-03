@@ -19,7 +19,6 @@
 #include <stdexcept>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -59,14 +58,14 @@ namespace
         std::unique_ptr<ProjectileSpray> shot(PlayerTeam team, int owner,
             const RectangleF& rectangle = RectangleF(0, 0, 200, 200))
         {
-            return std::make_unique<ProjectileSpray>(rectangle, Vector2F::ZERO, team, owner, Colour::white,
+            return std::make_unique<ProjectileSpray>(rectangle, Vector2F::zero, team, owner, Colour::white,
                 &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render),
                 &tuning.projectile(ProjectileType::spray));
         }
         void hit(Player& victim, const CollisionObject& shot) const
         {
             const float before = victim.health();
-            victim.on_contact(shot, Vector2F::ZERO, 0.0f);
+            victim.on_contact(shot, Vector2F::zero, 0.0f);
             const float expected = before - tuning.projectile(ProjectileType::spray).details.player_damage;
             require(std::bit_cast<std::uint32_t>(victim.health()) == std::bit_cast<std::uint32_t>(expected),
                 "Passive provenance changed the existing contact damage arithmetic");
@@ -144,7 +143,7 @@ namespace
         auto shot = world.shot(PlayerTeam::b, paint_owners::index(-1, 1));
         auto immune = world.player(); const float initial = immune->health();
         immune->set_damage_immune(true);
-        for (int count = 0; count < 8; ++count) { immune->on_contact(*shot, Vector2F::ZERO, 0.0f); }
+        for (int count = 0; count < 8; ++count) { immune->on_contact(*shot, Vector2F::zero, 0.0f); }
         require(immune->health() == initial && credited(*immune) == 0 && immune->lethal_projectiles().uncredited == 0,
             "Immunity created damage or provenance");
         auto killed = world.player(); killed->kill(); world.hit(*killed, *shot);
@@ -162,7 +161,7 @@ namespace
         ProjectileTagProxy proxy;
         auto tagged = world.player(); const float untouched = tagged->health();
         bool refused = false;
-        try { tagged->on_contact(proxy, Vector2F::ZERO, 0.0f); }
+        try { tagged->on_contact(proxy, Vector2F::zero, 0.0f); }
         catch (const std::logic_error&) { refused = true; }
         require(refused && tagged->health() == untouched && credited(*tagged) == 0 &&
             tagged->lethal_projectiles().uncredited == 0,
@@ -271,7 +270,7 @@ namespace
         }
         const int owner = paint_owners::index(-1, 3);
         ProjectileRolling* fatal = scene.add(std::make_unique<ProjectileRolling>(
-            RectangleF(victims[0]->center(), rolling.details.col_rect_size), Vector2F::ZERO,
+            RectangleF(victims[0]->center(), rolling.details.col_rect_size), Vector2F::zero,
             PlayerTeam::b, owner, Colour::white, &world.render,
             resolve_projectile_strip(rolling, world.render), &rolling));
         const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / 60));

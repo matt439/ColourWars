@@ -3,7 +3,6 @@
 #include "game/objects/terrain_material.h"
 #include <cmath>
 
-using namespace mattmath;
 using namespace labrador;
 
 FixedSlabShadow::FixedSlabShadow(const FixedSlabGeometry& geometry,
@@ -41,7 +40,7 @@ void FixedSlabShadow::draw(DrawList& list) const
             this->sprite_sheet()->draw(list, source,
                 RectangleF(this->geometry_.to_world({ left, FixedSlabGeometry::normal_thickness }),
                     { right - left, static_cast<float>(source.height) }),
-                Colour::white, this->geometry_.tangent().angle(), Vector2F::ZERO);
+                Colour::white, this->geometry_.tangent().angle(), Vector2F::zero);
         }
     }
 }

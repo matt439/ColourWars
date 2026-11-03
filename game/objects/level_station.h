@@ -9,7 +9,7 @@
 struct LevelStation
 {
 	std::string name;
-	mattmath::Vector2F position;
+	labrador::Vector2F position;
 };
 
 // A station's optional practice prompt (POL#19). Untimed solo practice shows
@@ -18,7 +18,7 @@ struct LevelStation
 struct LevelLesson
 {
 	std::string station;
-	mattmath::RectangleF area;
+	labrador::RectangleF area;
 	std::string title;
 	std::string text;
 };

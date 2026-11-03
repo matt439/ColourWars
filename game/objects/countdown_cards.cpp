@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <cmath>
 
-using namespace mattmath;
 using namespace labrador;
 
 CountdownCards::CountdownCards(const std::wstring& stage_name, const MatchTuning* match,
@@ -25,7 +24,7 @@ CountdownCards::CountdownCards(const std::wstring& stage_name, const MatchTuning
 	const MenuStyle& menu = presentation->menu();
 	const CountdownArtPresentation& paper = presentation->match().countdown_art;
 	this->stage_entry_ = std::make_unique<colourwars::TextDropShadow>(stage_name,
-		menu.heading_font, Vector2F::ZERO, render_resources,
+		menu.heading_font, Vector2F::zero, render_resources,
 		paper.ink, paper.paper, menu.heading_shadow_offset);
 }
 
@@ -43,16 +42,16 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 		&this->presentation_->match(), &this->presentation_->opening(), render_resources);
 	const MenuStyle& menu = this->presentation_->menu();
 	this->countdown_heading_ = std::make_unique<colourwars::TextDropShadow>(
-		L"GET READY", menu.detail_font, Vector2F::ZERO,
+		L"GET READY", menu.detail_font, Vector2F::zero,
 		render_resources, this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper,
 		menu.detail_shadow_offset);
 	this->resume_heading_ = std::make_unique<colourwars::TextDropShadow>(
-		L"RESUMING", menu.detail_font, Vector2F::ZERO, render_resources,
+		L"RESUMING", menu.detail_font, Vector2F::zero, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
 	this->replay_heading_ = std::make_unique<colourwars::TextDropShadow>(
-		L"REPLAY", menu.detail_font, Vector2F::ZERO, render_resources,
+		L"REPLAY", menu.detail_font, Vector2F::zero, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
 	this->centre_countdown_text(paper);
@@ -79,10 +78,10 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 	{
 		ControlsReminder reminder;
 		reminder.heading = std::make_unique<colourwars::TextDropShadow>(
-			heading, menu.detail_font, Vector2F::ZERO, render_resources,
+			heading, menu.detail_font, Vector2F::zero, render_resources,
 			menu.highlight, menu.shadow_colour, menu.detail_shadow_offset);
 		reminder.text = std::make_unique<colourwars::TextDropShadow>(
-			text, match.controls_font, Vector2F::ZERO, render_resources,
+			text, match.controls_font, Vector2F::zero, render_resources,
 			match.controls_colour, match.controls_shadow_colour,
 			match.controls_shadow_offset);
 		this->controls_reminders_.push_back(std::move(reminder));
@@ -135,14 +134,14 @@ RectangleF CountdownCards::gamepad_controls_text_bounds() const
 {
 	for (const ControlsReminder& reminder : this->controls_reminders_)
 	{ if (reminder.text.get() == this->gamepad_controls_) { return reminder.text_bounds; } }
-	return RectangleF::ZERO;
+	return RectangleF::zero;
 }
 
 RectangleF CountdownCards::gamepad_controls_card_bounds() const
 {
 	for (const ControlsReminder& reminder : this->controls_reminders_)
 	{ if (reminder.text.get() == this->gamepad_controls_) { return reminder.card; } }
-	return RectangleF::ZERO;
+	return RectangleF::zero;
 }
 
 std::wstring_view CountdownCards::keyboard_controls_text() const
@@ -152,14 +151,14 @@ RectangleF CountdownCards::keyboard_controls_text_bounds() const
 {
 	for (const ControlsReminder& reminder : this->controls_reminders_)
 	{ if (reminder.text.get() == this->keyboard_controls_) { return reminder.text_bounds; } }
-	return RectangleF::ZERO;
+	return RectangleF::zero;
 }
 
 RectangleF CountdownCards::keyboard_controls_card_bounds() const
 {
 	for (const ControlsReminder& reminder : this->controls_reminders_)
 	{ if (reminder.text.get() == this->keyboard_controls_) { return reminder.card; } }
-	return RectangleF::ZERO;
+	return RectangleF::zero;
 }
 
 void CountdownCards::set_label(const std::wstring& text)
@@ -186,7 +185,7 @@ void CountdownCards::centre_countdown_text(const PaperCard& paper)
 		card_size);
 	const Vector2F padding = look.controls_padding * scale;
 	const RectangleF heading_bounds = RectangleF::union_of(
-		this->countdown_heading_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->countdown_heading_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->countdown_heading_->text_bounds_at(menu.detail_shadow_offset, 1.0f));
 	const float heading_scale = std::min(scale,
 		(card_size.x - padding.x * 2.0f) / heading_bounds.width);
@@ -197,7 +196,7 @@ void CountdownCards::centre_countdown_text(const PaperCard& paper)
 		(resolution.x - heading_bounds.width * heading_scale) / 2.0f,
 		this->countdown_card_.y + padding.y) - heading_bounds.position() * heading_scale);
 	const RectangleF resume_bounds = RectangleF::union_of(
-		this->resume_heading_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->resume_heading_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->resume_heading_->text_bounds_at(menu.detail_shadow_offset, 1.0f));
 	const float resume_scale = std::min(heading_scale,
 		(card_size.x - padding.x * 2.0f) / resume_bounds.width);
@@ -210,7 +209,7 @@ void CountdownCards::centre_countdown_text(const PaperCard& paper)
 	// The replay's card holds only its heading, at the top of the screen,
 	// where it covers the least of the round it labels.
 	const RectangleF replay_bounds = RectangleF::union_of(
-		this->replay_heading_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->replay_heading_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->replay_heading_->text_bounds_at(menu.detail_shadow_offset, 1.0f));
 	this->replay_heading_->set_scale(heading_scale);
 	this->replay_heading_->set_shadow_scale(heading_scale);
@@ -243,7 +242,7 @@ void CountdownCards::centre_stage_entry(const PaperCard& paper)
 	const RectangleF inside(this->stage_entry_card_.position() + padding,
 		size - padding * 2.0f - Vector2F(shade));
 	const RectangleF bounds = RectangleF::union_of(
-		this->stage_entry_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->stage_entry_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->stage_entry_->text_bounds_at(menu.heading_shadow_offset, 1.0f));
 	// Fit both dimensions, including a font's side bearings and the shadow.
 	// This also handles authored multi-line names without clipping the paper.
@@ -285,10 +284,10 @@ void CountdownCards::centre_controls_text()
 	for (const ControlsReminder& reminder : this->controls_reminders_)
 	{
 		const RectangleF heading = RectangleF::union_of(
-			reminder.heading->text_bounds_at(Vector2F::ZERO, 1.0f),
+			reminder.heading->text_bounds_at(Vector2F::zero, 1.0f),
 			reminder.heading->text_bounds_at(look.heading_shadow, 1.0f));
 		const RectangleF text = RectangleF::union_of(
-			reminder.text->text_bounds_at(Vector2F::ZERO, 1.0f),
+			reminder.text->text_bounds_at(Vector2F::zero, 1.0f),
 			reminder.text->text_bounds_at(look.text_shadow, 1.0f));
 		content_width = std::max({ content_width, heading.width, text.width });
 		heading_height = std::max(heading_height, heading.height);
@@ -307,10 +306,10 @@ void CountdownCards::centre_controls_text()
 			std::min(resolution.y * look.y,
 				resolution.y - margin.y - card_size.y)), card_size);
 		const RectangleF heading = RectangleF::union_of(
-			reminder.heading->text_bounds_at(Vector2F::ZERO, 1.0f),
+			reminder.heading->text_bounds_at(Vector2F::zero, 1.0f),
 			reminder.heading->text_bounds_at(look.heading_shadow, 1.0f));
 		const RectangleF text = RectangleF::union_of(
-			reminder.text->text_bounds_at(Vector2F::ZERO, 1.0f),
+			reminder.text->text_bounds_at(Vector2F::zero, 1.0f),
 			reminder.text->text_bounds_at(look.text_shadow, 1.0f));
 		reminder.heading->set_scale(text_scale);
 		reminder.heading->set_shadow_scale(text_scale);

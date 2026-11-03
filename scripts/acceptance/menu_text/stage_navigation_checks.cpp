@@ -18,10 +18,10 @@ namespace menu_text_acceptance
             colourwars::UiTextDropShadow name("random_stage_name", source, style.item_font, stage.name_position,
                 &world.render, stage.unselected, style.shadow_colour, style.item_shadow_offset);
             source = L"Changed after construction";
-            const mattmath::RectangleF raw = mattmath::RectangleF::union_of(
-                mattmath::RectangleF(mattmath::Vector2F::ZERO, measured),
-                mattmath::RectangleF(style.item_shadow_offset, measured));
-            require(name.text() == retained && name.bounds() == mattmath::RectangleF::union_of(
+            const labrador::RectangleF raw = labrador::RectangleF::union_of(
+                labrador::RectangleF(labrador::Vector2F::zero, measured),
+                labrador::RectangleF(style.item_shadow_offset, measured));
+            require(name.text() == retained && name.bounds() == labrador::RectangleF::union_of(
                 name.text_bounds_at(stage.name_position, 1.0f),
                 name.text_bounds_at(stage.name_position + style.item_shadow_offset, 1.0f)) &&
                 raw.width == measured.x + std::abs(style.item_shadow_offset.x) &&
@@ -32,8 +32,8 @@ namespace menu_text_acceptance
             {
                 // The runtime explicitly measures at scale 1 before every
                 // update, even when the previous displayed slot was shrunk.
-                const auto bounds = mattmath::RectangleF::union_of(
-                    name.text_bounds_at(mattmath::Vector2F::ZERO, 1.0f),
+                const auto bounds = labrador::RectangleF::union_of(
+                    name.text_bounds_at(labrador::Vector2F::zero, 1.0f),
                     name.text_bounds_at(style.item_shadow_offset, 1.0f));
                 const float scale = std::min(1.0f, stage.preview_size.x / bounds.width);
                 name.set_scale(scale);
@@ -42,7 +42,7 @@ namespace menu_text_acceptance
                 return scale;
             };
             const float scale = fit();
-            const mattmath::RectangleF expected(stage.name_position + raw.position() * scale, raw.size() * scale);
+            const labrador::RectangleF expected(stage.name_position + raw.position() * scale, raw.size() * scale);
             const auto actual = name.bounds();
             require(name.text() == retained && name.text_bounds() == name.text_bounds_at(stage.name_position, scale) &&
                 std::abs(actual.x - expected.x) <= 0.01f && std::abs(actual.y - expected.y) <= 0.01f &&
@@ -62,9 +62,9 @@ namespace menu_text_acceptance
             const float reset_scale = fit();
             const auto reset = world.render.measure_text(font, L"Fit");
             require(reset_scale == 1.0f && name.text() == L"Fit" && name.shadow_scale() == 1.0f &&
-                name.shadow_offset() == style.item_shadow_offset && name.bounds() == mattmath::RectangleF::union_of(
-                    mattmath::RectangleF(stage.name_position, reset),
-                    mattmath::RectangleF(stage.name_position + style.item_shadow_offset, reset)),
+                name.shadow_offset() == style.item_shadow_offset && name.bounds() == labrador::RectangleF::union_of(
+                    labrador::RectangleF(stage.name_position, reset),
+                    labrador::RectangleF(stage.name_position + style.item_shadow_offset, reset)),
                 "Replacing a fitted Random stage name retained its shrink scale, lost its copied text or failed to reset its shadow");
             name.set_hidden(true);
             DrawList no_device;
@@ -141,7 +141,7 @@ namespace menu_text_acceptance
         std::vector<Glyph> glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? 2018 : 8,
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'~' ? 2018 : 8,
                 character == U'~' ? 160 : 16), 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_stage_random_half_scale",
@@ -157,7 +157,7 @@ namespace menu_text_acceptance
         const auto scaled = variants.load(scaled_contact);
         scaled.validate_resources(world.render, world.audio);
         const auto measured = world.render.measure_text(world.render.resolve_sprite_font(scaled.menu().item_font), L"~");
-        require(measured == mattmath::Vector2F(2018.0f, 160.0f) &&
+        require(measured == labrador::Vector2F(2018.0f, 160.0f) &&
             scaled.main_menu().stage_select.preview_size.x / (measured.x + 2.0f) == 0.5f,
             "Random stage boundary fixture no longer fits the complete 2020x162 shadow union at exactly half scale");
         variants.rejects("values.random", [&](rapidjson::Document& d)
@@ -354,7 +354,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 if (character == missing) { continue; }
-                glyphs.push_back({character, mattmath::RectangleI(0, 0,
+                glyphs.push_back({character, labrador::RectangleI(0, 0,
                     character == U'8' ? eight_width : character == U'~' ? tilde_width : 8,
                     character == U'~' ? tilde_height : 16), 0.0f, character == U'~' ? tilde_y : 0.0f, 0.0f});
             }
@@ -492,9 +492,9 @@ namespace menu_text_acceptance
         const auto point = stage.briefing.position + stage.briefing_padding + stage.briefing.spacing * 7.0f;
         colourwars::UiTextDropShadow hint("count_hint", hint_edge.menu_text().stage_random_hint(1), "menu_stage_count_hint_edge",
             point, &world.render, Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), hint_edge.menu().detail_shadow_offset);
-        const auto fit_hint = [&](const mattmath::Vector2F& shadow)
+        const auto fit_hint = [&](const labrador::Vector2F& shadow)
         {
-            const auto raw = mattmath::RectangleF::union_of(hint.text_bounds_at(mattmath::Vector2F::ZERO, 1.0f),
+            const auto raw = labrador::RectangleF::union_of(hint.text_bounds_at(labrador::Vector2F::zero, 1.0f),
                 hint.text_bounds_at(shadow, 1.0f));
             const float scale = std::min(1.0f, 476.0f / raw.width);
             hint.set_scale(scale);

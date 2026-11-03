@@ -14,7 +14,7 @@ public:
         const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences, const PaintTuning* paint,
         const TeamColour& team_colours, const PaintableFaces& faces,
-        std::span<const mattmath::RectangleF> flat_obstacles = {});
+        std::span<const labrador::RectangleF> flat_obstacles = {});
     FixedSlabPaintable(const FixedSlabPaintable&) = delete;
     FixedSlabPaintable& operator=(const FixedSlabPaintable&) = delete;
 
@@ -24,18 +24,18 @@ public:
     PlayerTeam top_paint_team(float world_x) const override;
     std::optional<labrador::Colour> top_paint_colour(float world_x) const override;
     // The face point is taken in the slab's own frame, not its bounding box.
-    mattmath::Vector2F cover_point(const mattmath::Vector2F& shot_centre,
-        const mattmath::Vector2F& normal) const override;
+    labrador::Vector2F cover_point(const labrador::Vector2F& shot_centre,
+        const labrador::Vector2F& normal) const override;
     const TerrainMaterial& local_material() const;
     const std::vector<std::pair<float, float>>& exposed_bottom() const;
 
     void update(float dt) override;
     void draw(labrador::DrawList& draw_list) const override;
     void draw_miniature(labrador::DrawList& draw_list) const override;
-    mattmath::RectangleF bounds() const override;
-    mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
+    labrador::RectangleF bounds() const override;
+    labrador::RectangleF cull_bounds(float units_per_pixel) const override;
     void on_projectile_contact(const Projectile& other,
-        const mattmath::Vector2F& normal, float penetration) override;
+        const labrador::Vector2F& normal, float penetration) override;
     PaintableObject* paintable() override { return this; }
     const PaintableObject* paintable() const override { return this; }
     PaintTotal paint_total() const override;
@@ -50,7 +50,7 @@ private:
     };
     struct Strip
     {
-        mattmath::RectangleF band;
+        labrador::RectangleF band;
         bool along_x;
         bool leading;
         std::size_t first_tile;
@@ -71,5 +71,5 @@ private:
         static_cast<std::size_t>(TerrainRole::count)> terrain_swatches_{};
 
     void draw_local(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& rectangle, const labrador::Colour& colour) const;
+        const labrador::RectangleF& rectangle, const labrador::Colour& colour) const;
 };

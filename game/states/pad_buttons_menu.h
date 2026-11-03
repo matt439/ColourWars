@@ -34,5 +34,5 @@ private:
 	std::unique_ptr<OptionRow> pad_;
 	std::array<std::unique_ptr<OptionRow>, entry_count> entries_;
 	labrador::UiText* help_ = nullptr;
-	mattmath::RectangleF status_limit_;
+	labrador::RectangleF status_limit_;
 };

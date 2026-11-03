@@ -79,7 +79,7 @@ HudHealthColourProbe::HudHealthColourProbe(Application& app,const Presentation& 
         app.render_resources()->resolve_sprite_font(look_.player_identity_font)},output_(output),fixed_(hud_health_fixed_style(look_)),
     fixed_identity_(hud_health_identity_style(identity_)),names_(hud_health_resource_names(look_))
 {
-    require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::ZERO&&
+    require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero&&
         look_.meter_track_colour==Colour(184,184,184)&&look_.reference_height==1080&&look_.player_identity_reference_width==1920&&
         look_.right_margin==.19f&&look_.health_top_margin==.09f&&look_.ammo_top_margin==.17f&&look_.box_size==Vector2F(.15f,.022f)&&
         look_.paper.keyline_width==2.0f&&colours_.team_a==Colour(6,52,204)&&colours_.team_b==Colour(255,127,0),
@@ -141,7 +141,7 @@ Frame HudHealthColourProbe::raw(size_t context,const Colour& colour,HudHealthRef
     const Frame result=render(context,[&]
     {
         Renderer& renderer=*app_.renderer();renderer.begin_frame();renderer.set_view_count(1);DrawList list=renderer.view(0);
-        list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::DEFAULT_CAMERA);list.set_filter(TextureFilter::point);
+        list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::default_camera);list.set_filter(TextureFilter::point);
         canvas_.draw(list,RectangleF(0,0,1280,720));write_raw(list,20,20,24,24,Colour(255,255,255));write_raw(list,25,20,29,24,Colour(0,0,0));
         write_raw(list,1036,64,1228,80,Colour(184,184,184)); // Explicit opaque underlay, never copied paper art.
         if(hud_health_fill_width(context)>0)

@@ -7,7 +7,6 @@
 #include <limits>
 #include <stdexcept>
 
-using namespace mattmath;
 using namespace labrador;
 
 const RectangleF& TranslatingStructurePaintable::checked_anchor(
@@ -107,7 +106,7 @@ FerryCueState TranslatingStructurePaintable::cue_state() const
 
 RectangleF TranslatingStructurePaintable::anchor_cue_bounds() const
 {
-    if (this->cue_ == nullptr) { return RectangleF::ZERO; }
+    if (this->cue_ == nullptr) { return RectangleF::zero; }
     const RectangleF& body = this->motion_.state_.spec.anchor;
     // A ferry's sign fits under its body; a lift is narrower than any sign
     // that can be read, so its own is lift_width wide (ROAD#28).

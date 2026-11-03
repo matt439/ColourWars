@@ -14,7 +14,7 @@ class GameData;
 class StagePreview final : public labrador::UiWidget
 {
 public:
-	StagePreview(const std::string& name, const mattmath::RectangleF& rectangle,
+	StagePreview(const std::string& name, const labrador::RectangleF& rectangle,
 		GameData* data);
 
 	// An empty stage clears the view for the page's Random card. Repeating the
@@ -22,13 +22,13 @@ public:
 	void set_stage(const std::string& stage);
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
-	mattmath::RectangleF bounds() const override;
+	labrador::RectangleF bounds() const override;
 	void set_colour(const labrador::Colour& colour) override;
 
 private:
 	GameData* data_;
-	mattmath::RectangleF rectangle_;
-	mattmath::RectangleF world_bounds_;
+	labrador::RectangleF rectangle_;
+	labrador::RectangleF world_bounds_;
 	std::string stage_;
 	std::vector<std::unique_ptr<labrador::GameObject>> objects_;
 	std::vector<std::unique_ptr<labrador::CollisionObject>> collision_objects_;

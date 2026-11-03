@@ -210,7 +210,7 @@ try {
         (Join-Path $gameDirectory 'colourwars_rumble_xinput.lib'),
         (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/MattMath.lib'),
+        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
         (Join-Path $dependencyLibraries 'xaudio2_9redist.lib')
     )
@@ -221,7 +221,7 @@ try {
     $source = Join-Path $PSScriptRoot 'acceptance/paint_fx_visual.cpp'
     $executable = Join-Path $run 'paint_fx_visual.exe'
     $responseFile = Join-Path $run 'compile.rsp'
-    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-',
+    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8',
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }

@@ -16,8 +16,8 @@
 
 struct Presentation::Validation
 {
-    using Vector2F = mattmath::Vector2F;
-    using RectangleF = mattmath::RectangleF;
+    using Vector2F = labrador::Vector2F;
+    using RectangleF = labrador::RectangleF;
     using FontHandle = labrador::FontHandle;
     static constexpr std::array<BotDifficulty, 3> label_difficulties{
         BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };

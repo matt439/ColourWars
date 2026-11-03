@@ -2,7 +2,6 @@
 #include "game/objects/silhouette.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 Silhouette::Silhouette(const OpeningPresentation* look, RenderResources* render_resources) :
     CrudeDrawing(look->sprite_sheet, look->fill_frame, render_resources),
@@ -71,7 +70,7 @@ void Silhouette::draw(DrawList& draw_list, const RectangleF& screen,
     mass(ink, Vector2F(pen, -pen));
     mass(ink, Vector2F(-pen, pen));
     mass(ink, Vector2F(pen, pen));
-    mass(premultiplied(look.silhouette), Vector2F::ZERO);
+    mass(premultiplied(look.silhouette), Vector2F::zero);
 
     // A few translucent, square-ended passes sit inside the same stepped
     // edge. There is no face, clothing or new persona information: only the

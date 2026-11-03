@@ -9,7 +9,6 @@
 #include "game/objects/countdown_cards.h"
 #include "game/objects/match_opening.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // The match's audio lifecycle as Level presents it: teardown, suspend, pause

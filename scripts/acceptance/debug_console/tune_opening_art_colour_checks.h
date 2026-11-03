@@ -154,7 +154,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator };
 		};
 		const auto held_geometry = geometry();
@@ -175,7 +175,7 @@
 		}();
 		const std::array<SilhouettePose, 3> poses{ SilhouettePose{},
 			SilhouettePose{ 0.5f, 0.0f, 0.0f }, SilhouettePose{ 0.0f, 1.0f, 0.4f } };
-		const mattmath::RectangleF screen(0.0f, 0.0f, 1280.0f, 720.0f);
+		const labrador::RectangleF screen(0.0f, 0.0f, 1280.0f, 720.0f);
 		const auto inputs = [&]
 		{
 			std::vector<float> values{ screen.x, screen.y, screen.width, screen.height };
@@ -531,7 +531,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator };
 		};
 		const auto held_geometry = geometry();

@@ -6,7 +6,6 @@
 #include <cmath>
 
 using namespace labrador;
-using namespace mattmath;
 
 BlockedShotFeedback::BlockedShotFeedback(const BlockedShotPresentation* presentation,
     RenderResources* render_resources) :
@@ -166,7 +165,7 @@ RectangleF BlockedShotFeedback::cue_bounds(const Cue& cue) const
 
 RectangleF BlockedShotFeedback::bounds() const
 {
-    if (!this->presentation_->enabled || this->count_ == 0) { return RectangleF::ZERO; }
+    if (!this->presentation_->enabled || this->count_ == 0) { return RectangleF::zero; }
     RectangleF result = this->cue_bounds(this->cues_[0]);
     for (size_t index = 1; index < this->count_; ++index)
     {

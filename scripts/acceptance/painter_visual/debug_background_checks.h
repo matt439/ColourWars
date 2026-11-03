@@ -105,10 +105,10 @@ namespace debug_background_acceptance
     bool neutral(const PlayerInputData& input)
     {
         return input.x_movement == 0.0f && !input.jump_pressed && !input.jump_held &&
-            input.shoot_angle == 0.0f && input.shoot_direction == Vector2F::ZERO &&
+            input.shoot_angle == 0.0f && input.shoot_direction == Vector2F::zero &&
             !input.shoot_direction_requested && !input.primary_shoot && !input.drop_through &&
             !input.toggle_debug &&
-            input.left_analog_stick == Vector2F::ZERO && input.right_analog_stick == Vector2F::ZERO;
+            input.left_analog_stick == Vector2F::zero && input.right_analog_stick == Vector2F::zero;
     }
 }
 
@@ -327,10 +327,10 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     Player& victim = const_cast<Player&>(game->level().player(1));
     victim.force_respawn();
     const auto& damage_values = tuning.projectile(ProjectileType::spray);
-    const ProjectileSpray damage(RectangleF(0, 0, 10, 10), Vector2F::ZERO, PlayerTeam::a,
+    const ProjectileSpray damage(RectangleF(0, 0, 10, 10), Vector2F::zero, PlayerTeam::a,
         3, Colour::white, app.render_resources(), resolve_projectile_strip(damage_values, *app.render_resources()), &damage_values);
     const float health_before = victim.health();
-    victim.on_contact(damage, Vector2F::ZERO, 0.0f); tick();
+    victim.on_contact(damage, Vector2F::zero, 0.0f); tick();
     require(victim.health() < health_before, "Inactive motor control did not produce actual damage");
     no_motor_calls_since(damage_begin); note("inactive-actual-damage-motors-zero");
 

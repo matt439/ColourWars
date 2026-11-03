@@ -6,7 +6,7 @@
 #include <limits>
 #include <stdexcept>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace
 {
@@ -88,7 +88,7 @@ namespace
         if (before >= 0.0 && after >= 0.0)
         {
             if (before == 0.0 && after > 0.0 && result.entry == 0.0 &&
-                result.normal_to_rectangle == Vector2F::ZERO)
+                result.normal_to_rectangle == Vector2F::zero)
             { result.normal_to_rectangle = normal; }
             return true;
         }
@@ -170,7 +170,7 @@ std::optional<FixedSlabSweep> FixedSlabGeometry::sweep(const RectangleF& start, 
     FixedSlabSweep result;
     result.initially_overlapping = this->overlaps(start);
     double minimum_initial_depth = std::numeric_limits<double>::infinity();
-    Vector2F initial_normal = Vector2F::ZERO;
+    Vector2F initial_normal = Vector2F::zero;
     const auto candidate_axes = axes(this->shape_);
     for (const Vector2F& axis : candidate_axes)
     {
@@ -185,7 +185,7 @@ std::optional<FixedSlabSweep> FixedSlabGeometry::sweep(const RectangleF& start, 
             !clip(positive_depth, slab.maximum - after.minimum, axis, result))
         { return std::nullopt; }
     }
-    if (result.initially_overlapping || (result.entry == 0.0 && result.normal_to_rectangle == Vector2F::ZERO))
+    if (result.initially_overlapping || (result.entry == 0.0 && result.normal_to_rectangle == Vector2F::zero))
     { result.normal_to_rectangle = initial_normal; }
 
     // Every separating inequality is affine. If strict overlap exists anywhere

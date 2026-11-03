@@ -5,7 +5,6 @@
 #include "engine/render/viewport_manager.h"
 #include <algorithm>
 
-using namespace mattmath;
 using namespace labrador;
 
 TeammateMarkers::TeammateMarkers(const HudPresentation* hud, RenderResources* render_resources,

@@ -24,7 +24,6 @@
 #include <typeinfo>
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {

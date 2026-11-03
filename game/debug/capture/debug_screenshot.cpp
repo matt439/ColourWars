@@ -24,7 +24,7 @@ ScreenCapture capture_stack(labrador::Application& application)
 	renderer.begin_frame();
 	application.draw(renderer);
 	renderer.submit();
-	const mattmath::Vector2F size = renderer.back_buffer_size();
+	const labrador::Vector2F size = renderer.back_buffer_size();
 	image.width = static_cast<int>(size.x);
 	image.height = static_cast<int>(size.y);
 	renderer.read_back_buffer(image.rgba);

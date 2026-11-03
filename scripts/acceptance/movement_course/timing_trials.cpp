@@ -199,7 +199,7 @@ namespace movement_course_acceptance
         const Surface& platform = s.course.named("long_landing_running_takeoff");
         const Vector2F respawn(platform.rectangle.left() + 220.0f,
             platform.rectangle.top() - s.tuning.player().size.y - 5.0f);
-        auto run = std::make_unique<Run>(s, respawn, Vector2F::ZERO, WeaponType::sprayer,
+        auto run = std::make_unique<Run>(s, respawn, Vector2F::zero, WeaponType::sprayer,
             PlayerTeam::a, respawn);
         run->settle(30);
         if (transition == Transition::pause)
@@ -223,7 +223,7 @@ namespace movement_course_acceptance
             }
             require(run->player->state() == PlayerState::alive, "eliminated player did not respawn");
             for (int tick = 0; tick < 30; ++tick) { run->tick(input(false, true)); }
-            require(run->support() == platform.name && run->player->velocity() == Vector2F::ZERO &&
+            require(run->support() == platform.name && run->player->velocity() == Vector2F::zero &&
                 run->player->rectangle().x == respawn.x &&
                 run->count(MovementFeedbackKind::takeoff) == 0,
                 "respawn did not settle at its point without carried input");
@@ -317,14 +317,14 @@ namespace movement_course_acceptance
             for (size_t index = 0; index < points.size(); ++index)
             {
                 const Vector2F spawn = points[index];
-                Run run(s, spawn, Vector2F::ZERO, WeaponType::sprayer, team, spawn);
+                Run run(s, spawn, Vector2F::zero, WeaponType::sprayer, team, spawn);
                 int respawn_ticks = 0;
                 for (int life = 0; life <= deaths; ++life)
                 {
                     for (int tick = 0; tick < 60; ++tick) { run.tick(input(false, life > 0)); }
                     require(run.support() == runway.name && run.player->rectangle().x == spawn.x &&
                         std::fabs(run.player->rectangle().bottom() - runway.rectangle.top()) < surface_tolerance &&
-                        run.player->velocity() == Vector2F::ZERO &&
+                        run.player->velocity() == Vector2F::zero &&
                         run.player->move_state() == PlayerMoveState::on_ground,
                         "a spawn did not settle on its runway at the authored point");
                     require(run.count(MovementFeedbackKind::takeoff) == 0,

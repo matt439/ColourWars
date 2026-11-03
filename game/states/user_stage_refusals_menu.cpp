@@ -7,7 +7,6 @@
 #include <utility>
 
 using namespace labrador;
-using namespace mattmath;
 
 UserStageRefusalsMenu::UserStageRefusalsMenu(MenuContext* context, std::vector<std::string> refusals) :
 	MenuPage(context), refusals_(std::move(refusals))

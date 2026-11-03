@@ -65,18 +65,18 @@ protected:
 	// page work can inspect it. Its page samples raw input instead of MenuInput.
 	virtual bool owns_raw_keyboard_input() const { return false; }
 
-	mattmath::Vector2F widget_position() const;
-	mattmath::Vector2F widget_size() const;
-	mattmath::Vector2F widget_spacing() const;
+	labrador::Vector2F widget_position() const;
+	labrador::Vector2F widget_size() const;
+	labrador::Vector2F widget_spacing() const;
 
-	void set_widget_position(const mattmath::Vector2F& widget_position);
-	void set_widget_size(const mattmath::Vector2F& widget_size);
-	void set_widget_spacing(const mattmath::Vector2F& widget_spacing);
+	void set_widget_position(const labrador::Vector2F& widget_position);
+	void set_widget_size(const labrador::Vector2F& widget_size);
+	void set_widget_spacing(const labrador::Vector2F& widget_spacing);
 
-	mattmath::Vector2F calculate_widget_position(int h_index, int v_index) const;
-	static mattmath::Vector2F calculate_center_position(
-		const mattmath::Vector2F& widget_size,
-		const mattmath::Vector2F& resolution);
+	labrador::Vector2F calculate_widget_position(int h_index, int v_index) const;
+	static labrador::Vector2F calculate_center_position(
+		const labrador::Vector2F& widget_size,
+		const labrador::Vector2F& resolution);
 	static float calculate_center_position(float widget_size, float resolution);
 	MenuContext* menu_context() const;
 
@@ -136,7 +136,7 @@ protected:
 	void set_prompts(MenuPrompt prompt);
 	void set_prompts(const std::wstring& legend, const PromptBarPresentation& look, float scale);
 
-	mattmath::Vector2F float_resolution() const;
+	labrador::Vector2F float_resolution() const;
 
 	// Maps unchanged design-space geometry into the current window.
 	labrador::Camera ui_camera() const;
@@ -150,7 +150,7 @@ private:
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
 	MenuText text_;
 	PromptBarPresentation prompt_look_;
-	mattmath::Vector2F widget_position_;
-	mattmath::Vector2F widget_size_;
-	mattmath::Vector2F widget_spacing_;
+	labrador::Vector2F widget_position_;
+	labrador::Vector2F widget_size_;
+	labrador::Vector2F widget_spacing_;
 };

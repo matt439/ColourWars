@@ -24,7 +24,7 @@ namespace turbulence_movers_acceptance
     void author_trial(const fs::path& static_stage, const fs::path& tuning, const fs::path& output);
     std::string read_text(const fs::path& path);
     MatchSetup settings(int count = 1, PlayerTeam first_team = PlayerTeam::a);
-    mattmath::RectangleF named_rectangle(const fs::path& path, const std::string& name);
+    labrador::RectangleF named_rectangle(const fs::path& path, const std::string& name);
     fs::path station_variant(Context& context, const std::string& label, float phase,
         bool side_b, bool on_mover = false);
     PlayerInputData input(float movement = 0.0f, bool pressed = false, bool held = false,
@@ -57,8 +57,8 @@ namespace turbulence_movers_acceptance
         int updates = 0;
         bool allow_damage = false;
     private:
-        mattmath::RectangleF bounds_;
-        std::vector<std::pair<std::string, std::unique_ptr<mattmath::Shape>>> solids_;
+        labrador::RectangleF bounds_;
+        std::vector<std::pair<std::string, std::unique_ptr<labrador::Shape>>> solids_;
     };
 
     float steering(const Trial& trial, float target);

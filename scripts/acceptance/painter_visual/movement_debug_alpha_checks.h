@@ -19,7 +19,7 @@ public:
         look_(look), geometry_(look), sheet_(app.render_resources()->sprite_sheet(look.sprite_sheet)),
         frame_(this->sheet_->sprite_frame(this->sheet_->resolve_sprite_frame(look.fill_frame)))
     {
-        require(look.enabled && this->frame_.origin() == Vector2F::ZERO,
+        require(look.enabled && this->frame_.origin() == Vector2F::zero,
             "Movement alpha fixture requires enabled cues and the reviewed zero-origin fill");
         for (size_t index = 0; index < this->cues_.size(); ++index)
         {
@@ -82,7 +82,7 @@ public:
             const auto raw = [&](const RectangleF& rectangle, const Colour& colour)
             {
                 list.draw_sprite(this->sheet_->texture(), this->frame_.source_rectangle(), rectangle,
-                    movement_debug_alpha_tint(colour, fade, mode), 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+                    movement_debug_alpha_tint(colour, fade, mode), 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f);
             };
             if (index % 10 >= 2)
             {
@@ -292,7 +292,7 @@ void movement_debug_alpha_checks(Application& app, Registry<LevelLoadedInfo>& le
     {
         const Canvas canvas(app.render_resources(), background); Renderer& renderer = *app.renderer();
         renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++readbacks;
         return read(renderer);
     };
@@ -308,8 +308,8 @@ void movement_debug_alpha_checks(Application& app, Registry<LevelLoadedInfo>& le
         for (const auto& line : literal_lines)
         {
             list.draw_text(font, line, at + text_geometry.shadow_offset, movement_debug_alpha_tint(shadow, 1, mode),
-                text_geometry.shadow_scale, 0, Vector2F::ZERO, 0);
-            list.draw_text(font, line, at, movement_debug_alpha_tint(colour, 1, mode), text_geometry.font_scale, 0, Vector2F::ZERO, 0);
+                text_geometry.shadow_scale, 0, Vector2F::zero, 0);
+            list.draw_text(font, line, at, movement_debug_alpha_tint(colour, 1, mode), text_geometry.font_scale, 0, Vector2F::zero, 0);
             at.y += text_geometry.line_spacing;
         }
         list.set_filter(TextureFilter::point);

@@ -29,7 +29,6 @@
 #include "scripts/acceptance/support/slot_seats.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -117,7 +116,7 @@ namespace
 
         std::unique_ptr<Player> player(PlayerTeam team = PlayerTeam::a, int slot = 3)
         {
-            const RectangleF rectangle(Vector2F::ZERO, this->tuning.player().size);
+            const RectangleF rectangle(Vector2F::zero, this->tuning.player().size);
             auto weapon = WeaponBuilder::build_weapon(&this->tuning, team, slot, 0,
                 Colour::blue, WeaponType::sniper, rectangle.center(), &this->render,
                 &this->audio, &this->preferences);
@@ -125,7 +124,7 @@ namespace
                 &this->presentation.movement_feedback(), &this->presentation.combat_feedback(),
                 &this->presentation.respawn_redraw(), &this->render, &this->audio,
                 &this->preferences, slot, team, WeaponType::sniper, std::move(weapon),
-                WeaponType::none, Colour::blue, Viewport{}, Vector2F::ZERO);
+                WeaponType::none, Colour::blue, Viewport{}, Vector2F::zero);
         }
 
         std::unique_ptr<Level> build(float duration = 300.0f)
@@ -209,7 +208,7 @@ namespace
             PaintAudio audio(&world.tuning.paint(), &world.audio);
             audio.update(dt);
             auto surface = world.surface({ true, true, true, true });
-            auto shots = world.shots(ProjectileType::jet, { -8, 50 }, Vector2F::ZERO);
+            auto shots = world.shots(ProjectileType::jet, { -8, 50 }, Vector2F::zero);
             if (projectile_first) { shots[0]->on_contact(*surface, { -1, 0 }, 2.0f); }
             surface->on_contact(*shots[0], { 1, 0 }, 2.0f);
             if (!projectile_first) { shots[0]->on_contact(*surface, { -1, 0 }, 2.0f); }
@@ -242,7 +241,7 @@ namespace
 
         auto cover = world.cover({ 0, 0, 100, 100 });
         CollisionObject* targets[]{ cover.get() };
-        auto roller = world.shots(ProjectileType::rolling, { 50, 50 }, Vector2F::ZERO);
+        auto roller = world.shots(ProjectileType::rolling, { 50, 50 }, Vector2F::zero);
         roller[0]->resolve_launch_obstruction({ -40, 50 }, targets);
         roller[0]->on_contact(*cover, { -1, 0 }, 1.0f);
         roller[0]->update(dt);
@@ -372,7 +371,7 @@ namespace
         require(feedback.cues().empty(), "Cue persisted past its bounded lifetime");
 
         feedback.clear();
-        for (const auto normal : { Vector2F::ZERO,
+        for (const auto normal : { Vector2F::zero,
             Vector2F(std::numeric_limits<float>::infinity(), 0.0f),
             Vector2F(0.0f, std::numeric_limits<float>::quiet_NaN()) })
         {
@@ -443,12 +442,12 @@ namespace
     {
         static_assert(std::is_same_v<decltype(&Level::blocked_shot_feedback),
             const BlockedShotFeedback& (Level::*)() const>);
-        std::vector<PlayerInputData> inputs(input_slots::count, aimed(false, PI));
+        std::vector<PlayerInputData> inputs(input_slots::count, aimed(false, pi));
         auto level = world.build(2.0f);
         require(level->blocked_shot_feedback().cues().empty(), "Countdown began with a blocked-shot cue");
         activate(*level, inputs);
         require(level->place_player(0, { 180, 875 }), "Cannot place bare-wall Level fixture");
-        inputs[3] = aimed(true, PI);
+        inputs[3] = aimed(true, pi);
         for (int tick = 0; tick < 90 && level->blocked_shot_feedback().cues().empty(); ++tick)
         {
             level->update(acceptance::slot_seats(*level, inputs), dt);
@@ -485,10 +484,10 @@ namespace
         look.enabled = enabled;
         std::srand(8817);
         auto level = world.build();
-        std::vector<PlayerInputData> inputs(input_slots::count, aimed(false, PI));
+        std::vector<PlayerInputData> inputs(input_slots::count, aimed(false, pi));
         activate(*level, inputs);
         require(level->place_player(0, { 180, 875 }), "Cannot place equivalent Level fixture");
-        inputs[3] = aimed(true, PI);
+        inputs[3] = aimed(true, pi);
         using Record = std::tuple<RectangleF, Vector2F, float, float, float, float, int>;
         std::vector<Record> result;
         for (int tick = 0; tick < 180; ++tick)

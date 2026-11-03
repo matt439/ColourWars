@@ -28,7 +28,7 @@ public:
             look_.quiet.face_colour == Colour::white && look_.arm_colour == Colour::black &&
             look_.hand_colour == Colour::white && fill_.sprite_sheet == "sprite_sheet_1" &&
             fill_.fill_frame == "pixel" && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
-            pixel_.origin() == Vector2F::ZERO,
+            pixel_.origin() == Vector2F::zero,
             "Quiet face requires the authored opaque defaults, two literal eyes and solid source");
         unchanged();
     }
@@ -40,7 +40,7 @@ public:
             look_.hand_colour == original_.hand_colour && limb_fill_fixed(fill_) == fill_fixed_ &&
             resources->sprite_sheet(fill_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(fill_.fill_frame)) == &pixel_ &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO &&
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             limb_figure_fixed(disabled_look_) == limb_figure_fixed(limb_disabled_look(original_)) &&
             disabled_look_.arm_colour == original_.arm_colour && disabled_look_.hand_colour == original_.hand_colour &&
             app_.viewport_manager()->fullscreen_viewport().pixel_rect() == RectangleI(0, 0, 1280, 720),
@@ -158,7 +158,7 @@ private:
         list.draw_sprite(sheet_->texture(), pixel_.source_rectangle(),
             RectangleF(static_cast<float>(box.x), static_cast<float>(box.y),
                 static_cast<float>(box.width), static_cast<float>(box.height)),
-            tint, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            tint, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f);
     }
     Frame render(size_t background, const std::function<void(DrawList&)>& draw)
     {
@@ -169,7 +169,7 @@ private:
         const Canvas canvas(app_.render_resources(), background == 0 ? Colour::black : Colour(32, 64, 96));
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); draw(list);
         rectangle(list, { 20, 20, 4, 4 }, Colour::white);
         rectangle(list, { 25, 20, 4, 4 }, Colour::black);

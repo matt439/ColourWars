@@ -11,7 +11,7 @@ namespace moving_structure_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         namespace contract = horizontal_motion_contract;
 
         // One storey of the Lift Trial: 256 down from a top anchor at y 800,
@@ -35,7 +35,7 @@ namespace moving_structure_acceptance
                 "A lift's spec does not name its own axis");
             HorizontalMotion::validate_spec(spec);
             const HorizontalMotion motion(spec);
-            require(motion.state().current_offset == Vector2F::ZERO && motion.bounds() == spec.anchor,
+            require(motion.state().current_offset == Vector2F::zero && motion.bounds() == spec.anchor,
                 "A lift at phase 0 is not at its top anchor");
             const HorizontalMotion quarter(lift(0.25f));
             require(quarter.state().current_offset == Vector2F(0.0f, 128.0f) &&

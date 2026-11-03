@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_page.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // Read through the constructor argument: context_ is not initialized

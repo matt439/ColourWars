@@ -81,7 +81,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (size_t slot = 0; slot < painter_scripted_pads::states.size(); ++slot)
         {
             const auto& pad = painter_scripted_pads::states[slot]; const bool connected = std::find(slots.begin(), slots.begin() + settings.player_count(), static_cast<int>(slot)) != slots.begin() + settings.player_count();
-            require(pad.connected == connected && pad.buttons == 0 && pad.left_stick == Vector2F::ZERO && pad.right_stick == Vector2F::ZERO &&
+            require(pad.connected == connected && pad.buttons == 0 && pad.left_stick == Vector2F::zero && pad.right_stick == Vector2F::zero &&
                 pad.left_trigger == 0.0f && pad.right_trigger == 0.0f, "Summary refresh changed neutral scripted pad input");
         }
         require(saved_bytes() == saved, "Summary formatting/navigation persisted private preferences");
@@ -134,16 +134,16 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (size_t role = 0; role < texts.size(); ++role)
         {
             const RectangleF bounds = texts[role].bounds(); RectangleF padded = bounds; padded.inflate(main.art.keyline_width * 3.0f + main.setup_shadow_offset);
-            require(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION).contains(bounds) && authored.contains(padded) &&
+            require(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION).contains(bounds) && authored.contains(padded) &&
                 bounds.bottom() <= (info + geometry.briefing.spacing * static_cast<float>(role + 2)).y,
                 "Independent unscaled summary/shadow bounds escape the paper or reach the following row");
         }
         std::srand(8131); const int random_value = std::rand(); std::srand(8131); const Frame actual = main_menu_frame(app);
         require(actual.pixels == main_menu_frame(app).pixels && std::rand() == random_value, "Frozen summary drawing changed pixels or consumed match randomness");
-        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), pane);
+        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
-        list.set_viewport(pane); list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
-        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
+        list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         sheet->draw(list, sheet->resolve_sprite_frame(style.fill_frame), camera.visible_rectangle(pane), style.scrim_colour);
         // Reuse only the existing paper leaf, never its broad fixture. Both

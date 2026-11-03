@@ -23,7 +23,6 @@ namespace fixed_slab_acceptance
     namespace
     {
         using namespace labrador;
-        using namespace mattmath;
         const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
         const TeamColour colours{ Colour::orange, Colour::cyan };
 
@@ -347,9 +346,9 @@ namespace fixed_slab_acceptance
             const auto& shot_tuning = tuning.projectile(ProjectileType::jet);
             const RectangleF supplied(contact.x + shot_tuning.details.col_rect_size.x / 2.0f,
                 contact.y + shot_tuning.details.col_rect_size.y / 2.0f, contact.width, contact.height);
-            ProjectileJet shot(supplied, Vector2F::ZERO, PlayerTeam::a, 0, colours.team_a,
+            ProjectileJet shot(supplied, Vector2F::zero, PlayerTeam::a, 0, colours.team_a,
                 &world.render, resolve_projectile_strip(shot_tuning, world.render), &shot_tuning);
-            course.slab->on_contact(shot, Vector2F::ZERO, 0.0f);
+            course.slab->on_contact(shot, Vector2F::zero, 0.0f);
             require(course.slab->top_paint_team(point.x) == PlayerTeam::a &&
                 course.slab->top_paint_team(course.player->center().x) == PlayerTeam::none,
                 "Underfoot fixture did not distinguish the true high corner from the floating foot centre");

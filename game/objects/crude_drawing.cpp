@@ -2,7 +2,6 @@
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 namespace
 {
@@ -29,7 +28,7 @@ void CrudeDrawing::fill(DrawList& draw_list, const RectangleF& rectangle,
     {
         return;
     }
-    this->draw_with(draw_list, rectangle, this->frame(), colour, Vector2F::ZERO,
+    this->draw_with(draw_list, rectangle, this->frame(), colour, Vector2F::zero,
         SpriteFlip::none, 0.0f);
 }
 

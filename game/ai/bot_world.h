@@ -12,8 +12,8 @@
 // value, read at the moment body() is called.
 struct BotBody
 {
-	mattmath::Vector2F center;
-	mattmath::Vector2F velocity;
+	labrador::Vector2F center;
+	labrador::Vector2F velocity;
 	PlayerTeam team = PlayerTeam::none;
 	// The state is alive; health is separate, since a living body at zero
 	// health is not yet a target.
@@ -53,13 +53,13 @@ public:
 	virtual std::vector<PaintSurfaceSample> paint_surfaces() const = 0;
 	// Conservative traversal bounds. A permitted team's open gates are neither
 	// obstacles nor standing supports; none retains all structural bounds.
-	virtual std::vector<mattmath::RectangleF> obstacles(PlayerTeam permitted) const = 0;
+	virtual std::vector<labrador::RectangleF> obstacles(PlayerTeam permitted) const = 0;
 	virtual std::vector<MatchBotSupport> supports(PlayerTeam permitted) const = 0;
 	virtual std::vector<MatchBotRamp> ramps() const = 0;
 	// Projectile cover includes every gate, even one the bot can walk through.
-	virtual bool line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to) const = 0;
+	virtual bool line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const = 0;
 	// Candidate route visibility only; the policy separately sweeps its body.
-	virtual bool traversal_line_of_sight(mattmath::Vector2F from, mattmath::Vector2F to,
+	virtual bool traversal_line_of_sight(labrador::Vector2F from, labrador::Vector2F to,
 		PlayerTeam team) const = 0;
 
 protected:

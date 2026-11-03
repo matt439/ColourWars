@@ -112,7 +112,7 @@ namespace
             // A bead follows the rendered wet lip, including the bucket's rim
             // well behind its projectile launch point. Use independent art
             // landmarks rather than deriving expectations from the drip code.
-            for (const float angle : { 0.0f, PI, -PI * 0.25f, -PI * 0.75f, PI * 0.125f, PI * 0.875f })
+            for (const float angle : { 0.0f, pi, -pi * 0.25f, -pi * 0.75f, pi * 0.125f, pi * 0.875f })
             {
                 auto& aimed = inputs.at(static_cast<size_t>(view));
                 aimed.shoot_angle = angle;
@@ -122,7 +122,7 @@ namespace
                 const auto& look = enabled_world.presentation.idle_drip(weapon.type());
                 Vector2F local = view == 1 ? Vector2F(99.0f, 3.0f) : Vector2F(46.0f, 8.0f);
                 if (view == 0) { local = Vector2F(69.0f, 3.0f); }
-                if (angle > PI * 0.5f || angle < -PI * 0.5f) { local.y = -local.y; }
+                if (angle > pi * 0.5f || angle < -pi * 0.5f) { local.y = -local.y; }
                 const Vector2F anchor = weapon.draw_pos() + Vector2F::rotate_vector(local, angle);
                 const IdleDrip& drip = *enabled->idle_drip(view);
                 require(weapon.rotation() == angle && drip.attached() &&

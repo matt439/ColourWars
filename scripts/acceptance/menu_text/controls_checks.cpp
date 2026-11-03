@@ -58,7 +58,7 @@ namespace menu_text_acceptance
         {
             // The F alone exactly fills the Controls action column. The same
             // one-character string still fits its other uses in the main font.
-            glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'F' ? 872 : 8, 16),
+            glyphs.push_back({ character, labrador::RectangleI(0, 0, character == U'F' ? 872 : 8, 16),
                 0.0f, 0.0f, 0.0f });
         }
         world.render.add_font("menu_controls_exact", std::make_unique<Font>(TextureHandle{}, glyphs, 20.0f));
@@ -135,7 +135,7 @@ namespace menu_text_acceptance
                 require(raw == shipped, "A Controls action without deep glyphs changed its shipped metrics");
                 continue;
             }
-            require(raw == mattmath::Vector2F(shipped.x, 52.0f) &&
+            require(raw == labrador::Vector2F(shipped.x, 52.0f) &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f == 68.0f &&
                 raw.y + real_controls.art.focus_padding.y * 2.0f > real_controls.layout.spacing.y,
                 "Action regression no longer exercises 52-high descenders plus padding in a 64-high row");
@@ -150,7 +150,7 @@ namespace menu_text_acceptance
         std::vector<Glyph> action_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
-            action_glyphs.push_back({ character, mattmath::RectangleI(0, 0,
+            action_glyphs.push_back({ character, labrador::RectangleI(0, 0,
                 character == U'F' ? 842 : 8, character == U'F' ? 48 : 16),
                 0.0f, character == U'H' ? 32.25f : 0.0f, 0.0f });
         }
@@ -189,12 +189,12 @@ namespace menu_text_acceptance
                 for (const int row : rows)
                 {
                     if (row < 0) { continue; }
-                    const auto position = look.layout.position + mattmath::Vector2F(0.0f,
+                    const auto position = look.layout.position + labrador::Vector2F(0.0f,
                         look.layout.spacing.y * static_cast<float>(row));
                     UiText text("fitted-action", words, look.item_font, position, &world.render, look.art.ink);
                     text.set_scale(scale);
                     require(std::isfinite(scale) && scale > 0.0f && text.text() == words &&
-                        text.bounds() == mattmath::RectangleF(position, raw * scale) &&
+                        text.bounds() == labrador::RectangleF(position, raw * scale) &&
                         text.bounds().width > 0.0f && text.bounds().width <= action_width &&
                         text.bounds().height > 0.0f && text.bounds().height <= action_height,
                         "Fitted action truncated its copy, changed proportions or escaped its column/row");
@@ -202,7 +202,7 @@ namespace menu_text_acceptance
                         "Action boundary did not distinguish exact/short labels from width/height overflow");
                     if (words == L"F")
                     {
-                        require(text.bounds().size() == mattmath::Vector2F(842.0f, 48.0f),
+                        require(text.bounds().size() == labrador::Vector2F(842.0f, 48.0f),
                             "Exact action glyph did not touch both fitted limits");
                     }
                 }
@@ -274,26 +274,26 @@ namespace menu_text_acceptance
         style.item_font = controls.item_font;
         const auto font = world.render.resolve_sprite_font(style.item_font);
         const float label_width = controls.layout.spacing.x - controls.art.focus_padding.x;
-        const mattmath::Vector2F value_limit(
+        const labrador::Vector2F value_limit(
             controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset -
                 controls.layout.position.x - controls.layout.spacing.x,
             controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
         require(controls.layout.size.y == 46.0f && controls.layout.spacing.y == 64.0f &&
-            label_width == 482.0f && value_limit == mattmath::Vector2F(332.0f, 48.0f),
+            label_width == 482.0f && value_limit == labrador::Vector2F(332.0f, 48.0f),
             "Controls fitted-row fixture no longer exercises the shipped column and height limits");
         for (size_t index = 0; index < std::size(controls_fitted_items); ++index)
         {
             // Controls keeps Sticks/Keyboard Jump/Pad Buttons first; its five
             // shared settings occupy rows3-7. The Sticks child occupies rows0-3.
             const int row_index = index < 5 ? static_cast<int>(index) + 3 : static_cast<int>(index) - 5;
-            const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
+            const auto position = controls.layout.position + labrador::Vector2F(0.0f,
                 controls.layout.spacing.y * static_cast<float>(row_index));
             const std::wstring& text = look.menu_text().item(controls_fitted_items[index]);
             const auto original = world.render.measure_text(font, text);
             require(original.x > label_width, "Long Controls label already fits without scaling");
             int adjustments = 0;
             OptionRow row("controls_fit", text, position,
-                position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f), style,
+                position + labrador::Vector2F(controls.layout.spacing.x, 0.0f), style,
                 controls.art.ink, &world.render,
                 [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; },
                 &controls.art, value_limit);
@@ -326,7 +326,7 @@ namespace menu_text_acceptance
         // no width reduction, while its font is just taller than Controls' 48.
         style.item_font = "menu_controls_row_overflow";
         OptionRow height_row("controls_height", L"i", controls.layout.position,
-            controls.layout.position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f),
+            controls.layout.position + labrador::Vector2F(controls.layout.spacing.x, 0.0f),
             style, controls.art.ink, &world.render, {}, &controls.art, value_limit);
         const UiText* fitted = row_text(height_row, "controls_height_label");
         require(fitted != nullptr && fitted->text() == L"i" && fitted->bounds().height > 0.0f &&

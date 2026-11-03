@@ -3,7 +3,6 @@
 
 #include <stdexcept>
 
-using namespace mattmath;
 using namespace labrador;
 
 Collider& Collider::of(CollisionObject& object)

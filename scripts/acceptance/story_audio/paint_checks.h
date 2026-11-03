@@ -159,17 +159,17 @@
 		fallback.contact(ProjectileType::ball, 0, false, false);
 	}
 
-	std::unique_ptr<StructurePaintable> paint_surface(World& world, const mattmath::RectangleF& rectangle,
+	std::unique_ptr<StructurePaintable> paint_surface(World& world, const labrador::RectangleF& rectangle,
 		const PaintableFaces& faces = { false, true, false, false })
 	{
 		return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", rectangle,
-			std::make_unique<mattmath::RectangleF>(rectangle), &world.render, &world.audio,
+			std::make_unique<labrador::RectangleF>(rectangle), &world.render, &world.audio,
 			&world.preferences, &world.tuning.paint(), CollisionObjectType::structure_paintable, TeamColour{}, faces);
 	}
 
 	auto paint_projectiles(World& world, ProjectileType type, PlayerTeam team = PlayerTeam::a,
-		int owner = 0, mattmath::Vector2F position = { 50.0f, 0.0f },
-		mattmath::Vector2F velocity = mattmath::Vector2F::ZERO)
+		int owner = 0, labrador::Vector2F position = { 50.0f, 0.0f },
+		labrador::Vector2F velocity = labrador::Vector2F::zero)
 	{
 		return ProjectileBuilder(&world.tuning, &world.render).build_projectiles(position, velocity, team, owner,
 			Colour::blue, type, &world.render);
@@ -177,14 +177,14 @@
 
 	void paint_contact(Projectile& projectile, StructurePaintable& surface, bool projectile_first = false)
 	{
-		if (projectile_first) { projectile.on_contact(surface, mattmath::Vector2F::ZERO, 0.0f); }
-		surface.on_contact(projectile, mattmath::Vector2F::ZERO, 0.0f);
-		if (!projectile_first) { projectile.on_contact(surface, mattmath::Vector2F::ZERO, 0.0f); }
+		if (projectile_first) { projectile.on_contact(surface, labrador::Vector2F::zero, 0.0f); }
+		surface.on_contact(projectile, labrador::Vector2F::zero, 0.0f);
+		if (!projectile_first) { projectile.on_contact(surface, labrador::Vector2F::zero, 0.0f); }
 	}
 
 	void check_paint_contacts(World& world)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		const auto& paint = world.tuning.paint();
 		world.set_sfx_volume(50);
 		for (const auto type : { ProjectileType::spray, ProjectileType::jet, ProjectileType::rolling,
@@ -256,7 +256,7 @@
 
 	void check_paint_duds_and_launch(World& world)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		const auto& paint = world.tuning.paint();
 		for (bool launch : { false, true })
 		{
@@ -297,11 +297,11 @@
 
 		// The actual Player launch path discards obstructed shots before returning
 		// them to Level. Their accumulated audio must be flushed before that erase.
-		const RectangleF player_rectangle(Vector2F::ZERO, world.tuning.player().size);
+		const RectangleF player_rectangle(Vector2F::zero, world.tuning.player().size);
 		Player player(player_rectangle, &world.tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
 			&world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
 			0, PlayerTeam::a, WeaponType::sniper, world.weapon(world.tuning, WeaponType::sniper),
-			WeaponType::none, Colour::blue, Viewport{}, Vector2F::ZERO);
+			WeaponType::none, Colour::blue, Viewport{}, Vector2F::zero);
 		player.set_paint_audio(&audio);
 		const RectangleF enclosure(-1000, -1000, 2000, 2000);
 		Structure cover("sprite_sheet_1", "square_white_4", enclosure,

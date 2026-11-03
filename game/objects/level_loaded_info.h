@@ -43,8 +43,8 @@ public:
 	std::string icon_frame() const;
 	bool include_in_random() const;
 
-	std::vector<mattmath::Vector2F> team_a_spawns() const;
-	std::vector<mattmath::Vector2F> team_b_spawns() const;
+	std::vector<labrador::Vector2F> team_a_spawns() const;
+	std::vector<labrador::Vector2F> team_b_spawns() const;
 
 	// Named places a developer can `goto`: the optional "stations" array
 	// ({ "name", "x", "y" }, the character's top-left, like a spawn) in file
@@ -56,11 +56,11 @@ public:
 	// a level without lessons, which therefore has no practice workshop.
 	std::vector<LevelLesson> lessons() const;
 
-	mattmath::RectangleF out_of_bounds_rectangle() const;
-	mattmath::RectangleF camera_bounds_rectangle() const;
+	labrador::RectangleF out_of_bounds_rectangle() const;
+	labrador::RectangleF camera_bounds_rectangle() const;
 
-	mattmath::RectangleF zoom_out_start_bounds_rectangle() const;
-	mattmath::RectangleF zoom_out_finish_bounds_rectangle() const;
+	labrador::RectangleF zoom_out_start_bounds_rectangle() const;
+	labrador::RectangleF zoom_out_finish_bounds_rectangle() const;
 
 	// Object entries are decoded by LevelObjectBuilder.
 	labrador::JsonValue collision_objects_json() const;
@@ -85,22 +85,22 @@ private:
 	std::uint64_t semantic_hash_ = 0;
 
 	// The four bounds rectangles differ only in which key they sit under.
-	mattmath::RectangleF bounds_rectangle(const char* bounds_key) const;
+	labrador::RectangleF bounds_rectangle(const char* bounds_key) const;
 
-	static std::vector<mattmath::Vector2F>
+	static std::vector<labrador::Vector2F>
 		decode_team_spawns(const labrador::JsonValue& json);
 
 	// Spawns and stations are checked the same way and want the same sentence;
 	// `what` is "a team_a spawn", "a station 'high_step'".
 	static void validate_position(const labrador::JsonValue& root,
-		const mattmath::Vector2F& position,
-		const mattmath::RectangleF& out_of_bounds,
+		const labrador::Vector2F& position,
+		const labrador::RectangleF& out_of_bounds,
 		const std::string& what);
 
-	void validate_stations(const mattmath::RectangleF& out_of_bounds) const;
+	void validate_stations(const labrador::RectangleF& out_of_bounds) const;
 	// A lesson's area lies inside the camera bounds and contains its station;
 	// its title and text are non-blank and drawable.
 	void validate_lesson(const labrador::JsonValue& lesson,
-		const mattmath::Vector2F& station, const std::string& name) const;
-	static mattmath::RectangleF lesson_area(const labrador::JsonValue& lesson);
+		const labrador::Vector2F& station, const std::string& name) const;
+	static labrador::RectangleF lesson_area(const labrador::JsonValue& lesson);
 };

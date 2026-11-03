@@ -145,7 +145,7 @@ namespace crossfeed_acceptance
             }
             const float forward = type == WeaponType::bucket ? -0.4f :
                 type == WeaponType::sprayer ? -0.25f : 0.0f;
-            const float angle = underside ? -PI / 2.0f : (right ? forward : PI - forward);
+            const float angle = underside ? -pi / 2.0f : (right ? forward : pi - forward);
             const float initial_ammo = run.player->weapon_ammo();
             std::vector<Flight> flights;
             int paid_tick = -1;

@@ -15,7 +15,6 @@
 // also walks to put each one in its group.
 
 using namespace labrador;
-using namespace mattmath;
 
 void GameTuning::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const

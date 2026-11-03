@@ -12,13 +12,13 @@
 			const std::string& start = tuning.details.shoot_sound_name;
 			const std::string loop = tuning.loop_sounds.sound_name(PlayerTeam::a, 0);
 			auto weapon = WeaponBuilder::build_weapon(&world.tuning, PlayerTeam::a, 0, 0, Colour::blue,
-				type, mattmath::Vector2F::ZERO, &world.render, &world.audio, &world.preferences);
+				type, labrador::Vector2F::zero, &world.render, &world.audio, &world.preferences);
 			const auto update = [&](bool held)
 			{
 				PlayerInputData input;
 				input.primary_shoot = held;
-				weapon->update_and_get_projectiles(input, mattmath::Vector2F::ZERO,
-					mattmath::Vector2F::ZERO, true, 1.0f / 60.0f);
+				weapon->update_and_get_projectiles(input, labrador::Vector2F::zero,
+					labrador::Vector2F::zero, true, 1.0f / 60.0f);
 			};
 			for (int i = 0; i < 10; ++i) { update(true); }
 			require(world.wave_plays(start) == 1 && world.plays(loop) == 1,
@@ -395,7 +395,7 @@
 
 	void check_roller_contacts(World& world)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
 		const auto& tuning = world.tuning.weapon(WeaponType::roller);
@@ -463,15 +463,15 @@
 
 	void check_player_weapon_lifecycle(World& world)
 	{
-		using namespace mattmath;
+		using namespace labrador;
 		world.set_sfx_volume(40);
 		world.begin = recorded_sounds(world.device).size();
-		const RectangleF rectangle(Vector2F::ZERO, world.tuning.player().size);
+		const RectangleF rectangle(Vector2F::zero, world.tuning.player().size);
 		Player player(rectangle, &world.tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
 			&world.presentation.respawn_redraw(), &world.render, &world.audio,
 			&world.preferences, 0, PlayerTeam::a, WeaponType::sniper,
 			world.weapon(world.tuning, WeaponType::sniper), WeaponType::none,
-			Colour::blue, Viewport{}, Vector2F::ZERO);
+			Colour::blue, Viewport{}, Vector2F::zero);
 		player.set_infinite_ammo(true);
 		PlayerInputData held;
 		held.primary_shoot = true;

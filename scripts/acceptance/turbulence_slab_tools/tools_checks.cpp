@@ -10,7 +10,7 @@ namespace turbulence_slab_tools_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         using World = moving_structure_acceptance::World;
         constexpr unsigned int seed = 260027u;
         constexpr int observation_updates = 180, maximum_readiness = 135;

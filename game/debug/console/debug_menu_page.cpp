@@ -9,7 +9,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 // Developer-only layout in menu design units (1920x1080); presentation.json
 // ships, this page does not. The panel starts below the band where every
@@ -29,7 +28,7 @@ namespace debug_menu_consts
 	constexpr std::size_t footer_columns = 90;
 
 	// A backing panel, so the rows stay readable over a busy match.
-	const mattmath::RectangleF panel(110.0f, 176.0f, 1060.0f, 774.0f);
+	const labrador::RectangleF panel(110.0f, 176.0f, 1060.0f, 774.0f);
 	const labrador::Colour panel_colour(0.02f, 0.03f, 0.05f, 0.82f);
 }
 

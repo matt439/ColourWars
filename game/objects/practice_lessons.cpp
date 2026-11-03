@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <string>
 
-using namespace mattmath;
 using namespace labrador;
 
 PracticeLessons::PracticeLessons(std::vector<LevelLesson> lessons, const GameTuning* tuning,
@@ -29,11 +28,11 @@ PracticeLessons::PracticeLessons(std::vector<LevelLesson> lessons, const GameTun
 		LessonCard card;
 		card.title = std::make_unique<colourwars::TextDropShadow>(
 			drawable_text::widen_drawable(lesson.title, where + ": title"),
-			menu.detail_font, Vector2F::ZERO, render_resources,
+			menu.detail_font, Vector2F::zero, render_resources,
 			menu.highlight, menu.shadow_colour, menu.detail_shadow_offset);
 		card.text = std::make_unique<colourwars::TextDropShadow>(
 			drawable_text::widen_drawable(lesson.text, where + ": text"),
-			match.controls_font, Vector2F::ZERO, render_resources,
+			match.controls_font, Vector2F::zero, render_resources,
 			match.controls_colour, match.controls_shadow_colour, match.controls_shadow_offset);
 		this->cards_.push_back(std::move(card));
 	}
@@ -65,10 +64,10 @@ void PracticeLessons::centre(const PaperCard& paper)
 	for (LessonCard& lesson : this->cards_)
 	{
 		const RectangleF title = RectangleF::union_of(
-			lesson.title->text_bounds_at(Vector2F::ZERO, 1.0f),
+			lesson.title->text_bounds_at(Vector2F::zero, 1.0f),
 			lesson.title->text_bounds_at(heading_shadow, 1.0f));
 		const RectangleF text = RectangleF::union_of(
-			lesson.text->text_bounds_at(Vector2F::ZERO, 1.0f),
+			lesson.text->text_bounds_at(Vector2F::zero, 1.0f),
 			lesson.text->text_bounds_at(text_shadow, 1.0f));
 		const float content_width = std::max(title.width, text.width);
 		const float room = resolution.x - margin.x * 2.0f - padding.x * 2.0f;

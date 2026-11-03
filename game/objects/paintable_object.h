@@ -61,7 +61,7 @@ enum class PaintSurfaceFace { top, bottom, left, right };
 // that moving/rotated scoring exists yet. Never replace it with a world AABB.
 struct PaintSurfaceSample
 {
-    std::array<mattmath::Vector2F, 4> corners{};
+    std::array<labrador::Vector2F, 4> corners{};
     PaintSurfaceFace face = PaintSurfaceFace::top;
     PlayerTeam team = PlayerTeam::none;
     int paint_owner = -1; // Raw paint-owner index; -1 may also mean owned but uncredited.

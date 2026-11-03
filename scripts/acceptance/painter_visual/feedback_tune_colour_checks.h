@@ -105,7 +105,7 @@ public:
             for (size_t row = 0; row < 2; ++row)
             {
                 const float life = row == 0 ? 1.0f : 0.5f;
-                for (const float turn : { -PI / 4.0f, PI / 4.0f })
+                for (const float turn : { -pi / 4.0f, pi / 4.0f })
                 { block(cell(row * 3), { size, size * 0.25f }, turn, highlight, life); }
                 block(cell(row * 3 + 1), { size * 0.65f, size }, 0.0f, team(), life);
                 if (!reduced)
@@ -125,12 +125,12 @@ public:
                 }
             }
             const float aim = this->geometry_.aim_marker_size, stroke = this->geometry_.aim_marker_stroke;
-            block(cell(6) + Vector2F(-aim * 0.1f, -aim * 0.22f), { aim * 0.72f, stroke }, PI / 4.0f, highlight, 1.0f);
-            block(cell(6) + Vector2F(-aim * 0.1f, aim * 0.22f), { aim * 0.72f, stroke }, -PI / 4.0f, highlight, 1.0f);
+            block(cell(6) + Vector2F(-aim * 0.1f, -aim * 0.22f), { aim * 0.72f, stroke }, pi / 4.0f, highlight, 1.0f);
+            block(cell(6) + Vector2F(-aim * 0.1f, aim * 0.22f), { aim * 0.72f, stroke }, -pi / 4.0f, highlight, 1.0f);
             block(cell(6) + Vector2F(-aim * 0.45f, 0.0f), { stroke, stroke }, 0.0f, team(), 1.0f);
             for (const float side : { -1.0f, 1.0f })
             { block(cell(7) + Vector2F(side * aim * 0.22f, 0), { stroke, aim * 0.8f }, 0.0f, highlight, 1.0f); }
-            for (const float turn : { -PI / 4.0f, PI / 4.0f })
+            for (const float turn : { -pi / 4.0f, pi / 4.0f })
             { block(cell(8), { aim * 0.85f, stroke }, turn, highlight, 1.0f); }
         });
     }
@@ -183,7 +183,7 @@ private:
         const Canvas canvas(this->app_.render_resources(), background);
         Renderer& renderer = *this->app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::DEFAULT_CAMERA); list.set_filter(TextureFilter::point);
+        list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, { 0, 0, 1280, 720 }); draw(list); ++this->readbacks_;
         return read(renderer);
     }

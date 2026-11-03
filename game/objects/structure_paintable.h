@@ -33,9 +33,9 @@ struct PaintRunoffVisual
 	float age = 0.0f;
 	float source_y = 0.0f;
 	float head_y = 0.0f;
-	mattmath::RectangleF owned_band = mattmath::RectangleF::ZERO;
-	mattmath::RectangleF trail = mattmath::RectangleF::ZERO;
-	mattmath::RectangleF bead = mattmath::RectangleF::ZERO;
+	labrador::RectangleF owned_band = labrador::RectangleF::zero;
+	labrador::RectangleF trail = labrador::RectangleF::zero;
+	labrador::RectangleF bead = labrador::RectangleF::zero;
 };
 
 class Projectile;
@@ -48,8 +48,8 @@ public:
 	// The obstacle span is consumed immediately and is not retained.
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
-		const mattmath::RectangleF& sprite_rectangle,
-		std::unique_ptr<mattmath::Shape> collision_shape,
+		const labrador::RectangleF& sprite_rectangle,
+		std::unique_ptr<labrador::Shape> collision_shape,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
@@ -57,10 +57,10 @@ public:
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
-		std::span<const mattmath::RectangleF> paint_obstacles = {},
+		std::span<const labrador::RectangleF> paint_obstacles = {},
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f,
 		std::unique_ptr<const TerrainMaterial> material = nullptr,
@@ -73,10 +73,10 @@ public:
 	void draw(labrador::DrawList& draw_list) const override;
 	void draw_miniature(labrador::DrawList& draw_list) const override;
 	// Surface splashes affect rendering extent, never layout/contact geometry.
-	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
+	labrador::RectangleF cull_bounds(float units_per_pixel) const override;
 	// Players are ignored; only projectiles paint the surface.
 	void on_projectile_contact(const Projectile& other,
-		const mattmath::Vector2F& normal, float penetration) override;
+		const labrador::Vector2F& normal, float penetration) override;
 
 	PaintableObject* paintable() override { return this; }
 	const PaintableObject* paintable() const override { return this; }
@@ -95,11 +95,11 @@ protected:
 	// not generally invertible at binade boundaries.
 	PlayerTeam top_paint_team_translated(float world_x, float offset_x) const;
 	void paint_from_projectile(const Projectile& projectile,
-		const mattmath::RectangleF& splash);
+		const labrador::RectangleF& splash);
 
 private:
 	void paint_from_projectile(const Projectile& projectile,
-		const mattmath::RectangleF& splash, PlayerTeam team);
+		const labrador::RectangleF& splash, PlayerTeam team);
 	void draw_paint(labrador::DrawList& draw_list) const;
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
 	PaintCredit credit_;
@@ -145,7 +145,7 @@ private:
 
 	// Build tiles and record the strips used by on_contact for candidate lookup.
 	std::vector<PaintTile> generate_paint_tiles(
-		std::span<const mattmath::RectangleF> paint_obstacles,
+		std::span<const labrador::RectangleF> paint_obstacles,
 		std::span<const PaintPolygon> paint_polygons);
 
 

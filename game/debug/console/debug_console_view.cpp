@@ -13,7 +13,6 @@
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 // Developer-only styling; presentation.json ships, this console does not.
 namespace debug_console_consts
@@ -194,9 +193,9 @@ void DebugConsoleView::draw(Renderer& renderer, const GameData& data,
 		{
 			const std::wstring wide = widen(line);
 			list.draw_text(this->font_, wide, Vector2F(x, y) + look.shadow_offset,
-				CrudeDrawing::premultiplied(look.shadow_colour), look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+				CrudeDrawing::premultiplied(look.shadow_colour), look.shadow_scale, 0.0f, Vector2F::zero, 0.0f);
 			list.draw_text(this->font_, wide, Vector2F(x, y), CrudeDrawing::premultiplied(colour),
-				look.font_scale, 0.0f, Vector2F::ZERO, 0.0f);
+				look.font_scale, 0.0f, Vector2F::zero, 0.0f);
 		};
 
 	const std::size_t columns = static_cast<std::size_t>(std::max(8.0f,
@@ -347,9 +346,9 @@ RectangleF DebugConsoleView::draw_panel(Renderer& renderer, const GameData& data
 	{
 		const Vector2F at = position + Vector2F(0.0f, line_height * static_cast<float>(i));
 		list.draw_text(font, wide[i], at + look.shadow_offset, CrudeDrawing::premultiplied(look.shadow_colour),
-			look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+			look.shadow_scale, 0.0f, Vector2F::zero, 0.0f);
 		list.draw_text(font, wide[i], at, strip_colour, look.font_scale, 0.0f,
-			Vector2F::ZERO, 0.0f);
+			Vector2F::zero, 0.0f);
 	}
 	list.set_filter(TextureFilter::point);
 	return background;
@@ -423,9 +422,9 @@ RectangleF DebugConsoleView::draw_perf(Renderer& renderer, const GameData& data,
 	{
 		const Vector2F at = origin + Vector2F(0.0f, text_top + line_height * static_cast<float>(i));
 		list.draw_text(font, wide[i], at + look.shadow_offset, CrudeDrawing::premultiplied(look.shadow_colour),
-			look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+			look.shadow_scale, 0.0f, Vector2F::zero, 0.0f);
 		list.draw_text(font, wide[i], at, strip_colour, look.font_scale, 0.0f,
-			Vector2F::ZERO, 0.0f);
+			Vector2F::zero, 0.0f);
 	}
 	list.set_filter(TextureFilter::point);
 	return background;

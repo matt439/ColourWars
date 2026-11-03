@@ -31,7 +31,6 @@
 namespace movement_acceptance
 {
     using namespace labrador;
-    using namespace mattmath;
 
     using acceptance::require;
 
@@ -71,7 +70,7 @@ namespace movement_acceptance
             const CombatFeedbackPresentation& combat,
             const RespawnRedrawPresentation& redraw, RenderResources& resources,
             const AudioResources& audio, const PlaySettings& preferences,
-            float bottom = 0.0f, const Vector2F& velocity = Vector2F::ZERO,
+            float bottom = 0.0f, const Vector2F& velocity = Vector2F::zero,
             const Vector2F& spawn = { 0.0f, -120.0f },
             WeaponType tool = WeaponType::sprayer) : render(&resources)
         {
@@ -254,7 +253,7 @@ namespace movement_acceptance
         const int fatal_hits;
 
         std::unique_ptr<Course> course(float bottom = 0.0f,
-            const Vector2F& velocity = Vector2F::ZERO) const
+            const Vector2F& velocity = Vector2F::zero) const
         {
             return std::make_unique<Course>(tuning, feedback, presentation.combat_feedback(), presentation.respawn_redraw(),
                 render, audio, preferences,

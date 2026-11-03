@@ -118,7 +118,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 if (character == omitted) { continue; }
-                glyphs.push_back({ character, mattmath::RectangleI(0, 0,
+                glyphs.push_back({ character, labrador::RectangleI(0, 0,
                     character == U'~' ? marker_width : character == U'1' ? one_width : 8,
                     character == U'~' ? marker_height : 16),
                     character == U'~' ? marker_x : 0.0f, character == U'~' ? marker_y : 0.0f, 0.0f });
@@ -142,23 +142,23 @@ namespace menu_text_acceptance
         };
         const auto edge = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_width"); });
         edge.validate_resources(world.render, world.audio);
-        require(edge.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) && edge.results_menu().session_score_y == 340.0f,
+        require(edge.results_menu().box_size == labrador::Vector2F(1300.0f, 860.0f) && edge.results_menu().session_score_y == 340.0f,
             "Series-score boundary fixture changed the full-height Results paper or actual row");
         std::wstring source = edge.menu_text().results.score_line(1, 0, 1);
         require(source == L"~101", "Series-score boundary must format the independently expected literal");
         colourwars::UiTextDropShadow widget("series-score-edge", source, edge.menu().detail_font, { 310.0f, 340.0f }, &world.render,
-            edge.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            edge.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
         source = L"Changed after construction";
-        require(widget.bounds() == mattmath::RectangleF(310.0f, 340.0f, 1300.0f, 20.0f) && widget.text() == L"~101" &&
-            widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+        require(widget.bounds() == labrador::RectangleF(310.0f, 340.0f, 1300.0f, 20.0f) && widget.text() == L"~101" &&
+            widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
             "Series-score widget lost unscaled centered copy or gained a shadow at the exact left/right paper edges");
         DrawList no_device; widget.draw(no_device);
         variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_width_overflow"); }, &world);
         const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_bottom"); });
         bottom.validate_resources(world.render, world.audio);
         colourwars::UiTextDropShadow tall("series-score-bottom", L"~101", bottom.menu().detail_font, { 944.0f, 340.0f }, &world.render,
-            bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
-        require(tall.bounds() == mattmath::RectangleF(944.0f, 340.0f, 32.0f, 630.0f) && tall.bounds().bottom() == 970.0f,
+            bottom.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
+        require(tall.bounds() == labrador::RectangleF(944.0f, 340.0f, 32.0f, 630.0f) && tall.bounds().bottom() == 970.0f,
             "Series-score height must use full paper containment without a new row-fit or overlap restriction");
         variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_bottom_overflow"); }, &world);
         const auto proportional = variants.load([&](rapidjson::Document& d) { select(d, "menu_score_proportional"); });
@@ -171,14 +171,14 @@ namespace menu_text_acceptance
             const int ones = (example.team_a == 1 ? 1 : 0) + (example.team_b == 1 ? 1 : 0) + (example.target == 1 ? 1 : 0);
             const auto size = world.render.measure_text(handle, literal);
             require(proportional.menu_text().results.score_line(example.team_a, example.team_b, example.target) == literal &&
-                size == mattmath::Vector2F(1212.0f + 40.0f * static_cast<float>(ones) + 8.0f * static_cast<float>(3 - ones), 20.0f),
+                size == labrador::Vector2F(1212.0f + 40.0f * static_cast<float>(ones) + 8.0f * static_cast<float>(3 - ones), 20.0f),
                 "All-ledger proportional-font oracle lost a real digit width or composed score");
             if (size.x > maximum) { maximum = size.x; widest_count = 1; }
             else if (size.x == maximum) { ++widest_count; }
         }
         require(maximum == 1300.0f && widest_count == 4 &&
-            world.render.measure_text(handle, L"~112") == mattmath::Vector2F(1300.0f, 20.0f) &&
-            world.render.measure_text(handle, L"~323") == mattmath::Vector2F(1236.0f, 20.0f),
+            world.render.measure_text(handle, L"~112") == labrador::Vector2F(1300.0f, 20.0f) &&
+            world.render.measure_text(handle, L"~323") == labrador::Vector2F(1236.0f, 20.0f),
             "Series-score resource fixture must require smaller-score ledgers, not assume digit3 or the terminal ledger is widest");
         variants.rejects("results.series_score", [&](rapidjson::Document& d) { select(d, "menu_score_proportional_overflow"); }, &world);
         for (const char* font_name : { "menu_score_infinite_width", "menu_score_nan_width", "menu_score_infinite_height" })
@@ -302,7 +302,7 @@ namespace menu_text_acceptance
             for (char32_t character = U' '; character <= U'~'; ++character)
             {
                 if (character == omitted) { continue; }
-                Glyph glyph{ character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f };
+                Glyph glyph{ character, labrador::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f };
                 alter(glyph); glyphs.push_back(glyph);
             }
             auto font = std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing);
@@ -359,50 +359,50 @@ namespace menu_text_acceptance
         const auto wide_nines = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_wide9"); });
         wide_nines.validate_resources(world.render, world.audio);
         const auto nines_font = world.render.resolve_sprite_font(wide_nines.menu().heading_font);
-        require(world.render.measure_text(nines_font, L"~1999999999") == mattmath::Vector2F(1300.0f, 20.0f) &&
-            world.render.measure_text(nines_font, L"~2147483647") == mattmath::Vector2F(1228.0f, 20.0f),
+        require(world.render.measure_text(nines_font, L"~1999999999") == labrador::Vector2F(1300.0f, 20.0f) &&
+            world.render.measure_text(nines_font, L"~2147483647") == labrador::Vector2F(1228.0f, 20.0f),
             "The positive-int heading maximum cannot be inferred from the numeric INT_MAX string");
-        require(wide_nines.results_menu().box_size == mattmath::Vector2F(1300.0f, 860.0f) &&
+        require(wide_nines.results_menu().box_size == labrador::Vector2F(1300.0f, 860.0f) &&
             wide_nines.results_menu().heading_y == 125.0f, "Numbered heading boundary changed the actual paper or row");
         std::wstring source = wide_nines.menu_text().results.round_title(1999999999);
         colourwars::UiTextDropShadow widget("round-heading-edge", source, wide_nines.menu().heading_font, { 310.0f, 125.0f },
-            &world.render, wide_nines.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
+            &world.render, wide_nines.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
         source.clear();
-        require(widget.text() == L"~1999999999" && widget.bounds() == mattmath::RectangleF(310.0f, 125.0f, 1300.0f, 20.0f) &&
-            widget.shadow_offset() == mattmath::Vector2F::ZERO && widget.shadow_color() == Colour{},
+        require(widget.text() == L"~1999999999" && widget.bounds() == labrador::RectangleF(310.0f, 125.0f, 1300.0f, 20.0f) &&
+            widget.shadow_offset() == labrador::Vector2F::zero && widget.shadow_color() == Colour{},
             "Numbered Results heading lost owned captured copy, unscaled paper contact or its zero-offset shadow");
         DrawList no_device; widget.draw(no_device);
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_wide9_overflow"); }, &world);
         const auto wide_twos = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_wide2"); });
         wide_twos.validate_resources(world.render, world.audio);
         const auto twos_font = world.render.resolve_sprite_font(wide_twos.menu().heading_font);
-        require(world.render.measure_text(twos_font, L"~2122222222") == mattmath::Vector2F(1300.0f, 20.0f) &&
-            world.render.measure_text(twos_font, L"~2222222222") == mattmath::Vector2F(1308.0f, 20.0f),
+        require(world.render.measure_text(twos_font, L"~2122222222") == labrador::Vector2F(1300.0f, 20.0f) &&
+            world.render.measure_text(twos_font, L"~2222222222") == labrador::Vector2F(1308.0f, 20.0f),
             "The numbered-heading bound must exclude the genuinely wider illegal ten-digit string");
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_wide2_overflow"); }, &world);
         const auto bottom = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_bottom"); });
         bottom.validate_resources(world.render, world.audio);
         colourwars::UiTextDropShadow tall("round-heading-bottom", L"~1", bottom.menu().heading_font, { 952.0f, 125.0f },
-            &world.render, bottom.results_menu().art.ink, Colour{}, mattmath::Vector2F::ZERO, true);
-        require(tall.bounds() == mattmath::RectangleF(952.0f, 125.0f, 16.0f, 845.0f) && tall.bounds().bottom() == 970.0f,
+            &world.render, bottom.results_menu().art.ink, Colour{}, labrador::Vector2F::zero, true);
+        require(tall.bounds() == labrador::RectangleF(952.0f, 125.0f, 16.0f, 845.0f) && tall.bounds().bottom() == 970.0f,
             "Numbered heading must meet the full paper bottom without a new collision or row-height restriction");
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_bottom_overflow"); }, &world);
         const auto signed_look = variants.load([&](rapidjson::Document& d) { select(d, "menu_round_signed", "{round}~"); });
         signed_look.validate_resources(world.render, world.audio);
         const auto signed_font = world.render.resolve_sprite_font(signed_look.menu().heading_font);
-        require(world.render.measure_text(signed_font, L"9~") == mattmath::Vector2F(1229.5f, 20.0f) &&
-            world.render.measure_text(signed_font, L"99~") == mattmath::Vector2F(1236.75f, 20.0f) &&
-            world.render.measure_text(signed_font, L"1999999999~") == mattmath::Vector2F(1293.25f, 20.0f) &&
-            world.render.measure_text(signed_font, L"2147483647~") == mattmath::Vector2F(1298.75f, 20.0f) &&
-            world.render.measure_text(signed_font, L"2000000000~") == mattmath::Vector2F(1300.0f, 20.0f),
+        require(world.render.measure_text(signed_font, L"9~") == labrador::Vector2F(1229.5f, 20.0f) &&
+            world.render.measure_text(signed_font, L"99~") == labrador::Vector2F(1236.75f, 20.0f) &&
+            world.render.measure_text(signed_font, L"1999999999~") == labrador::Vector2F(1293.25f, 20.0f) &&
+            world.render.measure_text(signed_font, L"2147483647~") == labrador::Vector2F(1298.75f, 20.0f) &&
+            world.render.measure_text(signed_font, L"2000000000~") == labrador::Vector2F(1300.0f, 20.0f),
             "Signed fractional bearings/advances must preserve the clamp and carry terminal pen, rather than ink extent, into the suffix");
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_signed_overflow", "{round}~"); }, &world);
         const auto zero_width_font = world.render.resolve_sprite_font("menu_round_zero_width");
         const auto zero_height_font = world.render.resolve_sprite_font("menu_round_zero_height");
-        require(world.render.measure_text(zero_width_font, L"1") == mattmath::Vector2F(0.0f, 20.0f) &&
-            world.render.measure_text(zero_width_font, L"2") == mattmath::Vector2F(8.0f, 20.0f) &&
-            world.render.measure_text(zero_height_font, L"1") == mattmath::Vector2F(8.0f, 0.0f) &&
-            world.render.measure_text(zero_height_font, L"2") == mattmath::Vector2F(8.0f, 16.0f),
+        require(world.render.measure_text(zero_width_font, L"1") == labrador::Vector2F(0.0f, 20.0f) &&
+            world.render.measure_text(zero_width_font, L"2") == labrador::Vector2F(8.0f, 20.0f) &&
+            world.render.measure_text(zero_height_font, L"1") == labrador::Vector2F(8.0f, 0.0f) &&
+            world.render.measure_text(zero_height_font, L"2") == labrador::Vector2F(8.0f, 16.0f),
             "Minimum-size witnesses must contain a genuinely zero path as well as a positive path");
         for (const char* font_name : { "menu_round_zero_width", "menu_round_zero_height", "menu_round_zero_both" })
         {
@@ -421,15 +421,15 @@ namespace menu_text_acceptance
         {
             const auto visible = variants.load([&](rapidjson::Document& d) { select(d, font_name, "{round}"); });
             visible.validate_resources(world.render, world.audio);
-            require(world.render.measure_text(world.render.resolve_sprite_font(visible.menu().heading_font), L"1") == mattmath::Vector2F(8.0f, 16.0f),
+            require(world.render.measure_text(world.render.resolve_sprite_font(visible.menu().heading_font), L"1") == labrador::Vector2F(8.0f, 16.0f),
                 "A blanket positive line-spacing requirement must not reject a positive measured single-line heading");
         }
-        require(world.render.measure_text(world.render.resolve_sprite_font("menu_round_negative_infinite_spacing"), L"1") == mattmath::Vector2F(8.0f, 16.0f),
+        require(world.render.measure_text(world.render.resolve_sprite_font("menu_round_negative_infinite_spacing"), L"1") == labrador::Vector2F(8.0f, 16.0f),
             "Positive glyph height must genuinely mask negative infinite line spacing in the raw Font measurement witness");
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_negative_infinite_spacing", "{round}"); }, &world);
         for (const char* font_name : { "menu_round_infinite_bearing", "menu_round_nan_bearing", "menu_round_infinite_height", "menu_round_infinite_advance" })
             variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, font_name, "{round}"); }, &world);
-        require(world.render.measure_text(world.render.resolve_sprite_font("menu_round_overflowing_pen"), L"9") == mattmath::Vector2F(8.0f, 20.0f),
+        require(world.render.measure_text(world.render.resolve_sprite_font("menu_round_overflowing_pen"), L"9") == labrador::Vector2F(8.0f, 20.0f),
             "The overflowing-pen fixture must leave the single-glyph measured ink finite before the unsafe carried advance");
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_round_overflowing_pen", "{round}"); }, &world);
         variants.rejects("results.round_heading", [&](rapidjson::Document& d) { select(d, "menu_text_limited"); }, &world);

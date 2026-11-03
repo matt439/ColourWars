@@ -16,7 +16,7 @@
 #include <string>
 #include <string_view>
 
-using namespace mattmath;
+using namespace labrador;
 using namespace presentation_read;
 using menu_consts::DESIGN_RESOLUTION;
 
@@ -52,7 +52,7 @@ void Presentation::Validation::validate_menu_chrome() const
 	check.font("debug_overlay.station_label.font", this->presentation_.debug_overlay_.station_label.font);
 	check.font("hud.timer.font", this->presentation_.hud_.timer_font);
 	check_menu_line("menu_text.brand", this->presentation_.menu_text_.brand, this->presentation_.menu_.brand_font,
-		this->presentation_.menu_.brand_position, this->presentation_.menu_.footer_y, Vector2F::ZERO);
+		this->presentation_.menu_.brand_position, this->presentation_.menu_.footer_y, Vector2F::zero);
 	for (size_t index = 0; index < this->presentation_.menu_text_.headings.size(); ++index)
 	{
 		Vector2F position = this->presentation_.menu_.layout.position;
@@ -131,17 +131,17 @@ void Presentation::Validation::validate_title_and_home_text() const
 	};
 	const MenuTitleText& title = this->presentation_.menu_text_.title;
 	const RectangleF wordmark = centered_title("menu_text.title.wordmark", title.wordmark,
-		main.title_font, main.title_y, Vector2F::ZERO);
+		main.title_font, main.title_y, Vector2F::zero);
 	const RectangleF subtitle = centered_title("menu_text.title.subtitle", title.subtitle,
-		this->presentation_.menu_.detail_font, main.title_subtitle_y, Vector2F::ZERO);
+		this->presentation_.menu_.detail_font, main.title_subtitle_y, Vector2F::zero);
 	RectangleF start = centered_title("menu_text.title.start", title.start,
 		this->presentation_.menu_.item_font, main.title_start_y, main.art.focus_padding);
 	start.inflate(main.art.focus_padding);
 	const RectangleF no_controller = centered_title("menu_text.title.no_controller", title.no_controller,
-		this->presentation_.menu_.item_font, main.title_no_pad_y, Vector2F::ZERO);
+		this->presentation_.menu_.item_font, main.title_no_pad_y, Vector2F::zero);
 	// Build identity remains generated, but it still shares the title's paper.
 	const RectangleF build = centered_title("main_menu.build_id_y", build_info::label,
-		this->presentation_.prompt_bar_.font, main.build_id_y, Vector2F::ZERO);
+		this->presentation_.prompt_bar_.font, main.build_id_y, Vector2F::zero);
 	const auto precedes = [&](const std::string& key, const RectangleF& before, const RectangleF& after)
 	{
 		if (before.bottom() > after.y)
@@ -156,10 +156,10 @@ void Presentation::Validation::validate_title_and_home_text() const
 	precedes("menu_text.title.no_controller", no_controller, build);
 	const RectangleF home_subtitle(main.home_subtitle_position,
 		fixed_menu_size("menu_text.home_subtitle", this->presentation_.menu_text_.home_subtitle, this->presentation_.menu_.detail_font));
-	check_fixed_paper("menu_text.home_subtitle", home_subtitle, main.home_box_size, Vector2F::ZERO);
+	check_fixed_paper("menu_text.home_subtitle", home_subtitle, main.home_box_size, Vector2F::zero);
 	const RectangleF home_heading(main.home_position,
 		fixed_menu_size("menu_text.headings.home", this->presentation_.menu_text_.heading(MenuHeading::home), this->presentation_.menu_.heading_font));
-	check_fixed_paper("menu_text.headings.home", home_heading, main.home_box_size, Vector2F::ZERO);
+	check_fixed_paper("menu_text.headings.home", home_heading, main.home_box_size, Vector2F::zero);
 	precedes("menu_text.home_subtitle", home_heading, home_subtitle);
 	RectangleF play(main.home_position + Vector2F(0.0f, main.home_spacing.y * 2.0f),
 		fixed_menu_size("menu_text.items.play", this->presentation_.menu_text_.item(MenuItem::play), this->presentation_.menu_.item_font));
@@ -222,7 +222,7 @@ void Presentation::Validation::check_status(const StatusMessage& message, const 
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must retain finite positive fitted status bounds.");
 	}
 	const RectangleF bounds(position, fitted);
-	check_fixed_paper(key, bounds, paper_size, Vector2F::ZERO);
+	check_fixed_paper(key, bounds, paper_size, Vector2F::zero);
 	for (const RectangleF& obstacle : obstacles)
 	{
 		// Touching edges are allowed. Options' status and Back deliberately

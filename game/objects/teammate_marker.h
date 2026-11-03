@@ -16,11 +16,11 @@ class PlayerBadge;
 struct TeammateMarkerPlacement
 {
     int participant = -1;
-    mattmath::Vector2F centre;
-    mattmath::Vector2F direction;
+    labrador::Vector2F centre;
+    labrador::Vector2F direction;
     // The chip; the pointer leaves it along `direction` and ends at `tip`.
-    mattmath::RectangleF chip;
-    mattmath::Vector2F tip;
+    labrador::RectangleF chip;
+    labrador::Vector2F tip;
     // The HUD scale it was placed at, so drawing uses the same sizes.
     float scale = 1.0f;
     // 0 when the teammate has only just left the view, 1 once faded in.
@@ -39,8 +39,8 @@ public:
     // None while any of `body` is inside what `camera` shows of a pane of
     // `pane_size`; otherwise where the marker goes. `scale` is the HUD's.
     static std::optional<TeammateMarkerPlacement> place(
-        const TeammateMarkerPresentation& look, const mattmath::Vector2F& pane_size,
-        const labrador::Camera& camera, const mattmath::RectangleF& body, float scale);
+        const TeammateMarkerPresentation& look, const labrador::Vector2F& pane_size,
+        const labrador::Camera& camera, const labrador::RectangleF& body, float scale);
 
     // Draws under whatever camera the list holds; the HUD's identity camera
     // makes the placement's pane-local pixels exact.

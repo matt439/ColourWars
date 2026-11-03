@@ -50,8 +50,8 @@ when they don't compete with it.
 **Independent implementation (2026-10-30).** The author asked for an architecture
 review on 2026-10-30 and for every finding to be worked through: its rows are
 complete (`HYG#51` last, 2026-11-02), and its owed reports `ENG#27`-`ENG#33` are
-drafted, with the author's filing calls made on 2026-11-03. Before them, the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The next-bump
-preparation is complete (`HYG#23`-`HYG#25`). A new autonomous row starts in its
+drafted, with the author's filing calls made on 2026-11-03. Before them, the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The pin moved to
+Labrador `v0.3.0` on 2026-11-03, spending its preparation (`HYG#23`-`HYG#25`). A new autonomous row starts in its
 owner with a concrete local next step, as the rules below require.
 This does not change the arena/tuning order above. `ROAD#28`'s two lift slices
 (cycling lifts on the Lift Trial, paint-driven ones on the Paint Lift Trial,
@@ -102,7 +102,7 @@ comparison and physical-pad check; values remain provisional.
   (`GAP#5.1`).
 - **Report posting:** filing is authorized (2026-11-03) and the `ENG#27` (with `ENG#26`
   as rider), `ENG#30` and `ENG#33` issues are to be posted from the author's account; the
-  `ENG#28` `CHANGES.md` amendment is an engine commit before Labrador's next tag.
+  `ENG#28` `CHANGES.md` amendment did not ship in `v0.3.0`, so it is the author's call again.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -190,7 +190,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
-| `GAP#L9` | DEFERRED | LOW | S | Inspection and 59.951 Hz `overlay.perf` receipt recorded; no present-interval option at the pin or master. Resume when the author wants a decoupled rate or `POL#25` reproduces the once-a-second long interval: engine report first. [Slice](docs/feature-roadmap.md#presentation-rate-inspection-slice-gapl9) |
+| `GAP#L9` | DEFERRED | LOW | S | Inspection and 59.951 Hz `overlay.perf` receipt recorded; no present-interval option at `v0.3.0` either. Resume when the author wants a decoupled rate or `POL#25` reproduces the once-a-second long interval: engine report first. [Slice](docs/feature-roadmap.md#presentation-rate-inspection-slice-gapl9) |
 | `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
 
 ## Comparable-game gaps
@@ -230,21 +230,21 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. `ENG#23`, `ENG#25`, `ENG#31` and `ENG#32` are answered on untagged master and
-wait on the next minor tag. On 2026-11-03 the author authorized filing `ENG#27`, `ENG#30` and
-`ENG#33` (with `ENG#26` riding on `ENG#27`), chose to fix `ENG#28` in Labrador directly and
-withdrew `ENG#29` (its client-side change, `HYG#52`, is done). Minimal engine-focused reports with
+`GAP#F*`. Labrador `v0.3.0` (pinned 2026-11-03) answered `ENG#23`, `ENG#25`, `ENG#31` and
+`ENG#32`; 23 and 32 were spent at the bump, and 25 and 31 are rows below. On 2026-11-03 the
+author authorized filing `ENG#27`, `ENG#30` and `ENG#33` (with `ENG#26` riding on `ENG#27`),
+chose to fix `ENG#28` in Labrador directly, which the tag did not carry, and withdrew `ENG#29`
+(its client-side change, `HYG#52`, is done). Minimal engine-focused reports with
 reproducible examples are approved; recheck upstream and prepare each report for
 Labrador's established issue route. These rows do not represent fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with a report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); registry name forgetting (report 26, with 27); install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; display-awake owner; non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `ENG#25` | BLOCKED | LOW | S | Answered, narrowed, on untagged master by `cadc962` (`Gamepads::vibrate`; not in v0.2.0); no filing needed. Waits on the next Labrador minor tag, then replace the native XInput transport and close the report. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output---draft-with-isolated-adapter-exhibit) |
-| `ENG#23` | BLOCKED | LOW | S | Answered on untagged engine master by `42bc478` (not in v0.2.0); filing no longer needed. Waits on the next Labrador minor tag, then delete `SettingsProbeActivationGuard` and its five uses and close the report. [Report](docs/review/engine-reports.md#23-resizing-a-hidden-window-activates-it--draft-with-activation-guard-exhibit) |
+| `ENG#25` | OPEN | LOW | M | Spend `Gamepads::vibrate` (pinned `v0.3.0`): keep the `make_rumble_sink` seam, move its body off `XInputSetState`, give `RumbleSink` a deadline that `Rumble::publish` renews as it grows, requalify `rumble`/`rumble_adapter`. Feel stays `ROAD#3`. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962) |
+| `ENG#31` | OPEN | LOW | S | Spend `JsonValue::keys()` (pinned `v0.3.0`): refuse unknown keys in every fixed `tuning.json` object, `_` comments allowed, with `gameplay_tuning` refusals; decide duplicates, per-weapon lists and `presentation.json`. [Report](docs/review/engine-reports.md#31-jsonvalue-cannot-report-keys-nobody-read-so-a-misspelled-optional-key-is-silent--e166dcc) |
 | `ENG#27`, `ENG#30`, `ENG#33` | DECISION | LOW | S | Filing authorized 2026-11-03; Engine-request drafts are ready (headless pad backend with the `ENG#26` rider, typed startup failure, a contact's `const` other party). Left: recheck master and post from the author's account. A decline of 33 keeps `HYG#49`'s cast. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
-| `ENG#28` | DECISION | LOW | S | Not filed (2026-11-03): an engine commit amends the two Unreleased `CHANGES.md` entries (`730dd99`, `fdfc24e`) with the three-place count (and, for `730dd99`, a cost statement or restoration) before the next tag. Close when it lands. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
-| `ENG#31`, `ENG#32` | BLOCKED | LOW | S | Answered on untagged master: `JsonValue::keys()` (`e166dcc`) and `Font::wrap` (`80024e5`), neither in v0.2.0; no filing needed. Waits on the next Labrador minor tag, then spend each as its report says. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#28` | DECISION | LOW | S | `v0.3.0` shipped `730dd99`/`fdfc24e` without the three-place count. Choose: amend later, close as declined (`game/carried/` the migration), or file a Bug. [Report](docs/review/engine-reports.md#28-public-types-and-members-removed-with-an-engine-only-caller-count---draft-with-carried-copy-exhibit) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -276,7 +276,7 @@ A new row for one of these gets its section back.
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
 | Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#52` was the last (2026-11-03) |
-| Closed engine reports (1–22, 24, 29) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
+| Closed engine reports (1–24, 29, 32; 25 and 31 have rows above) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |

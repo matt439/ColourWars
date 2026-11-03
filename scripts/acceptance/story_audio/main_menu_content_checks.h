@@ -243,7 +243,7 @@ namespace
 			main["options_warning_colour"].SetString("8A301CFF", json.GetAllocator());
 		});
 		const auto& valid = boundary.main_menu();
-		require(valid.title_box_size == mattmath::Vector2F(1760.0f, content_height - 40.0f) &&
+		require(valid.title_box_size == labrador::Vector2F(1760.0f, content_height - 40.0f) &&
 			valid.home_box_size == valid.title_box_size && valid.options_box_size == valid.title_box_size &&
 			valid.credits_box_size == valid.title_box_size && valid.options_spacing.x == 1920.0f &&
 			valid.art.disabled_ink == menu.art.disabled_ink &&

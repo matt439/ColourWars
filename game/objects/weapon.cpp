@@ -3,7 +3,6 @@
 
 #include <limits>
 
-using namespace mattmath;
 using namespace labrador;
 
 namespace
@@ -172,9 +171,9 @@ Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, colourwars::Rotat
     case colourwars::RotationOrigin::left_center:
         return {0.0f, size.y / 2.0f};
     case colourwars::RotationOrigin::top_left:
-        return Vector2F::ZERO;
+        return Vector2F::zero;
     default:
-        return Vector2F::ZERO;
+        return Vector2F::zero;
     }
 }
 
@@ -237,8 +236,8 @@ Vector2F Weapon::draw_pos() const
 
 bool Weapon::facing_left(float rotation)
 {
-	if (rotation > PI / 2.0f ||
-		rotation < PI / -2.0f)
+	if (rotation > pi / 2.0f ||
+		rotation < pi / -2.0f)
 	{
 		return true;
 	}
@@ -394,7 +393,7 @@ RectangleF Weapon::aim_marker_bounds() const
 {
     if (!this->has_aim_marker() || this->feedback_ == nullptr)
     {
-        return RectangleF(this->nozzle_pos(), Vector2F::ZERO);
+        return RectangleF(this->nozzle_pos(), Vector2F::zero);
     }
     return this->feedback_->aim_marker_bounds(this->nozzle_pos(), this->rotation());
 }
@@ -581,7 +580,7 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
 		}
 		else
 		{
-			this->set_rotation(PI);
+			this->set_rotation(pi);
 		}
     }
 

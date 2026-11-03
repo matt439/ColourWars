@@ -7,7 +7,6 @@
 #include "game/config/presentation/menu_geometry.h"
 
 using namespace labrador;
-using namespace mattmath;
 
 StagePreview::StagePreview(const std::string& name, const RectangleF& rectangle,
 	GameData* data) :

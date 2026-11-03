@@ -33,7 +33,7 @@ const char* terrain_role_name(TerrainRole role);
 // projected_miniature_quads returns viewport-local pixels.
 struct TerrainQuad
 {
-	mattmath::RectangleF rectangle;
+	labrador::RectangleF rectangle;
 	TerrainRole role = TerrainRole::keyline;
 };
 
@@ -62,7 +62,7 @@ public:
 	// `hand` picks the person's slips (MatchRandom::hand); 0 is the house
 	// hand. It moves decoration only, never a collision or scoring edge.
 	static std::unique_ptr<const TerrainMaterial> make(const std::string& name,
-		CollisionObjectType type, const mattmath::Shape& shape,
+		CollisionObjectType type, const labrador::Shape& shape,
 		const TerrainFaces& faces, float mirror_x,
 		labrador::RenderResources* render_resources, std::uint64_t hand = 0);
 
@@ -87,22 +87,22 @@ protected:
 	TerrainMaterial(const std::string& name, labrador::RenderResources* render_resources);
 
 	// Adds a quad clipped to `limit`; an empty result is dropped.
-	void add(const mattmath::RectangleF& rectangle, TerrainRole role,
-		const mattmath::RectangleF& limit);
+	void add(const labrador::RectangleF& rectangle, TerrainRole role,
+		const labrador::RectangleF& limit);
 	enum class StrokeEdge { top, bottom, left, right };
 	// Unlike a fill or incidental joint, this is an authored exposed stroke.
 	// Its minimum pixel grows inward from the named edge, inside `limit`.
-	void add_stroke(const mattmath::RectangleF& rectangle, TerrainRole role,
-		const mattmath::RectangleF& limit, StrokeEdge edge);
-	void add_stroke(const mattmath::RectangleF& rectangle, TerrainRole role,
-		const mattmath::RectangleF& limit, StrokeEdge edge,
-		const mattmath::RectangleF& miniature_limit);
-	void configure_miniature_ruler(const mattmath::RectangleF& rectangle, bool vertical);
-	void add_ruler_mark(const mattmath::RectangleF& rectangle,
-		const mattmath::RectangleF& limit, bool major);
+	void add_stroke(const labrador::RectangleF& rectangle, TerrainRole role,
+		const labrador::RectangleF& limit, StrokeEdge edge);
+	void add_stroke(const labrador::RectangleF& rectangle, TerrainRole role,
+		const labrador::RectangleF& limit, StrokeEdge edge,
+		const labrador::RectangleF& miniature_limit);
+	void configure_miniature_ruler(const labrador::RectangleF& rectangle, bool vertical);
+	void add_ruler_mark(const labrador::RectangleF& rectangle,
+		const labrador::RectangleF& limit, bool major);
 	// A sealed dark edge with light diagonal hatching, inside every exposed
 	// face. StructurePaintable covers scoring intervals with smooth primer.
-	void outline(const mattmath::RectangleF& rectangle, const TerrainFaces& faces);
+	void outline(const labrador::RectangleF& rectangle, const TerrainFaces& faces);
 
 private:
 	std::string name_;
@@ -114,12 +114,12 @@ private:
 		enum class Kind { fill, stroke, minor_mark, major_mark };
 		Kind kind = Kind::fill;
 		StrokeEdge edge = StrokeEdge::top;
-		mattmath::RectangleF limit = mattmath::RectangleF::ZERO;
+		labrador::RectangleF limit = labrador::RectangleF::zero;
 	};
 	// Parallel to quads_; construction records intent, drawing never guesses
 	// from a colour role (which also names joints and engraved interior lines).
 	std::vector<MiniatureDetail> miniature_details_;
-	mattmath::RectangleF ruler_rectangle_ = mattmath::RectangleF::ZERO;
+	labrador::RectangleF ruler_rectangle_ = labrador::RectangleF::zero;
 	bool miniature_ruler_ = false;
 	bool ruler_vertical_ = false;
 };
@@ -131,13 +131,13 @@ private:
 class OrientedTerrainMaterial : public TerrainMaterial
 {
 protected:
-	OrientedTerrainMaterial(const std::string& name, const mattmath::RectangleF& rectangle,
+	OrientedTerrainMaterial(const std::string& name, const labrador::RectangleF& rectangle,
 		labrador::RenderResources* render_resources);
 
 	float length() const;
 	float thickness() const;
 	bool vertical() const;
-	const mattmath::RectangleF& rectangle() const;
+	const labrador::RectangleF& rectangle() const;
 	// along, across, along size, across size -> a quad in world space.
 	void place(float along, float across, float along_size, float across_size,
 		TerrainRole role);
@@ -146,7 +146,7 @@ protected:
 		float low, float high);
 
 private:
-	mattmath::RectangleF rectangle_;
+	labrador::RectangleF rectangle_;
 	bool vertical_ = false;
 };
 
@@ -157,7 +157,7 @@ class GroundMaterial final : public TerrainMaterial
 {
 public:
 	// `hand` keys the brick slips, mortar strokes and doubled edges.
-	GroundMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
+	GroundMaterial(const labrador::RectangleF& rectangle, const TerrainFaces& faces,
 		labrador::RenderResources* render_resources, std::uint64_t hand = 0);
 };
 
@@ -166,7 +166,7 @@ public:
 class PencilMaterial final : public OrientedTerrainMaterial
 {
 public:
-	PencilMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
+	PencilMaterial(const labrador::RectangleF& rectangle, const TerrainFaces& faces,
 		float mirror_x, labrador::RenderResources* render_resources);
 };
 
@@ -174,7 +174,7 @@ public:
 class RulerMaterial final : public OrientedTerrainMaterial
 {
 public:
-	RulerMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
+	RulerMaterial(const labrador::RectangleF& rectangle, const TerrainFaces& faces,
 		labrador::RenderResources* render_resources);
 };
 
@@ -182,7 +182,7 @@ public:
 class EraserMaterial final : public OrientedTerrainMaterial
 {
 public:
-	EraserMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
+	EraserMaterial(const labrador::RectangleF& rectangle, const TerrainFaces& faces,
 		labrador::RenderResources* render_resources);
 };
 
@@ -190,7 +190,7 @@ public:
 class PaintTinMaterial final : public OrientedTerrainMaterial
 {
 public:
-	PaintTinMaterial(const mattmath::RectangleF& rectangle, const TerrainFaces& faces,
+	PaintTinMaterial(const labrador::RectangleF& rectangle, const TerrainFaces& faces,
 		labrador::RenderResources* render_resources);
 };
 
@@ -200,6 +200,6 @@ public:
 class SetSquareMaterial final : public TerrainMaterial
 {
 public:
-	SetSquareMaterial(const mattmath::Shape& triangle, const TerrainFaces& faces,
+	SetSquareMaterial(const labrador::Shape& triangle, const TerrainFaces& faces,
 		labrador::RenderResources* render_resources);
 };

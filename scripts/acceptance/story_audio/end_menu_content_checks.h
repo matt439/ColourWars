@@ -142,8 +142,8 @@ namespace
 		{
 			const float keyline = upper ? 8.0f : 0.001f;
 			const float shadow = 0.0f;
-			const mattmath::Vector2F padding = upper ? mattmath::Vector2F(48.0f, 24.0f) :
-				mattmath::Vector2F(0.002f, 0.002f);
+			const labrador::Vector2F padding = upper ? labrador::Vector2F(48.0f, 24.0f) :
+				labrador::Vector2F(0.002f, 0.002f);
 			const Presentation look = variants.load([&](rapidjson::Document& json)
 			{
 				auto& art = json["end_menu"]["art"];
@@ -160,8 +160,8 @@ namespace
 				art["focus_ink"].SetString("112233", json.GetAllocator());
 			});
 			const auto& art = look.end_menu().art;
-			require(look.end_menu().box_size == (upper ? mattmath::Vector2F(1600.0f, 900.0f) :
-				mattmath::Vector2F(0.007f, 0.007f)), "Valid end-menu paper size was not retained");
+			require(look.end_menu().box_size == (upper ? labrador::Vector2F(1600.0f, 900.0f) :
+				labrador::Vector2F(0.007f, 0.007f)), "Valid end-menu paper size was not retained");
 			require(art.keyline_width == keyline && art.shadow_offset == shadow &&
 				art.focus_padding == padding, "Valid end-menu artwork dimensions were not retained");
 			require(art.ink == (upper ? Colour("A0B1C2FF") : Colour::black) &&

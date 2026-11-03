@@ -68,7 +68,7 @@ namespace debug_console_acceptance
 		Level& level = *match.level;
 		require(level.state() == LevelState::opening && level.intro_playing() &&
 			!level.match_started(), "A full opening starts before the countdown");
-		const mattmath::Vector2F start = level.player(0).rectangle().position();
+		const labrador::Vector2F start = level.player(0).rectangle().position();
 		const int opening_ticks = ticks_while([&] { return match.level->state() == LevelState::opening; });
 		require(about(opening_ticks, whole) && level.state() == LevelState::start_countdown &&
 			level.intro_playing(), "The opening runs its length, then counts down in the picture");
@@ -224,8 +224,8 @@ namespace debug_console_acceptance
 		{
 			const labrador::UiText& label = level.station_label(index);
 			const LevelStation& station = stations[static_cast<std::size_t>(index)];
-			const mattmath::RectangleF bounds = label.bounds();
-			const mattmath::Vector2F expected = station.position + look.offset;
+			const labrador::RectangleF bounds = label.bounds();
+			const labrador::Vector2F expected = station.position + look.offset;
 			require(!label.hidden() && label.text() == labrador::widen(station.name) && label.colour() == shown_tint,
 				station.name + " is shown, labelled with its name in the station colour, premultiplied");
 			require(std::fabs(bounds.x - expected.x) < 0.01f && std::fabs(bounds.y - expected.y) < 0.01f &&
@@ -237,7 +237,7 @@ namespace debug_console_acceptance
 		{
 			if (step == 100)
 			{
-				const mattmath::RectangleF shown_box = level.station_label(0).bounds();
+				const labrador::RectangleF shown_box = level.station_label(0).bounds();
 				require(impl.execute("overlay stations").ok && level.station_label_count() == 12 && hidden(0) &&
 					hidden(9) && level.station_label(0).colour() == shown_tint &&
 					level.station_label(0).bounds() == shown_box,

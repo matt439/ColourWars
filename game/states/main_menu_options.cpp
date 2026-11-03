@@ -7,7 +7,6 @@
 
 #include <stdexcept>
 
-using namespace mattmath;
 using namespace labrador;
 
 #pragma region MainMenuOptions

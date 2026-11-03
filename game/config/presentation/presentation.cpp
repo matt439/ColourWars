@@ -11,7 +11,6 @@
 #include <string>
 
 using namespace labrador;
-using namespace mattmath;
 using namespace content_value;
 using namespace presentation_read;
 

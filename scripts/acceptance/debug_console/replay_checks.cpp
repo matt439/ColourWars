@@ -674,7 +674,7 @@ namespace debug_console_acceptance
 		impl.execute("timescale 1");
 		require(count_of_lines(log, "replay cpu: MATCH") == 2, "At timescale 4 the replay still matches");
 
-		world.resolution.set_resolution(mattmath::Vector2F(1280.0f, 720.0f));
+		world.resolution.set_resolution(labrador::Vector2F(1280.0f, 720.0f));
 		play("play cpu");
 		require(count_of_lines(log, "replay cpu: MATCH") == 3,
 			"At another window size the replay still matches (the camera only feeds recorded aim)");

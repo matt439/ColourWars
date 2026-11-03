@@ -7,8 +7,8 @@ class ProjectileSpray final : public DiffusingProjectile
 {
 public:
 	ProjectileSpray() = delete;
-	ProjectileSpray(const mattmath::RectangleF& rectangle,
-		const mattmath::Vector2F& velocity,
+	ProjectileSpray(const labrador::RectangleF& rectangle,
+		const labrador::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
@@ -16,17 +16,17 @@ public:
 		labrador::RenderResources::SheetStrip strip,
 		const ProjectileTuning* tuning,
 		float rotation = 0.0f,
-		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
+		const labrador::Vector2F& origin = labrador::Vector2F::zero,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
-	mattmath::RectangleF bounds() const override;
+	labrador::RectangleF bounds() const override;
 
-	const mattmath::Shape* shape() const override;
+	const labrador::Shape* shape() const override;
 
 private:
-	void set_rectangle(const mattmath::RectangleF& rectangle) override;
-	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
+	void set_rectangle(const labrador::RectangleF& rectangle) override;
+	labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
 };

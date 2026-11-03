@@ -4,7 +4,6 @@
 #include "game/carried/ui_text_drop_shadow.h"
 #include "game/states/player_label.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 ResultsMenuPage::ResultsMenuPage(MenuContext* context,
@@ -147,11 +146,11 @@ void ResultsMenuInitial::init()
 		this->session_.is_series() ? this->text().results.round_title(this->session_.round()) :
 			this->text().results.single_match_heading,
 		style.heading_font,
-		Vector2F::ZERO,
+		Vector2F::zero,
 		this->render_resources(),
 		look.art.ink,
 		Colour(),
-		Vector2F::ZERO);
+		Vector2F::zero);
 	center_text(*this->heading_, look.heading_y);
 
 	this->fill_box_ = std::make_unique<UiTexture>(
@@ -172,7 +171,7 @@ void ResultsMenuInitial::init()
 		"team_a_fill",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO,
+		RectangleF(Vector2F::zero,
 			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
 		this->level_end_info().team_colours.team_a);
@@ -183,7 +182,7 @@ void ResultsMenuInitial::init()
 		"team_b_fill",
 		style.sprite_sheet,
 		style.fill_frame,
-		RectangleF(Vector2F::ZERO,
+		RectangleF(Vector2F::zero,
 			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
 		this->level_end_info().team_colours.team_b);
@@ -196,18 +195,18 @@ void ResultsMenuInitial::init()
 		this->render_resources(),
 		look.art.ink,
 		Colour(),
-		Vector2F::ZERO,
+		Vector2F::zero,
 		true);
 
 	this->team_b_percentage_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"team_b_percentage",
 		end_info.team_b_percentage_string(this->text().results),
 		style.detail_font,
-		Vector2F::ZERO,
+		Vector2F::zero,
 		this->render_resources(),
 		look.art.ink,
 		Colour(),
-		Vector2F::ZERO,
+		Vector2F::zero,
 		true);
 	this->team_b_percentage_->set_position(Vector2F(
 		this->calculate_team_b_fill_top_right_position().x -
@@ -231,11 +230,11 @@ void ResultsMenuInitial::init()
 		"winner",
 		end_info.winning_team_string(this->text().results),
 		style.item_font,
-		Vector2F::ZERO,
+		Vector2F::zero,
 		this->render_resources(),
 		look.art.ink,
 		Colour(),
-		Vector2F::ZERO,
+		Vector2F::zero,
 		true);
 	center_text(*this->winner_, look.winner_y);
 
@@ -243,11 +242,11 @@ void ResultsMenuInitial::init()
 		"proceed",
 		this->text().results.proceed,
 		style.detail_font,
-		Vector2F::ZERO,
+		Vector2F::zero,
 		this->render_resources(),
 		look.art.ink,
 		Colour(),
-		Vector2F::ZERO,
+		Vector2F::zero,
 		true);
 	center_text(*this->proceed_, look.proceed_y);
 
@@ -261,9 +260,9 @@ void ResultsMenuInitial::init()
 				look.team_mark_size.x,
 			mark_y), look.team_mark_size);
 	this->team_a_mark_ = std::make_unique<colourwars::UiTextDropShadow>(
-		"team_a_mark", L"A", style.item_font, Vector2F::ZERO,
+		"team_a_mark", L"A", style.item_font, Vector2F::zero,
 		this->render_resources(), look.art.ink,
-		Colour(), Vector2F::ZERO);
+		Colour(), Vector2F::zero);
 	this->team_a_mark_->set_position(team_a_mark_box.center() -
 		this->team_a_mark_->bounds().center());
 
@@ -272,9 +271,9 @@ void ResultsMenuInitial::init()
 				look.team_mark_gap,
 			mark_y), look.team_mark_size);
 	this->team_b_mark_ = std::make_unique<colourwars::UiTextDropShadow>(
-		"team_b_mark", L"B", style.item_font, Vector2F::ZERO,
+		"team_b_mark", L"B", style.item_font, Vector2F::zero,
 		this->render_resources(), look.art.ink,
-		Colour(), Vector2F::ZERO);
+		Colour(), Vector2F::zero);
 	this->team_b_mark_->set_position(team_b_mark_box.center() -
 		this->team_b_mark_->bounds().center());
 
@@ -310,15 +309,15 @@ void ResultsMenuInitial::init()
 			this->details_.push_back(std::make_unique<colourwars::UiTextDropShadow>(
 				"detail_" + std::to_string(this->details_.size()), text, font,
 				position, this->render_resources(), look.art.ink,
-				Colour(), Vector2F::ZERO, true));
+				Colour(), Vector2F::zero, true));
 			this->text_container_->add_child(this->details_.back().get());
 			return this->details_.back().get();
 		};
 	if (this->session_.is_series())
 	{
-		center_text(*add_detail(this->session_.score_string(this->text().results), Vector2F::ZERO, style.detail_font),
+		center_text(*add_detail(this->session_.score_string(this->text().results), Vector2F::zero, style.detail_font),
 			look.session_score_y);
-		center_text(*add_detail(this->session_.result_string(this->text().results), Vector2F::ZERO, style.detail_font),
+		center_text(*add_detail(this->session_.result_string(this->text().results), Vector2F::zero, style.detail_font),
 			look.session_result_y);
 	}
 	add_detail(this->text().results.contribution_heading,
@@ -355,8 +354,8 @@ void ResultsMenuInitial::init()
 			continue;
 		}
 		auto line = std::make_unique<colourwars::UiTextDropShadow>("award_" + std::to_string(i + 1),
-			this->text().results.award_line(*awards[i]), look.contribution_font, Vector2F::ZERO,
-			this->render_resources(), look.art.ink, Colour(), Vector2F::ZERO, true);
+			this->text().results.award_line(*awards[i]), look.contribution_font, Vector2F::zero,
+			this->render_resources(), look.art.ink, Colour(), Vector2F::zero, true);
 		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
 			line->bounds().width, look.contribution_position.y +
 				look.contribution_spacing * static_cast<float>(i + 1)));
@@ -372,7 +371,7 @@ void ResultsMenuInitial::init()
 	const std::wstring record = record_text(this->record_, this->text().records);
 	if (!record.empty())
 	{
-		colourwars::UiTextDropShadow* line = add_detail(record, Vector2F::ZERO, look.contribution_font);
+		colourwars::UiTextDropShadow* line = add_detail(record, Vector2F::zero, look.contribution_font);
 		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
 			line->bounds().width, look.record_y));
 	}
@@ -436,8 +435,9 @@ void ResultsMenuInitial::update_team_b_fill() const
 	}
 	float width = fill * max_width;
 	this->team_b_fill_->set_width(width);
-	this->team_b_fill_->set_position_from_top_right_origin(
-		this->calculate_team_b_fill_top_right_position());
+	const Vector2F top_right = this->calculate_team_b_fill_top_right_position();
+	this->team_b_fill_->set_position(
+		Vector2F(top_right.x - this->team_b_fill_->rectangle().width, top_right.y));
 }
 
 Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const

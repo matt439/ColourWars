@@ -41,7 +41,6 @@
 namespace movement_course_acceptance
 {
     using namespace labrador;
-    using namespace mattmath;
 
     using acceptance::require;
     [[noreturn]] void fail(const std::string& message);
@@ -164,7 +163,7 @@ namespace movement_course_acceptance
         float swept_paint = 0.0f;
 
         Run(const Services& with, const Vector2F& top_left,
-            const Vector2F& velocity = Vector2F::ZERO,
+            const Vector2F& velocity = Vector2F::zero,
             WeaponType weapon = WeaponType::sprayer, PlayerTeam team = PlayerTeam::a,
             const std::optional<Vector2F>& respawn = std::nullopt) : services(with)
         {
@@ -322,13 +321,13 @@ namespace movement_course_acceptance
             this->death_expected = true;
             const PlayerTeam enemy = this->player->team() == PlayerTeam::a ?
                 PlayerTeam::b : PlayerTeam::a;
-            const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO, enemy, 1,
+            const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
                 Colour::white, &this->services.render,
                 resolve_projectile_strip(this->services.tuning.projectile(ProjectileType::spray), this->services.render),
                 &this->services.tuning.projectile(ProjectileType::spray));
             for (int hit = 0; hit < 1000 && this->player->health() > 0.0f; ++hit)
             {
-                this->player->on_contact(shot, Vector2F::ZERO, 0);
+                this->player->on_contact(shot, Vector2F::zero, 0);
             }
             require(this->player->health() <= 0.0f, "damage fixture did not eliminate the player");
         }

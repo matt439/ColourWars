@@ -241,7 +241,7 @@ namespace crossfeed_acceptance
             {
                 const float goal = x(phase == 0 ? 2450.0f : 1150.0f);
                 const float aim_direction = (right != (phase == 1)) ? 1.0f : -1.0f;
-                PlayerInputData actions = aimed(aim_direction > 0.0f ? PI / 3.0f : 2.0f * PI / 3.0f,
+                PlayerInputData actions = aimed(aim_direction > 0.0f ? pi / 3.0f : 2.0f * pi / 3.0f,
                     input(painting_steer(run, goal)));
                 actions.primary_shoot = observation.first_missed_tick < 0;
                 observation.tick(actions, true);
@@ -288,7 +288,7 @@ namespace crossfeed_acceptance
             int home_exit_paid = -1;
             float home_exit_area = -1.0f;
             float home_exit_ammo = -1.0f;
-            const float angle = right ? PI / 3.0f : 2.0f * PI / 3.0f;
+            const float angle = right ? pi / 3.0f : 2.0f * pi / 3.0f;
             for (int tick = 1; tick <= 180; ++tick)
             {
                 // Change to walking as soon as real contact reaches the lower

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-using namespace mattmath;
+using namespace labrador;
 
 namespace
 {

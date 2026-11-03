@@ -6,7 +6,7 @@ namespace paint_surfaces_acceptance
 {
     namespace
     {
-        using namespace mattmath;
+        using namespace labrador;
         std::vector<std::uint32_t> visible_state(const StructurePaintable& object)
         {
             const PaintTotal total = object.paint_total();

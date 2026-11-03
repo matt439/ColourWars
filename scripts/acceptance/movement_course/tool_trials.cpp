@@ -47,13 +47,13 @@ namespace movement_course_acceptance
         for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper,
             WeaponType::mister, WeaponType::bucket })
         {
-            Run run(s, standing_on(s, lane, lane.rectangle.center().x), Vector2F::ZERO, type);
+            Run run(s, standing_on(s, lane, lane.rectangle.center().x), Vector2F::zero, type);
             run.settle();
             run.tick(input(false, false, 1.0f));
             require(run.player->primary_weapon().rotation() == 0.0f,
                 "an unaimed weapon did not follow the initial right facing");
             run.tick(input(false, false, -1.0f));
-            require(run.player->primary_weapon().rotation() == PI,
+            require(run.player->primary_weapon().rotation() == pi,
                 "an unaimed weapon did not follow the initial left facing");
             const Vector2F up_left(-0.7f, -0.7f);
             const float wanted = up_left.angle();
@@ -69,7 +69,7 @@ namespace movement_course_acceptance
             const int shots_before_release = run.shots;
             for (int tick = 0; tick < 90; ++tick)
             {
-                const Vector2F stick = tick < 30 ? Vector2F(-0.1f, -0.1f) : Vector2F::ZERO;
+                const Vector2F stick = tick < 30 ? Vector2F(-0.1f, -0.1f) : Vector2F::zero;
                 PlayerInputData actions = pad_aim(stick, s.preferences,
                     input(false, false, tick < 30 ? 1.0f : -1.0f));
                 actions.primary_shoot = true;
@@ -114,16 +114,16 @@ namespace movement_course_acceptance
                 << " shots=" << run.shots << '\n';
         }
         {
-            Run run(s, standing_on(s, lane, lane.rectangle.center().x), Vector2F::ZERO, WeaponType::roller);
+            Run run(s, standing_on(s, lane, lane.rectangle.center().x), Vector2F::zero, WeaponType::roller);
             run.settle();
             for (int tick = 0; tick < 90; ++tick)
             {
                 const bool right = tick < 30;
-                PlayerInputData actions = pad_aim(tick < 60 ? Vector2F(-0.7f, -0.7f) : Vector2F::ZERO,
+                PlayerInputData actions = pad_aim(tick < 60 ? Vector2F(-0.7f, -0.7f) : Vector2F::zero,
                     s.preferences, input(false, false, right ? 1.0f : -1.0f));
                 actions.primary_shoot = true;
                 run.tick(actions);
-                const float wanted = right ? PI / 4.0f : 3.0f * PI / 4.0f;
+                const float wanted = right ? pi / 4.0f : 3.0f * pi / 4.0f;
                 require(run.player->primary_weapon().rotation() == wanted,
                     "the roller stopped using its fixed facing-down aim");
             }
@@ -177,7 +177,7 @@ namespace movement_course_acceptance
             const auto station = [&](const Vector2F& top_left, float first, float last, float walk,
                 const Surface& target, bool underside)
             {
-                Run run(s, top_left, Vector2F::ZERO, type);
+                Run run(s, top_left, Vector2F::zero, type);
                 run.settle(5);
                 run.watched_paint = [&run, &target, underside, thickness]
                     { return face_paint(run.paintable(target.name), underside, thickness); };
@@ -202,7 +202,7 @@ namespace movement_course_acceptance
             if (type == WeaponType::sniper) { outside = 300.0f; first = last = -0.15f; }
             if (type == WeaponType::bucket) { outside = 150.0f; first = last = -0.8f; }
             const auto under = station(standing_on(s, floor, block.rectangle.center().x),
-                -PI / 2.0f, -PI / 2.0f, 0.0f, block, true);
+                -pi / 2.0f, -pi / 2.0f, 0.0f, block, true);
             const auto under_far = station(standing_on(s, floor, block.rectangle.left() - outside),
                 first, last, 0.0f, block, true);
             // Wall: walk into the short step's left face aiming slightly down,

@@ -262,14 +262,14 @@ public:
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 		OptionRow::Adjust on_adjust = {});
 	static void check_duration_row(const OptionRow& duration_row,
-		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
+		const labrador::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 	// The Series stage row (ROAD#20), checked like the duration row for
 	// every rule's value.
 	static std::unique_ptr<OptionRow> make_stage_rule_row(labrador::RenderResources* render,
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 		OptionRow::Adjust on_adjust = {});
 	static void check_stage_rule_row(const OptionRow& stage_rule_row,
-		const mattmath::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
+		const labrador::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 protected:
 	bool shows_focus_backing() const override { return false; }
 private:
@@ -277,13 +277,13 @@ private:
 	static std::unique_ptr<OptionRow> make_setup_row(const std::string& name, MenuItem item, int row,
 		labrador::RenderResources* render, const MenuStyle& style, const MainMenuPresentation& look,
 		const MenuText& text, OptionRow::Adjust on_adjust);
-	static bool setup_row_fits(const OptionRow& row, const mattmath::RectangleF& panel,
+	static bool setup_row_fits(const OptionRow& row, const labrador::RectangleF& panel,
 		const MenuPaperArtPresentation& art, float row_spacing);
 	void cycle_duration(labrador::Direction direction);
 	void refresh_duration();
 	void cycle_stage_rule(labrador::Direction direction);
 	void refresh_stage_rule();
-	static mattmath::Vector2F practice_hint_position(const labrador::UiWidget& single_match,
+	static labrador::Vector2F practice_hint_position(const labrador::UiWidget& single_match,
 		const MenuPaperArtPresentation& art);
 	std::unique_ptr<OptionRow> duration_row_;
 	std::unique_ptr<OptionRow> stage_rule_row_;
@@ -343,7 +343,7 @@ private:
 		std::unique_ptr<MenuJoinAccent> accent;
 	};
 	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
-	mattmath::RectangleF check_paper_bounds(const labrador::UiWidget& widget,
+	labrador::RectangleF check_paper_bounds(const labrador::UiWidget& widget,
 		const char* role, const labrador::UiWidget* accent = nullptr) const;
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -494,7 +494,7 @@ private:
 	MenuPaperArtPresentation paper_art_;
 	MenuPaperArtPresentation briefing_art_;
 	PlayerTeam picker_ = PlayerTeam::none;
-	mattmath::RectangleF briefing_layout_bounds_;
+	labrador::RectangleF briefing_layout_bounds_;
 	float briefing_accent_motion_height_ = 0.0f;
 	MenuFocusMotion stage_motion_;
 	// Stage slots are followed by Random, which is not a stage-list entry.

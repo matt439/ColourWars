@@ -7,7 +7,6 @@
 #include "engine/render/renderer.h"
 #include "engine/render/resolution_manager.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 CursorMarkerOverlay::CursorMarkerOverlay(const Presentation* presentation,

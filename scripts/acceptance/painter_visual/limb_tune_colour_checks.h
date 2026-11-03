@@ -93,14 +93,14 @@ LimbColourProbe::LimbColourProbe(Application& app,const GameTuning& tuning,const
         look_.arm_width==4.0f&&look_.elbow_drop==12.0f&&look_.hand_size==16.0f&&look_.hand_edge==4.0f&&look_.quiet.enabled&&
         look_.quiet.eyes[0]==RectangleF(24,24,4,8)&&look_.quiet.eyes[1]==RectangleF(40,24,4,8)&&look_.quiet.eyelid_height==4.0f&&look_.quiet.face_colour==Colour(255,255,255)&&
         fill_.sprite_sheet=="sprite_sheet_1"&&fill_.fill_frame=="pixel"&&look_.sprite_sheet=="painter"&&
-        frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::ZERO,
+        frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero,
         "Limb fixture lost shipped source geometry, solid fill or unselected face underlayer");
     const std::array<std::string,4> names{look_.rest_arms_frame,look_.rest_arms_paint_frame,look_.sleeves_frame,look_.sleeves_paint_frame};
     const std::array<RectangleI,4> sources{RectangleI(76,4,68,120),RectangleI(76,516,68,120),RectangleI(148,4,68,120),RectangleI(148,516,68,120)};
     for(size_t i=0;i<names.size();++i)
     {art_handles_[i]=art_sheet_->resolve_sprite_frame(names[i]);art_frames_[i]=&art_sheet_->sprite_frame(art_handles_[i]);
         art_sources_[i]=art_frames_[i]->source_rectangle();art_origins_[i]=art_frames_[i]->origin();
-        require(art_sources_[i]==sources[i]&&art_origins_[i]==Vector2F::ZERO,"Limb captured sprite guard metadata changed");}
+        require(art_sources_[i]==sources[i]&&art_origins_[i]==Vector2F::zero,"Limb captured sprite guard metadata changed");}
     preferences_.music_volume=preferences_.sfx_volume=0;preferences_.view_shake=false;preference_values_=limb_preference_values(preferences_);
     std::ignore=limb_masks();
     for(size_t i=0;i<tools_.size();++i)
@@ -108,10 +108,10 @@ LimbColourProbe::LimbColourProbe(Application& app,const GameTuning& tuning,const
         const auto& c=limb_contexts()[i];const RectangleF figure=limb_canvas(i);const Vector2F centre=figure.position()+Vector2F(34,60);
         tools_[i]=WeaponBuilder::build_weapon(&tuning_,PlayerTeam::a,0,0,Colour(6,52,204),c.tool,centre,app_.render_resources(),app_.audio_resources(),
             &preferences_,&presentation_.tool_motion(),&presentation_.weapon_feedback());
-        auto& input=inputs_[i];input.connected=true;input.shoot_direction_requested=true;input.shoot_angle=c.facing?0.0f:PI;
+        auto& input=inputs_[i];input.connected=true;input.shoot_direction_requested=true;input.shoot_angle=c.facing?0.0f:pi;
         input.shoot_direction=Vector2F::unit_vec_from_angle(input.shoot_angle);
         const auto before_motion=tools_[i]->motion_state();const float ammo=tools_[i]->ammo();
-        const auto shots=tools_[i]->update_and_get_projectiles(input,centre,Vector2F::ZERO,c.facing,0.0f);++preparation_updates_;
+        const auto shots=tools_[i]->update_and_get_projectiles(input,centre,Vector2F::zero,c.facing,0.0f);++preparation_updates_;
         require(shots.empty()&&tools_[i]->ammo()==ammo&&!tools_[i]->shooting_this_update()&&tools_[i]->motion_state()==before_motion&&
             tools_[i]->type()==c.tool&&tools_[i]->rotation()==c.angle&&tools_[i]->draw_pos()==Vector2F(c.draw_x,c.draw_y),
             "Limb zero-delta nonshoot preparation lost real source pose, paid ammo or advanced mechanism state");
@@ -136,7 +136,7 @@ void LimbColourProbe::unchanged() const
     require(fill_sheet_handle_==resources->resolve_sprite_sheet(fill_.sprite_sheet)&&art_sheet_handle_==resources->resolve_sprite_sheet(look_.sprite_sheet)&&
         fill_sheet_==resources->sprite_sheet(fill_sheet_handle_)&&art_sheet_==resources->sprite_sheet(art_sheet_handle_)&&
         fill_handle_==fill_sheet_->resolve_sprite_frame(fill_.fill_frame)&& &frame_==&fill_sheet_->sprite_frame(fill_handle_)&&
-        frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::ZERO,
+        frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero,
         "Limb changed retained atlas/frame handles, pointers, solid source or origin");
     const std::array<std::string,4> names{look_.rest_arms_frame,look_.rest_arms_paint_frame,look_.sleeves_frame,look_.sleeves_paint_frame};
     for(size_t i=0;i<names.size();++i)
@@ -172,7 +172,7 @@ Frame LimbColourProbe::render(const std::function<void(DrawList&)>& draw)
 {
     unchanged();const std::array<Colour,6> selected{look_.arm_colour,look_.hand_colour,expected_.arm_colour,expected_.hand_colour,disabled_look_.arm_colour,disabled_look_.hand_colour};
     std::srand(41977);const int next=std::rand();std::srand(41977);Renderer& renderer=*app_.renderer();renderer.begin_frame();renderer.set_view_count(1);
-    DrawList list=renderer.view(0);list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::DEFAULT_CAMERA);list.set_filter(TextureFilter::point);
+    DrawList list=renderer.view(0);list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::default_camera);list.set_filter(TextureFilter::point);
     canvas_.draw(list,{0.0f,0.0f,1280.0f,720.0f});draw(list);
     // Actual WHITE/BLACK texel+coverage calibration stays inside every full-frame
     // guard. No added read and no exemption from repeat/control/reset checks.

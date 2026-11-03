@@ -65,7 +65,7 @@ namespace bot_ascent_acceptance
             MatchBot bot(&tuning, difficulty, 7);
             MatchBotObservation view = floor_fixture(tuning);
             view.on_platform = true;
-            view.obstacles.front() = mattmath::RectangleF(-1000.0f, view.size.y * 0.5f, 2000.0f, 10.0f);
+            view.obstacles.front() = labrador::RectangleF(-1000.0f, view.size.y * 0.5f, 2000.0f, 10.0f);
             view.supports.front() = { view.obstacles.front(), true, false };
             const float lower_top = view.size.y * 0.5f + 300.0f;
             view.obstacles.emplace_back(-300.0f, lower_top, 600.0f, 10.0f);
@@ -156,7 +156,7 @@ namespace bot_ascent_acceptance
         MatchBot narrow_source(&tuning, difficulty, 7);
         view = floor_fixture(tuning);
         view.size = { 1.0f, 1.0f };
-        view.obstacles.front() = mattmath::RectangleF(-0.5f, 0.5f, 1.0f, 100.0f);
+        view.obstacles.front() = labrador::RectangleF(-0.5f, 0.5f, 1.0f, 100.0f);
         view.supports.front() = { view.obstacles.front(), false, false };
         raised_support(view, 140.0f, 300.0f);
         require(first_decision(narrow_source, view, tuning, difficulty).jump_pressed,
@@ -164,7 +164,7 @@ namespace bot_ascent_acceptance
 
         MatchBot gap(&tuning, difficulty, 7);
         view = floor_fixture(tuning);
-        view.obstacles.front() = mattmath::RectangleF(-200.0f, view.size.y * 0.5f, 250.0f, 100.0f);
+        view.obstacles.front() = labrador::RectangleF(-200.0f, view.size.y * 0.5f, 250.0f, 100.0f);
         view.supports.front() = { view.obstacles.front(), false, false };
         view.obstacles.emplace_back(150.0f, view.size.y * 0.5f - 140.0f, 300.0f, 10.0f);
         view.supports.push_back({ view.obstacles.back(), true, false });
@@ -187,7 +187,7 @@ namespace bot_ascent_acceptance
         // A lower deck across a gap must not displace a higher support above
         // the current floor. Walking farther along one continuous floor is
         // different from committing to an extended airborne crossing.
-        view.obstacles.front() = mattmath::RectangleF(-200.0f, view.size.y * 0.5f, 250.0f, 100.0f);
+        view.obstacles.front() = labrador::RectangleF(-200.0f, view.size.y * 0.5f, 250.0f, 100.0f);
         view.supports.front() = { view.obstacles.front(), false, false };
         view.obstacles.emplace_back(300.0f, view.size.y * 0.5f - 80.0f, 200.0f, 10.0f);
         view.supports.push_back({ view.obstacles.back(), true, false });
@@ -346,7 +346,7 @@ namespace bot_ascent_acceptance
         MatchBot crossing(&tuning, difficulty, 7);
         MatchBotObservation view = floor_fixture(tuning);
         const float feet = view.size.y * 0.5f;
-        view.obstacles.front() = mattmath::RectangleF(-100.0f, feet, 150.0f, 100.0f);
+        view.obstacles.front() = labrador::RectangleF(-100.0f, feet, 150.0f, 100.0f);
         view.supports.front().bounds = view.obstacles.front();
         view.obstacles.emplace_back(175.0f, feet - 160.0f, 250.0f, 100.0f);
         view.supports.push_back({ view.obstacles.back(), false });

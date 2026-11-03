@@ -31,6 +31,9 @@ namespace labrador
     GamepadState GamepadReader::read(int) const { return {}; }
     void GamepadReader::suspend() {}
     void GamepadReader::resume() {}
+    // Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
+    bool GamepadReader::vibrate(int, const Vibration&) { return false; }
+    void GamepadReader::stop_vibration(int) {}
 }
 
 using namespace labrador;

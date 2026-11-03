@@ -133,9 +133,9 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         require(level.place_player(0, { 559.0f, 715.0f }), "Cannot place resume fixture over the drop platform");
         for (int step = 0; step < 30; ++step) { tick(); }
         Player& player = const_cast<Player&>(level.player(0));
-        const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+        const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::zero,
             PlayerTeam::b, 0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
-        player.on_contact(hit, Vector2F::ZERO, 0.0f);
+        player.on_contact(hit, Vector2F::zero, 0.0f);
         require(player.health() < tuning.player().starting_health, "Resume fixture did not receive a nonfatal hit");
         // Put health close to regeneration, then pay a fresh shot so ammo,
         // cooldown, moving paint and cosmetic pulses all have work pending.

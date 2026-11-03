@@ -23,7 +23,7 @@ namespace movement_course_acceptance
                 PlayerTeam::b, &course.named("spawn_b_runway"), -1.0f } })
         {
             const float d = lane.direction;
-            Run run(s, lane.spawn, Vector2F::ZERO, WeaponType::sprayer, lane.team, lane.spawn);
+            Run run(s, lane.spawn, Vector2F::zero, WeaponType::sprayer, lane.team, lane.spawn);
             run.settle(30);
             require(run.support() == lane.runway->name, "an authored spawn did not settle on its runway");
             const float end = d > 0.0f ? lane.runway->rectangle.right() : lane.runway->rectangle.left();

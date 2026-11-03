@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon.h"
 
-using namespace mattmath;
 using namespace labrador;
 
 // Weapon's decorative tool motion: the pose state machine, its resets and the
@@ -36,7 +35,7 @@ void Weapon::reset_mechanism_motion()
     this->motion_ = {};
     this->motion_firing_ = false;
     this->motion_supported_ = false;
-    this->mist_release_position_ = Vector2F::ZERO;
+    this->mist_release_position_ = Vector2F::zero;
     this->mist_release_rotation_ = 0.0f;
 }
 
@@ -124,7 +123,7 @@ void Weapon::advance_travel_motion(bool supported, bool established_support,
             motion.travel_phase = std::fmod(motion.travel_phase +
                 signed_distance / period, 1.0f);
             if (motion.travel_phase < 0.0f) { motion.travel_phase += 1.0f; }
-            swing = std::sin(motion.travel_phase * PI * 2.0f);
+            swing = std::sin(motion.travel_phase * pi * 2.0f);
         }
         else
         {

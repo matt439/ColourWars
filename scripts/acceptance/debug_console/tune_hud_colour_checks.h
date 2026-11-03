@@ -47,7 +47,7 @@
 		};
 		const auto font_measurements = [&]
 		{
-			return std::vector<mattmath::Vector2F>{
+			return std::vector<labrador::Vector2F>{
 				resources.measure_text(resources.resolve_sprite_font(original.meter_label_font), L"HEALTH"),
 				resources.measure_text(resources.resolve_sprite_font(original.timer_font), L"02:04"),
 				resources.measure_text(resources.resolve_sprite_font(original.player_identity_font), L"P1  /  TEAM A\nKeyboard + mouse") };
@@ -264,7 +264,7 @@
 		};
 		const auto font_measurements = [&]
 		{
-			return std::vector<mattmath::Vector2F>{
+			return std::vector<labrador::Vector2F>{
 				resources.measure_text(resources.resolve_sprite_font(original.meter_label_font), L"HEALTH"),
 				resources.measure_text(resources.resolve_sprite_font(original.timer_font), L"02:04"),
 				resources.measure_text(resources.resolve_sprite_font(original.player_identity_font), L"P1  /  TEAM A\nKeyboard + mouse") };

@@ -16,10 +16,10 @@ namespace paint_underfoot_acceptance
             world.paint(floor, floor.shape()->bounding_box(), floor_team, -1);
             course.settle();
             const auto& spray = world.tuning.projectile(ProjectileType::spray);
-            ProjectileSpray shot(mattmath::RectangleF(0, 0, 200, 200), mattmath::Vector2F::ZERO, PlayerTeam::b,
+            ProjectileSpray shot(labrador::RectangleF(0, 0, 200, 200), labrador::Vector2F::zero, PlayerTeam::b,
                 paint_owners::index(-1, 1), labrador::Colour::white, &world.render,
                 resolve_projectile_strip(spray, world.render), &spray);
-            course.player->on_contact(shot, mattmath::Vector2F::ZERO, 0.0f);
+            course.player->on_contact(shot, labrador::Vector2F::zero, 0.0f);
             const float hurt = course.player->health();
             require(hurt < world.tuning.player().starting_health, "The enemy hit did no damage");
             const int ticks = static_cast<int>(std::ceil(world.tuning.player().health_regen_delay / dt)) + 60;

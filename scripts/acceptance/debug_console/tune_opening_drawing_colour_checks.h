@@ -44,7 +44,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			return std::array<mattmath::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
+			return std::array<labrador::RectangleF, 4>{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator };
 		};
 		const auto held_geometry = geometry();
@@ -66,7 +66,7 @@
 		}();
 		const std::array<SilhouettePose, 3> poses{ SilhouettePose{},
 			SilhouettePose{ 0.5f, 0.0f, 0.0f }, SilhouettePose{ 0.0f, 1.0f, 0.4f } };
-		const mattmath::RectangleF screen(0.0f, 0.0f, 1280.0f, 720.0f);
+		const labrador::RectangleF screen(0.0f, 0.0f, 1280.0f, 720.0f);
 		const auto inputs = [&]
 		{
 			std::vector<float> values{ screen.x, screen.y, screen.width, screen.height };
@@ -223,7 +223,7 @@
 		const std::array<const MonitorPersona*, 2> captured_personas{ &first_monitor.persona(), &second_monitor.persona() };
 		const auto* const opening_sheet = resources.sprite_sheet(opening->sprite_sheet);
 		const auto* const palette_sheet = resources.sprite_sheet(opening->palette_sheet);
-		const mattmath::RectangleF screen(0, 0, 1280, 720);
+		const labrador::RectangleF screen(0, 0, 1280, 720);
 		require(original.sticky_notes.size() > 2 && original.sticky_notes[0] == labrador::Colour(255, 242, 122) &&
 			original.sticky_notes[2] == labrador::Colour(174, 235, 255),
 			"The scribble fixture retains the two actual authored yellow/blue paper entries without editing the colour arrays");
@@ -251,7 +251,7 @@
 		};
 		const auto rectangles = [&]
 		{
-			std::vector<mattmath::RectangleF> values{ opening->glass, opening->monitor_art.vent_area,
+			std::vector<labrador::RectangleF> values{ opening->glass, opening->monitor_art.vent_area,
 				opening->monitor_art.power_button, opening->monitor_art.power_indicator, screen };
 			for (const Monitor* monitor : monitors)
 			{
@@ -294,7 +294,7 @@
 			require(persona_values(monitors[context]->persona()) == persona_values(personas[context]) &&
 				!personas[context].child && !personas[context].mug && personas[context].shade == 0 &&
 				personas[context].sticky_notes.size() == 1 && personas[context].stickers.empty() && personas[context].crack.empty() &&
-				personas[context].sticky_notes[0].at == mattmath::Vector2F(0.015f, 0.47f) &&
+				personas[context].sticky_notes[0].at == labrador::Vector2F(0.015f, 0.47f) &&
 				personas[context].sticky_notes[0].colour == (context == 0 ? 0u : 2u) &&
 				personas[context].sticky_notes[0].tilt == (context == 0 ? 0.0f : 0.1f),
 				"Both retained CPU Monitors copy the exact paired note position/index/tilt contexts, without persona rolling");

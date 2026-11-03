@@ -108,11 +108,11 @@ namespace menu_text_acceptance
         require(measured.x == std::max(first_line.x, second_line.x) &&
             measured.y > std::max(first_line.y, second_line.y),
             "The authored wordmark no longer measures as two complete unscaled lines");
-        const mattmath::Vector2F position((1920.0f - measured.x) / 2.0f, defaults.main_menu().title_y);
+        const labrador::Vector2F position((1920.0f - measured.x) / 2.0f, defaults.main_menu().title_y);
         UiText wordmark("wordmark", defaults.menu_text().title.wordmark, defaults.main_menu().title_font,
             position, &world.render, defaults.main_menu().art.ink);
         require(wordmark.text() == L"COLOUR\nWARS" &&
-            wordmark.bounds() == mattmath::RectangleF(position, measured),
+            wordmark.bounds() == labrador::RectangleF(position, measured),
             "Actual UiText changed the wordmark's authored lines, centering or unscaled font bounds");
         wordmark.set_hidden(true);
         DrawList no_device;

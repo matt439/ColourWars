@@ -60,7 +60,7 @@ public:
             hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
             hud_track_same_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ &&
-            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::ZERO &&
+            pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
             "Closing material edit changed unselected HUD, identity, geometry, palette, captured sheet/frame or viewport");
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
@@ -188,7 +188,7 @@ private:
     {
         list.set_filter(TextureFilter::point); list.draw_sprite(sheet_->texture(), pixel_.source_rectangle(),
             RectangleF(static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height)),
-            colour, 0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f);
     }
     Frame render(const std::function<void(DrawList&)>& draw)
     {
@@ -196,7 +196,7 @@ private:
         const std::array<ClosingMaterialTuple, 2> held{ closing_materials(look_), closing_materials(expected_) };
         std::srand(525417); const int next = std::rand(); std::srand(525417);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
-        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->player_viewport(0)); list.set_camera(Camera::DEFAULT_CAMERA);
+        DrawList list = renderer.view(0); list.set_viewport(app_.viewport_manager()->player_viewport(0)); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point); canvas_.draw(list, { 0, 0, 1920, 1080 }); draw(list);
         rectangle(list, { 20, 20, 4, 4 }, Colour::white); rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame frame = read(renderer); ++readbacks_;

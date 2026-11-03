@@ -16,7 +16,6 @@
 // identity, feedback, figure, respawn, opening and the debug overlay.
 
 using namespace labrador;
-using namespace mattmath;
 using namespace content_value;
 using namespace presentation_read;
 

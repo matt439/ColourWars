@@ -23,7 +23,7 @@ public:
     struct Effect
     {
         MovementFeedbackKind kind = MovementFeedbackKind::takeoff;
-        mattmath::Vector2F position;
+        labrador::Vector2F position;
         float age = 0.0f;
         float strength = 1.0f;
         float direction = 1.0f;
@@ -34,15 +34,15 @@ public:
         labrador::RenderResources* render_resources);
 
     void update(float dt);
-    void takeoff(const mattmath::Vector2F& position);
-    void land(const mattmath::Vector2F& position, float speed);
+    void takeoff(const labrador::Vector2F& position);
+    void land(const labrador::Vector2F& position, float speed);
     // Resolved travel supplies direction; paint is the contacted surface's
     // current tint, which may belong to either team. No tile is ever changed.
-    void contact(MovementFeedbackKind kind, const mattmath::Vector2F& position,
+    void contact(MovementFeedbackKind kind, const labrador::Vector2F& position,
         float direction, std::optional<labrador::Colour> paint_colour);
     void clear();
     void draw(labrador::DrawList& draw_list) const;
-    mattmath::RectangleF bounds(const mattmath::RectangleF& player_bounds) const;
+    labrador::RectangleF bounds(const labrador::RectangleF& player_bounds) const;
     std::span<const Effect> effects() const;
 
 private:
@@ -52,12 +52,12 @@ private:
     const MovementFeedbackPresentation* presentation_;
 
     const MovementBurstPresentation& style(MovementFeedbackKind kind) const;
-    void emit(MovementFeedbackKind kind, const mattmath::Vector2F& position,
+    void emit(MovementFeedbackKind kind, const labrador::Vector2F& position,
         float strength, float direction = 1.0f,
         std::optional<labrador::Colour> paint_colour = std::nullopt);
     void draw_contact(labrador::DrawList& draw_list, const Effect& effect) const;
     void draw_burst(labrador::DrawList& draw_list, const Effect& effect) const;
     void draw_puff(labrador::DrawList& draw_list,
-        const std::array<mattmath::RectangleF, 8>& lobes,
-        const std::array<mattmath::RectangleF, 2>& highlights, float fade) const;
+        const std::array<labrador::RectangleF, 8>& lobes,
+        const std::array<labrador::RectangleF, 2>& highlights, float fade) const;
 };

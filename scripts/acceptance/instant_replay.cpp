@@ -15,7 +15,6 @@
 namespace
 {
     using namespace labrador;
-    using namespace mattmath;
     using paint_surfaces_acceptance::require;
 
     class World

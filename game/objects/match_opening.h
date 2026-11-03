@@ -85,7 +85,7 @@ public:
 
 	// What of the world the picture shows, and where its two halves meet.
 	// Once, before the first frame.
-	void set_picture(const mattmath::RectangleF& bounds, float middle);
+	void set_picture(const labrador::RectangleF& bounds, float middle);
 
 	// The opening is on screen, or its countdown in the picture is.
 	static bool intro_showing(const OpeningClock& clock);
@@ -148,9 +148,9 @@ private:
 	float push_ratio(const OpeningClock& clock) const;
 	// How far the view is through the glass: 0 at the monitor, 1 in the panes.
 	float glass_push(const OpeningClock& clock) const;
-	mattmath::RectangleF intro_screen(const OpeningClock& clock) const;
+	labrador::RectangleF intro_screen(const OpeningClock& clock) const;
 	void colour_players(const std::vector<Player*>& players, bool team_a, bool team_b);
-	void draw_reveal(labrador::DrawList& front, const mattmath::RectangleF& screen,
+	void draw_reveal(labrador::DrawList& front, const labrador::RectangleF& screen,
 		const OpeningClock& clock) const;
 	void draw_acting(labrador::DrawList& list, const std::vector<Player*>& players) const;
 
@@ -182,7 +182,7 @@ private:
 	// By roster participant: what each figure is doing, and for how long.
 	std::vector<FigureAct> acts_;
 	float act_time_ = 0.0f;
-	mattmath::RectangleF picture_bounds_;
+	labrador::RectangleF picture_bounds_;
 	float picture_middle_ = 0.0f;
 
 	float reveal_time_ = 0.0f;
