@@ -7,8 +7,9 @@ its font size, position and ceiling-based `m:ss` value. Ordinary clock drawing
 is unchanged. The response follows `ceil(remaining) - remaining`, so it shares
 the existing last-ten audio boundary without adding sounds or state. A long
 tick shows only the current second; pause and nonpositive updates cannot age it.
-Short matches retain the ordinary clock during the initial countdown and begin
-the closing treatment when GO releases play.
+The clock is hidden while the start countdown shows the stage title, whose card
+would otherwise cover it, and appears at GO; short matches begin the closing
+treatment then.
 
 After the person's reveal click, the existing `A x.x%` and `B x.x%` values
 appear on two matching paper cards. Ink outlines keep the actual team colours
