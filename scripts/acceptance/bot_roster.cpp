@@ -118,6 +118,39 @@ namespace
             !settings.claim_input_slot(input_slots::count) && !settings.release_input_slot(-1) &&
             !settings.release_input_slot(input_slots::keyboard_and_mouse),
             "Bots must not relax unique-device, valid-slot or host-retention rules");
+        {
+            // Joining stops at the chosen count: once every human gap is
+            // claimed, a fresh device is refused and the setup is untouched.
+            const MatchSetup full = settings;
+            require(settings.player_index_for_slot(0) == -1 && settings.player_index_for_slot(2) == -1,
+                "The full-count fixture must leave slots 0 and 2 fresh");
+            require(!settings.claim_input_slot(0) && !settings.claim_input_slot(2) &&
+                settings.player_index_for_slot(0) == -1 && settings.player_index_for_slot(2) == -1,
+                "A fresh device claimed a seat after the chosen count was full");
+            same_settings(full, settings);
+
+            MatchSetup pair;
+            pair.set_player_count(2);
+            pair.begin_input_claims(input_slots::keyboard_and_mouse);
+            require(pair.claim_input_slot(0) && pair.player_index_for_slot(0) == 1 &&
+                pair.input_roster_complete(),
+                "A fresh device below the chosen count must claim the open human seat");
+            const MatchSetup pair_full = pair;
+            require(!pair.claim_input_slot(1) && pair.player_index_for_slot(1) == -1 &&
+                pair.player_count() == 2,
+                "A fresh device joined a full two-seat roster or grew its count");
+            same_settings(pair_full, pair);
+
+            MatchSetup with_bot;
+            with_bot.set_player_count(2);
+            with_bot.begin_input_claims(input_slots::keyboard_and_mouse);
+            with_bot.set_player_bot(1, BotDifficulty::normal);
+            const MatchSetup bot_full = with_bot;
+            require(!with_bot.claim_input_slot(0) && with_bot.player_index_for_slot(0) == -1 &&
+                with_bot.player_settings()[1].controller == PlayerController::bot,
+                "A fresh device took a bot's seat once the human seats were full");
+            same_settings(bot_full, with_bot);
+        }
 
         const MatchSetup before_noop = settings;
         settings.set_player_human(2);
