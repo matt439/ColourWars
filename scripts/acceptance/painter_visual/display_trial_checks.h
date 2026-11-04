@@ -120,7 +120,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuOptions>(&context)); tick(); tick();
         // Restore supplies independently known 1920/windowed/Random choices.
-        for (int move = saved_fullscreen ? 1 : 0; move < 4; ++move) { tap(GamepadButton::dpad_down); }
+        for (int move = saved_fullscreen ? 1 : 0; move < 5; ++move) { tap(GamepadButton::dpad_down); }
         tap(GamepadButton::a); tap(GamepadButton::dpad_down); tick(settled); old(true);
     };
     const auto begin = [&](bool direct = false)

@@ -264,11 +264,32 @@ try {
         ForEach-Object { $_.Name })
     $slowNames = [string[]]@($declared | Where-Object { $_.ContainsKey('SlowInDebug') -and $_.SlowInDebug } |
         ForEach-Object { $_.Name })
-    Require ($optInNames.Count -gt 0 -and $slowNames.Count -gt 0) 'The case declarations lost the opt-in group or the slow Debug cases.'
+    $quickNames = [string[]]@($declared | Where-Object { $_.ContainsKey('Quick') -and $_.Quick } |
+        ForEach-Object { $_.Name })
+    $trialNames = [string[]]@($declared | Where-Object { $_.ContainsKey('NeedsTrial') -and $_.NeedsTrial } |
+        ForEach-Object { $_.Name })
+    $runnableNames = [string[]]@($optInNames | Where-Object { $_ -cnotin $trialNames })
+    $ownLegNames = [string[]]@($declared | Where-Object { $_.ContainsKey('OwnLeg') -and $_.OwnLeg } |
+        ForEach-Object { $_.Name })
+    Require ($ownLegNames.Count -gt 0) 'The case declarations lost the cases with their own CI leg.'
+    Require ($optInNames.Count -gt 0 -and $slowNames.Count -gt 0 -and $quickNames.Count -gt 0 -and $trialNames.Count -gt 0) 'The case declarations lost the opt-in group, the slow Debug cases, the quick cases or the trial cases.'
+    foreach ($name in @($quickNames) + @($trialNames)) {
+        Require ($name -cin $optInNames) "$name is Quick or NeedsTrial outside the opt-in group."
+    }
     $result.opt_in_cases = $optInNames.Count
     $result.slow_debug_cases = $slowNames
-    Check-Selection 'opt-in-debug' @{ Preset = 'x64-debug'; OptIn = $true } $missingCmake $optInNames -CheckNames
-    Check-Selection 'opt-in-release' @{ Preset = 'x64-release'; OptIn = $true } $missingCmake $optInNames -CheckNames
+    Check-Selection 'opt-in-debug' @{ Preset = 'x64-debug'; OptIn = $true } $missingCmake $runnableNames -CheckNames
+    Check-Selection 'opt-in-release' @{ Preset = 'x64-release'; OptIn = $true } $missingCmake $runnableNames -CheckNames
+    Check-Selection 'opt-in-compile-only' @{ Preset = 'x64-release'; OptIn = $true; CompileOnly = $true } $missingCmake $optInNames -CheckNames
+    Check-Selection 'own-leg-only' @{ Preset = 'x64-debug'; OwnLegOnly = $true } $missingCmake $ownLegNames -CheckNames
+    Check-Selection 'skip-own-leg' @{ Preset = 'x64-debug'; SkipOwnLeg = $true } $missingCmake `
+        ([string[]]@($observations['default-debug'].selected | Where-Object { $_ -cnotin $ownLegNames })) -CheckNames
+    Check-Selection 'own-leg-both' @{ OwnLegOnly = $true; SkipOwnLeg = $true } 'Choose -OwnLegOnly or -SkipOwnLeg, not both.'
+    Check-Selection 'quick-opt-in' @{ Preset = 'x64-release'; QuickOptIn = $true } $missingCmake $quickNames -CheckNames
+    Check-Selection 'quick-opt-in-with-opt-in' @{ QuickOptIn = $true; OptIn = $true } 'Choose -QuickOptIn alone, not with -Cases or -OptIn.'
+    Check-Selection 'quick-opt-in-with-cases' @{ QuickOptIn = $true; Cases = [string[]]@('ammo') } 'Choose -QuickOptIn alone, not with -Cases or -OptIn.'
+    Check-Selection 'trial-case-run' @{ Cases = [string[]]@($trialNames[0]) } "$($trialNames[0]) needs a private trial file, so the runner can only compile it."
+    Check-Selection 'trial-case-compile' @{ Cases = [string[]]@($trialNames[0]); CompileOnly = $true } $missingCmake @($trialNames[0]) -CheckNames
     Check-Selection 'skip-slow-debug' @{ Preset = 'x64-debug'; SkipSlowDebug = $true } $missingCmake `
         ([string[]]@($observations['default-debug'].selected | Where-Object { $_ -cnotin $slowNames })) -CheckNames
     Check-Selection 'skip-slow-release' @{ Preset = 'x64-release'; SkipSlowDebug = $true } 'SkipSlowDebug applies only to x64-debug.'

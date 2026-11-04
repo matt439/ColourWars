@@ -4356,8 +4356,7 @@ unchanged.
 
 ## Presentation rate (`GAP#L9`)
 
-**Vsync setting built 2026-11-04; waiting on the engine change and a check on
-real hardware.** The author asked for a vsync option on 2026-11-04 and chose to
+**Vsync setting built 2026-11-04; waiting on a check on real hardware.** The author asked for a vsync option on 2026-11-04 and chose to
 add the switch in Labrador rather than file a report first, as report 28 was
 answered. See [Vsync setting](#vsync-setting-gapl9) below. The rest of this
 section is the earlier inspection that led there.
@@ -4376,12 +4375,10 @@ rates before implementation; this row does not supply a ready engine change.
 ### Vsync setting (`GAP#L9`)
 
 **Engine.** Labrador's `Renderer::set_vsync(bool)` and
-`ApplicationOptions::vsync` (labrador#106, branch
-`claude/present-interval-option`) present with a sync interval of 0 on both
+`ApplicationOptions::vsync` (labrador#106, merged 2026-11-04) present with a sync interval of 0 on both
 Direct3D backends when vsync is off, and with no tearing flag, so a windowed
-game is still composed rather than torn. The pin is on that branch's commit
-until the pull request merges; then it moves to the merge on master, and to
-the next tag that carries it.
+game is still composed rather than torn. The pin is that merge on master, and
+moves to the next tag that carries it.
 
 **Game.** Options gains a `Vsync` On/Off row after Fullscreen
 (`menu_text.items.vsync`, the forty-sixth item). It is saved with the other
@@ -4400,8 +4397,9 @@ smoother on a high-refresh display. Interpolation would be its own row.
 
 **Still owed.** The author's check on MattPC: Off on the 59.951 Hz display,
 both windowed and fullscreen, against an `overlay.perf` capture (draws/s
-well above 60 and no tearing in a window), and the Options page at 1-4P
-through `check-painter.ps1`, whose Options crops assume seven rows.
+well above 60 and no tearing in a window). The painter's Options fixtures now
+describe the eight rows, and they and their leaves passed on MattPC in both
+presets on 2026-11-04.
 
 ### Presentation-rate inspection slice (`GAP#L9`)
 

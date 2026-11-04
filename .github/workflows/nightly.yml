@@ -1,0 +1,146 @@
+# What is too long or too exact for every pull request: the painter, paint
+# effects and the long opt-in cases, on master's tip each night. Not a required
+# check. A failure opens or updates one issue, so nobody has to look for it.
+#
+# This also keeps the vcpkg cache warm: caches are scoped per ref, master's
+# pushes no longer build, and a pull request can only inherit from master.
+
+name: nightly
+
+on:
+  schedule:
+    - cron: '17 16 * * *'
+  workflow_dispatch:
+  # Changing the sweep tries it on the pull request that changes it.
+  pull_request:
+    paths:
+      - .github/workflows/nightly.yml
+      - scripts/check-painter-sweep.ps1
+      - scripts/check-painter/hosted-known-failures.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: nightly (${{ matrix.leg }})
+    runs-on: windows-latest
+    timeout-minutes: 180
+    # The runner has no audio endpoint; the painter skips only its music flow.
+    env:
+      COLOURWARS_NO_AUDIO_ENDPOINT: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { leg: opt-in, preset: x64-release, opt_in: true }
+          - { leg: paint-fx-debug, preset: x64-debug, paint_fx: true }
+          - { leg: paint-fx-release, preset: x64-release, paint_fx: true }
+          - { leg: painter-plain, preset: x64-release, painter_plain: true }
+          - { leg: painter-0, preset: x64-release, sweep: true, shard: 0 }
+          - { leg: painter-1, preset: x64-release, sweep: true, shard: 1 }
+          - { leg: painter-2, preset: x64-release, sweep: true, shard: 2 }
+          - { leg: painter-3, preset: x64-release, sweep: true, shard: 3 }
+          - { leg: painter-debug-only, preset: x64-debug, sweep_debug_only: true }
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Point at the runner's vcpkg
+        id: vcpkg
+        shell: pwsh
+        run: |
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          echo "image=$env:ImageOS-$env:ImageVersion" >> $env:GITHUB_OUTPUT
+
+      # The same key as ci.yml: this is the save its pull requests restore.
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v6
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: vcpkg-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ steps.vcpkg.outputs.image }}-
+
+      - name: Set up MSVC
+        shell: pwsh
+        run: ./scripts/ci/export-msvc-environment.ps1
+
+      - name: Configure
+        run: |
+          cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: |
+          cmake --build --preset ${{ matrix.preset }}
+
+      - name: Opt-in cases
+        if: matrix.opt_in
+        run: |
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 -OptIn -OutputDirectory out/validation/opt-in
+
+      - name: Paint effects
+        if: matrix.paint_fx
+        run: |
+          pwsh -NoProfile -File scripts/check-paint-fx.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/paint-fx
+
+      - name: Painter plain matrix
+        if: matrix.painter_plain
+        run: |
+          pwsh -NoProfile -File scripts/check-painter.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/painter-plain
+
+      - name: Painter leaves
+        if: matrix.sweep
+        run: |
+          pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -Preset ${{ matrix.preset }} -Shards 4 -Shard ${{ matrix.shard }} -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
+
+      - name: Painter Debug-only leaves
+        if: matrix.sweep_debug_only
+        run: |
+          pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -Preset ${{ matrix.preset }} -DebugOnlyLeaves -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
+
+      # Results and logs; the captures stay on the runner.
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-${{ matrix.leg }}
+          path: |
+            out/validation/**/*.json
+            out/validation/**/*.log
+            out/validation/**/*.csv
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Only the schedule: a manual or pull request trial reports where it ran.
+  # By result, not failure(): a job its timeout stops concludes cancelled.
+  report:
+    needs: windows
+    if: always() && github.event_name == 'schedule' && needs.windows.result != 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the nightly issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title='Nightly sweep failed'
+          issue=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "Failed again: $RUN"
+          else
+            gh issue create --title "$title" --body "Failed on master's tip: $RUN. Close this once a night passes."
+          fi

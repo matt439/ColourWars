@@ -6,10 +6,11 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Five are live (26-28, 30 and 33).** On the author's 2026-11-03 decision,
+> **Six are live (26-28, 30, 33 and 34).** On the author's 2026-11-03 decision,
 > 27, 30 and 33 are to be filed, with 26 riding on 27; none is posted yet. 28
 > was to be fixed in the engine before `v0.3.0`, but the tag shipped without
-> the fix, so it is back with the author.
+> the fix, so it is back with the author. 34 is new and waits for the same
+> decision.
 > **Twenty-eight are closed** (1–25, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -583,10 +584,10 @@ Ledger table row, refreshed:
 ## 30. A device-unavailable startup failure can be classified only by its message text - **draft with string-match exhibit**
 
 **Author's decision 2026-11-03: file now as an Engine request.** The exhibit
-spans five places in two languages, and CI and the failure record both depend
-on it. The filing states the cost more exactly than the draft below: a reworded
-D3D11 message fails Release CI loudly on a host with no adapter, so the bump
-catches it; what fails quietly is `last-error.log` on players' machines, which
+spans four places in two languages, and the failure record and the sandbox
+receipt depend on it; CI stopped doing so on 2026-11-04, when it dropped the
+missing-adapter skip. The filing states the cost more exactly than the draft
+below: what fails quietly is `last-error.log` on players' machines, which
 stops recording `no_hardware_device`, and a change of backend does the same.
 The ask is narrow, matches the engine's own T6 "refuse loudly with a named
 reason" (`STORIES.md:1707`, `:1713`), and helps adopters whom the release guide
@@ -632,17 +633,14 @@ failure apart from the rest, in two places:
   `what()` with `std::strcmp` against `"No Direct3D hardware device found"`. On
   a match it records `cause_0_reason=no_hardware_device` in `last-error.log`.
   `scripts/acceptance/fatal_report.cpp:108-112` pins that match.
-- [`check-startup.ps1`](../../scripts/check-startup.ps1) at `:225` and `:248`
-  lets a Release run skip on a CI host with no adapter only if stderr is exactly
-  `startup failure: No Direct3D hardware device found`.
-  `scripts/sandbox/logon.ps1` holds the same literal at `:192` and compares
-  against it at `:208` and `:238`. The literal is also in
+- `scripts/sandbox/logon.ps1` holds the same literal at `:193` and compares
+  against it at `:218` and `:248`. The literal is also in
   [docs/failure-reporting.md](../failure-reporting.md) (`:34-38`).
 
 **What happens.** The classification depends on English prose that the engine
 is free to reword, and nothing tells the client when it does. If the wording
-changes, the reason quietly disappears from the failure record and the
-missing-adapter skip becomes a CI failure. Switching backend has the same
+changes, the reason quietly disappears from the failure record. Switching
+backend has the same
 effect. A `d3d12` build refuses with `No Direct3D 12 hardware device found`,
 and a Vulkan build refuses with one of two other messages, so none of them is
 recognised. Release has no WARP fallback by design (T6), so this refusal is the
@@ -658,12 +656,48 @@ engine decisions.
 
 **What an answer lets this repository delete.** The `strcmp` at
 `game/fatal_report.cpp:117` goes, and a type or code test replaces it. The
-exact-text checks at `scripts/check-startup.ps1:225` and `:248` and
-`scripts/sandbox/logon.ps1:208` and `:238` also go. In their place the scripts
-would read the `cause_0_reason` that `last-error.log` already records, which
-neither script checks today. The acceptance check would test the reason instead
+exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248` also go. In
+their place the script would read the `cause_0_reason` that `last-error.log`
+already records, which it does not check today. (`check-startup.ps1` held the
+same match until CI stopped allowing the skip it served.) The acceptance check
+would test the reason instead
 of the literal. Filing is authorized (2026-11-03); the public issue is drafted
 from this text with a synthetic repro.
+
+---
+
+## 34. `RenderDeviceKind::hardware` describes a software rasteriser - **draft with hosted-runner exhibit**
+
+**Exhibit.** A GitHub `windows-latest` runner has no GPU. Every retained run
+of `check-movement-feedback.ps1` there logs
+`DEVICE ... kind=hardware ... name=Microsoft Basic Render Driver vendor=5140 device=140`:
+the D3D11 backend sets the kind from `DXGI_ADAPTER_FLAG_SOFTWARE` alone
+(`external/labrador/engine/render/d3d11/renderer.cpp:53-54`), and that adapter
+does not set the flag. Vendor 5140 is 0x1414, Microsoft. Release's refusal of
+software adapters skips only flagged ones
+(`engine/render/d3d11/device_resources.cpp:480-484`), so Release starts there.
+
+**What happens.** `device_info()` tells a client it has hardware when it has a
+CPU rasteriser. A game that picks quality from the kind picks wrongly, and any
+receipt that records the kind says `hardware` for a machine with no GPU.
+
+**The catch for this client.** Our coverage relies on the label. Release
+startup and Release movement feedback pass on the runner only because of it,
+so a fix that reclassifies this adapter stops every pull request at the pin
+bump, loudly, because CI no longer allows a skip. The strict gates at
+`scripts/acceptance/painter_visual.cpp:452` and
+`scripts/acceptance/paint_fx_visual.cpp:621` would fail the nightly the same
+way. `scripts/acceptance/frame_pacing.cpp:206` has the gate too, but is only
+compiled on hosted runners. This repository has to decide what those gates
+accept before such a fix lands.
+
+**The ask.** Report the Basic Render Driver as software (or add a kind that says
+what it is), and say in `SEAM.md` what the kind promises. Whether Release should
+still start on it is the engine's call under T6.
+
+**What an answer lets this repository delete.** Nothing yet: it replaces an
+accident with a stated policy. The comment at the movement check in `ci.yml` and
+the `AGENTS.md` note go.
 
 ---
 

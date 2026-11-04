@@ -93,9 +93,10 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     };
     const auto stage = [&](int page)
     {
-        tap(Key::down);
-        if (page == 0 || page == 1) { tap(Key::down); }
-        if (page == 1) { tap(Key::down); tap(Key::down); }
+        // Options stages Team palette (row 3), Controls Music (row 4), Pad
+        // sticks its first deadzone (row 1).
+        const int staged_row = page == 0 ? 3 : page == 1 ? 4 : 1;
+        for (int row = 0; row < staged_row; ++row) { tap(Key::down); }
         tap(Key::right);
         const int remaining = page == 0 ? 3 : page == 1 ? 5 : 6;
         for (int row = 0; row < remaining; ++row) { tap(Key::down); }

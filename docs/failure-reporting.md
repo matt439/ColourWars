@@ -34,8 +34,8 @@ Single-cause startup stderr keeps its existing spelling:
 startup failure: No Direct3D hardware device found
 ```
 
-The exact missing-adapter line still supports the narrowly scoped Release skip
-in `check-startup.ps1`. Runtime errors use `runtime failure:`. Metadata-write
+The sandbox trial's receipt reads this exact missing-adapter line
+(`scripts/sandbox/logon.ps1`). Runtime errors use `runtime failure:`. Metadata-write
 status appears in the dialog, without adding another stderr line.
 
 ## Persisted metadata and privacy

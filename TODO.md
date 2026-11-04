@@ -86,8 +86,7 @@ comparison and physical-pad check; values remain provisional.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
-- **Vsync:** merge labrador#106, then try Off on MattPC with a perf capture and look at the
-  eight-row Options page (`GAP#L9`).
+- **Vsync:** try Off on MattPC with a perf capture and look for tearing windowed (`GAP#L9`).
 - **User stages:** play a stage made with Save to My Stages, and decide whether user stages
   may opt into Random, whether the briefing hint is enough of a marker, and the
   provisional scan-details wording (`ROAD#16`).
@@ -106,7 +105,7 @@ comparison and physical-pad check; values remain provisional.
   (`GAP#5.1`).
 - **Report posting:** filing is authorized (2026-11-03) and the `ENG#27` (with `ENG#26`
   as rider), `ENG#30` and `ENG#33` issues are to be posted from the author's account; the
-  `ENG#28` `CHANGES.md` amendment did not ship in `v0.3.0`, so it is the author's call again.
+  `ENG#28` `CHANGES.md` amendment did not ship in `v0.3.0`, so it is the author's call again. `ENG#34` (the runner's rasteriser reported as hardware) is new and needs the same call.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -193,7 +192,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
-| `GAP#L9` | DECISION | LOW | S | Vsync row, save key and engine `set_vsync` built 2026-11-04. Owed: labrador#106 merged and the pin moved off its branch, then the author's MattPC check of Off (perf capture, no tearing windowed) and the eight-row Options painter crops. [Setting](docs/feature-roadmap.md#vsync-setting-gapl9) |
+| `GAP#L9` | DECISION | LOW | S | Vsync row, save key and engine `set_vsync` built 2026-11-04. Owed: the author's MattPC check of Off (perf capture, no tearing windowed). [Setting](docs/feature-roadmap.md#vsync-setting-gapl9) |
 | `GAP#L11` | DECISION | LOW | M | Locale overlays, fallback, font substitution and the `qps-ploc` test locale are in; choose the first languages. Then: accented atlases, stage names and controls reminder into data, an Options row and save field. [Contract](docs/localisation.md). |
 
 ## Comparable-game gaps
@@ -247,6 +246,7 @@ Labrador's established issue route. These rows do not represent fixes already re
 | `ENG#25` | OPEN | LOW | M | Spend `Gamepads::vibrate` (pinned `v0.3.0`): keep the `make_rumble_sink` seam, move its body off `XInputSetState`, give `RumbleSink` a deadline that `Rumble::publish` renews as it grows, requalify `rumble`/`rumble_adapter`. Feel stays `ROAD#3`. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962) |
 | `ENG#31` | OPEN | LOW | S | Spend `JsonValue::keys()` (pinned `v0.3.0`): refuse unknown keys in every fixed `tuning.json` object, `_` comments allowed, with `gameplay_tuning` refusals; decide duplicates, per-weapon lists and `presentation.json`. [Report](docs/review/engine-reports.md#31-jsonvalue-cannot-report-keys-nobody-read-so-a-misspelled-optional-key-is-silent--e166dcc) |
 | `ENG#27`, `ENG#30`, `ENG#33` | DECISION | LOW | S | Filing authorized 2026-11-03; Engine-request drafts are ready (headless pad backend with the `ENG#26` rider, typed startup failure, a contact's `const` other party). Left: recheck master and post from the author's account. A decline of 33 keeps `HYG#49`'s cast. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
+| `ENG#34` | DECISION | LOW | S | The engine reports the runner's software rasteriser as hardware, and CI's strict gates rely on it. File it, and settle what those gates accept before any fix lands. [Report](docs/review/engine-reports.md#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit). |
 | `ENG#28` | DECISION | LOW | S | `v0.3.0` shipped `730dd99`/`fdfc24e` without the three-place count. Choose: amend later, close as declined (`game/carried/` the migration), or file a Bug. [Report](docs/review/engine-reports.md#28-public-types-and-members-removed-with-an-engine-only-caller-count---draft-with-carried-copy-exhibit) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
@@ -268,6 +268,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
+| `CI#7` | OPEN | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow needs an audio endpoint and is skipped there. After a week of nightlies, promote what is stable and short to `ci.yml`. [Workflow](.github/workflows/nightly.yml). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows

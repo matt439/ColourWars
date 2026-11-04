@@ -316,9 +316,10 @@ For paired GPU captures of the takeoff/landing prototype, run
 `./scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild`.
 It uses a hidden D3D11 hardware window, scripted jumps and isolated profile;
 see [feedback evidence and limitations](docs/polish-feedback.md).
-CI runs the same correctness matrix in Debug with `-AllowSoftwareAdapter`,
-which also accepts the engine's WARP fallback on runners without a GPU. That
-switch is Debug-only; the default probe still requires hardware. Evidence names
+CI runs the same correctness matrix in both presets on the runner's Basic
+Render Driver, a software rasteriser the engine reports as hardware. A Debug run
+with `-AllowSoftwareAdapter` also accepts the engine's WARP fallback; CI no longer
+uses it. Evidence names
 the actual adapter, and CI uploads JSON/CSV results and logs rather than the
 large raw captures. This does not qualify hardware, movement feel or performance.
 The foreground-dependent `check-debug-console.ps1` remains a local check.
@@ -331,10 +332,9 @@ Check runtime startup separately, preferably against the extracted Release ZIP:
 
 It checks the executable's version stamp, starts it hidden from an unrelated
 directory with an isolated save, checks the game window, its per-monitor v2 DPI awareness and diagnostics, then
-closes gracefully. CI requires Debug startup
-(the engine supports software rendering there). Release startup may be explicitly
-skipped only for the engine's exact missing-hardware-adapter error; all application
-failures fail CI. Local checks default to requiring startup. These automated
+closes gracefully. CI requires startup in both presets; Release starts on the
+runner's Basic Render Driver, and a missing adapter or any application failure
+fails CI. These automated
 checks do not establish controller feel, audible balance or multiplayer quality;
 the hardware acceptance checklist is in [the roadmap](docs/feature-roadmap.md).
 

@@ -281,7 +281,6 @@ include(cmake/release_assets.cmake)
 
     $startupOutput = Join-Path $run 'startup'
     $startupArgs = @{ Executable = Join-Path $staged 'ColourWars.exe'; OutputDirectory = $startupOutput; RequireAudio = $true }
-    if ($Preset -eq 'x64-release') { $startupArgs.AllowNoHardwareAdapter = $true }
     $previousQuietGame = Enter-QuietGame
     try {
         & (Join-Path $PSScriptRoot 'check-startup.ps1') @startupArgs |
@@ -291,8 +290,7 @@ include(cmake/release_assets.cmake)
     $receipts = @(Get-ChildItem -LiteralPath $startupOutput -Filter result.json -Recurse -File)
     Assert-Check ($receipts.Count -eq 1) 'Expected exactly one fresh startup result receipt.'
     $startup = Get-Content -LiteralPath $receipts[0].FullName -Raw | ConvertFrom-Json
-    Assert-Check ($startup.outcome -eq 'passed' -or
-        ($Preset -eq 'x64-release' -and $startup.outcome -eq 'skipped-no-hardware-adapter')) 'Fresh registered game startup did not pass its required content checks.'
+    Assert-Check ($startup.outcome -eq 'passed') 'Fresh registered game startup did not pass its required content checks.'
     $result.startup = [ordered]@{ receipt = $receipts[0].FullName; sha256 = Get-Hash $receipts[0].FullName; outcome = $startup.outcome }
     Assert-Inventory $after (Get-Inventory $scratch)
     $result.outcome = 'passed'

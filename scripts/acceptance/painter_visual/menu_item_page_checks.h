@@ -6,13 +6,14 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     constexpr std::array<const wchar_t*, 10> legacy{ L"Play", L"Options", L"Credits", L"Exit",
         L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Apply", L"Back" };
     static_assert(legacy.size() == static_cast<size_t>(MenuItem::single_match));
-    constexpr std::array<MenuItem, 7> options_items{ MenuItem::resolution, MenuItem::fullscreen,
+    constexpr std::array<MenuItem, 8> options_items{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync,
         MenuItem::team_palette, MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
     using ItemLabels = std::array<std::wstring, static_cast<size_t>(MenuItem::count)>;
     const Presentation original = presentation;
     ItemLabels defaults = original.menu_text().items;
     for (size_t index = 0; index < legacy.size(); ++index) { defaults[index] = legacy[index]; }
     defaults[static_cast<size_t>(MenuItem::restore_defaults)] = L"Restore defaults";
+    defaults[static_cast<size_t>(MenuItem::vsync)] = L"Vsync";
     Save preferences; SettingsSession preferences_session(preferences);
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;
@@ -80,10 +81,10 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
                 page == 1 ? look.options_position + Vector2F(0.0f, look.options_spacing.y * static_cast<float>(row)) :
                 look.credits_back_position;
             const bool focused = row == (page == 0 ? focused_home_row : 0);
-            UiText expected("reference-item", labels[item], style.item_font, position, app.render_resources(),
+            UiText expected("reference-item", labels[item], page == 1 ? look.options_font : style.item_font, position, app.render_resources(),
                 focused ? art.focus_ink : art.ink);
             float scale = 1.0f;
-            if (page == 1 && row < 3)
+            if (page == 1 && row < 4)
             {
                 const RectangleF bounds = expected.bounds();
                 const float width = look.options_value_x - position.x - art.focus_padding.x;
@@ -145,7 +146,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
                 {
                     // The real compound row owns its label AND value. A long
                     // label can shrink below the unchanged value's height.
-                    UiText value("reference-resolution-value", L"1920x1080", style.item_font,
+                    UiText value("reference-resolution-value", L"1920x1080", look.options_font,
                         Vector2F(look.options_value_x, position.y), app.render_resources(), art.ink);
                     const RectangleF bounds = value.bounds();
                     const float width = panel.right() - art.shadow_offset - art.focus_padding.x -
@@ -179,7 +180,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
             }
             save(observed, output / (stem + "-detail.ppm"));
             records << name << ',' << page << ',' << item << ',' << actual.width << ',' << actual.height << ',' <<
-                scale << ',' << expected.bounds().right() << ',' << (page == 1 && row < 3 ? look.options_value_x : 0.0f) <<
+                scale << ',' << expected.bounds().right() << ',' << (page == 1 && row < 4 ? look.options_value_x : 0.0f) <<
                 ",true\n";
         }
         std::srand(6287); const int next_random = std::rand(); std::srand(6287);
@@ -212,31 +213,41 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     ItemLabels old_labels = defaults;
     for (size_t index = 0; index < old_prefix.size(); ++index) { old_labels[index] = old_prefix[index]; }
     old_labels[static_cast<size_t>(MenuItem::restore_defaults)] = L"Restore~ defaults";
+    old_labels[static_cast<size_t>(MenuItem::vsync)] = L"Hold~ every drawn frame until this studio display has finished its refresh";
     Presentation old = original;
     const_cast<MenuText&>(old.menu_text()).items = old_labels;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
+    // Home and Credits draw the item font; Options draws its own, so each needs
+    // a replacement without the old labels' glyph.
+    const auto without_tilde = [&](const std::string& font, const std::string& name)
     {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Static-item font fixture lacks a baseline printable glyph");
-        glyphs.push_back(*glyph);
-    }
+        const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(font));
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character < U'~'; ++character)
+        {
+            const Glyph* glyph = source->find(character);
+            require(glyph != nullptr, "Static-item font fixture lacks a baseline printable glyph");
+            glyphs.push_back(*glyph);
+        }
+        app.render_resources()->add_font(name,
+            std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
+        require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(name), L"~"),
+            "Static-item replacement font still contains the old labels' glyph");
+    };
     const std::string narrow_name = "acceptance_menu_items_without_tilde";
-    app.render_resources()->add_font(narrow_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(narrow_name), L"~"),
-        "Static-item replacement font still contains the old labels' glyph");
+    const std::string narrow_options_name = "acceptance_options_items_without_tilde";
+    without_tilde(original.menu().item_font, narrow_name);
+    without_tilde(original.main_menu().options_font, narrow_options_name);
     const std::array<const wchar_t*, 10> new_prefix{ L"Start", L"Settings", L"Thanks", L"Leave", L"Display size",
         L"Fill display", L"Team colours", L"Audio and controls", L"Commit", L"Return" };
     ItemLabels new_labels = defaults;
     for (size_t index = 0; index < new_prefix.size(); ++index) { new_labels[index] = new_prefix[index]; }
     new_labels[static_cast<size_t>(MenuItem::restore_defaults)] = L"Reset choices";
+    new_labels[static_cast<size_t>(MenuItem::vsync)] = L"Frame sync";
     Presentation next = original;
     const_cast<MenuText&>(next.menu_text()).items = new_labels;
     const_cast<MenuStyle&>(next.menu()).item_font = narrow_name;
+    const_cast<MainMenuPresentation&>(next.main_menu()).options_font = narrow_options_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
@@ -266,7 +277,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         }
     }
     require(records.good(), "Static menu item evidence write failed");
-    std::cout << "PASS actual Home/Options/Credits: eleven independent item roles at 720p/1080p/QHD, "
+    std::cout << "PASS actual Home/Options/Credits: twelve independent item roles at 720p/1080p/QHD, "
         "long fitted Options labels, custom item/font reopen and exact retained/reversed snapshots, focus, "
         "Credits Select return and frozen draw RNG\n";
 }

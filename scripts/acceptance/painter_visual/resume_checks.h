@@ -287,9 +287,18 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         require(ended && stack.depth() == 1, "Actual Quit did not leave the match immediately");
         std::cout << "PASS actual " << count << "P GameLevel pause/resume input, freeze, focus, restart and quit\n";
     }
-    menu_music_flow_matrix(app, data, presentation, output);
-    arena_music_flow_matrix(app, data, tuning, presentation, output);
-    results_music_flow_matrix(app, data, presentation, output);
+    // A hosted runner has no audio endpoint, so no voice ever reports playing.
+    // nightly.yml says so; anywhere else these run and must pass.
+    if (GetEnvironmentVariableW(L"COLOURWARS_NO_AUDIO_ENDPOINT", nullptr, 0) != 0)
+    {
+        std::cout << "SKIP music flow: COLOURWARS_NO_AUDIO_ENDPOINT is set\n";
+    }
+    else
+    {
+        menu_music_flow_matrix(app, data, presentation, output);
+        arena_music_flow_matrix(app, data, tuning, presentation, output);
+        results_music_flow_matrix(app, data, presentation, output);
+    }
     debug_frame_text_matrix(app, data, presentation, output);
     require(evidence.good(), "Resume evidence write failed");
 }

@@ -1,0 +1,3 @@
+# Painter leaves whose exact pins hold only on a real GPU, one -XxxOnly name per
+# line. nightly.yml's sweep runs them on the hosted software rasteriser and does
+# not fail on these. A leaf belongs here only with a reason on its line.

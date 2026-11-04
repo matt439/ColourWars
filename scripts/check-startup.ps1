@@ -8,9 +8,6 @@ param(
     [switch]$RequireNoAudio,
     [switch]$RequireAudio,
     [switch]$SystemOnlyPath,
-    # Release has no WARP fallback. Only its exact missing-adapter diagnostic
-    # can be skipped; the default remains a required hardware startup check.
-    [switch]$AllowNoHardwareAdapter,
     # ROAD#16: seed the isolated profile's stage folder with one valid user
     # stage and one broken file. Startup must go on, with exactly one
     # refusal line for the broken file and no other diagnostic.
@@ -224,7 +221,6 @@ try {
     }
 
     $timer = [Diagnostics.Stopwatch]::StartNew()
-    $missingHardware = $false
     while ($timer.Elapsed.TotalSeconds -lt $StartupSeconds) {
         $process.Refresh()
         [string]$stderr = Read-StartupError
@@ -232,11 +228,6 @@ try {
             throw 'The audible startup check unexpectedly used a silent bank.'
         }
         if ($stderr.Contains('startup failure:')) {
-            if ($AllowNoHardwareAdapter -and
-                $stderr.Trim() -ceq 'startup failure: No Direct3D hardware device found') {
-                $missingHardware = $true
-                break
-            }
             throw "The game reported a startup failure: $($stderr.Trim())"
         }
         if ($process.HasExited) {
@@ -245,80 +236,60 @@ try {
         Start-Sleep -Milliseconds 100
     }
 
-    if ($missingHardware) {
-        Assert-DpiAware
-        [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
-        if (-not $process.WaitForExit(3000)) {
-            throw 'The missing-adapter error dialog did not close normally.'
-        }
-        $process.WaitForExit()
-        if ($process.ExitCode -ne 1) {
-            throw "The missing-adapter failure exited unexpectedly (code $($process.ExitCode))."
-        }
-        [string]$stderr = Read-StartupError
-        if ($stderr.Trim() -cne 'startup failure: No Direct3D hardware device found') {
-            throw "Additional diagnostics accompanied the missing-adapter failure: $($stderr.Trim())"
-        }
-        $result.outcome = 'skipped-no-hardware-adapter'
-        $result.diagnostic = 'Release could not find a Direct3D hardware adapter; hardware startup remains unverified.'
-        Write-Warning $result.diagnostic
+    $window = [ColourWars.StartupWindow]::FindGame($process.Id)
+    if ($window -eq [IntPtr]::Zero) {
+        throw 'The process did not create ColourWarsWindowClass.'
     }
-    else {
-        $window = [ColourWars.StartupWindow]::FindGame($process.Id)
-        if ($window -eq [IntPtr]::Zero) {
-            throw 'The process did not create ColourWarsWindowClass.'
-        }
-        if (-not [ColourWars.StartupWindow]::Responds($window)) {
-            throw 'The game window did not respond after startup.'
-        }
-        Assert-DpiAware
-        if (-not [ColourWars.StartupWindow]::PerMonitorV2($window)) {
-            throw 'The game window is not per-monitor v2 DPI aware; check the dpiAwareness element in game/settings.manifest.'
-        }
-        if (-not (Test-Path -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json'))) {
-            throw 'The game did not create its save in the isolated profile.'
-        }
-        [string]$stderr = Read-StartupError
-        if ($RequireNoAudio -and $stderr -notmatch '(?m)^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
-            throw 'The expected optional-wave-bank fallback was not reported.'
-        }
-        foreach ($line in ($stderr -split '\r?\n')) {
-            if ($RequireAudio -and $line -match '^no audio: ') {
-                throw 'The audible startup check unexpectedly used a silent bank.'
-            }
-            if ($line.Trim() -ne '' -and
-                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
-                -not ($userStageRefusal -and $line -match $userStageRefusal)) {
-                throw "Unexpected startup diagnostic: $line"
-            }
-        }
-        if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
-            throw 'The broken user stage was not refused with exactly one line.'
-        }
-        [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
-        if (-not $process.WaitForExit(10000)) {
-            throw 'The game did not shut down after WM_CLOSE.'
-        }
-        $process.WaitForExit()
-        if ($process.ExitCode -ne 0) {
-            throw "The game failed during shutdown (code $($process.ExitCode))."
-        }
-        # Destruction can report errors too, after the last running-process read.
-        [string]$stderr = Read-StartupError
-        foreach ($line in ($stderr -split '\r?\n')) {
-            if ($RequireAudio -and $line -match '^no audio: ') {
-                throw 'The audible startup check unexpectedly used a silent bank.'
-            }
-            if ($line.Trim() -ne '' -and
-                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
-                -not ($userStageRefusal -and $line -match $userStageRefusal)) {
-                throw "Unexpected shutdown diagnostic: $line"
-            }
-        }
-        $result.outcome = 'passed'
-        $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save and graceful shutdown passed.'
-        Write-Output $result.diagnostic
+    if (-not [ColourWars.StartupWindow]::Responds($window)) {
+        throw 'The game window did not respond after startup.'
     }
+    Assert-DpiAware
+    if (-not [ColourWars.StartupWindow]::PerMonitorV2($window)) {
+        throw 'The game window is not per-monitor v2 DPI aware; check the dpiAwareness element in game/settings.manifest.'
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json'))) {
+        throw 'The game did not create its save in the isolated profile.'
+    }
+    [string]$stderr = Read-StartupError
+    if ($RequireNoAudio -and $stderr -notmatch '(?m)^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
+        throw 'The expected optional-wave-bank fallback was not reported.'
+    }
+    foreach ($line in ($stderr -split '\r?\n')) {
+        if ($RequireAudio -and $line -match '^no audio: ') {
+            throw 'The audible startup check unexpectedly used a silent bank.'
+        }
+        if ($line.Trim() -ne '' -and
+            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
+            -not ($userStageRefusal -and $line -match $userStageRefusal)) {
+            throw "Unexpected startup diagnostic: $line"
+        }
+    }
+    if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
+        throw 'The broken user stage was not refused with exactly one line.'
+    }
+    [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
+    if (-not $process.WaitForExit(10000)) {
+        throw 'The game did not shut down after WM_CLOSE.'
+    }
+    $process.WaitForExit()
+    if ($process.ExitCode -ne 0) {
+        throw "The game failed during shutdown (code $($process.ExitCode))."
+    }
+    # Destruction can report errors too, after the last running-process read.
+    [string]$stderr = Read-StartupError
+    foreach ($line in ($stderr -split '\r?\n')) {
+        if ($RequireAudio -and $line -match '^no audio: ') {
+            throw 'The audible startup check unexpectedly used a silent bank.'
+        }
+        if ($line.Trim() -ne '' -and
+            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
+            -not ($userStageRefusal -and $line -match $userStageRefusal)) {
+            throw "Unexpected shutdown diagnostic: $line"
+        }
+    }
+    $result.outcome = 'passed'
+    $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save and graceful shutdown passed.'
+    Write-Output $result.diagnostic
 }
 catch {
     $failure = $_

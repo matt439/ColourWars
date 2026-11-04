@@ -1,11 +1,14 @@
 """Exercise CI selection against real Git histories, without a game build."""
 
+import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
-from lint import already_tested, check_changes
+from lint import (already_tested, check_changes, engine_pin_problem,
+                  moved_engine_pin, tree_passed)
 
 
 class ChangeChecks(unittest.TestCase):
@@ -227,6 +230,109 @@ class ChangeChecks(unittest.TestCase):
             with self.subTest(event_name=event_name, event=event):
                 with self.assertRaises(subprocess.CalledProcessError):
                     check_changes(event_name, event, cwd=self.repo)
+
+    def test_a_pull_request_moving_the_pin_is_reported(self) -> None:
+        def pull_request(head: str) -> dict:
+            return {"pull_request": {"base": {"sha": self.initial}, "head": {"sha": head}}}
+
+        self.git("update-index", "--add", "--cacheinfo",
+                 f"160000,{'a' * 40},external/labrador")
+        self.git("commit", "-m", "pin")
+        pinned = self.git("rev-parse", "HEAD")
+        self.assertEqual(moved_engine_pin("pull_request", pull_request(pinned), cwd=self.repo),
+                         "a" * 40)
+        self.assertIsNone(moved_engine_pin("push", {"before": self.initial, "after": pinned},
+                                           cwd=self.repo))
+        self.write("game/example.cpp", "int example = 1;\n")
+        later = self.commit()
+        self.initial = pinned
+        self.assertIsNone(moved_engine_pin("pull_request", pull_request(later), cwd=self.repo))
+
+    def test_unusable_history_stops_the_pin_check_rather_than_passing_it(self) -> None:
+        event = {"pull_request": {"base": {"sha": self.initial}, "head": {"sha": "f" * 40}}}
+        with self.assertRaises(subprocess.CalledProcessError):
+            moved_engine_pin("pull_request", event, cwd=self.repo)
+
+
+class TreeRecords(unittest.TestCase):
+    NAME = "passed-tree-abc"
+
+    def asks(self, artifact: dict | None = None, **run) -> bool:
+        record = {"name": self.NAME, "expired": False, "workflow_run": {"id": 7}}
+        record.update(artifact or {})
+        answer = {"event": "pull_request", "path": ".github/workflows/ci.yml",
+                  "conclusion": "success",
+                  "head_repository": {"full_name": "owner/repo"}}
+        answer.update(run)
+
+        def query(path: str, **parameters) -> dict:
+            if path == "actions/artifacts":
+                self.assertEqual(parameters, {"name": self.NAME})
+                return {"artifacts": [record]}
+            self.assertEqual(path, "actions/runs/7")
+            return answer
+
+        environment = {"GITHUB_REPOSITORY": "owner/repo",
+                       "GITHUB_WORKFLOW_REF": "owner/repo/.github/workflows/ci.yml@refs/heads/main"}
+        with mock.patch.dict(os.environ, environment):
+            return tree_passed("abc", query=query)
+
+    def test_this_repository_s_passed_pull_request_run_counts(self) -> None:
+        self.assertTrue(self.asks())
+
+    def test_anything_less_does_not(self) -> None:
+        for artifact, run in (
+                ({"expired": True}, {}),
+                ({"name": "passed-tree-abcd"}, {}),
+                ({}, {"event": "push"}),
+                ({}, {"path": ".github/workflows/other.yml"}),
+                ({}, {"conclusion": "failure"}),
+                ({}, {"head_repository": {"full_name": "fork/repo"}})):
+            with self.subTest(artifact=artifact, run=run):
+                self.assertFalse(self.asks(artifact, **run))
+
+    def test_a_run_with_no_head_repository_raises_for_the_full_ci_fallback(self) -> None:
+        with self.assertRaises(TypeError):
+            self.asks(head_repository=None)
+
+
+class EnginePins(unittest.TestCase):
+    PIN = "b" * 40
+
+    def problem(self, status: str = "behind", runs: list | None = None) -> str | None:
+        passed = {"path": ".github/workflows/ci.yml", "conclusion": "success"}
+
+        def query(path: str, repository: str, **parameters) -> dict:
+            self.assertEqual(repository, "matt439/Labrador")
+            if path == f"compare/master...{self.PIN}":
+                return {"status": status}
+            self.assertEqual((path, parameters), (
+                "actions/runs", {"head_sha": self.PIN, "event": "push"}))
+            return {"workflow_runs": [passed] if runs is None else runs}
+
+        return engine_pin_problem(self.PIN, query=query)
+
+    def test_a_passed_pin_on_master_is_accepted(self) -> None:
+        self.assertIsNone(self.problem("behind"))
+        self.assertIsNone(self.problem("identical"))
+
+    def test_a_pin_off_master_is_refused(self) -> None:
+        for status in ("ahead", "diverged"):
+            with self.subTest(status=status):
+                self.assertIn("not on Labrador's master", self.problem(status))
+
+    def test_a_pin_without_a_passed_engine_run_is_refused(self) -> None:
+        for runs in ([],
+                     [{"path": ".github/workflows/ci.yml", "conclusion": "failure"}],
+                     [{"path": ".github/workflows/ci.yml", "conclusion": None}],
+                     [{"path": ".github/workflows/website.yml", "conclusion": "success"}]):
+            with self.subTest(runs=runs):
+                self.assertIn("no passed push run", self.problem(runs=runs))
+
+    def test_an_unanswered_query_refuses_rather_than_passes(self) -> None:
+        def unavailable(path: str, **parameters) -> dict:
+            raise OSError("API unreachable")
+        self.assertIn("could not check", engine_pin_problem(self.PIN, query=unavailable))
 
 
 if __name__ == "__main__":

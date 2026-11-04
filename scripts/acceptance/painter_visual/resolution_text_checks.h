@@ -95,7 +95,8 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
         stack.draw(renderer); ++readbacks; return read(renderer);
     };
-    const RectangleF first_rows(132.0f, 204.0f, 1668.0f, 216.0f);
+    // Resolution, Fullscreen and Vsync, stopping short of Team palette.
+    const RectangleF first_rows(132.0f, 204.0f, 1668.0f, 240.0f);
     struct ResolutionMetrics
     {
         Vector2F raw; float width_scale = 0.0f, height_scale = 0.0f, scale = 0.0f;
@@ -141,13 +142,19 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         UiText fullscreen_value("independent-fullscreen-value", pending_fullscreen ? L"On" : L"Off", font,
             Vector2F(look.options_value_x, fullscreen_position.y), app.render_resources(), art.ink);
         std::ignore = value_scale(fullscreen_value);
+        const Vector2F vsync_position = position + Vector2F(0.0f, look.options_spacing.y * 2.0f);
+        UiText vsync_label("independent-vsync-label", L"Vsync", font, vsync_position, app.render_resources(), art.ink);
+        label_scale(vsync_label);
+        UiText vsync_value("independent-vsync-value", L"On", font,
+            Vector2F(look.options_value_x, vsync_position.y), app.render_resources(), art.ink);
+        std::ignore = value_scale(vsync_value);
         RectangleF focus = focused == 0 ? metrics.row :
             RectangleF::union_of(fullscreen_label.bounds(), fullscreen_value.bounds());
         std::unique_ptr<UiText> extra;
-        if (focused == 4 || focused == 6)
+        if (focused == 5 || focused == 7)
         {
             extra = std::make_unique<UiText>("independent-resolution-extra-focus",
-                focused == 4 ? L"Restore defaults" : L"Back", font,
+                focused == 5 ? L"Restore defaults" : L"Back", font,
                 position + Vector2F(0.0f, look.options_spacing.y * static_cast<float>(focused)),
                 app.render_resources(), art.focus_ink);
             focus = extra->bounds();
@@ -176,7 +183,8 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         // complete rows. Production's paper-art OptionRow uses plain UiText.
         setup_paper_reference(list, *app.render_resources(), style, art, paper, focus);
         list.set_filter(TextureFilter::linear); label.draw(list); value.draw(list);
-        fullscreen_label.draw(list); fullscreen_value.draw(list); if (extra) { extra->draw(list); }
+        fullscreen_label.draw(list); fullscreen_value.draw(list); vsync_label.draw(list); vsync_value.draw(list);
+        if (extra) { extra->draw(list); }
         ++readbacks; return read(renderer);
     };
     const auto project = [&](RectangleF rectangle)
@@ -194,7 +202,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const Frame actual = actual_frame();
         require(actual.pixels == actual_frame().pixels && std::rand() == next_random,
             "Resolution drawing changed frozen page pixels or consumed match RNG");
-        const Frame wanted = reference(snapshot, literal, focused, pending_fullscreen, snapshot.menu().item_font);
+        const Frame wanted = reference(snapshot, literal, focused, pending_fullscreen, snapshot.main_menu().options_font);
         const ResolutionMetrics measured = metrics;
         const RectangleI area = project(first_rows);
         const Frame observed = foreground_crop(actual, area, 0), expected = foreground_crop(wanted, area, 0);
@@ -206,7 +214,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                 ") local_delta=(" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << ")\n";
             throw std::runtime_error("Actual resolution/fullscreen rows differ from the independent complete fitted fixture");
         }
-        if (focused == 4 || focused == 6)
+        if (focused == 5 || focused == 7)
         {
             RectangleF bounds = measured.focus_ornament; bounds.inflate(2.0f);
             const RectangleI extra_area = project(bounds);
@@ -223,14 +231,14 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         require(fitting != "reset" || measured.scale == 1.0f, "Short replacement resolution did not reset its previous fit scale");
         if (negative_font)
         {
-            const Frame wrong = reference(snapshot, literal, focused, pending_fullscreen, original.menu().item_font);
+            const Frame wrong = reference(snapshot, literal, focused, pending_fullscreen, original.main_menu().options_font);
             require(observed.pixels != foreground_crop(wrong, area, 0).pixels,
                 "Resolution numeric-bearing font control did not distinguish the captured actual font"); ++font_controls;
         }
         if (*crop != '\0')
         {
-            require((actual.width == 1280 && actual.height == 720 && observed.width == 1112 && observed.height == 144) ||
-                (actual.width == 1600 && actual.height == 900 && observed.width == 1390 && observed.height == 180),
+            require((actual.width == 1280 && actual.height == 720 && observed.width == 1112 && observed.height == 160) ||
+                (actual.width == 1600 && actual.height == 900 && observed.width == 1390 && observed.height == 200),
                 "Resolution compact crop drifted from its exact fixed payload dimensions");
             save(observed, output / crop); ++crops;
         }
@@ -238,7 +246,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             (saved_fullscreen ? "true" : "false") << ',' << (pending_fullscreen ? "true" : "false") << ',' <<
             (saved_fullscreen ? "false" : "true") << ',';
         for (const wchar_t character : literal) { records << static_cast<char>(character); }
-        records << ',' << snapshot.menu().item_font << ',' << measured.raw.x << ',' << measured.raw.y << ',' <<
+        records << ',' << snapshot.main_menu().options_font << ',' << measured.raw.x << ',' << measured.raw.y << ',' <<
             measured.width_scale << ',' << measured.height_scale << ',' << measured.scale << ',' <<
             measured.row.width << ',' << measured.row.height << ',' << fit << ",true,true,true\n";
         ++rows; unchanged(); return actual;
@@ -253,7 +261,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     compare("pending-on-enabled", original, L"2560x1440", 0, true);
     tap(Key::left); compare("pending-on-cycle", original, L"1920x1080", 0, true);
 
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.menu().item_font));
+    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.main_menu().options_font));
     std::vector<Glyph> tall, shifted;
     for (char32_t character = U' '; character <= U'~'; ++character)
     {
@@ -273,34 +281,34 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_font), L"~"),
         "Resolution replacement numeric font still draws the old retained template's tilde");
     Presentation old = original, next = original;
-    const_cast<MenuText&>(old.menu_text()).values.resolution = L"OLD~ display pixels: {width}x{height}";
-    const_cast<MenuStyle&>(old.menu()).item_font = old_font;
-    const_cast<MenuText&>(next.menu_text()).values.resolution = L"Next display pixels: {width}x{height}.";
-    const_cast<MenuStyle&>(next.menu()).item_font = next_font;
+    const_cast<MenuText&>(old.menu_text()).values.resolution = L"OLD~ real studio display pixels: {width}x{height}";
+    const_cast<MainMenuPresentation&>(old.main_menu()).options_font = old_font;
+    const_cast<MenuText&>(next.menu_text()).values.resolution = L"Next real studio display pixels: {width}x{height}.";
+    const_cast<MainMenuPresentation&>(next.main_menu()).options_font = next_font;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     next.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = old; open();
-    const Frame old_frame = compare("old-width-height", old, L"OLD~ display pixels: 1920x1080", 0, false,
+    const Frame old_frame = compare("old-width-height", old, L"OLD~ real studio display pixels: 1920x1080", 0, false,
         "width_then_height", "resolution-text-old-fit.ppm");
     presentation = next;
-    require(compare("retained-old-source", old, L"OLD~ display pixels: 1920x1080", 0, false,
+    require(compare("retained-old-source", old, L"OLD~ real studio display pixels: 1920x1080", 0, false,
         "width_then_height").pixels == old_frame.pixels, "Resolution source assignment changed a constructed page");
-    tap(Key::left); compare("old-short-height", old, L"OLD~ display pixels: 1280x720", 0, false, "height");
+    tap(Key::left); compare("old-short-height", old, L"OLD~ real studio display pixels: 1280x720", 0, false, "height");
     open();
-    const Frame next_frame = compare("reopened-new-width", next, L"Next display pixels: 1920x1080.", 0, false,
+    const Frame next_frame = compare("reopened-new-width", next, L"Next real studio display pixels: 1920x1080.", 0, false,
         "width", "resolution-text-new-width.ppm", true);
     presentation = original;
-    require(compare("retained-new-reversal", next, L"Next display pixels: 1920x1080.", 0, false,
+    require(compare("retained-new-reversal", next, L"Next real studio display pixels: 1920x1080.", 0, false,
         "width").pixels == next_frame.pixels, "Resolution source reversal changed a constructed page");
-    tap(Key::left); const Frame short_frame = compare("new-short-reset", next, L"Next display pixels: 1280x720.", 0, false,
+    tap(Key::left); const Frame short_frame = compare("new-short-reset", next, L"Next real studio display pixels: 1280x720.", 0, false,
         "reset", "resolution-text-new-reset.ppm");
-    tap(Key::left); compare("new-long-refit", next, L"Next display pixels: 3840x2160.", 0, false, "width");
+    tap(Key::left); compare("new-long-refit", next, L"Next real studio display pixels: 3840x2160.", 0, false, "width");
     tap(Key::right);
-    require(compare("new-short-reset-again", next, L"Next display pixels: 1280x720.", 0, false, "reset").pixels == short_frame.pixels,
+    require(compare("new-short-reset-again", next, L"Next real studio display pixels: 1280x720.", 0, false, "reset").pixels == short_frame.pixels,
         "Resolution long-to-short cycle did not restore its exact original fitted row");
     const size_t resize_start = updates; resize({ 1920, 1080 });
-    compare("resized-1080", next, L"Next display pixels: 1280x720.", 0, false, "reset"); resize({ 1280, 720 });
-    require(compare("resized-720", next, L"Next display pixels: 1280x720.", 0, false, "reset").pixels == short_frame.pixels &&
+    compare("resized-1080", next, L"Next real studio display pixels: 1280x720.", 0, false, "reset"); resize({ 1280, 720 });
+    require(compare("resized-720", next, L"Next real studio display pixels: 1280x720.", 0, false, "reset").pixels == short_frame.pixels &&
         updates == resize_start, "Resolution resize round trip changed cached text/font/fit or updated state");
     open();
     require(compare("restored-windowed", original, L"1920x1080", 0, false).pixels == initial.pixels,
@@ -309,14 +317,14 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     // Only Save metadata changes. The application stays windowed throughout;
     // no Apply, display-trial or physical fullscreen operation is invoked.
     seed(ScreenResolution::s_3840_2160, true, "3840x2160"); resize({ 1600, 900 }); presentation = next; open();
-    compare("fullscreen-live-client", next, L"Next display pixels: 1600x900.", 1, true, "none", "resolution-text-fullscreen.ppm");
+    compare("fullscreen-live-client", next, L"Next real studio display pixels: 1600x900.", 1, true, "none", "resolution-text-fullscreen.ppm");
     resize({ 1001, 777 });
-    compare("fullscreen-retained-size", next, L"Next display pixels: 1600x900.", 1, true);
+    compare("fullscreen-retained-size", next, L"Next real studio display pixels: 1600x900.", 1, true);
     presentation = original; tap(Key::right);
-    compare("pending-off-disabled", next, L"Next display pixels: 1600x900.", 1, false);
-    tap(Key::up); compare("disabled-skip-back", next, L"Next display pixels: 1600x900.", 6, false);
+    compare("pending-off-disabled", next, L"Next real studio display pixels: 1600x900.", 1, false);
+    tap(Key::up); compare("disabled-skip-back", next, L"Next real studio display pixels: 1600x900.", 7, false);
     tap(Key::up); tap(Key::up); tap(Key::enter);
-    compare("fullscreen-defaults-refresh", next, L"Next display pixels: 1001x777.", 4, false);
+    compare("fullscreen-defaults-refresh", next, L"Next real studio display pixels: 1001x777.", 5, false);
     open(); compare("fullscreen-reopened-client", original, L"1001x777", 1, true);
     seed(ScreenResolution::s_3840_2160, false, "3840x2160"); open();
     compare("metadata-windowed-preset", original, L"3840x2160", 0, false);
@@ -325,7 +333,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     std::ofstream summary(output / "resolution-summary.json");
     summary << "{\"outcome\":\"passed\",\"scope\":\"resolution-text-only\",\"updates\":43,\"readbacks\":76,"
         "\"csv_rows\":25,\"compact_crops\":6,\"page_openings\":7,\"font_negative_controls\":1,"
-        "\"resize_updates\":0,\"save_calls\":3,\"crop_pixels\":1050840,\"metadata_only\":true,\"windowed_application\":true}\n";
+        "\"resize_updates\":0,\"save_calls\":3,\"crop_pixels\":1167600,\"metadata_only\":true,\"windowed_application\":true}\n";
     require(summary.good(), "Cannot retain resolution text probe summary");
     std::cout << "PASS resolution text leaf: actual Options presets/Left/Right/wrap and independent complete plain-text fitted rows; "
         "width-then-height fit, short reset, numeric-bearing font, retained/reopened/reversed sources; "

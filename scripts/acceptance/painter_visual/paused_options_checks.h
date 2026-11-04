@@ -6,20 +6,20 @@
 // true supplies the ordinary standalone probe Canvas before that same scrim.
 Frame paused_options_reference(Application& app, const Canvas& canvas,
     const Presentation& captured, const MenuText& words, int selected,
-    const std::array<std::wstring, 3>& values, bool resolution_disabled,
+    const std::array<std::wstring, 4>& values, bool resolution_disabled,
     const std::wstring& status_copy, bool status_warning,
     const std::wstring& expected_caption, const std::string& caption_font,
     const Vector2F& caption_position, bool canvas_underlay = false)
 {
-    require(selected >= 0 && selected < 7 && !(resolution_disabled && selected == 0),
+    require(selected >= 0 && selected < 8 && !(resolution_disabled && selected == 0),
         "Independent paused Options requires an enabled selected row");
     const auto& style = captured.menu(); const auto& look = captured.main_menu();
     auto art = look.art; art.focus_padding = look.setup_focus_padding;
     art.shadow_offset = look.setup_shadow_offset;
-    constexpr std::array<MenuItem, 7> roles{ MenuItem::resolution, MenuItem::fullscreen,
-        MenuItem::team_palette, MenuItem::controls_audio, MenuItem::restore_defaults,
-        MenuItem::apply, MenuItem::back };
-    constexpr std::array<const wchar_t*, 7> labels{ L"Resolution", L"Fullscreen",
+    constexpr std::array<MenuItem, 8> roles{ MenuItem::resolution, MenuItem::fullscreen,
+        MenuItem::vsync, MenuItem::team_palette, MenuItem::controls_audio,
+        MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
+    constexpr std::array<const wchar_t*, 8> labels{ L"Resolution", L"Fullscreen", L"Vsync",
         L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
     require(words.heading(MenuHeading::options) == L"Options" &&
         !expected_caption.empty() && words.options_palette_timing == expected_caption,
@@ -38,7 +38,7 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
     require(row_height > 0.0f && value_width > 0.0f,
         "Independent paused Options has no fitted value budget");
     std::vector<std::unique_ptr<UiText>> text;
-    std::array<RectangleF, 7> bounds;
+    std::array<RectangleF, 8> bounds;
     const auto add = [&](const std::wstring& copy, const std::string& font,
         const Vector2F& position, const Colour& colour)
     {
@@ -51,21 +51,21 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
     require(paper.contains(heading->bounds()) && paper.contains(caption->bounds()) &&
         heading->bounds().right() <= caption->bounds().x,
         "Independent paused Options heading and palette timing caption overlap or escape paper");
-    for (int index = 0; index < 7; ++index)
+    for (int index = 0; index < 8; ++index)
     {
         const Vector2F position = look.options_position +
             Vector2F(0.0f, look.options_spacing.y * static_cast<float>(index));
-        auto* label = add(labels[static_cast<size_t>(index)], style.item_font, position,
+        auto* label = add(labels[static_cast<size_t>(index)], look.options_font, position,
             index == 0 && resolution_disabled ? art.disabled_ink :
                 index == selected ? art.focus_ink : art.ink);
-        if (index < 3)
+        if (index < 4)
         {
             const float label_width = look.options_value_x - position.x - art.focus_padding.x;
             require(label_width > 0.0f, "Independent paused Options has no label budget");
             const RectangleF raw_label = label->bounds();
             label->set_scale(std::min({ 1.0f, label_width / raw_label.width,
                 row_height / raw_label.height }));
-            auto* value = add(values[static_cast<size_t>(index)], style.item_font,
+            auto* value = add(values[static_cast<size_t>(index)], look.options_font,
                 Vector2F(look.options_value_x, position.y), art.ink);
             const RectangleF raw_value = value->bounds();
             require(raw_value.width > 0.0f && raw_value.height > 0.0f,
@@ -187,7 +187,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     worlds << "check,players,level_identity,observation,level_hud_pixels,roster,layout,resume_zero\n";
     int world_checks = 0; MatchSetup plan;
     Presentation captured = original;
-    std::wstring resolution_value = L"1280x720", palette_value = L"A: Blue / B: Yellow", status;
+    std::wstring resolution_value = L"1280x720", vsync_value = L"Off", palette_value = L"A: Blue / B: Yellow", status;
     bool warning = false;
     const float settled = std::max(original.menu().motion.focus_duration, original.menu().motion.press_duration) + 0.01f;
     const auto bytes = [&] { std::ifstream stream(save_path, std::ios::binary); require(stream.good(), "Lost paused Options save");
@@ -243,13 +243,15 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     const auto open_options = [&] { tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_down); tap(GamepadButton::a); tick();
         require(stack.depth() == 4, "Pause row2 did not push its owned Options child"); row = 0;
-        status.clear(); warning = false; captured = presentation; resolution_value = L"1280x720"; palette_value = L"A: Blue / B: Yellow"; };
+        status.clear(); warning = false; captured = presentation; resolution_value = L"1280x720"; vsync_value = L"Off"; palette_value = L"A: Blue / B: Yellow"; };
     const auto open_match = [&](int count)
     {
         stack.clear(); presentation = original; players = count; owner = device = count == 1 ? keyboard : 3;
         resize({ 1280, 720 }); app.set_fullscreen(false); hide();
         const_cast<PlaySettings&>(preferences_session.play_settings()) = expected;
-        require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, false, TeamColourPair::blue_yellow), "Cannot seed paused Options profile");
+        // Vsync starts Off so Restore has a value to change and a rollback a value to keep.
+        require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, false, TeamColourPair::blue_yellow, false), "Cannot seed paused Options profile");
+        app.renderer()->set_vsync(false);
         for (Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::escape, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {};
         for (int slot : { 3, 0, 2, 1 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = count > 1; }
@@ -287,13 +289,13 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         require(stack.depth() == 4 && &game->level() == level_identity && game->resume_remaining() == 0.0f && app.viewport_manager()->layout() == plan.screen_layout(), "Paused Options reference lost its retained match or stack depth"); preserved();
         const Frame actual = resume_stack_frame(app);
         const Frame reference = paused_options_reference(app, canvas, captured, captured.menu_text(), row,
-            { resolution_value, L"Off", palette_value }, false, status, warning,
+            { resolution_value, L"Off", vsync_value, palette_value }, false, status, warning,
             captured.menu_text().options_palette_timing, captured.menu().detail_font,
             Vector2F(captured.main_menu().options_value_x, captured.main_menu().options_heading_position.y), false);
         const std::string stem = "paused-options-" + name + "-" + std::to_string(players) + "p-" + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != reference.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(reference, output / (stem + "-failure-expected.ppm"));
             const auto delta = foreground_delta_bounds(actual, reference); std::cerr << "PAUSED OPTIONS " << name << " row=" << row << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
-        require(actual.pixels == reference.pixels, "Paused Options differs from independent complete paper/caption/seven-row reference");
+        require(actual.pixels == reference.pixels, "Paused Options differs from independent complete paper/caption/eight-row reference");
         std::srand(9137); const int next = std::rand(); std::srand(9137);
         require(actual.pixels == resume_stack_frame(app).pixels && actual.pixels == resume_stack_frame(app).pixels && std::rand() == next,
             "Frozen paused Options changed pixels or consumed draw RNG");
@@ -309,7 +311,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     require(original.menu_text().options_palette_timing == L"Palette applies next round or restart.", "Paused palette timing copy drifted");
     for (Vector2I size : { Vector2I(1280,720), Vector2I(1920,1080), Vector2I(2560,1440), Vector2I(1600,1200), Vector2I(1920,1200), Vector2I(2560,1080) })
     {
-        resize(size); for (int focus = 0; focus < 7; ++focus) { go(focus); compare("focus" + std::to_string(focus), focus == 2); }
+        resize(size); for (int focus = 0; focus < 8; ++focus) { go(focus); compare("focus" + std::to_string(focus), focus == 3); }
         go(0); tick(0.0f); tick(-0.5f); compare("nonpositive");
     }
     check_world();
@@ -326,7 +328,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     const Camera motion_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
     const RectangleF motion_paper((Vector2F(1920.0f, original.menu().footer_y) - original.main_menu().options_box_size) / 2.0f, original.main_menu().options_box_size);
     require(countdown_crop_bounds(motion_camera.calculate_view_rectangle(motion_paper)).contains(delta), "Paused Options motion escaped its paper");
-    go(3); hold(device, GamepadButton::a, true); tick();
+    go(4); hold(device, GamepadButton::a, true); tick();
     static_cast<WindowNotify&>(app).on_deactivated(); tick();
     static_cast<WindowNotify&>(app).on_activated(); tick();
     hold(device, GamepadButton::a, false); tick(); tick();
@@ -342,16 +344,16 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     tap(GamepadButton::a); row = 0; captured = presentation; tick(); compare("reopened-caption-font", true);
     tap(GamepadButton::b); presentation = original; tap(GamepadButton::a); row = 0; captured = original; tick(); compare("restored-caption"); check_world();
     // Staged defaults can be discarded by either own Back route.
-    go(4); tap(GamepadButton::a); resolution_value = L"1920x1080"; palette_value = L"Random"; status = original.menu_text().status.options_pending;
-    const auto before_discard = bytes(); compare("restore-staged", true); go(6); tap(GamepadButton::a);
-    require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Back saved or replaced Pause"); tap(GamepadButton::a); row = 0; status.clear(); resolution_value = L"1280x720"; palette_value = L"A: Blue / B: Yellow"; tick(); compare("back-discard");
-    go(4); tap(GamepadButton::a); tap(GamepadButton::b); require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Escape saved or resumed");
+    go(5); tap(GamepadButton::a); resolution_value = L"1920x1080"; vsync_value = L"On"; palette_value = L"Random"; status = original.menu_text().status.options_pending;
+    const auto before_discard = bytes(); compare("restore-staged", true); go(7); tap(GamepadButton::a);
+    require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Back saved or replaced Pause"); tap(GamepadButton::a); row = 0; status.clear(); resolution_value = L"1280x720"; vsync_value = L"Off"; palette_value = L"A: Blue / B: Yellow"; tick(); compare("back-discard");
+    go(5); tap(GamepadButton::a); tap(GamepadButton::b); require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Escape saved or resumed");
     tap(GamepadButton::a); row = 0; tick(); compare("escape-discard"); check_world();
     // A palette-only Apply saves now but preserves this built arena and paint.
-    go(2); tap(GamepadButton::dpad_left); palette_value = L"A: Pink / B: Green"; status = original.menu_text().status.options_pending;
-    compare("palette-pending"); go(5); tap(GamepadButton::a); status = original.menu_text().status.options_saved;
+    go(3); tap(GamepadButton::dpad_left); palette_value = L"A: Pink / B: Green"; status = original.menu_text().status.options_pending;
+    compare("palette-pending"); go(6); tap(GamepadButton::a); status = original.menu_text().status.options_saved;
     compare("palette-saved", true); const auto new_palette = preferences.team_palette();
-    require(new_palette != TeamColourPair::blue_yellow && stack.depth() == 4, "Palette-only Apply incorrectly opened a display trial"); check_world();
+    require(new_palette != TeamColourPair::blue_yellow && !preferences.vsync() && stack.depth() == 4, "Palette-only Apply incorrectly opened a display trial or changed vsync"); check_world();
     tap(GamepadButton::b); tap(GamepadButton::dpad_up); tap(GamepadButton::a); require(stack.depth() == 3, "Restart did not retain typed Pause frame");
     tap(GamepadButton::dpad_up); tap(GamepadButton::a); require(stack.depth() == 2 && game->resume_remaining() == 0.0f, "Deliberate Restart did not rebuild");
     require(game->level().player(0).team_colour() == TeamColourTools::team_colours(new_palette, presentation.team_palette()).team_a, "Restart ignored newly saved palette");
@@ -367,13 +369,13 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         {
             painter_scripted_pads::states[3].connected = false; tick(); device = 0; tap(GamepadButton::dpad_down); row = 1; compare("joined-fallback");
             painter_scripted_pads::states[0].connected = false; tick(); device = keyboard; tap(GamepadButton::dpad_down); row = 2; compare("keyboard-recovery");
-            go(3); hold(3, GamepadButton::a, true); painter_scripted_pads::states[3].connected = true; tick(); tick(); hold(3, GamepadButton::a, false); tick(); tick();
+            go(4); hold(3, GamepadButton::a, true); painter_scripted_pads::states[3].connected = true; tick(); tick(); hold(3, GamepadButton::a, false); tick(); tick();
             painter_scripted_pads::states[0].connected = true; tick(); device = 3;
             compare("held-owner-reconnect"); const Frame restored = resume_stack_frame(app); tap_slot(keyboard, GamepadButton::dpad_down);
             require(restored.pixels == resume_stack_frame(app).pixels, "Owner reconnection failed to restore exclusivity");
         }
         // Own Controls and Pad Sticks keep the same input policy and merge saves.
-        go(3); const Frame options = compare("before-controls"); tap(GamepadButton::a); require(stack.depth() == 5, "Paused Options did not own Controls");
+        go(4); const Frame options = compare("before-controls"); tap(GamepadButton::a); require(stack.depth() == 5, "Paused Options did not own Controls");
         tick(); const Frame controls = resume_stack_frame(app); tap_slot(keyboard, GamepadButton::b);
         require(stack.depth() == 5 && controls.pixels == resume_stack_frame(app).pixels, "Spectator closed owned Controls");
         if (count == 2) { painter_scripted_pads::states[3].connected = false; tick(); device = 0;
@@ -401,12 +403,12 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     }
     // Private windowed trial paths remain children of the retained Options.
     open_match(2);
-    const auto begin_trial = [&] { go(4); tap(GamepadButton::a); resolution_value = L"1920x1080"; palette_value = L"Random";
-        status = original.menu_text().status.options_pending; go(5); const auto before = bytes(); tap(GamepadButton::a); hide(); tick();
+    const auto begin_trial = [&] { go(5); tap(GamepadButton::a); resolution_value = L"1920x1080"; vsync_value = L"On"; palette_value = L"Random";
+        status = original.menu_text().status.options_pending; go(6); const auto before = bytes(); tap(GamepadButton::a); hide(); tick();
         require(stack.depth() == 5 && bytes() == before && preferences.resolution() == ScreenResolution::s_1280_720,
             "Paused display trial wrote before Keep or replaced its parent"); };
     const auto rolled_back = [&] { hide(); tick(); require(stack.depth() == 4 && app.resolution_manager()->resolution_ivec() == Vector2I(1280,720) &&
-        preferences.resolution() == ScreenResolution::s_1280_720, "Paused trial rollback lost old preset or Options parent");
+        preferences.resolution() == ScreenResolution::s_1280_720 && !preferences.vsync() && !app.renderer()->vsync(), "Paused trial rollback lost old preset, vsync or Options parent");
         status = original.menu_text().status.options_reverted; compare("trial-reverted"); check_world(); };
     for (int path = 0; path < 5; ++path)
     {
@@ -428,7 +430,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     resize({1280,720}); compare("keep-save-failed", true); check_world();
     require(std::filesystem::remove(blocked), "Cannot remove controlled paused Keep refusal"); tap(GamepadButton::a); status = original.menu_text().status.options_saved; warning = false;
     compare("keep-save-recovered", true); Save loaded; SettingsSession loaded_session(loaded); loaded_session.load_save_file();
-    require(loaded.resolution() == ScreenResolution::s_1920_1080 && loaded.team_palette() == TeamColourPair::random, "Paused Keep recovery failed reload"); preserved(); check_world();
+    require(loaded.resolution() == ScreenResolution::s_1920_1080 && loaded.team_palette() == TeamColourPair::random && loaded.vsync() && app.renderer()->vsync(), "Paused Keep recovery failed reload"); preserved(); check_world();
     // Public developer hooks reject match replacement and unwind only this child.
     tap(GamepadButton::b); MenuInput direct_input(app.gamepads(), app.keyboard(), &tuning); MenuContext direct_context(&data, &direct_input, &plan);
     auto direct = std::make_unique<MainMenuOptions>(&direct_context, owner); auto* raw = direct.get(); stack.push(std::move(direct)); tick();

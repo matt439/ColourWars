@@ -214,7 +214,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
             const Frame options = compare("old-options", 0, 2, old, old_labels);
             tap(Key::enter); tick();
             require(stack.depth() == 3 && !choice, "Custom Pause Options did not open a child page");
-            for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+            for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
             const Frame controls_parent = pause_menu_frame(app);
             tap(Key::enter); tick();
             require(stack.depth() == 4 && !choice, "Paused Options did not open Controls/audio");

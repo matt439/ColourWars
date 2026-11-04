@@ -346,7 +346,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(Key::down); tap(Key::enter); tick();
         std::wstring parent_help = substitute(original.menu_text().help.controls, L"{jump}", L"J");
         for (const auto& [token, words] : { std::pair{ L"{left}", L"A" }, std::pair{ L"{right}", L"D" },
-            std::pair{ L"{drop}", L"S" }, std::pair{ L"{shoot}", L"Left click" }, std::pair{ L"{pause}", L"Esc" } })
+            std::pair{ L"{drop}", L"S" }, std::pair{ L"{shoot}", L"Left click" }, std::pair{ L"{pause}", L"Esc" },
+            std::pair{ L"{pad_shoot}", L"RT" }, std::pair{ L"{pad_jump}", L"A / LT" }, std::pair{ L"{pad_pause}", L"Start" } })
         { parent_help = substitute(parent_help, token, words); }
         copy_check("parent-refreshed-j", original, parent_help, original.menu_text().status.controls_pending,
             false, Key::j, Key::j);
@@ -445,7 +446,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(Key::escape); tick(); require(stack.depth() == 3, "Countdown Escape did not open actual Pause");
         move(Key::down, 2); tap(Key::enter); tick();
         require(stack.depth() == 4, "Paused Jump route did not open actual Options");
-        move(Key::down, 3); tap(Key::enter); tick();
+        move(Key::down, 4); tap(Key::enter); tick();
         require(stack.depth() == 5, "Paused Jump route did not open actual Controls");
         tap(Key::down); tap(Key::enter); tick();
         require(stack.depth() == 6, "Paused Controls did not open Keyboard Keys");

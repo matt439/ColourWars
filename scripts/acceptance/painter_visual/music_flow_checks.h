@@ -100,7 +100,7 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     tap(Key::down);
     page("options", Key::enter, 2);
     // Fullscreen disables the resolution row and initially focuses Fullscreen.
-    for (int move = 0; move < (data.save()->fullscreen() ? 2 : 3); ++move) { tap(Key::down); }
+    for (int move = 0; move < (data.save()->fullscreen() ? 3 : 4); ++move) { tap(Key::down); }
     page("controls", Key::enter, 3);
     page("sticks", Key::enter, 4);
     const Frame settings = resume_stack_frame(app);
@@ -645,7 +645,7 @@ void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning&
         tap(Key::down); tap(Key::down); tap(Key::enter); tick(0.0f);
         require(stack.depth() == 4, "Arena-music fixture did not enter actual Options");
         covered_focus("options-focus-return", 4);
-        for (int row = data.save()->fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+        for (int row = data.save()->fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
         tap(Key::enter); tick(0.0f);
         require(stack.depth() == 5, "Arena-music fixture did not enter actual Controls / audio");
         covered_focus("controls-focus-return", 5);

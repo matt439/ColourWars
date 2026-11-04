@@ -416,7 +416,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 
     // The underlying Options instance keeps pending display values and cursor.
     open(std::make_unique<MainMenuOptions>(&context)); tap(Key::left);
-    tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down);
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down);
     const Frame pending_options = main_menu_frame(app);
     tap(Key::enter); tick(); require(stack.depth() == 3, "Options did not push actual Controls/audio");
     const Frame controls_from_options = main_menu_frame(app);
@@ -451,7 +451,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto frozen = resume_observation(game->level());
     const Frame paused = main_menu_frame(app);
     tap(Key::enter); tick(); require(stack.depth() == 4, "Pause did not push actual Options");
-    for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+    for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
     const Frame options_from_pause = main_menu_frame(app);
     tap(Key::enter); tick(); require(stack.depth() == 5, "Paused Options did not push actual Controls/audio");
     const Frame controls_from_pause = main_menu_frame(app);
