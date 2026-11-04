@@ -260,10 +260,9 @@ target_precompile_headers(colourwars_game PRIVATE pch.h)
 # adapter, DisplayAwake's default constructor for the display-idle request.
 # Each implements a seam the game library declares, so it builds against that
 # library's headers and precompiled header; the game library never names them.
-add_library(colourwars_rumble_xinput STATIC input/rumble_xinput.cpp)
-target_link_libraries(colourwars_rumble_xinput PRIVATE Xinput)
+add_library(colourwars_rumble_gamepads STATIC input/rumble_gamepads.cpp)
 add_library(colourwars_display_awake STATIC display_awake.cpp)
-foreach(adapter IN ITEMS colourwars_rumble_xinput colourwars_display_awake)
+foreach(adapter IN ITEMS colourwars_rumble_gamepads colourwars_display_awake)
     target_link_libraries(${adapter} PRIVATE colourwars_game labrador_settings)
     target_precompile_headers(${adapter} REUSE_FROM colourwars_game)
 endforeach()
@@ -275,7 +274,7 @@ add_executable(ColourWars WIN32
 )
 target_link_libraries(ColourWars PRIVATE
     colourwars_game
-    colourwars_rumble_xinput
+    colourwars_rumble_gamepads
     colourwars_display_awake
     labrador_settings
 )

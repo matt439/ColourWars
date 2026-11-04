@@ -133,9 +133,10 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 GameLevel::GameLevel(GameData* game_data, const MatchSetup& settings, MatchStart start) :
 	game_data_(game_data), settings_(settings), start_(start),
 	session_(settings.player_count() == 1 ? 1 : settings.best_of()),
-	rumble_sink_(make_rumble_sink())
+	rumble_sink_(game_data != nullptr && game_data->gamepads() != nullptr ?
+		make_rumble_sink(*game_data->gamepads()) : nullptr)
 {
-	if (this->rumble_sink_ == nullptr) { throw std::runtime_error("Rumble sink factory returned no sink."); }
+	if (this->rumble_sink_ == nullptr) { throw std::runtime_error("Rumble sink needs the application's gamepads."); }
 }
 
 GameLevel::~GameLevel()

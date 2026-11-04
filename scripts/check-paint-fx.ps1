@@ -213,7 +213,7 @@ try {
     # The game library and both platform adapters, as the executable links them.
     $libraries = @(
         (Join-Path $gameDirectory 'colourwars_game.lib'),
-        (Join-Path $gameDirectory 'colourwars_rumble_xinput.lib'),
+        (Join-Path $gameDirectory 'colourwars_rumble_gamepads.lib'),
         (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),

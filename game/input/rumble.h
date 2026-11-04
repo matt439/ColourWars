@@ -50,11 +50,14 @@ struct RumbleSessionState
 // The sink accepts normalized motor intent and must remain alive until its
 // owning Rumble is destroyed. Native/device failure handling belongs to the
 // adapter; a policy stop makes a best-effort zero request, not a success claim.
+// Nonzero motors carry `seconds`, the longest the request may run unrenewed, in
+// (0, maximum_rumble_pulse_seconds]; the engine stops a request whose seconds
+// pass. All-zero motors are a stop and their seconds are 0.
 class RumbleSink
 {
 public:
     virtual ~RumbleSink() = default;
-    virtual void set_vibration(int pad_slot, const RumbleMotors& motors) noexcept = 0;
+    virtual void set_vibration(int pad_slot, const RumbleMotors& motors, float seconds) noexcept = 0;
 };
 
 // One match owns all physical pad slots. Slots are device indices, never roster
@@ -62,6 +65,14 @@ public:
 // Each event has an independent timer; overlaps take the maximum per motor,
 // and repeating an event refreshes only its own timer. Output changes are sent
 // immediately; update advances timers. Gate loss cancels rather than freezes.
+// Every nonzero request carries the time until the output would fall to zero
+// (the longest remaining nonzero pulse), so a match that stops updating still
+// ends at the engine's deadline. Every audible trigger sends the current output
+// again with that time; between triggers an unchanged output is resent only
+// when the time outgrows what the last request was given. The engine's deadline
+// runs on wall time and these timers on game time (update's dt), so a stall the
+// step timer clamps can stop the pad before this policy's pulse ends; the next
+// audible trigger restarts it.
 class Rumble final
 {
 public:
@@ -88,6 +99,8 @@ private:
         RumbleSlotState state;
         std::array<double, rumble_event_count> remaining{};
         RumbleMotors output;
+        // What remains of the last nonzero request's seconds; 0 after a stop.
+        double sent_seconds = 0.0;
     };
 
     static void validate_profile(const RumbleProfile& profile);
@@ -96,7 +109,7 @@ private:
     bool session_permits() const noexcept;
     bool slot_permits(std::size_t slot) const noexcept;
     void clear_slot(std::size_t slot, bool force_output) noexcept;
-    void publish(std::size_t slot) noexcept;
+    void publish(std::size_t slot, bool renew) noexcept;
 
     RumbleSink& sink_;
     const RumbleProfile profile_;

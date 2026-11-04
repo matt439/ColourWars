@@ -1908,8 +1908,9 @@ engine report.
    a hard landing and a dry trigger, read from `tuning.json`. A per-seat On/Off
    beside the stick settings, saved with them, default On. Bots, replays and the
    keyboard seat never rumble. Pause, focus loss and the end of a match stop
-   every motor. The call is a direct `XInputSetState` on the seat's slot,
-   isolated in one file because it bypasses the engine's reader.
+   every motor. The call was a direct `XInputSetState` on the seat's slot,
+   isolated in one file because it bypassed the engine's reader; since
+   `ENG#25` it is the engine's `Gamepads::vibrate`.
 2. **Report.** That one file is the exhibit for `GAP#F6`'s ask,
    `Gamepads::set_vibration` with the `state()` slot contract, drafted in the
    [ledger](review/engine-reports.md). Filing needs the author's authorisation.
@@ -1954,7 +1955,7 @@ presets. Phase-2 receipts are under `out/validation/overnight-20261026/phase2/`.
 
 | slice | deliverable and acceptance |
 |---|---|
-| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962) was answered unfiled (`cadc962`, released in `v0.3.0`); spending it is `ENG#25`. |
+| Report filing | [Report 25](review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962) was answered unfiled (`cadc962`, released in `v0.3.0`) and spent 2026-11-05 (`ENG#25`). |
 
 **Owner, settings page and native adapter qualified.**
 Pad sticks now has a per-slot Rumble row, with pending/Apply/Back semantics.
@@ -1971,11 +1972,17 @@ the current authored profile. Time-up stops at the transition out of active
 play, before the later Results page. Sink lifetime covers policy destruction
 and initialization/rebuild unwind.
 
-`game/input/rumble_xinput.cpp` isolates SDK types, normalized-to-16-bit conversion,
-`XInputSetState`, failure handling and the transport-level lifetime stop. It
-links SDK `Xinput.lib`, matching the current DirectXTK reader's XINPUT1_4 import.
-The injected overload checks conversion/invalid-input/failure/stop intent without
-calling the native transport. Failures are nonfatal, without retries or log spam.
+`game/input/rumble_gamepads.cpp` (`colourwars_rumble_gamepads`) sends through the
+engine's `Gamepads::vibrate` and `stop_vibration` (`ENG#25`, 2026-11-05; it was
+`rumble_xinput.cpp` over `XInputSetState` before). It checks what the engine
+would refuse first: invalid amplitudes or deadlines stop the slot, deadlines
+past `max_vibration_seconds` are clamped, and nothing the engine throws leaves
+the sink. Each nonzero request carries the time until the output falls to zero,
+and `Rumble` renews it at every audible trigger and whenever that time grows,
+because the engine ends a request on wall time while the policy's timers run on
+game time.
+The `rumble_adapter` case drives it through a real `Gamepads` over a fake
+`GamepadReader`. Failures are nonfatal, without retries or log spam.
 
 Every painter mode, the separate display-awake lifecycle harness and the
 frame-pacing harness omit that native object and supply the recording default

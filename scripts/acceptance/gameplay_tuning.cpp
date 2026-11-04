@@ -520,6 +520,93 @@ namespace
                 edges.projectile(ProjectileType::spray).diffusion.end_time,
             "A shared content-value boundary was rejected or changed");
     }
+
+    // ENG#31: every tuning.json object names the keys its reader reads. A key
+    // it does not read, or a name written twice, fails at load with the file,
+    // the object and the key; a '_' key is a comment.
+    void check_known_keys(Fixtures& fixtures, const GameTuning& defaults)
+    {
+        const auto add = [](rapidjson::Document& d, rapidjson::Value& object, const char* key,
+            rapidjson::Value value)
+        {
+            object.AddMember(rapidjson::Value(key, d.GetAllocator()), value, d.GetAllocator());
+        };
+        const auto number = [](double value) { return rapidjson::Value(value); };
+        const auto copy = [](rapidjson::Document& d, const rapidjson::Value& value)
+        {
+            return rapidjson::Value(value, d.GetAllocator());
+        };
+
+        // Unknown at the top level and in nested objects, down to a vector and
+        // a sound. paint_undrfoot is the report's exhibit: an optional block
+        // that a misspelling used to switch off without a word.
+        fixtures.rejects("the document", "pleyer", [&](rapidjson::Document& d)
+            { add(d, d, "pleyer", rapidjson::Value(rapidjson::kObjectType)); });
+        fixtures.rejects("player", "paint_undrfoot", [&](rapidjson::Document& d)
+            { add(d, d["player"], "paint_undrfoot", copy(d, d["player"]["paint_underfoot"])); });
+        fixtures.rejects("runoff", "dealy", [&](rapidjson::Document& d)
+            { add(d, d["paint"]["visual"]["runoff"], "dealy", number(0.1)); });
+        fixtures.rejects("size", "z", [&](rapidjson::Document& d)
+            { add(d, d["player"]["size"], "z", number(1.0)); });
+        fixtures.rejects("go", "volum", [&](rapidjson::Document& d)
+            { add(d, d["match"]["sounds"]["go"], "volum", number(0.5)); });
+        fixtures.rejects("duration_choices", "minutes", [&](rapidjson::Document& d)
+            { add(d, d["match"]["duration_choices"][0], "minutes", number(1.0)); });
+
+        // Each weapon has its own list: a misspelling, and keys another
+        // weapon reads that this one's class never acts on.
+        fixtures.rejects("roller", "aim_tlit", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["roller"], "aim_tlit", number(0.3)); });
+        fixtures.rejects("sprayer", "aim_tilt", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["sprayer"], "aim_tilt", number(0.3)); });
+        fixtures.rejects("sniper", "loop_sounds", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["sniper"], "loop_sounds", copy(d, d["weapons"]["sprayer"]["loop_sounds"])); });
+        fixtures.rejects("sniper", "add_player_velocity", [&](rapidjson::Document& d)
+        {
+            add(d, d["weapons"]["sniper"], "add_player_velocity", rapidjson::Value("x_only", d.GetAllocator()));
+            add(d, d["weapons"]["sniper"], "player_velocity_amount", number(1.0));
+        });
+        fixtures.rejects("roller", "add_player_velocity", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["roller"], "add_player_velocity", rapidjson::Value("x_only", d.GetAllocator())); });
+        fixtures.rejects("feedback_sounds", "stop", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["bucket"]["feedback_sounds"], "stop", copy(d, d["weapons"]["sprayer"]["feedback_sounds"]["stop"])); });
+        fixtures.rejects("feedback_sounds", "lift", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["mister"]["feedback_sounds"], "lift", copy(d, d["weapons"]["roller"]["feedback_sounds"]["lift"])); });
+        fixtures.rejects("jet", "spread_step", [&](rapidjson::Document& d)
+            { add(d, d["projectiles"]["jet"], "spread_step", number(0.1)); });
+        fixtures.rejects("ball", "diffusion", [&](rapidjson::Document& d)
+            { add(d, d["projectiles"]["ball"], "diffusion", copy(d, d["projectiles"]["spray"]["diffusion"])); });
+
+        // A name written twice: has() and every read take the first.
+        fixtures.rejects("player", "gravity", [&](rapidjson::Document& d)
+            { add(d, d["player"], "gravity", number(1.0)); });
+        fixtures.rejects("sniper", "shoot_interval", [&](rapidjson::Document& d)
+            { add(d, d["weapons"]["sniper"], "shoot_interval", number(2.0)); });
+        fixtures.rejects("bots", "_comment", [&](rapidjson::Document& d)
+            { add(d, d["bots"], "_comment", rapidjson::Value("twice", d.GetAllocator())); });
+
+        // Comments of any value are accepted wherever an object is read, and
+        // a key one weapon's class acts on is accepted on another that does.
+        const GameTuning commented = fixtures.load([&](rapidjson::Document& d)
+        {
+            add(d, d, "_comment", rapidjson::Value("top", d.GetAllocator()));
+            add(d, d["player"]["size"], "_note", number(3.0));
+            add(d, d["weapons"]["sniper"], "_comment", rapidjson::Value(rapidjson::kObjectType));
+            add(d, d["projectiles"]["mist"]["diffusion"], "_", rapidjson::Value(rapidjson::kArrayType));
+            add(d, d["match"]["duration_choices"][0], "_comment", rapidjson::Value(true));
+            add(d, d["weapons"]["bucket"]["feedback_sounds"], "ready",
+                copy(d, d["weapons"]["sniper"]["feedback_sounds"]["ready"]));
+        });
+        require(commented.player().size == defaults.player().size &&
+            commented.weapon(WeaponType::sniper).details.shoot_interval ==
+                defaults.weapon(WeaponType::sniper).details.shoot_interval &&
+            commented.projectile(ProjectileType::mist).diffusion.end_time ==
+                defaults.projectile(ProjectileType::mist).diffusion.end_time &&
+            commented.match().duration_choices == defaults.match().duration_choices &&
+            commented.weapon(WeaponType::bucket).feedback_sounds.ready.has_value() &&
+            !defaults.weapon(WeaponType::bucket).feedback_sounds.ready.has_value(),
+            "A '_' comment key or a bucket ready cue was refused or changed the tuning read");
+    }
 }
 
 int main(int argc, char** argv)
@@ -568,8 +655,10 @@ int main(int argc, char** argv)
         check_validation(fixtures);
         check_shared_bounds(fixtures);
         check_rumble_tuning(fixtures, defaults);
+        check_known_keys(fixtures, defaults);
         std::cout << "PASS gameplay tuning: exact legacy roller/mist/integrator parity, real custom values, "
-            "stable live borrowed records, strict boundaries, named rumble data and contextual rejection.\n";
+            "stable live borrowed records, strict boundaries, named rumble data, contextual rejection "
+            "and refused unknown or repeated keys.\n";
         return 0;
     });
 }

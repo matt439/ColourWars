@@ -55,7 +55,7 @@ external/rapidjson/    vendored JSON reader for the save and level files
 
 [game/CMakeLists.txt](../game/CMakeLists.txt) builds every game source except
 `main.cpp` and the two platform adapters into the `colourwars_game` static
-library, `input/rumble_xinput.cpp` into `colourwars_rumble_xinput`,
+library, `input/rumble_gamepads.cpp` into `colourwars_rumble_gamepads`,
 `display_awake.cpp` into `colourwars_display_awake`, and links the three into
 the `ColourWars` executable. The acceptance probes link the same library.
 
@@ -69,7 +69,7 @@ The role folders date from `HYG#51`:
 | `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |
 | `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators) |
 | `save/` | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles` |
-| `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `rumble*`, `rumble_xinput.cpp` |
+| `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `rumble*`, `rumble_gamepads.cpp` |
 
 `play_settings.h` and `settings_session` are in `config/` rather than `save/`:
 every gameplay object reads the play settings, and the save is one of their

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/content_value.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 using namespace labrador;
@@ -90,4 +91,35 @@ Vector2F content_value::read_positive_vector(const JsonValue& parent, const char
 {
 	const JsonValue vector = parent.object(key);
 	return Vector2F(read_positive(vector, "x"), read_positive(vector, "y"));
+}
+
+void content_value::require_known_keys(const JsonValue& object,
+	const std::vector<std::string_view>& known)
+{
+	const std::vector<std::string> keys = object.keys();
+	for (size_t index = 0; index < keys.size(); ++index)
+	{
+		const std::string& key = keys[index];
+		if (std::find(keys.begin(), keys.begin() + static_cast<std::ptrdiff_t>(index), key) !=
+			keys.begin() + static_cast<std::ptrdiff_t>(index))
+		{
+			throw std::runtime_error(object.where() + ": '" + key +
+				"' appears more than once. Only the first would be read, so name it once.");
+		}
+		if (!key.empty() && key.front() == '_')
+		{
+			continue;
+		}
+		if (std::find(known.begin(), known.end(), key) == known.end())
+		{
+			std::string expected;
+			for (const std::string_view name : known)
+			{
+				expected += (expected.empty() ? "" : ", ") + std::string(name);
+			}
+			throw std::runtime_error(object.where() + ": '" + key +
+				"' is not a key this object reads. Expected one of " + expected +
+				", or a comment key starting with '_'.");
+		}
+	}
 }

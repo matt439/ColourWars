@@ -5,6 +5,21 @@ build stages that file beside the executable. `GameTuning` owns the records that
 weapons and projectiles borrow; gameplay mechanics stay in C++, while authored
 balance values select their amounts.
 
+## Keys
+
+Every object in the file takes only the keys its reader reads: the root, each
+block, each vector and sound, and each array entry. An unknown key fails at
+startup with the file, the object and the key, and so does a name written
+twice in one object. A misspelt optional block such as `paint_underfoot` is no
+longer silently skipped. A key starting with `_` is a comment, with any value.
+Each weapon and projectile has its own list, taken from what its class acts on.
+`aim_tilt` is the roller's alone, `loop_sounds` and the `stop` cue belong to
+the held-fire tools, `ready` to the sniper and bucket, the player-velocity pair
+to the sprayer, mister and bucket, `spread_step` to the mist, and `diffusion`
+to the spray and mist. The lists are code, beside the reads in
+[tuning.cpp](../game/config/tuning.cpp). `presentation.json` and the level files
+do not check their keys this way yet.
+
 ## Tool angles and projectile wind threshold
 
 These required fields replace the gameplay constants from gap-audit 8.5. The
