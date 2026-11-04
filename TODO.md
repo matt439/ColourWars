@@ -279,7 +279,7 @@ A new row for one of these gets its section back.
 |---|---|---|
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
-| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#52` was the last (2026-11-03) |
+| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#57` was the last (2026-11-05) |
 | Closed engine reports (1–24, 29, 32; 25 and 31 have rows above) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |

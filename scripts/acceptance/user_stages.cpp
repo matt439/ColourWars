@@ -1,5 +1,4 @@
 #include "game/pch.h"
-#include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
 #include "game/directory_consts.h"
 #include "game/objects/stage.h"

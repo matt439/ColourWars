@@ -2538,7 +2538,7 @@ re-resolution. Every row still held; only line numbers had moved, mostly by
 | Editor decode *(new)* | `editor/horizontal_authoring.cpp:65-91` | the editor's twin of the loader refusal | the same second type |
 | Editor guide and checks | `editor/horizontal_authoring.cpp:108-156` | guide and refusals use the horizontal path/corridor | the shared contract's lift path and clearance |
 | Editor duplicate | `editor/level_document.cpp:897-917` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path and clearance |
-| Editor mirror | `editor/level_document.cpp:1012-1029` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
+| Editor mirror | `editor/level_document_mirror.cpp` (`mirror_object`) | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
 | Editor fields | `editor/level_document.cpp:615-631`, `:865-873` | `motion/type (horizontal)` and `motion/travel_x` labels and default | the lift's field and palette entry |
 | Blockout aids | `editor/blockout_aids.cpp:177-184`, `:209` | initial-phase offset added to x | added to y |
 | Bot supports | `game/objects/level_bot_world.cpp:111-130` (flag `:124-126`) | `moving` marks a support whose bounds change | unchanged flag |
@@ -2547,7 +2547,7 @@ re-resolution. Every row still held; only line numbers had moved, mostly by
 | Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-99` (spec words `:47-50`, domain tag `:76`, labels `:112`), `game/debug/replay/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words, and a new domain tag |
 | Replay codec | `game/debug/replay/replay.cpp:146-317` (spec word 4 is `travel_x` at `:207`; y offset must be 0 at `:219-220`; pose x-only at `:222`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
 | Replay version | `game/debug/replay/replay.h:21-22`, `:46`, `game/debug/replay/replay.cpp:682-686` | writes and reads 6 only (`HYG#39`) | writes 7 (answer E5) |
-| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:492-631`, `level_editor/motion_checks.cpp`, `debug_console/replay_checks.cpp`, `debug_console/bot_replay_checks.cpp` | horizontal fixtures; `type: "vertical"` and schema 2 asserted as refusals; version 6 | lift fixtures beside them; flipped refusals; version 7 |
+| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:492-631`, `level_editor/motion_checks.cpp`, `debug_console/replay_checks.cpp`, `debug_console/replay_codec_checks.cpp`, `debug_console/bot_replay_checks.cpp` | horizontal fixtures; `type: "vertical"` and schema 2 asserted as refusals; version 6 | lift fixtures beside them; flipped refusals; version 7 |
 
 **2. Engineering answers, each following existing practice.**
 

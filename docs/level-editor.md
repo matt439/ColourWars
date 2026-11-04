@@ -1093,7 +1093,7 @@ Station editing in the canvas followed as [`ED#26`](#station-editing-ed26).
 ### Mirror copy across the arena centre (`ED#24`)
 
 **Done 2026-10-29.** **Edit > Mirror copy** (Ctrl+Shift+D) is
-`LevelDocument::mirror_copy` ([level_document.cpp](../editor/level_document.cpp)):
+`LevelDocument::mirror_copy` ([level_document_mirror.cpp](../editor/level_document_mirror.cpp)):
 it appends one copy reflected across the `out_of_bounds` centre through the
 same validated, single-undo-step edit as Duplicate, and selects it. With
 `sum` = `out_of_bounds` left + right:
@@ -1147,7 +1147,7 @@ them belongs to the attended pass (`ED#5`).
 
 **Done 2026-10-30.** The [blockout aids](#blockout-aids) summary has a fifth
 line, built by `symmetry_summary` in [blockout_aids.cpp](../editor/blockout_aids.cpp)
-from `LevelDocument::symmetry` ([level_document.cpp](../editor/level_document.cpp)):
+from `LevelDocument::symmetry` ([level_document_mirror.cpp](../editor/level_document_mirror.cpp)):
 
 ```
 Symmetry: left 70200.0 / right 70200.0  |  every play object has a mirror partner  |  Art without partner: brush_pot

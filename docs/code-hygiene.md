@@ -2019,7 +2019,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
 | [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 17 | Ordered topic coordinator; `HYG#7` complete |
 | [tuning.cpp](../game/config/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
-| [level_document.cpp](../editor/level_document.cpp) | 949 | Retain the shared document transaction; `ED#7` save protection complete |
+| [level_document.cpp](../editor/level_document.cpp) | 1,168 | Reflection family (`ED#24`/`ED#25`) extracted (300 lines); shared transaction, save included, retained; `HYG#54` complete |
 | [projectile.cpp](../game/objects/projectile.cpp) | 287 | Contacts/sweeps extracted (587 lines), `HYG#3` complete |
 | [weapon.cpp](../game/objects/weapon.cpp) | 855 | Retain the current firing/lifecycle core; motion already has its own file |
 | [save.cpp](../game/save/save.cpp) | 602 | Profile overlay extracted (209 lines), `HYG#4` complete |
@@ -2182,3 +2182,181 @@ comments were retained: `GameMenu::init` lends the callback to Stage Select,
 whose main-menu entry rescans, while between-round entry does not. Missing
 definitions remain registered but unreachable from the stage list. Historical
 reviews and the engine's design decisions were left untouched.
+
+## Long-file audit (2026-11-05)
+
+A fresh pass over the 36 longest authored code files (about 600 lines and up,
+`external/`, data JSON and `scripts/studies/` excluded). One reader mapped
+each unit and proposed keep or split. Each proposed split then went to two
+independent skeptics, one checking cohesion and one checking whether the plan
+works as a mechanical move, with a brief to kill it if the split was motion
+rather than improvement. Five splits survived (`HYG#53`-`HYG#57` below), and
+one commit removed six dead includes (`save.cpp`, `level.cpp`,
+`tune_commands.cpp`, `user_stages.cpp`). The rulings below are recorded so a
+later pass starts from them rather than re-deriving them.
+
+| file | lines | ruling |
+|---|---:|---|
+| `game/objects/player.cpp` | 1,910 | Keep. The growth since 2026-10-28 is POL#46 figure resolution that belongs in the constructor; a contacts/movement split would separate the producer and consumer of the per-tick support flags |
+| `editor/level_document.cpp` | 1,470 | Reflection family split out (`HYG#54`); the file transaction (load/save/Win32) stays with `create` and `mutate`, as ruled 2026-10-28 |
+| `scripts/acceptance/painter_visual.cpp` | 1,386 | Keep, 2026-10-28 ruling stands: check bodies already live in topic headers |
+| `game/debug/replay/replay.cpp` | 1,148 | Keep: one type's on-disk format |
+| `scripts/acceptance/bot_team_trials.cpp` | 1,022 | Keep: one harness whose passes share streams and counters |
+| `scripts/acceptance/debug_console/replay_checks.cpp` | 927 | Codec/file checks split out (`HYG#55`) |
+| `game/config/tuning.cpp` | 892 | Keep, 2026-10-28 ruling stands |
+| `game/config/presentation/presentation_read_menu.cpp`, `presentation_read_match.cpp` | 891, 876 | Keep: one section-to-record reader each |
+| `editor/editor_window.cpp` | 880 | Split killed by both skeptics: one Win32 shell, and the 60-line clipboard leaves the reader's problem unchanged |
+| `game/config/presentation/presentation_menu_text.cpp` | 874 | Split killed by both skeptics: each template's token set and its formatter must change together |
+| `game/objects/level.cpp` | 878 | Keep, plus a dead-include fix: composition root and one tick order |
+| `scripts/acceptance/level_format.cpp`, `movement_feedback_visual.cpp`, `user_stages.cpp` | 867, 850, 841 | Keep (dead include removed from `user_stages.cpp`) |
+| `game/debug/replay/replay_commands.cpp`, `debug_director_hooks.cpp` | 853, 835 | Keep: already DebugDirectorImpl family sources |
+| `scripts/acceptance/debug_console/tune_colour_sweep_checks.h` | 847 | Colour-pair checks split out (`HYG#56`) |
+| `game/objects/weapon.cpp` | 842 | Keep, 2026-10-28 ruling stands |
+| `scripts/acceptance/crossfeed/opposed_loop_checks.cpp`, `turbulence_slab_routes/route_checks.cpp`, `debug_console/director_checks.cpp` | 836, 826, 790 | Keep: shared fixture or one simulation's captured state |
+| `game/debug/script/script_commands.cpp` | 797 | Split killed on a 1-1 tie: moving the perf block would part `perf.capture`'s registration from its body, and `draw_status` is mostly not perf |
+| `game/debug/tune/tune_commands.cpp` | 796 | Keep, plus a dead-include fix |
+| `game/objects/level_object_builder.cpp`, `match_opening.cpp` | 760, 698 | Keep: one decode path; one timeline |
+| `scripts/check-painter.ps1` | 757 | Two leaf evidence checks split out (`HYG#57`) |
+| `game/states/game_states.cpp` | 745 | Keep: GameLevel's families already have their own sources |
+| `scripts/check-debug-console.ps1` | 701 | Split killed by both skeptics: one ordered attended script with guarded phases |
+| `game/states/main_menu.cpp` | 697 | Mode Select page split out (`HYG#53`) |
+| `game/config/presentation/presentation_match.h`, `presentation_validation_settings.cpp` | 686, 680 | Keep: an aggregate catalogue; already a `HYG#1` family source |
+| `editor/editor_canvas.cpp`, `stage_registration.cpp`, `game/config/locale.cpp`, `game/save/save.cpp`, `scripts/check-acceptance-process.ps1` | 669-616 | Keep (dead include removed from `save.cpp`) |
+
+## Main-menu Mode Select page (`HYG#53`)
+
+**Done (2026-11-05).** Moved the whole `MainMenuModeSelect` region - its
+constructor, the static setup-row builders and fit checks
+(`make_setup_row` through `check_stage_rule_row` and
+`practice_hint_position`), the duration and series-stage refresh/cycle pairs,
+`update_page` and `init` - into
+`game/states/main_menu_mode_select.cpp` (330 lines), in its original order.
+It was the one large leaf page still beside the page bases; every other
+main-menu page already had its own file. The 372-line `main_menu.cpp` keeps
+`MainMenuPage`, `RosterSetupPage`, Title and Home. The file had no anonymous
+namespace or file-local helper, `main_menu.h` is unchanged, and the only
+other edits are the new file's preamble, its CMake registration and dropping
+the two includes (`series_stage_rule.h`, `ui_text_drop_shadow.h`) that only
+Mode Select used. The unused `drawable_text.h` include was left for a
+separate change.
+
+A line comparison confirms the moved block is identical to the original
+lines, including the `main_menu.mode_select_spacing` and `menu_text.values`
+diagnostics. Debug and Release builds pass, as do `menu_presentation`,
+`menu_navigation`, `remembered_setup` and `series_stage_rule` in both presets
+and `menu_text` in Release.
+
+## Level-document reflection family (`HYG#54`)
+
+**Done (2026-11-05).** Moved the `ED#24`/`ED#25` reflection rules out of
+`editor/level_document.cpp` into `editor/level_document_mirror.cpp` (300
+lines), in their original order: the anonymous `set_text`,
+`advance_half_cycle` and `mirror_object`; `LevelDocument::mirror_copy`; the
+anonymous `paint_ferry`, `strip_unmirrored` and `same_shape`; and
+`LevelDocument::symmetry`. The file had grown about 520 lines since the
+2026-10-28 snapshot, and roughly 270 of them were this one rule set with its
+own private helpers and its own sections in
+[the level editor guide](level-editor.md). The type is not split and no
+public signature or layout changes.
+
+Two things move with it, because the reflection bodies reach into the
+document's private state. `struct LevelDocument::Impl` and its inline
+`mutate` template move verbatim to the new editor-private header
+`editor/level_document_impl.h`, which only the two level-document sources
+include; it carries a `using namespace level_json;` so the `Impl` body stays
+unqualified. The four helpers the reflection family shares with the rest of
+the file - `entry_json`, `entry_array`, `set_number` and `move_shape` - change
+from internal to external linkage: their definitions stay in place in
+`level_document.cpp`, rewrapped from the first anonymous namespace into
+`colourwars_editor::level_document_detail`, which the header declares and
+brings into scope. The other helpers in that namespace stay anonymous and in
+source order. No other editor source defines those names.
+
+The file transaction stays: `load`, `create` and the `ED#7` save with its
+`save_target`, `same_save_target` and `check_saved_source` guards are the
+other half of `mutate`'s history contract, as the 2026-10-28 snapshot ruled,
+and `<windows.h>` stays with them. The clipboard and `unresolved_resources`
+also stay; each shares a helper with the edit core. The moved lines are
+identical to the originals. Debug and Release builds pass, as do
+`check-level-editor.ps1` in both presets (mirror copy and symmetry included),
+`check-stage-registration.ps1` and the `user_stages` case in Debug.
+
+The six acceptance cases that compile the real document through one-line
+`editor_*_adapter.cpp` files (`fixed_slab`, `moving_structure` and the four
+`turbulence_*` editor cases) each gained an `editor_mirror_adapter.cpp`; a
+source added to `colourwars_level_document` needs the same adapter there.
+
+## Replay codec and file checks (`HYG#55`)
+
+**Done (2026-11-05).** Split `scripts/acceptance/debug_console/replay_checks.cpp`
+(927 lines) along the two jobs its own header comment named. The codec and
+file job - `check_replay_codec` with its private `same_inputs` and `same_gaps`
+and the `check_bot_replay_metadata` declaration it calls - moved whole and in
+order to `replay_codec_checks.cpp` (283 lines): the bit-exact input round
+trip, run-length coding, the `DBG15` `replay_name` matrix and the
+`ReplayFile` write/read round trip with its version, length, step-size, gap
+and layout refusals in a temp folder. It builds no `Level` or director. The
+671-line `replay_checks.cpp` keeps `check_replay_cpu_match`, the one ordered
+scenario on a real CPU `Level`, with `count_of_lines`, `retaped`,
+`suspend_steps` and `drive`. That function stays whole: its locals run from
+the seeded recording to the unseeded seed, and lifting a piece such as the
+`DBG16` catalog block would need new parameters.
+
+No helper crosses the cut, so each anonymous namespace stays fully used under
+`/W4 /WX`. The new file copies the original include block verbatim (any
+trimming, such as the apparently unused `bot.h`, is a separate change); the
+only other edits are the two file comments and the `fixtures.h` heading that
+now names `replay_codec_checks.cpp` for `check_replay_codec`. The runner
+compiles every source in the case folder, so nothing registers it, and
+`debug_console.cpp` calls the two checks in the same order. A line comparison
+confirms both files' moved lines match the originals. The Debug build passes
+and the `debug_console` case compiles in Debug.
+
+## Colour-pair tune checks (`HYG#56`)
+
+**Done (2026-11-05).** Split
+`scripts/acceptance/debug_console/tune_colour_sweep_checks.h` (847 lines),
+whose comment named only the sweep and the identity tunes, along its two kinds
+of check. `check_identity_colour_tunes` and `check_hud_paper_colour_tunes`, the
+coupled opaque, distinct pairs that each run in fresh LF/CRLF scratch contexts,
+moved whole and in order, with the comment between them, to
+`tune_colour_pair_checks.h` (373 lines). The 476-line sweep header keeps
+`check_colour_tunes`, the sequential walk of every audited colour path over one
+shared scratch document. That function stays whole: its loops share `words`,
+`expected`, `initial` and the borrowed pointers in order, so cutting it would
+need new parameters.
+
+The new header has the same inclusion context as its siblings: no includes of
+its own, included by `tune_checks.cpp` immediately after the sweep header,
+inside the same anonymous namespace. Call order, scratch folders and
+diagnostics are unchanged. Concatenating the two bodies in include order
+reproduces the original lines exactly, mixed tab/space indentation included;
+the only other edits are the two file comments.
+The runner compiles the case folder through `tune_checks.cpp`, so nothing
+registers the header. The `debug_console` case compiles in Debug and passes.
+
+## Painter practice-replay and rumble evidence (`HYG#57`)
+
+**Done (2026-11-05).** `scripts/check-painter.ps1` (757 lines) stays one
+coordinator, but two leaves kept their post-run evidence inline against the
+rule its own header states: a leaf with post-run evidence gets a guarded
+`check-painter/verify-<leaf>.ps1` dot-source. Both blocks were added after
+`19d3fc91` created that family. The `PracticeReplayOnly` receipt check moved
+whole to `check-painter/verify-practice-replay.ps1` (32 lines) and the Debug
+`RumbleOnly` background-supplement check to `check-painter/verify-rumble.ps1`
+(21 lines), each with the family's two-line header and its bodies at their
+original 8-space indentation. The entry, now 708 lines, keeps the guards
+`if ($PracticeReplayOnly)` and `if ($RumbleOnly -and $debug)` unchanged and
+dot-sources each helper at the position of the block it replaces, not in the
+verifier list, so failures still come in the same order: practice receipt,
+remembered-setup relaunch, save diagnostics and fixture hash, background
+receipt, trial hash, then the other verifiers.
+
+The moved bodies read only `$captures`, `$debug` and `$result` and use no
+script path or `return`, so dot-sourcing keeps their meaning. A line
+comparison confirms both bodies match the originals. The selection checker's
+fault copy stops before either block, so it needs no change. All three
+scripts parse, `check-painter-selection.ps1` passes, `-CompileOnly` compiles
+in both presets, and the native `-PracticeReplayOnly` and `-RumbleOnly` leaves
+pass in Debug and Release with their `practice_replay_receipt` and Debug
+`background_receipt` recorded.

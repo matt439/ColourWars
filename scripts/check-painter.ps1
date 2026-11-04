@@ -491,37 +491,7 @@ try {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
     }
-    if ($PracticeReplayOnly) {
-        $practice = Get-Content -LiteralPath (Join-Path $captures 'practice-replay-summary.json') -Raw | ConvertFrom-Json
-        $practiceRows = @(Import-Csv -LiteralPath (Join-Path $captures 'practice-replay.csv'))
-        $expectedPracticeSteps = if ($debug) { 4920 } else { 4800 }
-        $expectedPracticeCases = @('sustained-practice-60-seconds', 'practice-pause-focus-resume', 'practice-restart',
-            'timed-menu-solo', 'timed-developer-course', 'timed-multiplayer', 'timed-to-practice-clears-old-tape')
-        if ($debug) { $expectedPracticeCases += 'independent-debug-recorder' }
-        if ($practice.outcome -cne 'passed' -or $practice.scope -cne 'actual-GameLevel-practice-replay' -or
-            $practice.practice_steps -ne $expectedPracticeSteps -or $practice.timed_cases -ne 3 -or
-            $practice.reproduced_steps -lt 500 -or $practice.state_updates -le 4800 -or
-            $practice.practice_steps_retained -ne 0 -or $practice.practice_gaps_retained -ne 0 -or
-            $practice.GPU_draws -ne 0 -or $practice.GPU_reads -ne 0 -or $practice.physical_pad_claim -ne $false -or
-            $practice.debug_recorder -ne $debug -or $practiceRows.Count -ne $expectedPracticeCases.Count -or
-            @($practiceRows.case | Sort-Object -Unique).Count -ne $expectedPracticeCases.Count -or
-            @(Compare-Object -ReferenceObject $expectedPracticeCases -DifferenceObject @($practiceRows.case)).Count -ne 0) {
-            throw 'Actual GameLevel practice/replay receipts differ from the bounded complete cases.'
-        }
-        foreach ($row in $practiceRows) {
-            if ($row.practice -eq '1' -and ($row.tape_steps -cne '0' -or $row.gaps -cne '0')) {
-                throw 'Actual practice retained shipping tape inputs or gaps.'
-            }
-            if ($row.case -like 'timed-*' -and $row.case -ne 'timed-to-practice-clears-old-tape' -and
-                ([int]$row.tape_steps -lt 170 -or [int]$row.gaps -lt 2 -or $row.reproduced_steps -cne $row.tape_steps)) {
-                throw 'A timed actual GameLevel control lost steps, gaps or its replay.'
-            }
-        }
-        if (@(Get-ChildItem -LiteralPath $captures -File | Where-Object { $_.Extension -in @('.ppm', '.png', '.rgba') }).Count) {
-            throw 'The zero-raster practice replay scope emitted a raster artifact.'
-        }
-        $result.practice_replay_receipt = $practice
-    }
+    if ($PracticeReplayOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-practice-replay.ps1') }
     if ($RememberedSetupOnly) {
         # A new OS process reloads the writer's nested private save. The outer
         # aim_marker=false runner fixture remains immutable in both launches.
@@ -632,26 +602,7 @@ try {
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
         throw 'The visual probe changed its isolated aim_marker=false save fixture.'
     }
-    if ($RumbleOnly -and $debug) {
-        $background = Get-Content -LiteralPath (Join-Path $captures 'debug-background-summary.json') -Raw | ConvertFrom-Json
-        $backgroundRows = @(Import-Csv -LiteralPath (Join-Path $captures 'debug-background.csv'))
-        $backgroundCases = @('default-off-inactive', 'actual-hidden-hard-gate',
-            'synthetic-inactive-neutral-presence-muted-before-step', 'foreground-zero-run-edge-discarded',
-            'inactive-actual-damage-motors-zero', 'inactive-script-wait',
-            'manual-debug-pause-and-script-self-disable-barrier', 'covered-toggle-hard-gate',
-            'injected-hidden', 'injected-minimized', 'injected-power-suspended', 'off-inactive-freezes',
-            'off-then-activation-ordinary-countin-current-preferences', 'actual-pause-menu-hard-gate',
-            'resume-countin-hard-gate', 'missing-pad-real-pause', 'inactive-bot-paid-shot-record',
-            'inactive-replay-final-fingerprint', 'new-inactive-level-enabled', 'new-inactive-level-disabled')
-        if ($background.outcome -cne 'passed' -or $background.cases -ne 20 -or $backgroundRows.Count -ne 20 -or
-            $background.recorded_updates -ne 420 -or $background.native_motor_calls -ne 0 -or
-            $background.save_unchanged -ne $true -or
-            @($backgroundRows.case | Sort-Object -Unique).Count -ne 20 -or
-            @(Compare-Object -ReferenceObject $backgroundCases -DifferenceObject @($backgroundRows.case)).Count -ne 0) {
-            throw 'Debug background supplement did not produce its complete bounded 20-case/420-update receipts.'
-        }
-        $result.background_receipt = $background
-    }
+    if ($RumbleOnly -and $debug) { . (Join-Path $PSScriptRoot 'check-painter/verify-rumble.ps1') }
     if ($trialMode) {
         $trialHashAfterAttempted = $true
         $result.trial_source.sha256_after = (Get-FileHash -LiteralPath $trialResolved -Algorithm SHA256).Hash

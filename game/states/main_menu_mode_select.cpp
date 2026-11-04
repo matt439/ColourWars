@@ -1,0 +1,330 @@
+#include "game/pch.h"
+#include "game/states/main_menu.h"
+#include "game/match/series_stage_rule.h"
+#include "game/objects/crude_drawing.h"
+#include "game/carried/ui_text_drop_shadow.h"
+
+using namespace labrador;
+
+#pragma region MainMenuModeSelect
+
+MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
+	MainMenuPage(context)
+{
+
+}
+
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_setup_row(const std::string& name, MenuItem item,
+	int row, RenderResources* render, const MenuStyle& style, const MainMenuPresentation& look,
+	const MenuText& text, OptionRow::Adjust on_adjust)
+{
+	MenuStyle row_style = style;
+	row_style.highlight = look.art.focus_ink;
+	row_style.unhighlight = look.art.ink;
+	row_style.disabled = look.art.disabled_ink;
+	row_style.shadow_colour = Colour{};
+	const float y = look.mode_select_spacing.y * static_cast<float>(row);
+	return std::make_unique<OptionRow>(name, text.item(item),
+		style.layout.position + Vector2F(0.0f, y),
+		style.layout.position + Vector2F(look.mode_select_spacing.x * 2.0f, y),
+		row_style, look.art.ink, render, std::move(on_adjust));
+}
+
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_duration_row(RenderResources* render,
+	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+	OptionRow::Adjust on_adjust)
+{
+	return make_setup_row("duration", MenuItem::match_length, DURATION_ROW, render, style, look, text,
+		std::move(on_adjust));
+}
+
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_stage_rule_row(RenderResources* render,
+	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+	OptionRow::Adjust on_adjust)
+{
+	return make_setup_row("series_stage", MenuItem::series_stage, STAGE_RULE_ROW, render, style, look, text,
+		std::move(on_adjust));
+}
+
+bool MainMenuModeSelect::setup_row_fits(const OptionRow& row_widget,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	const float pen = art.keyline_width;
+	const float shade = art.shadow_offset;
+	const RectangleF inside = menu_geometry::paper_interior(panel, art);
+	RectangleF row = row_widget.bounds();
+	row.inflate(art.focus_padding);
+	const RectangleF arrow(row.x - pen * 7.0f, row.center().y - pen * 3.0f,
+		pen * 5.0f, pen * 6.0f);
+	const RectangleF ornament = RectangleF::union_of(arrow, RectangleF::union_of(row,
+		RectangleF(row.position() + Vector2F(shade), row.size())));
+	return std::isfinite(row.x) && std::isfinite(row.y) && std::isfinite(row.width) && std::isfinite(row.height) &&
+		row.width > 0.0f && row.height > 0.0f && std::isfinite(row_spacing) && row_spacing > 0.0f &&
+		inside.contains(ornament) && std::max(row.height + shade, pen * 6.0f) <= row_spacing;
+}
+
+void MainMenuModeSelect::check_duration_row(const OptionRow& duration_row,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	if (!setup_row_fits(duration_row, panel, art, row_spacing))
+	{
+		throw std::runtime_error("main_menu.mode_select_spacing: the complete duration row must fit main_menu.setup_box_size.");
+	}
+}
+
+void MainMenuModeSelect::check_stage_rule_row(const OptionRow& stage_rule_row,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	if (!setup_row_fits(stage_rule_row, panel, art, row_spacing))
+	{
+		throw std::runtime_error("main_menu.mode_select_spacing: the complete series stage row must fit main_menu.setup_box_size.");
+	}
+}
+
+void MainMenuModeSelect::refresh_duration()
+{
+	const std::optional<float> seconds = this->level_settings()->duration();
+	const std::wstring value = this->text().setting_duration(
+		seconds.value_or(this->data()->tuning()->match().duration), !seconds.has_value());
+	const size_t missing = this->render_resources()->first_unrenderable(this->duration_font_, value);
+	if (missing != std::wstring::npos)
+	{
+		throw std::runtime_error(std::string("menu_text.values.") +
+			(seconds ? "duration_minutes" : "duration_default") + " cannot draw character at index " +
+			std::to_string(missing) + " with the captured duration font '" + this->duration_font_name_ + "'.");
+	}
+	this->duration_row_->set_value(value);
+	// The row, font, spacing, shadow and paper were captured at construction.
+	// Only the default's numeric tuning remains live through later refreshes.
+	check_duration_row(*this->duration_row_, this->paper_->rectangle(), this->setup_art_, this->duration_row_spacing_);
+}
+
+void MainMenuModeSelect::cycle_duration(Direction direction)
+{
+	const std::vector<float>& choices = this->data()->tuning()->match().duration_choices;
+	const std::optional<float> current = this->level_settings()->duration();
+	size_t slot = 0;
+	for (size_t index = 0; index < choices.size(); ++index)
+	{
+		if (current && *current == choices[index]) { slot = index + 1; break; }
+	}
+	const size_t count = choices.size() + 1;
+	slot = direction == Direction::left ? (slot + count - 1) % count : (slot + 1) % count;
+	this->level_settings()->set_duration(slot == 0 ? std::nullopt :
+		std::optional<float>(choices[slot - 1]));
+	this->refresh_duration();
+}
+
+Vector2F MainMenuModeSelect::practice_hint_position(const UiWidget& single_match,
+	const MenuPaperArtPresentation& art)
+{
+	const RectangleF label = single_match.bounds();
+	return Vector2F(label.right() + art.focus_padding.x * 2.0f + art.shadow_offset, label.y);
+}
+
+void MainMenuModeSelect::refresh_stage_rule()
+{
+	const std::wstring& value = this->text().series_stage_value(this->level_settings()->series_stage_rule());
+	const size_t missing = this->render_resources()->first_unrenderable(this->duration_font_, value);
+	if (missing != std::wstring::npos)
+	{
+		throw std::runtime_error("menu_text.values.series_stage cannot draw character at index " +
+			std::to_string(missing) + " with the captured item font '" + this->duration_font_name_ + "'.");
+	}
+	this->stage_rule_row_->set_value(value);
+	check_stage_rule_row(*this->stage_rule_row_, this->paper_->rectangle(), this->setup_art_,
+		this->duration_row_spacing_);
+}
+
+void MainMenuModeSelect::cycle_stage_rule(Direction direction)
+{
+	constexpr std::array<SeriesStageRule, 3> rules{
+		SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick };
+	const auto found = std::find(rules.begin(), rules.end(), this->level_settings()->series_stage_rule());
+	size_t slot = found == rules.end() ? 0 : static_cast<size_t>(found - rules.begin());
+	slot = direction == Direction::left ? (slot + rules.size() - 1) % rules.size() : (slot + 1) % rules.size();
+	this->level_settings()->set_series_stage_rule(rules[slot]);
+	this->refresh_stage_rule();
+}
+
+void MainMenuModeSelect::update_page(float /*dt*/)
+{
+	for (const ProcessedMenuInput& input : this->menu_inputs())
+	{
+		if (input.action == MenuInputAction::back)
+		{
+			this->play_wave(this->cancel_sound_);
+			this->go_to(MainMenuScreen::home);
+			return;
+		}
+		if (input.action == MenuInputAction::proceed)
+		{
+			if (this->activate_focus() == Activation::ran)
+			{
+				return;
+			}
+		}
+		else if (this->focus_.move(0, input.direction))
+		{
+			this->play_wave(this->direction_sound_);
+		}
+		else if ((this->focus_.focused(0) == this->duration_row_.get() ||
+			this->focus_.focused(0) == this->stage_rule_row_.get()) &&
+			(input.direction == Direction::left || input.direction == Direction::right))
+		{
+			this->play_wave(this->direction_sound_);
+			(this->focus_.focused(0) == this->duration_row_.get() ?
+				this->duration_row_ : this->stage_rule_row_)->adjust(input.direction);
+			this->press_focus();
+		}
+	}
+}
+void MainMenuModeSelect::init()
+{
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->setup_art_ = menu_geometry::setup_art(look);
+	this->set_prompts(MenuPrompt::mode);
+
+	// Every mode uses the same player setup and paint scoring.
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
+
+	this->set_widget_spacing(look.mode_select_spacing);
+
+	this->background_ = std::make_unique<UiTexture>(
+		"background",
+		style.sprite_sheet,
+		style.fill_frame,
+		menu_geometry::design_area(),
+		this->render_resources(),
+		CrudeDrawing::premultiplied(look.home_background_colour));
+
+	// Invisible shadows retain the existing font extents and navigation
+	// geometry while the paper's lettering uses plain, readable ink.
+	this->heading_ = std::make_unique<colourwars::UiTextDropShadow>(
+		"heading",
+		this->text().heading(MenuHeading::mode),
+		style.heading_font,
+		this->calculate_widget_position(0, 0),
+		this->render_resources(),
+		look.art.ink,
+		Colour{},
+		style.heading_shadow_offset);
+
+	this->standard_ = std::make_unique<colourwars::UiTextDropShadow>(
+		"standard",
+		this->text().item(MenuItem::single_match),
+		style.item_font,
+		this->calculate_widget_position(0, 2),
+		this->render_resources(),
+		look.art.focus_ink,
+		Colour{},
+		style.item_shadow_offset);
+
+	this->best_of_three_ = std::make_unique<colourwars::UiTextDropShadow>(
+		"best_of_three",
+		this->text().item(MenuItem::best_of_three),
+		style.item_font,
+		this->calculate_widget_position(0, 3),
+		this->render_resources(),
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
+
+	this->best_of_five_ = std::make_unique<colourwars::UiTextDropShadow>(
+		"best_of_five",
+		this->text().item(MenuItem::best_of_five),
+		style.item_font,
+		this->calculate_widget_position(0, 4),
+		this->render_resources(),
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
+
+	this->practice_ = std::make_unique<colourwars::UiTextDropShadow>(
+		"practice",
+		this->text().solo_practice_hint,
+		style.detail_font,
+		practice_hint_position(*this->standard_, this->setup_art_),
+		this->render_resources(),
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
+
+	this->back_ = std::make_unique<colourwars::UiTextDropShadow>(
+		"back",
+		this->text().item(MenuItem::back),
+		style.item_font,
+		this->calculate_widget_position(0, BACK_ROW),
+		this->render_resources(),
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
+
+	this->duration_font_name_ = style.item_font;
+	this->duration_font_ = this->render_resources()->resolve_sprite_font(this->duration_font_name_);
+	this->duration_row_spacing_ = look.mode_select_spacing.y;
+	this->duration_row_ = make_duration_row(this->render_resources(), style, look, this->text(),
+		[this](Direction direction) { this->cycle_duration(direction); });
+	this->stage_rule_row_ = make_stage_rule_row(this->render_resources(), style, look, this->text(),
+		[this](Direction direction) { this->cycle_stage_rule(direction); });
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		menu_geometry::footer_paper(look.setup_box_size, style.footer_y),
+		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
+		&this->focus_motion_, &this->settings_session()->play_settings());
+	this->refresh_duration();
+	this->refresh_stage_rule();
+
+	this->texture_container_ = std::make_unique<UiContainer>(
+		"texture_container");
+	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
+
+	this->text_container_ = std::make_unique<UiContainer>(
+		"text_container");
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->standard_.get());
+	this->text_container_->add_child(this->best_of_three_.get());
+	this->text_container_->add_child(this->best_of_five_.get());
+	this->text_container_->add_child(this->duration_row_.get());
+	this->text_container_->add_child(this->stage_rule_row_.get());
+	this->text_container_->add_child(this->practice_.get());
+	this->text_container_->add_child(this->back_.get());
+
+	const auto choose = [this](int best_of)
+		{
+			this->level_settings()->set_best_of(best_of);
+			this->play_wave(this->confirm_sound_);
+			this->go_to(MainMenuScreen::player_count);
+		};
+	this->focus_.add(this->standard_.get(), [choose] { choose(1); });
+	this->focus_.add(this->best_of_three_.get(), [choose] { choose(3); });
+	this->focus_.add(this->best_of_five_.get(), [choose] { choose(5); });
+	this->focus_.add(this->duration_row_.get(), [this]
+		{
+			this->play_wave(this->direction_sound_);
+			this->cycle_duration(Direction::right);
+		});
+	this->focus_.add(this->stage_rule_row_.get(), [this]
+		{
+			this->play_wave(this->direction_sound_);
+			this->cycle_stage_rule(Direction::right);
+		});
+
+	this->focus_.add(this->back_.get(), [this]
+		{
+			this->play_wave(this->cancel_sound_);
+			this->go_to(MainMenuScreen::home);
+		});
+	if (this->level_settings()->best_of() == 3)
+	{
+		this->focus_.set_focused(0, this->best_of_three_.get());
+	}
+	else if (this->level_settings()->best_of() == 5)
+	{
+		this->focus_.set_focused(0, this->best_of_five_.get());
+	}
+
+}
+
+#pragma endregion MainMenuModeSelect
