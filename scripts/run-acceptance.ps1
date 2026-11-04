@@ -7,6 +7,9 @@ param(
     [string[]] $Cases,
     [string[]] $ExcludeCases,
     [switch] $OptIn,
+    [switch] $QuickOptIn,
+    [switch] $OwnLegOnly,
+    [switch] $SkipOwnLeg,
     [switch] $SkipSlowDebug,
     [ValidateRange(1, 64)]
     [int] $Parallel = 1,
@@ -20,7 +23,7 @@ Set-StrictMode -Version Latest
 
 # Each case is declared once, in scripts/acceptance/cases.psd1.
 $declaredCases = @((Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'acceptance/cases.psd1')).Cases)
-$caseKeys = @('Name', 'Group', 'Sources', 'Arguments', 'StartRank', 'SlowInDebug', 'Utf8Output')
+$caseKeys = @('Name', 'Group', 'Sources', 'Arguments', 'StartRank', 'SlowInDebug', 'Utf8Output', 'Quick', 'NeedsTrial', 'OwnLeg')
 $caseTable = @{}
 foreach ($declared in $declaredCases) {
     foreach ($key in $declared.Keys) {
@@ -34,7 +37,7 @@ foreach ($declared in $declaredCases) {
         throw "acceptance/cases.psd1: $($declared.Name) has an unknown group."
     }
     # Fill in what a declaration leaves out, so every key reads under strict mode.
-    $defaults = @{ Arguments = @('game'); Sources = @(); StartRank = [int]::MaxValue; SlowInDebug = $false; Utf8Output = $false }
+    $defaults = @{ Arguments = @('game'); Sources = @(); StartRank = [int]::MaxValue; SlowInDebug = $false; Utf8Output = $false; Quick = $false; NeedsTrial = $false; OwnLeg = $false }
     foreach ($key in $defaults.Keys) {
         if (-not $declared.ContainsKey($key)) { $declared[$key] = $defaults[$key] }
     }
@@ -45,6 +48,7 @@ foreach ($declared in $declaredCases) {
 }
 $availableCases = @($declaredCases | ForEach-Object { $_.Name })
 if ($OptIn -and $PSBoundParameters.ContainsKey('Cases')) { throw 'Choose -Cases or -OptIn, not both.' }
+if ($QuickOptIn -and ($OptIn -or $PSBoundParameters.ContainsKey('Cases'))) { throw 'Choose -QuickOptIn alone, not with -Cases or -OptIn.' }
 if ($SkipSlowDebug -and $Preset -ne 'x64-debug') { throw 'SkipSlowDebug applies only to x64-debug.' }
 $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
     if (-not $Cases) { throw 'Cases must contain at least one case name.' }
@@ -56,7 +60,11 @@ $selectedCases = if ($PSBoundParameters.ContainsKey('Cases')) {
         }
     })
 } elseif ($OptIn) {
-    @($declaredCases | Where-Object { $_.Group -ceq 'opt-in' } | ForEach-Object { $_.Name })
+    # A trial case takes a private file the runner cannot supply, so it can only compile.
+    @($declaredCases | Where-Object { $_.Group -ceq 'opt-in' -and ($CompileOnly -or -not $_.NeedsTrial) } |
+        ForEach-Object { $_.Name })
+} elseif ($QuickOptIn) {
+    @($declaredCases | Where-Object { $_.Group -ceq 'opt-in' -and $_.Quick } | ForEach-Object { $_.Name })
 } else {
     @($declaredCases | Where-Object {
         $_.Group -ceq 'default' -or ($_.Group -ceq 'debug-only' -and $Preset -eq 'x64-debug')
@@ -66,6 +74,9 @@ foreach ($case in $selectedCases) {
     if ($case -notin $availableCases) { throw "Unknown acceptance case: $case" }
     if ($caseTable[$case].Group -ceq 'debug-only' -and $Preset -ne 'x64-debug') {
         throw "$case is a Debug-only developer tool."
+    }
+    if ($caseTable[$case].NeedsTrial -and -not $CompileOnly) {
+        throw "$case needs a private trial file, so the runner can only compile it."
     }
 }
 if (@($selectedCases | Select-Object -Unique).Count -ne @($selectedCases).Count) {
@@ -83,6 +94,11 @@ if ($ExcludeCases) {
 }
 if ($SkipSlowDebug) {
     $selectedCases = @($selectedCases | Where-Object { -not $caseTable[$_].SlowInDebug })
+    if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
+}
+if ($OwnLegOnly -and $SkipOwnLeg) { throw 'Choose -OwnLegOnly or -SkipOwnLeg, not both.' }
+if ($OwnLegOnly -or $SkipOwnLeg) {
+    $selectedCases = @($selectedCases | Where-Object { [bool]$caseTable[$_].OwnLeg -eq [bool]$OwnLegOnly })
     if (-not $selectedCases) { throw 'Every selected acceptance case was excluded.' }
 }
 

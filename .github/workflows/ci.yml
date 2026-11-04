@@ -16,8 +16,10 @@ permissions:
   contents: read
   actions: read
 
+# A newer push replaces a branch's run. Master keeps every run: with one group,
+# a docs-only merge cancelled a full build of the code merged before it.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/master' && github.sha || 'latest' }}
   cancel-in-progress: true
 
 jobs:
@@ -30,13 +32,15 @@ jobs:
       # Compare the whole push/PR without building the engine. The pinned
       # engine is checked out (not its own submodules) so the link check can
       # reach the engine files the docs link to.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
 
-      - name: Check CI change detection and the link checker
-        run: python3 -m unittest discover -s scripts/ci -p test_*.py
+      - name: Check CI change detection, the link checker and frame analysis
+        run: |
+          python3 -m unittest discover -s scripts/ci -p test_*.py
+          python3 -m unittest discover -s scripts/perf -p test_*.py
 
       # A pull request runs the whole suite once, and the record job names the
       # tree it passed. A push of that same tree, such as the merge commit of a
@@ -54,12 +58,23 @@ jobs:
   windows:
     needs: lint
     if: needs.lint.outputs.skip_windows != 'true'
+    name: windows (${{ matrix.leg }})
     runs-on: windows-latest
+    # The slowest run so far took 29 minutes as one job per preset.
+    timeout-minutes: 60
 
+    # Each leg builds for itself: a rebuild costs a parallel runner, a shared
+    # build would cost every leg a serial wait. crossfeed has a Debug leg of
+    # its own because it alone is as long as the rest of the suite.
     strategy:
       fail-fast: false
       matrix:
-        preset: [x64-debug, x64-release]
+        include:
+          - { leg: debug-crossfeed, preset: x64-debug, acceptance: true, selection: '-OwnLegOnly' }
+          - { leg: debug-cases, preset: x64-debug, acceptance: true, selection: '-SkipOwnLeg' }
+          - { leg: debug-checks, preset: x64-debug, checks: true }
+          - { leg: release-cases, preset: x64-release, acceptance: true, quick_opt_in: true }
+          - { leg: release-checks, preset: x64-release, checks: true }
 
     # Ninja builds need the MSVC environment, which Set up MSVC exports once.
     defaults:
@@ -68,7 +83,7 @@ jobs:
 
     steps:
       # Include Labrador and its nested dependencies.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -79,12 +94,14 @@ jobs:
         run: |
           echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
           echo "image=$env:ImageOS-$env:ImageVersion" >> $env:GITHUB_OUTPUT
+          # Runners differ by up to 2x; this names the one a slow run drew.
+          Get-CimInstance Win32_Processor | ForEach-Object { "$($_.Name), $($_.NumberOfLogicalProcessors) logical" }
 
       # Reuse dependency binaries across configure steps. vcpkg's package
       # hashes include the compiler, which moves with the runner image, so a
       # key without the image hits forever and restores nothing usable.
       - name: Cache vcpkg binaries
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/AppData/Local/vcpkg/archives
           key: vcpkg-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('vcpkg.json') }}
@@ -100,30 +117,39 @@ jobs:
         run: |
           cmake --preset ${{ matrix.preset }}
 
-      - name: Audio publication and staging checks
+      - name: Audio pipeline, publication and staging checks
+        if: matrix.checks
         shell: pwsh
-        run: python -m unittest discover -s scripts/audio -p test_runtime_bank.py
+        run: python -m unittest discover -s scripts/audio -p test_*.py
 
       # Building also runs Labrador's include-boundary check.
       - name: Build
+        id: build
         run: |
           cmake --build --preset ${{ matrix.preset }}
 
+      # Once the build is good every check below runs, whatever an earlier one
+      # did, so one failure does not hide the rest until a second run.
+
       # CI#2: compile, but never run, the probes CI does not otherwise build:
       # the opt-in acceptance cases (-OptIn, the 'opt-in' group in
-      # scripts/acceptance/cases.psd1), the painter with both pad readers and,
-      # Debug-only like its harness, frame pacing. No probe, window or GPU is used.
+      # scripts/acceptance/cases.psd1), the painter with both pad readers,
+      # paint effects and, Debug-only like its harness, frame pacing. No probe,
+      # window or GPU is used. nightly.yml runs the painter and paint effects.
       - name: Compile gate for opt-in probes
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         run: |
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -Parallel 4 -OutputDirectory out/validation/compile-gate/acceptance -OptIn
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-painter.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/painter
           if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-paint-fx.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/paint-fx
+          if errorlevel 1 exit /b 1
           if "${{ matrix.preset }}"=="x64-debug" pwsh -NoProfile -File scripts/check-frame-pacing.ps1 -Preset x64-debug -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/frame-pacing
 
       - name: Upload compile gate evidence
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: always() && matrix.checks
+        uses: actions/upload-artifact@v7
         with:
           name: compile-gate-${{ matrix.preset }}
           path: |
@@ -133,7 +159,7 @@ jobs:
           retention-days: 7
 
       - name: Acceptance tooling preflight, ownership and deadlines
-        if: matrix.preset == 'x64-debug'
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.leg == 'debug-checks' }}
         run: |
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-acceptance-selection.ps1
           if errorlevel 1 exit /b 1
@@ -148,8 +174,8 @@ jobs:
           pwsh -NoProfile -File scripts/check-acceptance-process.ps1
 
       - name: Upload acceptance tooling evidence
-        if: always() && matrix.preset == 'x64-debug'
-        uses: actions/upload-artifact@v4
+        if: always() && matrix.leg == 'debug-checks'
+        uses: actions/upload-artifact@v7
         with:
           name: acceptance-tooling
           path: |
@@ -165,34 +191,48 @@ jobs:
 
       # Four cases at a time on the runner's four cores. Every event runs the
       # full suite, so a pull request's run is the one its merge relies on.
+      # The deadline is about twice the slowest case seen, 815 s.
       - name: Consumer acceptance checks
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.acceptance }}
         run: |
-          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 -RunTimeoutSeconds 1800 ${{ matrix.selection }}
+
+      # The opt-in cases short enough for every pull request ('Quick' in
+      # cases.psd1). The rest, bot_team_trials above all, run in nightly.yml.
+      - name: Quick opt-in cases
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.quick_opt_in }}
+        run: |
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 -RunTimeoutSeconds 1800 -QuickOptIn -OutputDirectory out/acceptance-quick-opt-in
 
       # CI#4: per-case compile and run seconds, outcome, longest first. The
       # data the scheduling order in cases.psd1 should rest on.
       - name: Upload acceptance timing summary
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: always() && matrix.acceptance
+        uses: actions/upload-artifact@v7
         with:
-          name: acceptance-summary-${{ matrix.preset }}
-          path: out/acceptance/${{ matrix.preset }}/acceptance-summary.json
+          name: acceptance-summary-${{ matrix.leg }}
+          path: |
+            out/acceptance/${{ matrix.preset }}/acceptance-summary.json
+            out/acceptance-quick-opt-in/${{ matrix.preset }}/acceptance-summary.json
           if-no-files-found: ignore
           retention-days: 30
 
-      # Hidden, scripted correctness checks. Debug can fall back to WARP on
-      # GPU-less runners; this establishes no hardware or performance acceptance.
+      # Hidden, scripted correctness checks, and the only match frames either
+      # preset draws on a pull request. The runner's Microsoft Basic Render
+      # Driver is a software rasteriser that DXGI does not flag as software, so
+      # the engine reports it as hardware and this passes the hardware-only
+      # gate. That establishes no hardware or performance acceptance.
       - name: Movement feedback rendering checks
-        if: matrix.preset == 'x64-debug'
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         timeout-minutes: 20
         run: |
-          pwsh -NoProfile -File scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild -AllowSoftwareAdapter
+          pwsh -NoProfile -File scripts/check-movement-feedback.ps1 -Preset ${{ matrix.preset }} -SkipBuild
 
       # Keep structured diagnostics on failure without uploading the probe's
       # executable, objects or large raw PPM capture matrix.
       - name: Upload movement feedback evidence
-        if: always() && matrix.preset == 'x64-debug'
-        uses: actions/upload-artifact@v4
+        if: always() && matrix.checks
+        uses: actions/upload-artifact@v7
         with:
           name: movement-feedback-${{ matrix.preset }}
           path: |
@@ -204,14 +244,17 @@ jobs:
           retention-days: 7
 
       - name: Level editor acceptance
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         run: |
           cmake --build --preset ${{ matrix.preset }} --target ColourWarsEditor colourwars_editor_acceptance colourwars_editor_dpi_acceptance
+          if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-level-editor.ps1 -Preset ${{ matrix.preset }} -SkipBuild
 
       # CI#3: both are hidden and input-free (about 20 s and 1 s locally). The
       # registration check stages a scratch game and runs check-startup on it;
       # the failure check reads and closes its own process's dialog by message.
       - name: Stage registration integration
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         timeout-minutes: 10
         run: |
           cmake --build --preset ${{ matrix.preset }} --target ColourWarsRegisterStage
@@ -219,15 +262,30 @@ jobs:
           pwsh -NoProfile -File scripts/check-stage-registration.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/stage-registration
 
       - name: Entry-point failure reporting
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         timeout-minutes: 5
         run: |
           pwsh -NoProfile -File scripts/check-failure-reporting.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/failure-reporting
 
+      # Hidden; a real GameLevel lifecycle with a recording adapter.
+      - name: Display awake over a match's lifetime
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
+        timeout-minutes: 10
+        run: |
+          pwsh -NoProfile -File scripts/check-display-awake.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/display-awake
+
+      # A synthetic ZIP: no build, compiler or sandbox.
+      - name: Sandbox trial generator
+        if: ${{ !cancelled() && matrix.leg == 'release-checks' }}
+        timeout-minutes: 5
+        run: |
+          pwsh -NoProfile -File scripts/check-sandbox-release.ps1 -OutputDirectory out/validation/sandbox-check
+
       # Receipts and logs only: each registration run also holds a scratch
       # repository, a junction to it and a staged game, none of them uploaded.
       - name: Upload registration and failure-reporting evidence
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: always() && matrix.checks
+        uses: actions/upload-artifact@v7
         with:
           name: registration-failure-reporting-${{ matrix.preset }}
           path: |
@@ -243,24 +301,29 @@ jobs:
             out/validation/failure-reporting/*/*/*/metadata.log
             out/validation/failure-reporting/*/*/*/startup.err
             out/validation/failure-reporting/*/*/*/startup.out
+            out/validation/display-awake/*/*/result.json
           if-no-files-found: ignore
           retention-days: 7
 
       - name: Package Release
-        if: matrix.preset == 'x64-release'
+        id: package
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.leg == 'release-checks' }}
         run: |
           cmake --build --preset x64-release --target package
 
       # CI#6: the packaging rules are a script, runnable locally the same way.
       - name: Extract and inspect Release package
-        if: matrix.preset == 'x64-release'
+        id: inspect
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
         shell: pwsh
         run: ./scripts/check-release-package.ps1 -OutputDirectory (Join-Path $env:RUNNER_TEMP 'ColourWars-release')
 
-      # Debug supports WARP and must start. The pinned engine's Release refuses
-      # software adapters: only its exact no-hardware diagnostic may be skipped.
-      # Content errors, crashes, missing windows and shutdown errors fail CI.
-      - name: Audible clone starts from anywhere; missing-bank fallback starts separately
+      # Both presets must start, on the adapter described at the movement
+      # check; Release starts from the inspected package. Losing that adapter,
+      # content errors, crashes, missing windows and shutdown errors fail CI.
+      # A muted process: this proves the bank opens, not how it sounds.
+      - name: The bank opens from anywhere; missing-bank fallback starts separately
+        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.inspect.outcome == 'success') }}
         shell: pwsh
         run: |
           $dir = "out/build/${{ matrix.preset }}/game"
@@ -272,7 +335,6 @@ jobs:
           if ('${{ matrix.preset }}' -eq 'x64-release') {
             $dir = Join-Path $env:RUNNER_TEMP "ColourWars-release/ColourWars-windows-x64"
             $arguments.Executable = Join-Path $dir 'ColourWars.exe'
-            $arguments.AllowNoHardwareAdapter = $true
             $arguments.SystemOnlyPath = $true
           }
           & ./scripts/check-startup.ps1 @arguments
@@ -292,6 +354,7 @@ jobs:
       # ROAD#16: one valid and one broken stage in the isolated profile's
       # stage folder; the broken one is one stderr line and startup goes on.
       - name: A broken user stage is refused without stopping startup
+        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.inspect.outcome == 'success') }}
         shell: pwsh
         run: |
           $arguments = @{
@@ -301,13 +364,13 @@ jobs:
           }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
             $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64/ColourWars.exe'
-            $arguments.AllowNoHardwareAdapter = $true
             $arguments.SystemOnlyPath = $true
           }
           & ./scripts/check-startup.ps1 @arguments
 
       # GAP#L11: the test locale composes and passes every startup check.
       - name: The test locale starts
+        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.inspect.outcome == 'success') }}
         shell: pwsh
         run: |
           $arguments = @{
@@ -317,15 +380,14 @@ jobs:
           }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
             $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64/ColourWars.exe'
-            $arguments.AllowNoHardwareAdapter = $true
             $arguments.SystemOnlyPath = $true
           }
           & ./scripts/check-startup.ps1 @arguments
 
       # Only a ZIP that passed inspection, its version stamp and startup.
       - name: Upload Release package
-        if: matrix.preset == 'x64-release'
-        uses: actions/upload-artifact@v4
+        if: matrix.leg == 'release-checks'
+        uses: actions/upload-artifact@v7
         with:
           name: ColourWars-windows-x64
           path: out/build/x64-release/packages/ColourWars-windows-x64.zip
@@ -333,8 +395,8 @@ jobs:
           retention-days: 14
 
       - name: Upload startup evidence
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: always() && matrix.checks
+        uses: actions/upload-artifact@v7
         with:
           name: startup-${{ matrix.preset }}
           path: out/validation/startup
@@ -350,7 +412,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -362,7 +424,7 @@ jobs:
           [ "v$version" = "$GITHUB_REF_NAME" ] ||
             { echo "::error::Tag $GITHUB_REF_NAME does not match project(VERSION $version)"; exit 1; }
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: ColourWars-windows-x64
 
@@ -381,7 +443,7 @@ jobs:
             --verify-tag --title "ColourWars $GITHUB_REF_NAME" \
             --notes-file notes.md --generate-notes
 
-  # Only after both Windows jobs passed on the commit they checked out (a pull
+  # Only after every Windows job passed on the commit they checked out (a pull
   # request's test merge): its tree is what a later push may skip on.
   record:
     needs: [lint, windows]
@@ -392,9 +454,28 @@ jobs:
         run: echo "${{ github.sha }}" > passed-commit.txt
 
       - name: Record the passed tree
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: passed-tree-${{ needs.lint.outputs.tree }}
           path: passed-commit.txt
           if-no-files-found: error
           retention-days: 90
+
+  # The one required check on master, so the ruleset names no matrix leg. It
+  # must run and judge for itself: a job skipped because a job it needs failed
+  # reports success, and a failed lint also leaves the Windows jobs skipped.
+  gate:
+    needs: [lint, windows]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint passed, and the Windows jobs passed or were rightly skipped
+        env:
+          LINT: ${{ needs.lint.result }}
+          WINDOWS: ${{ needs.windows.result }}
+          SKIP_WINDOWS: ${{ needs.lint.outputs.skip_windows }}
+        run: |
+          echo "lint=$LINT windows=$WINDOWS skip_windows=$SKIP_WINDOWS"
+          [ "$LINT" = success ] || exit 1
+          [ "$WINDOWS" = success ] && exit 0
+          [ "$WINDOWS" = skipped ] && [ "$SKIP_WINDOWS" = true ]

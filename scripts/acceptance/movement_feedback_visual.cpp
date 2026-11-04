@@ -3,6 +3,7 @@
 #include "game/game_data.h"
 #include "game/input/input_slots.h"
 
+#include <d3d11.h>
 #include <dxgi1_3.h>
 #include <dxgidebug.h>
 #include <wrl/client.h>
@@ -24,6 +25,8 @@
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/slot_seats.h"
 #undef private
+
+#pragma comment(lib, "d3d11.lib")
 
 using namespace labrador;
 
@@ -694,6 +697,12 @@ int wmain(int argc, wchar_t** argv)
             << " device=" << device.device_id << '\n';
         bool permitted_device = device.kind == RenderDeviceKind::hardware;
 #if defined(_DEBUG)
+        // The engine asks for the debug layer only where it is installed, and
+        // CI catches D3D usage errors only if it is. Asked the way the SDK
+        // samples ask: a null device costs nothing and fails without the layer.
+        std::cout << "DEBUG_LAYER available=" << (SUCCEEDED(D3D11CreateDevice(nullptr,
+            D3D_DRIVER_TYPE_NULL, nullptr, D3D11_CREATE_DEVICE_DEBUG, nullptr, 0,
+            D3D11_SDK_VERSION, nullptr, nullptr, nullptr)) ? 1 : 0) << '\n';
         permitted_device = permitted_device ||
             (allow_software_adapter && device.kind == RenderDeviceKind::software);
 #endif

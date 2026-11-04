@@ -55,6 +55,13 @@ work on that branch. Do not create a new branch or pull request for each commit,
 or split dependent commits across separate pull requests unless asked. Keep work
 local until the user authorizes a push.
 
+`master` takes changes only through the required `gate` check, and a pull
+request must be up to date with `master` to merge. When `master` moves, merge it
+into the branch, wait for the new run and merge on its green; a merge queue is
+not available on a personal account, so this step is the session's. The ruleset
+has no bypass on purpose, because sessions act as the owner's account: if CI
+itself is broken, the owner adds a bypass for that one merge and removes it.
+
 ## Build and run
 
 Requires **VCPKG_ROOT** set (`CMakePresets.json` reads it for the toolchain
@@ -150,8 +157,9 @@ The one exception is the Debug painter background fixture, which plays at 1-4%
 so its mute checks still test something.
 
 Each case is declared once, in `scripts/acceptance/cases.psd1`: its name, its
-group (default, Debug-only or opt-in), extra sources, arguments, start rank and
-whether it is slow in Debug. A new case is a `.cpp` there plus one entry; the
+group (default, Debug-only or opt-in), extra sources, arguments, start rank,
+whether it is slow in Debug, and `Quick`, `NeedsTrial` or `OwnLeg` where one
+applies. A new case is a `.cpp` there plus one entry; the
 runner and CI read the list and write no case names of their own. Probes share
 `scripts/acceptance/support/probe.h`: `acceptance::require` throws on a failed
 check, and `acceptance::run_probe` turns an escaping exception into a `FAIL`
@@ -161,7 +169,11 @@ Use `-Cases ammo,text_wrap` to select a subset, including with `pwsh -File`.
 PowerShell arrays also work; names are trimmed and case-insensitive, while
 empty names, unknown names and duplicate selections are refused. `-ExcludeCases`
 removes cases from the chosen/default list. `-OptIn` selects the opt-in group
-instead of the default list, and `-SkipSlowDebug` (Debug only) leaves out the
+instead of the default list, leaving out the two `NeedsTrial` cases unless
+`-CompileOnly` is set, because they take a private file the runner cannot
+supply; naming one with `-Cases` is refused for the same reason. `-QuickOptIn`
+selects the opt-in cases declared `Quick`, `-OwnLegOnly` and `-SkipOwnLeg` split
+the list as CI's Debug legs do, and `-SkipSlowDebug` (Debug only) leaves out the
 cases declared slow in Debug. `scripts/check-acceptance-selection.ps1`
 checks these rules without starting CMake, a compiler or the native helper.
 
@@ -209,28 +221,65 @@ heading anchors in tracked Markdown outside `external/` resolve
 only Markdown or image/video files under `docs/images/` skip the Windows jobs.
 Deleting a packaged Markdown file still runs full CI, as do code, scripts, schemas,
 runtime assets and submodule changes. A pull request's run is the only full run
-its change gets: when both Windows jobs pass, a `record` job uploads an artifact
+its change gets: when every Windows job passes, a `record` job uploads an artifact
 named `passed-tree-<tree>` for the tree they built, and a push whose commit has
 that exact tree skips the Windows jobs. A merge of a branch already up to date
-with `master` is that tree; a `master` that moved past the branch, a conflict
-resolved in the merge, a direct push or a failed lookup builds in full, as do
-manual runs and `v*` tag pushes. A tag on `master` whose name matches
+with `master` is that tree, which the ruleset now requires; anything else, or a
+failed lookup, builds in full, as do manual runs and `v*` tag pushes. The `gate`
+job is the one required check: it always runs, and fails unless lint passed and
+the Windows jobs passed or were rightly skipped. A pull request that moves the
+engine pin must pin a revision on Labrador's `master` whose push run passed
+there, which `lint.py` asks Labrador's API. Such a pull request stays red until
+then, so a branch pin cannot merge; pin the merge commit or a tag, because a
+commit that was never `master`'s tip never gets a push run. A tag on `master` whose name matches
 `project(VERSION)` then publishes that run's checked Release ZIP as a GitHub
 Release (the `publish` job); the first tag is the author's call. Change detection and its regression checks live in `scripts/ci/`.
 
-Full CI builds both presets, compiles without running the opt-in probes
+Full CI runs five parallel Windows legs, each building for itself: Debug
+`crossfeed`, the rest of Debug's cases, Debug's other checks, Release's cases
+and Release's other checks. It compiles without running the opt-in probes
 (the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
-both pad readers and, in Debug, `check-frame-pacing.ps1 -CompileOnly`), runs
-consumer acceptance and checks startup.
+both pad readers, `check-paint-fx.ps1 -CompileOnly` and, in Debug,
+`check-frame-pacing.ps1 -CompileOnly`), runs consumer acceptance, the `Quick`
+opt-in cases in Release, movement feedback and display awake in both presets,
+and checks startup. Once a leg's build is good every check runs, so one failure
+does not hide the others.
 Acceptance runs four cases at a
 time (`-Parallel 4`), and every event runs every case: `crossfeed`,
 `press_tower`, `menu_text` and `debug_console` take minutes each under Debug's
 checked iterators, and `-SkipSlowDebug` leaves them out of a local Debug run,
-but a pull request runs them because its merge is not built again. Debug
-startup is required; Release may skip only the exact missing-hardware-adapter
-diagnostic because its engine build has no software fallback. Content failures,
-crashes and other startup errors fail CI. Release also builds and inspects the
-redistributable ZIP.
+but a pull request runs them because its merge is not built again. Startup is
+required in both presets. The runner has no GPU: its Microsoft Basic Render
+Driver is a software rasteriser that DXGI does not flag, so the engine reports
+it as hardware and Release starts on it (`ENG#34`). If that ever changes, CI
+fails rather than skips. Content failures, crashes and other startup errors fail
+CI. Release also builds and inspects the redistributable ZIP.
+
+[nightly.yml](.github/workflows/nightly.yml) runs what is too long or too exact
+for a pull request on `master`'s tip: the painter (plain matrix and leaves, through
+`scripts/check-painter-sweep.ps1`), paint effects and every runnable opt-in case.
+It is not a required check. A scheduled failure opens or updates one issue,
+`Nightly sweep failed`, and its Configure keeps `master`'s vcpkg cache current for
+pull requests. `scripts/check-painter/hosted-known-failures.txt` names the leaves
+whose exact pins hold only on a real GPU.
+
+### What a green pull request means
+
+A green `gate` means the change is merge-ready: nobody needs to rerun the suite
+afterwards, because that run repeats CI on the tree CI built. What neither CI
+nor a rerun can prove stays a human check, named in the pull request body when a
+change touches it, and is not a reason to rerun anything:
+
+- how it looks on a real GPU (a periodic `check-painter-sweep.ps1` and plain
+  `check-painter.ps1` on MattPC);
+- physical pads and rumble, listening, and attended performance captures;
+- anything needing a foreground desktop (`check-debug-console`,
+  `check-finish-details`, `CI#1`);
+- how it plays.
+
+`build.cmd` and Windows PowerShell 5.1 runs of the acceptance runner are
+unexercised beyond the selection and process checks, by choice. A failing
+scheduled nightly is the signal to look; the rest of the time, nothing is owed.
 
 ## Audio: accepted replacement bank and optional fallback
 

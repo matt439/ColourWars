@@ -7,6 +7,7 @@
 #   Group        'default' (omitted): in the default list of both presets.
 #                'debug-only': in the Debug default list; refused in Release.
 #                'opt-in': never run by default; -OptIn selects all of them.
+#                CI compiles them all; nightly.yml runs them.
 #   Sources      Extra sources, relative to the repository root.
 #   Arguments    What the probe is given, in order: 'game' is the staged game
 #                folder, 'repo' the checkout. Omitted means @('game').
@@ -15,6 +16,12 @@
 #   SlowInDebug  Left out by -SkipSlowDebug for a quicker local Debug run:
 #                minutes each under Debug's checked iterators. CI runs them.
 #   Utf8Output   Its output is decoded as UTF-8; such a case runs serially.
+#   Quick        An opt-in case short enough for every pull request; CI runs
+#                these in Release with -QuickOptIn.
+#   OwnLeg       Debug CI gives it a leg of its own (-OwnLegOnly; -SkipOwnLeg is
+#                the rest), because it alone outlasts the other cases together.
+#   NeedsTrial   An opt-in case that takes a private trial file the runner
+#                cannot supply: it compiles, and -OptIn leaves it out of a run.
 @{
 Cases = @(
     @{ Name = 'display_awake' }
@@ -35,7 +42,7 @@ Cases = @(
     @{ Name = 'view_shake' }
     @{
         Name = 'movement'
-        StartRank = 8
+        StartRank = 12
     }
     @{ Name = 'movement_contact' }
     @{ Name = 'combat_feedback' }
@@ -54,23 +61,27 @@ Cases = @(
     @{ Name = 'menu_navigation' }
     @{
         Name = 'movement_course'
-        StartRank = 6
+        StartRank = 8
     }
     @{
         Name = 'cq_blockout'
-        StartRank = 9
+        StartRank = 10
     }
     @{
         Name = 'crossfeed'
+        OwnLeg = $true
         StartRank = 1
         SlowInDebug = $true
     }
     @{
         Name = 'press_tower'
-        StartRank = 3
+        StartRank = 2
         SlowInDebug = $true
     }
-    @{ Name = 'turbulence_blockout' }
+    @{
+        Name = 'turbulence_blockout'
+        StartRank = 13
+    }
     @{ Name = 'resume_countdown' }
     @{ Name = 'match_suspension' }
     @{
@@ -83,8 +94,8 @@ Cases = @(
         # recording backend, compiled ahead of the static engine archive, lets
         # this case observe sound calls without opening hardware.
         Name = 'story_audio'
+        StartRank = 7
         Sources = @('external/labrador/engine/audio/null/audio_device.cpp')
-        StartRank = 5
     }
     @{
         Name = 'level_format'
@@ -94,15 +105,15 @@ Cases = @(
     @{ Name = 'gameplay_tuning' }
     @{
         Name = 'menu_presentation'
-        StartRank = 7
-    }
-    @{
-        Name = 'weapon_catalog'
         StartRank = 14
     }
     @{
+        Name = 'weapon_catalog'
+        StartRank = 17
+    }
+    @{
         Name = 'menu_text'
-        StartRank = 2
+        StartRank = 3
         SlowInDebug = $true
     }
     @{ Name = 'locales' }
@@ -113,27 +124,30 @@ Cases = @(
     @{ Name = 'terrain' }
     @{ Name = 'lethal_provenance' }
     @{ Name = 'skirmish_bot' }
-    @{
-        Name = 'paint_surfaces'
-        StartRank = 11
-    }
-    @{
-        Name = 'balance_regions'
-        StartRank = 10
-    }
+    @{ Name = 'paint_surfaces' }
+    @{ Name = 'balance_regions' }
     @{
         Name = 'paint_underfoot'
-        StartRank = 13
+        StartRank = 15
     }
     @{
         Name = 'moving_structure'
-        StartRank = 12
+        StartRank = 6
     }
-    @{ Name = 'fixed_slab' }
+    @{
+        Name = 'fixed_slab'
+        StartRank = 16
+    }
     @{ Name = 'practice_workshop' }
     @{ Name = 'results_awards' }
-    @{ Name = 'paint_ferry' }
-    @{ Name = 'team_gate' }
+    @{
+        Name = 'paint_ferry'
+        StartRank = 5
+    }
+    @{
+        Name = 'team_gate'
+        StartRank = 9
+    }
     @{ Name = 'bot_driver' }
     @{ Name = 'bot_runtime' }
     @{ Name = 'bot_recovery' }
@@ -142,7 +156,10 @@ Cases = @(
     @{ Name = 'bot_territory' }
     @{ Name = 'bot_gate_routes' }
     @{ Name = 'handicap' }
-    @{ Name = 'instant_replay' }
+    @{
+        Name = 'instant_replay'
+        StartRank = 11
+    }
     @{ Name = 'user_stages' }
     @{ Name = 'series_stage_rule' }
     @{ Name = 'teammate_markers' }
@@ -158,10 +175,12 @@ Cases = @(
     }
     @{
         Name = 'bot_trials'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'bot_combat_trials'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
@@ -172,18 +191,22 @@ Cases = @(
     }
     @{
         Name = 'bot_ascents'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'bot_arena_routes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'bot_hill_routes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'bot_turbulence_routes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
@@ -192,35 +215,43 @@ Cases = @(
     }
     @{
         Name = 'bot_mover_routes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'bot_slab_routes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'bot_blockout_routes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'turbulence_movers'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'turbulence_slopes'
+        Quick = $true
         Group = 'opt-in'
     }
     @{
         Name = 'turbulence_slab_routes'
+        NeedsTrial = $true
         Group = 'opt-in'
     }
     @{
         Name = 'turbulence_slab_stage'
+        Quick = $true
         Group = 'opt-in'
         Arguments = @('game', 'repo')
     }
     @{
         Name = 'turbulence_slab_tools'
+        NeedsTrial = $true
         Group = 'opt-in'
     }
 )
