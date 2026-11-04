@@ -58,9 +58,14 @@ local until the user authorizes a push.
 `master` takes changes only through the required `gate` check, and a pull
 request must be up to date with `master` to merge. When `master` moves, merge it
 into the branch, wait for the new run and merge on its green; a merge queue is
-not available on a personal account, so this step is the session's. The ruleset
-has no bypass on purpose, because sessions act as the owner's account: if CI
-itself is broken, the owner adds a bypass for that one merge and removes it.
+not available on a personal account, so this step is the session's. Nobody
+bypasses `gate`: the ruleset lists no bypass actors, the owner included,
+because sessions act as the owner's account. Never add one, and never disable,
+loosen or delete the ruleset to land a change, even for a single merge. If CI
+itself is broken, the fix lands like any other change: a pull request runs its
+own `ci.yml`, so a pull request that repairs CI goes green on the repaired
+workflow. A pull request that weakens `gate`, `lint.py` or the jobs `gate`
+needs in order to pass is a bypass in disguise, and its body must say so.
 
 ## Build and run
 
