@@ -2281,6 +2281,11 @@ identical to the originals. Debug and Release builds pass, as do
 `check-level-editor.ps1` in both presets (mirror copy and symmetry included),
 `check-stage-registration.ps1` and the `user_stages` case in Debug.
 
+The six acceptance cases that compile the real document through one-line
+`editor_*_adapter.cpp` files (`fixed_slab`, `moving_structure` and the four
+`turbulence_*` editor cases) each gained an `editor_mirror_adapter.cpp`; a
+source added to `colourwars_level_document` needs the same adapter there.
+
 ## Replay codec and file checks (`HYG#55`)
 
 **Done (2026-11-05).** Split `scripts/acceptance/debug_console/replay_checks.cpp`
