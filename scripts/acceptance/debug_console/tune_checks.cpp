@@ -37,6 +37,7 @@ namespace debug_console_acceptance
 	namespace
 	{
 #include "scripts/acceptance/debug_console/tune_colour_sweep_checks.h"
+#include "scripts/acceptance/debug_console/tune_colour_pair_checks.h"
 #include "scripts/acceptance/debug_console/tune_underfoot_checks.h"
 #include "scripts/acceptance/debug_console/tune_feedback_colour_checks.h"
 #include "scripts/acceptance/debug_console/tune_opening_art_colour_checks.h"

@@ -2266,3 +2266,26 @@ compiles every source in the case folder, so nothing registers it, and
 `debug_console.cpp` calls the two checks in the same order. A line comparison
 confirms both files' moved lines match the originals. The Debug build passes
 and the `debug_console` case compiles in Debug.
+
+## Colour-pair tune checks (`HYG#56`)
+
+**Done (2026-11-05).** Split
+`scripts/acceptance/debug_console/tune_colour_sweep_checks.h` (847 lines),
+whose comment named only the sweep and the identity tunes, along its two kinds
+of check. `check_identity_colour_tunes` and `check_hud_paper_colour_tunes`, the
+coupled opaque, distinct pairs that each run in fresh LF/CRLF scratch contexts,
+moved whole and in order, with the comment between them, to
+`tune_colour_pair_checks.h` (373 lines). The 476-line sweep header keeps
+`check_colour_tunes`, the sequential walk of every audited colour path over one
+shared scratch document. That function stays whole: its loops share `words`,
+`expected`, `initial` and the borrowed pointers in order, so cutting it would
+need new parameters.
+
+The new header has the same inclusion context as its siblings: no includes of
+its own, included by `tune_checks.cpp` immediately after the sweep header,
+inside the same anonymous namespace. Call order, scratch folders and
+diagnostics are unchanged. Concatenating the two bodies in include order
+reproduces the original lines exactly, mixed tab/space indentation included;
+the only other edits are the two file comments.
+The runner compiles the case folder through `tune_checks.cpp`, so nothing
+registers the header. The `debug_console` case compiles in Debug and passes.
