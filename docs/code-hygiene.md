@@ -2289,3 +2289,29 @@ reproduces the original lines exactly, mixed tab/space indentation included;
 the only other edits are the two file comments.
 The runner compiles the case folder through `tune_checks.cpp`, so nothing
 registers the header. The `debug_console` case compiles in Debug and passes.
+
+## Painter practice-replay and rumble evidence (`HYG#57`)
+
+**Done (2026-11-05).** `scripts/check-painter.ps1` (757 lines) stays one
+coordinator, but two leaves kept their post-run evidence inline against the
+rule its own header states: a leaf with post-run evidence gets a guarded
+`check-painter/verify-<leaf>.ps1` dot-source. Both blocks were added after
+`19d3fc91` created that family. The `PracticeReplayOnly` receipt check moved
+whole to `check-painter/verify-practice-replay.ps1` (32 lines) and the Debug
+`RumbleOnly` background-supplement check to `check-painter/verify-rumble.ps1`
+(21 lines), each with the family's two-line header and its bodies at their
+original 8-space indentation. The entry, now 708 lines, keeps the guards
+`if ($PracticeReplayOnly)` and `if ($RumbleOnly -and $debug)` unchanged and
+dot-sources each helper at the position of the block it replaces, not in the
+verifier list, so failures still come in the same order: practice receipt,
+remembered-setup relaunch, save diagnostics and fixture hash, background
+receipt, trial hash, then the other verifiers.
+
+The moved bodies read only `$captures`, `$debug` and `$result` and use no
+script path or `return`, so dot-sourcing keeps their meaning. A line
+comparison confirms both bodies match the originals. The selection checker's
+fault copy stops before either block, so it needs no change. All three
+scripts parse, `check-painter-selection.ps1` passes, `-CompileOnly` compiles
+in both presets, and the native `-PracticeReplayOnly` and `-RumbleOnly` leaves
+pass in Debug and Release with their `practice_replay_receipt` and Debug
+`background_receipt` recorded.
