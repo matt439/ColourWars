@@ -268,7 +268,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#7` | OPEN | MED | M | Read the first `nightly.yml` runs: list hosted-only painter failures in `scripts/check-painter/hosted-known-failures.txt` with reasons, or fix them, and promote whatever is stable and short to `ci.yml`. [Workflow](.github/workflows/nightly.yml). |
+| `CI#7` | OPEN | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow needs an audio endpoint and is skipped there. After a week of nightlies, promote what is stable and short to `ci.yml`. [Workflow](.github/workflows/nightly.yml). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows

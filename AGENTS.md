@@ -260,8 +260,10 @@ for a pull request on `master`'s tip: the painter (plain matrix and leaves, thro
 `scripts/check-painter-sweep.ps1`), paint effects and every runnable opt-in case.
 It is not a required check. A scheduled failure opens or updates one issue,
 `Nightly sweep failed`, and its Configure keeps `master`'s vcpkg cache current for
-pull requests. `scripts/check-painter/hosted-known-failures.txt` names the leaves
-whose exact pins hold only on a real GPU.
+pull requests. `scripts/check-painter/hosted-known-failures.txt` names any leaf
+whose exact pins hold only on a real GPU. The runner has no audio endpoint, so
+the job sets `COLOURWARS_NO_AUDIO_ENDPOINT` and the painter skips its music flow,
+which therefore runs only on a machine with one.
 
 ### What a green pull request means
 

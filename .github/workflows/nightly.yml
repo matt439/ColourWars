@@ -30,6 +30,9 @@ jobs:
     name: nightly (${{ matrix.leg }})
     runs-on: windows-latest
     timeout-minutes: 180
+    # The runner has no audio endpoint; the painter skips only its music flow.
+    env:
+      COLOURWARS_NO_AUDIO_ENDPOINT: 1
 
     strategy:
       fail-fast: false
