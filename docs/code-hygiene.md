@@ -2240,3 +2240,29 @@ also stay; each shares a helper with the edit core. The moved lines are
 identical to the originals. Debug and Release builds pass, as do
 `check-level-editor.ps1` in both presets (mirror copy and symmetry included),
 `check-stage-registration.ps1` and the `user_stages` case in Debug.
+
+## Replay codec and file checks (`HYG#55`)
+
+**Done (2026-11-05).** Split `scripts/acceptance/debug_console/replay_checks.cpp`
+(927 lines) along the two jobs its own header comment named. The codec and
+file job - `check_replay_codec` with its private `same_inputs` and `same_gaps`
+and the `check_bot_replay_metadata` declaration it calls - moved whole and in
+order to `replay_codec_checks.cpp` (283 lines): the bit-exact input round
+trip, run-length coding, the `DBG15` `replay_name` matrix and the
+`ReplayFile` write/read round trip with its version, length, step-size, gap
+and layout refusals in a temp folder. It builds no `Level` or director. The
+671-line `replay_checks.cpp` keeps `check_replay_cpu_match`, the one ordered
+scenario on a real CPU `Level`, with `count_of_lines`, `retaped`,
+`suspend_steps` and `drive`. That function stays whole: its locals run from
+the seeded recording to the unseeded seed, and lifting a piece such as the
+`DBG16` catalog block would need new parameters.
+
+No helper crosses the cut, so each anonymous namespace stays fully used under
+`/W4 /WX`. The new file copies the original include block verbatim (any
+trimming, such as the apparently unused `bot.h`, is a separate change); the
+only other edits are the two file comments and the `fixtures.h` heading that
+now names `replay_codec_checks.cpp` for `check_replay_codec`. The runner
+compiles every source in the case folder, so nothing registers it, and
+`debug_console.cpp` calls the two checks in the same order. A line comparison
+confirms both files' moved lines match the originals. The Debug build passes
+and the `debug_console` case compiles in Debug.

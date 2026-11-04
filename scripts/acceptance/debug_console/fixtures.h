@@ -479,8 +479,10 @@ namespace debug_console_acceptance
 	void check_bots(GameTuning& tuning, Presentation& presentation);
 	void check_seeded_planner(GameTuning& tuning, Presentation& presentation);
 
-	// replay_checks.cpp
+	// replay_codec_checks.cpp
 	void check_replay_codec();
+
+	// replay_checks.cpp
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);
 	void check_roster_replay(const std::filesystem::path& game_directory);
 

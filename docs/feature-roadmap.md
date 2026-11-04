@@ -2547,7 +2547,7 @@ re-resolution. Every row still held; only line numbers had moved, mostly by
 | Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-99` (spec words `:47-50`, domain tag `:76`, labels `:112`), `game/debug/replay/match_fingerprint.h:46-55` | seven spec words with `travel_x`; offsets/poses already hold y | the lift's travel in the spec words, and a new domain tag |
 | Replay codec | `game/debug/replay/replay.cpp:146-317` (spec word 4 is `travel_x` at `:207`; y offset must be 0 at `:219-220`; pose x-only at `:222`; current offset from `travel_x` at `:233`; `schema` 1 at `:257`, `:284`) | horizontal-only motion block, schema 1 | schema 2 and a version bump (answer E5) |
 | Replay version | `game/debug/replay/replay.h:21-22`, `:46`, `game/debug/replay/replay.cpp:682-686` | writes and reads 6 only (`HYG#39`) | writes 7 (answer E5) |
-| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:492-631`, `level_editor/motion_checks.cpp`, `debug_console/replay_checks.cpp`, `debug_console/bot_replay_checks.cpp` | horizontal fixtures; `type: "vertical"` and schema 2 asserted as refusals; version 6 | lift fixtures beside them; flipped refusals; version 7 |
+| Acceptance | `scripts/acceptance/moving_structure/`, `level_format.cpp:492-631`, `level_editor/motion_checks.cpp`, `debug_console/replay_checks.cpp`, `debug_console/replay_codec_checks.cpp`, `debug_console/bot_replay_checks.cpp` | horizontal fixtures; `type: "vertical"` and schema 2 asserted as refusals; version 6 | lift fixtures beside them; flipped refusals; version 7 |
 
 **2. Engineering answers, each following existing practice.**
 
