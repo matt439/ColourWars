@@ -10,12 +10,12 @@
             'pending-off-disabled', 'disabled-skip-back', 'fullscreen-retained-size', 'fullscreen-defaults-refresh',
             'fullscreen-reopened-client', 'metadata-windowed-preset')
         $resolutionExpectedValues = @('1920x1080', '1280x720', '3840x2160', '1280x720', '2560x1440',
-            '2560x1440', '1920x1080', 'OLD~ display pixels: 1920x1080', 'OLD~ display pixels: 1920x1080',
-            'OLD~ display pixels: 1280x720', 'Next display pixels: 1920x1080.', 'Next display pixels: 1920x1080.',
-            'Next display pixels: 1280x720.', 'Next display pixels: 3840x2160.', 'Next display pixels: 1280x720.',
-            'Next display pixels: 1280x720.', 'Next display pixels: 1280x720.', '1920x1080',
-            'Next display pixels: 1600x900.', 'Next display pixels: 1600x900.', 'Next display pixels: 1600x900.',
-            'Next display pixels: 1600x900.', 'Next display pixels: 1001x777.', '1001x777', '3840x2160')
+            '2560x1440', '1920x1080', 'OLD~ real studio display pixels: 1920x1080', 'OLD~ real studio display pixels: 1920x1080',
+            'OLD~ real studio display pixels: 1280x720', 'Next real studio display pixels: 1920x1080.', 'Next real studio display pixels: 1920x1080.',
+            'Next real studio display pixels: 1280x720.', 'Next real studio display pixels: 3840x2160.', 'Next real studio display pixels: 1280x720.',
+            'Next real studio display pixels: 1280x720.', 'Next real studio display pixels: 1280x720.', '1920x1080',
+            'Next real studio display pixels: 1600x900.', 'Next real studio display pixels: 1600x900.', 'Next real studio display pixels: 1600x900.',
+            'Next real studio display pixels: 1600x900.', 'Next real studio display pixels: 1001x777.', '1001x777', '3840x2160')
         $resolutionExpectedColumns = @('case', 'width', 'height', 'focus', 'saved_preset', 'saved_fullscreen',
             'pending_fullscreen', 'enabled', 'expected_value', 'font', 'raw_width', 'raw_height', 'width_scale',
             'height_scale', 'scale', 'row_width', 'row_height', 'fit', 'full_row_match', 'ornament_inside', 'frozen_state_rng')
@@ -24,7 +24,7 @@
             $resolutionSummary.csv_rows -ne 25 -or $resolutionSummary.compact_crops -ne 6 -or
             $resolutionSummary.page_openings -ne 7 -or $resolutionSummary.font_negative_controls -ne 1 -or
             $resolutionSummary.resize_updates -ne 0 -or $resolutionSummary.save_calls -ne 3 -or
-            $resolutionSummary.crop_pixels -ne 1050840 -or $resolutionSummary.metadata_only -ne $true -or
+            $resolutionSummary.crop_pixels -ne 1167600 -or $resolutionSummary.metadata_only -ne $true -or
             $resolutionSummary.windowed_application -ne $true -or $resolutionRows.Count -ne 25 -or
             (($resolutionRows[0].PSObject.Properties.Name) -join '|') -ne ($resolutionExpectedColumns -join '|') -or
             (($resolutionRows.case | Sort-Object) -join '|') -ne (($resolutionExpectedCases | Sort-Object) -join '|')) {
@@ -38,14 +38,14 @@
             elseif ($caseIndex -eq 19) { $expectedWidth = 1600; $expectedHeight = 900 }
             elseif ($caseIndex -ge 20) { $expectedWidth = 1001; $expectedHeight = 777 }
             $expectedFocus = if ($caseIndex -in @(19, 20, 22, 24)) { '1' }
-                elseif ($caseIndex -eq 21) { '6' } elseif ($caseIndex -eq 23) { '4' } else { '0' }
+                elseif ($caseIndex -eq 21) { '7' } elseif ($caseIndex -eq 23) { '5' } else { '0' }
             $expectedPreset = if ($caseIndex -ge 19) { '3840x2160' } else { '1920x1080' }
             $expectedSavedFullscreen = if ($caseIndex -ge 19 -and $caseIndex -le 24) { 'true' } else { 'false' }
             $expectedPendingFullscreen = if ($caseIndex -in @(6, 7, 19, 22, 24)) { 'true' } else { 'false' }
             $expectedEnabled = if ($expectedSavedFullscreen -eq 'true') { 'false' } else { 'true' }
             $expectedFont = if ($caseIndex -ge 8 -and $caseIndex -le 10) { 'resolution_tall_tilde' }
                 elseif (($caseIndex -ge 11 -and $caseIndex -le 17) -or
-                    ($caseIndex -ge 19 -and $caseIndex -le 23)) { 'resolution_numeric_shift' } else { 'lato_black_48' }
+                    ($caseIndex -ge 19 -and $caseIndex -le 23)) { 'resolution_numeric_shift' } else { 'lato_black_36' }
             $expectedFit = if ($caseIndex -in @(8, 9)) { 'width_then_height' } elseif ($caseIndex -eq 10) { 'height' }
                 elseif ($caseIndex -in @(11, 12, 14)) { 'width' }
                 elseif ($caseIndex -in @(13, 15, 16, 17)) { 'reset' } else { 'none' }
@@ -69,12 +69,12 @@
             }
         }
         $resolutionExpectedCrops = [ordered]@{
-            'resolution-text-default.ppm' = @(1112, 144)
-            'resolution-text-wrap.ppm' = @(1112, 144)
-            'resolution-text-old-fit.ppm' = @(1112, 144)
-            'resolution-text-new-width.ppm' = @(1112, 144)
-            'resolution-text-new-reset.ppm' = @(1112, 144)
-            'resolution-text-fullscreen.ppm' = @(1390, 180)
+            'resolution-text-default.ppm' = @(1112, 160)
+            'resolution-text-wrap.ppm' = @(1112, 160)
+            'resolution-text-old-fit.ppm' = @(1112, 160)
+            'resolution-text-new-width.ppm' = @(1112, 160)
+            'resolution-text-new-reset.ppm' = @(1112, 160)
+            'resolution-text-fullscreen.ppm' = @(1390, 200)
         }
         $resolutionCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'resolution-*.ppm' -File)
         $resolutionExpectedNames = @($resolutionExpectedCrops.Keys) + @('resolution-values.csv', 'resolution-summary.json')

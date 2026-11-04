@@ -78,17 +78,17 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         bounds.inflate(page_art.focus_padding + Vector2F(page_art.keyline_width + 2.0f));
         return bounds;
     };
-    const std::array<const wchar_t*, 7> labels{
-        L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
-    constexpr size_t apply_row = 5, back_row = 6;
+    const std::array<const wchar_t*, 8> labels{
+        L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
+    constexpr size_t palette_row = 3, apply_row = 6, back_row = 7;
     const auto row_label = [&](size_t index)
     {
-        return text_bounds(style.item_font, labels[index], look.options_position +
+        return text_bounds(look.options_font, labels[index], look.options_position +
             Vector2F(0.0f, static_cast<float>(index) * look.options_spacing.y));
     };
     const auto value_bounds = [&](size_t index, const std::wstring& value)
     {
-        return text_bounds(style.item_font, value, Vector2F(look.options_value_x,
+        return text_bounds(look.options_font, value, Vector2F(look.options_value_x,
             look.options_position.y + static_cast<float>(index) * look.options_spacing.y));
     };
     const auto row_bounds = [&](size_t index, const std::wstring& value = L"")
@@ -111,9 +111,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         "Options/Credits paper overlaps the shared controls footer");
     std::cout << "OPTIONS heading=" << options_heading.x << ',' << options_heading.y << ',' <<
         options_heading.width << ',' << options_heading.height << " first-card-y=" << card(row_label(0)).y << '\n';
-    for (const wchar_t* label : { L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back", L"A: Blue / B: Yellow", L"3840x2160" })
+    for (const wchar_t* label : { L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back", L"A: Blue / B: Yellow", L"3840x2160" })
     {
-        const Vector2F size = measure(style.item_font, label);
+        const Vector2F size = measure(look.options_font, label);
         std::wcout << L"MEASURE " << label << L"=" << size.x << L',' << size.y << L'\n';
     }
     std::cout << "CREDITS body=" << credits_body.width << ',' << credits_body.height << " status=" <<
@@ -128,7 +128,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         require(look.options_spacing.y > row_label(index).height + options_art.focus_padding.y * 2.0f,
             "Options cards overlap at actual font height");
     }
-    for (const std::wstring& value : { std::wstring(L"3840x2160"), std::wstring(L"Off"),
+    for (const std::wstring& value : { std::wstring(L"3840x2160"), std::wstring(L"Off"), std::wstring(L"On"),
         presentation.team_palette().fixed_pair(TeamColourPair::blue_orange).label,
         presentation.team_palette().fixed_pair(TeamColourPair::pink_green).label,
         presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label,
@@ -136,7 +136,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         presentation.team_palette().fixed_pair(TeamColourPair::red_azure).label,
         presentation.team_palette().fixed_pair(TeamColourPair::magenta_forest).label, std::wstring(L"Random") })
     {
-        const size_t index = value.find(L'x') != std::wstring::npos ? 0 : value == L"Off" ? 1 : 2;
+        const size_t index = value.find(L'x') != std::wstring::npos ? 0 : value == L"Off" ? 1 : value == L"On" ? 2 : palette_row;
         require(row_label(index).right() + options_art.focus_padding.x < look.options_value_x &&
             options_panel.contains(card(row_bounds(index, value))),
             "Measured Options value overlaps its label or escapes its paper/card");
@@ -372,10 +372,10 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         open(std::make_unique<MainMenuOptions>(&context));
         for (size_t row = 0; row < labels.size(); ++row)
         {
-            const std::wstring value = row == 0 ? L"1920x1080" : row == 1 ? L"Off" : row == 2 ?
+            const std::wstring value = row == 0 ? L"1920x1080" : row == 1 ? L"Off" : row == 2 ? L"On" : row == palette_row ?
                 presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label : L"";
-            const Frame frame = capture("options", std::array<const char*, 7>{
-                "resolution", "fullscreen", "palette", "controls", "restore-defaults", "apply", "back" }[row],
+            const Frame frame = capture("options", std::array<const char*, 8>{
+                "resolution", "fullscreen", "vsync", "palette", "controls", "restore-defaults", "apply", "back" }[row],
                 options_panel, row_bounds(row, value));
             contrast(frame, options_heading);
             linear_lettering(frame, style.heading_font, L"Options", options_heading);
@@ -383,7 +383,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             if (!value.empty())
             {
                 contrast(frame, value_bounds(row, value));
-                linear_lettering(frame, style.item_font, value, value_bounds(row, value), row_bounds(row, value));
+                linear_lettering(frame, look.options_font, value, value_bounds(row, value), row_bounds(row, value));
             }
             if (row + 1 < labels.size()) { tap(Key::down); }
         }
@@ -403,7 +403,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     tap(Key::enter);
     require(preferences.team_palette() == TeamColourPair::blue_yellow,
         "Confirming a value row unexpectedly applied settings");
-    tap(Key::down); tap(Key::down);
+    for (size_t row = 0; row < palette_row; ++row) { tap(Key::down); }
     // Right from the seeded Blue/Yellow walks ROAD#8's three pairs, wraps
     // through Random and the first two pairs, and lands back on Blue/Yellow.
     for (const TeamColourPair palette : { TeamColourPair::purple_gold, TeamColourPair::red_azure,
@@ -414,8 +414,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         const std::wstring value = palette == TeamColourPair::random ? L"Random" :
             presentation.team_palette().fixed_pair(palette).label;
         const Frame frame = capture("palette", TeamColourTools::palette_key(palette),
-            options_panel, row_bounds(2, value));
-        linear_lettering(frame, style.item_font, value, value_bounds(2, value), row_bounds(2, value));
+            options_panel, row_bounds(palette_row, value));
+        linear_lettering(frame, look.options_font, value, value_bounds(palette_row, value), row_bounds(palette_row, value));
         require(preferences.team_palette() == TeamColourPair::blue_yellow,
             "Cycling a palette saved before Apply");
     }
@@ -429,7 +429,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const Frame pending = main_menu_frame(app);
     require(preferences.resolution() == ScreenResolution::s_1920_1080 && saved_bytes() == original,
         "Adjusting an Options row applied or saved before Apply");
-    tap(Key::down); tap(Key::down); tap(Key::right); tap(Key::down);
+    for (size_t row = 0; row < palette_row; ++row) { tap(Key::down); }
+    tap(Key::right); tap(Key::down);
     const Frame before_controls = main_menu_frame(app);
     tap(Key::enter); tick();
     require(stack.depth() == 3 && main_menu_frame(app).pixels != before_controls.pixels,
@@ -438,7 +439,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     require(stack.depth() == 2 && before_controls.pixels == main_menu_frame(app).pixels &&
         saved_bytes() == original && play.aim_sensitivity == PlaySettings{}.aim_sensitivity,
         "Controls/audio Back lost pending Options focus/values or saved its own changes");
-    tap(Key::up); tap(Key::up); tap(Key::up);
+    for (size_t row = 0; row <= palette_row; ++row) { tap(Key::up); }
     require(pending.pixels != main_menu_frame(app).pixels,
         "Palette adjustment had no visible settings effect");
     tap(Key::escape);
@@ -450,9 +451,10 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     open(std::make_unique<MainMenuOptions>(&context));
     // Four Rights pass Blue/Yellow's three ROAD#8 successors to reach Random,
     // so the saved preference is still the one that is not a fixed pair.
-    tap(Key::left); tap(Key::down); tap(Key::down);
+    tap(Key::left);
+    for (size_t row = 0; row < palette_row; ++row) { tap(Key::down); }
     for (int step = 0; step < 4; ++step) { tap(Key::right); }
-    for (size_t row = 2; row < apply_row; ++row) { tap(Key::down); }
+    for (size_t row = palette_row; row < apply_row; ++row) { tap(Key::down); }
     apply(true);
     resize_page({ 1280, 720 });
     require(preferences.resolution() == ScreenResolution::s_1280_720 &&
@@ -471,9 +473,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const std::string last_saved = saved_bytes();
     const std::filesystem::path blocked = save_path.wstring() + L".tmp";
     require(std::filesystem::create_directory(blocked), "Cannot block the isolated save's temporary file");
-    for (size_t row = 2; row < apply_row; ++row) { tap(Key::up); }
+    for (size_t row = palette_row; row < apply_row; ++row) { tap(Key::up); }
     tap(Key::right);
-    for (size_t row = 2; row < apply_row; ++row) { tap(Key::down); }
+    for (size_t row = palette_row; row < apply_row; ++row) { tap(Key::down); }
     apply();
     require(preferences.team_palette() == TeamColourPair::blue_orange && saved_bytes() == last_saved,
         "Failed settings save lost its active choice or replaced the previous JSON");

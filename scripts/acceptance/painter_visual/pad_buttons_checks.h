@@ -254,7 +254,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap_pad(3, GamepadButton::start); tick(); require(stack.depth() == 3, "Mapped pad Start did not open actual Pause");
         move_pad(3, GamepadButton::dpad_down, 2); tap_pad(3, GamepadButton::a); tick();
         require(stack.depth() == 4, "Paused Pad Jump route did not open actual Options");
-        move_pad(3, GamepadButton::dpad_down, 3); tap_pad(3, GamepadButton::a); tick();
+        move_pad(3, GamepadButton::dpad_down, 4); tap_pad(3, GamepadButton::a); tick();
         require(stack.depth() == 5, "Paused Pad Jump route did not open actual Controls");
         move_pad(3, GamepadButton::dpad_down, 2); tap_pad(3, GamepadButton::a); tick();
         require(stack.depth() == 6, "Paused Controls did not open actual Pad Jump child");

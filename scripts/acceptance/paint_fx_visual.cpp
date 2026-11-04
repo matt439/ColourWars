@@ -90,6 +90,15 @@ namespace
         using TextureObject::draw;
     };
 
+    // PlayerCamera's rule, restated here: the authored reference height sets
+    // the scale, capped so a narrow pane still shows minimum_world_width.
+    float gameplay_scale(const CameraPresentation& framing, float pane_width, float screen_height)
+    {
+        const float scale = screen_height / framing.reference_height;
+        return framing.minimum_world_width > 0 ?
+            std::min(scale, pane_width / framing.minimum_world_width) : scale;
+    }
+
     Camera centred(const Vector2F& centre, const Viewport& viewport, float scale)
     {
         return Camera(centre - Vector2F(viewport.width, viewport.height) / (2 * scale), scale);
@@ -652,7 +661,10 @@ int wmain(int argc, wchar_t** argv)
                 for (auto& input : inputs) { input.primary_shoot = true; }
                 for (int tick = 0; tick < 5; ++tick) { match->update(acceptance::slot_seats(*match, inputs), dt); }
                 const float scale = match->player(0).camera().scale;
-                require(std::fabs(scale - static_cast<float>(size.y) / 1080) < 0.0001f,
+                const float pane_width = static_cast<float>(
+                    app.viewport_manager()->player_viewport(0).pixel_rect().width);
+                require(std::fabs(scale - gameplay_scale(presentation.camera(), pane_width,
+                    static_cast<float>(size.y))) < 0.0001f,
                     "matrix no longer matches the authored gameplay camera scale");
                 const std::string prefix = std::to_string(size.x) + 'x' + std::to_string(size.y) + '-' +
                     TeamColourTools::palette_key(palette);
@@ -663,7 +675,10 @@ int wmain(int argc, wchar_t** argv)
                 shots(app, canvas, tuning, colours, scale, output, prefix, records);
                 impacts(app, canvas, tuning, preferences, colours, scale, output, prefix, records);
                 runoffs(app, canvas, tuning, preferences, colours, scale, output, prefix, records, 4);
-                runoffs(app, canvas, tuning, preferences, colours, scale, output, prefix, records, 1);
+                // One full-width view is not capped as a quarter pane is.
+                runoffs(app, canvas, tuning, preferences, colours,
+                    gameplay_scale(presentation.camera(), static_cast<float>(size.x), static_cast<float>(size.y)),
+                    output, prefix, records, 1);
                 std::cout << "PASS " << prefix << " real 4P scene, four flying types, five impact types, "
                     "four faces, immediate friendly/enemy repaint, frozen redraw and raster bounds\n";
             }

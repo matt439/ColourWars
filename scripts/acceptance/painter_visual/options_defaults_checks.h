@@ -54,12 +54,12 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     } clear{ stack, blocked };
     const auto& style = presentation.menu(); const auto& look = presentation.main_menu();
     auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
-    const std::array<std::wstring, 7> labels{ L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
-    require(presentation.menu_text().item(MenuItem::restore_defaults) == labels[4] &&
-        SaveData{}.resolution == ScreenResolution::s_1920_1080 && !SaveData{}.fullscreen && SaveData{}.team_palette == TeamColourPair::random,
+    const std::array<std::wstring, 8> labels{ L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
+    require(presentation.menu_text().item(MenuItem::restore_defaults) == labels[5] &&
+        SaveData{}.resolution == ScreenResolution::s_1920_1080 && !SaveData{}.fullscreen && SaveData{}.vsync && SaveData{}.team_palette == TeamColourPair::random,
         "Options defaults independent copy or canonical display defaults drifted");
     const int keyboard = input_slots::keyboard_and_mouse; int device = keyboard, row = 0, status = 0;
-    bool staged = false, saved_fullscreen = false; std::string before_bytes;
+    bool staged = false, saved_fullscreen = false, shown_vsync = false; std::string before_bytes;
     const float settled = std::max(style.motion.focus_duration, style.motion.press_duration) + 0.01f;
     const auto tick = [&](float elapsed = 0.0f) { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](GamepadButton button, bool down)
@@ -85,7 +85,10 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         // since ROAD#21 play_settings() is derived from them plus worn
         // profiles, and every later save serializes the durable copy.
         stack.clear(); require(preferences_session.set_play_settings_and_save(expected), "Cannot seed Options defaults play preferences");
-        require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, fullscreen, TeamColourPair::blue_yellow), "Cannot seed Options defaults preferences");
+        // Vsync starts Off, and the renderer with it, so Restore has a value to
+        // change and only Apply may reach the renderer.
+        require(preferences.set_display_settings_and_save(ScreenResolution::s_1280_720, fullscreen, TeamColourPair::blue_yellow, false), "Cannot seed Options defaults preferences");
+        app.renderer()->set_vsync(false);
         saved_fullscreen = fullscreen; before_bytes = bytes(); staged = false; status = 0;
     };
     const auto open = [&]
@@ -95,7 +98,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = device == 3;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); auto page = std::make_unique<MainMenuOptions>(&context); active = page.get(); stack.push(std::move(page));
-        row = saved_fullscreen ? 1 : 0; status = 0; tick(); tick();
+        row = saved_fullscreen ? 1 : 0; status = 0; shown_vsync = preferences.vsync(); tick(); tick();
         require(stack.depth() == 2 && !app.fullscreen() && IsWindowVisible(static_cast<HWND>(app.window())) == FALSE, "Options defaults exposed its hidden window or failed to open");
     };
     const auto go = [&](int wanted)
@@ -105,27 +108,27 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     const auto unchanged = [&](Vector2I resolution)
     {
         preserved(preferences_session.play_settings()); require(preferences.resolution() == ScreenResolution::s_1280_720 &&
-            preferences.fullscreen() == saved_fullscreen && preferences.team_palette() == TeamColourPair::blue_yellow && bytes() == before_bytes &&
+            preferences.fullscreen() == saved_fullscreen && preferences.team_palette() == TeamColourPair::blue_yellow && !preferences.vsync() && !app.renderer()->vsync() && bytes() == before_bytes &&
             app.resolution_manager()->resolution_ivec() == resolution && !app.fullscreen() && IsWindowVisible(static_cast<HWND>(app.window())) == FALSE &&
             GetForegroundWindow() != static_cast<HWND>(app.window()), "Staged Options defaults changed active display, window, file or play preferences before Apply");
     };
     const auto restore = [&]
     {
-        go(4); const Vector2I size = app.resolution_manager()->resolution_ivec(); tap(GamepadButton::a); staged = true; status = 1; unchanged(size);
+        go(5); const Vector2I size = app.resolution_manager()->resolution_ivec(); tap(GamepadButton::a); staged = true; shown_vsync = true; status = 1; unchanged(size);
     };
     const auto applied = [&]
     {
         preserved(preferences_session.play_settings()); require(preferences.resolution() == ScreenResolution::s_1920_1080 && !preferences.fullscreen() &&
-            preferences.team_palette() == TeamColourPair::random && !app.fullscreen(), "Options defaults Apply lost canonical display choices");
+            preferences.team_palette() == TeamColourPair::random && preferences.vsync() && app.renderer()->vsync() && !app.fullscreen(), "Options defaults Apply lost canonical display choices");
     };
     const auto reload = [&](bool defaults)
     {
         Save loaded; SettingsSession loaded_session(loaded); loaded_session.load_save_file(); preserved(loaded_session.play_settings()); require(loaded.resolution() == (defaults ? ScreenResolution::s_1920_1080 : ScreenResolution::s_1280_720) &&
-            loaded.team_palette() == (defaults ? TeamColourPair::random : TeamColourPair::blue_yellow) && loaded.fullscreen() == (defaults ? false : saved_fullscreen), "Options defaults persisted the wrong display choices");
+            loaded.team_palette() == (defaults ? TeamColourPair::random : TeamColourPair::blue_yellow) && loaded.fullscreen() == (defaults ? false : saved_fullscreen) && loaded.vsync() == defaults, "Options defaults persisted the wrong display choices");
     };
     const auto apply = [&](Vector2I size, bool success)
     {
-        go(5); const HWND window = static_cast<HWND>(app.window());
+        go(6); const HWND window = static_cast<HWND>(app.window());
         const auto before = bytes(); const auto resolution = preferences.resolution();
         const bool fullscreen = preferences.fullscreen(); const auto palette = preferences.team_palette();
         const bool display_trial = resolution != ScreenResolution::s_1920_1080 || fullscreen || app.fullscreen();
@@ -148,23 +151,23 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         preserved(preferences_session.play_settings()); const Frame actual = frame(); const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
         const RectangleF paper((Vector2F(1920.0f, style.footer_y) - look.options_box_size) / 2.0f, look.options_box_size);
         const float height = look.options_spacing.y - art.focus_padding.y * 2.0f;
-        const std::array<std::wstring, 3> values{ saved_fullscreen ? std::to_wstring(actual.width) + L"x" + std::to_wstring(actual.height) : staged ? L"1920x1080" : L"1280x720",
-            staged ? L"Off" : saved_fullscreen ? L"On" : L"Off", staged ? L"Random" : L"A: Blue / B: Yellow" };
-        std::vector<std::unique_ptr<UiText>> text; std::array<RectangleF, 7> bounds;
+        const std::array<std::wstring, 4> values{ saved_fullscreen ? std::to_wstring(actual.width) + L"x" + std::to_wstring(actual.height) : staged ? L"1920x1080" : L"1280x720",
+            staged ? L"Off" : saved_fullscreen ? L"On" : L"Off", shown_vsync ? L"On" : L"Off", staged ? L"Random" : L"A: Blue / B: Yellow" };
+        std::vector<std::unique_ptr<UiText>> text; std::array<RectangleF, 8> bounds;
         const auto label = [&](const std::wstring& value, const std::string& font, Vector2F position, Colour ink)
         {
             auto item = std::make_unique<UiText>("independent-options-defaults", value, font, position, app.render_resources(), ink); auto* raw = item.get(); text.push_back(std::move(item)); return raw;
         };
         label(L"Options", style.heading_font, look.options_heading_position, art.ink);
-        for (int index = 0; index < 7; ++index)
+        for (int index = 0; index < 8; ++index)
         {
             const Vector2F position = look.options_position + Vector2F(0.0f, look.options_spacing.y * static_cast<float>(index));
-            auto* item = label(labels[static_cast<size_t>(index)], style.item_font, position,
+            auto* item = label(labels[static_cast<size_t>(index)], look.options_font, position,
                 index == 0 && saved_fullscreen ? art.disabled_ink : index == row ? art.focus_ink : art.ink);
-            if (index < 3)
+            if (index < 4)
             {
                 item->set_scale(std::min({ 1.0f, (look.options_value_x - position.x - art.focus_padding.x) / item->bounds().width, height / item->bounds().height }));
-                auto* value = label(values[static_cast<size_t>(index)], style.item_font, Vector2F(look.options_value_x, position.y), art.ink);
+                auto* value = label(values[static_cast<size_t>(index)], look.options_font, Vector2F(look.options_value_x, position.y), art.ink);
                 value->set_scale(std::min({ 1.0f, (paper.right() - art.shadow_offset - art.focus_padding.x - look.options_value_x) / value->bounds().width, height / value->bounds().height }));
                 bounds[static_cast<size_t>(index)] = RectangleF::union_of(item->bounds(), value->bounds());
             }
@@ -188,7 +191,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         const auto& footer = presentation.prompt_bar(); const colourwars::UiTextDropShadow prompt("independent-options-defaults-prompt", L"Left/Right Change    A/Enter Select    B/Esc Back", footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); prompt.draw(list);
         const Frame expected_frame = read(renderer); const std::string stem = "options-defaults-" + name + (device == keyboard ? "-keyboard-" : "-pad3-") + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected_frame.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected_frame, output / (stem + "-failure-expected.ppm")); const auto delta = foreground_delta_bounds(actual, expected_frame); std::cerr << "OPTIONS DEFAULTS " << name << " row=" << row << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
-        require(stack.depth() == 2 && actual.pixels == expected_frame.pixels, "Actual Options defaults differs from independent complete seven-row paper/text/value/status reference");
+        require(stack.depth() == 2 && actual.pixels == expected_frame.pixels, "Actual Options defaults differs from independent complete eight-row paper/text/value/status reference");
         std::srand(7567); const int next = std::rand(); std::srand(7567); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next, "Frozen Options defaults changed pixels or draw RNG");
         if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << row << ',' << staged << ',' << saved_fullscreen << ',' << status << ",true\n"; return actual;
@@ -196,12 +199,12 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440), Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
     {
         device = keyboard; resize(size); seed(); open();
-        for (int focus = 0; focus < 7; ++focus) { go(focus); compare("initial-row" + std::to_string(focus), focus == 4); }
+        for (int focus = 0; focus < 8; ++focus) { go(focus); compare("initial-row" + std::to_string(focus), focus == 5); }
         restore(); compare("restored-pending", true); restore(); compare("repeat-restore");
         apply(size, true); compare("saved", true); reload(true); const auto once = bytes(); apply(size, true); require(bytes() == once, "Repeated defaults Apply changed serialized preferences"); compare("repeat-apply");
         seed(); open(); restore(); const auto prior = bytes(); require(std::filesystem::create_directory(blocked), "Cannot block isolated defaults temporary save");
         apply(size, false); require(bytes() == prior, "Failed defaults save replaced the previous JSON"); compare("failed-save", true);
-        Save old; SettingsSession old_session(old); old_session.load_save_file(); preserved(old_session.play_settings()); require(old.resolution() == ScreenResolution::s_1280_720 && old.team_palette() == TeamColourPair::blue_yellow, "Failed defaults write lost prior durable preferences");
+        Save old; SettingsSession old_session(old); old_session.load_save_file(); preserved(old_session.play_settings()); require(old.resolution() == ScreenResolution::s_1280_720 && old.team_palette() == TeamColourPair::blue_yellow && !old.vsync(), "Failed defaults write lost prior durable preferences");
         require(std::filesystem::remove(blocked), "Cannot remove isolated defaults write refusal"); apply(size, true); reload(true); compare("recovered-save");
         std::cout << "PASS Options defaults complete states " << size.x << 'x' << size.y << '\n';
     }
@@ -210,15 +213,15 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     {
         device = slot; seed(); stack.clear(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
         stack.push(std::make_unique<MainMenuHome>(&context, MainMenuHome::InitialFocus::options)); tick(); tick(); const Frame home_destination = frame();
-        open(); go(4); hold(GamepadButton::a, true); tick();
+        open(); go(5); hold(GamepadButton::a, true); tick();
         if (slot == keyboard) { static_cast<WindowNotify&>(app).on_deactivated(); tick(); static_cast<WindowNotify&>(app).on_activated(); tick(); }
         else { painter_scripted_pads::states[3].connected = false; tick(); painter_scripted_pads::states[3].connected = true; tick(); tick(); }
         hold(GamepadButton::a, false); tick(); tick(); tick(settled); unchanged(size); compare("interrupted-restore");
-        restore(); compare("fresh-restore", true); go(3); const Frame parent = compare("before-controls"); tap(GamepadButton::a); tick(); require(stack.depth() == 3, "Defaults Controls row did not push child");
+        restore(); compare("fresh-restore", true); go(4); const Frame parent = compare("before-controls"); tap(GamepadButton::a); tick(); require(stack.depth() == 3, "Defaults Controls row did not push child");
         // Five down is SFX (Controls rows listed below): stage an edit the child then discards.
         for (int move = 0; move < 5; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
         tap(GamepadButton::b); tick(); require(parent.pixels == frame().pixels && stack.depth() == 2, "Controls return lost pending defaults or parent focus"); unchanged(size); compare("after-controls");
-        go(6); tap(GamepadButton::a); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Back did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("back-discard");
+        go(7); tap(GamepadButton::a); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Back did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("back-discard");
         restore(); tap(GamepadButton::b); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Escape did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("escape-discard");
         restore(); stack.notify_activation(false); compare("deactivated-restore"); stack.notify_activation(true); tick(); active->debug_reset_input(slot); compare("developer-reset");
         expected.reduce_effects = true; const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = true; restore(); const Frame quiet = compare("reduced-restore"); tick(0.0f); tick(-0.5f); tick(settled); require(quiet.pixels == frame().pixels, "Reduced defaults response moved or nonpositive time changed it");
@@ -230,10 +233,21 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     // Controls rows: Pad sticks, Keyboard Jump, Pad buttons, Profiles, Music,
     // SFX, View shake, Aim marker, Reduce effects, Apply, Back - so View shake
     // is six down and Apply three more.
-    device = keyboard; seed(); open(); restore(); go(3); tap(GamepadButton::a); tick();
+    device = keyboard; seed(); open(); restore(); go(4); tap(GamepadButton::a); tick();
     for (int move = 0; move < 6; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
     for (int move = 0; move < 3; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::a); expected.view_shake = true; preserved(preferences_session.play_settings());
     tap(GamepadButton::b); tick(); compare("controls-saved-parent-pending"); apply(size, true); reload(true); compare("controls-merge-applied");
+    // Vsync alone is the Apply that takes neither a display trial nor a resize,
+    // yet it must reach the renderer and the file.
+    seed(); open(); go(2); tap(GamepadButton::dpad_right); shown_vsync = true; status = 1; unchanged(size); compare("vsync-pending", true);
+    go(6); tap(GamepadButton::a); tick();
+    require(stack.depth() == 2 && preferences.vsync() && app.renderer()->vsync() && preferences.resolution() == ScreenResolution::s_1280_720 &&
+        preferences.team_palette() == TeamColourPair::blue_yellow && app.resolution_manager()->resolution_ivec() == size,
+        "Vsync-only Apply opened a trial, resized or missed the renderer");
+    status = 2; compare("vsync-applied", true);
+    Save vsync_saved; SettingsSession vsync_session(vsync_saved); vsync_session.load_save_file(); preserved(vsync_session.play_settings());
+    require(vsync_saved.vsync() && vsync_saved.resolution() == ScreenResolution::s_1280_720 && vsync_saved.team_palette() == TeamColourPair::blue_yellow,
+        "Vsync-only Apply persisted the wrong display choices");
     require(records.good(), "Options defaults evidence write failed");
-    std::cout << "PASS Options defaults independent complete seven rows; staged/no-write restore, repeat/discard/Controls merge, hidden windowed Apply/reload/failure/recovery, all preserved play/pad fields and keyboard/sparse-pad rearming\n";
+    std::cout << "PASS Options defaults independent complete eight rows; staged/no-write restore, repeat/discard/Controls merge, hidden windowed Apply/reload/failure/recovery, Vsync-only direct Apply, all preserved play/pad fields and keyboard/sparse-pad rearming\n";
 }

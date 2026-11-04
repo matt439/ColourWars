@@ -3,6 +3,8 @@ param(
     [ValidateSet('x64-debug', 'x64-release')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
+    # Compile the probe, then stop: no window, GPU or capture.
+    [switch] $CompileOnly,
     [string] $OutputDirectory
 )
 
@@ -159,7 +161,11 @@ $result = [ordered]@{
     stage = 'movement_course'
     player_counts = @(1, 4)
     resolutions = @('1280x720', '1920x1080', '2560x1440')
-    camera_scales = @(0.6666667, 1.0, 1.3333333)
+    # Capped by camera.minimum_world_width in a quarter pane, not in a full view.
+    camera_scales = [ordered]@{
+        four_view = @(0.5, 0.75, 1.0)
+        one_view_runoff = @(0.6666667, 1.0, 1.3333333)
+    }
     palettes = @('blue_orange', 'pink_green', 'blue_yellow')
     weapons = @('sprayer', 'sniper', 'mister', 'bucket', 'roller')
     projectile_types = @('spray', 'jet', 'rolling', 'mist', 'ball')
@@ -243,47 +249,53 @@ try {
     Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
         -LogPath (Join-Path $run 'compile.log')
 
-    $result.staged_content_hashes = @(
-        'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
-        'textures/painter.dds', 'textures/painter.json',
-        'textures/weapon_paint.dds', 'textures/weapon_paint.json',
-        'textures/paint_fx.dds', 'textures/paint_fx.json' |
-        ForEach-Object {
-            [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
+    if ($CompileOnly) {
+        $result.outcome = 'compiled'
+        $result.diagnostic = 'Probe compiled; no window or GPU started and no paint-effect claim.'
+    }
+    else {
+        $result.staged_content_hashes = @(
+            'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
+            'textures/painter.dds', 'textures/painter.json',
+            'textures/weapon_paint.dds', 'textures/weapon_paint.json',
+            'textures/paint_fx.dds', 'textures/paint_fx.json' |
+            ForEach-Object {
+                [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
+            }
+        )
+        $env:PATH = "$gameDirectory;$previousPath"
+        $env:LOCALAPPDATA = $profile
+        $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
+            -WorkingDirectory $working -ArgumentList @((Quote-Path $gameDirectory),
+                (Quote-Path $captures)) `
+            -RedirectStandardOutput (Join-Path $run 'run.log') `
+            -RedirectStandardError (Join-Path $run 'run.err')
+        $null = $process.Handle
+        $env:PATH = $previousPath
+        $env:LOCALAPPDATA = $previousLocalAppData
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+        while (-not $process.WaitForExit(1000)) {
+            if ($timer.Elapsed.TotalSeconds -gt 600) { throw 'Visual probe exceeded its 600-second runtime limit.' }
         }
-    )
-    $env:PATH = "$gameDirectory;$previousPath"
-    $env:LOCALAPPDATA = $profile
-    $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
-        -WorkingDirectory $working -ArgumentList @((Quote-Path $gameDirectory),
-            (Quote-Path $captures)) `
-        -RedirectStandardOutput (Join-Path $run 'run.log') `
-        -RedirectStandardError (Join-Path $run 'run.err')
-    $null = $process.Handle
-    $env:PATH = $previousPath
-    $env:LOCALAPPDATA = $previousLocalAppData
-    $timer = [Diagnostics.Stopwatch]::StartNew()
-    while (-not $process.WaitForExit(1000)) {
-        if ($timer.Elapsed.TotalSeconds -gt 600) { throw 'Visual probe exceeded its 600-second runtime limit.' }
-    }
-    $process.WaitForExit()
-    Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
-    if ($process.ExitCode -ne 0) {
-        Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
-        throw "Visual probe exited with $($process.ExitCode)."
-    }
-    foreach ($line in Get-Content -LiteralPath (Join-Path $run 'run.err')) {
-        if ($line.Trim() -ne '' -and
-            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
-            throw "Unexpected probe diagnostic: $line"
+        $process.WaitForExit()
+        Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
+        if ($process.ExitCode -ne 0) {
+            Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
+            throw "Visual probe exited with $($process.ExitCode)."
         }
+        foreach ($line in Get-Content -LiteralPath (Join-Path $run 'run.err')) {
+            if ($line.Trim() -ne '' -and
+                $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
+                throw "Unexpected probe diagnostic: $line"
+            }
+        }
+        if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
+            throw 'The visual probe unexpectedly created a save.'
+        }
+        Write-ContactSheet -CaptureDirectory $captures
+        $result.outcome = 'passed'
+        $result.diagnostic = 'Paint effect builder/contact matrices, immediate repaint tint, paint credit, frozen draws, settled impacts and raster culling bounds passed. One/four-view wall runoff moves at native gameplay scale, obeys exact ownership/keyline/occlusion raster bounds, suppresses live with Reduce effects and retires while hidden. Contact sheets preserve playing size. Human art review, physical devices and listening acceptance remain separate.'
     }
-    if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
-        throw 'The visual probe unexpectedly created a save.'
-    }
-    Write-ContactSheet -CaptureDirectory $captures
-    $result.outcome = 'passed'
-    $result.diagnostic = 'Paint effect builder/contact matrices, immediate repaint tint, paint credit, frozen draws, settled impacts and raster culling bounds passed. One/four-view wall runoff moves at native gameplay scale, obeys exact ownership/keyline/occlusion raster bounds, suppresses live with Reduce effects and retires while hidden. Contact sheets preserve playing size. Human art review, physical devices and listening acceptance remain separate.'
 }
 catch {
     $failure = $_

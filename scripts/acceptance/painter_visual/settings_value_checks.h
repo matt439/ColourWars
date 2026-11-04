@@ -106,7 +106,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             art.shadow_offset = look.setup_shadow_offset;
         }
         const auto& style = snapshot.menu();
-        const auto& font = controls_page ? control.item_font : style.item_font;
+        const auto& font = controls_page ? control.item_font : look.options_font;
         const Vector2F position = controls_page ? control.layout.position : look.options_position;
         const Vector2F spacing = controls_page ? control.layout.spacing : look.options_spacing;
         const Vector2F label_position = position + Vector2F(0.0f, spacing.y * static_cast<float>(row));
@@ -117,7 +117,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             art.shadow_offset - value_position.x : panel.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
             spacing.y - art.focus_padding.y * 2.0f);
         const wchar_t* label = controls_page ? (row == 6 ? L"View shake" : row == 7 ? L"Aim marker" : L"Reduce effects") :
-            (row == 1 ? L"Fullscreen" : L"Team palette");
+            (row == 1 ? L"Fullscreen" : row == 2 ? L"Vsync" : L"Team palette");
         UiText label_text("reference-value-label", label, font, label_position, app.render_resources(),
             focused ? art.focus_ink : art.ink);
         const RectangleF raw_label = label_text.bounds();
@@ -189,17 +189,20 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             tap(Key::down); compare(name + "-fullscreen-off", false, 1, words.off, snapshot, true, off_fit);
             tap(Key::right); compare(name + "-fullscreen-on", false, 1, words.on, snapshot, true, on_fit);
             tap(Key::left); compare(name + "-fullscreen-off-reset", false, 1, words.off, snapshot, true, off_fit);
+            tap(Key::down); compare(name + "-vsync-on", false, 2, words.on, snapshot, true, on_fit);
+            tap(Key::right); compare(name + "-vsync-off", false, 2, words.off, snapshot, true, off_fit);
+            tap(Key::left); compare(name + "-vsync-on-reset", false, 2, words.on, snapshot, true, on_fit);
             // Blue/Yellow is no longer the last fixed pair (ROAD#8), so Random
             // is as many Rights away as there are pairs from it to the end, and
             // as many Lefts lead back.
             tap(Key::down);
             for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::right); }
-            compare(name + "-palette-random", false, 2, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
+            compare(name + "-palette-random", false, 3, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
             for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::left); }
-            compare(name + "-palette-fixed-reset", false, 2,
+            compare(name + "-palette-fixed-reset", false, 3,
                 snapshot.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, snapshot, true, custom ? 3 : 0);
             for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::right); }
-            compare(name + "-palette-random-cycle", false, 2, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
+            compare(name + "-palette-random-cycle", false, 3, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
             tap(Key::down); tap(Key::down); tap(Key::down);
         }
     };
@@ -212,7 +215,8 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         }
         else
         {
-            compare(name, false, 1, words.off, snapshot, false); compare(name, false, 2, words.random, snapshot, false);
+            compare(name, false, 1, words.off, snapshot, false); compare(name, false, 2, words.on, snapshot, false);
+            compare(name, false, 3, words.random, snapshot, false);
         }
     };
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440),
@@ -228,7 +232,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     const Values old_words = words_of(L"On~", L"Off~", L"Random~"), next_words = words_of(L"Enabled", L"Disabled", L"All colours");
     Values long_words = old_words;
     for (int repeat = 0; repeat < 36; ++repeat) { long_words.off += L" previous value"; long_words.random += L" previous palette"; }
-    const std::string source_name = controls ? original.controls_settings().item_font : original.menu().item_font;
+    const std::string source_name = controls ? original.controls_settings().item_font : original.main_menu().options_font;
     const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(source_name));
     std::vector<Glyph> tall, missing;
     for (char32_t character = U' '; character <= U'~'; ++character)
@@ -254,8 +258,8 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     }
     else
     {
-        const_cast<MenuStyle&>(old.menu()).item_font = tall_name;
-        const_cast<MenuStyle&>(next.menu()).item_font = next_name;
+        const_cast<MainMenuPresentation&>(old.main_menu()).options_font = tall_name;
+        const_cast<MainMenuPresentation&>(next.main_menu()).options_font = next_name;
     }
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
     resize({ 1280, 720 });
@@ -328,6 +332,6 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         (controls ? "refitting between width/height limits and reopened short copy, " : "Random-to-short-fixed-palette scale reset, ") <<
         "a missing-old-glyph item font, retained/reopened/reversed callbacks; " <<
         (controls ? "Left/Right boolean assignments, Pad sticks return/profile merge, interrupted/repeated Apply" :
-            "both fullscreen toggle directions/Random cycles, Controls child On/Off pair/return, interrupted/repeated windowed-Off Apply") <<
+            "both fullscreen and Vsync toggle directions/Random cycles, Controls child On/Off pair/return, interrupted/repeated windowed-Off Apply") <<
         ", controlled failure/recovery, isolated reload/discard\n";
 }

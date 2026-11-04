@@ -330,7 +330,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     tap(Key::down); tap(Key::enter); tick();
     require(stack.depth() == 3 && !choice.has_value(),
         "Pause Options did not push a covering settings page");
-    for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+    for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
     const Frame options = pause_menu_frame(app);
     tap(Key::enter); tick();
     require(stack.depth() == 4 && !choice.has_value(),
@@ -381,7 +381,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         tap(Key::enter); tick();
         require(stack.depth() == 3 && !choice.has_value(),
             "Missing-controller pause could not reach Options");
-        for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+        for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
         const Frame missing_options = pause_menu_frame(app);
         tap(Key::enter); tick();
         require(stack.depth() == 4 && !choice.has_value(),
