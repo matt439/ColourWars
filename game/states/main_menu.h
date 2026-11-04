@@ -215,6 +215,7 @@ private:
 	labrador::FontHandle resolution_font_{};
 	std::string resolution_font_name_;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
+	std::unique_ptr<OptionRow> vsync_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 	std::unique_ptr<labrador::UiText> controls_ = nullptr;
 	std::unique_ptr<labrador::UiText> restore_defaults_ = nullptr;
@@ -224,6 +225,7 @@ private:
 	std::unique_ptr<labrador::UiText> status_ = nullptr;
 	labrador::ScreenResolution resolution_selection_ = labrador::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
+	bool vsync_selection_ = true;
 	TeamColourPair team_palette_selection_ = TeamColourPair::random;
 	void cycle_resolution(labrador::Direction direction);
 	void cycle_team_palette(labrador::Direction direction);
@@ -241,6 +243,10 @@ private:
 	// while fullscreen.
 	void refresh_resolution_row();
 	void update_full_screen_selection_text() const;
+	void update_vsync_selection_text() const;
+	// Hands the saved vsync preference to the renderer, so what is drawn
+	// always follows what the save holds.
+	void apply_saved_vsync() const;
 };
 
 class MainMenuModeSelect final : public MainMenuPage

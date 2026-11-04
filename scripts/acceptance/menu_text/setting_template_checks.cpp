@@ -341,19 +341,21 @@ namespace menu_text_acceptance
             const labrador::Vector2F value_position(main.options_value_x, main.options_position.y);
             const labrador::Vector2F limit(paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
                 main.options_spacing.y - art.focus_padding.y * 2.0f);
-            require(value_position == labrador::Vector2F(820.0f, 220.0f) && limit == labrador::Vector2F(930.0f, 86.0f),
+            require(value_position == labrador::Vector2F(820.0f, 220.0f) && limit == labrador::Vector2F(930.0f, 68.0f),
                 "Resolution fixture no longer exercises the actual Options value column and row");
-            const FontHandle font_handle = world.render.resolve_sprite_font(style.item_font);
+            // Options rows draw in the page's own font (main_menu.fonts.options).
+            MenuStyle row_style = style; row_style.item_font = main.options_font;
+            const FontHandle font_handle = world.render.resolve_sprite_font(row_style.item_font);
             const std::wstring expected = L"1280x720";
             const auto measured = world.render.measure_text(font_handle, expected);
             float expected_scale = 1.0f;
             if (measured.x > 930.0f) { expected_scale = 930.0f / measured.x; }
             require(width_limited == (expected_scale < 1.0f) &&
-                height_limited == (measured.y * expected_scale > 86.0f),
+                height_limited == (measured.y * expected_scale > 68.0f),
                 "Resolution font does not independently exercise its claimed width-then-height fitting path");
-            if (measured.y * expected_scale > 86.0f) { expected_scale = 86.0f / measured.y; }
+            if (measured.y * expected_scale > 68.0f) { expected_scale = 68.0f / measured.y; }
             int adjustments = 0;
-            OptionRow row("resolution", L"Resolution", main.options_position, value_position, style, art.ink, &world.render,
+            OptionRow row("resolution", L"Resolution", main.options_position, value_position, row_style, art.ink, &world.render,
                 [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; }, &art, limit);
             UiText* value = row_text(row, "resolution_value"); UiText* label = row_text(row, "resolution_label");
             require(value != nullptr && label != nullptr, "Resolution row lost its actual plain-ink OptionRow children");
@@ -365,12 +367,12 @@ namespace menu_text_acceptance
             require(value->text() == expected && bounds.position() == value_position && label->bounds() == retained_label &&
                 std::abs(bounds.width - measured.x * expected_scale) <= 0.01f &&
                 std::abs(bounds.height - measured.y * expected_scale) <= 0.01f &&
-                bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 930.01f && bounds.height <= 86.01f,
+                bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 930.01f && bounds.height <= 68.01f,
                 "Resolution OptionRow lost copied text, its fixed column/label or proportional fitting");
             auto padded = bounds; padded.inflate(art.focus_padding);
             require(paper.contains(padded) && bounds.height + art.focus_padding.y * 2.0f <= main.options_spacing.y + 0.01f,
                 "Resolution value or focus padding escaped the actual Options paper/row");
-            if (height_limited) { require(std::abs(bounds.height - 86.0f) <= 0.01f, "Resolution height fitting lost inclusive row contact"); }
+            if (height_limited) { require(std::abs(bounds.height - 68.0f) <= 0.01f, "Resolution height fitting lost inclusive row contact"); }
             else if (width_limited) { require(std::abs(bounds.width - 930.0f) <= 0.01f, "Resolution width fitting lost inclusive column contact"); }
             else { require(bounds == labrador::RectangleF(value_position, measured), "Short resolution value was enlarged"); }
             row.set_value(look.menu_text().setting_resolution(1, 1));
@@ -387,7 +389,7 @@ namespace menu_text_acceptance
         {
             const char* names[]{ "menu_resolution_width", "menu_resolution_height", "menu_resolution_both" };
             const auto look = variants.load([&](rapidjson::Document& d)
-                { d["menu_style"]["fonts"]["item"].SetString(names[mode], d.GetAllocator()); });
+                { d["main_menu"]["fonts"]["options"].SetString(names[mode], d.GetAllocator()); });
             // The wide digit intentionally cannot fit an unscaled Results
             // percentage. Check that refusal, then exercise Options fitting
             // directly with the same parsed font and independent row oracle.
@@ -403,7 +405,7 @@ namespace menu_text_acceptance
         for (const char* font_name : { "menu_resolution_missing9", "menu_resolution_zero", "menu_resolution_nonfinite" })
         {
             variants.rejects("values.resolution", [&](rapidjson::Document& d)
-                { d["menu_style"]["fonts"]["item"].SetString(font_name, d.GetAllocator()); }, &world);
+                { d["main_menu"]["fonts"]["options"].SetString(font_name, d.GetAllocator()); }, &world);
         }
         require(world.render.font(world.render.resolve_sprite_font("menu_resolution_missing9"))->contains(U'?') &&
             !world.render.font(world.render.resolve_sprite_font("menu_resolution_missing9"))->contains(U'9'),
@@ -413,7 +415,7 @@ namespace menu_text_acceptance
             "Resolution literal-glyph fixture lost its stand-in or missing tilde");
         variants.rejects("values.resolution", [](rapidjson::Document& d)
         {
-            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
             d["menu_text"]["values"]["resolution"].SetString("~{width}x{height}");
         }, &world);
         const auto separate_controls = variants.load([](rapidjson::Document& d)
@@ -441,6 +443,7 @@ namespace menu_text_acceptance
         variants.rejects("values.on", [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
             d["menu_text"]["values"]["on"].SetString("~");
             d["menu_text"]["values"]["resolution"].SetString("~{width}x{height}");
         }, &world);

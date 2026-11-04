@@ -95,7 +95,7 @@ void DisplaySettingsTrial::keep()
 	try
 	{
 		if (this->save_->set_display_settings_and_save(this->candidate_.resolution,
-			this->candidate_.fullscreen, this->candidate_.palette))
+			this->candidate_.fullscreen, this->candidate_.palette, this->candidate_.vsync))
 		{
 			this->result_ = DisplayTrialResult::kept;
 		}

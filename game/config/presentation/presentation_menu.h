@@ -219,6 +219,9 @@ struct MainMenuPresentation
 	labrador::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;
+	// The Options page's rows. Smaller than menu_style's item font so its
+	// eight rows fit one paper.
+	std::string options_font;
 	std::string weapon_description_font;
 	float build_id_y = 0.0f;
 

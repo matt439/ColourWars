@@ -200,7 +200,7 @@ namespace
 		rejected("options_heading_position", [&](rapidjson::Document& json)
 			{ json["main_menu"]["options_heading_position"]["y"].SetFloat(menu.options_position.y); });
 		rejected("options_status_position", [&](rapidjson::Document& json)
-			{ json["main_menu"]["options_status_position"]["y"].SetFloat(menu.options_position.y + menu.options_spacing.y * 6.0f); });
+			{ json["main_menu"]["options_status_position"]["y"].SetFloat(menu.options_position.y + menu.options_spacing.y * 7.0f); });
 		// Compact Options geometry makes the old shared-art right edges legal
 		// reader anchors. Font-sized paper containment is checked separately.
 		const Presentation compact_boundary = variants.load([&](rapidjson::Document& json)

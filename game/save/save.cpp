@@ -61,6 +61,7 @@ namespace
     }
 
     // Resolution, window mode and team palette: flat root keys since version 0.
+    // Vsync joined them in version 6.
     class DisplaySection final : public SaveSection
     {
     public:
@@ -72,6 +73,7 @@ namespace
             data.resolution = defaults.resolution;
             data.fullscreen = defaults.fullscreen;
             data.team_palette = defaults.team_palette;
+            data.vsync = defaults.vsync;
         }
 
         void read(const JsonValue& root, SaveData& data) const override
@@ -91,6 +93,17 @@ namespace
             try
             {
                 data.fullscreen = root.boolean("fullscreen");
+            }
+            catch (const std::runtime_error&)
+            {
+            }
+
+            try
+            {
+                if (root.has("vsync"))
+                {
+                    data.vsync = root.boolean("vsync");
+                }
             }
             catch (const std::runtime_error&)
             {
@@ -129,6 +142,8 @@ namespace
             writer.boolean(data.fullscreen);
             writer.key("team_palette");
             writer.string(TeamColourTools::palette_key(data.team_palette));
+            writer.key("vsync");
+            writer.boolean(data.vsync);
         }
     };
 
@@ -548,6 +563,13 @@ bool Save::save_to_file() const
 bool Save::set_display_settings_and_save(ScreenResolution resolution,
     bool fullscreen, TeamColourPair palette)
 {
+    return this->set_display_settings_and_save(resolution, fullscreen, palette,
+        this->save_data_.vsync);
+}
+
+bool Save::set_display_settings_and_save(ScreenResolution resolution,
+    bool fullscreen, TeamColourPair palette, bool vsync)
+{
     // Validate the whole selection before changing any active preference.
     if (convert_resolution_to_ivec(resolution).x <= 0)
     {
@@ -557,6 +579,7 @@ bool Save::set_display_settings_and_save(ScreenResolution resolution,
     this->save_data_.resolution = resolution;
     this->save_data_.fullscreen = fullscreen;
     this->save_data_.team_palette = palette;
+    this->save_data_.vsync = vsync;
     return this->save_to_file();
 }
 
@@ -578,6 +601,11 @@ bool Save::fullscreen() const
 TeamColourPair Save::team_palette() const
 {
     return this->save_data_.team_palette;
+}
+
+bool Save::vsync() const
+{
+    return this->save_data_.vsync;
 }
 
 const MatchRecords& Save::records() const

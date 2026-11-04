@@ -262,7 +262,7 @@ namespace
 
     void check_remembered(const IsolatedSaveDirectory& directory)
     {
-        require(Save::version == 5, "The series stage rule needs save version 5");
+        require(Save::version >= 5, "The series stage rule needs save version 5 or later");
         // Every rule survives capture, the file and restore.
         for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
         {
@@ -285,7 +285,8 @@ namespace
                 (rule == SeriesStageRule::same || bytes.find(std::string("\"stage_rule\":\"") +
                     series_stage_rule_key(rule) + "\"") != std::string::npos),
                 "The rule was not written only when it differs from Same");
-            require(bytes.rfind("{\"save_version\":5,", 0) == 0, "The save did not write version 5");
+            require(bytes.rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0,
+                "The save did not write the current version");
             Save reloaded; SettingsSession reloaded_session(reloaded);
             reloaded_session.load_save_file();
             require(reloaded.last_match_setup() && reloaded.last_match_setup()->stage_rule == rule,

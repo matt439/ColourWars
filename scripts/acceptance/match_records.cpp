@@ -454,7 +454,7 @@ namespace
 		require(last->save_to_file(), "A save after an unreadable load did not write");
 		Save restored;
 		const std::string errors = captured_stderr(directory, [&] { restored.load_save_file(); });
-		require(errors.empty() && directory.contents().find("\"save_version\":5") != std::string::npos,
+		require(errors.empty() && directory.contents().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
 			"A save after an unreadable load did not write the real path");
 		require(read_bytes(directory.side_copy(1)) == corrupt[0] && read_bytes(directory.side_copy(2)) == corrupt[1] &&
 			!std::filesystem::exists(directory.side_copy(3)), "Writing the save disturbed its side copies");

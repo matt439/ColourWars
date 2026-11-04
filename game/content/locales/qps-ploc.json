@@ -253,6 +253,7 @@
         "exit": "[Exit]",
         "resolution": "[Resolution]",
         "fullscreen": "[Fullscreen]",
+        "vsync": "[Vsync]",
         "team_palette": "[Team palette]",
         "controls_audio": "[Controls / audio]",
         "apply": "[Apply]",

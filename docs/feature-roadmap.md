@@ -3567,9 +3567,10 @@ stderr line with its key and the error, and leaves the others intact. There is
 no migration pass: each section reads every older layout in place, as
 [save_section.h](../game/save/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 5` is written first (version 1 introduced records, version 2
+`"save_version": 6` is written first (version 1 introduced records, version 2
 remembered setup, version 3 independent input bindings, version 4
-`"profiles"` and version 5 `"last_match.stage_rule"`; [save.h](../game/save/save.h)
+`"profiles"`, version 5 `"last_match.stage_rule"` and version 6 the flat
+`"vsync"` display key; [save.h](../game/save/save.h)
 keeps the list). A missing key is version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
@@ -4355,7 +4356,13 @@ unchanged.
 
 ## Presentation rate (`GAP#L9`)
 
-**DEFERRED (inspected 2026-10-29; [slice](#presentation-rate-inspection-slice-gapl9)).**
+**Vsync setting built 2026-11-04; waiting on the engine change and a check on
+real hardware.** The author asked for a vsync option on 2026-11-04 and chose to
+add the switch in Labrador rather than file a report first, as report 28 was
+answered. See [Vsync setting](#vsync-setting-gapl9) below. The rest of this
+section is the earlier inspection that led there.
+
+**Inspected 2026-10-29 ([slice](#presentation-rate-inspection-slice-gapl9)).**
 `SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing
 `ApplicationOptions::target_fps` changes that step, not just presentation. The
 pinned D3D11 backend presents with sync interval 1 and exposes no client vsync
@@ -4365,6 +4372,36 @@ supported policy, separately from simulation and any interpolation work.
 Inspect the current engine API and master before proposing a client setting or
 report. Define its persistence and visible acceptance on the intended refresh
 rates before implementation; this row does not supply a ready engine change.
+
+### Vsync setting (`GAP#L9`)
+
+**Engine.** Labrador's `Renderer::set_vsync(bool)` and
+`ApplicationOptions::vsync` (labrador#106, branch
+`claude/present-interval-option`) present with a sync interval of 0 on both
+Direct3D backends when vsync is off, and with no tearing flag, so a windowed
+game is still composed rather than torn. The pin is on that branch's commit
+until the pull request merges; then it moves to the merge on master, and to
+the next tag that carries it.
+
+**Game.** Options gains a `Vsync` On/Off row after Fullscreen
+(`menu_text.items.vsync`, the forty-sixth item). It is saved with the other
+display settings as the flat `"vsync"` key (save version 6; older saves read
+as On). Apply hands it to the renderer straight away, without the display
+trial, which is kept for resolution and window mode, and `main.cpp` sets it
+before the first frame. To fit eight rows, Options' rows draw in their own
+font, `main_menu.fonts.options` (`lato_black_36`), with
+`options_spacing.y` at `82`. The other pages keep `lato_black_48`.
+
+**What Off does here.** Gameplay still steps at `SIMULATION_HZ`, and nothing
+reads `Application::step_position()`. With vsync off the engine draws as fast
+as it can, and every frame between two steps shows the same picture. So Off
+lowers input-to-display latency and costs GPU time. It does not make motion
+smoother on a high-refresh display. Interpolation would be its own row.
+
+**Still owed.** The author's check on MattPC: Off on the 59.951 Hz display,
+both windowed and fullscreen, against an `overlay.perf` capture (draws/s
+well above 60 and no tearing in a window), and the Options page at 1-4P
+through `check-painter.ps1`, whose Options crops assume seven rows.
 
 ### Presentation-rate inspection slice (`GAP#L9`)
 

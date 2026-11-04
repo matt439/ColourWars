@@ -212,6 +212,7 @@ namespace menu_text_acceptance
         variants.rejects("values.on", [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_limited"); d["menu_text"]["values"]["on"].SetString("~");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
             d["menu_text"]["results"]["series_score"].SetString("~{team_a_wins}{team_b_wins}{target}");
         }, &world);
         Presentation mutated = defaults;

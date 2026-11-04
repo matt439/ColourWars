@@ -86,6 +86,8 @@ comparison and physical-pad check; values remain provisional.
 - **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
   or cut it and settle the lesson wording (`POL#19`).
 - **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
+- **Vsync:** merge labrador#106, then try Off on MattPC with a perf capture and look at the
+  eight-row Options page (`GAP#L9`).
 - **User stages:** play a stage made with Save to My Stages, and decide whether user stages
   may opt into Random, whether the briefing hint is enough of a marker, and the
   provisional scan-details wording (`ROAD#16`).
@@ -192,7 +194,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
-| `GAP#L9` | DEFERRED | LOW | S | Inspection and 59.951 Hz `overlay.perf` receipt recorded; no present-interval option at `v0.3.0` either. Resume when the author wants a decoupled rate or `POL#25` reproduces the once-a-second long interval: engine report first. [Slice](docs/feature-roadmap.md#presentation-rate-inspection-slice-gapl9) |
+| `GAP#L9` | DECISION | LOW | S | Vsync row, save key and engine `set_vsync` built 2026-11-04. Owed: labrador#106 merged and the pin moved off its branch, then the author's MattPC check of Off (perf capture, no tearing windowed) and the eight-row Options painter crops. [Setting](docs/feature-roadmap.md#vsync-setting-gapl9) |
 | `GAP#L11` | DECISION | LOW | M | Locale overlays, fallback, font substitution and the `qps-ploc` test locale are in; choose the first languages. Then: accented atlases, stage names and controls reminder into data, an Options row and save field. [Contract](docs/localisation.md). |
 
 ## Comparable-game gaps

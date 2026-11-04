@@ -19,6 +19,9 @@ struct SaveData
 	labrador::ScreenResolution resolution = labrador::ScreenResolution::s_1920_1080;
 	bool fullscreen = false;
 	TeamColourPair team_palette = TeamColourPair::random;
+	// Whether presenting waits for the display. Gameplay steps at
+	// SIMULATION_HZ either way; off trades tearing or extra frames for latency.
+	bool vsync = true;
 	PlaySettings play;
 	InputBindings input_bindings;
 	MatchRecords records;
@@ -41,7 +44,9 @@ public:
 	// 4 adds the independent "profiles" list; older saves have none.
 	// 5 adds "last_match.stage_rule", the series stage rule; older saves have
 	// none and read as Same, which is how they played.
-	static constexpr int version = 5;
+	// 6 adds the flat "vsync" preference; older saves have none and read as
+	// On, which is how they played.
+	static constexpr int version = 6;
 
 	Save() = default;
 	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession
@@ -52,11 +57,15 @@ public:
 	bool save_to_file() const;
 	// What the file holds: each pad slot's own settings, whatever it wears.
 	SaveData save_data() const;
+	// The three-setting form keeps the saved vsync preference.
 	bool set_display_settings_and_save(labrador::ScreenResolution resolution,
 		bool fullscreen, TeamColourPair palette);
+	bool set_display_settings_and_save(labrador::ScreenResolution resolution,
+		bool fullscreen, TeamColourPair palette, bool vsync);
 	labrador::ScreenResolution resolution() const;
 	bool fullscreen() const;
 	TeamColourPair team_palette() const;
+	bool vsync() const;
 
 	// What the file holds: each pad slot's own play settings and buttons,
 	// whatever it wears. The settings in effect, with worn profiles laid over

@@ -9,7 +9,7 @@ namespace menu_text_acceptance
         const std::string authored(200, 'W');
         const auto look = variants.load([&](rapidjson::Document& d)
         {
-            for (const char* key : { "resolution", "fullscreen", "team_palette" })
+            for (const char* key : { "resolution", "fullscreen", "vsync", "team_palette" })
             {
                 d["menu_text"]["items"][key].SetString(authored.c_str(), d.GetAllocator());
             }
@@ -18,11 +18,11 @@ namespace menu_text_acceptance
         // their glyphs and fitted geometry, preserving the actual OptionRow's
         // ability to fit a long, otherwise valid label.
         look.validate_resources(world.render, world.audio);
-        for (const char* key : { "resolution", "fullscreen", "team_palette" })
+        for (const char* key : { "resolution", "fullscreen", "vsync", "team_palette" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
             {
-                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
                 d["menu_text"]["items"][key].SetString("Glyph~");
             }, &world);
         }
@@ -32,7 +32,7 @@ namespace menu_text_acceptance
         const labrador::Vector2F value_position(420.0f, 100.0f);
         const float label_column = value_position.x - label_position.x - art.focus_padding.x;
         const auto font = world.render.resolve_sprite_font(style.item_font);
-        for (const MenuItem item : { MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette })
+        for (const MenuItem item : { MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync, MenuItem::team_palette })
         {
             int adjustments = 0;
             const std::wstring& text = look.menu_text().item(item);
@@ -320,20 +320,25 @@ namespace menu_text_acceptance
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
         const auto art = options_art(main);
-        const auto back_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
+        const auto back_size = world.render.measure_text(world.render.resolve_sprite_font(main.options_font),
             original.menu_text().item(MenuItem::back));
+        // Back is row 7. The shipped status sits below it, so the fixture
+        // lifts the status into the padded row to test horizontal contact.
+        const float back_top = main.options_position.y + main.options_spacing.y * 7.0f;
+        const float overlapping_status_y = back_top + back_size.y / 2.0f;
         const float back_right = main.options_position.x + back_size.x + art.focus_padding.x;
         const auto back_edge = [&](rapidjson::Document& d)
         {
-            // The shipped status already overlaps Back vertically. Exact
-            // horizontal contact remains legal; any positive area is rejected.
+            // Exact horizontal contact remains legal; any positive area is
+            // rejected.
             d["main_menu"]["options_status_position"]["x"].SetFloat(back_right);
+            d["main_menu"]["options_status_position"]["y"].SetFloat(overlapping_status_y);
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
         };
         const auto beside_back = variants.load(back_edge);
         beside_back.validate_resources(world.render, world.audio);
-        require(main.options_status_position.y < main.options_position.y + main.options_spacing.y * 6.0f +
-            back_size.y + art.focus_padding.y,
+        require(overlapping_status_y > back_top &&
+            overlapping_status_y < back_top + back_size.y + art.focus_padding.y,
             "Options status fixture no longer intersects the padded Back row vertically");
         variants.rejects("status.options_pending", [&](rapidjson::Document& d)
         {

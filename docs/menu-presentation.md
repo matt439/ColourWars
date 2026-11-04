@@ -76,13 +76,28 @@ paper geometry reuse the shared heading/item/detail fonts and `pause_menu.art`,
 fill. No numeric field or artwork asset is added. The page captures its text
 and uses the existing input rearming, shared motion and Reduce effects policy.
 
+## Options Vsync
+
+The required `menu_text.items.vsync`, shipped as `Vsync`, is the forty-sixth
+menu item. Options shows it as an On/Off row 2, after Fullscreen and before
+Team palette. Controls/audio, Restore defaults, Apply and Back move to rows 4
+to 7. Eight rows at the menu item font (`lato_black_48`, 77-pixel lines) do
+not fit between the first-row anchor and the status at y = `885`, so Options'
+rows and their values draw in the new required `main_menu.fonts.options`,
+shipped as `lato_black_36`, with `main_menu.options_spacing.y` at `82`. Every
+other page keeps `menu_style.fonts.item`. Startup validates the Options rows,
+values, resolution text and Back card against the Options font, and the
+reader requires eight rows above the status.
+
 ## Options Restore defaults
 
 The required `menu_text.items.restore_defaults`, shipped as `Restore defaults`,
 is appended as the thirty-seventh menu item. Options places it at row 4 after
 Controls/audio (row 3); Apply and Back are rows 5 and 6. The existing first-row
 anchor and status y = `885` remain, with `main_menu.options_spacing.y` changed
-to `100` for the seven rows.
+to `100` for the seven rows. `GAP#L9` later added Vsync as row 2, which moved
+Restore defaults to row 5, and gave the rows their own font
+([Options Vsync](#options-vsync)).
 
 Options captures geometry from `main_menu.setup_focus_padding` (`28, 7`) and
 `setup_shadow_offset` (`2`) while its paper colours remain live in
@@ -587,7 +602,7 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string, still checked; no page draws a brand line |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits`, `bot_team`, `bot_weapon` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |

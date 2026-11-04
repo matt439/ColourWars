@@ -65,10 +65,10 @@ namespace menu_text_acceptance
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
         const auto art = options_art(main);
-        require(main.options_spacing == labrador::Vector2F(540.0f, 100.0f) &&
+        require(main.options_spacing == labrador::Vector2F(540.0f, 82.0f) &&
             art.focus_padding == labrador::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
-            original.menu().item_font == "lato_black_48",
-            "Seven-row Options changed its reviewed compact geometry or existing item font");
+            original.menu().item_font == "lato_black_48" && main.options_font == "lato_black_36",
+            "Eight-row Options changed its reviewed compact geometry or its row font");
         const auto normalized = variants.load([](rapidjson::Document& d)
         {
             d["menu_text"]["items"]["restore_defaults"].SetString("  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
@@ -85,7 +85,7 @@ namespace menu_text_acceptance
         }
         variants.rejects("items.restore_defaults", [](rapidjson::Document& d)
         {
-            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
             d["menu_text"]["items"]["restore_defaults"].SetString("Glyph~");
         }, &world);
         for (const int width : { 1470, 1471 })
@@ -100,7 +100,7 @@ namespace menu_text_acceptance
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
             const auto edit = [&](rapidjson::Document& d)
             {
-                d["menu_style"]["fonts"]["item"].SetString(name.c_str(), d.GetAllocator());
+                d["main_menu"]["fonts"]["options"].SetString(name.c_str(), d.GetAllocator());
                 d["menu_text"]["items"]["restore_defaults"].SetString("~");
             };
             if (width == 1471) { variants.rejects("items.restore_defaults", edit, &world); continue; }
@@ -108,30 +108,31 @@ namespace menu_text_acceptance
             edge.validate_resources(world.render, world.audio);
             std::wstring source = edge.menu_text().item(MenuItem::restore_defaults);
             UiText text("restore_defaults", source, name,
-                main.options_position + labrador::Vector2F(0.0f, main.options_spacing.y * 4.0f), &world.render, art.ink);
+                main.options_position + labrador::Vector2F(0.0f, main.options_spacing.y * 5.0f), &world.render, art.ink);
             source = L"Changed after construction";
             auto card = text.bounds(); card.inflate(art.focus_padding);
-            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 620.0f &&
+            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 630.0f &&
                 card.right() == (1920.0f + main.options_box_size.x) / 2.0f - art.shadow_offset,
-                "Plain Restore defaults borrowed its copy, fitted its width or missed row4's inclusive paper-face edge");
+                "Plain Restore defaults borrowed its copy, fitted its width or missed row5's inclusive paper-face edge");
             text.set_hidden(true); DrawList no_device; text.draw(no_device);
         }
-        // Only row6 Back reaches the paper-face bottom; a stale six-row mapping
+        // Only row7 Back reaches the paper-face bottom; a stale seven-row mapping
         // would accept the overflow variant below.
         const auto back_bottom = [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_exact");
             d["prompt_bar"]["font"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
-            d["main_menu"]["options_position"]["y"].SetFloat(311.0f);
+            d["main_menu"]["options_position"]["y"].SetFloat(337.0f);
             d["main_menu"]["options_status_position"]["y"].SetFloat(914.0f);
         };
         variants.load(back_bottom).validate_resources(world.render, world.audio);
         variants.rejects("items.back", [&](rapidjson::Document& d)
         {
             back_bottom(d);
-            d["main_menu"]["options_position"]["y"].SetFloat(311.25f);
+            d["main_menu"]["options_position"]["y"].SetFloat(337.25f);
         }, &world);
     }
 
