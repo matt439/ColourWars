@@ -2183,6 +2183,46 @@ whose main-menu entry rescans, while between-round entry does not. Missing
 definitions remain registered but unreachable from the stage list. Historical
 reviews and the engine's design decisions were left untouched.
 
+## Long-file audit (2026-11-05)
+
+A fresh pass over the 36 longest authored code files (about 600 lines and up,
+`external/`, data JSON and `scripts/studies/` excluded). One reader mapped
+each unit and proposed keep or split. Each proposed split then went to two
+independent skeptics, one checking cohesion and one checking whether the plan
+works as a mechanical move, with a brief to kill it if the split was motion
+rather than improvement. Five splits survived (`HYG#53`-`HYG#57` below), and
+one commit removed six dead includes (`save.cpp`, `level.cpp`,
+`tune_commands.cpp`, `user_stages.cpp`). The rulings below are recorded so a
+later pass starts from them rather than re-deriving them.
+
+| file | lines | ruling |
+|---|---:|---|
+| `game/objects/player.cpp` | 1,910 | Keep. The growth since 2026-10-28 is POL#46 figure resolution that belongs in the constructor; a contacts/movement split would separate the producer and consumer of the per-tick support flags |
+| `editor/level_document.cpp` | 1,470 | Reflection family split out (`HYG#54`); the file transaction (load/save/Win32) stays with `create` and `mutate`, as ruled 2026-10-28 |
+| `scripts/acceptance/painter_visual.cpp` | 1,386 | Keep, 2026-10-28 ruling stands: check bodies already live in topic headers |
+| `game/debug/replay/replay.cpp` | 1,148 | Keep: one type's on-disk format |
+| `scripts/acceptance/bot_team_trials.cpp` | 1,022 | Keep: one harness whose passes share streams and counters |
+| `scripts/acceptance/debug_console/replay_checks.cpp` | 927 | Codec/file checks split out (`HYG#55`) |
+| `game/config/tuning.cpp` | 892 | Keep, 2026-10-28 ruling stands |
+| `game/config/presentation/presentation_read_menu.cpp`, `presentation_read_match.cpp` | 891, 876 | Keep: one section-to-record reader each |
+| `editor/editor_window.cpp` | 880 | Split killed by both skeptics: one Win32 shell, and the 60-line clipboard leaves the reader's problem unchanged |
+| `game/config/presentation/presentation_menu_text.cpp` | 874 | Split killed by both skeptics: each template's token set and its formatter must change together |
+| `game/objects/level.cpp` | 878 | Keep, plus a dead-include fix: composition root and one tick order |
+| `scripts/acceptance/level_format.cpp`, `movement_feedback_visual.cpp`, `user_stages.cpp` | 867, 850, 841 | Keep (dead include removed from `user_stages.cpp`) |
+| `game/debug/replay/replay_commands.cpp`, `debug_director_hooks.cpp` | 853, 835 | Keep: already DebugDirectorImpl family sources |
+| `scripts/acceptance/debug_console/tune_colour_sweep_checks.h` | 847 | Colour-pair checks split out (`HYG#56`) |
+| `game/objects/weapon.cpp` | 842 | Keep, 2026-10-28 ruling stands |
+| `scripts/acceptance/crossfeed/opposed_loop_checks.cpp`, `turbulence_slab_routes/route_checks.cpp`, `debug_console/director_checks.cpp` | 836, 826, 790 | Keep: shared fixture or one simulation's captured state |
+| `game/debug/script/script_commands.cpp` | 797 | Split killed on a 1-1 tie: moving the perf block would part `perf.capture`'s registration from its body, and `draw_status` is mostly not perf |
+| `game/debug/tune/tune_commands.cpp` | 796 | Keep, plus a dead-include fix |
+| `game/objects/level_object_builder.cpp`, `match_opening.cpp` | 760, 698 | Keep: one decode path; one timeline |
+| `scripts/check-painter.ps1` | 757 | Two leaf evidence checks split out (`HYG#57`) |
+| `game/states/game_states.cpp` | 745 | Keep: GameLevel's families already have their own sources |
+| `scripts/check-debug-console.ps1` | 701 | Split killed by both skeptics: one ordered attended script with guarded phases |
+| `game/states/main_menu.cpp` | 697 | Mode Select page split out (`HYG#53`) |
+| `game/config/presentation/presentation_match.h`, `presentation_validation_settings.cpp` | 686, 680 | Keep: an aggregate catalogue; already a `HYG#1` family source |
+| `editor/editor_canvas.cpp`, `stage_registration.cpp`, `game/config/locale.cpp`, `game/save/save.cpp`, `scripts/check-acceptance-process.ps1` | 669-616 | Keep (dead include removed from `save.cpp`) |
+
 ## Main-menu Mode Select page (`HYG#53`)
 
 **Done (2026-11-05).** Moved the whole `MainMenuModeSelect` region - its
