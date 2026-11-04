@@ -233,7 +233,7 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
 `GAP#F*`. Labrador `v0.3.0` (pinned 2026-11-03) answered `ENG#23`, `ENG#25`, `ENG#31` and
-`ENG#32`; 23 and 32 were spent at the bump, and 25 and 31 are rows below. On 2026-11-03 the
+`ENG#32`; 23 and 32 were spent at the bump, 31 on 2026-11-05, and 25 is a row below. On 2026-11-03 the
 author authorized filing `ENG#27`, `ENG#30` and `ENG#33` (with `ENG#26` riding on `ENG#27`),
 chose to fix `ENG#28` in Labrador directly, which the tag did not carry, and withdrew `ENG#29`
 (its client-side change, `HYG#52`, is done). Minimal engine-focused reports with
@@ -244,7 +244,6 @@ Labrador's established issue route. These rows do not represent fixes already re
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with a report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); registry name forgetting (report 26, with 27); install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; display-awake owner; non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#25` | OPEN | LOW | M | Spend `Gamepads::vibrate` (pinned `v0.3.0`): keep the `make_rumble_sink` seam, move its body off `XInputSetState`, give `RumbleSink` a deadline that `Rumble::publish` renews as it grows, requalify `rumble`/`rumble_adapter`. Feel stays `ROAD#3`. [Report](docs/review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962) |
-| `ENG#31` | OPEN | LOW | S | Spend `JsonValue::keys()` (pinned `v0.3.0`): refuse unknown keys in every fixed `tuning.json` object, `_` comments allowed, with `gameplay_tuning` refusals; decide duplicates, per-weapon lists and `presentation.json`. [Report](docs/review/engine-reports.md#31-jsonvalue-cannot-report-keys-nobody-read-so-a-misspelled-optional-key-is-silent--e166dcc) |
 | `ENG#27`, `ENG#30`, `ENG#33` | DECISION | LOW | S | Filing authorized 2026-11-03; Engine-request drafts are ready (headless pad backend with the `ENG#26` rider, typed startup failure, a contact's `const` other party). Left: recheck master and post from the author's account. A decline of 33 keeps `HYG#49`'s cast. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
 | `ENG#34` | DECISION | LOW | S | The engine reports the runner's software rasteriser as hardware, and CI's strict gates rely on it. File it, and settle what those gates accept before any fix lands. [Report](docs/review/engine-reports.md#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit). |
 | `ENG#28` | DECISION | LOW | S | `v0.3.0` shipped `730dd99`/`fdfc24e` without the three-place count. Choose: amend later, close as declined (`game/carried/` the migration), or file a Bug. [Report](docs/review/engine-reports.md#28-public-types-and-members-removed-with-an-engine-only-caller-count---draft-with-carried-copy-exhibit) |
@@ -280,7 +279,7 @@ A new row for one of these gets its section back.
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
 | Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#57` was the last (2026-11-05) |
-| Closed engine reports (1–24, 29, 32; 25 and 31 have rows above) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
+| Closed engine reports (1–24, 29, 31, 32; 25 has a row above) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |

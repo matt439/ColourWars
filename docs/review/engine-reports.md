@@ -106,8 +106,9 @@ fixed in Labrador rather than filed, and 29 is withdrawn. Each report below
 records its call and what would reopen it.
 
 **Moved 2026-11-03 to `v0.3.0`** (`0f4f503`), the tag's day, 243 commits past
-`v0.2.0`. It carries the answers to 23, 25, 31 and 32. 23 and 32 are spent,
-and 25 and 31 are left as their own TODO rows. 28's engine fix did not ship.
+`v0.2.0`. It carries the answers to 23, 25, 31 and 32. 23 and 32 were spent at
+the bump and 31 on 2026-11-05; 25 is left as its own TODO row. 28's engine fix
+did not ship.
 See [What the 2026-11-03 bump changed](#what-the-2026-11-03-bump-changed).
 
 ## The rule that governs this file
@@ -239,7 +240,7 @@ shipped without the fix; 29 is withdrawn and
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117`, `scripts/check-startup.ps1:225` and `:248` |
-| 31 | ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ answered in `v0.3.0`, see [Closed](#closed) | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
+| 31 | ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ answered in `v0.3.0` and spent 2026-11-05, see [Closed](#closed) | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
 | 32 | ~~Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false~~ answered and spent in `v0.3.0`, see [Closed](#closed) | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
 
@@ -765,9 +766,9 @@ comment on or open anything upstream.
 
 # Closed
 
-Twenty-eight reports: twenty-seven answered and one withdrawn. Eighteen were
-spent here in code, the last two (23 and 32) at the 2026-11-03 bump. Two (25
-and 31) are answered and not yet spent; each keeps a TODO row. Seven spent nothing in code: 1 was fixed before it was
+Twenty-eight reports: twenty-seven answered and one withdrawn. Nineteen were
+spent here in code: 23 and 32 at the 2026-11-03 bump, and 31 on 2026-11-05.
+One, 25, is answered and not yet spent, and keeps a TODO row. Seven spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
@@ -1839,14 +1840,47 @@ misspelt optional key such as `paint_undrfoot` was silently ignored, because
 member names in stored order, duplicates included. The engine's own refusal
 helper is private and applies only to its manifest and sprite-sheet loaders.
 
-**Not spent yet**: TODO `ENG#31` stays open. The spend is new client code, not a
-deletion. A `require_known_keys` beside the content readers would be called on
-every fixed-schema `tuning.json` object, with `_`-prefixed comment keys allowed,
-plus refusals in the `gameplay_tuning` case. Three choices are left for that
-row: what to do with duplicate names (the engine is silent, and `has()` reads
-the first), per-weapon field lists or a union, and whether `presentation.json`
-follows. One prediction was wrong: `keys()` lists names but does not record
-reads, so `check_tune_consumed` cannot shrink on its account. It stays.
+**Spent** 2026-11-05, on the author's "strict defaults" call of that day. The
+spend is new client code, not a deletion. `content_value::require_known_keys`
+([content_value.h](../../game/config/content_value.h)) refuses a member its
+reader does not read, naming the file, the object and the key, and lists what
+the object takes. `game/config/tuning.cpp` calls it on every `tuning.json`
+object: the root, each block and sub-block, each vector, each sound and each
+`duration_choices` entry. The lists are code, written beside the reads they
+match. Vectors go through two tuning-local readers, `read_xy` and
+`read_positive_xy`, because `content_value`'s own are shared with
+`presentation.json` and the level files. The three choices the row left:
+
+- **Duplicates are refused.** `keys()` lists them and `has()` reads the first,
+  so an edit of the second changed nothing. This covers `_` comments too.
+- **Each weapon has its own list**, taken from what its class acts on, not a
+  union. The held-fire tools (sprayer, roller, mister) take `loop_sounds` and a
+  `stop` cue. The one-shot tools (sniper, bucket) take a `ready` cue. The
+  `RelativeVelocityWeapon`s (sprayer, mister, bucket) take `add_player_velocity`
+  and `player_velocity_amount`. Only the roller takes `aim_tilt`, `lift` and
+  `settle`. Projectiles work the same way: only the mist takes `spread_step`,
+  and only the two `DiffusingProjectile`s, spray and mist, take `diffusion`.
+  The bucket's `ready` is allowed but not authored.
+- **`presentation.json` does not follow yet.** It is a later step, with no TODO
+  row until the author asks for it. Its readers share the vector helpers with
+  the level files, and a locale lays its text over the base file, so it needs
+  its own pass.
+
+Keys starting with `_` are comments and are allowed with any value. The
+shipped file loads unchanged. `gameplay_tuning`'s `check_known_keys` refuses
+an unknown key at the root, in a nested block, in a vector, in a sound and in
+an array entry. It refuses a misspelling in a weapon, and a key another weapon
+or projectile takes that this one does not (`aim_tilt` on the sprayer,
+`loop_sounds` and `add_player_velocity` on the sniper, `stop` on the bucket,
+`spread_step` on the jet, `diffusion` on the ball). It refuses a repeated
+field and a repeated comment. It accepts `_` keys of every JSON type in five
+places, and the bucket's `ready`. Live tuning needed no change. `tune` only
+replaces existing tokens and judges each candidate by constructing
+`GameTuning`, and `tune.save` loads the written file the same way, putting
+the old bytes back if it fails. So neither can produce or accept a key the
+load refuses. One prediction was wrong: `keys()` lists names but does not
+record reads, so `check_tune_consumed` cannot shrink on its account. It
+stays.
 
 ---
 
@@ -2703,8 +2737,11 @@ Answers, report by report:
 - **32** spent: `text_wrap::wrap` deleted, three callers on `wrap_text`, and
   four edge cases requalified
   ([Closed](#32-word-wrap-by-measured-width-is-client-code--80024e5)).
-- **25** and **31** answered, closed and not yet spent. Each stays a TODO row
-  with its measured scope, because each is new client work with choices in it.
+- **25** and **31** answered, closed and not yet spent at the bump. Each became
+  a TODO row with its measured scope, because each is new client work with
+  choices in it. 31 was spent on 2026-11-05: unknown and repeated keys in
+  `tuning.json` are refused
+  ([Closed](#31-jsonvalue-cannot-report-keys-nobody-read-so-a-misspelled-optional-key-is-silent--e166dcc)).
 - **28** wrong: the tag shipped both entries unamended, and the report is back
   with the author.
 

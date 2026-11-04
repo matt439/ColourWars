@@ -4,6 +4,8 @@
 #include "engine/math/vector2f.h"
 
 #include <string>
+#include <string_view>
+#include <vector>
 
 // Range-checked reads of authored numbers, shared by every content reader
 // (tuning.json, presentation.json and the level definitions). JsonValue
@@ -45,4 +47,15 @@ namespace content_value
 	// Both components finite and greater than zero: an extent or a cap.
 	labrador::Vector2F read_positive_vector(const labrador::JsonValue& parent,
 		const char* key);
+
+	// Refuses a member `object` has but its reader does not read, so a
+	// misspelt optional key fails at load instead of being silently ignored,
+	// and refuses a name that appears twice, because has() and every read
+	// take the first and an edit of the second would change nothing. A name
+	// starting with '_' is a comment and is allowed with any value. `known`
+	// is the reader's own list, written beside its reads: which keys an
+	// object has is code, not data. tuning.json calls it on every object;
+	// presentation.json and the level files do not yet.
+	void require_known_keys(const labrador::JsonValue& object,
+		const std::vector<std::string_view>& known);
 }

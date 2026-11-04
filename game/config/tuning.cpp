@@ -6,13 +6,49 @@
 
 #include <optional>
 #include <cmath>
+#include <initializer_list>
+#include <iterator>
 #include <stdexcept>
+#include <string_view>
+#include <vector>
 
 using namespace labrador;
 using namespace content_value;
 
 namespace
 {
+	// Every object this file reads names its keys beside its reads, through
+	// require_known_keys (content_value.h): a misspelt key, optional or not,
+	// is refused at load. Vectors and sounds are objects too, so they are
+	// read through the helpers below rather than content_value's own, which
+	// presentation.json and the level files share and which do not check
+	// keys yet.
+	JsonValue known_object(const JsonValue& parent, const char* key,
+		const std::vector<std::string_view>& known)
+	{
+		const JsonValue object = parent.object(key);
+		require_known_keys(object, known);
+		return object;
+	}
+
+	Vector2F read_xy(const JsonValue& parent, const char* key)
+	{
+		known_object(parent, key, { "x", "y" });
+		return read_vector(parent, key);
+	}
+
+	Vector2F read_positive_xy(const JsonValue& parent, const char* key)
+	{
+		known_object(parent, key, { "x", "y" });
+		return read_positive_vector(parent, key);
+	}
+
+	// An object keyed by projectile name, one member per kind.
+	std::vector<std::string_view> projectile_keys()
+	{
+		return { PROJECTILE_NAMES.begin(), PROJECTILE_NAMES.end() };
+	}
+
 	// Enum parsers use JsonValue's source context for unknown names.
 
 	ProjectileType read_projectile_type(const JsonValue& parent,
@@ -81,6 +117,7 @@ namespace
 
 	SoundTuning read_sound(const JsonValue& sound)
 	{
+		require_known_keys(sound, { "name", "volume" });
 		SoundTuning tuning;
 		tuning.name = sound.string("name");
 
@@ -98,7 +135,7 @@ namespace
 	PlayerAnimationTuning read_animation(const JsonValue& parent,
 		const char* key, const std::string& sheet, const std::string& uniform)
 	{
-		const JsonValue clip = parent.object(key);
+		const JsonValue clip = known_object(parent, key, { "strip", "paint_strip", "frame_time" });
 
 		PlayerAnimationTuning tuning;
 		tuning.sheet = sheet;
@@ -125,7 +162,9 @@ namespace
 
 	InputTuning read_input(const JsonValue& root)
 	{
-		const JsonValue json = root.object("input");
+		const JsonValue json = known_object(root, "input", { "trigger_shoot_threshold",
+			"trigger_jump_threshold", "movement_deadzone", "menu_engage_threshold",
+			"menu_release_threshold" });
 		InputTuning input;
 		input.trigger_shoot_threshold = read_unit(json, "trigger_shoot_threshold");
 		input.trigger_jump_threshold = read_unit(json, "trigger_jump_threshold");
@@ -143,7 +182,11 @@ namespace
 
 	BotTuning read_bots(const JsonValue& root)
 	{
-		const JsonValue json = root.object("bots");
+		const JsonValue json = known_object(root, "bots", { "sight_distance", "reserve_low",
+			"reserve_resume", "stuck_jump_steps", "stuck_turn_steps", "recovery_steps",
+			"progress_window_steps", "progress_distance", "finish_dwell_steps",
+			"deliberate_shot_interval", "refill_retreat_margin", "mover_hold_steps",
+			"refill_off_enemy_paint", "easy", "normal", "hard" });
 		BotTuning bots;
 		bots.sight_distance = read_positive(json, "sight_distance");
 		bots.reserve_low = read_unit(json, "reserve_low");
@@ -178,7 +221,8 @@ namespace
 		const char* names[]{ "easy", "normal", "hard" };
 		for (size_t index = 0; index < bots.difficulties.size(); ++index)
 		{
-			const JsonValue entry = json.object(names[index]);
+			const JsonValue entry = known_object(json, names[index], { "reaction_steps",
+				"replan_steps", "territory_candidates", "aim_error_radians" });
 			BotDifficultyTuning& difficulty = bots.difficulties[index];
 			difficulty.reaction_steps = steps(entry, "reaction_steps");
 			difficulty.replan_steps = steps(entry, "replan_steps");
@@ -194,13 +238,14 @@ namespace
 
 	std::array<HandicapTuning, handicaps::count> read_handicaps(const JsonValue& root)
 	{
-		const JsonValue json = root.object("handicaps");
+		const JsonValue json = known_object(root, "handicaps", { "none", "plus_one", "plus_two" });
 		std::array<HandicapTuning, handicaps::count> result{};
 		const char* names[]{ "none", "plus_one", "plus_two" };
 		static_assert(std::size(names) == handicaps::count);
 		for (size_t index = 0; index < result.size(); ++index)
 		{
-			const JsonValue entry = json.object(names[index]);
+			const JsonValue entry = known_object(json, names[index],
+				{ "damage_taken", "paint_refill" });
 			HandicapTuning& level = result[index];
 			level.damage_taken = read_unit(entry, "damage_taken");
 			if (!(level.damage_taken > 0.0f))
@@ -228,12 +273,13 @@ namespace
 
 	RumbleProfile read_rumble(const JsonValue& root)
 	{
-		const JsonValue json = root.object("rumble");
-		RumbleProfile profile;
 		constexpr const char* names[]{ "hit", "elimination", "hard_landing", "dry_fire" };
+		const JsonValue json = known_object(root, "rumble", { std::begin(names), std::end(names) });
+		RumbleProfile profile;
 		for (size_t index = 0; index < profile.size(); ++index)
 		{
-			const JsonValue pulse = json.object(names[index]);
+			const JsonValue pulse = known_object(json, names[index],
+				{ "low_frequency", "high_frequency", "duration" });
 			profile[index] = { { read_unit(pulse, "low_frequency"), read_unit(pulse, "high_frequency") },
 				read_number_in(pulse, "duration", 0.0f, maximum_rumble_pulse_seconds) };
 		}
@@ -242,7 +288,9 @@ namespace
 
 	MatchTuning read_match(const JsonValue& root)
 	{
-		const JsonValue json = root.object("match");
+		const JsonValue json = known_object(root, "match", { "duration", "duration_choices",
+			"countdown", "zoom_out", "overview", "replay", "controls_text", "sounds",
+			"opening", "reveal" });
 
 		MatchTuning match;
 
@@ -251,6 +299,7 @@ namespace
 		const JsonValue choices = json.array("duration_choices");
 		for (size_t index = 0; index < choices.size(); ++index)
 		{
+			require_known_keys(choices.at(index), { "seconds" });
 			match.duration_choices.push_back(read_positive(choices.at(index), "seconds"));
 		}
 		if (match.duration_choices.empty())
@@ -266,14 +315,17 @@ namespace
 		match.overview = read_non_negative(json, "overview");
 		match.replay = read_positive(json, "replay");
 
-		const JsonValue controls = json.object("controls_text");
+		const JsonValue controls = known_object(json, "controls_text",
+			{ "font", "colour", "shadow_colour", "shadow_offset", "y" });
 		match.controls_font = controls.string("font");
 		match.controls_colour = read_colour(controls, "colour");
 		match.controls_shadow_colour = read_colour(controls, "shadow_colour");
-		match.controls_shadow_offset = read_vector(controls, "shadow_offset");
+		match.controls_shadow_offset = read_xy(controls, "shadow_offset");
 		match.controls_y = read_unit(controls, "y");
 
-		const JsonValue sounds = json.object("sounds");
+		const JsonValue sounds = known_object(json, "sounds", { "countdown", "go", "time_up",
+			"last_ten", "zoom_out", "room_tone", "hover", "click", "sigh", "chair",
+			"glass_in", "close", "celebrate", "slump", "colour_in", "skip", "undo" });
 		match.countdown_sound = read_sound(sounds, "countdown");
 		match.go_sound = read_sound(sounds, "go");
 		match.time_up_sound = read_sound(sounds, "time_up");
@@ -292,13 +344,15 @@ namespace
 		match.skip_sound = read_sound(sounds, "skip");
 		match.undo_sound = read_sound(sounds, "undo");
 
-		const JsonValue opening = json.object("opening");
+		const JsonValue opening = known_object(json, "opening",
+			{ "settle", "preview", "undo", "leave", "push" });
 		match.opening.settle = read_non_negative(opening, "settle");
 		match.opening.preview = read_positive(opening, "preview");
 		match.opening.undo = read_non_negative(opening, "undo");
 		match.opening.leave = read_positive(opening, "leave");
 		match.opening.push = read_positive(opening, "push");
-		const JsonValue reveal = json.object("reveal");
+		const JsonValue reveal = known_object(json, "reveal",
+			{ "walk_in", "hover", "decide", "show", "leave", "react" });
 		match.reveal.walk_in = read_positive(reveal, "walk_in");
 		match.reveal.hover = read_positive(reveal, "hover");
 		match.reveal.decide = read_positive(reveal, "decide");
@@ -316,20 +370,23 @@ namespace
 
 	PaintTuning read_paint(const JsonValue& root)
 	{
-		const JsonValue json = root.object("paint");
+		const JsonValue json = known_object(root, "paint", { "size", "thickness", "sheet",
+			"frame", "splash", "visual", "gate", "sound_bank", "splash_sounds",
+			"capture_sound", "dud_sound", "impact_sounds", "min_impact_interval",
+			"min_capture_interval" });
 
 		PaintTuning paint;
 
 		// Positive tile lengths are required to derive finite strip counts.
-		paint.size = read_positive_vector(json, "size");
+		paint.size = read_positive_xy(json, "size");
 
 		paint.thickness = read_positive(json, "thickness");
 		paint.sheet = json.string("sheet");
 		paint.frame = json.string("frame");
 
-		const JsonValue splash = json.object("splash");
+		const JsonValue splash = known_object(json, "splash", { "sheet", "animations" });
 		paint.splash_sheet = splash.string("sheet");
-		const JsonValue animations = splash.object("animations");
+		const JsonValue animations = known_object(splash, "animations", projectile_keys());
 		const auto splash_animation = [&](ProjectileType type, const char* key)
 		{
 			paint.splash_animations[static_cast<size_t>(type)] = animations.string(key);
@@ -337,7 +394,8 @@ namespace
 		for_each_projectile(splash_animation);
 		paint.splash_animation = paint.splash_animations[static_cast<size_t>(ProjectileType::spray)];
 
-		const JsonValue visual = json.object("visual");
+		const JsonValue visual = known_object(json, "visual", { "edge_width", "wet_duration",
+			"wet_highlight", "settle_depth", "splash_scale", "runoff" });
 		paint.edge_width = read_positive(visual, "edge_width");
 		paint.wet_duration = read_positive(visual, "wet_duration");
 		paint.wet_highlight = read_unit(visual, "wet_highlight");
@@ -348,7 +406,9 @@ namespace
 			throw std::runtime_error(visual.where() +
 				": 'edge_width' must leave visible team paint inside the tile thickness.");
 		}
-		const JsonValue runoff = visual.object("runoff");
+		const JsonValue runoff = known_object(visual, "runoff", { "delay", "duration",
+			"distance", "width", "bead_height", "trail_length", "trail_width",
+			"keyline_width", "face_inset", "shade", "highlight" });
 		paint.runoff.delay = read_unit(runoff, "delay");
 		const auto positive_runoff = [&](const char* key, float high)
 		{
@@ -388,7 +448,7 @@ namespace
 				": 'keyline_width' must leave visible paint inside width and bead_height.");
 		}
 
-		paint.gate_open_share = read_unit(json.object("gate"), "open_share");
+		paint.gate_open_share = read_unit(known_object(json, "gate", { "open_share" }), "open_share");
 
 		paint.sound_bank = json.string("sound_bank");
 		const JsonValue choices = json.array("splash_sounds");
@@ -404,7 +464,7 @@ namespace
 		}
 		paint.capture_sound = read_sound(json, "capture_sound");
 		paint.dud_sound = read_sound(json, "dud_sound");
-		const JsonValue impacts = json.object("impact_sounds");
+		const JsonValue impacts = known_object(json, "impact_sounds", projectile_keys());
 		const auto impact = [&](ProjectileType type, const char* key)
 		{
 			paint.impact_sounds[static_cast<size_t>(type)] = read_sound(impacts, key);
@@ -417,7 +477,9 @@ namespace
 
 	PlayerMovementSounds read_movement_sounds(const JsonValue& player)
 	{
-		const JsonValue json = player.object("movement_sounds");
+		const JsonValue json = known_object(player, "movement_sounds", { "land", "step",
+			"step_painted", "skid", "landing_full_speed", "landing_min_gain",
+			"stride_distance", "min_step_interval", "skid_min_speed", "skid_repeat_delay" });
 		PlayerMovementSounds sounds;
 		const auto read_choices = [&json](const char* key)
 		{
@@ -452,7 +514,9 @@ namespace
     {
         PaintUnderfootTuning result;
         if (!player.has("paint_underfoot")) { return result; }
-        const JsonValue json = player.object("paint_underfoot");
+        const JsonValue json = known_object(player, "paint_underfoot", { "enabled",
+            "own_speed_multiplier", "own_ammo_regen_multiplier", "enemy_speed_multiplier",
+            "enemy_ammo_regen_multiplier", "enemy_blocks_health_regen" });
         result.enabled = json.boolean("enabled");
         const auto at_least_one = [&](const char* key)
         {
@@ -497,14 +561,20 @@ namespace
     }
 	PlayerTuning read_player(const JsonValue& root)
 	{
-		const JsonValue json = root.object("player");
+		const JsonValue json = known_object(root, "player", { "size", "max_velocity",
+			"x_initial_velocity", "x_acceleration", "x_deacceleration", "paint_underfoot",
+			"ramp_gravity_multiplier", "gravity", "jump_launch_velocity", "jump_acceleration",
+			"jump_max_time", "jump_buffer_time", "ledge_grace_time", "drop_down_velocity",
+			"drop_down_analog_threshold", "starting_health", "health_regen_delay",
+			"health_regen_rate", "respawn_delay", "damage_sound_delay", "sound_bank",
+			"sounds", "redraw_sounds", "movement_sounds", "animations" });
 
 		PlayerTuning player;
 		// A zero, negative or non-finite extent or speed cap would leave the
 		// per-stage anti-tunnelling bound (game/config/tunnelling_limits.h) meaning
 		// nothing, so the tuning half of that check is refusing one at load.
-		player.size = read_positive_vector(json, "size");
-		player.max_velocity = read_positive_vector(json, "max_velocity");
+		player.size = read_positive_xy(json, "size");
+		player.max_velocity = read_positive_xy(json, "max_velocity");
 		// The three horizontal rates are magnitudes: Player::update takes their
 		// direction from the stick. A zero first step could never leave rest,
 		// and braking divides by x_deacceleration (plus x_acceleration, which
@@ -536,7 +606,8 @@ namespace
 
 		player.sound_bank = json.string("sound_bank");
 
-		const JsonValue sounds = json.object("sounds");
+		const JsonValue sounds = known_object(json, "sounds",
+			{ "damage", "death", "jump", "respawn" });
 		player.damage_sound = read_sound(sounds, "damage");
 		player.death_sound = read_sound(sounds, "death");
 		player.jump_sound = read_sound(sounds, "jump");
@@ -561,7 +632,9 @@ namespace
 		}
 		player.movement_sounds = read_movement_sounds(json);
 
-		const JsonValue animations = json.object("animations");
+		const JsonValue animations = known_object(json, "animations", { "sheet", "uniform",
+			"idle", "walk", "running", "jumping", "falling", "takeoff", "land", "fire",
+			"hurt", "elimination" });
 		const std::string sheet = animations.string("sheet");
 		const std::string uniform = animations.string("uniform");
 		player.idle = read_animation(animations, "idle", sheet, uniform);
@@ -586,7 +659,7 @@ namespace
 			return sounds;
 		}
 
-		const JsonValue block = json.object("loop_sounds");
+		const JsonValue block = known_object(json, "loop_sounds", { "team_a", "team_b" });
 
 		const auto read_team = [&block](const char* key,
 			std::array<std::string, 4>& into)
@@ -610,15 +683,66 @@ namespace
 		return sounds;
 	}
 
+	// Each weapon's own keys, not a union of all five: a field its class does
+	// not act on is a mistake in that weapon's block. The held-fire tools
+	// (sprayer, roller, mister) loop, so they take loop_sounds and a stop cue;
+	// the one-shot tools (sniper, bucket) override the firing sound and wait
+	// out a cooldown, so they take a ready cue; RelativeVelocityWeapon's
+	// (sprayer, mister, bucket) add the player's velocity; the roller alone
+	// tilts, lifts and settles.
+	struct WeaponKeys
+	{
+		std::vector<std::string_view> weapon;
+		std::vector<std::string_view> feedback;
+	};
+
+	WeaponKeys weapon_keys(WeaponType type)
+	{
+		WeaponKeys keys{
+			{ "offset", "size", "nozzle_offset", "shoot_interval", "starting_vel_length",
+				"ammo_usage", "sheet", "frame", "projectile", "sound_bank", "shoot_sound",
+				"feedback_sounds" },
+			{ "empty", "recovered", "empty_repeat_delay", "low" } };
+		const auto add = [](std::vector<std::string_view>& into,
+			std::initializer_list<std::string_view> more)
+		{
+			into.insert(into.end(), more.begin(), more.end());
+		};
+		switch (type)
+		{
+		case WeaponType::sprayer:
+		case WeaponType::mister:
+			add(keys.weapon, { "add_player_velocity", "player_velocity_amount", "loop_sounds" });
+			add(keys.feedback, { "stop" });
+			break;
+		case WeaponType::sniper:
+			add(keys.feedback, { "ready" });
+			break;
+		case WeaponType::roller:
+			add(keys.weapon, { "aim_tilt", "loop_sounds" });
+			add(keys.feedback, { "stop", "lift", "settle" });
+			break;
+		case WeaponType::bucket:
+			add(keys.weapon, { "add_player_velocity", "player_velocity_amount" });
+			add(keys.feedback, { "ready" });
+			break;
+		default:
+			throw std::logic_error("weapon " + std::to_string(static_cast<int>(type)) +
+				" has no key list in tuning.cpp");
+		}
+		return keys;
+	}
+
 	WeaponTuning read_weapon(const JsonValue& weapons, const char* key, WeaponType type)
 	{
-		const JsonValue json = weapons.object(key);
+		const WeaponKeys keys = weapon_keys(type);
+		const JsonValue json = known_object(weapons, key, keys.weapon);
 
 		WeaponTuning weapon;
 		WeaponDetails& details = weapon.details;
-		details.offset = read_vector(json, "offset");
-		details.size = read_vector(json, "size");
-		details.nozzle_offset = read_vector(json, "nozzle_offset");
+		details.offset = read_xy(json, "offset");
+		details.size = read_xy(json, "size");
+		details.nozzle_offset = read_xy(json, "nozzle_offset");
 		// Zero fires every update; the sprayer and roller are authored so.
 		details.shoot_interval = read_non_negative(json, "shoot_interval");
 		details.starting_vel_length = read_non_negative(json, "starting_vel_length");
@@ -653,7 +777,7 @@ namespace
 		}
 
 		weapon.loop_sounds = read_loop_sounds(json);
-		const JsonValue feedback = json.object("feedback_sounds");
+		const JsonValue feedback = known_object(json, "feedback_sounds", keys.feedback);
 		weapon.feedback_sounds.empty = read_sound(feedback, "empty");
 		weapon.feedback_sounds.recovered = read_sound(feedback, "recovered");
 		weapon.feedback_sounds.empty_repeat_delay = read_positive(feedback, "empty_repeat_delay");
@@ -672,7 +796,19 @@ namespace
 	ProjectileTuning read_projectile(const JsonValue& projectiles,
 		const char* key, ProjectileType type, float wind_stop_factor)
 	{
-		const JsonValue json = projectiles.object(key);
+		// The mist alone fans its shots, and spray and mist are the two
+		// DiffusingProjectiles, the only kinds that act on a diffusion block.
+		std::vector<std::string_view> known{ "gravity", "wind_resistance", "rotation_origin",
+			"delete_timer", "player_damage", "size", "collision_size", "sheet", "animation" };
+		if (type == ProjectileType::mist)
+		{
+			known.push_back("spread_step");
+		}
+		if (type == ProjectileType::spray || type == ProjectileType::mist)
+		{
+			known.push_back("diffusion");
+		}
+		const JsonValue json = known_object(projectiles, key, known);
 
 		ProjectileTuning projectile;
 		ProjectileDetails& details = projectile.details;
@@ -693,18 +829,19 @@ namespace
 		// A shot that is deleted the update it is made never exists.
 		details.delete_timer = read_positive(json, "delete_timer");
 		details.player_damage = read_non_negative(json, "player_damage");
-		details.size = read_positive_vector(json, "size");
-		details.col_rect_size = read_positive_vector(json, "collision_size");
+		details.size = read_positive_xy(json, "size");
+		details.col_rect_size = read_positive_xy(json, "collision_size");
 		details.sheet_name = json.string("sheet");
 		details.animation_strip_name = json.string("animation");
 
 		if (json.has("diffusion"))
 		{
-			const JsonValue diffusion = json.object("diffusion");
+			const JsonValue diffusion = known_object(json, "diffusion",
+				{ "type", "start_time", "end_time", "end_scale" });
 			projectile.diffusion.type = read_diffusion_type(diffusion, "type");
 			projectile.diffusion.start_time = read_non_negative(diffusion, "start_time");
 			projectile.diffusion.end_time = read_non_negative(diffusion, "end_time");
-			projectile.diffusion.end_scale = read_positive_vector(diffusion, "end_scale");
+			projectile.diffusion.end_scale = read_positive_xy(diffusion, "end_scale");
 			// Equal times are a step to end_scale; a reversed pair would skip
 			// the growth the block describes.
 			if (!(projectile.diffusion.start_time <= projectile.diffusion.end_time))
@@ -728,6 +865,8 @@ GameTuning::GameTuning(const JsonDocument& document)
 {
 	this->source_path_ = document.source_path();
 	const JsonValue root = document.root();
+	require_known_keys(root, { "input", "match", "paint", "player", "rumble", "bots",
+		"handicaps", "weapons", "projectiles" });
 
 	this->input_ = read_input(root);
 	this->match_ = read_match(root);
@@ -737,12 +876,19 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->bots_ = read_bots(root);
 	this->handicaps_ = read_handicaps(root);
 
-	const JsonValue weapons = root.object("weapons");
+	std::vector<std::string_view> weapon_members{ "ammo_regen_delay", "ammo_regen_rate",
+		"starting_ammo", "low_paint" };
+	for_each_tuned_weapon([&weapon_members](WeaponType, const char* name)
+	{
+		weapon_members.push_back(name);
+	});
+	const JsonValue weapons = known_object(root, "weapons", weapon_members);
 	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
 	this->ammo_regen_rate_ = read_non_negative(weapons, "ammo_regen_rate");
 	this->starting_ammo_ = read_positive(weapons, "starting_ammo");
 	{
-		const JsonValue low = weapons.object("low_paint");
+		const JsonValue low = known_object(weapons, "low_paint",
+			{ "supply_fraction", "shots", "rearm_fraction" });
 		this->low_paint_.supply_fraction = read_unit(low, "supply_fraction");
 		this->low_paint_.shots = read_finite(low, "shots");
 		// Two shots' paint guarantees the shot that crosses the line leaves one.
@@ -784,9 +930,11 @@ GameTuning::GameTuning(const JsonDocument& document)
 
 	for_each_tuned_weapon(add_weapon);
 
-	const JsonValue projectiles = root.object("projectiles");
+	std::vector<std::string_view> projectile_members = projectile_keys();
+	projectile_members.insert(projectile_members.begin(), { "max_velocity", "wind_stop_factor" });
+	const JsonValue projectiles = known_object(root, "projectiles", projectile_members);
 	// A per-axis speed cap: a zero or negative one has no meaning.
-	const Vector2F max_velocity = read_positive_vector(projectiles, "max_velocity");
+	const Vector2F max_velocity = read_positive_xy(projectiles, "max_velocity");
 	const float wind_stop_factor = read_non_negative(projectiles, "wind_stop_factor");
 
 	const auto add_projectile = [this, &projectiles, &max_velocity, wind_stop_factor](
