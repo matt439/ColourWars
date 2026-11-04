@@ -39,11 +39,6 @@ Three build tools are retained in this repository:
 Source: https://github.com/microsoft/DirectXTK and
 https://github.com/microsoft/DirectXTex
 
-`game/directx.ico`, the executable's icon, is the stock icon from Microsoft's
-DirectX Visual Studio project templates
-(https://github.com/walbourn/directx-vs-templates), under the same licence.
-It is a placeholder until the release-art pass (TODO.md, GAP#7.6).
-
     The MIT License (MIT)
 
     Copyright (c) Microsoft Corporation.

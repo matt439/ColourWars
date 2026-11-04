@@ -2,7 +2,7 @@
 #include "game/version.rc.h"
 
 // The engine loads the window icon by this name (LoadIconW(instance, L"IDI_ICON")).
-IDI_ICON                ICON                    "directx.ico"
+IDI_ICON                ICON                    "colourwars.ico"
 
 // Explorer's Properties > Details. The number is project(VERSION) in the root
 // CMakeLists.txt; scripts/check-startup.ps1 checks it is stamped.
