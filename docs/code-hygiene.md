@@ -53,8 +53,9 @@ on the Debug executable.
 
 **Done 2026-10-30.** [game/CMakeLists.txt](../game/CMakeLists.txt) now builds
 every game source but `main.cpp` and the two platform adapters into the
-`colourwars_game` static library, `rumble_xinput.cpp` into
-`colourwars_rumble_xinput` and `display_awake.cpp` into
+`colourwars_game` static library, `rumble_gamepads.cpp` into
+`colourwars_rumble_gamepads` (`rumble_xinput.cpp` and
+`colourwars_rumble_xinput` until `ENG#25`) and `display_awake.cpp` into
 `colourwars_display_awake` (each building against the game library's headers
 and reusing its precompiled header), and links all three into the thin
 `ColourWars` executable of `main.cpp`, `resource.rc` and the manifest.

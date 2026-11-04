@@ -1,132 +1,242 @@
 #include "game/pch.h"
 #include "game/input/rumble_sink.h"
+#include "engine/input/gamepad_reader.h"
+#include "engine/input/gamepads.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
 
-namespace
+// The concrete reader link seam: the real adapter drives the real
+// labrador::Gamepads, and this reader stands where the pad API would. Nothing
+// here reaches XInput or a motor.
+namespace rumble_adapter_pads
 {
-    using acceptance::require;
-
-    struct Requests
+    struct Call
     {
-        struct Call
-        {
-            int slot = -1;
-            std::uint16_t low = 0;
-            std::uint16_t high = 0;
-        };
+        bool stop = false;
+        int slot = -1;
+        labrador::Vibration vibration;
+    };
+
+    struct Trace
+    {
         std::array<Call, 64> calls{};
         std::size_t count = 0;
-        bool succeeds = true;
         bool overflow = false;
+        bool accepts = true;
+        bool throws = false;
 
-        void exact(std::size_t index, int slot, std::uint16_t low, std::uint16_t high) const
+        void record(const Call& call)
         {
-            require(!overflow && index < count && calls[index].slot == slot &&
-                calls[index].low == low && calls[index].high == high,
-                "Rumble adapter request trace differs");
+            if (this->count >= this->calls.size()) { this->overflow = true; return; }
+            this->calls[this->count++] = call;
         }
     };
 
-    bool record(void* context, int slot, std::uint16_t low, std::uint16_t high) noexcept
+    std::array<labrador::GamepadState, 4> states{};
+    Trace* trace = nullptr;
+}
+
+namespace labrador
+{
+    struct GamepadReader::Impl { std::array<GamepadState, 4> states{}; };
+    GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
+    GamepadReader::~GamepadReader() = default;
+    GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
+    GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
+    void GamepadReader::sample() { this->impl_->states = rumble_adapter_pads::states; }
+    GamepadState GamepadReader::read(int slot) const
     {
-        auto& requests = *static_cast<Requests*>(context);
-        if (requests.count >= requests.calls.size()) { requests.overflow = true; return false; }
-        requests.calls[requests.count++] = { slot, low, high };
-        return requests.succeeds;
+        return slot >= 0 && slot < 4 ? this->impl_->states[static_cast<size_t>(slot)] : GamepadState{};
+    }
+    void GamepadReader::suspend() {}
+    void GamepadReader::resume() {}
+    bool GamepadReader::vibrate(int slot, const Vibration& vibration)
+    {
+        rumble_adapter_pads::Trace& trace = *rumble_adapter_pads::trace;
+        trace.record({ false, slot, vibration });
+        if (trace.throws) { throw std::runtime_error("fixture pad API failure"); }
+        return trace.accepts;
+    }
+    void GamepadReader::stop_vibration(int slot)
+    {
+        rumble_adapter_pads::Trace& trace = *rumble_adapter_pads::trace;
+        trace.record({ true, slot, {} });
+        if (trace.throws) { throw std::runtime_error("fixture pad API failure"); }
+    }
+}
+
+namespace
+{
+    using acceptance::require;
+    using rumble_adapter_pads::Trace;
+
+    // One reader and Gamepads per check, polled once with the chosen pads.
+    class Pads
+    {
+    public:
+        explicit Pads(Trace& trace, std::array<bool, 4> connected = { true, true, true, true }) :
+            gamepads_(&reader_)
+        {
+            rumble_adapter_pads::trace = &trace;
+            for (std::size_t slot = 0; slot < connected.size(); ++slot)
+            {
+                rumble_adapter_pads::states[slot] = {};
+                rumble_adapter_pads::states[slot].connected = connected[slot];
+            }
+            this->gamepads_.poll();
+        }
+        labrador::Gamepads& gamepads() { return this->gamepads_; }
+    private:
+        labrador::GamepadReader reader_;
+        labrador::Gamepads gamepads_;
+    };
+
+    void vibrated(const Trace& trace, std::size_t index, int slot, float low, float high, float seconds)
+    {
+        require(!trace.overflow && index < trace.count && !trace.calls[index].stop &&
+            trace.calls[index].slot == slot &&
+            trace.calls[index].vibration.low_frequency == low &&
+            trace.calls[index].vibration.high_frequency == high &&
+            trace.calls[index].vibration.seconds == seconds,
+            "Rumble adapter vibration trace differs");
     }
 
-    void conversion_and_slots()
+    void stopped(const Trace& trace, std::size_t index, int slot)
     {
-        Requests requests;
+        require(!trace.overflow && index < trace.count && trace.calls[index].stop &&
+            trace.calls[index].slot == slot, "Rumble adapter stop trace differs");
+    }
+
+    void requests_and_slots()
+    {
+        Trace trace;
         {
-            auto sink = make_rumble_sink(record, &requests);
-            require(requests.count == 0, "Constructing a rumble sink contacted the transport");
+            Pads pads(trace);
+            auto sink = make_rumble_sink(pads.gamepads());
+            require(trace.count == 0, "Constructing a rumble sink contacted the pads");
             for (const int slot : { -1, input_slots::keyboard_and_mouse, input_slots::count,
                 (std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
             {
-                sink->set_vibration(slot, { 1.0f, 1.0f });
+                sink->set_vibration(slot, { 1.0f, 1.0f }, 0.5f);
+                sink->set_vibration(slot, {}, 0.0f);
             }
-            require(requests.count == 0, "Invalid/keyboard slot reached native rumble transport");
-            sink->set_vibration(3, { 1.0f, 0.0f });
-            requests.exact(0, 3, 65535, 0);
-            sink->set_vibration(1, { 0.5f, 0.25f });
-            requests.exact(1, 1, 32768, 16384);
-            sink->set_vibration(1, { 1.0f / 65535.0f, 0.0000001f });
-            requests.exact(2, 1, 1, 0);
-            sink->set_vibration(1, {});
-            requests.exact(3, 1, 0, 0);
+            require(trace.count == 0, "Invalid/keyboard slot reached the engine's pads");
+            sink->set_vibration(3, { 1.0f, 0.0f }, 0.5f);
+            vibrated(trace, 0, 3, 1.0f, 0.0f, 0.5f);
+            sink->set_vibration(1, { 0.5f, 0.25f }, 0.125f);
+            vibrated(trace, 1, 1, 0.5f, 0.25f, 0.125f);
+            // Past the engine's bound is clamped rather than refused.
+            sink->set_vibration(1, { 0.5f, 0.25f }, labrador::max_vibration_seconds * 2.0f);
+            vibrated(trace, 2, 1, 0.5f, 0.25f, labrador::max_vibration_seconds);
+            sink->set_vibration(1, {}, 0.0f);
+            stopped(trace, 3, 1);
         }
-        require(requests.count == 5, "Sink destruction stopped untouched/already-stopped slots or omitted active output");
-        requests.exact(4, 3, 0, 0);
+        require(trace.count == 5, "Sink destruction stopped untouched/already-stopped slots or omitted active output");
+        stopped(trace, 4, 3);
     }
 
-    void invalid_motors_stop()
+    void invalid_requests_stop()
     {
-        for (const float invalid : { -0.001f, 1.001f, std::numeric_limits<float>::quiet_NaN(),
-            std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() })
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const float infinity = std::numeric_limits<float>::infinity();
+        for (const float invalid : { -0.001f, 1.001f, nan, infinity, -infinity })
         {
             for (const bool invalid_low : { false, true })
             {
-                Requests requests;
+                Trace trace;
                 {
-                    auto sink = make_rumble_sink(record, &requests);
-                    sink->set_vibration(2, { 1.0f, 1.0f });
-                    sink->set_vibration(2, invalid_low ? RumbleMotors{ invalid, 1.0f } : RumbleMotors{ 1.0f, invalid });
-                    requests.exact(1, 2, 0, 0);
+                    Pads pads(trace);
+                    auto sink = make_rumble_sink(pads.gamepads());
+                    sink->set_vibration(2, { 1.0f, 1.0f }, 0.5f);
+                    sink->set_vibration(2, invalid_low ? RumbleMotors{ invalid, 1.0f } : RumbleMotors{ 1.0f, invalid }, 0.5f);
+                    stopped(trace, 1, 2);
                 }
-                require(requests.count == 2, "Invalid motor input left stale output or caused a retry");
+                require(trace.count == 2, "Invalid motor input left stale output or caused a retry");
             }
+        }
+        for (const float invalid : { 0.0f, -0.0f, -0.5f, nan, infinity, -infinity })
+        {
+            Trace trace;
+            {
+                Pads pads(trace);
+                auto sink = make_rumble_sink(pads.gamepads());
+                sink->set_vibration(0, { 1.0f, 1.0f }, 0.5f);
+                sink->set_vibration(0, { 1.0f, 1.0f }, invalid);
+                stopped(trace, 1, 0);
+            }
+            require(trace.count == 2, "An unbounded or empty deadline reached the engine or left stale output");
         }
     }
 
     void unavailable_and_unwind()
     {
-        Requests requests;
-        requests.succeeds = false;
+        Trace refused;
+        refused.accepts = false;
         {
-            auto sink = make_rumble_sink(record, &requests);
-            sink->set_vibration(3, { 0.5f, 0.0f });
-            require(requests.count == 1, "Failed native request entered a retry loop");
-            requests.succeeds = true;
-            sink->set_vibration(3, { 0.0f, 0.5f });
-            requests.exact(1, 3, 0, 32768);
+            Pads pads(refused);
+            auto sink = make_rumble_sink(pads.gamepads());
+            sink->set_vibration(3, { 0.5f, 0.0f }, 0.25f);
+            require(refused.count == 1, "Refused request entered a retry loop");
+            refused.accepts = true;
+            sink->set_vibration(3, { 0.0f, 0.5f }, 0.25f);
+            vibrated(refused, 1, 3, 0.0f, 0.5f, 0.25f);
         }
-        require(requests.count == 3, "A failed native request suppressed a later request or lifetime stop");
-        requests.exact(2, 3, 0, 0);
+        require(refused.count == 3, "A refused request suppressed a later request or lifetime stop");
+        stopped(refused, 2, 3);
 
-        Requests failed_stop;
-        failed_stop.succeeds = false;
+        // An empty slot is answered by Gamepads without the reader; the
+        // intent is still stopped at destruction, which is safe on any slot.
+        Trace absent;
         {
-            auto sink = make_rumble_sink(record, &failed_stop);
-            sink->set_vibration(0, { 1.0f, 1.0f });
-            sink->set_vibration(0, {});
+            Pads pads(absent, { true, false, true, true });
+            auto sink = make_rumble_sink(pads.gamepads());
+            sink->set_vibration(1, { 1.0f, 1.0f }, 0.5f);
+            require(absent.count == 0, "A request for an empty slot reached the reader");
         }
-        require(failed_stop.count == 2, "Failed explicit stop was retried on destruction");
-        failed_stop.exact(1, 0, 0, 0);
+        require(absent.count == 1, "Destruction did not stop an empty slot's outstanding intent");
+        stopped(absent, 0, 1);
+
+        // Nothing the pads throw leaves the nonthrowing sink.
+        Trace throwing;
+        throwing.throws = true;
+        {
+            Pads pads(throwing);
+            auto sink = make_rumble_sink(pads.gamepads());
+            sink->set_vibration(0, { 1.0f, 1.0f }, 0.5f);
+            sink->set_vibration(2, { 1.0f, 1.0f }, 0.5f);
+            sink->set_vibration(2, {}, 0.0f);
+        }
+        require(throwing.count == 4, "A throwing pad API was retried or skipped a stop");
+        vibrated(throwing, 0, 0, 1.0f, 1.0f, 0.5f);
+        stopped(throwing, 2, 2);
+        stopped(throwing, 3, 0);
 
         struct ExpectedFailure {};
-        Requests unwind;
+        Trace unwind;
         bool caught = false;
-        try
         {
-            auto sink = make_rumble_sink(record, &unwind);
-            sink->set_vibration(1, { 1.0f, 0.0f });
-            throw ExpectedFailure{};
+            Pads pads(unwind);
+            try
+            {
+                auto sink = make_rumble_sink(pads.gamepads());
+                sink->set_vibration(1, { 1.0f, 0.0f }, 0.5f);
+                throw ExpectedFailure{};
+            }
+            catch (const ExpectedFailure&) { caught = true; }
         }
-        catch (const ExpectedFailure&) { caught = true; }
         require(caught && unwind.count == 2, "Sink did not stop through an owning exception unwind");
-        unwind.exact(1, 1, 0, 0);
+        stopped(unwind, 1, 1);
     }
 
     void policy_stop_path()
     {
-        Requests requests;
+        Trace trace;
         {
-            auto sink = make_rumble_sink(record, &requests);
+            Pads pads(trace);
+            auto sink = make_rumble_sink(pads.gamepads());
             RumbleProfile profile{};
             profile[static_cast<std::size_t>(RumbleEvent::hit)] = { { 1.0f, 0.5f }, 0.125f };
             {
@@ -134,18 +244,21 @@ namespace
                 rumble.set_session({ true, true, false });
                 rumble.set_slot(3, { true, true, false, false });
                 rumble.trigger(3, RumbleEvent::hit);
-                requests.exact(0, 3, 65535, 32768);
-                rumble.update(0.125f);
-                requests.exact(1, 3, 0, 0);
+                vibrated(trace, 0, 3, 1.0f, 0.5f, 0.125f);
+                rumble.update(0.0625f);
                 rumble.trigger(3, RumbleEvent::hit);
-                requests.exact(2, 3, 65535, 32768);
+                vibrated(trace, 1, 3, 1.0f, 0.5f, 0.125f);
+                rumble.update(0.125f);
+                stopped(trace, 2, 3);
+                rumble.trigger(3, RumbleEvent::hit);
+                vibrated(trace, 3, 3, 1.0f, 0.5f, 0.125f);
             }
             for (int slot = 0; slot < input_slots::pad_count; ++slot)
             {
-                requests.exact(3 + static_cast<std::size_t>(slot), slot, 0, 0);
+                stopped(trace, 4 + static_cast<std::size_t>(slot), slot);
             }
         }
-        require(requests.count == 7, "Native adapter retained nonzero intent after the policy destructor stopped all pads");
+        require(trace.count == 8, "Adapter retained nonzero intent after the policy destructor stopped all pads");
     }
 }
 
@@ -153,13 +266,15 @@ int main()
 {
     return acceptance::run_probe("rumble adapter", [&]
     {
-        conversion_and_slots();
-        invalid_motors_stop();
+        requests_and_slots();
+        invalid_requests_stop();
         unavailable_and_unwind();
         policy_stop_path();
-        std::cout << "PASS rumble adapter: normalized 16-bit intent, physical slot bounds, invalid-value stop, "
-            "unavailable/failing transport, lifetime unwind and policy stop path. Injected callback only; "
-            "no default factory, XInput request, physical pad or feel acceptance.\n";
+        rumble_adapter_pads::trace = nullptr;
+        std::cout << "PASS rumble adapter: bounded Gamepads::vibrate requests and stop_vibration stops through "
+            "the real labrador::Gamepads, physical slot bounds, invalid-value and invalid-deadline stop, "
+            "clamped engine bound, refused/empty/throwing pads, lifetime unwind and policy renew/stop path. "
+            "Fake GamepadReader only; no XInput request, physical pad or feel acceptance.\n";
         return 0;
     });
 }

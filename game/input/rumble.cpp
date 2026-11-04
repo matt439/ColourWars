@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/input/rumble.h"
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 namespace
@@ -9,6 +11,11 @@ namespace
     {
         return left.low_frequency == right.low_frequency &&
             left.high_frequency == right.high_frequency;
+    }
+
+    bool silent(const RumbleMotors& motors) noexcept
+    {
+        return motors.low_frequency == 0.0f && motors.high_frequency == 0.0f;
     }
 }
 
@@ -104,10 +111,14 @@ void Rumble::update(float dt)
     }
     for (std::size_t slot = 0; slot < this->slots_.size(); ++slot)
     {
-        for (double& remaining : this->slots_[slot].remaining)
+        Slot& target = this->slots_[slot];
+        for (double& remaining : target.remaining)
         {
             remaining = std::max(0.0, remaining - static_cast<double>(dt));
         }
+        // The same arithmetic as the pulse timers, so a request and the pulse
+        // that set its seconds expire together and nothing is resent early.
+        target.sent_seconds = std::max(0.0, target.sent_seconds - static_cast<double>(dt));
         this->publish(slot);
     }
 }
@@ -119,30 +130,41 @@ void Rumble::clear_slot(std::size_t slot, bool force_output) noexcept
     const RumbleMotors zero;
     if (force_output || !same_motors(target.output, zero))
     {
-        this->sink_.set_vibration(static_cast<int>(slot), zero);
+        this->sink_.set_vibration(static_cast<int>(slot), zero, 0.0f);
     }
     target.output = zero;
+    target.sent_seconds = 0.0;
 }
 
 void Rumble::publish(std::size_t slot) noexcept
 {
     Slot& target = this->slots_[slot];
     RumbleMotors output;
+    // How long the output stays nonzero: the longest audible pulse left.
+    double hold = 0.0;
     if (this->slot_permits(slot))
     {
         for (std::size_t event = 0; event < rumble_event_count; ++event)
         {
+            const RumbleMotors& motors = this->profile_[event].motors;
             if (target.remaining[event] > 0.0)
             {
-                output.low_frequency = std::max(output.low_frequency, this->profile_[event].motors.low_frequency);
-                output.high_frequency = std::max(output.high_frequency, this->profile_[event].motors.high_frequency);
+                output.low_frequency = std::max(output.low_frequency, motors.low_frequency);
+                output.high_frequency = std::max(output.high_frequency, motors.high_frequency);
+                if (!silent(motors)) { hold = std::max(hold, target.remaining[event]); }
             }
         }
     }
-    if (!same_motors(target.output, output))
+    if (silent(output)) { hold = 0.0; }
+    if (!same_motors(target.output, output) || hold > target.sent_seconds)
     {
-        this->sink_.set_vibration(static_cast<int>(slot), output);
+        // Profiles bound hold by maximum_rumble_pulse_seconds; the floor keeps
+        // a vanishing remainder a positive request rather than a refused one.
+        const float seconds = silent(output) ? 0.0f :
+            std::clamp(static_cast<float>(hold), (std::numeric_limits<float>::min)(), maximum_rumble_pulse_seconds);
+        this->sink_.set_vibration(static_cast<int>(slot), output, seconds);
         target.output = output;
+        target.sent_seconds = hold;
     }
 }
 

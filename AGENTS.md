@@ -139,7 +139,7 @@ them: case selection, a Windows Job Object and deadline per probe, retained
 logs and evidence, and `acceptance-summary.json`. They link the build's own
 output rather than a copy of it: [game/CMakeLists.txt](game/CMakeLists.txt)
 builds every game source but `main.cpp` into the `colourwars_game` static
-library, the two platform adapters into `colourwars_rumble_xinput` and
+library, the two platform adapters into `colourwars_rumble_gamepads` and
 `colourwars_display_awake`, and links all three into the thin `ColourWars`
 executable. A probe links `colourwars_game.lib` and chooses each adapter by
 linking its library or defining the adapter's symbols itself.

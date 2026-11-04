@@ -50,11 +50,14 @@ struct RumbleSessionState
 // The sink accepts normalized motor intent and must remain alive until its
 // owning Rumble is destroyed. Native/device failure handling belongs to the
 // adapter; a policy stop makes a best-effort zero request, not a success claim.
+// Nonzero motors carry `seconds`, the longest the request may run unrenewed, in
+// (0, maximum_rumble_pulse_seconds]; the engine stops a request whose seconds
+// pass. All-zero motors are a stop and their seconds are 0.
 class RumbleSink
 {
 public:
     virtual ~RumbleSink() = default;
-    virtual void set_vibration(int pad_slot, const RumbleMotors& motors) noexcept = 0;
+    virtual void set_vibration(int pad_slot, const RumbleMotors& motors, float seconds) noexcept = 0;
 };
 
 // One match owns all physical pad slots. Slots are device indices, never roster
@@ -62,6 +65,11 @@ public:
 // Each event has an independent timer; overlaps take the maximum per motor,
 // and repeating an event refreshes only its own timer. Output changes are sent
 // immediately; update advances timers. Gate loss cancels rather than freezes.
+// Every nonzero request carries the time until the output would fall to zero
+// (the longest remaining nonzero pulse), so a match that stops updating still
+// ends at the engine's deadline. An unchanged output is sent again only when
+// that time outgrows what the last request was given: a retrigger that extends
+// the pulse renews the request, and one that does not stays silent.
 class Rumble final
 {
 public:
@@ -88,6 +96,8 @@ private:
         RumbleSlotState state;
         std::array<double, rumble_event_count> remaining{};
         RumbleMotors output;
+        // What remains of the last nonzero request's seconds; 0 after a stop.
+        double sent_seconds = 0.0;
     };
 
     static void validate_profile(const RumbleProfile& profile);

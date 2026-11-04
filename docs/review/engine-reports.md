@@ -107,7 +107,7 @@ records its call and what would reopen it.
 
 **Moved 2026-11-03 to `v0.3.0`** (`0f4f503`), the tag's day, 243 commits past
 `v0.2.0`. It carries the answers to 23, 25, 31 and 32. 23 and 32 were spent at
-the bump and 31 on 2026-11-05; 25 is left as its own TODO row. 28's engine fix
+the bump, 31 and 25 on 2026-11-05. 28's engine fix
 did not ship.
 See [What the 2026-11-03 bump changed](#what-the-2026-11-03-bump-changed).
 
@@ -766,9 +766,9 @@ comment on or open anything upstream.
 
 # Closed
 
-Twenty-eight reports: twenty-seven answered and one withdrawn. Nineteen were
-spent here in code: 23 and 32 at the 2026-11-03 bump, and 31 on 2026-11-05.
-One, 25, is answered and not yet spent, and keeps a TODO row. Seven spent nothing in code: 1 was fixed before it was
+Twenty-eight reports: twenty-seven answered and one withdrawn. Twenty were
+spent here in code: 23 and 32 at the 2026-11-03 bump, and 31 and 25 on
+2026-11-05. Seven spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
@@ -1777,22 +1777,42 @@ narrowed: every request carries a deadline the engine enforces; pad loss,
 suspension and destruction stop it and nothing is replayed; and `submitted`
 means only that the pad API took the request, not that a motor turned.
 
-**Not spent yet**, by choice: TODO `ENG#25` stays open with the measured scope.
-The bump found the swap is more than a transport change:
+**Spent** 2026-11-05, with the measured scope the bump recorded. No client
+code calls `XInputSetState` or includes `Xinput.h` any more, and the adapter
+library no longer links `Xinput.lib`:
 
-- The prediction that the factory goes was wrong. `make_rumble_sink` is the
-  link seam that keeps the painter, frame-pacing and display-awake probes off
-  real motors (`rumble_sink_fixture.h`). It stays, and only its production
-  body moves onto `labrador::Gamepads`.
-- The client's model does not map one to one. `Rumble` sends a level only when
-  it changes and holds it with no deadline, and a retrigger extends its timer
-  without resending (the `rumble` case pins that). Under the engine, a level
-  held by repeated hits would stop after the first request's `seconds`. So
-  `RumbleSink::set_vibration` needs a deadline, `Rumble::publish` must resend
-  when that deadline grows, the `rumble` traces change, and `rumble_adapter`
-  is rewritten or deleted.
-- Physical output cannot be checked here: there is no pad on this machine, and
-  the engine has not checked it either. That stays with `ROAD#3`.
+- The `make_rumble_sink` link seam stayed, as the bump found it must. Its
+  production body, now `game/input/rumble_gamepads.cpp` in the renamed
+  `colourwars_rumble_gamepads` library, sends through `Gamepads::vibrate` and
+  `stop_vibration`. The factory takes the borrowed `labrador::Gamepads&`, which
+  `GameLevel` passes from `Application::gamepads()`; the painter fixture
+  (`rumble_sink_fixture.h`), and through it the display-awake and frame-pacing
+  harnesses, define the same signature and still reach no motor.
+- `RumbleSink::set_vibration` carries a deadline. A nonzero request's seconds
+  are the time until the output would fall to zero, the longest audible pulse
+  left, in (0, `maximum_rumble_pulse_seconds`]; a stop carries none.
+  `Rumble::publish` sends when the output changes, as before, and now also when
+  that time outgrows what the last request was given. A retrigger that extends
+  a pulse renews the request at the same level; one that does not stays silent.
+  A level held by repeated hits is renewed at every hit, so the engine's
+  deadline never cuts it short, and a match that stops updating still ends at
+  it.
+- The adapter checks what `check_vibration` would refuse before calling:
+  invalid amplitudes, and seconds that are not positive and finite, become a
+  stop; seconds past `max_vibration_seconds` are clamped. Keyboard and invalid
+  slots never reach `Gamepads`, and anything it throws is caught inside the
+  nonthrowing sink. An unavailable answer is not retried. Gate loss, pause,
+  focus loss and destruction still stop through `stop_all`.
+- The injected-callback overload is gone. `rumble_adapter` now drives the real
+  adapter through a real `labrador::Gamepads` over its own `GamepadReader`
+  fake (the link seam [report 27](#27-no-headless-or-recording-pad-backend---draft-with-link-seam-exhibit)
+  describes), recording each `vibrate` and `stop_vibration`, and covers empty,
+  refusing and throwing pads. The `rumble` case pins every request's seconds
+  and the renewal traces.
+
+Physical output is still unchecked: there is no pad on this machine, and
+`submitted` is not evidence that a motor turned. That stays with `ROAD#3` and
+`ROAD#9`.
 
 The four probe `GamepadReader` fakes needed exactly the two members
 [report 27](#27-no-headless-or-recording-pad-backend---draft-with-link-seam-exhibit)

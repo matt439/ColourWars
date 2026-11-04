@@ -4,7 +4,7 @@
 #include <array>
 #include <cmath>
 
-// Every painter probe links this factory instead of the colourwars_rumble_xinput
+// Every painter probe links this factory instead of the colourwars_rumble_gamepads
 // adapter library. Most modes discard intent; the rumble leaf attaches a
 // bounded recording context.
 // Neither path can invoke a native motor API, including existing GameLevel
@@ -13,7 +13,7 @@ namespace painter_rumble
 {
     struct Recording
     {
-        struct Call { int slot = -1; RumbleMotors motors; };
+        struct Call { int slot = -1; RumbleMotors motors; float seconds = 0.0f; };
         std::array<Call, 4096> calls{};
         std::array<RumbleMotors, input_slots::pad_count> current{};
         std::size_t count = 0;
@@ -47,19 +47,21 @@ namespace painter_rumble
         {
             if (this->target_ != nullptr) { ++this->target_->destructions; }
         }
-        void set_vibration(int slot, const RumbleMotors& motors) noexcept override
+        void set_vibration(int slot, const RumbleMotors& motors, float seconds) noexcept override
         {
             if (this->target_ == nullptr) { return; }
             Recording& target = *this->target_;
+            const bool stop = motors.low_frequency == 0.0f && motors.high_frequency == 0.0f;
             if (!input_slots::is_pad(slot) || target.count >= target.calls.size() ||
                 !std::isfinite(motors.low_frequency) || !std::isfinite(motors.high_frequency) ||
                 motors.low_frequency < 0.0f || motors.low_frequency > 1.0f ||
-                motors.high_frequency < 0.0f || motors.high_frequency > 1.0f)
+                motors.high_frequency < 0.0f || motors.high_frequency > 1.0f ||
+                (stop ? seconds != 0.0f : !(seconds > 0.0f && seconds <= maximum_rumble_pulse_seconds)))
             {
                 target.invalid = true;
                 return;
             }
-            target.calls[target.count++] = { slot, motors };
+            target.calls[target.count++] = { slot, motors, seconds };
             target.current[static_cast<std::size_t>(slot)] = motors;
         }
     private:
@@ -67,7 +69,7 @@ namespace painter_rumble
     };
 }
 
-std::unique_ptr<RumbleSink> make_rumble_sink()
+std::unique_ptr<RumbleSink> make_rumble_sink(labrador::Gamepads&)
 {
     return std::make_unique<painter_rumble::Sink>(painter_rumble::recording);
 }
