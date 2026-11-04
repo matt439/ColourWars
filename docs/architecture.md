@@ -22,7 +22,8 @@ game/                  the game executable and the colourwars_game library
   match/               what a match is: setup, seats, the session, the series
                        rule, the round tape, awards and paint owners
   config/              tuning, content values and validation, the stage catalog
-                       and loading, settings, text fitting and sound groups
+                       and loading, settings, locales, text fitting and sound
+                       groups
     presentation/      presentation.json's records, readers and validators,
                        and the menu geometry
   save/                the save file, its sections, profiles, records and the
@@ -316,18 +317,20 @@ says, and this round's decisions.
 
 ## Data
 
-Four JSON files are read at startup, before any asset:
+Five JSON files are read at startup, before any asset:
 
 | File | What |
 |---|---|
 | `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
 | `tuning.json` | every number a match is balanced on ([game/config/tuning.h](../game/config/tuning.h)) |
 | `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/config/presentation/presentation.h](../game/config/presentation/presentation.h), with the in-match records in [presentation_match.h](../game/config/presentation/presentation_match.h), the menu-page layout records in [presentation_menu.h](../game/config/presentation/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/config/presentation/presentation_menu_text.h)) |
+| `locales/locales.json` | the languages the copy is in; each listed `locales/<tag>.json` is laid over `presentation.json`'s text before it is read ([localisation.md](localisation.md), [game/config/locale.h](../game/config/locale.h)) |
 | `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records, in versioned `SaveSection`s ([game/save/save_section.h](../game/save/save_section.h)) |
 
 Tuning and presentation are two files for two audiences (a balance pass and an
 art pass), and neither is a manifest entry: they are read before every asset
-and are what those assets are used by. The first three are content the build
+and are what those assets are used by; neither are the locales, which are
+`presentation.json`'s copy in another language. The first four are content the build
 stages beside the executable; the save is written by the player and created by
 nothing but the game. An older save at `./save/save_data.json` in the staged
 folder is read once, if nothing is at the real path, to carry it across

@@ -39,6 +39,13 @@ namespace level_editor_acceptance
             // content also contains private legacy masters which are neither
             // runtime input nor appropriate acceptance evidence.
             std::set<fs::path> runtime_files{ "manifest.json", "tuning.json", "presentation.json" };
+            // And the locales, which their own index names (docs/localisation.md).
+            const rapidjson::Document locale_index = parse(contents(source_content / "locales/locales.json"));
+            runtime_files.insert("locales/locales.json");
+            for (const rapidjson::Value& locale : locale_index["locales"].GetArray())
+            {
+                runtime_files.insert(fs::path("locales") / (std::string(locale["tag"].GetString()) + ".json"));
+            }
             const rapidjson::Document source_manifest = parse(contents(source_content / "manifest.json"));
             const std::map<std::string, std::vector<std::string>> extensions{
                 { "font", { "spritefont" } }, { "sprite_sheet", { "json", "dds" } },

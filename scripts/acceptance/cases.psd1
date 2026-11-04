@@ -105,6 +105,7 @@ Cases = @(
         StartRank = 2
         SlowInDebug = $true
     }
+    @{ Name = 'locales' }
     @{ Name = 'menu_focus_motion' }
     @{ Name = 'display_trial' }
     @{ Name = 'tunnelling' }

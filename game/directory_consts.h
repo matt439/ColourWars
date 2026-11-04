@@ -10,6 +10,8 @@ namespace directory_consts
 	const static std::string MANIFEST_PATH = "./manifest.json";
 	const static std::string TUNING_PATH = "./tuning.json";
 	const static std::string PRESENTATION_PATH = "./presentation.json";
+	// locales.json and one <tag>.json per listed locale (docs/localisation.md).
+	const static std::string LOCALES_DIRECTORY = "./locales";
 
 	// Per-user settings at %LOCALAPPDATA%\ColourWars\save_data.json.
 	// Returns a UTF-8 path, falling back to legacy_save_file_path() if the
