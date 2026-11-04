@@ -63,7 +63,7 @@ The role folders date from `HYG#51`:
 
 | Folder | Holds (examples) |
 |---|---|
-| the `game/` root | the shell: `main.cpp`, `game_data`, `fatal_report`, `directory_consts`, `display_awake`, `pch.h`, `resource.rc` |
+| the `game/` root | the shell: `main.cpp`, `game_data`, `fatal_report`, `directory_consts`, `display_awake`, `pch.h`, `resource.rc` and the `colourwars.ico` it embeds |
 | `contracts/` | the nine engine-free headers [below](#the-engine-free-contract-headers) and `level.schema.json` |
 | `match/` | `match_setup`, `seat_setup.h`, `player_control.h`, `session`, `series_stage_rule`, `round_tape`, `match_award.h`, `paint_owners.h` |
 | `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |

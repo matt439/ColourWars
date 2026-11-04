@@ -29,6 +29,13 @@ Only `game/content/textures/painter.{json,dds}` is staged and packaged.
 The [implementation and review record](../../docs/polish-painter.md) states
 what this increment covers and which character work remains open.
 
+## Executable icon
+
+The [icon source](icon/README.md) is the painter's head in front of a team
+paint splat, drawn pixel for pixel at 16, 24 and 32 and enlarged without
+filtering to 48, 64 and 256. `python3 scripts/build_icon.py` rebuilds
+`game/colourwars.ico`; the build embeds it through `game/resource.rc`.
+
 ## Weapon artwork
 
 The [five-tool source](weapons/README.md) is the editable Paint.exe production

@@ -67,6 +67,7 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 |---|---|
 | [build-fonts.ps1](build-fonts.ps1) | regenerates the sprite-font atlases (`-Update` writes them) |
 | [build-painter-art.ps1](build-painter-art.ps1), [build-weapon-art.ps1](build-weapon-art.ps1), [build-paint-fx-art.ps1](build-paint-fx-art.ps1), [build-terrain-art.ps1](build-terrain-art.ps1) | rebuild the runtime art from its editable recipes ([game/art/](../game/art/README.md)) |
+| [build_icon.py](build_icon.py) | rebuilds `game/colourwars.ico` and its preview from the editable drawing ([game/art/icon/](../game/art/icon/README.md)); `--check` fails if they are stale, which CI runs through [ci/test_build_icon.py](ci/test_build_icon.py) |
 | [audio/](audio/) | the audio pipeline and runtime-bank publication ([game/audio/paint_exe/](../game/audio/paint_exe/README.md)) |
 
 ## Other folders

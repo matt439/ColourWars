@@ -1,0 +1,123 @@
+{
+  "_comment": [
+    "Editable executable icon: the painter's head (game/art/painter/painter.json) under a",
+    "team-B paint splat, in Paint.exe style. Each character is one pixel of a hand-drawn",
+    "grid. . = transparent, K = black keyline, W = white face, B = team-A blue cap,",
+    "O = team-B orange paint; the two are the blue_orange pair in presentation.json.",
+    "Each image is a grid drawn at its own size or a whole-number nearest-neighbour",
+    "enlargement of one, so no size is filtered. Rebuild with python3 scripts/build_icon.py."
+  ],
+  "palette": {
+    ".": null,
+    "K": "000000",
+    "W": "FFFFFF",
+    "B": "0634CC",
+    "O": "FF7F00"
+  },
+  "images": [
+    {
+      "size": 16,
+      "grid": "16"
+    },
+    {
+      "size": 24,
+      "grid": "24"
+    },
+    {
+      "size": 32,
+      "grid": "32"
+    },
+    {
+      "size": 48,
+      "grid": "24"
+    },
+    {
+      "size": 64,
+      "grid": "32"
+    },
+    {
+      "size": 256,
+      "grid": "32"
+    }
+  ],
+  "grids": {
+    "16": [
+      ".........K......",
+      "...K....KOK..KK.",
+      "..KOK...KOOKKOOK",
+      "...K...KOOOOOOK.",
+      "......KOOOOOOOOK",
+      "....KKKKKKKOOOOK",
+      "...KBBBBBBBKOOK.",
+      "...KBBBBBBBKOOOK",
+      "KKKKKKKKKKKKOOK.",
+      "...KWWWWWWWKOK..",
+      "...KWKWWWKWKOK..",
+      "..KKWKWWWKWKKK..",
+      "..KKWWWWWWWKK...",
+      "...KWWWWKWWK....",
+      "...KWWKKKWWK....",
+      "...KKKKKKKKK...."
+    ],
+    "24": [
+      "............KK..........",
+      "...........KOOK.....KK..",
+      "......KK...KOOOK...KOOK.",
+      ".....KOOK...KOOOKKKOOK..",
+      ".....KOOK...KOOOOOOOK...",
+      "......KK..KKKOOOOOOOOKK.",
+      ".........KOOOOOOOOOOOOOK",
+      ".....KKKKKKKKKKKKOOOOOOK",
+      "....KBBBBBBBBBBBBKOOOOK.",
+      "....KBBBBBBBBBBBBKOOOOOK",
+      "....KBBBBBBBBBBBBKOOOOOK",
+      "KKKKKKKKKKKKKKKKKKOOOOK.",
+      "KKKKKKKKKKKKKKKKKKOOOK..",
+      "....KWWWWWWWWWWWWKOOK...",
+      "....KWWWWWWWWWWWWKOOK...",
+      "....KWWKKWWWWKKWWKOOK...",
+      "..KKKWWKKWWWWKKWWKKKK...",
+      "..KKKWWKKWWWWKKWWKKK....",
+      "..KKKWWWWWWWWWWWWKKK....",
+      "....KWWWWWWWWWWWWK..KK..",
+      "....KWWWWWWWWKKWWK.KOOK.",
+      "....KWWWWKKKKKKWWK.KOOK.",
+      "....KWWWWWWWWWWWWK..KK..",
+      "....KKKKKKKKKKKKKK......"
+    ],
+    "32": [
+      "................KKK.............",
+      "...............KOOOK........KK..",
+      "...............KOOOOK......KOOK.",
+      "........KK......KOOOOK....KOOK..",
+      ".......KOOK.....KOOOOOKKKKOOK...",
+      ".......KOOK.....KOOOOOOOOOOK....",
+      "........KK.KKKKKOOOOOOOOOOOOKKK.",
+      "..........KOOOOOOOOOOOOOOOOOOOOK",
+      "...........KOOOOOOOOOOOOOOOOOOOK",
+      "............KOOOOOOOOOOOOOOOOOK.",
+      "........KKKKKKKKKKKKKKOOOOOOOOK.",
+      "........KKKKKKKKKKKKKKOOOOOOOOK.",
+      "......KKBBBBBBBBBBBBBBKKOOOOOOOK",
+      "......KKBBBBBBBBBBBBBBKKOOOOOOOK",
+      "......KKBBBBBBBBBBBBBBKKOOOOOOK.",
+      "......KKBBBBBBBBBBBBBBKKOOOOOK..",
+      "KKKKKKKKKKKKKKKKKKKKKKKKOOOOK...",
+      "KKKKKKKKKKKKKKKKKKKKKKKKOOOK....",
+      "......KKWWWWWWWWWWWWWWKKOOOK....",
+      "......KKWWWWWWWWWWWWWWKKOOOK....",
+      "......KKWWKKWWWWWWKKWWKKOOOK....",
+      "......KKWWKKWWWWWWKKWWKKKKK.....",
+      "....KKKKWWKKWWWWWWKKWWKKKK......",
+      "....KKKKWWKKWWWWWWKKWWKKKK...KK.",
+      "....KKKKWWWWWWWWWWWWWWKKKK..KOOK",
+      "....KKKKWWWWWWWWWWWWWWKKKK..KOOK",
+      "......KKWWWWWWWWKKWWWWKK.....KK.",
+      "......KKWWWWWWWWKKWWWWKK........",
+      "......KKWWWWKKKKKKWWWWKK........",
+      "......KKWWWWKKKKKKWWWWKK........",
+      "......KKKKKKKKKKKKKKKKKK........",
+      "......KKKKKKKKKKKKKKKKKK........"
+    ]
+  }
+}
