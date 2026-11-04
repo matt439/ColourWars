@@ -15,11 +15,18 @@
 // mapping and mouse aim, so a replay needs no device, window or camera) and
 // where the match was suspended and resumed - with what checks a replay:
 // checkpoint hashes every 60 updates, the final fingerprint and the content
-// hashes. Written as JSON to %LOCALAPPDATA%\ColourWars\replays\<name>.json.
-// Debug-only.
+// hashes. A recording that runs on into the next round of the match keeps
+// each later round the same way, in `later_rounds`. Written as JSON to
+// %LOCALAPPDATA%\ColourWars\replays\<name>.json. Debug-only.
 //
-// Format version 7 (versions 3 to 6 are refused: a replay holds only on the
+// Format version 8 (versions 3 to 7 are refused: a replay holds only on the
 // build that recorded it, DBG#2):
+//   rounds:  written only when the recording crossed a round boundary: one
+//            object per later round, in order, each with its own seed,
+//            stage_hash, settings, updates, gaps, inputs, checkpoints and
+//            final, exactly as the top level has them for the first round.
+//            build, dt, the content hashes, tune_diff and cheats are the
+//            recording's and are shared.
 //   horizontal_motion is schema 2: eight spec words, the last a vertical
 //   lift's travel_y (ROAD#28), and offsets on the mover's own axis;
 //   settings preserves each seat's controller kind, bot difficulty and
@@ -45,7 +52,7 @@
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 7;
+	static constexpr int format_version = 8;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint
@@ -75,6 +82,18 @@ public:
 	std::vector<Checkpoint> checkpoints;
 	MatchFingerprint final_print;
 
+	// The rounds after this one, when the recording ran on into them (DBG#2).
+	// Each is a whole one-round file whose header fields repeat this one's;
+	// none has later rounds of its own.
+	std::vector<ReplayFile> later_rounds;
+
+	// This round and the later ones.
+	int round_count() const { return 1 + static_cast<int>(this->later_rounds.size()); }
+	// Round `index` (0 is this file's own) as a one-round file.
+	ReplayFile round(int index) const;
+	// Adds `next` and its own later rounds after this file's last round.
+	void append_round(ReplayFile next);
+
 	// The tape's inputs by participant: [seat][logic step].
 	std::vector<std::vector<PlayerInputData>> inputs_by_seat() const;
 	// Whether a suspend was noted at Level update `update`.
@@ -82,7 +101,8 @@ public:
 
 	// Throws std::runtime_error naming the path on any I/O failure, when the
 	// tape's steps were not all taken at `dt_bits`, or when `gap_updates` does
-	// not give each gap a Level update, in order.
+	// not give each gap a Level update, in order; for a later round, also when
+	// its dt or cheats are not this round's.
 	void write(const std::filesystem::path& path) const;
 
 	// Throws std::runtime_error naming the path and what is wrong: not JSON,

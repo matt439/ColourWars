@@ -417,7 +417,13 @@ try {
         Write-Host ("Acceptance: $($Result.Case) ($Preset, $($Result.Seconds)s; compile " +
             "$([int]$Result.CompileSeconds)s, run $([int]$Result.RunSeconds)s)")
         $Result.Lines | ForEach-Object { Write-Host $_ }
-        if ($Result.Failure) { $failures.Add("$($Result.Case): $($Result.Failure)") }
+        if ($Result.Failure) {
+            # The case's own FAIL lines go in the closing error too: with four
+            # cases at a time, a long log can bury them far from the end.
+            $failLines = @($Result.Lines | Where-Object { $_ -like 'FAIL *' } | Select-Object -First 5)
+            $detail = if ($failLines.Count -gt 0) { "`n    " + ($failLines -join "`n    ") } else { '' }
+            $failures.Add("$($Result.Case): $($Result.Failure)$detail")
+        }
     }
 
     # Start the longest cases first so none of them is left running alone at

@@ -256,17 +256,17 @@ namespace debug_console_acceptance
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 3, 4, 5, 6, 8 })
+		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 9 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 7"), 12,
+			text.replace(text.find("\"version\": 8"), 12,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads only 7") != std::string::npos,
+				"; this build reads only 8") != std::string::npos,
 				"A previous workshop recording, an older replay or another format is refused: " + message);
 		}
 		// Every participant's inputs cover every step.

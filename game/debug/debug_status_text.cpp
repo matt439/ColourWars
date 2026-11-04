@@ -185,9 +185,14 @@ std::string DebugDirectorImpl::status_strip() const
 	{
 		add("REC " + this->recorder_->name() + " " + std::to_string(this->level_updates_));
 	}
+	else if (this->record_series_ != nullptr)
+	{
+		// Saved at the end of its round; the End menu's next round carries it on.
+		add("REC " + this->record_series_name_ + " next round");
+	}
 	if (this->player_ != nullptr)
 	{
-		add("PLAY " + this->player_->name() + (this->player_->finished ?
+		add("PLAY " + this->replay_label(*this->player_) + (this->player_->finished ?
 			std::string(" done (") + (this->player_->matched ? "MATCH" : "DIVERGED") + ")" :
 			" " + std::to_string(this->level_updates_) + "/" +
 				std::to_string(this->player_->file().updates)));

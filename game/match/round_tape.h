@@ -15,10 +15,11 @@ class Level;
 // the two things between steps that change a player - a suspend clears every
 // jump buffer, and a resume re-reads which jumps are still held.
 //
-// The Debug recordings (DBG#2) are the same tape, written to a file with
-// their checks (game/debug/replay/replay.h), and hold under the same contract: on
-// this build, this machine and this step, within one round, because the
-// simulation is deterministic from the build. The shipping tape never leaves
+// The Debug recordings (DBG#2) are the same tape, one per round, written to a
+// file with their checks (game/debug/replay/replay.h), and hold under the same
+// contract: on this build, this machine and this step, because the simulation
+// is deterministic from the build. A tape never crosses a round boundary; a
+// recording that does keeps the next round's own tape. The shipping tape never leaves
 // memory, so that is all it needs. Debug place/respawn/kill spoil the tape; a cheat change after the first
 // recorded step also spoils it. Live tuning edits and suspends injected by Debug
 // playback are not observed; such a replay can diverge (docs/feature-roadmap.md, ROAD#19).

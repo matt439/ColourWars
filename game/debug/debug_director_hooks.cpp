@@ -160,8 +160,17 @@ void DebugDirectorImpl::log_match(const MatchPlan& plan, const std::string& how)
 void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 {
 	// A rebuild ends a recording or a replay of the level it replaces (the
-	// one `record` or `play` queued starts after this build).
-	this->stop_recording("the match was rebuilt");
+	// one `record` or `play` queued starts after this build). The one
+	// exception is the round the End menu starts after a recorded round
+	// ended: it carries the recording on (DBG#2). A queued debug request,
+	// restart included, is not that round.
+	const bool next_round = this->record_series_ != nullptr && this->recorder_ == nullptr &&
+		!this->debug_rebuilding_ && this->request_.empty() && !this->record_armed_ &&
+		this->play_armed_ == nullptr;
+	if (!next_round)
+	{
+		this->stop_recording("the match was rebuilt");
+	}
 	this->stop_playing("the match was rebuilt");
 	this->bot_driver_.reset();
 
@@ -231,8 +240,9 @@ unsigned int DebugDirectorImpl::round_seed(unsigned int drawn)
 OpeningMode DebugDirectorImpl::opening_mode(OpeningMode chosen) const
 {
 	// A recording starts at the first update of play, and a replay must
-	// meet the same frames, so neither has an intro to skip or not.
-	if (this->play_armed_ != nullptr || this->record_armed_)
+	// meet the same frames, so neither has an intro to skip or not; nor
+	// does a round a recording is carried on into.
+	if (this->play_armed_ != nullptr || this->record_armed_ || this->record_series_ != nullptr)
 	{
 		return OpeningMode::off;
 	}
@@ -273,7 +283,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 	if (this->play_armed_ != nullptr)
 	{
 		this->player_ = std::move(this->play_armed_);
-		this->log_.info("replay " + this->player_->name() + ": playing " +
+		this->log_.info("replay " + this->replay_label(*this->player_) + ": playing " +
 			std::to_string(this->player_->file().updates) + " updates");
 		// The last replay's held frame is over; a pause the user chose stays.
 		if (this->replay_hold_ && this->clock_.paused())
@@ -293,6 +303,10 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 				this->replay_header(match), this->bot_driver_.get(), armed.limit);
 			this->log_.info("record " + armed.name + ": recording" + (armed.limit > 0 ?
 				" " + std::to_string(armed.limit) + " updates" : std::string(" until 'record stop'")));
+		}
+		else if (this->record_series_ != nullptr)
+		{
+			this->continue_recording(match);
 		}
 	}
 
@@ -388,6 +402,11 @@ void DebugDirectorImpl::disarm_play(const std::string& reason)
 	{
 		this->log_.warning("play " + this->play_armed_->name() + ": disarmed (" + reason + ")");
 		this->play_armed_.reset();
+	}
+	// The rounds of a recording nothing plays any more.
+	if (this->player_ == nullptr)
+	{
+		this->play_file_.reset();
 	}
 }
 
@@ -552,7 +571,17 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, b
 	}
 
 	// The build runs before_level_build and after_level_build.
-	match.debug_rebuild(plan.settings, plan.reset_session);
+	this->debug_rebuilding_ = true;
+	try
+	{
+		match.debug_rebuild(plan.settings, plan.reset_session);
+	}
+	catch (...)
+	{
+		this->debug_rebuilding_ = false;
+		throw;
+	}
+	this->debug_rebuilding_ = false;
 	this->log_match(plan, "");
 	return true;
 }

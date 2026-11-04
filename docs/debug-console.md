@@ -1069,9 +1069,15 @@ update this table and that pin together.
 **`record [name] [updates]`** records every seat's input on every logic step,
 from a fresh build: in a match it restarts the match (and closes the console),
 in the menus it waits for the next match. It stops and saves after `updates`
-Level updates (the 3 s countdown is 180 of them), at the end of the round, when
-the match is rebuilt or left, or on `record stop` (a bare `record` while
-recording stops too). The file is `%LOCALAPPDATA%\ColourWars\replays\<name>.json`
+Level updates (the 3 s countdown is 180 of them, and across rounds they add
+up), at the end of the round, when the match is rebuilt or left, or on `record
+stop` (a bare `record` while recording stops too). A recording saved at the end
+of its round runs on into the next round the End menu starts (Next Round, or
+the rematch once a series is decided): the strip says `REC <name> next round`
+in between, and each round's end saves the file again with every round so far.
+Anything else that builds the match next (`restart`, `stage`, `play`, a changed
+roster), leaving the match, `record stop`, or a `tune`, `reload` or cheat
+change between rounds ends it there, as saved (`DBG#2`). The file is `%LOCALAPPDATA%\ColourWars\replays\<name>.json`
 (default name `replay-YYYYMMDD-HHMMSS`): the stage, roster (device slots, teams,
 weapons), best-of, the round seed the level was built from, the cheats, hashes of both content files
 and the live tune edits, a semantic hash of the loaded stage definition
@@ -1081,8 +1087,9 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 7** (`ROAD#28` moved the motion block to schema 2 for
-vertical lifts, so format 6 is refused), with explicit human/bot controller kind and
+Files use **format 8** (`DBG#2` added later rounds, so format 7 is refused;
+`ROAD#28` had moved the motion block to schema 2 for vertical lifts), with
+explicit human/bot controller kind and
 Easy/Normal/Hard difficulty for each participant. `seed` is required and is the
 round seed, which `play` builds from, so a recording made without `seed`
 replays its Random palette too. Layout counts humans, while
@@ -1090,10 +1097,15 @@ input arrays count all participants and are all the same length. `gaps` lists
 every suspend and resume in order, a resume with the seat commands it re-read;
 each has the tape `step` it preceded (an index into the inputs, which the
 countdown and the end of the round do not advance) and the Level `update` it
-was noted at, which is where playback repeats it.
-Formats 3 and 4 (which noted suspends only) and 5 (whose `seed` was the
-optional developer seed) are refused: a replay holds only on the build that
-recorded it. The metadata is strict; bot seats cannot own devices and P1 must
+was noted at, which is where playback repeats it. A recording that crossed a
+round boundary adds `rounds`: one object per later round, each with its own
+`seed`, `stage_hash`, `settings`, `updates`, `gaps`, `inputs`, `checkpoints` and
+`final`, as the top level has them for the first round; the build, step,
+content hashes, `tune_diff` and cheats are shared. A one-round file has no
+`rounds` and is otherwise format 7's bytes.
+Formats 3 and 4 (which noted suspends only), 5 (whose `seed` was the
+optional developer seed), 6 and 7 are refused: a replay holds only on the
+build that recorded it. The metadata is strict; bot seats cannot own devices and P1 must
 be human. Human difficulty is unused and written as
 Normal. Normal setup now supports playable bots
 (`ROAD#10`); recording captures their final inputs, and playback bypasses their
@@ -1113,6 +1125,15 @@ replay drive: MATCH (600 updates, 10 checkpoints, checksum 1b2bcf45e4694e88, pai
 replay drive: DIVERGED at update 240 (checkpoint 4 of 10): state hash ..., recorded ...
 replay drive: final state differs: P2 x 1532.5 != 1530.25
 ```
+
+A recording of several rounds plays them in turn. `play` checks every round's
+stage first; each round is built from its own seed, stage and settings, as the
+End menu built it, straight after the last (no results or End menu between),
+and is compared on its own, so its log lines say `replay <name> round 2/3`. A
+round that diverges does not spoil the next, which starts from its own build.
+The last round ends with `replay <name>: MATCH in all 3 rounds` (or `DIVERGED in
+at least one of 3 rounds`) and holds its last frame; `wait replay` waits for it.
+A round that ends before its recorded last update is compared where it ended.
 
 `play stop` hands the seats back. `replays` lists recordings; `checksum` prints
 the running match's state hash and paint, which is what the comparison uses.
@@ -1153,7 +1174,9 @@ neither the mouse nor the camera is read on replay. The limits:
   ammo, respawn timer, move state and life, the paint areas and the level state.
   Hidden state (a jump buffer, projectiles in flight) shows up when it changes
   one of those, a little later.
-- One round: a recording stops at the end of the round.
+- **Across rounds**, only through the End menu: the round boundary is where one
+  round's level is destroyed and the next is built from its own round seed,
+  so nothing but the setup crosses it, and the file records each round's.
 
 ## Screenshots
 
@@ -1722,8 +1745,7 @@ none.
 - **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
   and inserting keys in `tune.save`: the fifty-eight listed colour fields above are
   implemented; see [the remaining scope](debug-console-record.md#remaining-live-tuning-work-dbg1) (`DBG#1`).
-- **Replays across builds or machines**, across step sizes, and across rounds
-  (a recording stops at the end of the round) (`DBG#2`).
+- **Replays across builds or machines**, and across step sizes (`DBG#2`).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side (`DBG#7`).
 
