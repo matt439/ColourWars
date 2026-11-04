@@ -7,7 +7,6 @@
 #include <system_error>
 #include <array>
 #include <cmath>
-#include "game/match/player_control.h"
 #include <optional>
 // The engine reads JSON; the game uses RapidJSON to write player settings.
 #include "rapidjson/filewritestream.h"
