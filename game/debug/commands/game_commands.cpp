@@ -401,7 +401,11 @@ DebugStatus DebugDirectorImpl::reload_content()
 	try
 	{
 		auto tuning = std::make_unique<GameTuning>(tuning_path.c_str());
-		auto presentation = std::make_unique<Presentation>(presentation_path.c_str());
+		// In the run's language, as at startup.
+		const ActiveLocale* locale = this->data_->locale();
+		auto presentation = locale != nullptr ?
+			std::make_unique<Presentation>(locale->presentation(presentation_path)) :
+			std::make_unique<Presentation>(presentation_path.c_str());
 		validate_shell_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
 			*this->data_->stages(), this->data_->settings_session()->play_settings());

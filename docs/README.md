@@ -24,6 +24,7 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 | [level-format.md](level-format.md), [level.schema.json](../game/contracts/level.schema.json) | the level file format and its schema |
 | [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: what each block controls |
 | [menu-presentation.md](menu-presentation.md) | `presentation.json`'s menu geometry, artwork and text |
+| [localisation.md](localisation.md) | locales: the overlay files, what they may change, fallback, font coverage and numbers |
 
 ## Design and direction
 

@@ -23,6 +23,7 @@ add_library(colourwars_game STATIC
     input/controls_text.cpp
     directory_consts.cpp
     config/drawable_text.cpp
+    config/locale.cpp
     fatal_report.cpp
     game_data.cpp
     save/last_match_setup.cpp

@@ -34,7 +34,7 @@ its checks where it has one, and [acceptance/support/probe.h](acceptance/support
 
 | Script | What |
 |---|---|
-| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save, diagnostics and graceful shutdown |
+| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
 | [check-failure-reporting.ps1](check-failure-reporting.ps1) | the caught-failure report ([failure-reporting.md](../docs/failure-reporting.md)) |
 | [check-display-awake.ps1](check-display-awake.ps1) | `GameLevel`'s display-idle request over a match's lifetime, with a recording adapter |
 | [check-debug-console.ps1](check-debug-console.ps1), [check-debug-console/](check-debug-console/) | drives the Debug console with real key events; needs a foreground desktop, so it is local only (`CI#1`) |

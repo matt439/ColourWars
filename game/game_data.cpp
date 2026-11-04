@@ -32,6 +32,11 @@ void GameData::set_presentation(const Presentation* presentation)
 	this->presentation_ = presentation;
 }
 
+void GameData::set_locale(const ActiveLocale* locale)
+{
+	this->locale_ = locale;
+}
+
 void GameData::set_debug(DebugDirector* debug)
 {
 	this->debug_ = debug;
@@ -75,6 +80,11 @@ const GameTuning* GameData::tuning() const
 const Presentation* GameData::presentation() const
 {
 	return this->presentation_;
+}
+
+const ActiveLocale* GameData::locale() const
+{
+	return this->locale_;
 }
 
 const Registry<LevelLoadedInfo>* GameData::level_infos() const

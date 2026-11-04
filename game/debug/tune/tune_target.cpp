@@ -81,7 +81,11 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 	const GameData* context, bool checks_levels)
 {
 	this->candidate_.reset();
-	auto candidate = std::make_unique<Presentation>(
+	// An edit of presentation.json is judged, and applied, in the run's
+	// language: the locale's text still lies over the edited base.
+	const ActiveLocale* locale = context != nullptr ? context->locale() : nullptr;
+	auto candidate = std::make_unique<Presentation>(locale != nullptr ?
+		locale->presentation(candidate_text, source_name) :
 		labrador::parse_json(candidate_text, source_name));
 	if (checks_levels && can_check_levels(context))
 	{

@@ -5,6 +5,8 @@ set(COLOURWARS_RUNTIME_ASSETS
     manifest.json
     tuning.json
     presentation.json
+    locales/locales.json
+    locales/qps-ploc.json
     fonts/courier_prime_bold_16.spritefont
     fonts/lato_black_24.spritefont
     fonts/lato_black_36.spritefont
@@ -43,5 +45,5 @@ set(COLOURWARS_RUNTIME_ASSETS
 
 # Only these directories belong to the staging mirror. Root files such as
 # executables, DLLs and developer captures must never be removed by staging.
-set(COLOURWARS_RUNTIME_DIRECTORIES fonts textures levels sounds)
+set(COLOURWARS_RUNTIME_DIRECTORIES fonts textures levels sounds locales)
 set(COLOURWARS_OPTIONAL_RUNTIME_ASSETS sounds/paint_exe.xwb)
