@@ -203,16 +203,30 @@ namespace colourwars_editor
         SetFocus(editor.value_edit_);
         require(GetFocus() == editor.value_edit_, "Could not focus the hidden property field");
         const std::string field_ready = editor.document_.serialize();
+        // The EDIT control opens the clipboard once and silently does nothing if
+        // it is busy, and clipboard watchers on a desktop (Explorer, input-device
+        // agents) open it just after every write. So press again while the key
+        // has had no effect; a document change is a real failure and stops at once.
+        const auto field_key = [&](WPARAM virtual_key, const auto& landed)
+        {
+            for (int attempt = 0; attempt < 50; ++attempt)
+            {
+                SendMessageW(editor.value_edit_, EM_SETSEL, 0, -1);
+                key(editor.value_edit_, virtual_key);
+                if (landed() || editor.document_.serialize() != field_ready) { return; }
+                Sleep(20);
+            }
+        };
         set_clipboard_text(L"sentinel");
-        SendMessageW(editor.value_edit_, EM_SETSEL, 0, -1);
-        key(editor.value_edit_, 'C');
-        require(clipboard_text() == window_text(editor.value_edit_) && editor.document_.serialize() == field_ready,
-            "Ctrl+C in the property field copied an object instead of its text");
+        const auto field_copied = [&] { return clipboard_text() == window_text(editor.value_edit_); };
+        field_key('C', field_copied);
+        require(field_copied() && editor.document_.serialize() == field_ready,
+            "Ctrl+C in the property field did not copy its text, or copied an object");
         set_clipboard_text(L"4321");
-        SendMessageW(editor.value_edit_, EM_SETSEL, 0, -1);
-        key(editor.value_edit_, 'V');
-        require(window_text(editor.value_edit_) == L"4321" && editor.document_.serialize() == field_ready,
-            "Ctrl+V in the property field pasted an object instead of text");
+        const auto field_pasted = [&] { return window_text(editor.value_edit_) == L"4321"; };
+        field_key('V', field_pasted);
+        require(field_pasted() && editor.document_.serialize() == field_ready,
+            "Ctrl+V in the property field did not paste text, or pasted an object");
         editor.select_property(x_row);
 
         editor.cancel_drag();
