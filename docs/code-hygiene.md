@@ -2182,3 +2182,26 @@ comments were retained: `GameMenu::init` lends the callback to Stage Select,
 whose main-menu entry rescans, while between-round entry does not. Missing
 definitions remain registered but unreachable from the stage list. Historical
 reviews and the engine's design decisions were left untouched.
+
+## Main-menu Mode Select page (`HYG#53`)
+
+**Done (2026-11-05).** Moved the whole `MainMenuModeSelect` region - its
+constructor, the static setup-row builders and fit checks
+(`make_setup_row` through `check_stage_rule_row` and
+`practice_hint_position`), the duration and series-stage refresh/cycle pairs,
+`update_page` and `init` - into
+`game/states/main_menu_mode_select.cpp` (330 lines), in its original order.
+It was the one large leaf page still beside the page bases; every other
+main-menu page already had its own file. The 372-line `main_menu.cpp` keeps
+`MainMenuPage`, `RosterSetupPage`, Title and Home. The file had no anonymous
+namespace or file-local helper, `main_menu.h` is unchanged, and the only
+other edits are the new file's preamble, its CMake registration and dropping
+the two includes (`series_stage_rule.h`, `ui_text_drop_shadow.h`) that only
+Mode Select used. The unused `drawable_text.h` include was left for a
+separate change.
+
+A line comparison confirms the moved block is identical to the original
+lines, including the `main_menu.mode_select_spacing` and `menu_text.values`
+diagnostics. Debug and Release builds pass, as do `menu_presentation`,
+`menu_navigation`, `remembered_setup` and `series_stage_rule` in both presets
+and `menu_text` in Release.

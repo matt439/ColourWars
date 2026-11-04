@@ -213,6 +213,7 @@ add_library(colourwars_game STATIC
     states/main_menu.cpp
     states/main_menu_credits.cpp
     states/main_menu_exit.cpp
+    states/main_menu_mode_select.cpp
     states/main_menu_options.cpp
     states/main_menu_players.cpp
     states/main_menu_route.cpp
