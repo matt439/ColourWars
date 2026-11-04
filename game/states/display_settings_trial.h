@@ -10,6 +10,8 @@ struct DisplaySettingsChoice
 	labrador::ScreenResolution resolution;
 	bool fullscreen;
 	TeamColourPair palette;
+	// Saved on Keep with the rest, like the palette; not part of the trial.
+	bool vsync = true;
 };
 
 enum class DisplayTrialResult

@@ -16,20 +16,20 @@
 using namespace labrador;
 using namespace presentation_read;
 
-// Phase 1: Options' seven actions; the three option rows fit their labels.
+// Phase 1: Options' eight actions; the four option rows fit their labels.
 void Presentation::Validation::validate_options_actions(const SetupGeometry& setup) const
 {
 	const MainMenuPresentation& main = this->presentation_.main_menu_;
 	const auto& options_art = setup.options_art;
-	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette,
-		MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
+	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync,
+		MenuItem::team_palette, MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(options_items); ++index)
 	{
 		const Vector2F position = main.options_position +
 			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index));
-		const std::optional<float> label_width = index < 3 ?
+		const std::optional<float> label_width = index < 4 ?
 			std::optional<float>(main.options_value_x - position.x - options_art.focus_padding.x) : std::nullopt;
-		check_menu_item(options_items[index], this->presentation_.menu_.item_font, position,
+		check_menu_item(options_items[index], this->presentation_.main_menu_.options_font, position,
 			menu_geometry::footer_paper(main.options_box_size, this->presentation_.menu_.footer_y), main.options_spacing.y, label_width, options_art);
 	}
 }
@@ -45,11 +45,11 @@ Vector2F Presentation::Validation::validate_options_values(const SetupGeometry& 
 		menu_geometry::footer_paper(main.options_box_size, this->presentation_.menu_.footer_y), options_art) -
 		main.options_value_x,
 		main.options_spacing.y - options_art.focus_padding.y * 2.0f);
-	check_value("on", values.on, this->presentation_.menu_.item_font, options_value_position(1), options_value_limit,
+	check_value("on", values.on, this->presentation_.main_menu_.options_font, options_value_position(1), options_value_limit,
 		main.options_box_size, options_art, main.options_spacing.y, false);
-	check_value("off", values.off, this->presentation_.menu_.item_font, options_value_position(1), options_value_limit,
+	check_value("off", values.off, this->presentation_.main_menu_.options_font, options_value_position(1), options_value_limit,
 		main.options_box_size, options_art, main.options_spacing.y, false);
-	check_value("random", values.random, this->presentation_.menu_.item_font, options_value_position(2), options_value_limit,
+	check_value("random", values.random, this->presentation_.main_menu_.options_font, options_value_position(3), options_value_limit,
 		main.options_box_size, options_art, main.options_spacing.y, false);
 
 	return options_value_limit;
@@ -108,7 +108,7 @@ void Presentation::Validation::validate_options_resolutions(const SetupGeometry&
 	{
 		const std::wstring literal = format_label_template(values.resolution,
 			{ { L"{width}", L"" }, { L"{height}", L"" } });
-		drawable_text::check_font_can_draw(&render, this->presentation_.menu_.item_font,
+		drawable_text::check_font_can_draw(&render, this->presentation_.main_menu_.options_font,
 			literal + L"0123456789", this->presentation_.source_path_ + ": " + resolution_key);
 	}
 	catch (const std::invalid_argument& error)
@@ -117,7 +117,7 @@ void Presentation::Validation::validate_options_resolutions(const SetupGeometry&
 	}
 	const auto check_resolution = [&](const Vector2I& size)
 	{
-		check_value("resolution", this->presentation_.menu_text_.setting_resolution(size.x, size.y), this->presentation_.menu_.item_font,
+		check_value("resolution", this->presentation_.menu_text_.setting_resolution(size.x, size.y), this->presentation_.main_menu_.options_font,
 			options_value_position(0), options_value_limit, main.options_box_size, options_art,
 			main.options_spacing.y, false);
 	};

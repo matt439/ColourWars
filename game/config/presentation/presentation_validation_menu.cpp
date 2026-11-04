@@ -41,6 +41,7 @@ void Presentation::Validation::validate_menu_chrome() const
 		this->presentation_.main_menu_.backdrop_frame);
 	check.font("main_menu.fonts.title", this->presentation_.main_menu_.title_font);
 	check.font("main_menu.fonts.announcement", this->presentation_.main_menu_.announcement_font);
+	check.font("main_menu.fonts.options", this->presentation_.main_menu_.options_font);
 	check.font("main_menu.fonts.weapon_description", this->presentation_.main_menu_.weapon_description_font);
 	check.font("main_menu.credits.font", this->presentation_.main_menu_.credits_font);
 	check.font("controls_settings.help_font", this->presentation_.controls_settings_.help_font);
@@ -184,8 +185,8 @@ Presentation::Validation::StatusBacks Presentation::Validation::status_back_card
 	const MainMenuPresentation& main = this->presentation_.main_menu_;
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
 	const auto& options_art = setup.options_art;
-	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 6.0f),
-		this->presentation_.menu_.item_font, options_art);
+	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 7.0f),
+		main.options_font, options_art);
 	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 10.0f),
 		controls.item_font, controls.art);
 	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),

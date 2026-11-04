@@ -51,6 +51,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
 		options.fullscreen = save.fullscreen();
+		options.vsync = save.vsync();
 		options.target_fps = SIMULATION_HZ;
 		options.max_threads = 16;
 

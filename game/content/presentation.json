@@ -388,7 +388,8 @@
       "rumble": "Rumble",
       "watch_replay": "Watch Replay",
       "profiles": "Profiles",
-      "series_stage": "Series stage"
+      "series_stage": "Series stage",
+      "vsync": "Vsync"
     }
   },
 
@@ -436,7 +437,8 @@
     "fonts": {
       "title": "bowlby_one_144",
       "announcement": "lato_black_144",
-      "weapon_description": "lato_black_24"
+      "weapon_description": "lato_black_24",
+      "options": "lato_black_36"
     },
     "build_id_y": 880.0,
     "backgrounds": {
@@ -447,7 +449,7 @@
     },
     "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",
-    "options_spacing": { "x": 540.0, "y": 100.0 },
+    "options_spacing": { "x": 540.0, "y": 82.0 },
     "display_trial_seconds": 15.0,
     "weapon_description": {
       "colour": "1B1C20",

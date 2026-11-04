@@ -77,7 +77,8 @@ namespace
 		restored_session.load_save_file();
 		require(restored.resolution() == expected.resolution() &&
 			restored.fullscreen() == expected.fullscreen() &&
-			restored.team_palette() == expected.team_palette(),
+			restored.team_palette() == expected.team_palette() &&
+			restored.vsync() == expected.vsync(),
 			"Display preferences did not survive reloading");
 		const PlaySettings& actual = restored_session.play_settings();
 		const PlaySettings& wanted = expected.saved_play_settings();
@@ -510,6 +511,62 @@ namespace
 			check_round_trip(restored);
 		}
 	}
+
+	// Vsync (save version 6) is a flat display key. It defaults to On, which
+	// is how older saves played, recovers on its own and survives the
+	// three-setting display form.
+	void check_vsync_loading(const IsolatedSaveDirectory& directory)
+	{
+		struct Fixture
+		{
+			const char* value;
+			bool expected;
+		};
+		const Fixture fixtures[] = {
+			{ nullptr, true },
+			{ "true", true },
+			{ "false", false },
+			{ "null", true },
+			{ "0", true },
+			{ "\"false\"", true }
+		};
+		for (const Fixture& fixture : fixtures)
+		{
+			{
+				std::ofstream output(directory.save_path(), std::ios::binary | std::ios::trunc);
+				output << "{\"save_version\":6,\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
+					"\"team_palette\":\"blue_yellow\"";
+				if (fixture.value != nullptr)
+				{
+					output << ",\"vsync\":" << fixture.value;
+				}
+				output << '}';
+				require(output.good(), "Could not write the vsync save fixture");
+			}
+			Save restored; SettingsSession restored_session(restored);
+			restored_session.load_save_file();
+			require(restored.vsync() == fixture.expected, "Absent or invalid vsync did not use its default");
+			require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
+				restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow,
+				"Vsync recovery reset an unrelated display preference");
+			require(restored.save_to_file(), "Could not canonicalize the vsync save fixture");
+			require(contents(directory.save_path()).find(std::string("\"vsync\":") +
+				(fixture.expected ? "true" : "false")) != std::string::npos,
+				"Saving did not write vsync as a boolean");
+			check_round_trip(restored);
+		}
+
+		Save save; SettingsSession save_session(save);
+		save_session.load_save_file();
+		require(save.set_display_settings_and_save(labrador::ScreenResolution::s_1920_1080, false,
+			TeamColourPair::pink_green, false), "Could not save vsync off");
+		require(!save.vsync(), "The four-setting display form did not set vsync");
+		require(save.set_display_settings_and_save(labrador::ScreenResolution::s_1280_720, false,
+			TeamColourPair::pink_green), "Could not save the three-setting display form");
+		require(!save.vsync(), "The three-setting display form changed vsync");
+		check_round_trip(save);
+		require(SaveData{}.vsync, "Vsync is not on by default");
+	}
 }
 
 int main()
@@ -600,10 +657,12 @@ int main()
 		check_rumble_loading(directory);
 		check_comfort_resolution();
 		check_comfort_loading(directory);
+		check_vsync_loading(directory);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
 			"boolean recovery, four pad profiles, typed field recovery, legacy aim inheritance, "
 			"stick normalization, independent per-slot rumble recovery and persistence, "
-			"per-slot comfort overrides, their resolution and field-independent recovery\n";
+			"per-slot comfort overrides, their resolution and field-independent recovery, "
+			"and the vsync display preference\n";
 		return 0;
 	});
 }

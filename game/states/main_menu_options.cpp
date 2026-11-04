@@ -4,6 +4,7 @@
 #include "game/states/main_menu.h"
 #include "game/input/input_slots.h"
 #include "game/objects/crude_drawing.h"
+#include "engine/render/renderer.h"
 
 #include <stdexcept>
 
@@ -135,15 +136,18 @@ void MainMenuOptions::apply_settings()
 		this->input()->reset_actions();
 		this->context()->push<DisplayTrialResult>(
 			std::make_unique<MainMenuDisplayConfirmation>(this->menu_context(),
-				DisplaySettingsChoice{ this->resolution_selection_, fs, this->team_palette_selection_ },
+				DisplaySettingsChoice{ this->resolution_selection_, fs, this->team_palette_selection_,
+					this->vsync_selection_ },
 				this->pausing_slot_),
 			[this](const DisplayTrialResult& result) { this->finish_display_trial(result); });
 		return;
 	}
 
-	// Palette-only and unchanged Apply do not resize a manually sized window.
+	// Palette-only, vsync-only and unchanged Apply do not resize a manually
+	// sized window.
 	const bool saved = this->save()->set_display_settings_and_save(
-		this->resolution_selection_, fs, this->team_palette_selection_);
+		this->resolution_selection_, fs, this->team_palette_selection_, this->vsync_selection_);
+	this->apply_saved_vsync();
 	this->refresh_resolution_row();
 	this->set_status(saved ? this->text().status.options_saved :
 		this->text().status.options_save_failed,
@@ -154,6 +158,7 @@ void MainMenuOptions::finish_display_trial(DisplayTrialResult result)
 {
 	this->input()->reset_actions();
 	this->reset_menu_motion();
+	this->apply_saved_vsync();
 	this->refresh_resolution_row();
 	const MenuStatusText& status = this->text().status;
 	const std::wstring* message = &status.options_reverted;
@@ -176,8 +181,10 @@ void MainMenuOptions::restore_defaults()
 	const SaveData defaults{};
 	this->resolution_selection_ = defaults.resolution;
 	this->full_screen_selection_ = defaults.fullscreen;
+	this->vsync_selection_ = defaults.vsync;
 	this->team_palette_selection_ = defaults.team_palette;
 	this->update_full_screen_selection_text();
+	this->update_vsync_selection_text();
 	this->update_team_palette_selection_text();
 	this->refresh_resolution_row();
 	this->play_wave(this->confirm_sound_);
@@ -189,6 +196,9 @@ void MainMenuOptions::init()
 	this->input()->reset_actions();
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
+	// The page's rows use the Options font; everything else keeps the menu's.
+	MenuStyle row_style = style;
+	row_style.item_font = look.options_font;
 	this->set_widget_position(look.options_position);
 	this->set_widget_spacing(look.options_spacing);
 	this->set_prompts(MenuPrompt::options);
@@ -207,6 +217,7 @@ void MainMenuOptions::init()
 	// Load the saved windowed preset, not the current fullscreen dimensions.
 	this->resolution_selection_ = this->save()->resolution();
 	this->full_screen_selection_ = this->save()->fullscreen();
+	this->vsync_selection_ = this->save()->vsync();
 	this->team_palette_selection_ = this->save()->team_palette();
 
 	this->background_ = std::make_unique<UiTexture>(
@@ -232,14 +243,14 @@ void MainMenuOptions::init()
 			this->render_resources(), look.art.ink);
 	}
 
-	this->resolution_font_name_ = style.item_font;
+	this->resolution_font_name_ = row_style.item_font;
 	this->resolution_font_ = this->render_resources()->resolve_sprite_font(this->resolution_font_name_);
 	this->resolution_row_ = std::make_unique<OptionRow>(
 		"resolution",
 		this->text().item(MenuItem::resolution),
 		this->calculate_widget_position(0, 0),
 		value_position(0),
-		this->menu_style(),
+		row_style,
 		look.art.ink,
 		this->render_resources(),
 		[this](Direction direction) { this->cycle_resolution(direction); },
@@ -252,7 +263,7 @@ void MainMenuOptions::init()
 		this->text().item(MenuItem::fullscreen),
 		this->calculate_widget_position(0, 1),
 		value_position(1),
-		this->menu_style(),
+		row_style,
 		look.art.ink,
 		this->render_resources(),
 		[this](Direction /*direction*/)
@@ -264,12 +275,27 @@ void MainMenuOptions::init()
 
 	this->update_full_screen_selection_text();
 
+	this->vsync_row_ = std::make_unique<OptionRow>(
+		"vsync",
+		this->text().item(MenuItem::vsync),
+		this->calculate_widget_position(0, 2),
+		value_position(2),
+		row_style,
+		look.art.ink,
+		this->render_resources(),
+		[this](Direction /*direction*/)
+		{
+			this->vsync_selection_ = !this->vsync_selection_;
+			this->update_vsync_selection_text();
+		}, &this->options_art_, value_limit);
+	this->update_vsync_selection_text();
+
 	this->team_palette_row_ = std::make_unique<OptionRow>(
 		"team_palette",
 		this->text().item(MenuItem::team_palette),
-		this->calculate_widget_position(0, 2),
-		value_position(2),
-		this->menu_style(),
+		this->calculate_widget_position(0, 3),
+		value_position(3),
+		row_style,
 		look.art.ink,
 		this->render_resources(),
 		[this](Direction direction) { this->cycle_team_palette(direction); },
@@ -277,25 +303,25 @@ void MainMenuOptions::init()
 	this->update_team_palette_selection_text();
 
 	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
-		style.item_font, this->calculate_widget_position(0, 3),
+		row_style.item_font, this->calculate_widget_position(0, 4),
 		this->render_resources(), look.art.ink);
 	this->restore_defaults_ = std::make_unique<UiText>("restore_defaults",
-		this->text().item(MenuItem::restore_defaults), style.item_font,
-		this->calculate_widget_position(0, 4), this->render_resources(), look.art.ink);
+		this->text().item(MenuItem::restore_defaults), row_style.item_font,
+		this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
 
 	this->apply_ = std::make_unique<UiText>(
 		"apply",
 		this->text().item(MenuItem::apply),
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
+		row_style.item_font,
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
 		look.art.ink);
 
 	this->back_ = std::make_unique<UiText>(
 		"back",
 		this->text().item(MenuItem::back),
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 6),
+		row_style.item_font,
+		this->calculate_widget_position(0, 7),
 		this->render_resources(),
 		look.art.ink);
 
@@ -318,6 +344,7 @@ void MainMenuOptions::init()
 	if (this->palette_timing_) { this->text_container_->add_child(this->palette_timing_.get()); }
 	this->text_container_->add_child(this->resolution_row_.get());
 	this->text_container_->add_child(this->full_screen_row_.get());
+	this->text_container_->add_child(this->vsync_row_.get());
 	this->text_container_->add_child(this->team_palette_row_.get());
 	this->text_container_->add_child(this->controls_.get());
 	this->text_container_->add_child(this->restore_defaults_.get());
@@ -328,6 +355,7 @@ void MainMenuOptions::init()
 	// Value rows respond to left/right; confirming them has no action.
 	this->focus_.add(this->resolution_row_.get());
 	this->focus_.add(this->full_screen_row_.get());
+	this->focus_.add(this->vsync_row_.get());
 	this->focus_.add(this->team_palette_row_.get());
 	this->focus_.add(this->controls_.get(), [this]
 		{
@@ -438,6 +466,20 @@ void MainMenuOptions::update_full_screen_selection_text() const
 		fs_text = this->text().values.off;
 	}
 	this->full_screen_row_->set_value(fs_text);
+}
+
+void MainMenuOptions::update_vsync_selection_text() const
+{
+	this->vsync_row_->set_value(this->vsync_selection_ ? this->text().values.on : this->text().values.off);
+}
+
+void MainMenuOptions::apply_saved_vsync() const
+{
+	labrador::Renderer* display = this->data()->application()->renderer();
+	if (display != nullptr)
+	{
+		display->set_vsync(this->save()->vsync());
+	}
 }
 
 void MainMenuOptions::cycle_team_palette(labrador::Direction direction)

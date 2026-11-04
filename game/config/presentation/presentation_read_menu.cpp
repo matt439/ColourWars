@@ -313,6 +313,7 @@ namespace presentation_read
 		const JsonValue fonts = json.object("fonts");
 		menu.title_font = fonts.string("title");
 		menu.announcement_font = fonts.string("announcement");
+		menu.options_font = fonts.string("options");
 		menu.weapon_description_font = fonts.string("weapon_description");
 		menu.build_id_y = title_height("build_id_y");
 
@@ -402,12 +403,12 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": options_value_x must follow the label inside options_box_size.");
 		}
 		if (menu.options_heading_position.y >= menu.options_position.y ||
-			menu.options_position.y + menu.options_spacing.y * 6.0f >= menu.options_status_position.y ||
+			menu.options_position.y + menu.options_spacing.y * 7.0f >= menu.options_status_position.y ||
 			menu.options_spacing.y <= options_art.focus_padding.y * 2.0f ||
 			menu.options_spacing.x > DESIGN_RESOLUTION.x)
 		{
 			throw std::runtime_error(json.where() + ": options_heading_position, options_position, options_spacing and "
-				"options_status_position must order the heading, seven rows and status inside options_box_size.");
+				"options_status_position must order the heading, eight rows and status inside options_box_size.");
 		}
 		inside_panel(menu.credits_heading_position, menu.credits_box_size, "heading_position", credits, menu.art);
 		inside_panel(menu.credits_position, menu.credits_box_size, "position", credits, menu.art);

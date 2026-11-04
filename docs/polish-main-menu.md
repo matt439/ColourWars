@@ -180,9 +180,12 @@ Resolution availability still follows the applied fullscreen state. Restoring
 pending windowed defaults while fullscreen keeps the resolution row disabled
 and showing the live dimensions until Apply changes the display.
 
-The page has seven rows: resolution, fullscreen, palette, Controls/audio,
-Restore defaults, Apply and Back. Their existing first-row anchor is unchanged;
-`options_spacing.y` is now `100`, and the status remains at y = `885`. Options
+The page has eight rows: resolution, fullscreen, vsync, palette,
+Controls/audio, Restore defaults, Apply and Back. Their first-row anchor is
+unchanged; `options_spacing.y` is `82` and the status remains at y = `885`.
+Since `GAP#L9` (2026-11-04) the rows draw in `main_menu.fonts.options`
+(`lato_black_36`) instead of the menu item font, because eight 48-point rows do
+not fit the paper. Options
 captures compact geometry from `setup_focus_padding` (`28, 7`) and
 `setup_shadow_offset` (`2`), while its paper colours remain live in
 `main_menu.art`. This local geometry override preserves the existing item font

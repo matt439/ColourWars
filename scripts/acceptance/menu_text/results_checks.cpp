@@ -170,6 +170,7 @@ namespace menu_text_acceptance
         variants.rejects("values.on", [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_limited"); d["menu_text"]["values"]["on"].SetString("~");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
             d["menu_text"]["results"]["proceed"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
         }, &world);
     }
@@ -299,6 +300,7 @@ namespace menu_text_acceptance
         variants.rejects("values.on", [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_limited"); d["menu_text"]["values"]["on"].SetString("~");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
             d["menu_text"]["results"]["series_team_a_wins"].SetString(std::string(512, 'W').c_str(), d.GetAllocator());
         }, &world);
         variants.rejects("results.proceed", [](rapidjson::Document& d)

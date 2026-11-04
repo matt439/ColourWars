@@ -234,6 +234,7 @@ namespace menu_text_acceptance
             variants.rejects(field, [&](rapidjson::Document& d)
             {
                 d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["main_menu"]["fonts"]["options"].SetString("menu_text_limited");
                 d["menu_text"]["values"][entry.key].SetString("Glyph~");
             }, &world);
             if (entry.field != &MenuValueText::random)
@@ -269,6 +270,7 @@ namespace menu_text_acceptance
             variants.rejects(std::string("values.") + entry.key, [&](rapidjson::Document& d)
             {
                 d["menu_style"]["fonts"]["item"].SetString("menu_value_zero_width");
+                d["main_menu"]["fonts"]["options"].SetString("menu_value_zero_width");
                 d["menu_text"]["values"][entry.key].SetString("~");
             }, &world);
             if (entry.field != &MenuValueText::random)
@@ -288,7 +290,9 @@ namespace menu_text_acceptance
         constexpr ValueUse uses[]{
             { true, 1, MenuItem::fullscreen, &MenuValueText::on },
             { true, 1, MenuItem::fullscreen, &MenuValueText::off },
-            { true, 2, MenuItem::team_palette, &MenuValueText::random },
+            { true, 2, MenuItem::vsync, &MenuValueText::on },
+            { true, 2, MenuItem::vsync, &MenuValueText::off },
+            { true, 3, MenuItem::team_palette, &MenuValueText::random },
             { false, 5, MenuItem::view_shake, &MenuValueText::on },
             { false, 5, MenuItem::view_shake, &MenuValueText::off },
             { false, 6, MenuItem::aim_marker, &MenuValueText::on },
@@ -305,7 +309,7 @@ namespace menu_text_acceptance
                 const auto& main = look.main_menu();
                 const auto& controls = look.controls_settings();
                 MenuStyle style = look.menu();
-                if (!use.options) { style.item_font = controls.item_font; }
+                style.item_font = use.options ? main.options_font : controls.item_font;
                 const auto art = use.options ? options_art(main) : controls.art;
                 const auto box_size = use.options ? main.options_box_size : controls.box_size;
                 const auto spacing = use.options ? main.options_spacing : controls.layout.spacing;
@@ -318,7 +322,7 @@ namespace menu_text_acceptance
                     paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x :
                     controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - value_position.x,
                     spacing.y - art.focus_padding.y * 2.0f);
-                require(limit == (use.options ? labrador::Vector2F(930.0f, 86.0f) : labrador::Vector2F(332.0f, 48.0f)),
+                require(limit == (use.options ? labrador::Vector2F(930.0f, 68.0f) : labrador::Vector2F(332.0f, 48.0f)),
                     "Authored value fixture no longer exercises the shipped Options/Controls fitting limits");
                 const auto font = world.render.resolve_sprite_font(style.item_font);
                 std::wstring authored = look.menu_text().values.*use.field;
@@ -379,7 +383,7 @@ namespace menu_text_acceptance
             }
         };
         const auto defaults = variants.load([](rapidjson::Document&) {});
-        require(defaults.menu().item_font != defaults.controls_settings().item_font,
+        require(defaults.main_menu().options_font != defaults.controls_settings().item_font,
             "Authored values must exercise the separate shipped Options and Controls fonts");
         defaults.validate_resources(world.render, world.audio);
         check_rows(defaults, false, false);
@@ -406,11 +410,12 @@ namespace menu_text_acceptance
             const auto tall = variants.load([&](rapidjson::Document& d)
             {
                 d["menu_style"]["fonts"]["item"].SetString(font_name, d.GetAllocator());
+                d["main_menu"]["fonts"]["options"].SetString(font_name, d.GetAllocator());
                 d["controls_settings"]["item_font"].SetString(font_name, d.GetAllocator());
                 for (const auto& entry : value_text) { d["menu_text"]["values"][entry.key].SetString("~"); }
                 // Random also supplies the arena name, whose existing fit
                 // shrinks only to preview width. A narrow synthetic preview
-                // keeps that separate consumer valid while all nine real
+                // keeps that separate consumer valid while every real
                 // OptionRow uses still exercise their width/height limits.
                 d["main_menu"]["stage_select"]["preview_size"]["x"].SetFloat(2.0f);
             });
