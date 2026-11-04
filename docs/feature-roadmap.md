@@ -1978,7 +1978,9 @@ engine's `Gamepads::vibrate` and `stop_vibration` (`ENG#25`, 2026-11-05; it was
 would refuse first: invalid amplitudes or deadlines stop the slot, deadlines
 past `max_vibration_seconds` are clamped, and nothing the engine throws leaves
 the sink. Each nonzero request carries the time until the output falls to zero,
-and `Rumble` renews an unchanged output when a retrigger extends that time.
+and `Rumble` renews it at every audible trigger and whenever that time grows,
+because the engine ends a request on wall time while the policy's timers run on
+game time.
 The `rumble_adapter` case drives it through a real `Gamepads` over a fake
 `GamepadReader`. Failures are nonfatal, without retries or log spam.
 

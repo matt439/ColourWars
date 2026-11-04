@@ -67,9 +67,12 @@ public:
 // immediately; update advances timers. Gate loss cancels rather than freezes.
 // Every nonzero request carries the time until the output would fall to zero
 // (the longest remaining nonzero pulse), so a match that stops updating still
-// ends at the engine's deadline. An unchanged output is sent again only when
-// that time outgrows what the last request was given: a retrigger that extends
-// the pulse renews the request, and one that does not stays silent.
+// ends at the engine's deadline. Every audible trigger sends the current output
+// again with that time; between triggers an unchanged output is resent only
+// when the time outgrows what the last request was given. The engine's deadline
+// runs on wall time and these timers on game time (update's dt), so a stall the
+// step timer clamps can stop the pad before this policy's pulse ends; the next
+// audible trigger restarts it.
 class Rumble final
 {
 public:
@@ -106,7 +109,7 @@ private:
     bool session_permits() const noexcept;
     bool slot_permits(std::size_t slot) const noexcept;
     void clear_slot(std::size_t slot, bool force_output) noexcept;
-    void publish(std::size_t slot) noexcept;
+    void publish(std::size_t slot, bool renew) noexcept;
 
     RumbleSink& sink_;
     const RumbleProfile profile_;

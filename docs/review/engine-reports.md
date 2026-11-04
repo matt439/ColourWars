@@ -236,7 +236,7 @@ shipped without the fix; 29 is withdrawn and
 
 | # | Report | Exhibit at `96c65373` |
 |---|---|---|
-| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp` and `painter_visual.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
+| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117`, `scripts/check-startup.ps1:225` and `:248` |
@@ -363,11 +363,11 @@ This is not the "XInput is the only pad reader" entry under
 [What is deliberately not here](#what-is-deliberately-not-here). That entry is
 about pad coverage: a GameInput backend for DualSense, DualShock or Switch Pro,
 under `ROAD#2`. It stays, and its "no exhibit" still holds for that subject.
-This report is about a test seam. It has an exhibit, in four places.
+This report is about a test seam. It has an exhibit, in five places.
 
 ### Exhibit
 
-Four acceptance probes need to set a slot's state without a pad, a window or
+Five acceptance probes need to set a slot's state without a pad, a window or
 XInput. Each one does it by redefining every `labrador::GamepadReader` member,
 `Impl` included, in its own translation unit. The probe's object file then wins
 over `LabradorEngine.lib`'s `xinput/gamepad_reader.obj` at link time:
@@ -376,6 +376,7 @@ over `LabradorEngine.lib`'s `xinput/gamepad_reader.obj` at link time:
 - [input_bindings.cpp:9-23](../../scripts/acceptance/input_bindings.cpp) does the same thing with `binding_test_pads::states`.
 - [keyboard_jump_capture.cpp:23-34](../../scripts/acceptance/keyboard_jump_capture.cpp) defines a reader whose slots are always empty, only so a `Gamepads` can be built.
 - [painter_visual.cpp:77-109](../../scripts/acceptance/painter_visual.cpp) uses `painter_scripted_pads::states` under `COLOURWARS_PAINTER_SCRIPTED_PADS`. `scripts/check-painter.ps1:409` passes that define only for the scripted-pad variants, so the other painter binaries keep XInput.
+- [rumble_adapter.cpp:42-69](../../scripts/acceptance/rumble_adapter.cpp) records every `vibrate` and `stop_vibration` in `rumble_adapter_pads::trace`, and can refuse or throw, so the real rumble adapter drives a real `Gamepads`. It joined when report 25 was spent (2026-11-05), and is the one block that exercises the vibration members the bump added.
 
 ### What happens
 
@@ -392,7 +393,7 @@ Every consumer that wants to drive `Gamepads` in a test meets the same problem.
 Reproduction: in a test target that links `LabradorEngine` (xinput), try to put
 `GamepadState{ .connected = true, ... }` into slot 0 of a `Gamepads` without a
 physical pad. No public way exists. The only route is to define
-`labrador::GamepadReader` yourself, as the four files above do.
+`labrador::GamepadReader` yourself, as the five files above do.
 
 ### The ask
 
@@ -408,11 +409,13 @@ are the engine's call.
 
 ### What an answer lets this repository delete
 
-All four `namespace labrador` blocks. The three state arrays they read
-(`action_test_pads`, `binding_test_pads`, `painter_scripted_pads`) become calls
-to the engine's setter. This repository would also no longer have to edit four
-probes whenever `GamepadReader` gains a member. The PI-21 bump will be the first
-time that is needed. `COLOURWARS_PAINTER_SCRIPTED_PADS` can stay if it still
+All five `namespace labrador` blocks. The four state arrays they read
+(`action_test_pads`, `binding_test_pads`, `painter_scripted_pads`,
+`rumble_adapter_pads`) become calls to the engine's setter, and
+`rumble_adapter_pads::trace` becomes the reader's own vibration record. This
+repository would also no longer have to edit five probes whenever
+`GamepadReader` gains a member. The PI-21 bump was the first time that was
+needed. `COLOURWARS_PAINTER_SCRIPTED_PADS` can stay if it still
 selects scripted pads over physical ones.
 
 Filing is authorized (2026-11-03); the public issue is drafted from this text
@@ -1766,9 +1769,9 @@ this side.
 ## 25. ~~No public controller vibration output~~ — accepted, narrowed, `cadc962`
 
 Drafted 2026-10-26. The engine's pad reader had no output, so rumble went out
-through this client's own adapter, `game/input/rumble_xinput.cpp`. It calls
-`XInputSetState` and links `Xinput.lib`, behind the `make_rumble_sink`
-factory. **Answered unfiled** on 2026-10-27 in `cadc962`, *Send controller
+through this client's own adapter, `game/input/rumble_xinput.cpp` (deleted at
+the spend), which called `XInputSetState` and linked `Xinput.lib`, behind the
+`make_rumble_sink` factory. **Answered unfiled** on 2026-10-27 in `cadc962`, *Send controller
 vibration through the input seam*, released in `v0.3.0`. The answer is
 `Gamepads::vibrate(slot, Vibration)` and `stop_vibration`
 (`engine/input/gamepads.h:81`, `:86`), with `Vibration`, `VibrationResult`,
@@ -1792,11 +1795,13 @@ library no longer links `Xinput.lib`:
   are the time until the output would fall to zero, the longest audible pulse
   left, in (0, `maximum_rumble_pulse_seconds`]; a stop carries none.
   `Rumble::publish` sends when the output changes, as before, and now also when
-  that time outgrows what the last request was given. A retrigger that extends
-  a pulse renews the request at the same level; one that does not stays silent.
-  A level held by repeated hits is renewed at every hit, so the engine's
-  deadline never cuts it short, and a match that stops updating still ends at
-  it.
+  that time outgrows what the last request was given, and at every audible
+  trigger even when neither changed. The engine's deadline runs on wall time and
+  `Rumble`'s timers on game time, which the step timer clamps after a stall, so
+  the engine can stop a pad before the policy's pulse ends; the next audible
+  cue restarts it rather than being dropped as unchanged. A level held by
+  repeated hits is renewed at every hit, so the engine's deadline never cuts it
+  short, and a match that stops updating still ends at it.
 - The adapter checks what `check_vibration` would refuse before calling:
   invalid amplitudes, and seconds that are not positive and finite, become a
   stop; seconds past `max_vibration_seconds` are clamped. Keyboard and invalid
@@ -2759,9 +2764,11 @@ Answers, report by report:
   ([Closed](#32-word-wrap-by-measured-width-is-client-code--80024e5)).
 - **25** and **31** answered, closed and not yet spent at the bump. Each became
   a TODO row with its measured scope, because each is new client work with
-  choices in it. 31 was spent on 2026-11-05: unknown and repeated keys in
-  `tuning.json` are refused
-  ([Closed](#31-jsonvalue-cannot-report-keys-nobody-read-so-a-misspelled-optional-key-is-silent--e166dcc)).
+  choices in it. Both were spent on 2026-11-05: 31 refuses unknown and
+  repeated keys in `tuning.json`
+  ([Closed](#31-jsonvalue-cannot-report-keys-nobody-read-so-a-misspelled-optional-key-is-silent--e166dcc)),
+  and 25 sends rumble through `Gamepads::vibrate` with a renewed deadline
+  ([Closed](#25-no-public-controller-vibration-output--accepted-narrowed-cadc962)).
 - **28** wrong: the tag shipped both entries unamended, and the report is back
   with the author.
 

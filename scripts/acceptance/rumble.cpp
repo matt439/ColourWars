@@ -146,38 +146,43 @@ namespace
         // The mixed output lasts as long as its longest audible pulse.
         sink.exact(1, 2, 0.75f, 0.5f, 0.25f);
         rumble.update(0.03125f);
+        // A retrigger that does not outlast the request still resends it: the
+        // engine's wall-clock deadline may already have passed after a stall.
         rumble.trigger(2, RumbleEvent::dry_fire);
+        sink.exact(2, 2, 0.75f, 0.5f, 0.21875f);
         rumble.update(0.03125f);
-        require(sink.count == 2, "Retriggered dry-fire pulse expired early, added motor amplitudes "
-            "or renewed a request it does not outlast");
+        require(sink.count == 3, "Retriggered dry-fire pulse expired early or added motor amplitudes");
         rumble.update(0.03125f);
-        sink.exact(2, 2, 0.75f, 0.25f, 0.15625f);
+        sink.exact(3, 2, 0.75f, 0.25f, 0.15625f);
         rumble.update(0.15625f);
-        sink.exact(3, 2, 0.0f, 0.0f);
-        require(sink.count == 4, "Repeating one event extended an unrelated event");
+        sink.exact(4, 2, 0.0f, 0.0f);
+        require(sink.count == 5, "Repeating one event extended an unrelated event");
 
         rumble.trigger(2, RumbleEvent::hit);
         rumble.update(0.125f);
         rumble.trigger(2, RumbleEvent::hit);
         // Same output, longer deadline: the engine would stop the first
         // request at its seconds, so the retrigger renews it.
-        sink.exact(5, 2, 0.75f, 0.25f, 0.25f);
+        sink.exact(6, 2, 0.75f, 0.25f, 0.25f);
         rumble.update(0.125f);
-        require(sink.count == 6 && equals(sink.current[2], 0.75f, 0.25f),
+        require(sink.count == 7 && equals(sink.current[2], 0.75f, 0.25f),
             "Repeated hit did not refresh its own pulse and renew its request exactly once");
         rumble.update(0.125f);
-        sink.exact(6, 2, 0.0f, 0.0f);
+        sink.exact(7, 2, 0.0f, 0.0f);
 
         rumble.trigger(2, RumbleEvent::hit);
         rumble.trigger(2, RumbleEvent::elimination);
+        sink.exact(9, 2, 1.0f, 1.0f, 0.5f);
+        // Weaker cues leave the level alone but renew its deadline.
         rumble.trigger(2, RumbleEvent::hard_landing);
+        sink.exact(10, 2, 1.0f, 1.0f, 0.5f);
         rumble.trigger(2, RumbleEvent::dry_fire);
-        sink.exact(8, 2, 1.0f, 1.0f, 0.5f);
+        sink.exact(11, 2, 1.0f, 1.0f, 0.5f);
         rumble.update(0.25f);
-        require(sink.count == 9, "Weaker overlapping cues shortened or altered an elimination pulse");
+        require(sink.count == 12, "Weaker overlapping cues shortened or altered an elimination pulse");
         rumble.update(0.25f);
-        sink.exact(9, 2, 0.0f, 0.0f);
-        require(sink.count == 10, "Overlap generated extra writes");
+        sink.exact(12, 2, 0.0f, 0.0f);
+        require(sink.count == 13, "Overlap generated extra writes");
     }
 
     void deadlines_renew()
@@ -188,29 +193,31 @@ namespace
         rumble.trigger(0, RumbleEvent::elimination);
         sink.exact(0, 0, 1.0f, 1.0f, 0.5f);
         rumble.update(0.375f);
+        // A weaker cue that ends with the request renews it at the same level
+        // and seconds, restarting a pad the engine stopped after a stall.
         rumble.trigger(0, RumbleEvent::hard_landing);
-        require(sink.count == 1, "A weaker cue that ends with the request renewed it");
+        sink.exact(1, 0, 1.0f, 1.0f, 0.125f);
         // A weaker cue that outlasts the stronger one keeps the motor running
         // past the first request's seconds: same output, longer deadline.
         rumble.trigger(0, RumbleEvent::hit);
-        sink.exact(1, 0, 1.0f, 1.0f, 0.25f);
+        sink.exact(2, 0, 1.0f, 1.0f, 0.25f);
         rumble.update(0.125f);
-        sink.exact(2, 0, 0.75f, 0.25f, 0.125f);
+        sink.exact(3, 0, 0.75f, 0.25f, 0.125f);
         rumble.update(0.125f);
-        sink.exact(3, 0, 0.0f, 0.0f);
+        sink.exact(4, 0, 0.0f, 0.0f);
 
         // A level held by repeated hits is renewed at every hit, never left
         // to the first request's deadline.
         for (std::size_t hit = 0; hit < 8; ++hit)
         {
             rumble.trigger(0, RumbleEvent::hit);
-            sink.exact(4 + hit, 0, 0.75f, 0.25f, 0.25f);
+            sink.exact(5 + hit, 0, 0.75f, 0.25f, 0.25f);
             rumble.update(0.125f);
         }
-        require(sink.count == 12, "A held level was resent between hits");
+        require(sink.count == 13, "A held level was resent between hits");
         rumble.update(0.125f);
-        sink.exact(12, 0, 0.0f, 0.0f);
-        require(sink.count == 13, "A held level did not stop once its last hit expired");
+        sink.exact(13, 0, 0.0f, 0.0f);
+        require(sink.count == 14, "A held level did not stop once its last hit expired");
     }
 
     void sparse_slots_and_keyboard()
@@ -406,7 +413,7 @@ int wmain(int argc, wchar_t* argv[])
         silent_and_boundary_profiles();
         rumble_acceptance::check_callers(std::filesystem::absolute(argv[1]));
         std::cout << "PASS rumble pulse policy: four event intents, independent expiry/retrigger and bounded overlap, "
-            "bounded request deadlines renewed only when they grow, "
+            "bounded request deadlines renewed at every audible trigger and whenever they grow, "
             "sparse physical slots, keyboard/bot/replay/disabled/disconnected gates, pause/focus/match/destructor stops, "
             "no stale resume and atomic invalid-input rejection. Fake sink only; no native motors, "
             "GameLevel output or physical feel acceptance.\n";

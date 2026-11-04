@@ -99,8 +99,12 @@ void Rumble::trigger(int input_slot, RumbleEvent event)
     if (!input_slots::is_pad(input_slot)) { return; }
     const std::size_t slot = static_cast<std::size_t>(input_slot);
     if (!this->slot_permits(slot)) { return; }
-    this->slots_[slot].remaining[index] = static_cast<double>(this->profile_[index].duration_seconds);
-    this->publish(slot);
+    const RumblePulse& pulse = this->profile_[index];
+    this->slots_[slot].remaining[index] = static_cast<double>(pulse.duration_seconds);
+    // An audible cue always renews the request, even at an unchanged output and
+    // deadline: the engine's deadline runs on wall time and this policy's on
+    // game time, so after a stall the pad may already have stopped.
+    this->publish(slot, pulse.duration_seconds > 0.0f && !silent(pulse.motors));
 }
 
 void Rumble::update(float dt)
@@ -119,7 +123,7 @@ void Rumble::update(float dt)
         // The same arithmetic as the pulse timers, so a request and the pulse
         // that set its seconds expire together and nothing is resent early.
         target.sent_seconds = std::max(0.0, target.sent_seconds - static_cast<double>(dt));
-        this->publish(slot);
+        this->publish(slot, false);
     }
 }
 
@@ -136,7 +140,7 @@ void Rumble::clear_slot(std::size_t slot, bool force_output) noexcept
     target.sent_seconds = 0.0;
 }
 
-void Rumble::publish(std::size_t slot) noexcept
+void Rumble::publish(std::size_t slot, bool renew) noexcept
 {
     Slot& target = this->slots_[slot];
     RumbleMotors output;
@@ -156,7 +160,7 @@ void Rumble::publish(std::size_t slot) noexcept
         }
     }
     if (silent(output)) { hold = 0.0; }
-    if (!same_motors(target.output, output) || hold > target.sent_seconds)
+    if (!same_motors(target.output, output) || hold > target.sent_seconds || (renew && !silent(output)))
     {
         // Profiles bound hold by maximum_rumble_pulse_seconds; the floor keeps
         // a vanishing remainder a positive request rather than a refused one.
