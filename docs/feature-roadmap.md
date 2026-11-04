@@ -2538,7 +2538,7 @@ re-resolution. Every row still held; only line numbers had moved, mostly by
 | Editor decode *(new)* | `editor/horizontal_authoring.cpp:65-91` | the editor's twin of the loader refusal | the same second type |
 | Editor guide and checks | `editor/horizontal_authoring.cpp:108-156` | guide and refusals use the horizontal path/corridor | the shared contract's lift path and clearance |
 | Editor duplicate | `editor/level_document.cpp:897-917` | a copy moves down past source body plus corridor | the copy clears the lift's whole vertical path and clearance |
-| Editor mirror | `editor/level_document.cpp:1012-1029` | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
+| Editor mirror | `editor/level_document_mirror.cpp` (`mirror_object`) | reflects `travel_x` reach; refuses paint ferries | a lift reflects as its anchor only, without the half-cycle phase advance a horizontal path needs |
 | Editor fields | `editor/level_document.cpp:615-631`, `:865-873` | `motion/type (horizontal)` and `motion/travel_x` labels and default | the lift's field and palette entry |
 | Blockout aids | `editor/blockout_aids.cpp:177-184`, `:209` | initial-phase offset added to x | added to y |
 | Bot supports | `game/objects/level_bot_world.cpp:111-130` (flag `:124-126`) | `moving` marks a support whose bounds change | unchanged flag |

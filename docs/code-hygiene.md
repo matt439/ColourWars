@@ -2019,7 +2019,7 @@ gate. The earlier figure/animation and other source splits already exist.
 | [level.cpp](../game/objects/level.cpp) | 966 | Horizontal-motion subsystem extracted (380 lines), `HYG#2` complete |
 | [tune_colour_document_checks.h](../scripts/acceptance/debug_console/tune_colour_document_checks.h) | 17 | Ordered topic coordinator; `HYG#7` complete |
 | [tuning.cpp](../game/config/tuning.cpp) | 907 | Retain cohesive key-by-key parsing and validation |
-| [level_document.cpp](../editor/level_document.cpp) | 949 | Retain the shared document transaction; `ED#7` save protection complete |
+| [level_document.cpp](../editor/level_document.cpp) | 1,168 | Reflection family (`ED#24`/`ED#25`) extracted (300 lines); shared transaction, save included, retained; `HYG#54` complete |
 | [projectile.cpp](../game/objects/projectile.cpp) | 287 | Contacts/sweeps extracted (587 lines), `HYG#3` complete |
 | [weapon.cpp](../game/objects/weapon.cpp) | 855 | Retain the current firing/lifecycle core; motion already has its own file |
 | [save.cpp](../game/save/save.cpp) | 602 | Profile overlay extracted (209 lines), `HYG#4` complete |
@@ -2205,3 +2205,38 @@ lines, including the `main_menu.mode_select_spacing` and `menu_text.values`
 diagnostics. Debug and Release builds pass, as do `menu_presentation`,
 `menu_navigation`, `remembered_setup` and `series_stage_rule` in both presets
 and `menu_text` in Release.
+
+## Level-document reflection family (`HYG#54`)
+
+**Done (2026-11-05).** Moved the `ED#24`/`ED#25` reflection rules out of
+`editor/level_document.cpp` into `editor/level_document_mirror.cpp` (300
+lines), in their original order: the anonymous `set_text`,
+`advance_half_cycle` and `mirror_object`; `LevelDocument::mirror_copy`; the
+anonymous `paint_ferry`, `strip_unmirrored` and `same_shape`; and
+`LevelDocument::symmetry`. The file had grown about 520 lines since the
+2026-10-28 snapshot, and roughly 270 of them were this one rule set with its
+own private helpers and its own sections in
+[the level editor guide](level-editor.md). The type is not split and no
+public signature or layout changes.
+
+Two things move with it, because the reflection bodies reach into the
+document's private state. `struct LevelDocument::Impl` and its inline
+`mutate` template move verbatim to the new editor-private header
+`editor/level_document_impl.h`, which only the two level-document sources
+include; it carries a `using namespace level_json;` so the `Impl` body stays
+unqualified. The four helpers the reflection family shares with the rest of
+the file - `entry_json`, `entry_array`, `set_number` and `move_shape` - change
+from internal to external linkage: their definitions stay in place in
+`level_document.cpp`, rewrapped from the first anonymous namespace into
+`colourwars_editor::level_document_detail`, which the header declares and
+brings into scope. The other helpers in that namespace stay anonymous and in
+source order. No other editor source defines those names.
+
+The file transaction stays: `load`, `create` and the `ED#7` save with its
+`save_target`, `same_save_target` and `check_saved_source` guards are the
+other half of `mutate`'s history contract, as the 2026-10-28 snapshot ruled,
+and `<windows.h>` stays with them. The clipboard and `unresolved_resources`
+also stay; each shares a helper with the edit core. The moved lines are
+identical to the originals. Debug and Release builds pass, as do
+`check-level-editor.ps1` in both presets (mirror copy and symmetry included),
+`check-stage-registration.ps1` and the `user_stages` case in Debug.
