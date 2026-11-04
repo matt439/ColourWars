@@ -481,6 +481,53 @@ match, queued request, playback or warning side effects. Loader `level_format`,
 the accepted audio bank also pass in both presets. No hardware or attended-play
 gate is closed by these checks.
 
+## Replays across rounds (`DBG#2`)
+
+**Done (2026-11-04).** A recording now crosses the round boundary, and `play`
+replays every round it holds. The rest of `DBG#2` (another build, machine or
+step size) stays deferred.
+
+The boundary is recorded rather than bridged. Each round's level is destroyed
+and the next is built from its own round seed (`HYG#39`) and setup, so nothing
+but the setup crosses it, and every round keeps its own `RoundTape`, gaps,
+checkpoints and final fingerprint. Format 8 writes the first round where format
+7 did and later ones in `rounds`, each with its own `seed`, `stage_hash`,
+`settings`, `updates`, `gaps`, `inputs`, `checkpoints` and `final`. The build,
+step, content hashes, `tune_diff` and cheats are shared: the writer refuses a
+later round at another dt or under other cheats, and the recorder will not
+carry on into a round whose tuning, presentation or cheats changed. A one-round
+file has no `rounds` key and is otherwise format 7's bytes, so formats 3 to 7
+are refused only by their version.
+
+Recording: the round's end saves the file, as it always did, and keeps the
+recording for the round the End menu starts next (the director's
+`before_level_build` sees a build with no debug request in progress or queued).
+That round starts without an intro, like any recorded round, and its end saves
+the file again with every round so far. A debug rebuild (`restart`, `stage`,
+`play`, `record`), leaving the match or `record stop` ends it as saved; a
+`record` update limit counts every round's updates. `wait record` still
+finishes at the first round's end, when the file is complete.
+
+Playback: `play` checks every round's stage fingerprint before arming the
+first. When a round reaches its recorded last update, or its level finishes
+first, it is compared and logged as `replay <name> round k/n`; the next round
+is armed and built as an exact request straight away, skipping the results and
+End menus, from its own seed. A round that diverged does not spoil the next.
+The last round logs the summary and holds its frame; `replay_finished` and
+`wait replay` wait for it.
+
+**Check.** The `debug_console` case's `series_replay_checks.cpp` records two
+two-second rounds on a real CPU `Level` (a scripted keyboard seat and a paint
+bot), the second on another stage with another drawn seed and a full intro
+asked for, through the build path the End menu takes. It checks the one-round
+file after the first round, both rounds' seeds, stages and checks after the
+second, a byte-for-byte rewrite, that `restart` between rounds ends the
+recording without touching the file, and that `play` rebuilds both rounds and
+matches each checkpoint and final state. The probe changes for format 8 are in
+`replay_checks.cpp`, `bot_replay_checks.cpp` and
+`moving_structure/replay_checks.cpp`. No attended run or hardware gate is
+closed by this.
+
 ## Background script work (`DBG#6`)
 
 **Implemented and qualified, 2026-10-26.** `script.background [0|1]` is a Debug-only,

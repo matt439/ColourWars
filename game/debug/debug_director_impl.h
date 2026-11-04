@@ -175,6 +175,9 @@ public:
 	// Level updates since the running match was built.
 	int level_updates() const { return this->level_updates_; }
 	bool recording() const { return this->recorder_ != nullptr; }
+	// A recording saved at the end of its round, which the End menu's next
+	// round would carry on (DBG#2).
+	bool record_continues() const { return this->record_series_ != nullptr; }
 	bool playing() const { return this->player_ != nullptr; }
 	bool replay_finished() const;
 	const std::optional<unsigned int>& seed() const { return this->seed_; }
@@ -373,11 +376,37 @@ private:
 	std::optional<MatchFingerprint> last_print_;
 	std::unique_ptr<ReplayPlayer> play_armed_;
 	std::unique_ptr<ReplayPlayer> player_;
+	// Across rounds (DBG#2). A recording whose round ended is saved, and the
+	// next round the End menu starts carries it on: what it saved, its name,
+	// its update limit and the updates already in the file. Any other build,
+	// leaving the match or `record stop` ends it, as do changed content or
+	// cheats.
+	std::unique_ptr<ReplayFile> record_series_;
+	std::string record_series_name_;
+	int record_series_limit_ = 0;
+	int record_series_updates_ = 0;
+	void end_record_series(const std::string& reason);
+	// after_level_build of the End menu's next round: records it on, unless
+	// the content or cheats changed since the saved rounds.
+	void continue_recording(const DebugMatchView& match);
+	// A replay of several rounds: the whole recording, the round playing
+	// (0-based), and whether every round so far matched. Each round is armed
+	// and built in turn, as `play` arms the first.
+	std::unique_ptr<ReplayFile> play_file_;
+	int play_round_ = 0;
+	bool play_rounds_matched_ = true;
+	// The replay's name with its round when it has several: "cpu round 2/3".
+	std::string replay_label(const ReplayPlayer& player) const;
+	// A queued debug request is being built (match.debug_rebuild), so the
+	// build is not the End menu's next round.
+	bool debug_rebuilding_ = false;
 	std::optional<std::pair<bool, bool>> cheats_before_play_;
 	SeatInputFilter* seat_filter();
 	void before_level_update(DebugMatchTarget& match, float dt);
 	void after_level_update(DebugMatchTarget& match);
-	void stop_recording(const std::string& reason);
+	// `round_ended`: the round finished, so the End menu's next round may
+	// carry the recording on.
+	void stop_recording(const std::string& reason, bool round_ended = false);
 	void stop_playing(const std::string& reason);
 	void restore_cheats_after_play();
 	// Drops an armed replay whose build will not come: the exact request that

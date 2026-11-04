@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 
 namespace
 {
@@ -324,6 +325,437 @@ namespace
         validate_motion(terrain, roster, final_seats, path); return terrain;
     }
 
+	// Every line of `text` after `prefix`.
+	std::string indented(const std::string& text, const std::string& prefix)
+	{
+		std::string result = prefix;
+		for (const char c : text)
+		{
+			result += c;
+			if (c == '\n') { result += prefix; }
+		}
+		return result;
+	}
+
+	// One round's settings to final, at the top level's indentation, its last
+	// line unterminated: the file's own round and each of its later rounds (DBG#2).
+	void write_round(std::ostream& out, const ReplayFile& file, const std::filesystem::path& path)
+	{
+		const MatchSetup& roster = file.tape.settings();
+		validate_roster(roster, path);
+        if (file.final_print.horizontal_motion)
+        { validate_motion(*file.final_print.horizontal_motion, roster.player_settings().size(),
+            file.final_print.seats.size(), path); }
+		const std::size_t participants = roster.player_settings().size();
+		for (int step = 0; step < file.tape.steps(); ++step)
+		{
+			const std::uint32_t bits = std::bit_cast<std::uint32_t>(file.tape.dt(step));
+			if (bits != file.dt_bits)
+			{
+				fail(path, "step " + std::to_string(step) + " was taken at dt " + hex32(bits) +
+					", not " + hex32(file.dt_bits));
+			}
+			if (file.tape.seats(step).size() != participants)
+			{
+				fail(path, "step " + std::to_string(step) + " has " +
+					std::to_string(file.tape.seats(step).size()) + " seats, not the roster's " +
+					std::to_string(participants));
+			}
+		}
+
+
+		out << "  \"settings\": {\n";
+		out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
+		out << "    \"best_of\": " << roster.best_of() << ",\n";
+		if (roster.duration())
+		{
+			out << "    \"duration\": " << std::setprecision(std::numeric_limits<float>::max_digits10)
+				<< *roster.duration() << ",\n";
+		}
+		out << "    \"layout\": " << static_cast<int>(roster.screen_layout()) << ",\n";
+		out << "    \"seats\": [\n";
+		const std::vector<SeatSetup> seats = roster.player_settings();
+		for (std::size_t i = 0; i < seats.size(); ++i)
+		{
+			out << "      { \"slot\": " << seats[i].num << ", \"team\": " <<
+				quoted(seats[i].team == PlayerTeam::a ? "a" : seats[i].team == PlayerTeam::b ? "b" : "none") <<
+				", \"weapon\": " << quoted(MatchPlanner::weapon_name(seats[i].weapon)) <<
+				", \"controller\": " << quoted(seats[i].controller == PlayerController::bot ? "bot" : "human") <<
+				", \"difficulty\": " << quoted(difficulty_name(seats[i].controller == PlayerController::bot ?
+					seats[i].difficulty : BotDifficulty::normal, path)) <<
+				(seats[i].handicap != 0 ? ", \"handicap\": " + std::to_string(seats[i].handicap) : std::string()) << " }" <<
+				(i + 1 < seats.size() ? ",\n" : "\n");
+		}
+		out << "    ]\n  },\n";
+
+		out << "  \"updates\": " << file.updates << ",\n";
+		const std::vector<RoundTape::Gap>& gaps = file.tape.gaps();
+		if (file.gap_updates.size() != gaps.size())
+		{
+			fail(path, std::to_string(gaps.size()) + " gaps but " + std::to_string(file.gap_updates.size()) +
+				" gap updates");
+		}
+		for (std::size_t i = 0; i < gaps.size(); ++i)
+		{
+			if (file.gap_updates[i] < (i == 0 ? 0 : file.gap_updates[i - 1]))
+			{
+				fail(path, "gap " + std::to_string(i + 1) + "'s update " + std::to_string(file.gap_updates[i]) +
+					" is negative or before the gap ahead of it");
+			}
+		}
+		out << "  \"gaps\": [";
+		for (std::size_t i = 0; i < gaps.size(); ++i)
+		{
+			out << (i == 0 ? "\n" : ",\n") << "    { \"step\": " << gaps[i].step <<
+				", \"update\": " << file.gap_updates[i];
+			if (gaps[i].resume)
+			{
+				out << ", \"resume\": [";
+				for (std::size_t seat = 0; seat < gaps[i].seats.size(); ++seat)
+				{
+					out << (seat == 0 ? " " : ", ") << quoted(replay_codec::encode(gaps[i].seats[seat]));
+				}
+				out << (gaps[i].seats.empty() ? "]" : " ]");
+			}
+			out << " }";
+		}
+		out << (gaps.empty() ? "],\n" : "\n  ],\n");
+
+		const std::vector<std::vector<PlayerInputData>> inputs = file.inputs_by_seat();
+		out << "  \"inputs\": [\n";
+		for (std::size_t seat = 0; seat < inputs.size(); ++seat)
+		{
+			const std::vector<std::string> entries = replay_codec::run_length(inputs[seat]);
+			out << "    [";
+			for (std::size_t i = 0; i < entries.size(); ++i)
+			{
+				out << (i == 0 ? "\n      " : ",\n      ") << quoted(entries[i]);
+			}
+			out << (entries.empty() ? "]" : "\n    ]") << (seat + 1 < inputs.size() ? ",\n" : "\n");
+		}
+		out << "  ],\n";
+
+		out << "  \"checkpoints\": [";
+		for (std::size_t i = 0; i < file.checkpoints.size(); ++i)
+		{
+			out << (i == 0 ? "\n" : ",\n") << "    { \"update\": " << file.checkpoints[i].update <<
+				", \"hash\": " << quoted(hex64(file.checkpoints[i].hash)) << " }";
+		}
+		out << (file.checkpoints.empty() ? "],\n" : "\n  ],\n");
+
+		const MatchFingerprint& print = file.final_print;
+		out << "  \"final\": {\n";
+		out << "    \"updates\": " << print.updates << ",\n";
+		out << "    \"hash\": " << quoted(hex64(print.hash)) << ",\n";
+		out << "    \"paint\": " << quoted(print.paint_text()) << ",\n";
+		out << "    \"team_a\": " << quoted(hex32(print.team_a)) << ",\n";
+		out << "    \"team_b\": " << quoted(hex32(print.team_b)) << ",\n";
+		out << "    \"total\": " << quoted(hex32(print.total)) << ",\n";
+		out << "    \"level_state\": " << print.level_state << ",\n";
+		out << "    \"seats\": [";
+		for (std::size_t i = 0; i < print.seats.size(); ++i)
+		{
+			const MatchFingerprint::Seat& seat = print.seats[i];
+			out << (i == 0 ? "\n" : ",\n") << "      { \"x\": " << quoted(hex32(seat.x)) <<
+				", \"y\": " << quoted(hex32(seat.y)) << ", \"vx\": " << quoted(hex32(seat.vx)) <<
+				", \"vy\": " << quoted(hex32(seat.vy)) << ", \"health\": " << quoted(hex32(seat.health)) <<
+				", \"ammo\": " << quoted(hex32(seat.ammo)) << ", \"respawn\": " <<
+				quoted(hex32(seat.respawn)) << ", \"move_state\": " << seat.move_state <<
+				", \"alive\": " << seat.alive;
+            if (seat.paint_underfoot)
+            {
+                out << ", \"paint_underfoot\": { \"support_team\": " << seat.support_paint_team <<
+                    ", \"step_team\": " << seat.step_paint_team << " }";
+            }
+            out << " }";
+		}
+        if (print.horizontal_motion)
+        {
+            out << (print.seats.empty() ? "]" : "\n    ]");
+            write_motion(out, *print.horizontal_motion);
+            out << "\n";
+        }
+        else
+        {
+		out << (print.seats.empty() ? "]\n" : "\n    ]\n");
+        }
+		out << "  }";
+	}
+
+	// One round's seed, stage fingerprint and settings to final, from the
+	// file's top level or from one of its later rounds (DBG#2). `file` has the
+	// header (dt) already.
+	void read_round(const labrador::JsonValue& root, ReplayFile& file, bool god, bool infinite_ammo,
+		const std::filesystem::path& path)
+	{
+		if (!root.has("seed"))
+		{
+			fail(path, "'seed' is missing");
+		}
+		{
+			unsigned int seed = 0;
+			const std::string text = root.string("seed");
+			const auto result = std::from_chars(text.data(), text.data() + text.size(), seed);
+			if (result.ec != std::errc() || result.ptr != text.data() + text.size())
+			{
+				fail(path, "'seed' is not a number");
+			}
+			file.seed = seed;
+		}
+		if (root.has("stage_hash"))
+		{
+			std::uint64_t hash = 0;
+			if (!parse_hex(root.string("stage_hash"), hash))
+			{
+				fail(path, "'stage_hash' is not hex");
+			}
+			file.stage_hash = hash;
+		}
+		// Controller kind is explicit: an unclaimed human or Debug dummy (-1)
+		// must never become a bot.
+		const labrador::JsonValue setup = root.object("settings");
+		const labrador::JsonValue seats = setup.array("seats");
+		const int count = static_cast<int>(seats.size());
+		if (count < 1 || count > 4)
+		{
+			fail(path, "it has " + std::to_string(count) + " seats; 1-4 expected");
+		}
+		MatchSetup rebuilt;
+		rebuilt.set_player_count(count);
+		std::vector<int> slots;
+		for (int seat = 0; seat < count; ++seat)
+		{
+			const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
+			const int slot = entry.integer("slot");
+			slots.push_back(slot);
+			const std::string controller = entry.identifier("controller");
+			const BotDifficulty difficulty = read_difficulty(entry, path);
+			if (controller == "bot")
+			{
+				if (seat == 0) { fail(path, "seat 1 must be human"); }
+				if (slot != -1) { fail(path, "a bot seat cannot have a device"); }
+				rebuilt.set_player_bot(seat, difficulty);
+			}
+			else if (controller != "human") { fail(path, "controller must be human or bot"); }
+			else if (difficulty != BotDifficulty::normal)
+			{ fail(path, "a human seat's difficulty must be normal"); }
+			if (slot < -1 || slot >= input_slots::count) { fail(path, "device slot is out of range"); }
+		}
+		if (slots.front() < 0)
+		{
+			fail(path, "seat 1 has no device");
+		}
+		rebuilt.begin_input_claims(slots.front());
+		// Claim through the public roster operations without compressing a sparse
+		// human gap. Temporary unused device claims are released after later humans
+		// have reached their original seats; bots are skipped by claim_input_slot.
+		std::array<bool, input_slots::count> occupied{};
+		for (const int slot : slots)
+		{
+			if (slot >= 0) { occupied[static_cast<std::size_t>(slot)] = true; }
+		}
+		std::vector<int> temporary_claims;
+		for (int seat = 1; seat < count; ++seat)
+		{
+			if (rebuilt.player_settings()[static_cast<std::size_t>(seat)].controller == PlayerController::bot)
+			{ continue; }
+			int slot = slots[static_cast<std::size_t>(seat)];
+			if (slot < 0)
+			{
+				const auto unused = std::find(occupied.begin(), occupied.end(), false);
+				if (unused == occupied.end()) { fail(path, "no temporary slot available for a human gap"); }
+				slot = static_cast<int>(unused - occupied.begin());
+				occupied[static_cast<std::size_t>(slot)] = true;
+				temporary_claims.push_back(slot);
+			}
+			if (!rebuilt.claim_input_slot(slot))
+			{
+				fail(path, "seat " + std::to_string(seat + 1) + "'s slot cannot be claimed");
+			}
+		}
+		for (const int slot : temporary_claims) { rebuilt.release_input_slot(slot); }
+		const std::vector<SeatSetup> claimed = rebuilt.player_settings();
+		for (int seat = 0; seat < count; ++seat)
+		{
+			if (claimed[static_cast<std::size_t>(seat)].num != slots[static_cast<std::size_t>(seat)])
+			{
+				fail(path, "the roster's slots cannot be rebuilt in seat order");
+			}
+			const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
+			const std::string team = entry.string("team");
+			rebuilt.set_player_team(seat, team == "a" ? PlayerTeam::a :
+				team == "b" ? PlayerTeam::b : PlayerTeam::none);
+			WeaponType weapon = WeaponType::sprayer;
+			if (!MatchPlanner::weapon_from_name(entry.string("weapon"), weapon) ||
+				weapon == WeaponType::random_primary)
+			{
+				fail(path, "seat " + std::to_string(seat + 1) + " has an unknown weapon");
+			}
+			rebuilt.set_player_weapon(seat, weapon);
+			// Absent is none.
+			if (entry.has("handicap"))
+			{
+				const int handicap = entry.integer("handicap");
+				if (!handicaps::valid(handicap)) { fail(path, "seat " + std::to_string(seat + 1) + " has an unknown handicap"); }
+				rebuilt.set_player_handicap(seat, handicap);
+			}
+		}
+		rebuilt.set_stage(setup.string("stage"));
+		rebuilt.set_best_of(setup.integer("best_of"));
+		if (setup.has("duration")) { rebuilt.set_duration(setup.number("duration")); }
+		// Bots remain participants but have no split-screen pane.
+		rebuilt.set_screen_layout(static_cast<labrador::ScreenLayout>(setup.integer("layout")));
+		validate_roster(rebuilt, path);
+
+		file.updates = root.integer("updates");
+
+		const std::size_t participants = rebuilt.player_settings().size();
+		const labrador::JsonValue inputs = root.array("inputs");
+		if (inputs.size() != participants)
+		{
+			fail(path, "'inputs' has " + std::to_string(inputs.size()) + " seats, not the roster's " +
+				std::to_string(participants));
+		}
+		std::vector<std::vector<PlayerInputData>> by_seat;
+		for (std::size_t seat = 0; seat < inputs.size(); ++seat)
+		{
+			const labrador::JsonValue entries = inputs.at(seat);
+			std::vector<std::string> texts;
+			for (std::size_t i = 0; i < entries.size(); ++i)
+			{
+				texts.push_back(entries.at(i).as_string());
+			}
+			try
+			{
+				by_seat.push_back(replay_codec::expand(texts));
+			}
+			catch (const std::exception& e)
+			{
+				fail(path, "seat " + std::to_string(seat + 1) + ": " + e.what());
+			}
+			if (by_seat.back().size() != by_seat.front().size())
+			{
+				fail(path, "seat " + std::to_string(seat + 1) + " has " + std::to_string(by_seat.back().size()) +
+					" steps, seat 1 " + std::to_string(by_seat.front().size()));
+			}
+		}
+		const int steps = static_cast<int>(by_seat.front().size());
+
+		// The tape, rebuilt as it was recorded: each gap before the step it
+		// preceded, in order.
+		file.tape.start(file.seed, rebuilt);
+		file.tape.set_cheats(god, infinite_ammo);
+		const float dt = std::bit_cast<float>(file.dt_bits);
+		const labrador::JsonValue gaps = root.array("gaps");
+		std::size_t gap = 0;
+		int previous = 0;
+		for (int step = 0; step <= steps; ++step)
+		{
+			for (; gap < gaps.size(); ++gap)
+			{
+				const labrador::JsonValue entry = gaps.at(gap);
+				const int at = entry.integer("step");
+				if (at < previous || at > steps)
+				{
+					fail(path, "gap " + std::to_string(gap + 1) + " is at step " + std::to_string(at) +
+						", out of order or past the last step");
+				}
+				previous = at;
+				if (at != step) { break; }
+				const int update = entry.integer("update");
+				if (update < (file.gap_updates.empty() ? 0 : file.gap_updates.back()))
+				{
+					fail(path, "gap " + std::to_string(gap + 1) + " is at update " + std::to_string(update) +
+						", negative or before the gap ahead of it");
+				}
+				file.gap_updates.push_back(update);
+				if (!entry.has("resume"))
+				{
+					file.tape.record_suspend();
+					continue;
+				}
+				const labrador::JsonValue resume = entry.array("resume");
+				if (resume.size() != participants)
+				{
+					fail(path, "gap " + std::to_string(gap + 1) + " resumes " + std::to_string(resume.size()) +
+						" seats, not the roster's " + std::to_string(participants));
+				}
+				std::vector<PlayerInputData> resumed(participants);
+				for (std::size_t seat = 0; seat < participants; ++seat)
+				{
+					const std::string text = resume.at(seat).as_string();
+					if (!replay_codec::decode(text, resumed[seat]))
+					{
+						fail(path, "gap " + std::to_string(gap + 1) + " holds '" + text + "', not an input");
+					}
+				}
+				file.tape.record_resume(resumed);
+			}
+			if (step == steps) { break; }
+			std::vector<PlayerInputData> row(participants);
+			for (std::size_t seat = 0; seat < participants; ++seat)
+			{
+				row[seat] = by_seat[seat][static_cast<std::size_t>(step)];
+			}
+			file.tape.record_step(row, dt);
+		}
+
+		const labrador::JsonValue checkpoints = root.array("checkpoints");
+		for (std::size_t i = 0; i < checkpoints.size(); ++i)
+		{
+			const labrador::JsonValue entry = checkpoints.at(i);
+			ReplayFile::Checkpoint checkpoint;
+			checkpoint.update = entry.integer("update");
+			if (!parse_hex(entry.string("hash"), checkpoint.hash))
+			{
+				fail(path, "a checkpoint hash is not hex");
+			}
+			file.checkpoints.push_back(checkpoint);
+		}
+
+		const labrador::JsonValue last = root.object("final");
+		MatchFingerprint& print = file.final_print;
+		print.updates = last.integer("updates");
+		if (!parse_hex(last.string("hash"), print.hash))
+		{
+			fail(path, "the final hash is not hex");
+		}
+		print.team_a = hex_field(last, "team_a", path);
+		print.team_b = hex_field(last, "team_b", path);
+		print.total = hex_field(last, "total", path);
+		print.level_state = last.integer("level_state");
+		const labrador::JsonValue final_seats = last.array("seats");
+		for (std::size_t i = 0; i < final_seats.size(); ++i)
+		{
+			const labrador::JsonValue entry = final_seats.at(i);
+			MatchFingerprint::Seat seat;
+			seat.x = hex_field(entry, "x", path);
+			seat.y = hex_field(entry, "y", path);
+			seat.vx = hex_field(entry, "vx", path);
+			seat.vy = hex_field(entry, "vy", path);
+			seat.health = hex_field(entry, "health", path);
+			seat.ammo = hex_field(entry, "ammo", path);
+			seat.respawn = hex_field(entry, "respawn", path);
+			seat.move_state = entry.integer("move_state");
+			seat.alive = entry.integer("alive");
+            if (entry.has("paint_underfoot"))
+            {
+                const labrador::JsonValue effect = entry.object("paint_underfoot");
+                seat.paint_underfoot = true;
+                seat.support_paint_team = effect.integer("support_team");
+                seat.step_paint_team = effect.integer("step_team");
+                if (seat.support_paint_team < 0 || seat.support_paint_team > 2 ||
+                    seat.step_paint_team < 0 || seat.step_paint_team > 2)
+                { fail(path, "paint_underfoot teams must be a, b or neutral enum values"); }
+            }
+			print.seats.push_back(seat);
+		}
+        if (last.has("horizontal_motion"))
+        { print.horizontal_motion = read_motion(last.object("horizontal_motion"),
+            seats.size(), print.seats.size(), path); }
+
+	}
+
 }
 
 // ---------------------------------------------------------------------------
@@ -483,6 +915,33 @@ std::string replay_name(std::string_view requested)
 
 // ---------------------------------------------------------------------------
 
+ReplayFile ReplayFile::round(int index) const
+{
+	if (index < 0 || index >= this->round_count())
+	{
+		throw std::out_of_range("replay round " + std::to_string(index) + " of " +
+			std::to_string(this->round_count()));
+	}
+	if (index == 0)
+	{
+		ReplayFile first = *this;
+		first.later_rounds.clear();
+		return first;
+	}
+	return this->later_rounds[static_cast<std::size_t>(index - 1)];
+}
+
+void ReplayFile::append_round(ReplayFile next)
+{
+	std::vector<ReplayFile> after = std::move(next.later_rounds);
+	next.later_rounds.clear();
+	this->later_rounds.push_back(std::move(next));
+	for (ReplayFile& later : after)
+	{
+		this->later_rounds.push_back(std::move(later));
+	}
+}
+
 std::vector<std::vector<PlayerInputData>> ReplayFile::inputs_by_seat() const
 {
 	std::vector<std::vector<PlayerInputData>> by_seat(this->tape.settings().player_settings().size());
@@ -510,28 +969,6 @@ bool ReplayFile::suspended_at(int update) const
 
 void ReplayFile::write(const std::filesystem::path& path) const
 {
-	const MatchSetup& roster = this->tape.settings();
-	validate_roster(roster, path);
-    if (this->final_print.horizontal_motion)
-    { validate_motion(*this->final_print.horizontal_motion, roster.player_settings().size(),
-        this->final_print.seats.size(), path); }
-	const std::size_t participants = roster.player_settings().size();
-	for (int step = 0; step < this->tape.steps(); ++step)
-	{
-		const std::uint32_t bits = std::bit_cast<std::uint32_t>(this->tape.dt(step));
-		if (bits != this->dt_bits)
-		{
-			fail(path, "step " + std::to_string(step) + " was taken at dt " + hex32(bits) +
-				", not " + hex32(this->dt_bits));
-		}
-		if (this->tape.seats(step).size() != participants)
-		{
-			fail(path, "step " + std::to_string(step) + " has " +
-				std::to_string(this->tape.seats(step).size()) + " seats, not the roster's " +
-				std::to_string(participants));
-		}
-	}
-
 	std::ostringstream out;
 	out << "{\n";
 	out << "  \"version\": " << format_version << ",\n";
@@ -553,122 +990,39 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	out << "  \"cheats\": { \"god\": " << (this->tape.damage_immune() ? "true" : "false") <<
 		", \"infinite_ammo\": " << (this->tape.infinite_ammo() ? "true" : "false") << " },\n";
 
-	out << "  \"settings\": {\n";
-	out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
-	out << "    \"best_of\": " << roster.best_of() << ",\n";
-	if (roster.duration())
+	write_round(out, *this, path);
+	if (this->later_rounds.empty())
 	{
-		out << "    \"duration\": " << std::setprecision(std::numeric_limits<float>::max_digits10)
-			<< *roster.duration() << ",\n";
+		out << "\n}\n";
 	}
-	out << "    \"layout\": " << static_cast<int>(roster.screen_layout()) << ",\n";
-	out << "    \"seats\": [\n";
-	const std::vector<SeatSetup> seats = roster.player_settings();
-	for (std::size_t i = 0; i < seats.size(); ++i)
+	else
 	{
-		out << "      { \"slot\": " << seats[i].num << ", \"team\": " <<
-			quoted(seats[i].team == PlayerTeam::a ? "a" : seats[i].team == PlayerTeam::b ? "b" : "none") <<
-			", \"weapon\": " << quoted(MatchPlanner::weapon_name(seats[i].weapon)) <<
-			", \"controller\": " << quoted(seats[i].controller == PlayerController::bot ? "bot" : "human") <<
-			", \"difficulty\": " << quoted(difficulty_name(seats[i].controller == PlayerController::bot ?
-				seats[i].difficulty : BotDifficulty::normal, path)) <<
-			(seats[i].handicap != 0 ? ", \"handicap\": " + std::to_string(seats[i].handicap) : std::string()) << " }" <<
-			(i + 1 < seats.size() ? ",\n" : "\n");
-	}
-	out << "    ]\n  },\n";
-
-	out << "  \"updates\": " << this->updates << ",\n";
-	const std::vector<RoundTape::Gap>& gaps = this->tape.gaps();
-	if (this->gap_updates.size() != gaps.size())
-	{
-		fail(path, std::to_string(gaps.size()) + " gaps but " + std::to_string(this->gap_updates.size()) +
-			" gap updates");
-	}
-	for (std::size_t i = 0; i < gaps.size(); ++i)
-	{
-		if (this->gap_updates[i] < (i == 0 ? 0 : this->gap_updates[i - 1]))
+		// Each later round shares the header: the build, step, content hashes
+		// and cheats are the recording's, which a round boundary cannot change.
+		out << ",\n  \"rounds\": [\n";
+		for (std::size_t i = 0; i < this->later_rounds.size(); ++i)
 		{
-			fail(path, "gap " + std::to_string(i + 1) + "'s update " + std::to_string(this->gap_updates[i]) +
-				" is negative or before the gap ahead of it");
-		}
-	}
-	out << "  \"gaps\": [";
-	for (std::size_t i = 0; i < gaps.size(); ++i)
-	{
-		out << (i == 0 ? "\n" : ",\n") << "    { \"step\": " << gaps[i].step <<
-			", \"update\": " << this->gap_updates[i];
-		if (gaps[i].resume)
-		{
-			out << ", \"resume\": [";
-			for (std::size_t seat = 0; seat < gaps[i].seats.size(); ++seat)
+			const ReplayFile& later = this->later_rounds[i];
+			const std::string which = "round " + std::to_string(i + 2) + " ";
+			if (!later.later_rounds.empty()) { fail(path, which + "holds rounds of its own"); }
+			if (later.dt_bits != this->dt_bits) { fail(path, which + "was stepped at another dt"); }
+			if (later.tape.damage_immune() != this->tape.damage_immune() ||
+				later.tape.infinite_ammo() != this->tape.infinite_ammo())
 			{
-				out << (seat == 0 ? " " : ", ") << quoted(replay_codec::encode(gaps[i].seats[seat]));
+				fail(path, which + "was played under other cheats");
 			}
-			out << (gaps[i].seats.empty() ? "]" : " ]");
+			std::ostringstream body;
+			body << "  \"seed\": " << quoted(std::to_string(later.seed)) << ",\n";
+			if (later.stage_hash)
+			{
+				body << "  \"stage_hash\": " << quoted(hex64(*later.stage_hash)) << ",\n";
+			}
+			write_round(body, later, path);
+			out << "    {\n" << indented(body.str(), "    ") << "\n    }" <<
+				(i + 1 < this->later_rounds.size() ? ",\n" : "\n");
 		}
-		out << " }";
+		out << "  ]\n}\n";
 	}
-	out << (gaps.empty() ? "],\n" : "\n  ],\n");
-
-	const std::vector<std::vector<PlayerInputData>> inputs = this->inputs_by_seat();
-	out << "  \"inputs\": [\n";
-	for (std::size_t seat = 0; seat < inputs.size(); ++seat)
-	{
-		const std::vector<std::string> entries = replay_codec::run_length(inputs[seat]);
-		out << "    [";
-		for (std::size_t i = 0; i < entries.size(); ++i)
-		{
-			out << (i == 0 ? "\n      " : ",\n      ") << quoted(entries[i]);
-		}
-		out << (entries.empty() ? "]" : "\n    ]") << (seat + 1 < inputs.size() ? ",\n" : "\n");
-	}
-	out << "  ],\n";
-
-	out << "  \"checkpoints\": [";
-	for (std::size_t i = 0; i < this->checkpoints.size(); ++i)
-	{
-		out << (i == 0 ? "\n" : ",\n") << "    { \"update\": " << this->checkpoints[i].update <<
-			", \"hash\": " << quoted(hex64(this->checkpoints[i].hash)) << " }";
-	}
-	out << (this->checkpoints.empty() ? "],\n" : "\n  ],\n");
-
-	const MatchFingerprint& print = this->final_print;
-	out << "  \"final\": {\n";
-	out << "    \"updates\": " << print.updates << ",\n";
-	out << "    \"hash\": " << quoted(hex64(print.hash)) << ",\n";
-	out << "    \"paint\": " << quoted(print.paint_text()) << ",\n";
-	out << "    \"team_a\": " << quoted(hex32(print.team_a)) << ",\n";
-	out << "    \"team_b\": " << quoted(hex32(print.team_b)) << ",\n";
-	out << "    \"total\": " << quoted(hex32(print.total)) << ",\n";
-	out << "    \"level_state\": " << print.level_state << ",\n";
-	out << "    \"seats\": [";
-	for (std::size_t i = 0; i < print.seats.size(); ++i)
-	{
-		const MatchFingerprint::Seat& seat = print.seats[i];
-		out << (i == 0 ? "\n" : ",\n") << "      { \"x\": " << quoted(hex32(seat.x)) <<
-			", \"y\": " << quoted(hex32(seat.y)) << ", \"vx\": " << quoted(hex32(seat.vx)) <<
-			", \"vy\": " << quoted(hex32(seat.vy)) << ", \"health\": " << quoted(hex32(seat.health)) <<
-			", \"ammo\": " << quoted(hex32(seat.ammo)) << ", \"respawn\": " <<
-			quoted(hex32(seat.respawn)) << ", \"move_state\": " << seat.move_state <<
-			", \"alive\": " << seat.alive;
-        if (seat.paint_underfoot)
-        {
-            out << ", \"paint_underfoot\": { \"support_team\": " << seat.support_paint_team <<
-                ", \"step_team\": " << seat.step_paint_team << " }";
-        }
-        out << " }";
-	}
-    if (print.horizontal_motion)
-    {
-        out << (print.seats.empty() ? "]" : "\n    ]");
-        write_motion(out, *print.horizontal_motion);
-        out << "\n";
-    }
-    else
-    {
-	out << (print.seats.empty() ? "]\n" : "\n    ]\n");
-    }
-	out << "  }\n}\n";
 
 	std::error_code error;
 	std::filesystem::create_directories(path.parent_path(), error);
@@ -697,33 +1051,10 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	ReplayFile file;
 	file.build = root.string("build");
 	file.dt_bits = hex_field(root, "dt", path);
-	if (!root.has("seed"))
-	{
-		fail(path, "'seed' is missing");
-	}
-	{
-		unsigned int seed = 0;
-		const std::string text = root.string("seed");
-		const auto result = std::from_chars(text.data(), text.data() + text.size(), seed);
-		if (result.ec != std::errc() || result.ptr != text.data() + text.size())
-		{
-			fail(path, "'seed' is not a number");
-		}
-		file.seed = seed;
-	}
 	if (!parse_hex(root.string("tuning_hash"), file.tuning_hash) ||
 		!parse_hex(root.string("presentation_hash"), file.presentation_hash))
 	{
 		fail(path, "a content hash is not hex");
-	}
-	if (root.has("stage_hash"))
-	{
-		std::uint64_t hash = 0;
-		if (!parse_hex(root.string("stage_hash"), hash))
-		{
-			fail(path, "'stage_hash' is not hex");
-		}
-		file.stage_hash = hash;
 	}
 	const labrador::JsonValue diff = root.array("tune_diff");
 	for (std::size_t i = 0; i < diff.size(); ++i)
@@ -734,249 +1065,30 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	const bool god = cheats.boolean("god");
 	const bool infinite_ammo = cheats.boolean("infinite_ammo");
 
-	// Controller kind is explicit: an unclaimed human or Debug dummy (-1)
-	// must never become a bot.
-	const labrador::JsonValue setup = root.object("settings");
-	const labrador::JsonValue seats = setup.array("seats");
-	const int count = static_cast<int>(seats.size());
-	if (count < 1 || count > 4)
+	read_round(root, file, god, infinite_ammo, path);
+	if (root.has("rounds"))
 	{
-		fail(path, "it has " + std::to_string(count) + " seats; 1-4 expected");
-	}
-	MatchSetup rebuilt;
-	rebuilt.set_player_count(count);
-	std::vector<int> slots;
-	for (int seat = 0; seat < count; ++seat)
-	{
-		const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
-		const int slot = entry.integer("slot");
-		slots.push_back(slot);
-		const std::string controller = entry.identifier("controller");
-		const BotDifficulty difficulty = read_difficulty(entry, path);
-		if (controller == "bot")
+		const labrador::JsonValue rounds = root.array("rounds");
+		for (std::size_t i = 0; i < rounds.size(); ++i)
 		{
-			if (seat == 0) { fail(path, "seat 1 must be human"); }
-			if (slot != -1) { fail(path, "a bot seat cannot have a device"); }
-			rebuilt.set_player_bot(seat, difficulty);
-		}
-		else if (controller != "human") { fail(path, "controller must be human or bot"); }
-		else if (difficulty != BotDifficulty::normal)
-		{ fail(path, "a human seat's difficulty must be normal"); }
-		if (slot < -1 || slot >= input_slots::count) { fail(path, "device slot is out of range"); }
-	}
-	if (slots.front() < 0)
-	{
-		fail(path, "seat 1 has no device");
-	}
-	rebuilt.begin_input_claims(slots.front());
-	// Claim through the public roster operations without compressing a sparse
-	// human gap. Temporary unused device claims are released after later humans
-	// have reached their original seats; bots are skipped by claim_input_slot.
-	std::array<bool, input_slots::count> occupied{};
-	for (const int slot : slots)
-	{
-		if (slot >= 0) { occupied[static_cast<std::size_t>(slot)] = true; }
-	}
-	std::vector<int> temporary_claims;
-	for (int seat = 1; seat < count; ++seat)
-	{
-		if (rebuilt.player_settings()[static_cast<std::size_t>(seat)].controller == PlayerController::bot)
-		{ continue; }
-		int slot = slots[static_cast<std::size_t>(seat)];
-		if (slot < 0)
-		{
-			const auto unused = std::find(occupied.begin(), occupied.end(), false);
-			if (unused == occupied.end()) { fail(path, "no temporary slot available for a human gap"); }
-			slot = static_cast<int>(unused - occupied.begin());
-			occupied[static_cast<std::size_t>(slot)] = true;
-			temporary_claims.push_back(slot);
-		}
-		if (!rebuilt.claim_input_slot(slot))
-		{
-			fail(path, "seat " + std::to_string(seat + 1) + "'s slot cannot be claimed");
-		}
-	}
-	for (const int slot : temporary_claims) { rebuilt.release_input_slot(slot); }
-	const std::vector<SeatSetup> claimed = rebuilt.player_settings();
-	for (int seat = 0; seat < count; ++seat)
-	{
-		if (claimed[static_cast<std::size_t>(seat)].num != slots[static_cast<std::size_t>(seat)])
-		{
-			fail(path, "the roster's slots cannot be rebuilt in seat order");
-		}
-		const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
-		const std::string team = entry.string("team");
-		rebuilt.set_player_team(seat, team == "a" ? PlayerTeam::a :
-			team == "b" ? PlayerTeam::b : PlayerTeam::none);
-		WeaponType weapon = WeaponType::sprayer;
-		if (!MatchPlanner::weapon_from_name(entry.string("weapon"), weapon) ||
-			weapon == WeaponType::random_primary)
-		{
-			fail(path, "seat " + std::to_string(seat + 1) + " has an unknown weapon");
-		}
-		rebuilt.set_player_weapon(seat, weapon);
-		// Absent is none.
-		if (entry.has("handicap"))
-		{
-			const int handicap = entry.integer("handicap");
-			if (!handicaps::valid(handicap)) { fail(path, "seat " + std::to_string(seat + 1) + " has an unknown handicap"); }
-			rebuilt.set_player_handicap(seat, handicap);
-		}
-	}
-	rebuilt.set_stage(setup.string("stage"));
-	rebuilt.set_best_of(setup.integer("best_of"));
-	if (setup.has("duration")) { rebuilt.set_duration(setup.number("duration")); }
-	// Bots remain participants but have no split-screen pane.
-	rebuilt.set_screen_layout(static_cast<labrador::ScreenLayout>(setup.integer("layout")));
-	validate_roster(rebuilt, path);
-
-	file.updates = root.integer("updates");
-
-	const std::size_t participants = rebuilt.player_settings().size();
-	const labrador::JsonValue inputs = root.array("inputs");
-	if (inputs.size() != participants)
-	{
-		fail(path, "'inputs' has " + std::to_string(inputs.size()) + " seats, not the roster's " +
-			std::to_string(participants));
-	}
-	std::vector<std::vector<PlayerInputData>> by_seat;
-	for (std::size_t seat = 0; seat < inputs.size(); ++seat)
-	{
-		const labrador::JsonValue entries = inputs.at(seat);
-		std::vector<std::string> texts;
-		for (std::size_t i = 0; i < entries.size(); ++i)
-		{
-			texts.push_back(entries.at(i).as_string());
-		}
-		try
-		{
-			by_seat.push_back(replay_codec::expand(texts));
-		}
-		catch (const std::exception& e)
-		{
-			fail(path, "seat " + std::to_string(seat + 1) + ": " + e.what());
-		}
-		if (by_seat.back().size() != by_seat.front().size())
-		{
-			fail(path, "seat " + std::to_string(seat + 1) + " has " + std::to_string(by_seat.back().size()) +
-				" steps, seat 1 " + std::to_string(by_seat.front().size()));
-		}
-	}
-	const int steps = static_cast<int>(by_seat.front().size());
-
-	// The tape, rebuilt as it was recorded: each gap before the step it
-	// preceded, in order.
-	file.tape.start(file.seed, rebuilt);
-	file.tape.set_cheats(god, infinite_ammo);
-	const float dt = std::bit_cast<float>(file.dt_bits);
-	const labrador::JsonValue gaps = root.array("gaps");
-	std::size_t gap = 0;
-	int previous = 0;
-	for (int step = 0; step <= steps; ++step)
-	{
-		for (; gap < gaps.size(); ++gap)
-		{
-			const labrador::JsonValue entry = gaps.at(gap);
-			const int at = entry.integer("step");
-			if (at < previous || at > steps)
+			// Each later round shares the header: build, step, hashes, cheats.
+			ReplayFile later;
+			later.build = file.build;
+			later.dt_bits = file.dt_bits;
+			later.tuning_hash = file.tuning_hash;
+			later.presentation_hash = file.presentation_hash;
+			later.tune_diff = file.tune_diff;
+			try
 			{
-				fail(path, "gap " + std::to_string(gap + 1) + " is at step " + std::to_string(at) +
-					", out of order or past the last step");
+				read_round(rounds.at(i), later, god, infinite_ammo, path);
 			}
-			previous = at;
-			if (at != step) { break; }
-			const int update = entry.integer("update");
-			if (update < (file.gap_updates.empty() ? 0 : file.gap_updates.back()))
+			catch (const std::exception& e)
 			{
-				fail(path, "gap " + std::to_string(gap + 1) + " is at update " + std::to_string(update) +
-					", negative or before the gap ahead of it");
+				throw std::runtime_error(std::string(e.what()) + " (round " + std::to_string(i + 2) + ")");
 			}
-			file.gap_updates.push_back(update);
-			if (!entry.has("resume"))
-			{
-				file.tape.record_suspend();
-				continue;
-			}
-			const labrador::JsonValue resume = entry.array("resume");
-			if (resume.size() != participants)
-			{
-				fail(path, "gap " + std::to_string(gap + 1) + " resumes " + std::to_string(resume.size()) +
-					" seats, not the roster's " + std::to_string(participants));
-			}
-			std::vector<PlayerInputData> resumed(participants);
-			for (std::size_t seat = 0; seat < participants; ++seat)
-			{
-				const std::string text = resume.at(seat).as_string();
-				if (!replay_codec::decode(text, resumed[seat]))
-				{
-					fail(path, "gap " + std::to_string(gap + 1) + " holds '" + text + "', not an input");
-				}
-			}
-			file.tape.record_resume(resumed);
+			file.later_rounds.push_back(std::move(later));
 		}
-		if (step == steps) { break; }
-		std::vector<PlayerInputData> row(participants);
-		for (std::size_t seat = 0; seat < participants; ++seat)
-		{
-			row[seat] = by_seat[seat][static_cast<std::size_t>(step)];
-		}
-		file.tape.record_step(row, dt);
 	}
-
-	const labrador::JsonValue checkpoints = root.array("checkpoints");
-	for (std::size_t i = 0; i < checkpoints.size(); ++i)
-	{
-		const labrador::JsonValue entry = checkpoints.at(i);
-		Checkpoint checkpoint;
-		checkpoint.update = entry.integer("update");
-		if (!parse_hex(entry.string("hash"), checkpoint.hash))
-		{
-			fail(path, "a checkpoint hash is not hex");
-		}
-		file.checkpoints.push_back(checkpoint);
-	}
-
-	const labrador::JsonValue last = root.object("final");
-	MatchFingerprint& print = file.final_print;
-	print.updates = last.integer("updates");
-	if (!parse_hex(last.string("hash"), print.hash))
-	{
-		fail(path, "the final hash is not hex");
-	}
-	print.team_a = hex_field(last, "team_a", path);
-	print.team_b = hex_field(last, "team_b", path);
-	print.total = hex_field(last, "total", path);
-	print.level_state = last.integer("level_state");
-	const labrador::JsonValue final_seats = last.array("seats");
-	for (std::size_t i = 0; i < final_seats.size(); ++i)
-	{
-		const labrador::JsonValue entry = final_seats.at(i);
-		MatchFingerprint::Seat seat;
-		seat.x = hex_field(entry, "x", path);
-		seat.y = hex_field(entry, "y", path);
-		seat.vx = hex_field(entry, "vx", path);
-		seat.vy = hex_field(entry, "vy", path);
-		seat.health = hex_field(entry, "health", path);
-		seat.ammo = hex_field(entry, "ammo", path);
-		seat.respawn = hex_field(entry, "respawn", path);
-		seat.move_state = entry.integer("move_state");
-		seat.alive = entry.integer("alive");
-        if (entry.has("paint_underfoot"))
-        {
-            const labrador::JsonValue effect = entry.object("paint_underfoot");
-            seat.paint_underfoot = true;
-            seat.support_paint_team = effect.integer("support_team");
-            seat.step_paint_team = effect.integer("step_team");
-            if (seat.support_paint_team < 0 || seat.support_paint_team > 2 ||
-                seat.step_paint_team < 0 || seat.step_paint_team > 2)
-            { fail(path, "paint_underfoot teams must be a, b or neutral enum values"); }
-        }
-		print.seats.push_back(seat);
-	}
-    if (last.has("horizontal_motion"))
-    { print.horizontal_motion = read_motion(last.object("horizontal_motion"),
-        seats.size(), print.seats.size(), path); }
-
 	return file;
 }
 

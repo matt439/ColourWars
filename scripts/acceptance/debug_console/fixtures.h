@@ -484,6 +484,9 @@ namespace debug_console_acceptance
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);
 	void check_roster_replay(const std::filesystem::path& game_directory);
 
+	// series_replay_checks.cpp
+	void check_series_replay(const std::filesystem::path& game_directory);
+
 	// level_checks.cpp
 	void check_opening(const std::filesystem::path& game_directory);
 	void check_station_labels(const std::filesystem::path& game_directory);

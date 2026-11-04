@@ -89,7 +89,16 @@ MatchPlanner::Random DebugDirectorImpl::planner_random()
 
 bool DebugDirectorImpl::replay_finished() const
 {
-	return this->player_ != nullptr && this->player_->finished;
+	// A replay of several rounds has finished when its last one has: until
+	// then the next round is armed.
+	return this->player_ != nullptr && this->player_->finished && this->play_armed_ == nullptr;
+}
+
+std::string DebugDirectorImpl::replay_label(const ReplayPlayer& player) const
+{
+	const int rounds = this->play_file_ != nullptr ? this->play_file_->round_count() : 1;
+	return rounds > 1 ? player.name() + " round " + std::to_string(this->play_round_ + 1) + "/" +
+		std::to_string(rounds) : player.name();
 }
 
 SeatInputFilter* DebugDirectorImpl::seat_filter()
@@ -305,7 +314,7 @@ void DebugDirectorImpl::after_level_update(DebugMatchTarget& match)
 		}
 		else if (match.debug_level_finished())
 		{
-			this->stop_recording("the round ended");
+			this->stop_recording("the round ended", true);
 		}
 	}
 
@@ -326,7 +335,7 @@ void DebugDirectorImpl::after_level_update(DebugMatchTarget& match)
 			if (print.hash != checkpoint.hash && player.diverged_at < 0)
 			{
 				player.diverged_at = this->level_updates_;
-				this->log_.error("replay " + player.name() + ": DIVERGED at update " +
+				this->log_.error("replay " + this->replay_label(player) + ": DIVERGED at update " +
 					std::to_string(this->level_updates_) + " (checkpoint " +
 					std::to_string(player.next_checkpoint + 1) + " of " +
 					std::to_string(file.checkpoints.size()) + "): state hash " + hex64(print.hash) +
@@ -334,9 +343,12 @@ void DebugDirectorImpl::after_level_update(DebugMatchTarget& match)
 			}
 			++player.next_checkpoint;
 		}
-		if (this->level_updates_ >= file.updates)
+		// A round that ends before its recorded last update has diverged; it is
+		// compared there, since the level steps no further.
+		if (this->level_updates_ >= file.updates || match.debug_level_finished())
 		{
 			player.finished = true;
+			const std::string label = this->replay_label(player);
 			const MatchFingerprint print = MatchFingerprint::of(*level, this->level_updates_);
 			const std::string difference = MatchFingerprint::difference(file.final_print, print);
 			const std::string expected = player.unrecorded_suspend >= 0 ?
@@ -345,20 +357,49 @@ void DebugDirectorImpl::after_level_update(DebugMatchTarget& match)
 			if (difference.empty() && player.diverged_at < 0)
 			{
 				player.matched = true;
-				this->log_.info("replay " + player.name() + ": MATCH (" +
+				this->log_.info("replay " + label + ": MATCH (" +
 					std::to_string(this->level_updates_) + " updates, " +
 					std::to_string(file.checkpoints.size()) + " checkpoints, checksum " +
 					hex64(print.hash) + ", paint " + print.paint_text() + ")");
 			}
 			else if (player.diverged_at < 0)
 			{
-				this->log_.error("replay " + player.name() + ": DIVERGED at update " +
+				this->log_.error("replay " + label + ": DIVERGED at update " +
 					std::to_string(this->level_updates_) + " (final state): " + difference + expected);
 			}
 			else
 			{
-				this->log_.error("replay " + player.name() + ": final state differs: " +
+				this->log_.error("replay " + label + ": final state differs: " +
 					(difference.empty() ? std::string("hash only") : difference) + expected);
+			}
+			this->play_rounds_matched_ = this->play_rounds_matched_ && player.matched;
+			const int rounds = this->play_file_ != nullptr ? this->play_file_->round_count() : 1;
+			if (this->play_round_ + 1 < rounds)
+			{
+				// The next round is built from its own seed and settings, as
+				// the End menu built it: a divergence does not carry into it.
+				++this->play_round_;
+				this->play_armed_ = std::make_unique<ReplayPlayer>(player.name(),
+					this->play_file_->round(this->play_round_));
+				const MatchSetup& settings = this->play_armed_->file().tape.settings();
+				this->request_ = MatchRequest();
+				this->request_.exact = settings;
+				this->request_.exact_label = player.name();
+				this->request_.stage = settings.stage();
+				return;
+			}
+			if (rounds > 1)
+			{
+				if (this->play_rounds_matched_)
+				{
+					this->log_.info("replay " + player.name() + ": MATCH in all " +
+						std::to_string(rounds) + " rounds");
+				}
+				else
+				{
+					this->log_.error("replay " + player.name() + ": DIVERGED in at least one of " +
+						std::to_string(rounds) + " rounds");
+				}
 			}
 			// Hold the last frame so it can be looked at (the next play resumes).
 			if (!this->clock_.paused())
@@ -371,10 +412,11 @@ void DebugDirectorImpl::after_level_update(DebugMatchTarget& match)
 	}
 }
 
-void DebugDirectorImpl::stop_recording(const std::string& reason)
+void DebugDirectorImpl::stop_recording(const std::string& reason, bool round_ended)
 {
 	if (this->recorder_ == nullptr)
 	{
+		this->end_record_series(reason);
 		return;
 	}
 	ReplayFile& file = this->recorder_->file();
@@ -388,20 +430,109 @@ void DebugDirectorImpl::stop_recording(const std::string& reason)
 		file.final_print = MatchFingerprint();
 		file.final_print.updates = this->level_updates_;
 	}
-	const std::filesystem::path path = replay_path(this->recorder_->name());
+	const std::string name = this->recorder_->name();
+	const int limit = this->record_series_ != nullptr ? this->record_series_limit_ :
+		this->recorder_->limit();
+	const int updates = (this->record_series_ != nullptr ? this->record_series_updates_ : 0) +
+		file.updates;
+	const std::uint64_t checksum = file.final_print.hash;
+	// A round the End menu carried the recording into joins the rounds saved
+	// before it.
+	ReplayFile saved;
+	if (this->record_series_ != nullptr)
+	{
+		saved = std::move(*this->record_series_);
+		saved.append_round(std::move(file));
+	}
+	else
+	{
+		saved = std::move(file);
+	}
+	this->record_series_.reset();
+	this->recorder_.reset();
+	this->last_print_.reset();
+
+	const int rounds = saved.round_count();
+	const std::filesystem::path path = replay_path(name);
+	bool written = false;
 	try
 	{
-		file.write(path);
+		saved.write(path);
+		written = true;
 		this->log_.info("record: saved " + labrador::path_to_utf8(path) + " (" +
-			std::to_string(file.updates) + " updates, checksum " + hex64(file.final_print.hash) +
-			"; " + reason + ")");
+			std::to_string(updates) + " updates" +
+			(rounds > 1 ? " in " + std::to_string(rounds) + " rounds" : std::string()) +
+			", checksum " + hex64(checksum) + "; " + reason + ")");
 	}
 	catch (const std::exception& e)
 	{
 		this->log_.error(std::string("record: not saved: ") + e.what());
 	}
-	this->recorder_.reset();
-	this->last_print_.reset();
+	if (round_ended && written && (limit <= 0 || updates < limit))
+	{
+		this->record_series_ = std::make_unique<ReplayFile>(std::move(saved));
+		this->record_series_name_ = name;
+		this->record_series_limit_ = limit;
+		this->record_series_updates_ = updates;
+		this->log_.info("record " + name + ": the end menu's next round carries this recording "
+			"on ('record stop' ends it here)");
+	}
+}
+
+void DebugDirectorImpl::end_record_series(const std::string& reason)
+{
+	if (this->record_series_ == nullptr)
+	{
+		return;
+	}
+	const int rounds = this->record_series_->round_count();
+	this->log_.info("record " + this->record_series_name_ + ": ends with " + std::to_string(rounds) +
+		(rounds == 1 ? " round" : " rounds") + ", as saved (" + reason + ")");
+	this->record_series_.reset();
+	this->record_series_name_.clear();
+	this->record_series_limit_ = 0;
+	this->record_series_updates_ = 0;
+}
+
+void DebugDirectorImpl::continue_recording(const DebugMatchView& match)
+{
+	ReplayFile header;
+	try
+	{
+		header = this->replay_header(match);
+	}
+	catch (const std::exception& e)
+	{
+		this->log_.error(std::string("record: ") + e.what());
+		this->end_record_series("this round cannot be recorded");
+		return;
+	}
+	const ReplayFile& saved = *this->record_series_;
+	// One header serves every round: the hashes play checks and the cheats
+	// it re-applies must hold for all of them.
+	std::string changed;
+	if (header.tuning_hash != saved.tuning_hash) { changed = "tuning"; }
+	else if (header.presentation_hash != saved.presentation_hash) { changed = "presentation.json"; }
+	else if (header.tape.damage_immune() != saved.tape.damage_immune() ||
+		header.tape.infinite_ammo() != saved.tape.infinite_ammo()) { changed = "the cheats"; }
+	if (!changed.empty())
+	{
+		this->log_.warning("record " + this->record_series_name_ + ": not carried into this round: " +
+			changed + " changed since its first round");
+		this->end_record_series(changed + " changed");
+		return;
+	}
+	header.build = saved.build;
+	header.dt_bits = saved.dt_bits;
+	header.tune_diff = saved.tune_diff;
+	const int number = saved.round_count() + 1;
+	const int remaining = this->record_series_limit_ > 0 ?
+		this->record_series_limit_ - this->record_series_updates_ : 0;
+	this->recorder_ = std::make_unique<ReplayRecorder>(this->record_series_name_, std::move(header),
+		this->bot_driver_.get(), remaining);
+	this->log_.info("record " + this->record_series_name_ + ": recording round " +
+		std::to_string(number) + (remaining > 0 ? ", " + std::to_string(remaining) + " updates left" :
+			std::string()));
 }
 
 void DebugDirectorImpl::stop_playing(const std::string& reason)
@@ -418,6 +549,11 @@ void DebugDirectorImpl::stop_playing(const std::string& reason)
 	}
 	this->player_.reset();
 	this->restore_cheats_after_play();
+	// A next round already armed keeps the recording it comes from.
+	if (this->play_armed_ == nullptr)
+	{
+		this->play_file_.reset();
+	}
 }
 
 void DebugDirectorImpl::restore_cheats_after_play()
@@ -479,7 +615,7 @@ void DebugDirectorImpl::register_replay_commands()
 		[this](Args args, DebugLog&)
 		{
 			const bool stop = (args.has(0) && args.text(0) == "stop") ||
-				(!args.has(0) && this->recorder_ != nullptr);
+				(!args.has(0) && (this->recorder_ != nullptr || this->record_series_ != nullptr));
 			if (stop)
 			{
 				if (this->record_armed_ && this->recorder_ == nullptr)
@@ -487,6 +623,11 @@ void DebugDirectorImpl::register_replay_commands()
 					const std::string name = this->record_armed_->name;
 					this->record_armed_.reset();
 					return DebugStatus::success("record " + name + ": disarmed");
+				}
+				if (this->recorder_ == nullptr && this->record_series_ != nullptr)
+				{
+					this->end_record_series("record stop");
+					return DebugStatus::success();
 				}
 				if (this->recorder_ == nullptr)
 				{
@@ -542,6 +683,12 @@ void DebugDirectorImpl::register_replay_commands()
 				{
 					return DebugStatus::failure("play stop: no replay is running");
 				}
+				if (this->play_armed_ != nullptr)
+				{
+					// Between rounds: the next round's build goes too.
+					this->play_armed_.reset();
+					this->drop_request("play stop");
+				}
 				this->stop_playing("play stop");
 				this->apply_cheats();
 				if (this->match_ != nullptr)
@@ -579,32 +726,42 @@ void DebugDirectorImpl::register_replay_commands()
 			{
 				return DebugStatus::failure(std::string("play: ") + e.what());
 			}
-			if (!file.stage_hash)
+			// Every round is built from its own stage: each must be loaded and
+			// be the definition it was recorded on.
+			for (int index = 0; index < file.round_count(); ++index)
 			{
-				return DebugStatus::failure("play: legacy recording '" + name +
-					"' has no stage fingerprint for '" + file.tape.settings().stage() +
-					"'; record a new run with this build");
-			}
-			const StageList* stages = this->data_ != nullptr ? this->data_->stages() : nullptr;
-			if (stages == nullptr || std::none_of(stages->begin(), stages->end(),
-				[&file](const Stage& stage) { return stage.name == file.tape.settings().stage(); }))
-			{
-				return DebugStatus::failure("play: the recording's stage '" + file.tape.settings().stage() +
-					"' is not loaded");
-			}
-			const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
-			if (levels == nullptr || !levels->contains(file.tape.settings().stage()))
-			{
-				return DebugStatus::failure("play: the recording's stage '" + file.tape.settings().stage() +
-					"' has no loaded definition; restore the stage definition or record a new run");
-			}
-			const std::uint64_t stage_hash = levels->get(file.tape.settings().stage())->semantic_hash();
-			if (*file.stage_hash != stage_hash)
-			{
-				return DebugStatus::failure("play: stage '" + file.tape.settings().stage() +
-					"' differs from the recording (recorded " + hex64(*file.stage_hash) +
-					", loaded " + hex64(stage_hash) +
-					"); restore the recorded stage definition or record a new run");
+				const ReplayFile recorded = file.round(index);
+				const std::string which = file.round_count() > 1 ?
+					" (round " + std::to_string(index + 1) + ")" : std::string();
+				const std::string& stage_name = recorded.tape.settings().stage();
+				if (!recorded.stage_hash)
+				{
+					return DebugStatus::failure("play: legacy recording '" + name +
+						"' has no stage fingerprint for '" + stage_name +
+						"'; record a new run with this build" + which);
+				}
+				const StageList* stages = this->data_ != nullptr ? this->data_->stages() : nullptr;
+				if (stages == nullptr || std::none_of(stages->begin(), stages->end(),
+					[&stage_name](const Stage& stage) { return stage.name == stage_name; }))
+				{
+					return DebugStatus::failure("play: the recording's stage '" + stage_name +
+						"' is not loaded" + which);
+				}
+				const auto* levels = this->data_ != nullptr ? this->data_->level_infos() : nullptr;
+				if (levels == nullptr || !levels->contains(stage_name))
+				{
+					return DebugStatus::failure("play: the recording's stage '" + stage_name +
+						"' has no loaded definition; restore the stage definition or record a new run" +
+						which);
+				}
+				const std::uint64_t stage_hash = levels->get(stage_name)->semantic_hash();
+				if (*recorded.stage_hash != stage_hash)
+				{
+					return DebugStatus::failure("play: stage '" + stage_name +
+						"' differs from the recording (recorded " + hex64(*recorded.stage_hash) +
+						", loaded " + hex64(stage_hash) +
+						"); restore the recorded stage definition or record a new run" + which);
+				}
 			}
 			if (this->last_dt_bits_ != 0 && this->last_dt_bits_ != file.dt_bits)
 			{
@@ -639,7 +796,13 @@ void DebugDirectorImpl::register_replay_commands()
 			{
 				log.info("play: recorded with " + line);
 			}
-			this->play_armed_ = std::make_unique<ReplayPlayer>(name, std::move(file));
+			// A recording that crossed round boundaries plays each round in
+			// turn, from the first.
+			this->play_file_ = std::make_unique<ReplayFile>(std::move(file));
+			this->play_round_ = 0;
+			this->play_rounds_matched_ = true;
+			this->play_armed_ = std::make_unique<ReplayPlayer>(name, this->play_file_->round(0));
+			const int rounds = this->play_file_->round_count();
 			const MatchSetup& settings = this->play_armed_->file().tape.settings();
 			this->request_ = MatchRequest();
 			this->request_.exact = settings;
@@ -648,6 +811,7 @@ void DebugDirectorImpl::register_replay_commands()
 			return DebugStatus::success("play " + name + ": " + settings.stage() + ", " +
 				std::to_string(settings.player_count()) + " player(s), " +
 				std::to_string(this->play_armed_->file().updates) + " updates" +
+				(rounds > 1 ? " in round 1 of " + std::to_string(rounds) : std::string()) +
 				(this->match_ != nullptr ? ": rebuilding the match" : ": starting a match"), true);
 		}, replay_traits(DebugMenuTraits::Form::pick));
 

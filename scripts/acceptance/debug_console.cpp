@@ -230,6 +230,7 @@ int main(int argc, char** argv)
 			check_replay_codec();
 			replay_case = check_replay_cpu_match(game_directory);
 			check_roster_replay(game_directory);
+			check_series_replay(game_directory);
 			if (!background_only)
 			{
 				check_opening(game_directory);
