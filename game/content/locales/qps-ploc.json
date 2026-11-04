@@ -1,0 +1,356 @@
+{
+  "_comment": [
+    "The test locale (GAP#L11): pseudo-localisation, never offered to players.",
+    "Run with COLOURWARS_LOCALE=qps-ploc. Each line of copy is wrapped in [ ],",
+    "so a cut-off or unlocalised string shows at a glance; the strings it leaves",
+    "out are ones with no room for two more characters, and fall back to",
+    "presentation.json. docs/localisation.md is the contract."
+  ],
+  "presentation": {
+    "menu_text": {
+      "brand": "[C O L O U R W A R S   /   LOCAL PAINT BATTLES]",
+      "solo_practice_hint": "[Solo practice: choose Single Match]",
+      "practice_tool": "[Tool:  < {tool} >]",
+      "options_palette_timing": "[Palette applies next round or restart.]",
+      "title": {
+        "wordmark": "[COLOUR]\n[WARS]",
+        "subtitle": "[MAKE A MESS. MAKE IT YOURS.]",
+        "start": "[LET'S PLAY]",
+        "no_controller": "[Connect a controller]"
+      },
+      "home_subtitle": "[Paint the arena. Claim the win.]",
+      "display_trial_countdown": "[Reverting in {seconds}s]",
+      "help": {
+        "controls": "[CONTROLLER]\n[Move / drop: left stick]\n[Aim: right stick    Shoot: {pad_shoot}]\n[Jump: {pad_jump} (hold for height)]\n[Pause: {pad_pause}    Debug: Back / View]\n[KEYBOARD + MOUSE]\n[Move: {left} / {right}    Drop: {drop} / Down]\n[Aim: mouse cursor    Shoot: {shoot}]\n[Jump: {jump} (hold for height)]\n[Pause: {pause}    Debug: F1]\n[MENUS]\n[Navigate: stick / D-pad / arrows]\n[Select: A / Enter    Back: B / Esc]\n[AIM / READINESS]\n[Direction only; roller aim is fixed.]\n[Ready: chevron / Cooldown: bars]\n[No paint: cross]\n[Pad sticks: movement / aim deadzones.]\n[REDUCE EFFECTS]\n[Less shake, flashes and idle detail.]",
+        "pad_association": "[Profiles follow Pad 1-4 slots,]\n[not the player number or device.]\n[After reconnecting, check the slot.]\n[Keyboard/mouse is unchanged.]",
+        "aim_cutoff": "[Right stick: radial cutoff]"
+      },
+      "keyboard_jump": {
+        "heading": "[Keyboard Keys]",
+        "move_left": "[Move left]",
+        "move_right": "[Move right]",
+        "jump": "[Jump]",
+        "drop": "[Drop]",
+        "shoot": "[Shoot]",
+        "pause": "[Pause (also)]",
+        "reset": "[Reset all keys]",
+        "help": "[Select a row, then press its new key.]\n[Use one A-Z key or Space;]\n[Shoot may also take a mouse button.]\n[One key does one action;]\n[keys in use are refused.]\n[Esc always pauses and Down always drops.]\n[Apply activates and saves your keys.]\n[Back discards unapplied changes.]\n[Menus and intro skip keep their fixed keys.]",
+        "pending_status": "[Apply to activate these keys.]",
+        "saved_status": "[Keyboard keys applied and saved.]",
+        "capture_wait_neutral": "[Release all keys before choosing.]",
+        "capture_ready": "[Press one key. Esc / pad Back cancels.]",
+        "capture_ready_mouse": "[Press a key or click. Esc / pad Back cancels.]",
+        "capture_release": "[Release {key} to keep this choice.]",
+        "capture_rejected": "[Use one A-Z key or Space. Try again.]",
+        "capture_conflict": "[That key already does another action.]",
+        "capture_cancelled": "[Gesture cancelled; pending key unchanged.]",
+        "debug_collision": "[A chosen key also has a developer bind.]"
+      },
+      "pad_buttons": {
+        "heading": "[Pad Buttons]",
+        "jump": "[Jump]",
+        "jump_alternate": "[Jump (also)]",
+        "shoot": "[Shoot]",
+        "shoot_alternate": "[Shoot (also)]",
+        "pause": "[Pause]",
+        "pause_alternate": "[Pause (also)]",
+        "reset": "[Reset this pad]",
+        "help": "[Choose Jump, Shoot and Pause for this]\n[pad, each with an optional second control.]\n[One control does one action per pad;]\n[controls in use are skipped.]\n[LS / RS mean pressing a stick in.]\n[Apply saves edited pads.]\n[Back discards unapplied changes.]\n[Menus and intro skip keep A / B / Start.]\n[Profiles follow Pad 1-4 slots.]",
+        "pending_status": "[Apply to activate edited pads' buttons.]",
+        "saved_status": "[Edited pads' buttons applied and saved.]",
+        "conflict_status": "[Controls in use on this pad were skipped.]"
+      },
+      "profiles": {
+        "heading": "[Profiles]",
+        "profile": "[Profile]",
+        "none": "[None yet]",
+        "name": "[Name]",
+        "boost": "[Boost]",
+        "worn_by": "[Worn by]",
+        "nobody": "[Nobody]",
+        "new_profile": "[New profile]",
+        "delete_profile": "[Delete profile]",
+        "help": "[A profile carries one person's stick]\n[deadzones, rumble, comfort switches,]\n[pad buttons and Boost from pad to pad.]\n[Wear it on Join Players with X/R,]\n[or choose a pad under Worn by.]\n[While a pad wears a profile, Pad sticks]\n[and Pad buttons edit the profile.]\n[New profile copies the pressing pad.]\n[Wearing lasts until the game closes.]",
+        "idle_status": "[Changes here save straight away.]",
+        "saved_status": "[Profile saved.]",
+        "editing_status": "[Editing the name. A keeps it; B puts the old one back.]",
+        "name_taken_status": "[Another profile has that name.]",
+        "full_status": "[Eight profiles is the most there can be.]",
+        "delete_confirm_status": "[Press A again to delete this profile.]",
+        "deleted_status": "[Profile deleted.]"
+      },
+      "status": {
+        "options_pending": "[Apply to save changes.]",
+        "options_saved": "[Settings applied and saved.]",
+        "options_save_failed": "[Settings active for this run. Could not save for next time.]",
+        "controls_pending": "[Apply to save changes for all players.]",
+        "controls_saved": "[Applied and saved for all players.]",
+        "active_save_failed": "[Active for this run. Could not save.]",
+        "sticks_pending": "[Apply to save pad settings.]",
+        "sticks_saved": "[Pad settings applied and saved.]",
+        "options_reverted": "[Display settings reverted.]",
+        "options_display_failed": "[Could not change display settings. Previous settings restored.]",
+        "options_rollback_failed": "[Could not restore display settings. Try Apply again.]"
+      },
+      "values": {
+        "on": "[On]",
+        "off": "[Off]",
+        "random": "[Random]",
+        "percentage": "[{value}%]",
+        "duration_minutes": "[{value} min]",
+        "duration_default": "[Default ({value})]",
+        "resolution": "[{width}x{height}]",
+        "shared": "[Shared ({value})]",
+        "series_stage_same": "[Same stage]",
+        "series_stage_rotate": "[Rotate]",
+        "series_stage_losers_pick": "[Loser's pick]"
+      },
+      "confirmations": {
+        "restart": "[Are you sure you want to restart?]",
+        "quit": "[Are you sure you want to quit?]",
+        "exit": "[Exit ColourWars?]",
+        "display": "[Keep these display settings?]"
+      },
+      "end": {
+        "match_complete": "[Match Complete]",
+        "round_complete": "[Round Complete]",
+        "series_complete": "[Series Complete]",
+        "rematch": "[Rematch]",
+        "play_series_again": "[Play Series Again]",
+        "replay_draw": "[Replay Draw]",
+        "next_round": "[Next Round]"
+      },
+      "results": {
+        "single_match_heading": "[Results]",
+        "proceed": "[Press A/Enter to proceed]",
+        "contribution_heading": "[Surface held (% of arena)]",
+        "series_team_a_wins": "[Team A wins the series!]",
+        "series_team_b_wins": "[Team B wins the series!]",
+        "draw_no_win": "[Draw - no win awarded]",
+        "series_continues": "[Series continues]",
+        "series_score": "[Wins: A {team_a_wins} - B {team_b_wins}  |  First to {target}]",
+        "round_heading": "[Round {round}]",
+        "competitive_team_a_wins": "[Team A Wins!]",
+        "competitive_team_b_wins": "[Team B Wins!]",
+        "competitive_draw": "[Draw!]",
+        "contribution_team_a": "[ | Team A | ]",
+        "contribution_team_b": "[ | Team B | ]",
+        "award_paint_laid": "[Most paint laid]",
+        "award_recaptured": "[Most retaken]",
+        "award_airtime": "[Best airtime]",
+        "award_splats": "[Most splats]",
+        "solo_coverage": "[{percentage} Painted]",
+        "team_a_percentage": "[A {percentage}]",
+        "team_b_percentage": "[B {percentage}]"
+      },
+      "stage_scan": {
+        "heading": "[User-stage scan]",
+        "status": "[User-stage scan: {count} issue(s).]",
+        "browse_prompt": "[Left/Right Arena   Down Scan details   A/Enter Lock   B/Esc Back]",
+        "details_prompt": "[Left/Right Issue   Up/Down Page   A/Enter or B/Esc Back]",
+        "counter": "[Issue {file} of {files}   Page {page} of {pages}]",
+        "no_refusals": "[No user-stage issues were found.]",
+        "unicode_hint": "[Other characters use \\uXXXX; invalid UTF-8 uses \\xXX.]"
+      },
+      "stage": {
+        "browse_status": "[FIND YOUR ARENA]",
+        "locked_status": "[ARENA LOCKED]",
+        "briefing_label": "[MATCH SETUP]",
+        "goal": "[PAINT TO WIN]",
+        "solo_objective": "[Make the arena your canvas.]\n[Try weapons. Cover more ground.]",
+        "versus_objective": "[Cover the arena in your colour.]\n[Most painted surface wins.]",
+        "random_navigation": "[<   SURPRISE ME   >]",
+        "locked_hint": "[Confirm again to start.]\n[Back to change your choice.]",
+        "browse_hint": "[Left/Right to browse.]\n[Confirm to lock your choice.]",
+        "user_hint": "[Built by you.]\n[Confirm to lock your choice.]",
+        "solo_mode": "[SOLO PRACTICE]",
+        "single_match_mode": "[SINGLE MATCH]",
+        "best_of_mode": "[BEST OF {best_of}]",
+        "solo_roster": "[{players} PLAYER]",
+        "versus_roster": "[{players} PLAYERS / 2 TEAMS]",
+        "numbered_navigation": "[<   ARENA {index} / {total}   >]",
+        "random_hint": "[Random: {count} available arenas.]\n[Confirm to lock your choice.]",
+        "team_a_picks": "[Team A picks the arena]",
+        "team_b_picks": "[Team B picks the arena]"
+      },
+      "records": {
+        "new_best": "[NEW BEST]",
+        "stage_best": "[STAGE BEST]",
+        "best_win": "[BEST WIN]",
+        "best_coverage": "[BEST COVER]",
+        "played": "[PLAYED]"
+      },
+      "labels": {
+        "pad": "[Pad {pad}]",
+        "waiting": "[Waiting to join]",
+        "bot": "[Bot ({difficulty})]",
+        "bot_easy": "[Easy]",
+        "bot_normal": "[Normal]",
+        "bot_hard": "[Hard]",
+        "handicap_none": "[Boost: Off]",
+        "handicap_plus_one": "[Boost: +1]",
+        "handicap_plus_two": "[Boost: +2]",
+        "worn_profile": "[{device} ({name})]"
+      },
+      "connection": {
+        "join_reconnect_suffix": "[ - Reconnect]",
+        "join_ready": "[Everyone joined. Player 1 can continue.]",
+        "join_waiting": "[Press A / Enter on each device to join. Reconnect reserved pads.]",
+        "pause_title": "[Pause Menu]",
+        "pause_player_title": "[Pause Menu P{player}]",
+        "controller_lost": "[Controller lost]",
+        "all_connected": "[All players connected.]",
+        "teams_required": "[Both teams need a player]"
+      },
+      "stick_readouts": {
+        "connected": "[{device} - connected]",
+        "disconnected": "[{device} - disconnected]",
+        "raw_movement": "[Left stick raw X: {value}%]",
+        "movement_response": "[Move response: {value}%]",
+        "aim_inactive": "[Raw X: {raw_x}%]\n[Raw Y: {raw_y}%]\n[No new aim]\n[Raw: hollow]\n[Aim: solid]",
+        "aim_active": "[Raw X: {raw_x}%]\n[Raw Y: {raw_y}%]\n[Aim X: {aim_x}%]\n[Aim Y: {aim_y}%]\n[Raw: hollow]\n[Aim: solid]"
+      },
+      "headings": {
+        "home": "[Make your mark.]",
+        "options": "[Options]",
+        "credits": "[Credits]",
+        "controls_audio": "[Controls / audio]",
+        "pad_sticks": "[Pad sticks]",
+        "players": "[Number of Players]",
+        "join_players": "[Join Players]",
+        "mode": "[Mode Select]",
+        "teams": "[Team Select]",
+        "weapons": "[Weapon Select]",
+        "arena": "[Choose your arena]"
+      },
+      "prompts": {
+        "title": "[A/Enter Start]",
+        "select_back": "[A/Enter Select    B/Esc Back]",
+        "options": "[Left/Right Change    A/Enter Select    B/Esc Back]",
+        "controls": "[Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)]",
+        "sticks": "[D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)]",
+        "mode": "[A/Enter Select    Left/Right Change    B/Esc Back]",
+        "join": "[A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot]",
+        "team": "[Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel]",
+        "team_shuffle": "[Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams]",
+        "weapon": "[Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel]",
+        "arena_browse": "[Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back]",
+        "arena_locked": "[A/Enter Start match    B/Esc Unlock arena]",
+        "missing_player": "[ Reconnect controller    B/Esc Change players]",
+        "pause": "[A/Enter Select    B/Start/Esc Resume]",
+        "pause_missing": "[ Reconnect, then Start    A/Enter Select]",
+        "select": "[A/Enter Select]",
+        "credits": "[A/Enter Back    B/Esc Back]",
+        "bot_team": "[P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams]",
+        "bot_weapon": "[P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel]",
+        "profiles": "[D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back]",
+        "profile_name": "[Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel]"
+      },
+      "items": {
+        "play": "[Play]",
+        "options": "[Options]",
+        "credits": "[Credits]",
+        "exit": "[Exit]",
+        "resolution": "[Resolution]",
+        "fullscreen": "[Fullscreen]",
+        "vsync": "[Vsync]",
+        "team_palette": "[Team palette]",
+        "controls_audio": "[Controls / audio]",
+        "apply": "[Apply]",
+        "back": "[Back]",
+        "single_match": "[Single Match]",
+        "best_of_three": "[Best of 3]",
+        "best_of_five": "[Best of 5]",
+        "match_length": "[Match length]",
+        "one_player_practice": "[1 Player (practice)]",
+        "two_players": "[2 Players]",
+        "three_players": "[3 Players]",
+        "four_players": "[4 Players]",
+        "resume": "[Resume]",
+        "restart": "[Restart]",
+        "quit": "[Quit]",
+        "yes": "[Yes]",
+        "no": "[No]",
+        "change_teams": "[Change Teams]",
+        "change_weapons": "[Change Weapons]",
+        "change_level": "[Change Level]",
+        "exit_to_main_menu": "[Exit to Main Menu]",
+        "pad_sticks": "[Pad sticks]",
+        "music_volume": "[Music volume]",
+        "sfx_volume": "[SFX volume]",
+        "view_shake": "[View shake]",
+        "aim_marker": "[Aim marker]",
+        "reduce_effects": "[Reduce effects]",
+        "pad": "[Pad]",
+        "move_deadzone": "[Move deadzone]",
+        "aim_deadzone": "[Aim deadzone]",
+        "restore_defaults": "[Restore defaults]",
+        "keep": "[Keep]",
+        "revert": "[Revert]",
+        "keyboard_jump": "[Keyboard Keys]",
+        "pad_buttons": "[Pad Buttons]",
+        "rumble": "[Rumble]",
+        "watch_replay": "[Watch Replay]",
+        "profiles": "[Profiles]",
+        "series_stage": "[Series stage]"
+      }
+    },
+    "main_menu": {
+      "weapon_descriptions": {
+        "sprayer": "[Fires a powerful stream of paint in an arc pattern.]\n[Good for beginners.]",
+        "sniper": "[Slowly fires powerful, accurate shots.]\n[Can dispatch players quickly if you have skill.]",
+        "roller": "[Rolls paint in a wide area in front of you.]\n[Can be used to cover large floor areas quickly.]",
+        "mister": "[Produces a mist of slow-moving, diffusing paint particles.]",
+        "bucket": "[Throws a bucket of paint in a short arc pattern.]\n[Ideal for defeating other players.]",
+        "random": "[Randomly selects a weapon for you.]\n[Indecisiveness is nothing to be ashamed of.]"
+      },
+      "weapon_select": {
+        "choices": {
+          "sprayer": {
+            "name": "[Sprayer]"
+          },
+          "sniper": {
+            "name": "[Sniper]"
+          },
+          "roller": {
+            "name": "[Roller]"
+          },
+          "mister": {
+            "name": "[Mister]"
+          },
+          "bucket": {
+            "name": "[Bucket]"
+          },
+          "random": {
+            "name": "[Random]"
+          }
+        }
+      },
+      "credits": {
+        "text": "[ColourWars - Matt Harding]\n[Built with the Labrador engine (MIT).]\n[Microsoft - DirectX Tool Kit, DirectXTex, DirectXMath (MIT); XAudio2Redist (Microsoft licence).]\n[Microsoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).]\n[RapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).]\n[Collision routines - Christer Ericson, Real-Time Collision Detection (2005).]\n[Fonts - Lato, Bowlby One and Courier Prime (SIL Open Font License 1.1).]\n[Menu artwork - generated for ColourWars with OpenAI image generation.]\n\n[Accepted replacement audio sources (CC0):]\n[Joseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;]\n[Mateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.]\n[Original audio arrangements and production code - authored with Codex (MIT).]\n[Full notices, source credits and licence terms: NOTICE, LICENSE and licenses/]\n[inside the release folder. Legacy commercial audio is not distributed.]"
+      }
+    },
+    "team_palette": {
+      "pairs": [
+        {
+          "label": "[A: Blue / B: Orange]"
+        },
+        {
+          "label": "[A: Pink / B: Green]"
+        },
+        {
+          "label": "[A: Blue / B: Yellow]"
+        },
+        {
+          "label": "[A: Purple / B: Gold]"
+        },
+        {
+          "label": "[A: Red / B: Azure]"
+        },
+        {
+          "label": "[A: Magenta / B: Forest]"
+        }
+      ]
+    }
+  }
+}

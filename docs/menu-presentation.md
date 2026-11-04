@@ -2627,7 +2627,7 @@ Keep the existing page capture/adoption behavior: a page retains its captured
 copy where it does today, and reopening adopts edits. Acceptance covers actual
 refreshes and reopening as well as malformed content. Navigation, readiness,
 input ownership, RNG, gameplay values, persistence and results stay unchanged.
-The shipped copy is retained. A locale axis remains unscoped (`GAP#L11`): locale
-selection/storage, fallback, font coverage and numeric conventions need their
-own contract. This text extraction does not introduce a general formatter or
+The shipped copy is retained. The locale axis (`GAP#L11`) lays a translation
+over this copy before `Presentation` reads it; [localisation.md](localisation.md)
+is its contract. This text extraction does not introduce a general formatter or
 change canonical player identities, A/B marks or numeric percentage spelling.

@@ -7,6 +7,7 @@
 #include "game/fatal_report.h"
 #include "game/debug/debug_director.h"
 #include "game/game_data.h"
+#include "game/config/locale.h"
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
 #include "game/states/game_states.h"
@@ -74,8 +75,15 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		GameTuning tuning(
 			resolved_under(content_root, TUNING_PATH).c_str());
 
-		Presentation presentation(
-			resolved_under(content_root, PRESENTATION_PATH).c_str());
+		// The shell's copy, in the language COLOURWARS_LOCALE asks for: its
+		// locale file and fallbacks laid over presentation.json, which every
+		// check below then judges as it judges the base (docs/localisation.md).
+		// Every listed locale must compose, chosen or not.
+		const std::string presentation_path = resolved_under(content_root, PRESENTATION_PATH);
+		const ActiveLocale locale(Locales::read(resolved_under(content_root, LOCALES_DIRECTORY)),
+			locale_selection::requested_from_environment());
+		locale.locales().check_structure(presentation_path);
+		Presentation presentation(locale.presentation(presentation_path));
 
 		// Inert in Release. Declared before Application so it outlives every state.
 		DebugDirector debug(&tuning, &presentation);
@@ -131,6 +139,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		data.set_stage_catalog(&stage_catalog);
 		data.set_tuning(&tuning);
 		data.set_presentation(&presentation);
+		data.set_locale(&locale);
 		data.set_debug(&debug);
 		debug.attach(&app, &data);
 

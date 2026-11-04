@@ -498,6 +498,18 @@ namespace colourwars_editor
             }
         }
         if (level_groups != 1) fail("Registration requires exactly one existing manifest level group");
+        // Locales load before the manifest, so their own index names them
+        // (docs/localisation.md): the index and one file per listed tag.
+        const fs::path locale_index = content / "locales" / "locales.json";
+        if (fs::exists(locale_index))
+        {
+            const rapidjson::Document locales = manifest_document(read(safe_existing(locale_index, false)));
+            const Json& list = field(locales, "locales");
+            if (!list.IsArray()) fail("locales/locales.json locales must be an array");
+            expected.push_back("locales/locales.json");
+            for (const Json& entry : list.GetArray())
+                expected.push_back("locales/" + text(field(entry, "tag"), "tag") + ".json");
+        }
         const auto tokens = cmake_tokens(result.runtime_assets.original);
         const AssetList runtime = literal_list(tokens, "COLOURWARS_RUNTIME_ASSETS");
         const AssetList optional = literal_list(tokens, "COLOURWARS_OPTIONAL_RUNTIME_ASSETS");

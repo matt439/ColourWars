@@ -38,6 +38,20 @@ foreach(group RANGE 0 ${last_group})
         endforeach()
     endforeach()
 endforeach()
+# Locales load before the manifest, as presentation.json does, so they are not
+# manifest entries: the index names them (docs/localisation.md).
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${content}/locales/locales.json")
+file(READ "${content}/locales/locales.json" locale_index)
+list(APPEND expected locales/locales.json)
+string(JSON locale_count LENGTH "${locale_index}" locales)
+if(locale_count GREATER 0)
+    math(EXPR last_locale "${locale_count} - 1")
+    foreach(index RANGE 0 ${last_locale})
+        string(JSON tag GET "${locale_index}" locales ${index} tag)
+        list(APPEND expected "locales/${tag}.json")
+    endforeach()
+endif()
 # Check present audio at configure time too. An optional missing-bank build is
 # valid; release_package.cmake requires the bank when installing/packaging.
 execute_process(COMMAND "${CMAKE_COMMAND}"

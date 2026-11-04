@@ -94,6 +94,8 @@ comparison and physical-pad check; values remain provisional.
 - **Series stage rule:** play Same stage, Rotate and Loser's pick, choose the default and
   settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
 - **Keyboard Keys:** rebind on a keyboard and confirm the slice's provisional calls (`GAP#4.2`).
+- **Languages:** which to translate into first; the locale axis and a test locale are in, and
+  what a real language still needs is listed in [its contract](docs/localisation.md) (`GAP#L11`).
 - **Off-screen markers:** whether enemies get threat markers, and a readability look at the
   teammate markers at 1/2/4P (`ROAD#18`).
 - **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
@@ -193,7 +195,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | DECISION | LOW | S | Vsync row, save key and engine `set_vsync` built 2026-11-04. Owed: labrador#106 merged and the pin moved off its branch, then the author's MattPC check of Off (perf capture, no tearing windowed) and the eight-row Options painter crops. [Setting](docs/feature-roadmap.md#vsync-setting-gapl9) |
-| `GAP#L11` | UNSCOPED | LOW | L | Define locale selection, fallback, font coverage and numeric conventions separately; text extraction is complete. [Boundary](docs/menu-presentation.md#remaining-text-slices-gap84), [font recipe](game/art/README.md#sprite-font-recipe-gap87). |
+| `GAP#L11` | DECISION | LOW | M | Locale overlays, fallback, font substitution and the `qps-ploc` test locale are in; choose the first languages. Then: accented atlases, stage names and controls reminder into data, an Options row and save field. [Contract](docs/localisation.md). |
 
 ## Comparable-game gaps
 

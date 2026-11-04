@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "The languages the shell's copy is in (GAP#L11). presentation.json is the",
+    "base and holds every string; each listed locale is <tag>.json beside this",
+    "file, a partial copy of presentation.json's text laid over it at startup.",
+    "fallback is the base or a locale listed above; a string a locale leaves",
+    "out comes from there. A test locale is never offered to players.",
+    "COLOURWARS_LOCALE=<tag> chooses one. docs/localisation.md is the contract."
+  ],
+  "base": { "tag": "en", "name": "English" },
+  "locales": [
+    { "tag": "qps-ploc", "name": "[Pseudo]", "fallback": "en", "test": true }
+  ]
+}

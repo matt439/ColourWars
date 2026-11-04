@@ -14,7 +14,11 @@ param(
     # ROAD#16: seed the isolated profile's stage folder with one valid user
     # stage and one broken file. Startup must go on, with exactly one
     # refusal line for the broken file and no other diagnostic.
-    [switch]$UserStageFixture
+    [switch]$UserStageFixture,
+    # GAP#L11: the locale the game starts in (COLOURWARS_LOCALE), composed
+    # and checked like the base; any diagnostic fails. Empty is the base,
+    # whatever the caller's own COLOURWARS_LOCALE says.
+    [string]$Locale = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -167,12 +171,14 @@ function Read-StartupError {
 $process = $null
 $originalLocalAppData = $env:LOCALAPPDATA
 $originalPath = $env:PATH
+$originalLocale = $env:COLOURWARS_LOCALE
 $result = [ordered]@{
     executable = $executablePath
     working_directory = $workingDirectory
     profile = $profileDirectory
     version = ''
     dpi_awareness = $null
+    locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     outcome = 'failed'
     diagnostic = ''
@@ -196,6 +202,7 @@ try {
     # Launch hidden and enumerate by class: MainWindowHandle ignores hidden
     # windows and could otherwise mistake an error MessageBox for the game.
     $env:LOCALAPPDATA = $profileDirectory
+    $env:COLOURWARS_LOCALE = $Locale
     $previousQuietGame = Enter-QuietGame
     try {
         if ($SystemOnlyPath) {
@@ -212,6 +219,7 @@ try {
     finally {
         $env:LOCALAPPDATA = $originalLocalAppData
         $env:PATH = $originalPath
+        $env:COLOURWARS_LOCALE = $originalLocale
         Exit-QuietGame $previousQuietGame
     }
 

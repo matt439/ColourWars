@@ -324,6 +324,9 @@ they describe. The rules that follow from that structure:
   stays in C++. Moving a number into JSON so it can be a scripting layer is the
   failure mode to avoid. Tuning and presentation stay two files, and neither
   becomes a manifest entry.
+- **Player-facing copy lives in `presentation.json`**, not in C++: that is the
+  only text a locale can reach ([docs/localisation.md](docs/localisation.md)).
+  `COLOURWARS_LOCALE=qps-ploc` runs the bracketed test locale.
 - **Levels are never optional.** A stage the manifest names and the disk lacks
   is a content bug that must fail at startup, not three screens later.
 - **Nothing seeds a save.** `Save` writes its own defaults on first run; the old

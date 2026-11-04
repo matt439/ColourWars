@@ -7,6 +7,7 @@
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
 #include "game/config/stage_catalog.h"
+#include "game/config/locale.h"
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
 #include "game/debug/debug_director.h"
@@ -25,6 +26,7 @@ public:
     void set_stage_catalog(const StageCatalog* stage_catalog);
     void set_tuning(const GameTuning* tuning);
     void set_presentation(const Presentation* presentation);
+    void set_locale(const ActiveLocale* locale);
     void set_debug(DebugDirector* debug);
 
     // Game-owned services. The save is what the file holds; the settings in
@@ -48,6 +50,11 @@ public:
 
     // Presentation settings loaded at startup and shared by menus and HUDs.
     const Presentation* presentation() const;
+
+    // The language this run's presentation is in. Whatever rebuilds the
+    // presentation (Debug `reload` and `tune`) composes it through this, so
+    // the copy stays in that language. Null when none was set.
+    const ActiveLocale* locale() const;
 
     // Developer tools (console, launch arguments, debug clock). Inert in
     // Release, and inert when no director was set.
@@ -75,5 +82,6 @@ private:
     const StageCatalog* stage_catalog_ = nullptr;
     const GameTuning* tuning_ = nullptr;
     const Presentation* presentation_ = nullptr;
+    const ActiveLocale* locale_ = nullptr;
     DebugDirector* debug_ = nullptr;
 };
