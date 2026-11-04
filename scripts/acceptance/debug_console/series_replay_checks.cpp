@@ -128,7 +128,8 @@ namespace debug_console_acceptance
 
 		// Play: each round is built from its own seed and stage and compared.
 		const DebugStatus played = impl.execute("play " + name);
-		require(played.ok && played.message.find("in round 1 of 2") != std::string::npos &&
+		// A command's success message goes to the log, not the returned status.
+		require(played.ok && count_lines(log, " updates in round 1 of 2: rebuilding the match") == 1 &&
 			director.before_match_update(match, series_step) && impl.playing() &&
 			match.settings.stage() == "movement_course",
 			"Cannot play the series: " + played.message);
