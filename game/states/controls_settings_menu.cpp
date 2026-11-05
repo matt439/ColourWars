@@ -190,13 +190,22 @@ void ControlsSettingsMenu::refresh_values()
 	this->reduce_effects_->set_value(this->selection_.reduce_effects ? this->text().values.on : this->text().values.off);
 }
 
+PlaySettings ControlsSettingsMenu::applied_settings(PlaySettings current, const PlaySettings& page)
+{
+	current.music_volume = page.music_volume;
+	current.sfx_volume = page.sfx_volume;
+	current.view_shake = page.view_shake;
+	current.aim_marker = page.aim_marker;
+	current.reduce_effects = page.reduce_effects;
+	return current;
+}
+
 void ControlsSettingsMenu::apply_settings()
 {
-	// The child commits pad profiles independently of these shared preferences.
-	this->selection_.sticks = this->settings_session()->play_settings().sticks;
-	this->selection_.pad_rumble = this->settings_session()->play_settings().pad_rumble;
-	this->selection_.pad_comfort = this->settings_session()->play_settings().pad_comfort;
-	const bool saved = this->settings_session()->set_play_settings_and_save(this->selection_);
+	// Merged onto what is in effect now, as Pad sticks does, so a child
+	// page's commits survive this page's older selection.
+	const bool saved = this->settings_session()->set_play_settings_and_save(
+		applied_settings(this->settings_session()->play_settings(), this->selection_));
 	// The settings in memory changed whether or not the file did. The groups
 	// reach every playing and paused voice, so a music fade carries on.
 	sound_groups::apply(*this->data()->audio_resources(), this->settings_session()->play_settings());

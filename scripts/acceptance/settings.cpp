@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
+#include "game/states/controls_settings_menu.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
@@ -567,6 +568,48 @@ namespace
 		check_round_trip(save);
 		require(SaveData{}.vsync, "Vsync is not on by default");
 	}
+
+	// Controls/audio takes its copy of the settings when it opens, and its
+	// child pages commit their own while it stays open underneath. Its Apply
+	// must lay only its own fields over what is in effect then. aim_sensitivity
+	// stands for a field no page edits, which a copied back-fill list misses.
+	void check_controls_apply(const IsolatedSaveDirectory& directory)
+	{
+		std::error_code ignored;
+		std::filesystem::remove(directory.save_path(), ignored);
+		Save save; SettingsSession session(save);
+		session.load_save_file();
+		PlaySettings page = session.play_settings();
+		page.music_volume = 40;
+		page.sfx_volume = 60;
+		page.view_shake = !page.view_shake;
+		page.aim_marker = !page.aim_marker;
+		page.reduce_effects = !page.reduce_effects;
+
+		PlaySettings child = session.play_settings();
+		child.sticks[1] = StickSettings{ 20, 30 };
+		child.pad_rumble[2] = false;
+		child.pad_comfort[0].aim_marker = SeatSwitch::on;
+		child.aim_sensitivity = 2;
+		require(session.set_play_settings_and_save(child), "Could not save the child page's settings");
+
+		require(session.set_play_settings_and_save(
+			ControlsSettingsMenu::applied_settings(session.play_settings(), page)),
+			"Could not save the Controls/audio Apply");
+		Save restored; SettingsSession restored_session(restored);
+		restored_session.load_save_file();
+		for (const PlaySettings* play : { &session.play_settings(), &restored_session.play_settings() })
+		{
+			require(play->music_volume == 40 && play->sfx_volume == 60 &&
+				play->view_shake == page.view_shake && play->aim_marker == page.aim_marker &&
+				play->reduce_effects == page.reduce_effects,
+				"Controls/audio Apply lost one of its own fields");
+			require(play->sticks[1].movement_deadzone == 20 && play->sticks[1].aim_deadzone == 30 &&
+				play->pad_rumble == child.pad_rumble &&
+				play->pad_comfort == child.pad_comfort && play->aim_sensitivity == 2,
+				"Controls/audio Apply reverted a change committed while it was open");
+		}
+	}
 }
 
 int main()
@@ -658,11 +701,12 @@ int main()
 		check_comfort_resolution();
 		check_comfort_loading(directory);
 		check_vsync_loading(directory);
+		check_controls_apply(directory);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
 			"boolean recovery, four pad profiles, typed field recovery, legacy aim inheritance, "
 			"stick normalization, independent per-slot rumble recovery and persistence, "
 			"per-slot comfort overrides, their resolution and field-independent recovery, "
-			"and the vsync display preference\n";
+			"the vsync display preference, and child-page changes kept by Controls Apply\n";
 		return 0;
 	});
 }
