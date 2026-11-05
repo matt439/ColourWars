@@ -346,7 +346,7 @@ are historical, not current.
 
 The overview is [docs/architecture.md](docs/architecture.md): the directory map,
 the intended dependency direction, `GameData`, the state stack, `Level` and
-`Scene`, the builders, the four startup JSON files and the main class chains.
+`Scene`, the builders, the five startup JSON files and the main class chains.
 [docs/oop-guide.md](docs/oop-guide.md) walks the hierarchies;
 [docs/README.md](docs/README.md) and [scripts/README.md](scripts/README.md)
 index the docs and the scripts. Keep those pages true when a change moves what
@@ -416,13 +416,13 @@ this code, written while the two repositories were one.
 
 This code is full inheritance and virtual dispatch, several levels deep and
 multiple where it suits: `ProjectileMist → DiffusingProjectile → Projectile →
-MovingObject + AnimationObject + CollisionObject`, `WeaponBucket →
+MovingObject + AnimationObject + Collider`, `WeaponBucket →
 RelativeVelocityWeapon → Weapon → TextureObject + SoundBankObject`,
 `MainMenuStageSelect → RosterSetupPage → MainMenuPage → MenuPage → State +
 SoundBankObject + DebugPageTarget`,
 `StructurePaintable → Structure + PaintableObject` (and `Structure →
-TextureObject + CollisionObject`). `Player` even holds two `DrawObject`
-subobjects, one through `AnimationObject` and one through `TextureObject`
+TextureObject + Collider`, with `Collider → CollisionObject`). `Player` even
+holds two `DrawObject` subobjects, one through `AnimationObject` and one through `TextureObject`
 ([the guide](docs/oop-guide.md#players-two-drawing-bases)). **That is the
 design, not drift.**
 

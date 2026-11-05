@@ -68,16 +68,19 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	bool reduced_effects, bool clock_running) const
 {
 	this->draw_gameplay_interface_prepared(draw_list, resolution, player_index,
-		identity_text(player_index, team, device_label), health, ammo, timer,
+		identity_text(player_index, this->team_label(team), device_label), health, ammo, timer,
 		team_colour, reduced_effects, clock_running);
 }
 
-std::wstring InterfaceGameplay::identity_text(int player_index, PlayerTeam team,
+const std::wstring& InterfaceGameplay::team_label(PlayerTeam team) const
+{
+	return team == PlayerTeam::a ? this->look_->labels.team_a : this->look_->labels.team_b;
+}
+
+std::wstring InterfaceGameplay::identity_text(int player_index, const std::wstring& team_label,
 	const std::wstring& device_label)
 {
-	return PlayerBadge::label(player_index) +
-		(team == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
-		device_label;
+	return PlayerBadge::label(player_index) + L"  /  " + team_label + L"\n" + device_label;
 }
 
 void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
@@ -144,7 +147,7 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	const Vector2F health_pos(x_pos,
 		resolution.y * look.health_top_margin);
 	const float label_height = this->render_resources()->measure_text(
-		this->meter_label_font_, L"HEALTH").y * scale;
+		this->meter_label_font_, look.labels.health).y * scale;
 	const float panel_top = std::min(ammo_pos.y, health_pos.y) -
 		label_height - look.meter_label_gap * scale;
 	const float panel_bottom = std::max(ammo_pos.y, health_pos.y) +
@@ -155,12 +158,12 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 			Vector2F(resolution.x * look.box_size.x,
 				panel_bottom - panel_top) + padding * 2.0f), scale);
 	this->draw_meter(draw_list, resolution, health, CrudeDrawing::premultiplied(look.health_colour),
-		health_pos, L"HEALTH", scale);
+		health_pos, look.labels.health, scale);
 	const float blink = look.low_paint.blink_period;
 	const bool tagged = low_paint &&
 		(reduced_effects || std::fmod(low_paint_elapsed, blink) < blink * 0.5f);
 	this->draw_meter(draw_list, resolution, ammo, team_colour,
-		ammo_pos, L"PAINT", scale, tagged);
+		ammo_pos, look.labels.paint, scale, tagged);
 
 	draw_list.set_filter(TextureFilter::point);
 }

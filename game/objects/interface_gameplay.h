@@ -65,8 +65,13 @@ public:
         bool show_clock = true) const;
 
     // "P1  /  TEAM A\n" followed by the device label: the identity box's text.
-    static std::wstring identity_text(int player_index, PlayerTeam team,
+    // The team label is menu_text.hud's (HudPresentation::labels); the
+    // separator and the line break are the code's.
+    static std::wstring identity_text(int player_index, const std::wstring& team_label,
         const std::wstring& device_label);
+
+    // hud.labels.team_a or team_b.
+    const std::wstring& team_label(PlayerTeam team) const;
 
 private:
     // hud.paper.keyline_width at this HUD scale, never below one device

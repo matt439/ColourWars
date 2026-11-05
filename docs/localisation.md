@@ -63,7 +63,10 @@ index, the files and composition) and `ActiveLocale` (the run's choice).
 Objects merge key by key; an array must have the base's length, and a `null`
 element leaves that element as it is. A locale changes **copy only**:
 
-- everything under `menu_text`;
+- everything under `menu_text`, the match's own copy included:
+  `menu_text.hud` (the identity box's team labels and the HEALTH and PAINT
+  meter labels; its device line is `menu_text.labels`) and
+  `menu_text.countdown` (the GET READY, RESUMING and REPLAY headings);
 - `main_menu.weapon_descriptions.*` and `main_menu.weapon_select.choices.*.name`;
 - `main_menu.credits.text`;
 - `team_palette.pairs[].label`.
@@ -186,8 +189,10 @@ Three groups of text still come from somewhere a locale does not reach:
 - **Stage names.** Each level file's `display_name` ("King of the Hill") is
   read by Stage Select and by the match's stage title, from the level, not
   `presentation.json`.
-- **The in-match controls reminder** and the pad and key labels it is built
-  from ([controls_text.cpp](../game/input/controls_text.cpp),
+- **The in-match controls reminder**, its GAMEPAD and KEYBOARD + MOUSE
+  headings ([countdown_cards.cpp](../game/objects/countdown_cards.cpp)) and
+  the pad and key labels it is built from
+  ([controls_text.cpp](../game/input/controls_text.cpp),
   [input_bindings.cpp](../game/input/input_bindings.cpp)): "Move",
   "Drop through", "Left click" are written in C++.
 - **Developer text**: the Debug console, overlays and diagnostics stay English.

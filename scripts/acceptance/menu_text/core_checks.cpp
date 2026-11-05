@@ -130,6 +130,15 @@ namespace menu_text_acceptance
         {
             require(text.records.*entry.field == entry.text, std::string("Stage record default changed: ") + entry.key);
         }
+        for (const auto& entry : hud_text)
+        {
+            require(text.hud.*entry.field == entry.text && presentation.hud().labels.*entry.field == entry.text,
+                std::string("HUD label default changed: ") + entry.key);
+        }
+        for (const auto& entry : countdown_text)
+        {
+            require(text.countdown.*entry.field == entry.text, std::string("Countdown heading default changed: ") + entry.key);
+        }
         for (const auto& entry : stage_briefing_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
@@ -183,7 +192,7 @@ namespace menu_text_acceptance
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -202,7 +211,7 @@ namespace menu_text_acceptance
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -240,6 +249,8 @@ namespace menu_text_acceptance
         for (const auto& entry : end_text) { required("end", entry.key); }
         for (const auto& entry : end_continuation_text) { required("end", entry.key); }
         for (const auto& entry : record_text) { required("records", entry.key); }
+        for (const auto& entry : hud_text) { required("hud", entry.key); }
+        for (const auto& entry : countdown_text) { required("countdown", entry.key); }
         for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : stage_count_text) { required("stage", entry.key); }
         for (const auto& entry : stage_summary_text) { required("stage", entry.key); }

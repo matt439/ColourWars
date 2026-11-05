@@ -368,8 +368,9 @@ cross-field rule startup has applies, with startup's message (`tune: rejected:
 nothing. In the running game every edit also runs the file's own startup checks
 against the loaded resources (`validate_resources`): for presentation, that
 its named fonts, frames and sounds exist, and `match.countdown_size` leaves
-room under the GET READY heading. Edits under
-`tuning.paint`, `tuning.player.size` and `tuning.player.max_velocity`, and
+room under the GET READY and RESUMING headings (`menu_text.countdown`).
+Edits under `tuning.paint`, `tuning.player.size` and
+`tuning.player.max_velocity`, and
 of `tuning.player.x_initial_velocity` and `tuning.player.drop_down_velocity`,
 also run the startup check that builds every stage's objects, so a speed cap at
 which a player could step through a floor is refused

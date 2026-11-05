@@ -210,6 +210,17 @@
         "aim_inactive": "[Raw X: {raw_x}%]\n[Raw Y: {raw_y}%]\n[No new aim]\n[Raw: hollow]\n[Aim: solid]",
         "aim_active": "[Raw X: {raw_x}%]\n[Raw Y: {raw_y}%]\n[Aim X: {aim_x}%]\n[Aim Y: {aim_y}%]\n[Raw: hollow]\n[Aim: solid]"
       },
+      "hud": {
+        "team_a": "[TEAM A]",
+        "team_b": "[TEAM B]",
+        "health": "[HEALTH]",
+        "paint": "[PAINT]"
+      },
+      "countdown": {
+        "get_ready": "[GET READY]",
+        "resuming": "[RESUMING]",
+        "replay": "[REPLAY]"
+      },
       "headings": {
         "home": "[Make your mark.]",
         "options": "[Options]",

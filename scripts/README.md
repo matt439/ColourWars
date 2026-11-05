@@ -18,7 +18,7 @@ full.
 
 | Script | What |
 |---|---|
-| [run-acceptance.ps1](run-acceptance.ps1) | builds the game and runs the consumer probes declared in [acceptance/cases.psd1](acceptance/cases.psd1) (`-Cases`, `-ExcludeCases`, `-OptIn`, `-QuickOptIn`, `-OwnLegOnly`, `-SkipOwnLeg`, `-SkipSlowDebug`, `-CompileOnly`, `-Parallel`); writes `acceptance-summary.json` |
+| [run-acceptance.ps1](run-acceptance.ps1) | builds the game and runs the consumer probes declared in [acceptance/cases.psd1](acceptance/cases.psd1) (`-Cases`, `-ExcludeCases`, `-OptIn`, `-QuickOptIn`, `-OwnLegOnly`, `-SkipOwnLeg`, `-SkipSlowDebug`, `-CompileOnly`, `-Parallel`, `-RunTimeoutSeconds`); writes `acceptance-summary.json` |
 | [acceptance-process.ps1](acceptance-process.ps1), [acceptance-process/](acceptance-process/) | the runner's native helper: one Windows Job Object, deadline and log per probe |
 | [check-acceptance-selection.ps1](check-acceptance-selection.ps1) | checks the runner's case selection rules without CMake, a compiler or the helper |
 | [check-acceptance-process.ps1](check-acceptance-process.ps1) | qualifies the helper's ownership, deadlines, logging and cancellation with isolated processes |
@@ -26,9 +26,19 @@ full.
 | [quiet-game.ps1](quiet-game.ps1) | dot-sourced helper that sets `COLOURWARS_MUTE` for the game and real-audio probes a check starts, and restores the caller's value; set `COLOURWARS_MUTE=0` first to hear a run |
 | [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
 
-[acceptance/](acceptance/) holds one `.cpp` per case, a same-named folder of
-its checks where it has one, and [acceptance/support/probe.h](acceptance/support/probe.h)
-(`acceptance::require` and `acceptance::run_probe`).
+[acceptance/](acceptance/) holds one `.cpp` per case declared in
+[cases.psd1](acceptance/cases.psd1), a same-named folder of its checks where it
+has one, and [acceptance/support/probe.h](acceptance/support/probe.h)
+(`acceptance::require` and `acceptance::run_probe`). It also holds the sources
+of probes that are not cases and that their own entry points build:
+`painter_visual` ([check-painter.ps1](check-painter.ps1)), `paint_fx_visual`
+([check-paint-fx.ps1](check-paint-fx.ps1)), `movement_feedback_visual`
+([check-movement-feedback.ps1](check-movement-feedback.ps1)), `frame_pacing`
+([check-frame-pacing.ps1](check-frame-pacing.ps1)), `display_awake_lifecycle`
+([check-display-awake.ps1](check-display-awake.ps1)), and `level_editor` and
+`level_editor_dpi` (built by [editor/CMakeLists.txt](../editor/CMakeLists.txt)
+and run by [check-level-editor.ps1](check-level-editor.ps1)). Do not add them
+to `cases.psd1`.
 
 ## Game checks
 

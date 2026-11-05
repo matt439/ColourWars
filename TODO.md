@@ -232,8 +232,9 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. Labrador `v0.3.0` (pinned 2026-11-03) answered `ENG#23`, `ENG#25`, `ENG#31` and
-`ENG#32`; 23 and 32 were spent at the bump, 31 and 25 on 2026-11-05. On 2026-11-03 the
+`GAP#F*`. Labrador `v0.3.0` (pinned 2026-11-03; the pin is now master `e7fc50e`, for vsync)
+answered `ENG#23`, `ENG#25`, `ENG#31` and `ENG#32`; 23 and 32 were spent at the bump, 31 and
+25 on 2026-11-05. On 2026-11-03 the
 author authorized filing `ENG#27`, `ENG#30` and `ENG#33` (with `ENG#26` riding on `ENG#27`),
 chose to fix `ENG#28` in Labrador directly, which the tag did not carry, and withdrew `ENG#29`
 (its client-side change, `HYG#52`, is done). Minimal engine-focused reports with
@@ -266,7 +267,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#7` | OPEN | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow needs an audio endpoint and is skipped there. After a week of nightlies, promote what is stable and short to `ci.yml`. [Workflow](.github/workflows/nightly.yml). |
+| `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows

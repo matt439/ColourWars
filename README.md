@@ -60,7 +60,7 @@ the session. For solo practice, choose Single Match and 1 Player. The experiment
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
 and platform-drop trials; select it explicitly, as Random uses the four arenas
 (including Crossfeed). The provisional Press Tower and the static, mover, scored-slab,
-gate and ferry Turbulence Yard comparisons are also explicit-only.
+gate, ferry, lift and paint-lift Turbulence Yard comparisons are also explicit-only.
 The chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads.
 Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-establish-the-art-and-display-rules);
 the superseded workshop comparison was retired on 2026-10-15. Open work is in
@@ -387,8 +387,8 @@ new GitHub Release.
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.
 The ZIP includes licence notices, the player guide `HOW-TO-PLAY.txt`, the seven compiled fonts, six sprite sheets,
-the eight arenas (including Crossfeed, Press Tower and the explicit static/mover/slab
-Turbulence Yard comparisons) and Movement Course, tuning,
+the twelve arenas (including Crossfeed, Press Tower and the explicit
+static/mover/slab/ferry/gate/lift/paint-lift Turbulence Yard comparisons) and Movement Course, tuning,
 presentation, the replacement sound-bank definition and validated `paint_exe.xwb`,
 with audio provenance and CC0 terms. Source audio, development art, content tools and saves are excluded.
 Do not distribute the normal `game/` build directory in place of this ZIP.

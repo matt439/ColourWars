@@ -24,6 +24,9 @@ namespace input_slots
 		return slot == keyboard_and_mouse;
 	}
 
+	// The base locale's menu_text.labels device copy, for probes, diagnostics
+	// and InterfaceGameplay's input-slot overload. Player-facing text uses
+	// MenuText::device_label, which a locale can reach.
 	inline std::wstring device_name(int slot)
 	{
 		if (is_pad(slot))

@@ -445,6 +445,15 @@ namespace presentation_read
 		text.records.best_win = read_menu_line(records, "best_win");
 		text.records.best_coverage = read_menu_line(records, "best_coverage");
 		text.records.played = read_menu_line(records, "played");
+		const JsonValue hud = json.object("hud");
+		text.hud.team_a = read_menu_line(hud, "team_a");
+		text.hud.team_b = read_menu_line(hud, "team_b");
+		text.hud.health = read_menu_line(hud, "health");
+		text.hud.paint = read_menu_line(hud, "paint");
+		const JsonValue countdown = json.object("countdown");
+		text.countdown.get_ready = read_menu_line(countdown, "get_ready");
+		text.countdown.resuming = read_menu_line(countdown, "resuming");
+		text.countdown.replay = read_menu_line(countdown, "replay");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{

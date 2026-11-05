@@ -300,9 +300,6 @@ namespace presentation_read
 		{
 			return read_number_in(json, key, 0.0f, DESIGN_RESOLUTION.y);
 		};
-		const JsonValue backdrop = json.object("backdrop");
-		menu.backdrop_sheet = backdrop.string("sheet");
-		menu.backdrop_frame = backdrop.string("frame");
 		menu.title_y = title_height("title_y");
 		menu.title_subtitle_y = title_height("title_subtitle_y");
 		menu.title_start_y = title_height("title_start_y");
@@ -320,8 +317,6 @@ namespace presentation_read
 		const JsonValue backgrounds = json.object("backgrounds");
 		menu.title_background_colour = read_colour(backgrounds, "title");
 		menu.home_background_colour = read_colour(backgrounds, "home");
-		menu.options_background_colour = read_colour(backgrounds, "options");
-		menu.play_background_colour = read_colour(backgrounds, "play");
 
 		menu.options_value_colour = read_colour(json, "options_value_colour");
 		menu.options_warning_colour = read_colour(json, "options_warning_colour");

@@ -307,6 +307,17 @@
       "aim_inactive": "Raw X: {raw_x}%\nRaw Y: {raw_y}%\nNo new aim\nRaw: hollow\nAim: solid",
       "aim_active": "Raw X: {raw_x}%\nRaw Y: {raw_y}%\nAim X: {aim_x}%\nAim Y: {aim_y}%\nRaw: hollow\nAim: solid"
     },
+    "hud": {
+      "team_a": "TEAM A",
+      "team_b": "TEAM B",
+      "health": "HEALTH",
+      "paint": "PAINT"
+    },
+    "countdown": {
+      "get_ready": "GET READY",
+      "resuming": "RESUMING",
+      "replay": "REPLAY"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",
@@ -394,7 +405,6 @@
   },
 
   "main_menu": {
-    "backdrop": { "sheet": "menu_paint", "frame": "backdrop" },
     "title_box_size": { "x": 1320.0, "y": 920.0 },
     "home_box_size": { "x": 1320.0, "y": 920.0 },
     "options_box_size": { "x": 1640.0, "y": 920.0 },
@@ -443,9 +453,7 @@
     "build_id_y": 880.0,
     "backgrounds": {
       "title": "B0B0A8",
-      "home": "B0B0A8",
-      "options": "485467",
-      "play": "485467"
+      "home": "B0B0A8"
     },
     "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",

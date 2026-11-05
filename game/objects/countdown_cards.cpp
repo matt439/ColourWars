@@ -41,17 +41,18 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 	this->countdown_art_ = std::make_unique<CountdownArt>(
 		&this->presentation_->match(), &this->presentation_->opening(), render_resources);
 	const MenuStyle& menu = this->presentation_->menu();
+	const MenuCountdownText& headings = this->presentation_->menu_text().countdown;
 	this->countdown_heading_ = std::make_unique<colourwars::TextDropShadow>(
-		L"GET READY", menu.detail_font, Vector2F::zero,
+		headings.get_ready, menu.detail_font, Vector2F::zero,
 		render_resources, this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper,
 		menu.detail_shadow_offset);
 	this->resume_heading_ = std::make_unique<colourwars::TextDropShadow>(
-		L"RESUMING", menu.detail_font, Vector2F::zero, render_resources,
+		headings.resuming, menu.detail_font, Vector2F::zero, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
 	this->replay_heading_ = std::make_unique<colourwars::TextDropShadow>(
-		L"REPLAY", menu.detail_font, Vector2F::zero, render_resources,
+		headings.replay, menu.detail_font, Vector2F::zero, render_resources,
 		this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
 	this->centre_countdown_text(paper);

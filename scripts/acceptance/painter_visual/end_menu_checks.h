@@ -257,7 +257,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const auto& fixture = cases[index];
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
         // Between rounds Change Weapons and Change Level replace this page in
-        // its frame rather than closing it (repick_checks covers them).
+        // its frame rather than closing it (series_repick_checks covers them).
         const std::vector<std::optional<EndMenuAction>> actions = ongoing ?
             std::vector<std::optional<EndMenuAction>>{ EndMenuAction::restart, std::nullopt, std::nullopt,
                 EndMenuAction::exit } :

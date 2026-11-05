@@ -133,6 +133,7 @@ Presentation::Presentation(const JsonDocument& document)
 	this->results_menu_ = read_results_menu(root);
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
+	this->hud_.labels = this->menu_text_.hud;
 	this->player_identity_ = read_player_identity(root);
 	const JsonValue camera = root.object("camera");
 	this->camera_.reference_height = read_positive(camera, "reference_height");
