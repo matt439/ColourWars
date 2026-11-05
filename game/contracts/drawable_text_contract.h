@@ -28,24 +28,25 @@ namespace drawable_text_contract
     };
 
     // Typographic punctuation and spaces, and the ASCII each becomes. Authored
-    // letters and accents are not transliterated.
+    // letters and accents are not transliterated. The code points are escapes
+    // so visually similar punctuation and the invisible spaces stay distinct.
     inline constexpr std::array<Transliteration, 16> transliterations = { {
-        { U'‘', "'" },     // left single quotation mark
-        { U'’', "'" },     // right single quotation mark, i.e. the apostrophe
-        { U'ʼ', "'" },     // modifier letter apostrophe
-        { U'′', "'" },     // prime
-        { U'“', "\"" },    // left double quotation mark
-        { U'”', "\"" },    // right double quotation mark
-        { U'″', "\"" },    // double prime
-        { U'‐', "-" },     // hyphen
-        { U'‑', "-" },     // non-breaking hyphen
-        { U'–', "-" },     // en dash
-        { U'—', "-" },     // em dash
-        { U'−', "-" },     // minus sign
-        { U'…', "..." },   // horizontal ellipsis
-        { U' ', " " },     // no-break space
-        { U' ', " " },     // figure space
-        { U' ', " " } } }; // narrow no-break space
+        { U'\u2018', "'" },   // left single quotation mark
+        { U'\u2019', "'" },   // right single quotation mark, i.e. the apostrophe
+        { U'\u02BC', "'" },   // modifier letter apostrophe
+        { U'\u2032', "'" },   // prime
+        { U'\u201C', "\"" },  // left double quotation mark
+        { U'\u201D', "\"" },  // right double quotation mark
+        { U'\u2033', "\"" },  // double prime
+        { U'\u2010', "-" },   // hyphen
+        { U'\u2011', "-" },   // non-breaking hyphen
+        { U'\u2013', "-" },   // en dash
+        { U'\u2014', "-" },   // em dash
+        { U'\u2212', "-" },   // minus sign
+        { U'\u2026', "..." }, // horizontal ellipsis
+        { U'\u00A0', " " },   // no-break space
+        { U'\u2007', " " },   // figure space
+        { U'\u202F', " " } } }; // narrow no-break space
 
     // The ASCII a character becomes, empty when it is kept as written.
     constexpr std::string_view transliteration(char32_t character)

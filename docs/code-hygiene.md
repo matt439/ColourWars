@@ -546,7 +546,9 @@ since lifts reach them too.
   names (`face::*`, `paintable_face_names`) and the scenery greys
   (`scenery_grey_names`, `is_scenery_grey`), and the new
   [drawable_text_contract.h](../game/contracts/drawable_text_contract.h) holds
-  the drawable range, the layout controls and the punctuation table. The game's
+  the drawable range, the layout controls and the punctuation table (its code
+  points written as `\u` escapes, as the switch had them, so the dashes and
+  the three invisible spaces stay distinct in source). The game's
   `drawable_text` reads that table in place of its switch, and
   `LevelObjectBuilder` reads the face names. The editor's `level_json` reads all
   three tables (its grey-name string, UTF-8 punctuation list and face lists are
