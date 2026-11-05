@@ -260,7 +260,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     {
         auto& board = const_cast<MatchRecords&>(preferences.records());
         struct ClearRecords { MatchRecords& board; ~ClearRecords() { this->board = MatchRecords(); } } clear_records{ board };
-        const auto& geometry = original.main_menu().stage_select; const auto& style = original.menu(); const auto& record_words = original.menu_text().records;
+        const auto& geometry = original.main_menu().stage_select; const auto& style = original.menu();
         const RectangleF preview(geometry.preview_position, geometry.preview_size);
         const auto record_font = app.render_resources()->resolve_sprite_font(geometry.record_font);
         const auto detail_font = app.render_resources()->resolve_sprite_font(style.detail_font);
@@ -296,10 +296,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
                 save(with, output / ("stage-record-" + std::string(name) + '-' + std::to_string(size.x) + 'x' + std::to_string(size.y) + ".ppm"));
                 return scale;
             };
-            require(expect("versus", 2, 0, record_words.best_win + L" 68.4% / 12 " + record_words.played) == 1.0f, "A typical versus stage record was shrunk");
-            require(expect("solo", 1, 0, record_words.best_coverage + L" 37.0% / 2 " + record_words.played) == 1.0f, "A typical practice stage record was shrunk");
-            expect("draws-only", 4, 1, L"3 " + record_words.played);
-            require(expect("crowded", 2, 2, record_words.best_win + L" 100.0% / 123456789 " + record_words.played) < 1.0f, "A record too long for its row was not shrunk");
+            require(expect("versus", 2, 0, L"BEST WIN 68.4% / 12 PLAYED") == 1.0f, "A typical versus stage record was shrunk");
+            require(expect("solo", 1, 0, L"BEST COVER 37.0% / 2 PLAYED") == 1.0f, "A typical practice stage record was shrunk");
+            expect("draws-only", 4, 1, L"3 PLAYED");
+            require(expect("crowded", 2, 2, L"BEST WIN 100.0% / 123456789 PLAYED") < 1.0f, "A record too long for its row was not shrunk");
             require(shown(2, 0, true, {}).pixels == shown(2, 0, true, { versus_record }).pixels, "Random showed a stage record");
             require(shown(1, 1, false, {}).pixels == shown(1, 1, false, { draws_only }).pixels, "A stage unplayed in this kind of match showed a record");
         }

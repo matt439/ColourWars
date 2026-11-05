@@ -38,8 +38,8 @@ namespace input_bindings_acceptance
         require(rejected, message);
     }
 
-    struct ExpectedKey { Key key; const char* name; const wchar_t* label; };
-    // Explicit physical names and labels, independent of enum arithmetic and
+    struct ExpectedKey { Key key; const char* name; const wchar_t* legend; };
+    // Explicit physical names and legends, independent of enum arithmetic and
     // the production conversion table. Supported does not imply conflict-free.
     inline constexpr std::array<ExpectedKey, 27> expected_keys{{
         { Key::a, "a", L"A" }, { Key::b, "b", L"B" }, { Key::c, "c", L"C" },
@@ -50,19 +50,19 @@ namespace input_bindings_acceptance
         { Key::p, "p", L"P" }, { Key::q, "q", L"Q" }, { Key::r, "r", L"R" },
         { Key::s, "s", L"S" }, { Key::t, "t", L"T" }, { Key::u, "u", L"U" },
         { Key::v, "v", L"V" }, { Key::w, "w", L"W" }, { Key::x, "x", L"X" },
-        { Key::y, "y", L"Y" }, { Key::z, "z", L"Z" }, { Key::space, "space", L"Space" }
+        { Key::y, "y", L"Y" }, { Key::z, "z", L"Z" }, { Key::space, "space", L"" }
     }};
 
-    struct ExpectedControl { PadControl control; const char* name; const wchar_t* label; };
-    // Explicit tokens and labels in page order, with None first: independent of
+    struct ExpectedControl { PadControl control; const char* name; const wchar_t* legend; };
+    // Explicit tokens and legends in page order, with None first: independent of
     // the production table and of PadControl ordinals.
     inline constexpr std::array<ExpectedControl, 12> expected_controls{{
-        { PadControl::none, "none", L"None" }, { PadControl::a, "a", L"A" }, { PadControl::b, "b", L"B" },
+        { PadControl::none, "none", L"" }, { PadControl::a, "a", L"A" }, { PadControl::b, "b", L"B" },
         { PadControl::x, "x", L"X" }, { PadControl::y, "y", L"Y" },
         { PadControl::left_shoulder, "lb", L"LB" }, { PadControl::right_shoulder, "rb", L"RB" },
         { PadControl::left_trigger, "lt", L"LT" }, { PadControl::right_trigger, "rt", L"RT" },
         { PadControl::left_stick, "ls", L"LS" }, { PadControl::right_stick, "rs", L"RS" },
-        { PadControl::start, "start", L"Start" }
+        { PadControl::start, "start", L"" }
     }};
     inline constexpr std::array<PadAction, 3> pad_actions{ PadAction::jump, PadAction::shoot, PadAction::pause };
 

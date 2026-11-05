@@ -52,7 +52,7 @@ void DebugMenuPage::init()
 	const std::string& small_font = this->presentation().controls_settings().help_font;
 	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
 	this->set_prompts({ { L"Up/Down", L"Move" }, { L"Left/Right", L"Change" },
-		{ L"A", L"Select" }, { L"B", L"Back" }, { L"F10/Back+Start", L"Close" } });
+		{ L"A/Enter", L"Select" }, { L"B/Esc", L"Back" }, { L"F10/Back+Start", L"Close" } });
 
 	this->title_ = std::make_unique<colourwars::UiTextDropShadow>("debug_title", L"DEBUG",
 		style.heading_font, Vector2F(left, title_y), this->render_resources(),

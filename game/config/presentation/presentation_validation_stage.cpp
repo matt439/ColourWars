@@ -102,9 +102,9 @@ void Presentation::Validation::validate_stage_select_briefing(StageGeometry& geo
 	// copy must draw in its font and the row must sit below the preview edge
 	// and above the footer.
 	const RectangleF record_preview(stage.preview_position, stage.preview_size);
-	for (const std::wstring* label : { &this->presentation_.menu_text_.records.best_win, &this->presentation_.menu_text_.records.best_coverage })
+	for (const bool solo : { false, true })
 	{
-		const std::wstring line = *label + L" 100.0% / 99 " + this->presentation_.menu_text_.records.played;
+		const std::wstring line = this->presentation_.menu_text_.records.best_line(solo, L"100.0%", 99);
 		const Vector2F size = fixed_menu_size("menu_text.records", line, stage.record_font) +
 			this->presentation_.menu_.detail_shadow_offset;
 		if (stage.record_y < record_preview.bottom() + this->presentation_.menu_.rule_height ||
@@ -115,6 +115,10 @@ void Presentation::Validation::validate_stage_select_briefing(StageGeometry& geo
 				"below the preview edge and above the footer.");
 		}
 	}
+	// The Random mark must draw in its font; the page itself refuses a mark
+	// that leaves the preview (MainMenuStageSelect's geometry check).
+	std::ignore = fixed_menu_size("menu_text.stage.random_mark", this->presentation_.menu_text_.stage.random_mark,
+		main.announcement_font);
 	geometry.stage_briefing = stage_briefing;
 	geometry.stage_info = stage_info;
 	geometry.briefing_rows = std::move(briefing_rows);

@@ -143,7 +143,7 @@ namespace menu_text_acceptance
         {
             d["results_menu"]["contribution_font"].SetString(font_name, d.GetAllocator());
             d["menu_text"]["results"]["contribution_heading"].SetString("~");
-            d["menu_text"]["records"]["new_best"].SetString("R"); d["menu_text"]["records"]["stage_best"].SetString("R");
+            d["menu_text"]["records"]["new_best"].SetString("R {percentage}"); d["menu_text"]["records"]["stage_best"].SetString("R {percentage}");
         };
         const auto record_gap = variants.load([&](rapidjson::Document& d) { contribution(d, "menu_results_record_gap"); });
         record_gap.validate_resources(world.render, world.audio);
@@ -659,7 +659,7 @@ namespace menu_text_acceptance
             d["results_menu"]["contribution_position"]["x"].SetFloat(x); d["results_menu"]["contribution_spacing"].SetFloat(46.0f);
             d["results_menu"]["fill"]["box_size"]["x"].SetFloat(1264.0f);
             d["menu_text"]["results"]["contribution_heading"].SetString("R");
-            d["menu_text"]["records"]["new_best"].SetString("R"); d["menu_text"]["records"]["stage_best"].SetString("R");
+            d["menu_text"]["records"]["new_best"].SetString("R {percentage}"); d["menu_text"]["records"]["stage_best"].SetString("R {percentage}");
             d["menu_text"]["results"]["contribution_team_a"].SetString(" {A}~"); d["menu_text"]["results"]["contribution_team_b"].SetString("^{B} ");
         };
         for (int team = 0; team < 2; ++team)

@@ -152,39 +152,13 @@ void MenuPage::debug_reset_input(int pad_slot)
 	this->reset_menu_motion();
 }
 
-// Add keyboard equivalents to the shared pad labels. Keep these mappings
-// in sync with MenuInput; Left/Right already describes keyboard navigation.
+// The prompts as given: shipped pages pass a MenuPrompt, whose legend is
+// presentation.json's copy; this form is the Debug menu's and an empty bar's.
 void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
 {
-	std::vector<PromptBar::Prompt> with_keys;
-	with_keys.reserve(prompts.size());
-
-	for (const PromptBar::Prompt& prompt : prompts)
-	{
-		std::wstring button = prompt.button;
-		if (button == L"A")
-		{
-			button = L"A/Enter";
-		}
-		else if (button == L"B")
-		{
-			button = L"B/Esc";
-		}
-		else if (button == L"X")
-		{
-			button = L"X/R";
-		}
-		else if (button == L"B/Start")
-		{
-			button = L"B/Start/Esc";
-		}
-
-		with_keys.push_back({ button, prompt.action });
-	}
-
 	this->prompt_bar_ = std::make_unique<PromptBar>(
 		"prompt_bar",
-		with_keys,
+		prompts,
 		this->prompt_look_,
 		this->render_resources());
 }

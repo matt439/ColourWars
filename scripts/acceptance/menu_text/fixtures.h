@@ -277,11 +277,11 @@ namespace menu_text_acceptance
     };
     struct RecordText { const char* key; const wchar_t* text; std::wstring MenuRecordText::* field; };
     constexpr RecordText record_text[]{
-        { "new_best", L"NEW BEST", &MenuRecordText::new_best },
-        { "stage_best", L"STAGE BEST", &MenuRecordText::stage_best },
-        { "best_win", L"BEST WIN", &MenuRecordText::best_win },
-        { "best_coverage", L"BEST COVER", &MenuRecordText::best_coverage },
-        { "played", L"PLAYED", &MenuRecordText::played }
+        { "new_best", L"NEW BEST {percentage}", &MenuRecordText::new_best },
+        { "stage_best", L"STAGE BEST {percentage}", &MenuRecordText::stage_best },
+        { "best_win", L"BEST WIN {percentage} / {played}", &MenuRecordText::best_win },
+        { "best_coverage", L"BEST COVER {percentage} / {played}", &MenuRecordText::best_coverage },
+        { "played", L"{count} PLAYED", &MenuRecordText::played }
     };
     struct HudText { const char* key; const wchar_t* text; std::wstring HudLabels::* field; };
     constexpr HudText hud_text[]{

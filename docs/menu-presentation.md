@@ -1128,8 +1128,8 @@ exactly once, and each template is formatted with the default controls when
 read. Startup measures the reminders for every keyboard and pad choice in
 tuning's `match.controls_text.font` and the headings in the detail font; the
 cards scale to fit, so only glyphs and bounds are checked. The letters, the pad
-legends and the " / " between a primary and its alternate stay in code, and
-`input_bindings.cpp`'s labels are the base locale's twins of these words.
+legends and the " / " between a primary and its alternate stay in code;
+`input_bindings.cpp` holds only those legends, none of these words.
 
 Startup checks actual help-font glyphs and finite, positive measured bounds.
 The help region begins at `controls_settings.controls_position`, has size

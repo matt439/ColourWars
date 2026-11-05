@@ -272,13 +272,11 @@ std::wstring MainMenuStageSelect::record_line(int slot) const
 	{
 		return std::wstring();
 	}
-	const std::wstring count = std::to_wstring(played) + L" " + text.played;
 	if (!best)
 	{
-		return count;
+		return text.played_line(played);
 	}
-	return (solo ? text.best_coverage : text.best_win) + L" " +
-		percentage_text(*best) + L" / " + count;
+	return text.best_line(solo, percentage_text(*best), played);
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
@@ -380,7 +378,7 @@ void MainMenuStageSelect::init()
 		L"", look.record_font, Vector2F(0.0f, look.record_y), resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset, true);
 	this->random_mark_ = std::make_unique<colourwars::UiTextDropShadow>("random_mark",
-		L"?", this->look().announcement_font, Vector2F::zero, resources,
+		this->text().stage.random_mark, this->look().announcement_font, Vector2F::zero, resources,
 		style.highlight, style.shadow_colour, style.title_shadow_offset);
 	this->random_mark_->set_position(preview.center() -
 		this->random_mark_->bounds().center());

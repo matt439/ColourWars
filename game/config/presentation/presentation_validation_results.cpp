@@ -29,9 +29,10 @@ void Presentation::Validation::validate_results_records(StageGeometry& geometry)
 	const RectangleF contribution_heading(results.contribution_position, fixed_menu_size(
 		"menu_text.results.contribution_heading", this->presentation_.menu_text_.results.contribution_heading,
 		results.contribution_font));
-	for (const std::wstring* label : { &this->presentation_.menu_text_.records.new_best, &this->presentation_.menu_text_.records.stage_best })
+	const MenuRecordText& records = this->presentation_.menu_text_.records;
+	for (const std::wstring& line : { records.new_best_line(L"100.0%"), records.stage_best_line(L"100.0%") })
 	{
-		const Vector2F size = fixed_menu_size("menu_text.records", *label + L" 100.0%", results.contribution_font);
+		const Vector2F size = fixed_menu_size("menu_text.records", line, results.contribution_font);
 		const RectangleF bounds(Vector2F(results_fill_right - size.x, results.record_y), size);
 		if (!results_panel.contains(bounds) || bounds.y < results_fill_bottom ||
 			bounds.bottom() > results.proceed_y || bounds.x <= contribution_heading.right())

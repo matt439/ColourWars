@@ -361,7 +361,7 @@ Presentation::Validation::SticksHelp Presentation::Validation::validate_sticks_h
 	}
 	const Vector2F caption_size = fixed_menu_size("menu_text.help.aim_cutoff",
 		this->presentation_.menu_text_.help.aim_cutoff, controls.help_font);
-	const float probe_height = render.measure_text(render.resolve_sprite_font(controls.help_font), L"Move").y;
+	const float probe_height = caption_size.y;
 	const RectangleF caption(preview.aim.position() -
 		Vector2F(0.0f, probe_height + controls.art.focus_padding.y), caption_size);
 	if (!std::isfinite(probe_height) || probe_height <= 0.0f || !help_area.contains(caption) ||

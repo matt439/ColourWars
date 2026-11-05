@@ -44,11 +44,11 @@ std::wstring ResultsMenuInitial::record_text(const RecordOutcome& record,
 	}
 	if (record.new_best && record.best)
 	{
-		return text.new_best + L" " + percentage_text(*record.best);
+		return text.new_best_line(percentage_text(*record.best));
 	}
 	if (record.best)
 	{
-		return text.stage_best + L" " + percentage_text(*record.best);
+		return text.stage_best_line(percentage_text(*record.best));
 	}
 	return std::wstring();
 }

@@ -10,12 +10,13 @@ using namespace labrador;
 
 namespace
 {
-	// The save token is labrador::key_name; which keys Jump may take, and what a
-	// player is shown for each, are this game's.
+	// The save token is labrador::key_name; which keys Jump may take, and the
+	// letter printed on each, are this game's. Space has no legend: its word is
+	// the locale's (menu_text.controls.labels.space).
 	struct KeyName
 	{
 		Key key;
-		std::wstring_view label;
+		std::wstring_view legend;
 	};
 
 	constexpr std::array<KeyName, 27> key_names{ {
@@ -24,22 +25,23 @@ namespace
 		{ Key::k, L"K" }, { Key::l, L"L" }, { Key::m, L"M" }, { Key::n, L"N" }, { Key::o, L"O" },
 		{ Key::p, L"P" }, { Key::q, L"Q" }, { Key::r, L"R" }, { Key::s, L"S" }, { Key::t, L"T" },
 		{ Key::u, L"U" }, { Key::v, L"V" }, { Key::w, L"W" }, { Key::x, L"X" }, { Key::y, L"Y" },
-		{ Key::z, L"Z" }, { Key::space, L"Space" }
+		{ Key::z, L"Z" }, { Key::space, {} }
 	} };
 
+	// None and Start have no legend: their words are the locale's.
 	struct ControlName
 	{
 		PadControl control;
 		std::string_view name;
-		std::wstring_view label;
+		std::wstring_view legend;
 	};
 	constexpr std::array<ControlName, 12> control_names{ {
-		{ PadControl::none, "none", L"None" }, { PadControl::a, "a", L"A" }, { PadControl::b, "b", L"B" },
+		{ PadControl::none, "none", {} }, { PadControl::a, "a", L"A" }, { PadControl::b, "b", L"B" },
 		{ PadControl::x, "x", L"X" }, { PadControl::y, "y", L"Y" },
 		{ PadControl::left_shoulder, "lb", L"LB" }, { PadControl::right_shoulder, "rb", L"RB" },
 		{ PadControl::left_trigger, "lt", L"LT" }, { PadControl::right_trigger, "rt", L"RT" },
 		{ PadControl::left_stick, "ls", L"LS" }, { PadControl::right_stick, "rs", L"RS" },
-		{ PadControl::start, "start", L"Start" }
+		{ PadControl::start, "start", {} }
 	} };
 
 	const ControlName& control_entry(PadControl control)
@@ -90,12 +92,10 @@ namespace
 	{
 		MouseButton button;
 		std::string_view name;
-		std::wstring_view label;
 	};
 	constexpr std::array<MouseName, 5> mouse_names{ {
-		{ MouseButton::left, "mouse_left", L"Left click" }, { MouseButton::right, "mouse_right", L"Right click" },
-		{ MouseButton::middle, "mouse_middle", L"Middle click" }, { MouseButton::x1, "mouse_x1", L"Mouse 4" },
-		{ MouseButton::x2, "mouse_x2", L"Mouse 5" }
+		{ MouseButton::left, "mouse_left" }, { MouseButton::right, "mouse_right" },
+		{ MouseButton::middle, "mouse_middle" }, { MouseButton::x1, "mouse_x1" }, { MouseButton::x2, "mouse_x2" }
 	} };
 
 	constexpr std::array<const char*, keyboard_action_count> keyboard_action_names{
@@ -171,19 +171,6 @@ std::string_view desktop_control_name(const DesktopControl& control)
 		return entry->name;
 	}
 	return input_key_name(control.key);
-}
-
-std::wstring_view desktop_control_label(const DesktopControl& control)
-{
-	require_single(control);
-	if (unbound(control)) { return L"None"; }
-	if (control.button != MouseButton::none)
-	{
-		const MouseName* entry = mouse_entry(control.button);
-		if (entry == nullptr) { throw std::invalid_argument("Unsupported mouse button"); }
-		return entry->label;
-	}
-	return input_key_label(control.key);
 }
 
 DesktopControl desktop_control_from_name(std::string_view name)
@@ -273,9 +260,9 @@ std::string_view input_key_name(Key key)
 	return labrador::key_name(key);
 }
 
-std::wstring_view input_key_label(Key key)
+std::wstring_view input_key_legend(Key key)
 {
-	for (const auto& value : key_names) { if (value.key == key) { return value.label; } }
+	for (const auto& value : key_names) { if (value.key == key) { return value.legend; } }
 	throw std::invalid_argument("Keyboard Jump key must be A-Z or Space");
 }
 
@@ -301,7 +288,7 @@ bool pad_control_supported(PadControl control)
 
 std::string_view pad_control_name(PadControl control) { return control_entry(control).name; }
 
-std::wstring_view pad_control_label(PadControl control) { return control_entry(control).label; }
+std::wstring_view pad_control_legend(PadControl control) { return control_entry(control).legend; }
 
 PadControl pad_control_from_name(std::string_view name)
 {

@@ -199,8 +199,9 @@ void StickSettingsMenu::init()
 		this->calculate_widget_position(0, 8)), [this] { this->close(); });
 	this->status_ = this->add_text("status", L"", look.help_font, look.status_position);
 	this->connection_ = this->add_text("connection", L"", look.help_font, look.controls_position);
+	// One help-font line, measured on the locale's own preview label.
 	const float label_height = this->render_resources()->measure_text(
-		this->render_resources()->resolve_sprite_font(look.help_font), L"Move").y;
+		this->render_resources()->resolve_sprite_font(look.help_font), this->text().help.aim_cutoff).y;
 	this->raw_movement_ = this->add_text("raw_movement", L"", look.help_font,
 		look.stick_preview.raw_movement.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
 	this->movement_response_ = this->add_text("movement_response", L"", look.help_font,

@@ -220,7 +220,8 @@ namespace
 
 	void check_results_line()
 	{
-		MenuRecordText text{ L"NEW BEST", L"STAGE BEST", L"BEST WIN", L"BEST COVER", L"PLAYED" };
+		MenuRecordText text{ L"NEW BEST {percentage}", L"STAGE BEST {percentage}",
+			L"BEST WIN {percentage} / {played}", L"BEST COVER {percentage} / {played}", L"{count} PLAYED" };
 		require(ResultsMenuInitial::record_text(RecordOutcome(), text).empty(),
 			"An unrecorded result showed a record line");
 		RecordOutcome outcome;

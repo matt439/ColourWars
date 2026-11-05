@@ -137,7 +137,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         {
             const auto& preview = look.stick_preview;
             const float label_height = app.render_resources()->measure_text(
-                app.render_resources()->resolve_sprite_font(look.help_font), L"Move").y;
+                app.render_resources()->resolve_sprite_font(look.help_font), words.aim_cutoff).y;
             const Vector2F caption = preview.aim.position() - Vector2F(0.0f, label_height + art.focus_padding.y);
             add("aim_cutoff", words.aim_cutoff, caption,
                 Vector2F(look.controls_position.x + look.controls_size.x - caption.x,

@@ -612,17 +612,55 @@ the single-state `== on_ground` checks, which test exactly that state.
 
 ### Player-facing copy out of C++ (`HYG#69`)
 
-- Move the stage record line's word order and separators to `menu_text`
-  templates (`main_menu_stage_select.cpp:275`). Move the random mark `?` too.
-- Start `OptionRow` empty instead of `L"null"` (`option_row.cpp:39`).
-- Measure the localised label, not an English word, on the Sticks page
-  (`stick_settings_menu.cpp:200`).
-- Move the prompt-rewrite table that only the Debug menu reaches out of
-  `MenuPage` (`menu_page.cpp:155`).
-- Drop the English control words the game never shows
-  (`input_bindings.cpp:96`).
-- Add the `P1`-`P4` labels and the window title to localisation.md's "Not yet
-  localisable" list, or move the label pattern to `presentation.json`.
+**Done 2026-11-06; no change to any English line.** A locale can now reorder
+the record lines and replace the Random mark; `qps-ploc` brackets both.
+
+- `menu_text.records` are templates: `new_best` and `stage_best` take
+  `{percentage}`, `played` takes `{count}`, and `best_win` and `best_coverage`
+  take `{percentage}` and `{played}` (the formatted played line). Startup
+  formats each once and refuses a missing or repeated token.
+  `MenuRecordText::new_best_line`, `stage_best_line`, `played_line` and
+  `best_line` build them for Stage Select's `record_line`, the sibling the grep
+  found in Results' `record_text`, and both validators. The Random mark is
+  `menu_text.stage.random_mark`, checked at startup for its glyphs in the
+  announcement font; the page still refuses a mark that leaves the preview. A
+  startup fit check was tried and dropped: `menu_text` fixtures shrink the
+  preview to 2 pixels and must still load.
+- `OptionRow` starts its value empty.
+- The Sticks page, its validator and the four probe copies of its layout
+  measure the help-font line on `menu_text.help.aim_cutoff` instead of `"Move"`.
+  In the shipped `lato_black_24` both measure 38, the line spacing, in English
+  and `qps-ploc`, so nothing moves. Only a font whose caption glyphs are taller
+  than its line spacing differs: the caption then clears the aim box by its own
+  height, so `menu_text`'s 29-high `G` overflow case is gone and its
+  track-touching fixture moved from 447 to 455.
+- `MenuPage::set_prompts` builds a vector of prompts as given; the Debug menu
+  writes `A/Enter` and `B/Esc` itself. Shipped pages already passed copy.
+- `input_bindings.cpp` keeps only legends: `input_key_legend` and
+  `pad_control_legend` (empty for Space, None and Start) replace
+  `input_key_label` and `pad_control_label`, the mouse names lost their labels,
+  and `desktop_control_label` is gone (`controls_text::desktop_label` checks the
+  control through `desktop_control_name`). The `menu_text` case now checks that
+  every word comes from the copy instead of matching English twins.
+- [localisation.md](localisation.md#not-yet-localisable) lists `P1`-`P4`, which
+  name the pencil-cell badge and stay with it, and the window title, set
+  before the locale is chosen.
+
+Left as found: the Debug menu's `"Queued"` measure and its English, which are
+developer text; the HUD identity separator and the results `A`/`B` marks,
+recorded choices (frozen review). The painter's Stage paper check now expects
+literal English record lines rather than gluing the copy itself.
+
+Both presets build under `/W4 /WX`. The full default acceptance list (78
+cases, `-Parallel 4`) passed in Release; in Debug, `input_bindings`,
+`keyboard_jump_capture`, `action_bindings`, `menu_text`, `locales`,
+`match_records`, `stage_selection`, `stick_settings`, `series_stage_rule`,
+`handicap`, `menu_presentation`, `settings`, `user_stages`, `results_awards`,
+`player_identity` and `debug_console` passed. `check-startup.ps1` passed in
+both presets, plain and with `-Locale qps-ploc`. `check-painter.ps1`'s
+`StickSettingsOnly`, `StickReadoutsOnly`, `ControlsMenuOnly`, `MenuTextOnly`,
+`StagePaperOnly`, `ResultsMenuOnly` and `KeyboardJumpOnly` passed in both
+presets.
 
 ### Presentation reader and validator helpers (`HYG#70`)
 

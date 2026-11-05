@@ -476,6 +476,7 @@ namespace presentation_read
 		}
 		text.stage.team_a_picks = read_menu_line(stage, "team_a_picks");
 		text.stage.team_b_picks = read_menu_line(stage, "team_b_picks");
+		text.stage.random_mark = read_menu_line(stage, "random_mark");
 		// Keyed by data, not by a C++ list: which ids are shipped is the
 		// manifest's, so validate_stage_names judges the key set once it loads.
 		const JsonValue stage_names = json.object("stage_names");
@@ -490,11 +491,19 @@ namespace presentation_read
 			text.stage_names.emplace(id, read_menu_line(stage_names, id.c_str()));
 		}
 		const JsonValue records = json.object("records");
-		text.records.new_best = read_menu_line(records, "new_best");
-		text.records.stage_best = read_menu_line(records, "stage_best");
-		text.records.best_win = read_menu_line(records, "best_win");
-		text.records.best_coverage = read_menu_line(records, "best_coverage");
-		text.records.played = read_menu_line(records, "played");
+		const auto read_record = [&](const char* key, std::initializer_list<LabelToken> tokens)
+		{
+			const std::wstring value = read_menu_line(records, key);
+			try { std::ignore = format_label_template(value, tokens); }
+			catch (const std::invalid_argument& error)
+			{ throw std::runtime_error(records.where() + ": " + key + ": " + error.what()); }
+			return value;
+		};
+		text.records.new_best = read_record("new_best", { { L"{percentage}", L"0.0%" } });
+		text.records.stage_best = read_record("stage_best", { { L"{percentage}", L"0.0%" } });
+		text.records.best_win = read_record("best_win", { { L"{percentage}", L"0.0%" }, { L"{played}", L"1" } });
+		text.records.best_coverage = read_record("best_coverage", { { L"{percentage}", L"0.0%" }, { L"{played}", L"1" } });
+		text.records.played = read_record("played", { { L"{count}", L"1" } });
 		const JsonValue hud = json.object("hud");
 		text.hud.team_a = read_menu_line(hud, "team_a");
 		text.hud.team_b = read_menu_line(hud, "team_b");
@@ -723,6 +732,27 @@ std::wstring MenuResultsText::team_a_percentage_line(const std::wstring& percent
 std::wstring MenuResultsText::team_b_percentage_line(const std::wstring& percentage) const
 {
 	return format_label_template(this->team_b_percentage, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuRecordText::new_best_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->new_best, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuRecordText::stage_best_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->stage_best, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuRecordText::played_line(int count) const
+{
+	return format_label_template(this->played, { { L"{count}", std::to_wstring(count) } });
+}
+
+std::wstring MenuRecordText::best_line(bool solo, const std::wstring& percentage, int count) const
+{
+	return format_label_template(solo ? this->best_coverage : this->best_win,
+		{ { L"{percentage}", percentage }, { L"{played}", this->played_line(count) } });
 }
 
 const std::wstring& MenuResultsText::award_line(MatchAward award) const

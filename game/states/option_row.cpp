@@ -36,7 +36,7 @@ OptionRow::OptionRow(const std::string& name,
 		label_text->set_scale(scale);
 		this->label_ = std::move(label_text);
 
-		auto value_text = std::make_unique<UiText>(name + "_value", L"null",
+		auto value_text = std::make_unique<UiText>(name + "_value", L"",
 			style.item_font, value_position, render_resources, value_colour);
 		this->value_text_ = value_text.get();
 		this->value_ = std::move(value_text);
@@ -53,10 +53,10 @@ OptionRow::OptionRow(const std::string& name,
 			style.shadow_colour,
 			style.item_shadow_offset);
 
-		// The page must set the displayed value before the first draw.
+		// Empty until the page sets the displayed value, before the first draw.
 		auto value_text = std::make_unique<colourwars::UiTextDropShadow>(
 			name + "_value",
-			L"null",
+			L"",
 			style.item_font,
 			value_position,
 			render_resources,

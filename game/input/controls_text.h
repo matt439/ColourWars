@@ -11,7 +11,7 @@
 // The player-facing controls text, formatted with menu_text.controls
 // (controls_copy.h), so a locale reaches every word of it. The label
 // functions take the words from the copy and the legends (A-Z, the pad
-// buttons) from input_bindings.h, whose labels stay the base locale's twins.
+// buttons) from input_bindings.h, which holds no words.
 namespace controls_text
 {
     // Label coverage includes A/D/S even though those keys conflict with other

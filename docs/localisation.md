@@ -204,9 +204,10 @@ as does the ` / ` between a primary control and its alternate. The words are
 (an unbound Pause key or alternate), `start` and the five mouse buttons
 (`mouse_left` ... `mouse_x2`). [controls_text](../game/input/controls_text.h)
 puts the two together for the reminder, the Controls help, the Keyboard Keys
-and Pad Buttons rows and the Keys capture status. `input_bindings.cpp`'s own
-labels are the base locale's twins of those words, for probes and
-diagnostics; the `menu_text` case fails if the two drift. The save tokens
+and Pad Buttons rows and the Keys capture status. `input_bindings.cpp` holds
+only the legends (`input_key_legend`, `pad_control_legend`, empty for Space,
+None and Start) and no English words; the `menu_text` case checks every word
+comes from the copy. The save tokens
 (`"space"`, `"mouse_left"`, `"start"`, ...) are a file format and never
 change with a locale.
 
@@ -277,6 +278,14 @@ These still come from somewhere a locale does not reach:
   defaults before `wWinMain` reads the locales, and the failure report covers
   a failure to load them. Localising them means reading the locale earlier,
   or deciding they stay English.
+- **The `P1`-`P4` player labels.** `PlayerBadge::label`
+  ([player_badge.cpp](../game/objects/player_badge.cpp)) spells them for the
+  roster rows' `{player}` token and the HUD identity box. They name the badge,
+  whose `P` and digit are drawn as pencil cells rather than set in a font, so
+  the label and the drawing change together or not at all.
+- **The window title**, `Colour Wars`
+  ([main.cpp](../game/main.cpp)), written into the window options before the
+  locale is chosen. It is the display name, as on the title screen's wordmark.
 - **Developer text**: the Debug console, overlays and diagnostics stay English.
 
 All but the last need moving into data (or, for the dialogs, a decision to

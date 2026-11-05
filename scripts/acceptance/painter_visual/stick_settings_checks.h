@@ -237,7 +237,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         {
             return std::to_wstring(static_cast<int>(std::lround(value * 100.0f))) + L"%";
         };
-        const float label_height = measure(look.help_font, L"Move").y;
+        const float label_height = measure(look.help_font, L"Right stick: radial cutoff").y;
         add(values[0] + (state.connected ? L" - connected" : L" - disconnected"), look.help_font,
             look.controls_position, art.ink);
         add(L"Left stick raw X: " + percent(left.x), look.help_font, preview.raw_movement.position() -

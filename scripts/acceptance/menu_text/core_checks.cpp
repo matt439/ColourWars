@@ -130,6 +130,14 @@ namespace menu_text_acceptance
         {
             require(text.records.*entry.field == entry.text, std::string("Stage record default changed: ") + entry.key);
         }
+        // The templates own the words, their order and the joins; the numbers are the caller's.
+        require(text.records.new_best_line(L"68.4%") == L"NEW BEST 68.4%" &&
+            text.records.stage_best_line(L"72.1%") == L"STAGE BEST 72.1%" &&
+            text.records.played_line(2) == L"2 PLAYED" &&
+            text.records.best_line(false, L"68.4%", 12) == L"BEST WIN 68.4% / 12 PLAYED" &&
+            text.records.best_line(true, L"37.0%", 2) == L"BEST COVER 37.0% / 2 PLAYED",
+            "Stage record templates no longer compose the shipped English lines");
+        require(text.stage.random_mark == L"?", "Stage Select's Random mark default changed");
         for (const auto& entry : hud_text)
         {
             require(text.hud.*entry.field == entry.text && presentation.hud().labels.*entry.field == entry.text,
@@ -148,16 +156,20 @@ namespace menu_text_acceptance
             require(text.controls.labels.*entry.field == entry.text && text.keyboard_jump.labels.*entry.field == entry.text,
                 std::string("Control label default changed, or Keyboard Keys lost it: ") + entry.key);
         }
-        // input_bindings.cpp's labels are the base locale's twins of these words.
+        // The words come only from the copy: input_bindings.cpp holds legends,
+        // and none for Space, None or Start.
         const ControlLabels& words = text.controls.labels;
-        require(words.space == input_key_label(Key::space) && words.none == desktop_control_label({}) &&
-            words.none == pad_control_label(PadControl::none) && words.start == pad_control_label(PadControl::start) &&
-            words.mouse_left == desktop_control_label({ Key::none, MouseButton::left }) &&
-            words.mouse_right == desktop_control_label({ Key::none, MouseButton::right }) &&
-            words.mouse_middle == desktop_control_label({ Key::none, MouseButton::middle }) &&
-            words.mouse_x1 == desktop_control_label({ Key::none, MouseButton::x1 }) &&
-            words.mouse_x2 == desktop_control_label({ Key::none, MouseButton::x2 }),
-            "presentation.json's control labels drifted from input_bindings.cpp's base-locale twins");
+        require(input_key_legend(Key::space).empty() && pad_control_legend(PadControl::none).empty() &&
+            pad_control_legend(PadControl::start).empty() &&
+            controls_text::key_label(words, Key::space) == words.space && controls_text::desktop_label(words, {}) == words.none &&
+            controls_text::pad_label(words, PadControl::none) == words.none &&
+            controls_text::pad_label(words, PadControl::start) == words.start &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::left }) == words.mouse_left &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::right }) == words.mouse_right &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::middle }) == words.mouse_middle &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::x1 }) == words.mouse_x1 &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::x2 }) == words.mouse_x2,
+            "A control-label word did not come from presentation.json, or input_bindings.cpp kept one");
         for (const auto& entry : stage_briefing_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
@@ -282,6 +294,10 @@ namespace menu_text_acceptance
         for (const auto& entry : end_text) { required("end", entry.key); }
         for (const auto& entry : end_continuation_text) { required("end", entry.key); }
         for (const auto& entry : record_text) { required("records", entry.key); }
+        variants.rejects("records.new_best", [](rapidjson::Document& d) { d["menu_text"]["records"]["new_best"].SetString("NEW BEST"); });
+        variants.rejects("records.played", [](rapidjson::Document& d) { d["menu_text"]["records"]["played"].SetString("{count} {count} PLAYED"); });
+        variants.rejects("records.best_win", [](rapidjson::Document& d) { d["menu_text"]["records"]["best_win"].SetString("BEST WIN {percentage}"); });
+        required("stage", "random_mark");
         for (const auto& entry : hud_text) { required("hud", entry.key); }
         for (const auto& entry : countdown_text) { required("countdown", entry.key); }
         for (const auto& entry : controls_text_defaults) { required("controls", entry.key); }
@@ -394,6 +410,9 @@ namespace menu_text_acceptance
             variants.rejects(field, [role](rapidjson::Document& d)
                 { select_font(d, role, "menu_text_tall"); }, &world);
         }
+        // The Random mark draws in the announcement font.
+        variants.rejects("menu_text.stage.random_mark", [](rapidjson::Document& d)
+            { d["menu_text"]["stage"]["random_mark"].SetString("Glyph~"); d["main_menu"]["fonts"]["announcement"].SetString("menu_text_limited"); }, &world);
     }
 
     void check_prompt_bar(World& world, const Presentation& look)
