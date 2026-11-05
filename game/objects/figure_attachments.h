@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/objects/aim_facing.h"
 #include "game/objects/crude_drawing.h"
 #include "game/objects/weapon.h"
 #include "game/config/presentation/presentation_match.h"
@@ -175,7 +176,7 @@ private:
     {
         const auto& grip = look_->grips.at(static_cast<size_t>(weapon.type()));
         const float rotation = weapon.rotation();
-        const bool flip = rotation > labrador::pi_over_2 || rotation < -labrador::pi_over_2;
+        const bool flip = aim_faces_left(rotation);
         const auto point = [&](labrador::Vector2F local)
         {
             if (flip) { local.y = -local.y; }

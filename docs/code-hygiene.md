@@ -1108,6 +1108,11 @@ table were already refused.
 - `game/objects/aim_facing.h`'s `aim_faces_left` replaces `Weapon::facing_left`
   and the idle drip's copy; the roller and the base weapon set their flip from
   it in one line each. The idle drip's disabled branch calls `clear()`.
+  Found in review, the bot's predicted nozzle (`match_bot_territory.h`'s
+  `top_launch_lands`) and the figure's hands (`figure_attachments.h`) call it
+  too, so neither can disagree with the weapon's flip. The two probes that
+  restate the test as an oracle (`bot_territory.cpp`,
+  `idle_drip/level_checks.h`) are left for the probe rows.
 - `paint_owners::slot_or_fallback` serves `PaintAudio` and, also found,
   `BlockedShotFeedback`, whose `owner_index` is gone. `Projectile::team()` is
   now public and replaces the layer-to-team mapping in `StructurePaintable`
@@ -1141,7 +1146,10 @@ Both presets build under `/W4 /WX`. The full default acceptance list
 `check-painter.ps1` leaves passed in both presets: `Monitor`, `Countdown`,
 `Closing`, `RevealTuneColours`, `SurfaceFinish`, `MiniatureTerrain`,
 `IdleDripTuneColours`, `FerryDirection`, `WeaponCatalog`, `Crossfeed` and
-`BlockedShotTuneColours` (each `...Only`).
+`BlockedShotTuneColours` (each `...Only`). The review follow-up rebuilt both
+presets and passed `bot_territory`, `bot_ballistics`, `skirmish_bot`,
+`idle_drip`, `weapon_feedback`, `figure_slips` and the painter's
+`WeaponCatalogOnly` in each.
 
 The row as filed:
 
