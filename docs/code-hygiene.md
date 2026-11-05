@@ -4,8 +4,712 @@ This is the live owner for `HYG` rows in [TODO](../TODO.md). The author asked
 for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
-`CI#7`; `CI#1`, the foreground debug-console check, stays with
+`CI#8`; `CI#1`, the foreground debug-console check, stays with
 [the debug console](debug-console-record.md#foreground-checks-ci1).
+
+## Hygiene review (2026-11-05)
+
+On 2026-11-05 the author asked for a large code hygiene review and for its
+findings to go into TODO the same way as the architecture review's. The
+findings are recorded, frozen, in
+[the review](review/2026-11-05-code-hygiene-review.md); this section owns their
+status. 500 verified findings are grouped into the rows below. The one engine-side
+finding is ledger draft `ENG#35` in [engine-reports.md](review/engine-reports.md).
+
+The rows keep the rules the [architecture rows](#architecture-review-2026-10-30)
+work under. They may rename, add a small shared helper and move code between
+files. They preserve behaviour, the inheritance-first style (no T11 findings),
+save and content formats, and evaluation and RNG order, unless the row says
+otherwise. A row that changes behaviour (`HYG#58`-`HYG#60` and parts of others)
+says so in its commit. Each row builds Debug and Release and runs the acceptance
+cases its files touch. A row that only edits probes runs those probes in both
+presets, and a row that only edits scripts runs the matching `check-*` script
+or selection checker. Each row names its sites; a site that stands for a group
+says so ("and siblings", "about twenty"), and the row starts with a grep for the
+rest. Refresh line numbers from `8a04c998` before starting. Work the defects (`HYG#58`-`HYG#60`) first, then in
+the listed order. Several rows are independent and can be taken in any order;
+the rows that depend on another say so.
+
+### Controls percentages on the real rows (`HYG#58`)
+
+`Presentation::Validation::validate_settings_percentages`
+(`game/config/presentation/presentation_validation_settings.cpp:651`) fit-checks
+Controls rows `{1, 2, 3, 4}`. Music and SFX are rows 4 and 5
+(`controls_settings_menu.cpp:91-94`), so the SFX value is never checked. Name the
+Controls and Sticks value rows once, as constants the two pages and the validator
+share, check those rows and correct the comment. Correct
+`scripts/check-painter/verify-percentage-text.ps1:26`, which checks rows 4/5 but
+names rows 3/4 and 2/3, by building its messages from the same table. Done when a
+too-wide SFX percentage fails startup validation (one added rejection variant in
+the probe that covers percentages).
+
+### Save and settings correctness (`HYG#59`)
+
+Four behaviour fixes, one commit each:
+
+- `Save::file_exists` (`save.cpp:422`) treats any open failure as missing, so a
+  locked or unreadable save is overwritten with defaults. Decide "missing" with
+  `std::filesystem::exists` (an error counts as present), so an existing file that
+  fails to open reaches `keep_unreadable_save`.
+- The legacy-save `catch` (`save.cpp:447`) drops the file silently. Report it on
+  stderr like the other read failures and leave the file in place.
+- `ControlsSettingsMenu::apply_settings` (`controls_settings_menu.cpp:189`) saves
+  the `PlaySettings` snapshot taken at `init()`. Merge the page's own fields onto
+  the current `settings_session()->play_settings()`, as
+  `StickSettingsMenu::apply_settings` does, and delete the back-fill list.
+- Default `operator==` on `StickSettings` and `PlayerProfile`
+  (`player_profiles.h:25`) instead of comparing a hand-kept field list.
+
+Done when the save probes cover a present-but-unopenable save (kept aside, not
+overwritten) and a child-page change that survives Controls Apply.
+
+### Checks that can fail (`HYG#60`)
+
+Make each listed check able to fail, or delete it:
+
+- `bot_driver.cpp:260`: swap the two mover-hold requires, so each reports its
+  own failure.
+- `menu_navigation.cpp:313`: do the substitution outside the `try`, so a fixture
+  failure is not counted as a rejection.
+- `debug_background_checks.h:479`: count real motor calls, or drop
+  `native_motor_calls` from the summary and `verify-rumble.ps1`.
+- `countdown_checks.h:86`: use the three-player layout for three players.
+- `input_bindings/reader_checks.cpp:9`: compare `SlotInput` with a defaulted
+  `operator==`.
+- `crossfeed_checks.h:78`: pass the gate and ferry cues and the production stage
+  title. Do the same in `route_warning_fixtures.h:51`.
+- `script_checks.cpp:433`: lint `tune` paths and weapon names in shipped `.cfg`
+  scripts.
+- `session_checks.cpp:215`: move the shipping Session checks to a case that runs
+  in both presets.
+- `align_origin_checks.h:9` and `clipboard_checks.h:190`: use the command id, and
+  check the dereferenced `find_if`.
+- `check-level-editor-save-guidance.ps1:76`: address menu items by command id and
+  name the steps for what they do.
+- `check-acceptance-selection.ps1:116`: measure the receipt flags instead of
+  setting constants.
+- `prepare_review.py:67`: compare each master with its project's own recorded
+  hash.
+
+Done when each check fails against a deliberately broken input. Show it once
+locally, and do not commit the broken input.
+
+### Status text after the 2026-11-05 decisions (`HYG#61`)
+
+Reword every comment, `_comment` and doc line that still describes a row settled
+on 2026-11-05 as an open trial or pending review. The sites are
+`tuning.h:261`, `tuning.json:29` and `:187`, `audio_pipeline.py:1`, `README.md:456`
+and the matching AGENTS.md audio paragraph, `architecture.md:182` (report 28 was
+declined), `game/art/README.md:300`, `gameplay-tuning.md:536`,
+`level-editor.md:1082`, `design-process.md:358`, `game/art/painter/README.md:58`,
+the `scripts/debug/*.cfg` headers and the "prototype" diagnostics in
+`replay_checks.cpp:604`. Fix `prepare_review.py:50`'s status text and regenerate
+`PROVENANCE.md`, `cues.json` and the review page from it. Write row ids with `#`.
+Frozen reviews are not touched.
+
+### Comments and reference docs that drifted (`HYG#62`)
+
+Correct each comment and doc line against the code. First the `GameData` class
+comment (`game_data.h:15`), which says objects share it, the opposite of the
+architecture rule. Then `level.h:127`, `main.cpp:73`, `level_inputs.h:14` and
+`save.cpp:453`. Then `debug-console.md:1585` (the RTTI list has 16 names) and
+`:1615` (`SkirmishBot`), `README.md:206` and `:216`, `level-format.md:35`, `:197`
+and `:596`, `docs/README.md:25` and `:48`, `menu-presentation.md:191`,
+`oop-guide.md:311` (the `low` cue), and `architecture.md:105` (the SHA stamp).
+
+### One atomic file writer and one debug file-stem rule (`HYG#63`)
+
+Add one game-side `replace_file_atomically(path, bytes)`. It uses a unique
+sibling temporary, flushes, renames with write-through and removes the temporary
+on failure. Route the six writers through it: `save.cpp`, `fatal_report.cpp`,
+`debug_files.cpp:25`, `tune_commands.cpp:52`, `ReplayFile::write`
+(`replay.cpp:1027`, which truncates in place and ignores the
+`create_directories` error) and the screenshot writer (`debug_screenshot.cpp:73`,
+which leaves partial PNGs). Give the editor one shared copy
+(`stage_registration.cpp:516`) inside its own library. Add
+`debug_file_name::valid_stem` and use it in the five stem checks
+(`script_commands.cpp:74`), which gives `perf.capture` (`:416`) the reserved-name
+refusal. Make `replay_names` (`replay_commands.cpp:66`) use the non-throwing
+iterator increment.
+
+### Diagnostics and impossible states (`HYG#64`)
+
+- `FatalReport::capture` classifies the game's own "Player out of bounds" throw by
+  `strcmp` (`fatal_report.cpp:113`). Throw a `PlayerOutOfBounds` type and classify
+  it by type. This is not report 30, which is about the engine's message.
+- Print the real `fatal_report_path` in the dialog (`:153`).
+- Reword the spawn diagnostic (`level_loaded_info.cpp:251`): players are not
+  "retired". Reword the paintable-role error (`level.cpp:820`), which names a
+  removed enum spelling.
+- Replace the seven MSVC-only `std::exception("...")` throws (`player.cpp:1116`,
+  `projectile.cpp:151`, `player_figure.cpp:430`, `team_colour.cpp:23` and
+  siblings) with `std::logic_error` or `std::invalid_argument` naming the value.
+- Make Stage Select's out-of-range slot (`main_menu_stage_select.cpp:313`) and
+  Pause's unknown confirmation (`pause_menu.cpp:551`) throw instead of drawing
+  `ERROR` or `Error`.
+
+### Fixed arrays and lifetime hazards (`HYG#65`)
+
+- Size or fill arrays from their declared size instead of literal lists:
+  `was_dead` from `players_.size()` (`level.cpp:368`), `pad_devices_`
+  (`player_identity_hud.h:101`), the boosts (`game_states.cpp:210`), the per-pad
+  arrays in `settings_session.h:72`, `MenuDirectionRepeat` with
+  `menu_direction_count` (`menu_input.h:19`) and the crossing arrivals
+  (`bot_team_trials.cpp:200`).
+- Add a `static_assert` that `terrain_role_name` covers every role
+  (`terrain_material.cpp:71`).
+- Give `DisplaySettingsChoice` default member initialisers
+  (`display_settings_trial.h:10`).
+- Delete copies on `Editor`, `ScreenMusic` and `ResumeAudio`.
+- Guard the pointer that is dereferenced, `settings_session()`, in
+  `bind_commands.cpp:230`.
+- Range-check `editor/win32_text.h:15`'s `size_t`-to-`int` conversion.
+
+### Match-domain rules and settings bounds in one place (`HYG#66`)
+
+In `game/match`, add `layout_for_humans(int)`, `bot_difficulty_key` and
+`bot_difficulty_from_key`, `valid_best_of`, `session_rounds`, a
+`series_stage_rules` array and `max_players`. Use them in place of these copies:
+
+- the human-count-to-layout copies (`main_menu_players.cpp:194`,
+  `match_plan.cpp:8`, `last_match_setup`, `team_selection.cpp:24`);
+- the five difficulty tables (`replay.cpp:92`, `player_control.h:11`,
+  `tuning.cpp:221`);
+- best-of (`last_match_setup.cpp:45`) and the round count
+  (`game_states.cpp:135`);
+- the stage-rule list (`main_menu_mode_select.cpp:141`);
+- the literal 4 and 2 in `match_setup.cpp:29` and the replay validators
+  (`replay.cpp:519`).
+
+In the same row, name the stick and play-setting bounds once (the 90% deadzone
+cap, the 5% step, sensitivity and volume ranges; `stick_settings_menu.cpp:146`,
+`play_settings.h:18`). Share the `StickSettings` and `SeatComfort` JSON readers
+between `save.cpp:191` and the profiles, so the readers and `normalized_deadzone`
+agree. Out-of-range saved values may now clamp instead of dropping; say so in
+the commit.
+
+### The level-format contract owns its numbers and names (`HYG#67`)
+
+- Add `slab_span`, `slab_rise` and `slab_thickness` to the contract
+  (`fixed_slab_paint_geometry.h:27`). Alias them from `FixedSlabGeometry`, and use
+  them in `fixed_slab_paintable.cpp:16`, `level_object_builder.cpp:557`,
+  `editor/slab_authoring.cpp:44`, the mirror and `blockout_aids`.
+- Tidy the contract headers. Make one initialised `Rectangle` instead of three,
+  and initialise `horizontal_motion_contract::Spec`. Make `standing()` use
+  `corridor_pad()` or document why not. Word the lift diagnostics neutrally.
+- Have the editor read the rules the contract owns since `HYG#46`. That means
+  scenery-colour, drawable-text and paintable-face tables in `game/contracts`,
+  `key::*` and `collision_named` instead of literals
+  (`horizontal_authoring.cpp:96`, `level_json.cpp:140-493`), `heading_name`, and
+  `user_stage_contract::usable_name` in `valid_basename`
+  (`stage_registration.cpp:106`).
+
+### `Player` move-state and contact predicates (`HYG#68`)
+
+Add a public `grounded()` and a free `supported(PlayerMoveState)` beside the
+enum (`player.h:557`), and private `on_flat_ground()` and `can_act()`. Use them at
+the twenty or so sites in `Player`, `Level`, `LevelBotWorld`, the Debug bot driver
+and probes. Share the contact-orientation loop between `end_contacts` and
+`choose_carrier` (`player.cpp:319`). Use one comparison rule in the velocity
+chain (`:1246`), and one identity fallback for the three sound indices in the
+constructor (`:71`). Floating-point results must not change: the probes'
+movement fingerprints must match before and after.
+
+### Player-facing copy out of C++ (`HYG#69`)
+
+- Move the stage record line's word order and separators to `menu_text`
+  templates (`main_menu_stage_select.cpp:275`). Move the random mark `?` too.
+- Start `OptionRow` empty instead of `L"null"` (`option_row.cpp:39`).
+- Measure the localised label, not an English word, on the Sticks page
+  (`stick_settings_menu.cpp:200`).
+- Move the prompt-rewrite table that only the Debug menu reaches out of
+  `MenuPage` (`menu_page.cpp:155`).
+- Drop the English control words the game never shows
+  (`input_bindings.cpp:96`).
+- Add the `P1`-`P4` labels and the window title to localisation.md's "Not yet
+  localisable" list, or move the label pattern to `presentation.json`.
+
+### Presentation reader and validator helpers (`HYG#70`)
+
+Move the duplicated helpers into shared ones:
+
+- `finite_rectangle` and `overlaps` (`presentation_validation_text.cpp:235`);
+- the `LabelPen` walk (`presentation_validation_settings.cpp:479`);
+- one `check_settings_row` (`:193`);
+- `check_plaque` (`presentation_read_match.cpp:347`);
+- `read_disabled_ink` (`presentation_read_menu.cpp:282`);
+- `read_pen_points` (`presentation_read_match.cpp:669`);
+- one block template formatter (`presentation_menu_text.cpp:62`, `:208`).
+
+Also:
+
+- Read the practice Pause spacing from data instead of `0.8` in both the page
+  and the validator (`pause_menu.cpp:292`, `presentation_validation_pause.cpp:38`).
+- Format limits in messages from the `menu_geometry` constants
+  (`presentation_read_menu.cpp:601`).
+- Prefix stage-scan copy errors with `menu_text.stage_scan`
+  (`presentation_validation_stage_scan.cpp:66`), and give cross-section errors a
+  position (`presentation.cpp:230`).
+- Move the five inline section reads out of the constructor (`presentation.cpp:114`).
+- Use one selectable-weapon count (`presentation_menu.h:171`), and name the focus
+  motion bounds once (`menu_focus_motion.cpp:10`).
+- Fix the misplaced doc comments (`presentation_match.h:207`, `menu_geometry.h:8`,
+  `presentation_validation_menu.cpp:215`).
+
+Diagnostics text may change; no accepted content may become rejected.
+
+### Presentation and content keys that mislead (`HYG#71`)
+
+- Call `require_known_keys` on the presentation objects with optional members
+  (`camera`, both `stage_scan` blocks) and correct the root comment
+  (`presentation.json:6`).
+- Delete the unused `menu_style.box_size` (`presentation_menu.h:84`).
+- Rename or move `main_menu.options_value_colour`, which only the Debug menu
+  uses (`presentation_read_menu.cpp:321`).
+- Move `hud.player_identity.background_colour`, which only Stage Select uses, to
+  that page (`presentation.json:809`).
+- Remove the about 25 unreferenced `sprite_sheet_1` strips and frames
+  (`sprite_sheet_1.json:5`).
+- Move the countdown controls-reminder look from `tuning.json` to presentation
+  (`countdown_cards.cpp:37`).
+- Rewrite the `_comment`s at `presentation.json:44` and `:698` and
+  `tuning.json:117` to describe the block.
+
+A renamed key is a content-format change; update every probe and tune path that
+names it.
+
+### Tuning and content-validation readers (`HYG#72`)
+
+- Fix the diagnostics that hard-code `./tuning.json` and "five weapons"
+  (`tuning.cpp:1024`), and the rumble messages that repeat constants
+  (`rumble.cpp:33`).
+- Correct the stale header comments (`tuning.h:27`, `:96`,
+  `tunnelling_limits.h:15`).
+- Use `content_value::number_text` instead of the local formatter
+  (`tunnelling_limits.cpp:50`), and drop the vacuous roller entry (`:90`).
+- Merge the duplicated stage-name throw (`content_validation.cpp:77`), and hoist
+  the supply-strip check out of its loop (`:289`).
+- Use `drawable_text`'s range constants (`stage_scan_diagnostics.cpp:75`).
+- Gather paint-underfoot validation in one place (`tuning.cpp:901`), and drop the
+  copied `splash_animation` field (`tuning.h:221`).
+- Move the run-animation threshold `600` into player tuning
+  (`player_figure.cpp:399`). Keep its value; this row moves it, it does not tune
+  it.
+- Use one base-locale spelling (`locale.cpp:423`).
+
+### Dead code in the game (`HYG#73`)
+
+Remove these, updating builders and probe fixtures:
+
+- `rotation_origin` from `tuning.json`, the reader and
+  `game/carried/rotation_origin.h` if nothing else uses it
+  (`projectile_details.h:10`);
+- `Player::primary_type_`;
+- `HorizontalCarryStep::current_top` and `HorizontalPaintImpact::global_entry`;
+- the empty arms in `do_jump` and the redundant pitch check
+  (`translated_airbrush_shadow.cpp:27`);
+- `to_projectile_type`, `projectile_name` and `PaintTile::draw_surface_rigid`;
+- `Weapon::nozzle_size` and the unused `Weapon` accessors and update parameters;
+- `build_projectiles`' trailing parameters and the duplicate `Projectile::type()`;
+- `DebugText::render_resources_`;
+- the `audio_resources` constructor parameter (`structure_paintable.cpp:56`);
+- the ten stale includes in `level.h`;
+- `MenuPage::calculate_center_position` and `float_resolution`, and the unused
+  `ProfilesMenu` accessors;
+- `hook_frames_`, and `text_wrap`'s `caller` parameter;
+- the dead includes in `main_menu.cpp`, `pause_menu.h`, `end_menu.h`,
+  `game_commands.cpp` (with `source_paths.h`; fix the CMake comment),
+  `debug_director_hooks.cpp` and `save.h`.
+
+Write the validate-only calls one way (`save.cpp:577`), and merge
+`sound_groups.cpp`'s two anonymous namespaces.
+
+### Menu-page helpers (`HYG#74`)
+
+Add `menu_geometry::fit_scale` and `fits`, `wrap_step` and `step_tool`,
+`MenuPage::pop_page` and one action-arming helper. Then convert:
+
+- the about seven fit-to-box copies (`option_row.cpp:26`);
+- the four paper-bounds checks (`main_menu_weapon_select.cpp:401`);
+- the pad and keyboard arming (`menu_input.cpp:145`);
+- the wrap idioms (`main_menu_options.cpp:376`) and tool stepping
+  (`pause_menu.cpp:155`);
+- the three close bodies (`settings_panel_page.cpp:94`) and the two
+  `debug_dismiss` bodies (`pause_menu.cpp:130`);
+- the hand-rolled status fitting (`controls_settings_menu.cpp:166`);
+- `end_menu.cpp:169`, the two results fills (`results_menu.cpp:410`) and its
+  unread index (`:454`);
+- the `LevelEndInfo` copy (`results_menu.h:23`), `main_menu.cpp:204` and the
+  copied roster vectors (`game_states.cpp:204`).
+
+### Shared drawing helpers (`HYG#75`)
+
+Add `CrudeDrawing::paper_card` and `keyed_block`, the `AirbrushShadow` tile
+helpers, named primitive-frame constants (or presentation's sheet and fill), and
+a `TerrainMaterial` swatch accessor. Then delete these copies:
+
+- the four paper cards (`countdown_art.cpp:45`) and the two `draw_block`s
+  (`weapon_feedback.cpp:59`);
+- the wet band (`paint_tile.cpp:159`) and the shadow tiles
+  (`fixed_slab_shadow.cpp:13`);
+- the literal frame names (`team_gate_structure_paintable.cpp:44`,
+  `teammate_marker.cpp:22`) and the second swatch resolve
+  (`fixed_slab_paintable.cpp:65`);
+- the copied team colours (`translating_structure_paintable.h:105`) and the
+  `RenderResources` pointer (`reveal_art.h:19`);
+- the ruler periods (`terrain_material.cpp:226`) and the second `splitmix64`
+  (`terrain_material_drawings.cpp:33`);
+- the `1080` literal (`level_draw.cpp:173`) and the copied seed mix
+  (`quiet_character.h:24`).
+
+Fix the pencil-cap comment (`terrain_material_drawings.cpp:341`). Rendered
+pixels must not change, so the painter leaves that draw these must pass
+unchanged on MattPC.
+
+### Weapon, projectile and opening logic (`HYG#76`)
+
+- Add `Weapon::play_one_shot` for the identical Bucket and Sniper overrides
+  (`weapon_bucket.cpp:27`, `weapon_sniper.cpp:28`), and fix the inverted
+  parameter name (`weapon.cpp:357`).
+- Add one `aim_faces_left` for the roller (`weapon_roller.cpp:73`) and the idle
+  drip (`idle_drip.cpp:107`), and call `clear()` in the idle drip (`:72`).
+- Add `paint_owners::slot_or_fallback` (`paint_audio.cpp:38`), and use
+  `Projectile::team()` instead of the copied mapping
+  (`structure_paintable.cpp:150`).
+- Add `HorizontalMotionSpec::pose_at` and `axis_part` (`level_structures.cpp:47`),
+  and the opening time helpers (`match_opening.cpp:429`).
+- Make `TerrainMaterial` use the `level_format` names (`terrain_material.cpp:40`)
+  and throw on an unknown material (`:123`) instead of drawing a paint tin. That
+  is a behaviour change for malformed content only; say so in the commit.
+
+### Bot geometry, replay and Debug bots (`HYG#77`)
+
+Bot geometry:
+
+- Share `crosses_interior` (`match_bot_ramp.cpp:23`) and one held-jump step
+  count (`match_bot.cpp:367`).
+- Have the death branch call `replan_traversal` (`:415`).
+- Use `RectangleF` equality (`match_bot_ramp.cpp:11`).
+- Define one step length in `simulation.h:9` (two values exist today). Keep the
+  value the shipping step uses, and record any probe that pins the other.
+- Delete `height_across`.
+
+Replay and the Debug bots:
+
+- Refuse an unknown team word (`replay.cpp:585`).
+- Fix the format-4 and "as before the table" comments (`match_plan.cpp:357`,
+  `:98`).
+- Move FNV-1a and `hex64` from `tune_document.h:87` to a hash header.
+- Use `Bot::neutral()` (`replay.cpp:1141`), and add `Bot::observes_tool` instead
+  of comparing names (`bot_driver.cpp:110`).
+- Name the bot constants (`bot.cpp:129`), and drop `BotSeatView::step`.
+
+### Editor shell and document (`HYG#78`)
+
+- Make File > New read `template.json` (`level_document.cpp:285`).
+- Use one `{label, type}` palette table (`editor_window.cpp:189`) and one snap
+  table (`:719`).
+- Dispatch `WM_COMMAND` only for menus and `BN_CLICKED` (`:724`), so a combo
+  selection does not apply pending text.
+- Share the added-entry label loop (`level_document.cpp:964`).
+- Read the player size from tuning (`:482`).
+- Print "Registration failed:" once (`stage_registration.cpp:820`).
+- Build the shell sources once as a library that the DPI probe links
+  (`editor/CMakeLists.txt:55`).
+
+### Use the engine's text, path and environment helpers (`HYG#79`)
+
+Replace the local copies with the engine's helpers:
+
+- `labrador::narrow` for the local `narrow` (`debug_tokenizer.cpp:25`) and
+  `narrow_build_label` (`replay_commands.cpp:37`);
+- `labrador::widen` for `ProfilesMenu`'s byte copies (`profiles_menu.cpp:10`);
+- `labrador::path_to_utf8` for the three path conversions in
+  `debug_director_hooks.cpp:499`;
+- one editor `path_text.h` for the five editor copies (`user_stage_save.cpp:19`),
+  and no `path.string()` in messages (`blockout_aids.cpp:22`);
+- a `DebugArgs::parse_double` for tune's copy;
+- an `environment_variable()` helper for the two `_dupenv_s` readers
+  (`sound_groups.cpp:149`).
+
+### Debug console commands (`HYG#80`)
+
+Fix the messages and help text:
+
+- `screenshot` names a file it does not write (`game_commands.cpp:334`).
+- The F-key help is fixed text that goes stale after `bind`
+  (`debug_registry.cpp:422`).
+- The `binds.cfg` warning omits `binds.reset` (`bind_commands.cpp:77`), and the
+  inverted `moved` variable hides a silent failure (`:59`).
+- The doc-comment examples and counts have drifted (`debug_director_impl.h:115`,
+  `tune_scope.h:19`).
+
+Share the duplicated helpers:
+
+- the arity check (`debug_registry.cpp:294`) and the queued predicate
+  (`debug_director_hooks.cpp:423`);
+- the behaviour list (`player_commands.cpp:371`) and `respawn`/`kill` (`:68`);
+- the severity prefix (`debug_log.cpp:24`), `upper()` (`bind_commands.cpp:31`) and
+  `format_number` (`game_commands.cpp:28`);
+- the overlay names (`view_commands.cpp:71`) and `OverlayHandles::resolve`
+  (`debug_console_view.cpp:77`);
+- the restart-flag check (`debug_menu_model.cpp:101`);
+- one way to register a command with menu traits (`bind_commands.cpp:23`).
+
+Also:
+
+- Make `reload` validate the text it applies (`game_commands.cpp:418`).
+- Move `DebugStatus` to its header (`debug_variable.cpp:9`).
+- Use `DebugPerf::max_capture_frames` (`script_commands.cpp:413`).
+- Name the tune file indices (`tune_commands.cpp:23`), and check `parse_double`'s
+  result (`:396`).
+
+### The `SCREAMING_SNAKE` constant rule (`HYG#81`)
+
+AGENTS.md reserves `SCREAMING_SNAKE` for macros (`AGENTS.md:403`). About 59
+constants use it anyway, for example `SIMULATION_HZ`, `DESIGN_RESOLUTION`,
+`WEAPON_NAMES` and the `directory_consts.h` strings. The author decides first:
+amend the rule to admit constants, or rename. If renaming, do file-local
+constants first, then one header per commit, and make `directory_consts.h`'s
+per-translation-unit `const static std::string`s `inline constexpr` character
+arrays. That last change is worth doing whichever way the rule goes.
+
+### Names that mislead (`HYG#82`)
+
+Mechanical renames, one per commit:
+
+- the key-domain helpers' "Jump" (`input_bindings.cpp:285`) and
+  `KeyboardJumpMenu`/`KeyboardJumpCapture` (the save key `keyboard_jump` stays);
+- the settings panels' `player` parameter to `opening_slot`
+  (`profiles_menu.h:15`);
+- `match_owns_pad_slot` to `match_owns_input_slot` (`pause_menu.h:19`);
+- the `_1_player` members (`main_menu.h:322`);
+- `duration_font_` (`main_menu_mode_select.cpp:128`);
+- `SettingsPanelPage::text_` (`settings_panel_page.h:64`);
+- `Validation::presentation_` (`presentation_validation.h:67`);
+- the editor's `horizontal_authoring`, now that it covers lifts.
+
+In the same row, move `MenuInputAction` from `states/` to
+`game/input/menu_input_action.h` (`action_bindings.h:7`), and drop the exception
+from docs/architecture.md.
+
+### Probe stages and assets from the manifest (`HYG#83`)
+
+In `support/stage_catalog.h`, add `manifest_level_paths` and `shipped_stage`. In
+a new `support/content_world.h`, add `load_cpu_assets(content, render, audio)`,
+which reads `manifest.json`. Then replace these copies:
+
+- the hand-picked stage lists behind "every" claims (`story_audio.cpp:163`,
+  `level_editor/content_checks.cpp:106`, `countdown_checks.h:423`);
+- the stale "four shipped stages" guard (`terrain.cpp:77` and tunnelling);
+- the private manifest readers (`locales.cpp:75`);
+- the repeated lists (`miniature_terrain_checks.h:441`, `instant_replay.cpp:25`,
+  `user_stages.cpp:149`, `stage_selection.cpp:58`);
+- the 28 hard-coded `movement_course` descriptors (`bot_setup_checks.h:226`) and
+  the hard-coded music cue (`music_flow_checks.h:469`);
+- the about twenty Worlds that copy the manifest's sheets and fonts
+  (`aim_marker.cpp:48`, `weapon_catalog.cpp:57`, `tune_menu_checks.cpp:74`);
+- the identical `menu_text` and `menu_presentation` Worlds
+  (`menu_presentation.cpp:65`), and `moving_structure`'s copy of the
+  paint-surface helpers.
+
+Exact-count pins stay with `stage_selection`. A check whose coverage grows may
+find new failures; fix them in the same row, or record them as their own rows.
+
+### Probe save isolation and JSON fixtures (`HYG#84`)
+
+Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
+`LOCALAPPDATA` override with `remove_all`, `save_path()`, `save_bytes()` and a RAII
+`ReplacementLock`. Replace the about twenty copies (`display_trial.cpp:26`,
+`settings.cpp:20`, `remembered_setup.cpp:40`, `menu_motion_checks.h:7`,
+`controls_menu_checks.h:7` and others) and the 64 spelled-out save paths. Add
+`support/json_fixture.h`, with `read_document`, `write_document` and
+`rejects_variant` using checked I/O and one scratch policy. Port the edit-a-copy
+fixtures and read/write helpers (`combat_feedback.cpp:342`, `view_shake.cpp:553`,
+`series_stage_rule.cpp:361`, `story_audio.cpp:59`, `locales.cpp:59`,
+`practice_workshop.cpp:337`, `menu_presentation.cpp:233`).
+
+### Level-driving and route fixtures (`HYG#85`)
+
+After `HYG#83`. Move `one_bot_roster`, `owned_top_paint`,
+`check_final_input_replay` and the trial rosters into
+`bot_navigation/fixtures.h`. Delete the copies in `bot_trials.cpp:137`,
+`bot_arena_routes.cpp:89` and `:119`, `team_gate.cpp:411` and the other bot
+cases. Add `support/player_course.h` for the six `Course` fixtures that restate
+`Level`'s tick order (`tool_motion.cpp:281`). Add `support/route_run.h` for the
+Map, Services and Run fixture copied across `crossfeed`, `cq_blockout` and
+`press_tower` (`crossfeed/fixtures.cpp:53`). Collapse crossfeed's five
+steering copies (`opposed_loop_checks.cpp:36`), the seat-to-team expression
+(`bot_team_trials.cpp:316`), the region classifier
+(`turbulence_blockout/tool_checks.cpp:15`) and `movement_feedback_visual.cpp:729`.
+The trial fingerprints and counts must match before and after.
+
+### `painter_visual` fixtures (`HYG#86`)
+
+Add the following to `painter_fixtures.h`:
+
+- `TuneColourSession`, the about-90-line scaffold copied into about twenty
+  `*_tune_colour` headers (`blocked_shot_tune_colour_checks.h:275`);
+- `add_probe_font`, the nine shifted-font copies
+  (`competitive_winner_checks.h:272`);
+- `CanvasProbeRoot` and `stack_frame` (`end_menu_checks.h:3`,
+  `main_menu_checks.h:3`);
+- the opening and HUD style fingerprints, with explicit exclusions, so a new
+  field is not silently dropped (`acting_tune_colour_checks.h:4`,
+  `power_light_tune_colour_checks.h:5`);
+- `pixel_bounds` and `srgb_luminance` (`countdown_checks.h:19`);
+- `controlled_spray` (`action_combat_checks.h:136`).
+
+Also:
+
+- Replace the `const_cast` seeding (`controls_menu_checks.h:31`).
+- Share the Options reference renderers (`options_defaults_checks.h:152`) and
+  the help copy (`controls_help_checks.h:8`).
+- Make `StageScanStderrCapture` safe (`stage_scan_checks.h:12`).
+
+Port leaves in batches. Each batch runs its leaves on MattPC with identical
+pins.
+
+### Probe tidy-ups (`HYG#87`)
+
+- Delete the `srand` calls that have seeded nothing since `HYG#39`
+  (`press_tower_checks.h:49`, `aim_marker.cpp:320`, `player_identity.cpp:328`,
+  `level_checks.cpp:207`, `home_loop_checks.cpp:82`, `paint_surfaces/fixtures.h:94`).
+- Remove the dead probe code: the unused `Mouse` members, the SettingsSession
+  locals (`remembered_setup.cpp:214`), the `Totals` fields (`team_gate.cpp:439`),
+  the no-op slot claim (`instant_replay.cpp:54`), the silenced parameters, the
+  unreachable `#else` throws (`painter_visual.cpp:812`), the unused includes,
+  crossfeed's `swept_surface` and the unbuilt
+  `turbulence_slab_stage/tools/register.cpp`.
+- Tidy the `debug_console` case:
+  - one `{path, accessor}` colour table with named indices
+    (`fixtures.h:411`, `tune_colour_sweep_checks.h:126`);
+  - shared reserved-name, tick and `command()` helpers;
+  - the `DebugPerf` and `ReplayFile` constants;
+  - checked lookups;
+  - one declaration index, and the stale comments.
+- Share the `level_editor` refusal, lookup and file helpers. Return a value from
+  `motion_of` (`drive_checks.cpp:33`). Require the clipboard restore and
+  `DeleteFileW`.
+- Fix the idioms: RAII `captured_stderr` (`match_records.cpp:389`), one
+  `story_audio` include convention, internal linkage for file-local helpers, the
+  BOM in `team_palette.cpp` and the fixture folders `fatal_report` leaves.
+- Fix the fused words (`exceeded500`), the `#`-less row ids (`ROAD34`, `POL36`,
+  `CI1`) and the stale "draft" headers.
+
+### Painter verifier evidence helpers (`HYG#88`)
+
+Add `scripts/check-painter/evidence.ps1` with `Assert-PainterPpm`,
+`ConvertTo-PainterFinite`, `Get-PainterSaveCounts`, key-set and CSV asserts and
+one PPM-to-PNG conversion. Port the about forty verifiers
+(`verify-hud-closing-shade.ps1:4`, `verify-competitive-winner.ps1:119`,
+`verify-desktop-tune-colour.ps1:6`). That restores the payload-length check
+`verify-feedback-tune-colours.ps1:30` lost, and settles one case rule.
+
+Also:
+
+- Drop the hand-added totals (`verify-desktop-tune-colour.ps1:66`).
+- Derive the selector token instead of the 100-branch chain
+  (`check-painter.ps1:194`).
+- Rename `$profile` (`:307`).
+- Check the git exit codes (`evidence-record.ps1:13`).
+- Treat `check-path.ps1` as required (`check-painter-selection.ps1:265`).
+- Fix the contact sheet's rumble filter (`contact-sheet.ps1:145`).
+
+Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
+
+### Shared PowerShell probe-pipeline and art helpers (`HYG#89`)
+
+Add dot-sourced helpers:
+
+- `probe-build.ps1`, for the CMakeCache, compile-flag and library pipeline that
+  six scripts copy (`check-movement-feedback.ps1:33`; it has drifted on the
+  rapidjson root and Xinput);
+- `check-diagnostics.ps1`, for the stderr and optional-bank scans
+  (`check-startup.ps1:257`);
+- one window enumerator (`:77`);
+- one art PNG writer (`build-painter-art.ps1:17`, `build-terrain-art.ps1:17`).
+
+Also:
+
+- Require Windows PowerShell in the `build-*-art` scripts
+  (`drawing-references.ps1:4`).
+- Use the CI query in `build.ps1:43`, and `vswhere` in
+  `capture-study-b.ps1:78`.
+- Fix the messages: `check-display-awake.ps1:80`,
+  `check-failure-reporting.ps1:307`, `check-debug-console.ps1:51` and
+  `driver.ps1:1`.
+- Correct `scripts/README.md:6`'s OutputDirectory claim.
+
+Run each touched `check-*` script in both presets.
+
+### Art build scripts and art docs (`HYG#90`)
+
+- Read the team colours from `presentation.json` in the painter lineup
+  (`build-painter-art.ps1:516`) and the icon (`icon.json:14`).
+- Name `slips.png` in the status line (`:593`), and fix the row-check comment
+  (`:176`).
+- Stop emitting the unread `idle` frame (`:431`), and move the locomotion timing
+  into `painter.json` (`:419`).
+- Make `build_icon.py --check` decode-based, or drop its CI claim
+  (`build_icon.py:6`).
+- Correct the art READMEs: the hue count (`painter/README.md:145`), the pen
+  table (`:107`), the owned directories (`game/art/README.md:276`), the source
+  rows (`:262`) and the terrain props (`:244`).
+
+Regenerated art must be byte-identical, or the commit says why not.
+
+### Python audio and study tools (`HYG#91`)
+
+- Add one shared `write_wave` (`foley/build.py:104`; the three writers clip
+  differently).
+- Name the ADPCM geometry and the peak ceiling once in `audio_pipeline`
+  (`audio_pipeline.py:235`, `prepare_review.py:228`).
+- Fix the overwritten test fixture (`test_audio_pipeline.py:166`).
+- Make `--only` refuse unknown ids (`music/render.py:342`).
+- Report the publisher's failures on stderr (`publish_runtime_bank.py:69`).
+- Share the capture limit (`analyze_frame_pacing.py:71`).
+- Normalise Study B's tie-break (`study-b/analyse.py:111`).
+- Fix the pose error (`make-references.py:146`).
+- Add a `scripts/studies/_paths.py` for the four copies of the privacy guard.
+
+The tracked bank must be unchanged.
+
+### Debug `.cfg` scripts (`HYG#92`)
+
+- Add the two stations `station_tour.cfg` skips. It claims every station.
+- Extract `station_tour_begin` and `station_tour_end`.
+- Collapse the seven `review_turbulence_*` copies into one family script with
+  wrappers.
+- Factor the movement and tools profiles the `jump_*` and `crossfeed_*`
+  scripts restate.
+- Fix `review_finish_details.cfg:38`'s scope comment.
+
+The shipped-script lint (`debug_console`) must still pass.
+
+### Build, CI and repository housekeeping (`CI#8`)
+
+- Rename the vcpkg manifest to `colourwars`, drop the hand-repeated version and
+  the unused `doctest` (`vcpkg.json:2`, `:11`). Keep the cache key in step.
+- Move the audio tests after Build, so their failure does not skip every check
+  (`ci.yml:120`).
+- Write the manifest-to-runtime-asset rule once (`cmake/release_assets.cmake:10`).
+  Fix the "four directories" and rapidjson comments (`game/CMakeLists.txt:344`,
+  `:245`).
+- Drop the retired kit from `.gitattributes`, and the duplicate `out/` ignore
+  (`.gitignore:383`).
+- Share the Windows job setup between `ci.yml` and `nightly.yml`
+  (`nightly.yml:67`), and keep a manual dispatch from cancelling the scheduled
+  run (`:24`).
+- Drop the dead `testPresets` (`CMakePresets.json:31`) and the `review-*` trigger
+  (`ci.yml:8`).
+- Add `retention-days` to the startup upload (`:397`).
+- Make the four rapidjson includes use angle brackets (`save.cpp:12`).
+- Fix `lint.py`'s docstring (`:57`), and derive `PACKAGED_DOCS` from the package
+  rule (`:15`).
+- Read each document once in `check_doc_links.py:119`.
+
+This touches `gate`'s jobs, so the pull request says it weakens nothing (AGENTS.md).
 
 ## Architecture review (2026-10-30)
 
