@@ -427,13 +427,27 @@ namespace debug_console_acceptance
 				}
 				return nullptr;
 			};
-		// A file name alone, or a file-prefixed path to a tunable leaf.
-		const auto tune_target = [&](const std::string& target)
+		// Each tune command's own grammar (tune_commands.cpp): tune takes a
+		// file-prefixed leaf; tune.reset a leaf, a file or all; tune.diff a file
+		// or all; tune.save a file, all or force, then only force.
+		const auto tune_leaf = [&](const std::string& target)
 			{
 				const std::size_t dot = target.find('.');
-				const TuneDocument* document = tune_file(std::string_view(target).substr(0, dot));
-				return document != nullptr && (dot == std::string::npos ||
-					document->find(std::string_view(target).substr(dot + 1)) != nullptr);
+				const TuneDocument* document = dot == std::string::npos ? nullptr :
+					tune_file(std::string_view(target).substr(0, dot));
+				return document != nullptr && document->find(std::string_view(target).substr(dot + 1)) != nullptr;
+			};
+		const auto tune_whole = [&](const std::string& target)
+			{ return target == "all" || tune_file(target) != nullptr; };
+		const auto tune_words = [&](const std::vector<std::string>& w)
+			{
+				const std::string first = w.size() > 1 ? w[1] : std::string();
+				const std::string second = w.size() > 2 ? w[2] : std::string();
+				if (w[0] == "tune") { return tune_leaf(first); }
+				if (w[0] == "tune.reset") { return first.empty() || tune_whole(first) || tune_leaf(first); }
+				if (w[0] == "tune.diff") { return first.empty() || tune_whole(first); }
+				return (first.empty() || first == "force" || tune_whole(first)) &&
+					(second.empty() || (second == "force" && first != "force"));
 			};
 
 		std::vector<std::string> names;
@@ -488,8 +502,9 @@ namespace debug_console_acceptance
 					}
 					else if (w[0] == "tune" || w[0] == "tune.reset" || w[0] == "tune.diff" || w[0] == "tune.save")
 					{
-						require(w.size() < 2 || tune_target(word(1)) || (w[0] != "tune" && w[0] != "tune.diff" && word(1) == "all"),
-							statement.where() + ": no tunable " + word(1));
+						require(tune_words(w), statement.where() + ": " + w[0] + " cannot take " +
+							(w.size() > 1 ? word(1) : std::string("no target")) +
+							(w.size() > 2 ? " " + word(2) : std::string()));
 					}
 					else if (w[0] == "weapon")
 					{

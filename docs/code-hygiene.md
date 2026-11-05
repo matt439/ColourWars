@@ -119,7 +119,8 @@ compare stick settings field by field were left as they are.
 
 ### Checks that can fail (`HYG#60`)
 
-**Done 2026-11-05.** The game's behaviour is unchanged; the checks changed, and
+**Done 2026-11-05**, except three fixture items that no check notices (see
+below). The game's behaviour is unchanged; the checks changed, and
 the Session checks now run in Release too. Three commits:
 
 - `bot_driver`'s mover hold requires a drop before it requires one after the
@@ -144,7 +145,10 @@ the Session checks now run in Release too. Three commits:
 - `debug_console`'s shipped-script lint resolves every `tune`, `tune.reset`,
   `tune.diff` and `tune.save` target against `tuning.json` and
   `presentation.json` as `TuneDocument` reads them, and checks `weapon`'s seat
-  and weapon name.
+  and weapon name. Each tune command keeps its own grammar from
+  `tune_commands.cpp`: `tune` takes a file-prefixed leaf, `tune.reset` a leaf,
+  a file or `all`, `tune.diff` a file or `all`, and `tune.save` a file, `all`
+  or `force`, then only `force`.
 - The shipping Session checks (end-page continuation, result and score text,
   `next_session`) moved from `debug_console`'s Debug-only `session_checks.cpp`
   to a new default case, `session`, which runs in both presets.
@@ -170,7 +174,11 @@ support past its bounded hold"); a renamed key in the rejection list ("Input
 tuning field must exist"); a flipped `skip_intro` in the repeated sample
 ("Repeated reader access consumed or changed a sampled action edge"); a renamed
 `tune` path and a misspelt weapon in shipped scripts ("no tunable
-tuning.player.gravity_renamed", "weapon 4 sprayr in a 4-player script"); a
+tuning.player.gravity_renamed", "weapon 4 sprayr in a 4-player script"), then,
+after the per-command grammar, a bare `tune tuning` and a
+`tune.save tuning.player.gravity` ("tune cannot take tuning", "tune.save cannot
+take tuning.player.gravity") while `tune.diff all`, `tune.save force` and
+`tune.save tuning force` passed; a
 staged "Rematch!" in Release ("A finished single round or solo practice offers
 Rematch"); an entry search that finds nothing ("Clipboard fixture lacks a
 collision entry"); the Align menu item removed ("Align origin menu availability
@@ -179,10 +187,16 @@ command 116"); a process started in each runner's preflight ("started 1
 process(es)"); and a changed foley record hash ("Master hash differs from its
 project's record: player.step.01").
 Against background-supplement evidence copied from a passing run,
-`verify-rumble.ps1` threw once `recorded_updates` read 419. The layout,
-crossfeed and route-warning changes correct fixtures that checked the wrong
-thing rather than checks that could not fail; their leaves passed on the
-production inputs, and no broken input was tried for them.
+`verify-rumble.ps1` threw once `recorded_updates` read 419.
+
+Three items do not meet the row's done criterion: no check notices them. The
+layout, crossfeed and route-warning changes make the fixtures match production,
+but putting each old input back still passes. With `four_player` for three
+players, `-CountdownOnly` passed in both presets, and `-SetupMotionOnly` and
+`-TeamSetupOnly` passed in Release. With the gate and ferry cues left out and the
+old literal identity label, `-CrossfeedOnly`, `-RouteWarningOnly`,
+`-GatePermissionOnly` and `-FerryDirectionOnly` passed in Release. The fixtures
+are now right, but a later drift in them would still go unnoticed.
 
 Both presets build under `/W4 /WX`. `bot_driver`, `menu_navigation`,
 `input_bindings`, `session`, `instant_replay` and `debug_console` passed in
