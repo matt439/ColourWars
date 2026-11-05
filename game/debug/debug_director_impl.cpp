@@ -98,7 +98,7 @@ void DebugDirectorImpl::background_changed()
 void DebugDirectorImpl::sync_background_audio(bool active)
 {
 	if (this->application_ == nullptr || this->data_ == nullptr || this->data_->audio_resources() == nullptr ||
-		this->data_->save() == nullptr) { return; }
+		this->data_->settings_session() == nullptr) { return; }
 	AudioResources& audio = *this->data_->audio_resources();
 	if (!active && (this->background_scripts_ || this->background_audio_muted_))
 	{

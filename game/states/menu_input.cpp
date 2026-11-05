@@ -54,7 +54,7 @@ ProcessedMenuInput menu_input_for_owner(
 	return ProcessedMenuInput();
 }
 
-Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
+Direction MenuDirectionRepeat::update(const std::array<bool, menu_direction_count>& held,
 	float dt, float delay, float interval)
 {
 	Direction wanted = Direction::none;
@@ -90,10 +90,11 @@ Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
 Direction MenuDirectionRepeat::update_pad(const GamepadState& pad,
 	float dt, float delay, float interval, const InputTuning& tuning, bool use_stick)
 {
-	const float values[] = { -pad.left_stick.y, pad.left_stick.y,
+	// In the order of default_action_bindings().directions.
+	const std::array<float, menu_direction_count> values{ -pad.left_stick.y, pad.left_stick.y,
 		-pad.left_stick.x, pad.left_stick.x };
 	const auto dpad = dpad_direction_held(default_action_bindings(), pad);
-	std::array<bool, 4> held = {};
+	std::array<bool, menu_direction_count> held = {};
 	for (int i = 0; i < menu_direction_count; ++i)
 	{
 		this->stick_[i] = use_stick && values[i] >= (this->stick_[i] ?

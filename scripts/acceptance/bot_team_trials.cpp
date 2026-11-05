@@ -197,7 +197,12 @@ namespace
         std::array<bool, tower_contacts.size()> landed{};
         int summit_steps = 0;
         // First active step on each crossing contact; -1 if never.
-        std::array<int, crossing_contacts.size()> arrival{ -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+        std::array<int, crossing_contacts.size()> arrival = []
+        {
+            std::array<int, crossing_contacts.size()> never{};
+            never.fill(-1);
+            return never;
+        }();
         PlayerState previous_state = PlayerState::alive;
         std::uint64_t eliminations = 0, enemy_lethal_taken = 0, uncredited_lethal = 0;
     };

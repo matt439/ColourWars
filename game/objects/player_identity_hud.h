@@ -98,7 +98,7 @@ private:
 	// set by the Debug director, so empty in Release.
 	std::vector<std::wstring> seat_labels_;
 	// See set_pad_devices; -1 until set, which is the slot's own pad.
-	std::array<int, input_slots::pad_count> pad_devices_ = { -1, -1, -1, -1 };
+	std::array<int, input_slots::pad_count> pad_devices_ = input_slots::per_pad(-1);
 	// By participant: each HUD identity box's whole text. Built from the seat, the
 	// player's team, pad (fixed unless a seat is reclaimed) and seat_labels_,
 	// so only construction, set_seat_labels and set_pad_devices rebuild it;

@@ -366,7 +366,7 @@ float Level::zoom_out_camera_ratio() const
 void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal)
 {
-	std::array<bool, 4> was_dead{};
+	std::vector<bool> was_dead(this->players_.size());
 	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
 		was_dead[participant] = this->players_[participant]->state() == PlayerState::dead;

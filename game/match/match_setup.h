@@ -89,7 +89,7 @@ private:
 
 	std::vector<SeatSetup> player_settings_;
 	// Per pad input slot, the pad that now drives it; -1 is the slot itself.
-	std::array<int, input_slots::pad_count> devices_ = { -1, -1, -1, -1 };
+	std::array<int, input_slots::pad_count> devices_ = input_slots::per_pad(-1);
 	int best_of_ = 1;
 	std::optional<float> duration_;
 	SeriesStageRule series_stage_rule_ = default_series_stage_rule;

@@ -75,6 +75,8 @@ const char* terrain_role_name(TerrainRole role)
 		"ruler_fill", "ruler_marks", "eraser_fill", "eraser_shade",
 		"metal_light", "metal_dark", "shadow", "shadow_deep",
 		"face", "hud_paper", "hud_ink", "highlight", "prop_accent" };
+	// A missing name leaves the last entries null; every role must have one.
+	static_assert(names.back() != nullptr, "terrain_role_name lacks a TerrainRole");
 	return names.at(static_cast<size_t>(role));
 }
 

@@ -7,9 +7,11 @@
 
 struct DisplaySettingsChoice
 {
-	labrador::ScreenResolution resolution;
-	bool fullscreen;
-	TeamColourPair palette;
+	// The save's own defaults (save.h), so a choice built field by field
+	// never carries an indeterminate value.
+	labrador::ScreenResolution resolution = labrador::ScreenResolution::s_1920_1080;
+	bool fullscreen = false;
+	TeamColourPair palette = TeamColourPair::random;
 	// Saved on Keep with the rest, like the palette; not part of the trial.
 	bool vsync = true;
 };

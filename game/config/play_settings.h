@@ -81,7 +81,7 @@ struct PlaySettings
 	bool aim_marker = true;
 	bool reduce_effects = false;
 	std::array<StickSettings, input_slots::pad_count> sticks{};
-	std::array<bool, input_slots::pad_count> pad_rumble{ true, true, true, true };
+	std::array<bool, input_slots::pad_count> pad_rumble = input_slots::per_pad(true);
 	std::array<SeatComfort, input_slots::pad_count> pad_comfort{};
 
 	float music_gain() const { return static_cast<float>(music_volume) / 100.0f; }

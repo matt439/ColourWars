@@ -45,6 +45,9 @@ namespace colourwars_editor
     public:
         explicit Editor(HINSTANCE instance);
         ~Editor();
+        // Owns its window, font, menu and accelerators.
+        Editor(const Editor&) = delete;
+        Editor& operator=(const Editor&) = delete;
         int run(int show, const std::filesystem::path& initial_path);
 
     private:

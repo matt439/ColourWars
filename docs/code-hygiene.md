@@ -411,20 +411,48 @@ Both presets build under `/W4 /WX`. `fatal_report`, `level_format`,
 
 ### Fixed arrays and lifetime hazards (`HYG#65`)
 
-- Size or fill arrays from their declared size instead of literal lists:
-  `was_dead` from `players_.size()` (`level.cpp:368`), `pad_devices_`
-  (`player_identity_hud.h:101`), the boosts (`game_states.cpp:210`), the per-pad
-  arrays in `settings_session.h:72`, `MenuDirectionRepeat` with
-  `menu_direction_count` (`menu_input.h:19`) and the crossing arrivals
-  (`bot_team_trials.cpp:200`).
-- Add a `static_assert` that `terrain_role_name` covers every role
-  (`terrain_material.cpp:71`).
-- Give `DisplaySettingsChoice` default member initialisers
-  (`display_settings_trial.h:10`).
-- Delete copies on `Editor`, `ScreenMusic` and `ResumeAudio`.
-- Guard the pointer that is dereferenced, `settings_session()`, in
-  `bind_commands.cpp:230`.
-- Range-check `editor/win32_text.h:15`'s `size_t`-to-`int` conversion.
+**Done 2026-11-06.** No behaviour change for any input the game can produce;
+the editor's text conversion now refuses a string longer than `INT_MAX`
+instead of truncating its length.
+
+- `input_slots::per_pad(value)` ([input_slots.h](../game/input/input_slots.h))
+  fills an array of `pad_count`. It replaces the four-element literals in
+  `PlayerIdentityHud::pad_devices_`, the entry boosts in `game_states.cpp`,
+  `SettingsSession::worn_`, and the siblings the grep found:
+  `MatchSetup::devices_` and `PlaySettings::pad_rumble`. `shuffle_teams`' seat
+  order is `std::iota` instead of `{ 0, 1, 2, 3 }`.
+- `Level::update_level_logic`'s `was_dead` is a `std::vector<bool>` of
+  `players_.size()`, not a fixed four.
+- `MenuDirectionRepeat`'s held, stick and stick-value arrays are sized by
+  `menu_direction_count`.
+- `bot_team_trials`' crossing arrivals are filled with -1 to the contact
+  list's size instead of nine literals.
+- `terrain_role_name`'s table has a `static_assert` that its last entry is
+  set, which a missing name would leave null.
+- `DisplaySettingsChoice` defaults to the save's own defaults (`s_1920_1080`,
+  windowed, random palette).
+- `Editor`, `ScreenMusic` and `ResumeAudio` delete their copy constructor and
+  copy assignment.
+- `bind_commands.cpp` checks `settings_session()`, the pointer it
+  dereferences, instead of `save()`. The same mismatch in `tune_target.cpp`'s
+  `can_check_levels` and `DebugDirectorImpl::sync_background_audio` is fixed
+  the same way.
+- `editor/win32_text.h`'s `wide` and `narrow` take their length through a
+  checked `win32_length`. `stage_scan_diagnostics.cpp` already range-checks;
+  `debug_tokenizer.cpp`'s unchecked copy is the local `narrow` that
+  [`HYG#79`](#use-the-engines-text-path-and-environment-helpers-hyg79) replaces.
+
+Left alone: probe expectations written as four-element literals
+(`menu_navigation`, `roster_checks`, `settings`) state the expected value
+rather than fill a size, so they stay.
+
+Both presets build under `/W4 /WX`. `menu_navigation`, `player_identity`,
+`settings`, `stick_settings`, `display_trial`, `terrain`, `input_bindings`,
+`action_bindings`, `bot_roster`, `team_selection`, `handicap`,
+`player_profiles`, `camera_framing`, `moving_structure`, `story_audio`,
+`session` and `debug_console` passed in Debug and Release; the opt-in
+`bot_team_trials` compiled in both and passed in Release.
+`check-level-editor.ps1` passed in both presets.
 
 ### Match-domain rules and settings bounds in one place (`HYG#66`)
 

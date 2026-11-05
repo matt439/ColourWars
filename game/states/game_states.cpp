@@ -207,7 +207,7 @@ void GameLevel::init()
 			{ return this->data()->debug().drives_slot(seat.num); }))
 	{
 		// Each worn profile keeps the Boost its seat started with (ROAD#21).
-		std::array<int, input_slots::pad_count> boosts{ -1, -1, -1, -1 };
+		std::array<int, input_slots::pad_count> boosts = input_slots::per_pad(-1);
 		for (const SeatSetup& seat : seats)
 		{
 			if (seat.controller == PlayerController::human && input_slots::is_pad(seat.num))

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/input/gamepads.h"
+#include <array>
 #include <string>
 
 // Stable device slots: gamepads first, then a shared keyboard/mouse slot.
@@ -13,6 +14,15 @@ namespace input_slots
 	constexpr int keyboard_and_mouse = pad_count;
 
 	constexpr int count = pad_count + 1;
+
+	// One value for every pad slot, so a per-pad array follows pad_count.
+	template <typename T>
+	constexpr std::array<T, pad_count> per_pad(const T& value)
+	{
+		std::array<T, pad_count> result{};
+		result.fill(value);
+		return result;
+	}
 
 	constexpr bool is_pad(int slot)
 	{

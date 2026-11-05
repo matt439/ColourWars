@@ -3,6 +3,7 @@
 #include "game/input/input_slots.h"
 #include <array>
 #include <cstdlib>
+#include <numeric>
 using namespace labrador;
 
 std::optional<float> MatchSetup::duration() const
@@ -114,7 +115,8 @@ bool MatchSetup::shuffle_teams()
 	const int count = this->player_count();
 	if (count < 2 || !this->input_roster_complete()) { return false; }
 
-	std::array<int, input_slots::pad_count> seats{ 0, 1, 2, 3 };
+	std::array<int, input_slots::pad_count> seats{};
+	std::iota(seats.begin(), seats.end(), 0);
 	for (int last = count - 1; last > 0; --last)
 	{
 		const int chosen = std::rand() % (last + 1);

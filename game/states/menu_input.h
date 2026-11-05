@@ -16,14 +16,14 @@ class MatchSetup;
 class MenuDirectionRepeat
 {
 public:
-	labrador::Direction update(const std::array<bool, 4>& held, float dt,
+	labrador::Direction update(const std::array<bool, menu_direction_count>& held, float dt,
 		float delay, float interval);
 	labrador::Direction update_pad(const labrador::GamepadState& pad, float dt,
 		float delay, float interval, const InputTuning& tuning, bool use_stick = true);
 private:
 	bool ready_ = false;
 	labrador::DirectionRepeat repeat_;
-	std::array<bool, 4> stick_ = {};
+	std::array<bool, menu_direction_count> stick_ = {};
 };
 
 struct ProcessedMenuInput

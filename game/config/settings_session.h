@@ -69,7 +69,7 @@ public:
 
 private:
 	Save* save_;
-	std::array<int, input_slots::pad_count> worn_{ -1, -1, -1, -1 };
+	std::array<int, input_slots::pad_count> worn_ = input_slots::per_pad(-1);
 	// The save's settings with the worn profiles laid over their slots.
 	// Rebuilt in place, never replaced, because matches and pages borrow them.
 	PlaySettings play_;

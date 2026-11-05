@@ -18,7 +18,7 @@ namespace
 	{
 		return context != nullptr && context->application() != nullptr &&
 			context->level_infos() != nullptr && context->stages() != nullptr &&
-			context->save() != nullptr;
+			context->settings_session() != nullptr;
 	}
 
 	bool can_check_resources(const GameData* context)
