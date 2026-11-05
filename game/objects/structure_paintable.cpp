@@ -24,7 +24,6 @@ StructurePaintable::StructurePaintable(
 	const RectangleF& sprite_rectangle,
 	std::unique_ptr<Shape> collision_shape,
 	RenderResources* render_resources,
-	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
 	const PaintTuning* paint,
 	CollisionObjectType collision_type,
@@ -51,9 +50,6 @@ StructurePaintable::StructurePaintable(
 		runoff_frame_(render_resources->sprite_sheet(this->runoff_sheet_)->resolve_sprite_frame(paint->frame))
 {
 	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles, paint_polygons);
-	// Preview construction shares this path. Cue names are validated at startup;
-	// match playback is owned by Level's PaintAudio across every surface.
-	(void)audio_resources;
 }
 
 void StructurePaintable::update(float dt)

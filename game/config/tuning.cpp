@@ -69,21 +69,6 @@ namespace
 			"' is not a projectile. Expected one of " + expected + ".");
 	}
 
-	colourwars::RotationOrigin read_rotation_origin(const JsonValue& parent,
-		const char* key)
-	{
-		const std::string name = parent.string(key);
-
-		if (name == "no_rotation") { return colourwars::RotationOrigin::no_rotation; }
-		if (name == "center") { return colourwars::RotationOrigin::center; }
-		if (name == "top_left") { return colourwars::RotationOrigin::top_left; }
-		if (name == "left_center") { return colourwars::RotationOrigin::left_center; }
-
-		throw std::runtime_error(parent.where() + ": '" + name +
-			"' is not a rotation origin. Expected one of no_rotation, center, "
-			"top_left, left_center.");
-	}
-
 	AddPlayerVelocity read_add_player_velocity(const JsonValue& parent,
 		const char* key)
 	{
@@ -818,7 +803,7 @@ namespace
 	{
 		// The mist alone fans its shots, and spray and mist are the two
 		// DiffusingProjectiles, the only kinds that act on a diffusion block.
-		std::vector<std::string_view> known{ "gravity", "wind_resistance", "rotation_origin",
+		std::vector<std::string_view> known{ "gravity", "wind_resistance",
 			"delete_timer", "player_damage", "size", "collision_size", "sheet", "animation" };
 		if (type == ProjectileType::mist)
 		{
@@ -845,7 +830,6 @@ namespace
 			// The two outer pellets stay within a half-turn forward fan.
 			projectile.spread_step = read_number_in(json, "spread_step", 0.0f, pi / 4.0f);
 		}
-		details.rotat_origin = read_rotation_origin(json, "rotation_origin");
 		// A shot that is deleted the update it is made never exists.
 		details.delete_timer = read_positive(json, "delete_timer");
 		details.player_damage = read_non_negative(json, "player_damage");

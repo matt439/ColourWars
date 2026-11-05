@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/match/round_tape.h"
+#include "engine/input/mouse.h"
 #include "scripts/acceptance/support/probe.h"
 #include <iostream>
 

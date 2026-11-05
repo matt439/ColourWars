@@ -836,7 +836,7 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const PlaySettings preferences;
-        const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
+        const LevelObjectBuilder builder(&render, &preferences, &tuning.paint());
 
         size_t checked = 0;
         const auto check_compatible = [&](const std::filesystem::path& path)

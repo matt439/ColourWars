@@ -209,7 +209,7 @@ namespace turbulence_slab_routes_acceptance
                 world(with), map(groups)
             {
                 auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str()); info->validate();
-                const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+                const LevelObjectBuilder objects(&world.render, &world.preferences, &world.tuning.paint());
                 info->validate_content(objects, world.render, world.audio); bounds = info->out_of_bounds_rectangle();
                 infos.add(decoded_settings ? decoded_settings->stage() : "turbulence_roller_route", std::move(info));
                 MatchSetup settings;

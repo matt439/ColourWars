@@ -26,7 +26,7 @@ namespace
 MatchBot::MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed) :
 	tuning_(tuning), locomotion_(required(tuning)), difficulty_(difficulty), random_(seed)
 {
-	(void)tuning->bot(difficulty);
+	std::ignore = tuning->bot(difficulty); // Throws for a difficulty with no record.
 	this->heading_ = this->random_unit() < 0.5f ? -1.0f : 1.0f;
 }
 

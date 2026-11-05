@@ -26,14 +26,14 @@ const RectangleF& TranslatingStructurePaintable::checked_anchor(
 TranslatingStructurePaintable::TranslatingStructurePaintable(
     const std::string& sheet_name, const std::string& frame_name,
     const HorizontalMotionSpec& motion, RenderResources* render_resources,
-    const AudioResources* audio_resources, const PlaySettings* preferences,
+    const PlaySettings* preferences,
     const PaintTuning* paint, CollisionObjectType collision_type,
     const TeamColour& team_colours, const PaintableFaces& faces,
     const Colour& colour, const Vector2F& origin, SpriteFlip flip,
     float layer_depth, std::unique_ptr<const TerrainMaterial> material,
     const FerryDirectionPresentation* cue) :
     StructurePaintable(sheet_name, frame_name, checked_anchor(motion, collision_type),
-        std::make_unique<RectangleF>(motion.anchor), render_resources, audio_resources,
+        std::make_unique<RectangleF>(motion.anchor), render_resources,
         preferences, paint, collision_type, team_colours, faces, {}, colour,
         0.0f, origin, flip, layer_depth, std::move(material)),
     motion_(motion), world_rectangle_(this->motion_.bounds()),

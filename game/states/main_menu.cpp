@@ -4,7 +4,6 @@
 #include "game/states/end_menu.h"
 #include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
-#include "game/config/drawable_text.h"
 
 using namespace labrador;
 

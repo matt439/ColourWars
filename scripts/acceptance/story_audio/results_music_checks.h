@@ -404,7 +404,7 @@ namespace
 	void check_ending_sting_content(World& world, const std::filesystem::path& content)
 	{
 		const EndingStageVariant variants(content);
-		const LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+		const LevelObjectBuilder builder(&world.render, &world.preferences, &world.tuning.paint());
 		const auto rejected = [&](auto edit)
 		{
 			bool named = false;

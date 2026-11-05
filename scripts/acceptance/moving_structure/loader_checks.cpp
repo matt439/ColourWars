@@ -32,7 +32,7 @@ namespace moving_structure_acceptance
         using namespace labrador;
         const JsonDocument document = parse_json(loaded_objects, "moving-loader-fixture.json");
         const JsonValue entries = document.root().array("objects");
-        const LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+        const LevelObjectBuilder builder(&world.render, &world.preferences, &world.tuning.paint());
         auto objects = builder.build_collision_objects(entries, world.palette);
         require(objects.size() == 2 && dynamic_cast<TranslatingStructurePaintable*>(objects[0].get()) == nullptr,
             "Unmarked static object changed its runtime type");

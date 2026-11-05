@@ -28,7 +28,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     const std::string source = read_source();
     Registry<LevelLoadedInfo> trial_levels("Explicit shoulder inspection Level");
     auto loaded = std::make_unique<LevelLoadedInfo>(path_to_utf8(trial_json).c_str()); loaded->validate();
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
     require(loaded->collision_objects_json().size() == 26 && !loaded->include_in_random() &&
         loaded->display_name() == "Turbulence Yard - Shoulder Trial" &&

@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#73` | OPEN | LOW | M | Delete dead fields, accessors, parameters and includes in the game, including the authored but unread `rotation_origin`. [Scope](docs/code-hygiene.md#dead-code-in-the-game-hyg73). |
 | `HYG#74` | OPEN | LOW | M | Shared fit-to-box, paper-bounds, wrap, tool-step and close helpers for the menu pages. [Scope](docs/code-hygiene.md#menu-page-helpers-hyg74). |
 | `HYG#75` | OPEN | LOW | M | Shared paper-card, keyed-block, shadow-tile and swatch helpers for the drawings; pixels unchanged. [Scope](docs/code-hygiene.md#shared-drawing-helpers-hyg75). |
 | `HYG#76` | OPEN | LOW | M | Deduplicate weapon sound, facing, owner-slot, pose and opening-time logic; unknown terrain materials throw instead of drawing a paint tin. [Scope](docs/code-hygiene.md#weapon-projectile-and-opening-logic-hyg76). |

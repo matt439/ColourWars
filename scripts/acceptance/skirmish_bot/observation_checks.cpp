@@ -10,6 +10,7 @@
 #include "game/objects/weapon.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/json.h"
+#include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"

@@ -4,8 +4,11 @@
 #include "game/save/play_settings_json.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
+#include "engine/math/vector2i.h"
+#include "game/directory_consts.h"
 #include <cstdio>
 #include <filesystem>
+#include <iostream>
 #include <system_error>
 #include <array>
 #include <cmath>
@@ -510,7 +513,7 @@ bool Save::set_display_settings_and_save(ScreenResolution resolution,
     {
         throw std::invalid_argument("Invalid display resolution");
     }
-    TeamColourTools::palette_key(palette);
+    std::ignore = TeamColourTools::palette_key(palette); // Throws for no palette.
     this->save_data_.resolution = resolution;
     this->save_data_.fullscreen = fullscreen;
     this->save_data_.team_palette = palette;

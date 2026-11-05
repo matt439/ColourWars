@@ -68,7 +68,7 @@ Player::Player(const RectangleF& rectangle,
     const PlaySettings* preferences,
     int player_num,
     PlayerTeam team,
-    WeaponType primary,
+    WeaponType /*primary*/,
     std::unique_ptr<Weapon> primary_weapon,
     WeaponType /*secondary*/,
     const Colour& team_colour,
@@ -106,7 +106,6 @@ Player::Player(const RectangleF& rectangle,
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
     team_(team),
-    primary_type_(primary),
     team_colour_(team_colour),
     viewport_(view_port),
     rectangle_(rectangle),
@@ -1391,9 +1390,6 @@ void Player::do_jump(float dt)
     {
 		this->start_jump();
 	}
-	else if (move_state == PlayerMoveState::on_ceiling)
-	{
-	}
 	else if (move_state == PlayerMoveState::jumping)
 	{
 		if (jump_held)
@@ -1412,9 +1408,6 @@ void Player::do_jump(float dt)
 			this->set_move_state(PlayerMoveState::in_air);
 		}
 		this->alter_air_time(dt);
-	}
-	else if (move_state == PlayerMoveState::in_air)
-	{
 	}
 
     if (this->velocity_y() < -this->player_tuning().max_velocity.y)

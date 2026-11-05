@@ -20,7 +20,6 @@ class LevelObjectBuilder
 public:
 	// Borrowed paint tuning must outlive the built objects. It sets tile granularity.
 	LevelObjectBuilder(labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const PaintTuning* paint,
 		const GatePermissionPresentation* gate_cue = nullptr,
@@ -60,7 +59,6 @@ private:
 	const GatePermissionPresentation* gate_cue_ = nullptr;
 	const FerryDirectionPresentation* ferry_cue_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
-	const labrador::AudioResources* audio_resources_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
 	// What every object in a stage needs from the others: the flat rectangles

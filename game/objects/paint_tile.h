@@ -95,8 +95,6 @@ public:
 	void draw_surface(labrador::DrawList& draw_list) const;
 	void draw_splash_rigid(labrador::DrawList& draw_list,
 		const FixedSlabGeometry& geometry) const;
-	void draw_surface_rigid(labrador::DrawList& draw_list,
-		const FixedSlabGeometry& geometry) const;
 	// A rigid structure may join same-team tiles into one opaque visual base.
 	// Wet highlights stay per tile; scoring rectangles and credit never join.
 	void draw_surface_base_rigid(labrador::DrawList& draw_list,

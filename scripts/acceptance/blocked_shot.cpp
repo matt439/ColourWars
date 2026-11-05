@@ -14,6 +14,7 @@
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
+#include "engine/input/mouse.h"
 
 #include <array>
 #include <cstdlib>
@@ -109,7 +110,7 @@ namespace
         {
             const RectangleF rectangle(0.0f, 0.0f, 100.0f, 100.0f);
             return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", rectangle,
-                std::make_unique<RectangleF>(rectangle), &this->render, &this->audio,
+                std::make_unique<RectangleF>(rectangle), &this->render,
                 &this->preferences, &this->tuning.paint(), CollisionObjectType::structure_paintable,
                 TeamColour{}, faces);
         }

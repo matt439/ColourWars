@@ -131,7 +131,6 @@ protected:
 	CollisionObjectType collision_type() const;
 
 	const labrador::Colour& team_colour() const;
-	ProjectileType type() const;
 
 	float timer() const;
 	void alter_timer(float time);

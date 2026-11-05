@@ -453,10 +453,9 @@ private:
 	// the launch arguments); a script never runs inside an update.
 	DebugScriptRunner scripts_;
 	long long total_updates_ = 0;
-	// Every hook frame, and the hook frames on which a script could tick (what
-	// `wait frames` counts: not under the debug menu, nor on a frame the menu
-	// toggle or the console key takes).
-	long long hook_frames_ = 0;
+	// The hook frames on which a script could tick (what `wait frames`
+	// counts: not under the debug menu, nor on a frame the menu toggle or the
+	// console key takes).
 	long long script_frames_ = 0;
 	// While a hook ticks: a pending screenshot may be taken in place, so two
 	// shots in a row show the same simulation frame.

@@ -79,7 +79,7 @@ namespace moving_structure_acceptance
         viewports.set_layout(settings.screen_layout());
         auto info = std::make_unique<LevelLoadedInfo>(labrador::path_to_utf8(stage).c_str());
         info->validate();
-        const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &tuning.paint());
+        const LevelObjectBuilder objects(&world.render, &world.preferences, &tuning.paint());
         info->validate_content(objects, world.render, world.audio);
         levels.add(settings.stage(), std::move(info));
         LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences,

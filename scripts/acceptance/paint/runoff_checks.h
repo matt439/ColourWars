@@ -2,7 +2,7 @@
 
 namespace
 {
-    void check_runoff_surfaces(RenderResources& render, AudioResources& audio,
+    void check_runoff_surfaces(RenderResources& render,
         const GameTuning& tuning, const TeamColour& colours)
     {
         PlaySettings preferences;
@@ -15,7 +15,7 @@ namespace
             std::span<const RectangleF> obstacles = {})
         {
             return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
-                wall, std::make_unique<RectangleF>(wall), &render, &audio,
+                wall, std::make_unique<RectangleF>(wall), &render,
                 &preferences, &look, CollisionObjectType::structure_paintable,
                 colours, faces, obstacles);
         };

@@ -61,7 +61,7 @@ namespace turbulence_blockout_acceptance
             Registry<LevelLoadedInfo> levels("Turbulence candidate Level");
             auto loaded = std::make_unique<LevelLoadedInfo>(path_to_utf8(content / "levels/turbulence_blockout.json").c_str());
             loaded->validate();
-            const LevelObjectBuilder objects(&render, &audio, &services.preferences, &services.tuning.paint());
+            const LevelObjectBuilder objects(&render, &services.preferences, &services.tuning.paint());
             loaded->validate_content(objects, render, audio);
             levels.add("turbulence_blockout", std::move(loaded));
             ResolutionManager resolution;

@@ -131,7 +131,7 @@ void Projectile::touch(Collider& receiver, const Vector2F& normal, float penetra
 }
 CollisionObjectType Projectile::collision_type() const
 {
-    ProjectileType type = this->type();
+    ProjectileType type = this->projectile_type();
     switch (this->team())
     {
     case PlayerTeam::a:
@@ -192,10 +192,6 @@ int Projectile::player_num() const
 const Colour& Projectile::team_colour() const
 {
     return this->team_colour_;
-}
-ProjectileType Projectile::type() const
-{
-    return this->type_;
 }
 float Projectile::timer() const
 {

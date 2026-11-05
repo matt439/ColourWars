@@ -29,7 +29,7 @@ namespace fixed_slab_acceptance
         {
             return std::make_unique<FixedSlabPaintable>(
                 FixedSlabSpec{ { 0.0f, rise == FixedSlabRise::right ? 80.0f : 0.0f }, rise },
-                &world.render, &world.audio, &world.preferences, &world.tuning.paint(), world.palette,
+                &world.render, &world.tuning.paint(), world.palette,
                 PaintableFaces{ paintable, paintable, paintable, paintable }, obstacles);
         }
 

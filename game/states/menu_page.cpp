@@ -226,22 +226,6 @@ Vector2F MenuPage::calculate_widget_position(int h_index, int v_index) const
 	return result;
 }
 
-Vector2F MenuPage::calculate_center_position(
-	const Vector2F& widget_size,
-	const Vector2F& resolution)
-{
-	return {
-		menu_geometry::centred(widget_size.x, resolution.x),
-		menu_geometry::centred(widget_size.y, resolution.y)
-	};
-}
-
-float MenuPage::calculate_center_position(
-	float widget_size, float resolution)
-{
-	return menu_geometry::centred(widget_size, resolution);
-}
-
 MenuContext* MenuPage::menu_context() const
 {
 	return this->context_;
@@ -359,11 +343,6 @@ void MenuPage::draw_chrome(DrawList& list) const
 std::vector<ProcessedMenuInput> MenuPage::menu_inputs() const
 {
 	return this->input()->menu_inputs();
-}
-
-Vector2F MenuPage::float_resolution() const
-{
-	return this->resolution_manager()->resolution_vec();
 }
 
 // Fit the whole design into the actual window, including arbitrary drag sizes

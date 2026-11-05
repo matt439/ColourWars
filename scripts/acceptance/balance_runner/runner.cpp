@@ -11,6 +11,7 @@
 #include "game/objects/weapon_feedback.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/json.h"
+#include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/render/sprite_font_file.h"

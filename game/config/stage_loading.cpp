@@ -116,7 +116,7 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 			return first.filename().native() < second.filename().native();
 		});
 
-	const LevelObjectBuilder builder(checks.render, checks.audio, checks.play_settings,
+	const LevelObjectBuilder builder(checks.render, checks.play_settings,
 		&checks.tuning->paint());
 	for (const std::filesystem::path& file : files)
 	{

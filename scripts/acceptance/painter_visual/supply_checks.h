@@ -14,7 +14,7 @@ public:
         input.shoot_angle = angle;
         input.shoot_direction = Vector2F::unit_vec_from_angle(angle);
         input.shoot_direction_requested = true;
-        this->update_movement_and_rotation(input, this->player_center(), Vector2F::zero, right);
+        this->update_movement_and_rotation(input, this->player_center(), right);
     }
 
     void pose(ToolMotionPose value)

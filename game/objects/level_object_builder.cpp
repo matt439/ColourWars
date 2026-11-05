@@ -328,13 +328,11 @@ namespace
 }
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
-	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
 	const PaintTuning* paint, const GatePermissionPresentation* gate_cue,
 	const FerryDirectionPresentation* ferry_cue) :
 	paint_(paint), gate_cue_(gate_cue), ferry_cue_(ferry_cue),
-	render_resources_(render_resources),
-	audio_resources_(audio_resources)
+	render_resources_(render_resources)
 {
 	this->preferences_ = preferences;
 
@@ -391,7 +389,7 @@ std::unique_ptr<CollisionObject>
 				collision_type == CollisionObjectType::structure_jump_through);
 			return std::make_unique<TranslatingStructurePaintable>(
 				json.string(key::sheet_name), json.string(key::frame_name), motion,
-				this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+				this->render_resources_, this->preferences_, this->paint_,
 				collision_type, team_colours, faces, colour_of(json), Vector2F::zero,
 				SpriteFlip::none, 0.0f,
 				material_of(json, collision_type, rectangle, {}, context.mirror_x, context.hand,
@@ -404,7 +402,7 @@ std::unique_ptr<CollisionObject>
 			{
 				return std::make_unique<TeamGateStructurePaintable>(
 					json.string(key::sheet_name), json.string(key::frame_name), rectangle,
-					this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+					this->render_resources_, this->preferences_, this->paint_,
 					team_colours, faces, context.flat, colour_of(json),
 					material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
 						this->render_resources_, context.slabs), context.slabs, this->gate_cue_);
@@ -421,7 +419,6 @@ std::unique_ptr<CollisionObject>
 			rectangle,
 			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
-			this->audio_resources_,
 			this->preferences_,
 			this->paint_,
 			collision_type,
@@ -577,8 +574,8 @@ std::unique_ptr<FixedSlabPaintable>
 	const JsonValue face = json.object(key::paintable_faces);
 	const PaintableFaces faces{ face.boolean(level_format::face::left), face.boolean(level_format::face::top),
 		face.boolean(level_format::face::right), face.boolean(level_format::face::bottom) };
-	return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_, this->audio_resources_,
-		this->preferences_, this->paint_, team_colours, faces, context.flat);
+	return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_,
+		this->paint_, team_colours, faces, context.flat);
 }
 
 std::vector<std::unique_ptr<CollisionObject>>

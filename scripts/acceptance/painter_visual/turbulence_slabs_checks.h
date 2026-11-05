@@ -93,7 +93,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const std::string source = read_source();
     Registry<LevelLoadedInfo> trial_levels("Explicit slab inspection Level");
     auto loaded = std::make_unique<LevelLoadedInfo>(path_to_utf8(trial_json).c_str()); loaded->validate();
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
     // The registered slab trial has joined Random; a private trial copy stays explicit-only.
     require(loaded->collision_objects_json().size() == 24 &&

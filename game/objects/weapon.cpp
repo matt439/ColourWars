@@ -162,20 +162,6 @@ bool Weapon::shooting_this_update() const
 {
     return this->shooting_this_update_;
 }
-Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, colourwars::RotationOrigin origin)
-{
-    switch (origin)
-    {
-    case colourwars::RotationOrigin::center:
-        return Vector2F(size) / 2.0f;
-    case colourwars::RotationOrigin::left_center:
-        return {0.0f, size.y / 2.0f};
-    case colourwars::RotationOrigin::top_left:
-        return Vector2F::zero;
-    default:
-        return Vector2F::zero;
-    }
-}
 
 RectangleF Weapon::nozzle_rectangle() const
 {
@@ -183,14 +169,6 @@ RectangleF Weapon::nozzle_rectangle() const
 
     return { nozzle_pos, nozzle_marker_size };
 }
-
-Vector2F Weapon::nozzle_size()
-{
-	return nozzle_marker_size;
-}
-
-
-
 
 RectangleF Weapon::draw_bounds() const
 {
@@ -275,13 +253,12 @@ std::vector<std::unique_ptr<Projectile>>
     if (!std::isfinite(ammo_regen_multiplier) || ammo_regen_multiplier < 0.0f ||
         (ammo_regen_multiplier != 1.0f && !std::isfinite(this->tuning_->ammo_regen_rate() * ammo_regen_multiplier)))
     { throw std::invalid_argument("Ammunition recovery multiplier must produce a finite nonnegative rate"); }
-    this->update_movement_and_rotation(input, player_center,
-		player_velocity, player_facing_right);
+    this->update_movement_and_rotation(input, player_center, player_facing_right);
 
     if (this->feedback_ != nullptr) { this->feedback_->update(dt); }
 
-    const bool shot = this->check_if_shooting_and_ammo_update(input, player_center,
-        player_velocity, dt, ammo_regen_multiplier);
+    const bool shot = this->check_if_shooting_and_ammo_update(input, dt,
+        ammo_regen_multiplier);
     this->update_motion(shot, dt);
     if (shot && dt > 0.0f && std::isfinite(dt) && this->feedback_ != nullptr)
     {
@@ -300,8 +277,6 @@ std::vector<std::unique_ptr<Projectile>>
 
 bool Weapon::check_if_shooting_and_ammo_update(
     PlayerInputData input,
-    const Vector2F& /*player_center*/,
-    const Vector2F& /*player_velocity*/,
     float dt, float ammo_regen_multiplier)
 {
     const bool ok_to_shoot = input.primary_shoot;
@@ -564,7 +539,6 @@ std::string Weapon::loop_sound_name(const WeaponLoopSounds& loop_sounds,
 }
 void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,
-    const Vector2F& /*player_velocity*/,
     bool player_facing_right)
 {
     if (input.shoot_direction_requested)
@@ -672,16 +646,6 @@ const WeaponDetails& Weapon::details() const
 	return this->weapon_tuning_->details;
 }
 
-const Vector2F& Weapon::offset() const
-{
-	return this->details().offset;
-}
-
-const Vector2F& Weapon::nozzle_offset() const
-{
-	return this->details().nozzle_offset;
-}
-
 float Weapon::shoot_interval() const
 {
 	return this->details().shoot_interval;
@@ -778,10 +742,6 @@ void Weapon::clear_rumble_events() noexcept
 	this->pending_rumble_ = {};
 }
 
-ProjectileBuilder* Weapon::projectile_builder() const
-{
-	return this->proj_builder_.get();
-}
 RenderResources* Weapon::render_resources() const
 {
 	return this->render_resources_;

@@ -200,7 +200,7 @@ namespace
     {
         const RectangleF bounds(400.0f, 300.0f, 80.0f, 500.0f);
         TeamGateStructurePaintable gate("sprite_sheet_1", "square_white_4", bounds,
-            &world.assets.render, &world.assets.audio, &world.assets.preferences, &world.assets.tuning.paint(),
+            &world.assets.render, &world.assets.preferences, &world.assets.tuning.paint(),
             TeamColour{}, { true, true, true, false });
         const std::vector<Player*> nobody;
         const ProjectileTuning& tuning = world.assets.tuning.projectile(ProjectileType::spray);

@@ -24,11 +24,6 @@ inline constexpr std::array<const char*, static_cast<size_t>(ProjectileType::cou
 	"spray", "jet", "rolling", "mist", "ball"
 };
 
-constexpr const char* projectile_name(ProjectileType type)
-{
-	return PROJECTILE_NAMES[static_cast<size_t>(type)];
-}
-
 // The kind a name spells; empty for any other name.
 constexpr std::optional<ProjectileType> projectile_from_name(std::string_view name)
 {

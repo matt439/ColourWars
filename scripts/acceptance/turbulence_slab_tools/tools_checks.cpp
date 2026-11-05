@@ -209,7 +209,7 @@ namespace turbulence_slab_tools_acceptance
                 trace_(trace), label_(label)
             {
                 auto info = std::make_unique<LevelLoadedInfo>(labrador::path_to_utf8(stage).c_str()); info->validate();
-                const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+                const LevelObjectBuilder objects(&world.render, &world.preferences, &world.tuning.paint());
                 info->validate_content(objects, world.render, world.audio); bounds_ = info->out_of_bounds_rectangle();
                 const auto setup = settings(side_b); infos_.add(setup.stage(), std::move(info));
                 viewports_.set_layout(setup.screen_layout());

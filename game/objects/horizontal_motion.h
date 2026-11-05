@@ -82,7 +82,6 @@ struct HorizontalCarryStep
 {
     HorizontalMotionId id = 0;
     labrador::RectangleF previous_top = labrador::RectangleF::zero;
-    labrador::RectangleF current_top = labrador::RectangleF::zero;
     float displacement_x = 0.0f;
     // A lift's rider moves with its top (E2), before its own integration.
     float displacement_y = 0.0f;
@@ -100,7 +99,6 @@ struct HorizontalPaintImpact
     labrador::RectangleF anchor_rectangle = labrador::RectangleF::zero;
     labrador::Vector2F normal_to_projectile = labrador::Vector2F::zero;
     float penetration = 0.0f;
-    double global_entry = 0.0;
 };
 
 struct HorizontalStructureState

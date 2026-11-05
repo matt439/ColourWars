@@ -259,7 +259,7 @@ namespace
 		const std::filesystem::path& scratch)
 	{
 		std::filesystem::create_directories(scratch);
-		const LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &tuning.paint());
+		const LevelObjectBuilder builder(&world.render, &world.preferences, &tuning.paint());
 		const auto fixture = [&](const std::string& drift, size_t index)
 		{
 			const auto path = scratch / ("cloud-drift-" + std::to_string(index) + ".json");

@@ -204,8 +204,6 @@ protected:
 
 
 	const WeaponDetails& details() const;
-	const labrador::Vector2F& offset() const;
-	const labrador::Vector2F& nozzle_offset() const;
 	float shoot_interval() const;
 	float starting_vel_length() const;
 	float ammo_usage() const;
@@ -225,7 +223,6 @@ protected:
 	void alter_ammo_timer(float dt);
 
 
-	static labrador::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
 	virtual std::vector<std::unique_ptr<Projectile>> shoot(
@@ -237,20 +234,13 @@ protected:
 		float starting_velocity,
 		const labrador::Vector2F& player_velocity) const;
 
-	static labrador::Vector2F calculate_sprite_origin(
-		const labrador::Vector2F& size, colourwars::RotationOrigin origin);
-
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
-		const labrador::Vector2F& player_center,
-		const labrador::Vector2F& player_velocity,
 		float dt, float ammo_regen_multiplier);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
 		const labrador::Vector2F& player_center,
-		const labrador::Vector2F& player_velocity,
 		bool player_facing_right);
 
-	ProjectileBuilder* projectile_builder() const;
 	labrador::RenderResources* render_resources() const override;
 
 private:

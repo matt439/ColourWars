@@ -398,7 +398,6 @@
         "spray": {
             "gravity": 2500.0,
             "wind_resistance": 20.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 5.0,
             "player_damage": 0.01,
             "size": { "x": 15.0, "y": 15.0 },
@@ -416,7 +415,6 @@
         "jet": {
             "gravity": 0.0,
             "wind_resistance": 0.0,
-            "rotation_origin": "center",
             "delete_timer": 5.0,
             "player_damage": 0.334,
             "size": { "x": 20.0, "y": 20.0 },
@@ -428,7 +426,6 @@
         "rolling": {
             "gravity": 0.0,
             "wind_resistance": 0.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 0.000001,
             "player_damage": 0.015,
             "size": { "x": 50.0, "y": 50.0 },
@@ -441,7 +438,6 @@
             "spread_step": 0.2617994,
             "gravity": 0.0,
             "wind_resistance": 0.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 2.0,
             "player_damage": 0.01,
             "size": { "x": 5.0, "y": 5.0 },
@@ -459,7 +455,6 @@
         "ball": {
             "gravity": 2500.0,
             "wind_resistance": 20.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 5.0,
             "player_damage": 0.201,
             "size": { "x": 100.0, "y": 100.0 },

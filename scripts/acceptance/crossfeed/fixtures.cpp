@@ -105,7 +105,7 @@ namespace crossfeed_acceptance
         tuning((content / "tuning.json").string().c_str()),
         presentation((content / "presentation.json").string().c_str()),
         map(content / "levels/crossfeed.json"),
-        builder(&this->render, &this->audio, &this->preferences, &this->tuning.paint())
+        builder(&this->render, &this->preferences, &this->tuning.paint())
     {
         for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
         {

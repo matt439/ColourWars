@@ -3,6 +3,7 @@
 #include "game/ai/match_bot_support.h"
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
+#include "engine/input/mouse.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
 #include "game/debug/replay/replay.h"

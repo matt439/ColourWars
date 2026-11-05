@@ -597,7 +597,7 @@ void Locales::check_structure(std::string_view base_text, const std::string& bas
 {
 	for (const LocaleEntry& entry : this->impl_->entries)
 	{
-		(void)this->compose(entry.tag, base_text, base_name);
+		std::ignore = this->compose(entry.tag, base_text, base_name);
 	}
 }
 

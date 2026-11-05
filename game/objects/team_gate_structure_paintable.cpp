@@ -24,15 +24,14 @@ namespace
 
 TeamGateStructurePaintable::TeamGateStructurePaintable(const std::string& sheet_name,
     const std::string& frame_name, const RectangleF& rectangle,
-    RenderResources* render_resources, const AudioResources* audio_resources,
-    const PlaySettings* preferences, const PaintTuning* paint,
+    RenderResources* render_resources, const PlaySettings* preferences, const PaintTuning* paint,
     const TeamColour& team_colours, const PaintableFaces& faces,
     std::span<const RectangleF> paint_obstacles, const Colour& colour,
     std::unique_ptr<const TerrainMaterial> material,
     std::span<const PaintPolygon> paint_polygons,
     const GatePermissionPresentation* cue) :
     StructurePaintable(sheet_name, frame_name, rectangle, std::make_unique<RectangleF>(rectangle),
-        render_resources, audio_resources, preferences, paint,
+        render_resources, preferences, paint,
         CollisionObjectType::structure_paintable, team_colours, faces, paint_obstacles,
         colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f, std::move(material), paint_polygons),
     open_share_(checked_share(paint)), paint_thickness_(paint->thickness),

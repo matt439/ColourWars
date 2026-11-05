@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         require(presentation.movement_feedback().enabled,
             "route trials count takeoffs and landings through movement feedback");
         const TeamColour colours;
-        const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
+        const LevelObjectBuilder builder(&render, &preferences, &tuning.paint());
         const CourseData course(content / "levels" / "movement_course.json");
         const Services services{ tuning, presentation.movement_feedback(),
             presentation.combat_feedback(), presentation.respawn_redraw(), render, audio,

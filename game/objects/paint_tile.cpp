@@ -114,13 +114,6 @@ void PaintTile::draw_splash_rigid(DrawList& draw_list,
 		this->team_colours_.team_colour(this->team_), geometry);
 }
 
-void PaintTile::draw_surface_rigid(DrawList& draw_list,
-	const FixedSlabGeometry& geometry) const
-{
-	this->draw_surface_base_rigid(draw_list, geometry, this->rectangle_);
-	this->draw_surface_wet_rigid(draw_list, geometry);
-}
-
 void PaintTile::draw_rectangle_rigid(DrawList& draw_list,
 	const FixedSlabGeometry& geometry, const RectangleF& local, const Colour& tint) const
 {

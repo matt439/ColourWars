@@ -27,12 +27,12 @@ namespace
 		return result;
 	}
 
-	void require_width(float max_width, const char* caller)
+	void require_width(float max_width)
 	{
 		if (!std::isfinite(max_width) || max_width <= 0.0f)
 		{
-			throw std::invalid_argument(std::string("text_wrap::") + caller +
-				": max_width must be finite and positive");
+			throw std::invalid_argument(
+				"text_wrap::check_fits: max_width must be finite and positive");
 		}
 	}
 
@@ -42,7 +42,7 @@ void text_wrap::check_fits(const labrador::RenderResources& render,
 	labrador::FontHandle font, std::wstring_view text, float max_width,
 	float scale, const std::string& where)
 {
-	require_width(max_width, "check_fits");
+	require_width(max_width);
 	size_t index = 0;
 	while (index < text.size())
 	{

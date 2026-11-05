@@ -125,7 +125,7 @@ namespace fixed_slab_acceptance
                 const auto add_slab = [&]
                 {
                     slab = scene.add(std::make_unique<FixedSlabPaintable>(spec(mirrored), &world.render,
-                        &world.audio, &world.preferences, &tuning.paint(), colours,
+                        &tuning.paint(), colours,
                         PaintableFaces{ true, true, true, true }, flats));
                 };
                 if (slab_first) { add_slab(); }

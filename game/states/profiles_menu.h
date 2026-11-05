@@ -15,8 +15,6 @@ public:
 	explicit ProfilesMenu(MenuContext* context, int player = -1);
 	void init() override;
 	void update_page(float dt) override;
-	int selected_profile() const { return this->profile_; }
-	bool editing_name() const { return this->name_edit_.has_value(); }
 protected:
 	bool accepts_stick_navigation() const override { return false; }
 private:

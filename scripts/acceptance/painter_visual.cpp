@@ -11,6 +11,8 @@
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/screen_cursor.h"
+#include "game/objects/monitor.h"
+#include "game/objects/silhouette.h"
 #include "game/objects/player_badge.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"

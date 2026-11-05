@@ -46,7 +46,7 @@ namespace
 
 		LevelObjectBuilder builder(const GameTuning& tuning)
 		{
-			return LevelObjectBuilder(&render, &audio, &preferences, &tuning.paint());
+			return LevelObjectBuilder(&render, &preferences, &tuning.paint());
 		}
 	};
 

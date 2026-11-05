@@ -76,7 +76,7 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     app.viewport_manager()->set_layout(settings.screen_layout());
     const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
     // LevelBuilder's own arguments: the gate and ferry cues come from presentation.
-    const LevelObjectBuilder objects(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint(),
+    const LevelObjectBuilder objects(app.render_resources(), &preferences, &tuning.paint(),
         &presentation.gate_permission(), &presentation.ferry_direction());
     auto scene = std::make_unique<Scene>(app.thread_pool(), app.partitioner());
     scene->set_bounds(info.out_of_bounds_rectangle());

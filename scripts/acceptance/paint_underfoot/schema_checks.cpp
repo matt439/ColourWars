@@ -23,7 +23,7 @@ namespace paint_underfoot_acceptance
         std::string stage_rejection(World& world)
         {
             const auto stage = labrador::parse_json(R"([{"type":"Structure","sheet_name":"sprite_sheet_1","frame_name":"square_white_4","rectangle":{"x":0,"y":0,"width":1,"height":10000},"collision_type":"STRUCTURE","colour":"WHITE"}])", "paint-underfoot-stage.json");
-            LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+            LevelObjectBuilder builder(&world.render, &world.preferences, &world.tuning.paint());
             try { check_stage_tunnelling(world.tuning, builder, stage.root(), dt); }
             catch (const std::runtime_error& error) { return error.what(); }
             return {};

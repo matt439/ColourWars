@@ -29,10 +29,7 @@ namespace
 			return audio.add_sound_group(name);
 		}
 	}
-}
 
-namespace
-{
 	void append_stage_sounds(std::vector<SoundReference>& sounds, const GameTuning& tuning,
 		const LevelLoadedInfo& info, const Stage& stage)
 	{

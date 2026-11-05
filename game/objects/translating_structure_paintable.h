@@ -35,7 +35,6 @@ public:
         const std::string& frame_name,
         const HorizontalMotionSpec& motion,
         labrador::RenderResources* render_resources,
-        const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
         const PaintTuning* paint,
         CollisionObjectType collision_type,

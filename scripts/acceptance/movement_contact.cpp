@@ -110,7 +110,7 @@ namespace
         {
             auto* result = this->scene.add(std::make_unique<StructurePaintable>(
                 "sprite_sheet_1", "square_white_4", rectangle,
-                std::make_unique<RectangleF>(rectangle), &world.render, &world.audio,
+                std::make_unique<RectangleF>(rectangle), &world.render,
                 &world.preferences, &world.tuning.paint(), CollisionObjectType::structure_paintable,
                 surface_colours, faces, obstacles));
             this->scene.end_tick();

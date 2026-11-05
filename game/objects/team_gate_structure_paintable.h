@@ -23,7 +23,6 @@ public:
         const std::string& frame_name,
         const labrador::RectangleF& rectangle,
         labrador::RenderResources* render_resources,
-        const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
         const PaintTuning* paint,
         const TeamColour& team_colours,

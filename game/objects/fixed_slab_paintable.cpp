@@ -39,8 +39,7 @@ namespace
 }
 
 FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
-    RenderResources* render_resources, const AudioResources* audio_resources,
-    const PlaySettings* preferences, const PaintTuning* paint,
+    RenderResources* render_resources, const PaintTuning* paint,
     const TeamColour& team_colours, const PaintableFaces& faces,
     std::span<const RectangleF> flat_obstacles) :
     Structure(checked_paint(paint)->sheet, checked_paint(paint)->frame,
@@ -53,7 +52,6 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
 {
     // Sound batching remains Level-owned, exactly as for the flat structures.
     // This fixed slice has no separate gravity runoff policy for sloped faces.
-    (void)audio_resources; (void)preferences;
     TerrainFaces exposed;
     exposed.top = exposed_edge(this->geometry_, true, true, flat_obstacles);
     exposed.bottom = exposed_edge(this->geometry_, true, false, flat_obstacles);

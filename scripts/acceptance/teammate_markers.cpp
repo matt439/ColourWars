@@ -7,6 +7,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
+#include "engine/input/mouse.h"
 
 #include <cmath>
 #include <cstdlib>

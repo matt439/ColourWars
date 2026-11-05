@@ -45,7 +45,7 @@ namespace
         {
             target.plain({ -512.0f, 1200.0f, 4000.0f, 80.0f });
             auto* mover = target.scene->add(std::make_unique<TranslatingStructurePaintable>(
-                "sprite_sheet_1", "square_white_4", spec, &world.render, &world.audio,
+                "sprite_sheet_1", "square_white_4", spec, &world.render,
                 &world.preferences, &world.tuning.paint(), CollisionObjectType::structure_jump_through,
                 world.palette, PaintableFaces{ true, true, true, true }, Colour::white,
                 Vector2F::zero, SpriteFlip::none, 0.0f, nullptr, look));
@@ -147,7 +147,7 @@ namespace
         {
             target.plain({ -512.0f, 1200.0f, 4000.0f, 80.0f });
             auto* lift = target.scene->add(std::make_unique<TranslatingStructurePaintable>(
-                "sprite_sheet_1", "square_white_4", spec, &world.render, &world.audio,
+                "sprite_sheet_1", "square_white_4", spec, &world.render,
                 &world.preferences, &world.tuning.paint(), CollisionObjectType::structure_paintable,
                 world.palette, PaintableFaces{ true, true, true, true }, Colour::white,
                 Vector2F::zero, SpriteFlip::none, 0.0f, nullptr, look));
@@ -232,7 +232,7 @@ void check_ferry_cue(const std::filesystem::path& content)
     check_rounded_world_hold(world);
     HorizontalMotionSpec cycle{ { 512.0f, 500.0f, 320.0f, 20.0f }, 120.0f, 1.0f, 0.25f };
     TranslatingStructurePaintable cycling("sprite_sheet_1", "square_white_4", cycle,
-        &world.render, &world.audio, &world.preferences, &world.tuning.paint(),
+        &world.render, &world.preferences, &world.tuning.paint(),
         CollisionObjectType::structure_jump_through, world.palette, { true, true, true, true },
         labrador::Colour::white, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f,
         nullptr, &world.presentation.ferry_direction());

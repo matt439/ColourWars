@@ -57,7 +57,6 @@ void WeaponRoller::update_ground_contact(bool supported, bool established_suppor
 
 void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     const Vector2F& player_center,
-    const Vector2F& /*player_velocity*/,
     bool player_facing_right)
 {
     if (player_facing_right)  

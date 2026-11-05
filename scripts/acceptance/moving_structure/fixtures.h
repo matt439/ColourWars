@@ -17,6 +17,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
+#include "engine/input/mouse.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -214,7 +215,7 @@ namespace moving_structure_acceptance
             CollisionObjectType type = CollisionObjectType::structure_paintable)
         {
             return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", rectangle,
-                std::make_unique<labrador::RectangleF>(rectangle), &render, &audio, &preferences,
+                std::make_unique<labrador::RectangleF>(rectangle), &render, &preferences,
                 &values.paint(), type, palette, faces, obstacles);
         }
         std::unique_ptr<StructurePaintable> surface(const labrador::RectangleF& rectangle,
@@ -227,7 +228,7 @@ namespace moving_structure_acceptance
             std::unique_ptr<const TerrainMaterial> material = nullptr)
         {
             return std::make_unique<TranslatingStructurePaintable>("sprite_sheet_1", "square_white_4", spec,
-                &render, &audio, &preferences, &values.paint(), type, palette, faces,
+                &render, &preferences, &values.paint(), type, palette, faces,
                 labrador::Colour::white, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f, std::move(material));
         }
         std::unique_ptr<TranslatingStructurePaintable> mover(const HorizontalMotionSpec& spec,

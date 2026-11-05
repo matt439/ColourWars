@@ -401,7 +401,7 @@ LevelStructures::Frame LevelStructures::prepare(float dt, const Scene& scene,
         {
             if (this->horizontal_structures_[index]->motion_id() != selected) { continue; }
             const HorizontalMotionStep& step = frame.motions[index].collision;
-            frame.carriers[player] = HorizontalCarryStep{ selected, step.before, step.after,
+            frame.carriers[player] = HorizontalCarryStep{ selected, step.before,
                 step.after.x - step.before.x, step.after.y - step.before.y };
             break;
         }
@@ -476,7 +476,7 @@ void LevelStructures::publish_zero(std::span<Player* const> players) noexcept
             if (mover->motion_id() == player->carrier_id())
             {
                 const RectangleF current = mover->bounds();
-                zero = HorizontalCarryStep{ mover->motion_id(), current, current, 0.0f, 0.0f };
+                zero = HorizontalCarryStep{ mover->motion_id(), current, 0.0f, 0.0f };
                 break;
             }
         }

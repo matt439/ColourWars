@@ -33,7 +33,7 @@ void surface_finish_pixels(Application& app, const Canvas& canvas, const GameTun
         {"name":"owned-corner","type":"StructurePaintable","material":"ground","sheet_name":"sprite_sheet_1","frame_name":"square_white_4","rectangle":{"x":800,"y":160,"width":240,"height":120},"collision_type":"STRUCTURE_PAINTABLE","colour":"WHITE","paintable_faces":{"top":true,"bottom":true,"left":true,"right":true}}
     ]})", "surface-finish-native-fixture");
     const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     auto objects = builder.build_collision_objects(document.root().array("objects"), colours);
     auto* corner = dynamic_cast<StructurePaintable*>(objects.back().get());
     require(corner != nullptr, "Surface corner fixture lost its scoring role");

@@ -314,7 +314,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	// All asset kinds are available now. Check every stage's actual object
 	// construction and resource references before opening the first menu,
 	// then that a player at its speed cap cannot step through what was built.
-	const LevelObjectBuilder content_validator(render, audio, &play_settings,
+	const LevelObjectBuilder content_validator(render, &play_settings,
 		&tuning.paint());
 	for (const Stage& stage : stages)
 	{

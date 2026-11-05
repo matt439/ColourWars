@@ -2,7 +2,6 @@
 #include "game/debug/dev_tools.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "engine/app/application.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/console/debug_console_view.h"
@@ -510,7 +509,6 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, b
 {
 	this->match_hook_active_ = active;
 	if (!active) { this->clock_.discard_input_edges(); }
-	++this->hook_frames_;
 	if (active && (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested(true)))
 	{
 		return true;
@@ -686,7 +684,6 @@ void DebugDirectorImpl::begin_keyboard_capture()
 
 void DebugDirectorImpl::capture_input_frame(DebugPageTarget& page)
 {
-	++this->hook_frames_;
 	this->keyboard_capture_ = true;
 	this->close_live_console("raw keyboard capture");
 	this->break_perf_interval();
@@ -717,7 +714,6 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt, bool
 		this->capture_input_frame(page);
 		return false;
 	}
-	++this->hook_frames_;
 	// A page is on top: the live console exists only over a running match,
 	// and perf times only frames with the match on top (a page may cover it).
 	this->close_live_console("a menu opened");

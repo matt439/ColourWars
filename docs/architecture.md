@@ -171,11 +171,12 @@ editor's `colourwars_level_document` depend on it. The engine's
 
 ## `game/carried`
 
-Seven engine types that Labrador v0.2.0 had and v0.3.0 removes
+Six engine types that Labrador v0.2.0 had and v0.3.0 removes
 (`AnimationObject`, `MovingObject`, `SoundBankObject`, `TextDropShadow`,
-`UiTextDropShadow`, the camera tools and `RotationOrigin`), copied with their
-shape unchanged into `namespace colourwars` so they can never be ambiguous with
-an engine type. `removed_members.h` does the same for two members v0.3.0 also
+`UiTextDropShadow` and the camera tools), copied with their shape unchanged
+into `namespace colourwars` so they can never be ambiguous with an engine type.
+A seventh, `RotationOrigin`, was carried too; `HYG#73` deleted it with the
+`rotation_origin` tuning key it served, which nothing read. `removed_members.h` does the same for two members v0.3.0 also
 removed, `RectangleF::from_top_left_bottom_right` and
 `Camera::calculate_intermediate_camera`, as free functions. The folder is named
 for where the code came from, not for what it does; the removal with an

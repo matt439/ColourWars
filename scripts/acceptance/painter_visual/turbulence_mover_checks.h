@@ -60,7 +60,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const std::string source = source_bytes();
     Registry<LevelLoadedInfo> trial_levels("Private Turbulence mover trial Level");
     auto loaded = std::make_unique<LevelLoadedInfo>(path_to_utf8(trial_json).c_str()); loaded->validate();
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
     require(!loaded->include_in_random() && loaded->collision_objects_json().size() == 22 &&
         loaded->display_name() == "Turbulence Yard - Mover Trial" &&

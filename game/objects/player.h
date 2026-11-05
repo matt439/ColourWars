@@ -463,7 +463,6 @@ private:
 
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
-    WeaponType primary_type_ = WeaponType::none;
     labrador::Colour team_colour_ = labrador::Colour::gray;
     labrador::Viewport viewport_ = labrador::Viewport();
 

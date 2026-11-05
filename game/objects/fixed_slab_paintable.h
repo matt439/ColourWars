@@ -10,9 +10,7 @@ class FixedSlabPaintable final : public Structure, public PaintableObject
 {
 public:
     FixedSlabPaintable(const FixedSlabSpec& spec,
-        labrador::RenderResources* render_resources,
-        const labrador::AudioResources* audio_resources,
-        const PlaySettings* preferences, const PaintTuning* paint,
+        labrador::RenderResources* render_resources, const PaintTuning* paint,
         const TeamColour& team_colours, const PaintableFaces& faces,
         std::span<const labrador::RectangleF> flat_obstacles = {});
     FixedSlabPaintable(const FixedSlabPaintable&) = delete;

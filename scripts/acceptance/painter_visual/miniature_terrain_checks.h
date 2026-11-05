@@ -285,7 +285,7 @@ void miniature_paint_matrix(Application& app, const Canvas& canvas, const GameTu
     const auto make = [&](bool material)
     {
         return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", body,
-            std::make_unique<RectangleF>(body), app.render_resources(), app.audio_resources(), &preferences,
+            std::make_unique<RectangleF>(body), app.render_resources(), &preferences,
             &tuning.paint(), CollisionObjectType::structure_paintable, colours,
             PaintableFaces{ false, true, false, false }, std::span<const RectangleF>{}, Colour::white,
             0.0f, Vector2F::zero, SpriteFlip::none, 0.0f,
@@ -436,7 +436,7 @@ void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences, const std::filesystem::path& output,
     std::ofstream& records)
 {
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     size_t changed_overviews = 0;
     for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
     {

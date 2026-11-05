@@ -3,23 +3,17 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
-#include "engine/app/content_root.h"
-#include "engine/render/text_encoding.h"
 #include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
 #include "game/debug/replay/bot.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/capture/debug_screenshot.h"
-#include "game/directory_consts.h"
 #include "game/game_data.h"
-#include "game/source_paths.h"
 #include "game/config/sound_groups.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include "game/debug/replay/bot_driver.h"
-#include "game/debug/replay/replay.h"
-#include "game/debug/tune/tune_document.h"
 
 using namespace labrador;
 

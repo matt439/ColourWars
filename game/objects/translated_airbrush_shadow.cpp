@@ -24,7 +24,7 @@ float TranslatedAirbrushShadow::checked_left(const TranslatingStructurePaintable
     // cell to int64. Refuse coordinates at which that recipe cannot progress.
     const double lower = static_cast<double>((std::numeric_limits<long long>::min)());
     const double upper = -lower;
-    if (!(pitch > 0.0f) || !std::isfinite(first) || !std::isfinite(last) ||
+    if (!std::isfinite(first) || !std::isfinite(last) ||
         !(first + pitch > first) || !(last + pitch > last) ||
         static_cast<double>(std::floor(first / pitch)) < lower ||
         !(static_cast<double>(std::floor(last / pitch)) < upper))

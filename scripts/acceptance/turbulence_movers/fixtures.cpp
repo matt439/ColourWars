@@ -110,7 +110,7 @@ namespace turbulence_movers_acceptance
     {
         auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str());
         info->validate();
-        const LevelObjectBuilder object_builder(&with.world.render, &with.world.audio, &with.world.preferences, &with.world.tuning.paint());
+        const LevelObjectBuilder object_builder(&with.world.render, &with.world.preferences, &with.world.tuning.paint());
         info->validate_content(object_builder, with.world.render, with.world.audio);
         bounds_ = info->out_of_bounds_rectangle();
         const auto entries = info->collision_objects_json();

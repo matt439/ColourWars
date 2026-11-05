@@ -876,6 +876,51 @@ included); it covers `gameplay_tuning`, `paint`, `paint_underfoot`,
 
 ### Dead code in the game (`HYG#73`)
 
+**Done 2026-11-06; a content-format change, with nothing played differently.**
+`rotation_origin` is gone from the five projectiles in `tuning.json`, from
+`read_projectile` and `ProjectileDetails`, so a tuning file that still names it
+is now refused as an unknown key. `game/carried/rotation_origin.h` went with it:
+its only other user, `Weapon::calculate_sprite_origin`, had no callers, and
+[architecture.md](architecture.md#gamecarried) now counts six carried types.
+Everything else listed below is deleted as written, with these notes:
+
+- `Weapon` also lost `offset()`, `nozzle_offset()` and `projectile_builder()`,
+  `check_if_shooting_and_ammo_update` lost its player centre and velocity, and
+  `update_movement_and_rotation` (and `WeaponRoller`'s override) its velocity.
+- `relative_impact` lost the motion segment it only read for `global_entry`.
+- `build_projectiles` and `build_mist_projectiles` lost rotation, origin, flip
+  and layer depth; no caller passed them, so every shot keeps the defaults.
+- Dropping `audio_resources` from `StructurePaintable` reached its two
+  subclasses and the sibling `FixedSlabPaintable`, which also dropped its unused
+  `preferences`. That left `LevelObjectBuilder`'s audio unread, so its
+  constructor lost it too, at its four game callers and the probes.
+- `level.h` had seventeen stale includes, not ten. Probes that reached
+  `labrador::Mouse`, `Monitor` or `Silhouette` through it now include them.
+- `game_commands.cpp` also lost `content_root.h`, `text_encoding.h`,
+  `directory_consts.h`, `replay.h` and `tune_document.h`, and
+  `debug_director_hooks.cpp` lost `application.h`. `main_menu.cpp` lost
+  `drawable_text.h`; `pause_menu.h` and `end_menu.h` lost `state_context.h` and
+  `colour.h`; `save.h` lost `<iostream>`, `<chrono>`, `<array>`, `vector2i.h`
+  and `directory_consts.h`, which `save.cpp` now includes itself. The CMake
+  comment on `source_paths.h` names its real users.
+- The validate-only calls are written `std::ignore = ...`, the game's usual
+  form: the palette check in `save.cpp` and the two `(void)` siblings in
+  `match_bot.cpp` and `locale.cpp`.
+
+Left: `Player`'s constructor still takes the `primary` and `secondary` weapon
+types and reads neither. Removing them touches about thirty probe constructions
+and was not in the row.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and in Debug (79, the slow four
+included; `skirmish_bot` and `balance_runner` passed on a rerun after their
+missing `mouse.h`). The opt-in cases, `check-painter.ps1 -CompileOnly` and
+`check-paint-fx.ps1 -CompileOnly` compiled in both presets, and
+`check-frame-pacing.ps1 -CompileOnly` in Debug. `check-startup.ps1`,
+`check-movement-feedback.ps1` and `check-display-awake.ps1` passed in both.
+
+The row as filed:
+
 Remove these, updating builders and probe fixtures:
 
 - `rotation_origin` from `tuning.json`, the reader and

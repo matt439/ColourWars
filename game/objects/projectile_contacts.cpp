@@ -169,7 +169,7 @@ namespace
 
     HorizontalPaintImpact relative_impact(const RelativeRectangle& start,
         const RelativeRectangle& finish, const RectangleF& anchor,
-        const HorizontalMotionSegment& segment, const std::pair<double, double>& interval)
+        const std::pair<double, double>& interval)
     {
         const double travel = std::max({ std::abs(finish.left - start.left),
             std::abs(finish.right - start.right), std::abs(finish.top - start.top),
@@ -199,8 +199,6 @@ namespace
                 Vector2F(0.0f, 1.0f) : Vector2F(0.0f, -1.0f);
         }
         impact.penetration = static_cast<float>(depth);
-        impact.global_entry = segment.begin +
-            (segment.end - segment.begin) * interval.first;
         return impact;
     }
 }
@@ -288,7 +286,7 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
                     obstruction = object;
                     moving_obstruction = moving;
                     closest_entry = entry;
-                    closest_impact = relative_impact(before, after, anchor, segment, *interval);
+                    closest_impact = relative_impact(before, after, anchor, *interval);
                 }
             }
             continue;

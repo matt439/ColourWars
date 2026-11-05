@@ -3,8 +3,6 @@
 #include "game/states/pause_menu_action.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_page.h"
-#include "engine/core/state_context.h"
-#include "engine/render/colour.h"
 #include "game/objects/slot_input.h"
 #include "game/input/input_slots.h"
 #include "game/objects/weapon_type.h"

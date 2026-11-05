@@ -9,17 +9,11 @@ using namespace labrador;
 DebugText::DebugText(RenderResources* render_resources,
     const ResolutionManager* resolution_manager,
     const DebugOverlayPresentation* look) :
-    render_resources_(render_resources),
     resolution_manager_(resolution_manager),
     look_(look),
     font_(render_resources->resolve_sprite_font(look->font))
 {
 	
-}
-
-RenderResources* DebugText::render_resources() const
-{
-    return this->render_resources_;
 }
 
 

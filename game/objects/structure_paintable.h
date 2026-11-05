@@ -51,7 +51,6 @@ public:
 		const labrador::RectangleF& sprite_rectangle,
 		std::unique_ptr<labrador::Shape> collision_shape,
 		labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const PaintTuning* paint,
 		CollisionObjectType collision_type,
