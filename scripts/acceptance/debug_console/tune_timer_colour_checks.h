@@ -31,7 +31,8 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"},") +
             (shared_paper ? "\"paper\":{\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"shade\":\"\\u00300000055\"}," : "") +
             "\"closing_clock\":{\"text\":\"\\u003141414\",\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"accent\":\"\\u0046FD34D\",\"shade\":\"\\u00300000055\"},"
-            "\"player_identity\":{\"colour\":\"\\u003141414\",\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\",\"background_colour\":\"FFFFFF\"}},"
+            "\"player_identity\":{\"colour\":\"\\u003141414\",\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"}},"
+            "\"main_menu\":{\"stage_select\":{\"preview_background\":\"FFFFFF\"}},"
             "\r\n\"number\":1\r\n}\r\n";
         const std::string authored_token = positive_alpha ? "\"\\u00300000055\"" : shadow ? "\"\\u00300000022\"" :
             (index == closing_clock_paper_colour_index || index == hud_paper_paper_colour_index) ? "\"\\u0046FF5DF\"" :
@@ -42,7 +43,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
             document.current().token(*leaf) == authored_token &&
             document.find("hud.timer.font") == nullptr && document.find("hud.player_identity.font") == nullptr &&
-            document.find("hud.player_identity.background_colour") != nullptr && document.find(sibling_local) != nullptr,
+            document.find("main_menu.stage_select.preview_background") != nullptr && document.find(sibling_local) != nullptr,
             "Each exact HUD clock/label colour is editable with its independently supported sibling; fonts stay unavailable and the separately captured preview backing is eligible");
         document.commit(document.edited(*leaf, saved_token), local);
         const std::string pending = document.current().text();const auto edit = document.edits().at(local);
@@ -163,7 +164,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const auto unselected = [&]
     {
         std::vector<labrador::Colour> values{ look->health_colour, look->meter_track_colour,
-            look->player_identity_background_colour, identity->ink_colour, identity->background_colour };
+            presentation.main_menu().stage_select.preview_background, identity->ink_colour, identity->background_colour };
         if (!shared_paper)
             { values.insert(values.begin(), { look->paper.ink, look->paper.paper, look->paper.shade }); }
         return values;

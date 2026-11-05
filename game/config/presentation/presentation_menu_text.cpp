@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation_menu_text.h"
 #include "game/config/presentation/presentation_read.h"
+#include "game/config/content_value.h"
 #include "game/input/controls_text.h"
 
 #include "engine/assets/json.h"
@@ -136,6 +137,12 @@ namespace presentation_read
 	MenuText read_menu_text(const JsonValue& root)
 	{
 		const JsonValue json = root.object("menu_text");
+		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
+		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool",
+			"options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
+			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
+			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
+			"stick_readouts", "hud", "countdown", "controls", "headings", "prompts", "items" });
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
@@ -526,6 +533,8 @@ namespace presentation_read
 		if (json.has("stage_scan"))
 		{
 			const JsonValue scan = json.object("stage_scan");
+			content_value::require_known_keys(scan, { "heading", "status", "browse_prompt",
+				"details_prompt", "counter", "no_refusals", "unicode_hint" });
 			text.stage_scan.heading = read_menu_line(scan, "heading");
 			text.stage_scan.status = read_menu_line(scan, "status");
 			text.stage_scan.browse_prompt = read_menu_line(scan, "browse_prompt");

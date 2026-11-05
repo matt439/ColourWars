@@ -57,7 +57,6 @@ void TuningTarget::validate(std::string_view candidate_text, const std::string& 
 		// Startup's checks of numbers against the loaded resources, without
 		// building every stage.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
-		validate_controls_reminders(*candidate, *this->presentation_, *context->render_resources());
 		validate_mode_durations(context->render_resources(), *candidate, *this->presentation_);
 	}
 	this->candidate_ = std::move(candidate);
@@ -102,7 +101,7 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		// Frame sizes against each frame's native texels, and the countdown
 		// box against its heading: startup's checks that need the resources.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
-		validate_controls_reminders(*this->tuning_, *candidate, *context->render_resources());
+		validate_controls_reminders(*candidate, *context->render_resources());
 		validate_mode_durations(context->render_resources(), *this->tuning_, *candidate);
 		validate_mode_stage_rules(context->render_resources(), *candidate);
 	}

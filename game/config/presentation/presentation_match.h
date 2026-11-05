@@ -43,6 +43,20 @@ struct CountdownArtPresentation
 };
 
 // Screen-space layout for the start signal and device-specific reminders.
+// The countdown's controls reminder and the practice lesson cards. Their
+// words are menu_text.controls or the lesson's, measured in this font by
+// validate_controls_reminders and validate_stage_text (content_validation.h).
+struct ControlsTextPresentation
+{
+	std::string font;
+	labrador::Colour colour = labrador::Colour::white;
+	labrador::Colour shadow_colour = labrador::Colour::black;
+	labrador::Vector2F shadow_offset = { 0.0f, 0.0f };
+	// Down the screen, as a fraction of its height, so the legend clears the
+	// countdown at any resolution.
+	float y = 0.8f;
+};
+
 struct MatchPresentation
 {
 	labrador::Vector2F reference_size;
@@ -53,6 +67,7 @@ struct MatchPresentation
 	labrador::Vector2F controls_margin;
 	labrador::Vector2F controls_padding;
 	float controls_gap = 0.0f;
+	ControlsTextPresentation controls_text;
 	CountdownArtPresentation countdown_art;
 };
 
@@ -254,7 +269,6 @@ struct HudPresentation
 	labrador::Vector2F player_identity_shadow_offset = { 0.0f, 0.0f };
 	labrador::Colour player_identity_colour = labrador::Colour::white;
 	labrador::Colour player_identity_shadow_colour = labrador::Colour::black;
-	labrador::Colour player_identity_background_colour = labrador::Colour::black;
 	labrador::Vector2F player_identity_padding = { 0.0f, 0.0f };
 	float player_identity_reference_width = 1920.0f;
 
@@ -283,6 +297,8 @@ struct DebugOverlayPresentation
 	labrador::Colour shadow_colour = labrador::Colour::black;
 	labrador::Vector2F shadow_offset = { 0.0f, 0.0f };
 	float shadow_scale = 1.0f;
+	// The values beside the Debug menu's rows.
+	labrador::Colour menu_value_colour = labrador::Colour::white;
 	StationLabelPresentation station_label;
 };
 

@@ -141,18 +141,8 @@ struct MatchTuning
 	// How much of the round's end the End menu's Watch Replay plays (ROAD#19).
 	float replay = 0.0f;
 
-	// The controls reminder's look during the countdown. Its words are
-	// presentation.json's menu_text.controls, measured in this font by
-	// validate_controls_reminders (content_validation.h); the drawn start
-	// signal lives in MatchPresentation.
-	std::string controls_font;
-	labrador::Colour controls_colour = labrador::Colour::white;
-	labrador::Colour controls_shadow_colour = labrador::Colour::black;
-	labrador::Vector2F controls_shadow_offset = { 0.0f, 0.0f };
-
-	// Down the screen, as a fraction of its height, so the legend clears the
-	// countdown at any resolution.
-	float controls_y = 0.8f;
+	// The controls reminder's look is presentation's, in
+	// MatchPresentation::controls_text.
 
 	SoundTuning countdown_sound;
 	SoundTuning go_sound;

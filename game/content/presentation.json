@@ -3,8 +3,12 @@
     "What the shell looks like. game/config/presentation/presentation.h says what each key means",
     "and why this is a second file beside tuning.json rather than a section of",
     "it. Colours are either a name the engine knows or RRGGBB / RRGGBBAA.",
-    "Every key here is read at startup; a missing one stops the game with this",
-    "file and the position in it named."
+    "It is read at startup. Most keys are required: a missing one stops the game",
+    "with this file and the position in it named. A few are optional (camera's",
+    "framing keys, both stage_scan blocks, pause_menu.practice_row_spacing and a",
+    "figure slip stroke's after or remove); an object that holds one also refuses",
+    "any key it does not read, so a misspelt optional key stops the game instead",
+    "of being ignored."
   ],
 
   "team_palette": {
@@ -42,9 +46,10 @@
 
   "menu_style": {
     "_comment": [
-      "The four menu families all drew themselves from an identical copy of",
-      "this block. They still agreed, which is the only reason nobody had",
-      "noticed; a fifth menu would have made it four places to keep in step."
+      "What every menu page shares: the first widget's layout, the solid fill",
+      "frame, held-direction repeat, focus motion, fonts and their shadows, the",
+      "text colours, the arcade chrome around each page and the menu sounds.",
+      "A page's own section overrides only what it names."
     ],
     "layout": {
       "position": { "x": 150.0, "y": 150.0 },
@@ -92,7 +97,6 @@
       "rule_height": 2.0,
       "icon_padding": { "x": 6.0, "y": 6.0 }
     },
-    "box_size": { "x": 900.0, "y": 600.0 },
     "sound_bank": "paint_exe",
     "sounds": {
       "direction": { "name": "ui.move", "volume": 1.0 },
@@ -492,7 +496,6 @@
       "title": "B0B0A8",
       "home": "B0B0A8"
     },
-    "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",
     "options_spacing": { "x": 540.0, "y": 82.0 },
     "display_trial_seconds": 15.0,
@@ -558,7 +561,8 @@
       "briefing_padding": { "x": 32.0, "y": 28.0 },
       "selected": "75EDD7",
       "unselected": "1B1C20",
-      "selected_ink": "111216"
+      "selected_ink": "111216",
+      "preview_background": "121827EE"
     },
     "music": { "name": "music.menu", "volume": 0.65 },
     "sounds": {
@@ -697,13 +701,8 @@
       "time": 2.0
     },
     "show_results_delay": 1.0,
-    "_team_mark_comment": [
-      "The A and B letters, outside each end of the fill box rather than on",
-      "it: the percentages already sit at the top-left of their own bars.",
-      "The gap is measured from the fill box edge outwards; the results",
-      "panel leaves room on each side for the labels."
-    ],
     "team_mark": {
+      "_comment": "The box each team's A or B letter is fitted into, one outside each end of the fill box. gap is from the fill box edge outward; the results panel leaves room on each side for it.",
       "size": { "x": 56.0, "y": 56.0 },
       "gap": 20.0
     },
@@ -808,7 +807,6 @@
       "shadow_offset": { "x": 2.0, "y": 2.0 },
       "colour": "141414",
       "shadow_colour": "00000022",
-      "background_colour": "121827EE",
       "padding": { "x": 16.0, "y": 10.0 },
       "reference_width": 1920.0
     }
@@ -1258,6 +1256,14 @@
     "controls_margin": { "x": 72.0, "y": 48.0 },
     "controls_padding": { "x": 28.0, "y": 20.0 },
     "controls_gap": 32.0,
+    "controls_text": {
+      "_comment": "The countdown's controls reminder and the practice lesson cards. What they say is menu_text.controls, filled in with the player's own controls, or the lesson; this is how it looks. y is a fraction of the screen height, under the countdown.",
+      "font": "lato_black_24",
+      "colour": "WHITE_SMOKE",
+      "shadow_colour": "BLACK",
+      "shadow_offset": { "x": 2.0, "y": 2.0 },
+      "y": 0.78
+    },
     "countdown_art": {
       "_comment": "Coarse start signal. Card widths/offsets use reference pixels; beat_duration is seconds; pulse is a fraction. Reduce effects suppresses pulse and detached ticks.",
       "ink": "151515",
@@ -1281,6 +1287,7 @@
     "shadow_colour": "BLACK",
     "shadow_offset": { "x": 1.0, "y": 1.0 },
     "shadow_scale": 1.0,
+    "menu_value_colour": "FFB77A",
     "station_label": {
       "font": "courier_prime_bold_16",
       "scale": 1.0,

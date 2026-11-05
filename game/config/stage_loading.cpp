@@ -43,7 +43,7 @@ namespace
 		const StageList& stages = catalog.stages();
 		validate_stage_objects(*checks.tuning, builder, *checks.render, *checks.audio,
 			*candidate.info);
-		validate_stage_text(*checks.tuning, *checks.presentation, checks.render,
+		validate_stage_text(*checks.presentation, checks.render,
 			*candidate.info, candidate.stage);
 		sound_groups::check_candidate(*checks.tuning, *checks.presentation,
 			catalog.level_infos(), stages, *candidate.info, candidate.stage);

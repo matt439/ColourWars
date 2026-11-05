@@ -38,20 +38,20 @@ public:
 
 void check_stage_preview_background_colour_tunes(const std::filesystem::path& game_directory)
 {
-    const std::string path = "presentation.hud.player_identity.background_colour";
-    const std::string local = "hud.player_identity.background_colour";
+    const std::string path = "presentation.main_menu.stage_select.preview_background";
+    const std::string local = "main_menu.stage_select.preview_background";
     {
-        const std::string escaped = "{\r\n\"hud\":{\"player_identity\":{\"background_colour\":\"\\u003121827EE\",\"font\":\"retained\"}},\"outside\":1\r\n}\r\n";
+        const std::string escaped = "{\r\n\"main_menu\":{\"stage_select\":{\"preview_background\":\"\\u003121827EE\",\"record_font\":\"retained\"}},\"outside\":1\r\n}\r\n";
         TuneDocument spans("presentation", escaped);
         const auto* leaf = spans.find(local);
         require(leaf != nullptr && spans.current().token(*leaf) == "\"\\u003121827EE\"" &&
-            spans.find("hud.player_identity.font") == nullptr, "The exact backing leaf preserves its nested escaped token while font remains unavailable");
+            spans.find("main_menu.stage_select.record_font") == nullptr, "The exact backing leaf preserves its nested escaped token while font remains unavailable");
         spans.commit(spans.edited(*leaf, "\"2060C080\""), local);
         require(spans.edits().size() == 1 && spans.edits().at(local).baseline_token == "\"\\u003121827EE\"" &&
             spans.edits().at(local).current_token == "\"2060C080\"" && spans.reverted(local) == escaped,
             "Backing span edits retain both exact ledger tokens and reset to escaped CRLF baseline bytes");
-        const std::string outside = "{\r\n\"hud\":{\"player_identity\":{\"background_colour\":\"\\u003121827EE\",\"font\":\"retained\"}},\"outside\":25\r\n}\r\n";
-        const std::string wanted = "{\r\n\"hud\":{\"player_identity\":{\"background_colour\":\"2060C080\",\"font\":\"retained\"}},\"outside\":25\r\n}\r\n";
+        const std::string outside = "{\r\n\"main_menu\":{\"stage_select\":{\"preview_background\":\"\\u003121827EE\",\"record_font\":\"retained\"}},\"outside\":25\r\n}\r\n";
+        const std::string wanted = "{\r\n\"main_menu\":{\"stage_select\":{\"preview_background\":\"2060C080\",\"record_font\":\"retained\"}},\"outside\":25\r\n}\r\n";
         const TuneSplice merged = spans.splice(outside, false);
         require(merged.conflicts.empty() && merged.written == 1 && merged.text == wanted,
             "A literal backing-only nested splice preserves unrelated external bytes and captured font text");
@@ -100,7 +100,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     const auto held_fonts = font_handles();
     const labrador::RectangleF rectangle(labrador::Vector2F(150.0f, 330.0f), labrador::Vector2F(1010.0f, 500.0f));
     require(document != nullptr && impl.tune_token(path) == "\"121827EE\"" &&
-        hud->player_identity_background_colour == labrador::Colour(18, 24, 39, 238) &&
+        presentation.main_menu().stage_select.preview_background == labrador::Colour(18, 24, 39, 238) &&
         presentation.main_menu().stage_select.preview_position == rectangle.position() &&
         presentation.main_menu().stage_select.preview_size == rectangle.size() &&
         tune_scope_of(path) == TuneScope::next_screen,
@@ -110,10 +110,10 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     const auto capture_widget_chain = [&]
     {
         return std::make_unique<StagePreviewCaptureProbe>("preview_background", sheet_name, frame_name, rectangle,
-            &render, CrudeDrawing::premultiplied(presentation.hud().player_identity_background_colour));
+            &render, CrudeDrawing::premultiplied(presentation.main_menu().stage_select.preview_background));
     };
     const auto retained = capture_widget_chain();
-    require(retained->captured_tint() == default_tint && default_tint != hud->player_identity_background_colour &&
+    require(retained->captured_tint() == default_tint && default_tint != presentation.main_menu().stage_select.preview_background &&
         default_tint != CrudeDrawing::premultiplied(default_tint),
         "Literal default premultiplied channels distinguish the previous raw tint and a double multiplication; old default pixel parity is not claimed");
     const auto metadata = [&](const StagePreviewCaptureProbe& widget)
@@ -419,9 +419,9 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         DebugMenuModel preview_model(impl);
         preview_model.confirm(row_index(preview_model.rows(), "tuning"));
         preview_model.confirm(row_index(preview_model.rows(), "presentation"));
-        preview_model.confirm(paged_row_index(preview_model, "hud"));
-        preview_model.confirm(paged_row_index(preview_model, "player_identity"));
-        const std::size_t preview_row = paged_row_index(preview_model, "background_colour");
+        preview_model.confirm(paged_row_index(preview_model, "main_menu"));
+        preview_model.confirm(paged_row_index(preview_model, "stage_select"));
+        const std::size_t preview_row = paged_row_index(preview_model, "preview_background");
         const std::string preview_token = impl.tune_token(preview_path);
         const auto preview_before = colour_values(presentation);
         const std::string preview_text = impl.tune_document("presentation")->current().text();

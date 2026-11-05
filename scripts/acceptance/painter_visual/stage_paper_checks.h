@@ -151,7 +151,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const RectangleF card = stage_paper_surface_reference(list, *app.render_resources(), captured, refreshed, settings, random, locked, candidate_count, offset);
         require(card == expected_card, "Shared independent Stage surface differs from the full expected-text card union");
         const UiTexture preview_edge("independent-stage-edge", style.sprite_sheet, style.fill_frame, edge, app.render_resources(), locked ? live.selected : style.panel_edge_colour);
-        const auto& backing_colour = captured.hud().player_identity_background_colour;
+        const auto& backing_colour = captured.main_menu().stage_select.preview_background;
         const Colour backing_tint(backing_colour.r * backing_colour.a, backing_colour.g * backing_colour.a,
             backing_colour.b * backing_colour.a, backing_colour.a);
         const UiTexture preview_back("independent-stage-pane", style.sprite_sheet, style.fill_frame, preview, app.render_resources(), backing_tint);

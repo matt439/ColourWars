@@ -24,8 +24,9 @@ sites; it adds no story elements to solo practice.
 texel. `presentation.json.hud.paper` owns opaque, distinct ink/paper colours,
 visible shade, keyline width and shadow offset in HUD reference pixels. Startup
 validates required fields, types, colour syntax and bounded measurements. The
-existing `hud.player_identity.background_colour` remains the stage-preview
-backing colour; gameplay uses the new paper settings. No new atlas or authoring
+existing stage-preview backing colour, now
+`main_menu.stage_select.preview_background` (`HYG#71`), is separate; gameplay
+uses the new paper settings. No new atlas or authoring
 asset is required.
 
 ## Validation

@@ -72,7 +72,7 @@
 				look->paper.shade, look->meter_track_colour, look->timer_colour, look->timer_shadow_colour,
 				look->closing_clock.ink, look->closing_clock.paper, look->closing_clock.shade,
 				look->closing_clock.text, look->closing_clock.accent, look->player_identity_colour,
-				look->player_identity_shadow_colour, look->player_identity_background_colour,
+				look->player_identity_shadow_colour, presentation.main_menu().stage_select.preview_background,
 				identity->ink_colour, identity->background_colour };
 		};
 		const auto resource_names = [&]
@@ -289,7 +289,7 @@
 				look->paper.shade, look->health_colour, look->timer_colour, look->timer_shadow_colour,
 				look->closing_clock.ink, look->closing_clock.paper, look->closing_clock.shade,
 				look->closing_clock.text, look->closing_clock.accent, look->player_identity_colour,
-				look->player_identity_shadow_colour, look->player_identity_background_colour,
+				look->player_identity_shadow_colour, presentation.main_menu().stage_select.preview_background,
 				identity->ink_colour, identity->background_colour };
 		};
 		const auto resource_names = [&]

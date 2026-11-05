@@ -755,23 +755,59 @@ committed), `menu_text` failed on the 100-pixel fixture.
 
 ### Presentation and content keys that mislead (`HYG#71`)
 
-- Call `require_known_keys` on the presentation objects with optional members
-  (`camera`, both `stage_scan` blocks) and correct the root comment
-  (`presentation.json:6`).
-- Delete the unused `menu_style.box_size` (`presentation_menu.h:84`).
-- Rename or move `main_menu.options_value_colour`, which only the Debug menu
-  uses (`presentation_read_menu.cpp:321`).
-- Move `hud.player_identity.background_colour`, which only Stage Select uses, to
-  that page (`presentation.json:809`).
-- Remove the about 25 unreferenced `sprite_sheet_1` strips and frames
-  (`sprite_sheet_1.json:5`).
-- Move the countdown controls-reminder look from `tuning.json` to presentation
-  (`countdown_cards.cpp:37`).
-- Rewrite the `_comment`s at `presentation.json:44` and `:698` and
-  `tuning.json:117` to describe the block.
+**Done 2026-11-06; a content-format change, with nothing drawn differently.**
+Three keys moved and two Debug `tune` paths changed with them; a
+`presentation.json` or `tuning.json` written for the old layout no longer loads,
+and a user stage whose objects or `icon_frame` name a deleted `sprite_sheet_1`
+frame is refused at load.
 
-A renamed key is a content-format change; update every probe and tune path that
-names it.
+- `require_known_keys` now runs on each presentation object with an optional
+  member: `camera`, `main_menu`, `menu_text` and `pause_menu` (whose optional
+  members are the framing keys, the two `stage_scan` blocks and
+  `practice_row_spacing`), both `stage_scan` blocks themselves, and a figure
+  slip stroke's edit, where `after` or `remove` chooses the edit. A misspelt
+  optional key now stops startup. The root comment says which keys are optional,
+  and `content_value.h` says where the check runs.
+- `menu_style.box_size` is gone from the file, the reader and `MenuStyle`.
+- `main_menu.options_value_colour` is `debug_overlay.menu_value_colour`
+  (`DebugOverlayPresentation`), which the Debug menu reads.
+- `hud.player_identity.background_colour` is
+  `main_menu.stage_select.preview_background` (`StageSelectPresentation`). Its
+  `tune` path, scope (next screen) and every `debug_console` and
+  `painter_visual` probe that named it moved with it, including the Debug menu
+  walk and the synthetic span documents; the painter evidence text names the new
+  path.
+- `sprite_sheet_1.json` keeps the twelve frames something names (`pixel`,
+  `square_white_4`, the six team-select frames, the three stage icons and
+  `ramp_right_200_100`); its nine strips and 29 other frames are gone. The
+  `level_editor` probe's "a strip is not a frame" checks use `painter`'s `run`
+  strip instead of `player_right_walk`.
+- The controls reminder's look is `match.controls_text` in presentation
+  (`ControlsTextPresentation`), not tuning: `CountdownCards`, `PracticeLessons`
+  (which no longer takes `GameTuning`), `validate_controls_reminders` and
+  `validate_stage_text` (neither takes `GameTuning` now) read it, and its font
+  is checked with the other presentation fonts. Its `tune` path is
+  `presentation.match.controls_text.*`, still rebuilt with the level.
+- The `_comment`s on `menu_style`, `results_menu.team_mark` (now inside the
+  block) and `tuning.json`'s `paint` describe the block.
+
+Left as found: `_prompt_bar_comment`, which sits beside its block rather than in
+it but describes it; and `require_known_keys` on the presentation objects whose
+members are all required, where a misspelling already fails as a missing key
+(the level files are still unchecked, as `content_value.h` says).
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases). In Debug, 77 passed on the first
+run and `debug_console` failed, its Debug menu walk still looking for the
+preview backing under `hud`; after that fix `debug_console` and the one case the
+failure left unrun, `balance_runner`, passed. `check-startup.ps1` passed in both
+presets and with `-Locale qps-ploc` in Release, and `check-level-editor.ps1`
+passed in both. `check-painter.ps1`'s `HudHealthTuneColourOnly`,
+`HudTrackTuneColourOnly`, `HudTimerTuneColourOnly`, `HudLabelTuneColoursOnly`,
+`StagePreviewBackgroundTuneColourOnly`, `StagePaperOnly`, `MenuTextOnly`,
+`CountdownOnly` and `PracticeReplayOnly` passed in both presets. Seven of them
+first failed with capture or save writes refused under a long evidence path;
+they passed rerun with a short `-OutputDirectory`.
 
 ### Tuning and content-validation readers (`HYG#72`)
 

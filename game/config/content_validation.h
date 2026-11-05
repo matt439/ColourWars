@@ -43,9 +43,9 @@ void check_stage_names_agree(const std::string& presentation_path, const StageLi
 
 // The in-match controls reminder: presentation.json's menu_text.controls
 // copy, formatted for every keyboard and pad choice, drawn and measured in
-// tuning.json's match.controls_text.font. validate_game_content runs it, and
-// the Debug `tune` targets run it on a candidate tuning or presentation.
-void validate_controls_reminders(const GameTuning& tuning, const Presentation& presentation,
+// presentation.json's match.controls_text.font. validate_game_content runs it,
+// and the Debug `tune` target runs it on a candidate presentation.
+void validate_controls_reminders(const Presentation& presentation,
 	const labrador::RenderResources& render);
 
 // validate_game_content's two per-stage halves, in the order it runs them: the
@@ -57,5 +57,5 @@ void validate_controls_reminders(const GameTuning& tuning, const Presentation& p
 void validate_stage_objects(const GameTuning& tuning, const LevelObjectBuilder& builder,
 	labrador::RenderResources& render, const labrador::AudioResources& audio,
 	const LevelLoadedInfo& info);
-void validate_stage_text(const GameTuning& tuning, const Presentation& presentation,
+void validate_stage_text(const Presentation& presentation,
 	labrador::RenderResources* render, const LevelLoadedInfo& info, const Stage& stage);

@@ -125,8 +125,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		this->state_ = LevelState::opening;
 	}
 
-	this->lessons_ = PracticeLessons(std::move(stage.lessons), tuning, presentation,
-		render_resources);
+	this->lessons_ = PracticeLessons(std::move(stage.lessons), presentation, render_resources);
 	this->build_opening_frame();
 }
 

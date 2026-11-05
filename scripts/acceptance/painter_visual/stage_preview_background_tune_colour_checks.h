@@ -11,7 +11,7 @@ public:
     PreviewBackingProbe(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
         GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output,
         const char* phase, DebugDirector* debug = nullptr) : app_(app), presentation_(presentation),
-        look_(presentation.hud()), canvas_(canvas), input_(app.gamepads(), app.keyboard(), &tuning),
+        look_(presentation.main_menu().stage_select), canvas_(canvas), input_(app.gamepads(), app.keyboard(), &tuning),
         context_(&data_, &input_, &settings_), stack_(app),
         sheet_(app.render_resources()->sprite_sheet(presentation.menu().sprite_sheet)),
         pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(presentation.menu().fill_frame))),
@@ -25,7 +25,7 @@ public:
             initial_previous_.keys[0] == 0 && initial_previous_.keys[1] == 0,
             "Preview backing fixture requires an empty stack and neutral private keyboard");
         const auto& menu = presentation.menu(); const auto& geometry = presentation.main_menu().stage_select;
-        require(look_.player_identity_background_colour == Colour(18, 24, 39, 238) &&
+        require(look_.preview_background == Colour(18, 24, 39, 238) &&
             geometry.preview_position == Vector2F(150, 330) && geometry.preview_size == Vector2F(1010, 500) &&
             geometry.name_position == Vector2F(150, 245) && geometry.navigation_position == Vector2F(150, 865) &&
             menu.rule_height == 2 && menu.panel_edge_colour == Colour(68, 82, 104) &&
@@ -76,11 +76,11 @@ public:
     Colour captured() const { return captured_; }
     bool random() const { return slot_ == 2; }
     bool locked() const { return locked_; }
-    void set_source(const Colour& colour) { const_cast<HudPresentation&>(presentation_.hud()).player_identity_background_colour = colour; }
+    void set_source(const Colour& colour) { const_cast<StageSelectPresentation&>(presentation_.main_menu().stage_select).preview_background = colour; }
     void unchanged() const
     {
         auto* resources = app_.render_resources();
-        require(&look_ == &presentation_.hud() && fixed_style(presentation_) == fixed_ &&
+        require(&look_ == &presentation_.main_menu().stage_select && fixed_style(presentation_) == fixed_ &&
             hud_track_identity_style(presentation_.player_identity()) == identity_fixed_ &&
             hud_track_same_palette(presentation_.team_palette(), palette_) && preference_values() == preferences_before_ &&
             resources->sprite_sheet(presentation_.menu().sprite_sheet) == sheet_ &&
@@ -112,7 +112,7 @@ public:
         settings_ = MatchSetup(); settings_.set_player_count(1); settings_.set_best_of(1); settings_.set_duration(73.0f);
         settings_.set_stage("crossfeed"); settings_.set_screen_layout(ScreenLayout::one_player);
         settings_.begin_input_claims(input_slots::keyboard_and_mouse); settings_.set_player_team(0, PlayerTeam::a);
-        settings_.set_player_weapon(0, WeaponType::sprayer); slot_ = 0; locked_ = false; captured_ = look_.player_identity_background_colour;
+        settings_.set_player_weapon(0, WeaponType::sprayer); slot_ = 0; locked_ = false; captured_ = look_.preview_background;
         stack_.push(std::make_unique<PauseMenuProbeRoot>(app_, canvas_));
         std::srand(51023); const int next = std::rand(); std::srand(51023);
         stack_.push(std::make_unique<MainMenuStageSelect>(&context_)); ++counts_.opens; opened_ = true;
@@ -135,7 +135,7 @@ public:
     { require(!locked_, "Back reconstruction needs an unconfirmed page"); tap(Key::escape); }
     void proceed_from_weapon()
     {
-        tap(Key::enter); captured_ = look_.player_identity_background_colour; slot_ = 0; locked_ = false;
+        tap(Key::enter); captured_ = look_.preview_background; slot_ = 0; locked_ = false;
         ++counts_.reopens; tick(); tick(); unchanged();
     }
     void reopen() { back_to_weapon(); proceed_from_weapon(); }
@@ -201,7 +201,7 @@ public:
 private:
     static std::vector<float> fixed_style(const Presentation& presentation)
     {
-        auto hud = presentation.hud(); hud.player_identity_background_colour = Colour(18, 24, 39, 238);
+        const auto& hud = presentation.hud();
         auto v = hud_track_fixed_style(hud); const auto& track = hud.meter_track_colour;
         v.insert(v.end(), { track.r, track.g, track.b, track.a });
         const auto& menu = presentation.menu(); const auto& p = presentation.main_menu().stage_select;
@@ -228,7 +228,7 @@ private:
     Frame draw(bool actual, const std::function<void(DrawList&)>& raw)
     {
         unchanged(); require(counts_.reads < (phase_ == "shared" ? 68U : 24U), "Preview backing exceeded its finite read budget");
-        const Colour before = look_.player_identity_background_colour, held = captured_;
+        const Colour before = look_.preview_background, held = captured_;
         const auto keys = app_.keyboard()->state(), previous = app_.keyboard()->previous_state();
         std::srand(51031); const int next = std::rand(); std::srand(51031);
         Renderer& renderer = *app_.renderer(); renderer.begin_frame();
@@ -242,7 +242,7 @@ private:
         for (int y = 20; y < 24; ++y) { for (int x = 20; x < 29; ++x)
         { if (x == 24) { continue; } const size_t at = offset(x, y); const unsigned char c = x < 24 ? 255 : 0;
           require(frame.pixels[at] == c && frame.pixels[at + 1] == c && frame.pixels[at + 2] == c && frame.pixels[at + 3] == 255, "Preview backing WHITE/BLACK RGBA calibration differs"); } }
-        require(std::rand() == next && look_.player_identity_background_colour == before && captured_ == held &&
+        require(std::rand() == next && look_.preview_background == before && captured_ == held &&
             app_.keyboard()->state().keys[0] == keys.keys[0] && app_.keyboard()->state().keys[1] == keys.keys[1] &&
             app_.keyboard()->previous_state().keys[0] == previous.keys[0] && app_.keyboard()->previous_state().keys[1] == previous.keys[1],
             "Preview draw consumed RNG or changed source/captured colour or keyboard snapshots"); unchanged(); return frame;
@@ -257,7 +257,7 @@ private:
         std::ofstream record(output_ / (stem + ".json")); record << "{\"scope\":\"source-hypothesis-failure-no-fitting\",\"roi\":[180,350,64,32],\"reads\":" << counts_.reads << ",\"local_menu_updates\":" << counts_.updates << "}\n";
         require(record.good(), "Cannot preserve preview failure receipt");
     }
-    Application& app_; Presentation& presentation_; const HudPresentation& look_; const Canvas& canvas_;
+    Application& app_; Presentation& presentation_; const StageSelectPresentation& look_; const Canvas& canvas_;
     Save preferences_; SettingsSession preferences_settings_{ preferences_ }; StageList stages_; StageCatalog stage_catalog_; GameData data_; MenuInput input_; MatchSetup settings_; MenuContext context_; StateContext& stack_;
     const SpriteSheet* sheet_; const SpriteFrame& pixel_; std::vector<float> fixed_, identity_fixed_; TeamPalettePresentation palette_;
     std::vector<int> preferences_before_; std::array<std::string, 6> font_names_{}; std::array<FontHandle, 6> fonts_{}; std::array<const Font*, 6> font_pointers_{};
@@ -377,7 +377,7 @@ void stage_preview_background_command_checks(Application& app, Registry<LevelLoa
     const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestorePreview { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestorePreview() { t = old_t; p = old_p; } }
         restore{ tuning, presentation, tuning, presentation };
-    const std::string path = "hud.player_identity.background_colour", full = "presentation." + path;
+    const std::string path = "main_menu.stage_select.preview_background", full = "presentation." + path;
     JsonSpanDocument document(bytes[1], "Preview backing private source"); const auto* token = document.find(path);
     require(token && document.token(*token) == "\"121827EE\"", "Preview authored exact RGBA token must stay 121827EE");
     const std::string saved_bytes = document.replaced(*token, "\"2060C080\""); bool persisted = false;
@@ -434,7 +434,7 @@ void stage_preview_background_command_checks(Application& app, Registry<LevelLoa
             tuning_document->edits().empty(), "Preview command changed the tuning document");
         const int revision = current->revision(); const size_t ledger_entries = current->edits().size();
         const Colour wanted = std::string_view(word) == "121827EE" ? shared.colours[0] : std::string_view(word) == "35BCE1" ? shared.colours[1] : shared.colours[2];
-        require(presentation.hud().player_identity_background_colour == wanted, "Preview source channels differ from the actual command");
+        require(presentation.main_menu().stage_select.preview_background == wanted, "Preview source channels differ from the actual command");
         const Frame frame = probe.repeated(state); probe.match_roi(state, frame, shared.raw[captured][0]);
         probe.match_page(state, frame, shared.pages[captured][context][0]);
         require(current->revision() == revision && current->edits().size() == ledger_entries, "Preview drawing changed document revision/ledger");

@@ -131,8 +131,10 @@ namespace
 			{
 				const JsonValue edit_json = edits.at(at);
 				FigureSlipStroke edit;
+				// after and remove choose the edit, so a misspelt one must fail.
 				if (edit_json.has("after"))
 				{
+					require_known_keys(edit_json, { "after", "part", "points" });
 					edit.edit = FigureSlipStroke::Edit::insert_after;
 					edit.stroke = read_index(edit_json, "after");
 					edit.part = edit_json.string("part");
@@ -140,6 +142,7 @@ namespace
 				}
 				else
 				{
+					require_known_keys(edit_json, { "stroke", "remove", "points" });
 					edit.stroke = read_index(edit_json, "stroke");
 					if (edit_json.has("remove") && edit_json.boolean("remove"))
 					{
@@ -337,7 +340,6 @@ namespace presentation_read
 		hud.player_identity_shadow_offset = read_vector_unchecked(identity, "shadow_offset");
 		hud.player_identity_colour = read_colour(identity, "colour");
 		hud.player_identity_shadow_colour = read_colour(identity, "shadow_colour");
-		hud.player_identity_background_colour = read_colour(identity, "background_colour");
 		hud.player_identity_padding = read_vector_unchecked(identity, "padding");
 		hud.player_identity_reference_width = read_positive(identity, "reference_width");
 
@@ -868,6 +870,9 @@ namespace presentation_read
 	CameraPresentation read_camera(const JsonValue& root)
 	{
 		const JsonValue camera = root.object("camera");
+		// Three keys are optional, so a misspelt one must fail rather than be skipped.
+		require_known_keys(camera, { "reference_height", "minimum_world_width",
+			"horizontal_lead_seconds", "horizontal_lead_max_distance", "shake" });
 		CameraPresentation framing;
 		framing.reference_height = read_positive(camera, "reference_height");
 		const auto camera_option = [&](const char* key)
@@ -977,6 +982,14 @@ namespace presentation_read
 		intro.controls_gap = read_positive(match, "controls_gap");
 		intro.stage_entry_size = read_positive_vector(match, "stage_entry_size");
 		intro.stage_entry_top = read_positive(match, "stage_entry_top");
+		const JsonValue controls_text = match.object("controls_text");
+		require_known_keys(controls_text, { "font", "colour", "shadow_colour", "shadow_offset", "y" });
+		require_known_keys(controls_text.object("shadow_offset"), { "x", "y" });
+		intro.controls_text.font = controls_text.string("font");
+		intro.controls_text.colour = read_colour(controls_text, "colour");
+		intro.controls_text.shadow_colour = read_colour(controls_text, "shadow_colour");
+		intro.controls_text.shadow_offset = read_vector(controls_text, "shadow_offset");
+		intro.controls_text.y = read_unit(controls_text, "y");
 		const JsonValue countdown_art = match.object("countdown_art");
 		CountdownArtPresentation& signal = intro.countdown_art;
 		signal.ink = read_colour(countdown_art, "ink");
@@ -1035,6 +1048,7 @@ namespace presentation_read
 		debug.shadow_colour = read_colour(json, "shadow_colour");
 		debug.shadow_offset = read_vector_unchecked(json, "shadow_offset");
 		debug.shadow_scale = read_positive(json, "shadow_scale");
+		debug.menu_value_colour = read_colour(json, "menu_value_colour");
 		const JsonValue station = json.object("station_label");
 		debug.station_label.font = station.string("font");
 		debug.station_label.scale = read_positive(station, "scale");

@@ -42,7 +42,8 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const PlaySettings preferences;
         const GameTuning tuning((content / "tuning.json").string().c_str());
-        for (const auto& font : { tuning.match().controls_font })
+        const Presentation presentation((content / "presentation.json").string().c_str());
+        for (const auto& font : { presentation.match().controls_text.font })
         {
             const SpriteFontFile file = read_sprite_font_file(
                 (content / "fonts" / (font + ".spritefont")).string());
@@ -50,7 +51,6 @@ int main(int argc, char** argv)
             if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
             render.add_font(font, std::move(loaded));
         }
-        const Presentation presentation((content / "presentation.json").string().c_str());
         const MovementFeedbackPresentation& feedback = presentation.movement_feedback();
         tuning.validate_resources(render, audio);
         const ContentVariant animation_content(content / "tuning.json");

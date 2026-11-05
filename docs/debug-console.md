@@ -453,7 +453,7 @@ The latest validation is recorded under
 | `presentation.hud.closing_clock.text` | live, opaque | Final-ten-positive-seconds clock text on applicable running draws; opaque named/RGB/RGBA-FF values retain the existing reader contract. |
 | `presentation.hud.player_identity.colour` | live | Shared foreground of the existing identity label and HEALTH/PAINT meter labels, on each applicable HUD draw; fonts remain captured. |
 | `presentation.hud.player_identity.shadow_colour` | live | Offset identity-label shadow drawn before its independent foreground; the meter labels have no shadow call. |
-| `presentation.hud.player_identity.background_colour` | next screen | Captured backing behind the Stage Select preview; a newly constructed page adopts it, while the gameplay HUD paper remains separate. |
+| `presentation.main_menu.stage_select.preview_background` | next screen | Captured backing behind the Stage Select preview; a newly constructed page adopts it, while the gameplay HUD paper remains separate. |
 | `presentation.hud.closing_clock.ink` | live, opaque | Closing-panel ink cross fills and detached beat tick under-strokes on applicable running draws. |
 | `presentation.hud.closing_clock.paper` | live, opaque | Inner closing-panel paper cross fills on applicable running draws. |
 | `presentation.hud.closing_clock.accent` | live, opaque | Four detached tick stripes while the existing closing beat geometry is active; settled/reduced draws omit them. |
@@ -729,10 +729,10 @@ their existing policy. Foreground alpha0 leaves the paper and current identity
 shadow, while the two meter labels contribute no selected ink. Shadow alpha0
 leaves paper and the later identity foreground. The distinct root badge ink/
 background remain opaque and independently supported. The separate
-`hud.player_identity.background_colour` preview backing is described below; it
+`main_menu.stage_select.preview_background` preview backing is described below; it
 does not colour the HUD identity paper and is outside this pair.
 
-Stage Select captures `hud.player_identity.background_colour` into its preview
+Stage Select captures `main_menu.stage_select.preview_background` into its preview
 backing UiTexture when the page is initialized. A new page adopts an edit;
 stable updates, stage cycling, ready/unready and resizing do not recapture the
 tint. Ready state can change the underlying filled preview-edge colour, so

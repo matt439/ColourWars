@@ -289,7 +289,7 @@ namespace
 	MatchTuning read_match(const JsonValue& root)
 	{
 		const JsonValue json = known_object(root, "match", { "duration", "duration_choices",
-			"countdown", "zoom_out", "overview", "replay", "controls_text", "sounds",
+			"countdown", "zoom_out", "overview", "replay", "sounds",
 			"opening", "reveal" });
 
 		MatchTuning match;
@@ -314,14 +314,6 @@ namespace
 		match.countdown = read_non_negative(json, "countdown");
 		match.overview = read_non_negative(json, "overview");
 		match.replay = read_positive(json, "replay");
-
-		const JsonValue controls = known_object(json, "controls_text",
-			{ "font", "colour", "shadow_colour", "shadow_offset", "y" });
-		match.controls_font = controls.string("font");
-		match.controls_colour = read_colour(controls, "colour");
-		match.controls_shadow_colour = read_colour(controls, "shadow_colour");
-		match.controls_shadow_offset = read_xy(controls, "shadow_offset");
-		match.controls_y = read_unit(controls, "y");
 
 		const JsonValue sounds = known_object(json, "sounds", { "countdown", "go", "time_up",
 			"last_ten", "zoom_out", "room_tone", "hover", "click", "sigh", "chair",

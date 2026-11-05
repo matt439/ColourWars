@@ -139,7 +139,7 @@ namespace debug_console_acceptance
 		const std::string recorded_closing_text = impl.tune_token("presentation.hud.closing_clock.text");
 		const std::string recorded_hud_label = impl.tune_token("presentation.hud.player_identity.colour");
 		const std::string recorded_hud_identity_shadow = impl.tune_token("presentation.hud.player_identity.shadow_colour");
-		const std::string recorded_preview_background = impl.tune_token("presentation.hud.player_identity.background_colour");
+		const std::string recorded_preview_background = impl.tune_token("presentation.main_menu.stage_select.preview_background");
         const std::string recorded_closing_ink = impl.tune_token("presentation.hud.closing_clock.ink");
         const std::string recorded_closing_paper = impl.tune_token("presentation.hud.closing_clock.paper");
         const std::string recorded_closing_accent = impl.tune_token("presentation.hud.closing_clock.accent");
@@ -184,7 +184,7 @@ namespace debug_console_acceptance
 			{ "presentation.hud.closing_clock.text", recorded_closing_text },
 			{ "presentation.hud.player_identity.colour", recorded_hud_label },
 			{ "presentation.hud.player_identity.shadow_colour", recorded_hud_identity_shadow },
-			{ "presentation.hud.player_identity.background_colour", recorded_preview_background },
+			{ "presentation.main_menu.stage_select.preview_background", recorded_preview_background },
             { "presentation.hud.closing_clock.ink", recorded_closing_ink },
             { "presentation.hud.closing_clock.paper", recorded_closing_paper },
             { "presentation.hud.closing_clock.accent", recorded_closing_accent },
@@ -481,7 +481,7 @@ namespace debug_console_acceptance
 			{ "presentation.hud.closing_clock.text", recorded_closing_text },
 			{ "presentation.hud.player_identity.colour", recorded_hud_label },
 			{ "presentation.hud.player_identity.shadow_colour", recorded_hud_identity_shadow },
-			{ "presentation.hud.player_identity.background_colour", recorded_preview_background },
+			{ "presentation.main_menu.stage_select.preview_background", recorded_preview_background },
             { "presentation.hud.closing_clock.ink", recorded_closing_ink },
             { "presentation.hud.closing_clock.paper", recorded_closing_paper },
             { "presentation.hud.closing_clock.accent", recorded_closing_accent },

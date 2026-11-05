@@ -220,7 +220,6 @@ namespace presentation_read
 		style.footer_y = chrome.number("footer_y");
 		style.rule_height = read_positive(chrome, "rule_height");
 		style.icon_padding = read_vector_unchecked(chrome, "icon_padding");
-		style.box_size = read_vector_unchecked(json, "box_size");
 
 		style.sound_bank = json.string("sound_bank");
 
@@ -250,6 +249,17 @@ namespace presentation_read
 				": menu_style.chrome.footer_y must be finite, greater than " +
 				number_text(menu_geometry::paper_footer_margin) + " and at most " + number_text(DESIGN_RESOLUTION.y) + ".");
 		}
+
+		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
+		require_known_keys(json, { "title_box_size", "home_box_size", "options_box_size",
+			"credits_box_size", "setup_box_size", "team_box_size", "weapon_box_size", "stage_box_size",
+			"setup_focus_padding", "setup_shadow_offset", "art", "title_y", "title_subtitle_y",
+			"title_start_y", "title_no_pad_y", "home_position", "home_subtitle_position", "home_spacing",
+			"options_heading_position", "options_position", "options_value_x", "options_status_position",
+			"credits", "fonts", "build_id_y", "backgrounds", "options_warning_colour",
+			"options_spacing", "display_trial_seconds", "weapon_description", "mode_select_spacing",
+			"player_count_spacing", "team_select", "weapon_select", "stage_scan", "stage_select", "music",
+			"sounds", "weapon_descriptions" });
 
 		MainMenuPresentation menu;
 		const auto panel_size = [&](const char* key, float max_width = menu_geometry::paper_max_width)
@@ -337,7 +347,6 @@ namespace presentation_read
 		menu.title_background_colour = read_colour(backgrounds, "title");
 		menu.home_background_colour = read_colour(backgrounds, "home");
 
-		menu.options_value_colour = read_colour(json, "options_value_colour");
 		menu.options_warning_colour = read_colour(json, "options_warning_colour");
 		if (menu.options_warning_colour.a != 1.0f || menu.options_warning_colour == menu.art.paper ||
 			menu.options_warning_colour == menu.art.focus_fill)
@@ -515,6 +524,7 @@ namespace presentation_read
 		menu.stage_select.selected = read_colour(stage, "selected");
 		menu.stage_select.unselected = read_colour(stage, "unselected");
 		menu.stage_select.selected_ink = read_colour(stage, "selected_ink");
+		menu.stage_select.preview_background = read_colour(stage, "preview_background");
 
 		menu.music = read_sound(json, "music");
 
@@ -542,6 +552,8 @@ namespace presentation_read
 		if (json.has("stage_scan"))
 		{
 			const JsonValue scan = json.object("stage_scan");
+			require_known_keys(scan, { "font", "heading_scale", "text_scale", "status_scale",
+				"prompt_position", "prompt_shadow_offset", "box_size", "padding", "gap", "status" });
 			menu.stage_scan.font = scan.identifier("font");
 			menu.stage_scan.heading_scale = read_positive(scan, "heading_scale");
 			menu.stage_scan.text_scale = read_positive(scan, "text_scale");
@@ -746,6 +758,9 @@ namespace presentation_read
 	PauseMenuPresentation read_pause_menu(const JsonValue& root)
 	{
 		const JsonValue json = root.object("pause_menu");
+		// practice_row_spacing is optional, so a misspelt key must fail rather than be skipped.
+		require_known_keys(json, { "resume_countdown", "box_size", "heading_y", "status_y", "art",
+			"layout", "practice_row_spacing", "window_open_sound", "sounds" });
 
 		PauseMenuPresentation menu;
 		menu.resume_countdown = read_positive(json, "resume_countdown");

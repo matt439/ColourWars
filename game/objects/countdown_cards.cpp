@@ -34,8 +34,9 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 	// Use the configured countdown for the opening beat.
 	const MatchTuning& match = *this->match_;
 	const MatchPresentation& controls = this->presentation_->match();
+	const ControlsTextPresentation& look = controls.controls_text;
 	this->controls_look_ = { controls.reference_size, controls.controls_margin, controls.controls_padding,
-		this->presentation_->menu().detail_shadow_offset, match.controls_shadow_offset, controls.controls_gap, match.controls_y };
+		this->presentation_->menu().detail_shadow_offset, look.shadow_offset, controls.controls_gap, look.y };
 	this->countdown_label_ = match.countdown > 0.0f ?
 		std::to_wstring(static_cast<int>(std::ceil(match.countdown))) : L"GO!";
 	this->countdown_art_ = std::make_unique<CountdownArt>(
@@ -74,7 +75,7 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 		}
 	}
 
-	const auto add_reminder = [this, render_resources, &match, &menu](
+	const auto add_reminder = [this, render_resources, &look, &menu](
 		const std::wstring& heading, const std::wstring& text)
 	{
 		ControlsReminder reminder;
@@ -82,9 +83,8 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 			heading, menu.detail_font, Vector2F::zero, render_resources,
 			menu.highlight, menu.shadow_colour, menu.detail_shadow_offset);
 		reminder.text = std::make_unique<colourwars::TextDropShadow>(
-			text, match.controls_font, Vector2F::zero, render_resources,
-			match.controls_colour, match.controls_shadow_colour,
-			match.controls_shadow_offset);
+			text, look.font, Vector2F::zero, render_resources,
+			look.colour, look.shadow_colour, look.shadow_offset);
 		this->controls_reminders_.push_back(std::move(reminder));
 	};
 

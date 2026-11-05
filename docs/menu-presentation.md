@@ -572,7 +572,9 @@ preserve diagnostic priority.
 The required `main_menu.stage_select.selected_ink`, shipped as `111216`, supplies
 the live confirmed stage-name/status colour. Their unconfirmed colour remains
 the live `unselected`, now shipped as `1B1C20`. The preview edge retains the live
-mint `selected` colour. The briefing label and goal use captured focus ink;
+mint `selected` colour, and the required `main_menu.stage_select.preview_background`,
+shipped as `121827EE`, is the backing behind the preview, captured when the page
+is built. The briefing label and goal use captured focus ink;
 the remaining static paper labels use captured art ink. Paper shadows have zero
 alpha, retaining the authored shadow offsets and text extents. The Random
 question mark retains its existing light colour and visible shadow on the
@@ -1129,7 +1131,7 @@ help's `per_pad`, and `labels`: the words among the control labels (`space`,
 `escape`, `none`, `start` and the five mouse buttons). Each token is required
 exactly once, and each template is formatted with the default controls when
 read. Startup measures the reminders for every keyboard and pad choice in
-tuning's `match.controls_text.font` and the headings in the detail font; the
+presentation's `match.controls_text.font` and the headings in the detail font; the
 cards scale to fit, so only glyphs and bounds are checked. The letters, the pad
 legends and the " / " between a primary and its alternate stay in code;
 `input_bindings.cpp` holds only those legends, none of these words.

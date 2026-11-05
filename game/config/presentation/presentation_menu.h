@@ -87,9 +87,6 @@ struct MenuStyle
 	float rule_height = 0.0f;
 	labrador::Vector2F icon_padding;
 
-	// The box a modal menu is drawn in. Pause, end and results all use it.
-	labrador::Vector2F box_size = { 0.0f, 0.0f };
-
 	std::string sound_bank;
 	float repeat_delay = 0.0f;
 	float repeat_interval = 0.0f;
@@ -121,6 +118,8 @@ struct StageSelectPresentation
 	labrador::Colour selected;
 	labrador::Colour unselected;
 	labrador::Colour selected_ink;
+	// Behind the arena preview, captured when the page is built.
+	labrador::Colour preview_background = labrador::Colour::black;
 };
 
 // Stepped paper and action cards, in menu design coordinates.
@@ -233,7 +232,6 @@ struct MainMenuPresentation
 	labrador::Colour title_background_colour = labrador::Colour::black;
 	labrador::Colour home_background_colour = labrador::Colour::black;
 
-	labrador::Colour options_value_colour = labrador::Colour::white;
 	labrador::Colour options_warning_colour;
 	labrador::Vector2F options_heading_position;
 	labrador::Vector2F options_position;

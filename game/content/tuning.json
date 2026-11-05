@@ -51,18 +51,6 @@
         "zoom_out": 2.0,
         "overview": 2.0,
         "replay": 8.0,
-        "controls_text": {
-            "_comment": [
-                "What it says is presentation.json's menu_text.controls, filled",
-                "in with the player's own controls; this is only how it looks.",
-                "y is a fraction of the screen height, under the countdown."
-            ],
-            "font": "lato_black_24",
-            "colour": "WHITE_SMOKE",
-            "shadow_colour": "BLACK",
-            "shadow_offset": { "x": 2.0, "y": 2.0 },
-            "y": 0.78
-        },
         "sounds": {
             "countdown": { "name": "match.count_beat", "volume": 1.0 },
             "go": { "name": "match.go", "volume": 1.0 },
@@ -113,8 +101,9 @@
 
     "paint": {
     "_comment": [
-      "The granularity coverage is scored at, and how deep paint sits on a",
-      "face. These were paint_tile_consts and structure_paintable_consts."
+      "Painted surface: the tile size coverage is scored at, how deep paint",
+      "sits on a face, the frame tiles draw with, splash animations, the look",
+      "of wet paint, the share a paint gate opens at, and the paint sounds."
     ],
     "size": { "x": 4.0, "y": 4.0 },
     "thickness": 12.0,

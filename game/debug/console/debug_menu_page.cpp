@@ -137,7 +137,7 @@ void DebugMenuPage::rebuild(const std::vector<DebugMenuRow>& rows, std::size_t f
 		const float y = this->first_row_y_ + this->row_pitch_ * static_cast<float>(i);
 		built.push_back(std::make_unique<OptionRow>("debug_row_" + std::to_string(i),
 			widen(rows[i].label), Vector2F(left, y), Vector2F(value_x, y), style,
-			this->presentation().main_menu().options_value_colour, this->render_resources(),
+			this->presentation().debug_overlay().menu_value_colour, this->render_resources(),
 			nullptr));
 		built.back()->set_value(widen(rows[i].value));
 		this->shown_labels_.push_back(rows[i].label);
