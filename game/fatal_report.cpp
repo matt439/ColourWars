@@ -2,6 +2,7 @@
 #include "game/fatal_report.h"
 #include "game/build_info.h"
 #include "game/directory_consts.h"
+#include "game/objects/player_out_of_bounds.h"
 #include "game/save/atomic_file.h"
 #include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
@@ -111,10 +112,8 @@ void FatalReport::capture(const std::exception_ptr& failure)
 		else if (dynamic_cast<const std::logic_error*>(&error)) { cause.kind = "logic_error"; }
 		else if (dynamic_cast<const std::runtime_error*>(&error)) { cause.kind = "runtime_error"; }
 		else { cause.kind = "standard_exception"; }
-		if (diagnostic != nullptr && std::strcmp(diagnostic, "Player out of bounds") == 0)
-		{
-			cause.reason = "player_out_of_bounds";
-		}
+		if (dynamic_cast<const PlayerOutOfBounds*>(&error)) { cause.reason = "player_out_of_bounds"; }
+		// The engine's device failure has no type of its own (engine report 30).
 		else if (diagnostic != nullptr && std::strcmp(diagnostic, "No Direct3D hardware device found") == 0)
 		{
 			cause.reason = "no_hardware_device";
@@ -144,15 +143,15 @@ const wchar_t* FatalReport::caption() const
 		L"ColourWars - runtime failure" : L"ColourWars - startup failure";
 }
 
-std::wstring FatalReport::dialog_text(bool saved) const
+std::wstring FatalReport::dialog_text(const std::string& saved_path) const
 {
 	std::string text = "Failure while ";
 	text += phase_description(this->phase_);
 	text += ".\n\n";
 	text += this->message_;
 	if (this->message_truncated_) { text += "\n[Exception text truncated]"; }
-	text += saved ? "\n\nDiagnostic metadata saved to %LOCALAPPDATA%\\ColourWars\\last-error.log." :
-		"\n\nDiagnostic metadata could not be saved.";
+	text += saved_path.empty() ? std::string("\n\nDiagnostic metadata could not be saved.") :
+		"\n\nDiagnostic metadata saved to " + saved_path + ".";
 	return labrador::widen(text);
 }
 
@@ -207,14 +206,14 @@ int present_fatal_error(FailurePhase phase, const std::exception_ptr& failure) n
 	try
 	{
 		const FatalReport report(phase, failure);
-		bool saved = false;
+		std::string saved_path;
 		try
 		{
 			const std::string path = directory_consts::fatal_report_path();
-			if (!path.empty()) { saved = report.write_record(labrador::path_from_utf8(path)); }
+			if (!path.empty() && report.write_record(labrador::path_from_utf8(path))) { saved_path = path; }
 		}
 		catch (...) { }
-		const std::wstring text = report.dialog_text(saved);
+		const std::wstring text = report.dialog_text(saved_path);
 		std::fprintf(stderr, "%s failure: %s\n", report.stderr_prefix(), report.message().c_str());
 		std::fflush(stderr);
 		MessageBoxW(nullptr, text.c_str(), report.caption(), MB_OK | MB_ICONERROR);

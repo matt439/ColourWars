@@ -310,7 +310,7 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 		const Stage& stage = stages->at(static_cast<size_t>(slot));
 		return this->text().stage_title(stage.name, stage.display_name, "the stage list");
 	}
-	return L"ERROR";
+	throw std::out_of_range("Stage Select has no slot " + std::to_string(slot));
 }
 bool MainMenuStageSelect::is_user_stage(int slot) const
 {

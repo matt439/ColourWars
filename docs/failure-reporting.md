@@ -36,7 +36,8 @@ startup failure: No Direct3D hardware device found
 
 The sandbox trial's receipt reads this exact missing-adapter line
 (`scripts/sandbox/logon.ps1`). Runtime errors use `runtime failure:`. Metadata-write
-status appears in the dialog, without adding another stderr line.
+status appears in the dialog, without adding another stderr line: the dialog
+names the path it wrote, or says it could not save.
 
 ## Persisted metadata and privacy
 
@@ -53,8 +54,10 @@ Format 1 is a UTF-8 `key=value` record containing only these controlled fields:
 - Ordered, fixed exception-kind names. Standard system/generic error categories
   may include their numeric error code. Custom category names, messages and codes
   are omitted.
-- Fixed reason codes for the existing player-out-of-bounds and missing-hardware
-  diagnostics, when the original message matches exactly.
+- Fixed reason codes for two diagnostics: `player_out_of_bounds` for the game's
+  own `PlayerOutOfBounds` exception, recognised by type, and
+  `no_hardware_device` when the engine's message matches exactly (it has no type
+  of its own; engine report 30).
 - Cause-count and diagnostic-text truncation flags.
 
 Arbitrary exception messages, RTTI names, file paths, command-line arguments,

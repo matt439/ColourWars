@@ -29,7 +29,9 @@ public:
 	const std::string& message() const;
 	const char* stderr_prefix() const;
 	const wchar_t* caption() const;
-	std::wstring dialog_text(bool saved) const;
+	// saved_path is the UTF-8 path the record was written to, or empty when it
+	// was not; the dialog names it.
+	std::wstring dialog_text(const std::string& saved_path) const;
 	std::string record_text() const;
 	// A failed write preserves the previous complete file and the original error.
 	bool write_record(const std::filesystem::path& path) const noexcept;

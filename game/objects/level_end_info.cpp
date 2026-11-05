@@ -132,7 +132,8 @@ std::wstring LevelEndInfo::winning_team_string(const MenuResultsText& text) cons
 	{
 		return text.competitive_draw;
 	}
-	throw std::exception("No winning team");
+	throw std::logic_error("LevelEndInfo has no text for winning team " +
+		std::to_string(static_cast<int>(winning)));
 }
 
 std::wstring LevelEndInfo::player_percentage_string(int slot) const

@@ -1113,7 +1113,8 @@ void Player::update(float dt)
     }
 	else
 	{
-		throw std::exception("Invalid player state.");
+		throw std::logic_error("Player cannot update unknown state " +
+			std::to_string(static_cast<int>(this->state_)));
 	}
     if (this->input_.toggle_debug)
     {

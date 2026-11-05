@@ -548,6 +548,7 @@ std::wstring PauseMenuConfirmation::question_text(
 	case ConfirmationType::quit:
 		return this->text().confirmations.quit;
 	default:
-		return L"Error";
+		throw std::logic_error("Pause has no question for confirmation type " +
+			std::to_string(static_cast<int>(type)));
 	}
 }

@@ -148,7 +148,8 @@ CollisionObjectType Projectile::collision_type() const
         case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_a;
         default:
-            throw std::exception("Invalid ProjectileType value.");
+            throw std::logic_error("Projectile has no collision type for projectile type " +
+                std::to_string(static_cast<int>(type)));
         }
     case PlayerTeam::b:
         switch (type)
@@ -164,10 +165,12 @@ CollisionObjectType Projectile::collision_type() const
         case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_b;
         default:
-            throw std::exception("Invalid ProjectileType value.");
+            throw std::logic_error("Projectile has no collision type for projectile type " +
+                std::to_string(static_cast<int>(type)));
         }
     default:
-        throw std::exception("Invalid PlayerTeam value.");
+        throw std::logic_error("Projectile has no collision type for team " +
+            std::to_string(static_cast<int>(this->team())));
     }
 }
 PlayerTeam Projectile::team() const

@@ -427,6 +427,7 @@ PlayerAnimationState Player::calculate_animation_state() const
 	}
     else
     {
-		throw std::exception("Invalid player move state.");
+		throw std::logic_error("Player has no animation for move state " +
+			std::to_string(static_cast<int>(move_state)));
 	}
 }

@@ -11,6 +11,7 @@
 #include "game/objects/match_audio.h"
 #include "game/objects/countdown_cards.h"
 #include "game/objects/match_opening.h"
+#include "game/objects/player_out_of_bounds.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -427,7 +428,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	{
 		if (!this->scene_->in_bounds(*player))
 		{
-			throw std::runtime_error("Player out of bounds");
+			throw PlayerOutOfBounds();
 		}
 	}
 }
@@ -817,7 +818,7 @@ LevelEndInfo Level::level_end_info() const
 			if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
 			{
 				throw std::runtime_error(
-					"Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
+					"A structure_paintable collision object has no paintable role");
 			}
 			continue;
 		}

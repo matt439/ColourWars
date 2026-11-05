@@ -371,19 +371,43 @@ same nine painter switches passed again in Debug and Release.
 
 ### Diagnostics and impossible states (`HYG#64`)
 
-- `FatalReport::capture` classifies the game's own "Player out of bounds" throw by
-  `strcmp` (`fatal_report.cpp:113`). Throw a `PlayerOutOfBounds` type and classify
-  it by type. This is not report 30, which is about the engine's message.
-- Print the real `fatal_report_path` in the dialog (`:153`).
-- Reword the spawn diagnostic (`level_loaded_info.cpp:251`): players are not
-  "retired". Reword the paintable-role error (`level.cpp:820`), which names a
-  removed enum spelling.
-- Replace the seven MSVC-only `std::exception("...")` throws (`player.cpp:1116`,
-  `projectile.cpp:151`, `player_figure.cpp:430`, `team_colour.cpp:23` and
-  siblings) with `std::logic_error` or `std::invalid_argument` naming the value.
-- Make Stage Select's out-of-range slot (`main_menu_stage_select.cpp:313`) and
-  Pause's unknown confirmation (`pause_menu.cpp:551`) throw instead of drawing
-  `ERROR` or `Error`.
+**Done 2026-11-05; behaviour change.** The failure dialog names the real record
+path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
+
+- `Level::update` throws `PlayerOutOfBounds`
+  ([player_out_of_bounds.h](../game/objects/player_out_of_bounds.h)), a
+  `std::runtime_error` with the same message, and `FatalReport::capture`
+  records `player_out_of_bounds` by type. A plain `runtime_error` with those
+  words no longer gets the reason. The engine's device-failure `strcmp` stays
+  at `fatal_report.cpp:117`, where report 30 cites it.
+- `FatalReport::dialog_text` takes the path written (empty when nothing was
+  saved), and the dialog says `Diagnostic metadata saved to <path>.` instead of
+  the fixed `%LOCALAPPDATA%` spelling.
+- The spawn diagnostic says a player built outside `out_of_bounds` stops the
+  match with a player-out-of-bounds failure; its sibling in
+  `station_contract.h` (the editor's words) and its comment say the same. The
+  paintable-role error says a `structure_paintable` collision object has no
+  paintable role.
+- The seven `std::exception("...")` throws (`level_end_info.cpp`,
+  `player_figure.cpp`, `player.cpp`, three in `projectile.cpp`,
+  `team_colour.cpp`) are `std::logic_error`, or `std::invalid_argument` for
+  `TeamColour::team_colour`'s parameter, each naming the enum's value.
+- Stage Select's out-of-range slot throws `std::out_of_range` and Pause's unknown
+  confirmation `std::logic_error`; neither is reachable (the slot's preview
+  already calls `stages->at` first).
+
+`fatal_report` now checks the type, that a look-alike `runtime_error` is not
+classified, that a nested one is classified at its own cause, and that the
+dialog ends with the given (Unicode) path or the could-not-save line.
+`check-failure-reporting.ps1` expects the isolated profile's real path.
+`failure-reporting.md` says both.
+
+Both presets build under `/W4 /WX`. `fatal_report`, `level_format`,
+`menu_navigation`, `stage_selection`, `session`, `gameplay_tuning`,
+`user_stages`, `bot_driver`, `movement`, `paint`, `results_awards` and
+`team_palette` passed in Debug and Release, as did `check-failure-reporting.ps1`
+(its dialog body names the isolated `last-error.log`) and
+`check-level-editor.ps1`.
 
 ### Fixed arrays and lifetime hazards (`HYG#65`)
 

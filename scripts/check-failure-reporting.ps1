@@ -226,7 +226,7 @@ function Test-FailureCase {
             throw 'The failure dialog did not preserve the complete original file/parser/offset cause.'
         }
         $status = if ($BlockedLog) { 'Diagnostic metadata could not be saved.' } else {
-            'Diagnostic metadata saved to %LOCALAPPDATA%\ColourWars\last-error.log.'
+            "Diagnostic metadata saved to $reportPath."
         }
         if (-not $body.EndsWith($status, [StringComparison]::Ordinal)) {
             throw 'The failure dialog did not report the actual metadata-write outcome.'
