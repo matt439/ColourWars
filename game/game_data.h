@@ -12,7 +12,10 @@
 #include "game/config/tuning.h"
 #include "game/debug/debug_director.h"
 
-// Borrowed application and game services shared with states and objects.
+// Borrowed application and game services for the shell: states, menu pages,
+// MenuContext, StagePreview and the developer tools. Nothing in game/objects,
+// game/ai or game/carried names it; a state unpacks it into a builder, which
+// hands each object only what it uses (docs/architecture.md).
 // wWinMain owns the game data before Application, so it remains valid during
 // state teardown. Engine services are forwarded through Application.
 class GameData

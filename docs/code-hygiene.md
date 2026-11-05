@@ -264,13 +264,36 @@ and `user_stages`, `menu_presentation` and `menu_text`, which read
 
 ### Comments and reference docs that drifted (`HYG#62`)
 
-Correct each comment and doc line against the code. First the `GameData` class
-comment (`game_data.h:15`), which says objects share it, the opposite of the
-architecture rule. Then `level.h:127`, `main.cpp:73`, `level_inputs.h:14` and
-`save.cpp:453`. Then `debug-console.md:1585` (the RTTI list has 16 names) and
-`:1615` (`SkirmishBot`), `README.md:206` and `:216`, `level-format.md:35`, `:197`
-and `:596`, `docs/README.md:25` and `:48`, `menu-presentation.md:191`,
-`oop-guide.md:311` (the `low` cue), and `architecture.md:105` (the SHA stamp).
+**Done 2026-11-05.** Comments and docs only; the game's behaviour is unchanged.
+Each named site now says what the code does:
+
+- `GameData`'s class comment names its holders (states, menu pages,
+  `MenuContext`, `StagePreview`, the developer tools) and says nothing in
+  `objects/`, `ai/` or `carried/` names it.
+- `Level::update` says the shipping bots drive first unless the seat filter
+  replaces bot inputs, and the filter sees every input last; `main.cpp` adds
+  `tune` to what mutates tuning and presentation; `level_inputs.h` says the
+  four records are the constructor's (with `StageAudio` inside `LevelStage`);
+  `save.cpp` says the first save fails before any page could report it, which
+  is why it gets a dialog.
+- `debug-console.md` lists all sixteen RTTI names (`DebugBackgroundInput` was
+  missing) and `SkirmishBot` in the bot hierarchy. `README.md`'s tree has
+  today's line counts (~78k, ~17k, ~7k), what RapidJSON reads and what `cmake/`
+  holds (no wave-bank recipe; staging and checks). `level-format.md` says the
+  archived levels had their bank and music renamed and all use `level_name`,
+  names the two drives (they are described below the line, not above), and
+  counts thirteen registered stages. `docs/README.md` says what
+  `gameplay-tuning.md` covers and that Press Tower and Turbulence's slab trial
+  were accepted. `menu-presentation.md` names the real key,
+  `main_menu.backgrounds.home`, at all three sites, and so does its sibling in
+  `polish-main-menu.md`. `oop-guide.md` lists the optional `low` cue, and
+  `architecture.md`'s invariants, re-checked, carry a date instead of a SHA.
+
+Left as found: the dated `b96bad6`/`8e91aab` stamps in `feature-roadmap.md`,
+which record what one past check covered rather than claim a present state.
+
+Both presets build under `/W4 /WX`. `settings`, `level_format`, `bot_driver` and
+`menu_presentation` passed in Debug and Release, and the Markdown links resolve.
 
 ### One atomic file writer and one debug file-stem rule (`HYG#63`)
 

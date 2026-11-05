@@ -124,11 +124,11 @@ public:
 
 	// `commands` holds one command per participant, in roster order: device
 	// slots already mapped and keyboard/mouse aim resolved (SeatCommandBuilder).
-	// A participant past its end gets neutral input. `seats`, when given, sees
-	// and may replace every participant's final input after the shipping bots,
-	// unless it replaces their inputs. GameLevel passes the shipping recorder
-	// in both builds, optionally wrapping a Debug filter; instant replay
-	// supplies a tape player instead.
+	// A participant past its end gets neutral input. The shipping bots then
+	// drive their seats unless `seats` replaces bot inputs; `seats`, when given,
+	// sees and may replace every participant's input last. GameLevel passes
+	// the shipping recorder in both builds, optionally wrapping a Debug filter;
+	// instant replay supplies a tape player instead.
 	void update(const std::vector<PlayerInputData>& commands, float dt,
 		SeatInputFilter* seats = nullptr);
 	// Skip the intro on the next update, as A, B or Start does: honoured only

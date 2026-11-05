@@ -102,7 +102,7 @@ everything -> external/labrador (never the other way)
 debug/ -> everything above; the rest reaches debug/ through three headers
 ```
 
-What holds at `272ecb75`:
+What holds (checked 2026-11-05):
 
 - **No file-level include cycles**, and nothing in `objects/`, `ai/` or
   `carried/` includes a `states/` header.

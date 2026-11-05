@@ -33,9 +33,10 @@ rotate, move, position or reorder a level object. Unsupported `type` and
 `collision_type` values are errors.
 
 The old JSON examples in [game/art/archive/levels](../game/art/archive/levels)
-are historical sources, retained unchanged. Some use `level_name` instead of the
-current metadata or unsupported object tags; `base.json` there is not a template
-for the current loader. The Publisher documents in
+are historical sources, retained as authored except that the Paint.exe audio
+renamed their sound bank and music. All use `level_name` instead of the current
+metadata and some carry unsupported object tags; `base.json` there is not a
+template for the current loader. The Publisher documents in
 [game/art/sources/levels](../game/art/sources/levels) are layout source material,
 not runtime assets.
 
@@ -194,7 +195,7 @@ conversion. The anchor and endpoint must have finite, positive represented
 edges. Both solid and jump-through paintables are supported. Motion on plain
 structures, ramps or visuals, a motion `type` other than `horizontal` or
 [`vertical`](#vertical-lift-motion), and `axis`, `travel_y` or `rotation` in a
-horizontal record are errors, as are a `drive` other than the two above
+horizontal record are errors, as are a `drive` other than `cycle` or `paint`
 and the paint-drive rules below. Other unknown keys remain ignored metadata,
 as elsewhere in format 1; they do not add motion capabilities.
 
@@ -593,7 +594,7 @@ Repeat with `x64-release`. The `level_format` consumer case uses bundled
 RapidJSON Draft-04 validation and the actual `LevelLoadedInfo`/`LevelObjectBuilder`
 paths with CPU resource metadata; it checks source and staged copies of every
 level the manifest registers plus the template, with an untagged legacy clone of
-each. The case requires the exact registered count (eleven at 2026-10-29,
+each. The case requires the exact registered count (thirteen at 2026-11-05,
 [level_format.cpp](../scripts/acceptance/level_format.cpp)), so registering or
 retiring a stage updates that number.
 Its fixtures also exercise invalid

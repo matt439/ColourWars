@@ -70,8 +70,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		// Parse tuning and presentation before creating states. Their asset names
 		// are validated after the manifest loads; both objects outlive Application.
-		// Mutable only through the developer director (Debug `reload` and
-		// `feedback`); GameData hands everything else const pointers.
+		// Mutable only through the developer director (Debug `reload`, `tune`
+		// and `feedback`); GameData hands everything else const pointers.
 		phase = FailurePhase::definitions;
 		GameTuning tuning(
 			resolved_under(content_root, TUNING_PATH).c_str());

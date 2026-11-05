@@ -188,7 +188,7 @@ and Player Count. Its shipped value is `(1760, 920)`, centered in
 ink, shade colour and pen width, replacing its card padding and shadow offset
 with the required `main_menu.setup_focus_padding` (`28, 7`) and
 `main_menu.setup_shadow_offset` (`2`). The solid surround uses
-`main_menu.home_background_colour`. `MenuPaperArtwork` draws only the enabled
+`main_menu.backgrounds.home`. `MenuPaperArtwork` draws only the enabled
 focused row's card and detached arrow; neither page has a persistent
 primary-action card.
 The legacy brand and focus stripe are suppressed on these two pages. The
@@ -229,7 +229,7 @@ opens; reopening adopts edited values.
 
 Join reuses `main_menu.setup_box_size` and the captured setup-art copy described
 above, including the focus-padding and shadow-offset overrides. Its solid
-surround uses `main_menu.home_background_colour`. There are no new data fields
+surround uses `main_menu.backgrounds.home`. There are no new data fields
 or artwork assets. `MenuPaperArtwork` draws the outer panel without a
 focused-row card or detached arrow. A static underline identifies the row P1
 can edit: Up/Down selects an unclaimed non-host human or an existing bot, and
@@ -381,7 +381,7 @@ badges and card padding at their existing positions. Dimensions must be finite
 and positive, at most 1840 wide and at most `footer_y - 40` high. The page
 captures `main_menu.art` with the existing `setup_focus_padding` and
 `setup_shadow_offset` overrides; row cards copy this art with their paper fill
-set to `focus_fill`. The solid surround uses `home_background_colour`. There
+set to `focus_fill`. The solid surround uses `main_menu.backgrounds.home`. There
 is no shared focus cursor, focused-row card or detached arrow. The controls
 footer remains visible and the legacy brand is suppressed.
 

@@ -309,7 +309,8 @@ For a new selectable primary weapon, keep these registrations together:
    settings required by its chosen implementation. A looping sound needs
    independent voices for each team and player position. Each weapon supplies
    `feedback_sounds.empty`, `recovered` and a positive `empty_repeat_delay`;
-   `stop`, `ready`, `lift` and `settle` are optional mechanism cues. Their
+   `stop`, `ready`, `lift` and `settle` are optional mechanism cues, and any
+   weapon may add `low`, played once as a shot leaves it low on paint. Their
    volumes are SFX multipliers in [0, 1], and startup checks their wave names.
 3. Add a case to [WeaponBuilder](../game/objects/weapon_builder.cpp) that returns
    an owning `unique_ptr<Weapon>` of the appropriate type. For a new subclass,

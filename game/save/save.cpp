@@ -453,7 +453,9 @@ void Save::load_save_file()
             }
         }
 
-        // There is no settings screen yet to report a failed first save.
+        // The first save runs at startup, before any page could show a status
+        // line (Options and Controls report their own failed saves), so a
+        // dialog reports it.
         if (!this->save_to_file())
         {
             const std::wstring message = L"Could not write " +

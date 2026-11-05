@@ -203,18 +203,20 @@ no client is a library of guesses, and ColourWars is what keeps saying "this
 API is awkward" loudly enough to be worth fixing.
 
 ```
-game/                 ~71k lines     the game: states, objects, content, and
-                                     ~16k of Debug-only tools in game/debug/
-editor/               ~6k lines      the desktop level editor
+game/                 ~78k lines     the game: states, objects, content, and
+                                     ~17k of Debug-only tools in game/debug/
+editor/               ~7k lines      the desktop level editor
 scripts/                             acceptance checks, startup, capture and
                                      art-build scripts, developer-console scripts
                                      (indexed in scripts/README.md)
 docs/                                the backstory, polish plan, roadmap,
                                      guides and reviews (indexed in docs/README.md)
 external/labrador/                   the engine, as a submodule
-external/rapidjson/                  vendored, for the save and level files
-cmake/                               the wave-bank recipe, release packaging
-                                     and the build stamp
+external/rapidjson/                  vendored, for the JSON the game and
+                                     editor read and write
+cmake/                               runtime-asset staging, the wave-bank,
+                                     font and contract-include checks, release
+                                     packaging and the build stamp
 ```
 
 ## Building

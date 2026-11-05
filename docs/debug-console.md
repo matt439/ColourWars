@@ -1586,8 +1586,9 @@ as the game. In Release:
   `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
   `.?AVBot@@`, `.?AVPaintBot@@`, `.?AVBotDriver@@`, `.?AVReplayRecorder@@`,
   `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@`,
-  `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
-  `.?AVMatchWait@@`, and the Release executable must contain none of them;
+  `.?AVDebugBackgroundInput@@`, `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
+  `.?AVMatchWait@@` (sixteen in all), and the Release executable must contain
+  none of them;
   in Release it also checks that the director supplies no developer filter or
   driven physical slot. `SeatInputFilter` remains present for the round tape.
   CI also checks the packaged
@@ -1613,7 +1614,7 @@ as the game. In Release:
   builds the real reader's object and copies it over the live one;
   `tune_scope.*`, the scope table, steps and path tree; `tune_commands.cpp`);
   bots (`bot.*`, the deliberately OOP `Bot -> WalkBot -> JumpBot -> ChaseBot /
-  PaintBot` hierarchy; `bot_driver.*`, the seat filter that runs them);
+  PaintBot / SkirmishBot` hierarchy; `bot_driver.*`, the seat filter that runs them);
   record and play (`replay.*`: the file, the input codec, `ReplayRecorder` and
   `ReplayPlayer`; `match_fingerprint.*`; `replay_commands.cpp`, which also holds
   the update hooks that count updates, repeat recorded suspends and resumes and
