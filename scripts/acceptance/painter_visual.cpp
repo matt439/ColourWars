@@ -55,6 +55,7 @@
 #include "game/debug/console/debug_console_view.h"
 #include "game/debug/capture/debug_perf.h"
 #include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/debug/tune/tune_target.h"
 #include "game/debug/replay/replay.h"
 #endif

@@ -300,6 +300,15 @@ namespace debug_console_acceptance
 			require(message.find("is not the 3-player layout") != std::string::npos,
 				std::string("A replay with ") + layout + " for three seats is refused: " + message);
 		}
+		// A seat's team is a, b or none; any other word is refused, not read as none.
+		file.write(path);
+		text = read_text(path);
+		text.replace(text.find("\"team\": \"b\""), 11, "\"team\": \"c\"");
+		write_text(path, text);
+		message.clear();
+		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+		require(message.find("has an unknown team 'c'") != std::string::npos,
+			"A replay with an unknown team word is refused: " + message);
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 	}

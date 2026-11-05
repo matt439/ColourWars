@@ -169,6 +169,11 @@ private:
 	bool clear_standing(const MatchBotObservation& view, labrador::Vector2F center) const;
 	bool clear_route(const MatchBotObservation& view, labrador::Vector2F center) const;
 	bool clear_route(const MatchBotObservation& view, labrador::Vector2F from, labrador::Vector2F to) const;
+	// The body (half-extents half) swept from rom to 	o enters the
+	// positive interior of ounds. Clipped in double, so touching an edge
+	// or ending on it is clear.
+	static bool crosses_interior(labrador::Vector2F from, labrador::Vector2F to,
+		const labrador::RectangleF& bounds, labrador::Vector2F half);
 	void choose_descent(const MatchBotObservation& view);
 	void choose_ascent(const MatchBotObservation& view);
 	void steer_ascent(const MatchBotObservation& view, PlayerInputData& input);

@@ -3,7 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
-#include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/objects/level.h"
 #include "game/objects/horizontal_motion.h"
 #include <bit>

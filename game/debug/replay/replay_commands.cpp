@@ -9,6 +9,7 @@
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/replay/replay.h"
 #include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level.h"

@@ -13,6 +13,7 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level.h"
+#include "game/contracts/simulation.h"
 #include "game/source_paths.h"
 #include <bit>
 #include <cmath>
@@ -360,9 +361,9 @@ DebugStatus DebugDirectorImpl::wait_command(const DebugArgs& args)
 		{
 			return DebugStatus::failure("wait: expected seconds in (0, 3600], got '" + word + "'");
 		}
-		// The engine's step is fixed; before the first update, 1/60.
+		// The engine's step is fixed; before the first update, its length.
 		const float dt = this->last_dt_bits_ != 0 ?
-			std::bit_cast<float>(this->last_dt_bits_) : 1.0f / 60.0f;
+			std::bit_cast<float>(this->last_dt_bits_) : SECONDS_PER_STEP;
 		updates = std::max(1L, std::lround(seconds / dt));
 	}
 	else

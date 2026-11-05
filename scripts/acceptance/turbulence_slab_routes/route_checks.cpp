@@ -10,7 +10,7 @@
 #include <set>
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/replay.h"
-#include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include <rapidjson/prettywriter.h>
 #endif
 

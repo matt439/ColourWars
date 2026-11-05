@@ -1169,6 +1169,64 @@ The row as filed:
 
 ### Bot geometry, replay and Debug bots (`HYG#77`)
 
+**Done 2026-11-06; behaviour change.** Two changes, both small:
+`SECONDS_PER_STEP` is now the step the game actually takes, so the shipping
+bots' jump model steps at 0.0166666 s instead of 0.016666668 s; and a Debug
+replay whose seat names a team other than `a`, `b` or `none` is refused instead
+of read as `none`.
+
+- [simulation.h](../game/contracts/simulation.h) derives `SECONDS_PER_STEP` the
+  way the engine's `StepTimer` does (10,000,000 ticks a second, 1/60 truncated
+  to 166666 ticks), and `main.cpp` `static_assert`s that it equals
+  `StepTimer`'s step. The three spellings are now one: `match_bot_ballistics`'s
+  two `StepTimer` expressions (already this value) and the Debug `wait`'s
+  `1.0f / 60.0f` fallback read it. `MatchBotLocomotion::jump`, the
+  anti-tunnelling check's default, the motion contract's two-step period floor,
+  `HorizontalMotion::validate_dt` and `LevelStructures`' budget move from 1/60
+  to it; the shipped content passes each at either value.
+- `MatchBot::crosses_interior` is the navigation and ramp code's one sweep, and
+  `MatchBotLocomotion::held_jump_steps` the one hold count that `decide` sets
+  and `jump()` models. The death branch calls `replan_traversal`, then clears
+  what a replan keeps. Bounds compare with `RectangleF::operator==` in the ramp
+  code and, also found, in `clear_route` and `same_support`. `height_across`
+  is gone.
+- [replay.cpp](../game/debug/replay/replay.cpp) writes and reads a seat's team
+  through one `team_words` table and refuses an unknown word, naming the seat.
+  The finished player fills seats with `Bot::neutral()`. `match_plan.cpp`'s two
+  comments now say what the code does. `fnv1a` and `hex64` moved to
+  [game/debug/replay/hash.h](../game/debug/replay/hash.h), and `replay.cpp`'s
+  identical `motion_hex64` is gone.
+- `Bot::observes_tool` (true for `SkirmishBot`) replaces `BotDriver`'s name
+  comparison. `BotSeatView::step` is gone, with `view_of`'s `step` parameter and
+  `BotDriver::step_`. The Debug bots' numbers are named in `bot.cpp`; values and
+  RNG order are unchanged.
+
+Probes: `debug_console`'s codec check refuses a team `c`, `skirmish_bot` checks
+that only the skirmish bot observes the tool, and the probes that set
+`view.step` no longer do. The probes that step a match at `1.0f / 60.0f`, the
+other value, stay pinned to it: `debug_console` (most of its checks),
+`display_awake_lifecycle`, `instant_replay`, `keyboard_jump_capture`,
+`quiet_character`, `resume_countdown`, `story_audio`, `terrain` and
+`painter_visual`'s result-percentage fixture. None of them runs a mover, the
+only code that refuses a longer step (`validate_dt`). About forty more spell
+the shipping step through `StepTimer`; moving them to `SECONDS_PER_STEP` is
+probe tidying for [`HYG#87`](#probe-tidy-ups-hyg87). Left as found:
+`level_loaded_info.cpp`'s `StageSemanticHash`, shipping code with its own FNV
+framing, and the probes' private FNV loops (`practice_replay_checks.h`,
+`turbulence_slab_routes`).
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Debug (79 cases) and Release (78). After a last,
+value-identical edit, the eight bot cases, `skirmish_bot`, `crossfeed`,
+`press_tower`, `cq_blockout`, `paint_ferry` and `debug_console` passed again in
+Release. The twelve `Quick` opt-in cases (the bot route and trial probes and
+`turbulence_movers` among them) passed in both presets, and every opt-in case
+compiled in both (`-OptIn -CompileOnly`). `check-painter.ps1 -CompileOnly` and
+the `PracticeReplayOnly`, `BotPlayersOnly` and `CrossfeedOnly` leaves passed in
+both presets, and `check-startup.ps1` passed on both executables.
+
+The row as filed:
+
 Bot geometry:
 
 - Share `crosses_interior` (`match_bot_ramp.cpp:23`) and one held-jump step

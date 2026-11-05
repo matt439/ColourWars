@@ -17,8 +17,33 @@ namespace
 	constexpr int stuck_jump_steps = 8;
 	constexpr float still_speed = 1.0f;
 
+	// Steps between a JumpBot's own jumps, and how long it holds one.
+	constexpr int min_jump_gap_steps = 60;
+	constexpr int max_jump_gap_steps = 180;
+	constexpr int min_jump_hold_steps = 6;
+	constexpr int max_jump_hold_steps = 30;
+
 	constexpr float chase_range = 900.0f;
+	// ChaseBot stops walking this close to its target, and fires above this
+	// fraction of its tank.
+	constexpr float chase_stop_distance = 40.0f;
+	constexpr float chase_fire_ammo = 0.1f;
 	constexpr float paint_engage_range = 400.0f;
+
+	// The aim sweeps' start (radians below the horizontal) and drift per step.
+	constexpr float paint_sweep_start_min = 0.5f;
+	constexpr float paint_sweep_start_max = 2.6f;
+	constexpr float paint_sweep_drift = 0.06f;
+	constexpr float skirmish_sweep_drift = 0.04f;
+
+	// Fire down to the low fraction of the tank, then refill to the high one.
+	constexpr float refill_below_ammo = 0.15f;
+	constexpr float refill_until_ammo = 0.8f;
+
+	// SkirmishBot holds this fraction of its engage distance from a target,
+	// and is back at its return point within this fraction of its height.
+	constexpr float skirmish_engage_gap = 0.6f;
+	constexpr float skirmish_return_reach = 0.15f;
 }
 
 Bot::Bot(std::uint64_t seed) : random_(seed)
@@ -126,7 +151,7 @@ void WalkBot::decorate(PlayerInputData& input, const BotSeatView&)
 
 JumpBot::JumpBot(std::uint64_t seed) : WalkBot(seed)
 {
-	this->jump_in_ = this->random_.between(60, 180);
+	this->jump_in_ = this->random_.between(min_jump_gap_steps, max_jump_gap_steps);
 }
 
 bool JumpBot::wants_jump(const BotSeatView&)
@@ -137,7 +162,7 @@ bool JumpBot::wants_jump(const BotSeatView&)
 	}
 	if (--this->jump_in_ <= 0)
 	{
-		this->jump_in_ = this->random_.between(60, 180);
+		this->jump_in_ = this->random_.between(min_jump_gap_steps, max_jump_gap_steps);
 		return true;
 	}
 	return false;
@@ -154,7 +179,7 @@ void JumpBot::decorate(PlayerInputData& input, const BotSeatView& view)
 	else if (!input.jump_held && view.self.on_ground && this->wants_jump(view))
 	{
 		// Held for a random time, so the jumps vary in height.
-		this->hold_left_ = this->random_.between(6, 30) - 1;
+		this->hold_left_ = this->random_.between(min_jump_hold_steps, max_jump_hold_steps) - 1;
 		hold = true;
 	}
 	// Bot::hold_jump never repeats a press while the jump is held, so a
@@ -196,7 +221,7 @@ float ChaseBot::walk_direction(const BotSeatView& view)
 		return JumpBot::walk_direction(view);
 	}
 	const float dx = target->center.x - view.self.center.x;
-	if (std::fabs(dx) < 40.0f)
+	if (std::fabs(dx) < chase_stop_distance)
 	{
 		return 0.0f;
 	}
@@ -226,7 +251,7 @@ void ChaseBot::decorate(PlayerInputData& input, const BotSeatView& view)
 	if (offset.length() <= chase_range)
 	{
 		aim(input, offset);
-		input.primary_shoot = view.self.ammo > 0.1f;
+		input.primary_shoot = view.self.ammo > chase_fire_ammo;
 	}
 }
 
@@ -234,7 +259,7 @@ void ChaseBot::decorate(PlayerInputData& input, const BotSeatView& view)
 
 PaintBot::PaintBot(std::uint64_t seed) : JumpBot(seed)
 {
-	this->sweep_ = this->random_.between(0.5f, 2.6f);
+	this->sweep_ = this->random_.between(paint_sweep_start_min, paint_sweep_start_max);
 }
 
 void PaintBot::decorate(PlayerInputData& input, const BotSeatView& view)
@@ -243,12 +268,11 @@ void PaintBot::decorate(PlayerInputData& input, const BotSeatView& view)
 
 	// A random walk over the lower half-circle, 30 to 150 degrees below the
 	// horizontal (y is down): the floor ahead, below and behind.
-	this->sweep_ += this->random_.between(-0.06f, 0.06f);
+	this->sweep_ += this->random_.between(-paint_sweep_drift, paint_sweep_drift);
 	this->sweep_ = std::clamp(this->sweep_, pi / 6.0f, pi * 5.0f / 6.0f);
 	Vector2F direction(std::cos(this->sweep_), std::sin(this->sweep_));
 
-	for
- (const BotSeatView::Seat& other : view.others)
+	for (const BotSeatView::Seat& other : view.others)
 	{
 		if (other.alive && other.team != view.self.team &&
 			Vector2F::distance(other.center, view.self.center) <= paint_engage_range)
@@ -260,11 +284,11 @@ void PaintBot::decorate(PlayerInputData& input, const BotSeatView& view)
 	aim(input, direction);
 
 	// Fire down to a sliver of ammo, then let the tank refill.
-	if (this->refilling_ && view.self.ammo >= 0.8f)
+	if (this->refilling_ && view.self.ammo >= refill_until_ammo)
 	{
 		this->refilling_ = false;
 	}
-	else if (!this->refilling_ && view.self.ammo <= 0.15f)
+	else if (!this->refilling_ && view.self.ammo <= refill_below_ammo)
 	{
 		this->refilling_ = true;
 	}
@@ -278,7 +302,7 @@ void JumpBot::reset_jump()
 	PlayerInputData released = neutral();
 	this->hold_jump(released, false);
 	this->hold_left_ = 0;
-	this->jump_in_ = this->random_.between(60, 180);
+	this->jump_in_ = this->random_.between(min_jump_gap_steps, max_jump_gap_steps);
 }
 
 SkirmishBot::SkirmishBot(std::uint64_t seed) : JumpBot(seed)
@@ -332,7 +356,7 @@ PlayerInputData SkirmishBot::think(const BotSeatView& view)
 
 	// A tank can be positive yet unable to buy the next shot (notably Sniper).
 	// Recovery requires both the larger tank threshold and full-shot readiness.
-	if (this->mode_ != Mode::refill && (view.shot_empty || view.self.ammo <= 0.15f))
+	if (this->mode_ != Mode::refill && (view.shot_empty || view.self.ammo <= refill_below_ammo))
 	{
 		this->mode_ = Mode::refill;
 		this->return_point_ = view.self.center;
@@ -342,14 +366,14 @@ PlayerInputData SkirmishBot::think(const BotSeatView& view)
 	}
 	if (this->mode_ == Mode::refill)
 	{
-		if (view.self.ammo >= 0.8f && !view.shot_empty) { this->mode_ = Mode::return_to_paint; }
+		if (view.self.ammo >= refill_until_ammo && !view.shot_empty) { this->mode_ = Mode::return_to_paint; }
 	}
 	if (this->mode_ != Mode::refill)
 	{
 		if (this->target_near_) { this->mode_ = Mode::engage; }
 		else if (this->mode_ == Mode::engage) { this->mode_ = Mode::paint; }
 		if (this->mode_ == Mode::return_to_paint &&
-			std::fabs(this->return_point_.x - view.self.center.x) <= view.player_height * 0.15f)
+			std::fabs(this->return_point_.x - view.self.center.x) <= view.player_height * skirmish_return_reach)
 		{
 			this->mode_ = Mode::paint;
 		}
@@ -367,7 +391,7 @@ float SkirmishBot::walk_direction(const BotSeatView& view)
 	if (this->mode_ == Mode::engage)
 	{
 		// A simple stopping distance, not cover selection or tool balance.
-		const float gap = view.engage_distance * 0.6f;
+		const float gap = view.engage_distance * skirmish_engage_gap;
 		if (std::fabs(this->target_offset_.x) <= gap) { return 0.0f; }
 		return this->target_offset_.x > 0.0f ? 1.0f : -1.0f;
 	}
@@ -394,7 +418,7 @@ void SkirmishBot::decorate(PlayerInputData& input, const BotSeatView& view)
 	}
 	if (this->mode_ == Mode::paint)
 	{
-		this->sweep_ += this->random_.between(-0.04f, 0.04f);
+		this->sweep_ += this->random_.between(-skirmish_sweep_drift, skirmish_sweep_drift);
 		this->sweep_ = std::clamp(this->sweep_, pi / 6.0f, pi * 5.0f / 12.0f);
 	}
 	const float facing = input.x_movement != 0.0f ? input.x_movement :

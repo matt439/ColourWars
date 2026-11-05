@@ -39,9 +39,9 @@ public:
 		float reach = 0.0f;
 	};
 	JumpArc jump(float launch_speed) const;
-	// The held jump's height above takeoff when it has travelled `across`
-	// horizontally from launch_speed, or a negative value if it lands first.
-	float height_across(float launch_speed, float across) const;
+	// The steps a bot holds jump for: jump_max_time in whole steps, at least
+	// one. jump() models the same hold.
+	int held_jump_steps() const;
 
 private:
 	const GameTuning& tuning_;

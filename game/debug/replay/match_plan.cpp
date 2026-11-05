@@ -85,7 +85,9 @@ bool MatchPlanner::weapon_from_name(const std::string& name, WeaponType& weapon)
 
 const char* MatchPlanner::weapon_name(WeaponType weapon)
 {
-	// As before the table: anything but a tuned weapon, Random included, is "other".
+	// Only the five tuned tools have a name here. Random and any value outside
+	// the table read "other", which the replay reader refuses as an unknown
+	// weapon.
 	const char* const name = ::weapon_name(weapon);
 	return name != nullptr && weapon != WeaponType::random_primary ? name : "other";
 }
@@ -346,7 +348,8 @@ MatchPlan MatchPlanner::resolve(const MatchSetup* current,
 	{
 		plan.reset_session = true;
 	}
-	// The rules a format-4 replay enforces, so a planned match always records.
+	// The seat rules every replay enforces (validate_roster in replay.cpp), so
+	// a planned match always records.
 	const std::vector<SeatSetup>& seats = settings.player_settings();
 	for (std::size_t seat = 0; seat < seats.size(); ++seat)
 	{

@@ -8,16 +8,14 @@
 namespace
 {
 	// Steps a held jump the way Player::start_jump and its held extension do,
-	// calling visit(height, travelled) after each step until it lands.
+	// holding for held_steps, calling visit(height, travelled) after each step
+	// until it lands.
 	template <class Visit>
-	void held_jump(const PlayerTuning& movement, float launch_speed, Visit visit)
+	void held_jump(const PlayerTuning& movement, int held_steps, float launch_speed, Visit visit)
 	{
 		float vy = movement.jump_launch_velocity, height = 0.0f;
 		float vx = launch_speed, travelled = 0.0f;
 		constexpr float dt = SECONDS_PER_STEP;
-		const int held_steps = std::max(1, static_cast<int>(std::min(
-			std::ceil(static_cast<double>(movement.jump_max_time) * SIMULATION_HZ),
-			static_cast<double>((std::numeric_limits<int>::max)()))));
 		for (int step = 0; step < 2 * SIMULATION_HZ; ++step)
 		{
 			// Player::start_jump overwrites gravity on the takeoff tick. Held
@@ -68,26 +66,20 @@ float MatchBotLocomotion::stopping_distance(float vx, bool grounded, MatchBotFoo
 	return braking > 0.0f ? vx * vx / (2.0f * braking) : std::numeric_limits<float>::max();
 }
 
+int MatchBotLocomotion::held_jump_steps() const
+{
+	const double steps = std::ceil(static_cast<double>(this->tuning_.player().jump_max_time) * SIMULATION_HZ);
+	return std::max(1, static_cast<int>(std::min(steps, static_cast<double>((std::numeric_limits<int>::max)()))));
+}
+
 MatchBotLocomotion::JumpArc MatchBotLocomotion::jump(float launch_speed) const
 {
 	JumpArc arc;
-	held_jump(this->tuning_.player(), launch_speed, [&](float height, float travelled)
+	held_jump(this->tuning_.player(), this->held_jump_steps(), launch_speed, [&](float height, float travelled)
 	{
 		arc.rise = std::max(arc.rise, height);
 		arc.reach = travelled;
 		return true;
 	});
 	return arc;
-}
-
-float MatchBotLocomotion::height_across(float launch_speed, float across) const
-{
-	float answer = -1.0f;
-	held_jump(this->tuning_.player(), launch_speed, [&](float height, float travelled)
-	{
-		if (travelled < across) { return true; }
-		answer = height;
-		return false;
-	});
-	return answer;
 }

@@ -57,11 +57,10 @@ bool BotDriver::drives(int seat) const
 	return this->behaviours_.find(seat) != this->behaviours_.end();
 }
 
-BotSeatView BotDriver::view_of(const Level& level, int seat, int step, const GameTuning& tuning,
+BotSeatView BotDriver::view_of(const Level& level, int seat, const GameTuning& tuning,
 	bool observe_tool)
 {
 	BotSeatView view;
-	view.step = step;
 	view.player_height = tuning.player().size.y;
 	for (int other = 0; other < level.player_count(); ++other)
 	{
@@ -93,8 +92,7 @@ void BotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Level& l
 			continue;
 		}
 		seats[static_cast<std::size_t>(seat)] = bot != nullptr ?
-			bot->think(view_of(level, seat, this->step_, *this->tuning_, bot->name() == "skirmish")) : Bot::neutral();
+			bot->think(view_of(level, seat, *this->tuning_, bot->observes_tool())) : Bot::neutral();
 	}
-	++this->step_;
 }
 #endif

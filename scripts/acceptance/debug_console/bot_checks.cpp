@@ -21,7 +21,6 @@ namespace debug_console_acceptance
 	BotSeatView scripted_view(int step)
 	{
 		BotSeatView view;
-		view.step = step;
 		view.self.center = { 1000.0f + 3.0f * static_cast<float>(step % 200), 800.0f };
 		view.self.velocity = { step % 70 < 25 ? 0.0f : 300.0f, step % 40 < 20 ? 0.0f : -200.0f };
 		view.self.team = PlayerTeam::a;

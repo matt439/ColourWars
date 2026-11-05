@@ -6,8 +6,9 @@
 #include "game/debug/script/debug_file_name.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
+#include "game/debug/replay/bot.h"
 #include "game/debug/replay/match_plan.h"
-#include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/save/atomic_file.h"
 #include "game/input/input_slots.h"
 #include "game/match/match_rules.h"
@@ -79,6 +80,22 @@ namespace
 		throw std::runtime_error("replay '" + labrador::path_to_utf8(path) + "': " + what);
 	}
 
+	// A seat's team as the settings spell it, and back. Nothing else reads.
+	constexpr std::array<std::pair<PlayerTeam, std::string_view>, 3> team_words{ {
+		{ PlayerTeam::a, "a" }, { PlayerTeam::b, "b" }, { PlayerTeam::none, "none" } } };
+
+	std::string_view team_word(PlayerTeam team)
+	{
+		for (const auto& [value, word] : team_words) { if (value == team) { return word; } }
+		throw std::logic_error("A seat has no team word.");
+	}
+
+	PlayerTeam team_from_word(std::string_view word, int seat, const std::filesystem::path& path)
+	{
+		for (const auto& [value, spelled] : team_words) { if (spelled == word) { return value; } }
+		fail(path, "seat " + std::to_string(seat + 1) + " has an unknown team '" + std::string(word) + "'");
+	}
+
 	std::uint32_t hex_field(const labrador::JsonValue& value, const char* key,
 		const std::filesystem::path& path)
 	{
@@ -146,11 +163,7 @@ namespace
     {
         char buffer[9] = {}; std::snprintf(buffer, sizeof(buffer), "%08x", value); return buffer;
     }
-    std::string motion_hex64(std::uint64_t value)
-    {
-        char buffer[17] = {};
-        std::snprintf(buffer, sizeof(buffer), "%016llx", static_cast<unsigned long long>(value)); return buffer;
-    }
+
     template<class Integer> Integer motion_hex(const std::string& text, std::size_t width,
         const std::filesystem::path& path)
     {
@@ -261,7 +274,7 @@ namespace
             const auto& value = terrain.structures[index];
             out << (index == 0 ? "\n" : ",\n") << "      { \"id\": " << value.id << ", \"spec\": ";
             write_motion_array(out, value.spec);
-            out << ", \"phase\": " << quoted(motion_hex64(value.phase)) << ", \"direction\": " << value.direction;
+            out << ", \"phase\": " << quoted(hex64(value.phase)) << ", \"direction\": " << value.direction;
             out << ", \"offsets\": "; write_motion_array(out, value.offsets);
             out << ", \"pose\": "; write_motion_array(out, value.pose); out << ", \"tiles\": [";
             for (std::size_t tile_index = 0; tile_index < value.tiles.size(); ++tile_index)
@@ -370,7 +383,7 @@ namespace
 		for (std::size_t i = 0; i < seats.size(); ++i)
 		{
 			out << "      { \"slot\": " << seats[i].num << ", \"team\": " <<
-				quoted(seats[i].team == PlayerTeam::a ? "a" : seats[i].team == PlayerTeam::b ? "b" : "none") <<
+				quoted(team_word(seats[i].team)) <<
 				", \"weapon\": " << quoted(MatchPlanner::weapon_name(seats[i].weapon)) <<
 				", \"controller\": " << quoted(seats[i].controller == PlayerController::bot ? "bot" : "human") <<
 				", \"difficulty\": " << quoted(difficulty_name(seats[i].controller == PlayerController::bot ?
@@ -574,9 +587,7 @@ namespace
 				fail(path, "the roster's slots cannot be rebuilt in seat order");
 			}
 			const labrador::JsonValue entry = seats.at(static_cast<std::size_t>(seat));
-			const std::string team = entry.string("team");
-			rebuilt.set_player_team(seat, team == "a" ? PlayerTeam::a :
-				team == "b" ? PlayerTeam::b : PlayerTeam::none);
+			rebuilt.set_player_team(seat, team_from_word(entry.string("team"), seat, path));
 			WeaponType weapon = WeaponType::sprayer;
 			if (!MatchPlanner::weapon_from_name(entry.string("weapon"), weapon) ||
 				weapon == WeaponType::random_primary)
@@ -1123,9 +1134,7 @@ void ReplayPlayer::filter_seats(std::vector<PlayerInputData>& seats, const Level
 {
 	if (this->player_.finished())
 	{
-		PlayerInputData input;
-		input.connected = true;
-		std::fill(seats.begin(), seats.end(), input);
+		std::fill(seats.begin(), seats.end(), Bot::neutral());
 		return;
 	}
 	this->player_.filter_seats(seats, level);

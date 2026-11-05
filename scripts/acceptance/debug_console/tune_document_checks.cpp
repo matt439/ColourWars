@@ -6,6 +6,7 @@
 #include "game/debug/commands/debug_tokenizer.h"
 #include "game/debug/tune/json_spans.h"
 #include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/debug/tune/tune_scope.h"
 #include "engine/assets/json.h"
 #include "engine/math/scalar.h"

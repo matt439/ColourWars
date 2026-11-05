@@ -362,12 +362,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 	const bool jump = !finishing && !this->ascending_ && !this->climbing_ramp_ && !dropping && view.grounded && movement != 0.0f &&
 		(above || this->blocked_steps_ >= policy.stuck_jump_steps ||
 			this->obstacle_ahead(view) || (this->ledge_ahead(view) && goal.y <= view.center.y));
-	if (jump && !this->jump_was_held_)
-	{
-		const double steps = std::ceil(static_cast<double>(this->tuning_->player().jump_max_time) * SIMULATION_HZ);
-		this->jump_left_ = std::max(1, static_cast<int>(std::min(steps,
-			static_cast<double>((std::numeric_limits<int>::max)()))));
-	}
+	if (jump && !this->jump_was_held_) { this->jump_left_ = this->locomotion_.held_jump_steps(); }
 	this->decision_.drop_through = dropping;
 	Vector2F aim(this->heading_, 0.7f);
 	bool targeted = true;
@@ -414,21 +409,13 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	neutral.connected = true;
 	if (!view.alive)
 	{
+		// Death drops everything a replan does, and the jump hold, reserve,
+		// ride and aim error with it.
+		this->replan_traversal();
 		this->had_alive_step_ = false;
-		this->react_in_ = this->replan_in_ = this->blocked_steps_ = this->jump_left_ = 0;
-		this->recovery_left_ = this->progress_steps_ = 0;
-		this->jump_was_held_ = this->refilling_ = this->has_goal_ = false;
-		this->has_paint_goal_ = false;
-		this->ascending_ = this->ascent_airborne_ = this->continue_ascent_ = false;
-		this->climbing_ramp_ = false;
-		this->seeking_after_descent_ = this->descent_airborne_ = false;
-		this->descent_turns_ = 0;
-		this->finish_pending_ = false;
-		this->finish_left_ = 0;
+		this->jump_was_held_ = this->refilling_ = false;
 		this->riding_ = false;
 		this->ride_hold_left_ = 0;
-		this->has_off_enemy_ = false;
-		this->visited_supports_.clear();
 		this->decision_ = neutral;
 		this->aim_error_ = 0.0f;
 		return neutral;

@@ -25,6 +25,5 @@ struct MatchBotRamp
 inline bool same_support(const MatchBotSupport& a, const MatchBotSupport& b)
 {
 	if (a.id != 0 || b.id != 0) { return a.id == b.id; }
-	return a.bounds.x == b.bounds.x && a.bounds.y == b.bounds.y &&
-		a.bounds.width == b.bounds.width && a.bounds.height == b.bounds.height;
+	return a.bounds == b.bounds;
 }

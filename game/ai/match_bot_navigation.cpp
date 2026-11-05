@@ -5,25 +5,22 @@
 
 using namespace labrador;
 
-namespace
+bool MatchBot::crosses_interior(Vector2F from, Vector2F to, const RectangleF& bounds, Vector2F half)
 {
-	bool crosses_interior(Vector2F from, Vector2F to, const RectangleF& bounds, Vector2F half)
+	double enter = 0.0, leave = 1.0;
+	const auto axis = [&](double start, double finish, double low, double high)
 	{
-		double enter = 0.0, leave = 1.0;
-		const auto axis = [&](double start, double finish, double low, double high)
-		{
-			const double delta = finish - start;
-			if (delta == 0.0) { return start > low && start < high; }
-			double first = (low - start) / delta, last = (high - start) / delta;
-			if (first > last) { std::swap(first, last); }
-			enter = std::max(enter, first); leave = std::min(leave, last);
-			return enter < leave;
-		};
-		return axis(from.x, to.x, static_cast<double>(bounds.left()) - half.x,
-			static_cast<double>(bounds.right()) + half.x) &&
-			axis(from.y, to.y, static_cast<double>(bounds.top()) - half.y,
-				static_cast<double>(bounds.bottom()) + half.y);
-	}
+		const double delta = finish - start;
+		if (delta == 0.0) { return start > low && start < high; }
+		double first = (low - start) / delta, last = (high - start) / delta;
+		if (first > last) { std::swap(first, last); }
+		enter = std::max(enter, first); leave = std::min(leave, last);
+		return enter < leave;
+	};
+	return axis(from.x, to.x, static_cast<double>(bounds.left()) - half.x,
+		static_cast<double>(bounds.right()) + half.x) &&
+		axis(from.y, to.y, static_cast<double>(bounds.top()) - half.y,
+			static_cast<double>(bounds.bottom()) + half.y);
 }
 
 bool MatchBot::clear_route(const MatchBotObservation& view, Vector2F center) const
@@ -38,11 +35,7 @@ bool MatchBot::clear_route(const MatchBotObservation& view, Vector2F from, Vecto
 	{
 		bool one_way = false;
 		for (const MatchBotSupport& platform : view.supports)
-		{
-			const RectangleF& bounds = platform.bounds;
-			one_way = one_way || (platform.one_way && barrier.x == bounds.x && barrier.y == bounds.y &&
-				barrier.width == bounds.width && barrier.height == bounds.height);
-		}
+		{ one_way = one_way || (platform.one_way && barrier == platform.bounds); }
 		if (one_way) { continue; }
 		// Sweep the body, retaining ramp/slab AABBs as conservative barriers.
 		// Positive interiors only: feet moving along a support top or ending

@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_ballistics.h"
 #include "game/contracts/simulation.h"
-#include "engine/core/step_timer.h"
 #include <cmath>
 #include <limits>
 
@@ -24,8 +23,7 @@ namespace
 	float miss_squared(float angle, const WeaponTuning& tool, const ProjectileTuning& projectile,
 		Vector2F inherited, Vector2F target, Vector2F target_velocity)
 	{
-		const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-			labrador::StepTimer::TicksPerSecond / SIMULATION_HZ));
+		const float dt = SECONDS_PER_STEP;
 		const Vector2F direction(std::cos(angle), std::sin(angle));
 		Vector2F position = Vector2F::rotate_vector(tool.details.nozzle_offset +
 			Vector2F(tool.details.size.x, 0.0f), angle);
@@ -64,8 +62,7 @@ namespace
 float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
 	const ProjectileTuning& projectile)
 {
-	const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-		labrador::StepTimer::TicksPerSecond / SIMULATION_HZ));
+	const float dt = SECONDS_PER_STEP;
 	float speed = tool.details.starting_vel_length;
 	float distance = 0.0f;
 	float elapsed = 0.0f;

@@ -3,8 +3,8 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/debug/tune/tune_scope.h"
-#include <cstdio>
 #include <stdexcept>
 #include <string_view>
 #include <unordered_map>
@@ -19,22 +19,6 @@ namespace
 	}
 }
 
-std::uint64_t fnv1a(std::string_view bytes, std::uint64_t hash)
-{
-	for (const char c : bytes)
-	{
-		hash ^= static_cast<unsigned char>(c);
-		hash *= 0x100000001b3ull;
-	}
-	return hash;
-}
-
-std::string hex64(std::uint64_t value)
-{
-	char buffer[20] = {};
-	std::snprintf(buffer, sizeof(buffer), "%016llx", static_cast<unsigned long long>(value));
-	return buffer;
-}
 
 TuneDocument::TuneDocument(std::string name, std::string baseline_text) :
 	name_(name),

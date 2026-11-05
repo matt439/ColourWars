@@ -26,7 +26,6 @@ struct BotSeatView
 		float ammo = 1.0f;   // fraction of starting ammo
 	};
 
-	int step = 0;
 	float player_height = 120.0f;
 	// Only populated by BotDriver's opt-in skirmish observation. This is the
 	// actual full-shot affordability state, including a positive but low tank.
@@ -56,6 +55,10 @@ public:
 
 	virtual PlayerInputData think(const BotSeatView& view) = 0;
 	virtual std::string_view name() const = 0;
+	// BotDriver fills the view's tool observations (shot_empty,
+	// engage_distance) only for a bot that reads them; the others keep the
+	// view they were written against.
+	virtual bool observes_tool() const { return false; }
 
 	// idle, walk, jump, chase, paint, skirmish. `idle` is neutral connected input and
 	// has no class; make returns nullptr for it.
@@ -175,6 +178,7 @@ public:
 
 	PlayerInputData think(const BotSeatView& view) override;
 	std::string_view name() const override { return "skirmish"; }
+	bool observes_tool() const override { return true; }
 
 private:
 	enum class Mode { paint, engage, refill, return_to_paint };
