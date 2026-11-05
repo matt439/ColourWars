@@ -27,7 +27,7 @@ decision without the attended sessions:
   [labrador#122-#125](docs/review/engine-reports.md#live), and 28 is closed as declined.
 
 The next aim is the author's to set. Until then, rows are picked from the sections below.
-The 2026-11-05 [hygiene review](#hygiene-review) added `HYG#58`-`HYG#92` and `CI#8`, defects first;
+The 2026-11-05 [hygiene review](#hygiene-review) added `HYG#58`-`HYG#92` and `CI#8`; its defect rows (`HYG#58`-`HYG#60`) are done;
 two of its rows wait on the author: `HYG#81` (the `SCREAMING_SNAKE` rule) and `ENG#35` (file or not).
 `ROAD#22` (endless paint) is the one `OPEN` row. Art (`POL#16`) is unblocked but stays
 deferred. Bot lift routing, sponges and the controller rows remain unscoped.
@@ -35,12 +35,11 @@ deferred. Bot lift routing, sponges and the controller rows remain unscoped.
 ## Hygiene review
 
 **Owner:** [docs/code-hygiene.md, Hygiene review](docs/code-hygiene.md#hygiene-review-2026-11-05); findings in the frozen
-[2026-11-05 review](docs/review/2026-11-05-code-hygiene-review.md). Work the last defect row (`HYG#60`) first, then
-in the listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
+[2026-11-05 review](docs/review/2026-11-05-code-hygiene-review.md). Work the rows in the
+listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#60` | OPEN | MED | M | Fifteen acceptance checks and verifiers that cannot fail or check the wrong thing (bot_driver, menu_navigation, crossfeed fixture, shipped-script lint, Session in Debug only, editor menus by position). [Scope](docs/code-hygiene.md#checks-that-can-fail-hyg60). |
 | `HYG#61` | OPEN | MED | M | Comments, `_comment`s, docs and the shipped audio `PROVENANCE.md` still call rows settled on 2026-11-05 open trials or pending reviews. [Scope](docs/code-hygiene.md#status-text-after-the-2026-11-05-decisions-hyg61). |
 | `HYG#62` | OPEN | MED | M | About seventeen comments and doc lines that drifted from the code, first `GameData`'s class comment, which contradicts the architecture rule. [Scope](docs/code-hygiene.md#comments-and-reference-docs-that-drifted-hyg62). |
 | `HYG#63` | OPEN | MED | M | One atomic file writer for the six drifted temp-then-rename copies (replay truncates in place, screenshots leave partial PNGs) and one debug file-stem rule. [Scope](docs/code-hygiene.md#one-atomic-file-writer-and-one-debug-file-stem-rule-hyg63). |

@@ -119,34 +119,79 @@ compare stick settings field by field were left as they are.
 
 ### Checks that can fail (`HYG#60`)
 
-Make each listed check able to fail, or delete it:
+**Done 2026-11-05.** The game's behaviour is unchanged; the checks changed, and
+the Session checks now run in Release too. Three commits:
 
-- `bot_driver.cpp:260`: swap the two mover-hold requires, so each reports its
-  own failure.
-- `menu_navigation.cpp:313`: do the substitution outside the `try`, so a fixture
-  failure is not counted as a rejection.
-- `debug_background_checks.h:479`: count real motor calls, or drop
-  `native_motor_calls` from the summary and `verify-rumble.ps1`.
-- `countdown_checks.h:86`: use the three-player layout for three players.
-- `input_bindings/reader_checks.cpp:9`: compare `SlotInput` with a defaulted
-  `operator==`.
-- `crossfeed_checks.h:78`: pass the gate and ferry cues and the production stage
-  title. Do the same in `route_warning_fixtures.h:51`.
-- `script_checks.cpp:433`: lint `tune` paths and weapon names in shipped `.cfg`
-  scripts.
-- `session_checks.cpp:215`: move the shipping Session checks to a case that runs
-  in both presets.
-- `align_origin_checks.h:9` and `clipboard_checks.h:190`: use the command id, and
-  check the dereferenced `find_if`.
-- `check-level-editor-save-guidance.ps1:76`: address menu items by command id and
-  name the steps for what they do.
-- `check-acceptance-selection.ps1:116`: measure the receipt flags instead of
-  setting constants.
-- `prepare_review.py:67`: compare each master with its project's own recorded
-  hash.
+- `bot_driver`'s mover hold requires a drop before it requires one after the
+  hold, so a bot that never drops reports that, not an early drop.
+- `menu_navigation`'s `InputVariant::write` makes the substitution, and refuses
+  a missing key or unreadable `tuning.json`, outside the rejection `try`
+  (`rejects`).
+- The background supplement and rumble-owner summaries drop the constant
+  `native_motor_calls` (the fixtures have recording motors only), and
+  `recorded_updates` is the tape's own count; `verify-rumble.ps1` no longer
+  reads the dropped field.
+- Painter fixtures take their layout from one `players_layout` in
+  `painter_fixtures.h`. Three players now get `three_player` in `countdown`,
+  `setup_motion` and `team_setup`; the other sixteen fixtures give the same
+  layouts as before.
+- `PlayerInputData` and `SlotInput` have defaulted `operator==`, which
+  `input_bindings` uses in place of its field list (`same_input`).
+- The crossfeed fixture builds its objects with the gate and ferry cues and
+  names its stage through `stage_title`, as `LevelBuilder` does. The route
+  warning HUD bounds measure the level's own identity text and the locale's
+  `health` label instead of literals.
+- `debug_console`'s shipped-script lint resolves every `tune`, `tune.reset`,
+  `tune.diff` and `tune.save` target against `tuning.json` and
+  `presentation.json` as `TuneDocument` reads them, and checks `weapon`'s seat
+  and weapon name.
+- The shipping Session checks (end-page continuation, result and score text,
+  `next_session`) moved from `debug_console`'s Debug-only `session_checks.cpp`
+  to a new default case, `session`, which runs in both presets.
+- `level_editor_dpi` addresses Align origin by `edit_align_origin`, and the
+  clipboard check requires its collision entry before dereferencing it.
+- `check-level-editor.ps1` reads the command ids from `editor/editor.h`
+  (`Get-EditorCommandIds`); it and the save-guidance check send menu commands
+  by id and refuse an id the menu lacks. The steps that toggle Blockout aids are
+  named `*-blockout-toggle-ready`.
+- [process-births.ps1](../scripts/process-births.ps1) counts the processes a
+  check starts through a Job Object. `check-acceptance-selection.ps1` and its
+  sibling `check-painter-selection.ps1` record and require that count, and the
+  helper-loaded flag, from measurement; the comma-binding child may start only
+  its host and that host's conhost.
+- `prepare_review.py` compares each master with its own project's record
+  (music `measurements.json`, foley `PROVENANCE.json`, interface `cues.json`);
+  only interface cues carried a hash before, so music and foley compared with
+  themselves.
 
-Done when each check fails against a deliberately broken input. Show it once
-locally, and do not commit the broken input.
+Each check failed once against a broken input that was then reverted:
+a mover hold multiplied by 1000 in `match_bot.cpp` ("A bot held on a moving
+support past its bounded hold"); a renamed key in the rejection list ("Input
+tuning field must exist"); a flipped `skip_intro` in the repeated sample
+("Repeated reader access consumed or changed a sampled action edge"); a renamed
+`tune` path and a misspelt weapon in shipped scripts ("no tunable
+tuning.player.gravity_renamed", "weapon 4 sprayr in a 4-player script"); a
+staged "Rematch!" in Release ("A finished single round or solo practice offers
+Rematch"); an entry search that finds nothing ("Clipboard fixture lacks a
+collision entry"); the Align menu item removed ("Align origin menu availability
+does not follow the selected entry"); an id the menu lacks ("Editor menu has no
+command 116"); a process started in each runner's preflight ("started 1
+process(es)"); and a changed foley record hash ("Master hash differs from its
+project's record: player.step.01").
+Against background-supplement evidence copied from a passing run,
+`verify-rumble.ps1` threw once `recorded_updates` read 419. The layout,
+crossfeed and route-warning changes correct fixtures that checked the wrong
+thing rather than checks that could not fail; their leaves passed on the
+production inputs, and no broken input was tried for them.
+
+Both presets build under `/W4 /WX`. `bot_driver`, `menu_navigation`,
+`input_bindings`, `session`, `instant_replay` and `debug_console` passed in
+Debug and Release. On MattPC, `check-painter.ps1` passed `-CountdownOnly`,
+`-SetupMotionOnly`, `-TeamSetupOnly`, `-CrossfeedOnly`, `-RouteWarningOnly`,
+`-RumbleOnly`, `-GatePermissionOnly` and `-FerryDirectionOnly` in both presets.
+`check-level-editor.ps1` passed in both presets, and both selection checkers
+passed in pwsh and Windows PowerShell 5.1. `prepare_review.py`'s `collect`
+passed and rewrote its outputs unchanged.
 
 ### Status text after the 2026-11-05 decisions (`HYG#61`)
 

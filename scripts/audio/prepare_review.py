@@ -51,10 +51,23 @@ def acceptance_status(cues: list[dict]) -> str:
     return "Production candidates; listening acceptance pending."
 
 
+def recorded_hashes(name: str, part: Path) -> dict[str, str]:
+    """Each project's own record of its masters' hashes, written by its renderer."""
+    if name == "music":
+        return {cue_id: row["sha256"] for cue_id, row in
+            json.loads((part / "measurements.json").read_text(encoding="utf-8")).items()}
+    if name == "foley":
+        return {row["id"]: row["sha256"] for row in
+            json.loads((part / "PROVENANCE.json").read_text(encoding="utf-8"))["assets"]}
+    return {cue["id"]: cue["sha256"] for cue in
+        json.loads((part / "cues.json").read_text(encoding="utf-8"))["cues"]}
+
+
 def collect() -> tuple[list[dict], dict[str, dict]]:
     cues, sources = [], {}
     for name in ("music", "foley", "interface"):
         part = PRODUCTION / name
+        recorded = recorded_hashes(name, part)
         for source in json.loads((part / "sources.json").read_text(encoding="utf-8"))["sources"]:
             if source["id"] in sources:
                 raise ValueError(f"Duplicate source id: {source['id']}")
@@ -64,8 +77,10 @@ def collect() -> tuple[list[dict], dict[str, dict]]:
             cue.setdefault("cue_id", cue["id"])
             path = ROOT / cue["path"]
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            if cue.get("sha256", digest) != digest:
-                raise ValueError(f"Master hash differs from its project registry: {cue['id']}")
+            if cue["id"] not in recorded:
+                raise ValueError(f"Master has no hash in its project's record: {cue['id']}")
+            if recorded[cue["id"]] != digest:
+                raise ValueError(f"Master hash differs from its project's record: {cue['id']}")
             cue["sha256"] = digest
             # Browser audio.loop and the offline mix repeat the whole file.
             # Refuse a partial smpl region rather than review a different join.
