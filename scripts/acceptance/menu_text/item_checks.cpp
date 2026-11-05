@@ -353,6 +353,25 @@ namespace menu_text_acceptance
         // Exit heading paper-top and question/action contact are checked below.
         // Practice Quit's last row reaches the full-height Pause paper face, below the menu footer.
         paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
+        // The edge follows practice_row_spacing itself, not 0.8 of the layout
+        // spacing: at 100 (not 96) practice Quit sits 16 pixels lower, so a
+        // validator still spacing the rows at 96 would accept the step past it.
+        // Plain Pause's four rows (3 * 120 = 360 < 400) stay inside.
+        const float own_spacing = 100.0f;
+        require(own_spacing != pause.layout.spacing.y * 0.8f && 4.0f * own_spacing > 3.0f * pause.layout.spacing.y,
+            "Practice spacing fixture no longer separates the key from 0.8 of the layout spacing");
+        const float own_bottom = bottom.y - 4.0f * own_spacing - 20.0f - pause.art.focus_padding.y;
+        const auto own_edge = [&](float position)
+        {
+            return [&, position](rapidjson::Document& d)
+            {
+                exact_items(d);
+                d["pause_menu"]["practice_row_spacing"].SetFloat(own_spacing);
+                d["pause_menu"]["layout"]["position"]["y"].SetFloat(position);
+            };
+        };
+        variants.load(own_edge(own_bottom)).validate_resources(world.render, world.audio);
+        variants.rejects("items.quit", own_edge(own_bottom + 0.25f), &world);
         // The Tool row names every tool, unscaled, on the same paper face.
         variants.rejects("practice_tool", [](rapidjson::Document& d)
         {

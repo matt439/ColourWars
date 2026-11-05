@@ -851,8 +851,9 @@ paper rectangle: `pause_menu.box_size`, centered in the full 1920 by 1080 design
 area. The row-height rule is
 `measured_height + 2 * pause_menu.art.focus_padding.y <= pause_menu.layout.spacing.y`.
 Rows begin at `pause_menu.layout.position` and use its authored spacing;
-practice Pause's five rows use `pause_menu.practice_row_spacing` instead,
-and are checked against the paper only.
+practice Pause's five rows use `pause_menu.practice_row_spacing` instead
+(optional; without it, 0.8 of `layout.spacing.y`), and are checked against
+the paper only.
 Equality is accepted; no item-text shadow or fitting scale is added.
 
 Each Pause page uses its captured `MenuText` and resolves the item font when it

@@ -288,7 +288,8 @@ struct PauseMenuPresentation
 	float status_y = 0.0f;
 	WidgetLayout layout;
 	// Practice Pause fits a fifth row, Tool, into the same paper at this
-	// vertical spacing in place of layout.spacing.y.
+	// vertical spacing in place of layout.spacing.y. The key is optional; the
+	// reader fills in 0.8 * layout.spacing.y without it.
 	float practice_row_spacing = 0.0f;
 	PresentationSound window_open_sound;
 	PresentationSound pad_lost_sound;

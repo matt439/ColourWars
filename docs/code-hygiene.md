@@ -675,10 +675,12 @@ presets.
 
 ### Presentation reader and validator helpers (`HYG#70`)
 
-**Done 2026-11-06; content-format change, no layout change.**
+**Done 2026-11-06; no layout change, and no accepted content is rejected.**
 `pause_menu.practice_row_spacing` (96, what `0.8` times the 120 spacing
-gave) is a new required key, so a `presentation.json` without it no longer
-loads. Some diagnostics are worded differently.
+gave) is a new optional key: a `presentation.json` without it gets
+`0.8 * layout.spacing.y` from the reader, so it loads as before. The first
+commit made the key required, which broke the row's criterion; the review
+follow-up made it optional. Some diagnostics are worded differently.
 
 - [presentation_read.h](../game/config/presentation/presentation_read.h) has
   `finite_rectangle` (finite edges, positive size) and `overlaps` (touching
@@ -699,7 +701,12 @@ loads. Some diagnostics are worded differently.
   Pause player title (whose reader and formatter each spelled their token check
   out) use it, and `read_menu_block` shares its blank-line rule.
 - Practice Pause reads `pause_menu.practice_row_spacing` in the page and the
-  validator; the `menu_text` probe's paper-edge and full-height fixtures use it.
+  validator; the `menu_text` probe's paper-edge and full-height fixtures use it,
+  and one paper-edge fixture sets it to 100, not 96, so a validator spacing the
+  rows at `0.8` of the layout spacing fails it. `menu_presentation` checks the
+  fallback for a missing key, an exact custom value, and refusals for zero,
+  negative, too-large and non-number values. No CPU probe can see the page's
+  row spacing: the painter's Pause checks draw plain Pause only.
 - The menu reader formats its size limits from `DESIGN_RESOLUTION` and the
   `menu_geometry` constants; the focus-motion bounds are
   `MenuFocusMotionPresentation::max_duration`, `max_arrow_travel` and
@@ -707,7 +714,10 @@ loads. Some diagnostics are worded differently.
   use and format.
 - Stage-scan copy errors say `menu_text.stage_scan`; the font, layout and fit
   errors keep `main_menu.stage_scan`. The respawn canvas and figure-slip
-  cross-checks name their position in the file.
+  cross-checks name their position in the file. `user_stages` checks a blank
+  heading's prefix next to its font, layout and fit refusals, and
+  `menu_presentation` checks the canvas, slip-stroke and shared-stroke
+  refusals' positions.
 - `read_music_mix`, `read_camera`, `read_movement_feedback`,
   `read_combat_feedback` and `read_match` replace the constructor's inline
   reads.
@@ -737,7 +747,11 @@ practice rows had followed its 3-pixel spacing; it passed once the fixture set
 `practice_row_spacing` to the same 2.4. `check-startup.ps1` passed in both
 presets and with `-Locale qps-ploc` in Release, and `check-painter.ps1`'s
 `PauseMenuOnly`, `StickReadoutsOnly`, `MenuTextOnly`, `WeaponCatalogOnly` and
-`StageScanOnly` passed in both presets.
+`StageScanOnly` passed in both presets. After the review follow-up, both
+presets built again and `menu_presentation`, `menu_text`, `user_stages`,
+`figure_slips` and `practice_workshop` passed in both, as did
+`check-startup.ps1`; with the validator put back to `0.8` of the spacing (not
+committed), `menu_text` failed on the 100-pixel fixture.
 
 ### Presentation and content keys that mislead (`HYG#71`)
 
