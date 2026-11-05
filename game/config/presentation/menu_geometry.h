@@ -58,7 +58,7 @@ namespace menu_geometry
 	// The whole design: backgrounds fill it and the UI camera frames it.
 	labrador::RectangleF design_area();
 
-	// The scale, never above 1, that fits size within vailable, per axis
+	// The scale, never above 1, that fits size within available, per axis
 	// or on both at once. A size or limit that is not positive does not
 	// constrain its axis.
 	float fit_scale(float size, float available);

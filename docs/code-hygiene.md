@@ -981,8 +981,9 @@ Write the validate-only calls one way (`save.cpp:577`), and merge
   updated in `update_fill_box`, `continue_pressed` returns a `bool`, and
   `level_end_info()` returns a reference. The title page reads its inputs
   once. The read-only roster copies in `game_states.cpp` (two),
-  `player_commands.cpp`, `replay_commands.cpp` and the replay writer are
-  references.
+  `player_commands.cpp`, `replay_commands.cpp`, the replay writer, the
+  director's seat labels and the status page's two (match lines and paint
+  line) are references.
 
 Left as found: the presentation validators' own fit formulas and
 `!finite_rectangle(b) || !inside.contains(b)` pairs, where a non-positive

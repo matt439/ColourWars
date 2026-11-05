@@ -323,7 +323,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 
 std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchView& match) const
 {
-	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup>& seats = match.debug_settings().player_settings();
 	std::vector<std::wstring> labels(seats.size());
 	bool any = false;
 	for (std::size_t i = 0; i < seats.size(); ++i)
