@@ -2,7 +2,9 @@
 # All commands go to the probe's owned hidden windows; no global keyboard,
 # mouse, foreground or focus operations are used.
 function Test-EditorSaveGuidance {
-    param([string] $Executable, [string] $Level, [string] $RunDirectory, [string] $SourceLevel)
+    # Commands maps the editor's Command enum names to ids (Get-EditorCommandIds).
+    param([string] $Executable, [string] $Level, [string] $RunDirectory, [string] $SourceLevel,
+        [Parameter(Mandatory)] [hashtable] $Commands)
 
     if (-not ('ColourWars.EditorSaveProbe' -as [type])) {
         Add-Type -TypeDefinition @'
@@ -55,9 +57,7 @@ namespace ColourWars
         [DllImport("user32.dll")]
         private static extern IntPtr GetMenu(IntPtr window);
         [DllImport("user32.dll")]
-        private static extern IntPtr GetSubMenu(IntPtr menu, int index);
-        [DllImport("user32.dll")]
-        private static extern uint GetMenuItemID(IntPtr menu, int index);
+        private static extern uint GetMenuState(IntPtr menu, uint item, uint flags);
 
         private static string ClassName(IntPtr window)
         {
@@ -71,10 +71,11 @@ namespace ColourWars
             if (SendMessageTimeout(window, message, wparam, lparam, 2, 2000, out result) == IntPtr.Zero)
                 throw new InvalidOperationException("Owned editor command timed out");
         }
-        public static void MenuCommand(IntPtr window, int menu, int item, bool asynchronous)
+        // A menu item by its command id; GetMenuState searches the submenus.
+        public static void MenuCommand(IntPtr window, uint command, bool asynchronous)
         {
-            uint command = GetMenuItemID(GetSubMenu(GetMenu(window), menu), item);
-            if (command == 0xffffffff) throw new InvalidOperationException("Editor menu command missing");
+            if (GetMenuState(GetMenu(window), command, 0) == 0xffffffff)
+                throw new InvalidOperationException("Editor menu has no command " + command);
             if (asynchronous)
             {
                 // Match a queued menu command; a sent message can constrain the
@@ -316,7 +317,7 @@ namespace ColourWars
         $initialTitle = [ColourWars.EditorWindowProbe]::Title($window)
 
         # Cancel the actual My Stages dialog before it has saved or retained its folder.
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 0, 4, $true)
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.file_save_user_stage, $true)
         $dialog = Wait-GuidanceDialog -FilePicker
         [ColourWars.EditorSaveProbe]::Answer($dialog, 2)
         Wait-GuidanceReady { -not (Test-Path -LiteralPath $myStages) } 'cancelled My Stages folder cleanup'
@@ -332,7 +333,7 @@ namespace ColourWars
         if ($cancelFolder) { throw "Cancelled Save to My Stages retained the previously absent folder: $myStages" }
         if ($cancelHash -ne $sourceHash) { throw 'Cancelled Save to My Stages changed source file bytes.' }
 
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 0, 4, $true)
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.file_save_user_stage, $true)
         $dialog = Wait-GuidanceDialog -FilePicker
         [ColourWars.EditorSaveProbe]::FileName($dialog, $userFile)
         [ColourWars.EditorSaveProbe]::Answer($dialog, 1)
@@ -342,16 +343,18 @@ namespace ColourWars
         if (-not (Test-Path -LiteralPath $userFile -PathType Leaf)) { throw 'My Stages save did not write its chosen scratch file.' }
         $userHash = (Get-FileHash -LiteralPath $userFile -Algorithm SHA256).Hash
         [ColourWars.EditorSaveProbe]::NudgeFirstSpawn($window)
-        $null = Assert-GuidanceStatus 'my-stages-edit-refresh' 'Ready' 'no rebuild needed'
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 0, 2, $false)
+        $null = Assert-GuidanceStatus 'my-stages-edit-ready' 'Ready' 'no rebuild needed'
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.file_save, $false)
         $null = Assert-GuidanceStatus 'my-stages-ordinary-save' 'Saved ' 'no rebuild needed'
         if ((Get-FileHash -LiteralPath $userFile -Algorithm SHA256).Hash -eq $userHash) { throw 'The ordinary Save did not persist its edit.' }
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 2, 4, $false)
-        $readyStatus = Assert-GuidanceStatus 'my-stages-explicit-refresh' 'Ready' 'no rebuild needed'
+        # Toggling Blockout aids reloads tuning and recomputes the status line;
+        # after a save the line must read Ready again, not Saved.
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.view_blockout, $false)
+        $readyStatus = Assert-GuidanceStatus 'my-stages-blockout-toggle-ready' 'Ready' 'no rebuild needed'
         $userTitle = [ColourWars.EditorWindowProbe]::Title($window)
         $userHash = (Get-FileHash -LiteralPath $userFile -Algorithm SHA256).Hash
 
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 0, 3, $true)
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.file_save_as, $true)
         $dialog = Wait-GuidanceDialog -FilePicker
         [ColourWars.EditorSaveProbe]::Answer($dialog, 2)
         Wait-GuidanceReady
@@ -369,7 +372,7 @@ namespace ColourWars
         $failedTitle = [ColourWars.EditorWindowProbe]::Title($window)
         [IO.File]::AppendAllText($userFile, "`n ", [Text.UTF8Encoding]::new($false))
         $externalHash = (Get-FileHash -LiteralPath $userFile -Algorithm SHA256).Hash
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 0, 2, $true)
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.file_save, $true)
         $dialog = Wait-GuidanceDialog
         if (-not [ColourWars.EditorSaveProbe]::StaticText($dialog).Contains('Save As')) {
             throw 'Failed ordinary Save did not report the external-change recovery action.'
@@ -385,15 +388,15 @@ namespace ColourWars
         if ($afterFailureTitle -ne $failedTitle) { throw "Failed ordinary Save changed title/destination from '$failedTitle' to '$afterFailureTitle'." }
         if ($afterFailureHash -ne $externalHash) { throw 'Failed ordinary Save changed external file bytes.' }
 
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 0, 3, $true)
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.file_save_as, $true)
         $dialog = Wait-GuidanceDialog -FilePicker
         [ColourWars.EditorSaveProbe]::FileName($dialog, $elsewhere)
         [ColourWars.EditorSaveProbe]::Answer($dialog, 1)
         Wait-GuidanceReady { (Test-Path -LiteralPath $elsewhere -PathType Leaf) -and
             [ColourWars.EditorSaveProbe]::Status($window).StartsWith('Saved elsewhere.json') } 'Save As status and file'
         $null = Assert-GuidanceStatus 'save-as-elsewhere' 'Saved ' 'does not discover this destination'
-        [ColourWars.EditorSaveProbe]::MenuCommand($window, 2, 4, $false)
-        $null = Assert-GuidanceStatus 'elsewhere-refresh' 'Ready' 'does not discover this destination'
+        [ColourWars.EditorSaveProbe]::MenuCommand($window, $Commands.view_blockout, $false)
+        $null = Assert-GuidanceStatus 'elsewhere-blockout-toggle-ready' 'Ready' 'does not discover this destination'
         if (-not [ColourWars.EditorWindowProbe]::Title($window).StartsWith('elsewhere.json') -or
             (Get-FileHash -LiteralPath $userFile -Algorithm SHA256).Hash -ne $externalHash -or
             (Get-FileHash -LiteralPath $Level -Algorithm SHA256).Hash -ne $sourceHash) {
@@ -410,7 +413,7 @@ namespace ColourWars
         if ($SourceLevel) {
             $sourceRun = Join-Path $RunDirectory 'source-read-only'
             [IO.Directory]::CreateDirectory($sourceRun) | Out-Null
-            Test-EditorWindow -Executable $Executable -Level $SourceLevel -RunDirectory $sourceRun -ExpectStatus 'then rebuild the game'
+            Test-EditorWindow -Executable $Executable -Level $SourceLevel -RunDirectory $sourceRun -ExpectStatus 'then rebuild the game' -Commands $Commands
         }
         $result.outcome = 'passed'
         Write-Host 'PASS hidden editor destination guidance, My Stages/ordinary Save/refresh, Save As, cancel and failed save'
