@@ -208,8 +208,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 |---|---|---|---|
 | 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); still unanswered at master `aa8f5a2`; author's decision 2026-11-03: not filed alone, rides with report 27's filing |
 | 27, 28, 30, 33 | Four still live from the 2026-10-30 architecture review (29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | author's decision 2026-11-03: 27, 30 and 33 to be filed (drafted, not posted); 28 was to be fixed in the engine before the tag, but `v0.3.0` shipped without it, so it is back with the author |
+| 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | drafted 2026-11-04, not posted; filing, and what those gates accept, is the author's call (`ENG#34`) |
 
-Nothing else is outstanding, on either side, beyond report 26 below, the four still live
+Nothing else is outstanding, on either side, beyond reports 26 and 34 below, the four still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -255,7 +256,7 @@ content, so it is not withdrawn: it goes with the report 27 filing as a rider,
 since both are state a test or a reload needs to reset, and it stays among the
 `ENG#PARKED` asks until an answer. The draft below is kept as written.
 Rechecked 2026-11-03 at master `aa8f5a2`: `registry.h` is unchanged since
-`3a14f11`. **Reopen** and file it alone if reloading user stages becomes a
+`3a14f11`, and still at master `11292fa` (2026-11-05). **Reopen** and file it alone if reloading user stages becomes a
 frequent or large flow (an editor hot-reload loop, or many large user stages)
 so the held memory or a stale `contains` has a measurable cost, or if a
 Labrador sample adds reloadable content and needs the same removal. Withdraw it
@@ -316,8 +317,7 @@ no pad seam beside it, so the growth this draft predicted has happened. At the
 bump each of the four blocks gained `vibrate` and `stop_vibration` (two lines
 each), and the rehearsal (`HYG#24`) had built the duplicate-symbol failure
 that the caveats below call inferred: with the members missing, the linker
-pulled `gamepad_reader.cpp.obj` and reported `LNK2005`/`LNK1169`. The blocks
-now end two or three lines later than the ranges cited under the exhibit. The
+pulled `gamepad_reader.cpp.obj` and reported `LNK2005`/`LNK1169`. The
 filing still stands: the extension is now evidence rather than a prediction,
 and the "file before the tag" reason and the **Reopen** condition below are
 spent. The record below is as decided before the tag.
@@ -336,7 +336,11 @@ the duplicate-symbol outcome is inferred, not built. Not posted yet. Rechecked
 corrected comments and `ff24323` dropped no-op `using` directives, neither
 changing behaviour. The four blocks have drifted to
 `action_bindings.cpp:19`, `input_bindings.cpp:10`,
-`keyboard_jump_capture.cpp:23` and `painter_visual.cpp:85`. **Reopen** and
+`keyboard_jump_capture.cpp:23` and `painter_visual.cpp:85`. Rechecked
+2026-11-05 at master `11292fa`: unanswered; the only input-area commit,
+`afdc9f9`, adds an engine-internal browser-transport test
+(`tests/input/web_vibration_tests.cpp`) with a fake actuator, and no reader a
+consumer can set. **Reopen** and
 hold the filing if a trial build against master (`HYG#24`) shows the four
 blocks need only two trivial extra definitions and the engine says the next tag
 is imminent; then file after the bump with the real extension as evidence.
@@ -372,10 +376,10 @@ XInput. Each one does it by redefining every `labrador::GamepadReader` member,
 `Impl` included, in its own translation unit. The probe's object file then wins
 over `LabradorEngine.lib`'s `xinput/gamepad_reader.obj` at link time:
 
-- [action_bindings.cpp:18-36](../../scripts/acceptance/action_bindings.cpp) feeds `action_test_pads::states` through `sample()` and keeps a `suspended` flag.
-- [input_bindings.cpp:9-23](../../scripts/acceptance/input_bindings.cpp) does the same thing with `binding_test_pads::states`.
-- [keyboard_jump_capture.cpp:23-34](../../scripts/acceptance/keyboard_jump_capture.cpp) defines a reader whose slots are always empty, only so a `Gamepads` can be built.
-- [painter_visual.cpp:77-109](../../scripts/acceptance/painter_visual.cpp) uses `painter_scripted_pads::states` under `COLOURWARS_PAINTER_SCRIPTED_PADS`. `scripts/check-painter.ps1:409` passes that define only for the scripted-pad variants, so the other painter binaries keep XInput.
+- [action_bindings.cpp:18-39](../../scripts/acceptance/action_bindings.cpp) feeds `action_test_pads::states` through `sample()` and keeps a `suspended` flag.
+- [input_bindings.cpp:9-26](../../scripts/acceptance/input_bindings.cpp) does the same thing with `binding_test_pads::states`.
+- [keyboard_jump_capture.cpp:23-37](../../scripts/acceptance/keyboard_jump_capture.cpp) defines a reader whose slots are always empty, only so a `Gamepads` can be built.
+- [painter_visual.cpp:78-112](../../scripts/acceptance/painter_visual.cpp) uses `painter_scripted_pads::states` under `COLOURWARS_PAINTER_SCRIPTED_PADS`. `scripts/check-painter.ps1:413` passes that define only for the scripted-pad variants, so the other painter binaries keep XInput.
 - [rumble_adapter.cpp:42-69](../../scripts/acceptance/rumble_adapter.cpp) records every `vibrate` and `stop_vibration` in `rumble_adapter_pads::trace`, and can refuse or throw, so the real rumble adapter drives a real `Gamepads`. It joined when report 25 was spent (2026-11-05), and is the one block that exercises the vibration members the bump added.
 
 ### What happens
@@ -597,7 +601,10 @@ The ask is narrow, matches the engine's own T6 "refuse loudly with a named
 reason" (`STORIES.md:1707`, `:1713`), and helps adopters whom the release guide
 teaches to match on prose. Not posted yet. Rechecked 2026-11-03 at master
 `aa8f5a2`: device creation unchanged since `47be5a3`; the client `strcmp` is
-at `game/fatal_report.cpp:117`. **Reopen** and hold the filing if the engine
+at `game/fatal_report.cpp:117`. Rechecked 2026-11-05 at master `11292fa`:
+unanswered; `2474720` edited only the comment above the Vulkan throw
+(`vulkan/device_resources.cpp:558-559`), and the cited engine lines and the
+client `strcmp` still hold. **Reopen** and hold the filing if the engine
 signals it is reworking device creation under T6 (for example a WARP or
 software-fallback policy change), then file against the new shape. Drop it if
 the author decides ColourWars will only ever ship D3D11 and accepts patching
@@ -621,7 +628,7 @@ engine exception subclass on this path, `com_exception`
 call, and its own comment says a catch site cannot tell one from another.
 `Renderer::device_info()` (`engine/render/SEAM.md:85-88`) classifies a device
 as hardware, software or null only after one has been created. The engine's
-own release guide (`website/src/content/docs/docs/guides/windows-release.mdx:199-212`)
+own release guide (`website/src/content/docs/docs/guides/windows-release.mdx:225-238`)
 tabulates the refusals by their message text, so the text is the only
 interface there is. Nothing in master's `CHANGES.md`, `docs/product/BACKLOG.md`
 or `docs/design` plans a typed refusal. `GAP-REGISTER.md:2741` mentions the
@@ -683,7 +690,15 @@ software adapters skips only flagged ones
 
 **What happens.** `device_info()` tells a client it has hardware when it has a
 CPU rasteriser. A game that picks quality from the kind picks wrongly, and any
-receipt that records the kind says `hardware` for a machine with no GPU.
+receipt that records the kind says `hardware` for a machine with no GPU. The
+engine already treats this adapter as software elsewhere: the GL backend's
+`names_software` (`engine/render/gl/renderer.cpp:42-55`) matches
+`microsoft basic render`, and Vulkan's matches llvmpipe, lavapipe and
+SwiftShader, while D3D11 and D3D12 (`d3d12/renderer.cpp:69-70`) read only
+`DXGI_ADAPTER_FLAG_SOFTWARE`. So the same machine reports `software` under
+`gl` and `hardware` under `d3d11`. Checked 2026-11-05 at master `11292fa`:
+unanswered; `2474720` runs the GL and Vulkan device tests on software
+rasterisers in CI but leaves the Direct3D kind alone.
 
 **The catch for this client.** Our coverage relies on the label. Release
 startup and Release movement feedback pass on the runner only because of it,
@@ -718,7 +733,12 @@ stays for good, and the comments at `game/objects/collider.cpp:24-26` and
 `projectile.h:88-93` say so instead of pointing here. Filing now, beside the
 engine's open IDEA#9 contact-helper decision, lets it weigh both contact-shape
 questions together. Not posted yet. Rechecked 2026-11-03 at master `aa8f5a2`:
-nothing touches `engine/collision`. **Reopen** and withdraw it if the author
+nothing touches `engine/collision`. Rechecked 2026-11-05 at master `11292fa`:
+unanswered; only `narrow_phase` changed (`f6752ca`, OCA-80 circles). IDEA#9 is
+still an open decision there, and the engine's
+`docs/2026-11-04-decision-recommendations.md` advises deferring it until a
+second client, so this filing should not count on the two being weighed
+together. **Reopen** and withdraw it if the author
 decides the one documented `const_cast` is acceptable for good. Hold it, and
 attach it to that discussion, if Labrador opens IDEA#9 or contact-manifold work
 that would change `on_contact`'s shape anyway.

@@ -1,3 +1,6 @@
-# Painter leaves whose exact pins hold only on a real GPU, one -XxxOnly name per
-# line. nightly.yml's sweep runs them on the hosted software rasteriser and does
-# not fail on these. A leaf belongs here only with a reason on its line.
+# Painter leaves whose exact pins hold only on a real GPU: one leaf name per
+# line, spelt as check-painter.ps1's switch without its dash (RumbleOnly, not
+# -RumbleOnly), with its reason in a trailing comment:
+#   RumbleOnly  # why it holds only on a real GPU
+# nightly.yml's sweep runs them on the hosted software rasteriser and does not
+# fail on these. A leaf belongs here only with a reason.
