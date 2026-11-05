@@ -6,6 +6,7 @@
 #include "engine/assets/json.h"
 #include "game/config/drawable_text.h"
 #include "game/input/input_slots.h"
+#include "game/match/match_rules.h"
 #include "game/objects/player_badge.h"
 
 #include <array>
@@ -673,9 +674,9 @@ std::wstring MenuText::practice_tool_label(std::wstring_view tool) const
 
 std::wstring MenuText::pause_title_for_player(int number) const
 {
-	if (number < 1 || number > 4)
+	if (!valid_player_count(number))
 	{
-		throw std::invalid_argument("Pause title requires a player number from 1 to 4.");
+		throw std::invalid_argument("Pause title requires a player number from " + player_count_range() + ".");
 	}
 	std::wstring result = this->connection.pause_player_title;
 	const std::wstring token = L"{player}";
@@ -815,18 +816,19 @@ const std::wstring& MenuText::series_stage_value(SeriesStageRule rule) const
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const
 {
-	if (best_of != 3 && best_of != 5)
+	// A single match has its own words (stage.single_match_mode).
+	if (!valid_best_of(best_of) || best_of == 1)
 	{
-		throw std::invalid_argument("Stage best-of mode requires 3 or 5.");
+		throw std::invalid_argument("Stage best-of mode requires a series length.");
 	}
 	return format_label_template(this->stage.best_of_mode, { { L"{best_of}", std::to_wstring(best_of) } });
 }
 
 std::wstring MenuText::stage_roster(int players) const
 {
-	if (players < 1 || players > 4)
+	if (!valid_player_count(players))
 	{
-		throw std::invalid_argument("Stage roster requires a player count from 1 to 4.");
+		throw std::invalid_argument("Stage roster requires a player count from " + player_count_range() + ".");
 	}
 	return format_label_template(players == 1 ? this->stage.solo_roster : this->stage.versus_roster,
 		{ { L"{players}", std::to_wstring(players) } });

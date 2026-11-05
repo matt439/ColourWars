@@ -19,8 +19,7 @@ struct Presentation::Validation
     using Vector2F = labrador::Vector2F;
     using RectangleF = labrador::RectangleF;
     using FontHandle = labrador::FontHandle;
-    static constexpr std::array<BotDifficulty, 3> label_difficulties{
-        BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };
+    static constexpr std::array<BotDifficulty, 3> label_difficulties = bot_difficulties;
     static constexpr int label_choices = input_slots::count + static_cast<int>(label_difficulties.size());
     using LabelRows = std::array<std::array<RectangleF, label_choices>, 4>;
 

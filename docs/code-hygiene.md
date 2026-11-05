@@ -460,26 +460,64 @@ Both presets build under `/W4 /WX`. `menu_navigation`, `player_identity`,
 
 ### Match-domain rules and settings bounds in one place (`HYG#66`)
 
-In `game/match`, add `layout_for_humans(int)`, `bot_difficulty_key` and
-`bot_difficulty_from_key`, `valid_best_of`, `session_rounds`, a
-`series_stage_rules` array and `max_players`. Use them in place of these copies:
+**Done 2026-11-06; behaviour change.** A saved deadzone above 90 now loads as
+90 instead of falling back to the inherited value.
 
-- the human-count-to-layout copies (`main_menu_players.cpp:194`,
-  `match_plan.cpp:8`, `last_match_setup`, `team_selection.cpp:24`);
-- the five difficulty tables (`replay.cpp:92`, `player_control.h:11`,
-  `tuning.cpp:221`);
-- best-of (`last_match_setup.cpp:45`) and the round count
-  (`game_states.cpp:135`);
-- the stage-rule list (`main_menu_mode_select.cpp:141`);
-- the literal 4 and 2 in `match_setup.cpp:29` and the replay validators
-  (`replay.cpp:519`).
+- [match_rules.h](../game/match/match_rules.h) holds `max_players` (4),
+  `min_versus_players` (2), `valid_player_count`, `player_count_range`,
+  `layout_for_humans` (which throws outside 1-4), `best_of_choices` and
+  `valid_best_of`; `session_rounds(const MatchSetup&)` in `match_setup.h` is
+  the solo-is-a-single-match rule. `bot_difficulties`, `valid_bot_difficulty`,
+  `bot_difficulty_key` and `bot_difficulty_from_key` sit beside the enum in
+  `player_control.h`, and `series_stage_rules` and `valid_series_stage_rule`
+  beside theirs in `series_stage_rule.h`.
+- They replace the layout copies in `main_menu_players.cpp` (both arrays, and
+  `start_join` no longer takes a layout per button), `game_states.cpp`,
+  `level_builder.cpp`, `last_match_setup.cpp` and `MatchPlanner::layout_for`,
+  which is gone (the three `debug_console` checks that called it now call
+  `layout_for_humans`), and the human-count copies in the `team_selection`,
+  `bot_runtime`, `cursor_marker`, `instant_replay` and `teammate_markers`
+  probes; the difficulty tables in `last_match_setup.cpp`,
+  `replay.cpp`, `match_plan.cpp` (completion list, check and conversion),
+  `tuning.cpp` (the `bots` entry names and `GameTuning::bot`), `match_setup.cpp`,
+  `debug_status_text.cpp` and `Presentation::Validation`; best-of in
+  `match_setup.cpp`, `session.cpp`, `last_match_setup.cpp`,
+  `MenuText::stage_best_of_mode` and the stage summary validator; the four
+  round-count copies (`game_states.cpp` twice, `game_level_dev_tools.cpp`
+  twice); the stage-rule lists in the Mode page, `menu_content_validation.cpp`
+  and `last_match_setup.cpp`; and the 4 and 2 in `match_setup.cpp`,
+  `last_match_setup.cpp`, the three replay validators, `match_plan.cpp`'s
+  `players` check, `MenuText`'s pause title and roster line, and the Players
+  page's series focus. Messages that named "1-4" now format it.
+- [play_settings.h](../game/config/play_settings.h) names
+  `StickSettings::inherit`, `max_deadzone` and `deadzone_step`, and
+  `PlaySettings::min_aim_sensitivity`, `max_aim_sensitivity`, `max_volume` and
+  `volume_step`. The save's play reader, `Save::checked_play_settings`,
+  `PlayerProfiles::validate`, the Sticks and Controls pages and the gains read
+  them. [play_settings_json.h](../game/save/play_settings_json.h) has the one
+  reader and writer for a `StickSettings` and a `SeatComfort`, which the play
+  section's `pad_sticks` and `pad_comfort` and each `profiles` entry share; the
+  deadzone reader goes through `normalized_deadzone`. `settings` now expects 91
+  and 500 to load as 90, and `player_profiles` a saved 95 as 90.
 
-In the same row, name the stick and play-setting bounds once (the 90% deadzone
-cap, the 5% step, sensitivity and volume ranges; `stick_settings_menu.cpp:146`,
-`play_settings.h:18`). Share the `StickSettings` and `SeatComfort` JSON readers
-between `save.cpp:191` and the profiles, so the readers and `normalized_deadzone`
-agree. Out-of-range saved values may now clamp instead of dropping; say so in
-the commit.
+Left as found: the Debug console's `players`, `seat`, `weapon`, `goto`,
+`respawn`, `kill` and `bot` parsers, whose help text and completions spell
+1-4 with the check; the presentation validators' per-player loops over
+four-row geometry tables (`presentation_validation_setup.cpp`, `_results`,
+`_pause`), which belong with
+[`HYG#70`](#presentation-reader-and-validator-helpers-hyg70); the
+Join page's difficulty stepping and the Mode page's two series buttons, which
+are page behaviour rather than tables; probes' own difficulty names and the
+`balance_runner` option parser, which state expectations or a tool's command
+line; and the layouts `bot_roster` and `balance_runner`'s `build` set from the
+whole seat count, bots included, which are fixture choices rather than the
+one-pane-per-human rule.
+
+Both presets build under `/W4 /WX`. The full default acceptance list (78
+cases, `-Parallel 4`) passed in Debug and Release, `check-startup.ps1` passed
+in both, and `check-painter.ps1`'s `ControlsMenuOnly`, `StickSettingsOnly`,
+`RememberedSetupOnly`, `StageSummaryOnly`, `MenuTextOnly` and
+`StickReadoutsOnly` passed in both.
 
 ### The level-format contract owns its numbers and names (`HYG#67`)
 
@@ -548,6 +586,9 @@ Also:
   motion bounds once (`menu_focus_motion.cpp:10`).
 - Fix the misplaced doc comments (`presentation_match.h:207`, `menu_geometry.h:8`,
   `presentation_validation_menu.cpp:215`).
+- Handed on by `HYG#66`: the per-player loops written `player < 4` over
+  four-row geometry tables (`presentation_validation_setup.cpp`, `_results`,
+  `_pause`) can take `max_players` from `game/match/match_rules.h`.
 
 Diagnostics text may change; no accepted content may become rejected.
 

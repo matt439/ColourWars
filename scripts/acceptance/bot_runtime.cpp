@@ -55,7 +55,7 @@ namespace
         settings.begin_input_claims(3);
         for (const int slot : { input_slots::keyboard_and_mouse, 1, 2 })
         { std::ignore = settings.claim_input_slot(slot); }
-        settings.set_screen_layout(static_cast<ScreenLayout>(settings.human_count() - 1));
+        settings.set_screen_layout(layout_for_humans(settings.human_count()));
         settings.set_stage("crossfeed"); settings.set_duration(30.0f);
         for (int seat = 0; seat < count; ++seat)
         {

@@ -12,6 +12,7 @@ namespace
 		{ SeriesStageRule::same, "same" },
 		{ SeriesStageRule::rotate, "rotate" },
 		{ SeriesStageRule::losers_pick, "losers_pick" } } };
+	static_assert(rule_keys.size() == series_stage_rules.size(), "Every series stage rule needs a save key");
 
 	PlayerTeam round_loser(const Session& session)
 	{

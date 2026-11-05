@@ -327,7 +327,7 @@ private:
 
 	int activating_slot_ = -1;
 
-	void start_join(int players, labrador::ScreenLayout layout);
+	void start_join(int players);
 };
 
 class MainMenuJoin final : public RosterSetupPage

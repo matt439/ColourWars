@@ -218,7 +218,7 @@ namespace debug_console_acceptance
             MatchPlan plan = MatchPlanner(&world.stages).resolve(nullptr, request, {}, [] { return 0u; });
             require(plan.ok, "Cannot plan loaded-stage replay fixture: " + plan.error);
             plan.settings.set_player_bot(1, BotDifficulty::easy);
-            plan.settings.set_screen_layout(MatchPlanner::layout_for(plan.settings.human_count()));
+            plan.settings.set_screen_layout(layout_for_humans(plan.settings.human_count()));
             plan.settings.set_duration(20.0f);
             return plan.settings;
         };

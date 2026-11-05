@@ -1,10 +1,11 @@
 #include "game/pch.h"
 #include "game/match/session.h"
+#include "game/match/match_rules.h"
 #include "game/config/presentation/presentation.h"
 
 Session::Session(int best_of) : best_of_(best_of)
 {
-	if (best_of != 1 && best_of != 3 && best_of != 5)
+	if (!valid_best_of(best_of))
 	{
 		throw std::invalid_argument("Session length must be 1, 3 or 5");
 	}

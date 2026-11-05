@@ -10,6 +10,7 @@
 #include "game/debug/tune/tune_document.h"
 #include "game/save/atomic_file.h"
 #include "game/input/input_slots.h"
+#include "game/match/match_rules.h"
 #include "game/objects/horizontal_motion.h"
 #include <algorithm>
 #include <array>
@@ -91,29 +92,23 @@ namespace
 
 	const char* difficulty_name(BotDifficulty difficulty, const std::filesystem::path& path)
 	{
-		switch (difficulty)
-		{
-		case BotDifficulty::easy: return "easy";
-		case BotDifficulty::normal: return "normal";
-		case BotDifficulty::hard: return "hard";
-		default: fail(path, "bot difficulty must be easy, normal or hard");
-		}
+		if (!valid_bot_difficulty(difficulty)) { fail(path, "bot difficulty must be easy, normal or hard"); }
+		return bot_difficulty_key(difficulty);
 	}
 
 	BotDifficulty read_difficulty(const labrador::JsonValue& seat,
 		const std::filesystem::path& path)
 	{
-		const std::string difficulty = seat.identifier("difficulty");
-		if (difficulty == "easy") { return BotDifficulty::easy; }
-		if (difficulty == "normal") { return BotDifficulty::normal; }
-		if (difficulty == "hard") { return BotDifficulty::hard; }
-		fail(path, "bot difficulty must be easy, normal or hard");
+		const std::optional<BotDifficulty> difficulty = bot_difficulty_from_key(seat.identifier("difficulty"));
+		if (!difficulty) { fail(path, "bot difficulty must be easy, normal or hard"); }
+		return *difficulty;
 	}
 
 	void validate_roster(const MatchSetup& settings, const std::filesystem::path& path)
 	{
 		const std::vector<SeatSetup>& seats = settings.player_settings();
-		if (seats.empty() || seats.size() > 4) { fail(path, "settings must have 1-4 seats"); }
+		if (!valid_player_count(static_cast<int>(seats.size())))
+		{ fail(path, "settings must have " + player_count_range() + " seats"); }
 		if (seats.front().controller != PlayerController::human || seats.front().num < 0)
 		{ fail(path, "seat 1 must be a human with a device"); }
 		std::array<bool, input_slots::count> used{};
@@ -138,10 +133,12 @@ namespace
 		}
 		const int humans = settings.human_count();
 		const int layout = static_cast<int>(settings.screen_layout());
-		if (layout != static_cast<int>(MatchPlanner::layout_for(humans)))
+		// Seat 1 is a human, checked above, so there is a layout for them.
+		const int expected = static_cast<int>(layout_for_humans(humans));
+		if (layout != expected)
 		{
 			fail(path, "layout " + std::to_string(layout) + " is not the " + std::to_string(humans) +
-				"-player layout (" + std::to_string(static_cast<int>(MatchPlanner::layout_for(humans))) + ")");
+				"-player layout (" + std::to_string(expected) + ")");
 		}
 	}
     // Strict horizontal_motion helpers are separate from the unchanged legacy codec.
@@ -191,7 +188,7 @@ namespace
         };
         bounded(terrain.structures.size()); bounded(terrain.carriers.size());
         if (terrain.structures.empty()) { fail(path, "horizontal_motion structures must be nonempty"); }
-        if (roster < 1 || roster > 4 || terrain.carriers.size() != roster || terrain.carriers.size() != final_seats)
+        if (!valid_player_count(static_cast<int>(roster)) || terrain.carriers.size() != roster || terrain.carriers.size() != final_seats)
         { fail(path, "horizontal_motion carrier count must match setup and final seats"); }
         for (std::size_t index = 0; index < terrain.structures.size(); ++index)
         {
@@ -516,9 +513,9 @@ namespace
 		const labrador::JsonValue setup = root.object("settings");
 		const labrador::JsonValue seats = setup.array("seats");
 		const int count = static_cast<int>(seats.size());
-		if (count < 1 || count > 4)
+		if (!valid_player_count(count))
 		{
-			fail(path, "it has " + std::to_string(count) + " seats; 1-4 expected");
+			fail(path, "it has " + std::to_string(count) + " seats; " + player_count_range() + " expected");
 		}
 		MatchSetup rebuilt;
 		rebuilt.set_player_count(count);

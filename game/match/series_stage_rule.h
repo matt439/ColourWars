@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include "game/objects/player_team.h"
 #include "game/objects/stage.h"
@@ -19,6 +20,19 @@ enum class SeriesStageRule
 	// After a decisive round, the losing team chooses on Stage Select.
 	losers_pick
 };
+
+// Every rule, in the order the Mode page cycles through them.
+constexpr std::array<SeriesStageRule, 3> series_stage_rules{
+	SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick };
+
+constexpr bool valid_series_stage_rule(SeriesStageRule rule)
+{
+	for (const SeriesStageRule known : series_stage_rules)
+	{
+		if (known == rule) { return true; }
+	}
+	return false;
+}
 
 // A new setup's rule, and what a save without one (or with an unknown
 // spelling) reads as. Rotate since 2026-11-05; Same before.

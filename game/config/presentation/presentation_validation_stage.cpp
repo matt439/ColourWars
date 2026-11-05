@@ -6,6 +6,7 @@
 #include "game/config/presentation/presentation_validation.h"
 #include "game/config/drawable_text.h"
 #include "game/config/presentation/menu_geometry.h"
+#include "game/match/match_rules.h"
 
 #include <cmath>
 #include <initializer_list>
@@ -224,11 +225,12 @@ void Presentation::Validation::validate_stage_summaries(const StageGeometry& sta
 	// The page draws one card around every row it shows at once, so the rows
 	// are also checked together, each alternative included, for the preview.
 	RectangleF shown_together = stage_geometry.briefing_rows.front().second;
-	for (const int best_of : { 3, 5 })
+	for (const int best_of : best_of_choices)
 	{
+		if (best_of == 1) { continue; }
 		shown_together = RectangleF::union_of(shown_together, check_stage_summary(stage_briefing, stage_info, "best_of_mode", this->presentation_.menu_text_.stage_best_of_mode(best_of), this->presentation_.menu_.detail_font, 1.0f, 2.0f));
 	}
-	for (int players = 1; players <= 4; ++players)
+	for (int players = 1; players <= max_players; ++players)
 	{
 		shown_together = RectangleF::union_of(shown_together, check_stage_summary(stage_briefing, stage_info, players == 1 ? "solo_roster" : "versus_roster", this->presentation_.menu_text_.stage_roster(players),
 			this->presentation_.menu_.brand_font, 2.0f, 3.0f));

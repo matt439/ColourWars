@@ -145,7 +145,8 @@ void StickSettingsMenu::init()
 		const float effective = movement ? this->selection_.movement_deadzone(this->slot_,
 			this->data()->tuning()->input().movement_deadzone) : this->selection_.aim_deadzone(this->slot_);
 		value = std::clamp(static_cast<int>(std::lround(effective * 100.0f)) +
-			(direction == Direction::right ? 5 : -5), 0, 90);
+			(direction == Direction::right ? StickSettings::deadzone_step : -StickSettings::deadzone_step),
+			0, StickSettings::max_deadzone);
 		this->refresh_values();
 		this->set_status(this->text().status.sticks_pending);
 	};

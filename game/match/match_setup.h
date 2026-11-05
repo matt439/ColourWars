@@ -9,8 +9,10 @@
 #include "engine/render/screen_layout.h"
 #include "game/input/input_slots.h"
 #include "game/match/series_stage_rule.h"
+#include "game/match/match_rules.h"
 
-// The roster is empty until a player count is chosen, then contains 1-4 seats.
+// The roster is empty until a player count is chosen, then contains 1 to
+// max_players seats (game/match/match_rules.h).
 // Human seats are unclaimed (-1) or hold a unique valid device slot. Bots have
 // no device and carry their own difficulty. P1 is always the human setup host.
 // Only roster operations mutate assignments; snapshots cannot alter the roster.
@@ -96,3 +98,7 @@ private:
 	std::string stage_;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;
 };
+
+// The best-of a Session for this setup plays: solo is always a single match,
+// whatever series length the Mode page last held.
+int session_rounds(const MatchSetup& settings);

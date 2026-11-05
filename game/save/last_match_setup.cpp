@@ -3,6 +3,7 @@
 #include "engine/assets/json.h"
 #include "game/save/save.h"
 #include "game/match/match_setup.h"
+#include "game/match/match_rules.h"
 #include <array>
 #include <cmath>
 #include <optional>
@@ -13,22 +14,17 @@ using namespace labrador;
 
 namespace
 {
-	constexpr std::array<ScreenLayout, 4> layouts{
-		ScreenLayout::one_player, ScreenLayout::two_player,
-		ScreenLayout::three_player, ScreenLayout::four_player };
-	constexpr std::array<const char*, 4> layout_keys{
+	// The save's spelling of each ScreenLayout, in enum order.
+	constexpr std::array<const char*, max_players> layout_keys{
 		"one_player", "two_player", "three_player", "four_player" };
-	constexpr std::array<BotDifficulty, 3> difficulties{
-		BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard };
-	constexpr std::array<const char*, 3> difficulty_keys{ "easy", "normal", "hard" };
 
 	ScreenLayout layout_for_count(size_t count)
 	{
-		if (count < 1 || count > layouts.size())
+		if (count < 1 || count > static_cast<size_t>(max_players))
 		{
-			throw std::invalid_argument("Remembered player count must be between 1 and 4");
+			throw std::invalid_argument("Remembered player count must be " + player_count_range());
 		}
-		return layouts[count - 1];
+		return layout_for_humans(static_cast<int>(count));
 	}
 
 	bool valid_team(PlayerTeam team)
@@ -42,25 +38,9 @@ namespace
 		return static_cast<size_t>(weapon) < TUNED_WEAPON_COUNT;
 	}
 
-	bool valid_best_of(int best_of)
-	{
-		return best_of == 1 || best_of == 3 || best_of == 5;
-	}
-
-	bool valid_stage_rule(SeriesStageRule rule)
-	{
-		return rule == SeriesStageRule::same || rule == SeriesStageRule::rotate ||
-			rule == SeriesStageRule::losers_pick;
-	}
-
 	bool valid_controller(PlayerController controller)
 	{
 		return controller == PlayerController::human || controller == PlayerController::bot;
-	}
-
-	bool valid_difficulty(BotDifficulty difficulty)
-	{
-		return std::find(difficulties.begin(), difficulties.end(), difficulty) != difficulties.end();
 	}
 
 	size_t human_count(const std::vector<LastMatchPlayer>& players)
@@ -83,11 +63,9 @@ namespace
 	{
 		try
 		{
-			const std::string key = player.identifier("difficulty");
-			for (size_t index = 0; index < difficulties.size(); ++index)
-			{
-				if (key == difficulty_keys[index]) { return difficulties[index]; }
-			}
+			const std::optional<BotDifficulty> difficulty =
+				bot_difficulty_from_key(player.identifier("difficulty"));
+			if (difficulty) { return *difficulty; }
 		}
 		catch (const std::runtime_error&) {}
 		return BotDifficulty::normal;
@@ -102,15 +80,6 @@ namespace
 		}
 		catch (const std::runtime_error&) {}
 		return 0;
-	}
-
-	const char* difficulty_key(BotDifficulty difficulty)
-	{
-		for (size_t index = 0; index < difficulties.size(); ++index)
-		{
-			if (difficulty == difficulties[index]) { return difficulty_keys[index]; }
-		}
-		throw std::invalid_argument("Remembered bot difficulty must be Easy, Normal or Hard");
 	}
 
 	bool valid_teams(const std::vector<LastMatchPlayer>& players)
@@ -194,7 +163,7 @@ void LastMatchSetup::validate() const
 	}
 	for (const LastMatchPlayer& player : this->players)
 	{
-		if (!valid_controller(player.controller) || !valid_difficulty(player.difficulty) ||
+		if (!valid_controller(player.controller) || !valid_bot_difficulty(player.difficulty) ||
 			(player.controller == PlayerController::human && player.difficulty != BotDifficulty::normal))
 		{
 			throw std::invalid_argument("Remembered controllers and bot difficulties must be valid");
@@ -220,7 +189,7 @@ void LastMatchSetup::validate() const
 	{
 		throw std::invalid_argument("Remembered duration must be finite and positive");
 	}
-	if (!valid_stage_rule(this->stage_rule))
+	if (!valid_series_stage_rule(this->stage_rule))
 	{
 		throw std::invalid_argument("Remembered series stage rule must be Same, Rotate or Loser's pick");
 	}
@@ -233,7 +202,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 	for (LastMatchPlayer& player : setup.players)
 	{
 		if (!valid_controller(player.controller)) { player.controller = PlayerController::human; }
-		if (!valid_difficulty(player.difficulty)) { player.difficulty = BotDifficulty::normal; }
+		if (!valid_bot_difficulty(player.difficulty)) { player.difficulty = BotDifficulty::normal; }
 		if (!handicaps::valid(player.handicap)) { player.handicap = 0; }
 	}
 	setup.players.front().controller = PlayerController::human;
@@ -259,7 +228,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 		setup.duration.reset();
 	}
 	if (setup.stage.find('\0') != std::string::npos) { setup.stage.clear(); }
-	if (!valid_stage_rule(setup.stage_rule)) { setup.stage_rule = default_series_stage_rule; }
+	if (!valid_series_stage_rule(setup.stage_rule)) { setup.stage_rule = default_series_stage_rule; }
 	return setup;
 }
 
@@ -300,9 +269,9 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	if (!root.has(this->key())) { return; }
 	const JsonValue entry = root.object(this->key());
 	const JsonValue players = entry.array("players");
-	if (players.size() < 1 || players.size() > layouts.size())
+	if (players.size() < 1 || players.size() > static_cast<size_t>(max_players))
 	{
-		throw std::runtime_error(players.where() + " must contain between 1 and 4 players");
+		throw std::runtime_error(players.where() + " must contain " + player_count_range() + " players");
 	}
 	LastMatchSetup setup;
 	for (size_t index = 0; index < players.size(); ++index)
@@ -321,9 +290,9 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	try
 	{
 		const std::string key = entry.identifier("layout");
-		for (size_t index = 0; index < layouts.size(); ++index)
+		for (size_t index = 0; index < layout_keys.size(); ++index)
 		{
-			if (key == layout_keys[index]) { setup.layout = layouts[index]; break; }
+			if (key == layout_keys[index]) { setup.layout = layout_for_humans(static_cast<int>(index) + 1); break; }
 		}
 	}
 	catch (const std::runtime_error&)
@@ -375,7 +344,7 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 		writer.key("controller");
 		writer.string(player.controller == PlayerController::bot ? "bot" : "human");
 		writer.key("difficulty");
-		writer.string(difficulty_key(player.difficulty));
+		writer.string(bot_difficulty_key(player.difficulty));
 		if (player.handicap != 0)
 		{
 			writer.key("handicap");

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/match/match_setup.h"
 #include "game/input/input_slots.h"
+#include "game/match/match_rules.h"
 #include <array>
 #include <cstdlib>
 #include <numeric>
@@ -27,9 +28,9 @@ const std::vector<SeatSetup>& MatchSetup::player_settings() const
 
 void MatchSetup::set_player_count(int player_count)
 {
-	if (player_count < 1 || player_count > input_slots::pad_count)
+	if (!valid_player_count(player_count))
 	{
-		throw std::invalid_argument("Player count must be between 1 and 4");
+		throw std::invalid_argument("Player count must be " + player_count_range());
 	}
 	// The vector is the count's single source of truth, including if growth throws.
 	this->player_settings_.resize(static_cast<size_t>(player_count));
@@ -59,8 +60,7 @@ void MatchSetup::set_player_bot(int player_index, BotDifficulty difficulty)
 	{
 		throw std::invalid_argument("Player 1 must remain the human setup host");
 	}
-	if (difficulty != BotDifficulty::easy && difficulty != BotDifficulty::normal &&
-		difficulty != BotDifficulty::hard)
+	if (!valid_bot_difficulty(difficulty))
 	{
 		throw std::invalid_argument("Bot difficulty must be Easy, Normal or Hard");
 	}
@@ -113,9 +113,9 @@ PlayerTeam MatchSetup::player_team(int player_index) const
 bool MatchSetup::shuffle_teams()
 {
 	const int count = this->player_count();
-	if (count < 2 || !this->input_roster_complete()) { return false; }
+	if (count < min_versus_players || !this->input_roster_complete()) { return false; }
 
-	std::array<int, input_slots::pad_count> seats{};
+	std::array<int, max_players> seats{};
 	std::iota(seats.begin(), seats.end(), 0);
 	for (int last = count - 1; last > 0; --last)
 	{
@@ -301,9 +301,14 @@ int MatchSetup::best_of() const
 
 void MatchSetup::set_best_of(int best_of)
 {
-	if (best_of != 1 && best_of != 3 && best_of != 5)
+	if (!valid_best_of(best_of))
 	{
 		throw std::invalid_argument("Session length must be 1, 3 or 5");
 	}
 	this->best_of_ = best_of;
+}
+
+int session_rounds(const MatchSetup& settings)
+{
+	return settings.player_count() == 1 ? 1 : settings.best_of();
 }

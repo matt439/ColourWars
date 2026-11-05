@@ -56,7 +56,7 @@ namespace debug_console_acceptance
 			{
 				if ((bot_mask & (1 << seat)) != 0) { roster.set_player_bot(seat, difficulty); }
 			}
-			roster.set_screen_layout(MatchPlanner::layout_for(roster.human_count()));
+			roster.set_screen_layout(layout_for_humans(roster.human_count()));
 			return roster;
 		}
 

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/save/save.h"
 #include "game/save/atomic_file.h"
+#include "game/save/play_settings_json.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
 #include <cstdio>
@@ -175,9 +176,10 @@ namespace
                 {
                 }
             };
-            read_preference("aim_sensitivity", 1, 5, data.play.aim_sensitivity);
-            read_preference("music_volume", 0, 100, data.play.music_volume);
-            read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
+            read_preference("aim_sensitivity", PlaySettings::min_aim_sensitivity,
+                PlaySettings::max_aim_sensitivity, data.play.aim_sensitivity);
+            read_preference("music_volume", 0, PlaySettings::max_volume, data.play.music_volume);
+            read_preference("sfx_volume", 0, PlaySettings::max_volume, data.play.sfx_volume);
 
             // Each saved profile belongs to its XInput slot. Missing legacy profiles
             // inherit the authored movement and the existing shared aim preference.
@@ -188,20 +190,7 @@ namespace
                 const size_t count = std::min(profiles.size(), data.play.sticks.size());
                 for (size_t slot = 0; slot < count; ++slot)
                 {
-                    const JsonValue profile = profiles.at(slot);
-                    const auto read_deadzone = [&profile](const char* key, int& destination)
-                    {
-                        try
-                        {
-                            const int value = profile.integer(key);
-                            if (value >= -1 && value <= 90) { destination = value; }
-                        }
-                        catch (const std::runtime_error&)
-                        {
-                        }
-                    };
-                    read_deadzone("movement_deadzone", data.play.sticks[slot].movement_deadzone);
-                    read_deadzone("aim_deadzone", data.play.sticks[slot].aim_deadzone);
+                    read_stick_settings(profiles.at(slot), data.play.sticks[slot]);
                 }
             }
             catch (const std::runtime_error&)
@@ -230,20 +219,7 @@ namespace
                 const size_t count = std::min(slots.size(), data.play.pad_comfort.size());
                 for (size_t slot = 0; slot < count; ++slot)
                 {
-                    const JsonValue entry = slots.at(slot);
-                    const auto read_seat_switch = [&entry](const char* key, SeatSwitch& destination)
-                    {
-                        try
-                        {
-                            const std::optional<SeatSwitch> value = seat_switch_from_key(entry.string(key));
-                            if (value) { destination = *value; }
-                        }
-                        catch (const std::runtime_error&) {}
-                    };
-                    SeatComfort& comfort = data.play.pad_comfort[slot];
-                    read_seat_switch("view_shake", comfort.view_shake);
-                    read_seat_switch("aim_marker", comfort.aim_marker);
-                    read_seat_switch("reduce_effects", comfort.reduce_effects);
+                    read_seat_comfort(slots.at(slot), data.play.pad_comfort[slot]);
                 }
             }
             catch (const std::runtime_error&) {}
@@ -272,10 +248,7 @@ namespace
             for (const StickSettings& settings : data.play.sticks)
             {
                 writer.begin_object();
-                writer.key("movement_deadzone");
-                writer.integer(settings.movement_deadzone);
-                writer.key("aim_deadzone");
-                writer.integer(settings.aim_deadzone);
+                write_stick_settings(writer, settings);
                 writer.end_object();
             }
             writer.end_array();
@@ -294,12 +267,7 @@ namespace
             for (const SeatComfort& comfort : data.play.pad_comfort)
             {
                 writer.begin_object();
-                writer.key("view_shake");
-                writer.string(seat_switch_key(comfort.view_shake));
-                writer.key("aim_marker");
-                writer.string(seat_switch_key(comfort.aim_marker));
-                writer.key("reduce_effects");
-                writer.string(seat_switch_key(comfort.reduce_effects));
+                write_seat_comfort(writer, comfort);
                 writer.end_object();
             }
             writer.end_array();

@@ -38,13 +38,8 @@ namespace
 		{
 			return device_label(player.num);
 		}
-		switch (player.difficulty)
-		{
-		case BotDifficulty::easy: return "bot easy";
-		case BotDifficulty::normal: return "bot normal";
-		case BotDifficulty::hard: return "bot hard";
-		default: return "bot unknown";
-		}
+		return valid_bot_difficulty(player.difficulty) ?
+			std::string("bot ") + bot_difficulty_key(player.difficulty) : std::string("bot unknown");
 	}
 }
 

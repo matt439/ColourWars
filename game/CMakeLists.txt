@@ -53,6 +53,7 @@ add_library(colourwars_game STATIC
     save/atomic_file.cpp
     save/save.cpp
     save/save_profiles.cpp
+    save/play_settings_json.cpp
     match/series_stage_rule.cpp
     match/session.cpp
     config/settings_session.cpp

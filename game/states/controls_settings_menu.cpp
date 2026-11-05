@@ -90,9 +90,9 @@ void ControlsSettingsMenu::init()
 		this->context()->push(std::make_unique<ProfilesMenu>(this->menu_context(), this->opening_slot()));
 	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
-		settings_rows::controls_music, this->selection_.music_volume, 0, 100, 10);
+		settings_rows::controls_music, this->selection_.music_volume, 0, PlaySettings::max_volume, PlaySettings::volume_step);
 	this->sfx_ = make_row("sfx", this->text().item(MenuItem::sfx_volume),
-		settings_rows::controls_sfx, this->selection_.sfx_volume, 0, 100, 10);
+		settings_rows::controls_sfx, this->selection_.sfx_volume, 0, PlaySettings::max_volume, PlaySettings::volume_step);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", this->text().item(MenuItem::view_shake),
 		this->calculate_widget_position(0, settings_rows::controls_view_shake),
 		this->calculate_widget_position(1, settings_rows::controls_view_shake),

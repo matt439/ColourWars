@@ -41,7 +41,7 @@ std::unique_ptr<Level>
 {
 	if (settings.player_count() < 1 || settings.human_count() < 1 ||
 		(settings.bot_count() != 0 &&
-			settings.screen_layout() != static_cast<ScreenLayout>(settings.human_count() - 1)))
+			settings.screen_layout() != layout_for_humans(settings.human_count())))
 	{ throw std::invalid_argument("Level layout must match its human participants"); }
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());

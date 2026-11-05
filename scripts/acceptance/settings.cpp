@@ -134,7 +134,8 @@ namespace
 			{ nullptr, -1 }, { "-1", -1 }, { "0", 0 }, { "90", 90 },
 			{ "null", -1 }, { "true", -1 }, { "false", -1 }, { "\"25\"", -1 },
 			{ "[]", -1 }, { "{}", -1 }, { "1.5", -1 }, { "-2", -1 },
-			{ "91", -1 }, { "2147483648", -1 }
+			// Above the cap clamps to it, as normalized_deadzone does (HYG#66).
+			{ "91", 90 }, { "500", 90 }, { "2147483648", -1 }
 		};
 		for (const bool movement : { false, true })
 		{

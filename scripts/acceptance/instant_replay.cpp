@@ -56,7 +56,7 @@ namespace
         {
             settings.set_player_bot(seat, static_cast<BotDifficulty>(seat % 3));
         }
-        settings.set_screen_layout(static_cast<ScreenLayout>(settings.human_count() - 1));
+        settings.set_screen_layout(layout_for_humans(settings.human_count()));
         settings.set_stage(stage); settings.set_duration(20.0f);
         for (int seat = 0; seat < 4; ++seat)
         {

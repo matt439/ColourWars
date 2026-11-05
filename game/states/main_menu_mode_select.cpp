@@ -138,8 +138,7 @@ void MainMenuModeSelect::refresh_stage_rule()
 
 void MainMenuModeSelect::cycle_stage_rule(Direction direction)
 {
-	constexpr std::array<SeriesStageRule, 3> rules{
-		SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick };
+	const auto& rules = series_stage_rules;
 	const auto found = std::find(rules.begin(), rules.end(), this->level_settings()->series_stage_rule());
 	size_t slot = found == rules.end() ? 0 : static_cast<size_t>(found - rules.begin());
 	slot = direction == Direction::left ? (slot + rules.size() - 1) % rules.size() : (slot + 1) % rules.size();

@@ -132,7 +132,7 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 
 GameLevel::GameLevel(GameData* game_data, const MatchSetup& settings, MatchStart start) :
 	game_data_(game_data), settings_(settings), start_(start),
-	session_(settings.player_count() == 1 ? 1 : settings.best_of()),
+	session_(session_rounds(settings)),
 	rumble_sink_(game_data != nullptr && game_data->gamepads() != nullptr ?
 		make_rumble_sink(*game_data->gamepads()) : nullptr)
 {
@@ -255,7 +255,7 @@ void GameLevel::build_and_enter_level()
 	// crosses the round boundary; the sink belongs to the containing screen.
 	this->rumble_ = std::make_unique<Rumble>(*this->rumble_sink_, this->data()->tuning()->rumble());
 	// Panes belong to humans; scoring, spawns and the session use participants.
-	this->settings_.set_screen_layout(static_cast<ScreenLayout>(this->settings_.human_count() - 1));
+	this->settings_.set_screen_layout(layout_for_humans(this->settings_.human_count()));
 	this->data()->viewport_manager()->
 		set_layout(this->settings_.screen_layout());
 	// round_opening is the rule; the developer tools may choose otherwise,
@@ -714,8 +714,7 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 		// Decided on the finished round, before the ledger moves on.
 		this->settings_.set_stage(series_next_stage(this->settings_, *this->data()->stages(),
 			this->session_, action == EndMenuAction::play_chosen_stage));
-		this->session_ = next_session(this->session_,
-			this->settings_.player_count() == 1 ? 1 : this->settings_.best_of());
+		this->session_ = next_session(this->session_, session_rounds(this->settings_));
 		this->build_and_enter_level();
 		return;
 	}

@@ -145,19 +145,19 @@ void MainMenuPlayerCount::init()
 	this->text_container_->add_child(this->back_.get());
 
 	this->focus_.add(this->_1_player.get(),
-		[this] { this->start_join(1, ScreenLayout::one_player); });
+		[this] { this->start_join(1); });
 	this->focus_.add(this->_2_players.get(),
-		[this] { this->start_join(2, ScreenLayout::two_player); });
+		[this] { this->start_join(2); });
 	this->focus_.add(this->_3_players.get(),
-		[this] { this->start_join(3, ScreenLayout::three_player); });
+		[this] { this->start_join(3); });
 	this->focus_.add(this->_4_players.get(),
-		[this] { this->start_join(4, ScreenLayout::four_player); });
+		[this] { this->start_join(4); });
 	// A series needs both teams; solo remains available through Single Match.
 	this->focus_.set_enabled(this->_1_player.get(),
 		this->level_settings()->best_of() == 1);
 	// Retain the previous count's focus, without retaining any device claims.
 	const int count = std::max(this->level_settings()->player_count(),
-		this->level_settings()->best_of() > 1 ? 2 : 1);
+		this->level_settings()->best_of() > 1 ? min_versus_players : 1);
 	switch (count)
 	{
 	case 4:
@@ -181,20 +181,15 @@ void MainMenuPlayerCount::init()
 
 }
 
-void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
+void MainMenuPlayerCount::start_join(int players)
 {
 	this->play_wave(this->confirm_sound_);
 	MatchSetup* settings = this->level_settings();
 	settings->set_player_count(players);
-	settings->set_screen_layout(layout);
+	// Retained bots have no pane.
+	settings->set_screen_layout(layout_for_humans(settings->human_count()));
 	settings->begin_input_claims(this->activating_slot_);
 	this->take_profile_boost(this->activating_slot_);
-	if (settings->bot_count() > 0)
-	{
-		constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player,
-			ScreenLayout::two_player, ScreenLayout::three_player, ScreenLayout::four_player };
-		settings->set_screen_layout(layouts[static_cast<size_t>(settings->human_count() - 1)]);
-	}
 	if (players == 1 && settings->player_team(0) != PlayerTeam::a &&
 		settings->player_team(0) != PlayerTeam::b)
 	{
@@ -380,9 +375,7 @@ void MainMenuJoin::change_host_row(Direction direction)
 		settings.set_player_bot(this->host_row_, BotDifficulty::hard);
 	}
 	else { settings.set_player_human(this->host_row_); }
-	constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player,
-		ScreenLayout::two_player, ScreenLayout::three_player, ScreenLayout::four_player };
-	settings.set_screen_layout(layouts[static_cast<size_t>(settings.human_count() - 1)]);
+	settings.set_screen_layout(layout_for_humans(settings.human_count()));
 	this->play_wave(this->direction_sound_);
 }
 

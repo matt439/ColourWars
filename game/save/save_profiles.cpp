@@ -16,9 +16,10 @@ const InputBindings& Save::saved_input_bindings() const
 
 PlaySettings Save::checked_play_settings(const PlaySettings& settings)
 {
-    if (settings.aim_sensitivity < 1 || settings.aim_sensitivity > 5 ||
-        settings.music_volume < 0 || settings.music_volume > 100 ||
-        settings.sfx_volume < 0 || settings.sfx_volume > 100)
+    if (settings.aim_sensitivity < PlaySettings::min_aim_sensitivity ||
+        settings.aim_sensitivity > PlaySettings::max_aim_sensitivity ||
+        settings.music_volume < 0 || settings.music_volume > PlaySettings::max_volume ||
+        settings.sfx_volume < 0 || settings.sfx_volume > PlaySettings::max_volume)
     {
         throw std::invalid_argument("Play settings are outside their supported range");
     }

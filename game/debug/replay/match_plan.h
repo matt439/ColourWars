@@ -85,9 +85,6 @@ public:
 	// roster's humans and sets the layout.
 	static void claim_devices(MatchSetup& settings, const ConnectedPads& pads);
 
-	// The split-screen layout a plan gives `players` (1-4) seats.
-	static labrador::ScreenLayout layout_for(int players);
-
 	// Weapon names accepted by "weapon": the five primaries and random.
 	static std::vector<std::string> weapon_names();
 	static bool weapon_from_name(const std::string& name, WeaponType& weapon);

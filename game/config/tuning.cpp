@@ -218,10 +218,10 @@ namespace
 		{
 			throw std::runtime_error(json.where() + ": stuck_turn_steps must exceed stuck_jump_steps.");
 		}
-		const char* names[]{ "easy", "normal", "hard" };
+		static_assert(std::tuple_size_v<decltype(bots.difficulties)> == bot_difficulties.size());
 		for (size_t index = 0; index < bots.difficulties.size(); ++index)
 		{
-			const JsonValue entry = known_object(json, names[index], { "reaction_steps",
+			const JsonValue entry = known_object(json, bot_difficulty_key(bot_difficulties[index]), { "reaction_steps",
 				"replan_steps", "territory_candidates", "aim_error_radians" });
 			BotDifficultyTuning& difficulty = bots.difficulties[index];
 			difficulty.reaction_steps = steps(entry, "reaction_steps");
@@ -990,8 +990,7 @@ const HandicapTuning& GameTuning::handicap(int level) const
 
 const BotDifficultyTuning& GameTuning::bot(BotDifficulty difficulty) const
 {
-	if (difficulty != BotDifficulty::easy && difficulty != BotDifficulty::normal &&
-		difficulty != BotDifficulty::hard)
+	if (!valid_bot_difficulty(difficulty))
 	{
 		throw std::out_of_range("Unknown bot difficulty");
 	}

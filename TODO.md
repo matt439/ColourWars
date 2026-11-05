@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#66` | OPEN | MED | M | One owner each for human count to layout, bot difficulty names, best-of, round count, stage rules, the player limit, and the stick and play-setting bounds. [Scope](docs/code-hygiene.md#match-domain-rules-and-settings-bounds-in-one-place-hyg66). |
 | `HYG#67` | OPEN | MED | M | Name the slab footprint in the contract, tidy the contract headers, and have the editor read the format rules the contract owns since `HYG#46`. [Scope](docs/code-hygiene.md#the-level-format-contract-owns-its-numbers-and-names-hyg67). |
 | `HYG#68` | OPEN | MED | M | Public `grounded()` and shared contact predicates in place of about twenty hand-spelled move-state checks; one velocity comparison rule. [Scope](docs/code-hygiene.md#player-move-state-and-contact-predicates-hyg68). |
 | `HYG#69` | OPEN | LOW | M | Stage record line, `OptionRow` placeholder, the Sticks measured word and the Debug-only prompt rewrite out of shipping C++; list `P1`-`P4` and the window title as not yet localisable. [Scope](docs/code-hygiene.md#player-facing-copy-out-of-c-hyg69). |
