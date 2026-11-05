@@ -257,8 +257,8 @@ namespace
 				}
 				if (moving)
 				{
-					require(first_drop >= hold, "A bot left a moving support with unpainted top before its hold ended");
 					require(first_drop >= 0, "A bot held on a moving support past its bounded hold");
+					require(first_drop >= hold, "A bot left a moving support with unpainted top before its hold ended");
 				}
 				else
 				{

@@ -476,7 +476,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
         "Background fixture leaked an owner, changed Save or could not write cases");
     std::ofstream summary(output / "debug-background-summary.json");
     summary << "{\"outcome\":\"passed\",\"cases\":" << case_count <<
-        ",\"recorded_updates\":420,\"native_motor_calls\":0,\"save_unchanged\":true,"
+        ",\"recorded_updates\":" << tape.updates << ",\"save_unchanged\":true,"
         "\"limits\":\"Private HWND native visibility/minimize and forwarded synthetic power messages; "
         "actual GameLevel on hidden hardware shell with injected window facts and synthetic StateContext activation; "
         "scripted readers and recording motors only; no real OS focus/power-sleep, physical pad, listening, CI1 or performance acceptance\"}\n";

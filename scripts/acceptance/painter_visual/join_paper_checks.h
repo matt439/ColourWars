@@ -83,8 +83,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(1);
         settings.set_stage("movement_course"); settings.set_duration(73.0f);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
-            count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         settings.begin_input_claims(slots[0]); expected_slots.assign(static_cast<size_t>(count), -1); expected_slots[0] = slots[0];
         expected_host_row = 1;
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); }

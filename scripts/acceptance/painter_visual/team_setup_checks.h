@@ -132,8 +132,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         settings.begin_input_claims(slots[0]);
         for (int i = 1; i < count; ++i) { require(settings.claim_input_slot(slots[static_cast<size_t>(i)]), "Scripted setup seat claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(123.0f); settings.set_best_of(5);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         for (int i = 0; i < count; ++i)
         {
             settings.set_player_team(i, i % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);

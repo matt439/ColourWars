@@ -1,12 +1,11 @@
 #pragma once
 
-// Include after gesture_checks.h. The first WM_COMMAND uses a planned unused
-// ID so this header builds against the old shell without a production stub.
+// Include after gesture_checks.h.
 namespace colourwars_editor
 {
     inline void EditorDpiProbe::check_align_origin(Editor& editor, const std::filesystem::path& scratch)
     {
-        constexpr int alignment_command = static_cast<int>(grid_size) + 1;
+        constexpr int alignment_command = static_cast<int>(edit_align_origin);
         const auto original_path = editor.document_.path();
         const std::string original_document = editor.document_.serialize();
         const auto original_selection = editor.selection_;

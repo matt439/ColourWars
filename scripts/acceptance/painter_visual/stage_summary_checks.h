@@ -104,7 +104,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (int seat = 1; seat < fixture.players; ++seat)
         { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Cannot claim the connected summary fixture roster"); painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(seat)])].connected = true; }
         settings.set_stage("close_quarters"); settings.set_best_of(fixture.best_of); settings.set_duration(81.0f);
-        settings.set_screen_layout(fixture.players == 1 ? ScreenLayout::one_player : fixture.players == 2 ? ScreenLayout::two_player : fixture.players == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(fixture.players));
         for (int seat = 0; seat < fixture.players; ++seat)
         { settings.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]); }
         expected = settings; app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();

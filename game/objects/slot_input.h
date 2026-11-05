@@ -16,4 +16,6 @@ struct SlotInput : PlayerInputData
 	bool pause_held = false;
 	// A, B or Start released (Space, Escape or Enter): skips the intro.
 	bool skip_intro = false;
+
+	bool operator==(const SlotInput&) const = default;
 };

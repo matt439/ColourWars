@@ -1,13 +1,6 @@
 // Included after reveal_checks.h: use the real HUD and hardware raster. The
 // tests observe exact meter fractions and text contrast, not a second card art.
 
-ScreenLayout hud_layout(int count)
-{
-    return count == 1 ? ScreenLayout::one_player :
-        (count == 2 ? ScreenLayout::two_player :
-            (count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player));
-}
-
 Frame hud_fixture(Application& app, const Canvas& canvas, const InterfaceGameplay& hud,
     int count, const TeamColour& colours, float health, float paint,
     bool reduced = false, int only_view = -1)
@@ -158,7 +151,7 @@ void hud_static_matrix(Application& app, const Canvas& canvas, const Presentatio
     records << "capture,players,width,height,palette,view,hud_pixels\n";
     for (const Case& item : cases)
     {
-        app.viewport_manager()->set_layout(hud_layout(item.count));
+        app.viewport_manager()->set_layout(players_layout(item.count));
         app.resolution_manager()->set_resolution_exactly(item.size);
         std::ignore = app.renderer()->window_size_changed(item.size.x, item.size.y);
         for (const TeamColourPair palette : { TeamColourPair::blue_orange,

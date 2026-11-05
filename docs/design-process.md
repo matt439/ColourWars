@@ -449,7 +449,7 @@ CPU-checkable criterion that no case asserts; they are collected under
 | C3 | P1 | Change Weapons / Change Level under Next Round | `ROAD#20`'s re-pick slice done | `series_stage_rule`; painter for rows, lock and Back | Served |
 | C4 | P1 | Series stage rule on Mode | `ROAD#20` | `series_stage_rule`; painter for losing-seats-only | Attended |
 | C5 | any | Watch Replay | `ROAD#19` done | `instant_replay` (three viewings of one tape); painter `-PracticeReplayOnly` for the End-menu loop (`DES#3`); painter `-EndMenuOnly` for Watch Replay after Back from a re-pick (`DES#4`) | Served |
-| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `debug_console` (`next_session`, `DES#3`), `story_audio` (`round_opening`, `DES#4`); painter `-BotPlayersOnly` for Restart and Play Series Again on a real `GameLevel` | Served |
+| C6 | P1 | Play Series Again, rematch at the preview, Restart | none | `series_stage_rule`, `session` (`next_session`, `DES#3`), `story_audio` (`round_opening`, `DES#4`); painter `-BotPlayersOnly` for Restart and Play Series Again on a real `GameLevel` | Served |
 | C7 | P1 | End to Main Menu, `MainMenuExitConfirmation`, the save | none | `settings`, `match_records`, `remembered_setup`; painter for the confirmation | Served |
 | D1 | P4 | Per-pad View shake, Aim marker, Reduce effects | `ROAD#7` | `view_shake`, `aim_marker`, `settings`, `player_identity` | Attended |
 | D2 | P4 | Options team palette | none | `team_palette`, `settings`, `display_trial`; painter for the HUD team text | Served |
@@ -523,8 +523,9 @@ calls too, and where the call site mattered, a painter check drives a real
    a bot, two humans, and two seats with a bot. A claim below the count must
    still land, and a refused claim must leave the setup unchanged.
 2. **C6 (P1):** the End menu's continuation is `next_session`
-   ([session.h](../game/match/session.h)), which `debug_console` checks for
-   best-of-3, best-of-5 and a single match: Next Round and Replay Draw keep
+   ([session.h](../game/match/session.h)), which the `session` case
+   (`debug_console` until `HYG#60`) checks for best-of-3, best-of-5 and a
+   single match: Next Round and Replay Draw keep
    the ledger, and Play Series Again and Rematch start a fresh one of the same
    length. Painter `-BotPlayersOnly` plays a best-of-5 to completion on a real
    `GameLevel` (through the new `GameLevel::session()`). Pause Restart after a

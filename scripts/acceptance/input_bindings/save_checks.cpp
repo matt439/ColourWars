@@ -199,7 +199,7 @@ namespace input_bindings_acceptance
             h.keyboard.on_key_down(Key::k); std::ignore = h.sample();
             actual = saved_reader.player_inputs()[input_slots::keyboard_and_mouse];
             require(actual.jump_held && actual.jump_pressed &&
-                same_input(actual, saved_reader.player_inputs()[input_slots::keyboard_and_mouse]),
+                actual == saved_reader.player_inputs()[input_slots::keyboard_and_mouse],
                 "Actual Save-borrowing reader did not follow active K after persistence failed");
             h.keyboard.on_key_up(Key::k); std::ignore = h.sample();
             require_independent(save); Save old_disk; SettingsSession old_disk_session(old_disk); old_disk_session.load_save_file();

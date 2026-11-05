@@ -259,7 +259,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         plan = MatchSetup{}; plan.set_stage("close_quarters"); plan.set_duration(120.0f); plan.set_player_count(count);
         plan.begin_input_claims(owner); if (count > 1) { require(plan.claim_input_slot(0), "Cannot claim joined pad0"); }
         if (count == 4) { require(plan.claim_input_slot(2) && plan.claim_input_slot(1), "Cannot claim sparse four-pad roster"); }
-        plan.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        plan.set_screen_layout(players_layout(count));
         for (int view = 0; view < count; ++view) { plan.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); plan.set_player_weapon(view, WeaponType::sprayer); }
         auto page = std::make_unique<GameLevel>(&data, plan); game = page.get();
         stack.push<EndMenuAction>(std::move(page), [](const EndMenuAction&) { throw std::runtime_error("Paused Options unexpectedly left the match"); });

@@ -192,8 +192,10 @@ namespace colourwars_editor
         menu_enabled(edit_copy, false);
 
         // The property field keeps its own Ctrl+C and Ctrl+V.
-        editor.selection_ = *std::find_if(editor.entries_.begin(), editor.entries_.end(),
+        const auto collision = std::find_if(editor.entries_.begin(), editor.entries_.end(),
             [](const Entry& entry) { return entry.kind == EntryKind::collision; });
+        require(collision != editor.entries_.end(), "Clipboard fixture lacks a collision entry");
+        editor.selection_ = *collision;
         editor.refresh();
         int x_row = -1;
         for (std::size_t index = 0; index < editor.properties_.size(); ++index)

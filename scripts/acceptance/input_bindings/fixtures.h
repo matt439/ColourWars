@@ -77,7 +77,6 @@ namespace input_bindings_acceptance
     bool conflicting(Key key);
     void require_mapping(const ActionBindings& actual, Key jump, const PadProfile& pad = PadProfile{});
     KeyboardState keys(std::initializer_list<Key> pressed);
-    bool same_input(const SlotInput& a, const SlotInput& b);
 
     struct ReaderHarness
     {
@@ -96,7 +95,7 @@ namespace input_bindings_acceptance
             auto result = player.player_inputs(); const auto repeated = player.player_inputs();
             require(result.size() == input_slots::count && repeated.size() == result.size(), "Actual input reader changed slot count");
             for (size_t slot = 0; slot < result.size(); ++slot)
-            { require(same_input(result[slot], repeated[slot]), "Repeated reader access consumed or changed a sampled action edge"); }
+            { require(result[slot] == repeated[slot], "Repeated reader access consumed or changed a sampled action edge"); }
             menus = menu.menu_inputs(); return result;
         }
         SlotInput desktop() { return this->sample()[input_slots::keyboard_and_mouse]; }

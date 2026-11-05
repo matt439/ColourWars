@@ -505,7 +505,6 @@ namespace debug_console_acceptance
 	void check_history(GameTuning& tuning, Presentation& presentation);
 	void check_live_console_input(GameTuning& tuning, Presentation& presentation);
 	void check_polish(GameTuning& tuning, Presentation& presentation);
-	void check_session_continuation(const Presentation& presentation);
 
 	// perf_checks.cpp
 	void check_perf();

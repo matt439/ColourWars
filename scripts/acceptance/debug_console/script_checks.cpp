@@ -6,6 +6,7 @@
 #include "game/debug/script/debug_script.h"
 #include "game/debug/commands/debug_tokenizer.h"
 #include "game/debug/script/debug_wait.h"
+#include "game/debug/tune/tune_document.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/source_paths.h"
 #include "engine/render/text_encoding.h"
@@ -414,6 +415,26 @@ namespace debug_console_acceptance
 			};
 		std::string stage = "movement_course";
 		int players = 1;
+		// The shipped files as tune sees them: a renamed key is a missing leaf.
+		const TuneDocument tune_files[] = {
+			TuneDocument("tuning", to_lf(read_text(game_directory / L"tuning.json"))),
+			TuneDocument("presentation", to_lf(read_text(game_directory / L"presentation.json"))) };
+		const auto tune_file = [&](std::string_view name) -> const TuneDocument*
+			{
+				for (const TuneDocument& document : tune_files)
+				{
+					if (document.name() == name) { return &document; }
+				}
+				return nullptr;
+			};
+		// A file name alone, or a file-prefixed path to a tunable leaf.
+		const auto tune_target = [&](const std::string& target)
+			{
+				const std::size_t dot = target.find('.');
+				const TuneDocument* document = tune_file(std::string_view(target).substr(0, dot));
+				return document != nullptr && (dot == std::string::npos ||
+					document->find(std::string_view(target).substr(dot + 1)) != nullptr);
+			};
 
 		std::vector<std::string> names;
 		for (const auto& entry : std::filesystem::directory_iterator(folder))
@@ -464,6 +485,20 @@ namespace debug_console_acceptance
 					else if (w[0] == "players" && w.size() == 3)
 					{
 						require(Bot::is_behaviour(word(2)), statement.where() + ": no bot " + word(2));
+					}
+					else if (w[0] == "tune" || w[0] == "tune.reset" || w[0] == "tune.diff" || w[0] == "tune.save")
+					{
+						require(w.size() < 2 || tune_target(word(1)) || (w[0] != "tune" && w[0] != "tune.diff" && word(1) == "all"),
+							statement.where() + ": no tunable " + word(1));
+					}
+					else if (w[0] == "weapon")
+					{
+						int seat = 0;
+						WeaponType weapon = WeaponType::sprayer;
+						require((word(1) == "all" || (DebugArgs::parse_int(word(1), seat) && seat >= 1 && seat <= players)) &&
+							MatchPlanner::weapon_from_name(word(2), weapon),
+							statement.where() + ": weapon " + word(1) + " " + word(2) + " in a " +
+							std::to_string(players) + "-player script");
 					}
 					if (w[0] == "players")
 					{

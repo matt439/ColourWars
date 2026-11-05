@@ -162,6 +162,7 @@ Cases = @(
     }
     @{ Name = 'user_stages' }
     @{ Name = 'series_stage_rule' }
+    @{ Name = 'session' }
     @{ Name = 'teammate_markers' }
     @{ Name = 'cursor_marker' }
     @{
