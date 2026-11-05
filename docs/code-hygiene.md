@@ -1030,6 +1030,49 @@ Add `menu_geometry::fit_scale` and `fits`, `wrap_step` and `step_tool`,
 
 ### Shared drawing helpers (`HYG#75`)
 
+**Done 2026-11-06; nothing drawn differently.**
+
+- `CrudeDrawing::paper_card` (a static template over any fill, and a
+  protected overload through `fill`) draws the countdown, reveal, HUD paper
+  and closing-clock cards and, found while converting, a fifth copy: the
+  menu paper in `menu_panel.cpp`. `keyed_block` replaces both `draw_block`
+  bodies; `WeaponFeedback` and `BlockedShotFeedback` now derive from
+  `CrudeDrawing` and keep `draw_block` as one-line wrappers, so their call
+  sites did not move.
+- `AirbrushShadow::tiles`, `lay` and `first_tile` serve `AirbrushShadow`,
+  `FixedSlabShadow` and `TranslatedAirbrushShadow`'s pitch; `PaintTile::wet_band`
+  serves the plain and rigid wet bands.
+- `game/objects/primitive_frame.h` names the built-in `sprite_sheet_1`/`pixel`
+  texel for the badge, teammate marker, gate and ferry cues, viewport
+  dividers, the debug console, debug menu and the presentation validator.
+  `level_loaded_info.cpp:368` still names `sprite_sheet_1` for a stage icon,
+  a different frame, and is left as found.
+- `TerrainMaterial::swatch` replaces `FixedSlabPaintable`'s second resolve;
+  `StructurePaintable::team_colours()` replaces the copies in the ferry and,
+  also found, the team gate. `RevealArt` uses `render_resources()`.
+- `ruler_minor_period`/`ruler_major_period` name the ruler's 16 and 80;
+  `cell_key` draws from `BotRandom` (the same splitmix64) instead of a second
+  copy; `CursorMarkerPresentation::reference_lines` names the `1080`;
+  `cosmetic_seed.h` holds the seed mix `QuietCharacter` and `IdleDrip` share.
+  The pencil-cap comment describes `at_start`.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and Debug (79); it covers
+`weapon_feedback`, `blocked_shot`, `terrain`, `menu_presentation`, `menu_text`
+and `debug_console`. 32 `check-painter.ps1` leaves passed in both presets:
+`Countdown`, `RevealTuneColours`, `Monitor`, `Hud`, `HudPaperTuneColours`,
+`HudClosingMaterials`, `HudClosingShade`, `Closing`, `HudTimerTuneColour`,
+`MainMenu`, `SetupPaper`, `JoinPaper`, `TeamPaper`, `WeaponPaper`,
+`StagePaper`, `PauseMenu`, `MenuMotion`, `FeedbackTuneColours`,
+`BlockedShotTuneColours`, `SurfaceFinish`, `TurbulenceSlab` and
+`TurbulenceMover` (with the tracked trial files as `-TrialPath`),
+`MiniatureTerrain`, `CqBlockout`, `Crossfeed`, `PressTower`,
+`GatePermission`, `FerryDirection`, `Identity`, `Quiet`,
+`IdleDripTuneColours` and `CursorTuneColours` (each `...Only`).
+`check-startup.ps1` passed in both presets.
+
+The row as filed:
+
 Add `CrudeDrawing::paper_card` and `keyed_block`, the `AirbrushShadow` tile
 helpers, named primitive-frame constants (or presentation's sheet and fill), and
 a `TerrainMaterial` swatch accessor. Then delete these copies:

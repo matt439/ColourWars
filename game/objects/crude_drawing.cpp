@@ -100,3 +100,27 @@ void CrudeDrawing::line(DrawList& draw_list, const Vector2F& from, const Vector2
         this->fill(draw_list, RectangleF(at - Vector2F(width / 2.0f), Vector2F(width)), colour);
     }
 }
+
+void CrudeDrawing::paper_card(DrawList& draw_list, const RectangleF& shadow,
+    const RectangleF& face, float pen, const Colour& shade, const Colour& ink,
+    const Colour& paper) const
+{
+    paper_card([&](const RectangleF& rectangle, const Colour& colour)
+    {
+        this->fill(draw_list, rectangle, premultiplied(colour));
+    }, shadow, face, pen, shade, ink, paper);
+}
+
+void CrudeDrawing::keyed_block(DrawList& draw_list, const Vector2F& center,
+    const Vector2F& size, float angle, const Colour& colour, const Colour& keyline,
+    float keyline_width, float alpha) const
+{
+    const RectangleI& source = this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle();
+    const Vector2F origin(static_cast<float>(source.width) * 0.5f,
+        static_cast<float>(source.height) * 0.5f);
+    const float border = keyline_width * 2.0f;
+    this->draw_with(draw_list, RectangleF(center, size + Vector2F(border, border)),
+        this->frame(), premultiplied(keyline) * alpha, origin, SpriteFlip::none, angle);
+    this->draw_with(draw_list, RectangleF(center, size), this->frame(),
+        premultiplied(colour) * alpha, origin, SpriteFlip::none, angle);
+}

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation_validation.h"
 #include "game/config/drawable_text.h"
+#include "game/objects/primitive_frame.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -120,7 +121,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 	}
 
 	// Non-menu primitive drawing and developer overlays still use this texel.
-	check.frame("built-in primitive frame 'pixel'", "sprite_sheet_1", "pixel");
+	check.frame("built-in primitive frame 'pixel'", primitive_frame::sheet, primitive_frame::pixel);
 	const WeaponSelectArtworkPresentation& artwork = this->presentation_.main_menu_.weapon_select_art;
 	check.frame("main_menu.weapon_select.fill_frame", artwork.sheet, artwork.fill_frame);
 	const SpriteSheet* weapon_sheet = render.sprite_sheet(artwork.sheet);

@@ -61,7 +61,6 @@ private:
     float open_share_ = 0.0f;
     float paint_thickness_ = 0.0f;
     const GatePermissionPresentation* cue_ = nullptr;
-    TeamColour team_colours_;
     labrador::RenderResources::SheetFrame cue_frame_;
     void draw_permission(labrador::DrawList& draw_list) const;
 };

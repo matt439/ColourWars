@@ -225,7 +225,8 @@ std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera
 		else if (miniature && (detail.kind == MiniatureDetail::Kind::minor_mark ||
 			detail.kind == MiniatureDetail::Kind::major_mark))
 		{
-			const float period = detail.kind == MiniatureDetail::Kind::major_mark ? 80.0f : 16.0f;
+			const float period = detail.kind == MiniatureDetail::Kind::major_mark ?
+				ruler_major_period : ruler_minor_period;
 			if (ruler_thickness < 3.0f || period * camera.scale < 3.0f) { continue; }
 			// Marks keep a light gap between neighbours and stay between the
 			// two physical outlines. Major marks survive after minors cease
@@ -257,6 +258,11 @@ std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera
 const std::string& TerrainMaterial::name() const
 {
 	return this->name_;
+}
+
+SpriteSheet::frame_handle TerrainMaterial::swatch(TerrainRole role) const
+{
+	return this->swatches_[static_cast<size_t>(role)];
 }
 
 const std::vector<TerrainQuad>& TerrainMaterial::quads() const

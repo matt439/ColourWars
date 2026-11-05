@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/teammate_marker.h"
 #include "game/objects/player_badge.h"
+#include "game/objects/primitive_frame.h"
 
 #include <algorithm>
 #include <cmath>
@@ -19,7 +20,7 @@ namespace
 
 TeammateMarker::TeammateMarker(const TeammateMarkerPresentation* look,
     RenderResources* render_resources) :
-    CrudeDrawing("sprite_sheet_1", "pixel", render_resources), look_(look)
+    CrudeDrawing(primitive_frame::sheet, primitive_frame::pixel, render_resources), look_(look)
 {
     if (look_ == nullptr)
     {

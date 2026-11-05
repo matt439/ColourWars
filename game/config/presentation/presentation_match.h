@@ -183,6 +183,8 @@ struct HudLowPaintPresentation
 // reference pixels at 1080 lines; steady, so Reduce effects keeps it as is.
 struct CursorMarkerPresentation
 {
+	// The window height the sizes are authored at.
+	static constexpr float reference_lines = 1080.0f;
 	bool enabled = true;
 	labrador::Colour ink;
 	labrador::Colour paper;

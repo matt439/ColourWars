@@ -11,6 +11,7 @@
 #include "game/contracts/level_format.h"
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/fixed_slab_shadow.h"
+#include "game/objects/primitive_frame.h"
 #include "game/objects/translated_airbrush_shadow.h"
 #include "game/contracts/paint_face_geometry.h"
 #include "game/contracts/fixed_slab_paint_geometry.h"
@@ -25,9 +26,7 @@ namespace object_type = level_format::object_type;
 
 namespace
 {
-	// Game assets used to draw the viewport manager's divider rectangles.
-	const std::string DIVIDER_SHEET_NAME = "sprite_sheet_1";
-	const std::string DIVIDER_FRAME_NAME = "pixel";
+	// The viewport manager's divider rectangles are the primitive texel in black.
 	const Colour DIVIDER_COLOUR = Colour::black;
 
 	class ViewportDivider final : public GameObject, public TextureObject
@@ -35,7 +34,7 @@ namespace
 	public:
 		ViewportDivider(const ViewportManager* viewport_manager, size_t index,
 			RenderResources* render_resources) :
-			TextureObject(DIVIDER_SHEET_NAME, DIVIDER_FRAME_NAME,
+			TextureObject(primitive_frame::sheet, primitive_frame::pixel,
 				render_resources, DIVIDER_COLOUR),
 			viewport_manager_(viewport_manager), index_(index)
 		{

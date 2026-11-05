@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player_badge.h"
+#include "game/objects/primitive_frame.h"
 
 #include <array>
 #include <stdexcept>
@@ -20,7 +21,7 @@ namespace
 
 PlayerBadge::PlayerBadge(const PlayerIdentityPresentation* look,
     RenderResources* render_resources) :
-    CrudeDrawing("sprite_sheet_1", "pixel", render_resources), look_(look)
+    CrudeDrawing(primitive_frame::sheet, primitive_frame::pixel, render_resources), look_(look)
 {
     if (look_ == nullptr)
     {

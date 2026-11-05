@@ -10,6 +10,7 @@
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/capture/debug_perf.h"
 #include "game/game_data.h"
+#include "game/objects/primitive_frame.h"
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
@@ -74,8 +75,8 @@ DebugConsoleView::DebugConsoleView(bool live) : live_(live)
 void DebugConsoleView::init(const GameData& data)
 {
 	RenderResources* resources = data.render_resources();
-	this->sheet_ = resources->resolve_sprite_sheet("sprite_sheet_1");
-	this->pixel_ = resources->sprite_sheet(this->sheet_)->resolve_sprite_frame("pixel");
+	this->sheet_ = resources->resolve_sprite_sheet(primitive_frame::sheet);
+	this->pixel_ = resources->sprite_sheet(this->sheet_)->resolve_sprite_frame(primitive_frame::pixel);
 	this->font_ = resources->resolve_sprite_font(data.presentation()->debug_overlay().font);
 	// The overlay font is monospaced; one glyph's pen advance places the caret
 	// and wraps every line. measure_text reports ink extent (x_offset + width
@@ -294,8 +295,8 @@ DebugConsoleView::OverlayHandles DebugConsoleView::OverlayHandles::resolve(const
 {
 	RenderResources* resources = data.render_resources();
 	OverlayHandles handles;
-	handles.sheet = resources->resolve_sprite_sheet("sprite_sheet_1");
-	handles.pixel = resources->sprite_sheet(handles.sheet)->resolve_sprite_frame("pixel");
+	handles.sheet = resources->resolve_sprite_sheet(primitive_frame::sheet);
+	handles.pixel = resources->sprite_sheet(handles.sheet)->resolve_sprite_frame(primitive_frame::pixel);
 	handles.font = resources->resolve_sprite_font(data.presentation()->debug_overlay().font);
 	return handles;
 }

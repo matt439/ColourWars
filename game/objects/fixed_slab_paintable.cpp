@@ -60,12 +60,6 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
     this->exposed_bottom_ = exposed.bottom;
     this->local_material_ = std::make_unique<EraserMaterial>(
         this->geometry_.local_rectangle(), exposed, render_resources);
-    const SpriteSheet* terrain = render_resources->sprite_sheet(this->terrain_sheet_);
-    for (std::size_t index = 0; index < this->terrain_swatches_.size(); ++index)
-    {
-        this->terrain_swatches_[index] = terrain->resolve_sprite_frame(
-            std::string("swatch_") + terrain_role_name(static_cast<TerrainRole>(index)));
-    }
     const RectangleF local = this->geometry_.local_rectangle();
     const auto append_face = [&](bool enabled, PaintSurfaceFace face, bool along_x, bool leading,
         const std::vector<std::pair<float, float>>& intervals)
@@ -129,8 +123,8 @@ void FixedSlabPaintable::draw(DrawList& draw_list) const
     const SpriteSheet* terrain = this->render_resources()->sprite_sheet(this->terrain_sheet_);
     for (const TerrainQuad& quad : this->local_material_->quads())
     {
-        terrain->draw(draw_list, terrain->sprite_frame(this->terrain_swatches_[
-            static_cast<std::size_t>(quad.role)]).source_rectangle(),
+        terrain->draw(draw_list, terrain->sprite_frame(
+            this->local_material_->swatch(quad.role)).source_rectangle(),
             RectangleF(this->geometry_.to_world(quad.rectangle.top_left()), quad.rectangle.size()),
             Colour::white, this->geometry_.tangent().angle(), Vector2F::zero);
     }

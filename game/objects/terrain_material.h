@@ -82,6 +82,9 @@ public:
 
 	const std::string& name() const;
 	const std::vector<TerrainQuad>& quads() const;
+	// The terrain sheet's `swatch_<role>` frame, for a drawing that lays the
+	// quads with its own transform.
+	labrador::SpriteSheet::frame_handle swatch(TerrainRole role) const;
 
 protected:
 	TerrainMaterial(const std::string& name, labrador::RenderResources* render_resources);

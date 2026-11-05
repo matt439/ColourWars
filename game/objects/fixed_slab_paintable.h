@@ -65,8 +65,6 @@ private:
     std::vector<std::pair<float, float>> exposed_bottom_;
     std::unique_ptr<const TerrainMaterial> local_material_;
     labrador::RenderResources::SpriteSheetHandle terrain_sheet_;
-    std::array<labrador::SpriteSheet::frame_handle,
-        static_cast<std::size_t>(TerrainRole::count)> terrain_swatches_{};
 
     void draw_local(labrador::DrawList& draw_list,
         const labrador::RectangleF& rectangle, const labrador::Colour& colour) const;

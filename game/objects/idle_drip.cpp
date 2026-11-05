@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/collision_object_type.h"
+#include "game/objects/cosmetic_seed.h"
 #include "game/objects/crude_drawing.h"
 #include "game/config/play_settings.h"
 #include "engine/collision/narrow_phase.h"
@@ -14,7 +15,7 @@ IdleDrip::IdleDrip(const IdleDripPresentation* presentation,
     const PlaySettings* preferences) :
     TextureObject(presentation->sprite_sheet, presentation->fill_frame, resources),
     presentation_(presentation), preferences_(preferences), paint_(colour),
-    sequence_(0x9e3779b9u ^ ((identity + 1u) * 0x85ebca6bu))
+    sequence_(cosmetic_seed(identity))
 {
     if (this->sequence_ == 0) { this->sequence_ = 1; }
     this->interval_ = this->next_interval();

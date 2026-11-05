@@ -7,6 +7,7 @@
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/objects/primitive_frame.h"
 
 using namespace labrador;
 
@@ -79,7 +80,7 @@ void DebugMenuPage::init()
 			this->render_resources(), style.unhighlight, style.shadow_colour,
 			style.detail_shadow_offset);
 	}
-	this->panel_ = std::make_unique<UiTexture>("debug_panel", "sprite_sheet_1", "pixel",
+	this->panel_ = std::make_unique<UiTexture>("debug_panel", primitive_frame::sheet, primitive_frame::pixel,
 		panel, this->render_resources(), panel_colour);
 	this->texture_container_ = std::make_unique<UiContainer>("debug_textures");
 	this->texture_container_->add_child(this->panel_.get());

@@ -3,14 +3,14 @@
 #include "game/objects/blocked_shot_contact.h"
 #include "game/match/paint_owners.h"
 #include "game/config/presentation/presentation_match.h"
-#include "engine/render/texture_object.h"
+#include "game/objects/crude_drawing.h"
 
 #include <array>
 #include <span>
 
 // One match's bounded, detached cover contacts. Level advances these once per
 // active tick, then every world view draws the same immutable snapshot.
-class BlockedShotFeedback final : public labrador::TextureObject
+class BlockedShotFeedback final : public CrudeDrawing
 {
 public:
     struct Cue

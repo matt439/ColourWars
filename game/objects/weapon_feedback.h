@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/config/presentation/presentation_match.h"
-#include "engine/render/texture_object.h"
+#include "game/objects/crude_drawing.h"
 
 enum class WeaponReadiness
 {
@@ -32,7 +32,7 @@ struct LowPaintCue
 
 // Three bounded event pulses and a stateless readiness marker. Drawing another
 // view never advances them, and they never create paint or gameplay objects.
-class WeaponFeedback : public labrador::TextureObject
+class WeaponFeedback : public CrudeDrawing
 {
 public:
     WeaponFeedback(const WeaponFeedbackPresentation* presentation,

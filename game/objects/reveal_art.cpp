@@ -5,7 +5,7 @@ using namespace labrador;
 
 RevealArt::RevealArt(const OpeningPresentation* look, RenderResources* resources) :
     CrudeDrawing(look->sprite_sheet, look->fill_frame, resources),
-    look_(look), resources_(resources), font_(resources->resolve_sprite_font(look->percent_font))
+    look_(look), font_(resources->resolve_sprite_font(look->percent_font))
 {
 }
 
@@ -28,30 +28,12 @@ void RevealArt::draw(DrawList& list, const RectangleF& bounds, std::wstring_view
     const Vector2F available = face.size() - Vector2F(padding * 2.0f);
     if (available.x <= 0.0f || available.y <= 0.0f) { return; }
 
-    const auto paper = [&](const RectangleF& box, const Colour& colour)
-    {
-        const float step = pen * 2.0f;
-        this->fill(list, RectangleF(box.x + step, box.y, box.width - step * 2.0f, box.height), colour);
-        this->fill(list, RectangleF(box.x, box.y + step, box.width, box.height - step * 2.0f), colour);
-    };
     list.set_filter(TextureFilter::point);
-    paper(RectangleF(face.position() + Vector2F(shade), face.size()), premultiplied(art.shade));
-    paper(face, premultiplied(art.ink));
-    const RectangleF inside(face.x + pen, face.y + pen, face.width - pen * 2.0f, face.height - pen * 2.0f);
-    paper(inside, premultiplied(art.paper));
-    for (int pass = 3; pass > 0; --pass)
-    {
-        Colour colour = art.shade;
-        colour.a *= 0.12f;
-        const float width = pen * static_cast<float>(pass);
-        this->fill(list, RectangleF(inside.x + pen * 2.0f, inside.bottom() - width,
-            inside.width - pen * 4.0f, width), premultiplied(colour));
-        this->fill(list, RectangleF(inside.right() - width, inside.y + pen * 2.0f,
-            width, inside.height - pen * 4.0f), premultiplied(colour));
-    }
+    this->paper_card(list, RectangleF(face.position() + Vector2F(shade), face.size()), face,
+        pen, art.shade, art.ink, art.paper);
 
     const std::wstring label(text);
-    const Vector2F measured = this->resources_->measure_text(this->font_, label);
+    const Vector2F measured = this->render_resources()->measure_text(this->font_, label);
     if (measured.x <= 0.0f || measured.y <= 0.0f) { return; }
     const float scale = std::min(available.x / measured.x, available.y / measured.y);
     const Vector2F at = face.center() - measured * scale * 0.5f;

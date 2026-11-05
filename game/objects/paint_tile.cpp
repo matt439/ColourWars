@@ -87,22 +87,10 @@ void PaintTile::draw_surface(DrawList& draw_list) const
 	this->TextureObject::draw_with(draw_list, this->face_band(depth - edge, edge),
 		this->frame(), Colour::black, Vector2F::zero, SpriteFlip::none, 0.0f);
 
-	if (this->wet_age_ < this->paint_->wet_duration)
+	if (const std::optional<WetBand> wet = this->wet_band(tint))
 	{
-		const float progress = this->wet_age_ / this->paint_->wet_duration;
-		const float colour_depth = depth - edge;
-		const float shine_depth = std::min(this->paint_->settle_depth, colour_depth);
-		if (shine_depth > 0.0f)
-		{
-			const float offset = std::min(this->paint_->settle_depth * progress,
-				colour_depth - shine_depth);
-			const float amount = this->paint_->wet_highlight * (1.0f - progress);
-			const Colour shine(tint.r + (1.0f - tint.r) * amount,
-				tint.g + (1.0f - tint.g) * amount,
-				tint.b + (1.0f - tint.b) * amount, 1.0f);
-			this->TextureObject::draw_with(draw_list, this->face_band(offset, shine_depth),
-				this->frame(), shine, Vector2F::zero, SpriteFlip::none, 0.0f);
-		}
+		this->TextureObject::draw_with(draw_list, wet->band,
+			this->frame(), wet->shine, Vector2F::zero, SpriteFlip::none, 0.0f);
 	}
 }
 
@@ -146,25 +134,29 @@ void PaintTile::draw_surface_wet_rigid(DrawList& draw_list,
 	const FixedSlabGeometry& geometry) const
 {
 	if (this->team_ == PlayerTeam::none) { return; }
-	const Colour tint = this->team_colours_.team_colour(this->team_);
+	if (const std::optional<WetBand> wet = this->wet_band(
+		this->team_colours_.team_colour(this->team_)))
+	{
+		this->draw_rectangle_rigid(draw_list, geometry, wet->band, wet->shine);
+	}
+}
+
+std::optional<PaintTile::WetBand> PaintTile::wet_band(const Colour& tint) const
+{
+	if (!(this->wet_age_ < this->paint_->wet_duration)) { return std::nullopt; }
 	const float depth = this->along_x_ ? this->rectangle_.height : this->rectangle_.width;
 	const float edge = std::min(this->paint_->edge_width, depth);
-	if (this->wet_age_ < this->paint_->wet_duration)
-	{
-		const float progress = this->wet_age_ / this->paint_->wet_duration;
-		const float colour_depth = depth - edge;
-		const float shine_depth = std::min(this->paint_->settle_depth, colour_depth);
-		if (shine_depth > 0.0f)
-		{
-			const float offset = std::min(this->paint_->settle_depth * progress,
-				colour_depth - shine_depth);
-			const float amount = this->paint_->wet_highlight * (1.0f - progress);
-			this->draw_rectangle_rigid(draw_list, geometry, this->face_band(offset, shine_depth), Colour(
-				tint.r + (1.0f - tint.r) * amount,
-				tint.g + (1.0f - tint.g) * amount,
-				tint.b + (1.0f - tint.b) * amount, 1.0f));
-		}
-	}
+	const float progress = this->wet_age_ / this->paint_->wet_duration;
+	const float colour_depth = depth - edge;
+	const float shine_depth = std::min(this->paint_->settle_depth, colour_depth);
+	if (!(shine_depth > 0.0f)) { return std::nullopt; }
+	const float offset = std::min(this->paint_->settle_depth * progress,
+		colour_depth - shine_depth);
+	const float amount = this->paint_->wet_highlight * (1.0f - progress);
+	return WetBand{ this->face_band(offset, shine_depth), Colour(
+		tint.r + (1.0f - tint.r) * amount,
+		tint.g + (1.0f - tint.g) * amount,
+		tint.b + (1.0f - tint.b) * amount, 1.0f) };
 }
 
 RectangleF PaintTile::face_band(float offset, float depth) const

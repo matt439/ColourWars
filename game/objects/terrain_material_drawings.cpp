@@ -1,6 +1,7 @@
 // The six leaf materials: each works out its drawing once, in its constructor.
 #include "game/pch.h"
 #include "game/objects/terrain_material.h"
+#include "game/ai/bot_random.h"
 #include "engine/math/triangle.h"
 
 #include <cmath>
@@ -30,22 +31,15 @@ namespace
 		return std::ceil(world / period) * period;
 	}
 
-	std::uint64_t splitmix(std::uint64_t z)
-	{
-		z += 0x9E3779B97F4A7C15ULL;
-		z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
-		z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
-		return z ^ (z >> 31);
-	}
-
 	// A hash of a world cell and a seed: neighbouring pieces agree and every
 	// build of one match draws the same wall. The seed is a constant per kind
 	// of slip, mixed with the match's hand (MatchRandom::hand); hand 0 is the
-	// house hand. Never a draw from a gameplay stream.
+	// house hand. Never a draw from a gameplay stream: the key is the first
+	// splitmix64 output of a private BotRandom.
 	std::uint64_t cell_key(float x, float y, std::uint64_t seed)
 	{
-		return splitmix((static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(x / CELL))) << 32) ^
-			static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(y / CELL))) ^ seed);
+		return BotRandom((static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(x / CELL))) << 32) ^
+			static_cast<std::uint64_t>(static_cast<std::int64_t>(std::lround(y / CELL))) ^ seed).next();
 	}
 
 	// The person laid the bricks by hand (docs/drawing-mistakes-research.md,
@@ -338,7 +332,8 @@ PencilMaterial::PencilMaterial(const RectangleF& rectangle, const TerrainFaces& 
 		const float core_at = cells((thickness - core) / 2.0f);
 		const float shade_at = cells(thickness * 0.65f);
 
-		// at = where the cap begins; inward = +1 from the start, -1 from the end.
+		// at_start: the cap is laid from the start (along = 0); otherwise it is
+		// mirrored to end at the far end (along = length).
 		const auto eraser_cap = [&](bool at_start)
 		{
 			const auto span = [&](float from, float size, float across, float across_size, TerrainRole role)
@@ -387,13 +382,13 @@ RulerMaterial::RulerMaterial(const RectangleF& rectangle, const TerrainFaces& fa
 
 	if (thickness >= 6.0f * CELL)
 	{
-		// Short marks every 16 units, long every 80, rising from the lower edge.
+		// Short marks every minor period, long every major, rising from the lower edge.
 		const float origin = this->vertical() ? rectangle.top() : rectangle.left();
 		const float bottom_keyline = CELL;
-		for (float world = grid_from(origin + CELL * 2.0f, 16.0f);
-			world < origin + length - CELL * 2.0f; world += 16.0f)
+		for (float world = grid_from(origin + CELL * 2.0f, ruler_minor_period);
+			world < origin + length - CELL * 2.0f; world += ruler_minor_period)
 		{
-			const bool major = std::fmod(std::abs(world), 80.0f) < 0.5f;
+			const bool major = std::fmod(std::abs(world), ruler_major_period) < 0.5f;
 			const float mark = (major ? 3.0f : 2.0f) * CELL;
 			const float along = world - origin;
 			const float across = thickness - bottom_keyline - mark;
