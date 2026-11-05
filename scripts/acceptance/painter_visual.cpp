@@ -535,13 +535,13 @@ int wmain(int argc, wchar_t** argv)
         {
             limb_colour_consumer_checks(app, tuning, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            limb_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            limb_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS limb-tune-colours-only Release direct-consumer-only scope; no developer commands executed\n";
 #endif
             quiet_face_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            quiet_face_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            quiet_face_tune_colour_checks(app, tuning, presentation, content, output);
 #endif
             return 0;
         }
@@ -549,7 +549,7 @@ int wmain(int argc, wchar_t** argv)
         {
             crack_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            crack_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            crack_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS crack-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -557,19 +557,19 @@ int wmain(int argc, wchar_t** argv)
         }
         if (hud_paper_tune_colours_only)
         {
-            hud_paper_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            hud_paper_tune_colour_checks(app, tuning, presentation, content, output);
             return 0;
         }
         if (hud_closing_shade_only)
         {
-            hud_closing_shade_checks(app, levels, tuning, presentation, content, output);
+            hud_closing_shade_checks(app, tuning, presentation, content, output);
             return 0;
         }
         if (hud_closing_materials_only)
         {
             hud_closing_material_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            hud_closing_material_tune_checks(app, levels, tuning, presentation, content, output);
+            hud_closing_material_tune_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS hud-closing-materials-only Release consumer scope; no developer commands executed\n";
 #endif
@@ -593,7 +593,7 @@ int wmain(int argc, wchar_t** argv)
         {
             hud_label_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            hud_label_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            hud_label_tune_colour_checks(app, tuning, presentation, content, output);
 #endif
             return 0;
         }
@@ -601,17 +601,17 @@ int wmain(int argc, wchar_t** argv)
         {
             hud_timer_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            hud_timer_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            hud_timer_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS normal HUD timer Release consumer scope; no developer commands executed\n";
 #endif
             hud_timer_colour_consumer_checks(app, presentation, output, HudTimerSubject::shadow);
 #if COLOURWARS_DEV_TOOLS
-            hud_timer_tune_colour_checks(app, levels, tuning, presentation, content, output, HudTimerSubject::shadow);
+            hud_timer_tune_colour_checks(app, tuning, presentation, content, output, HudTimerSubject::shadow);
 #endif
             hud_closing_text_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            hud_closing_text_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            hud_closing_text_tune_colour_checks(app, tuning, presentation, content, output);
 #endif
             return 0;
         }
@@ -619,7 +619,7 @@ int wmain(int argc, wchar_t** argv)
         {
             hud_track_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            hud_track_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            hud_track_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS hud-track-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -629,7 +629,7 @@ int wmain(int argc, wchar_t** argv)
         {
             hud_health_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            hud_health_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            hud_health_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS hud-health-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -639,7 +639,7 @@ int wmain(int argc, wchar_t** argv)
         {
             scribble_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            scribble_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            scribble_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS scribble-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -649,7 +649,7 @@ int wmain(int argc, wchar_t** argv)
         {
             silhouette_body_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            silhouette_body_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            silhouette_body_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS silhouette-body-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -659,7 +659,7 @@ int wmain(int argc, wchar_t** argv)
         {
             glass_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            glass_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            glass_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS glass-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -669,7 +669,7 @@ int wmain(int argc, wchar_t** argv)
         {
             acting_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            acting_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            acting_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS acting-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -684,7 +684,7 @@ int wmain(int argc, wchar_t** argv)
         {
             program_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            program_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            program_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS program-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -694,7 +694,7 @@ int wmain(int argc, wchar_t** argv)
         {
             power_light_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            power_light_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            power_light_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS power-light-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -704,7 +704,7 @@ int wmain(int argc, wchar_t** argv)
         {
             desktop_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            desktop_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            desktop_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS desktop-tune-colour-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -714,7 +714,7 @@ int wmain(int argc, wchar_t** argv)
         {
             cursor_material_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            cursor_material_tune_checks(app, levels, tuning, presentation, content, output);
+            cursor_material_tune_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS cursor-material-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -724,7 +724,7 @@ int wmain(int argc, wchar_t** argv)
         {
             reveal_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            reveal_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            reveal_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS reveal-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -734,7 +734,7 @@ int wmain(int argc, wchar_t** argv)
         {
             silhouette_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            silhouette_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            silhouette_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS silhouette-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -744,7 +744,7 @@ int wmain(int argc, wchar_t** argv)
         {
             cursor_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            cursor_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            cursor_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS cursor-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -764,7 +764,7 @@ int wmain(int argc, wchar_t** argv)
         {
             idle_drip_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            idle_drip_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            idle_drip_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS idle-drip-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -774,7 +774,7 @@ int wmain(int argc, wchar_t** argv)
         {
             blocked_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            blocked_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            blocked_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS blocked-shot-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -784,7 +784,7 @@ int wmain(int argc, wchar_t** argv)
         {
             combat_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            combat_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            combat_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS combat-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -794,7 +794,7 @@ int wmain(int argc, wchar_t** argv)
         {
             feedback_colour_consumer_checks(app, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-            feedback_tune_colour_checks(app, levels, tuning, presentation, content, output);
+            feedback_tune_colour_checks(app, tuning, presentation, content, output);
 #else
             std::cout << "PASS feedback-tune-colours-only Release consumer-only scope; no developer commands executed\n";
 #endif
@@ -847,10 +847,28 @@ int wmain(int argc, wchar_t** argv)
 #if COLOURWARS_DEV_TOOLS
         if (argc == 4 && std::wstring(argv[3]) == L"tune-colours")
         {
-            tune_colour_matrix(app, levels, tuning, presentation, content, output);
+            tune_colour_matrix(app, tuning, presentation, content, output);
             return 0;
         }
 #endif
+        // The clean/heavy pairs (Crossfeed and the four Turbulence matrices)
+        // compare actor motion on clean and heavily painted floors, so they run
+        // on a copy of the tuning with paint underfoot off; the shipped tuning
+        // has it on (POL#30).
+        const auto underfoot_off = [&]
+        {
+            std::ifstream input(content / "tuning.json", std::ios::binary);
+            require(input.good(), "Cannot read tuning for the underfoot-off clean/heavy copy");
+            const std::string bytes{ std::istreambuf_iterator<char>(input), {} };
+            rapidjson::Document document; document.Parse(bytes.c_str());
+            require(!document.HasParseError(), "Cannot parse tuning for the underfoot-off clean/heavy copy");
+            document["player"]["paint_underfoot"]["enabled"].SetBool(false);
+            rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            require(document.Accept(writer), "Cannot encode the underfoot-off clean/heavy copy");
+            GameTuning copy(labrador::parse_json(buffer.GetString(), "painter-underfoot-off"));
+            copy.validate_resources(*app.render_resources(), *app.audio_resources());
+            return copy;
+        };
         if (argc == 4 && std::wstring(argv[3]) == L"landmark")
         {
             landmark_matrix(app, levels, builder, tuning, presentation, preferences, content, output);
@@ -863,7 +881,8 @@ int wmain(int argc, wchar_t** argv)
         }
         if (argc == 4 && std::wstring(argv[3]) == L"route-warning")
         {
-            route_warning_matrix(app, levels, tuning, presentation, preferences, output);
+            const GameTuning still = underfoot_off();
+            route_warning_matrix(app, levels, still, presentation, preferences, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"gate-permission")
@@ -883,7 +902,8 @@ int wmain(int argc, wchar_t** argv)
         }
         if (argc == 4 && std::wstring(argv[3]) == L"crossfeed")
         {
-            crossfeed_matrix(app, levels, canvas, tuning, presentation, preferences, output);
+            const GameTuning still = underfoot_off();
+            crossfeed_matrix(app, levels, canvas, still, presentation, preferences, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"press-tower")
@@ -893,22 +913,26 @@ int wmain(int argc, wchar_t** argv)
         }
         if (turbulence_slab_only)
         {
-            turbulence_slab_matrix(app, levels, canvas, tuning, presentation, preferences, std::filesystem::path(argv[4]), output);
+            const GameTuning still = underfoot_off();
+            turbulence_slab_matrix(app, levels, canvas, still, presentation, preferences, std::filesystem::path(argv[4]), output);
             return 0;
         }
         if (turbulence_shoulder_only)
         {
-            turbulence_shoulder_matrix(app, levels, canvas, tuning, presentation, preferences, std::filesystem::path(argv[4]), output);
+            const GameTuning still = underfoot_off();
+            turbulence_shoulder_matrix(app, levels, canvas, still, presentation, preferences, std::filesystem::path(argv[4]), output);
             return 0;
         }
         if (turbulence_mover_only)
         {
-            turbulence_mover_matrix(app, levels, canvas, tuning, presentation, preferences, std::filesystem::path(argv[4]), output);
+            const GameTuning still = underfoot_off();
+            turbulence_mover_matrix(app, levels, canvas, still, presentation, preferences, std::filesystem::path(argv[4]), output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"turbulence-blockout")
         {
-            turbulence_blockout_matrix(app, levels, canvas, tuning, presentation, preferences, output);
+            const GameTuning still = underfoot_off();
+            turbulence_blockout_matrix(app, levels, canvas, still, presentation, preferences, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"cq-blockout")
@@ -1158,7 +1182,7 @@ int wmain(int argc, wchar_t** argv)
         }
         if (identity_only)
         {
-            identity_matrix(app, builder, levels, tuning, presentation, preferences, content, output);
+            identity_matrix(app, builder, tuning, presentation, preferences, content, output);
             require(records.good(), "Capture record write failed");
             std::cout << "PASS identity-only visual check; other painter matrices were not run\n";
             return 0;
@@ -1213,7 +1237,7 @@ int wmain(int argc, wchar_t** argv)
         wet_tool_matrix(app, builder, canvas, presentation, preferences, output, records);
         reduced_effects_matrix(app, builder, canvas, presentation, preferences, output, records);
         shake_matrix(app, builder, tuning, presentation, preferences, output);
-        identity_matrix(app, builder, levels, tuning, presentation, preferences, content, output);
+        identity_matrix(app, builder, tuning, presentation, preferences, content, output);
         monitor_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
         countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);

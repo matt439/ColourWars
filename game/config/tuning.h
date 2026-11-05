@@ -78,7 +78,8 @@ struct BotTuning
 	// The most steps a bot holds on one moving support per ride to paint it.
 	int mover_hold_steps = 1;
 	// With paint underfoot enabled, a refilling bot walks back off enemy paint
-	// and holds still off it. No effect while paint underfoot is off.
+	// and, off it, holds rather than walk onto enemy paint ahead. No effect
+	// while paint underfoot is off.
 	bool refill_off_enemy_paint = false;
 };
 

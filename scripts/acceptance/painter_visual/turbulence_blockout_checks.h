@@ -8,7 +8,7 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     const RestoreFlag restore{ preferences.reduce_effects, preferences.reduce_effects };
     preferences.reduce_effects = false;
     require(!tuning.player().paint_underfoot.enabled,
-        "Turbulence native clean/heavy movement comparison requires the shipped underfoot prototype to stay off");
+        "Turbulence native clean/heavy movement comparison requires its underfoot-off tuning copy");
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
     const LevelLoadedInfo& info = *levels.get("turbulence_blockout");
@@ -284,7 +284,7 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         "Initial positions are deliberately placed; six neutral settle ticks precede 18 actual movement ticks. Upper first/second views hold jump; third/fourth views walk toward a possible retreat. CPU route qualification is separate.\n"
         "Each pane records a whole-body landing/support patch and immediate supported reversal space, both inside its actual Scene camera. Upper reversal and home-ground patches show the whole standing body plus an eight-world-unit support cap; upper reversal patches stay on the source shelf and do not claim visibility of an eventual lower-bed drop or an entire foundation.\n"
         "Four-player home-floor/roof departures add six walking ticks, without claiming a completed spawn departure. Actual short-match overviews and an actual clean StagePreview supplement player panes.\n"
-        "Controlled ProjectileSpray contacts establish measured >99 percent held paint; these fixtures do not measure weapon painting efficiency. P3 underfoot modification stays disabled and clean/heavy actor motion must match.\n"
+        "Controlled ProjectileSpray contacts establish measured >99 percent held paint; these fixtures do not measure weapon painting efficiency. Paint underfoot ships on; these pairs run on a tuning copy with it off, so clean/heavy actor motion must match.\n"
         "Repeated Level drawing preserves full pixels, observed public/paint/geometry state, gameplay RNG and Debug fingerprints. The isolated StagePreview checks repeated pixels, widget bounds and gameplay RNG only. Native crops are unscaled. The paper-only backdrop is provisional art.\n"
         "No visible performance capture, human readability/warning-time, balance, physical-pad, listening or arena acceptance is established.\n";
     summary.close(); scope.close();

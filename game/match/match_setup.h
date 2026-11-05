@@ -92,7 +92,7 @@ private:
 	std::array<int, input_slots::pad_count> devices_ = { -1, -1, -1, -1 };
 	int best_of_ = 1;
 	std::optional<float> duration_;
-	SeriesStageRule series_stage_rule_ = SeriesStageRule::same;
+	SeriesStageRule series_stage_rule_ = default_series_stage_rule;
 	std::string stage_;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;
 };

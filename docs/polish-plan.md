@@ -6,8 +6,8 @@ kit and its runtime comparison were retired on 2026-10-15; the historical
 style studies and authored Movement Course route trials remain. The Paint.exe art
 rules are accepted as of 2026-10-15. Initial braking, released-aim and route
 policies (`POL#4`) and stronger takeoff/landing puffs (`POL#5`) are implemented;
-their values remain tunable. Production artwork, movement-feel and arena
-acceptance remain open.
+their values remain tunable. Production artwork remains open; movement feel and
+the arena choices were accepted by the author on 2026-11-05 (below).
 Direction agreed on 2026-10-08. Source baseline: game revision `9d35ad1`.
 
 First increment: resolution-independent camera framing, configurable jump buffering
@@ -33,7 +33,7 @@ direction changes, and moves larger light badges behind the head. It lifts
 dark-team masks to a luminance floor. It shows that standing contact is
 pixel-flush, retains the Movement Course route trials as CI acceptance, and
 captured feedback on and off while the camera moved. Its workshop candidates
-have since been retired; movement-feel review remains open.
+have since been retired; movement feel was accepted as built on 2026-11-05.
 
 Direction changed on 2026-10-09: the author chose **Paint.exe Maximalism**
 (crude, mouse-drawn box-head figures, embraced deliberately) over the workshop
@@ -58,6 +58,21 @@ the program when nobody painted) and the figures acting. Solo practice skips
 both ends, and the results page keeps only the percentages after the reveal.
 Its accepted pop, sigh and chair-creak sounds are integrated as of 2026-10-15.
 Open work and its order are in [TODO.md](../TODO.md).
+
+**The author's calls of 2026-11-05.** Every open decision this plan owned was
+accepted as it stood, except where noted: the Turbulence slab trial and Press
+Tower joined Random in place of the original Turbulence and King of the Hill
+(`POL#21`, `POL#31`); paint underfoot ships on (`POL#30`); fractional display
+scaling is kept (`POL#34`); the low-paint cue, cursor marquee, footer-band
+overlaps, practice workshop, P3 movement, five-tool values and audio mix stand
+at their current values and are no longer provisional (`POL#38`, `POL#39`,
+`POL#45`, `POL#19`, `POL#3`, `POL#27`, `POL#23`). The attended checks that
+could not be run were **waived by the author on 2026-11-05 and not performed**:
+the finish review and fresh-player observations (`POL#24`), the physical-pad
+sessions (`POL#18`, the pad half of `POL#3`), and the performance captures and
+hardware baseline (`POL#25`). Nothing below that names one of those checks
+records it as passed. `POL#16` is no longer blocked by arena selection but stays
+a deferred later art pass.
 
 ## Goal and direction
 
@@ -138,8 +153,9 @@ languages. The gameplay code also offers concrete polish opportunities:
 
 The private legacy audio bank has been retired from live content and packaging.
 The accepted distributable replacement set now supplies the game's existing
-audio bindings; [NOTICE](../NOTICE) records its sources. Further cue hooks and
-the in-game mix remain open, with a silent fallback when the bank is missing.
+audio bindings; [NOTICE](../NOTICE) records its sources. The in-game mix was
+accepted as it stands on 2026-11-05 (`POL#23`), with a silent fallback when the
+bank is missing.
 
 Relevant implementation references:
 [player](../game/objects/player.cpp), [camera and match flow](../game/objects/level.cpp),
@@ -171,10 +187,14 @@ working baseline for the next iteration, not a permanent freeze on art or tuning
    speeds/ranges/arcs, cadence, painting and recovery. Iterate geometry when
    observations identify a layout issue. Fit the approved kit and inspect
    1-4P/heavy-paint composition. Reference-arena acceptance follows actual play;
-   then apply the process to the other arenas (`POL#21`). Values remain provisional.
+   then apply the process to the other arenas (`POL#21`). The author accepted
+   the current values on 2026-11-05; later level and art work may still retune them.
    **The author accepted Crossfeed as the reference arena on 2026-10-25**
    ([record](polish-crossfeed.md#author-arena-acceptance-2026-10-25)); its
-   unreviewed spawn-pressure and readability checks move to `POL#24`.
+   unreviewed spawn-pressure and readability checks moved to `POL#24`, which
+   the author waived on 2026-11-05 (not performed). On the same day the author
+   accepted the current P3 movement and five-tool values and the other arena
+   choices (`POL#21`, `POL#31`).
 
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
@@ -185,14 +205,16 @@ stage. Their current-arena review rows are complete. The small-view treatment,
 static landmarks and retained parallax comparison are implemented; shipped
 backdrops remain static. The latest sequence opens the researched new-map pass
 (`POL#17`), followed by coupled movement / weapon tuning (`POL#3`, `POL#27`). Re-check the
-treatment in the new composition during that work and the reference-match
-finish review (`POL#24`); future iteration remains expected. No new test matrix,
-device session or detailed observations are implied by this approval.
+treatment in the new composition during that work; future iteration remains
+expected. No new test matrix, device session or detailed observations are
+implied by this approval. The reference-match finish review (`POL#24`) was
+waived by the author on 2026-11-05 and not performed.
 
-`POL#16` stays deferred behind the blockouts. Listening/mix choices (`POL#23`),
-physical-pad sessions and attended performance/hardware acceptance (`POL#25`)
-retain their own gates. Supporting implementation choices in TODO's NOW can
-proceed when they do not compete with the blockout work.
+`POL#16` no longer waits on arena selection (settled 2026-11-05) but stays
+deferred as a later art pass. The listening/mix choices (`POL#23`) were accepted
+as they stand on 2026-11-05; the physical-pad sessions and the attended
+performance/hardware acceptance (`POL#25`) were waived the same day and not
+performed.
 
 ## 1. Establish the art and display rules
 
@@ -295,10 +317,11 @@ at 720p, 1080p and QHD. Record the supported scaling behaviour and any letterbox
 
 ### Display scaling record
 
-**Current behavior recorded; policy selection remains with the author (`POL#34`).**
-This source/evidence record is based on `c030c054` (2026-10-26), with the same
-camera, render and presentation paths as the qualified `87593628` native
-captures. It selects no snapping, integer-scale or letterboxing policy.
+**Decided 2026-11-05: keep fractional scaling (`POL#34`).** The author chose the
+first candidate below, the current behaviour, so no code changed: no camera
+snapping, integer cell scale or letterboxing. This source/evidence record is
+based on `c030c054` (2026-10-26), with the same camera, render and presentation
+paths as the qualified `87593628` native captures.
 
 The active-gameplay camera uses
 `min(screen_height / 1080, pane_pixel_width / 1280)` with the current
@@ -347,9 +370,9 @@ and stage-preview paths can select miniature terrain below 0.25 camera scale;
 active gameplay retains ordinary terrain, even in a narrower, lower-scale pane.
 Stage Preview independently frames its authored world bounds inside its menu pane.
 
-**Candidates for the author:**
+**Candidates the author chose between** (the first was kept):
 
-- **Retain fractional scaling:** retain the current pane coverage, world extents
+- **Retain fractional scaling (chosen 2026-11-05):** retain the current pane coverage, world extents
   and continuous camera. The existing uneven column widths, subpixel placement
   and rotated-pixel treatment remain part of the visual review.
 - **Snap the render camera to screen pixels:** retain the current scale and world
@@ -379,16 +402,18 @@ Using the full pane at those integer scales instead would change the visible
 world extent. Integer grid art still does not settle arbitrary tool rotations
 or linear UI text. Collision geometry must not move to hide raster artifacts.
 
-**Evidence and remaining gate.** The [POL#32 native inspection](polish-press-tower.md#native-inspection-pol32)
+**Evidence behind the choice.** The [POL#32 native inspection](polish-press-tower.md#native-inspection-pol32)
 retains actual 1P/4P story/overview contexts at 720p/1080p/QHD, plus clean/heavy
 720p surface panes and the Press Tower 4P landing/exit captures. Two-player
 entries above are source-derived. The saved captures keep their original
 source/binary scopes; no new policy comparison or human motion/readability
 acceptance is claimed. The source pins, exact arithmetic and reused-receipt
 reconciliation are under `out/validation/todo-loop-20261025/pol34-prep-v1/`.
-The author still chooses a candidate, with motion/aim sweeps and 1/2/4P HUD and
-clean/heavy scene readability reviewed at all three sizes. Existing `POL#24`
-finish and physical-device gates remain open.
+The author kept fractional scaling on 2026-11-05 without a separate motion/aim
+sweep or 1/2/4P readability session at all three sizes; the `POL#24` finish
+review and the physical-device checks that would have covered them were waived
+the same day and not performed. Reopen the policy if uneven columns or subpixel
+shimmer show up in play.
 
 **Workshop retirement validation (2026-10-15):** Debug and Release build and
 pass all 11 remaining consumer cases. Movement Course routes, movement feedback,
@@ -430,8 +455,8 @@ Use a small movement course to compare the baseline with candidate changes:
 **Current sequence:** Crossfeed is the accepted reference arena (2026-10-25).
 Keep its P3/five-tool baseline while building the other arena blockouts; tune movement
 and weapons together from specific route and play observations. The course
-supplies measurements and comparisons, while C2 recognition and physical-pad
-review remain `POL#3`. Follow the [development order](#development-order-2026-10-17).
+supplies measurements and comparisons. The author accepted the P3 movement on
+2026-11-05 (`POL#3`); its physical-pad half was waived that day and not performed. Follow the [development order](#development-order-2026-10-17).
 
 Measure the resulting jump envelope and travel speed. Use those measurements
 when placing platforms; the old movement note is not a level-design specification.
@@ -495,37 +520,42 @@ build the blockout in the editor, then measure routes, paint by region, spawn
 approaches and side swaps as Crossfeed did. Use supported structures, platforms, ramps and
 visuals; evaluate any new gameplay object as a separate, evidenced requirement.
 
-**King of the Hill (2026-10-25):** the blockout is [Press Tower](polish-press-tower.md),
-a new explicit-only stage (`press_tower`) beside the untouched `king_of_the_hill.json`,
-which stays selectable and in Random. Its baseline acceptance case and native four-pane
-captures/matrix coverage (`POL#32`) are qualified; attended play (`POL#31`) and the brief's
-support art remain open there. Turbulence now has
-[static, mover and scored-slab Turbulence Yard comparisons](polish-turbulence.md), explicit-only
-as `turbulence_blockout`, `turbulence_mover_trial` and `turbulence_slab_trial`. CPU routes, local scoring,
+**King of the Hill (2026-10-25):** the blockout is [Press Tower](polish-press-tower.md)
+(`press_tower`), built beside the untouched `king_of_the_hill.json`. Its baseline
+acceptance case and native four-pane captures/matrix coverage (`POL#32`) are
+qualified. On 2026-11-05 the author accepted it (`POL#31`): Press Tower joined
+Random as the King of the Hill arena, and the original stays selectable but left
+Random. The brief's support art waits on the later art pass. Turbulence has
+[static, mover and scored-slab Turbulence Yard comparisons](polish-turbulence.md).
+On 2026-11-05 the author chose the scored-slab trial (`turbulence_slab_trial`,
+`POL#21`), which joined Random; the original `turbulence.json` stays selectable
+but left Random, and `turbulence_blockout` and `turbulence_mover_trial` stay
+explicit-only. CPU routes, local scoring,
 public builder/editor round trips, Debug replay, all split-screen native layouts
 and the bounded local five-tool paint-angle comparison are qualified. The
 [roadmap](feature-roadmap.md#horizontal-movement-capability-2026-10-26) records
-the qualified fixed-slab capability; attended balance/value remains a separate gate.
-The earlier arenas and P3/five-tool tuning are preserved.
+the qualified fixed-slab capability; the author accepted its current values on
+2026-11-05. The earlier arenas and P3/five-tool tuning are preserved.
 
 ### Turbulence blockout work (`POL#21`)
 
-**DECISION, software checkpoint 2026-10-26.** The [route and score brief](polish-turbulence.md)
-defines the fixed skeleton, optional moving approaches, spawn/pressure checks
-and provisional regional/face allocations. Its static, mover and fixed-slab
-comparisons are selectable beside the original. Public loader/editor, CPU
-route/paint, bounded five-tool pressure, replay and native split-screen checks
-are qualified, including registered slab overview, result-derived ending
-composition and lower-approach underside cover/paint controls. The bounded
-software comparisons retain the current values; attended play must choose the
-geometry and answer pressure, crossing comfort and balance.
-No additional pressure mode is required before that session. The local Release
-package and separate missing-bank fallback also pass; clean-machine acceptance
-remains `ROAD#1`. Press Tower support art retains its owner's later art-pass gate.
-Retain these comparisons beside the preserved `turbulence.json`. Use the
-recorded [H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
-and current P3/five-tool values during selection. Turbulence and Press Tower
-keep separate attended-play gates.
+**Decided 2026-11-05: the scored-slab trial wins.** The software checkpoint of
+2026-10-26 qualified the [route and score brief](polish-turbulence.md): the fixed
+skeleton, optional moving approaches, spawn/pressure checks and regional/face
+allocations, with static, mover and fixed-slab comparisons selectable beside the
+original. Public loader/editor, CPU route/paint, bounded five-tool pressure,
+replay and native split-screen checks are qualified, including registered slab
+overview, result-derived ending composition and lower-approach underside
+cover/paint controls, all at the current values. The author then chose
+`turbulence_slab_trial` (Yard, movers and fixed scored slabs), which joined
+Random; `turbulence.json` stays selectable but left Random, and the static and
+mover comparisons stay explicit-only. The author accepted the geometry and
+values without a further attended pressure, crossing-comfort or balance
+session. The local Release package and separate missing-bank fallback pass; the
+clean-machine check (`ROAD#1`) was waived on 2026-11-05 and not performed. Press
+Tower support art retains its owner's later art-pass gate. The
+[H1-H8 criteria](level-design-research.md#criteria-for-the-original-new-map)
+remain the measure for any later revision.
 
 | Slice | Concrete result and stopping point | Dependency |
 |---|---|---|
@@ -540,11 +570,11 @@ do not introduce lifts, crushing corridors, wind or moving rotation as incidenta
 blockout work. If a useful placement needs a different capability, record that
 requirement before widening the implementation.
 
-Automated route and capture results establish feasibility and composition only.
-Attended both-side 1-4P play must still answer pressure, crossing comfort and
-balance before this layout is accepted; record that gate in the arena owner and
-TODO when the candidate is ready. `POL#3`, `POL#24`, `POL#27` and physical-pad
-acceptance stay open.
+Automated route and capture results establish feasibility and composition only;
+the 2026-11-05 acceptance rests on them and the author's judgement, not on an
+attended both-side 1-4P session. `POL#3` and `POL#27` were accepted at current
+values the same day; `POL#24` and the physical-pad checks were waived and not
+performed.
 
 The first new-map pass uses current movement and weapon values. Define required,
 optional and recovery routes independently from their input families. Reconcile
@@ -561,8 +591,9 @@ Retain a short route, spawn and paint-distribution brief for each accepted layou
 
 Take the accepted Crossfeed reference through the finish review with the
 approved character and all five tool treatments. The implemented production
-passes below are the working baseline; wider arena art remains after `POL#21`
-and the attended finish gate (`POL#24`).
+passes below are the working baseline. `POL#21` was settled on 2026-11-05 and the
+attended finish gate (`POL#24`) was waived that day, not performed; wider arena
+art is the deferred later pass (`POL#16`).
 
 ### Environment and background
 
@@ -991,13 +1022,14 @@ now has retained sources, per-wave provenance, reproducible exports and an
 isolated bank. The author accepted the set on 2026-10-14, closing POL#22.
 The 2026-10-15 [runtime migration](audio-inventory.md#9-runtime-migration-and-remaining-integration)
 replaces all existing audio bindings and includes the story cues and separate
-countdown beats/GO. POL#23 retains the new hooks listed there and the gameplay
-mix; ROAD#3 owns in-game audio acceptance.
+countdown beats/GO. The author accepted the gameplay mix and the current hooks on
+2026-11-05, closing POL#23; ROAD#3's in-game audio acceptance was waived the same
+day and not performed.
 The movement increment adds impact-scaled landing variants, distance-driven
 footsteps and reversal skids with per-player repetition limits. Respawn redraws
 now have separate pause-aware pen loops per player, and exposed painted support
-selects wet step/landing variants within the same movement budgets. Remaining
-hooks and the listening mix stay in POL#23. The menu-feedback increment adds
+selects wet step/landing variants within the same movement budgets. The
+listening mix was accepted as it stands on 2026-11-05 (POL#23). The menu-feedback increment adds
 distinct unready and pending SFX-volume previews, shared match/pause pad
 lost/back cues, and a completed-series cue. The shared resume count-in now uses
 the accepted `ui.count_in` beat. The accepted results coda and each arena's
@@ -1005,7 +1037,8 @@ ending sting are integrated. Arena music now fades in, fades under its ending
 sting and ducks through pause/reconnect/settings and the resume count-in.
 Menu music now has one owner across setup and nested settings; menu/results
 entry and exit fades preserve their outgoing page until the handoff. Optional
-detail assessment and listening remain open.
+detail cues were not added: the author accepted the current set on 2026-11-05,
+and the listening pass was waived (`ROAD#3`), not performed.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give
@@ -1035,9 +1068,10 @@ and release asset list are integrated. Only the accepted set can supply the live
 bank or package; private legacy files are excluded regardless of timestamps.
 README, NOTICE and repository instructions describe this workflow. All 103
 accepted masters are in the bank; inclusion does not mean every new cue has a
-gameplay trigger yet. Complete the remaining hooks in
-[audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration),
-keeping looping/stoppable voices in the existing audio lifecycle.
+gameplay trigger yet. The author accepted the current hooks on 2026-11-05; any
+further hook in
+[audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration)
+is new work and keeps looping/stoppable voices in the existing audio lifecycle.
 
 Retain the optional-bank fallback for missing audio and keep gameplay understandable
 when muted. The finished release should include the new distributable audio;
@@ -1475,12 +1509,16 @@ pass, including extracted Release with its published bank and optional-bank
 fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
-Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. The current material/prop kit is approved for this development stage.
+Accepted-arena artwork remains `POL#16`: the arenas were settled on 2026-11-05,
+so it no longer waits on selection, but it stays deferred as a later art pass.
+The human presentation/readability review it would have folded in (`POL#24`)
+was waived on 2026-11-05 and not performed. The current material/prop kit is
+approved for this development stage.
 The [development order](#development-order-2026-10-17) starts with `POL#17`'s
 level improvement, then movement tuning (`POL#3`), then small iterative changes
 to both, with weapon tuning (`POL#27`) as the layout and movement settle.
-Physical-controller and listening acceptance retain their existing gates.
+Physical-controller and listening acceptance were waived on 2026-11-05 and not
+performed.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
@@ -1504,6 +1542,15 @@ from setup through results. Include jump/landing/contact effects and replacement
 audio for that complete experience, the idle muzzle drip, tool settling, character
 idle motion and a few purposeful signs of life in the room. Review it in motion and
 by ear before expanding asset production.
+
+**Status, 2026-11-05.** For the reference milestone the author accepted the
+built match as it stands and **waived** the attended parts of this section,
+which were **not performed**: the finish review and fresh-player observations
+below (`POL#24`), the physical-controller sessions (`POL#18`, the pad half of
+`POL#3`), the attended performance captures and supported hardware baseline
+(`POL#25`), the listening passes (`ROAD#3`) and the clean-PC Release check
+(`ROAD#1`). The procedure stays as written for a later pass; nothing in this
+section has been recorded as passed by those waivers.
 
 Use a repeatable finish review for each major pass:
 
@@ -1579,10 +1626,11 @@ with further tuning as the game develops. The [movement decisions](
 polish-movement-course.md#initial-movement-decisions-2026-10-15) and
 [feedback values](polish-feedback.md#authored-prototype-values) record them.
 
-Human movement review remains `POL#3`: use keyboard/mouse and physical
-controllers with feedback enabled and disabled, including camera motion and aim
-sweeps. Use that evidence for later tuning alongside the new character poses
-and audio; it does not block implementing the remaining game.
+The author accepted the current movement on 2026-11-05 (`POL#3`); its
+physical-controller half was waived that day and not performed. A later review
+with keyboard/mouse and physical controllers, feedback enabled and disabled,
+camera motion and aim sweeps would feed later tuning alongside the new character
+poses and audio; it does not block implementing the remaining game.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 
@@ -1637,8 +1685,10 @@ Every flag changed at least one frame: `combat_feedback` only `t54s`,
 `debug_console` acceptance case follows and lints the three new scripts (35
 shipped files). Evidence is under `out/validation/finish-details/`.
 
-This decides nothing about which details stay, are refined or cut. That is the
-attended finish review (`POL#24`); these frames are its material.
+This decides nothing about which details stay, are refined or cut. That was the
+attended finish review (`POL#24`), which the author waived on 2026-11-05 without
+it being performed: every detail stays as shipped, and these frames remain the
+material for any later review.
 
 ## 8. Further improvements to prototype
 
@@ -1650,8 +1700,8 @@ Keep the first polished match as the next deliverable.
 
 ### Mouse-cursor visibility (`POL#39`)
 
-**Prototyped 2026-10-27, reported by the author the same day; the attended
-look remains.** The small white Windows cursor was easy to lose during play.
+**Prototyped 2026-10-27, reported by the author the same day; accepted as built
+on 2026-11-05.** The small white Windows cursor was easy to lose during play.
 While a keyboard/mouse human is in the match, the window has the mouse and the
 pointer is inside it, `Level` now draws a hollow Paint.exe marquee centred on
 the pointer's hotspot in its final full-screen pass, under the system cursor:
@@ -1667,12 +1717,14 @@ colours and at least half the marquee left open. Debug Crossfeed launches with
 a scripted pointer show it over pale sky and mid-grey walls at 2P and 4P.
 
 The marquee follows the last polled position, so it can trail the hardware
-cursor by about a frame while the mouse moves fast. **Remaining (`DECISION`):**
-judge it in play over pale, dark and heavily painted scenes at 1/2/4P,
-including that trail; size and colours are provisional. The same decision
-should set a minimum size: the reader's open-half rule uses authored widths,
-so an accepted marquee of size 13 or less can close over the pointer once
-widths round up to a pixel ([`POL#44` finding](#cursor-marker-acceptance-case-pol44)).
+cursor by about a frame while the mouse moves fast. **Decided 2026-11-05:** the
+author accepted the marquee as built, including that trail, with the shipped
+size (44) and colours; they are no longer provisional. No separate in-play
+review over pale, dark and painted scenes at 1/2/4P was held. No minimum size
+was set: the reader's open-half rule uses authored widths, so a marquee of size
+13 or less could still close over the pointer once widths round up to a pixel
+([`POL#44` finding](#cursor-marker-acceptance-case-pol44)); that matters only if
+someone shrinks the shipped size.
 
 ### Cursor-marker acceptance case (`POL#44`)
 
@@ -1716,13 +1768,18 @@ widths, but drawing rounds each width up to at least one pixel. A very small
 accepted marquee can therefore close or invert at some heights. Sweeping sizes
 in 0.5 steps and widths in 0.25 steps, the largest such accepted size is 13
 (for example size 3.5 with 0.25 widths). The shipped 44 and every size above 13
-stay open. A minimum size belongs to the `POL#39` look decision, so this case
-checks the shipped and largest looks only.
+stay open. The `POL#39` decision (2026-11-05) kept the shipped size and set no
+minimum, so this case checks the shipped and largest looks only.
 
-The case does not decide the marquee's look, size, colours or one-frame trail.
-Those remain the `POL#39` `DECISION`.
+The case does not decide the marquee's look, size, colours or one-frame trail;
+the author accepted those as built in `POL#39` on 2026-11-05.
 
 ### Footer band over the overlay papers (`POL#45`)
+
+**Decided 2026-11-05: both overlaps are intended.** The author accepted the
+footer band over the Pause, End and Results papers and the practice Pause focus
+cards reaching into their neighbours as they are; nothing changes. The record
+of what was found follows.
 
 Found 2026-10-30 while putting menu geometry in one place (`HYG#37`, see
 [code-hygiene.md](code-hygiene.md#menu-page-geometry-in-one-place-hyg37)).
@@ -1735,8 +1792,8 @@ centred above `footer_y` instead, and nothing in the reader or validators
 relates the overlay boxes to it. This is measured from `presentation.json` and
 the code, not yet looked at in a capture.
 
-Left, for the author: look at Pause, End and Results at 1/2/4P and say whether
-the overlap is intended. If not, the choices are shorter overlay papers, centring
+The question was whether that overlap is intended; the author said yes on
+2026-11-05. Had it not been, the choices were shorter overlay papers, centring
 them above the footer as the menu pages are, or not drawing the band over a
 match; each is a `presentation.json` or one-function change in
 [menu_geometry](../game/config/presentation/menu_geometry.h), plus a validator rule that keeps the
@@ -1749,9 +1806,10 @@ shipped item's focus card is 113 tall (77 text plus 2 x 18 focus padding), so
 neighbouring focus cards overlap by 17 pixels. Only one card is drawn at a time,
 so the overlap shows only as a focused card reaching into its neighbours' text.
 The validator checks the practice rows against the paper only, because the
-normal row rule would refuse the shipped file. Left, for the author: look at
-practice Pause and say whether that is fine; if not, widen the spacing, shrink
-the padding for that page, or drop a row, and the validator takes the row rule.
+normal row rule would refuse the shipped file. The author accepted that as
+intended on 2026-11-05, so the validator keeps its paper-only practice check.
+Changing it later means widening the spacing, shrinking the padding for that
+page or dropping a row, with the validator taking the row rule.
 
 ### Help players read the tool and the fight
 
@@ -1896,42 +1954,39 @@ blockout; they do not replace playing it.
 
 ### Decide which Splatoon mechanics to borrow (`POL#30`)
 
-**DECISION; only paint underfoot is left, and it is the first fork of the
-`POL#27` sessions.** ColourWars follows Splatoon on purpose in places (no live
-score, random pairs). The [level research](level-design-research.md) lists the
-mechanics it does not borrow as constraints on maps, but nothing records whether
-that absence is a decision. A 2026-10-24 review named three. Each changes
-balance, so none should be added ahead of `POL#27`. The splat tally and the
-special have since been answered "no".
+**Decided: all three answered; paint underfoot ships on (2026-11-05).**
+ColourWars follows Splatoon on purpose in places (no live score, random pairs).
+The [level research](level-design-research.md) lists the mechanics it does not
+borrow as constraints on maps, but nothing recorded whether that absence was a
+decision. A 2026-10-24 review named three. Each changes balance, so each was
+weighed against `POL#27`. The splat tally and the special were answered "no";
+paint underfoot was answered "yes".
 
-- **Paint underfoot. Open; decided 2026-11-03 to settle it first in the
-  `POL#27` sessions.** Shipped tuning keeps movement and ammunition recovery
-  independent of paint. The default-off trial below lets the author judge whether
-  own-colour speed/recovery and enemy-colour slowdown should make territory
-  matter during the round. It adds no paint damage. The author's 2026-11-03
-  decision: underfoot on or off is the first thing the `POL#27` sessions answer,
-  before the five tools are tuned inside whichever answer wins, because zero
-  enemy-paint recovery reprices every tool's reserve (the Sniper's supply most).
-  Play it on Crossfeed at 1P, 2P and 4P with the stored amounts (`1.10`/`1.25`/
-  `0.85`/`0`), `enemy_blocks_health_regen` off and `bots.refill_off_enemy_paint`
-  on. The lean is "yes, movement and recovery only", but it is a lean, not a
-  default. Keep underfoot off during the `POL#21` and `POL#31` arena sessions,
-  so their geometry reads stay comparable with the baseline already recorded; a
-  "yes" then earns a short recheck of the chosen arena, since crossing speed
-  moves by roughly 10-15%. Reopen the call:
+- **Paint underfoot. Answered 2026-11-05: on, movement and recovery only.**
+  Shipped tuning now enables the stored amounts (`1.10` own speed, `1.25` own
+  recovery, `0.85` enemy speed, `0` enemy recovery), with
+  `enemy_blocks_health_regen` off and `bots.refill_off_enemy_paint` on, so
+  own-colour paint speeds a player and their refill and enemy paint slows them
+  and stops it. It adds no paint damage. The author had decided on 2026-11-03 to
+  settle it first in attended `POL#27` sessions on Crossfeed; on 2026-11-05 the
+  author took the lean ("yes, movement and recovery only") as the answer
+  without those sessions and accepted the five tools at their current values
+  inside it. The `POL#21` and `POL#31` arena choices of the same day were made
+  against the earlier underfoot-off baseline; crossing speed now moves by
+  roughly 10-15% on painted floor. Reopen the call:
   - towards "no" or milder amounts if 4P split-screen players cannot tell why
     they slowed, if the losing team snowballs (slower, no ammunition on enemy
     turf, unable to reclaim ground), or if the five tools already feel balanced
     with territory contested through geometry alone;
-  - towards "yes", perhaps with the health lockout, if coverage barely moves
-    mid-round and players ignore enemy paint;
-  - towards settling it before `POL#27` if the arena choice (`POL#21`/`POL#31`)
-    turns out to need the final movement model.
+  - towards the health lockout if coverage barely moves mid-round and players
+    ignore enemy paint;
+  - towards a recheck of Press Tower or the Turbulence slab trial if their
+    crossings, chosen with underfoot off, stop working with it on.
 - **A special charged by painting. Answered 2026-11-03: no special.** There are
   five primaries and nothing else, and that absence is deliberate. Splatoon uses
   a special to answer "why keep painting when nobody is here"; here the arenas
-  answer it with geometry, and paint underfoot would answer it more cheaply if
-  it ships. Nothing was built, so there was nothing to play, and a "no" changes
+  answer it with geometry, and paint underfoot (on since 2026-11-05) answers it
+  more cheaply. Nothing was built, so there was nothing to play, and a "no" changes
   nothing `POL#27` tunes. Extra per-player actions are revisited under the sub
   weapons (`ROAD#11`, [comparable-game gaps](feature-roadmap.md#comparable-game-gaps-2026-10-27)) after
   `POL#27`, so a special and a sub weapon never compete for the same input and
@@ -1949,20 +2004,20 @@ special have since been answered "no".
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
 
-**Paint-underfoot prototype (`POL#36`, implemented 2026-10-26).** The default-off
-trial is available for an isolated Debug match through `tune`. Implementation
-does not answer `POL#30`: the author decides whether to keep the mechanic and
-its amounts as the first fork of the `POL#27` sessions (above). Shipped tuning
-keeps the current P3/five-tool baseline.
+**Paint-underfoot prototype (`POL#36`, implemented 2026-10-26; shipped on
+2026-11-05).** It was built as a default-off trial for an isolated Debug match
+through `tune`, so the author could answer `POL#30`. The 2026-11-05 answer
+turned it on in shipped tuning at the stored amounts.
 
 #### Experimental underfoot prototype
 
-`player.paint_underfoot.enabled` ships `false`. The inactive stored trial
-factors are friendly horizontal speed `1.10`, friendly ammunition recovery
-`1.25`, enemy horizontal speed `0.85`, and enemy recovery `0`. These amounts
-are experimental hypotheses for attended play, not accepted balance. A missing
-old `paint_underfoot` block remains disabled with neutral factors; a present
-block requires all five typed fields and finite usable derived rates.
+`player.paint_underfoot.enabled` ships `true` since 2026-11-05 (it shipped
+`false` until then). The factors are friendly horizontal speed `1.10`, friendly
+ammunition recovery `1.25`, enemy horizontal speed `0.85`, and enemy recovery
+`0`; the author accepted them as shipped balance on 2026-11-05 without a
+separate attended session. A missing old `paint_underfoot` block still reads as
+disabled with neutral factors; a present block requires all five typed fields
+and finite usable derived rates.
 
 Gameplay reads the actual team's paint, independently of capture-credit owner,
 input slot and palette. At the completed contact phase, a living supported
@@ -1985,11 +2040,10 @@ edges so rounded translation cannot lose a half-open edge. The selected fixed
 scored slabs sample the actual support corner in the slab's local top frame.
 That bounded rotated support and public moving-stage construction are now
 qualified in the [completed capability record](feature-roadmap.md#horizontal-movement-capability-2026-10-26).
-Arbitrary moving rotation remains outside the contract; whether the mechanic
-ships is still the open half of `POL#30`.
+Arbitrary moving rotation remains outside the contract.
 
-Two further switches, added 2026-10-27, act only while `enabled` is on, so the
-shipped game is unchanged by either:
+Two further switches, added 2026-10-27, act only while `enabled` is on, which it
+now is in the shipped game:
 
 - `player.paint_underfoot.enemy_blocks_health_regen` (ships `false`; optional,
   missing reads as `false`). While the frozen step class is enemy paint, health
@@ -1999,20 +2053,22 @@ shipped game is unchanged by either:
   cannot kill, and a handicap's `damage_taken` is unaffected.
 - `bots.refill_off_enemy_paint` (ships `true`). With enemy recovery at `0`, a
   refilling bot that kept walking to its next paint goal could stay empty. When
-  on, a refilling bot that is not backing away from a threat walks back to the
-  last grounded centre it held off enemy paint, and holds still once off it,
-  until its reserve resumes. Off restores the unaware bots for comparison.
+  on, a refilling bot on enemy paint makes for the nearest ground along its
+  floor that isn't, or else the last grounded centre it held off it; off enemy
+  paint it keeps walking to its goal, or backing away from a threat, and stops
+  only where the ground ahead is enemy paint, until its reserve resumes. Off
+  restores the unaware bots for comparison.
 
-To try the stored amounts in Debug, without saving content:
+To compare against the old underfoot-off game in Debug, without saving content:
 
 ```
-tune tuning.player.paint_underfoot.enabled on
+tune tuning.player.paint_underfoot.enabled off
 ```
 
 To restore shipped behavior:
 
 ```
-tune tuning.player.paint_underfoot.enabled off
+tune tuning.player.paint_underfoot.enabled on
 ```
 
 All multiplier leaves are live numeric tunes. Invalid schema, derived overflow
@@ -2055,13 +2111,17 @@ failed during asset loading before commands, then reached its wrapper deadline.
 Its failed result and missing-`sprite_sheet_1.dds` stderr remain preserved; v3
 corrected the private runtime inventory without a game rebuild or guard change.
 The Debug, Release recovery, off-state and real-Application receipts retain
-these scopes and failures. Human acceptance of the mechanic and its trial
-factors remains open, in the `POL#27` sessions as recorded above; `POL#31` is
-judged with underfoot off.
+these scopes and failures. The author accepted the mechanic and its factors on
+2026-11-05 (above) without an attended session; `POL#31` was judged with
+underfoot off. These receipts predate shipping it on; the acceptance probes that
+assumed it shipped off were updated to require it on, and the exact motion and
+route pins that compare clean with painted floor run on an underfoot-off copy.
 
 ### Let players learn by making a mess
 
-**Workshop built (2026-10-27, `POL#19`); keeping it waits on a fresh player.**
+**Workshop built (2026-10-27, `POL#19`); kept with its current wording
+(author, 2026-11-05).** The fresh-player observation that was to decide it was
+waived and not performed.
 Choosing **1 Player (practice)** and the Movement Course from the menus now
 opens an untimed workshop: no clock, a lesson card for each station, a pause
 **Tool** row and Restart for a clean course. The
@@ -2119,8 +2179,9 @@ The accepted `ui.count_in` sounds once per displayed positive second, using
 current SFX gain/mute. Its owned voice stops on completion, re-pause, focus loss,
 rebuild and teardown; missed beats never queue. Match music and player voices
 stay suspended until the count completes. The bank's wave bytes are unchanged.
-Physical-pad play still needs to establish whether the brief wait prevents
-surprise starts without making frequent pauses tiresome (`ROAD#2`).
+The two-second wait is accepted as shipped. The physical-pad session that was to
+show whether it prevents surprise starts without making frequent pauses tiresome
+(`POL#18`, `ROAD#2`) was waived by the author on 2026-11-05 and not performed.
 
 Validation: Debug and Release build under `/W4 /WX` and pass all 22 consumer
 cases. Focused final movement and recording-audio reruns cover count-in
@@ -2145,7 +2206,8 @@ No player's real save is opened. Evidence is under `out/acceptance/`,
 visual run IDs are Debug `343c9b1190d24d15a0197e182d423756` and Release
 `2d0a9c2039234fe08a63b1b1b9be912f`. Rerun the hardware check with
 `scripts/check-painter.ps1 -Preset x64-debug -ResumeOnly` (or `x64-release`).
-These checks do not establish physical-pad, listening or human comfort acceptance.
+These checks do not establish physical-pad, listening or human comfort
+acceptance; those were waived on 2026-11-05 and not performed.
 
 **Primary Rematch and end-menu paper implemented (2026-10-15, part of
 `POL#18`/`POL#16`).** The [end menu](../game/states/end_menu.cpp) initially focuses
@@ -2197,8 +2259,8 @@ all 26 reviewed runtime assets and excludes authoring assets. Evidence is under
 Debug `64e06ffaae7c42e4bcca94a413d9c562` and Release
 `ed454a07b52d4fea9795c0148531f4ad`. Rerun with
 `scripts/check-painter.ps1 -Preset x64-debug -EndMenuOnly` (or `x64-release`).
-Physical-pad comfort, listening and human readability acceptance remain in
-their existing TODO rows; this increment does not close `POL#16` or `POL#18`.
+Physical-pad comfort, listening and human readability acceptance were waived by
+the author on 2026-11-05 and not performed; `POL#16` stays a deferred art pass.
 
 A visible per-player ready check before the next round is
 worth testing if one person's confirmation repeatedly starts play before the
@@ -2263,9 +2325,11 @@ with isolated saves and a system-only PATH; the 53-file ZIP retains the accepted
 bank and byte-identical presentation data. Evidence is under `out/acceptance/`
 and `out/validation/stick-*`.
 
-Physical review with two controllers, including drift, partial movement, aiming
-and reconnect-slot identification, remains in `POL#18`/`ROAD#2`. Full remapping
-remains separate (`GAP#4.2`).
+**Status, 2026-11-05 (`POL#18`).** The resume timing and per-slot deadzones are
+accepted as shipped. The physical review with two controllers, including drift,
+partial movement, aiming and reconnect-slot identification (`POL#18`, `ROAD#2`),
+was waived by the author on 2026-11-05 and **not performed**; nothing above
+records a physical pad as tested. Full remapping remains separate (`GAP#4.2`).
 
 ### Make the finished paint job worth looking at
 

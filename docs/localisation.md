@@ -3,8 +3,11 @@
 The locale axis: which language the shell's copy is in, where a translation
 lives, what it may change, what happens to a string it leaves out, which
 characters it may use and how numbers are written. Implemented 2026-11-04 with
-one test locale. Which languages ship is the author's call and is still open
-(`GAP#L11` in [TODO.md](../TODO.md)).
+one test locale. Which languages ship was the author's call (`GAP#L11`): on
+2026-11-05 the author chose none for now, so the game ships English and the
+`qps-ploc` test locale only, and the row is closed. Localisation returns as a
+new row in [TODO.md](../TODO.md) when a language is chosen; the work that
+waits for it is listed below.
 
 ## How a locale works
 
@@ -112,8 +115,9 @@ player could pick it.
 
 A build without `locales/locales.json` has only the base.
 
-There is no language row on Options, and the save has no locale field, yet.
-Both wait for the first language that is not a test locale: a picker that
+There is no language row on Options, and the save has no locale field. Both
+wait for the first language that is not a test locale (none was chosen on
+2026-11-05): a picker that
 offers only English would be noise. When one ships, the row goes on Options and
 the choice in the save, read before `Presentation` the way the resolution is;
 `locale_selection::requested_from_environment` is where that joins. A change

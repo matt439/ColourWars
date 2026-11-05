@@ -54,13 +54,13 @@ namespace turbulence_slab_stage_acceptance
             for (auto field = original.MemberBegin(); field != original.MemberEnd(); ++field)
             {
                 const std::string name = field->name.GetString();
-                if (name == "display_name" || name == "collision_objects") { continue; }
+                if (name == "display_name" || name == "include_in_random" || name == "collision_objects") { continue; }
                 require(stage.HasMember(field->name) && stage[field->name] == field->value,
                     "Registered slab stage changed original spawns/non-display metadata");
             }
             require(std::string(stage["display_name"].GetString()) == "Turbulence Yard - Slab Trial" &&
-                stage.HasMember("include_in_random") && !stage["include_in_random"].GetBool(),
-                "Registered slab stage must retain its explicit-only display identity");
+                stage.HasMember("include_in_random") && stage["include_in_random"].IsBool() && stage["include_in_random"].GetBool(),
+                "Registered slab stage must keep its display identity and its accepted place in Random");
             for (rapidjson::SizeType index = 22; index < 24; ++index)
             {
                 const auto& object = stage["collision_objects"][index];
@@ -116,20 +116,31 @@ namespace turbulence_slab_stage_acceptance
             }
             require(result.size() == 13, "Registered slab catalog must expose thirteen explicit stages");
             const auto random = random_stage_indices(result);
-            require(random.size() == 4, "Registered slab comparison must preserve the four accepted Random arenas");
+            require(random.size() == 4, "Registered slab stage must be one of the four accepted Random arenas");
             bool found = false;
             for (std::size_t index = 0; index < result.size(); ++index)
             {
+                if (result[index].name == "turbulence")
+                {
+                    require(!result[index].include_in_random && std::find(random.begin(), random.end(), index) == random.end(),
+                        "The original Turbulence must stay selectable but out of Random");
+                }
                 if (result[index].name != stage_name) { continue; }
-                require(!found && !result[index].include_in_random &&
+                require(!found && result[index].include_in_random &&
                     result[index].display_name == "Turbulence Yard - Slab Trial" &&
-                    std::find(random.begin(), random.end(), index) == random.end(),
-                    "Registered slab stage leaked into Random or lost explicit selection");
+                    std::find(random.begin(), random.end(), index) != random.end(),
+                    "Registered slab stage left Random or lost its explicit selection");
                 found = true;
             }
             require(found, "Registered slab stage is absent from the actual manifest catalog");
+            bool drawn = false;
             for (std::size_t draw = 0; draw < 16; ++draw)
-            { require(result[random_stage_index(result, draw)].name != stage_name, "Random mapping returned the explicit-only slab trial"); }
+            {
+                const std::string& name = result[random_stage_index(result, draw)].name;
+                require(name != "turbulence", "Random mapping returned the original Turbulence");
+                drawn = drawn || name == stage_name;
+            }
+            require(drawn, "Random mapping never returned the accepted slab trial");
             return result;
         }
 
@@ -255,7 +266,7 @@ namespace turbulence_slab_stage_acceptance
         summary << "{\"outcome\":\"passed\",\"scope\":\"registered-public-LevelBuilder-short-endings-CPU\","
             "\"explicit_stages\":" << stages.size() << ",\"random_stages\":4,\"fresh_levels\":4,\"player_counts\":[1,2,3,4],"
             "\"actual_level_updates\":" << updates << ",\"maximum_level_updates\":4000,\"source_objects\":24,\"preserved_original_objects\":22,"
-            "\"original_movers\":2,\"random_eligible\":false,\"source_staged_identity\":true,\"source_writes\":false,"
+            "\"original_movers\":2,\"random_eligible\":true,\"source_staged_identity\":true,\"source_writes\":false,"
             "\"native_ending_pixels_measured\":false,\"human_balance_acceptance\":false}\n";
         summary.close(); require(summary.good(), "Cannot finish registered slab qualification summary");
     }

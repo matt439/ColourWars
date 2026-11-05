@@ -10,8 +10,9 @@ int wmain(int argc, wchar_t* argv[])
     {
         if (argc != 2) { throw std::invalid_argument("moving_structure <content>"); }
         moving_structure_acceptance::World world(std::filesystem::absolute(argv[1]));
-        moving_structure_acceptance::require(!world.tuning.player().paint_underfoot.enabled,
-            "POL36 prototype must continue to ship disabled");
+        moving_structure_acceptance::require(world.tuning.player().paint_underfoot.enabled,
+            "Paint underfoot must ship enabled (POL#30)");
+        world.disable_paint_underfoot();
         moving_structure_acceptance::check_motion(world);
         moving_structure_acceptance::check_loader(world);
         moving_structure_acceptance::check_paint(world);

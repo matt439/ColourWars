@@ -133,12 +133,15 @@ namespace
         try { std::ignore = series_stage_rule_key(static_cast<SeriesStageRule>(9)); }
         catch (const std::invalid_argument&) { refused = true; }
         require(refused, "An invalid rule value has a key");
+        // The default is Rotate (accepted 2026-11-05; Same before).
+        require(default_series_stage_rule == SeriesStageRule::rotate, "The default series stage rule is not Rotate");
         MatchSetup settings;
-        require(settings.series_stage_rule() == SeriesStageRule::same, "A new setup is not Same stage");
+        require(settings.series_stage_rule() == SeriesStageRule::rotate, "A new setup is not Rotate");
+        require(LastMatchSetup{}.stage_rule == SeriesStageRule::rotate, "A new remembered setup is not Rotate");
         refused = false;
         try { settings.set_series_stage_rule(static_cast<SeriesStageRule>(9)); }
         catch (const std::invalid_argument&) { refused = true; }
-        require(refused && settings.series_stage_rule() == SeriesStageRule::same, "An invalid rule was stored");
+        require(refused && settings.series_stage_rule() == SeriesStageRule::rotate, "An invalid rule was stored");
         settings.set_series_stage_rule(SeriesStageRule::losers_pick);
         const MatchSetup copy = settings;
         require(copy.series_stage_rule() == SeriesStageRule::losers_pick, "A setup copy lost its rule");
@@ -281,10 +284,11 @@ namespace
             }
             const std::string bytes = directory.contents();
             const bool written = bytes.find("\"stage_rule\"") != std::string::npos;
-            require(written == (rule != SeriesStageRule::same) &&
-                (rule == SeriesStageRule::same || bytes.find(std::string("\"stage_rule\":\"") +
+            // Written only when it is not the default: Same is now explicit.
+            require(written == (rule != SeriesStageRule::rotate) &&
+                (rule == SeriesStageRule::rotate || bytes.find(std::string("\"stage_rule\":\"") +
                     series_stage_rule_key(rule) + "\"") != std::string::npos),
-                "The rule was not written only when it differs from Same");
+                "The rule was not written only when it differs from Rotate");
             require(bytes.rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0,
                 "The save did not write the current version");
             Save reloaded; SettingsSession reloaded_session(reloaded);
@@ -295,35 +299,39 @@ namespace
             require(restored.series_stage_rule() == rule && restored.stage() == "hill" && restored.best_of() == 3,
                 "Restore lost the rule or changed the setup around it");
         }
-        // Saves from before the rule (version 4, and the bare version 2 setup)
-        // have no key and play as they always did: Same stage.
-        for (const char* version : { "2", "4" })
+        // A save without the key reads as the default, Rotate: those from
+        // before the rule (version 4, and the bare version 2 setup), and those
+        // from builds where Same was the default and so left unwritten
+        // (versions 5 and 6). The default changed; no version marks it.
+        for (const char* version : { "2", "4", "5", "6" })
         {
             const auto old = load(directory, std::string("{\"save_version\":") + version + "," + last_match("") + "}");
-            require(old && old->stage_rule == SeriesStageRule::same && old->stage == "hill" && old->best_of == 3 &&
-                old->players.size() == 2, "An old save without a rule did not read as Same with its setup intact");
+            require(old && old->stage_rule == SeriesStageRule::rotate && old->stage == "hill" && old->best_of == 3 &&
+                old->players.size() == 2, "A save without a rule did not read as Rotate with its setup intact");
         }
-        // Unknown spellings and wrong types recover to Same and keep the rest.
+        // Unknown spellings and wrong types recover to Rotate and keep the rest.
         for (const char* bad : { ",\"stage_rule\":\"shuffle\"", ",\"stage_rule\":2", ",\"stage_rule\":null",
-            ",\"stage_rule\":\"Rotate\"" })
+            ",\"stage_rule\":\"Same\"" })
         {
             const auto recovered = load(directory, std::string("{\"save_version\":5,") + last_match(bad) + "}");
-            require(recovered && recovered->stage_rule == SeriesStageRule::same && recovered->stage == "hill" &&
-                recovered->best_of == 3, std::string("A malformed rule did not recover to Same alone: ") + bad);
+            require(recovered && recovered->stage_rule == SeriesStageRule::rotate && recovered->stage == "hill" &&
+                recovered->best_of == 3, std::string("A malformed rule did not recover to Rotate alone: ") + bad);
         }
+        const auto same = load(directory, std::string("{\"save_version\":5,") + last_match(",\"stage_rule\":\"same\"") + "}");
+        require(same && same->stage_rule == SeriesStageRule::same, "A saved Same did not load");
         const auto rotate = load(directory, std::string("{\"save_version\":5,") + last_match(",\"stage_rule\":\"rotate\"") + "}");
         require(rotate && rotate->stage_rule == SeriesStageRule::rotate, "A saved Rotate did not load");
         // A newer save's rule still loads in this build.
         const auto newer = load(directory, std::string("{\"save_version\":9,") + last_match(",\"stage_rule\":\"losers_pick\"") + "}");
         require(newer && newer->stage_rule == SeriesStageRule::losers_pick, "A newer save's rule did not load");
         // An invalid in-memory rule is refused by capture and repaired by normalised().
-        LastMatchSetup broken = *rotate;
+        LastMatchSetup broken = *same;
         broken.stage_rule = static_cast<SeriesStageRule>(7);
         bool refused = false;
         try { broken.validate(); }
         catch (const std::invalid_argument&) { refused = true; }
-        require(refused && broken.normalised().stage_rule == SeriesStageRule::same,
-            "An invalid rule was accepted or not repaired to Same");
+        require(refused && broken.normalised().stage_rule == SeriesStageRule::rotate,
+            "An invalid rule was accepted or not repaired to Rotate");
     }
 
     struct World
@@ -446,8 +454,9 @@ int wmain(int argc, wchar_t* argv[])
             "in manifest order, wraps, never rotates into an explicit-only stage and joins the pool from one; "
             "Loser's pick hands Stage Select to the losing team with a human seat, rotates for a bot-only loser; "
             "draws replay under every rule; single matches ignore it; Play Series Again follows it; a stage chosen "
-            "by hand wins over every rule; the rule round-trips the remembered setup, is written only when not "
-            "Same (save version 5), and old, unknown or wrong-typed rules read as Same without touching the rest; "
+            "by hand wins over every rule; Rotate is the default; the rule round-trips the remembered setup, is "
+            "written only when not Rotate (so Same is explicit), and absent, unknown or wrong-typed rules read as "
+            "Rotate without touching the rest; "
             "menu text read, mapped, fit-checked and refused when missing or too wide\n";
         return 0;
     });

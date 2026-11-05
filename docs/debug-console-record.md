@@ -361,8 +361,9 @@ and Release still carries none of the console's RTTI names. No pad or attended
 play is needed.
 
 **Not decided here.** This is preparation only. Whether Easy/Normal/Hard are
-useful (`ROAD#10`) and whether Boost +1/+2 are fair (`ROAD#5`) stay DECISION;
-no difficulty, Boost or team default changed.
+useful (`ROAD#10`) and whether Boost +1/+2 are fair (`ROAD#5`) were the
+author's calls; on 2026-11-05 both were accepted at their current values,
+without the attended session. No difficulty, Boost or team default changed.
 
 ## Arena review screenshot pack (`DBG#18`)
 
@@ -397,7 +398,7 @@ The shipped scripts photographed the
 Movement Course (`station_tour`, `review_feedback_ab`) and Close Quarters
 (`bots_4p`); nothing in `scripts/debug/` covers Press Tower or Turbulence.
 Every explicit-only stage is reachable with `+stage`, since
-`include_in_random` (`game/objects/stage.h:16`) only filters Random, and the
+`include_in_random` (`game/objects/stage.h:19`) only filters Random, and the
 Turbulence owner still asks for native 1/2/3/4-pane clean and heavy captures
 ([polish-turbulence.md](polish-turbulence.md), lines 1047-1050).
 
@@ -423,8 +424,8 @@ logs checksums; two runs with the same seed log the same checksums. No pad is
 needed; the run notes go in each arena's owner doc.
 
 **Not decided here.** The pictures are evidence for review, not acceptance:
-readability, composition and arena approval stay with the arena owners and their
-DECISION rows.
+readability, composition and arena approval stay with the arena owners (the
+author's 2026-11-05 calls are recorded there).
 
 ## Loaded-stage replay fingerprint (`DBG#8`)
 

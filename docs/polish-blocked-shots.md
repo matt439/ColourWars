@@ -39,7 +39,8 @@ budget, including device-less debug players. No gameplay random values,
 projectiles, scoring tiles or sound voices are created by the visual cue.
 The existing budgeted `paint.dud` sound remains the audible response. The
 optional accepted `weapon.blocked` sound is not layered over it; assessment of
-optional cues and the multiplayer mix remains `POL#23`.
+optional cues and the multiplayer mix was `POL#23`, whose current mix the
+author accepted on 2026-11-05 without a listening session.
 
 ## Authored values
 
@@ -94,7 +95,8 @@ From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
   the bank, a system-only PATH and graceful close. A separate extracted copy
   also passes without the optional bank, emitting only the expected silent-bank
   diagnostic. Receipts are under `out/validation/blocked-shot/`; deployment on
-  a clean Windows PC remains `ROAD#1`.
+  a clean Windows PC (`ROAD#1`) was waived by the author on 2026-11-05 and not
+  performed.
 
 CPU evidence is under `out/acceptance/<preset>/`, with the final focused Debug
 case in `out/validation/blocked-shot/focused-run.log`. Hardware receipts,

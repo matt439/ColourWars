@@ -4,10 +4,13 @@
 // probe that loads one registry and offers several stage lists from it builds
 // a catalog per list here, rereading the definitions it needs from their files.
 
+#include "engine/assets/json.h"
 #include "engine/core/registry.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
 #include "game/config/stage_catalog.h"
+#include "game/config/stage_loading.h"
+#include <filesystem>
 #include <initializer_list>
 #include <memory>
 #include <string>
@@ -53,6 +56,34 @@ namespace acceptance
         for (const Stage& stage : stages)
         {
             catalog.add(StageDefinition{ stage, copy(stage.name) });
+        }
+        return catalog;
+    }
+
+    // Every stage `content`/manifest.json lists, in its order, each read as
+    // wWinMain's "level" kind reads it: the catalog the game's GameData holds
+    // before any user stage joins. A probe whose debug director loads content
+    // as the game does (tune.save, reload, a tune that reaches the levels)
+    // needs this list, not a hand-picked one: validate_stage_names holds
+    // presentation.json's menu_text.stage_names to exactly the manifest's
+    // stages, so a subset makes the shipped file look broken.
+    inline StageCatalog manifest_catalog(const std::filesystem::path& content)
+    {
+        const labrador::JsonDocument manifest =
+            labrador::read_json_file((content / "manifest.json").string().c_str());
+        const labrador::JsonValue assets = manifest.root().array("assets");
+        StageCatalog catalog;
+        for (size_t group = 0; group < assets.size(); ++group)
+        {
+            const labrador::JsonValue asset = assets.at(group);
+            if (asset.string("kind") != "level") { continue; }
+            const labrador::JsonValue names = asset.array("names");
+            for (size_t index = 0; index < names.size(); ++index)
+            {
+                const std::string name = names.at(index).as_string();
+                catalog.add(read_stage_definition(
+                    (content / asset.string("directory") / (name + ".json")).string(), name));
+            }
         }
         return catalog;
     }

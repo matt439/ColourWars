@@ -20,6 +20,10 @@ enum class SeriesStageRule
 	losers_pick
 };
 
+// A new setup's rule, and what a save without one (or with an unknown
+// spelling) reads as. Rotate since 2026-11-05; Same before.
+constexpr SeriesStageRule default_series_stage_rule = SeriesStageRule::rotate;
+
 // The save's spelling: "same", "rotate", "losers_pick".
 const char* series_stage_rule_key(SeriesStageRule rule);
 // False for an unknown spelling, leaving `rule` unchanged.

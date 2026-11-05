@@ -106,7 +106,7 @@ From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
   sound bank. Isolated Debug and extracted Release startup pass with the bank,
   a system-only PATH and graceful close. Extracted Release also passes without
   the optional bank, reporting the expected silent fallback. Clean-PC deployment
-  remains `ROAD#1`.
+  (`ROAD#1`) was waived by the author on 2026-11-05 and not performed.
 
 CPU evidence is in `out/acceptance/<preset>/`; build, native menu, package and
 startup evidence is in `out/validation/aim-marker/`. These checks retain the

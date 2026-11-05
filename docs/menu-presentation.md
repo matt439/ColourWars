@@ -783,7 +783,8 @@ order, actions and input handling retained.
 
 The Series stage values are `menu_text.values.series_stage_same` (`Same
 stage`), `series_stage_rotate` (`Rotate`) and `series_stage_losers_pick`
-(`Loser's pick`), drawn in the item font at the duration's value column.
+(`Loser's pick`), drawn in the item font at the duration's value column. A
+setup with no remembered rule shows `Rotate`, the default since 2026-11-05.
 Startup draws each one in a real row and checks the complete row, card and
 arrow fit the paper and row stride, as it does for every duration value. Under
 Loser's pick, Stage Select's heading becomes `menu_text.stage.team_a_picks` or

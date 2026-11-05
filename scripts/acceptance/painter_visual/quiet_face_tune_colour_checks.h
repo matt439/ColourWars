@@ -247,7 +247,7 @@ void quiet_face_colour_consumer_checks(Application& app, const Presentation& pre
 }
 
 #if COLOURWARS_DEV_TOOLS
-void quiet_face_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
+void quiet_face_tune_colour_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const auto root = output / "quiet-face-tune-scratch", source = root / "source", staged = root / "staged";
@@ -274,14 +274,9 @@ void quiet_face_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& 
             static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) });
         return value;
     };
-    const auto original_preferences = preference_values(); StageList stages;
-    for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence", "crossfeed" })
-    {
-        const auto* info = levels.get(name); require(info != nullptr, "Quiet face requires shipped stage metadata");
-        stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
-    }
+    const auto original_preferences = preference_values();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);

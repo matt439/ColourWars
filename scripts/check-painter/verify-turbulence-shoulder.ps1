@@ -23,7 +23,7 @@ $shoulderTuning=Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json'
 $shoulderBody=$shoulderTuning.player.size;$shoulderWorld=$shoulderStage.level_bounds.zoom_out_finish_bounds
 $shoulderBounds=$shoulderStage.level_bounds.camera_bounds
 if($shoulderStage.collision_objects.Count -ne 26 -or $shoulderStage.display_name -cne 'Turbulence Yard - Shoulder Trial' -or
-    $shoulderStage.include_in_random -isnot [bool] -or $shoulderStage.include_in_random -or $shoulderTuning.player.paint_underfoot.enabled -or
+    $shoulderStage.include_in_random -isnot [bool] -or $shoulderStage.include_in_random -or -not $shoulderTuning.player.paint_underfoot.enabled -or
     $shoulderBody.x -ne 52 -or $shoulderBody.y -ne 120){throw 'Shoulder source/body/underfoot fixture differs.'}
 $shoulderObjects=@{}
 foreach($object in $shoulderStage.collision_objects){$shoulderObjects[$object.name]=$object}

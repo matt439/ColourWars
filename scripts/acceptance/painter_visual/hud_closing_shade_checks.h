@@ -302,7 +302,7 @@ ClosingShadeFrames hud_closing_shade_consumer_checks(HudClosingShadeProbe& probe
     return references;
 }
 #if COLOURWARS_DEV_TOOLS
-void hud_closing_shade_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning, Presentation& presentation,
+void hud_closing_shade_tune_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output, HudClosingShadeProbe& probe, const ClosingShadeFrames& references)
 {
     const auto root = output / "closing-shade-tune-scratch", source = root / "source", staged = root / "staged";
@@ -319,10 +319,8 @@ void hud_closing_shade_tune_checks(Application& app, Registry<LevelLoadedInfo>& 
         values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
             static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
     };
-    const auto original_preferences = preferences_now(); StageList stages;
-    for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence", "crossfeed" })
-    { const auto* info = levels.get(name); require(info != nullptr, "Closing shade requires shipped stage metadata"); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() }); }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
+    const auto original_preferences = preferences_now();
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
@@ -424,7 +422,7 @@ void hud_closing_shade_tune_checks(Application& app, Registry<LevelLoadedInfo>& 
     std::cout << "PASS closing shade tune: 10 actual statements, 8 accepted rendered states and 1 atomic AA00 refusal with a held-frame read; 25 additional reads, one-token Save/rebase and original/saved reset. No game Saves or updates.\n";
 }
 #endif
-void hud_closing_shade_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning, Presentation& presentation,
+void hud_closing_shade_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
@@ -433,13 +431,13 @@ void hud_closing_shade_checks(Application& app, Registry<LevelLoadedInfo>& level
 #if COLOURWARS_DEV_TOOLS
     constexpr size_t budget = 93;
 #else
-    constexpr size_t budget = 68; (void)levels; (void)content;
+    constexpr size_t budget = 68; (void)content;
 #endif
     HudClosingShadeProbe probe(app, presentation, output, budget);
     auto& look = const_cast<HudPresentation&>(presentation.hud());
     const ClosingShadeFrames references = hud_closing_shade_consumer_checks(probe, look, output);
 #if COLOURWARS_DEV_TOOLS
-    hud_closing_shade_tune_checks(app, levels, tuning, presentation, content, output, probe, references);
+    hud_closing_shade_tune_checks(app, tuning, presentation, content, output, probe, references);
 #else
     (void)references; std::cout << "PASS hud-closing-shade-only Release consumer scope; no developer commands executed\n";
 #endif

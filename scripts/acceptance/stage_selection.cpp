@@ -57,6 +57,8 @@ namespace
 		StageList stages;
 		bool course_found = false;
 		bool crossfeed_found = false;
+		bool king_of_the_hill_found = false;
+		bool turbulence_found = false;
 		bool press_tower_found = false;
 		bool turbulence_blockout_found = false;
 		bool turbulence_mover_found = false;
@@ -92,10 +94,20 @@ namespace
 					crossfeed_index = stages.size() - 1;
 					require(info.include_in_random(), "Accepted Crossfeed must be eligible for Random");
 				}
+				if (name == "king_of_the_hill")
+				{
+					king_of_the_hill_found = true;
+					require(!info.include_in_random(), "The original King of the Hill must leave Random now Press Tower replaced it");
+				}
+				if (name == "turbulence")
+				{
+					turbulence_found = true;
+					require(!info.include_in_random(), "The original Turbulence must leave Random now the slab trial replaced it");
+				}
 				if (name == "press_tower")
 				{
 					press_tower_found = true;
-					require(!info.include_in_random(), "Press Tower must require an explicit stage choice while provisional");
+					require(info.include_in_random(), "Accepted Press Tower must be eligible for Random");
 				}
 				if (name == "turbulence_blockout")
 				{
@@ -110,7 +122,7 @@ namespace
 				if (name == "turbulence_slab_trial")
 				{
 					turbulence_slab_found = true;
-					require(!info.include_in_random(), "Turbulence scored-slab comparison must remain explicit-only while provisional");
+					require(info.include_in_random(), "Accepted Turbulence slab trial must be eligible for Random");
 				}
 				if (name == "turbulence_ferry_trial")
 				{
@@ -140,19 +152,19 @@ namespace
 				}
 			}
 		}
-		require(course_found && crossfeed_found && press_tower_found && turbulence_blockout_found && turbulence_mover_found &&
-			turbulence_slab_found && turbulence_ferry_found && turbulence_gate_found && turbulence_lift_found &&
-			turbulence_paint_lift_found && defaulted_arenas == 3,
-			"Acceptance needs the explicit course, Press Tower and Turbulence comparisons, eligible Crossfeed and three unchanged arenas");
+		require(course_found && crossfeed_found && king_of_the_hill_found && turbulence_found && press_tower_found &&
+			turbulence_blockout_found && turbulence_mover_found && turbulence_slab_found && turbulence_ferry_found &&
+			turbulence_gate_found && turbulence_lift_found && turbulence_paint_lift_found && defaulted_arenas == 1,
+			"Acceptance needs the explicit course, originals and Turbulence trials, eligible Crossfeed, Press Tower and slab trial and one unmarked arena");
 		const std::set<std::string> expected_names{ "king_of_the_hill", "turbulence", "close_quarters", "movement_course",
 			"crossfeed", "press_tower", "turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial", "turbulence_ferry_trial",
 			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" };
 		require(stages.size() == 13 && names_seen == expected_names, "Stage selection must expose exactly the thirteen registered stages");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
-		require(candidates.size() == 4, "The three legacy arenas and accepted Crossfeed must remain the four Random candidates");
+		require(candidates.size() == 4, "Close Quarters, Crossfeed, Press Tower and the slab trial must be the four Random candidates");
 		std::set<std::string> candidate_names;
 		for (const size_t index : candidates) { candidate_names.insert(stages[index].name); }
-		require(candidate_names == std::set<std::string>{ "king_of_the_hill", "turbulence", "close_quarters", "crossfeed" },
+		require(candidate_names == std::set<std::string>{ "close_quarters", "crossfeed", "press_tower", "turbulence_slab_trial" },
 			"Random changed its four accepted arena identities");
 		require(std::find(candidates.begin(), candidates.end(), crossfeed_index) != candidates.end(),
 			"Shipped Random selection omitted accepted Crossfeed");
@@ -160,9 +172,9 @@ namespace
 		{
 			const size_t index = random_stage_index(stages, draw);
 			require(index == candidates[draw] && stages[index].include_in_random &&
-				stages[index].name != "movement_course" && stages[index].name != "press_tower" &&
-				stages[index].name != "turbulence_blockout" && stages[index].name != "turbulence_mover_trial" &&
-				stages[index].name != "turbulence_slab_trial" && stages[index].name != "turbulence_ferry_trial" &&
+				stages[index].name != "movement_course" && stages[index].name != "king_of_the_hill" &&
+				stages[index].name != "turbulence" && stages[index].name != "turbulence_blockout" &&
+				stages[index].name != "turbulence_mover_trial" && stages[index].name != "turbulence_ferry_trial" &&
 				stages[index].name != "turbulence_gate_trial" && stages[index].name != "turbulence_lift_trial" &&
 				stages[index].name != "turbulence_paint_lift_trial",
 				"Shipped Random selection admitted an explicit-only stage");
@@ -209,7 +221,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course, Press Tower and Turbulence comparisons, Crossfeed in Random, eligible Random mapping, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: explicit course, originals and Turbulence trials, Crossfeed, Press Tower and slab trial in Random, eligible Random mapping, defaults and rejection guards.\n";
 		return 0;
 	});
 }

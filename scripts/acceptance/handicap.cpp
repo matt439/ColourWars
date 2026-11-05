@@ -32,8 +32,8 @@
 // ROAD#5: per-seat handicaps. Tuning shape and validation, the roster field,
 // the Tools page copy, and the two match effects on a real Player: damage
 // taken and paint refill. Level 0 must leave both bit-for-bit unchanged.
-// ROAD#39: Boost on paint underfoot, on a test copy of the tuning with the
-// underfoot trial enabled. The shipped tuning is not changed.
+// ROAD#39: Boost on paint underfoot, which ships enabled (POL#30), checked
+// against a test copy of the tuning with it switched off.
 
 using namespace labrador;
 
@@ -226,8 +226,9 @@ namespace
     }
 
     // ROAD#39. The refill a weapon receives is the underfoot multiplier times
-    // the level's paint_refill. Built from an enabled copy of the tuning at
-    // the shipped trial amounts, through actual floor paint and contacts.
+    // the level's paint_refill. Built from the shipped tuning, which enables
+    // the mechanic at the accepted trial amounts, and from a disabled copy,
+    // through actual floor paint and contacts.
     namespace underfoot = paint_underfoot_acceptance;
 
     std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
@@ -253,9 +254,10 @@ namespace
     void check_boost_underfoot(const std::filesystem::path& content)
     {
         underfoot::World world(content);
-        require(!world.tuning.player().paint_underfoot.enabled,
-            "Paint underfoot ships enabled; this check expects to enable it on a test copy");
-        // Off: the shipped tuning gives paint_refill alone on any floor, bit for bit.
+        require(world.tuning.player().paint_underfoot.enabled,
+            "Paint underfoot ships disabled; this check expects the shipped tuning to enable it");
+        // Off: a disabled copy gives paint_refill alone on any floor, bit for bit.
+        world.configure(false);
         for (const PlayerTeam floor : { PlayerTeam::none, PlayerTeam::a, PlayerTeam::b })
         {
             for (int level = 0; level < handicaps::count; ++level)
@@ -269,7 +271,7 @@ namespace
         world.configure(true);
         const PaintUnderfootTuning& effect = world.tuning.player().paint_underfoot;
         require(effect.enabled && effect.own_ammo_regen_multiplier > 1.0f && effect.enemy_ammo_regen_multiplier == 0.0f,
-            "The test tuning copy lost the trial's own boost or enemy suppression");
+            "The enabled tuning lost the trial's own boost or enemy suppression");
         for (int level = 0; level < handicaps::count; ++level)
         {
             const float refill = world.tuning.handicap(level).paint_refill;
@@ -424,11 +426,14 @@ namespace
     {
         navigation::World world(content, "handicap-bot", "Boost bot fixture needs authored support '",
             "turbulence_mover_trial");
-        underfoot::World enabled(content);
-        enabled.configure(true);
+        require(world.assets.tuning.player().paint_underfoot.enabled,
+            "The Boost bot fixture expects the shipped tuning to enable paint underfoot");
+        const GameTuning shipped = world.assets.tuning;
+        underfoot::World disabled(content);
+        disabled.configure(false);
         for (const bool trial : { false, true })
         {
-            if (trial) { world.assets.tuning = enabled.tuning; }
+            world.assets.tuning = trial ? shipped : disabled.tuning;
             require(world.assets.tuning.player().paint_underfoot.enabled == trial,
                 "The Boost bot fixture did not use the intended tuning copy");
             for (int level = 0; level < handicaps::count; ++level) { observe_refilling_window(world, level); }
@@ -452,7 +457,7 @@ int wmain(int argc, wchar_t* argv[])
         std::cout << "PASS handicap: neutral none and monotonic shipped boosts, malformed tuning refused with context, "
             "roster field kept through bot/human, difficulty, resize, shuffle, copy and claims, invalid levels refused, "
             "Tools page copy and prompts, damage scaled bit-exactly per level (none unchanged), refill multiplier, "
-            "kept through respawn; Boost on paint underfoot (test tuning copy): own and enemy multiplier times "
+            "kept through respawn; Boost on paint underfoot (shipped on, disabled test copy): own and enemy multiplier times "
             "paint_refill bit-exact per level, enemy zero kept, off paint and dead give paint_refill alone, Off unchanged; "
             "a boosted bot's refilling finish window uses its level's paint_refill, underfoot off and on\n";
         return 0;

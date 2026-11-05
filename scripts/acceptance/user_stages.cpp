@@ -440,7 +440,8 @@ namespace
 		write_level(base, folder / "my_arena.json", [](rapidjson::Document& d)
 		{
 			set_string(d, d, "display_name", "My Arena");
-			// Asks for Random; a user stage is explicit-only regardless.
+			// Asks for Random, so it joins it; zz-second leaves the key out
+			// and, unlike a shipped stage without it, stays explicit-only.
 			d.AddMember("include_in_random", true, d.GetAllocator());
 		});
 		write_level(base, folder / "zz-second.json", [](rapidjson::Document& d)
@@ -504,23 +505,28 @@ namespace
 			require(!shipped.stages[index].user, "Shipped stages must stay first and unmarked");
 		}
 		const Stage& mine = shipped.stages[13];
-		require(mine.name == "my_arena" && mine.display_name == "My Arena" && mine.user && !mine.include_in_random,
-			"A user stage must follow the shipped ones, marked and explicit-only");
+		require(mine.name == "my_arena" && mine.display_name == "My Arena" && mine.user && mine.include_in_random,
+			"A user stage asking for Random must follow the shipped ones, marked and a Random candidate");
 		// menu_text.stage_names names only shipped stages: a user stage's
 		// title is its own display_name, which no locale reaches.
 		require(fixture.presentation->menu_text().stage_name("my_arena") == nullptr &&
 			fixture.presentation->menu_text().stage_title(mine.name, mine.display_name, "my_arena") == L"My Arena",
 			"A user stage's title must be its own display_name");
-		require(shipped.stages[14].name == "zz-second" && shipped.stages[14].user,
-			"The second user stage must follow the first");
+		require(shipped.stages[14].name == "zz-second" && shipped.stages[14].user && !shipped.stages[14].include_in_random,
+			"The second user stage must follow the first, explicit-only without include_in_random");
 		require(shipped.levels.contains("my_arena") && shipped.levels.contains("zz-second") &&
 			!shipped.levels.contains("broken") && !shipped.levels.contains("Crossfeed"),
 			"Only accepted user stages may reach the level registry");
 		require(shipped.levels.get("crossfeed")->display_name() == "Crossfeed",
 			"A colliding user stage must not replace the shipped stage");
-		const std::vector<size_t> random = random_stage_indices(shipped.stages);
-		require(random.size() == 4 && std::none_of(random.begin(), random.end(),
-			[](size_t index) { return index >= 11; }), "User stages must not join the Random pool");
+		// The opted-in user stage joins the shipped Random pool, which the
+		// hint counts; the one without the key does not.
+		const StageList shipped_only(shipped.stages.begin(), shipped.stages.begin() + 13);
+		const std::vector<size_t> shipped_random = random_stage_indices(shipped_only);
+		std::vector<size_t> expected_random = shipped_random;
+		expected_random.push_back(13);
+		require(!shipped_random.empty() && random_stage_indices(shipped.stages) == expected_random,
+			"Only the user stage asking for Random may join the Random pool, after the shipped candidates");
 
 		// The startup path after the scan: the whole list, user stages
 		// included, passes the same checks and joins the sound groups.
@@ -670,6 +676,7 @@ namespace
 		write_level(base, folder / "a_arena.json", [](rapidjson::Document& d)
 		{
 			set_string(d, d, "display_name", "A Arena");
+			d.AddMember("include_in_random", false, d.GetAllocator());
 		});
 		write_level(base, folder / "b_arena.json", [](rapidjson::Document& d)
 		{
@@ -690,6 +697,8 @@ namespace
 		require(shipped.stages[manifest.size() + 1].display_name == "B Arena Edited" &&
 			shipped.levels.get("b_arena")->display_name() == "B Arena Edited" && shipped.stages[manifest.size() + 1].user &&
 			!shipped.stages[manifest.size() + 1].include_in_random, "An edited user stage must play its new definition");
+		require(shipped.stages[manifest.size()].name == "a_arena" && !shipped.stages[manifest.size()].include_in_random,
+			"A user stage saying include_in_random false must stay explicit-only");
 
 		// Nothing changed: the same list, and the same refusal.
 		const UserStageScan same = session.rescan();
@@ -919,7 +928,7 @@ int main(int argc, char** argv)
 		check_stage_names(fixture, content, scratch);
 		check_rescan(fixture, content, scratch);
 		std::cout << "PASS user stages: per-user folder, per-file validation and refusal, "
-			"no shipped or user name collisions, Stage Select order and marker, outside Random.\n";
+			"no shipped or user name collisions, Stage Select order and marker, Random only on request.\n";
 		return 0;
 	});
 }

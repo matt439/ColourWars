@@ -36,7 +36,7 @@ struct LastMatchSetup
 	std::optional<float> duration;
 	int best_of = 1;
 	// Kept for single matches too, so the Mode page shows what was last chosen.
-	SeriesStageRule stage_rule = SeriesStageRule::same;
+	SeriesStageRule stage_rule = default_series_stage_rule;
 
 	// Rejects unresolved or invalid choices; input claims are neither required
 	// nor copied. The caller establishes that this was a normal user start.
@@ -61,8 +61,8 @@ struct LastMatchSetup
 // or counts reset to absent; recoverable fields are normalised independently.
 // Legacy seats without controller/difficulty are human/Normal. Handicap is
 // written only when a seat has one; absent or invalid is none. The series
-// stage rule (save version 5) is written only when it is not Same; absent or
-// unknown is Same, the behaviour before the rule existed. P1 is human,
+// stage rule (save version 5) is written only when it is not the default,
+// Rotate; absent or unknown is Rotate, so Same is written explicitly. P1 is human,
 // and the layout follows the number of humans rather than all participants.
 class LastMatchSetupSection final : public SaveSection
 {

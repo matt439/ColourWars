@@ -86,7 +86,7 @@ checks and full Release qualification in
 | `format` | Optional integer | `1`; omission selects legacy format 1. |
 | `display_name` | String | Authored stage label. Startup checks it against the game's drawable text rules and fonts. A shipped stage is drawn by its `presentation.json` `menu_text.stage_names` entry, whose English must equal this byte for byte ([Stage names](localisation.md#stage-names)); a user stage draws this itself. |
 | `icon_frame` | String | Existing frame in `sprite_sheet_1`. Required legacy icon metadata; stage selection now draws a live arena preview. |
-| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. A [user stage](feature-roadmap.md#user-stages-road16) is never in Random, whatever this says. |
+| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. A [user stage](feature-roadmap.md#user-stages-road16) defaults to `false` instead: it joins Random only when its file says `true` (since 2026-11-05). |
 | `sound` | Object | Bank identifier and independent optional music/sting pairs, below. |
 | `spawn_locations` | Object | `team_a` and `team_b` arrays of points, at least four entries each. |
 | `level_bounds` | Object | All four named rectangles, below. |
@@ -615,5 +615,6 @@ levels.
 
 The schema is an authoring and acceptance artifact. Normal builds and runtime
 loading add no Python or external schema-package dependency. Manual editor and
-saved-stage play checks (`ED#5`), physical multiplayer sessions (`ROAD#2`) and
-visible uncontended frame-pacing/hardware qualification (`POL#25`) remain open.
+saved-stage play checks (`ED#5`, accepted as built), physical multiplayer
+sessions (`ROAD#2`) and visible uncontended frame-pacing/hardware qualification
+(`POL#25`) were waived by the author 2026-11-05, not performed.

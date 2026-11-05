@@ -184,6 +184,21 @@ namespace moving_structure_acceptance
             require(document.Accept(writer), "Cannot encode isolated moving fixture tuning");
             return GameTuning(labrador::parse_json(buffer.GetString(), "moving-fixture-variant.json"));
         }
+        // Paint underfoot ships on (POL#30). The motion, support and paint
+        // pins here were measured with it off, so the source and every
+        // variant start from a copy with it off; a check that wants it on
+        // switches it on in its own variant.
+        void disable_paint_underfoot()
+        {
+            rapidjson::Document document; document.Parse(source.c_str());
+            require(!document.HasParseError(), "Cannot parse source moving fixture tuning");
+            document["player"]["paint_underfoot"]["enabled"].SetBool(false);
+            rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            require(document.Accept(writer), "Cannot encode moving fixture tuning with underfoot off");
+            source = buffer.GetString();
+            tuning = GameTuning(labrador::parse_json(source, "moving-fixture-underfoot-off.json"));
+            tuning.validate_resources(render, audio);
+        }
         std::unique_ptr<Weapon> weapon(const GameTuning& values, WeaponType tool,
             PlayerTeam team, int owner, const labrador::Vector2F& center = labrador::Vector2F::zero, int view = 0)
         {

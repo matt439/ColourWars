@@ -5,6 +5,9 @@ void check_underfoot_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const Sc
     const std::string source_before = read_text(scratch.source / L"tuning.json");
     const std::string staged_before = read_text(scratch.staged / L"tuning.json");
     const auto before = tuning.player().paint_underfoot;
+    // The mechanic ships on (POL#30); the switch is edited to the other
+    // value so the path reset below has a live edit to undo.
+    require(before.enabled, "Scratch tuning should ship paint underfoot enabled");
     const PlayerTuning* const borrowed = &tuning.player();
     for (const char* field : { "enabled", "own_speed_multiplier", "own_ammo_regen_multiplier", "enemy_speed_multiplier", "enemy_ammo_regen_multiplier",
         "enemy_blocks_health_regen" })
@@ -19,7 +22,9 @@ void check_underfoot_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const Sc
         impl.execute("tune " + root + "enemy_ammo_regen_multiplier 0").ok &&
         impl.execute("tune " + root + "enemy_blocks_health_regen on").ok &&
         tuning.player().paint_underfoot.enemy_blocks_health_regen &&
+        impl.execute("tune " + root + "enabled off").ok && !tuning.player().paint_underfoot.enabled &&
         impl.execute("tune " + root + "enabled on").ok && tuning.player().paint_underfoot.enabled &&
+        impl.execute("tune " + root + "enabled off").ok && !tuning.player().paint_underfoot.enabled &&
         &tuning.player() == borrowed, "Valid live underfoot edits do not move borrowed tuning records");
     const std::string text = impl.tune_document("tuning")->current().text();
     const auto ledger = impl.tune_document("tuning")->edits().size();

@@ -5,6 +5,7 @@
 #include "game/objects/weapon_type.h"
 #include "game/config/tuning.h"
 #include "game/ai/match_bot_support.h"
+#include "game/ai/match_bot_locomotion.h"
 #include "game/ai/bot_random.h"
 #include "engine/math/rectanglef.h"
 #include <cstdint>
@@ -32,11 +33,21 @@ struct MatchBotObservation
 	bool on_platform = false;
 	bool facing_right = true;
 	float ammo = 0.0f;
-	// The seat's handicap refill boost; paint underfoot is not predicted.
+	// The seat's handicap refill boost. MatchBotLocomotion adds the footing's.
 	float paint_refill = 1.0f;
-	// The paint-underfoot trial is on, and the support this step is enemy paint.
+	// Paint underfoot is on. footing is the support top under the body this
+	// step, as the player's movement and refill read it. The rest are read
+	// only for a refill: the ahead footings are this floor a short stride to
+	// either side, at the leading foot and one braking distance further
+	// (enemy if either is); on enemy paint, the refuges are how far along
+	// this floor each way the nearest ground that isn't enemy paint lies,
+	// negative where the floor ends or none lies within sight.
 	bool underfoot = false;
-	bool on_enemy_paint = false;
+	MatchBotFooting footing = MatchBotFooting::none;
+	MatchBotFooting ahead_left = MatchBotFooting::none;
+	MatchBotFooting ahead_right = MatchBotFooting::none;
+	float refuge_left = -1.0f;
+	float refuge_right = -1.0f;
 	bool shot_empty = false;
 	float engage_distance = 0.0f;
 	WeaponType weapon = WeaponType::sprayer;
@@ -56,6 +67,9 @@ struct MatchBotObservation
 	// Visible in-range non-team top paint on the current support, even where
 	// this pose's launch clearance rejects every tile. Refreshed with it.
 	bool support_open = false;
+	// Non-team top tiles on the current support, seen or not; negative when
+	// this step did not scan the paint.
+	int support_unpainted = -1;
 	std::vector<labrador::RectangleF> obstacles;
 	// Rectangular standing surfaces, distinct from conservative sight bounds.
 	// One-way supports may be crossed by a deliberate downward route.
@@ -82,12 +96,15 @@ public:
 	// Grounded on a moving paintable support at the last step; the driver
 	// scans its top paint every step while the bot rides it.
 	bool riding() const;
+	// Holding fire until the reserve resumes.
+	bool refilling() const;
 	// The difficulty it was built with. Read-only, for measurement.
 	BotDifficulty difficulty() const;
 	std::uint64_t random();
 
 private:
 	const GameTuning* tuning_;
+	MatchBotLocomotion locomotion_;
 	BotDifficulty difficulty_;
 	BotRandom random_;
 	int react_in_ = 0;
@@ -136,6 +153,10 @@ private:
 	bool riding_ = false;
 	MatchBotSupport ride_support_;
 	int ride_hold_left_ = 0;
+	// The fewest unpainted tiles seen on this ride, and the steps able to
+	// fire since that last fell. A ride that stops painting ends its hold.
+	int ride_unpainted_ = -1;
+	int ride_stalled_ = 0;
 	// The last grounded centre that was not enemy paint, for a refill's way back.
 	bool has_off_enemy_ = false;
 	labrador::Vector2F off_enemy_center_;

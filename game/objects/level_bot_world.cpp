@@ -143,6 +143,29 @@ std::vector<MatchBotRamp> LevelBotWorld::ramps() const
     return ramps;
 }
 
+std::optional<PlayerTeam> LevelBotWorld::top_paint_team(Vector2F foot) const
+{
+    // Player::gameplay_support_team's flat rule, at a point the body has not
+    // reached: the support tops level with the feet, agreeing or none.
+    bool supported = false;
+    PlayerTeam answer = PlayerTeam::none;
+    for (const CollisionObject* object : this->structures_.projectile_targets())
+    {
+        const Structure* structure = Collider::of(*object).structure();
+        if (structure == nullptr || !structure->flat() || object->shape() == nullptr) { continue; }
+        const RectangleF bounds = object->shape()->bounding_box();
+        if (!(foot.x >= bounds.left() && foot.x < bounds.right()) ||
+            std::fabs(foot.y - bounds.top()) >= 0.5f) { continue; }
+        supported = true;
+        const PlayerTeam team = structure->top_paint_team(foot.x);
+        if (team == PlayerTeam::none) { continue; }
+        if (answer != PlayerTeam::none && answer != team) { return PlayerTeam::none; }
+        answer = team;
+    }
+    if (!supported) { return std::nullopt; }
+    return answer;
+}
+
 bool LevelBotWorld::line_of_sight(Vector2F from, Vector2F to) const
 {
     return this->traversal_line_of_sight(from, to, PlayerTeam::none);

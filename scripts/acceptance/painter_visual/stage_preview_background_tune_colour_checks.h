@@ -383,7 +383,11 @@ void stage_preview_background_command_checks(Application& app, Registry<LevelLoa
     const std::string saved_bytes = document.replaced(*token, "\"2060C080\""); bool persisted = false;
     DebugDirector director(&tuning, &presentation); auto& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user"); impl.set_script_directories({ root / "scripts" });
-    PreviewBackingProbe probe(app, levels, canvas, tuning, presentation, output, "debug", &director); director.attach(&app, &probe.data());
+    PreviewBackingProbe probe(app, levels, canvas, tuning, presentation, output, "debug", &director);
+    // Stage Select offers the probe's two arenas, but the director judges
+    // content as the game does, against every stage the manifest lists.
+    const StageCatalog manifest_stages = acceptance::manifest_catalog(content);
+    GameData director_data = probe.data(); director_data.set_stage_catalog(&manifest_stages); director.attach(&app, &director_data);
     impl.log().set_mirror_to_debugger(false);
     require(impl.log().set_transcript((output / "stage-preview-background-tune-commands.log").string()), "Cannot retain preview command transcript");
     size_t commands = 0, rows = 0;

@@ -15,12 +15,17 @@ namespace
 	{
 		return view.support_open && view.support_paint && view.support_bounds == support.bounds;
 	}
+
+	const GameTuning& required(const GameTuning* tuning)
+	{
+		if (tuning == nullptr) { throw std::invalid_argument("A match bot requires tuning"); }
+		return *tuning;
+	}
 }
 
 MatchBot::MatchBot(const GameTuning* tuning, BotDifficulty difficulty, std::uint64_t seed) :
-	tuning_(tuning), difficulty_(difficulty), random_(seed)
+	tuning_(tuning), locomotion_(required(tuning)), difficulty_(difficulty), random_(seed)
 {
-	if (tuning == nullptr) { throw std::invalid_argument("A match bot requires tuning"); }
 	(void)tuning->bot(difficulty);
 	this->heading_ = this->random_unit() < 0.5f ? -1.0f : 1.0f;
 }
@@ -78,6 +83,11 @@ bool MatchBot::riding() const
 	return this->riding_;
 }
 
+bool MatchBot::refilling() const
+{
+	return this->refilling_;
+}
+
 const MatchBotSupport* MatchBot::moving_support(const MatchBotObservation& view) const
 {
 	if (!view.grounded) { return nullptr; }
@@ -98,6 +108,9 @@ void MatchBot::open_finish(const MatchBotObservation& view, const MatchBotSuppor
 	double refill = 0.0;
 	if (this->refilling_)
 	{
+		// At the base rate with the seat's handicap: own paint underfoot only
+		// shortens the real refill, and the bot paints over any enemy paint on
+		// the top it holds, so the window stays a sufficient minimum.
 		const double per_step = static_cast<double>(this->tuning_->ammo_regen_rate()) *
 			view.paint_refill / this->tuning_->starting_ammo() / SIMULATION_HZ;
 		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * SIMULATION_HZ) + (per_step > 0.0 ?
@@ -232,13 +245,27 @@ void MatchBot::decide(const MatchBotObservation& view)
 		goal = view.center + Vector2F(enemy->center.x > view.center.x ? -view.size.x * 4.0f :
 			view.size.x * 4.0f, 0.0f);
 	}
-	// Enemy paint stops the refill under the underfoot trial, so walking on to
-	// the next paint goal could leave the bot empty. Go back to the last ground
-	// that wasn't enemy paint, and hold still there until the reserve resumes.
-	else if (this->refilling_ && policy.refill_off_enemy_paint && view.underfoot)
+	// Enemy paint underfoot stops the refill, so walking on to the next paint
+	// goal, or backing away from an enemy, across it could leave the bot empty.
+	// Off enemy paint the bot keeps that goal, refilling as it walks, and holds
+	// only where the ground ahead toward it is enemy paint. On enemy paint it
+	// makes for the nearest ground along this floor that isn't, or else back
+	// to the last ground it stood on that wasn't.
+	if (this->refilling_ && policy.refill_off_enemy_paint && view.underfoot)
 	{
-		if (!view.on_enemy_paint) { goal = view.center; }
-		// That ground may have been painted since; then walk on as before.
+		const float toward = goal.x - view.center.x;
+		const MatchBotFooting ahead = toward < 0.0f ? view.ahead_left : view.ahead_right;
+		if (view.footing != MatchBotFooting::enemy)
+		{
+			if (std::fabs(toward) > view.size.x * 0.4f && ahead == MatchBotFooting::enemy) { goal = view.center; }
+		}
+		else if (view.refuge_left >= 0.0f || view.refuge_right >= 0.0f)
+		{
+			const bool left = view.refuge_right < 0.0f ||
+				(view.refuge_left >= 0.0f && view.refuge_left < view.refuge_right);
+			const float reach = (left ? view.refuge_left : view.refuge_right) + view.size.x * 0.5f;
+			goal = view.center + Vector2F(left ? -reach : reach, 0.0f);
+		}
 		else if (this->has_off_enemy_ && std::fabs(this->off_enemy_center_.x - view.center.x) > view.size.x)
 		{ goal = this->off_enemy_center_; }
 	}
@@ -312,7 +339,16 @@ void MatchBot::decide(const MatchBotObservation& view)
 	if (recovering) { goal = view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f); }
 	const float dx = goal.x - view.center.x;
 	float movement = std::fabs(dx) > view.size.x * 0.4f ? (dx > 0.0f ? 1.0f : -1.0f) : 0.0f;
-	if (engaging && !this->refilling_ && !recovering && std::fabs(dx) <= view.engage_distance * 0.55f)
+	// In range, stop short of the enemy, starting early enough to brake there
+	// on this footing and to cover the steps this decision is held for.
+	float closing = 0.0f;
+	if (engaging && dx * view.velocity.x > 0.0f)
+	{
+		closing = this->locomotion_.stopping_distance(view.velocity.x, view.grounded, view.footing) +
+			std::fabs(view.velocity.x) * static_cast<float>(this->tuning_->bot(this->difficulty_).reaction_steps) /
+			static_cast<float>(SIMULATION_HZ);
+	}
+	if (engaging && !this->refilling_ && !recovering && std::fabs(dx) <= view.engage_distance * 0.55f + closing)
 	{
 		movement = 0.0f;
 	}
@@ -405,8 +441,9 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	}
 	const BotTuning& policy = this->tuning_->bots();
 	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
-	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; }
-	if (view.grounded && !view.on_enemy_paint) { this->has_off_enemy_ = true; this->off_enemy_center_ = view.center; }
+	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; this->ride_stalled_ = 0; }
+	if (view.grounded && view.footing != MatchBotFooting::enemy)
+	{ this->has_off_enemy_ = true; this->off_enemy_center_ = view.center; }
 	if (this->seeking_after_descent_ && !view.grounded) { this->descent_airborne_ = true; }
 	if (this->seeking_after_descent_ && view.grounded)
 	{
@@ -450,9 +487,32 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	const MatchBotSupport* mover = this->moving_support(view);
 	if (mover == nullptr) { this->ride_hold_left_ = 0; }
 	else if (!this->riding_ || !same_support(*mover, this->ride_support_))
-	{ this->ride_support_ = *mover; this->ride_hold_left_ = policy.mover_hold_steps; }
+	{
+		this->ride_support_ = *mover; this->ride_hold_left_ = policy.mover_hold_steps;
+		this->ride_unpainted_ = view.support_unpainted; this->ride_stalled_ = 0;
+	}
 	else if (this->ride_hold_left_ > 0) { --this->ride_hold_left_; }
 	this->riding_ = mover != nullptr;
+	// The hold is there to paint the top. Once the unpainted count stops
+	// falling for a progress window (or two of this tool's shots, if longer)
+	// of steps the bot could fire, counted afresh when its reserve resumes,
+	// the ride ends as if its hold had.
+	if (mover != nullptr && this->ride_hold_left_ > 0 && view.support_unpainted >= 0)
+	{
+		if (this->ride_unpainted_ < 0 || view.support_unpainted < this->ride_unpainted_)
+		{ this->ride_unpainted_ = view.support_unpainted; this->ride_stalled_ = 0; }
+		else if (!this->refilling_ && !view.shot_empty)
+		{
+			const int shots = static_cast<int>(std::ceil(2.0 * static_cast<double>(
+				this->tuning_->weapon(view.weapon).details.shoot_interval) * SIMULATION_HZ));
+			if (++this->ride_stalled_ >= std::max(policy.progress_window_steps, shots))
+			{
+				this->ride_hold_left_ = 0;
+				if (this->finish_left_ > 0 && same_support(this->finish_support_, *mover))
+				{ this->finish_left_ = 0; this->react_in_ = 1; }
+			}
+		}
+	}
 	// Decide now rather than inheriting a drop through the support.
 	if (mover != nullptr && this->finish_left_ == 0 && this->ride_hold_left_ > 0 && ride_target(view, *mover) &&
 		view.enemies.empty() && this->recovery_left_ == 0 && !this->ascending_ && !this->climbing_ramp_)

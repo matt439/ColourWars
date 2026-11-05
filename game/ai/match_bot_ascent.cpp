@@ -8,10 +8,10 @@ using namespace labrador;
 
 namespace
 {
-	float steer(float target, const MatchBotObservation& view, const PlayerTuning& tuning)
+	float steer(float target, const MatchBotObservation& view, const MatchBotLocomotion& locomotion)
 	{
 		const float dx = target - view.center.x;
-		const float stopping = view.velocity.x * view.velocity.x / (2.0f * tuning.x_deacceleration);
+		const float stopping = locomotion.stopping_distance(view.velocity.x, view.grounded, view.footing);
 		if (std::fabs(dx) < 2.0f || (dx * view.velocity.x > 0.0f && std::fabs(dx) <= stopping + 2.0f))
 		{ return 0.0f; }
 		return dx > 0.0f ? 1.0f : -1.0f;
@@ -23,32 +23,19 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 	// Explore adjacent raised supports to open new sight lines, independently
 	// of sampled paint. No arena names, authored routes or unseen enemies enter
 	// this choice. Initial one-way spawns retain their ordinary descent policy.
-	const PlayerTuning& movement = this->tuning_->player();
 	const Vector2F half = view.size * 0.5f;
 	const float inset = std::min(2.0f, half.x);
-	float vy = movement.jump_launch_velocity, height = 0.0f, rise = 0.0f;
-	float vx = movement.x_initial_velocity, reach = 0.0f;
-	constexpr float dt = SECONDS_PER_STEP;
-	const int held_steps = std::max(1, static_cast<int>(std::min(
-		std::ceil(static_cast<double>(movement.jump_max_time) * SIMULATION_HZ),
-		static_cast<double>((std::numeric_limits<int>::max)()))));
-	for (int step = 0; step < 2 * SIMULATION_HZ; ++step)
-	{
-		// Player::start_jump overwrites gravity on the takeoff tick. Held
-		// extension begins on the following tick and includes only held outputs.
-		if (step == 0) { vy = std::max(vy, -movement.max_velocity.y); }
-		else
-		{
-			vy = std::min(vy + movement.gravity * dt, movement.max_velocity.y);
-			if (step < held_steps && static_cast<float>(step - 1) * dt <= movement.jump_max_time)
-			{ vy += movement.jump_acceleration * dt; }
-			vy = std::max(vy, -movement.max_velocity.y);
-		}
-		height -= vy * dt; rise = std::max(rise, height);
-		reach += vx * dt;
-		vx = std::min(vx + movement.x_acceleration * dt, movement.max_velocity.x);
-		if (height <= 0.0f) { break; }
-	}
+	// A standing launch starts at its footing's starting speed. The takeoff
+	// may lie away from this footing, so plan the first step at the slower of
+	// this footing and unpainted ground: own paint here is no promise of own
+	// paint at the lip. A next step from a landing whose paint is not yet
+	// known assumes unpainted ground.
+	const MatchBotLocomotion::JumpArc here = this->locomotion_.jump(std::min(
+		this->locomotion_.ground(view.footing).initial,
+		this->locomotion_.ground(MatchBotFooting::none).initial));
+	const MatchBotLocomotion::JumpArc onward = this->locomotion_.jump(
+		this->locomotion_.ground(MatchBotFooting::none).initial);
+	float rise = here.rise, reach = here.reach;
 	// Reuse the same local geometry test for a candidate's next step. A
 	// reachable dead-end shelf should not displace a continuing ascent chain.
 	const auto route = [&](Vector2F center, const MatchBotSupport& support,
@@ -120,7 +107,9 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 		if (visited) { continue; }
 		Vector2F takeoff, landing;
 		float cost = 0.0f, approach = 0.0f;
+		rise = here.rise; reach = here.reach;
 		if (!route(view.center, support, takeoff, landing, cost, approach)) { continue; }
+		rise = onward.rise; reach = onward.reach;
 		bool continues = false;
 		for (const MatchBotSupport& next : view.supports)
 		{
@@ -142,7 +131,7 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 			// Allow the supported approach at ordinary minimum moving speed,
 			// then retain the existing finite jump/recovery allowance.
 			const double travel = std::ceil(static_cast<double>(approach) /
-				movement.x_initial_velocity * SIMULATION_HZ);
+				this->tuning_->player().x_initial_velocity * SIMULATION_HZ);
 			const double budget = travel + this->tuning_->bots().progress_window_steps +
 				this->tuning_->bots().recovery_steps;
 			this->ascent_steps_left_ = static_cast<int>(std::min(budget,
@@ -181,7 +170,7 @@ void MatchBot::steer_finish(const MatchBotObservation& view, PlayerInputData& in
 		if (same_support(this->finish_support_, support) && support.bounds.left() != this->finish_anchor_)
 		{ target += support.bounds.left() - this->finish_anchor_; }
 	}
-	input.x_movement = steer(target, view, this->tuning_->player());
+	input.x_movement = steer(target, view, this->locomotion_);
 	input.left_analog_stick = Vector2F(input.x_movement, 0.0f);
 	input.drop_through = false;
 }
@@ -234,12 +223,16 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	}
 	if (this->ascent_airborne_)
 	{
-		if (one_way || crossing || feet <= target.top()) { destination = landing.x; }
+		// A crossing still rising with its feet below a solid lip holds beside
+		// the lip's face too: a fast run-up otherwise meets that face low
+		// enough to catch its corner and lose the jump. A falling one has no
+		// height left to gain and keeps its line.
+		if (one_way || feet <= target.top() || (crossing && view.velocity.y >= 0.0f)) { destination = landing.x; }
 		else if (this->ascent_takeoff_.x < target.center().x)
 		{ destination = target.left() - half.x - 2.0f; }
 		else { destination = target.right() + half.x + 2.0f; }
 	}
-	input.x_movement = steer(destination, view, movement);
+	input.x_movement = steer(destination, view, this->locomotion_);
 	// Across a gap, braking to a standing takeoff wastes the short interval
 	// above a solid lip. Carry the ordinary run-up into the jump instead.
 	if (crossing && !this->ascent_airborne_)
@@ -247,7 +240,7 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	input.left_analog_stick = Vector2F(input.x_movement, 0.0f);
 	const float launch_margin = crossing ? std::max(3.0f, std::fabs(view.velocity.x) / static_cast<float>(SIMULATION_HZ) + 2.0f) : 3.0f;
 	if (!this->ascent_airborne_ && std::fabs(view.center.x - destination) <= launch_margin &&
-		(crossing || std::fabs(view.velocity.x) <= movement.x_initial_velocity) && !this->jump_was_held_)
+		(crossing || std::fabs(view.velocity.x) <= this->locomotion_.ground(view.footing).initial) && !this->jump_was_held_)
 	{
 		const double steps = std::ceil(static_cast<double>(movement.jump_max_time) * SIMULATION_HZ);
 		this->jump_left_ = std::max(1, static_cast<int>(std::min(steps,

@@ -1120,8 +1120,8 @@ void Player::update(float dt)
         this->showing_debug_ = !this->showing_debug_;
     }
 
-    // Regenerate up to the configured starting health. The underfoot trial
-    // can pause both the delay and the regeneration on enemy paint.
+    // Regenerate up to the configured starting health. Paint underfoot can
+    // pause both the delay and the regeneration on enemy paint.
     const PlayerTuning& tuning = this->player_tuning();
     const bool regen_blocked = tuning.paint_underfoot.enabled &&
         tuning.paint_underfoot.enemy_blocks_health_regen &&

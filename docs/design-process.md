@@ -92,7 +92,7 @@ by** cell below, the table is current.
 | E17 | [Pause controls/settings](feature-roadmap.md#fourth-increment-pause-controlssettings), [action bindings](feature-roadmap.md#action-bindings-gap42), [player profiles](feature-roadmap.md#player-profiles-road21) | A controls reference, per-pad deadzones, music/SFX volume, rebinding, and named profiles that carry a person's settings between pads. |
 | E18 | [Make couch play comfortable](polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds) | The resume count-in, so a resume or focus return does not surprise anyone (`POL#18`). |
 | E19 | [Backstory: Building it](backstory.md#building-it), [countdown](polish-countdown.md) | The opening, skippable with A, B or Start (the reveal plays in full); solo practice skips both; the countdown shows one controls card per kind of device present (keyboard and mouse, pad). |
-| E20 | [Level editor](level-editor.md#play-the-level), [User stages](feature-roadmap.md#user-stages-road16) | A player who saves a stage should play it without a rebuild; a broken file costs one stage; user stages are never Random (provisional). |
+| E20 | [Level editor](level-editor.md#play-the-level), [User stages](feature-roadmap.md#user-stages-road16) | A player who saves a stage should play it without a rebuild; a broken file costs one stage; a user stage joins Random only when its file asks (`ROAD#16`, decided 2026-11-05). |
 | E21 | [OOP guide](oop-guide.md), AGENTS.md "What this game is for" | A second audience: Labrador developers reading the game as the engine's full-OOP client. |
 | E22 | [Polish plan: the indie standard](polish-plan.md#what-the-indie-game-standard-means-in-practice) | Moving and painting in an empty room should be enjoyable; the finish must hold through pause, death, respawn and rematch. |
 | E23 | `game/states/main_menu.h`, `game/states/game_states.h`, `MainMenuJoin::update_page` (`game/states/main_menu_players.cpp`) | The menu path Title, Home, Mode, Player Count, Join, Team, Weapon, Stage; one player skips Team Select; a match is a `GameLevel` pushed above `GameMenu`. |
@@ -251,7 +251,7 @@ by** names the feature or row and, where one exists, the retained
 | F3 | P5: a broken stage to cost one stage and tell me why | A refused file is left out with a reason on stderr and in Stage Select's issue details | `ROAD#16`, `ROAD#32`; `user_stages` | E20 |
 | F4 | P5: to check my arena's fairness before playing it | The editor's blockout aids show paint-mechanism guides and a symmetry report | `ED#9`, `ED#25`; `level_editor` | E20 |
 | F5 | P5: my stage to keep its records | Records are keyed by the file name and survive later registration | `ROAD#16`; `user_stages`, `match_records` | E20 |
-| F6 | P5: my finished stage in Random | **(H)** An opted-in user stage can be drawn by Random | none: user stages are never Random (provisional); the yes/no is `ROAD#16`'s Random call, no new row | E20 |
+| F6 | P5: my finished stage in Random | **(H)** An opted-in user stage can be drawn by Random | A user stage whose file says `"include_in_random": true` joins Random (`ROAD#16`'s Random call, decided 2026-11-05); `user_stages` | E20 |
 | F7 | P5: to give my stage to a friend | **(H)** A stage file copied into another player's folder plays there | Copying the file by hand, with the README's "Your own stages"; `ROAD#16`; `user_stages`. In-game sharing is deliberately absent while the editor stays out of the ZIP | E20 |
 
 #### G. Reading the code
@@ -335,7 +335,7 @@ from Stage Select on, with a file someone else made.
 | Play it; records are keyed by the file name | `GameLevel`, `MatchRecords` | F2, F5 |
 | Edit, save, reopen Stage Select from the main menu: the new version plays | Rescan on open (not between rounds) | F2 |
 | Share it: copy the file into a friend's stages folder | By hand, per the README's "Your own stages"; no in-game sharing | F7 |
-| Put it in Random | none: never Random (provisional, `ROAD#16`) | F6 |
+| Put it in Random | Set `include_in_random` to true in the editor before saving (`ROAD#16`, 2026-11-05) | F6 |
 
 ### Open points for the author
 
@@ -382,6 +382,8 @@ does not decide" says, that reorders nothing and closes no gate.
      stage by hand. *Reopen* towards the opt-in if the editor ships, if the
      `ROAD#16`/`ED#5` saved-stage play shows finished stages worth rotating,
      or if groups collect enough user stages that picking each is a chore.
+     The author's call on 2026-11-05 was the opt-in: a user stage whose file
+     says `"include_in_random": true` joins Random.
    - **F7** is served by hand-copying and the README; in-game sharing is
      deliberately absent while the editor stays out of the ZIP. *Reopen* as
      a candidate if the editor ships in the ZIP or players other than the
@@ -411,7 +413,11 @@ accepted draft, and the differences are under [Corrections](#corrections-to-serv
 **How to read it.** *Served*: built, and nothing open holds it. *Attended*:
 built, and an open `DECISION` row holds its human review (the mapping closes no
 gate). *Held*: unserved, and an existing owner row already holds the call.
-*Docs*: a P6 story, traced to docs only and not ordered. A row named "done" is
+*Docs*: a P6 story, traced to docs only and not ordered. On 2026-11-05 the
+author accepted every open `DECISION` row as built; the attended reviews an
+*Attended* result names were not held, and the hardware and participant ones
+were waived by the author, not performed, so *Attended* now reads as built and
+accepted without that review. A row named "done" is
 closed and no longer in TODO. "Painter" means the check runs only under
 `check-painter.ps1` on MattPC, not in the default case list. A **check gap** is a
 CPU-checkable criterion that no case asserts; they are collected under
@@ -464,7 +470,7 @@ CPU-checkable criterion that no case asserts; they are collected under
 | F3 | P5 | Refused files, scan details | `ROAD#32` done; wording `ROAD#16` | `user_stages`; `check-startup.ps1 -UserStageFixture` for stderr | Attended |
 | F4 | P5 | Mechanism guides, symmetry report | `ED#9`, `ED#25` done; `ED#5` | the editor's acceptance | Served |
 | F5 | P5 | Records keyed by file name | `ROAD#16` | `match_records` (generic stage keys) | Served by construction |
-| F6 | P5 | none: user stages are never Random | `ROAD#16`'s Random call | `user_stages` checks the opposite | Held |
+| F6 | P5 | A user stage's `"include_in_random": true` ([stage_loading.cpp](../game/config/stage_loading.cpp)) | `ROAD#16`'s Random call, decided 2026-11-05 | `user_stages` | Served |
 | F7 | P5 | Hand-copying, the README's "Your own stages" | `ROAD#16`, `ED#5` | `user_stages` | Attended, **(H)** |
 | G1 | P6 | [OOP guide](oop-guide.md#where-the-concepts-live) | none | none (a reading review) | Docs |
 | G2 | P6 | [Follow one shot](oop-guide.md#follow-one-shot-from-input-to-score) | none | none | Docs |
@@ -606,8 +612,8 @@ rest are developer tools.
   a finished series; the setup pages' missing-controller wait (Team, Weapon
   and Stage Select hold on the missing-player prompt, and Back returns to
   Player Count, or between rounds to the End menu); leaving a versus match
-  from Pause with Quit and its confirmation; paint underfoot (default off,
-  `POL#30`); Turbulence Yard and its paint-object and mover stages (the Ferry,
+  from Pause with Quit and its confirmation; paint underfoot (shipped on
+  since 2026-11-05, `POL#30`); Turbulence Yard and its paint-object and mover stages (the Ferry,
   Gate, Lift, Paint Lift, Mover and Slab Trials); which surfaces score (slabs,
   ramps, one-way floors); the respawn redraw; combat, blocked-shot and movement
   feedback; menu and match music, the results coda and cues; the error dialog

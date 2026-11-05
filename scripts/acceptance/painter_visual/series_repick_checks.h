@@ -9,12 +9,15 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     Save preferences; SettingsSession preferences_session(preferences);
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    // King of the Hill stands in for the Random pool whatever the shipped
+    // flags say, so Rotate from the explicit-only course always has a stage
+    // to move on to.
     StageList stages;
     for (const char* name : { "movement_course", "king_of_the_hill" })
     {
         const auto* info = levels.get(name);
         require(info != nullptr, "Series re-pick needs both fixture stages");
-        stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
+        stages.push_back({ name, info->display_name(), info->icon_frame(), std::string(name) == "king_of_the_hill" });
     }
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "king_of_the_hill", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning);
@@ -87,6 +90,9 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     settings.set_screen_layout(ScreenLayout::one_player);
     settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
     settings.set_player_weapon(0, WeaponType::sprayer); settings.set_player_weapon(1, WeaponType::sprayer);
+    // The re-pick checks below open Stage Select on the stage just played,
+    // which is Same's behaviour; Rotate (the default) is checked after them.
+    settings.set_series_stage_rule(SeriesStageRule::same);
     const auto roster_kept = [&](const char* message)
     {
         const auto seats = settings.player_settings();
@@ -225,7 +231,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     still_open("A seat outside the picking team chose or left the loser's pick");
     require(settings.stage() == "king_of_the_hill", "A seat outside the picking team changed the stage");
     evidence("team-b-picks");
-    settings.set_series_stage_rule(SeriesStageRule::same);
+    settings.set_series_stage_rule(default_series_stage_rule);
     std::cout << "PASS series re-pick: actual End menu between rounds opens Weapon then Stage Select in its frame; "
         "re-picked tools and Boost, then the stage, play the next round as chosen; Back returns to the End menu "
         "without committing and still offers Watch Replay; teams, roster, bot and best-of stay; Exit follows Change Level; Rotate opens Change "

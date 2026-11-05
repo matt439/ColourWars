@@ -455,11 +455,11 @@ namespace debug_console_acceptance
         const std::string underfoot_before = impl.tune_document("tuning")->current().text();
         const auto underfoot_edits = impl.tune_document("tuning")->edits().size();
         require(impl.execute("tune tuning.player.paint_underfoot.enabled").ok &&
-            !impl.execute("tune tuning.player.paint_underfoot.enabled on").ok &&
+            !impl.execute("tune tuning.player.paint_underfoot.enabled off").ok &&
             !impl.execute("tune tuning.player.paint_underfoot.own_speed_multiplier 1.2").ok &&
             !impl.execute("tune.reset tuning.player.paint_underfoot.enabled").ok &&
             impl.tune_document("tuning")->current().text() == underfoot_before &&
-            impl.tune_document("tuning")->edits().size() == underfoot_edits && !tuning.player().paint_underfoot.enabled,
+            impl.tune_document("tuning")->edits().size() == underfoot_edits && tuning.player().paint_underfoot.enabled,
             "Replay allowed underfoot mutation/reset or changed live data/ledger while refusing it");
 		const std::string replayed_presentation = impl.tune_document("presentation")->current().text();
 		require(impl.execute("tune presentation.debug_overlay.station_label.colour").ok &&
@@ -591,14 +591,14 @@ namespace debug_console_acceptance
 		drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= length; });
 		require(count_of_lines(log, "replay cpu: MATCH") == matched_before + 1, "and it matches");
         // Exercise actual active Level fingerprints and record/play with the
-        // experimental switch on. This remains a CPU determinism check.
+        // switch on, as it ships (POL#30). This remains a CPU determinism check.
         // A completed replay retains its input player until explicitly stopped;
         // recording correctly refuses that attached player, even after MATCH.
         const DebugStatus stopped_trial_replay = impl.execute("play stop");
         require(stopped_trial_replay.ok && !impl.playing(),
             "Cannot release the completed replay before active recording: " + stopped_trial_replay.message);
-        require(impl.execute("pause off").ok && impl.execute("tune tuning.player.paint_underfoot.enabled on").ok,
-            "Cannot enable the isolated active replay prototype");
+        require(impl.execute("pause off").ok && tuning.player().paint_underfoot.enabled,
+            "The active replay fixture expects paint underfoot to ship enabled");
         const std::string trial_name = "pol36_active_" + std::to_string(_getpid());
         const DebugStatus trial_record = impl.execute("record " + trial_name + " 600");
         require(trial_record.ok, "Cannot queue actual active-prototype recording: " + trial_record.message);
@@ -630,8 +630,8 @@ namespace debug_console_acceptance
         drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= 600; });
         require(log_contains(log, "replay " + trial_name + ": MATCH (600 updates", DebugSeverity::info),
             "Actual active-prototype replay diverged");
-        require(impl.execute("tune.reset tuning.player.paint_underfoot.enabled").ok && !tuning.player().paint_underfoot.enabled,
-            "Active replay fixture did not restore the default-off switch");
+        require(tuning.player().paint_underfoot.enabled,
+            "Active replay fixture changed the shipped paint-underfoot switch");
 		// HYG#39: with no seed, a recording writes the round seed the build
 		// drew, and playback builds from that one, not from a new draw.
 		// A finished replay holds its last frame on a paused clock.

@@ -125,7 +125,8 @@ The remaining menu geometry and sheet choices are documented in
 **First report complete (2026-10-26).** The runner, Skirmish policy, paired final
 paint metrics and first fixed 250-match report are implemented and recorded below.
 They provide descriptive evidence for the five-tool balance pass (`POL#27`) and
-arena reviews (`POL#21`, `POL#31`), which still require attended decisions. Levels
+arena reviews (`POL#21`, `POL#31`); the author accepted all three on 2026-11-05
+without the attended sessions, at current values. Levels
 build without a device, the Debug [bots](debug-console.md#bots) are seeded and
 deterministic, and paint credit is per seat. Final paint can expose a question
 about an arena or tool; it does not measure whether a route was used.
@@ -530,8 +531,8 @@ The deliberate pause and completed job receipts remain preserved.
 The independent actual-data/protocol review is `independent-actual-review-v1.json`,
 SHA256 `5C89F9A5C460EAAB0E03E04C14925520F675DF4ED04B8D14EC67F6B66FFD61E1`.
 
-This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` remain attended
-decisions; the report neither authorizes retuning nor accepts a new bot opponent.
+This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` were attended
+decisions, accepted by the author on 2026-11-05 at current values; the report neither authorizes retuning nor accepts a new bot opponent.
 `POL#36` remains its separately selected paint-underfoot prototype, using a future
 explicit switch-off comparison; no such mechanic was enabled in this baseline.
 
@@ -582,8 +583,8 @@ for the attended `ROAD#10` comparison. `TOOL#3` (below) ran the five-tool
 matrix with Hard on both sides; it does not compare difficulties.
 
 Not decided here: whether the difficulties are spaced well, whether any bot is
-fit to ship, and any tuning change. Those stay `ROAD#10` and `POL#27` attended
-decisions.
+fit to ship, and any tuning change. Those were `ROAD#10` and `POL#27`, accepted
+by the author on 2026-11-05 at current values without the attended comparison.
 
 ## Turbulence bands and Hard five-tool rerun (`TOOL#3`, 2026-10-29)
 
@@ -695,6 +696,6 @@ folder per ordered pair (`run-info.json` with arguments, pins and CSV hashes,
 every table here plus per-band coverage for every equal-tool control.
 
 Not decided here: arena acceptance, route or geometry changes, tool tuning and
-bot difficulty. Those stay `POL#21`, `POL#27`, `POL#31` and `ROAD#10` attended
-decisions. The 6200-wide `turbulence` candidate still has no bands; scoping them
+bot difficulty. Those were `POL#21`, `POL#27`, `POL#31` and `ROAD#10`, accepted
+by the author on 2026-11-05 (the slab trial and Press Tower joined Random). The 6200-wide `turbulence` candidate still has no bands; scoping them
 is not open work until that candidate is chosen for review.

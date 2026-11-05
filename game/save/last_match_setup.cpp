@@ -259,7 +259,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 		setup.duration.reset();
 	}
 	if (setup.stage.find('\0') != std::string::npos) { setup.stage.clear(); }
-	if (!valid_stage_rule(setup.stage_rule)) { setup.stage_rule = SeriesStageRule::same; }
+	if (!valid_stage_rule(setup.stage_rule)) { setup.stage_rule = default_series_stage_rule; }
 	return setup;
 }
 
@@ -343,8 +343,10 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	catch (const std::runtime_error&)
 	{
 	}
-	// Saves before version 5 have no rule, and an unknown spelling keeps
-	// Same: both play every round on one stage, as those builds did.
+	// No rule, or an unknown spelling, keeps the default, Rotate. Saves before
+	// 2026-11-05 left Same out because it was then the default, so they read
+	// as Rotate too: the default changed, and an absent key never recorded
+	// whether Same had been chosen or merely left alone.
 	try
 	{
 		if (entry.has("stage_rule")) { std::ignore = read_series_stage_rule(entry.identifier("stage_rule"), setup.stage_rule); }
@@ -393,7 +395,7 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 		writer.key("duration");
 		writer.number(*setup.duration);
 	}
-	if (setup.stage_rule != SeriesStageRule::same)
+	if (setup.stage_rule != default_series_stage_rule)
 	{
 		writer.key("stage_rule");
 		writer.string(series_stage_rule_key(setup.stage_rule));

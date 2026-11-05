@@ -30,7 +30,8 @@ $slabBody = $slabTuning.player.size
 $slabWorld = $slabStage.level_bounds.zoom_out_finish_bounds
 $slabBounds = $slabStage.level_bounds.camera_bounds
 if ($slabStage.collision_objects.Count -ne 24 -or $slabStage.display_name -cnotin @('Turbulence Yard - Mover Trial','Turbulence Yard - Slab Trial') -or
-    $slabStage.include_in_random -isnot [bool] -or $slabStage.include_in_random -or $slabTuning.player.paint_underfoot.enabled -or
+    $slabStage.include_in_random -isnot [bool] -or
+    ($slabStage.include_in_random -and $slabStage.display_name -cne 'Turbulence Yard - Slab Trial') -or -not $slabTuning.player.paint_underfoot.enabled -or
     $slabBody.x -ne 52 -or $slabBody.y -ne 120) { throw 'Fixed slab source/body/underfoot fixture differs.' }
 $slabObjects = @{}
 foreach ($object in $slabStage.collision_objects) {

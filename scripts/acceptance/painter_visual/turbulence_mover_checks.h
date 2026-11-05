@@ -49,7 +49,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const std::filesystem::path& trial_json, const std::filesystem::path& output)
 {
     const RestoreFlag restore{ preferences.reduce_effects, preferences.reduce_effects }; preferences.reduce_effects = false;
-    require(!tuning.player().paint_underfoot.enabled, "Mover native paint/motion pairs need shipped underfoot behavior disabled");
+    require(!tuning.player().paint_underfoot.enabled, "Mover native paint/motion pairs need their underfoot-off tuning copy");
     const auto source_bytes = [&]()
     {
         std::ifstream input(trial_json, std::ios::binary);

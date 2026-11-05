@@ -186,7 +186,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         recovered.begin_input_claims(0);
         require(recovered.claim_input_slot(2) && recovered.move_to_device(0, 3), "Cannot arrange the private recovered seat");
         recovered.set_player_weapon(0, WeaponType::sniper); recovered.set_player_handicap(0, 2);
-        recovered.set_player_weapon(1, WeaponType::mister); recovered.set_series_stage_rule(SeriesStageRule::rotate);
+        recovered.set_player_weapon(1, WeaponType::mister); recovered.set_series_stage_rule(SeriesStageRule::losers_pick);
         const MatchSetup expected_settings = recovered;
         MenuContext recovery_context(&data, &input, &recovered);
         struct ClearRecoveryPage

@@ -260,13 +260,17 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         "Mode duration Left did not wrap to the last authored choice");
     tap(Key::enter); require(!settings.duration(), "Confirming Match length did not keep its ordinary right cycle");
     compare("duration-confirm-wrap", false, 3, original, legacy);
-    // Series stage (ROAD#20) cycles Same, Rotate, Loser's pick and wraps both ways.
-    tap(Key::down); compare("series-stage-same", false, 4, original, legacy);
-    tap(Key::right); require(settings.series_stage_rule() == SeriesStageRule::rotate, "Series stage Right did not reach Rotate");
+    // Series stage (ROAD#20) cycles Same, Rotate, Loser's pick and wraps both
+    // ways; a new setup opens on Rotate, the default.
+    tap(Key::down); require(settings.series_stage_rule() == SeriesStageRule::rotate, "Series stage did not open on Rotate");
     compare("series-stage-rotate", false, 4, original, legacy);
     tap(Key::right); require(settings.series_stage_rule() == SeriesStageRule::losers_pick, "Series stage Right did not reach Loser's pick");
     compare("series-stage-losers-pick", false, 4, original, legacy);
     tap(Key::right); require(settings.series_stage_rule() == SeriesStageRule::same, "Series stage Right did not wrap to Same");
+    compare("series-stage-same", false, 4, original, legacy);
+    tap(Key::left); require(settings.series_stage_rule() == SeriesStageRule::losers_pick, "Series stage Left did not step back");
+    tap(Key::left); require(settings.series_stage_rule() == SeriesStageRule::rotate, "Series stage Left did not reach Rotate");
+    tap(Key::left); require(settings.series_stage_rule() == SeriesStageRule::same, "Series stage Left did not reach Same");
     tap(Key::left); require(settings.series_stage_rule() == SeriesStageRule::losers_pick, "Series stage Left did not wrap");
     tap(Key::enter); require(settings.series_stage_rule() == SeriesStageRule::same && !settings.duration(),
         "Confirming Series stage did not cycle right, or changed the duration");

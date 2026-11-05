@@ -18,7 +18,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     const std::filesystem::path& trial_json, const std::filesystem::path& output)
 {
     const RestoreFlag restore{ preferences.reduce_effects, preferences.reduce_effects }; preferences.reduce_effects = false;
-    require(!tuning.player().paint_underfoot.enabled, "Shoulder clean/heavy inspection needs shipped underfoot behavior off");
+    require(!tuning.player().paint_underfoot.enabled, "Shoulder clean/heavy inspection needs its underfoot-off tuning copy");
     const auto read_source = [&]()
     {
         std::ifstream input(trial_json, std::ios::binary); require(input.good(), "Cannot read explicit shoulder trial");

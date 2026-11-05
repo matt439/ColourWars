@@ -125,9 +125,11 @@ lower scored floor adds that opportunity without requiring ceiling paint. All
 five tools must be exercised before making weapon-role claims or changing their
 numbers under `POL#27`.
 
-There are no supply pickups in current gameplay. Ammunition recovers anywhere
-after 0.5 seconds without a paid shot, at 0.4 tank per second: about three
-seconds from empty to full. The home rooms, baffle sides and lower bypass offer
+There are no supply pickups in current gameplay. Ammunition recovers after 0.5
+seconds without a paid shot, at 0.4 tank per second: about three seconds from
+empty to full on unpainted floor. Since paint underfoot shipped on 2026-11-05
+(`POL#30`), own paint recovers 1.25 times as fast and enemy paint not at all.
+The home rooms, baffle sides and lower bypass offer
 places to stop firing and recover. Whether those pauses are too safe, too long
 or easy to deny belongs in the pacing observations.
 
@@ -233,6 +235,7 @@ comparable loadouts and repeated respawns under pressure. Record time to first
 contest and return from spawn, safe painting stretches, repeated chokes,
 disengagement, upper-route counterplay and any tool or side advantage. Scripted
 routes and bots can reveal failures; they do not establish comfort or balance.
-Physical-pad acceptance remains with `ROAD#2`, and the reference-match finish
-review and fresh-player observations remain `POL#24`. Other arenas wait for
-reference-arena acceptance under `POL#21`.
+Physical-pad acceptance (`ROAD#2`) and the reference-match finish review and
+fresh-player observations (`POL#24`) were waived by the author on 2026-11-05
+and not performed. The other arenas followed Crossfeed's acceptance under
+`POL#21`, which the author closed on 2026-11-05.

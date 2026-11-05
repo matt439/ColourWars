@@ -31,7 +31,9 @@ public:
 // layout this build writes, and each section reads every older layout itself,
 // in place, as it reads the current one. A new version only adds: a new
 // section or key, which older files lack and which reads as the default that
-// matches how those files played (version 5's stage rule reads as Same). A key
+// matches how those files played. The one exception is version 5's stage
+// rule, whose default changed from Same to Rotate on 2026-11-05 without a
+// version: an absent rule now reads as Rotate (see Save::version). A key
 // whose meaning changes gets a new name, and the section reads the old name
 // when the new one is absent (as "pads" falls back to the older "pad_jump"). No
 // section reads "save_version": a file is read by what it holds, not by its

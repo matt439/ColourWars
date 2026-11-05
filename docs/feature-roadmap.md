@@ -44,11 +44,13 @@ toggle would then need its own ruling.
 
 ### AI bot players (ROAD#10)
 
-**ROAD#10 - DECISION (readiness audit, 2026-10-28).** Setup, the shipping
-driver, mover painting and pane-clamped labels are integrated. Attended
-Easy/Normal/Hard usefulness and physical-pad checks remain; values are
-provisional. The dated implementation records below retain their original
-checkpoints.
+**ROAD#10 - accepted (the author, 2026-11-05).** Setup, the shipping
+driver, mover painting and pane-clamped labels are integrated, and the author
+accepted the Easy/Normal/Hard values as they stand; they are no longer
+provisional. The attended difficulty comparison and the physical-pad checks
+were waived by the author on 2026-11-05 and were not performed. The dated
+implementation records below retain their original checkpoints, including the
+"provisional" and "OPEN" wording each had at the time.
 
 **Original request (2026-10-27).** Add playable AI teammates and
 opponents through normal match setup in Debug and Release, within the existing
@@ -1095,15 +1097,46 @@ enemy's full run) is the provisional value. A refill lasts about 2.1 s, in which
 running enemy covers more than the 1600-unit sight distance, so the margin is
 not derived from the refill.
 
-**Refill off enemy paint.** The default-off paint-underfoot trial
-([POL#30](polish-plan.md#experimental-underfoot-prototype)) stops ammunition
+**Refill off enemy paint.** Paint underfoot
+([POL#30](polish-plan.md#experimental-underfoot-prototype); a default-off trial
+when this was written, shipped on since 2026-11-05) stops ammunition
 recovery on enemy paint, and a refilling bot walks on toward its next paint
-goal, so it could stay empty. `bots.refill_off_enemy_paint` (shipped on, inert
-while the trial is off) sends a refilling bot back to the last grounded centre
-it held off enemy paint and holds it still off it until the reserve resumes.
-A threat retreat still wins. The observation carries the trial's state and
-whether this step's support is enemy paint; `bot_driver` checks hold, return
-and the no-trial and toggle-off controls.
+goal, so it could stay empty. `bots.refill_off_enemy_paint` (shipped on, and
+active now that underfoot ships on) sent a refilling bot back to the last grounded centre
+it held off enemy paint and held it still off it until the reserve resumed.
+A threat retreat still won. The observation carried the trial's state and
+whether this step's support was enemy paint; `bot_driver` checked hold, return
+and the no-trial and toggle-off controls. The 2026-11-05 paragraph below
+replaces the hold.
+
+**Paint underfoot in the bots (2026-11-05).** With underfoot shipped on, the
+shipping driver failed `bot_combat_trials`, `bot_turbulence_routes`,
+`bot_mover_routes` and `bot_team_trials` (all four pass with it off). The bots
+now model it rather than the probes switching it off. `MatchBotLocomotion`
+(`game/ai/match_bot_locomotion.h`) mirrors `Player::update_movement` from
+`tuning.player().paint_underfoot`: a footing (none, own, enemy) scales the four
+ground rates, and airborne steps use the base rates. The
+observation carries this step's footing; braking (`steer`), a standing
+launch's speed limit and jump reach, the approach stop (now starting a
+stopping distance plus one held decision's travel early inside range) read
+it; the first jump's reach takes the slower of this footing and unpainted
+ground, since the takeoff need not share this step's paint. A finish window's refill estimate keeps the base rate, a sufficient
+minimum since own paint only speeds the refill. The refill rule no longer freezes a
+bot off enemy paint: it keeps walking and refilling, holding only where
+`BotWorld::top_paint_team` reports enemy paint a stride or a braking distance
+ahead, and that filter applies to a threat retreat too. On enemy paint it
+makes for the nearest ground along its floor that isn't, then the remembered
+ground. A crossing ascent still rising with its feet below a solid lip holds
+beside the lip's face, as a plain ascent already did. A mover ride's hold, and
+any finishing window on it, ends early once the support's unpainted tile count
+has not fallen for a progress window (or two shots of a slow tool) of steps the
+bot could fire, counted afresh when its reserve resumes. No probe
+threshold changed and none runs underfoot off; `bot_driver`'s refill check
+now pins walk-on, hold-before-enemy-paint and the refuge choice. Walk and ramp
+budgets keep the base starting speed, which already far undercounts a real
+walk. The four cases pass in Release with the shipped tuning; the closest
+margin is a Mover reach trial (Easy Sprayer, team b) that lands at step 2010
+and leaves at 2368 of 2400.
 
 **Baseline comparison.** Release, against `b3380db` (no changes in this slice), in
 the six trial and route cases:
@@ -1255,8 +1288,9 @@ where the earlier capture clipped them. Evidence:
 
 **Remaining acceptance (readiness audit, 2026-10-28):** attended difficulty
 comparison and usefulness remain the author's gate. Physical-pad checks were
-not run. Mover painting and pane-clamped labels are implemented above; values
-remain provisional and `ROAD#10` is `DECISION`.
+not run. Mover painting and pane-clamped labels are implemented above. The
+author accepted the values on 2026-11-05 and waived the attended comparison
+and physical-pad checks, which were not performed.
 
 #### Fixed scored slabs for bots (`ROAD#38`)
 
@@ -1265,7 +1299,8 @@ scored slabs as solid boxes: `Level::bot_supports` leaves out
 `structure_fixed_slab`, `Level::bot_ramps` takes only ramps, and the traversal
 sweeps keep slab bounds as conservative barriers
 (`game/ai/match_bot_navigation.cpp`, `match_bot_ramp.cpp`). That is unchanged.
-Only the explicit-only `turbulence_slab_trial` has fixed slabs; it is the mover
+Only `turbulence_slab_trial` has fixed slabs (explicit-only when this was
+written; in Random since the author's 2026-11-05 `POL#21` call); it is the mover
 trial plus one slab per side bridging the upper approach (top 880) to the
 crossover (top 800).
 
@@ -1300,8 +1335,9 @@ It was reverted because the scope did not call for it. If `POL#21` keeps the
 slabs, that is the measured starting point.
 
 Evidence: `out/validation/road38/` (per-trial `MEASURE` lines in each preset's
-`bot_slab_routes-run.log`). This does not put slabs into Turbulence (`POL#21`),
-change difficulty values or close the attended `ROAD#10` gate. The slab trial
+`bot_slab_routes-run.log`). This slice did not put slabs into Random (the
+author's 2026-11-05 `POL#21` call did), change difficulty values or close the
+attended `ROAD#10` gate. The slab trial
 can now join `POL#42`'s comparisons.
 
 ### Balanced random teams
@@ -1344,9 +1380,11 @@ not close the physical-pad session (`ROAD#2`) or human readability/listening gat
 
 ### Handicaps
 
-**ROAD#5 - DECISION (reopened by the author 2026-10-27).** It was deferred on
-2026-10-15 until couch sessions (`ROAD#2`) showed a need; with bots now offering
-Easy, Normal and Hard, the author asked for it to be built.
+**ROAD#5 - accepted (the author, 2026-11-05).** Reopened by the author on
+2026-10-27 after being deferred on 2026-10-15 until couch sessions (`ROAD#2`)
+showed a need; with bots now offering Easy, Normal and Hard, the author asked
+for it to be built. On 2026-11-05 the author accepted +1 and +2 at the values
+below without the attended session.
 
 **Mechanic (chosen by the author 2026-10-27).** Each seat, human or
 bot, has a handicap level: Off, +1 or +2, shown as **Boost**. A boost makes the
@@ -1386,11 +1424,11 @@ and Boost on paint underfoot (below);
 `remembered_setup` round-trips and recovers handicaps. Presentation
 validation fits every level's text under every Weapon Select label.
 
-**Still the author's:** judge in attended play whether +1 and +2 are worth
-having and the values feel fair against Easy/Normal/Hard bots. The author
-picked one Boost for health and refill over health-only, refill-only or
-two-way levels; the values remain provisional until that play. A Debug
-build can start that session without the menus:
+**Accepted, 2026-11-05.** The author picked one Boost for health and refill
+over health-only, refill-only or two-way levels, and accepted +1 and +2 at the
+values above; they are no longer provisional. The attended play against
+Easy/Normal/Hard bots was waived by the author on 2026-11-05 and was not
+performed. A Debug build can still start that session without the menus:
 `ColourWars.exe +exec review_bots_boost` plans a seeded Crossfeed with Easy +2,
 Normal +1 and Hard bots, and `seat <n> bot|boost|team` sets any other roster
 ([`DBG#17`](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17)).
@@ -1400,14 +1438,16 @@ Normal +1 and Hard bots, and `seat <n> bot|boost|team` sets any other roster
 **Covered (2026-10-29); checks only.** `Player::ammo_regen_multiplier`
 multiplies the underfoot multiplier by the level's `paint_refill`
 (`game/objects/player.cpp`), which is what "multiplies paint underfoot rather
-than replacing it" above means. Paint underfoot ships disabled (`tuning.json`
-`paint_underfoot.enabled: false`, `POL#36` trial amounts), so the `handicap`
-case now exercises the combination on a test tuning copy, through the
-`paint_underfoot` case's fixture (`scripts/acceptance/paint_underfoot/fixtures.h`):
+than replacing it" above means. Paint underfoot has shipped on since the
+author's 2026-11-05 `POL#30` call (`tuning.json` `paint_underfoot.enabled:
+true`, at the `POL#36` amounts), so the `handicap` case requires that and
+exercises the combination both ways, through the `paint_underfoot` case's
+fixture (`scripts/acceptance/paint_underfoot/fixtures.h`):
 
-- **Shipped tuning (Off):** on unpainted, own and enemy floor, every level's
-  multiplier is that level's `paint_refill` alone, bit for bit.
-- **Enabled copy, at the shipped trial amounts:** standing on actual floor
+- **Underfoot switched off (`World::configure(false)`):** on unpainted, own and
+  enemy floor, every level's multiplier is that level's `paint_refill` alone,
+  bit for bit.
+- **Shipped tuning, underfoot on at its shipped amounts:** standing on actual floor
   paint, with the support consumed through real contacts, own paint gives
   `own_ammo_regen_multiplier` × `paint_refill` and enemy paint gives
   `enemy_ammo_regen_multiplier` × `paint_refill` bit-exact at every level;
@@ -1419,15 +1459,15 @@ case now exercises the combination on a test tuning copy, through the
   Level's input boundary, opens a ride finishing window whose budget counts
   the refill at the observation's `paint_refill`
   (`MatchBot::open_finish`). Its first refilling window lasts 158, 138 and
-  125 steps at Off, +1 and +2, under the shipped tuning and the enabled copy
+  125 steps at Off, +1 and +2, under a disabled copy and the shipped tuning
   alike; the case requires each length to match its own level's
   `paint_refill` and no other level's, so the driver must observe the seat's
   Boost.
 
 Validation: `handicap` and `paint_underfoot` pass in Debug and Release. No
-tuning, content or game source changed. This does not decide whether paint
-underfoot ships, whether the Boost values are fair (the author's attended
-play above, `ROAD#5`), or whether the bot's refill estimate should count
+tuning, content or game source changed in this slice; the 2026-11-05 switch to
+shipping underfoot on (`POL#30`) moved the case's off half to a disabled copy.
+It does not decide whether the bot's refill estimate should count
 paint underfoot; the observation still carries the handicap's `paint_refill`
 alone, as `MatchBotObservation` documents.
 
@@ -1458,13 +1498,14 @@ then Start". The HUD and the missing list name the pad the seat now uses, and
 the seat's "back" cue plays. Setup never moves a seat. A pad back in its own
 slot needs no press, as before. The rule and its edge cases are checked by
 `menu_navigation` (`check_seat_reclaim`); unplugging a real pad into another
-slot is part of `ROAD#2`.
+slot is part of `ROAD#2` (waived 2026-11-05, not performed).
 
 The [shared resume count-in](polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds)
 (`POL#18`, 2026-10-15) now holds the whole live match for two seconds after
 explicit Resume or focus return. Returning a pad still leaves the menu open.
 Movement/aim carry through; held fire/drop-through and stale jump/pause edges
-are rearmed through release. Physical-controller comfort remains in `ROAD#2`.
+are rearmed through release. Physical-controller comfort was `ROAD#2`'s,
+waived 2026-11-05 and not performed.
 
 Validation: both normal Debug and Release builds; a temporary native roster
 probe for duplicate claims, capacity, stable seats, reset and labels; and a
@@ -1550,16 +1591,18 @@ wave bank, source audio, content tools or debug symbols; launch with an isolated
 save and a minimal system-only PATH; and inspection confirming the process loads
 DirectXTK, XAudio2Redist and MSVC DLLs from the extracted package. The title-screen
 identifier was visually checked. CI now builds and inspects the Release ZIP and
-uses it for the existing startup smoke check. A clean Windows machine still
-needs a separate deployment check. The engine pin and source are unchanged.
+uses it for the existing startup smoke check. The separate deployment check on
+a clean Windows machine (`ROAD#1`) was waived by the author on 2026-11-05 and
+was not performed. The engine pin and source are unchanged.
 The original validation predates replacement audio; current migration checks
 are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration).
 
 ### Windows Sandbox run of the Release ZIP (`ROAD#37`)
 
 **Done 2026-10-30.** A Windows Sandbox run proves that the ZIP loads and runs
-on a clean OS. It does not prove that the game runs on a player's PC or GPU:
-`ROAD#1` stays `DECISION`, and no CI job runs a sandbox.
+on a clean OS. It does not prove that the game runs on a player's PC or GPU.
+The clean-PC run of `ROAD#1` was waived by the author on 2026-11-05 and was not
+performed, so that remains unproven; no CI job runs a sandbox.
 
 **Labrador's run, recorded here.** Labrador's `PI-14` (master
 `docs/product/BACKLOG.md:294`, at `b96bad6`) records a 2026-10-28 Windows
@@ -1700,7 +1743,7 @@ Implemented:
   the Debug real-Level check runs a 1.25-second override through countdown
   and into the reveal, and the replay codec preserves a fractional override
   exactly. Debug startup passed with an isolated save and graceful shutdown.
-  A physical-controller menu session remains part of ROAD#2.
+  A physical-controller menu session was part of ROAD#2 (waived 2026-11-05, not performed).
 - Mode Select offers Single Match, Best of 3 and Best of 5. A series needs
   2-4 players and ends when Team A or B reaches two or three wins. Single Match
   keeps the one-player practice path and the existing team scoring.
@@ -1760,7 +1803,11 @@ save; Debug startup also passed. Both closed gracefully. Malformed content,
 crashes and misleading adapter-error messages were rejected by the startup
 script; its exact-adapter skip was checked separately. The engine is unchanged.
 
-The next acceptance work requires hardware and is still outstanding:
+The acceptance work below needed hardware. The author waived all of it on
+2026-11-05 and **none of it was performed**: the clean-machine run (item 1,
+`ROAD#1`) and the physical-pad sessions (items 2-6, `ROAD#2`) are closed as
+waived, untested, not passed. The list stays as the record of what a
+hardware session would check:
 
 1. Run the extracted Release ZIP on a clean Windows 10/11 x64 machine.
 2. Play two- and four-player sessions across the three arenas and five weapons,
@@ -1830,13 +1877,15 @@ From an x64 VS Developer shell, run `scripts/run-acceptance.ps1 -Preset x64-debu
 for the isolated lifecycle probe; repeat with `x64-release`. Qualified
 build/CPU/native receipts are under
 `out/validation/todo-loop-20261024/road6-prep/`. Physical pad-only display-timer
-and separate screen-saver observations remain item 6 above in `ROAD#2`.
+and separate screen-saver observations were item 6 above in `ROAD#2`, waived
+on 2026-11-05 and not performed.
 The existing `0bd8f45` Release ZIP predates ROAD6; no replacement package was
 produced for this increment.
 
 ### Per-seat accessibility toggles (`ROAD#7`)
 
-**Implemented 2026-10-27; a look on 1-4P panes with pads remains (`ROAD#2`).**
+**Implemented 2026-10-27; accepted 2026-11-05.** The look on 1-4P panes with
+pads was waived by the author on 2026-11-05 and was not performed.
 View shake, the aim marker and Reduce effects were single `PlaySettings` fields
 that applied to every pane, so on a shared screen a motion-sensitive player
 could not opt out alone. Each pad slot now has its own **Off / Shared / On**
@@ -1898,7 +1947,9 @@ name the original three.
 
 ### Controller rumble (`ROAD#9`)
 
-**Local implementation qualified, 2026-10-26; physical feel remains a decision.** In a four-pad couch game rumble is the only private
+**Local implementation qualified, 2026-10-26; accepted 2026-11-05 without a
+physical-feel check.** The author waived the pad session on 2026-11-05; rumble
+has not been felt on a real pad, and the pulse values ship as they stand. In a four-pad couch game rumble is the only private
 per-player channel: the screen and speakers are shared
 ([gap audit F6](review/gap-audit.md)). The engine's `GamepadReader` exposed no
 vibration when this was built, so it began as a client feature and the exhibit
@@ -1918,7 +1969,7 @@ for report 25, which the engine answered with `Gamepads::vibrate` (`cadc962`,
 
 Acceptance is a CPU case over a fake vibration sink: which events pulse which
 seat, the per-seat setting and every stop condition. Feeling it needs pads
-(`ROAD#2`).
+(`ROAD#2`), which was waived on 2026-11-05 and not performed.
 
 The local work has bounded stopping points; each leaves a reviewable increment.
 
@@ -1940,7 +1991,8 @@ The policy test values are not authored cue tuning or a physical-feel result.
 holds four default-On slot flags; the save writes `pad_rumble` as four
 `{"enabled": bool}` records, recovering missing/malformed entries independently.
 Four named pulse records now live in `tuning.json` with contextual finite/range
-validation. Their values are provisional until physical-pad review.
+validation. The author accepted their values on 2026-11-05 without the
+physical-pad review, which was waived and not performed.
 
 Actual nonfatal damage, the once-only elimination transition, the existing hard
 landing decision and the rate-limited empty-trigger warning emit coalescing
@@ -2010,9 +2062,10 @@ The frame-pacing harness compiles with its fake factory; no performance capture
 was run. The metadata audit narrows RumbleOnly to its actual three-player sparse
 roster and default Random palette selection, with no palette comparison.
 
-Do not close the physical feel review with fake-sink results. The native hook
-does not require a pad to build, and the implementation does not claim
-that its four candidate pulses feel distinct or comfortable.
+The physical feel review was not closed with fake-sink results: the author
+waived it on 2026-11-05 and it was not performed. The native hook does not
+require a pad to build, and nothing here claims that the four pulses feel
+distinct or comfortable.
 
 ### Input devices and seats
 
@@ -2025,8 +2078,9 @@ now has a row.
   `sample`, `read`, `suspend`, `resume`, `vibrate` and `stop_vibration`, with
   XInput and browser backends at the pin (`v0.3.0` plus the vsync merge
   `e7fc50e`; vibration from `cadc962`). A GameInput backend is still Labrador
-  work and would need an exhibit before it is a report. `ROAD#2` observes the
-  limit (item 6 above). The author asked for it to be tracked on 2026-10-27
+  work and would need an exhibit before it is a report. `ROAD#2` would have
+  observed the limit (item 6 above); that session was waived on 2026-11-05
+  and not performed, so the limit is still assumed rather than observed. The author asked for it to be tracked on 2026-10-27
   (`ROAD#23`, [comparable-game gaps](#comparable-game-gaps-2026-10-27)).
 - **One keyboard seat.** That seat aims with the mouse, so a second keyboard
   player needs a keyboard-only aim model. That is a design question, not a
@@ -2052,18 +2106,20 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
 - **Sub weapons (`ROAD#11`).** Splatoon pairs each main weapon with a sub
   (bombs, Splash Wall, Sprinkler) that costs a large slice of ink. `Player`
   already takes a secondary weapon (always `grenade_std`) and ignores it.
-  A sub changes the reserve and balance game, so it waits for `POL#27`; bots
-  (`ROAD#10`) would need to use it.
+  A sub changes the reserve and balance game, so it waited for `POL#27`;
+  with the five-tool balance accepted on 2026-11-05 it is no longer blocked.
+  Bots (`ROAD#10`) would need to use it.
 - **Results awards (`ROAD#12`, done 2026-10-27).** Splatoon 3 medals and
   TowerFall awards give each player a few call-outs after a match. See
   [Results awards](#results-awards-road12) below.
 - **More tool archetypes (`ROAD#13`).** Splatoon's brush, blaster, splatling,
   dualies and brella have no counterpart among the five tools; a fast-moving
   painter or a shield tool would differ most. Each new tool needs art, audio
-  and bot ballistics, and waits for `POL#27`. A new subclass suits the OOP
-  rule.
+  and bot ballistics. It waited for `POL#27`, which the author settled on
+  2026-11-05, so it is no longer blocked. A new subclass suits the OOP rule.
 - **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
-  Smash items. Needs a match toggle and bot awareness, and waits for `POL#27`.
+  Smash items. Needs a match toggle and bot awareness. It waited for
+  `POL#27`, which the author settled on 2026-11-05, so it is no longer blocked.
 
 ### Stages
 
@@ -2080,8 +2136,10 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   2026-10-28: a per-user stage folder, each file validated on its own, a
   broken one refused without stopping startup; manifest stages stay
   never-optional. The editor's Save to My Stages, a rescan as Stage Select
-  opens and a README note for players followed the same day. Attended play
-  and two author calls remain. See [User stages](#user-stages-road16) below.
+  opens and a README note for players followed the same day. The author's
+  2026-11-05 calls: a user stage joins Random only when its file says
+  `"include_in_random": true`, and "Built by you." stays its only marker.
+  See [User stages](#user-stages-road16) below.
 
 ### Awareness and presentation
 
@@ -2090,8 +2148,9 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   unused. The author declined it; the reason is under
   [Not tracked, by choice](#not-tracked-by-choice).
 - **Off-screen teammate and threat markers (`ROAD#18`).** Splatoon shows
-  allies through walls. Teammate markers done 2026-10-28; threat markers are
-  an author decision. See [Teammate markers](#teammate-markers-road18) below.
+  allies through walls. Teammate markers done 2026-10-28; the author decided
+  on 2026-11-05 to draw no threat markers. See
+  [Teammate markers](#teammate-markers-road18) below.
 - **End-of-round instant replay (`ROAD#19`, done 2026-10-27).** TowerFall
   replays each round's final seconds and can save a GIF. The End menu now
   offers Watch Replay; see [Instant replay](#instant-replay-road19) below.
@@ -2111,24 +2170,25 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   the rest of the series only; the setup the main menu remembers is the one
   that started it. Done 2026-10-28: a Series stage rule on the Mode page (Same
   stage, Rotate, Loser's pick); see [Series stage rule](#series-stage-rule-road20)
-  below. Left: the author plays the rules and says which they like.
+  below. The author made Rotate the default on 2026-11-05.
 - **Player profiles (`ROAD#21`, done 2026-10-27).** Smash name tags carry a
   person's controls, rumble and records. Deadzones, rumble, binds and
   accessibility toggles followed the pad slot (`POL#18`, `ROAD#7`, `ROAD#9`,
   `GAP#4.2`), so swapping controllers swapped settings. A pad can now wear a
   named profile that carries them. See [Player profiles](#player-profiles-road21)
   below.
-- **Match variants (`ROAD#22`, blocked on `POL#27`).** TowerFall variants,
+- **Match variants (`ROAD#22`, unblocked 2026-11-05).** TowerFall variants,
   Smash rules and INVERSUS custom rules: low gravity, endless paint, tool
   roulette. The author ruled on 2026-11-03 that they are match options, not
   modes (see [Match scope decisions](#match-scope-decisions-2026-10-15)). They
-  wait on `POL#27`, as `ROAD#11`, `ROAD#13` and `ROAD#14` do, because reserves
-  and tool balance decide what endless paint and roulette mean; tuning settling
-  is not a gate. The first slice is endless paint: a named variant owned by
-  C++ that overrides a few specific values, not a free-form override block, and
-  a refill switch for bots. Start it sooner if `POL#27` closes or a couch
-  session asks for variety beyond stage, tool and length; revisit treating tool
-  roulette separately if it is the variant people actually want.
+  waited on `POL#27`, as `ROAD#11`, `ROAD#13` and `ROAD#14` did, because
+  reserves and tool balance decide what endless paint and roulette mean. The
+  author accepted the five-tool balance at its current values on 2026-11-05,
+  so none of the four is blocked any more; tuning settling is not a gate. The
+  first slice is endless paint: a named variant owned by C++ that overrides a
+  few specific values, not a free-form override block, and a refill switch for
+  bots. Revisit treating tool roulette separately if it is the variant people
+  actually want.
 
 ### Input
 
@@ -2138,8 +2198,10 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   report with an exhibit; Steam Input covers it if the game ships on Steam.
 - **Pad aim assist (`ROAD#24`).** One mouse player can join pad players, and
   mouse aim is much more precise. Relates to `POL#3`, `POL#18` and the
-  `ROAD#5` handicaps. Story B8 holds it: raise and scope it if the `ROAD#2` or
-  `POL#24` sessions show pad seats consistently losing to the mouse seat
+  `ROAD#5` handicaps. Story B8 holds it: raise and scope it if a couch session
+  shows pad seats consistently losing to the mouse seat. The `ROAD#2` and
+  `POL#24` sessions that were to look for this were waived by the author on
+  2026-11-05 and not performed
   ([decision](design-process.md#open-points-for-the-author)).
 
 ### Not tracked, by choice
@@ -2166,7 +2228,8 @@ wrong, since Splatoon's map shows both teams' ink, and the decline does not
 rest on it. Reopen if the reveal no longer opens on the whole picture, if the
 author decides its payoff is the choice and the percentage rather than the
 picture, if attended 3P play shows players lost about where to paint despite
-teammate markers, or if `ROAD#18` takes threat markers. A territory-free use
+teammate markers, or if threat markers (declined under `ROAD#18` on 2026-11-05)
+are reopened. A territory-free use
 of the 3P quadrant (clock, team colours, the person's desk) would be its own
 row.
 
@@ -2333,7 +2396,7 @@ Release measured the same three matches. With the eleventh stage, the
 stage-select painter checks (`-StagePaperOnly`, `-StageCountsOnly`,
 `-StageSummaryOnly`) passed on MattPC in Debug and Release (2026-10-28).
 
-**Provisional defaults**, open to the author: the 0.25 open share; the paint
+**Defaults, accepted as built (the author, 2026-11-05, `ROAD#30`):** the 0.25 open share; the paint
 on the wall deciding it, rather than a separate bulb; a tie shutting it to
 both; a gate held open while its team is inside, rather than pushing them out;
 the eraser material; and the trial's single central floor gate.
@@ -2831,7 +2894,7 @@ to the crossover; painting theirs takes it away. It has the siblings' review
 pack (`review_turbulence_paint_lift_trial`) and joins `turbulence_station_tours`
 through `turbulence_lift_station_tour`.
 
-**Provisional, open to the author** (`ROAD#30`): the foot start, which side's
+**Accepted as built, 2026-11-05** (`ROAD#30`): the foot start, which side's
 team raises which lift, the 144-unit sign, and the speed, which is the cycle's
 160 units/s.
 
@@ -2875,7 +2938,13 @@ it reads there, or should be a fixed indicator above the shaft instead, is a
 
 ### Paint-object trial play (`ROAD#30`)
 
-**DECISION, M (2026-10-28).** Play the explicit-only Ferry and Gate Trials
+**Accepted as built (the author, 2026-11-05).** The Ferry, Gate, Lift and
+Paint Lift Trials stay explicit-only, out of Random, at their current values
+(the gate's 0.25 open share and held-open rule, the ferry headings, the
+lifts' 160 units/s, foot start and side assignment, the 144-unit sign); none
+of these is provisional any more. The attended 1-4P trial play below was
+waived and not performed, so the judgements it lists are unmade, not
+answered. The original brief (M, 2026-10-28): play the explicit-only Ferry and Gate Trials
 from both sides at 1-4P, and since 2026-11-03 the Lift Trial
 ([`ROAD#28`](#vertical-lift-first-slice-road28)) and the Paint Lift Trial
 ([second slice](#paint-driven-lift-second-slice-road28)). Judge whether ownership-driven travel and selective
@@ -3017,7 +3086,8 @@ check forwards 10,000 downstream input steps and bot-replacement decisions.
 Receipts are under `out/validation/road31-practice-replay/` (`acceptance/`,
 `painter/` and `startup/`). This is focused qualification, not the full suite.
 
-The workshop wording and its attended keep/cut decision remain `POL#19`.
+The workshop wording and its keep/cut call are `POL#19`: the author kept the
+workshop with its current wording on 2026-11-05.
 
 ### Player profiles (`ROAD#21`)
 
@@ -3071,7 +3141,8 @@ update count grew by the Profiles row's nine updates (180 to 189), and two
 probe resets wrote through the working copy `play_settings()` now returns
 instead of saving.
 
-Still open: play with real pads.
+Play with real pads was waived by the author on 2026-11-05 and was not
+performed; profiles are accepted on the scripted and painter checks above.
 
 #### Initial host profile Boost (`ROAD#34`)
 
@@ -3119,8 +3190,8 @@ Candidate evidence is
 `out/validation/implementation-loop-20261028/road34-candidate/849726c0c5154677b7960b8975acfc72`;
 native painter leaves are Debug `2844bbe443f849c5a96e255b89bc30f6` and Release
 `978ad28fc1a14d1e96fa46bd58b1678d` under its `painter` directory. No real pad or
-player save was used. The attended `ROAD#21` and fairness `ROAD#5` gates remain
-unchanged.
+player save was used. The attended `ROAD#21` session and `ROAD#5` fairness play
+were later waived by the author (2026-11-05) and not performed.
 
 #### Paused stick preview after controller recovery (`ROAD#35`)
 
@@ -3146,7 +3217,7 @@ must read the original physical slot instead. Preserve every existing readout
 matrix, private save bytes and seat/device mapping. Retain an old-source failure,
 then qualify both builds and focused native checks with worktree-status collection
 explicitly omitted. This software wiring check does not qualify physical-pad
-comfort or the attended `ROAD#21` session.
+comfort or the attended `ROAD#21` session (waived 2026-11-05, not performed).
 
 `StickSettingsMenu::preview_device` now resolves a slot through
 `MatchSetup::device_slot` only while the page has a pause owner. The
@@ -3231,19 +3302,23 @@ an edited/rescanned stage or a legacy unverified recording is refused before
 playback changes, even with `force`. An edit without rescan still uses the
 unchanged loaded snapshot. The usual same-build replay limits remain.
 
-Provisional decisions, open for the author:
+The author's calls (accepted 2026-11-05):
 
-- **Random.** User stages are never Random candidates, whatever their
-  `include_in_random` says; the Random hint's count is unchanged. An unfinished
-  stage turning up in a party's Random pick seemed worse than having to choose
-  it. Honouring an explicit `"include_in_random": true` would be a one-line
-  change.
+- **Random.** A user stage joins Random only when its file says
+  `"include_in_random": true`; without the key, or with `false`, it stays out.
+  This is the opposite of a shipped stage, where a missing key means "in
+  Random", because an unfinished stage turning up in a party's Random pick
+  seemed worse than having to choose it. `LevelLoadedInfo::asks_for_random()`
+  is true only for a present `true`, and `load_user_stages` sets the stage's
+  `include_in_random` from it. The Random hint counts the live pool, so an
+  opted-in stage is counted. Until 2026-11-05 user stages were never Random
+  candidates, whatever the key said.
 - **Names and records.** The id is the bare file name, the same namespace as
   the shipped stages, so a user stage keeps its records when it is later
   registered. The cost is that a future shipped stage with the same name
   refuses the user stage and inherits its records.
-- **Marker.** The hint is the only marker. A mark on the name or preview would
-  move the page and its painter fixtures.
+- **Marker.** The hint is the only marker (accepted 2026-11-05). A mark on the
+  name or preview would move the page and its painter fixtures.
 
 The `user_stages` acceptance case points `LOCALAPPDATA` at a scratch folder
 before it asks for the directory, and scans scratch folders beside its own
@@ -3252,7 +3327,8 @@ two valid stages, one asking for Random; and broken JSON, a level without
 spawns, a missing sprite frame, a music/effect conflict, a case-only collision
 with Crossfeed, two bad file names, an undrawable name, a text file and a
 `.json` folder. It requires the valid two in order after the shipped stages,
-marked and outside Random, each bad file refused in one line naming the
+marked, the one asking for Random in the Random pool (the shipped pool plus
+that stage) and the other outside it, each bad file refused in one line naming the
 cause, the shipped Crossfeed untouched, and the whole list then passing
 `validate_game_content` and `sound_groups::assign`. A second scan checks a
 collision between two user stages. `check-startup.ps1 -UserStageFixture` starts
@@ -3322,7 +3398,7 @@ passing `validate_game_content`. The editor's document checks
 (`check-level-editor.ps1`) cover Save to My Stages under a scratch
 `LOCALAPPDATA` ([Acceptance checks](level-editor.md#acceptance-checks)).
 
-Provisional decisions, open for the author:
+Accepted as built (the author, 2026-11-05):
 
 - **When to rescan.** Only as Stage Select opens from the main menu. It is the
   one screen that shows the list, and nothing there holds a definition. A
@@ -3331,9 +3407,9 @@ Provisional decisions, open for the author:
 - **The editor's shortcut** is Ctrl+M (for "My Stages"). Ctrl+Shift+S was
   taken.
 
-Still open: attended play of a real player-made stage (a human gate), the
-Random and marker calls above, and the provisional scan-details action/help
-wording identified in `ROAD#32` below.
+The author settled the Random and marker calls above and accepted the
+scan-details action/help wording of `ROAD#32` below on 2026-11-05. Attended
+play of a real player-made stage was not performed.
 
 ### User-stage refusal details in the game (`ROAD#32`)
 
@@ -3356,11 +3432,10 @@ and copy, with compatible defaults. Diagnostic legends have their own font
 and footer-relative geometry; status/counter text fits its reserved area.
 Resource checks run after the existing ordered presentation checks and cover
 full ASCII glyphs, templates, paper/row geometry and shadow-inclusive legends.
-The provisional new wording is identified in the content: `User-stage scan`,
+The new wording is identified in the content: `User-stage scan`,
 `issue(s)`, `Down Scan details`, issue/page navigation and the escape hint.
-The author's wording/readability review joins the existing `ROAD#16` workflow
-review; software qualification does not accept that copy or its Random/marker
-decisions.
+The author accepted it, with the `ROAD#16` Random and marker calls, on
+2026-11-05.
 
 Both game builds, `user_stages`, `stage_selection`, `menu_presentation` and
 `menu_text`, plus isolated accepted-audio startup/user-stage fixtures pass in
@@ -3379,11 +3454,16 @@ All folders and profiles are isolated; human play remains `ROAD#16`.
 **Done 2026-10-28.** The Mode page has a Series stage row under Match length,
 an option row like it: Left and Right (or Select) cycle **Same stage**,
 **Rotate** and **Loser's pick**. It decides which stage a series' next round
-plays. Same stage is the default and is what every series did before; a single
-match has no next round, so the row does nothing there. The rule is saved with
-the remembered setup (`"last_match.stage_rule"`, written only when it is not
-Same; save version 5). A save without it, or with a spelling this build does not
-know, reads as Same, so old saves play as they did. The row's value, Stage
+plays. Rotate is the default (the author's call, 2026-11-05; until then it was
+Same stage, what every series did before); a single match has no next round,
+so the row does nothing there. The rule is saved with the remembered setup
+(`"last_match.stage_rule"`, written only when it is not the default,
+`default_series_stage_rule`; added in save version 5). A save without it, or
+with a spelling this build does not know, reads as Rotate. That includes older
+saves that chose Same: builds before the change left the key out for Same, so
+a keyless save cannot tell "chose Same" from "never touched it", and such a
+player sees Rotate and can change it back on the Mode page. The save stays at
+version 6, because the format did not change. The row's value, Stage
 Select's picking heading and the Mode prompt are `presentation.json` text with
 startup fit checks ([Mode labels](menu-presentation.md#mode-and-player-count-labels)).
 
@@ -3423,30 +3503,27 @@ stage chosen by hand overriding every rule, the remembered-setup round trip,
 old and malformed saves, and the menu text. The painter series re-pick check
 (`check-painter.ps1 -EndMenuOnly`) drives the real End menu and Stage Select
 under each rule, including the restricted pick, and the setup text check
-(`-SetupPaperOnly`) draws the new Mode row. On MattPC (2026-10-28, Debug)
+(`-SetupPaperOnly`) draws the new Mode row; since the 2026-11-05 default change
+it opens on Rotate and walks Right to Loser's pick and Same. On MattPC (2026-10-28, Debug)
 `-EndMenuOnly`, `-SetupPaperOnly`, `-DurationTextOnly`, `-SetupMotionOnly`,
 `-RememberedSetupOnly`, `-MainMenuOnly`, `-HomeReturnFocusOnly` and
 `-StagePaperOnly` pass. `-MenuTextOnly` had stopped compiling when `ROAD#21`
 added two prompts; its prompt list is brought up to date, and it now runs but
 fails first on Home's Credits label, a page this change does not touch.
 
-Provisional calls the author should confirm in play:
+The author's calls (2026-11-05): Rotate became the default, and the other
+three behaviours were accepted as built:
 
-- which rule is the better default once tried (Same stays the default so
-  nothing changes until then);
-- whether Rotate should include the series' starting stage when it is
-  explicit-only, rather than leaving it after one round;
-- whether a draw under Loser's pick should hand the pick to the team that lost
-  the previous decisive round instead of replaying;
-- whether a bot-only loser should pick for itself (a random pool stage) rather
-  than rotate.
+- an explicit-only starting stage plays once and then leaves the rotation;
+- a draw replays its stage under every rule, Loser's pick included;
+- a bot-only losing team does not pick; the stage rotates.
 
 The practice hint moved beside Single Match, and Mode's row spacing went from
 100 to 96, to make room for the row; that is an art-pass call too.
 
 ### Teammate markers (`ROAD#18`)
 
-**Teammate half done 2026-10-28; threat markers are a DECISION.** In each
+**Teammate half done 2026-10-28; no threat markers (the author, 2026-11-05).** In each
 human pane, a living teammate whose body is wholly outside that pane's view
 gets a chip at the pane edge. The chip sits on the line from the pane centre
 toward the teammate, pulled in until it and its pointer are `margin` inside
@@ -3483,7 +3560,8 @@ override, or Shared with the Options switch) shows a marker at full strength
 at once instead of fading it. The keyboard seat follows the shared switch. The
 marker never blinks or moves on its own, so nothing else needed reducing.
 
-Provisional calls (author to confirm at the readability look):
+Accepted as built (the author, 2026-11-05; the attended readability look was
+not performed):
 
 - no Options or per-pad toggle of its own. If one is wanted it should be a fourth
   `pad_comfort` field next to View shake, Aim marker and Reduce effects
@@ -3496,15 +3574,14 @@ Provisional calls (author to confirm at the readability look):
   shake never makes a marker flicker;
 - a 0.25 s fade-in.
 
-**Threat markers are not drawn (DECISION).** Marking enemies off-screen would
+**Threat markers are not drawn (decided 2026-11-05).** Marking enemies off-screen would
 show every player where the other team is, a change to the game's information
 model: rear threats are currently found by looking and listening (the `POL#3`
 C2 rear-threat recognition review in [polish-crossfeed.md](polish-crossfeed.md)).
-The author decides whether threats get any marker (always, only recent damage
-sources, only within some distance) and how that fits the withheld-score
-decision (gap audit 1.1), on whose grounds the author declined a live overview
-map (`ROAD#17`, 2026-11-03). Until then only teammates
-are marked.
+On 2026-11-05 the author decided that threats get no marker of any kind, which
+keeps the withheld-score decision (gap audit 1.1) on whose grounds the author
+declined a live overview map (`ROAD#17`, 2026-11-03). Only teammates are
+marked.
 
 CPU acceptance: `teammate_markers` builds real Levels on Movement Course at 1,
 2, 3 and 4 human panes, at 1280x720 and 1920x1080. The rosters include a bot
@@ -3532,9 +3609,11 @@ keyline 0.375 px. The base branch without these markers fails `-HudOnly` the
 same way in Debug (rerun at review), so the failure predates `ROAD#18` and is
 not fixed here.
 
-Left: the threat-marker decision, and an attended readability look at 1, 2 and
-4 panes (chip size at 4P, overlap with the HUD panels at the top corners,
-pointer legibility, whether the fade helps), with a pad (`ROAD#2`).
+Nothing is left: the threat-marker call is made (none). The attended
+readability look at 1, 2 and 4 panes with a pad (chip size at 4P, overlap with
+the HUD panels at the top corners, pointer legibility, whether the fade helps)
+was part of the pad sessions the author waived on 2026-11-05 (`ROAD#2`); it was
+not performed.
 
 ## Menu navigation follow-up (GAP#4.4)
 
@@ -3555,8 +3634,8 @@ Confirm, Back and Start retain their existing armed release behavior.
 
 The CPU acceptance case `menu_navigation` covers held-page entry, press/repeat
 cadence, long frames, stick hysteresis, conflicting directions, keyboard focus,
-repeatable reads and unchanged confirmation ownership. Physical-pad feel remains
-part of ROAD#2; synthetic state checks do not close that session.
+repeatable reads and unchanged confirmation ownership. Physical-pad feel was
+part of ROAD#2 (waived 2026-11-05, not performed); synthetic state checks do not close that session.
 
 Validation: `scripts/run-acceptance.ps1 -Preset x64-debug` and `x64-release`
 both passed, including the new case and Release developer-tool exclusion.
@@ -3712,8 +3791,8 @@ developer-script/sparse-bot record/replay starts and an explicitly claimed bot
 also passed isolated published-bank startup, per-monitor v2 DPI awareness and
 graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
   are under `out/validation/remembered-setup/`, including the supplementary
-  `release-coverage-audit-*.json` receipt. Physical-pad acceptance remains
-`ROAD#2`; these checks use scripted input and establish no performance result.
+  `release-coverage-audit-*.json` receipt. Physical-pad acceptance was
+`ROAD#2` (waived 2026-11-05, not performed); these checks use scripted input and establish no performance result.
 
 ## Action bindings (`GAP#4.2`)
 
@@ -3722,8 +3801,8 @@ graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
 The pad defaults are unchanged (A / LT Jump, RT Shoot, Start Pause), and so are
 the keyboard's (A / D, Space, S / Down, left click, Esc). The pad contract is
 [below](#pad-buttons-slice-gap42), after the face-button slice it replaced; the
-keyboard's is the [keyboard actions slice](#keyboard-actions-slice-gap42). What
-is left is the author's call on that slice's provisional choices.
+keyboard's is the [keyboard actions slice](#keyboard-actions-slice-gap42). The
+author accepted that slice's choices as built on 2026-11-05, so nothing is left.
 [Action bindings](../game/input/action_bindings.h) name the existing gameplay actions
 and own typed keyboard, mouse, pad-button and trigger defaults, alongside the
 menu action and direction bindings. Pure evaluators consume engine snapshots;
@@ -3750,7 +3829,7 @@ Acceptance: compare default action output with the existing readers, including
 opposing/aliased keys, thresholds, held entry, reconnect, focus return and
 simultaneous inputs. Real-page checks retain joining, selection, pause and
 confirmation behavior. Synthetic devices establish mapping behavior; physical-pad
-comfort remains `ROAD#2`.
+comfort was `ROAD#2` (waived 2026-11-05, not performed).
 
 Validation (2026-10-19): both builds and all 38 CPU cases per preset pass. The
 new headless case compares literal frozen-reader oracles with pure evaluations
@@ -3945,8 +4024,8 @@ CPU receipts are under `out/validation/overnight-20261026/phase3/`.
 
 No new engine input API or rebinding artwork was needed. Synthetic devices
 establish mapping behavior. Physical-pad comfort
-remains `ROAD#2`, and attended readability, balance and hardware acceptance stay
-open.
+was `ROAD#2` (waived 2026-11-05, not performed); attended readability, balance and hardware acceptance
+were not performed either.
 
 The [pad buttons slice](#pad-buttons-slice-gap42) below generalises this one and
 replaces its page.
@@ -3999,7 +4078,7 @@ Shoot/Pause with Start keeping its intro and menu roles), legacy migration,
 per-slot recovery and failed writes. `menu_text` checks the copy and every
 control label in the actual OptionRow. `check-painter.ps1 -KeyboardJumpOnly`
 ports the Pad Jump native matrix to the new page, adding a skipped-conflict
-Shoot Apply. Physical-pad comfort remains `ROAD#2`, and rebinding artwork belongs
+Shoot Apply. Physical-pad comfort was `ROAD#2` (waived 2026-11-05, not performed), and rebinding artwork belongs
 to the later UI pass.
 
 Keyboard actions other than Jump are the
@@ -4065,7 +4144,7 @@ chooses.
   `{shoot}` and `{pause}` join `{jump}` in the help template, each at most
   once). Menu prompts are unchanged because menu keys are.
 
-**Provisional calls (author may revise).** Refuse rather than swap on conflict;
+**The calls, accepted as built (the author, 2026-11-05).** Refuse rather than swap on conflict;
 mouse buttons for Shoot only; Escape and Down kept as fixed aliases; one
 control per action with no keyboard alternates; the A-Z/Space domain kept
 rather than widened to digits, arrows or modifiers.
@@ -4105,9 +4184,9 @@ Escape. `menu_text` pins the copy, the tokens and the mouse labels.
 moving Move left, Shoot (a right click), the extra Pause and Jump onto the freed
 A, and checks Apply's merge, the reload and Reset all keys.
 
-**Left (`DECISION`).** Try the page on a keyboard and confirm or change the
-provisional calls above. Widening the domain, keyboard alternates and the
-extra Pause key closing the pause menu (Esc does that today) are not started.
+**Decided 2026-11-05.** The author accepted the calls above as they stand.
+Widening the domain, keyboard alternates and the extra Pause key closing the
+pause menu (Esc does that today) are not started and are not planned.
 
 ## Per-player menu focus (`GAP#D1`)
 
@@ -4174,8 +4253,9 @@ progress or modal types is not an implementation task.
 The [qualification below](#horizontal-movement-capability-2026-10-26) covers
 horizontal movers and mirrored fixed scored slabs through runtime/editor
 construction, collision/support, local paint, public routes/replay and native
-composition. Their useful placements remain explicit-only Turbulence
-comparisons; attended selection and balance are `POL#21`. Arbitrary moving
+composition. The author's 2026-11-05 `POL#21` call put the scored-slab trial
+(`turbulence_slab_trial`, the Yard with movers and fixed scored slabs) into
+Random; the other Turbulence comparisons stay explicit-only. Arbitrary moving
 rotation is outside this contract. Crossfeed and Press Tower stay static.
 
 ### Horizontal movement capability (2026-10-26)
@@ -4346,7 +4426,8 @@ cross-build determinism remain outside this proof. Release excludes this mode.
 **Bounded capability work complete.** Runtime/editor construction, local paint,
 support/projectile contacts, public driven routes/replay and native composition
 now qualify the selected horizontal movers and mirrored static scored slabs.
-This finishes `GAP#D5`; arena pressure and geometry selection remain `POL#21`.
+This finishes `GAP#D5`; arena geometry selection was `POL#21`, decided
+2026-11-05 for the slab trial.
 
 The explicit-only `turbulence_mover_trial` now uses the authored pair beside
 the preserved static arena. Both-preset route and native composition checks,
@@ -4358,14 +4439,15 @@ sampled phases; the other tools retain different static/moving tradeoffs.
 Arbitrary or combined moving/rotating bodies remain outside the implemented
 contract. Preserve the existing hierarchy and static arithmetic. The
 [Turbulence blockout work](polish-plan.md#turbulence-blockout-work-pol21) owns
-useful placements and route/side-swap qualification; attended arena acceptance
-remains a separate gate. The mover comparison stays out of Random. `POL#21`
-stays open; human/device gates and provisional weapon balance stay
-unchanged.
+useful placements and route/side-swap qualification. The author decided
+`POL#21` on 2026-11-05: the slab trial, which carries this pair of movers,
+joins Random, and the mover comparison stays explicit-only, out of Random. The
+five-tool balance was accepted at its current values the same day (`POL#27`).
+Attended arena acceptance was not performed.
 
 ## Presentation rate (`GAP#L9`)
 
-**Vsync setting built 2026-11-04; waiting on a check on real hardware.** The author asked for a vsync option on 2026-11-04 and chose to
+**Vsync setting built 2026-11-04; accepted by the author 2026-11-05.** The author asked for a vsync option on 2026-11-04 and chose to
 add the switch in Labrador rather than file a report first, as report 28 was
 answered. See [Vsync setting](#vsync-setting-gapl9) below. The rest of this
 section is the earlier inspection that led there.
@@ -4404,9 +4486,10 @@ as it can, and every frame between two steps shows the same picture. So Off
 lowers input-to-display latency and costs GPU time. It does not make motion
 smoother on a high-refresh display. Interpolation would be its own row.
 
-**Still owed.** The author's check on MattPC: Off on the 59.951 Hz display,
-both windowed and fullscreen, against an `overlay.perf` capture (draws/s
-well above 60 and no tearing in a window). The painter's Options fixtures now
+**Accepted 2026-11-05.** The author accepted the setting as built. The check
+on MattPC that was planned (Off on the 59.951 Hz display, both windowed and
+fullscreen, against an `overlay.perf` capture: draws/s well above 60 and no
+tearing in a window) was not performed. The painter's Options fixtures
 describe the eight rows, and they and their leaves passed on MattPC in both
 presets on 2026-11-04.
 
@@ -4449,12 +4532,13 @@ frames, so the extra time is outside the measured Present-wait phase. A
 second; this run does not diagnose the cause. Row 0 (five updates) and row 2
 (none) follow the capture start. The receipt, CSV/JSON, log and overlay
 screenshot are under `out/validation/gapl9/`. CPU wall time, uncontrolled
-load: it qualifies no visible pacing, which stays with
-[`POL#25`](polish-frame-pacing.md#remaining-acceptance).
+load: it qualifies no visible pacing, which was
+[`POL#25`](polish-frame-pacing.md#remaining-acceptance)'s to qualify (waived
+2026-11-05, not performed).
 
 **Deferred until** the author wants presentation decoupled from the 60 Hz step
-(a high-refresh, uncapped or vsync-off mode), or `POL#25`'s attended visible
-captures show the once-a-second long interval on an uncontended run. Either
+(a high-refresh, uncapped or vsync-off mode), or attended visible captures
+(`POL#25`'s, waived 2026-11-05) show the once-a-second long interval on an uncontended run. Either
 way, the next step is an engine report for a present-interval option and,
 for a decoupled rate, a client `step_position()` consumer; no client setting
 precedes it. This chooses no refresh-rate policy, setting or persistence.

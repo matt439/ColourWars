@@ -47,10 +47,10 @@ namespace
 			*candidate.info, candidate.stage);
 		sound_groups::check_candidate(*checks.tuning, *checks.presentation,
 			catalog.level_infos(), stages, *candidate.info, candidate.stage);
-		// The arena counter must still fit with one more stage; a user stage
-		// is never a Random candidate, so the eligible count is unchanged.
+		// The arena counter must still fit with one more stage, and the
+		// Random hint's count with one more candidate when it asks for Random.
 		checks.presentation->validate_stage_counts(*checks.render, stages.size() + 1,
-			random_stage_indices(stages).size());
+			random_stage_indices(stages).size() + (candidate.stage.include_in_random ? 1 : 0));
 	}
 }
 
@@ -141,7 +141,9 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 			}
 
 			StageDefinition candidate = read_stage_definition(path_to_utf8(file), name);
-			candidate.stage.include_in_random = false;
+			// Opt-in only: a user stage joins Random when its file says
+			// "include_in_random": true, never by the shipped default.
+			candidate.stage.include_in_random = candidate.info->asks_for_random();
 			candidate.stage.user = true;
 			check_user_stage(checks, builder, catalog, candidate);
 
