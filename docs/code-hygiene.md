@@ -4,7 +4,7 @@ This is the live owner for `HYG` rows in [TODO](../TODO.md). The author asked
 for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
-`CI#5`; `CI#1`, the foreground debug-console check, stays with
+`CI#7`; `CI#1`, the foreground debug-console check, stays with
 [the debug console](debug-console-record.md#foreground-checks-ci1).
 
 ## Architecture review (2026-10-30)
@@ -1117,6 +1117,19 @@ the package check passed twice on a fresh Release ZIP (34 checks, 66 files) and
 refused a copy with a stray `.pdb`; the export script, run with
 `-EnvironmentFile`, wrote 42 variables including `INCLUDE`, `LIB` and `Path`.
 The hosted run is the first test of the CI wiring.
+
+### Promote stable nightly checks (`CI#7`)
+
+**Deferred until a week of scheduled nightlies, from 2026-11-11.**
+[nightly.yml](../.github/workflows/nightly.yml) reached `master` on 2026-11-04
+and first fires on its schedule at 16:17 UTC on 2026-11-05. Its first hosted
+trial passed 96 of 97 painter leaves and paint effects in both presets. The
+other leaf, Resume, and the plain matrix stopped at music flow, because the
+runner has no audio endpoint; since `99240203` the job sets
+`COLOURWARS_NO_AUDIO_ENDPOINT` and the painter skips only its music flow. Once
+a week of scheduled runs is in, the legs that stayed green and are short enough
+for a pull request move to [ci.yml](../.github/workflows/ci.yml); the rest stay
+nightly.
 
 ### A typed projectile list in `Level` (`HYG#52`)
 

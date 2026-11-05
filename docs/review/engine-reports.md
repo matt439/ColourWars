@@ -111,6 +111,21 @@ the bump, 31 and 25 on 2026-11-05. 28's engine fix
 did not ship.
 See [What the 2026-11-03 bump changed](#what-the-2026-11-03-bump-changed).
 
+**Moved 2026-11-04 to upstream master `e7fc50e`** (`v0.3.0` plus nine commits),
+in `59c630e`, to carry labrador#106's `Renderer::set_vsync` and
+`ApplicationOptions::vsync` (`843ba27`) for the
+[`GAP#L9` Vsync setting](../feature-roadmap.md#vsync-setting-gapl9). The pin
+goes back to a tag at the next release that carries them. `e7fc50e` only passes
+the present interval through the D3D12 descriptor probe's macro in `bench/`, so
+it is part of that change, not a separate answer. `c06ccf3` is OCA-45's
+headless test of the minimal sample's pad-slot choice, and the other six are
+documentation. Outside `engine/app` and `engine/render` the nine change no
+engine source: `engine/input`, `engine/collision` and `engine/scene` are
+untouched, and no backend's device-creation refusal text changed. No report
+closed. All nine are in master `11292fa`, where the 2026-11-05 rechecks below
+find 26, 27, 30, 33 and 34 still unanswered; 28 has no recheck there and
+stands as the 2026-11-03 bump left it.
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -240,7 +255,7 @@ shipped without the fix; 29 is withdrawn and
 | 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
-| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117`, `scripts/check-startup.ps1:225` and `:248` |
+| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
 | 31 | ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ answered in `v0.3.0` and spent 2026-11-05, see [Closed](#closed) | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
 | 32 | ~~Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false~~ answered and spent in `v0.3.0`, see [Closed](#closed) | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
@@ -2084,10 +2099,12 @@ still only reads.
   unfiled, small enough to ride with another report.
 
 - **XInput is the only pad reader.** `engine/input/gamepad_reader.h` is one
-  function wide, so a GameInput backend (DualSense, DualShock, Switch Pro
-  without Steam Input) would be an engine addition behind an existing seam. No
-  exhibit: nothing here works around it. `ROAD#2` brings one such pad to
-  observe the limit.
+  concrete class chosen at build time (`sample`, `read`, `suspend`, `resume`,
+  `vibrate`, `stop_vibration`), with XInput and browser backends and no other
+  Windows one, so a GameInput backend (DualSense, DualShock, Switch Pro without
+  Steam Input) would be an engine addition behind an existing seam. No exhibit:
+  nothing here works around it. `ROAD#2` brings one such pad to observe the
+  limit.
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):

@@ -205,7 +205,7 @@ namespace movement_course_acceptance
         if (transition == Transition::pause)
         {
             run->tick(input(false, false, 1.0f));
-            // Level::suspend -> pause_player_sounds calls this for every player.
+            // Level::suspend -> interrupt_players calls this for every player.
             run->player->reset_jump_input();
             run->tick(input(true, true, 0.0f)); // the menu's activating press
             require(run->player->velocity().y == 0.0f, "a pause press jumped on resume");

@@ -1900,9 +1900,10 @@ name the original three.
 
 **Local implementation qualified, 2026-10-26; physical feel remains a decision.** In a four-pad couch game rumble is the only private
 per-player channel: the screen and speakers are shared
-([gap audit F6](review/gap-audit.md)). The engine's `GamepadReader` exposes no
-vibration, so this is a client feature that also produces the exhibit for an
-engine report.
+([gap audit F6](review/gap-audit.md)). The engine's `GamepadReader` exposed no
+vibration when this was built, so it began as a client feature and the exhibit
+for report 25, which the engine answered with `Gamepads::vibrate` (`cadc962`,
+`v0.3.0`).
 
 1. **Client slice.** Short, distinct pulses for being hit, being eliminated,
    a hard landing and a dry trigger, read from `tuning.json`. A per-seat On/Off
@@ -1911,9 +1912,9 @@ engine report.
    every motor. The call was a direct `XInputSetState` on the seat's slot,
    isolated in one file because it bypassed the engine's reader; since
    `ENG#25` it is the engine's `Gamepads::vibrate`.
-2. **Report.** That one file is the exhibit for `GAP#F6`'s ask,
-   `Gamepads::set_vibration` with the `state()` slot contract, drafted in the
-   [ledger](review/engine-reports.md). Filing needs the author's authorisation.
+2. **Report.** That file was the exhibit for `GAP#F6`'s ask,
+   [report 25](review/engine-reports.md#25-no-public-controller-vibration-output--accepted-narrowed-cadc962);
+   it was answered unfiled in `cadc962` and spent 2026-11-05.
 
 Acceptance is a CPU case over a fake vibration sink: which events pulse which
 seat, the per-seat setting and every stop condition. Feeling it needs pads
@@ -2022,9 +2023,10 @@ now has a row.
   Steam Input or a wrapper. The engine's reader seam
   (`engine/input/gamepad_reader.h`) is a concrete class chosen at build time:
   `sample`, `read`, `suspend`, `resume`, `vibrate` and `stop_vibration`, with
-  XInput and browser backends at the pin (`v0.3.0`; vibration from `cadc962`). A GameInput backend is still
-  Labrador work and would need an exhibit before it is a report. `ROAD#2` observes the limit
-  (item 6 above). The author asked for it to be tracked on 2026-10-27
+  XInput and browser backends at the pin (`v0.3.0` plus the vsync merge
+  `e7fc50e`; vibration from `cadc962`). A GameInput backend is still Labrador
+  work and would need an exhibit before it is a report. `ROAD#2` observes the
+  limit (item 6 above). The author asked for it to be tracked on 2026-10-27
   (`ROAD#23`, [comparable-game gaps](#comparable-game-gaps-2026-10-27)).
 - **One keyboard seat.** That seat aims with the mouse, so a second keyboard
   player needs a keyboard-only aim model. That is a design question, not a

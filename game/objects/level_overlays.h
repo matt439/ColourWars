@@ -13,7 +13,7 @@ struct LevelOverlays
 	// Each authored station's name (the `goto` targets) at its place in the
 	// world. Not a pane overlay: the names are labrador::UiText objects the
 	// scene holds and culls, so they draw wherever the world does, under
-	// collision objects (see Level::show_station_labels).
+	// collision objects (see Level::refresh_station_labels).
 	bool stations = false;
 
 	// What Level draws over each pane, after the world.
