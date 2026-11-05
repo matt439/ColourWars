@@ -419,15 +419,14 @@ SaveData Save::load_from_json(const char* json_path) const
     }
     return data;
 }
+// Only a file that is not there is missing. One that is there but will not
+// open (locked, denied) must reach the reader and be kept aside, not be
+// replaced with defaults, so a failed query counts as present too.
 bool Save::file_exists(const std::string& path)
 {
-    FILE* fp = nullptr;
-    if (_wfopen_s(&fp, path_from_utf8(path).c_str(), L"rb") != 0 || fp == nullptr)
-    {
-		return false;
-	}
-	fclose(fp);
-	return true;
+    std::error_code ec;
+    const bool present = std::filesystem::exists(path_from_utf8(path), ec);
+    return present || ec;
 }
 void Save::load_save_file()
 {
@@ -435,7 +434,7 @@ void Save::load_save_file()
 
     if (!file_exists(path))
     {
-        // If the per-user save cannot be opened, try the executable-relative legacy
+        // If there is no per-user save, try the executable-relative legacy
         // save before writing defaults. The legacy file is left intact.
         const std::string legacy = legacy_save_file_path();
         if (file_exists(legacy))

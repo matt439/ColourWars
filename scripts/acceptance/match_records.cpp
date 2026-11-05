@@ -459,6 +459,58 @@ namespace
 		require(read_bytes(directory.side_copy(1)) == corrupt[0] && read_bytes(directory.side_copy(2)) == corrupt[1] &&
 			!std::filesystem::exists(directory.side_copy(3)), "Writing the save disturbed its side copies");
 	}
+
+	// Another process holding the save open for delete, sharing everything, is
+	// enough to make the CRT's open fail: it does not share delete. A file copy
+	// does, so this is a save that is present, will not open, and can still be
+	// kept aside.
+	class OpenForDelete
+	{
+	public:
+		explicit OpenForDelete(const std::filesystem::path& path) : file_(CreateFileW(path.c_str(), DELETE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, nullptr))
+		{
+			require(this->file_ != INVALID_HANDLE_VALUE, "Could not hold the save open for delete");
+		}
+		~OpenForDelete() { CloseHandle(this->file_); }
+		OpenForDelete(const OpenForDelete&) = delete;
+		OpenForDelete& operator=(const OpenForDelete&) = delete;
+	private:
+		HANDLE file_;
+	};
+
+	// A save that is there but will not open is not a missing save: loading
+	// keeps the defaults, copies it aside and leaves it as it was, where it
+	// used to write the defaults over it.
+	void check_unopenable_save(const IsolatedSaveDirectory& directory)
+	{
+		std::error_code ignored;
+		for (int copy = 1; copy <= 3; ++copy) { std::filesystem::remove(directory.side_copy(copy), ignored); }
+		const std::string bytes = "{" + flat_preferences + "}";
+		directory.write(bytes);
+		Save save;
+		std::string errors;
+		{
+			const OpenForDelete held(directory.save_path());
+			FILE* probe = nullptr;
+			const bool opened = _wfopen_s(&probe, directory.save_path().c_str(), L"rb") == 0 && probe != nullptr;
+			if (probe != nullptr) { std::fclose(probe); }
+			require(!opened, "The held save still opened, so this fixture tests nothing");
+			errors = captured_stderr(directory, [&] { save.load_save_file(); });
+		}
+		require(save.saved_play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity &&
+			save.resolution() == SaveData{}.resolution, "An unopenable save did not leave the defaults");
+		require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+			errors.find("save_data.json") != std::string::npos &&
+			errors.find("save_data.unreadable-1.json") != std::string::npos,
+			"An unopenable save did not print one stderr line naming both paths");
+		require(std::filesystem::exists(directory.side_copy(1)) && read_bytes(directory.side_copy(1)) == bytes,
+			"An unopenable save was not copied aside byte for byte");
+		require(directory.contents() == bytes, "Loading an unopenable save wrote over it");
+		require(!std::filesystem::exists(directory.save_path().wstring() + L".tmp"),
+			"Loading an unopenable save left a temporary file");
+	}
 }
 
 int main()
@@ -474,9 +526,11 @@ int main()
 		check_round_trip(directory);
 		check_section_reset_report(directory);
 		check_unreadable_save(directory);
+		check_unopenable_save(directory);
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
 			"results line, version 0/1/newer saves, per-section and per-entry recovery, "
-			"bounded values, retired-stage retention, exact round trip and unreadable saves kept aside\n";
+			"bounded values, retired-stage retention, exact round trip, and unreadable and "
+			"unopenable saves kept aside\n";
 		return 0;
 	});
 }
