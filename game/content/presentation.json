@@ -307,6 +307,17 @@
       "aim_inactive": "Raw X: {raw_x}%\nRaw Y: {raw_y}%\nNo new aim\nRaw: hollow\nAim: solid",
       "aim_active": "Raw X: {raw_x}%\nRaw Y: {raw_y}%\nAim X: {aim_x}%\nAim Y: {aim_y}%\nRaw: hollow\nAim: solid"
     },
+    "hud": {
+      "team_a": "TEAM A",
+      "team_b": "TEAM B",
+      "health": "HEALTH",
+      "paint": "PAINT"
+    },
+    "countdown": {
+      "get_ready": "GET READY",
+      "resuming": "RESUMING",
+      "replay": "REPLAY"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

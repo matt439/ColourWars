@@ -208,6 +208,17 @@ struct HudPaperPresentation
 // wait has no number: the figure being redrawn at its spawn is the timer.
 // Margins, bar dimensions and text positions use viewport fractions. Shadow
 // offsets and identity padding use pixel distances scaled with the text.
+// menu_text.hud: the HUD's copy. It is read with the rest of menu_text, so a
+// locale reaches it, and Presentation copies it into HudPresentation::labels.
+// The identity box's "  /  " separator and line break stay in code.
+struct HudLabels
+{
+	std::wstring team_a;
+	std::wstring team_b;
+	std::wstring health;
+	std::wstring paint;
+};
+
 struct HudPresentation
 {
 	HudPaperPresentation paper;
@@ -246,6 +257,9 @@ struct HudPresentation
 	labrador::Colour player_identity_background_colour = labrador::Colour::black;
 	labrador::Vector2F player_identity_padding = { 0.0f, 0.0f };
 	float player_identity_reference_width = 1920.0f;
+
+	// menu_text.hud, copied here so the HUD needs no MenuText.
+	HudLabels labels;
 };
 
 // overlay.stations: each station's name in world units, its top-left at the

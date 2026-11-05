@@ -5,6 +5,8 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <utility>
 
 using namespace labrador;
 using namespace presentation_read;
@@ -54,16 +56,50 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 		}
 	}
 	check.font("opening.percent_font", this->presentation_.opening_.percent_font);
-	const Vector2F heading_size = render.measure_text(
-		render.resolve_sprite_font(this->presentation_.menu_.detail_font), L"GET READY");
-	const float heading_scale = std::min(1.0f,
-		(this->presentation_.match_.countdown_size.x - this->presentation_.match_.controls_padding.x * 2.0f) /
-			(heading_size.x + std::abs(this->presentation_.menu_.detail_shadow_offset.x)));
-	if ((heading_size.y + std::abs(this->presentation_.menu_.detail_shadow_offset.y)) * heading_scale +
-		this->presentation_.match_.controls_padding.y * 3.0f >= this->presentation_.match_.countdown_size.y)
+	// CountdownCards scales each heading to the card's width, never above the
+	// GET READY heading's scale, which also places the number box. RESUMING
+	// shares the card; the replay card takes GET READY's scale and grows with
+	// its own heading, so only its glyphs are checked here.
+	const MenuCountdownText& countdown = this->presentation_.menu_text_.countdown;
+	const Vector2F& shadow = this->presentation_.menu_.detail_shadow_offset;
+	const float heading_room = this->presentation_.match_.countdown_size.x -
+		this->presentation_.match_.controls_padding.x * 2.0f;
+	float heading_scale = 1.0f;
+	for (const auto& [key, text] : { std::pair<const char*, const std::wstring*>{ "get_ready", &countdown.get_ready },
+		{ "resuming", &countdown.resuming }, { "replay", &countdown.replay } })
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
-			": match.countdown_size must leave room below the GET READY heading.");
+		const std::string where = std::string("menu_text.countdown.") + key;
+		const Vector2F heading_size = fixed_menu_size(where, *text, this->presentation_.menu_.detail_font);
+		const float fitted = std::min(heading_scale, heading_room / (heading_size.x + std::abs(shadow.x)));
+		if (text == &countdown.get_ready) { heading_scale = fitted; }
+		if (text == &countdown.replay) { continue; }
+		if ((heading_size.y + std::abs(shadow.y)) * fitted +
+			this->presentation_.match_.controls_padding.y * 3.0f >= this->presentation_.match_.countdown_size.y)
+		{
+			// Drawable text is printable ASCII, so each character narrows as is.
+			std::string heading;
+			for (const wchar_t character : *text) { heading += static_cast<char>(character); }
+			throw std::runtime_error(this->presentation_.source_path_ +
+				": match.countdown_size must leave room below the " + heading + " heading (" + where + ").");
+		}
+	}
+
+	// The HUD's copy: the team labels in the identity box, which grows with
+	// its text, and the meter labels, which must fit above their meter at
+	// any pane size (the label scales by at most width / reference_width).
+	const HudPresentation& hud = this->presentation_.hud_;
+	std::ignore = fixed_menu_size("menu_text.hud.team_a", hud.labels.team_a, hud.player_identity_font);
+	std::ignore = fixed_menu_size("menu_text.hud.team_b", hud.labels.team_b, hud.player_identity_font);
+	for (const auto& [key, text] : { std::pair<const char*, const std::wstring*>{ "health", &hud.labels.health },
+		{ "paint", &hud.labels.paint } })
+	{
+		const std::string where = std::string("menu_text.hud.") + key;
+		if (fixed_menu_size(where, *text, hud.meter_label_font).x >
+			hud.box_size.x * hud.player_identity_reference_width)
+		{
+			throw std::runtime_error(this->presentation_.source_path_ + ": " + where +
+				" must fit above its meter (hud.box_size.x of hud.player_identity.reference_width).");
+		}
 	}
 
 	for (const SoundReference& sound : this->presentation_.sound_references())

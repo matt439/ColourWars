@@ -165,6 +165,11 @@ namespace
         const Presentation pseudo(locales.presentation("qps-ploc", base_path));
         require(pseudo.menu_text().title.start == L"[" + english.menu_text().title.start + L"]",
             "qps-ploc must bracket menu_text.title.start.");
+        require(pseudo.hud().labels.health == L"[" + english.hud().labels.health + L"]" &&
+            pseudo.hud().labels.team_a == L"[" + english.hud().labels.team_a + L"]",
+            "qps-ploc must bracket the HUD's labels, and the HUD must draw them.");
+        require(pseudo.menu_text().countdown.get_ready == L"[" + english.menu_text().countdown.get_ready + L"]",
+            "qps-ploc must bracket menu_text.countdown.get_ready.");
         require(pseudo.main_menu().weapon_select_art.choice(WeaponType::sprayer).name ==
             L"[" + english.main_menu().weapon_select_art.choice(WeaponType::sprayer).name + L"]",
             "qps-ploc must bracket the Sprayer's name.");

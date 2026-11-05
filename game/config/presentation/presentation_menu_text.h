@@ -11,6 +11,7 @@
 #include <string_view>
 #include "game/match/player_control.h"
 #include "game/match/series_stage_rule.h"
+#include "game/config/presentation/presentation_match.h"
 
 enum class MenuHeading
 {
@@ -253,6 +254,15 @@ struct MenuStickReadoutsText
 	std::wstring aim_active;
 };
 
+// The match countdown card's headings: before the opening count, before a
+// resumed match and above a watched replay.
+struct MenuCountdownText
+{
+	std::wstring get_ready;
+	std::wstring resuming;
+	std::wstring replay;
+};
+
 struct StageScanMenuText
 {
 	std::wstring heading = L"User-stage scan";
@@ -292,6 +302,8 @@ struct MenuText
 	MenuLabelText labels;
 	MenuConnectionText connection;
 	MenuStickReadoutsText stick_readouts;
+	HudLabels hud;
+	MenuCountdownText countdown;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

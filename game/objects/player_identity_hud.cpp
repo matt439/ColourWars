@@ -47,12 +47,14 @@ void PlayerIdentityHud::refresh_texts(const std::vector<Player*>& players, const
 		const Player& player = *players[participant];
 		const bool labelled = participant < this->seat_labels_.size() &&
 			!this->seat_labels_[participant].empty();
+		const HudLabels& labels = this->presentation_->hud().labels;
 		this->identity_texts_[participant] = InterfaceGameplay::identity_text(
-			static_cast<int>(participant), player.team(), labelled ?
+			static_cast<int>(participant),
+			player.team() == PlayerTeam::a ? labels.team_a : labels.team_b, labelled ?
 			this->seat_labels_[participant] :
 			(roster.at(participant).controller == PlayerController::bot ?
 				this->presentation_->menu_text().bot_label(roster[participant].difficulty) :
-				input_slots::device_name(this->pad_device(player.player_num()))));
+				this->presentation_->menu_text().device_label(this->pad_device(player.player_num()))));
 	}
 }
 

@@ -282,6 +282,19 @@ namespace menu_text_acceptance
         { "best_coverage", L"BEST COVER", &MenuRecordText::best_coverage },
         { "played", L"PLAYED", &MenuRecordText::played }
     };
+    struct HudText { const char* key; const wchar_t* text; std::wstring HudLabels::* field; };
+    constexpr HudText hud_text[]{
+        { "team_a", L"TEAM A", &HudLabels::team_a },
+        { "team_b", L"TEAM B", &HudLabels::team_b },
+        { "health", L"HEALTH", &HudLabels::health },
+        { "paint", L"PAINT", &HudLabels::paint }
+    };
+    struct CountdownText { const char* key; const wchar_t* text; std::wstring MenuCountdownText::* field; };
+    constexpr CountdownText countdown_text[]{
+        { "get_ready", L"GET READY", &MenuCountdownText::get_ready },
+        { "resuming", L"RESUMING", &MenuCountdownText::resuming },
+        { "replay", L"REPLAY", &MenuCountdownText::replay }
+    };
     struct StageText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; };
     constexpr StageText stage_text[]{
         { "browse_status", L"FIND YOUR ARENA", &MenuStageText::browse_status },
