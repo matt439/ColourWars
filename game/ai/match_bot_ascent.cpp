@@ -177,7 +177,6 @@ void MatchBot::steer_finish(const MatchBotObservation& view, PlayerInputData& in
 
 void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& input)
 {
-	const PlayerTuning& movement = this->tuning_->player();
 	const Vector2F half = view.size * 0.5f;
 	bool present = false;
 	bool one_way = false;
@@ -241,9 +240,5 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	const float launch_margin = crossing ? std::max(3.0f, std::fabs(view.velocity.x) / static_cast<float>(SIMULATION_HZ) + 2.0f) : 3.0f;
 	if (!this->ascent_airborne_ && std::fabs(view.center.x - destination) <= launch_margin &&
 		(crossing || std::fabs(view.velocity.x) <= this->locomotion_.ground(view.footing).initial) && !this->jump_was_held_)
-	{
-		const double steps = std::ceil(static_cast<double>(movement.jump_max_time) * SIMULATION_HZ);
-		this->jump_left_ = std::max(1, static_cast<int>(std::min(steps,
-			static_cast<double>((std::numeric_limits<int>::max)()))));
-	}
+	{ this->jump_left_ = this->locomotion_.held_jump_steps(); }
 }

@@ -1185,8 +1185,8 @@ of read as `none`.
   `HorizontalMotion::validate_dt` and `LevelStructures`' budget move from 1/60
   to it; the shipped content passes each at either value.
 - `MatchBot::crosses_interior` is the navigation and ramp code's one sweep, and
-  `MatchBotLocomotion::held_jump_steps` the one hold count that `decide` sets
-  and `jump()` models. The death branch calls `replan_traversal`, then clears
+  `MatchBotLocomotion::held_jump_steps` the one hold count that `decide` and
+  `steer_ascent`'s takeoff set and `jump()` models. The death branch calls `replan_traversal`, then clears
   what a replan keeps. Bounds compare with `RectangleF::operator==` in the ramp
   code and, also found, in `clear_route` and `same_support`. `height_across`
   is gone.
