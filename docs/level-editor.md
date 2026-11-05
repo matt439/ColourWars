@@ -849,7 +849,11 @@ To ship a stage with the game, register it instead. A new file in
 5. Configure/build again, then start the game and choose the new stage.
 
 [Registration assistance](#registration-assistance-ed4) makes steps 2-4 in
-one previewed operation.
+one previewed operation. Locales are not touched: the new stage shows its
+English in every locale until one names it, and the `qps-ploc` test locale
+brackets it only once `"<name>": "[<display_name>]"` is added to
+`game/content/locales/qps-ploc.json` by hand
+([Stage names](localisation.md#stage-names)). No check requires that.
 
 The file's `display_name` is the stage's label on the stage-select page, which
 also draws a live preview of the arena itself. For a registered stage it is

@@ -229,14 +229,23 @@ namespace
             L"[Pad 1: A / LT Jump, RT Shoot, [Start] Pause]\n[Pad 2: B Jump, RT Shoot, [Start] Pause]\n"
             L"[Right stick  Aim]",
             "qps-ploc must reach the per-pad reminder lines.");
-        // Every shipped stage's title, which Stage Select and the countdown draw.
+        // Each shipped stage's title, which Stage Select and the countdown draw.
+        // A locale names any subset, so a stage registered after qps-ploc.json
+        // was written (registration writes only the base) keeps the base's
+        // English rather than failing this case; each stage qps-ploc names is
+        // bracketed.
+        const JsonDocument pseudo_file = read_json_file((content / "locales" / "qps-ploc.json").string().c_str());
+        const JsonValue pseudo_names = pseudo_file.root().object("presentation").object("menu_text").object("stage_names");
         for (const Stage& stage : stages.stages())
         {
             const std::wstring* localised = pseudo.menu_text().stage_name(stage.name);
             const std::wstring* base = english.menu_text().stage_name(stage.name);
-            require(localised != nullptr && base != nullptr && *localised == L"[" + *base + L"]" &&
-                pseudo.menu_text().stage_title(stage.name, stage.display_name, stage.name) == *localised,
-                "qps-ploc must bracket menu_text.stage_names." + stage.name);
+            require(localised != nullptr && base != nullptr,
+                "presentation.json must name the shipped stage " + stage.name);
+            const std::wstring expected = pseudo_names.has(stage.name.c_str()) ? L"[" + *base + L"]" : *base;
+            require(*localised == expected &&
+                pseudo.menu_text().stage_title(stage.name, stage.display_name, stage.name) == expected,
+                "qps-ploc must bracket menu_text.stage_names." + stage.name + ", or leave it to the base's English");
         }
         require(*pseudo.menu_text().stage_name("king_of_the_hill") == L"[King of the Hill]",
             "qps-ploc must name King of the Hill in brackets.");

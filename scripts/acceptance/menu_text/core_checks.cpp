@@ -162,7 +162,9 @@ namespace menu_text_acceptance
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
         }
-        require(text.stage_names.size() == std::size(stage_names_text), "menu_text.stage_names gained or lost a stage");
+        // The pinned stages keep their names; a stage registered since may join
+        // (user_stages holds the table to exactly the manifest's stages).
+        require(text.stage_names.size() >= std::size(stage_names_text), "menu_text.stage_names lost a stage");
         for (const auto& entry : stage_names_text)
         {
             const std::wstring* name = text.stage_name(entry.key);

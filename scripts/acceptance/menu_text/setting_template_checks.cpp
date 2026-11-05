@@ -17,7 +17,11 @@ namespace menu_text_acceptance
             if (std::string_view(group["kind"].GetString()) != "level") { continue; }
             for (const auto& name : group["names"].GetArray()) { names.emplace_back(name.GetString()); }
         }
-        require(names.size() == std::size(stage_names_text), "The duration fixture did not read the manifest's stages");
+        for (const auto& pinned : stage_names_text)
+        {
+            require(std::find(names.begin(), names.end(), pinned.key) != names.end(),
+                std::string("The duration fixture did not read the manifest's stages: ") + pinned.key);
+        }
         for (const std::string& name : names)
         {
             auto info = std::make_unique<LevelLoadedInfo>((content / "levels" / (std::string(name) + ".json")).string().c_str());

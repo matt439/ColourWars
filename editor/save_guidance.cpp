@@ -36,13 +36,18 @@ namespace colourwars_editor
         const std::filesystem::path& source_levels, const ContentCatalog& catalog,
         const std::string& display_name)
     {
-        if (destination.empty() || !catalog.manifest_read || !catalog.stage_names_read || !json_file(destination) ||
+        if (destination.empty() || !catalog.manifest_read || !json_file(destination) ||
             !same_stage_folder(destination.parent_path(), source_levels))
             return {};
         const std::string name = stage_name(destination);
         const auto registered = std::find_if(catalog.stages.begin(), catalog.stages.end(),
             [&name](const std::string& stage) { return user_stage_contract::same_name(stage, name); });
         if (registered == catalog.stages.end()) return {};
+        // Only the title goes unchecked; resource names and guidance stand.
+        if (!catalog.stage_names_read)
+            return L"Stage title unchecked: " + (catalog.stage_names_problem.empty() ?
+                std::wstring(L"presentation.json's menu_text.stage_names was not read") :
+                widen(catalog.stage_names_problem));
         const auto entry = catalog.stage_names.find(*registered);
         const std::wstring id = widen(*registered);
         if (entry == catalog.stage_names.end())

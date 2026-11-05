@@ -219,8 +219,13 @@ namespace level_editor_acceptance
         require(has(stage_name_warning(source / "registered.json", source, catalog, "Registered Arena"), L"has no 'registered'"),
             "A registered level stage_names lacks was not warned about");
         catalog.stage_names_read = false;
-        require(stage_name_warning(source / "registered.json", source, catalog, "Renamed Arena").empty(),
-            "An unread presentation.json was reported as a disagreement");
+        catalog.stage_names_problem = "presentation.json needs a 'stage_names' object";
+        const std::wstring unread = stage_name_warning(source / "registered.json", source, catalog, "Renamed Arena");
+        require(has(unread, L"Stage title unchecked") && has(unread, L"'stage_names' object") &&
+            !has(unread, L"will not start"), "An unread presentation.json was reported as a disagreement");
+        require(stage_name_warning(source / "new_source.json", source, catalog, "Renamed Arena").empty(),
+            "An unread presentation.json was reported for an unregistered level");
+        catalog.stage_names_problem.clear();
 
         catalog.manifest_read = false;
         require(has(guidance(user / "my_arena.json", true), L"unchecked") &&

@@ -30,7 +30,11 @@ namespace colourwars_editor
         // by manifest id, whose English the game requires to equal the level's
         // display_name. Comment keys are left out. Read only after the manifest.
         std::map<std::string, std::string> stage_names;
+        // Manifest, sprite-sheet and sound-bank problems: each leaves resource
+        // names unchecked. A stage_names problem is not one of them; it goes in
+        // stage_names_problem and leaves only the titles unchecked.
         std::vector<std::string> problems;
+        std::string stage_names_problem;
         bool manifest_read = false;
         bool stage_names_read = false;
     };

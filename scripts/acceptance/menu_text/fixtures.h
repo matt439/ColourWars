@@ -318,7 +318,9 @@ namespace menu_text_acceptance
         { "mouse_middle", L"Middle click", &ControlLabels::mouse_middle },
         { "mouse_x1", L"Mouse 4", &ControlLabels::mouse_x1 }, { "mouse_x2", L"Mouse 5", &ControlLabels::mouse_x2 }
     };
-    // menu_text.stage_names: the manifest's stages, each its level's display_name.
+    // menu_text.stage_names: the stages shipped when this was pinned, each its
+    // level's display_name. A stage registered later joins the table without
+    // joining this list; removing one of these is a deliberate edit here.
     struct StageNameText { const char* key; const wchar_t* text; };
     constexpr StageNameText stage_names_text[]{
         { "king_of_the_hill", L"King of the Hill" }, { "turbulence", L"Turbulence" },

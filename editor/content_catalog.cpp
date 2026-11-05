@@ -151,7 +151,7 @@ namespace colourwars_editor
         }
         catch (const std::exception& error)
         {
-            catalog.problems.push_back(error.what());
+            catalog.stage_names_problem = error.what();
             catalog.stage_names.clear();
         }
         return catalog;

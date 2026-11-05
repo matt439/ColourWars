@@ -226,7 +226,14 @@ from the registration tool ([Registration assistance](level-editor.md#registrati
 so a registered stage cannot fail the check, and a shipped stage's id may not
 start with `_`, which the table would read as a comment.
 
-A locale names any subset; a stage it leaves out keeps the base's English. It
+A locale names any subset; a stage it leaves out keeps the base's English.
+Registration writes only the base, so a newly registered stage is untranslated
+in every locale, `qps-ploc` included, until someone adds it there: add
+`"<name>": "[<display_name>]"` to `qps-ploc.json`'s `stage_names` to keep the
+test locale bracketing every stage. Nothing fails meanwhile - the `locales`
+case brackets the stages `qps-ploc` names and holds the rest to the base, and
+the `menu_text` case pins the stages shipped when it was written and lets a
+later one join. A locale
 cannot add a stage: an id `presentation.json` lacks is refused like any other
 unknown key. A **user stage** (Save to My Stages, `ROAD#16`) is never in the
 table and draws its own `display_name` in every locale, untranslated: it is
@@ -235,7 +242,7 @@ fixture stage the table does not name falls back the same way.
 
 ## Not yet localisable
 
-Three groups of text still come from somewhere a locale does not reach:
+These still come from somewhere a locale does not reach:
 
 - **Practice lesson cards.** Movement Course's station lessons (`DROP
   THROUGH`, `SHORT HOP`, `HELD JUMP` ...) are each station's `lesson.title`
@@ -248,10 +255,27 @@ Three groups of text still come from somewhere a locale does not reach:
   identifier: [countdown_art.cpp](../game/objects/countdown_art.cpp) compares
   the label against `L"GO!"` to choose the go beat's look, so moving it needs
   that comparison replaced by a flag first.
+- **User-stage scan details.** Stage Select's Scan details page (Down while
+  browsing, Release included) draws each refused file as `user stage refused:
+  <file>: <reason>`, built in C++ by
+  [stage_loading.cpp](../game/config/stage_loading.cpp) with English reasons
+  (`is not a folder`, the name rule, a loader's exception text). The page's
+  heading, prompts and counter are `menu_text.stage_scan`; the lines are the
+  same text stderr prints, so the reasons need codes before they can be copy.
+- **System dialogs.** The first-save failure warning
+  ([save.cpp](../game/save/save.cpp): `Could not write <path>. Your settings
+  will not be remembered.`, captioned `ColourWars - save failure`) and the
+  startup/runtime failure report
+  ([fatal_report.cpp](../game/fatal_report.cpp)) are `MessageBoxW` text in
+  C++. Both can fire before a locale exists: `Save` writes its first-run
+  defaults before `wWinMain` reads the locales, and the failure report covers
+  a failure to load them. Localising them means reading the locale earlier,
+  or deciding they stay English.
 - **Developer text**: the Debug console, overlays and diagnostics stay English.
 
-The first two need moving into `presentation.json` before a real translation
-ships; the third is not player-facing.
+All but the last need moving into data (or, for the dialogs, a decision to
+keep them English) before a real translation ships; developer text is not
+player-facing.
 
 ## Checks
 
@@ -265,7 +289,8 @@ ships; the third is not player-facing.
   language name, an unknown root key, a character outside the fonts, in a stage
   name too, a line that does not fit). Its judge names every shipped stage
   through `stage_names` in every locale, and checks the base agrees with the
-  levels.
+  levels; `qps-ploc` must bracket each stage it names and leave the rest to
+  the base.
 - [`scripts/acceptance/user_stages.cpp`](../scripts/acceptance/user_stages.cpp)
   holds the stage-name checks against the stage list: a missing, extra, user
   or `_` entry and a drifted `display_name` are refused; a user stage keeps its

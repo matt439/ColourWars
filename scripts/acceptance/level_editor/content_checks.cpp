@@ -209,6 +209,21 @@ namespace level_editor_acceptance
         require(*load_content_catalog(partial).sound_effects.at("paint_exe") ==
             std::set<std::string>{ "a", "b", "c" }, "Each wave must be an effect when the bank asks for it");
 
+        // A broken stage_names leaves only titles unchecked: it is not a
+        // resource problem, so resource names are still checked.
+        const fs::path untitled = scratch / "untitled-content";
+        fs::create_directories(untitled);
+        fs::copy_file(content / "manifest.json", untitled / "manifest.json");
+        write(untitled / "presentation.json", "{ \"menu_text\": {} }");
+        const ContentCatalog untitled_catalog = load_content_catalog(untitled);
+        require(untitled_catalog.manifest_read && !untitled_catalog.stage_names_read &&
+            untitled_catalog.stage_names.empty() &&
+            untitled_catalog.stage_names_problem.find("'stage_names' object") != std::string::npos &&
+            untitled_catalog.problems.size() == untitled_catalog.sprite_frames.size() + untitled_catalog.sound_effects.size(),
+            "A broken menu_text.stage_names was reported as a resource problem");
+        require(catalog.stage_names_problem.empty() && partial_catalog.stage_names_problem.empty(),
+            "Readable stage_names reported a problem");
+
         const ContentCatalog missing = load_content_catalog(scratch / "no-content-here");
         require(!missing.manifest_read && missing.problems.size() == 1 &&
             missing.problems.front().find("manifest.json") != std::string::npos,
