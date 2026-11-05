@@ -186,7 +186,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             UiText* result = widget.get(); text.push_back(std::move(widget)); return result;
         };
         const size_t row_count = sticks ? stick_labels.size() : control_labels.size();
-        const size_t first_value_row = sticks ? 1 : 4;
+        const size_t first_value_row = static_cast<size_t>(sticks ? settings_rows::sticks_movement : settings_rows::controls_music);
         RectangleF focused_bounds;
         for (size_t row = 0; row < row_count; ++row)
         {

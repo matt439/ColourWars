@@ -114,8 +114,9 @@ namespace menu_text_acceptance
                 controls.layout.spacing.y - art.focus_padding.y * 2.0f);
             require(limit == labrador::Vector2F(332.0f, 48.0f), "Percentage rows lost the actual Controls/Sticks value limits");
             struct Use { int row; MenuItem label; };
-            constexpr Use uses[]{{3, MenuItem::music_volume}, {4, MenuItem::sfx_volume},
-                {1, MenuItem::move_deadzone}, {2, MenuItem::aim_deadzone}};
+            constexpr Use uses[]{{settings_rows::controls_music, MenuItem::music_volume},
+                {settings_rows::controls_sfx, MenuItem::sfx_volume},
+                {settings_rows::sticks_movement, MenuItem::move_deadzone}, {settings_rows::sticks_aim, MenuItem::aim_deadzone}};
             for (const auto& use : uses)
             {
                 const auto position = controls.layout.position + labrador::Vector2F(0.0f,

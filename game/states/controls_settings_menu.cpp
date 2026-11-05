@@ -6,6 +6,7 @@
 #include "game/states/profiles_menu.h"
 #include "game/input/controls_text.h"
 #include "game/config/sound_groups.h"
+#include "game/config/presentation/menu_geometry.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -89,11 +90,12 @@ void ControlsSettingsMenu::init()
 		this->context()->push(std::make_unique<ProfilesMenu>(this->menu_context(), this->opening_slot()));
 	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
-		4, this->selection_.music_volume, 0, 100, 10);
+		settings_rows::controls_music, this->selection_.music_volume, 0, 100, 10);
 	this->sfx_ = make_row("sfx", this->text().item(MenuItem::sfx_volume),
-		5, this->selection_.sfx_volume, 0, 100, 10);
+		settings_rows::controls_sfx, this->selection_.sfx_volume, 0, 100, 10);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", this->text().item(MenuItem::view_shake),
-		this->calculate_widget_position(0, 6), this->calculate_widget_position(1, 6),
+		this->calculate_widget_position(0, settings_rows::controls_view_shake),
+		this->calculate_widget_position(1, settings_rows::controls_view_shake),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -103,7 +105,8 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", this->text().item(MenuItem::aim_marker),
-		this->calculate_widget_position(0, 7), this->calculate_widget_position(1, 7),
+		this->calculate_widget_position(0, settings_rows::controls_aim_marker),
+		this->calculate_widget_position(1, settings_rows::controls_aim_marker),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -113,7 +116,8 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", this->text().item(MenuItem::reduce_effects),
-		this->calculate_widget_position(0, 8), this->calculate_widget_position(1, 8),
+		this->calculate_widget_position(0, settings_rows::controls_reduce_effects),
+		this->calculate_widget_position(1, settings_rows::controls_reduce_effects),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{

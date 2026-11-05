@@ -18,6 +18,27 @@ namespace menu_consts
 	inline const labrador::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
 }
 
+// The value rows of the two settings pages, named once for the pages that
+// place them and the validator that fit-checks them. Controls opens Sticks,
+// Keyboard Jump, Pad Buttons and Profiles from rows 0-3; Apply and Back follow
+// the value rows on both pages.
+namespace settings_rows
+{
+	inline constexpr int controls_music = 4;
+	inline constexpr int controls_sfx = 5;
+	inline constexpr int controls_view_shake = 6;
+	inline constexpr int controls_aim_marker = 7;
+	inline constexpr int controls_reduce_effects = 8;
+
+	inline constexpr int sticks_pad = 0;
+	inline constexpr int sticks_movement = 1;
+	inline constexpr int sticks_aim = 2;
+	inline constexpr int sticks_rumble = 3;
+	inline constexpr int sticks_view_shake = 4;
+	inline constexpr int sticks_aim_marker = 5;
+	inline constexpr int sticks_reduce_effects = 6;
+}
+
 namespace menu_geometry
 {
 	// The largest papers the reader accepts. Footer papers are at most this

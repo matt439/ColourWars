@@ -3,6 +3,7 @@
 #include "game/match/match_setup.h"
 #include "game/objects/stick_response.h"
 #include "game/objects/crude_drawing.h"
+#include "game/config/presentation/menu_geometry.h"
 #include <algorithm>
 #include <cmath>
 
@@ -131,7 +132,7 @@ void StickSettingsMenu::init()
 			this->calculate_widget_position(1, index), style, look.art.ink, this->render_resources(),
 			std::move(adjust), &look.art, value_limit);
 	};
-	this->pad_ = row("pad", this->text().item(MenuItem::pad), 0, [this](Direction direction)
+	this->pad_ = row("pad", this->text().item(MenuItem::pad), settings_rows::sticks_pad, [this](Direction direction)
 	{
 		this->slot_ = std::clamp(this->slot_ + (direction == Direction::right ? 1 : -1),
 			0, input_slots::pad_count - 1);
@@ -148,11 +149,11 @@ void StickSettingsMenu::init()
 		this->refresh_values();
 		this->set_status(this->text().status.sticks_pending);
 	};
-	this->movement_ = row("movement", this->text().item(MenuItem::move_deadzone), 1,
+	this->movement_ = row("movement", this->text().item(MenuItem::move_deadzone), settings_rows::sticks_movement,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(true, direction); });
-	this->aim_ = row("aim", this->text().item(MenuItem::aim_deadzone), 2,
+	this->aim_ = row("aim", this->text().item(MenuItem::aim_deadzone), settings_rows::sticks_aim,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(false, direction); });
-	this->rumble_ = row("rumble", this->text().item(MenuItem::rumble), 3,
+	this->rumble_ = row("rumble", this->text().item(MenuItem::rumble), settings_rows::sticks_rumble,
 		[this](Direction direction)
 		{
 			const size_t slot = static_cast<size_t>(this->slot_);
@@ -177,9 +178,9 @@ void StickSettingsMenu::init()
 			this->set_status(this->text().status.sticks_pending);
 		});
 	};
-	this->view_shake_ = comfort_row("view_shake", MenuItem::view_shake, 4, &SeatComfort::view_shake);
-	this->aim_marker_ = comfort_row("aim_marker", MenuItem::aim_marker, 5, &SeatComfort::aim_marker);
-	this->reduce_effects_ = comfort_row("reduce_effects", MenuItem::reduce_effects, 6, &SeatComfort::reduce_effects);
+	this->view_shake_ = comfort_row("view_shake", MenuItem::view_shake, settings_rows::sticks_view_shake, &SeatComfort::view_shake);
+	this->aim_marker_ = comfort_row("aim_marker", MenuItem::aim_marker, settings_rows::sticks_aim_marker, &SeatComfort::aim_marker);
+	this->reduce_effects_ = comfort_row("reduce_effects", MenuItem::reduce_effects, settings_rows::sticks_reduce_effects, &SeatComfort::reduce_effects);
 	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get(), this->rumble_.get(),
 		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
 	{

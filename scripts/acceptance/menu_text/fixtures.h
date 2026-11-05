@@ -19,6 +19,7 @@
 // bounds) and menu_controls_row_overflow (controls text -> controls option
 // rows). A new check that needs a font from another file must run after it.
 #include "game/config/presentation/presentation.h"
+#include "game/config/presentation/menu_geometry.h"
 #include "game/input/controls_text.h"
 #include "game/states/menu_content_validation.h"
 #include "game/config/play_settings.h"

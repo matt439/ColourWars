@@ -32,16 +32,35 @@ the rows that depend on another say so.
 
 ### Controls percentages on the real rows (`HYG#58`)
 
-`Presentation::Validation::validate_settings_percentages`
-(`game/config/presentation/presentation_validation_settings.cpp:651`) fit-checks
-Controls rows `{1, 2, 3, 4}`. Music and SFX are rows 4 and 5
-(`controls_settings_menu.cpp:91-94`), so the SFX value is never checked. Name the
-Controls and Sticks value rows once, as constants the two pages and the validator
-share, check those rows and correct the comment. Correct
-`scripts/check-painter/verify-percentage-text.ps1:26`, which checks rows 4/5 but
-names rows 3/4 and 2/3, by building its messages from the same table. Done when a
-too-wide SFX percentage fails startup validation (one added rejection variant in
-the probe that covers percentages).
+**Done 2026-11-05; behaviour change.** `settings_rows` in
+[menu_geometry.h](../game/config/presentation/menu_geometry.h) names the value
+rows of Controls (Music 4, SFX 5, the three toggles 6-8) and Sticks (Pad 0,
+Move 1, Aim 2, Rumble 3, the three comfort rows 4-6). Both pages place their
+rows from it, and `validate_settings_percentages` now fit-checks Sticks Move/Aim
+and Controls Music/SFX instead of rows 1-4, so the SFX value is checked;
+`validate_settings_toggles` takes its rows from the same names, and both stale
+comments are gone. The `menu_text` percentage fixture places its Music and SFX
+`OptionRow`s on the named rows (it used rows 3 and 4), and the painter's
+percentage leaf takes its first value row from them.
+[verify-percentage-text.ps1](../scripts/check-painter/verify-percentage-text.ps1)
+builds both its expectation and its message ("Controls rows 4/5 and Sticks rows
+1/2") from one table.
+
+No rejection variant was added. A percentage that fails only on the SFX row
+cannot be authored: values in one column share the font, width limit and help
+column, so only the row's y differs, and a fitted value is at most a row high.
+Anything that pushes the SFX value past the paper or the status line also
+pushes the labels on rows 6-10 past it, which the reader (eleven rows above
+`status_position`) and phase 1 reject first. Tried locally: a status line
+through the SFX value is refused by the reader before validation runs. The
+missing check was a latent gap, not a reachable failure.
+
+Both presets build under `/W4 /WX`. `menu_text`, `menu_presentation`,
+`stick_settings`, `settings`, `locales` and `menu_navigation` passed in Debug
+and Release, `check-startup.ps1` passed on both executables, and
+`check-painter.ps1 -PercentageTextOnly` passed in both presets. The verifier was
+also run by hand against that run's evidence with one Controls row changed, and
+threw the new message.
 
 ### Save and settings correctness (`HYG#59`)
 

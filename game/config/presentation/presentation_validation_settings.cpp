@@ -83,8 +83,9 @@ Vector2F Presentation::Validation::validate_settings_toggles() const
 	const Vector2F controls_value_limit(
 		menu_geometry::settings_action_width(controls, controls.layout.position.x + controls.layout.spacing.x),
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-	// Rumble occupies Stick row 3; Controls toggles occupy rows 6 through 8.
-	for (const int row : { 3, 6, 7, 8 })
+	// Sticks' Rumble row and the three Controls toggles.
+	for (const int row : { settings_rows::sticks_rumble, settings_rows::controls_view_shake,
+		settings_rows::controls_aim_marker, settings_rows::controls_reduce_effects })
 	{
 		const Vector2F position = controls.layout.position +
 			Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
@@ -642,13 +643,14 @@ void Presentation::Validation::validate_settings_percentages(const ControlsGeome
 {
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
 	const auto& controls_value_limit = control_geometry.controls_value_limit;
-	// Controls volumes occupy rows two and three; Sticks effective deadzones
-	// occupy rows one and two in the same captured font/value column. Validate every
-	// integer output, including saved non-step volumes and inherited 100%.
+	// The Controls Music and SFX rows and the Sticks effective-deadzone rows, in
+	// the same captured font/value column. Validate every integer output,
+	// including saved non-step volumes and inherited 100%.
 	for (int value = 0; value <= 100; ++value)
 	{
 		const std::wstring text = this->presentation_.menu_text_.setting_percentage(value);
-		for (const int row : { 1, 2, 3, 4 })
+		for (const int row : { settings_rows::sticks_movement, settings_rows::sticks_aim,
+			settings_rows::controls_music, settings_rows::controls_sfx })
 		{
 			const Vector2F position = controls.layout.position +
 				Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
