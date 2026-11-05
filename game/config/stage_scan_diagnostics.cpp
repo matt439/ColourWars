@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/stage_scan_diagnostics.h"
+#include "game/config/drawable_text.h"
 #include "engine/render/font.h"
 #include "game/config/presentation/menu_geometry.h"
 #include "game/config/presentation/presentation_menu.h"
@@ -71,9 +72,7 @@ stage_scan_diagnostics::Layout stage_scan_diagnostics::layout(const StageScanPre
 	const Vector2F top = result.paper.position() + padding;
 	const Vector2F bottom = result.paper.bottom_right() - padding - Vector2F(art.shadow_offset);
 	const float width = bottom.x - top.x;
-	std::wstring alphabet;
-	for (wchar_t character = L' '; character <= L'~'; ++character) { alphabet.push_back(character); }
-	const float line_height = font.measure(alphabet).y * look.text_scale;
+	const float line_height = font.measure(alphabet()).y * look.text_scale;
 	result.heading = RectangleF(top, Vector2F(width, font.measure(copy.heading).y * look.heading_scale));
 	result.unicode_hint = RectangleF(Vector2F(top.x, result.heading.bottom() + look.gap), Vector2F(width, line_height));
 	result.progress = RectangleF(Vector2F(top.x, bottom.y - line_height), Vector2F(width, line_height));
@@ -86,8 +85,20 @@ stage_scan_diagnostics::Layout stage_scan_diagnostics::layout(const StageScanPre
 	return result;
 }
 
+std::wstring stage_scan_diagnostics::alphabet()
+{
+	std::wstring result;
+	for (wchar_t character = drawable_text::first_drawable; character <= drawable_text::last_drawable; ++character)
+	{
+		result.push_back(character);
+	}
+	return result;
+}
+
 std::wstring stage_scan_diagnostics::display_text(std::string_view diagnostic)
 {
+	using drawable_text::first_drawable;
+	using drawable_text::last_drawable;
 	if (diagnostic.empty()) { return {}; }
 	int units = 0;
 	if (diagnostic.size() <= static_cast<size_t>((std::numeric_limits<int>::max)()))
@@ -101,7 +112,8 @@ std::wstring stage_scan_diagnostics::display_text(std::string_view diagnostic)
 		for (const char character : diagnostic)
 		{
 			const unsigned char byte = static_cast<unsigned char>(character);
-			if (byte >= 0x20 && byte <= 0x7e) { output.push_back(static_cast<wchar_t>(byte)); }
+			const wchar_t wide = static_cast<wchar_t>(byte);
+			if (wide >= first_drawable && wide <= last_drawable) { output.push_back(wide); }
 			else { append_escape(output, byte, 2, L'x'); }
 		}
 		return output;
@@ -114,7 +126,7 @@ std::wstring stage_scan_diagnostics::display_text(std::string_view diagnostic)
 	}
 	for (const wchar_t character : decoded)
 	{
-		if (character >= L' ' && character <= L'~') { output.push_back(character); }
+		if (character >= first_drawable && character <= last_drawable) { output.push_back(character); }
 		else { append_escape(output, static_cast<unsigned int>(character), 4, L'u'); }
 	}
 	return output;

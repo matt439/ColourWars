@@ -8,12 +8,12 @@ PaintSplashClips PaintSplashClips::resolve(const PaintTuning& paint,
 	const RenderResources& render_resources)
 {
 	PaintSplashClips clips;
-	clips.initial = render_resources.resolve_sheet_strip(paint.splash_sheet, paint.splash_animation);
 	for (size_t type = 0; type < clips.by_type.size(); ++type)
 	{
 		clips.by_type[type] = render_resources.resolve_sheet_strip(paint.splash_sheet,
 			paint.splash_animations[type]);
 	}
+	clips.initial = clips.by_type[static_cast<size_t>(ProjectileType::spray)];
 	return clips;
 }
 

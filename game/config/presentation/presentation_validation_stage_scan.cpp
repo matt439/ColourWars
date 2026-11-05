@@ -19,8 +19,7 @@ void Presentation::validate_stage_scan_resources(const labrador::RenderResources
 		const StageScanMenuText& copy = this->menu_text_.stage_scan;
 		const labrador::Font& font = *render.font(render.resolve_sprite_font(look.font));
 		// External filenames/reasons can need every printable ASCII glyph after escaping.
-		std::wstring alphabet;
-		for (wchar_t character = L' '; character <= L'~'; ++character) { alphabet.push_back(character); }
+		const std::wstring alphabet = stage_scan_diagnostics::alphabet();
 		if (font.first_unrenderable(alphabet) != std::wstring::npos)
 		{ throw std::invalid_argument("font must contain every printable ASCII diagnostic character."); }
 		const auto layout = stage_scan_diagnostics::layout(look, this->main_menu_.art,

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/input/controls_text.h"
+#include "game/config/drawable_text.h"
 #include <algorithm>
 #include <stdexcept>
 #include <string>
@@ -24,7 +25,7 @@ namespace
         {
             if (at < authored.size() && authored[at] != L'\n')
             {
-                if (authored[at] < L' ' || authored[at] > L'~')
+                if (authored[at] < drawable_text::first_drawable || authored[at] > drawable_text::last_drawable)
                 { throw std::invalid_argument("Controls text requires printable ASCII and allowed LF breaks."); }
                 continue;
             }

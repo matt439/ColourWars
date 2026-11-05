@@ -54,6 +54,18 @@ namespace
 			}
 		}
 	}
+
+	// What Stage Select and the countdown card draw for a shipped stage.
+	const std::wstring& shipped_stage_name(const Presentation& presentation, const std::string& stage)
+	{
+		const std::wstring* name = presentation.menu_text().stage_name(stage);
+		if (name == nullptr)
+		{
+			throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage +
+				"', a stage the manifest lists. Add it with the level's display_name.");
+		}
+		return *name;
+	}
 }
 
 void validate_stage_objects(const GameTuning& tuning, const LevelObjectBuilder& builder,
@@ -73,12 +85,7 @@ void validate_stage_text(const Presentation& presentation,
 	const std::wstring authored = drawable_text::widen_drawable(stage.display_name, authored_where);
 	// What Stage Select and the countdown card draw: a shipped stage's
 	// menu_text.stage_names entry, a user stage's own display_name.
-	const std::wstring* shipped = stage.user ? nullptr : presentation.menu_text().stage_name(stage.name);
-	if (!stage.user && shipped == nullptr)
-	{
-		throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage.name +
-			"', a stage the manifest lists. Add it with the level's display_name.");
-	}
+	const std::wstring* shipped = stage.user ? nullptr : &shipped_stage_name(presentation, stage.name);
 	const std::wstring& name = shipped != nullptr ? *shipped : authored;
 	const std::string where = shipped != nullptr ?
 		"presentation.json: menu_text.stage_names." + stage.name : authored_where;
@@ -106,11 +113,7 @@ void validate_stage_names(const Presentation& presentation, const StageList& sta
 			throw std::runtime_error("stage '" + stage.name + "': a shipped stage's name must not "
 				"start with '_', which presentation.json's menu_text.stage_names reads as a comment.");
 		}
-		if (presentation.menu_text().stage_name(stage.name) == nullptr)
-		{
-			throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage.name +
-				"', a stage the manifest lists. Add it with the level's display_name.");
-		}
+		std::ignore = shipped_stage_name(presentation, stage.name);
 	}
 	for (const auto& entry : presentation.menu_text().stage_names)
 	{
@@ -283,14 +286,15 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 			{
 				throw std::runtime_error("weapon supply " + name + ": needs empty and full levels.");
 			}
-			for (int level = 0; level < supply.frame_count(); ++level)
+			bool canvas = idle.origin() == labrador::Vector2F::zero;
+			for (int level = 0; canvas && level < supply.frame_count(); ++level)
 			{
-				if (supply.frame_rect(level).size() != idle.source_rectangle().size() ||
-					idle.origin() != labrador::Vector2F::zero)
-				{
-					throw std::runtime_error("weapon supply " + name +
-						": levels must retain the body canvas and zero authored origin.");
-				}
+				canvas = supply.frame_rect(level).size() == idle.source_rectangle().size();
+			}
+			if (!canvas)
+			{
+				throw std::runtime_error("weapon supply " + name +
+					": levels must retain the body canvas and zero authored origin.");
 			}
 		}
 	}

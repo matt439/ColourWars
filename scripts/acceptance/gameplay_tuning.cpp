@@ -472,6 +472,7 @@ namespace
             { { "player", "drop_down_analog_threshold" }, 1.01 },
             { { "player", "respawn_delay" }, -0.01 },
             { { "player", "health_regen_rate" }, -0.01 },
+            { { "player", "animations", "run_speed" }, 0.0 },
             { { "weapons", "ammo_regen_delay" }, -0.01 },
             { { "weapons", "ammo_regen_rate" }, 1e100 },
             { { "weapons", "sprayer", "shoot_interval" }, -0.01 },

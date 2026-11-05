@@ -66,7 +66,8 @@ int main(int argc, char** argv)
         const float tile_area = tile.area();
         const SpriteSheet* effects = render.sprite_sheet(tuning.paint().splash_sheet);
         const AnimationStrip& impact = effects->animation_strip(
-            effects->resolve_animation_strip(tuning.paint().splash_animation));
+            effects->resolve_animation_strip(
+                tuning.paint().splash_animations[static_cast<size_t>(ProjectileType::spray)]));
         const float impact_duration = impact.frame_time() * static_cast<float>(impact.frame_count());
         PaintTileSplash splash(tile_rectangle, clips.initial, &render);
         require(!splash.active(), "Splash animation plays before a paint contact");

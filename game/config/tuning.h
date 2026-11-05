@@ -25,8 +25,9 @@ namespace labrador
 }
 
 // Gameplay balance and asset choices loaded from tuning.json at startup.
-// Mechanics and animation states remain in C++; changing these values needs
-// staging the updated content and restarting.
+// Mechanics and animation states remain in C++. A Debug build's tune and
+// reload commands change these values while the game runs
+// (docs/debug-console.md#live-tuning); otherwise a change takes a restart.
 
 // A named sound and how loud it is played.
 struct SoundTuning
@@ -94,7 +95,6 @@ struct HandicapTuning
 	float paint_refill = 1.0f;
 };
 
-// Match phase durations and countdown presentation.
 // The opening's beats before the countdown (docs/backstory.md, "Opening"), in
 // seconds. They move the match's state machine, so they are tuning.
 struct OpeningTuning
@@ -131,6 +131,7 @@ struct RevealTuning
 	float react = 0.0f;
 };
 
+// Match phase durations and the match's sounds.
 struct MatchTuning
 {
 	float duration = 0.0f;
@@ -209,7 +210,6 @@ struct PaintTuning
 	std::string frame;
 
 	std::string splash_sheet;
-	std::string splash_animation;
 	std::array<std::string, static_cast<size_t>(ProjectileType::count)> splash_animations;
 
 	// Surface decoration stays inside the scored tile; only the short airborne
@@ -300,6 +300,8 @@ struct PlayerTuning
 	std::array<SoundTuning, 4> redraw_sounds;
 	PlayerMovementSounds movement_sounds;
 
+	// Above this horizontal ground speed the running clip plays, not walk.
+	float run_speed = 0.0f;
 	PlayerAnimationTuning idle;
 	PlayerAnimationTuning walk;
 	PlayerAnimationTuning running;

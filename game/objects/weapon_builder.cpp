@@ -44,8 +44,8 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     default:
         throw std::runtime_error("Weapon type " +
             std::to_string(static_cast<int>(type)) +
-            " has no builder: ./tuning.json describes the five a player can "
-            "pick, and this is not one of them.");
+            " has no builder: only the " + std::to_string(TUNED_WEAPON_COUNT) +
+            " tuned weapons a player can pick have one, and this is not one of them.");
     }
     weapon->set_motion_presentation(motion);
     weapon->set_feedback_presentation(feedback);

@@ -27,6 +27,13 @@ namespace
 {
 	constexpr const char* index_file = "locales.json";
 
+	// The base a build without locales.json has: presentation.json's own
+	// language, as the shipped index's "base" also names it.
+	LocaleEntry base_without_index()
+	{
+		return { "en", "English", "", false };
+	}
+
 	// Full precision, so a number written back out spells the literal it was
 	// read from and the engine's own parse of the composed text reads the
 	// same float the base file gives it.
@@ -420,7 +427,7 @@ struct Locales::Impl
 
 Locales::Locales() : impl_(std::make_unique<Impl>())
 {
-	this->impl_->entries.push_back({ "en", "English", "", false });
+	this->impl_->entries.push_back(base_without_index());
 	this->impl_->files.push_back(nullptr);
 }
 
@@ -473,7 +480,7 @@ Locales Locales::read(const std::string& directory)
 		}
 		if (entry.fallback.empty())
 		{
-			entry.fallback = impl.entries.front().tag;
+			entry.fallback = result.base().tag;
 		}
 		// Only the base or a locale listed above: the chain always ends, and
 		// reads top to bottom.
@@ -528,7 +535,7 @@ std::string Locales::compose(std::string_view tag, std::string_view base_text,
 	const std::string& base_name) const
 {
 	const std::vector<const LocaleEntry*> chain = this->chain(tag);
-	if (chain.size() == 1)
+	if (chain.front() == &this->base())
 	{
 		return std::string(base_text);
 	}

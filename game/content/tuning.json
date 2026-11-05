@@ -240,6 +240,7 @@
         "animations": {
             "sheet": "painter",
             "uniform": "idle_paint",
+            "run_speed": 600.0,
             "idle": { "strip": "idle", "paint_strip": "idle_paint" },
             "walk": { "strip": "run", "paint_strip": "run_paint" },
             "running": { "strip": "run", "paint_strip": "run_paint", "frame_time": 0.05 },

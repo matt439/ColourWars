@@ -384,7 +384,6 @@ namespace
 			paint.splash_animations[static_cast<size_t>(type)] = animations.string(key);
 		};
 		for_each_projectile(splash_animation);
-		paint.splash_animation = paint.splash_animations[static_cast<size_t>(ProjectileType::spray)];
 
 		const JsonValue visual = known_object(json, "visual", { "edge_width", "wet_duration",
 			"wet_highlight", "settle_depth", "splash_scale", "runoff" });
@@ -502,55 +501,83 @@ namespace
 		return sounds;
 	}
 
-    PaintUnderfootTuning read_paint_underfoot(const JsonValue& player)
-    {
-        PaintUnderfootTuning result;
-        if (!player.has("paint_underfoot")) { return result; }
-        const JsonValue json = known_object(player, "paint_underfoot", { "enabled",
-            "own_speed_multiplier", "own_ammo_regen_multiplier", "enemy_speed_multiplier",
-            "enemy_ammo_regen_multiplier", "enemy_blocks_health_regen" });
-        result.enabled = json.boolean("enabled");
-        const auto at_least_one = [&](const char* key)
-        {
-            const float value = read_finite(json, key);
-            if (!(value >= 1.0f))
-            { throw std::runtime_error(json.where() + ": '" + key + "' must be at least 1."); }
-            return value;
-        };
-        result.own_speed_multiplier = at_least_one("own_speed_multiplier");
-        result.own_ammo_regen_multiplier = at_least_one("own_ammo_regen_multiplier");
-        result.enemy_speed_multiplier = read_unit(json, "enemy_speed_multiplier");
-        if (!(result.enemy_speed_multiplier > 0.0f))
-        { throw std::runtime_error(json.where() + ": 'enemy_speed_multiplier' must be greater than zero."); }
-        result.enemy_ammo_regen_multiplier = read_unit(json, "enemy_ammo_regen_multiplier");
-        result.enemy_blocks_health_regen = json.has("enemy_blocks_health_regen") &&
-            json.boolean("enemy_blocks_health_regen");
-        return result;
-    }
+	PaintUnderfootTuning read_paint_underfoot(const JsonValue& player)
+	{
+		PaintUnderfootTuning result;
+		if (!player.has("paint_underfoot")) { return result; }
+		const JsonValue json = known_object(player, "paint_underfoot", { "enabled",
+			"own_speed_multiplier", "own_ammo_regen_multiplier", "enemy_speed_multiplier",
+			"enemy_ammo_regen_multiplier", "enemy_blocks_health_regen" });
+		result.enabled = json.boolean("enabled");
+		const auto at_least_one = [&](const char* key)
+		{
+			const float value = read_finite(json, key);
+			if (!(value >= 1.0f))
+			{ throw std::runtime_error(json.where() + ": '" + key + "' must be at least 1."); }
+			return value;
+		};
+		result.own_speed_multiplier = at_least_one("own_speed_multiplier");
+		result.own_ammo_regen_multiplier = at_least_one("own_ammo_regen_multiplier");
+		result.enemy_speed_multiplier = read_unit(json, "enemy_speed_multiplier");
+		if (!(result.enemy_speed_multiplier > 0.0f))
+		{ throw std::runtime_error(json.where() + ": 'enemy_speed_multiplier' must be greater than zero."); }
+		result.enemy_ammo_regen_multiplier = read_unit(json, "enemy_ammo_regen_multiplier");
+		result.enemy_blocks_health_regen = json.has("enemy_blocks_health_regen") &&
+			json.boolean("enemy_blocks_health_regen");
+		return result;
+	}
 
-    void validate_underfoot_rates(const JsonValue& json, const PlayerTuning& player)
-    {
-        if (!json.has("paint_underfoot")) { return; }
-        const JsonValue effect = json.object("paint_underfoot");
-        const auto speed = [&](float multiplier, const char* multiplier_key)
-        {
-            const auto rate = [&](float base, const char* key, bool may_be_zero)
-            {
-                const float derived = base * multiplier;
-                if (!std::isfinite(derived) || !(may_be_zero ? derived >= 0.0f : derived > 0.0f))
-                { throw std::runtime_error(effect.where() + ": '" + multiplier_key +
-                    "' times player." + key + " must be finite and retain a usable magnitude."); }
-            };
-            rate(player.x_initial_velocity, "x_initial_velocity", false);
-            rate(player.x_acceleration, "x_acceleration", true);
-            rate(player.x_deacceleration, "x_deacceleration", false);
-            rate(player.max_velocity.x, "max_velocity.x", false);
-            if (!std::isfinite(player.x_deacceleration * multiplier + player.x_acceleration * multiplier))
-            { throw std::runtime_error(effect.where() + ": '" + multiplier_key + "' produces non-finite horizontal braking."); }
-        };
-        speed(player.paint_underfoot.own_speed_multiplier, "own_speed_multiplier");
-        speed(player.paint_underfoot.enemy_speed_multiplier, "enemy_speed_multiplier");
-    }
+	// Every rule that holds paint underfoot against another block, run once
+	// those are read: its speed multipliers against the player's horizontal
+	// rates, its refill multipliers against weapons.ammo_regen_rate, and the
+	// fastest boosted refill against each handicap. read_paint_underfoot
+	// checks the block on its own.
+	void validate_paint_underfoot(const JsonValue& root, const PlayerTuning& player,
+		float ammo_regen_rate, const std::array<HandicapTuning, handicaps::count>& levels)
+	{
+		const PaintUnderfootTuning& underfoot = player.paint_underfoot;
+		const JsonValue player_json = root.object("player");
+		if (player_json.has("paint_underfoot"))
+		{
+			const JsonValue effect = player_json.object("paint_underfoot");
+			const auto speed = [&](float multiplier, const char* multiplier_key)
+			{
+				const auto rate = [&](float base, const char* key, bool may_be_zero)
+				{
+					const float derived = base * multiplier;
+					if (!std::isfinite(derived) || !(may_be_zero ? derived >= 0.0f : derived > 0.0f))
+					{ throw std::runtime_error(effect.where() + ": '" + multiplier_key +
+						"' times player." + key + " must be finite and retain a usable magnitude."); }
+				};
+				rate(player.x_initial_velocity, "x_initial_velocity", false);
+				rate(player.x_acceleration, "x_acceleration", true);
+				rate(player.x_deacceleration, "x_deacceleration", false);
+				rate(player.max_velocity.x, "max_velocity.x", false);
+				if (!std::isfinite(player.x_deacceleration * multiplier + player.x_acceleration * multiplier))
+				{ throw std::runtime_error(effect.where() + ": '" + multiplier_key + "' produces non-finite horizontal braking."); }
+			};
+			speed(underfoot.own_speed_multiplier, "own_speed_multiplier");
+			speed(underfoot.enemy_speed_multiplier, "enemy_speed_multiplier");
+			const auto recovery = [&](float multiplier, const char* key)
+			{
+				if (!std::isfinite(ammo_regen_rate * multiplier))
+				{ throw std::runtime_error(effect.where() + ": '" + key + "' times weapons.ammo_regen_rate must be finite."); }
+			};
+			recovery(underfoot.own_ammo_regen_multiplier, "own_ammo_regen_multiplier");
+			recovery(underfoot.enemy_ammo_regen_multiplier, "enemy_ammo_regen_multiplier");
+		}
+		// The fastest refill a boosted player can reach on their own paint.
+		const float own = underfoot.enabled ? underfoot.own_ammo_regen_multiplier : 1.0f;
+		for (const HandicapTuning& level : levels)
+		{
+			if (!std::isfinite(ammo_regen_rate * own * level.paint_refill))
+			{
+				throw std::runtime_error(root.object("handicaps").where() +
+					": 'paint_refill' times weapons.ammo_regen_rate and paint underfoot must be finite.");
+			}
+		}
+	}
+
 	PlayerTuning read_player(const JsonValue& root)
 	{
 		const JsonValue json = known_object(root, "player", { "size", "max_velocity",
@@ -575,7 +602,6 @@ namespace
 		player.x_acceleration = read_non_negative(json, "x_acceleration");
 		player.x_deacceleration = read_positive(json, "x_deacceleration");
 		player.paint_underfoot = read_paint_underfoot(json);
-		validate_underfoot_rates(json, player);
 		// A multiplier on gravity; a negative one would turn it round on a ramp.
 		player.ramp_gravity_multiplier = read_non_negative(json, "ramp_gravity_multiplier");
 		// The vertical rates carry a direction in their sign (y is down), so
@@ -625,8 +651,10 @@ namespace
 		player.movement_sounds = read_movement_sounds(json);
 
 		const JsonValue animations = known_object(json, "animations", { "sheet", "uniform",
-			"idle", "walk", "running", "jumping", "falling", "takeoff", "land", "fire",
+			"run_speed", "idle", "walk", "running", "jumping", "falling", "takeoff", "land", "fire",
 			"hurt", "elimination" });
+		// Above this ground speed the running clip plays instead of walk.
+		player.run_speed = read_positive(animations, "run_speed");
 		const std::string sheet = animations.string("sheet");
 		const std::string uniform = animations.string("uniform");
 		player.idle = read_animation(animations, "idle", sheet, uniform);
@@ -890,28 +918,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 		}
 		this->low_paint_.rearm_fraction = read_number_in(low, "rearm_fraction", 0.0f, 1.0f);
 	}
-    if (root.object("player").has("paint_underfoot"))
-    {
-        const JsonValue effect = root.object("player").object("paint_underfoot");
-        const auto recovery = [&](float multiplier, const char* key)
-        {
-            if (!std::isfinite(this->ammo_regen_rate_ * multiplier))
-            { throw std::runtime_error(effect.where() + ": '" + key + "' times weapons.ammo_regen_rate must be finite."); }
-        };
-        recovery(this->player_.paint_underfoot.own_ammo_regen_multiplier, "own_ammo_regen_multiplier");
-        recovery(this->player_.paint_underfoot.enemy_ammo_regen_multiplier, "enemy_ammo_regen_multiplier");
-    }
-	for (const HandicapTuning& level : this->handicaps_)
-	{
-		// The fastest refill a boosted player can reach on their own paint.
-		const float own = this->player_.paint_underfoot.enabled ?
-			this->player_.paint_underfoot.own_ammo_regen_multiplier : 1.0f;
-		if (!std::isfinite(this->ammo_regen_rate_ * own * level.paint_refill))
-		{
-			throw std::runtime_error(root.object("handicaps").where() +
-				": 'paint_refill' times weapons.ammo_regen_rate and paint underfoot must be finite.");
-		}
-	}
+	validate_paint_underfoot(root, this->player_, this->ammo_regen_rate_, this->handicaps_);
 
 	const auto add_weapon = [this, &weapons](WeaponType type, const char* key)
 	{
@@ -1013,8 +1020,9 @@ const WeaponTuning& GameTuning::weapon(WeaponType type) const
 	if (index >= WEAPON_COUNT || !this->weapon_tuned_[index])
 	{
 		throw std::out_of_range("weapon " + std::to_string(index) +
-			" has no tuning: ./tuning.json describes the five weapons a "
-			"player can pick, and this is not one of them.");
+			" has no tuning: " + this->source_path_ + " describes the " +
+			std::to_string(TUNED_WEAPON_COUNT) + " weapons a player can pick, "
+			"and this is not one of them.");
 	}
 	return this->weapons_[index];
 }
@@ -1025,7 +1033,7 @@ const ProjectileTuning& GameTuning::projectile(ProjectileType type) const
 	if (index >= PROJECTILE_COUNT || !this->projectile_tuned_[index])
 	{
 		throw std::out_of_range("projectile " + std::to_string(index) +
-			" has no tuning in ./tuning.json.");
+			" has no tuning in " + this->source_path_ + ".");
 	}
 	return this->projectiles_[index];
 }

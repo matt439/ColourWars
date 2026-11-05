@@ -821,22 +821,58 @@ committed), it failed.
 
 ### Tuning and content-validation readers (`HYG#72`)
 
-- Fix the diagnostics that hard-code `./tuning.json` and "five weapons"
-  (`tuning.cpp:1024`), and the rumble messages that repeat constants
-  (`rumble.cpp:33`).
-- Correct the stale header comments (`tuning.h:27`, `:96`,
-  `tunnelling_limits.h:15`).
-- Use `content_value::number_text` instead of the local formatter
-  (`tunnelling_limits.cpp:50`), and drop the vacuous roller entry (`:90`).
-- Merge the duplicated stage-name throw (`content_validation.cpp:77`), and hoist
-  the supply-strip check out of its loop (`:289`).
-- Use `drawable_text`'s range constants (`stage_scan_diagnostics.cpp:75`).
-- Gather paint-underfoot validation in one place (`tuning.cpp:901`), and drop the
-  copied `splash_animation` field (`tuning.h:221`).
-- Move the run-animation threshold `600` into player tuning
-  (`player_figure.cpp:399`). Keep its value; this row moves it, it does not tune
-  it.
-- Use one base-locale spelling (`locale.cpp:423`).
+**Done 2026-11-06; a content-format change, with nothing played differently.**
+`tuning.json` has a new required key, `player.animations.run_speed` (600, the
+literal it replaces), so a file written without it no longer loads. A file with
+two faults may name a different one first, because the paint-underfoot checks
+now run together after the weapons block is read. Some diagnostics are worded
+differently.
+
+- `GameTuning::weapon` and `projectile` name the file they were read from and
+  `TUNED_WEAPON_COUNT`, not `./tuning.json` and "five"; the sibling
+  `WeaponBuilder` refusal counts the same way. `Rumble`'s profile and event
+  refusals format `maximum_rumble_pulse_seconds` and `rumble_event_count`.
+- `tuning.h`'s file comment names the Debug `tune` and `reload` commands, and
+  "Match phase durations" sits on `MatchTuning`, not the opening, without the
+  countdown presentation that `HYG#71` moved out. `tunnelling_limits.h` says
+  that paint underfoot multiplies the player's horizontal speeds and that no
+  projectile is a mover.
+- `tunnelling_limits.cpp` formats through `content_value::number_text` and has
+  no roller entry, which could never refuse (zero travel against a positive
+  `collision_size`); the `static_assert` comment says why it needs none.
+- `content_validation.cpp`'s two stage-name refusals are one
+  `shipped_stage_name`, and the supply strip checks the idle origin once,
+  outside its loop.
+- `stage_scan_diagnostics::alphabet()` builds the printable range from
+  `drawable_text::first_drawable` and `last_drawable`, for the layout and the
+  stage-scan validator, and `display_text` tests the same constants. The grep's
+  two other content checks, `controls_text`'s `replace_tokens` and
+  `format_label_template`, use them too.
+- `validate_paint_underfoot` holds every rule that compares the block with
+  another (the player's horizontal rates, `weapons.ammo_regen_rate`, each
+  handicap's refill), in place of `validate_underfoot_rates` and two blocks in
+  the constructor; `read_paint_underfoot` keeps the block's own checks.
+  `PaintTuning::splash_animation` is gone: `PaintSplashClips::initial` is the
+  spray entry of `by_type`.
+- `Player::calculate_animation_state` reads `PlayerTuning::run_speed`; its Debug
+  `tune` path is `tuning.player.animations.run_speed`, live.
+  [gameplay-tuning.md](gameplay-tuning.md#accepted-ranges) lists it with the
+  positive fields, and `gameplay_tuning` refuses a zero.
+- `locale.cpp` builds the index-less base in one named place,
+  `base_without_index`, and the fallback default and `compose` reach the base
+  through `Locales::base()`. The tag and name still also appear in
+  `locales.json`, which a build without the index cannot read.
+
+Left as found: the printable-ASCII checks on console input
+(`debug_text_field.cpp`, `script_commands.cpp`), which bound what a person may
+type rather than what content may draw; and docs that say "five weapons" about
+the game.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and in Debug (79, the slow four
+included); it covers `gameplay_tuning`, `paint`, `paint_underfoot`,
+`tunnelling`, `handicap`, `locales`, `user_stages`, `menu_text` and
+`debug_console`. `check-startup.ps1` passed in both presets.
 
 ### Dead code in the game (`HYG#73`)
 

@@ -396,7 +396,7 @@ PlayerAnimationState Player::calculate_animation_state() const
         {
 			return PlayerAnimationState::idle;
 		}
-        else if (std::fabs(velocity_x) > 600.0f)
+        else if (std::fabs(velocity_x) > this->player_tuning().run_speed)
         {
 			return PlayerAnimationState::running;
 		}

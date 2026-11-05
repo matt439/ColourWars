@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#72` | OPEN | LOW | M | Tuning and content-validation diagnostics, stale header comments, a local formatter, split paint-underfoot validation and the run-animation literal. [Scope](docs/code-hygiene.md#tuning-and-content-validation-readers-hyg72). |
 | `HYG#73` | OPEN | LOW | M | Delete dead fields, accessors, parameters and includes in the game, including the authored but unread `rotation_origin`. [Scope](docs/code-hygiene.md#dead-code-in-the-game-hyg73). |
 | `HYG#74` | OPEN | LOW | M | Shared fit-to-box, paper-bounds, wrap, tool-step and close helpers for the menu pages. [Scope](docs/code-hygiene.md#menu-page-helpers-hyg74). |
 | `HYG#75` | OPEN | LOW | M | Shared paper-card, keyed-block, shadow-tile and swatch helpers for the drawings; pixels unchanged. [Scope](docs/code-hygiene.md#shared-drawing-helpers-hyg75). |

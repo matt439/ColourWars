@@ -87,7 +87,8 @@ namespace presentation_read
 	{
 		for (const wchar_t character : text)
 		{
-			if ((character < L' ' || character > L'~') && !(multiline && character == L'\n'))
+			if ((character < drawable_text::first_drawable || character > drawable_text::last_drawable) &&
+				!(multiline && character == L'\n'))
 			{
 				throw std::invalid_argument(multiline ?
 					"Menu text must use drawable characters and its allowed LF line breaks." :
