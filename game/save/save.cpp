@@ -443,8 +443,12 @@ void Save::load_save_file()
             {
                 this->save_data_ = this->load_from_json(legacy.c_str());
             }
-            catch (const std::exception&)
+            catch (const std::exception& error)
             {
+                // Nothing writes to the legacy path, so it needs no copy;
+                // say so like every other read failure.
+                fprintf(stderr, "save: legacy save %s could not be read (%s); it was left in "
+                    "place and the settings start from defaults.\n", legacy.c_str(), error.what());
                 this->save_data_ = SaveData();
             }
         }

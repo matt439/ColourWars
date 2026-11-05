@@ -3,6 +3,8 @@
 #include "game/save/match_records.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/results_menu.h"
+#include "game/directory_consts.h"
+#include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
@@ -511,10 +513,90 @@ namespace
 		require(!std::filesystem::exists(directory.save_path().wstring() + L".tmp"),
 			"Loading an unopenable save left a temporary file");
 	}
+
+	constexpr char legacy_child_argument[] = "--legacy-save-child";
+	const std::string corrupt_legacy = "{\"save_version\":1,\"resolution\":";
+
+	// Runs in a copy of this probe, whose executable-relative legacy save is
+	// its own, against its own empty per-user save. A legacy save that will
+	// not load, whether corrupt or held open, is reported on stderr and left
+	// in place; the defaults are kept and written to the per-user path.
+	int check_legacy_save_child()
+	{
+		const IsolatedSaveDirectory directory;
+		const std::filesystem::path legacy = labrador::path_from_utf8(directory_consts::legacy_save_file_path());
+		require(read_bytes(legacy) == corrupt_legacy, "The legacy fixture is not the parent's");
+		// The stderr capture goes beside the per-user save, which is not there yet.
+		std::filesystem::create_directories(directory.save_path().parent_path());
+		for (const bool held : { false, true })
+		{
+			std::error_code ignored;
+			std::filesystem::remove(directory.save_path(), ignored);
+			Save save;
+			std::string errors;
+			{
+				std::unique_ptr<OpenForDelete> hold;
+				if (held) { hold = std::make_unique<OpenForDelete>(legacy); }
+				errors = captured_stderr(directory, [&] { save.load_save_file(); });
+			}
+			const char* which = held ? "A held-open legacy save" : "A corrupt legacy save";
+			require(save.saved_play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity,
+				std::string(which) + " did not leave the defaults");
+			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+				errors.find("legacy save " + labrador::path_to_utf8(legacy) + " could not be read (") != std::string::npos &&
+				errors.find("it was left in place") != std::string::npos,
+				std::string(which) + " was not reported in one stderr line naming it");
+			require(read_bytes(legacy) == corrupt_legacy, std::string(which) + " was changed");
+			require(directory.contents().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
+				std::string(which) + " did not leave the defaults written to the per-user save");
+		}
+		return 0;
+	}
+
+	// The legacy save sits beside the executable, which every acceptance
+	// probe shares, so the check runs in a private copy of this probe.
+	void check_legacy_save()
+	{
+		wchar_t own[32768] = {};
+		const DWORD length = GetModuleFileNameW(nullptr, own, static_cast<DWORD>(std::size(own)));
+		require(length > 0 && length < std::size(own), "Could not find this probe's executable");
+		const std::filesystem::path scratch = std::filesystem::temp_directory_path() /
+			(L"cwr-legacy-" + std::to_wstring(GetCurrentProcessId()));
+		std::error_code ignored;
+		std::filesystem::remove_all(scratch, ignored);
+		std::filesystem::create_directories(scratch / L"save");
+		const std::filesystem::path child = scratch / L"match_records.exe";
+		std::filesystem::copy_file(own, child);
+		{
+			std::ofstream output(scratch / L"save" / L"save_data.json", std::ios::binary);
+			output << corrupt_legacy;
+			require(output.good(), "Could not write the legacy save fixture");
+		}
+
+		std::wstring command = L"\"" + child.wstring() + L"\" --legacy-save-child";
+		STARTUPINFOW startup{};
+		startup.cb = sizeof(startup);
+		PROCESS_INFORMATION process{};
+		require(CreateProcessW(child.c_str(), command.data(), nullptr, nullptr, TRUE, 0, nullptr,
+			scratch.c_str(), &startup, &process) != 0, "Could not start the legacy-save child");
+		WaitForSingleObject(process.hProcess, INFINITE);
+		DWORD exit_code = 1;
+		GetExitCodeProcess(process.hProcess, &exit_code);
+		CloseHandle(process.hThread);
+		CloseHandle(process.hProcess);
+		const bool kept = read_bytes(scratch / L"save" / L"save_data.json") == corrupt_legacy;
+		std::filesystem::remove_all(scratch, ignored);
+		require(exit_code == 0, "The legacy-save child failed; its FAIL line is above");
+		require(kept, "Loading changed the legacy save");
+	}
 }
 
-int main()
+int main(int argc, char** argv)
 {
+	if (argc == 2 && std::string(argv[1]) == legacy_child_argument)
+	{
+		return acceptance::run_probe("match records legacy save", [] { return check_legacy_save_child(); });
+	}
 	return acceptance::run_probe("match records", [&]
 	{
 		const IsolatedSaveDirectory directory;
@@ -527,10 +609,11 @@ int main()
 		check_section_reset_report(directory);
 		check_unreadable_save(directory);
 		check_unopenable_save(directory);
+		check_legacy_save();
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
 			"results line, version 0/1/newer saves, per-section and per-entry recovery, "
-			"bounded values, retired-stage retention, exact round trip, and unreadable and "
-			"unopenable saves kept aside\n";
+			"bounded values, retired-stage retention, exact round trip, unreadable and "
+			"unopenable saves kept aside, and unloadable legacy saves reported and left\n";
 		return 0;
 	});
 }
