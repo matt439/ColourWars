@@ -50,8 +50,7 @@ BotBody LevelBotWorld::body(int participant) const
     body.team = player.team();
     body.alive = player.state() == PlayerState::alive;
     body.health = player.health();
-    body.grounded = move == PlayerMoveState::on_ground || move == PlayerMoveState::on_drop_down_ground ||
-        move == PlayerMoveState::on_ramp_left || move == PlayerMoveState::on_ramp_right;
+    body.grounded = supported(move);
     body.on_platform = move == PlayerMoveState::on_drop_down_ground;
     body.facing_right = player.facing_right();
     body.ammo = player.weapon_ammo();

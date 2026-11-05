@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#68` | OPEN | MED | M | Public `grounded()` and shared contact predicates in place of about twenty hand-spelled move-state checks; one velocity comparison rule. [Scope](docs/code-hygiene.md#player-move-state-and-contact-predicates-hyg68). |
 | `HYG#69` | OPEN | LOW | M | Stage record line, `OptionRow` placeholder, the Sticks measured word and the Debug-only prompt rewrite out of shipping C++; list `P1`-`P4` and the window title as not yet localisable. [Scope](docs/code-hygiene.md#player-facing-copy-out-of-c-hyg69). |
 | `HYG#70` | OPEN | MED | L | Shared presentation reader and validator helpers (pen walk, settings rows, plaques, predicates); limits formatted from constants; error prefixes fixed. [Scope](docs/code-hygiene.md#presentation-reader-and-validator-helpers-hyg70). |
 | `HYG#71` | OPEN | MED | M | Reject unknown presentation keys, delete `menu_style.box_size` and dead `sprite_sheet_1` frames, move two misnamed colours, rewrite misleading `_comment`s. [Scope](docs/code-hygiene.md#presentation-and-content-keys-that-mislead-hyg71). |

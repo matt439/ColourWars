@@ -73,9 +73,7 @@ namespace turbulence_slab_tools_acceptance
 
         bool supported(const Player& player)
         {
-            const auto state = player.move_state();
-            return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-                state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+            return player.grounded();
         }
 
         RectangleF station(const Vector2F& size, bool side_b, bool upper)

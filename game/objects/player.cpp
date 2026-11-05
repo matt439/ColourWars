@@ -28,6 +28,34 @@ namespace
     {
         return coordinate_at(body.bottom(), height, body.height);
     }
+
+    // A contact as seen from self: the other body and the normal pointing
+    // from it towards self. other is null when self is not in the pair.
+    struct SeenContact
+    {
+        const CollisionObject* other = nullptr;
+        Vector2F normal;
+    };
+
+    SeenContact seen_from(const Contact& contact, const CollisionObject* self)
+    {
+        if (contact.a == self) { return { contact.b, contact.normal }; }
+        if (contact.b == self) { return { contact.a, -contact.normal }; }
+        return {};
+    }
+
+    // The normal pushes self up off the other body's top, not its side.
+    bool top_normal(const Vector2F& normal)
+    {
+        return normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x);
+    }
+
+    // One identity for the player's per-roster sounds and idle motion: the
+    // builder's roster participant, else the input slot (0 for a device-less body).
+    int sound_identity(int sound_index, int player_num)
+    {
+        return sound_index >= 0 ? sound_index : std::max(player_num, 0);
+    }
 }
 
 Player::Player(const RectangleF& rectangle,
@@ -68,12 +96,12 @@ Player::Player(const RectangleF& rectangle,
     clothing_(tuning->player().idle, render_resources, team_colour,
         rotation, origin, flip, layer_depth),
     attachments_(movement_feedback, figure, render_resources),
-    quiet_character_(figure, sound_index >= 0 ? sound_index : std::max(player_num, 0)),
+    quiet_character_(figure, sound_identity(sound_index, player_num)),
     movement_feedback_(movement_feedback, render_resources),
     combat_feedback_(combat_feedback, render_resources),
     view_shake_(view_shake),
     movement_audio_(&tuning->player().movement_sounds, audio_resources,
-        tuning->player().sound_bank, sound_index >= 0 ? sound_index : player_num),
+        tuning->player().sound_bank, sound_identity(sound_index, player_num)),
     respawn_redraw_(respawn_redraw, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
@@ -176,12 +204,14 @@ Player::Player(const RectangleF& rectangle,
         this->resolve_wave(player.jump_sound.name);
     this->respawn_sound_ =
         this->resolve_wave(player.respawn_sound.name);
-    const int index = sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4;
-    if (index >= static_cast<int>(player.redraw_sounds.size()))
+    // A roster participant past the table is a builder bug; a device-slot
+    // fallback (keyboard/mouse is slot 4) wraps onto the four cues.
+    if (sound_index >= static_cast<int>(player.redraw_sounds.size()))
     {
         throw std::runtime_error("Player redraw sound requires a roster index from 0 to 3");
     }
-    this->redraw_index_ = static_cast<size_t>(index);
+    this->redraw_index_ = static_cast<size_t>(sound_identity(sound_index, player_num)) %
+        player.redraw_sounds.size();
     this->redraw_voice_ = RedrawVoice(this, player.sound_bank, audio_resources,
         player.redraw_sounds[this->redraw_index_].name);
 }
@@ -283,8 +313,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
         }
     }
     const auto slab_position = this->fixed_slab_support_at(this->rectangle_);
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
-        !this->supported_this_tick_ || !this->is_on_ramp() ||
+    if (!this->can_act() || !this->supported_this_tick_ || !this->is_on_ramp() ||
         !slab_position || !feet_at(this->rectangle_, slab_position->y))
     {
         this->fixed_slab_support_.reset();
@@ -305,8 +334,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
         }
     }
     const auto ramp_position = this->ramp_support_at(this->rectangle_);
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
-        !this->supported_this_tick_ || !this->is_on_ramp() ||
+    if (!this->can_act() || !this->supported_this_tick_ || !this->is_on_ramp() ||
         !ramp_position || !feet_at(this->rectangle_, ramp_position->y))
     {
         this->ramp_support_.reset();
@@ -318,21 +346,10 @@ void Player::end_contacts(std::span<const Contact> contacts,
     // painted_support checks that they still touch the final footprint.
     for (const Contact& contact : contacts)
     {
-        const CollisionObject* other = nullptr;
-        Vector2F normal;
-        if (contact.a == this)
-        {
-            other = contact.b;
-            normal = contact.normal;
-        }
-        else if (contact.b == this)
-        {
-            other = contact.a;
-            normal = -contact.normal;
-        }
+        const SeenContact seen = seen_from(contact, this);
         // A player's contacts are with structures and projectiles only.
-        const Structure* surface = other != nullptr ? Collider::of(*other).structure() : nullptr;
-        if (surface != nullptr && normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x))
+        const Structure* surface = seen.other != nullptr ? Collider::of(*seen.other).structure() : nullptr;
+        if (surface != nullptr && top_normal(seen.normal))
         {
             if (surface->holds_flat_top_paint())
             {
@@ -345,7 +362,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
         // from the final grounded pose, regardless of pair dispatch order.
         if (surface != nullptr && this->supported_this_tick_ &&
             this->move_state() == PlayerMoveState::on_ground &&
-            !this->hit_ceiling_this_tick_ && this->state_ == PlayerState::alive && this->health_ > 0.0f)
+            !this->hit_ceiling_this_tick_ && this->can_act())
         {
             if (surface->ramp())
             {
@@ -406,7 +423,7 @@ void Player::end_contacts(std::span<const Contact> contacts,
     const PlayerMoveState move_state = this->move_state();
     const bool established_support = this->landing_feedback_ready_;
 
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    if (!this->can_act())
     {
         // Contact order must not leave a landing puff from a fatal impact.
         this->movement_feedback_.clear();
@@ -441,14 +458,14 @@ void Player::end_contacts(std::span<const Contact> contacts,
 
     // Only a resolving ground contact maintains support. Track ceiling contact
     // separately so a head bonk does not leave the idle animation active during descent.
-    if ((this->is_on_ground() && !this->supported_this_tick_) ||
+    if ((this->grounded() && !this->supported_this_tick_) ||
         (move_state == PlayerMoveState::on_ceiling &&
             !this->hit_ceiling_this_tick_))
     {
         this->set_move_state(PlayerMoveState::in_air);
     }
 
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    if (!this->can_act())
     {
         this->reset_jump_input();
     }
@@ -480,10 +497,10 @@ void Player::end_contacts(std::span<const Contact> contacts,
 
     // Ground-aware tool feedback sees the completed contact phase, including a
     // buffered jump. Fatal contacts and spawn settling silently reset history.
-    const bool can_act = this->state_ == PlayerState::alive && this->health_ > 0.0f;
+    const bool acting = this->can_act();
     // Sample after every paint/separation callback and buffered takeoff. The
     // prior step's frozen class has already served movement and ammunition.
-    if (!this->player_tuning().paint_underfoot.enabled || !can_act)
+    if (!this->player_tuning().paint_underfoot.enabled || !acting)
     {
         this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     }
@@ -501,8 +518,8 @@ void Player::end_contacts(std::span<const Contact> contacts,
     const float distance = resolved_x * this->movement_requested_x_ > 0.0f ?
         std::min(std::abs(resolved_x), std::abs(this->movement_requested_x_)) : 0.0f;
     const std::optional<PaintedSupport> paint = this->painted_support();
-    const MovementContactCues cues = this->movement_audio_.end_contacts(can_act, this->supported_this_tick_,
-        this->is_on_ground(), this->support_impact_speed_, distance, this->movement_previous_velocity_,
+    const MovementContactCues cues = this->movement_audio_.end_contacts(acting, this->supported_this_tick_,
+        this->grounded(), this->support_impact_speed_, distance, this->movement_previous_velocity_,
         this->input_.x_movement, this->movement_audio_dt_, paint.has_value());
     // Share the stride/reversal event with audio, including while muted. A
     // skid replaces that tick's step visually to keep the contact uncluttered.
@@ -515,12 +532,12 @@ void Player::end_contacts(std::span<const Contact> contacts,
     }
     this->movement_audio_dt_ = 0.0f;
     this->primary_->update_ground_contact(
-        can_act && this->supported_this_tick_ && this->is_on_ground(),
-        can_act && established_support, this->weapon_contact_dt_);
-    if (can_act)
+        acting && this->supported_this_tick_ && this->grounded(),
+        acting && established_support, this->weapon_contact_dt_);
+    if (acting)
     {
         this->primary_->update_resolved_motion(
-            this->supported_this_tick_ && this->is_on_ground(), established_support,
+            this->supported_this_tick_ && this->grounded(), established_support,
             std::copysign(distance, resolved_x), this->weapon_contact_dt_);
     }
     else
@@ -528,8 +545,8 @@ void Player::end_contacts(std::span<const Contact> contacts,
         this->primary_->reset_motion();
     }
 
-    this->quiet_character_.update(can_act && !this->preferences_->reduce_effects,
-        this->supported_this_tick_ && this->is_on_ground(),
+    this->quiet_character_.update(acting && !this->preferences_->reduce_effects,
+        this->supported_this_tick_ && this->grounded(),
         std::abs(this->velocity().x) < 0.01f && std::abs(this->input_.x_movement) < 0.01f &&
             !this->input_.primary_shoot,
         this->action_.has_value(), this->movement_previous_velocity_, this->velocity().x,
@@ -572,11 +589,9 @@ void Player::apply_carrier(float dt)
     if (!(dt > 0.0f) || !this->prepared_carrier_) { return; }
     const HorizontalCarryStep step = *this->prepared_carrier_;
     this->prepared_carrier_.reset();
-    const bool flat = this->move_state() == PlayerMoveState::on_ground ||
-        this->move_state() == PlayerMoveState::on_drop_down_ground;
     const float overlap = std::min(this->rectangle_.right(), step.previous_top.right()) -
         std::max(this->rectangle_.left(), step.previous_top.left());
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f || !flat ||
+    if (!this->can_act() || !this->on_flat_ground() ||
         step.id != this->carrier_id_ || !(overlap > 0.0f) ||
         !feet_at(this->rectangle_, step.previous_top.top()))
     {
@@ -592,10 +607,7 @@ void Player::apply_carrier(float dt)
 void Player::choose_carrier(std::span<const Contact> contacts,
     std::span<const HorizontalSupportRef> supports)
 {
-    const bool flat = this->move_state() == PlayerMoveState::on_ground ||
-        this->move_state() == PlayerMoveState::on_drop_down_ground;
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
-        !flat || !this->supported_this_tick_)
+    if (!this->can_act() || !this->on_flat_ground() || !this->supported_this_tick_)
     {
         this->clear_carrier();
         return;
@@ -608,12 +620,8 @@ void Player::choose_carrier(std::span<const Contact> contacts,
         bool measured_top = false;
         for (const Contact& contact : contacts)
         {
-            Vector2F normal;
-            const CollisionObject* other = nullptr;
-            if (contact.a == this) { other = contact.b; normal = contact.normal; }
-            else if (contact.b == this) { other = contact.a; normal = -contact.normal; }
-            if (other == candidate.surface && normal.y > 0.0f &&
-                std::abs(normal.y) >= std::abs(normal.x)) { measured_top = true; break; }
+            const SeenContact seen = seen_from(contact, this);
+            if (seen.other == candidate.surface && top_normal(seen.normal)) { measured_top = true; break; }
         }
         const bool resolved_top = std::find(this->resolved_flat_supports_.begin(),
             this->resolved_flat_supports_.end(), candidate.surface) != this->resolved_flat_supports_.end();
@@ -642,8 +650,7 @@ void Player::choose_carrier(std::span<const Contact> contacts,
 
 PlayerTeam Player::gameplay_support_team() const
 {
-    if (this->fixed_slab_support_ && this->is_on_ramp() &&
-        this->state_ == PlayerState::alive && this->health_ > 0.0f && this->supported_this_tick_)
+    if (this->fixed_slab_support_ && this->is_on_ramp() && this->can_act() && this->supported_this_tick_)
     {
         if (const auto point = this->fixed_slab_support_at(this->rectangle_);
             point && feet_at(this->rectangle_, point->y))
@@ -651,10 +658,7 @@ PlayerTeam Player::gameplay_support_team() const
             return this->fixed_slab_support_->surface->top_paint_team(point->x);
         }
     }
-    const bool flat_ground = this->move_state() == PlayerMoveState::on_ground ||
-        this->move_state() == PlayerMoveState::on_drop_down_ground;
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f ||
-        !this->supported_this_tick_ || !flat_ground) { return PlayerTeam::none; }
+    if (!this->can_act() || !this->supported_this_tick_ || !this->on_flat_ground()) { return PlayerTeam::none; }
     const float foot_x = this->rectangle_.center().x;
     PlayerTeam answer = PlayerTeam::none;
     for (std::size_t index = 0; index < this->paint_supports_.size(); ++index)
@@ -685,7 +689,7 @@ float Player::underfoot_speed_multiplier() const
 {
     const PaintUnderfootTuning& effect = this->player_tuning().paint_underfoot;
     if (!effect.enabled || this->underfoot_step_team_ == PlayerTeam::none ||
-        this->state_ != PlayerState::alive || this->health_ <= 0.0f) { return 1.0f; }
+        !this->can_act()) { return 1.0f; }
     return this->underfoot_step_team_ == this->team_ ? effect.own_speed_multiplier : effect.enemy_speed_multiplier;
 }
 
@@ -693,7 +697,7 @@ float Player::underfoot_ammo_multiplier() const
 {
     const PaintUnderfootTuning& effect = this->player_tuning().paint_underfoot;
     if (!effect.enabled || this->underfoot_step_team_ == PlayerTeam::none ||
-        this->state_ != PlayerState::alive || this->health_ <= 0.0f) { return 1.0f; }
+        !this->can_act()) { return 1.0f; }
     return this->underfoot_step_team_ == this->team_ ? effect.own_ammo_regen_multiplier : effect.enemy_ammo_regen_multiplier;
 }
 float Player::ammo_regen_multiplier() const
@@ -979,7 +983,7 @@ void Player::on_projectile_contact(const Projectile& source,
     const float damage = this->tuning_->projectile(
         source.projectile_type()).details.player_damage *
         this->tuning_->handicap(this->handicap_).damage_taken;
-    const bool vulnerable = this->state_ == PlayerState::alive && this->health_ > 0.0f;
+    const bool vulnerable = this->can_act();
     this->health_ -= damage;
     if (this->health_ <= 0.0f)
     {
@@ -1003,7 +1007,7 @@ void Player::on_projectile_contact(const Projectile& source,
         else { ++this->lethal_projectiles_.uncredited; }
     }
 
-    if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
+    if (damage > 0.0f && this->can_act())
     {
         this->pending_rumble_.hit = true;
         this->start_action(PlayerAnimationState::hurt);
@@ -1024,17 +1028,14 @@ void Player::update(float dt)
 {
     // One completed contact snapshot feeds movement and the later weapon call.
     // dt0 does not refresh terrain context; the disabled path always clears it.
-    if (!this->player_tuning().paint_underfoot.enabled ||
-        this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    if (!this->player_tuning().paint_underfoot.enabled || !this->can_act())
     {
         this->underfoot_support_team_ = this->underfoot_step_team_ = PlayerTeam::none;
     }
     else if (dt > 0.0f)
     {
-        const bool flat_ground = this->move_state() == PlayerMoveState::on_ground ||
-            this->move_state() == PlayerMoveState::on_drop_down_ground;
         const bool fixed_slab_ground = this->is_on_ramp() && this->fixed_slab_support_.has_value();
-        this->underfoot_step_team_ = flat_ground || fixed_slab_ground ?
+        this->underfoot_step_team_ = this->on_flat_ground() || fixed_slab_ground ?
             this->underfoot_support_team_ : PlayerTeam::none;
         this->underfoot_support_team_ = PlayerTeam::none;
     }
@@ -1149,7 +1150,7 @@ std::vector<std::unique_ptr<Projectile>>
     // Moving projectile contacts can be fatal before this phase, while state_
     // still says alive. Neither those players nor dead players can act. Stop the
     // loop explicitly because skipping update also skips normal release handling.
-    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    if (!this->can_act())
     {
         this->primary_->stop_sounds();
         this->primary_->reset_motion();
@@ -1244,35 +1245,50 @@ void Player::update_movement(float dt)
     const bool jump_pressed = this->input_.jump_pressed &&
         !this->jump_waiting_for_release_;
 
-    if (are_equal(colourwars::MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
+    // One rule for the chain: a velocity within are_equal's epsilon of zero
+    // is at rest, and the stick's direction is its exact sign. Every branch
+    // below therefore sees a nonzero velocity or no input.
+    const float velocity_x = colourwars::MovingObject::velocity_x();
+    if (are_equal(velocity_x, 0.0f) && x_input != 0.0f)
     {
         colourwars::MovingObject::set_velocity_x(initial * x_input);
     }
-    else if (colourwars::MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
+    else if (x_input == 0.0f)
     {
-        colourwars::MovingObject::alter_velocity_x(acceleration * dt * x_input);
-        if (colourwars::MovingObject::velocity_x() > cap)
+        // Release braking stops at zero rather than reversing.
+        if (velocity_x > 0.0f)
         {
-            colourwars::MovingObject::set_velocity_x(cap);
+            colourwars::MovingObject::alter_velocity_x(-braking_rate * dt);
+            if (colourwars::MovingObject::velocity_x() < 0.0f)
+            {
+                colourwars::MovingObject::set_velocity_x(0.0f);
+            }
+        }
+        else if (velocity_x < 0.0f)
+        {
+            colourwars::MovingObject::alter_velocity_x(braking_rate * dt);
+            if (colourwars::MovingObject::velocity_x() > 0.0f)
+            {
+                colourwars::MovingObject::set_velocity_x(0.0f);
+            }
         }
     }
-    else if (colourwars::MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
+    else if ((velocity_x > 0.0f) == (x_input > 0.0f))
     {
         colourwars::MovingObject::alter_velocity_x(acceleration * dt * x_input);
-        if (colourwars::MovingObject::velocity_x() < -cap)
+        if (std::fabs(colourwars::MovingObject::velocity_x()) > cap)
         {
-            colourwars::MovingObject::set_velocity_x(-cap);
+            colourwars::MovingObject::set_velocity_x(std::copysign(cap, x_input));
         }
     }
-    else if ((colourwars::MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
-        (colourwars::MovingObject::velocity_x() < 0.0f && x_input > 0.0f))
+    else
     {
         // Opposing input always includes release braking. Small corrections
         // must not make stopping weaker than letting go of the stick.
 
         const float braking = braking_rate +
             acceleration * std::fabs(x_input);
-        const float time_to_stop = std::fabs(colourwars::MovingObject::velocity_x()) / braking;
+        const float time_to_stop = std::fabs(velocity_x) / braking;
         if (dt <= time_to_stop)
         {
             colourwars::MovingObject::alter_velocity_x(std::copysign(braking * dt, x_input));
@@ -1284,22 +1300,6 @@ void Player::update_movement(float dt)
             colourwars::MovingObject::set_velocity_x(std::clamp(
                 acceleration * x_input * (dt - time_to_stop),
                 -cap, cap));
-        }
-    }
-    else if (colourwars::MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
-    {
-        colourwars::MovingObject::alter_velocity_x(-braking_rate * dt);
-        if (colourwars::MovingObject::velocity_x() < 0.0f)
-        {
-            colourwars::MovingObject::set_velocity_x(0.0f);
-        }
-    }
-    else if (colourwars::MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
-    {
-        colourwars::MovingObject::alter_velocity_x(braking_rate * dt);
-        if (colourwars::MovingObject::velocity_x() > 0.0f)
-        {
-            colourwars::MovingObject::set_velocity_x(0.0f);
         }
     }
     if (this->is_on_ramp())
@@ -1386,7 +1386,7 @@ void Player::do_jump(float dt)
     // preserve its held-button extension when simulation resumes.
     const bool jump_held = this->input_.jump_held;
    
-    if ((this->is_on_ground() || this->ledge_grace_remaining_ > 0.0f) &&
+    if ((this->grounded() || this->ledge_grace_remaining_ > 0.0f) &&
         jump_requested)
     {
 		this->start_jump();
@@ -1896,12 +1896,20 @@ std::string Player::player_move_state_string() const
 	return "invalid";
 }
 
-bool Player::is_on_ground() const
+bool Player::grounded() const
+{
+	return supported(this->move_state_);
+}
+
+bool Player::on_flat_ground() const
 {
 	return this->move_state_ == PlayerMoveState::on_ground ||
-		this->move_state_ == PlayerMoveState::on_drop_down_ground ||
-		this->move_state_ == PlayerMoveState::on_ramp_left ||
-		this->move_state_ == PlayerMoveState::on_ramp_right;
+		this->move_state_ == PlayerMoveState::on_drop_down_ground;
+}
+
+bool Player::can_act() const
+{
+	return this->state_ == PlayerState::alive && this->health_ > 0.0f;
 }
 
 bool Player::is_on_ramp() const

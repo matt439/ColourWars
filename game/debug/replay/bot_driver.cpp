@@ -10,20 +10,6 @@
 
 namespace
 {
-	bool on_ground(PlayerMoveState state)
-	{
-		switch (state)
-		{
-		case PlayerMoveState::on_ground:
-		case PlayerMoveState::on_drop_down_ground:
-		case PlayerMoveState::on_ramp_left:
-		case PlayerMoveState::on_ramp_right:
-			return true;
-		default:
-			return false;
-		}
-	}
-
 	// Policy for developer measurements only: the shipping driver's local
 	// reach (match_bot_ballistics::horizontal_reach, gravity-capped) plus the
 	// muzzle and both bodies. Inherited velocity, terrain, diffusion and target
@@ -45,7 +31,7 @@ namespace
 		seat.velocity = player.velocity();
 		seat.team = player.team();
 		seat.alive = player.state() == PlayerState::alive;
-		seat.on_ground = on_ground(player.move_state());
+		seat.on_ground = player.grounded();
 		seat.facing_right = player.facing_right();
 		const float health = tuning.player().starting_health;
 		const float ammo = tuning.starting_ammo();

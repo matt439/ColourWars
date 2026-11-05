@@ -173,9 +173,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto supported = [](const Player& player)
     {
-        const auto state = player.move_state();
-        return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-            state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+        return player.grounded();
     };
     const auto save_crop = [&](const Frame& frame, const RectangleI& box, const std::string& name)
     {

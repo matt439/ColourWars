@@ -470,12 +470,8 @@ void Level::update_idle_drips(float dt)
 		{
 			const Player& player = *this->players_[index];
 			const Weapon& weapon = player.primary_weapon();
-			const PlayerMoveState move = player.move_state();
-			const bool supported = move == PlayerMoveState::on_ground ||
-				move == PlayerMoveState::on_drop_down_ground ||
-				move == PlayerMoveState::on_ramp_left || move == PlayerMoveState::on_ramp_right;
 			const bool settled = player.state() == PlayerState::alive && player.health() > 0.0f &&
-				supported && player.velocity().x == 0.0f && player.velocity().y == 0.0f &&
+				player.grounded() && player.velocity().x == 0.0f && player.velocity().y == 0.0f &&
 				player.input().x_movement == 0.0f && !player.input().primary_shoot &&
 				!player.input().jump_held && !player.input().jump_pressed &&
 				player.animation_state() == PlayerAnimationState::idle;

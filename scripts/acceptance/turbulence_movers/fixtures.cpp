@@ -101,9 +101,7 @@ namespace turbulence_movers_acceptance
 
     bool supported(const Player& player)
     {
-        const auto state = player.move_state();
-        return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-            state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+        return player.grounded();
     }
 
     float mirrored(bool side_b, float x) { return side_b ? 4000.0f - x : x; }

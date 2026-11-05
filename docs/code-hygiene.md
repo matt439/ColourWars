@@ -576,14 +576,39 @@ Release.
 
 ### `Player` move-state and contact predicates (`HYG#68`)
 
-Add a public `grounded()` and a free `supported(PlayerMoveState)` beside the
-enum (`player.h:557`), and private `on_flat_ground()` and `can_act()`. Use them at
-the twenty or so sites in `Player`, `Level`, `LevelBotWorld`, the Debug bot driver
-and probes. Share the contact-orientation loop between `end_contacts` and
-`choose_carrier` (`player.cpp:319`). Use one comparison rule in the velocity
-chain (`:1246`), and one identity fallback for the three sound indices in the
-constructor (`:71`). Floating-point results must not change: the probes'
-movement fingerprints must match before and after.
+**Done 2026-11-06; no behaviour change.**
+
+- [player.h](../game/objects/player.h) has a free `supported(PlayerMoveState)`
+  beside the enum, a public `Player::grounded()` in place of the private
+  `is_on_ground()`, and private `on_flat_ground()` and `can_act()` (alive with
+  health left). `Player` and its figure use them at about twenty sites, and `Level`'s
+  idle drip, `LevelBotWorld::body`, the Debug bot driver (its `on_ground`
+  switch is gone) and thirteen probe helpers use `grounded()` or `supported()`.
+- `end_contacts` and `choose_carrier` share `seen_from` (a contact from the
+  player's side) and `top_normal`.
+- The velocity chain tests rest once, with `are_equal`, and the stick's
+  direction by its exact sign. The old chain's `are_equal(x_input, 0)` could
+  only be reached with an exact zero, so the branches are the same.
+- The constructor's three sound indices share `sound_identity` (the roster
+  participant, else the input slot, at least 0). The redraw cue takes it modulo
+  the four-entry table, which is what the old `% 4` did for the keyboard
+  slot, and still refuses a participant past the table.
+
+Verified by running the full default acceptance list in Release
+before and after on the same machine: all 78 run logs, with their movement
+measurements, timing pins and fingerprints, match once temporary paths, dates
+and process ids are masked. Both presets build under `/W4 /WX`. The full
+Debug list (79 cases, the slow four included) passed, as did
+`check-movement-feedback.ps1` in both presets, `check-painter.ps1 -CompileOnly`
+in Release (it compiles the three edited painter headers) and
+`-RouteWarningOnly` in Debug.
+
+Left as found: `alive && health > 0` written through the public accessors in
+`Level` (idle drip, camera follow), `level_structures` and `player_identity_hud`,
+because `can_act()` is private; the alive-only checks in `player_figure.cpp`,
+which ignore health; `movement_course`'s flat-only probe helper and
+`ramp_support_checks`' helper, which leaves out drop-through platforms; and
+the single-state `== on_ground` checks, which test exactly that state.
 
 ### Player-facing copy out of C++ (`HYG#69`)
 
