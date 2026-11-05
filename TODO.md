@@ -27,8 +27,54 @@ decision without the attended sessions:
   [labrador#122-#125](docs/review/engine-reports.md#live), and 28 is closed as declined.
 
 The next aim is the author's to set. Until then, rows are picked from the sections below.
+The 2026-11-05 [hygiene review](#hygiene-review) added `HYG#58`-`HYG#92` and `CI#8`, defects first;
+two of its rows wait on the author: `HYG#81` (the `SCREAMING_SNAKE` rule) and `ENG#35` (file or not).
 `ROAD#22` (endless paint) is the one `OPEN` row. Art (`POL#16`) is unblocked but stays
 deferred. Bot lift routing, sponges and the controller rows remain unscoped.
+
+## Hygiene review
+
+**Owner:** [docs/code-hygiene.md, Hygiene review](docs/code-hygiene.md#hygiene-review-2026-11-05); findings in the frozen
+[2026-11-05 review](docs/review/2026-11-05-code-hygiene-review.md). Work the defects (`HYG#58`-`HYG#60`) first, then
+in the listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `HYG#58` | OPEN | MED | S | Startup validation fit-checks Controls rows 1-4, but Music and SFX are rows 4 and 5, so SFX is never checked; name the rows once and fix the painter verifier's messages. [Scope](docs/code-hygiene.md#controls-percentages-on-the-real-rows-hyg58). |
+| `HYG#59` | OPEN | MED | S | A save that exists but cannot be opened is overwritten with defaults; the legacy-save failure is silent; Controls Apply saves a stale snapshot; profile equality is hand-written. [Scope](docs/code-hygiene.md#save-and-settings-correctness-hyg59). |
+| `HYG#60` | OPEN | MED | M | Fifteen acceptance checks and verifiers that cannot fail or check the wrong thing (bot_driver, menu_navigation, crossfeed fixture, shipped-script lint, Session in Debug only, editor menus by position). [Scope](docs/code-hygiene.md#checks-that-can-fail-hyg60). |
+| `HYG#61` | OPEN | MED | M | Comments, `_comment`s, docs and the shipped audio `PROVENANCE.md` still call rows settled on 2026-11-05 open trials or pending reviews. [Scope](docs/code-hygiene.md#status-text-after-the-2026-11-05-decisions-hyg61). |
+| `HYG#62` | OPEN | MED | M | About seventeen comments and doc lines that drifted from the code, first `GameData`'s class comment, which contradicts the architecture rule. [Scope](docs/code-hygiene.md#comments-and-reference-docs-that-drifted-hyg62). |
+| `HYG#63` | OPEN | MED | M | One atomic file writer for the six drifted temp-then-rename copies (replay truncates in place, screenshots leave partial PNGs) and one debug file-stem rule. [Scope](docs/code-hygiene.md#one-atomic-file-writer-and-one-debug-file-stem-rule-hyg63). |
+| `HYG#64` | OPEN | MED | S | Classify the game's own out-of-bounds throw by type, not message; fix two misleading diagnostics; standard exceptions for impossible states, which must not draw "ERROR". [Scope](docs/code-hygiene.md#diagnostics-and-impossible-states-hyg64). |
+| `HYG#65` | OPEN | MED | S | Fixed arrays filled from literal lists or indexed past a fixed 4 (`was_dead`), uninitialised `DisplaySettingsChoice`, copyable resource owners, a null guard on the wrong pointer. [Scope](docs/code-hygiene.md#fixed-arrays-and-lifetime-hazards-hyg65). |
+| `HYG#66` | OPEN | MED | M | One owner each for human count to layout, bot difficulty names, best-of, round count, stage rules, the player limit, and the stick and play-setting bounds. [Scope](docs/code-hygiene.md#match-domain-rules-and-settings-bounds-in-one-place-hyg66). |
+| `HYG#67` | OPEN | MED | M | Name the slab footprint in the contract, tidy the contract headers, and have the editor read the format rules the contract owns since `HYG#46`. [Scope](docs/code-hygiene.md#the-level-format-contract-owns-its-numbers-and-names-hyg67). |
+| `HYG#68` | OPEN | MED | M | Public `grounded()` and shared contact predicates in place of about twenty hand-spelled move-state checks; one velocity comparison rule. [Scope](docs/code-hygiene.md#player-move-state-and-contact-predicates-hyg68). |
+| `HYG#69` | OPEN | LOW | M | Stage record line, `OptionRow` placeholder, the Sticks measured word and the Debug-only prompt rewrite out of shipping C++; list `P1`-`P4` and the window title as not yet localisable. [Scope](docs/code-hygiene.md#player-facing-copy-out-of-c-hyg69). |
+| `HYG#70` | OPEN | MED | L | Shared presentation reader and validator helpers (pen walk, settings rows, plaques, predicates); limits formatted from constants; error prefixes fixed. [Scope](docs/code-hygiene.md#presentation-reader-and-validator-helpers-hyg70). |
+| `HYG#71` | OPEN | MED | M | Reject unknown presentation keys, delete `menu_style.box_size` and dead `sprite_sheet_1` frames, move two misnamed colours, rewrite misleading `_comment`s. [Scope](docs/code-hygiene.md#presentation-and-content-keys-that-mislead-hyg71). |
+| `HYG#72` | OPEN | LOW | M | Tuning and content-validation diagnostics, stale header comments, a local formatter, split paint-underfoot validation and the run-animation literal. [Scope](docs/code-hygiene.md#tuning-and-content-validation-readers-hyg72). |
+| `HYG#73` | OPEN | LOW | M | Delete dead fields, accessors, parameters and includes in the game, including the authored but unread `rotation_origin`. [Scope](docs/code-hygiene.md#dead-code-in-the-game-hyg73). |
+| `HYG#74` | OPEN | LOW | M | Shared fit-to-box, paper-bounds, wrap, tool-step and close helpers for the menu pages. [Scope](docs/code-hygiene.md#menu-page-helpers-hyg74). |
+| `HYG#75` | OPEN | LOW | M | Shared paper-card, keyed-block, shadow-tile and swatch helpers for the drawings; pixels unchanged. [Scope](docs/code-hygiene.md#shared-drawing-helpers-hyg75). |
+| `HYG#76` | OPEN | LOW | M | Deduplicate weapon sound, facing, owner-slot, pose and opening-time logic; unknown terrain materials throw instead of drawing a paint tin. [Scope](docs/code-hygiene.md#weapon-projectile-and-opening-logic-hyg76). |
+| `HYG#77` | OPEN | LOW | M | Shared bot geometry and one simulation step length; the replay reader refuses unknown teams; Debug bot and hash helpers tidied. [Scope](docs/code-hygiene.md#bot-geometry-replay-and-debug-bots-hyg77). |
+| `HYG#78` | OPEN | LOW | M | Editor File > New reads `template.json`; one palette and snap table; combo changes stop dispatching as commands; a shell library for the DPI probe. [Scope](docs/code-hygiene.md#editor-shell-and-document-hyg78). |
+| `HYG#79` | OPEN | LOW | S | Use the engine's narrow, widen and path helpers instead of local copies; no `path.string()` in editor messages. [Scope](docs/code-hygiene.md#use-the-engines-text-path-and-environment-helpers-hyg79). |
+| `HYG#80` | OPEN | LOW | M | Debug console messages that say the wrong thing, duplicated command helpers, and `reload` validating different text from what it applies. [Scope](docs/code-hygiene.md#debug-console-commands-hyg80). |
+| `HYG#81` | DECISION | LOW | L | AGENTS.md reserves `SCREAMING_SNAKE` for macros, but about 59 constants use it. The author amends the rule or approves the renames. [Scope](docs/code-hygiene.md#the-screaming_snake-constant-rule-hyg81). |
+| `HYG#82` | OPEN | LOW | M | Mechanical renames for names that now mislead (`KeyboardJumpMenu`, `match_owns_pad_slot`, ...), and `MenuInputAction` moves to `game/input`. [Scope](docs/code-hygiene.md#names-that-mislead-hyg82). |
+| `HYG#83` | OPEN | MED | M | Probe stage lists and CPU assets read from the manifest instead of hand-picked lists behind "every stage" claims. [Scope](docs/code-hygiene.md#probe-stages-and-assets-from-the-manifest-hyg83). |
+| `HYG#84` | OPEN | MED | M | One shared save-isolation fixture for the about twenty probe copies, and one JSON variant and file-I/O fixture. [Scope](docs/code-hygiene.md#probe-save-isolation-and-json-fixtures-hyg84). |
+| `HYG#85` | BLOCKED | MED | L | Shared bot-route, course and route-run fixtures for the copies across bot, crossfeed, CQ and Press Tower probes. After `HYG#83`. [Scope](docs/code-hygiene.md#level-driving-and-route-fixtures-hyg85). |
+| `HYG#86` | OPEN | MED | L | `painter_visual` fixtures: one tune-colour session, probe font, canvas root and style fingerprints that cannot drop a new field. [Scope](docs/code-hygiene.md#painter_visual-fixtures-hyg86). |
+| `HYG#87` | OPEN | LOW | M | Probe tidy-ups: stale `srand`, dead code, the `debug_console` and `level_editor` cases, idioms, typos and `#`-less row ids. [Scope](docs/code-hygiene.md#probe-tidy-ups-hyg87). |
+| `HYG#88` | OPEN | MED | L | Shared painter verifier evidence helpers for about forty hand-rolled PPM, number and CSV checks; one lost its payload check. [Scope](docs/code-hygiene.md#painter-verifier-evidence-helpers-hyg88). |
+| `HYG#89` | OPEN | MED | L | Shared PowerShell probe-build pipeline (six drifted copies), diagnostic scans, window enumeration and art PNG writer. [Scope](docs/code-hygiene.md#shared-powershell-probe-pipeline-and-art-helpers-hyg89). |
+| `HYG#90` | OPEN | LOW | M | Art build scripts read team colours from presentation; art READMEs corrected against the data. [Scope](docs/code-hygiene.md#art-build-scripts-and-art-docs-hyg90). |
+| `HYG#91` | OPEN | LOW | M | Python audio and study tools: one WAV writer, named ADPCM constants, Study B's crashing tie-break and CLI checks. [Scope](docs/code-hygiene.md#python-audio-and-study-tools-hyg91). |
+| `HYG#92` | OPEN | LOW | M | Debug `.cfg` scripts: the two stations the tour skips, and shared setup instead of byte-identical copies. [Scope](docs/code-hygiene.md#debug-cfg-scripts-hyg92). |
 
 ## Art direction, characters and the UI
 
@@ -81,6 +127,7 @@ answers one is when its workaround is deleted.
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with a report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); registry name forgetting (report 26, with 27); install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; display-awake owner; non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
+| `ENG#35` | DECISION | LOW | S | Drafted 2026-11-05 from the hygiene review: `AudioResources` has no non-throwing sound-group lookup, so `sound_groups.cpp` catches `out_of_range`. Checked at master `5cbc6b3`. The author decides whether to file. [Report](docs/review/engine-reports.md#35-audioresources-has-no-non-throwing-sound-group-lookup---draft-with-find-or-add-exhibit) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -100,6 +147,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
+| `CI#8` | OPEN | LOW | M | Build and CI housekeeping: rename the `artattack` vcpkg manifest and drop doctest, run the audio tests after Build, one runtime-asset rule, workflow and ignore leftovers. [Hygiene](docs/code-hygiene.md#build-ci-and-repository-housekeeping-ci8). |
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
@@ -116,7 +164,6 @@ A new row for one of these gets its section back.
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
-| Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#57` was the last (2026-11-05) |
 | Closed engine reports (1–25, 28, 29, 31, 32) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |

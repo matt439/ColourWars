@@ -12,7 +12,8 @@
 > rider, 30 as [#123](https://github.com/matt439/Labrador/issues/123), 33 as
 > [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
 > [#125](https://github.com/matt439/Labrador/issues/125). Each waits on the
-> engine's answer.
+> engine's answer. A sixth, **35**, is a draft from the 2026-11-05 hygiene
+> review and is not filed.
 > **Twenty-nine are closed** (1–25, 28, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -234,8 +235,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | narrowed 2026-10-30 to reclaiming memory (`HYG#47`); filed 2026-11-05 as the rider on [labrador#122](https://github.com/matt439/Labrador/issues/122); awaiting an answer |
 | 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
 | 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
+| 35 | `AudioResources` has no non-throwing sound-group lookup | [`sound_groups.cpp`](../../game/config/sound_groups.cpp)'s find-or-add catches `std::out_of_range` as control flow | drafted 2026-11-05 from the [hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed), checked against master `5cbc6b3`; not filed, the author decides |
 
-Nothing else is outstanding, on either side, beyond reports 26 and 34 below, the three still live
+Nothing else is outstanding, on either side, beyond reports 26, 34 and 35 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -660,6 +662,59 @@ After that, the game has no `const_cast` and no `mutable`.
 Filing is authorized (2026-11-03); the public issue is drafted from this text
 with the synthetic absorber-and-shot repro. This draft itself does not file,
 comment on or open anything upstream.
+
+---
+
+## 35. `AudioResources` has no non-throwing sound-group lookup - **draft with find-or-add exhibit**
+
+**Drafted 2026-11-05** from the [2026-11-05 hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed).
+Checked the same day against Labrador master `5cbc6b3`: `engine/audio/audio_resources.h:75-79`
+still offers only `add_sound_group`, which throws `std::invalid_argument` if the
+name exists, and `resolve_sound_group`, which throws `std::out_of_range` if it
+does not. There is no `find`, `has` or `try_resolve`. Not filed; the author
+decides whether it is worth filing. The pin `e7fc50e` has the same two calls.
+
+### Exhibit
+
+[`game/config/sound_groups.cpp`](../../game/config/sound_groups.cpp), the
+anonymous `group` helper at `:21-31`:
+
+```cpp
+SoundGroupHandle group(AudioResources& audio, const char* name)
+{
+    try
+    {
+        return audio.resolve_sound_group(name);
+    }
+    catch (const std::out_of_range&)
+    {
+        return audio.add_sound_group(name);
+    }
+}
+```
+
+`assign_sound_groups` calls it for `music`, `sfx` and, when the mute switch is
+on, `muted` (`:107-112`). It runs at startup and again after a Debug `reload`,
+so the second call must find the groups the first one added.
+
+### What happens
+
+Telling "absent" from "present" needs an exception. The client either catches
+`std::out_of_range` as control flow, as here, or keeps its own record of which
+names it has added, a second copy of state the engine already holds. A debugger
+set to break on first-chance exceptions stops in this helper on every startup.
+
+### The ask
+
+A non-throwing way to ask whether a group exists, or to get its handle if it does:
+a `has_sound_group(name)`, an optional-returning `find_sound_group(name)`, or a
+find-or-add. Which one is the engine's call. The engine may decline under T1,
+because the game decides which groups exist; a decline closes this report, and
+the client then keeps its own added-groups flag instead of the `catch`.
+
+### What an answer lets this repository delete
+
+The `try`/`catch` in `sound_groups.cpp`'s `group` helper, which becomes one call.
 
 ---
 
