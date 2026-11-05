@@ -98,9 +98,7 @@ std::vector<DebugMenuRow> DebugMenuModel::collect()
 	}
 
 	const MatchRequest& request = this->director_.request();
-	MatchRequest staged = request;
-	staged.restart = false;
-	if (!staged.empty())
+	if (!request.without_restart().empty())
 	{
 		DebugMenuRow apply{ Kind::apply, "", "", "", this->director_.can_apply() };
 		if (this->director_.in_match())
@@ -166,8 +164,7 @@ std::string DebugMenuModel::title() const
 
 std::string DebugMenuModel::queued() const
 {
-	MatchRequest staged = this->director_.request();
-	staged.restart = false;
+	const MatchRequest staged = this->director_.request().without_restart();
 	return staged.empty() ? std::string() : "Queued: " + staged.describe();
 }
 

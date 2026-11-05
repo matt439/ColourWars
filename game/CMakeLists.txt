@@ -74,6 +74,7 @@ add_library(colourwars_game STATIC
     debug/input/debug_chord.cpp
     debug/replay/debug_clock.cpp
     debug/commands/debug_command.cpp
+    debug/commands/debug_entry.cpp
     debug/input/debug_binds.cpp
     debug/console/debug_console_state.cpp
     debug/console/debug_console_view.cpp

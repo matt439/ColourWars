@@ -80,6 +80,14 @@ namespace debug_console_acceptance
 			"binds.cfg holds exactly the two differences, got '" + saved + "'");
 		require(impl.execute("bind f8 echo bound f8").ok && impl.binds().find(KeyChord{ Key::f8 }) != nullptr &&
 			*impl.binds().find(KeyChord{ Key::f8 }) == "echo bound f8", "Several words join into one line");
+		// help names the binds in force, not the defaults.
+		require(impl.execute("help").ok, "help runs");
+		const std::string keys = impl.log().lines().back().text;
+		require(keys.starts_with("keys: ") && keys.find("F8 echo bound f8") != std::string::npos &&
+			keys.find("F12 overlay perf") != std::string::npos &&
+			keys.find("F2 overlay collision") != std::string::npos &&
+			keys.find("F4 ") == std::string::npos,
+			"help lists the binds as they are now, got '" + keys + "'");
 
 		TestDirector reloaded(tuning, presentation);
 		reloaded.impl.set_user_directory(scratch.root);
@@ -113,6 +121,15 @@ namespace debug_console_acceptance
 		require(fourth.impl.binds().find(KeyChord{ Key::f12 }) != nullptr &&
 			read_text(scratch.root / L"binds.cfg") == by_hand,
 			"binds.reset inside binds.cfg does not delete the file being read");
+
+		// Any other line is skipped, and the warning names all three it reads.
+		write_text(scratch.root / L"binds.cfg", "echo stray\nbind f12 echo by-hand\n");
+		TestDirector stray(tuning, presentation);
+		stray.impl.set_user_directory(scratch.root);
+		stray.director.run_launch_arguments({});
+		require(log_contains(stray.impl.log(), "only bind, unbind and binds.reset lines are read",
+			DebugSeverity::warning) && stray.impl.binds().find(KeyChord{ Key::f12 }) != nullptr,
+			"A stray line in binds.cfg is skipped with a warning naming binds.reset");
 
 		// One that does not parse is moved aside, not overwritten by the next bind.
 		write_text(scratch.root / L"binds.cfg", "bind f12 \"unterminated\n");

@@ -123,6 +123,16 @@ namespace debug_keys
 			(named ? std::string(spelling(chord.key)) : std::string());
 	}
 
+	std::string display_name(const KeyChord& chord)
+	{
+		std::string name = chord_name(chord);
+		for (char& c : name)
+		{
+			c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+		}
+		return name;
+	}
+
 	bool reserved(const KeyChord& chord)
 	{
 		return chord.key == Key::grave || chord.key == Key::f10 || chord.key == Key::f11;

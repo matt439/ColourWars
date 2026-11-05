@@ -43,9 +43,11 @@ struct MatchRequest
 	std::optional<MatchSetup> exact;
 	std::string exact_label;
 
-
 	bool empty() const;
 	std::string describe() const;
+	// The request with `restart` cleared: what the debug menu shows as queued,
+	// what a drop reports and what a menu's own restart still has to apply.
+	MatchRequest without_restart() const;
 };
 
 struct MatchPlan

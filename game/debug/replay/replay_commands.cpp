@@ -27,14 +27,6 @@
 
 namespace
 {
-	DebugMenuTraits replay_traits(DebugMenuTraits::Form form)
-	{
-		DebugMenuTraits traits;
-		traits.category = "replay";
-		traits.form = form;
-		return traits;
-	}
-
 	std::filesystem::path replay_path(const std::string& name)
 	{
 		return std::filesystem::path(labrador::widen(directory_consts::replay_directory())) /
@@ -564,16 +556,7 @@ void DebugDirectorImpl::register_replay_commands()
 {
 	using Args = const DebugArgs&;
 	DebugRegistry& registry = this->registry_;
-	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu)
-		{
-			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body));
-			command->set_menu(std::move(menu));
-			registry.add(std::move(command));
-		};
-
-	add("seed", "fix the round seed of every build (palette, intro, bots), the menus' rand() and the planner, or off",
+	registry.add_command("seed", "fix the round seed of every build (palette, intro, bots), the menus' rand() and the planner, or off",
 		{ { "n|off", true, [] { return std::vector<std::string>{ "off" }; } } },
 		[this](Args args, DebugLog&)
 		{
@@ -600,9 +583,9 @@ void DebugDirectorImpl::register_replay_commands()
 			this->planner_random_.seed(seed);
 			return DebugStatus::success("seed " + text + (this->match_ != nullptr ?
 				": applies when the match is next built (restart)" : ""));
-		}, replay_traits(DebugMenuTraits::Form::hidden));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::hidden));
 
-	add("record", "record every seat's input from a fresh build: record [name] [updates], "
+	registry.add_command("record", "record every seat's input from a fresh build: record [name] [updates], "
 		"record stop (bare record while recording stops)",
 		{ { "name|stop", true, [] { return std::vector<std::string>{ "stop" }; } },
 			{ "updates", true, {} } },
@@ -654,9 +637,9 @@ void DebugDirectorImpl::register_replay_commands()
 					"from its first update", true);
 			}
 			return DebugStatus::success("record " + name + ": starts with the next match");
-		}, replay_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::run));
 
-	add("play", "rebuild a recorded match and feed it its recorded input; play stop",
+	registry.add_command("play", "rebuild a recorded match and feed it its recorded input; play stop",
 		{ { "name|stop", false, [] {
 				std::vector<std::string> names = replay_names();
 				names.insert(names.begin(), "stop");
@@ -807,9 +790,9 @@ void DebugDirectorImpl::register_replay_commands()
 				std::to_string(this->play_armed_->file().updates) + " updates" +
 				(rounds > 1 ? " in round 1 of " + std::to_string(rounds) : std::string()) +
 				(this->match_ != nullptr ? ": rebuilding the match" : ": starting a match"), true);
-		}, replay_traits(DebugMenuTraits::Form::pick));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::pick));
 
-	add("replays", "list the recorded matches", {},
+	registry.add_command("replays", "list the recorded matches", {},
 		[](Args, DebugLog& log)
 		{
 			const std::vector<std::string> names = replay_names();
@@ -819,9 +802,9 @@ void DebugDirectorImpl::register_replay_commands()
 			}
 			return DebugStatus::success(std::to_string(names.size()) + " replay(s) in " +
 				directory_consts::replay_directory());
-		}, replay_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::run));
 
-	add("checksum", "the running match's state hash and paint (what a replay compares)", {},
+	registry.add_command("checksum", "the running match's state hash and paint (what a replay compares)", {},
 		[this](Args, DebugLog&)
 		{
 			const std::optional<MatchFingerprint> print = this->fingerprint();
@@ -842,6 +825,6 @@ void DebugDirectorImpl::register_replay_commands()
 			return DebugStatus::success("checksum " + hex64(print->hash) + " at update " +
 				std::to_string(print->updates) + ", paint " + print->paint_text() + ", bursts " +
 				std::to_string(bursts));
-		}, replay_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::run));
 }
 #endif

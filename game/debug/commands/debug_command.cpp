@@ -61,6 +61,21 @@ bool DebugArgs::parse_double(std::string_view text, double& value)
 	return parse_finite(text, value);
 }
 
+std::string join_words(const std::vector<std::string>& words, std::string_view separator,
+	std::string_view last)
+{
+	std::string text;
+	for (std::size_t i = 0; i < words.size(); ++i)
+	{
+		if (i > 0)
+		{
+			text += i + 1 == words.size() && !last.empty() ? last : separator;
+		}
+		text += words[i];
+	}
+	return text;
+}
+
 DebugCommand::DebugCommand(std::string name, std::string help,
 	std::vector<DebugArgSpec> args, bool variadic) :
 	DebugEntry(std::move(name), std::move(help)), args_(std::move(args)), variadic_(variadic)

@@ -27,6 +27,16 @@ public:
 
 	// A duplicate name is a programming error: std::logic_error.
 	void add(std::unique_ptr<DebugEntry> entry);
+	// Listed under `menu` (DebugMenuTraits::of) instead of the entry's own.
+	void add(std::unique_ptr<DebugEntry> entry, DebugMenuTraits menu);
+	// A LambdaCommand listed under `menu`: how the director registers a
+	// command whose body is a callable.
+	void add_command(std::string name, std::string help, std::vector<DebugArgSpec> args,
+		LambdaCommand::Body body, DebugMenuTraits menu, bool variadic = false);
+
+	// What `help` lists after the console and menu keys: the key binds as they
+	// are now. Unset, it lists none.
+	void set_help_keys(std::function<std::string()> keys);
 
 	DebugEntry* find(std::string_view name) const;
 	DebugVariable* variable(std::string_view name) const;
@@ -57,6 +67,7 @@ public:
 
 private:
 	std::map<std::string, std::unique_ptr<DebugEntry>, std::less<>> entries_;
+	std::function<std::string()> help_keys_;
 
 	DebugStatus execute_statement(const std::string& statement, DebugLog& log);
 	void add_builtins();

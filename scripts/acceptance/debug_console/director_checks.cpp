@@ -683,8 +683,16 @@ namespace debug_console_acceptance
 		TestDirector test(tuning, presentation);
 		DebugDirectorImpl& impl = test.impl;
 		const DebugStatus queued = impl.execute("screenshot drive");
-		require(queued.ok && queued.close_console && impl.pending_screenshot() == "drive",
+		require(queued.ok && queued.close_console && impl.pending_screenshot() == "drive.png" &&
+			log_contains(impl.log(), "screenshot drive.png queued", DebugSeverity::info),
 			"screenshot queues and closes the console so the shot is clean");
+		// The timestamped default is named when it is queued, so the message
+		// names the file the capture writes.
+		const DebugStatus stamped = impl.execute("screenshot");
+		require(stamped.ok && impl.pending_screenshot().has_value() &&
+			impl.pending_screenshot()->starts_with("colourwars-") &&
+			impl.log().lines().back().text == "screenshot " + *impl.pending_screenshot() + " queued",
+			"A default screenshot queues the name its message gives");
 
 		// The shot waits only for something that will apply next frame.
 		require(!impl.screenshot_waits(), "Nothing queued: the shot is taken");

@@ -32,14 +32,6 @@ namespace
 {
 	using Form = DebugMenuTraits::Form;
 
-	DebugMenuTraits traits(const char* category, Form form)
-	{
-		DebugMenuTraits result;
-		result.category = category;
-		result.form = form;
-		return result;
-	}
-
 	std::string local_time_stamp()
 	{
 		const std::time_t now = std::time(nullptr);
@@ -409,7 +401,8 @@ DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
 	if (!DebugArgs::parse_int(args.text(0), frames) || frames < 1 ||
 		frames > static_cast<int>(DebugPerf::max_capture_frames))
 	{
-		return DebugStatus::failure("perf.capture: expected 1-36000 rendered intervals");
+		return DebugStatus::failure("perf.capture: expected 1-" +
+			std::to_string(DebugPerf::max_capture_frames) + " rendered intervals");
 	}
 	const std::string& label = args.text(1);
 	if (!debug_file_name::valid_stem(label))
@@ -564,16 +557,6 @@ void DebugDirectorImpl::register_script_commands()
 {
 	using Args = const DebugArgs&;
 	DebugRegistry& registry = this->registry_;
-	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu,
-		bool variadic = false)
-		{
-			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body), variadic);
-			command->set_menu(std::move(menu));
-			registry.add(std::move(command));
-		};
-
 	const auto script_names = [this]
 		{
 			std::vector<std::string> names;
@@ -602,7 +585,7 @@ void DebugDirectorImpl::register_script_commands()
 			return names;
 		};
 
-	add("exec", "run a script of console lines: exec <name> [args for $1..$9] "
+	registry.add_command("exec", "run a script of console lines: exec <name> [args for $1..$9] "
 		"(scripts/debug, then %LOCALAPPDATA%/ColourWars/debug)",
 		{ { "name", false, script_names } },
 		[this](Args args, DebugLog&)
@@ -613,9 +596,9 @@ void DebugDirectorImpl::register_script_commands()
 				rest.push_back(args.text(i));
 			}
 			return this->exec_script(args.text(0), rest);
-		}, traits("console", Form::hidden), true);
+		}, DebugMenuTraits::of("console", Form::hidden), true);
 
-	add("exec.stop", "stop every running script", {},
+	registry.add_command("exec.stop", "stop every running script", {},
 		[this](Args, DebugLog&)
 		{
 			if (!this->scripts_.running())
@@ -624,9 +607,9 @@ void DebugDirectorImpl::register_script_commands()
 			}
 			this->scripts_.stop("exec.stop", this->log_);
 			return DebugStatus::success();
-		}, traits("console", Form::run));
+		}, DebugMenuTraits::of("console", Form::run));
 
-	add("exec.list", "the scripts exec can run, with their first comment line", {},
+	registry.add_command("exec.list", "the scripts exec can run, with their first comment line", {},
 		[this, script_names](Args, DebugLog& log)
 		{
 			int count = 0;
@@ -651,18 +634,18 @@ void DebugDirectorImpl::register_script_commands()
 				where += (where.empty() ? "" : ", ") + labrador::path_to_utf8(directory);
 			}
 			return DebugStatus::success(std::to_string(count) + " script(s) in " + where);
-		}, traits("console", Form::run));
+		}, DebugMenuTraits::of("console", Form::run));
 
-	add("wait", "in a script: wait <updates> | <seconds>s | match | frames <n> | replay | record",
+	registry.add_command("wait", "in a script: wait <updates> | <seconds>s | match | frames <n> | replay | record",
 		{ { "n|<x>s|match|frames|replay|record", false, []
 			{
 				return std::vector<std::string>{ "match", "frames", "replay", "record" };
 			} },
 			{ "frames", true, {} } },
 		[this](Args args, DebugLog&) { return this->wait_command(args); },
-		traits("console", Form::hidden));
+		DebugMenuTraits::of("console", Form::hidden));
 
-	add("echo", "print a line (a marker in a script's transcript)",
+	registry.add_command("echo", "print a line (a marker in a script's transcript)",
 		{ { "text", true, {} } },
 		[](Args args, DebugLog& log)
 		{
@@ -673,7 +656,7 @@ void DebugDirectorImpl::register_script_commands()
 			}
 			log.info(text);
 			return DebugStatus::success();
-		}, traits("console", Form::hidden), true);
+		}, DebugMenuTraits::of("console", Form::hidden), true);
 
 	// Binds (bind_commands.cpp), in the place they always had.
 	this->register_bind_commands();
@@ -714,7 +697,7 @@ void DebugDirectorImpl::register_script_commands()
 
 	// Screenshots -----------------------------------------------------------
 
-	add("screenshot.dir", "a folder under screens/ for the next screenshots ({time} is the "
+	registry.add_command("screenshot.dir", "a folder under screens/ for the next screenshots ({time} is the "
 		"local time); off for screens/ itself",
 		{ { "folder|off", true, [] { return std::vector<std::string>{ "off" }; } } },
 		[this](Args args, DebugLog&)
@@ -740,9 +723,9 @@ void DebugDirectorImpl::register_script_commands()
 			this->screenshot_dir_ = cleaned;
 			return DebugStatus::success("screenshot.dir = " + cleaned + " (" + root + "/" +
 				cleaned + ")");
-		}, traits("content", Form::hidden));
+		}, DebugMenuTraits::of("content", Form::hidden));
 
-	auto strip = std::make_unique<BoolVariable>("screenshot.strip",
+	registry.add(std::make_unique<BoolVariable>("screenshot.strip",
 		"whether a screenshot shows the debug status strip (off for A/B pictures that "
 		"differ only in the world)", true,
 		[this] { return this->screenshot_strip_; },
@@ -750,13 +733,11 @@ void DebugDirectorImpl::register_script_commands()
 		{
 			this->screenshot_strip_ = on;
 			return DebugStatus::success(std::string("screenshot.strip = ") + (on ? "on" : "off"));
-		});
-	strip->set_menu(traits("content", Form::hidden));
-	registry.add(std::move(strip));
+		}), DebugMenuTraits::of("content", Form::hidden));
 
 	// Perf ------------------------------------------------------------------
 
-	add("perf", "frame, update and draw time (CPU, min / avg / max), object counts and the last level build", {},
+	registry.add_command("perf", "frame, update and draw time (CPU, min / avg / max), object counts and the last level build", {},
 		[this](Args, DebugLog& log)
 		{
 			if (this->last_build_)
@@ -775,19 +756,20 @@ void DebugDirectorImpl::register_script_commands()
 				log.info(line);
 			}
 			return DebugStatus::success();
-		}, traits("view", Form::hidden));
+		}, DebugMenuTraits::of("view", Form::hidden));
 
-	add("perf.reset", "forget the measured frames", {},
+	registry.add_command("perf.reset", "forget the measured frames", {},
 		[this](Args, DebugLog&)
 		{
 			if (this->perf_capture_path_) { return DebugStatus::failure("perf: a capture is pending"); }
 			this->perf_.reset();
 			return DebugStatus::success("perf: reset");
-		}, traits("view", Form::hidden));
+		}, DebugMenuTraits::of("view", Form::hidden));
 
-	add("perf.capture", "capture 1-36000 rendered match intervals, then export CSV and JSON; script barrier",
+	registry.add_command("perf.capture", "capture 1-" + std::to_string(DebugPerf::max_capture_frames) +
+		" rendered match intervals, then export CSV and JSON; script barrier",
 		{ { "frames", false, {} }, { "label", false, {} } },
 		[this](Args args, DebugLog&) { return this->start_perf_capture(args); },
-		traits("view", Form::hidden));
+		DebugMenuTraits::of("view", Form::hidden));
 }
 #endif

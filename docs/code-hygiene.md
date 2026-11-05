@@ -1401,6 +1401,57 @@ likewise.
 
 ### Debug console commands (`HYG#80`)
 
+**Done 2026-11-06; behaviour change, Debug only.** Four console messages say
+something different, and `reload` validates the bytes it applies.
+
+- `screenshot` names its file when it runs, so `screenshot <file> queued` is
+  the file the capture writes; before, a default name carried the capture's
+  time and the message the request's. The pending screenshot holds that name.
+- `help` ends with the binds in force (a registry hook the bind commands set)
+  instead of a fixed F-key list, and the startup banner says its F-keys are
+  the defaults.
+- A stray `binds.cfg` line warns "only bind, unbind and binds.reset lines are
+  read". `moved` is `rename_error`, and a `binds.cfg` that cannot be set aside
+  says so (the next bind replaces it) instead of nothing.
+- `reload` reads each file once (`debug_files::read_file(path, ok)`, which also
+  replaces tune's `read_bytes`), parses that text for the readers and the
+  stage-name check, and keeps it as live tuning's baseline. A file it cannot
+  read now fails with "cannot read '<path>'".
+- `tune` fails on a current token `parse_double` refuses instead of stepping
+  from 0. The tune file indices are `DebugDirectorImpl::tuning_file`,
+  `presentation_file` and `tune_file_count`, which also size `tune_docs_` and
+  `tune_targets_`.
+- The `status_strip`, `tune_scope_note` and `user_directory` comments match
+  the code.
+
+Shared: `DebugRegistry::add(entry, menu)` and `add_command(...)` with
+`DebugMenuTraits::of(...)` replace the five `add` lambdas, the four `traits`
+helpers, `place` and the `set_menu`/`add` pairs (the built-ins too); one
+`accepts` arity check serves `check` and `execute`; `screenshot_waits` is
+`can_apply`; `MatchRequest::without_restart` serves the menu model's two
+checks, the menu build's adopt and `drop_request`; `join_words` builds the bot
+behaviour and overlay word lists and messages; one lambda runs `respawn` and
+`kill`; `severity_prefix` serves the log, the transcript, the console and the
+debug menu page (a sibling); `debug_keys::display_name` replaces both
+`upper` copies; `NumberVariable::format` replaces `format_number`; the console
+view keeps an `OverlayHandles`; `perf.capture` prints
+`DebugPerf::max_capture_frames`. `DebugStatus` and `DebugEntry` are defined in
+a new `debug_entry.cpp` beside their header.
+
+Left: the `stage` command's own "one of:" loop, whose wording an empty list
+would change.
+
+Both presets build under `/W4 /WX`. `debug_console` passed in Debug and
+Release, with new checks: the screenshot name in its queued message, `help`
+naming rebound and unbound keys, and the stray-line warning. `check-startup.ps1`
+passed in both presets, `check-painter.ps1 -CompileOnly` in both and
+`check-frame-pacing.ps1 -CompileOnly` in Debug. A hand launch of the Debug game
+on an isolated profile ran `reload` in the menus and, under `qps-ploc`, in a
+match (validated, applied), `help` and a default `screenshot` whose queued
+name was the file written.
+
+The row as filed.
+
 Fix the messages and help text:
 
 - `screenshot` names a file it does not write (`game_commands.cpp:334`).

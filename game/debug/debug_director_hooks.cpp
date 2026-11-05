@@ -16,7 +16,6 @@
 #include "game/objects/level.h"
 #include "game/match/match_setup.h"
 #include <bit>
-#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -24,18 +23,6 @@
 #include <utility>
 
 using namespace labrador;
-
-namespace
-{
-	std::string upper(std::string text)
-	{
-		for (char& c : text)
-		{
-			c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-		}
-		return text;
-	}
-}
 
 bool DebugDirectorImpl::has_pending_content() const
 {
@@ -180,9 +167,7 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	// queued here reached the match through a menu's own restart (pause menu
 	// Restart, or the end menu after unwinding): this build is the one that
 	// applies it.
-	MatchRequest queued = this->request_;
-	queued.restart = false;
-	if (!queued.empty())
+	if (!this->request_.without_restart().empty())
 	{
 		const MatchPlan plan = this->planner().resolve(&match.debug_settings(),
 			this->request_, this->connected_pads(), this->planner_random());
@@ -382,8 +367,7 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<SlotInput>& inputs)
 
 void DebugDirectorImpl::drop_request(const std::string& reason)
 {
-	MatchRequest dropped = this->request_;
-	dropped.restart = false;
+	const MatchRequest dropped = this->request_.without_restart();
 	if (!dropped.empty())
 	{
 		this->log_.warning("dropped queued " + dropped.describe() + ": " + reason);
@@ -415,9 +399,8 @@ bool DebugDirectorImpl::screenshot_waits() const
 	// Something that applies at this update would change the picture first:
 	// in a match a rebuild or leave, in the menus only a queued stage (players
 	// or weapon without one, or reloaded content, wait for a match that may
-	// never come).
-	return this->match_ != nullptr ? !this->request_.empty() || this->leave_requested_ :
-		this->request_.stage.has_value();
+	// never come). That is what Apply applies.
+	return this->can_apply();
 }
 
 bool DebugDirectorImpl::can_apply() const
@@ -439,7 +422,7 @@ void DebugDirectorImpl::run_binds(DebugMatchTarget& match)
 		[&keyboard](Key key) { return keyboard.held(key); });
 	for (const auto& [chord, line] : fired)
 	{
-		this->log_.write(DebugSeverity::echo, "[" + upper(debug_keys::chord_name(chord)) + "] " + line);
+		this->log_.write(DebugSeverity::echo, "[" + debug_keys::display_name(chord) + "] " + line);
 		const bool paused = this->clock_.paused();
 		const int steps = this->clock_.pending_steps();
 		this->execute(line);
@@ -461,12 +444,10 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 	{
 		return;
 	}
-	const std::string requested = *this->pending_screenshot_;
+	const std::string name = *this->pending_screenshot_;
 	this->pending_screenshot_.reset();
 	try
 	{
-		const std::string name = screenshot_file_name(requested,
-			std::chrono::system_clock::now());
 		std::filesystem::path directory(widen(directory_consts::screenshot_directory()));
 		if (!this->screenshot_dir_.empty())
 		{

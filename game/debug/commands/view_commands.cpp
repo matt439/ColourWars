@@ -32,27 +32,24 @@ void DebugDirectorImpl::register_view_commands()
 			&DebugDirectorImpl::overlay_stations_ },
 	};
 
+	using Form = DebugMenuTraits::Form;
 	for (const Overlay& overlay : overlays)
 	{
 		const std::string name = std::string("overlay.") + overlay.name;
 		bool DebugDirectorImpl::* flag = overlay.flag;
-		auto variable = std::make_unique<BoolVariable>(name, overlay.help, false,
+		registry.add(std::make_unique<BoolVariable>(name, overlay.help, false,
 			[this, flag] { return this->*flag; },
 			[this, flag, name](bool on)
 			{
 				this->*flag = on;
 				this->apply_overlays(flag == &DebugDirectorImpl::overlay_player_);
 				return DebugStatus::success(name + " = " + (on ? "on" : "off"));
-			});
-		DebugMenuTraits menu = variable->menu();
-		menu.category = "view";
-		variable->set_menu(std::move(menu));
-		registry.add(std::move(variable));
+			}), DebugMenuTraits::of("view", Form::variable));
 	}
 
 	// The perf panel is not a world overlay: overlay all leaves it alone
 	// (and so every existing +overlay all picture), overlay none clears it.
-	auto perf = std::make_unique<BoolVariable>("overlay.perf",
+	registry.add(std::make_unique<BoolVariable>("overlay.perf",
 		"frame, update and draw time with a graph, and object counts, bottom left "
 		"(not in 'overlay all'; 'perf' prints them)", false,
 		[this] { return this->overlay_perf_; },
@@ -60,20 +57,19 @@ void DebugDirectorImpl::register_view_commands()
 		{
 			this->overlay_perf_ = on;
 			return DebugStatus::success(std::string("overlay.perf = ") + (on ? "on" : "off"));
-		});
-	DebugMenuTraits perf_menu = perf->menu();
-	perf_menu.category = "view";
-	perf->set_menu(std::move(perf_menu));
-	registry.add(std::move(perf));
+		}), DebugMenuTraits::of("view", Form::variable));
 
-	auto command = std::make_unique<LambdaCommand>("overlay",
-		"toggle one overlay, or set all on or off; no argument lists them",
-		std::vector<DebugArgSpec>{ { "player|collision|camera|paint|stations|perf|all|none", true, []
-			{
-				return std::vector<std::string>{ "player", "collision", "camera", "paint",
-					"stations", "perf", "all", "none" };
-			} } },
-		[this](const DebugArgs& args, DebugLog& log)
+	// What `overlay` takes: each world overlay, then perf, all and none.
+	std::vector<std::string> words;
+	for (const Overlay& overlay : overlays)
+	{
+		words.push_back(overlay.name);
+	}
+	words.insert(words.end(), { "perf", "all", "none" });
+
+	registry.add_command("overlay", "toggle one overlay, or set all on or off; no argument lists them",
+		{ { join_words(words, "|"), true, [words] { return words; } } },
+		[this, words](const DebugArgs& args, DebugLog& log)
 		{
 			if (!args.has(0))
 			{
@@ -115,14 +111,9 @@ void DebugDirectorImpl::register_view_commands()
 					return DebugStatus::success("overlay." + word + " = " + (on ? "on" : "off"));
 				}
 			}
-			return DebugStatus::failure("overlay: expected player, collision, camera, paint, "
-				"stations, perf, all or none, got '" + word + "'");
-		});
-	DebugMenuTraits menu;
-	menu.category = "view";
-	menu.form = DebugMenuTraits::Form::pick;
-	command->set_menu(std::move(menu));
-	registry.add(std::move(command));
+			return DebugStatus::failure("overlay: expected " + join_words(words, ", ", " or ") +
+				", got '" + word + "'");
+		}, DebugMenuTraits::of("view", Form::pick));
 }
 
 LevelOverlays DebugDirectorImpl::level_overlays() const

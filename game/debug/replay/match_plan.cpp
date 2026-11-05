@@ -12,6 +12,13 @@ bool MatchRequest::empty() const
 		this->seats.empty() && !this->restart && !this->exact;
 }
 
+MatchRequest MatchRequest::without_restart() const
+{
+	MatchRequest request = *this;
+	request.restart = false;
+	return request;
+}
+
 std::string MatchRequest::describe() const
 {
 	std::string text;

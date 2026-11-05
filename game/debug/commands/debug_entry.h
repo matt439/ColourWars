@@ -45,6 +45,10 @@ struct DebugMenuTraits
 	// Queues into the match request instead of acting: the menu stays open
 	// so several can be staged and applied together.
 	bool staged = false;
+
+	// What a registration names (DebugRegistry::add, add_command).
+	static DebugMenuTraits of(std::string category, Form form, bool staged = false,
+		std::size_t pick_argument = 0, std::string prefix = {});
 };
 
 // A named thing the console can reach: a variable or a command.

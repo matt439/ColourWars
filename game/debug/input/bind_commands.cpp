@@ -11,32 +11,10 @@
 #include "game/game_data.h"
 #include "game/input/input_bindings.h"
 #include "game/save/save.h"
-#include <cctype>
 
 // Phase 4 binds: bind, unbind, binds and binds.reset, and binds.cfg in the
 // debug user directory (only the differences from the default binds).
 
-namespace
-{
-	using Form = DebugMenuTraits::Form;
-
-	DebugMenuTraits traits(const char* category, Form form)
-	{
-		DebugMenuTraits result;
-		result.category = category;
-		result.form = form;
-		return result;
-	}
-
-	std::string upper(std::string text)
-	{
-		for (char& c : text)
-		{
-			c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-		}
-		return text;
-	}
-}
 
 // ---------------------------------------------------------------------------
 // binds.cfg
@@ -56,10 +34,12 @@ void DebugDirectorImpl::load_binds(const std::filesystem::path& directory)
 	{
 		// The next bind would overwrite it: keep the unreadable file aside.
 		const std::filesystem::path aside = directory / L"binds.cfg.bad";
-		std::error_code moved;
-		std::filesystem::rename(path, aside, moved);
+		std::error_code rename_error;
+		std::filesystem::rename(path, aside, rename_error);
 		this->log_.warning("binds: " + (too_big ? std::string("binds.cfg is too large") :
-			parsed.error) + "; keeping the default keys" + (moved ? std::string() :
+			parsed.error) + "; keeping the default keys" + (rename_error ?
+			" (it could not be set aside as " + labrador::path_to_utf8(aside) +
+				", so the next bind replaces it)" :
 			" (the file is kept as " + labrador::path_to_utf8(aside) + ")"));
 		return;
 	}
@@ -74,8 +54,8 @@ void DebugDirectorImpl::load_binds(const std::filesystem::path& directory)
 		const std::string head = tokens.words.empty() ? std::string() : tokens.words.front();
 		if (head != "bind" && head != "unbind" && head != "binds.reset")
 		{
-			this->log_.warning("binds: " + statement.where() + ": only bind and unbind lines "
-				"are read");
+			this->log_.warning("binds: " + statement.where() + ": only bind, unbind and "
+				"binds.reset lines are read");
 			continue;
 		}
 		const DebugStatus status = this->registry_.execute(statement.text, quiet);
@@ -140,22 +120,25 @@ void DebugDirectorImpl::register_bind_commands()
 {
 	using Args = const DebugArgs&;
 	DebugRegistry& registry = this->registry_;
-	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu,
-		bool variadic = false)
-		{
-			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body), variadic);
-			command->set_menu(std::move(menu));
-			registry.add(std::move(command));
-		};
+	using Form = DebugMenuTraits::Form;
 
+	// `help` names the binds in force, so a rebound or unbound key never
+	// lingers in it.
+	registry.set_help_keys([this]
+		{
+			std::vector<std::string> keys;
+			for (const auto& [chord, line] : this->binds_.entries())
+			{
+				keys.push_back(debug_keys::display_name(chord) + " " + line);
+			}
+			return join_words(keys, ", ");
+		});
 	const auto list_binds = [this](DebugLog& log)
 		{
 			for (const auto& [chord, line] : this->binds_.entries())
 			{
 				const std::string* original = DebugBinds::defaults().find(chord);
-				const std::string name = upper(debug_keys::chord_name(chord));
+				const std::string name = debug_keys::display_name(chord);
 				log.info("  " + name + std::string(name.size() < 10 ? 10 - name.size() : 1, ' ') +
 					line + (original != nullptr && *original == line ? "" : "  *"));
 			}
@@ -163,7 +146,7 @@ void DebugDirectorImpl::register_bind_commands()
 			{
 				if (this->binds_.find(chord) == nullptr)
 				{
-					log.info("  " + upper(debug_keys::chord_name(chord)) + "  (unbound; default " +
+					log.info("  " + debug_keys::display_name(chord) + "  (unbound; default " +
 						line + ")");
 				}
 			}
@@ -180,7 +163,7 @@ void DebugDirectorImpl::register_bind_commands()
 			return words;
 		};
 
-	add("bind", "bind <key> <line>: run a console line on a key in a match (ctrl+, shift+); "
+	registry.add_command("bind", "bind <key> <line>: run a console line on a key in a match (ctrl+, shift+); "
 		"bind <key> shows one; bind alone lists",
 		{ { "key", true, key_words }, { "line", true, {} } },
 		[this, list_binds](Args args, DebugLog& log)
@@ -243,9 +226,9 @@ void DebugDirectorImpl::register_bind_commands()
 			this->binds_.bind(*chord, line);
 			this->save_binds();
 			return DebugStatus::success("bind " + name + " " + quote_word(line));
-		}, traits("console", Form::hidden), true);
+		}, DebugMenuTraits::of("console", Form::hidden), true);
 
-	add("unbind", "unbind <key|all>: all clears every key, including the defaults",
+	registry.add_command("unbind", "unbind <key|all>: all clears every key, including the defaults",
 		{ { "key|all", false, key_words } },
 		[this](Args args, DebugLog&)
 		{
@@ -267,13 +250,13 @@ void DebugDirectorImpl::register_bind_commands()
 			}
 			this->save_binds();
 			return DebugStatus::success("unbind " + debug_keys::chord_name(*chord));
-		}, traits("console", Form::hidden));
+		}, DebugMenuTraits::of("console", Form::hidden));
 
-	add("binds", "list the key table (F2-F7 and F9 by default)", {},
+	registry.add_command("binds", "list the key table (F2-F7 and F9 by default)", {},
 		[list_binds](Args, DebugLog& log) { return list_binds(log); },
-		traits("console", Form::run));
+		DebugMenuTraits::of("console", Form::run));
 
-	add("binds.reset", "restore the default keys; deletes binds.cfg", {},
+	registry.add_command("binds.reset", "restore the default keys; deletes binds.cfg", {},
 		[this](Args, DebugLog&)
 		{
 			this->binds_.reset();
@@ -281,6 +264,6 @@ void DebugDirectorImpl::register_bind_commands()
 			// (a file that starts with binds.reset must not delete itself).
 			this->save_binds();
 			return DebugStatus::success("binds.reset: default keys restored");
-		}, traits("console", Form::run));
+		}, DebugMenuTraits::of("console", Form::run));
 }
 #endif

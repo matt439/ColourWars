@@ -1186,7 +1186,9 @@ neither the mouse nor the camera is read on replay. The limits:
 `%LOCALAPPDATA%\ColourWars\screens\` (beside the save; without `LOCALAPPDATA`,
 `save\screens` beside the executable). The default name is
 `colourwars-YYYYMMDD-HHMMSS-mmm.png`; a given name keeps `A-Z a-z 0-9 _ -` and
-replaces anything else with `_`. The console (or the debug menu) closes first,
+replaces anything else with `_`. The name is chosen when the command runs, so
+`screenshot <file> queued` names the file the capture writes (a default name
+carries the time it was typed). The console (or the debug menu) closes first,
 and the shot is taken at the top of the next update once nothing queued would
 change the picture, so `+stage movement_course +screenshot start` captures the
 match, not the title. The status strip and overlays are included; the log says
@@ -1604,8 +1606,9 @@ as the game. In Release:
 - Code: `game/debug/`. The director and its Debug-only implementation
   (`debug_director.*`, the facade; `debug_director_impl.*`, its core;
   `debug_director_hooks.cpp`, the match and page hooks and the queued
-  requests); the registry, variables and
-  commands (`debug_registry.*`, `debug_variable.*`, `debug_command.*`); the
+  requests); the registry, entries, variables and
+  commands (`debug_registry.*`, `debug_entry.*`, `debug_variable.*`,
+  `debug_command.*`); the
   commands themselves (`game_commands.cpp` for match, time, content and
   console, `debug_status_text.cpp` for the `status` lines, the status strip
   and the paint readout, `view_commands.cpp` for the overlays, `player_commands.cpp` for
@@ -1638,7 +1641,10 @@ as the game. In Release:
   in `scripts/debug/`.
 - Menu metadata is declared where each entry is registered
   (`DebugMenuTraits`: category, form - hidden, run, pick or variable - the
-  picked argument and its prefix, and whether it is staged).
+  picked argument and its prefix, and whether it is staged). A command whose
+  body is a lambda is registered with
+  `DebugRegistry::add_command(..., DebugMenuTraits::of(...))`, any other entry
+  with `add(entry, DebugMenuTraits::of(...))`.
 - Hooks:
   - `GameLevel::update` calls `before_match_update` (debug menu toggle,
     console key, pending screenshot, the live console or the binds, a script

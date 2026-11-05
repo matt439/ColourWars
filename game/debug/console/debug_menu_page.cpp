@@ -217,8 +217,7 @@ void DebugMenuPage::refresh()
 			continue;
 		}
 		const DebugLogLine& line = lines[lines.size() - back];
-		std::string text = (line.severity == DebugSeverity::error ? "error: " :
-			line.severity == DebugSeverity::warning ? "warning: " : "") + line.text;
+		std::string text = severity_prefix(line.severity) + line.text;
 		if (text.size() > footer_columns)
 		{
 			text = text.substr(0, footer_columns - 3) + "...";

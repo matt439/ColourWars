@@ -112,7 +112,7 @@ public:
 	// over any state, so it borrows none of theirs.
 	MenuContext* menu_context();
 
-	// Short "x0.25 PAUSED feedback-off GOD" text, empty when all default.
+	// Short "x0.25  PAUSED  feedback off  GOD" text, empty when all default.
 	std::string status_strip() const;
 
 	// "paint  A 23.4%  B 11.0%  free 65.6%" and a per-seat line, or empty
@@ -134,7 +134,8 @@ public:
 	// running match's. Never throws.
 	std::vector<std::string> station_names() const;
 
-	// Whether a pending screenshot waits for a queued change to apply first.
+	// Whether a pending screenshot waits for a queued change to apply first:
+	// whatever can_apply() would apply.
 	bool screenshot_waits() const;
 
 	// What `screenshot` stored, for the acceptance case.
@@ -160,6 +161,12 @@ public:
 	void set_content_directories(std::filesystem::path source, std::filesystem::path staged);
 	std::filesystem::path source_content_directory() const;
 	std::filesystem::path staged_content_directory() const;
+
+	// The two files live tuning edits, by index: tuning.json, then
+	// presentation.json.
+	static constexpr int tuning_file = 0;
+	static constexpr int presentation_file = 1;
+	static constexpr int tune_file_count = 2;
 
 	// "tuning" or "presentation"; null when the file could not be read.
 	TuneDocument* tune_document(std::string_view file);
@@ -194,9 +201,10 @@ public:
 
 	// Where autoexec.cfg, binds.cfg, history.txt and the player's scripts
 	// live: the override, else %LOCALAPPDATA%\ColourWars\debug once attach()
-	// had an application, else nothing - then all three are memory-only and
-	// no script is read from a profile (the acceptance case without an
-	// override never touches the developer's own files).
+	// had an application, else nothing - then binds and history are
+	// memory-only and no script, autoexec.cfg included, is read from a profile
+	// (the acceptance case without an override never touches the developer's
+	// own files).
 	void set_user_directory(std::filesystem::path directory);
 	std::optional<std::filesystem::path> user_directory() const;
 	// Where exec looks, in order: the override, else the source tree's
@@ -293,8 +301,9 @@ private:
 	std::optional<PendingGoto> pending_goto_;
 	bool starting_from_plan_ = false;
 
-	// A requested name ("" for the timestamped default), taken at the top of
-	// the next update with nothing queued to change the picture first.
+	// The file name `screenshot` chose (screenshot_file_name, when it was
+	// typed), taken at the top of the next update with nothing queued to
+	// change the picture first.
 	std::optional<std::string> pending_screenshot_;
 
 	void register_commands();
@@ -423,11 +432,11 @@ private:
 	// while a recording or a replay runs.
 	std::optional<DebugStatus> refuse_while_replaying(const std::string& what) const;
 
-	// Live tuning.
+	// Live tuning, indexed by tuning_file and presentation_file.
 	std::filesystem::path source_override_;
 	std::filesystem::path staged_override_;
-	std::array<std::unique_ptr<TuneDocument>, 2> tune_docs_;
-	std::array<std::unique_ptr<TuneTarget>, 2> tune_targets_;
+	std::array<std::unique_ptr<TuneDocument>, tune_file_count> tune_docs_;
+	std::array<std::unique_ptr<TuneTarget>, tune_file_count> tune_targets_;
 	bool tune_load_tried_ = false;
 	// Bumped whenever tune_docs_ are replaced; see tune_revision().
 	int tune_generation_ = 0;

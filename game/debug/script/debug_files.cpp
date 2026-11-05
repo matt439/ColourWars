@@ -22,6 +22,18 @@ namespace debug_files
 		return std::string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 	}
 
+	std::string read_file(const std::filesystem::path& path, bool& ok)
+	{
+		std::ifstream stream(path, std::ios::binary);
+		std::string text;
+		if (stream)
+		{
+			text.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+		}
+		ok = stream.is_open() && !stream.bad();
+		return ok ? text : std::string();
+	}
+
 	bool write_file(const std::filesystem::path& path, const std::string& text)
 	{
 		return replace_file_atomically(path, text);

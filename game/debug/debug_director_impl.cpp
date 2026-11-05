@@ -35,7 +35,7 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->log_.info("ColourWars developer console - " + labrador::narrow(build_info::label));
 	this->log_.info("` toggles this console; type help. F10/F11 (or hold pad Back+Start) "
 		"opens the debug menu. F2-F4 overlays, F5 restart, F6 pause, F7 step, "
-		"F9 feedback; 'binds' lists the key table, 'exec.list' the scripts.");
+		"F9 feedback by default; 'binds' lists the key table, 'exec.list' the scripts.");
 	this->binds_.reset();
 	this->register_commands();
 	this->register_view_commands();
@@ -44,8 +44,8 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->register_replay_commands();
 	this->register_tune_commands();
 	this->register_script_commands();
-	this->tune_targets_[0] = std::make_unique<TuningTarget>(tuning, presentation);
-	this->tune_targets_[1] = std::make_unique<PresentationTarget>(presentation, tuning);
+	this->tune_targets_[tuning_file] = std::make_unique<TuningTarget>(tuning, presentation);
+	this->tune_targets_[presentation_file] = std::make_unique<PresentationTarget>(presentation, tuning);
 }
 
 DebugDirectorImpl::~DebugDirectorImpl() = default;
