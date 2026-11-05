@@ -35,12 +35,11 @@ deferred. Bot lift routing, sponges and the controller rows remain unscoped.
 ## Hygiene review
 
 **Owner:** [docs/code-hygiene.md, Hygiene review](docs/code-hygiene.md#hygiene-review-2026-11-05); findings in the frozen
-[2026-11-05 review](docs/review/2026-11-05-code-hygiene-review.md). Work the defects (`HYG#59`-`HYG#60`) first, then
+[2026-11-05 review](docs/review/2026-11-05-code-hygiene-review.md). Work the last defect row (`HYG#60`) first, then
 in the listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#59` | OPEN | MED | S | A save that exists but cannot be opened is overwritten with defaults; the legacy-save failure is silent; Controls Apply saves a stale snapshot; profile equality is hand-written. [Scope](docs/code-hygiene.md#save-and-settings-correctness-hyg59). |
 | `HYG#60` | OPEN | MED | M | Fifteen acceptance checks and verifiers that cannot fail or check the wrong thing (bot_driver, menu_navigation, crossfeed fixture, shipped-script lint, Session in Debug only, editor menus by position). [Scope](docs/code-hygiene.md#checks-that-can-fail-hyg60). |
 | `HYG#61` | OPEN | MED | M | Comments, `_comment`s, docs and the shipped audio `PROVENANCE.md` still call rows settled on 2026-11-05 open trials or pending reviews. [Scope](docs/code-hygiene.md#status-text-after-the-2026-11-05-decisions-hyg61). |
 | `HYG#62` | OPEN | MED | M | About seventeen comments and doc lines that drifted from the code, first `GameData`'s class comment, which contradicts the architecture rule. [Scope](docs/code-hygiene.md#comments-and-reference-docs-that-drifted-hyg62). |

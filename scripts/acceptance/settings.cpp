@@ -604,8 +604,7 @@ namespace
 				play->view_shake == page.view_shake && play->aim_marker == page.aim_marker &&
 				play->reduce_effects == page.reduce_effects,
 				"Controls/audio Apply lost one of its own fields");
-			require(play->sticks[1].movement_deadzone == 20 && play->sticks[1].aim_deadzone == 30 &&
-				play->pad_rumble == child.pad_rumble &&
+			require(play->sticks == child.sticks && play->pad_rumble == child.pad_rumble &&
 				play->pad_comfort == child.pad_comfort && play->aim_sensitivity == 2,
 				"Controls/audio Apply reverted a change committed while it was open");
 		}

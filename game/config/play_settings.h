@@ -17,6 +17,8 @@ struct StickSettings
 	{
 		return value < 0 ? -1 : std::min(value, 90);
 	}
+
+	bool operator==(const StickSettings&) const = default;
 };
 
 // A per-slot comfort override: shared follows the Options switch of the same

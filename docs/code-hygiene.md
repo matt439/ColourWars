@@ -75,23 +75,47 @@ after it.
 
 ### Save and settings correctness (`HYG#59`)
 
-Four behaviour fixes, one commit each:
+**Done 2026-11-05; behaviour change.** Four commits:
 
-- `Save::file_exists` (`save.cpp:422`) treats any open failure as missing, so a
-  locked or unreadable save is overwritten with defaults. Decide "missing" with
-  `std::filesystem::exists` (an error counts as present), so an existing file that
-  fails to open reaches `keep_unreadable_save`.
-- The legacy-save `catch` (`save.cpp:447`) drops the file silently. Report it on
-  stderr like the other read failures and leave the file in place.
-- `ControlsSettingsMenu::apply_settings` (`controls_settings_menu.cpp:189`) saves
-  the `PlaySettings` snapshot taken at `init()`. Merge the page's own fields onto
-  the current `settings_session()->play_settings()`, as
-  `StickSettingsMenu::apply_settings` does, and delete the back-fill list.
-- Default `operator==` on `StickSettings` and `PlayerProfile`
-  (`player_profiles.h:25`) instead of comparing a hand-kept field list.
+- `Save::file_exists` ([save.cpp](../game/save/save.cpp)) asks
+  `std::filesystem::exists`, and a failed query counts as present. A save that is
+  there but will not open (locked, denied) now fails in the reader and goes to
+  `keep_unreadable_save`, which copies it to `save_data.unreadable-<n>.json`,
+  instead of being treated as missing and replaced with the defaults.
+- An unloadable legacy save (`./save/save_data.json` beside the executable, read
+  only when there is no per-user save) prints one stderr line naming it and the
+  reader's error. It is still left in place, and the defaults are still written
+  to the per-user path.
+- `ControlsSettingsMenu::apply_settings` lays its five fields (both volumes and
+  the three shared comfort switches) over the session's current settings through
+  the new static `ControlsSettingsMenu::applied_settings`, as Pad sticks does. The
+  back-fill list of child fields is gone.
+- `StickSettings` gained a defaulted `operator==`, and `PlayerProfile`'s is now
+  defaulted. Equality is unchanged today; a new field is compared automatically.
 
-Done when the save probes cover a present-but-unopenable save (kept aside, not
-overwritten) and a child-page change that survives Controls Apply.
+`match_records` gained two checks. `check_unopenable_save` holds the save open
+for delete from another handle, which the CRT's open refuses and a file copy
+does not, so the save is present, unopenable and still copyable. It requires the
+defaults, one stderr line naming the save and the copy, a byte-identical copy and
+an unchanged save. `check_legacy_save` runs a copy of the probe in a private
+directory, because every probe shares the executable's `./save/`, against a
+corrupt legacy save and the same file held open. It requires the stderr line, an
+untouched legacy file and a per-user save of this version. `settings` gained
+`check_controls_apply`. It commits child-page changes to sticks, rumble, comfort
+and `aim_sensitivity` (a field no page edits, standing in for one a back-fill list
+would miss) under an older Controls copy. After Apply it requires both sets of
+changes, in the session and after a reload. Each check failed against the code it
+replaced.
+
+Both presets build under `/W4 /WX`. `settings`, `match_records`,
+`player_profiles`, `remembered_setup`, `display_trial`, `input_bindings`,
+`stick_settings` and `menu_navigation` passed in Debug and Release, and
+`debug_console` and `menu_text` in Release. `check-startup.ps1` passed on both
+executables. On MattPC, `check-painter.ps1 -ControlsMenuOnly` and `-RumbleOnly`
+passed in both presets and `-StickSettingsOnly` in Debug and Release; those leaves
+drive the real Controls and Pad sticks pages, including a Pad sticks change kept
+by Controls Apply. The probe's `same_input` is `HYG#60`'s; the probes that
+compare stick settings field by field were left as they are.
 
 ### Checks that can fail (`HYG#60`)
 

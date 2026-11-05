@@ -22,12 +22,7 @@ struct PlayerProfile
 	// handicaps::valid; 0 is none.
 	int boost = 0;
 
-	bool operator==(const PlayerProfile& other) const
-	{
-		return this->name == other.name && this->sticks.movement_deadzone == other.sticks.movement_deadzone &&
-			this->sticks.aim_deadzone == other.sticks.aim_deadzone && this->rumble == other.rumble &&
-			this->comfort == other.comfort && this->buttons == other.buttons && this->boost == other.boost;
-	}
+	bool operator==(const PlayerProfile&) const = default;
 };
 
 namespace player_profiles
