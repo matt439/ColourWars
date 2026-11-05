@@ -675,35 +675,69 @@ presets.
 
 ### Presentation reader and validator helpers (`HYG#70`)
 
-Move the duplicated helpers into shared ones:
+**Done 2026-11-06; content-format change, no layout change.**
+`pause_menu.practice_row_spacing` (96, what `0.8` times the 120 spacing
+gave) is a new required key, so a `presentation.json` without it no longer
+loads. Some diagnostics are worded differently.
 
-- `finite_rectangle` and `overlaps` (`presentation_validation_text.cpp:235`);
-- the `LabelPen` walk (`presentation_validation_settings.cpp:479`);
-- one `check_settings_row` (`:193`);
-- `check_plaque` (`presentation_read_match.cpp:347`);
-- `read_disabled_ink` (`presentation_read_menu.cpp:282`);
-- `read_pen_points` (`presentation_read_match.cpp:669`);
-- one block template formatter (`presentation_menu_text.cpp:62`, `:208`).
+- [presentation_read.h](../game/config/presentation/presentation_read.h) has
+  `finite_rectangle` (finite edges, positive size) and `overlaps` (touching
+  edges allowed). They replace `Validation::finite_stage_rectangle`, the
+  lambdas in `check_briefing_card`, `validate_stage_counts` and the Random
+  navigation check, `check_status`'s and the opening glass's spelled-out
+  overlaps, and eleven spelled-out finite-and-positive checks in the text,
+  stage, setup and stick-readout validators.
+- The stick readouts measure through `append_label_text`, so their pen walk
+  is the labels' one; `Validation::check_settings_row` is the one row check
+  Keyboard Jump, Pad Buttons and Profiles share.
+- `presentation_read_match.cpp` has `check_plaque` (gate permission, ferry
+  direction) and one `read_pen_points`, which takes the respawn canvas's last
+  nib position when it has one; `presentation_read_menu.cpp` has
+  `read_disabled_ink` for the main and Pause art.
+- `format_label_template` takes a `multiline` flag and is the one template
+  formatter: the stick readouts, the Random hint, the Display countdown and the
+  Pause player title (whose reader and formatter each spelled their token check
+  out) use it, and `read_menu_block` shares its blank-line rule.
+- Practice Pause reads `pause_menu.practice_row_spacing` in the page and the
+  validator; the `menu_text` probe's paper-edge and full-height fixtures use it.
+- The menu reader formats its size limits from `DESIGN_RESOLUTION` and the
+  `menu_geometry` constants; the focus-motion bounds are
+  `MenuFocusMotionPresentation::max_duration`, `max_arrow_travel` and
+  `max_selection_inset_fraction`, which the reader and `MenuFocusMotion` both
+  use and format.
+- Stage-scan copy errors say `menu_text.stage_scan`; the font, layout and fit
+  errors keep `main_menu.stage_scan`. The respawn canvas and figure-slip
+  cross-checks name their position in the file.
+- `read_music_mix`, `read_camera`, `read_movement_feedback`,
+  `read_combat_feedback` and `read_match` replace the constructor's inline
+  reads.
+- `SELECTABLE_WEAPON_COUNT` in `weapon_type.h` sizes `WEAPON_NAMES`, the
+  Weapon Select choices and the descriptions; `CHOICES` and `DESCRIBED_WEAPONS`
+  are gone.
+- The HUD comment sits on `HudPresentation`, `menu_geometry.h` says where
+  its users are, and `check_status`'s comment no longer counts three pages.
+- The roster-row tables and the per-player loops in the setup, Results and
+  Pause validators take `max_players`.
 
-Also:
+Left as found: the Stage Select page's own overlap test
+(`main_menu_stage_select.cpp`), which goes with the page helpers in
+[`HYG#74`](#menu-page-helpers-hyg74); Mode's `card.intersects` for the
+practice hint, the engine's predicate, whose edge rule may differ from
+`overlaps`; `validate_stage_counts`' `size_of`, a `Presentation` copy of
+`fixed_menu_size`; Keyboard Jump's action labels, which fit their column
+without the row checks `check_settings_row` would add; `controls_text`'s
+`replace_tokens`, whose optional tokens differ from the formatter's; the slip
+nib check in the constructor, which runs once both sections are read; and the
+Results ledger's `target <= 3`.
 
-- Read the practice Pause spacing from data instead of `0.8` in both the page
-  and the validator (`pause_menu.cpp:292`, `presentation_validation_pause.cpp:38`).
-- Format limits in messages from the `menu_geometry` constants
-  (`presentation_read_menu.cpp:601`).
-- Prefix stage-scan copy errors with `menu_text.stage_scan`
-  (`presentation_validation_stage_scan.cpp:66`), and give cross-section errors a
-  position (`presentation.cpp:230`).
-- Move the five inline section reads out of the constructor (`presentation.cpp:114`).
-- Use one selectable-weapon count (`presentation_menu.h:171`), and name the focus
-  motion bounds once (`menu_focus_motion.cpp:10`).
-- Fix the misplaced doc comments (`presentation_match.h:207`, `menu_geometry.h:8`,
-  `presentation_validation_menu.cpp:215`).
-- Handed on by `HYG#66`: the per-player loops written `player < 4` over
-  four-row geometry tables (`presentation_validation_setup.cpp`, `_results`,
-  `_pause`) can take `max_players` from `game/match/match_rules.h`.
-
-Diagnostics text may change; no accepted content may become rejected.
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Debug (79 cases, the slow four included) and in
+Release (78), where `menu_text` first failed on its full-height fixture, whose
+practice rows had followed its 3-pixel spacing; it passed once the fixture set
+`practice_row_spacing` to the same 2.4. `check-startup.ps1` passed in both
+presets and with `-Locale qps-ploc` in Release, and `check-painter.ps1`'s
+`PauseMenuOnly`, `StickReadoutsOnly`, `MenuTextOnly`, `WeaponCatalogOnly` and
+`StageScanOnly` passed in both presets.
 
 ### Presentation and content keys that mislead (`HYG#71`)
 
@@ -787,7 +821,10 @@ Add `menu_geometry::fit_scale` and `fits`, `wrap_step` and `step_tool`,
 - `end_menu.cpp:169`, the two results fills (`results_menu.cpp:410`) and its
   unread index (`:454`);
 - the `LevelEndInfo` copy (`results_menu.h:23`), `main_menu.cpp:204` and the
-  copied roster vectors (`game_states.cpp:204`).
+  copied roster vectors (`game_states.cpp:204`);
+- handed on by `HYG#70`: Stage Select's spelled-out briefing/preview overlap
+  (`main_menu_stage_select.cpp:525`), which the presentation validators now
+  test with `presentation_read::overlaps`.
 
 ### Shared drawing helpers (`HYG#75`)
 

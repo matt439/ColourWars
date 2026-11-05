@@ -328,8 +328,8 @@ namespace menu_text_acceptance
         const auto bottom = top + pause.box_size - labrador::Vector2F(pause.art.shadow_offset);
         const float left_position = top.x + pause.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
-        // Practice's Quit is the deepest row: the fifth, at 0.8 spacing.
-        const float bottom_position = bottom.y - 4.0f * (pause.layout.spacing.y * 0.8f) -
+        // Practice's Quit is the deepest row: the fifth, at the practice spacing.
+        const float bottom_position = bottom.y - 4.0f * pause.practice_row_spacing -
             20.0f - pause.art.focus_padding.y;
         const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
         {

@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#70` | OPEN | MED | L | Shared presentation reader and validator helpers (pen walk, settings rows, plaques, predicates); limits formatted from constants; error prefixes fixed. [Scope](docs/code-hygiene.md#presentation-reader-and-validator-helpers-hyg70). |
 | `HYG#71` | OPEN | MED | M | Reject unknown presentation keys, delete `menu_style.box_size` and dead `sprite_sheet_1` frames, move two misnamed colours, rewrite misleading `_comment`s. [Scope](docs/code-hygiene.md#presentation-and-content-keys-that-mislead-hyg71). |
 | `HYG#72` | OPEN | LOW | M | Tuning and content-validation diagnostics, stale header comments, a local formatter, split paint-underfoot validation and the run-animation literal. [Scope](docs/code-hygiene.md#tuning-and-content-validation-readers-hyg72). |
 | `HYG#73` | OPEN | LOW | M | Delete dead fields, accessors, parameters and includes in the game, including the authored but unread `rotation_origin`. [Scope](docs/code-hygiene.md#dead-code-in-the-game-hyg73). |

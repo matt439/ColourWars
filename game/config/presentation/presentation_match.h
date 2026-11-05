@@ -204,10 +204,6 @@ struct HudPaperPresentation
 	float shadow_offset = 0.0f;
 };
 
-// Gameplay HUD: health, ammo, match timer and player identity. The respawn
-// wait has no number: the figure being redrawn at its spawn is the timer.
-// Margins, bar dimensions and text positions use viewport fractions. Shadow
-// offsets and identity padding use pixel distances scaled with the text.
 // menu_text.hud: the HUD's copy. It is read with the rest of menu_text, so a
 // locale reaches it, and Presentation copies it into HudPresentation::labels.
 // The identity box's "  /  " separator and line break stay in code.
@@ -219,6 +215,10 @@ struct HudLabels
 	std::wstring paint;
 };
 
+// Gameplay HUD: health, ammo, match timer and player identity. The respawn
+// wait has no number: the figure being redrawn at its spawn is the timer.
+// Margins, bar dimensions and text positions use viewport fractions. Shadow
+// offsets and identity padding use pixel distances scaled with the text.
 struct HudPresentation
 {
 	HudPaperPresentation paper;

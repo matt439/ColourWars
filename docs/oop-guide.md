@@ -325,8 +325,9 @@ For a new selectable primary weapon, keep these registrations together:
    reads both for every `WEAPON_NAMES` entry and refuses a missing one, and
    [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp)
    only draws what they hold. The choice and description arrays in
-   [presentation_menu.h](../game/config/presentation/presentation_menu.h) include
-   `random_primary`; keep that relationship if reorganizing the enum. The match
+   [presentation_menu.h](../game/config/presentation/presentation_menu.h) are
+   `SELECTABLE_WEAPON_COUNT` long, which includes `random_primary`; keep that
+   relationship if reorganizing the enum. The match
    presentation needs a record keyed by the name in three more tables, which
    [presentation_read_match.cpp](../game/config/presentation/presentation_read_match.cpp)
    reads for every tuned weapon and refuses a missing one: the muzzle size under

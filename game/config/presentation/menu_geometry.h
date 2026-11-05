@@ -6,7 +6,7 @@
 // width has one formula. It owns the design size the menus are authored in.
 //
 // It includes only labrador and the menu records, so the reader and the
-// validators reach it from the game/ root without including states/.
+// validators in game/config/presentation/ use it without including states/.
 
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"

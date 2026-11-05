@@ -24,6 +24,7 @@
 
 using namespace labrador;
 using namespace presentation_read;
+using namespace presentation_validation;
 
 // A Controls or Sticks action row, clear of the help column and status line.
 void Presentation::Validation::check_controls_item(MenuItem item, int row, bool fitted_label) const
@@ -186,6 +187,32 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 	return controls_help;
 }
 
+// A heading, label, value or action on Keyboard Jump, Pad Buttons or
+// Profiles. A row is fitted uniformly in both axes, to the label column for an
+// OptionRow label or to the width before the help column otherwise, and keeps
+// its focus card on the paper and before the help column.
+RectangleF Presentation::Validation::check_settings_row(const std::string& key, const std::wstring& words,
+	const std::string& font, const Vector2F& position, bool row, bool option_label) const
+{
+	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	Vector2F size = fixed_menu_size(key, words, font);
+	if (row)
+	{
+		const Vector2F available(option_label ? controls.layout.spacing.x - controls.art.focus_padding.x :
+			menu_geometry::settings_action_width(controls, position.x),
+			controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+		const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
+		if (!std::isfinite(scale) || scale <= 0.0f)
+		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must retain finite positive fitted bounds."); }
+		size *= scale;
+	}
+	check_fixed_paper(key, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
+	if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
+		(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
+	{ throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must fit its controls column and row."); }
+	return RectangleF(position, size);
+}
+
 // Phase 3: Keyboard Jump's heading, rows, values, Reset and help.
 void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& help_area) const
 {
@@ -193,23 +220,7 @@ void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& hel
 	const KeyboardJumpMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
 	const auto jump_text = [&](const char* key, const std::wstring& words, const std::string& font, const Vector2F& position, bool row)
 	{
-		const std::string where = std::string("menu_text.keyboard_jump.") + key;
-		Vector2F size = fixed_menu_size(where, words, font);
-		if (row)
-		{
-			// KeyboardJumpMenu fits its action labels uniformly in both axes.
-			const Vector2F available(menu_geometry::settings_action_width(controls, position.x),
-				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
-			if (!std::isfinite(scale) || scale <= 0.0f)
-			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted action bounds."); }
-			size *= scale;
-		}
-		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
-		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
-			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
-		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must fit its controls column and row."); }
-		return RectangleF(position, size);
+		return check_settings_row(std::string("menu_text.keyboard_jump.") + key, words, font, position, row);
 	};
 	const RectangleF jump_heading = jump_text("heading", jump.heading, this->presentation_.menu_.heading_font, controls.heading_position, false);
 	if (jump_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
@@ -250,23 +261,7 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 	const auto pad_buttons_text = [&](const char* key, const std::wstring& words, const std::string& font,
 		const Vector2F& position, bool row, bool option_label = false)
 	{
-		const std::string where = std::string("menu_text.pad_buttons.") + key;
-		Vector2F size = fixed_menu_size(where, words, font);
-		if (row)
-		{
-			const Vector2F available(option_label ? controls.layout.spacing.x - controls.art.focus_padding.x :
-				menu_geometry::settings_action_width(controls, position.x),
-				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
-			if (!std::isfinite(scale) || scale <= 0.0f)
-			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted bounds."); }
-			size *= scale;
-		}
-		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
-		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
-			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
-		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must fit its controls column and row."); }
-		return RectangleF(position, size);
+		return check_settings_row(std::string("menu_text.pad_buttons.") + key, words, font, position, row, option_label);
 	};
 	const RectangleF pad_buttons_heading = pad_buttons_text("heading", pad_buttons.heading, this->presentation_.menu_.heading_font,
 		controls.heading_position, false);
@@ -302,23 +297,7 @@ RectangleF Presentation::Validation::validate_profiles_text(const RectangleF& he
 	const auto profiles_text = [&](const char* key, const std::wstring& words, const std::string& font,
 		const Vector2F& position, bool row, bool option_label = false)
 	{
-		const std::string where = std::string("menu_text.profiles.") + key;
-		Vector2F size = fixed_menu_size(where, words, font);
-		if (row)
-		{
-			const Vector2F available(option_label ? controls.layout.spacing.x - controls.art.focus_padding.x :
-				menu_geometry::settings_action_width(controls, position.x),
-				controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-			const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
-			if (!std::isfinite(scale) || scale <= 0.0f)
-			{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must retain finite positive fitted bounds."); }
-			size *= scale;
-		}
-		check_fixed_paper(where, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
-		if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
-			(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
-		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + where + " must fit its controls column and row."); }
-		return RectangleF(position, size);
+		return check_settings_row(std::string("menu_text.profiles.") + key, words, font, position, row, option_label);
 	};
 	const RectangleF profiles_heading = profiles_text("heading", profiles.heading, this->presentation_.menu_.heading_font,
 		controls.heading_position, false);
@@ -477,48 +456,9 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 	{
 		const std::string where = this->presentation_.source_path_ + ": menu_text.stick_readouts." + role;
 		drawable_text::check_font_can_draw(&render, controls.help_font, L"-0123456789", where);
-		struct Pen
-		{
-			float x = 0.0f;
-			float y = 0.0f;
-			Vector2F extent = Vector2F::zero;
-		};
-		const auto walk = [&](Pen& pen, std::wstring_view words)
-		{
-			// Match Font's pen order, including accumulated bearings, the clamp
-			// at zero, whitespace suppression and glyph overhang beyond a line.
-			for (const wchar_t character : words)
-			{
-				if (character == L'\n')
-				{
-					pen.x = 0.0f;
-					pen.y += stick_font.line_spacing();
-					continue;
-				}
-				const Glyph& glyph = stick_font.drawn(static_cast<char32_t>(character));
-				if (!std::isfinite(glyph.x_offset) || !std::isfinite(glyph.y_offset) ||
-					!std::isfinite(glyph.x_advance))
-				{
-					throw std::runtime_error(where + " requires finite font glyph metrics.");
-				}
-				const float width = static_cast<float>(glyph.subrect.width);
-				pen.x += glyph.x_offset;
-				if (pen.x < 0.0f) { pen.x = 0.0f; }
-				if (character != L' ' || glyph.subrect.width > 1 || glyph.subrect.height > 1)
-				{
-					const float height = character == L' ' ? stick_font.line_spacing() :
-						std::max(stick_font.line_spacing(), static_cast<float>(glyph.subrect.height) + glyph.y_offset);
-					pen.extent.x = std::max(pen.extent.x, pen.x + width);
-					pen.extent.y = std::max(pen.extent.y, pen.y + height);
-				}
-				pen.x += width + glyph.x_advance;
-			}
-		};
-		if (!std::isfinite(stick_font.line_spacing()) || stick_font.line_spacing() <= 0.0f)
-		{
-			throw std::runtime_error(where + " requires finite positive font line spacing.");
-		}
-		Pen pen;
+		// The labels' pen walk matches Font's order, including accumulated
+		// bearings, the clamp at zero, whitespace suppression and overhang.
+		LabelPen pen;
 		size_t begin = 0;
 		for (;;)
 		{
@@ -526,7 +466,7 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 			const std::wstring_view literal = std::wstring_view(text).substr(begin,
 				token == std::wstring::npos ? token : token - begin);
 			drawable_text::check_font_can_draw(&render, controls.help_font, literal, where);
-			walk(pen, literal);
+			append_label_text(pen, stick_font, literal, where);
 			if (token == std::wstring::npos) { break; }
 			// Every incoming-pen transform is monotone. The maximum reachable
 			// pen suffices for the next token, but its greatest ink extent may
@@ -536,8 +476,8 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 			Vector2F maximum_extent = pen.extent;
 			for (int value = -100; value <= 100; ++value)
 			{
-				Pen candidate = pen;
-				walk(candidate, std::to_wstring(value));
+				LabelPen candidate = pen;
+				append_label_text(candidate, stick_font, std::to_wstring(value), where);
 				maximum_pen = std::max(maximum_pen, candidate.x);
 				maximum_extent.x = std::max(maximum_extent.x, candidate.extent.x);
 				maximum_extent.y = std::max(maximum_extent.y, candidate.extent.y);
@@ -562,8 +502,7 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 			((std::string_view(role) == "connected" || std::string_view(role) == "disconnected") ?
 				" with menu_text.labels.pad" : "");
 		const RectangleF bounds(position, size);
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+		if (!finite_rectangle(bounds) ||
 			!std::isfinite(top) || !std::isfinite(bottom) || !help_area.contains(bounds) ||
 			bounds.y < top || bounds.bottom() > bottom)
 		{
@@ -623,7 +562,7 @@ void Presentation::Validation::validate_sticks_pad_values(const ControlsGeometry
 		if (raw.y * scale > controls_value_limit.y) { scale = controls_value_limit.y / raw.y; }
 		const Vector2F fitted = raw * scale;
 		const RectangleF bounds(controls.layout.position + Vector2F(controls.layout.spacing.x, 0.0f), fitted);
-		if (!std::isfinite(scale) || scale <= 0.0f || !finite_stage_rectangle(bounds))
+		if (!std::isfinite(scale) || scale <= 0.0f || !finite_rectangle(bounds))
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must retain finite positive fitted bounds.");
 		}

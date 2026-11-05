@@ -31,6 +31,13 @@ struct WidgetLayout
 // Optional focus ornaments, captured when a menu page is constructed.
 struct MenuFocusMotionPresentation
 {
+	// The bounds the reader and MenuFocusMotion both hold the motion to:
+	// durations in (0, max_duration] seconds, arrow travel in keylines and the
+	// selection inset as a fraction of an icon's shorter side.
+	static constexpr float max_duration = 0.5f;
+	static constexpr float max_arrow_travel = 2.0f;
+	static constexpr float max_selection_inset_fraction = 0.08f;
+
 	float focus_duration = 0.0f;
 	float press_duration = 0.0f;
 	float arrow_travel = 0.0f;
@@ -168,10 +175,9 @@ struct WeaponChoicePresentation
 
 struct WeaponSelectArtworkPresentation
 {
-	static constexpr size_t CHOICES = static_cast<size_t>(WeaponType::random_primary) + 1;
 	std::string sheet;
 	std::string fill_frame;
-	std::array<WeaponChoicePresentation, CHOICES> choices;
+	std::array<WeaponChoicePresentation, SELECTABLE_WEAPON_COUNT> choices;
 	// Reject non-selection enum values rather than displaying an error picture.
 	const WeaponChoicePresentation& choice(WeaponType type) const;
 };
@@ -268,9 +274,7 @@ struct MainMenuPresentation
 
 	// Weapon descriptions converted from UTF-8 to normalized wide text at load.
 	// Indexed by WeaponType, including the random-primary choice.
-	static constexpr size_t DESCRIBED_WEAPONS =
-		static_cast<size_t>(WeaponType::random_primary) + 1;
-	std::array<std::wstring, DESCRIBED_WEAPONS> weapon_descriptions;
+	std::array<std::wstring, SELECTABLE_WEAPON_COUNT> weapon_descriptions;
 };
 
 struct PauseMenuPresentation
@@ -283,6 +287,9 @@ struct PauseMenuPresentation
 	float heading_y = 0.0f;
 	float status_y = 0.0f;
 	WidgetLayout layout;
+	// Practice Pause fits a fifth row, Tool, into the same paper at this
+	// vertical spacing in place of layout.spacing.y.
+	float practice_row_spacing = 0.0f;
 	PresentationSound window_open_sound;
 	PresentationSound pad_lost_sound;
 	PresentationSound pad_back_sound;

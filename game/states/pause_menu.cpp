@@ -289,7 +289,7 @@ void PauseMenuInitial::init()
 	// Practice fits a fifth row, Tool, into the same paper.
 	const bool practice = this->practice();
 	this->set_widget_spacing(practice ?
-		Vector2F(look.layout.spacing.x, look.layout.spacing.y * 0.8f) : look.layout.spacing);
+		Vector2F(look.layout.spacing.x, look.practice_row_spacing) : look.layout.spacing);
 	const int first_row = practice ? 1 : 0;
 
 	this->player_num_ = std::make_unique<UiText>(

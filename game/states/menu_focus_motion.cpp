@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_focus_motion.h"
+#include "game/config/content_value.h"
 
 #include <algorithm>
 #include <cmath>
@@ -7,14 +8,19 @@
 
 MenuFocusMotion::MenuFocusMotion(const MenuFocusMotionPresentation& look) : look_(look)
 {
-	if (!std::isfinite(look.focus_duration) || look.focus_duration <= 0.0f || look.focus_duration > 0.5f ||
-		!std::isfinite(look.press_duration) || look.press_duration <= 0.0f || look.press_duration > 0.5f ||
-		!std::isfinite(look.arrow_travel) || look.arrow_travel < 0.0f || look.arrow_travel > 2.0f ||
+	using Bounds = MenuFocusMotionPresentation;
+	if (!std::isfinite(look.focus_duration) || look.focus_duration <= 0.0f || look.focus_duration > Bounds::max_duration ||
+		!std::isfinite(look.press_duration) || look.press_duration <= 0.0f || look.press_duration > Bounds::max_duration ||
+		!std::isfinite(look.arrow_travel) || look.arrow_travel < 0.0f || look.arrow_travel > Bounds::max_arrow_travel ||
 		!std::isfinite(look.press_fraction) || look.press_fraction < 0.0f || look.press_fraction > 1.0f ||
 		!std::isfinite(look.selection_inset_fraction) || look.selection_inset_fraction < 0.0f ||
-		look.selection_inset_fraction > 0.08f)
+		look.selection_inset_fraction > Bounds::max_selection_inset_fraction)
 	{
-		throw std::invalid_argument("Menu focus motion requires durations in (0,0.5], arrow travel in [0,2], press fraction in [0,1] and selection inset fraction in [0,0.08].");
+		throw std::invalid_argument("Menu focus motion requires durations in (0," +
+			content_value::number_text(Bounds::max_duration) + "], arrow travel in [0," +
+			content_value::number_text(Bounds::max_arrow_travel) +
+			"], press fraction in [0,1] and selection inset fraction in [0," +
+			content_value::number_text(Bounds::max_selection_inset_fraction) + "].");
 	}
 }
 

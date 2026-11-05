@@ -7,6 +7,7 @@
 #include "game/config/resource_validation.h"
 #include "game/config/presentation/presentation_validation_metrics.h"
 #include "game/input/input_slots.h"
+#include "game/match/match_rules.h"
 #include "game/match/player_control.h"
 #include <initializer_list>
 #include <optional>
@@ -21,7 +22,7 @@ struct Presentation::Validation
     using FontHandle = labrador::FontHandle;
     static constexpr std::array<BotDifficulty, 3> label_difficulties = bot_difficulties;
     static constexpr int label_choices = input_slots::count + static_cast<int>(label_difficulties.size());
-    using LabelRows = std::array<std::array<RectangleF, label_choices>, 4>;
+    using LabelRows = std::array<std::array<RectangleF, label_choices>, max_players>;
 
     struct SetupGeometry
     {
@@ -157,6 +158,8 @@ struct Presentation::Validation
 		const Vector2F& position, const Vector2F& paper_size, const MenuPaperArtPresentation& art,
 		std::initializer_list<RectangleF> obstacles) const;
 	void check_controls_item(MenuItem item, int row, bool fitted_label) const;
+	RectangleF check_settings_row(const std::string& key, const std::wstring& words,
+		const std::string& font, const Vector2F& position, bool row, bool option_label = false) const;
 	RectangleF check_help_fit(const std::string& key, const std::wstring& text,
 		const Vector2F& position, const Vector2F& available, const RectangleF& help_area) const;
 
@@ -179,7 +182,6 @@ struct Presentation::Validation
 	RectangleF check_stage_summary(const RectangleF& stage_briefing, const Vector2F& stage_info, const char* role, const std::wstring& text, const std::string& font,
 		float line, float next_line) const;
 	void check_briefing_card(const RectangleF& stage_briefing, const std::string& key, RectangleF bounds) const;
-	static bool finite_stage_rectangle(const RectangleF& bounds);
 	Vector2F options_value_position(int row) const;
 	std::wstring label_words(int player, int choice) const;
 	static std::string label_key(int slot);

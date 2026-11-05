@@ -45,6 +45,26 @@ namespace
 		return layout;
 	}
 
+	// The ink an unavailable action draws in, on a paper whose other colours
+	// are already read: opaque, and distinct from the paper and active inks.
+	Colour read_disabled_ink(const JsonValue& parent, const MenuPaperArtPresentation& drawing)
+	{
+		const JsonValue art = parent.object("art");
+		const Colour ink = read_colour(art, "disabled_ink");
+		if (ink.a != 1.0f || ink == drawing.paper || ink == drawing.focus_fill ||
+			ink == drawing.ink || ink == drawing.focus_ink)
+		{
+			throw std::runtime_error(art.where() + ": disabled_ink must be opaque and distinct from paper and active ink.");
+		}
+		return ink;
+	}
+
+	// A size as the limits in this file's messages print it: "(x,y)".
+	std::string size_text(const Vector2F& size)
+	{
+		return "(" + number_text(size.x) + "," + number_text(size.y) + ")";
+	}
+
 	SelectPresentation read_select(const JsonValue& parent, const char* key)
 	{
 		const JsonValue json = parent.object(key);
@@ -137,13 +157,13 @@ namespace presentation_read
 			style.layout.position.y + style.layout.size.y > DESIGN_RESOLUTION.y)
 		{
 			throw std::runtime_error(layout.where() +
-				": 'position' and 'size' must place the first widget inside the (1920,1080) menu design.");
+				": 'position' and 'size' must place the first widget inside the " + size_text(DESIGN_RESOLUTION) + " menu design.");
 		}
 		if (style.layout.spacing.x < 0.0f || style.layout.spacing.y < 0.0f ||
 			style.layout.spacing.x > DESIGN_RESOLUTION.x || style.layout.spacing.y > DESIGN_RESOLUTION.y)
 		{
 			throw std::runtime_error(layout.where() +
-				": 'spacing' must be nonnegative and at most (1920,1080).");
+				": 'spacing' must be nonnegative and at most " + size_text(DESIGN_RESOLUTION) + ".");
 		}
 		style.sprite_sheet = json.identifier("sprite_sheet");
 		style.fill_frame = json.identifier("fill_frame");
@@ -159,12 +179,16 @@ namespace presentation_read
 		style.motion.focus_duration = read_positive(motion, "focus_duration");
 		style.motion.press_duration = read_positive(motion, "press_duration");
 		// Travel is in keyline units.
-		style.motion.arrow_travel = read_number_in(motion, "arrow_travel", 0.0f, 2.0f);
+		style.motion.arrow_travel = read_number_in(motion, "arrow_travel", 0.0f,
+			MenuFocusMotionPresentation::max_arrow_travel);
 		style.motion.press_fraction = read_unit(motion, "press_fraction");
-		style.motion.selection_inset_fraction = read_number_in(motion, "selection_inset_fraction", 0.0f, 0.08f);
-		if (style.motion.focus_duration > 0.5f || style.motion.press_duration > 0.5f)
+		style.motion.selection_inset_fraction = read_number_in(motion, "selection_inset_fraction", 0.0f,
+			MenuFocusMotionPresentation::max_selection_inset_fraction);
+		if (style.motion.focus_duration > MenuFocusMotionPresentation::max_duration ||
+			style.motion.press_duration > MenuFocusMotionPresentation::max_duration)
 		{
-			throw std::runtime_error(motion.where() + ": focus_duration and press_duration must be at most 0.5 seconds.");
+			throw std::runtime_error(motion.where() + ": focus_duration and press_duration must be at most " +
+				number_text(MenuFocusMotionPresentation::max_duration) + " seconds.");
 		}
 
 		const JsonValue fonts = json.object("fonts");
@@ -223,7 +247,8 @@ namespace presentation_read
 			content_height > DESIGN_RESOLUTION.y)
 		{
 			throw std::runtime_error(json.where() +
-				": menu_style.chrome.footer_y must be finite, greater than 40 and at most 1080.");
+				": menu_style.chrome.footer_y must be finite, greater than " +
+				number_text(menu_geometry::paper_footer_margin) + " and at most " + number_text(DESIGN_RESOLUTION.y) + ".");
 		}
 
 		MainMenuPresentation menu;
@@ -233,8 +258,9 @@ namespace presentation_read
 			if (size.x > max_width || size.y > content_height - menu_geometry::paper_footer_margin)
 			{
 				throw std::runtime_error(json.where() + ": '" + key +
-					"' must be at most " + std::to_string(static_cast<int>(max_width)) +
-					" wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
+					"' must be at most " + number_text(max_width) + " wide and leave " +
+					number_text(menu_geometry::paper_footer_margin / 2.0f) +
+					" pixels above and below within menu_style.chrome.footer_y.");
 			}
 			return size;
 		};
@@ -253,8 +279,6 @@ namespace presentation_read
 			std::min({ menu.title_box_size.y, menu.home_box_size.y,
 				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y, menu.team_box_size.y,
 				menu.weapon_box_size.y, menu.stage_box_size.y })));
-		const JsonValue art = json.object("art");
-		menu.art.disabled_ink = read_colour(art, "disabled_ink");
 		menu.setup_focus_padding = read_positive_vector(json, "setup_focus_padding");
 		menu.setup_shadow_offset = read_number_in(json, "setup_shadow_offset", 0.0f, 24.0f);
 		if (menu.setup_focus_padding.x > 48.0f ||
@@ -279,19 +303,14 @@ namespace presentation_read
 					"must exceed setup_shadow_offset + art.keyline_width * 6 on both axes.");
 			}
 		}
-		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
-			menu.art.disabled_ink == menu.art.focus_fill || menu.art.disabled_ink == menu.art.ink ||
-			menu.art.disabled_ink == menu.art.focus_ink)
-		{
-			throw std::runtime_error(art.where() + ": disabled_ink must be opaque and distinct from paper and active ink.");
-		}
+		menu.art.disabled_ink = read_disabled_ink(json, menu.art);
 		const auto position = [&](const char* key)
 		{
 			const Vector2F value = read_vector(json, key);
 			if (value.x < 0.0f || value.x > DESIGN_RESOLUTION.x || value.y < 0.0f || value.y > DESIGN_RESOLUTION.y)
 			{
 				throw std::runtime_error(json.where() + ": '" + key +
-					"' must be nonnegative and inside the (1920,1080) menu design.");
+					"' must be nonnegative and inside the " + size_text(DESIGN_RESOLUTION) + " menu design.");
 			}
 			return value;
 		};
@@ -598,7 +617,10 @@ namespace presentation_read
 			menu.box_size.y > content_height - menu_geometry::paper_footer_margin)
 		{
 			throw std::runtime_error(json.where() +
-				": box_size must be at most 1760 wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
+				": box_size must be at most " +
+				number_text(menu_geometry::paper_max_width) + " wide and leave " +
+				number_text(menu_geometry::paper_footer_margin / 2.0f) +
+				" pixels above and below within menu_style.chrome.footer_y.");
 		}
 		menu.art = read_menu_paper(json, menu.box_size);
 		menu.heading_position = read_vector(json, "heading_position");
@@ -735,25 +757,19 @@ namespace presentation_read
 		if (menu.box_size.x > menu_geometry::overlay_paper_max.x ||
 			menu.box_size.y > menu_geometry::overlay_paper_max.y)
 		{
-			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
+			throw std::runtime_error(json.where() + ": box_size must be at most " + size_text(menu_geometry::overlay_paper_max) + ".");
 		}
 		menu.art = read_menu_paper(json, menu.box_size);
-		const JsonValue art = json.object("art");
-		menu.art.disabled_ink = read_colour(art, "disabled_ink");
-		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
-			menu.art.disabled_ink == menu.art.focus_fill || menu.art.disabled_ink == menu.art.ink ||
-			menu.art.disabled_ink == menu.art.focus_ink)
-		{
-			throw std::runtime_error(art.where() + ": disabled_ink must be opaque and distinct from paper and active ink.");
-		}
+		menu.art.disabled_ink = read_disabled_ink(json, menu.art);
 		menu.heading_y = read_positive(json, "heading_y");
 		menu.status_y = read_positive(json, "status_y");
 		if (menu.heading_y > menu_geometry::overlay_max_y || menu.status_y > menu_geometry::overlay_max_y ||
 			menu.status_y <= menu.heading_y)
 		{
-			throw std::runtime_error(json.where() + ": heading_y < status_y <= 900 required.");
+			throw std::runtime_error(json.where() + ": heading_y < status_y <= " + number_text(menu_geometry::overlay_max_y) + " required.");
 		}
 		menu.layout = read_layout(json, "layout");
+		menu.practice_row_spacing = read_positive(json, "practice_row_spacing");
 		menu.window_open_sound = read_sound(json, "window_open_sound");
 		const JsonValue sounds = json.object("sounds");
 		menu.pad_lost_sound = read_sound(sounds, "pad_lost");
@@ -771,12 +787,12 @@ namespace presentation_read
 		menu.heading_y = read_positive(json, "heading_y");
 		if (menu.heading_y > menu_geometry::overlay_max_y)
 		{
-			throw std::runtime_error(json.where() + ": heading_y must be at most 900.");
+			throw std::runtime_error(json.where() + ": heading_y must be at most " + number_text(menu_geometry::overlay_max_y) + ".");
 		}
 		if (menu.box_size.x > menu_geometry::overlay_paper_max.x ||
 			menu.box_size.y > menu_geometry::overlay_paper_max.y)
 		{
-			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
+			throw std::runtime_error(json.where() + ": box_size must be at most " + size_text(menu_geometry::overlay_paper_max) + ".");
 		}
 		menu.art = read_menu_paper(json, menu.box_size);
 		menu.layout = read_layout(json, "layout");
@@ -793,7 +809,7 @@ namespace presentation_read
 		if (menu.box_size.x > menu_geometry::overlay_paper_max.x ||
 			menu.box_size.y > menu_geometry::overlay_paper_max.y)
 		{
-			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
+			throw std::runtime_error(json.where() + ": box_size must be at most " + size_text(menu_geometry::overlay_paper_max) + ".");
 		}
 		menu.art = read_menu_paper(json, menu.box_size);
 		const auto read_y = [&](const char* key)
@@ -801,7 +817,7 @@ namespace presentation_read
 			const float value = read_positive(json, key);
 			if (value > menu_geometry::overlay_max_y)
 			{
-				throw std::runtime_error(json.where() + ": " + key + " must be at most 900.");
+				throw std::runtime_error(json.where() + ": " + key + " must be at most " + number_text(menu_geometry::overlay_max_y) + ".");
 			}
 			return value;
 		};

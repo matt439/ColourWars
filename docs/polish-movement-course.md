@@ -61,8 +61,9 @@ tools. Select rebuilds the course clean with that tool and puts a living player
 back where they stood. It skips the countdown and goes straight to GO.
 Selecting the tool already held is therefore a clean course in place.
 **Restart** keeps the chosen tool and starts again at the spawn, after the
-countdown and controls reminder. The rows use 0.8 of the authored pause
-spacing so five fit the same paper.
+countdown and controls reminder. The rows use the authored
+`pause_menu.practice_row_spacing` (96, 0.8 of the pause spacing) so five fit
+the same paper.
 
 **Evidence.** The `practice_workshop` acceptance case builds the real level
 through `LevelBuilder` and checks the following:

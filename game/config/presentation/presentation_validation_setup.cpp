@@ -130,9 +130,7 @@ void Presentation::Validation::validate_team_heading(RosterPapers& papers) const
 		drawable_text::check_font_can_draw(&render, font, words, this->presentation_.source_path_ + ": " + key);
 		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), words);
 		const RectangleF bounds = RectangleF::union_of(RectangleF(position, size), RectangleF(position + shadow, size));
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-			bounds.width <= 0.0f || bounds.height <= 0.0f || !team_inside.contains(bounds))
+		if (!finite_rectangle(bounds) || !team_inside.contains(bounds))
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must fit main_menu.team_box_size including its retained shadow bounds.");
@@ -168,9 +166,7 @@ void Presentation::Validation::validate_weapon_heading(RosterPapers& papers) con
 	const RectangleF weapon_heading = RectangleF::union_of(
 		RectangleF(this->presentation_.menu_.layout.position, weapon_heading_size),
 		RectangleF(this->presentation_.menu_.layout.position + this->presentation_.menu_.heading_shadow_offset, weapon_heading_size));
-	if (!std::isfinite(weapon_heading.x) || !std::isfinite(weapon_heading.y) ||
-		!std::isfinite(weapon_heading.width) || !std::isfinite(weapon_heading.height) ||
-		weapon_heading.width <= 0.0f || weapon_heading.height <= 0.0f || !weapon_inside.contains(weapon_heading))
+	if (!finite_rectangle(weapon_heading) || !weapon_inside.contains(weapon_heading))
 	{
 		throw std::runtime_error(this->presentation_.source_path_ +
 			": menu_text.headings.weapons must fit main_menu.weapon_box_size including its retained shadow bounds.");
@@ -184,7 +180,7 @@ void Presentation::Validation::validate_bot_labels() const
 {
 	// Check these additional roles after the established pages so a shared font
 	// or geometry error retains its earlier diagnostic wherever possible.
-	for (int player = 1; player < 4; ++player)
+	for (int player = 1; player < max_players; ++player)
 	{
 		for (const BotDifficulty difficulty : label_difficulties)
 		{
@@ -216,7 +212,7 @@ void Presentation::Validation::validate_join_labels(const SetupGeometry& setup) 
 		}
 		return context;
 	};
-	for (int player = 0; player < 4; ++player)
+	for (int player = 0; player < max_players; ++player)
 	{
 		const Vector2F position = this->presentation_.menu_.layout.position +
 			Vector2F(0.0f, main.player_count_spacing.y * static_cast<float>(player + 2));
@@ -242,8 +238,7 @@ void Presentation::Validation::validate_join_labels(const SetupGeometry& setup) 
 					bounds = RectangleF::union_of(bounds, cursor);
 				}
 				bounds = RectangleF::union_of(bounds, accent);
-				if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-					!std::isfinite(bounds.width) || !std::isfinite(bounds.height) || !setup_inside.contains(bounds))
+				if (!finite_rectangle(bounds) || !setup_inside.contains(bounds))
 				{
 					throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 						" must fit every composed Join player/device row inside the setup paper including its retained shadow and acknowledgement bounds.");
@@ -315,7 +310,7 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 	LabelRows team_rows;
 	LabelRows weapon_rows;
 	const SpriteSheet* team_sheet = render.sprite_sheet(main.team_select_sheet);
-	for (int player = 0; player < 4; ++player)
+	for (int player = 0; player < max_players; ++player)
 	{
 		const float row = static_cast<float>(player + 2);
 		const Vector2F team_position = this->presentation_.menu_.layout.position + Vector2F(0.0f, main.team_select.spacing.y * row);

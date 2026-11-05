@@ -76,7 +76,7 @@ void Presentation::Validation::validate_results_contributions(const StageGeometr
 		}
 	}
 	LabelRows results_rows;
-	for (int player = 0; player < 4; ++player)
+	for (int player = 0; player < max_players; ++player)
 	{
 		const Vector2F position = results.contribution_position + Vector2F(0.0f,
 			results.contribution_spacing * static_cast<float>(player + 1));
@@ -131,7 +131,7 @@ void Presentation::Validation::validate_results_contributions(const StageGeometr
 		const std::string award_key = std::string("menu_text.results.") + key;
 		const Vector2F size = fixed_menu_size(award_key,
 			this->presentation_.menu_text_.results.award_line(award), results.contribution_font);
-		for (int player = 0; player < 4; ++player)
+		for (int player = 0; player < max_players; ++player)
 		{
 			const RectangleF bounds(Vector2F(results_fill_right - size.x,
 				results.contribution_position.y +
@@ -255,7 +255,7 @@ void Presentation::Validation::validate_results_lines(const StageGeometry& stage
 		// MenuPaperArtwork draws its face and shade within the supplied bounds.
 		// Match the widgets' single padding inflation and zero text shadow.
 		plate.inflate(results.art.focus_padding);
-		if (!finite_stage_rectangle(plate) || !results_panel.contains(plate))
+		if (!finite_rectangle(plate) || !results_panel.contains(plate))
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must fit unscaled inside the Results paper including its percentage plate padding.");

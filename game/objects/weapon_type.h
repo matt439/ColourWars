@@ -34,7 +34,9 @@ static_assert(WeaponType::max_prim_wep == WeaponType::random_primary);
 // by WeaponType from sprayer to random_primary, which is "random" (menu
 // descriptions, the weapon picker and the match plan; tuning has no entry).
 inline constexpr size_t TUNED_WEAPON_COUNT = static_cast<size_t>(WeaponType::random_primary);
-inline constexpr std::array<const char*, TUNED_WEAPON_COUNT + 1> WEAPON_NAMES{
+// The tuned weapons and Random: what Weapon Select offers and describes.
+inline constexpr size_t SELECTABLE_WEAPON_COUNT = TUNED_WEAPON_COUNT + 1;
+inline constexpr std::array<const char*, SELECTABLE_WEAPON_COUNT> WEAPON_NAMES{
     "sprayer", "sniper", "roller", "mister", "bucket", "random"
 };
 

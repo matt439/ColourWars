@@ -634,6 +634,7 @@
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 0.0, "y": 120.0 }
     },
+    "practice_row_spacing": 96.0,
     "window_open_sound": { "name": "ui.pause_open", "volume": 1.0 },
     "sounds": {
       "pad_lost": { "name": "ui.pad_lost", "volume": 0.65 },
