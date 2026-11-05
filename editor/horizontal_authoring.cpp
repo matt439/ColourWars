@@ -30,7 +30,7 @@ namespace colourwars_editor
         std::string object_name(const Json& object, size_t index)
         {
             std::string result = "collision_objects[" + std::to_string(index) + "]";
-            if (object.HasMember("name") && object["name"].IsString()) { result += " ('" + string(object, "name") + "')"; }
+            if (object.HasMember(key::name) && object[key::name].IsString()) { result += " ('" + string(object, key::name) + "')"; }
             return result;
         }
     }
@@ -45,7 +45,7 @@ namespace colourwars_editor
         }
         if (string(object, key::type) == object_type::structure_ramp)
         {
-            const Json& triangle = member(object, "triangle");
+            const Json& triangle = member(object, key::triangle);
             const std::array<float, 3> xs{ static_cast<float>(number(triangle, "x1")),
                 static_cast<float>(number(triangle, "x2")), static_cast<float>(number(triangle, "x3")) };
             const std::array<float, 3> ys{ static_cast<float>(number(triangle, "y1")),
@@ -54,8 +54,8 @@ namespace colourwars_editor
             const auto [top, bottom] = std::minmax_element(ys.begin(), ys.end());
             return { *left, *top, *right - *left, *bottom - *top };
         }
-        if (object.HasMember("rectangle")) { return plain_motion_rectangle(object["rectangle"]); }
-        const Json& bounds = member(object, "rectangle_tlbr");
+        if (object.HasMember(key::rectangle)) { return plain_motion_rectangle(object[key::rectangle]); }
+        const Json& bounds = member(object, key::rectangle_tlbr);
         const float left = static_cast<float>(number(bounds, "left"));
         const float top = static_cast<float>(number(bounds, "top"));
         return { left, top, static_cast<float>(number(bounds, "right")) - left,
@@ -66,7 +66,7 @@ namespace colourwars_editor
     {
         if (string(object, key::type) != object_type::structure_paintable)
         { fail("motion belongs only on flat StructurePaintable entries."); }
-        const Json& fields = member(object, "motion");
+        const Json& fields = member(object, key::motion);
         // One axis per mover (ROAD#28, E1), read as the game's loader reads it.
         const std::string type = string(fields, "type");
         if (type != "horizontal" && type != "vertical") { fail("motion.type must be horizontal or vertical."); }
@@ -93,7 +93,8 @@ namespace colourwars_editor
         {
             motion::validate_spec(spec);
             motion::validate_collision(spec, object.HasMember(key::collision_type) &&
-                string(object, key::collision_type) == "STRUCTURE_JUMP_THROUGH");
+                level_format::collision_named(string(object, key::collision_type)) ==
+                    level_format::Collision::structure_jump_through);
         }
         catch (const std::invalid_argument& error) { fail(std::string("motion: ") + error.what()); }
         return spec;
@@ -133,16 +134,16 @@ namespace colourwars_editor
 
     void validate_motion_geometry(const Document& document, const std::filesystem::path& tuning)
     {
-        const Json& objects = array(document, "collision_objects");
+        const Json& objects = array(document, key::collision_objects);
         bool moving = false;
-        for (const Json& object : objects.GetArray()) { moving |= object.HasMember("motion"); }
+        for (const Json& object : objects.GetArray()) { moving |= object.HasMember(key::motion); }
         if (!moving) { return; }
         const MotionPlayerSize player = load_motion_player_size(tuning);
-        const auto world = motion::box(plain_motion_rectangle(member(member(document, "level_bounds"), "out_of_bounds")));
+        const auto world = motion::box(plain_motion_rectangle(member(member(document, key::level_bounds), key::out_of_bounds)));
         for (rapidjson::SizeType index = 0; index < objects.Size(); ++index)
         {
             const Json& object = objects[index];
-            if (!object.HasMember("motion")) { continue; }
+            if (!object.HasMember(key::motion)) { continue; }
             try
             {
                 const auto spec = decode_horizontal_motion(object);
@@ -161,7 +162,7 @@ namespace colourwars_editor
                 {
                     if (other == index) { continue; }
                     const auto actual = motion_rectangle(objects[other]);
-                    const auto obstacle = objects[other].HasMember("motion") ?
+                    const auto obstacle = objects[other].HasMember(key::motion) ?
                         motion::path(decode_horizontal_motion(objects[other])) : motion::box(actual);
                     motion::finite(static_cast<double>(player.width) + actual.width);
                     motion::finite(static_cast<double>(player.height) + actual.height);

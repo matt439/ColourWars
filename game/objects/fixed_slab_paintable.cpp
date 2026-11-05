@@ -13,7 +13,7 @@ namespace
         bool along_x, bool leading, std::span<const RectangleF> obstacles)
     {
         const auto& spec = geometry.spec();
-        const auto end = spec.top_left + Vector2F(160.0f, spec.rise == FixedSlabRise::right ? -80.0f : 80.0f);
+        const auto end = spec.top_left + Vector2F(slab_span, spec.rise == FixedSlabRise::right ? -slab_rise : slab_rise);
         const auto& points = geometry.shape().points();
         const PaintPolygon represented{ PaintPoint{ points[0].x, points[0].y }, PaintPoint{ points[1].x, points[1].y },
             PaintPoint{ points[2].x, points[2].y }, PaintPoint{ points[3].x, points[3].y } };
@@ -24,7 +24,7 @@ namespace
         flat.reserve(obstacles.size());
         for (const auto& obstacle : obstacles)
         { flat.push_back({ obstacle.left(), obstacle.top(), obstacle.right(), obstacle.bottom() }); }
-        return exposed_slab_paint_edge(polygon, along_x ? geometry.length() : 24.0f, along_x, leading, flat);
+        return exposed_slab_paint_edge(polygon, along_x ? geometry.length() : slab_thickness, along_x, leading, flat);
     }
     const PaintTuning* checked_paint(const PaintTuning* paint)
     {

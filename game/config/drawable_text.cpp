@@ -5,41 +5,11 @@
 
 namespace
 {
-	// Normalize typographic punctuation, but preserve authored letters and accents.
-	// Escapes distinguish visually similar punctuation and invisible spaces.
-	std::wstring_view transliterate(wchar_t character)
+	// Normalize typographic punctuation, but preserve authored letters and
+	// accents. The table is drawable_text_contract's, which the editor reads too.
+	std::string_view transliterate(wchar_t character)
 	{
-		switch (character)
-		{
-		case L'\u2018':	// left single quotation mark
-		case L'\u2019':	// right single quotation mark, i.e. the apostrophe
-		case L'\u02BC':	// modifier letter apostrophe
-		case L'\u2032':	// prime
-			return L"'";
-
-		case L'\u201C':	// left double quotation mark
-		case L'\u201D':	// right double quotation mark
-		case L'\u2033':	// double prime
-			return L"\"";
-
-		case L'\u2010':	// hyphen
-		case L'\u2011':	// non-breaking hyphen
-		case L'\u2013':	// en dash
-		case L'\u2014':	// em dash
-		case L'\u2212':	// minus sign
-			return L"-";
-
-		case L'\u2026':	// horizontal ellipsis
-			return L"...";
-
-		case L'\u00A0':	// no-break space
-		case L'\u2007':	// figure space
-		case L'\u202F':	// narrow no-break space
-			return L" ";
-
-		default:
-			return {};
-		}
+		return drawable_text_contract::transliteration(static_cast<char32_t>(character));
 	}
 
 	std::string code_point_text(wchar_t character)
@@ -63,14 +33,14 @@ namespace drawable_text
 
 		for (size_t index = 0; index < text.size(); )
 		{
-			const std::wstring_view replacement = transliterate(text[index]);
+			const std::string_view replacement = transliterate(text[index]);
 			if (replacement.empty())
 			{
 				++index;
 				continue;
 			}
 
-			text.replace(index, 1, replacement);
+			text.replace(index, 1, std::wstring(replacement.begin(), replacement.end()));
 			index += replacement.size();
 		}
 

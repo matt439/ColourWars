@@ -2,6 +2,7 @@
 #include "editor/content_catalog.h"
 #include "editor/level_document.h"
 #include "editor/prepared_file.h"
+#include "game/contracts/user_stage_contract.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -95,18 +96,11 @@ namespace colourwars_editor
             return text;
         }
 
+        // The one stage-name rule, shared with the game's scan of a player's
+        // own stages, so a saved user stage can be registered unchanged.
         bool valid_basename(const std::string& name)
         {
-            if (name.empty() || name.size() > 250) return false;
-            for (const char c : name)
-                if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                    (c >= '0' && c <= '9') || c == '_' || c == '-')) return false;
-            if (name.front() == '-') return false;
-            const std::string lower = folded(name);
-            if (lower == "con" || lower == "prn" || lower == "aux" || lower == "nul" ||
-                lower == "clock$" || lower == "conin$" || lower == "conout$") return false;
-            return !(lower.size() == 4 && (lower.starts_with("com") || lower.starts_with("lpt")) &&
-                lower[3] >= '0' && lower[3] <= '9');
+            return user_stage_contract::usable_name(name);
         }
 
         bool asset_path(const std::string& value)
@@ -531,8 +525,7 @@ namespace colourwars_editor
         if (!same_path(result.stage.parent_path(), levels) || result.stage.extension() != ".json")
             fail("Choose an existing .json file directly inside this source tree's game/content/levels");
         result.name = shown(result.stage.stem());
-        if (!valid_basename(result.name)) fail("Invalid stage basename: use ASCII letters/digits/_/-, "
-            "no leading hyphen or Windows device name");
+        if (!valid_basename(result.name)) fail("Invalid stage basename: " + user_stage_contract::name_rule());
         if (result.name.front() == '_') fail("A shipped stage's basename must not start with '_': "
             "presentation.json's menu_text.stage_names would read its entry as a comment");
         result.stage_original = read(result.stage);

@@ -145,7 +145,9 @@ A missing string is never an error and never a blank: the base always has it.
 
 Authored text is printable ASCII, `U+0020` to `U+007E`, after the typographic
 punctuation `drawable_text` folds (curly quotes, dashes, ellipsis, no-break
-spaces); see [drawable_text.h](../game/config/drawable_text.h). The seven
+spaces); see [drawable_text.h](../game/config/drawable_text.h) and the table
+it reads, [drawable_text_contract.h](../game/contracts/drawable_text_contract.h),
+which the level editor's display-name check reads too. The seven
 shipped atlases carry exactly that range
 ([font recipe](../game/art/README.md#sprite-font-recipe-gap87)). A locale is held to
 the same two checks as the base:

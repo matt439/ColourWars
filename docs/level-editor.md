@@ -1603,8 +1603,10 @@ against a complete content catalog, verifies that the complete manifest/runtime
 asset lists already agree and that `presentation.json`'s `menu_text.stage_names`
 names exactly the manifest's levels, then shows the exact added name, runtime
 path and stage-name entry, whose English is the level's `display_name`.
-The basename uses ASCII letters, digits, `_` or `-`, with no leading hyphen or
-`_` (which `stage_names` would read as a comment) or Windows device name. The
+The basename follows the user-stage rule (`user_stage_contract::usable_name`):
+1 to 64 ASCII letters, digits, `_` or `-`, with no leading hyphen and no
+Windows device name. It also may not start with `_`, which `stage_names` would
+read as a comment. Every name in the manifest is held to the same rule. The
 file must have a `.json` extension and be directly in this source tree's levels
 directory; linked/reparse paths are refused. Its `display_name` must be one
 nonblank line, since a stage title is. Duplicate or case-alias names, a stage in

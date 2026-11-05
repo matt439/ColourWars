@@ -4,6 +4,7 @@
 #include "engine/math/rectangle_rotated.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/segment.h"
+#include "game/contracts/fixed_slab_paint_geometry.h"
 #include <optional>
 
 enum class FixedSlabRise { left, right };
@@ -30,14 +31,15 @@ struct FixedSlabSweep
 };
 
 // One fixed-size, fixed-orientation solid. Local X follows the top from left
-// to right; local Y points inward through its 24-unit normal thickness.
+// to right; local Y points inward through its normal thickness. The footprint
+// is the level-format contract's (fixed_slab_paint_geometry.h).
 // This is not a general rotating body or a moving-platform extension.
 class FixedSlabGeometry final
 {
 public:
-    static constexpr float horizontal_span = 160.0f;
-    static constexpr float vertical_rise = 80.0f;
-    static constexpr float normal_thickness = 24.0f;
+    static constexpr float horizontal_span = slab_span;
+    static constexpr float vertical_rise = slab_rise;
+    static constexpr float normal_thickness = slab_thickness;
 
     explicit FixedSlabGeometry(const FixedSlabSpec& spec);
     const FixedSlabSpec& spec() const;

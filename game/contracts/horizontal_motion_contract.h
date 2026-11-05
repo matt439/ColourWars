@@ -3,6 +3,7 @@
 // Engine-free authored motion and envelope arithmetic shared by the runtime
 // and level document. All inputs are game floats; keep operation order and
 // rounding identical to the admitted runtime path.
+#include "game/contracts/rectangle_contract.h"
 #include "game/contracts/simulation.h"
 #include <algorithm>
 #include <cmath>
@@ -14,14 +15,7 @@
 
 namespace horizontal_motion_contract
 {
-    struct Rectangle
-    {
-        float x, y, width, height;
-        float left() const { return x; }
-        float top() const { return y; }
-        float right() const { return x + width; }
-        float bottom() const { return y + height; }
-    };
+    using Rectangle = rectangle_contract::Rectangle;
 
     // What advances the phase. A cycle runs the triangular round trip forever. A
     // paint drive travels the same path at the same speed, but only while one team
@@ -36,8 +30,8 @@ namespace horizontal_motion_contract
     // name of the capability it began as.
     struct Spec
     {
-        Rectangle anchor;
-        float travel_x, period_seconds, initial_phase;
+        Rectangle anchor{};
+        float travel_x = 0.0f, period_seconds = 0.0f, initial_phase = 0.0f;
         Drive drive = Drive::cycle;
         // Paint drive only: +1 when team A's paint carries the mover right (a
         // lift down), -1 when it carries it left (a lift up). Team B's paint
@@ -92,7 +86,7 @@ namespace horizontal_motion_contract
     {
         if (spec.drive == Drive::cycle) { return; }
         if (spec.drive != Drive::paint)
-        { throw std::invalid_argument("Horizontal motion drive must be a cycle or paint."); }
+        { throw std::invalid_argument("Motion drive must be a cycle or paint."); }
         // A paint drive keeps to the outgoing leg, where phase 0 is the left
         // end (a lift's top) and 0.5 the right (its bottom), so phase alone
         // still names its pose.
@@ -119,7 +113,7 @@ namespace horizontal_motion_contract
             !std::isfinite(rectangle.right()) || !std::isfinite(rectangle.bottom()) ||
             !(rectangle.right() > rectangle.left()) || !(rectangle.bottom() > rectangle.top()))
         {
-            throw std::invalid_argument("Horizontal motion requires finite representable positive rectangle edges.");
+            throw std::invalid_argument("Motion requires finite representable positive rectangle edges.");
         }
     }
 
@@ -141,7 +135,7 @@ namespace horizontal_motion_contract
             !std::isfinite(spec.initial_phase) ||
             !(spec.initial_phase >= 0.0f && spec.initial_phase < 1.0f))
         {
-            throw std::invalid_argument("Horizontal motion needs positive finite travel, period >= two simulation steps and phase in [0,1).");
+            throw std::invalid_argument("Motion needs positive finite travel, period >= two simulation steps and phase in [0,1).");
         }
         Rectangle finish = spec.anchor;
         if (vertical) { finish.y = spec.anchor.y + spec.travel_y; }
@@ -149,7 +143,7 @@ namespace horizontal_motion_contract
         require_rectangle(finish);
         if (vertical ? !(finish.y > spec.anchor.y) : !(finish.x > spec.anchor.x))
         {
-            throw std::invalid_argument("Horizontal motion travel must reach a distinct representable endpoint.");
+            throw std::invalid_argument("Motion travel must reach a distinct representable endpoint.");
         }
         validate_drive(spec);
     }
@@ -166,7 +160,7 @@ namespace horizontal_motion_contract
         if (!std::isfinite(value) || std::abs(value) >
             static_cast<double>((std::numeric_limits<float>::max)()))
         {
-            throw std::invalid_argument("Horizontal motion requires finite representable arithmetic and edges.");
+            throw std::invalid_argument("Motion requires finite representable arithmetic and edges.");
         }
         return value;
     }
@@ -175,7 +169,7 @@ namespace horizontal_motion_contract
     {
         finite(value);
         if (value < 0.0)
-        { throw std::invalid_argument("Horizontal motion requires nonnegative displacement budgets."); }
+        { throw std::invalid_argument("Motion requires nonnegative displacement budgets."); }
         float result = static_cast<float>(value);
         if (static_cast<double>(result) < value)
         { result = std::nextafter(result, std::numeric_limits<float>::infinity()); }
@@ -198,7 +192,7 @@ namespace horizontal_motion_contract
         if (!std::isfinite(value.width) || !std::isfinite(value.height) ||
             !(value.width > 0.0f) || !(value.height > 0.0f) ||
             !(result.left < result.right) || !(result.top < result.bottom))
-        { throw std::invalid_argument("Horizontal motion requires finite positive represented body dimensions."); }
+        { throw std::invalid_argument("Motion requires finite positive represented body dimensions."); }
         return result;
     }
 
@@ -242,6 +236,12 @@ namespace horizontal_motion_contract
     // One body height above the path's top, widened by a body each side. For
     // a lift the path's top is its highest pose, so the corridor rises with it
     // (E3a) and no ceiling can close on a rider.
+    //
+    // Its pad is not corridor_pad: the corridor never reaches path.bottom, so
+    // its scale leaves that edge out. corridor_pad's scale includes it and is
+    // larger whenever the bottom is the path's largest magnitude; using it
+    // would widen the corridor by an ulp or two and could refuse a level
+    // admitted today.
     inline Box standing(const Box& path, float body_width, float body_height)
     {
         const double scale = std::max({ std::abs(path.left), std::abs(path.right),

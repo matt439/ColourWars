@@ -312,8 +312,10 @@ namespace
 				record.solid = level_format::collision_named(json.string(key::collision_type)) ==
 					level_format::Collision::structure_paintable;
 				const JsonValue face = json.object(key::paintable_faces);
-				record.any_paintable_face = face.boolean("left") || face.boolean("top") ||
-					face.boolean("right") || face.boolean("bottom");
+				for (const char* name : level_format::paintable_face_names)
+				{
+					record.any_paintable_face = record.any_paintable_face || face.boolean(name);
+				}
 			}
 			try { gate = team_gate_contract::decode(record); }
 			catch (const std::invalid_argument& error)
@@ -378,10 +380,10 @@ std::unique_ptr<CollisionObject>
 
 		const JsonValue faces_json = json.object(key::paintable_faces);
 		PaintableFaces faces;
-		faces.left = faces_json.boolean("left");
-		faces.top = faces_json.boolean("top");
-		faces.right = faces_json.boolean("right");
-		faces.bottom = faces_json.boolean("bottom");
+		faces.left = faces_json.boolean(level_format::face::left);
+		faces.top = faces_json.boolean(level_format::face::top);
+		faces.right = faces_json.boolean(level_format::face::right);
+		faces.bottom = faces_json.boolean(level_format::face::bottom);
 
 		if (json.has(key::motion))
 		{
@@ -554,10 +556,10 @@ LevelObjectBuilder::StageContext
 				polygon[corner] = { point.x, point.y };
 			}
 			const FixedSlabSpec& spec = geometry.spec();
-			const float dy = spec.rise == FixedSlabRise::right ? -80.0f : 80.0f;
+			const float dy = spec.rise == FixedSlabRise::right ? -slab_rise : slab_rise;
 			const Vector2F inward = geometry.inward_normal();
 			context.slabs.push_back(canonical_slab_paint_polygon(polygon,
-				{ spec.top_left.x, spec.top_left.y }, { spec.top_left.x + 160.0f, spec.top_left.y + dy },
+				{ spec.top_left.x, spec.top_left.y }, { spec.top_left.x + slab_span, spec.top_left.y + dy },
 				{ inward.x, inward.y }));
 		}
 	}
@@ -573,8 +575,8 @@ std::unique_ptr<FixedSlabPaintable>
 	(void)collision_type_of(json, type);
 	const FixedSlabSpec spec = decode_slab(json);
 	const JsonValue face = json.object(key::paintable_faces);
-	const PaintableFaces faces{ face.boolean("left"), face.boolean("top"),
-		face.boolean("right"), face.boolean("bottom") };
+	const PaintableFaces faces{ face.boolean(level_format::face::left), face.boolean(level_format::face::top),
+		face.boolean(level_format::face::right), face.boolean(level_format::face::bottom) };
 	return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_, this->audio_resources_,
 		this->preferences_, this->paint_, team_colours, faces, context.flat);
 }

@@ -420,6 +420,8 @@ engine's exact uppercase spelling:
 `BLACK`, `DARK_GRAY`, `DARK_GREY`, `DIM_GRAY`, `DIM_GREY`, `GAINSBORO`, `GRAY`,
 `GREY`, `LIGHT_GRAY`, `LIGHT_GREY`, `SILVER`, `WHITE`, `WHITE_SMOKE`.
 
+The list is `level_format::scenery_grey_names`, which the editor reads and the
+`level_format` acceptance case holds to the engine's colour table.
 The schema recognizes these names and six-digit hex syntax. Equality of the
 three hex channels is checked by the game/editor, so a coloured hex value can
 pass the schema and still fail content validation. Tinting art grey does not
@@ -468,7 +470,8 @@ bank. See the [audio inventory](audio-inventory.md).
 ## Fixed scored slabs
 
 `FixedSlabPaintable` is a bounded static solid: a 160-unit horizontal span,
-80-unit rise and **24-unit normal thickness**. It accepts the two mirrored
+80-unit rise and **24-unit normal thickness** (`slab_span`, `slab_rise` and
+`slab_thickness` in `game/contracts/fixed_slab_paint_geometry.h`). It accepts the two mirrored
 orientations below, rather than arbitrary angles, sizes or moving rotation.
 
 ```json

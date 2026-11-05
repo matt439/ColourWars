@@ -145,19 +145,21 @@ Where it does not hold yet:
 
 ## The engine-free contract headers
 
-Nine headers in `game/contracts/` hold rules the game and the editor must apply
+Eleven headers in `game/contracts/` hold rules the game and the editor must apply
 in the same words, with no engine include:
 
 | Header | Holds |
 |---|---|
-| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/contracts/level.schema.json) sits beside it |
+| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, the paintable-face names, the scenery greys, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/contracts/level.schema.json) sits beside it |
 | `simulation.h` | `SIMULATION_HZ`, the fixed step written once |
-| `horizontal_motion_contract.h` | authored horizontal motion and its envelope arithmetic (uses `simulation.h`) |
+| `rectangle_contract.h` | the one rectangle the station, gate and motion contracts take |
+| `horizontal_motion_contract.h` | authored horizontal and vertical motion, its heading names and its envelope arithmetic (uses `simulation.h`) |
 | `station_contract.h` | a level's review stations and their lessons |
 | `team_gate_contract.h` | a team gate's authored rules |
-| `user_stage_contract.h` | the names a player's own stage file may take |
+| `user_stage_contract.h` | the names a player's own stage file may take, which stage registration also applies |
+| `drawable_text_contract.h` | the characters the fonts draw and the punctuation folded to ASCII, for `drawable_text` and the editor's display-name check |
 | `paint_face_geometry.h`, `paint_polygon_geometry.h` | how paint tiles a face and a polygon, for the runtime tiles and the editor's scoring diagnostics |
-| `fixed_slab_paint_geometry.h` | the fixed slab's paint polygon (uses the two above) |
+| `fixed_slab_paint_geometry.h` | the fixed slab's footprint (`slab_span`, `slab_rise`, `slab_thickness`) and paint polygon (uses the two above) |
 
 They are header-only and include only the standard library and one another.
 The game's builders and startup validation read them; so do the editor's level

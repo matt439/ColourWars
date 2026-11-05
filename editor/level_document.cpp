@@ -678,7 +678,7 @@ namespace colourwars_editor
                 {
                     const bool lift = motion.HasMember("type") && motion["type"].IsString() &&
                         string(motion, "type") == "vertical";
-                    put("team_a_heads", lift ? "up" : "right");
+                    put("team_a_heads", horizontal_motion_contract::heading_name(lift, lift ? -1 : 1));
                 }
                 return;
             }

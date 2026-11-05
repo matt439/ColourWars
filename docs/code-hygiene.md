@@ -521,19 +521,56 @@ in both, and `check-painter.ps1`'s `ControlsMenuOnly`, `StickSettingsOnly`,
 
 ### The level-format contract owns its numbers and names (`HYG#67`)
 
-- Add `slab_span`, `slab_rise` and `slab_thickness` to the contract
-  (`fixed_slab_paint_geometry.h:27`). Alias them from `FixedSlabGeometry`, and use
-  them in `fixed_slab_paintable.cpp:16`, `level_object_builder.cpp:557`,
-  `editor/slab_authoring.cpp:44`, the mirror and `blockout_aids`.
-- Tidy the contract headers. Make one initialised `Rectangle` instead of three,
-  and initialise `horizontal_motion_contract::Spec`. Make `standing()` use
-  `corridor_pad()` or document why not. Word the lift diagnostics neutrally.
-- Have the editor read the rules the contract owns since `HYG#46`. That means
-  scenery-colour, drawable-text and paintable-face tables in `game/contracts`,
-  `key::*` and `collision_named` instead of literals
-  (`horizontal_authoring.cpp:96`, `level_json.cpp:140-493`), `heading_name`, and
-  `user_stage_contract::usable_name` in `valid_basename`
-  (`stage_registration.cpp:106`).
+**Done 2026-11-06; behaviour change.** Stage registration now refuses a
+manifest or stage basename longer than 64 characters (it took up to 250), and
+the motion contract's refusals say "Motion" rather than "Horizontal motion",
+since lifts reach them too.
+
+- [fixed_slab_paint_geometry.h](../game/contracts/fixed_slab_paint_geometry.h)
+  names `slab_span`, `slab_rise` and `slab_thickness`, and
+  `canonical_slab_paint_polygon` checks against them. `FixedSlabGeometry`'s
+  three constants alias them; `fixed_slab_paintable.cpp`,
+  `LevelObjectBuilder::stage_context`, the editor's `slab_authoring.cpp`, the
+  mirror's slab reflection and `blockout_aids` (its slab edge and paint-depth
+  bound) use them. Each value folds to the same float or double as the literal
+  it replaces.
+- The station, gate and motion contracts share one initialised `Rectangle`,
+  the new [rectangle_contract.h](../game/contracts/rectangle_contract.h), and
+  `horizontal_motion_contract::Spec` initialises every member. `standing()`
+  keeps its own pad, and its comment says why: its scale leaves out
+  `path.bottom`, which `corridor_pad()` includes, so using it could widen the
+  corridor and refuse a level admitted today. The contract's seven motion
+  refusals are worded "Motion ..."; `moving_structure`'s three constructor
+  checks look for the travel refusal by its new words.
+- [level_format.h](../game/contracts/level_format.h) holds the paintable-face
+  names (`face::*`, `paintable_face_names`) and the scenery greys
+  (`scenery_grey_names`, `is_scenery_grey`), and the new
+  [drawable_text_contract.h](../game/contracts/drawable_text_contract.h) holds
+  the drawable range, the layout controls and the punctuation table. The game's
+  `drawable_text` reads that table in place of its switch, and
+  `LevelObjectBuilder` reads the face names. The editor's `level_json` reads all
+  three tables (its grey-name string, UTF-8 punctuation list and face lists are
+  gone) and builds the unknown-material message from the material table;
+  `horizontal_authoring`, `slab_authoring`, `blockout_aids` and the mirror use
+  `key::*` and `collision_named` for the format's words; the paint-mechanism
+  guide and the paint-drive default read `heading_name`; and registration's
+  `valid_basename` is `user_stage_contract::usable_name`, its refusal quoting
+  `name_rule()`. The game still checks a scenery colour by resolving it, so
+  `level_format` now holds `scenery_grey_names` to the engine's colour table.
+
+Left as found: `level_document.cpp`'s own key literals (about 140, most in the
+File > New template string and the `AddMember` calls) and the canvas's
+`paintable_faces/...` and station `name` property paths, which go with File > New reading `template.json` in
+[`HYG#78`](#editor-shell-and-document-hyg78); and `level_structures.cpp`'s
+"Horizontal motion ..." admission refusals, which name the game's
+`HorizontalMotion` type rather than the contract and which the
+`moving_structure` probe matches by those words.
+
+Both presets build under `/W4 /WX`, editor included. The full default
+acceptance list passed with `-Parallel 4` (78 cases in Release, 79 in Debug);
+`level_format` reports the new scenery-grey check. `check-level-editor.ps1`,
+`check-stage-registration.ps1` and `check-startup.ps1` passed in Debug and
+Release.
 
 ### `Player` move-state and contact predicates (`HYG#68`)
 

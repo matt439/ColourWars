@@ -5,6 +5,7 @@
 // stations the game refuses, in the game's words. Each caller adds its own
 // location to the message. Lesson words are checked by the game alone: it owns
 // the fonts that decide what can be drawn.
+#include "game/contracts/rectangle_contract.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -18,10 +19,7 @@ namespace station_contract
         float x, y;
     };
 
-    struct Rectangle
-    {
-        float x, y, width, height;
-    };
+    using Rectangle = rectangle_contract::Rectangle;
 
     // Inclusive on every edge, as the engine's rectangle_point_intersect.
     inline bool contains(const Rectangle& rectangle, const Point& point)
