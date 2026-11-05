@@ -59,8 +59,11 @@ The focused hardware D3D11 matrix covers:
 
 Native review examples are the [720p countdown](images/polish-countdown/countdown-720p.png)
 and [two-player GO](images/polish-countdown/go-720p.png). These establish the
-drawing and event placement; movement, reference-arena composition, physical-pad
-and human readability acceptance remain in their existing TODO rows.
+drawing and event placement; for movement, reference-arena composition,
+physical-pad and human readability, on 2026-11-05 the author accepted the arenas and movement at their current
+values and waived the attended human-readability, physical-pad and listening
+checks (`POL#24`, the pad sessions, `ROAD#3`), which were not performed
+([polish plan](polish-plan.md)).
 
 The 53-file Release ZIP byte-matches the revised presentation and tuning data
 and the unchanged accepted sound bank, and contains no authoring/probe files.

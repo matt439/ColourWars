@@ -95,8 +95,11 @@ calls `SHA256.HashData`. That method is missing in Windows PowerShell 5.1.
 The [native meter detail](images/polish-hud/meters-720p.png) and
 [four-player match](images/polish-hud/four-player-720p.png) were inspected at
 720p without enlargement. These establish this drawing and placement;
-reference-arena composition, human readability, movement, physical-pad and
-listening acceptance remain in their existing TODO rows. Menus, cards, stage
+for reference-arena composition, human readability, movement, physical-pad and
+listening, on 2026-11-05 the author accepted the arenas and movement at their current
+values and waived the attended human-readability, physical-pad and listening
+checks (`POL#24`, the pad sessions, `ROAD#3`), which were not performed
+([polish plan](polish-plan.md)). Menus, cards, stage
 preview, pause, results and accepted arenas remain open under `POL#16`.
 
 Evidence is under `out/validation/hud/` and `out/acceptance/`, with build and

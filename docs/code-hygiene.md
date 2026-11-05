@@ -224,6 +224,15 @@ foley's `review_status` in `build.py` and in the `PROVENANCE.json` it wrote
 and the "prototype" and "trial amounts" wording in `match_fingerprint`, the
 `debug_console`, `paint_underfoot`, `handicap` and `moving_structure` probes.
 
+A review of that commit found sites it missed, fixed in a follow-up: the opening
+paragraph of `paint_exe/README.md` and `interface/README.md`, the third
+production README; the `POL#23` and `ROAD#3` lines in `polish-movement-course.md`
+and `backstory.md`; the "remain in their existing TODO rows" lines in
+`polish-hud.md`, `polish-countdown.md`, `polish-match-accents.md` and
+`polish-paint-effects.md`, which now say what was accepted and what was waived;
+and the `stage_scan` `_comment` in `presentation.json`, whose action/help wording
+the author accepted with `ROAD#32`.
+
 `prepare_review.py` now says the accepted set ships and, only while the masters
 match `acceptance.json`, what became of `POL#23` and `ROAD#3`; a changed set
 still reads as candidates. Running it rewrote `cues.json`'s status, the
@@ -235,7 +244,8 @@ back and are not part of the change.
 Left as found: `acceptance.json`'s `remaining` field, the author's 2026-10-14
 record as given; dated increment logs whose owner already carries a 2026-11-05
 status note (audio inventory §9, `ROAD#10` and the `ED#5` checkpoints in
-feature-roadmap.md and level-editor.md); and the probes' PASS summaries that
+feature-roadmap.md and level-editor.md, and the polish plan's dated
+increment notes under its 2026-11-05 calls); and the probes' PASS summaries that
 say attended acceptance "remains open", which are output rather than comments
 and go to `HYG#87`.
 
@@ -247,6 +257,10 @@ both. `paint_underfoot`, `handicap`, `moving_structure`, `debug_console`,
 `check-release-package.ps1`, and `check-startup.ps1` passed on both executables
 and the extracted ZIP. `check-finish-details.ps1` needs a foreground desktop and
 was not run; only its comment changed.
+
+The follow-up changed text and one JSON `_comment` only. Both presets rebuilt,
+and `user_stages`, `menu_presentation` and `menu_text`, which read
+`presentation.json`, passed in Debug and Release; the Markdown links resolve.
 
 ### Comments and reference docs that drifted (`HYG#62`)
 

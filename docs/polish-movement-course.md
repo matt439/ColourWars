@@ -16,7 +16,8 @@ legacy metadata that no screen draws; Stage Select uses the live arena preview
 ([`ED#6` retired](level-editor.md#movement-course-icon-ed6-retired)). The stage
 deliberately has no music: its `sound` block names the replacement bank only.
 Action cues, including footsteps and landings, use the accepted replacement set;
-optional detail and in-game mix listening remain in `POL#23`.
+the author accepted the mix as it stands on 2026-11-05 (`POL#23`), and the
+in-game listening check (`ROAD#3`) was waived and not performed.
 
 ## Practice workshop
 

@@ -11,9 +11,9 @@ to the explicit request to accept it for POL#23 integration or name revisions.
 POL#22 is closed; [acceptance.json](acceptance.json) records the exact 103 accepted
 master hashes. No revisions were requested.
 The 2026-10-15 runtime migration uses this set for the existing game bindings and
-includes all 103 masters in the live bank. POL#23 retains new cue hooks and the
-gameplay mix. ROAD#3 still owns actual multiplayer, pause/resume, volume and
-release acceptance.
+includes all 103 masters in the live bank. On 2026-11-05 the author accepted
+the cue hooks and gameplay mix as they stand (POL#23) and waived ROAD#3's
+multiplayer, pause/resume, volume and release checks, which were not performed.
 
 ## What is here
 

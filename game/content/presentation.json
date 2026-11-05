@@ -238,7 +238,7 @@
       "team_b_percentage": "B {percentage}"
     },
     "stage_scan": {
-      "_comment": "Provisional diagnostic action/help wording; external refusal text is retained verbatim with non-ASCII escapes.",
+      "_comment": "Diagnostic action/help wording accepted by the author on 2026-11-05 (ROAD#32); external refusal text is retained verbatim with non-ASCII escapes.",
       "heading": "User-stage scan",
       "status": "User-stage scan: {count} issue(s).",
       "browse_prompt": "Left/Right Arena   Down Scan details   A/Enter Lock   B/Esc Back",

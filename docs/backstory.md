@@ -162,8 +162,9 @@ Decided with the author on 2026-10-12, while the first slice was built:
 
 All story beats are built as of 2026-10-15. The replacement bank and data bindings
 are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration).
-Actual listening, pause/resume and multiplayer mix acceptance remain `ROAD#3`;
-the construction checks do not establish their audible timing or balance.
+Actual listening, pause/resume and multiplayer mix acceptance (`ROAD#3`) was
+waived by the author on 2026-11-05 and not performed; the construction checks
+do not establish their audible timing or balance.
 
 ## Rejected on the way, and why
 
