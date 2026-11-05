@@ -441,15 +441,15 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         "Pad sticks Escape saved an unapplied edit");
     tick();
     open_child(); tap(Key::down); tap(Key::right); values[1] = L"35%";
-    const std::filesystem::path blocked = save_path.wstring() + L".tmp";
-    require(std::filesystem::create_directory(blocked), "Cannot block isolated Pad sticks temporary save");
+    acceptance::ReplacementLock blocked(save_path);
+    require(blocked.hold(), "Cannot lock the isolated Pad sticks save");
     for (int row = 1; row < 7; ++row) { tap(Key::down); }
     tap(Key::enter);
     require(play.sticks[0].movement_deadzone == 35 && saved_bytes() == parent_saved,
         "Failed Pad sticks save lost the active choice or replaced previous JSON");
     capture("save-failed", 7, values, L"Active for this run. Could not save.",
         presentation.main_menu().options_warning_colour);
-    require(std::filesystem::remove(blocked), "Cannot remove isolated Pad sticks write refusal");
+    require(blocked.release(), "Cannot remove isolated Pad sticks write refusal");
     require(records.good(), "Pad sticks capture record write failed");
     std::cout << "PASS Pad sticks: actual child navigation; nine bounded readable cards at 720p/1080p/QHD; "
         "pad/deadzone clamps, pending Apply, reload/failure and Back/Escape discard; parent Apply preserves "

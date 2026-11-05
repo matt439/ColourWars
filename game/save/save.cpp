@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/save/save.h"
+#include "game/save/atomic_file.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
 #include <cstdio>
@@ -9,7 +10,7 @@
 #include <cmath>
 #include <optional>
 // The engine reads JSON; the game uses RapidJSON to write player settings.
-#include "rapidjson/filewritestream.h"
+#include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
 using namespace rapidjson;
@@ -333,7 +334,7 @@ namespace
     class FileSaveWriter final : public SaveWriter
     {
     public:
-        explicit FileSaveWriter(Writer<FileWriteStream>& writer) : writer_(writer) {}
+        explicit FileSaveWriter(Writer<StringBuffer>& writer) : writer_(writer) {}
         void key(const char* name) override { this->writer_.Key(name); }
         void integer(int value) override { this->writer_.Int(value); }
         void number(float value) override
@@ -352,7 +353,7 @@ namespace
         void begin_array() override { this->writer_.StartArray(); }
         void end_array() override { this->writer_.EndArray(); }
     private:
-        Writer<FileWriteStream>& writer_;
+        Writer<StringBuffer>& writer_;
     };
 
     // Copies a save that will not load to save_data.unreadable-<n>.json beside
@@ -482,31 +483,8 @@ void Save::load_save_file()
 
 bool Save::write_save_file(const SaveData& data) const
 {
-    const std::string path = save_file_path();
-
-    // Create the per-user directory on first save.
-    const std::filesystem::path save_path = path_from_utf8(path);
-    if (save_path.has_parent_path())
-    {
-        std::error_code ec;
-        std::filesystem::create_directories(save_path.parent_path(), ec);
-    }
-
-    // Write a sibling temporary file before replacing the save, so a failed
-    // write does not truncate the existing settings.
-    std::filesystem::path temp_file_path = save_path;
-    temp_file_path += L".tmp";
-
-    FILE* fp = nullptr;
-    if (_wfopen_s(&fp, temp_file_path.c_str(), L"wb") != 0 || fp == nullptr)
-    {
-        return false;
-    }
-    auto write_buffer = std::make_unique<char[]>(65536);
-    FileWriteStream os(fp, write_buffer.get(), 65536);
-
-    // Writer flushes when the root object ends, before fclose below.
-    Writer<FileWriteStream> json(os);
+    StringBuffer buffer;
+    Writer<StringBuffer> json(buffer);
     FileSaveWriter writer(json);
     json.StartObject();
     writer.key("save_version");
@@ -515,29 +493,14 @@ bool Save::write_save_file(const SaveData& data) const
     {
         section->write(writer, data);
     }
-    const bool serialized = json.EndObject();
-
-    // Ending the root flushes RapidJSON's buffer, but FileWriteStream ignores
-    // short fwrite results. Flush stdio and inspect its sticky error before
-    // always closing the file. Serialization, stream output and close must all
-    // succeed before the temporary file may replace the existing save.
-    const bool flushed = (fflush(fp) == 0);
-    const bool stream_good = (ferror(fp) == 0);
-    const bool closed = (fclose(fp) == 0);
-
-    std::error_code rename_ec;
-    if (serialized && flushed && stream_good && closed)
+    if (!json.EndObject())
     {
-        std::filesystem::rename(temp_file_path, save_path, rename_ec);
-        if (!rename_ec)
-        {
-            return true;
-        }
+        return false;
     }
 
-    std::error_code remove_ec;
-    std::filesystem::remove(temp_file_path, remove_ec);
-    return false;
+    // A failed write leaves the existing settings as they were.
+    return replace_file_atomically(path_from_utf8(save_file_path()),
+        std::string_view(buffer.GetString(), buffer.GetSize()));
 }
 
 bool Save::save_to_file() const

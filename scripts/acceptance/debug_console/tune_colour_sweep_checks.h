@@ -371,8 +371,8 @@
 				read_text(scratch.staged / L"presentation.json") == forced &&
 				presentation.debug_overlay().colour == unrelated_colour,
 				"Forced colour save replaces only our conflict and adopts the unrelated external edit");
-			require(!original_token.empty() && !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
-				!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			require(!original_token.empty() && !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
+				!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 				"Colour save leaves no temporary files beside either content copy");
 		}
 		for (const std::size_t index : { std::size_t(9), std::size_t(10), std::size_t(11), std::size_t(12),
@@ -469,8 +469,8 @@
 			require(crlf_impl.execute("tune " + path + " RED").ok && crlf_impl.execute("tune.reset " + path).ok &&
 				crlf_impl.tune_document("presentation")->current().text() == forced &&
 				colour_values(crlf_presentation) == adopted && crlf_impl.tune_document("presentation")->edits().empty() &&
-				!std::filesystem::exists(crlf_scratch.source / L"presentation.json.tmp") &&
-				!std::filesystem::exists(crlf_scratch.staged / L"presentation.json.tmp"),
+				!acceptance::temporary_beside(crlf_scratch.source / L"presentation.json") &&
+				!acceptance::temporary_beside(crlf_scratch.staged / L"presentation.json"),
 				"A selection/feedback CRLF reset uses the saved baseline and leaves no temporary files: " + path);
 		}
 	}

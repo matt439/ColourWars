@@ -2,6 +2,7 @@
 #include "game/fatal_report.h"
 #include "game/build_info.h"
 #include "game/directory_consts.h"
+#include "game/save/atomic_file.h"
 #include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include <cstring>
@@ -195,24 +196,7 @@ bool FatalReport::write_record(const std::filesystem::path& path) const noexcept
 	try
 	{
 		if (path.empty()) { return false; }
-		const std::string text = this->record_text();
-		if (text.size() > (std::numeric_limits<DWORD>::max)()) { return false; }
-		std::error_code error;
-		if (!path.parent_path().empty()) { std::filesystem::create_directories(path.parent_path(), error); }
-		if (error) { return false; }
-		std::filesystem::path temporary = path;
-		temporary += L"." + std::to_wstring(GetCurrentProcessId()) + L"." +
-			std::to_wstring(GetTickCount64()) + L".tmp";
-		const HANDLE file = CreateFileW(temporary.c_str(), GENERIC_WRITE, 0, nullptr,
-			CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
-		if (file == INVALID_HANDLE_VALUE) { return false; }
-		DWORD written = 0;
-		const bool complete = WriteFile(file, text.data(), static_cast<DWORD>(text.size()), &written, nullptr) &&
-			written == text.size() && FlushFileBuffers(file);
-		const bool closed = CloseHandle(file) != FALSE;
-		if (complete && closed && MoveFileExW(temporary.c_str(), path.c_str(),
-			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) { return true; }
-		DeleteFileW(temporary.c_str());
+		return replace_file_atomically(path, this->record_text());
 	}
 	catch (...) { }
 	return false;

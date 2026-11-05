@@ -1,5 +1,5 @@
 add_library(colourwars_level_document STATIC level_document.cpp level_document_mirror.cpp level_json.cpp horizontal_authoring.cpp slab_authoring.cpp blockout_aids.cpp
-    content_catalog.cpp stage_registration.cpp user_stage_save.cpp save_guidance.cpp paint_mechanism_guide.cpp window_layout.cpp)
+    content_catalog.cpp prepared_file.cpp stage_registration.cpp user_stage_save.cpp save_guidance.cpp paint_mechanism_guide.cpp window_layout.cpp)
 target_include_directories(colourwars_level_document PUBLIC "${PROJECT_SOURCE_DIR}")
 # The game/contracts/ headers it includes are held to their rule (game/CMakeLists.txt).
 add_dependencies(colourwars_level_document colourwars_check_contract_includes)

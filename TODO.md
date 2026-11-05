@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#63` | OPEN | MED | M | One atomic file writer for the six drifted temp-then-rename copies (replay truncates in place, screenshots leave partial PNGs) and one debug file-stem rule. [Scope](docs/code-hygiene.md#one-atomic-file-writer-and-one-debug-file-stem-rule-hyg63). |
 | `HYG#64` | OPEN | MED | S | Classify the game's own out-of-bounds throw by type, not message; fix two misleading diagnostics; standard exceptions for impossible states, which must not draw "ERROR". [Scope](docs/code-hygiene.md#diagnostics-and-impossible-states-hyg64). |
 | `HYG#65` | OPEN | MED | S | Fixed arrays filled from literal lists or indexed past a fixed 4 (`was_dead`), uninitialised `DisplaySettingsChoice`, copyable resource owners, a null guard on the wrong pointer. [Scope](docs/code-hygiene.md#fixed-arrays-and-lifetime-hazards-hyg65). |
 | `HYG#66` | OPEN | MED | M | One owner each for human count to layout, bot difficulty names, best-of, round count, stage rules, the player limit, and the stick and play-setting bounds. [Scope](docs/code-hygiene.md#match-domain-rules-and-settings-bounds-in-one-place-hyg66). |

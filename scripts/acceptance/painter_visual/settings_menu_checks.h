@@ -468,11 +468,11 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     contrast(applied, text_bounds(presentation.prompt_bar().font,
         L"Settings applied and saved.", look.options_status_position));
 
-    // A directory at the exact temporary-file location refuses this write while
+    // A lock on the save refuses the replacing move of this write while
     // preserving the previous JSON, allowing the production warning to render.
     const std::string last_saved = saved_bytes();
-    const std::filesystem::path blocked = save_path.wstring() + L".tmp";
-    require(std::filesystem::create_directory(blocked), "Cannot block the isolated save's temporary file");
+    acceptance::ReplacementLock blocked(save_path);
+    require(blocked.hold(), "Cannot lock the isolated save");
     for (size_t row = palette_row; row < apply_row; ++row) { tap(Key::up); }
     tap(Key::right);
     for (size_t row = palette_row; row < apply_row; ++row) { tap(Key::down); }
@@ -482,7 +482,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const Frame failed = capture("options", "save-failed", options_panel, row_label(apply_row));
     contrast(failed, text_bounds(presentation.prompt_bar().font,
         L"Settings active for this run. Could not save for next time.", look.options_status_position));
-    require(std::filesystem::remove(blocked), "Could not remove the isolated write refusal fixture");
+    require(blocked.release(), "Could not remove the isolated write refusal fixture");
 
     // Saved fullscreen metadata is enough to exercise the disabled row. Only
     // Off is applied using the isolated hidden, windowed fixture above.

@@ -50,6 +50,7 @@ add_library(colourwars_game STATIC
     config/presentation/presentation_validation_text.cpp
     match/round_tape.cpp
     input/rumble.cpp
+    save/atomic_file.cpp
     save/save.cpp
     save/save_profiles.cpp
     match/series_stage_rule.cpp

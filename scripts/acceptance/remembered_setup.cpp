@@ -8,6 +8,7 @@
 #include "game/match/match_setup.h"
 #include "engine/assets/json.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 
 #include <objbase.h>
 #include <array>
@@ -62,14 +63,11 @@ namespace
         {
             _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
             std::error_code ignored;
-            std::filesystem::remove(temporary_path(), ignored);
-            std::filesystem::remove(save_path(), ignored);
-            std::filesystem::remove(root_ / L"ColourWars", ignored);
-            std::filesystem::remove(root_, ignored);
+            std::filesystem::remove_all(root_, ignored);
         }
 
         std::filesystem::path save_path() const { return root_ / L"ColourWars" / L"save_data.json"; }
-        std::filesystem::path temporary_path() const { return save_path().wstring() + L".tmp"; }
+        bool temporary_left() const { return acceptance::temporary_beside(save_path()); }
         void write(const std::string& json) const
         {
             std::ofstream stream(save_path(), std::ios::binary | std::ios::trunc);
@@ -411,7 +409,7 @@ namespace
             rejects([&] { candidate.validate(); }, "Invalid remembered aggregate passed validation");
             rejects([&] { save.remember_match_setup_and_save(candidate); }, "Invalid remembered aggregate was saved");
             require(save.last_match_setup() && same(*save.last_match_setup(), before) &&
-                directory.contents() == bytes && !std::filesystem::exists(directory.temporary_path()),
+                directory.contents() == bytes && !directory.temporary_left(),
                 "Rejected remembered setup changed memory, bytes or staging files");
         };
         auto candidate = before; candidate.players.clear(); invalid(candidate);
@@ -447,42 +445,23 @@ namespace
         require(directory.contents() == bytes, "Capture validation wrote to the save");
     }
 
-    class ReplacementLock
-    {
-    public:
-        explicit ReplacementLock(const std::filesystem::path& path)
-        {
-            handle_ = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            require(handle_ != INVALID_HANDLE_VALUE, "Cannot lock private save replacement");
-        }
-        ~ReplacementLock() { CloseHandle(handle_); }
-    private:
-        HANDLE handle_ = INVALID_HANDLE_VALUE;
-    };
-
+    // The save's temporary is uniquely named (replace_file_atomically), so
+    // the failure is the replacing move, refused by a lock on the old save.
     void check_failures_and_independence(const IsolatedSaveDirectory& directory)
     {
-        for (bool replacement_failure : {false, true})
         {
             Save save = load(directory, valid_section); SettingsSession save_session(save);
             const auto old = *save.last_match_setup();
             const std::string bytes = directory.contents();
             const auto active = settings(4, 4);
             const auto proposed = LastMatchSetup::capture(active);
-            if (replacement_failure)
             {
-                const ReplacementLock lock(directory.save_path());
+                acceptance::ReplacementLock lock(directory.save_path());
+                require(lock.hold(), "Cannot lock private save replacement");
                 require(!save.remember_match_setup_and_save(proposed), "Locked save replacement unexpectedly succeeded");
             }
-            else
-            {
-                require(std::filesystem::create_directory(directory.temporary_path()), "Cannot block own staging path");
-                require(!save.remember_match_setup_and_save(proposed), "Blocked staging write unexpectedly succeeded");
-                require(std::filesystem::remove(directory.temporary_path()), "Cannot remove own staging blocker");
-            }
             require(save.last_match_setup() && same(*save.last_match_setup(), old) && directory.contents() == bytes &&
-                !std::filesystem::exists(directory.temporary_path()),
+                !directory.temporary_left(),
                 "Failed remembered save changed old memory/bytes or left a temporary file");
             require_other_sections(save);
             require(active.input_roster_complete() && active.player_index_for_slot(2) == 1 &&

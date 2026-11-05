@@ -8,6 +8,7 @@
 #include "game/states/menu_input.h"
 #include "engine/input/gamepad_reader.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 #include <objbase.h>
 #include <array>
 #include <cstdint>
@@ -129,11 +130,10 @@ namespace input_bindings_acceptance
             _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
             if (retained_) { return; } // Explicit relaunch profiles belong to the caller across processes.
             std::error_code ignored;
-            std::filesystem::remove(temporary_path(), ignored); std::filesystem::remove(save_path(), ignored);
-            std::filesystem::remove(root_ / L"ColourWars", ignored); std::filesystem::remove(root_, ignored);
+            std::filesystem::remove_all(root_, ignored);
         }
         std::filesystem::path save_path() const { return root_ / L"ColourWars/save_data.json"; }
-        std::filesystem::path temporary_path() const { return save_path().wstring() + L".tmp"; }
+        bool temporary_left() const { return acceptance::temporary_beside(save_path()); }
         void write(const std::string& json) const
         {
             std::ofstream stream(save_path(), std::ios::binary | std::ios::trunc); stream << json;

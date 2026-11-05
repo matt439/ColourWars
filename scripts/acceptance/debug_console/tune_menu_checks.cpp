@@ -210,8 +210,8 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     {
         require(!impl.execute(command).ok && document->current().text() == held_current && document->baseline().text() == saved &&
             ledger() == held_ledger && document->edits().size() == 2 && read_text(scratch.source / L"presentation.json") == invalid &&
-            read_text(scratch.staged / L"presentation.json") == saved && !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
-            !std::filesystem::exists(scratch.source / L"presentation.json.bak") && !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+            read_text(scratch.staged / L"presentation.json") == saved && !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
+            !std::filesystem::exists(scratch.source / L"presentation.json.bak") && !acceptance::temporary_beside(scratch.staged / L"presentation.json"),
             "Ordinary/forced invalid merged HUD geometry saves preserve exact files, live values and both ledger token pairs"); unchanged();
     }
     expected = initial; expected[stage_preview_background_colour_index] = labrador::Colour(32, 96, 192, 128);

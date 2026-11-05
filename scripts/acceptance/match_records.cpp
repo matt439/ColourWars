@@ -6,6 +6,7 @@
 #include "game/directory_consts.h"
 #include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 
 #include <algorithm>
 #include <cmath>
@@ -510,7 +511,7 @@ namespace
 		require(std::filesystem::exists(directory.side_copy(1)) && read_bytes(directory.side_copy(1)) == bytes,
 			"An unopenable save was not copied aside byte for byte");
 		require(directory.contents() == bytes, "Loading an unopenable save wrote over it");
-		require(!std::filesystem::exists(directory.save_path().wstring() + L".tmp"),
+		require(!acceptance::temporary_beside(directory.save_path()),
 			"Loading an unopenable save left a temporary file");
 	}
 

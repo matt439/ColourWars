@@ -4,6 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/script/debug_script.h"
 #include "game/debug/commands/debug_tokenizer.h"
+#include "game/debug/script/debug_file_name.h"
 
 std::string DebugScriptStatement::where() const
 {
@@ -19,18 +20,9 @@ namespace debug_script
 		{
 			stem.remove_suffix(4);
 		}
-		if (stem.empty() || stem.size() > 64)
+		if (!debug_file_name::valid_stem(stem))
 		{
 			return false;
-		}
-		for (const char c : stem)
-		{
-			const bool allowed = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-				(c >= '0' && c <= '9') || c == '_' || c == '-';
-			if (!allowed)
-			{
-				return false;
-			}
 		}
 		file = std::string(stem) + ".cfg";
 		return true;

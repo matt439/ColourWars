@@ -3,6 +3,7 @@
 #include "game/config/settings_session.h"
 #include "game/states/controls_settings_menu.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -683,7 +684,7 @@ int main()
 			"Failed saves lost the active settings");
 		require(contents(directory.save_path()) == original,
 			"Failed replacement damaged the previous save");
-		require(!std::filesystem::exists(directory.save_path().wstring() + L".tmp"),
+		require(!acceptance::temporary_beside(directory.save_path()),
 			"Failed replacement left a temporary save");
 		require(save.save_to_file(), "Save did not recover after the lock was released");
 		check_round_trip(save);

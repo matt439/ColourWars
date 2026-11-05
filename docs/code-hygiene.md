@@ -298,18 +298,62 @@ Both presets build under `/W4 /WX`. `settings`, `level_format`, `bot_driver` and
 
 ### One atomic file writer and one debug file-stem rule (`HYG#63`)
 
-Add one game-side `replace_file_atomically(path, bytes)`. It uses a unique
-sibling temporary, flushes, renames with write-through and removes the temporary
-on failure. Route the six writers through it: `save.cpp`, `fatal_report.cpp`,
-`debug_files.cpp:25`, `tune_commands.cpp:52`, `ReplayFile::write`
-(`replay.cpp:1027`, which truncates in place and ignores the
-`create_directories` error) and the screenshot writer (`debug_screenshot.cpp:73`,
-which leaves partial PNGs). Give the editor one shared copy
-(`stage_registration.cpp:516`) inside its own library. Add
-`debug_file_name::valid_stem` and use it in the five stem checks
-(`script_commands.cpp:74`), which gives `perf.capture` (`:416`) the reserved-name
-refusal. Make `replay_names` (`replay_commands.cpp:66`) use the non-throwing
-iterator increment.
+**Done 2026-11-05; behaviour change.** A replay is no longer truncated in place,
+a failed screenshot no longer leaves a partial PNG, and `exec` and
+`perf.capture` refuse reserved Windows names.
+
+- `replace_file_atomically(path, bytes)`
+  ([atomic_file.h](../game/save/atomic_file.h)) creates the parent, writes a
+  `CREATE_NEW` sibling named `<file>.<process>-<n>.tmp`, flushes it, moves it
+  over the file with replace and write-through, and deletes it on any failure.
+  The save (now serialised to a string first), the fatal-error record,
+  `debug_files::write_file`, `tune.save` (including its `.bak` fallback),
+  `ReplayFile::write` (which no longer ignores a `create_directories` failure)
+  and the screenshot writer (which now encodes the PNG into memory) all go
+  through it.
+- The editor's one copy is `PreparedFile` and `replace_prepared_file`
+  ([prepared_file.h](../editor/prepared_file.h)) in `colourwars_level_document`.
+  It is split into prepare and replace because document Save and stage
+  registration both recheck the destination in between. Six editor-linked probe
+  cases gained an `editor_prepared_file_adapter.cpp`, as they already compile
+  `level_document.cpp`.
+- `debug_file_name` ([debug_file_name.h](../game/debug/script/debug_file_name.h))
+  has `stem_character`, `valid_stem` and `max_stem` beside `reserved_stem`. The
+  two refusing checks (`exec`'s `debug_script::file_name` and `perf.capture`)
+  use `valid_stem`; the three repairing ones (`replay_name`, the screenshot name
+  and `screenshot.dir`) use `stem_character`.
+- `replay_names` lists with `increment(error)`.
+
+The unique temporary changed how probes fail a save on purpose. Sixteen sites
+made a directory at the fixed `save_data.json.tmp`, which no longer blocks
+anything. They now hold the old save open without delete sharing through
+`acceptance::ReplacementLock` ([replacement_lock.h](../scripts/acceptance/support/replacement_lock.h)):
+`display_trial`, `input_bindings` (twice), `remembered_setup` and twelve painter
+leaves. The three probes that ran a write both ways (blocked temporary, then
+locked save) now run only the locked one, because the writer's temporary can no
+longer be named from outside. The 50-odd checks that a fixed `*.tmp` was absent
+would now pass vacuously; they ask `acceptance::temporary_beside`, which finds
+any `<file>.*.tmp`. New checks: a locked replay and a locked PNG refuse the
+write, keep the earlier file whole and leave no temporary; a replay whose folder
+cannot be created is refused; `exec CON`, `nul.cfg` and `Com1` and
+`perf.capture` with `CON`, `nul`, `Com1` and `lpt9` are refused.
+
+Handed to [`HYG#84`](#probe-save-isolation-and-json-fixtures-hyg84):
+`settings.cpp`'s hand-made lock and the dead `save_data.json.tmp` removals in
+three fixture destructors. `ReplacementLock` is the lock that row names, and it
+moves into its `isolated_save.h`.
+
+Both presets build under `/W4 /WX`. `settings`, `player_profiles`,
+`match_records`, `remembered_setup`, `input_bindings`, `display_trial`,
+`fatal_report`, `debug_console`, `moving_structure`, `fixed_slab` and `session`
+passed in Debug and Release, as did the opt-in `turbulence_movers` and
+`turbulence_slopes`; `turbulence_slab_routes` and `turbulence_slab_tools`, which
+need the private trial, compiled in both. `check-level-editor.ps1` (with its
+save-guidance check) and `check-startup.ps1` passed in both presets. On MattPC,
+`check-painter.ps1` passed `-ControlsMenuOnly`, `-SettingsMenuOnly`,
+`-DisplayTrialOnly`, `-KeyboardJumpOnly`, `-OptionsDefaultsOnly`,
+`-PausedOptionsOnly`, `-PercentageTextOnly`, `-RumbleOnly` and
+`-StickSettingsOnly` in both presets: the twelve ported save-failure leaves.
 
 ### Diagnostics and impossible states (`HYG#64`)
 
@@ -707,6 +751,12 @@ Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
 fixtures and read/write helpers (`combat_feedback.cpp:342`, `view_shake.cpp:553`,
 `series_stage_rule.cpp:361`, `story_audio.cpp:59`, `locales.cpp:59`,
 `practice_workshop.cpp:337`, `menu_presentation.cpp:233`).
+
+From `HYG#63`: `acceptance::ReplacementLock` and `temporary_beside` already
+exist in `support/replacement_lock.h`; fold them into `isolated_save.h`. Port
+`settings.cpp`'s hand-made `locked` handle to it, and drop the
+`save_data.json.tmp` removals in the `settings`, `match_records` and
+`player_profiles` destructors, which no writer creates any more.
 
 ### Level-driving and route fixtures (`HYG#85`)
 

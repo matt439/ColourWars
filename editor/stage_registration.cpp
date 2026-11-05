@@ -1,6 +1,7 @@
 #include "editor/stage_registration.h"
 #include "editor/content_catalog.h"
 #include "editor/level_document.h"
+#include "editor/prepared_file.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -16,7 +17,6 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cctype>
 #include <exception>
 #include <fstream>
@@ -510,63 +510,6 @@ namespace colourwars_editor
             if (read(path) != expected) fail("Changed since registration preview; preview again: " + shown(path));
         }
 
-        class Prepared
-        {
-        public:
-            Prepared(const fs::path& destination, std::string_view label, const std::string& bytes)
-            {
-                path = destination;
-                path += ".registration-" + std::to_string(GetCurrentProcessId()) + "-" +
-                    std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" +
-                    std::string(label);
-                HANDLE output = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
-                    FILE_ATTRIBUTE_NORMAL, nullptr);
-                if (output == INVALID_HANDLE_VALUE) throw std::system_error(static_cast<int>(GetLastError()),
-                    std::system_category(), "Cannot create registration sibling");
-                try
-                {
-                    std::size_t offset = 0;
-                    while (offset < bytes.size())
-                    {
-                        const DWORD size = static_cast<DWORD>(std::min(bytes.size() - offset,
-                            static_cast<std::size_t>(std::numeric_limits<DWORD>::max())));
-                        DWORD written = 0;
-                        if (!WriteFile(output, bytes.data() + offset, size, &written, nullptr))
-                            throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                                "Cannot write registration sibling");
-                        if (written == 0) fail("The registration sibling stopped accepting data");
-                        offset += written;
-                    }
-                    if (!FlushFileBuffers(output)) throw std::system_error(static_cast<int>(GetLastError()),
-                        std::system_category(), "Cannot flush registration sibling");
-                    const BOOL closed = CloseHandle(output);
-                    output = INVALID_HANDLE_VALUE;
-                    if (!closed) throw std::system_error(static_cast<int>(GetLastError()),
-                        std::system_category(), "Cannot close registration sibling");
-                }
-                catch (...)
-                {
-                    if (output != INVALID_HANDLE_VALUE) CloseHandle(output);
-                    DeleteFileW(path.c_str());
-                    throw;
-                }
-            }
-            ~Prepared() { if (!keep_) DeleteFileW(path.c_str()); }
-            Prepared(const Prepared&) = delete;
-            Prepared& operator=(const Prepared&) = delete;
-            void retain() { keep_ = true; }
-            fs::path path;
-        private:
-            bool keep_ = false;
-        };
-
-        void replace_file(const fs::path& from, const fs::path& to)
-        {
-            if (!MoveFileExW(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-                throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                    "Cannot replace " + shown(to));
-        }
-
         std::string failure_text(const std::exception_ptr& error)
         {
             try { std::rethrow_exception(error); }
@@ -761,13 +704,15 @@ namespace colourwars_editor
                 files[index]->original == previewed[index]->original && files[index]->proposed == previewed[index]->proposed;
         if (!same) fail("Registration inputs or proposal changed; preview again");
         if (fresh.already_registered) return false;
-        std::vector<std::unique_ptr<Prepared>> candidates, originals;
+        std::vector<std::unique_ptr<PreparedFile>> candidates, originals;
         for (const StageRegistrationFile* file : files)
-            candidates.push_back(std::make_unique<Prepared>(file->path, "candidate", file->proposed));
+            candidates.push_back(std::make_unique<PreparedFile>(file->path, "registration", "-candidate",
+                file->proposed));
         for (const StageRegistrationFile* file : files)
-            originals.push_back(std::make_unique<Prepared>(file->path, "original", file->original));
+            originals.push_back(std::make_unique<PreparedFile>(file->path, "registration", "-original",
+                file->original));
         const auto perform = [&](const fs::path& source, const fs::path& target)
-        { if (replace) replace(source, target); else replace_file(source, target); };
+        { if (replace) replace(source, target); else replace_prepared_file(source, target); };
         // Before each replacement, every file is what the order says it should
         // be by then: the ones done are proposed, the rest still original.
         const auto recheck_all = [&](std::size_t done)
@@ -782,7 +727,7 @@ namespace colourwars_editor
             for (; done < files.size(); ++done)
             {
                 recheck_all(done);
-                perform(candidates[done]->path, files[done]->path);
+                perform(candidates[done]->path(), files[done]->path);
             }
         }
         catch (...)
@@ -799,7 +744,7 @@ namespace colourwars_editor
                 try
                 {
                     recheck(files[index]->path, files[index]->proposed);
-                    perform(originals[index]->path, files[index]->path);
+                    perform(originals[index]->path(), files[index]->path);
                     restored[index] = true;
                 }
                 catch (...)
@@ -815,7 +760,7 @@ namespace colourwars_editor
                 {
                     if (restored[index]) continue;
                     originals[index]->retain();
-                    retained.push_back(originals[index]->path);
+                    retained.push_back(originals[index]->path());
                 }
                 throw StageRegistrationError(std::string("Registration failed: ") + failure_text(failure) +
                     "; rollback could not complete: " + rollback_failures +

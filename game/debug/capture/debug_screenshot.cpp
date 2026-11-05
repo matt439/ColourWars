@@ -6,9 +6,12 @@
 #include "game/debug/capture/debug_screenshot.h"
 #include "engine/app/application.h"
 #include "engine/render/renderer.h"
+#include "game/save/atomic_file.h"
 #include <cctype>
 #include <cstdio>
 #include <ctime>
+#include <limits>
+#include <objbase.h>
 #include <wincodec.h>
 #include <wrl/client.h>
 
@@ -67,11 +70,11 @@ bool write_png(const std::filesystem::path& path, const ScreenCapture& image,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(factory.GetAddressOf()));
 	if (FAILED(result)) { return failed("creating the WIC factory", result); }
 
-	ComPtr<IWICStream> stream;
-	result = factory->CreateStream(stream.GetAddressOf());
+	// Encoded in memory and written whole, so a failure never leaves a partial
+	// PNG (or truncates an earlier one of the same name).
+	ComPtr<IStream> stream;
+	result = CreateStreamOnHGlobal(nullptr, TRUE, stream.GetAddressOf());
 	if (FAILED(result)) { return failed("creating a stream", result); }
-	result = stream->InitializeFromFilename(path.c_str(), GENERIC_WRITE);
-	if (FAILED(result)) { return failed("opening the file", result); }
 
 	ComPtr<IWICBitmapEncoder> encoder;
 	result = factory->CreateEncoder(GUID_ContainerFormatPng, nullptr, encoder.GetAddressOf());
@@ -99,6 +102,26 @@ bool write_png(const std::filesystem::path& path, const ScreenCapture& image,
 	if (FAILED(result)) { return failed("committing the frame", result); }
 	result = encoder->Commit();
 	if (FAILED(result)) { return failed("committing the file", result); }
+
+	STATSTG status{};
+	result = stream->Stat(&status, STATFLAG_NONAME);
+	if (FAILED(result)) { return failed("measuring the PNG", result); }
+	if (status.cbSize.QuadPart > (std::numeric_limits<ULONG>::max)())
+	{
+		error = "the PNG is too large";
+		return false;
+	}
+	std::string png(static_cast<std::size_t>(status.cbSize.QuadPart), '\0');
+	result = stream->Seek(LARGE_INTEGER{}, STREAM_SEEK_SET, nullptr);
+	if (FAILED(result)) { return failed("rewinding the PNG", result); }
+	ULONG read = 0;
+	result = stream->Read(png.data(), static_cast<ULONG>(png.size()), &read);
+	if (FAILED(result) || read != png.size()) { return failed("reading the PNG back", result); }
+	if (!replace_file_atomically(path, png))
+	{
+		error = "writing the file failed";
+		return false;
+	}
 	return true;
 }
 
@@ -120,11 +143,7 @@ std::string screenshot_file_name(std::string_view requested,
 	}
 	for (char& c : name)
 	{
-		const unsigned char u = static_cast<unsigned char>(c);
-		if (!(std::isalnum(u) && u < 0x80) && c != '_' && c != '-')
-		{
-			c = '_';
-		}
+		c = debug_file_name::stem_character(c) ? c : '_';
 	}
 	if (name.empty())
 	{

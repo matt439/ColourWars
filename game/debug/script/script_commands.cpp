@@ -71,9 +71,7 @@ namespace
 				{
 					for (char& c : segment)
 					{
-						const bool allowed = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-							(c >= '0' && c <= '9') || c == '_' || c == '-';
-						c = allowed ? c : '_';
+						c = debug_file_name::stem_character(c) ? c : '_';
 					}
 					segments.push_back(segment);
 				}
@@ -253,8 +251,8 @@ DebugStatus DebugDirectorImpl::exec_script(const std::string& name,
 	std::string file;
 	if (!debug_script::file_name(name, file))
 	{
-		return DebugStatus::failure("exec: '" + name + "' is not a script name ([A-Za-z0-9_-], "
-			"optionally .cfg; not a path)");
+		return DebugStatus::failure("exec: '" + name + "' is not a script name (1-64 of "
+			"[A-Za-z0-9_-], optionally .cfg; not a path or a reserved Windows name)");
 	}
 	std::filesystem::path found;
 	std::string searched;
@@ -413,13 +411,10 @@ DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
 		return DebugStatus::failure("perf.capture: expected 1-36000 rendered intervals");
 	}
 	const std::string& label = args.text(1);
-	if (label.empty() || label.size() > 64 || !std::all_of(label.begin(), label.end(), [](char c)
+	if (!debug_file_name::valid_stem(label))
 	{
-		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-			(c >= '0' && c <= '9') || c == '-' || c == '_';
-	}))
-	{
-		return DebugStatus::failure("perf.capture: label must use 1-64 letters, digits, '-' or '_'");
+		return DebugStatus::failure("perf.capture: label must use 1-64 letters, digits, '-' or '_' "
+			"and not be a reserved Windows name");
 	}
 	if (this->perf_capture_path_ || this->perf_.capture_active() || this->perf_.capture_ready())
 	{

@@ -7,7 +7,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     const NestedSaveProfile isolated(output / "keyboard-jump-profile");
     const auto save_path = output / "keyboard-jump-profile" / "ColourWars" / "save_data.json";
-    const auto blocked_path = std::filesystem::path(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked_path(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet;
     quiet.music_volume = quiet.sfx_volume = 0;
@@ -37,11 +37,11 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         StateContext& stack;
         Presentation& presentation;
         const Presentation& original;
-        std::filesystem::path blocked;
+        acceptance::ReplacementLock& blocked;
         ~RestoreKeyboardJump()
         {
             this->stack.clear(); this->presentation = this->original;
-            std::error_code error; std::filesystem::remove(this->blocked, error);
+            this->blocked.release();
         }
     } restore{ stack, presentation, original, blocked_path };
     const auto bytes = [&]
@@ -360,14 +360,14 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         // intact. The same real Apply widget retries after the refusal clears.
         move(Key::down, 2); tap(Key::enter); tick(); tap(Key::k); tick(); move(Key::down, 5);
         const std::string before_failure = bytes();
-        require(std::filesystem::create_directory(blocked_path), "Cannot refuse private Jump temporary write");
+        require(blocked_path.hold(), "Cannot lock the private Jump save");
         tap(Key::enter); tick();
         require(preferences_session.input_bindings().keyboard_jump == Key::k && bytes() == before_failure,
             "Failed Jump write lost the active choice or replaced the old JSON");
         reload(Key::j, 10);
         copy_check("save-failed-k", original, help_copy(copy, Key::k, Key::k),
             original.menu_text().status.active_save_failed, true, Key::k, Key::k);
-        require(std::filesystem::remove(blocked_path), "Cannot clear private Jump temporary-write refusal");
+        require(blocked_path.release(), "Cannot release the private Jump save lock");
         tap(Key::enter); tick(); reload(Key::k, 10);
         // Reset then Back discards its Space proposal while K stays effective.
         tap(Key::up); tap(Key::enter);

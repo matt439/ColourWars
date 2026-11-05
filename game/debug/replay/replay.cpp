@@ -8,6 +8,7 @@
 #include "engine/core/file_path.h"
 #include "game/debug/replay/match_plan.h"
 #include "game/debug/tune/tune_document.h"
+#include "game/save/atomic_file.h"
 #include "game/input/input_slots.h"
 #include "game/objects/horizontal_motion.h"
 #include <algorithm>
@@ -18,7 +19,6 @@
 #include <chrono>
 #include <cstdio>
 #include <ctime>
-#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -889,9 +889,7 @@ std::string replay_name(std::string_view requested)
 	std::string name;
 	for (const char c : requested)
 	{
-		const bool safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-			(c >= '0' && c <= '9') || c == '_' || c == '-';
-		name += safe ? c : '_';
+		name += debug_file_name::stem_character(c) ? c : '_';
 	}
 	if (name.size() > 5 && name.compare(name.size() - 5, 5, "_json") == 0)
 	{
@@ -1024,13 +1022,8 @@ void ReplayFile::write(const std::filesystem::path& path) const
 		out << "  ]\n}\n";
 	}
 
-	std::error_code error;
-	std::filesystem::create_directories(path.parent_path(), error);
-	std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-	const std::string text = out.str();
-	stream.write(text.data(), static_cast<std::streamsize>(text.size()));
-	stream.close();
-	if (!stream)
+	// A failed write leaves any earlier replay of this name whole.
+	if (!replace_file_atomically(path, out.str()))
 	{
 		fail(path, "could not be written");
 	}

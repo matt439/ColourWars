@@ -33,7 +33,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         ~StatusProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } isolated(profile);
     const auto save_path = profile / "ColourWars" / "save_data.json";
-    const auto blocked = std::filesystem::path(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]
     {
@@ -58,11 +58,11 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     struct RestoreStatus
     {
         StateContext& stack; Presentation& presentation; Presentation original;
-        std::filesystem::path blocked;
+        acceptance::ReplacementLock& blocked;
         ~RestoreStatus()
         {
             this->stack.clear(); this->presentation = this->original;
-            std::error_code ignored; std::filesystem::remove(this->blocked, ignored);
+            this->blocked.release();
         }
     } restore{ stack, presentation, original, blocked };
     const auto tick = [&] { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
@@ -179,9 +179,9 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     };
     const auto failure = [&](int page)
     {
-        require(std::filesystem::create_directory(blocked), "Cannot refuse the isolated status save");
+        require(blocked.hold(), "Cannot refuse the isolated status save");
         apply(page);
-        require(std::filesystem::remove(blocked), "Cannot release the isolated status save refusal");
+        require(blocked.release(), "Cannot release the isolated status save refusal");
     };
     const std::array<int, 2> pages = controls_pages ? std::array<int, 2>{ 1, 2 } : std::array<int, 2>{ 0, -1 };
     for (int page : pages)

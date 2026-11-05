@@ -32,8 +32,9 @@ namespace debug_script
 	inline constexpr std::size_t max_bytes = 64 * 1024;
 	inline constexpr std::size_t max_lines = 2000;
 
-	// The file a script name means: [A-Za-z0-9_-]+ with an optional ".cfg".
-	// False for anything else, so a name can never be a path.
+	// The file a script name means: a debug_file_name::valid_stem (1-64 of
+	// [A-Za-z0-9_-], not a reserved Windows name) with an optional ".cfg".
+	// False for anything else, so a name can never be a path or a device.
 	bool file_name(std::string_view name, std::string& file);
 
 	// The line with a // comment removed; // inside double quotes is text.

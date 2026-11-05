@@ -11,6 +11,7 @@
 
 #include "editor/content_catalog.h"
 #include "editor/level_json.h"
+#include "editor/prepared_file.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
 #include "game/contracts/level_format.h"
@@ -18,7 +19,6 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cmath>
 #include <exception>
 #include <fstream>
@@ -364,66 +364,13 @@ namespace colourwars_editor
         std::string source_bytes = saved_text;
         std::vector<std::string> saved_history = impl_->history;
         saved_history[impl_->history_index] = saved_text;
-        // A sibling temporary guarantees a same-volume rename. CREATE_NEW owns it
-        // exclusively, including when two editor processes save simultaneously.
-        const std::string suffix = ".editor-" + std::to_string(GetCurrentProcessId()) + "-" +
-            std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
-        std::filesystem::path temporary = path;
-        temporary += suffix + ".tmp";
-        HANDLE output = CreateFileW(temporary.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
-            FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (output == INVALID_HANDLE_VALUE)
-        {
-            throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                "Could not create the temporary save file");
-        }
-        try
-        {
-            std::size_t offset = 0;
-            while (offset < saved_text.size())
-            {
-                const DWORD count = static_cast<DWORD>(std::min(saved_text.size() - offset,
-                    static_cast<std::size_t>(std::numeric_limits<DWORD>::max())));
-                DWORD written = 0;
-                if (!WriteFile(output, saved_text.data() + offset, count, &written, nullptr))
-                {
-                    throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                        "Could not write the complete level file");
-                }
-                if (written == 0) { fail("The temporary save file stopped accepting data."); }
-                offset += written;
-            }
-            if (!FlushFileBuffers(output))
-            {
-                throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                    "Could not flush the level file");
-            }
-            const BOOL closed = CloseHandle(output);
-            output = INVALID_HANDLE_VALUE;
-            if (!closed)
-            {
-                throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                    "Could not close the level file");
-            }
-            // Another writer may have changed the destination while the temporary
-            // was written. Refuse before replacement, retaining both authors' work.
-            if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
-            // One Windows rename replaces the destination. Separate old->backup,
-            // temp->destination renames leave the authored file absent between calls.
-            // ReplaceFileW without a backup can also remove it on error 1176.
-            if (!MoveFileExW(temporary.c_str(), path.c_str(),
-                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-            {
-                throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                    "Could not replace the level file");
-            }
-        }
-        catch (...)
-        {
-            if (output != INVALID_HANDLE_VALUE) { CloseHandle(output); }
-            DeleteFileW(temporary.c_str());
-            throw;
-        }
+        // A sibling temporary guarantees a same-volume rename, and its unique
+        // name keeps two editor processes saving at once apart.
+        PreparedFile temporary(path, "editor", ".tmp", saved_text);
+        // Another writer may have changed the destination while the temporary
+        // was written. Refuse before replacement, retaining both authors' work.
+        if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
+        temporary.replace(path);
         impl_->document.Swap(saved_document);
         impl_->history.swap(saved_history);
         impl_->path.swap(saved_path);

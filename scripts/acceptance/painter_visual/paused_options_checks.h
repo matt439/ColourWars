@@ -156,7 +156,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         ~Profile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } profile(output / "paused-options-profile");
     const auto save_path = output / "paused-options-profile" / "ColourWars" / "save_data.json";
-    const std::filesystem::path blocked(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(save_path);
     const HWND window = static_cast<HWND>(app.window());
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected; expected.aim_sensitivity = 5;
     expected.music_volume = expected.sfx_volume = 0; expected.view_shake = expected.aim_marker = false;
@@ -172,9 +172,9 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     StateContext& stack = app;
     struct Cleanup
     {
-        StateContext& stack; Presentation& presentation; Presentation original; std::filesystem::path blocked;
+        StateContext& stack; Presentation& presentation; Presentation original; acceptance::ReplacementLock& blocked;
         ~Cleanup() { this->stack.clear(); this->presentation = this->original; painter_scripted_pads::states = {};
-            std::error_code ignored; std::filesystem::remove(this->blocked, ignored); }
+            this->blocked.release(); }
     } cleanup{ stack, presentation, original, blocked };
     const int keyboard = input_slots::keyboard_and_mouse;
     int owner = keyboard, device = keyboard, row = 0, players = 1;
@@ -423,12 +423,12 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
             tick(1.0f); require(stack.depth() == 6, "Covered paused trial popped its cover"); stack.pop(); tick(); }
         rolled_back(); require(bytes() == before, "Reverted paused trial wrote preferences");
     }
-    begin_trial(); require(std::filesystem::create_directory(blocked), "Cannot create controlled paused Keep refusal");
+    begin_trial(); require(blocked.hold(), "Cannot create controlled paused Keep refusal");
     const auto durable = bytes(); tap(GamepadButton::dpad_up); tap(GamepadButton::a); hide(); tick();
     require(stack.depth() == 4 && preferences.resolution() == ScreenResolution::s_1920_1080 && bytes() == durable,
         "Failed paused Keep lost active candidate or durable old preferences"); status = original.menu_text().status.options_save_failed; warning = true;
     resize({1280,720}); compare("keep-save-failed", true); check_world();
-    require(std::filesystem::remove(blocked), "Cannot remove controlled paused Keep refusal"); tap(GamepadButton::a); status = original.menu_text().status.options_saved; warning = false;
+    require(blocked.release(), "Cannot remove controlled paused Keep refusal"); tap(GamepadButton::a); status = original.menu_text().status.options_saved; warning = false;
     compare("keep-save-recovered", true); Save loaded; SettingsSession loaded_session(loaded); loaded_session.load_save_file();
     require(loaded.resolution() == ScreenResolution::s_1920_1080 && loaded.team_palette() == TeamColourPair::random && loaded.vsync() && app.renderer()->vsync(), "Paused Keep recovery failed reload"); preserved(); check_world();
     // Public developer hooks reject match replacement and unwind only this child.

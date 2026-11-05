@@ -146,9 +146,9 @@
 			opening->desktop_colour == labrador::Colour(32, 96, 192, 128) && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Desktop resets to its saved partial-alpha baseline without discarding the external source or leaving recovery files");
 		unchanged();
 		write_text(scratch.source / L"presentation.json", saved);
@@ -306,9 +306,9 @@
 			opening->monitor_art.power_light == labrador::Colour(32, 96, 192, 128) && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Power-light resets to its saved partial-alpha baseline without discarding the external source or leaving recovery files");
 		unchanged();
 		write_text(scratch.source / L"presentation.json", saved);
@@ -466,9 +466,9 @@
 			opening->program_colour == labrador::Colour(32, 96, 192, 128) && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Program resets to its saved partial-alpha baseline without discarding the external source or leaving recovery files");
 		unchanged();
 		write_text(scratch.source / L"presentation.json", saved);
@@ -637,9 +637,9 @@
 			pending->edits().size() == 1 && pending->edits().contains("debug_overlay.colour") &&
 			pending->current().text() == overlay_only && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Glass resets to its saved partial-alpha token while retaining unrelated pending colour, invalid external source and exact staging without recovery files");
 		unchanged();
 		restored_colours[3] = initial_colours[3];

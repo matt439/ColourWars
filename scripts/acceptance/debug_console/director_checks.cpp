@@ -647,6 +647,19 @@ namespace debug_console_acceptance
 			std::ifstream stream(path, std::ios::binary);
 			bytes.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 		}
+		// Encoded in memory and replaced whole: a refused write keeps the
+		// earlier PNG and leaves no partial file or temporary beside it.
+		{
+			acceptance::ReplacementLock lock(path);
+			require(lock.hold(), "Cannot lock the screenshot fixture");
+			error.clear();
+			require(!write_png(path, image, error) && !error.empty(), "A refused PNG write is reported");
+			require(lock.release(), "Cannot release the screenshot fixture");
+			std::ifstream stream(path, std::ios::binary);
+			const std::string kept((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+			require(kept == bytes && !acceptance::temporary_beside(path),
+				"A refused PNG write kept the earlier file whole and left no temporary");
+		}
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
 		const auto byte = [&bytes](std::size_t i) { return static_cast<unsigned char>(bytes.at(i)); };

@@ -342,9 +342,9 @@
 		require(impl.execute("tune.reset presentation.idle_drip.keyline").ok && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"After rejected saves the common keyline resets to the saved baseline without discarding the external source or leaving recovery files");
 		unchanged(labrador::Colour(32, 96, 192, 128));
 		write_text(scratch.source / L"presentation.json", saved);
@@ -509,9 +509,9 @@
 		require(impl.execute("tune.reset presentation.respawn_redraw.pen_colour").ok && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"After refused saves the pen resets to its saved baseline without overwriting external source or leaving recovery files");
 		unchanged(labrador::Colour(32, 96, 192, 128));
 		write_text(scratch.source / L"presentation.json", saved);

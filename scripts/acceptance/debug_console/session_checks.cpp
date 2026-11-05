@@ -273,6 +273,16 @@ namespace debug_console_acceptance
 				!perf_impl.perf().capture_active() &&
 				!perf_impl.perf().capture_ready(), "Invalid capture grammar cannot arm a recording: " + command);
 		}
+		// The one debug stem rule (debug_file_name::valid_stem): a device name
+		// is refused, as exec and the replay and screenshot names treat it.
+		for (const std::string& command : { "perf.capture 1 CON", "perf.capture 1 nul",
+			"perf.capture 1 Com1", "perf.capture 1 lpt9" })
+		{
+			const DebugStatus result = perf_impl.execute(command);
+			require(!result.ok && result.message.find("reserved Windows name") != std::string::npos &&
+				!perf_impl.perf().capture_active() && !perf_impl.perf().capture_ready(),
+				"A reserved Windows name is refused as a capture label: " + command);
+		}
 		const DebugStatus long_label = perf_impl.execute("perf.capture 1 " + std::string(65, 'a'));
 		require(!long_label.ok && long_label.message.find("label must use 1-64") != std::string::npos,
 			"Capture labels have a bounded safe filename");

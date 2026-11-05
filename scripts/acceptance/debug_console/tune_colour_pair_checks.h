@@ -164,8 +164,8 @@
 				}
 				require(impl.execute("tune.reset " + path).ok && value_of(*identity) == labrador::Colour(171, 205, 239) &&
 					read_text(source) == coupled && read_text(staged) == forced && edits().empty() &&
-					!std::filesystem::exists(source.string() + ".tmp") && !std::filesystem::exists(source.string() + ".bak") &&
-					!std::filesystem::exists(staged.string() + ".tmp"),
+					!acceptance::temporary_beside(source) && !std::filesystem::exists(source.string() + ".bak") &&
+					!acceptance::temporary_beside(staged),
 					"After rejected merged saves, reset still uses the saved baseline without discarding the external source or leaving recovery files: " + path);
 			}
 		}
@@ -216,9 +216,9 @@ void check_hud_paper_colour_tunes(const std::filesystem::path& game_directory)
             };
             const auto no_temporary = [&]
             {
-                return !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+                return !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
                     !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-                    !std::filesystem::exists(scratch.staged / L"presentation.json.tmp");
+                    !acceptance::temporary_beside(scratch.staged / L"presentation.json");
             };
             const auto held = [&]
             {

@@ -2,6 +2,7 @@
 #include "game/states/display_settings_trial.h"
 #include "game/config/settings_session.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -49,14 +50,10 @@ namespace
         {
             _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
             std::error_code ignored;
-            std::filesystem::remove(temporary_path(), ignored);
-            std::filesystem::remove(save_path(), ignored);
-            std::filesystem::remove(root_ / L"ColourWars", ignored);
-            std::filesystem::remove(root_, ignored);
+            std::filesystem::remove_all(root_, ignored);
         }
 
         std::filesystem::path save_path() const { return root_ / L"ColourWars" / L"save_data.json"; }
-        std::filesystem::path temporary_path() const { return save_path().wstring() + L".tmp"; }
 
     private:
         std::filesystem::path root_;
@@ -409,23 +406,10 @@ namespace
         require_reloaded(save);
     }
 
-    class SaveReplacementLock
-    {
-    public:
-        explicit SaveReplacementLock(const std::filesystem::path& path)
-        {
-            handle_ = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            require(handle_ != INVALID_HANDLE_VALUE, "Cannot lock isolated save replacement");
-        }
-        ~SaveReplacementLock() { CloseHandle(handle_); }
-    private:
-        HANDLE handle_ = INVALID_HANDLE_VALUE;
-    };
-
+    // The save writes a uniquely named temporary (replace_file_atomically), so
+    // the failure is the replacing move, refused by a lock on the old save.
     void check_failed_save(const IsolatedSaveDirectory& directory)
     {
-        for (bool after_serialization : { false, true })
         {
             Save save = seed_save(); SettingsSession save_session(save);
             const PlaySettings before_play = save_session.play_settings();
@@ -436,18 +420,10 @@ namespace
                 DisplaySettingsTrial trial(&save, candidate, false,
                     [&](ScreenResolution, bool) { ++calls; }, 15.0f);
                 trial.begin();
-                if (after_serialization)
-                {
-                    const SaveReplacementLock lock(directory.save_path());
-                    trial.keep();
-                }
-                else
-                {
-                    require(std::filesystem::create_directory(directory.temporary_path()),
-                        "Cannot create isolated temporary-file blocker");
-                    trial.keep();
-                    require(std::filesystem::remove(directory.temporary_path()), "Cannot remove own save blocker");
-                }
+                acceptance::ReplacementLock lock(directory.save_path());
+                require(lock.hold(), "Cannot lock isolated save replacement");
+                trial.keep();
+                require(lock.release(), "Cannot release isolated save replacement");
                 require_result(trial, DisplayTrialResult::save_failed);
                 require_choice(save, candidate);
                 require(same_play(save_session.play_settings(), before_play) && contents(directory.save_path()) == old_file,
@@ -456,7 +432,7 @@ namespace
             }
             require(calls == 1, "Failed persistence rolled back the accepted active display");
             require(contents(directory.save_path()) == old_file &&
-                !std::filesystem::exists(directory.temporary_path()), "Failed Keep left a partial persisted file");
+                !acceptance::temporary_beside(directory.save_path()), "Failed Keep left a partial persisted file");
             Save old; SettingsSession old_session(old);
             old_session.load_save_file();
             require(old.resolution() == ScreenResolution::s_2560_1440 && !old.fullscreen() &&

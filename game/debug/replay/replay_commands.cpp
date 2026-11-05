@@ -63,12 +63,15 @@ namespace
 		std::vector<std::string> names;
 		std::error_code error;
 		const std::filesystem::path directory(labrador::widen(directory_consts::replay_directory()));
-		for (const auto& entry : std::filesystem::directory_iterator(directory, error))
+		// increment(error), not ++: a listing that fails partway stops there
+		// instead of throwing out of replay.list or completion.
+		for (std::filesystem::directory_iterator it(directory, error), end;
+			!error && it != end; it.increment(error))
 		{
-			if (entry.is_regular_file(error) && entry.path().extension() == L".json")
+			std::error_code kind_error;
+			if (it->is_regular_file(kind_error) && it->path().extension() == L".json")
 			{
-				const std::string file_name = labrador::path_to_utf8(entry.path().filename());
-				names.push_back(file_name);
+				names.push_back(labrador::path_to_utf8(it->path().filename()));
 			}
 		}
 		std::sort(names.begin(), names.end());

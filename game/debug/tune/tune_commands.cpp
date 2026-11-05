@@ -9,6 +9,7 @@
 #include "game/debug/tune/tune_scope.h"
 #include "game/debug/tune/tune_target.h"
 #include "game/config/presentation/presentation.h"
+#include "game/save/atomic_file.h"
 #include "game/source_paths.h"
 #include <charconv>
 #include <cmath>
@@ -36,36 +37,6 @@ namespace
 		ok = stream.good();
 		return ok ? std::string(std::istreambuf_iterator<char>(stream),
 			std::istreambuf_iterator<char>()) : std::string();
-	}
-
-	bool write_bytes(const std::filesystem::path& path, const std::string& bytes)
-	{
-		std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-		stream.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-		stream.close();
-		return !stream.fail();
-	}
-
-	// Writes beside the target and renames over it, so a crash mid-write never
-	// leaves half a content file. On failure the target is untouched and no
-	// temporary is left in the content directory for the build to stage.
-	bool replace_file(const std::filesystem::path& path, const std::string& bytes)
-	{
-		std::filesystem::path temporary = path;
-		temporary += L".tmp";
-		std::error_code ignored;
-		if (!write_bytes(temporary, bytes))
-		{
-			std::filesystem::remove(temporary, ignored);
-			return false;
-		}
-		if (MoveFileExW(temporary.c_str(), path.c_str(),
-			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) == 0)
-		{
-			std::filesystem::remove(temporary, ignored);
-			return false;
-		}
-		return true;
 	}
 
 	// Forward slashes throughout, as reload prints its directory.
@@ -627,7 +598,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 			failed = true;
 			continue;
 		}
-		if (!replace_file(source, splice.text))
+		if (!replace_file_atomically(source, splice.text))
 		{
 			this->log_.error("tune.save: cannot write " + shown(source));
 			failed = true;
@@ -652,7 +623,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 		{
 			const std::string why = std::string("tune.save: the written file did not load (") +
 				e.what() + ")";
-			if (replace_file(source, before))
+			if (replace_file_atomically(source, before))
 			{
 				this->log_.error(why + "; the old bytes are back");
 			}
@@ -661,7 +632,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 				// Keep the old bytes somewhere a person can find them.
 				std::filesystem::path backup = source;
 				backup += L".bak";
-				const bool kept = write_bytes(backup, before);
+				const bool kept = replace_file_atomically(backup, before);
 				this->log_.error(why + "; putting the old bytes back FAILED, so " + shown(source) +
 					" holds the rejected text" + (kept ? "; the old file is in " + shown(backup) :
 						std::string("; and they could not be kept beside it either")));
@@ -672,7 +643,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 		// A relaunch without a rebuild reads the staged copy: keep it equal,
 		// and whole if the write fails.
 		const std::filesystem::path staged = this->staged_content_directory() / labrador::widen(name);
-		if (!replace_file(staged, splice.text))
+		if (!replace_file_atomically(staged, splice.text))
 		{
 			this->log_.warning("tune.save: could not refresh the staged " +
 				shown(staged) + "; the next build copies it");

@@ -1189,7 +1189,9 @@ replaces anything else with `_`. The console (or the debug menu) closes first,
 and the shot is taken at the top of the next update once nothing queued would
 change the picture, so `+stage movement_course +screenshot start` captures the
 match, not the title. The status strip and overlays are included; the log says
-`screenshot: <path> (WxH)`.
+`screenshot: <path> (WxH)`. The PNG is encoded in memory and replaces any file
+of that name whole, so a failed shot leaves no partial PNG; replays, scripts'
+own files and `tune.save` are written the same way.
 
 - `screenshot.dir <folder>` puts the next shots in `screens\<folder>\` (up to
   three `/`-separated levels, each kept to `A-Z a-z 0-9 _ -`; `{time}` becomes
@@ -1215,8 +1217,9 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 
 - **Where.** `exec` looks in the source tree's `scripts/debug/` (a Debug build
   knows its checkout, as `reload` does), then in
-  `%LOCALAPPDATA%\ColourWars\debug\`. A name is `A-Z a-z 0-9 _ -`, with or
-  without `.cfg` - never a path. `exec.list` lists both folders with each
+  `%LOCALAPPDATA%\ColourWars\debug\`. A name is 1-64 of `A-Z a-z 0-9 _ -`,
+  with or without `.cfg` - never a path or a reserved Windows name (`CON`,
+  `NUL`, `COM1`...). `exec.list` lists both folders with each
   script's first `//` line; Tab completes the names.
 - **Grammar.** One console line per text line, `;` between statements as at the
   prompt, `//` to the end of the line outside quotes, blank lines ignored, CRLF
@@ -1484,7 +1487,8 @@ Release has no developer timing service, so its legacy F1/Back text also shows
 
 `perf.capture <1-36000> <label>` records chronological raw intervals independently
 of the ring, then writes CSV and completion JSON under `debug/perf/` in the user
-profile. Labels use 1–64 letters, digits, `_` or `-`. Sampling starts with a fresh
+profile. Labels use 1–64 letters, digits, `_` or `-` and are not a reserved
+Windows name, the same rule as script names. Sampling starts with a fresh
 interval in a live match at 1x; focus/coverage, count-ins, clock changes, resizing,
 rebuilds and screenshots invalidate continuity. Export happens after sampling,
 and a script's next statement waits for it. `perf.reset` refuses while a capture

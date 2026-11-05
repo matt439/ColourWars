@@ -391,8 +391,8 @@ namespace debug_console_acceptance
 		require(tuning_after == expected, "tune.save changes only the edited token (CRLF file)");
 		require(read_text(scratch.staged / L"tuning.json") == tuning_after,
 			"tune.save refreshes the staged copy");
-		require(!std::filesystem::exists(scratch.source / L"tuning.json.tmp") &&
-			!std::filesystem::exists(scratch.staged / L"tuning.json.tmp"),
+		require(!acceptance::temporary_beside(scratch.source / L"tuning.json") &&
+			!acceptance::temporary_beside(scratch.staged / L"tuning.json"),
 			"tune.save leaves no temporary beside either copy");
 		require(GameTuning((scratch.source / L"tuning.json").string().c_str()).player().gravity ==
 			static_cast<float>(base + 100.0), "The saved file loads with the new value");

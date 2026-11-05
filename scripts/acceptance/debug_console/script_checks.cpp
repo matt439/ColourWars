@@ -240,6 +240,12 @@ namespace debug_console_acceptance
 			"exec of a missing script fails and says where it looked");
 		require(!impl.execute("exec ../x").ok && any_line(log, "is not a script name"),
 			"exec takes a name, never a path");
+		for (const std::string device : { "CON", "nul.cfg", "Com1" })
+		{
+			require(!impl.execute("exec " + device).ok &&
+				any_line(log, "exec: '" + device + "' is not a script name"),
+				"exec refuses a reserved Windows name: " + device);
+		}
 		require(!impl.execute("wait 10").ok &&
 			any_line(log, "wait: only in a script (exec, autoexec.cfg or launch arguments)"),
 			"wait outside a script fails");

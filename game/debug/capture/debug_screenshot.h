@@ -33,7 +33,9 @@ struct ScreenCapture
 ScreenCapture capture_stack(labrador::Application& application);
 
 // A PNG through WIC, 24-bit (the back buffer's alpha means nothing). COM
-// must already be initialised on this thread (Application does it).
+// must already be initialised on this thread (Application does it). Encoded
+// in memory and written through replace_file_atomically, so a failure leaves
+// no partial PNG and any earlier file of that name whole.
 bool write_png(const std::filesystem::path& path, const ScreenCapture& image,
 	std::string& error);
 

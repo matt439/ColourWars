@@ -17,7 +17,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         ~DefaultsProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } isolated(output / "options-defaults-profile");
     const auto save_path = output / "options-defaults-profile" / "ColourWars" / "save_data.json";
-    const std::filesystem::path blocked(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected;
     expected.aim_sensitivity = 5; expected.music_volume = expected.sfx_volume = 0;
     expected.view_shake = expected.aim_marker = false; expected.reduce_effects = false;
@@ -49,8 +49,8 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     MenuContext context(&data, &input, &settings); StateContext& stack = app; MenuPage* active = nullptr;
     struct ClearDefaults
     {
-        StateContext& stack; std::filesystem::path blocked;
-        ~ClearDefaults() { this->stack.clear(); painter_scripted_pads::states = {}; std::error_code ignored; std::filesystem::remove(this->blocked, ignored); }
+        StateContext& stack; acceptance::ReplacementLock& blocked;
+        ~ClearDefaults() { this->stack.clear(); painter_scripted_pads::states = {}; this->blocked.release(); }
     } clear{ stack, blocked };
     const auto& style = presentation.menu(); const auto& look = presentation.main_menu();
     auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
@@ -202,10 +202,10 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         for (int focus = 0; focus < 8; ++focus) { go(focus); compare("initial-row" + std::to_string(focus), focus == 5); }
         restore(); compare("restored-pending", true); restore(); compare("repeat-restore");
         apply(size, true); compare("saved", true); reload(true); const auto once = bytes(); apply(size, true); require(bytes() == once, "Repeated defaults Apply changed serialized preferences"); compare("repeat-apply");
-        seed(); open(); restore(); const auto prior = bytes(); require(std::filesystem::create_directory(blocked), "Cannot block isolated defaults temporary save");
+        seed(); open(); restore(); const auto prior = bytes(); require(blocked.hold(), "Cannot lock the isolated defaults save");
         apply(size, false); require(bytes() == prior, "Failed defaults save replaced the previous JSON"); compare("failed-save", true);
         Save old; SettingsSession old_session(old); old_session.load_save_file(); preserved(old_session.play_settings()); require(old.resolution() == ScreenResolution::s_1280_720 && old.team_palette() == TeamColourPair::blue_yellow && !old.vsync(), "Failed defaults write lost prior durable preferences");
-        require(std::filesystem::remove(blocked), "Cannot remove isolated defaults write refusal"); apply(size, true); reload(true); compare("recovered-save");
+        require(blocked.release(), "Cannot remove isolated defaults write refusal"); apply(size, true); reload(true); compare("recovered-save");
         std::cout << "PASS Options defaults complete states " << size.x << 'x' << size.y << '\n';
     }
     const Vector2I size(1280, 720); resize(size);

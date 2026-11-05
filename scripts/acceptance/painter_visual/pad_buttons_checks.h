@@ -8,7 +8,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto profile = output / "pad-jump-profile";
     const NestedSaveProfile isolated(profile);
     const auto path = profile / "ColourWars/save_data.json";
-    const auto blocked = std::filesystem::path(path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(path);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump preferences");
     InputBindings initial; initial.keyboard_jump = Key::j;
@@ -29,12 +29,12 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     struct RestorePadJump
     {
         StateContext& stack; Application& app; Presentation& presentation; const Presentation& original;
-        std::filesystem::path blocked;
+        acceptance::ReplacementLock& blocked;
         ~RestorePadJump()
         {
             this->stack.clear(); this->presentation = this->original; painter_scripted_pads::states = {};
             this->app.gamepads()->poll(); this->app.gamepads()->poll();
-            std::error_code ignored; std::filesystem::remove(this->blocked, ignored);
+            this->blocked.release();
         }
     } restore{ stack, app, presentation, original, blocked };
     const auto bytes = [&]
@@ -198,11 +198,11 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     // One controlled file refusal, followed by the same actual Apply widget.
     require(preferences_session.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump failed write"); open(-1);
     tap(Key::down); tap(Key::right); move(Key::down, 7); const std::string old = bytes();
-    require(std::filesystem::create_directory(blocked), "Cannot block private Pad Jump temporary write");
+    require(blocked.hold(), "Cannot lock the private Pad Jump save");
     tap(Key::enter); require(jump_of(preferences_session.input_bindings().pads[0]) == PadControl::b && bytes() == old,
         "Failed Pad Buttons write rolled back active choice or changed old JSON");
     copy_check("failed-write", 0, PadControl::b, PadControl::b, original.menu_text().status.active_save_failed, true);
-    require(std::filesystem::remove(blocked), "Cannot clear private Pad Jump temporary-write refusal");
+    require(blocked.release(), "Cannot release the private Pad Jump save lock");
     tap(Key::enter); Save retry; SettingsSession retry_session(retry); retry_session.load_save_file(); ++reloads;
     require(jump_of(retry_session.input_bindings().pads[0]) == PadControl::b, "Actual Pad Buttons Apply could not retry persistence");
     tap(Key::escape);

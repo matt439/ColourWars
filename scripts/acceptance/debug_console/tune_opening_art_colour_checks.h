@@ -111,9 +111,9 @@
 			colour_values(presentation) == expected_colours && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Cursor fill resets to its saved baseline without discarding the invalid external source or leaving recovery files");
 		unchanged();
 		write_text(scratch.source / L"presentation.json", saved);
@@ -312,9 +312,9 @@
 		}
 		require(pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Saved silhouette-art resets retain the invalid external source and exact staging without recovery files");
 		write_text(scratch.source / L"presentation.json", saved);
 		require(std::rand() == expected_random,
@@ -488,9 +488,9 @@
 		}
 		require(pending->edits().empty() && pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Reveal resets retain the exact saved baseline and invalid external source without leaving recovery files");
 		write_text(scratch.source / L"presentation.json", saved);
 		require(std::rand() == expected_random,
@@ -667,9 +667,9 @@
 		}
 		require(pending->edits().empty() && pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Cursor-material resets retain the exact saved baseline and invalid external source without leaving recovery files");
 		write_text(scratch.source / L"presentation.json", saved);
 		require(std::rand() == expected_random,

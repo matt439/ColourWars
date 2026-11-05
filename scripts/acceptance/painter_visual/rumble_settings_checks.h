@@ -7,7 +7,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto profile = output / "rumble-settings-profile";
     const NestedSaveProfile isolated(profile);
     const auto save_path = profile / "ColourWars/save_data.json";
-    const auto blocked = std::filesystem::path(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;
     initial.music_volume = initial.sfx_volume = 0;
@@ -26,12 +26,12 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     {
         StateContext& stack;
         Application& app;
-        std::filesystem::path blocked;
+        acceptance::ReplacementLock& blocked;
         ~ClearRumbleSettings()
         {
             this->stack.clear(); painter_scripted_pads::states = {};
             this->app.gamepads()->poll(); this->app.gamepads()->poll();
-            std::error_code ignored; std::filesystem::remove(this->blocked, ignored);
+            this->blocked.release();
         }
     } clear{ stack, app, blocked };
     const auto bytes = [&]
@@ -138,10 +138,10 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
 
     move(GamepadButton::dpad_up, 9); pad(3, GamepadButton::a);
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_right);
-    require(std::filesystem::create_directory(blocked), "Cannot isolate one rumble save failure");
+    require(blocked.hold(), "Cannot isolate one rumble save failure");
     move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     verify("save-failed", { true, true, true, true }, { true, true, true, false }, 10, 10);
-    require(std::filesystem::remove(blocked), "Cannot release the private rumble save blocker");
+    require(blocked.release(), "Cannot release the private rumble save blocker");
     pad(3, GamepadButton::a);
     verify("save-recovered", { true, true, true, true }, { true, true, true, true }, 10, 10);
     const std::string recovered_bytes = bytes();

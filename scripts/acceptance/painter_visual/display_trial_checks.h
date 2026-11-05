@@ -18,7 +18,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         ~TrialProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } isolated(output / "display-trial-profile");
     const auto save_path = output / "display-trial-profile" / "ColourWars" / "save_data.json";
-    const std::filesystem::path blocked(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(save_path);
     const HWND window = static_cast<HWND>(app.window());
     // Trials and rollbacks resize the hidden window; the engine keeps it hidden
     // and inactive (v0.3.0), which the checks on `window` below pin.
@@ -50,8 +50,8 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct ClearTrial
     {
-        StateContext& stack; Presentation& presentation; Presentation original; std::filesystem::path blocked;
-        ~ClearTrial() { this->stack.clear(); this->presentation = this->original; painter_scripted_pads::states = {}; std::error_code ignored; std::filesystem::remove(this->blocked, ignored); }
+        StateContext& stack; Presentation& presentation; Presentation original; acceptance::ReplacementLock& blocked;
+        ~ClearTrial() { this->stack.clear(); this->presentation = this->original; painter_scripted_pads::states = {}; this->blocked.release(); }
     } clear{ stack, presentation, original, blocked };
     const auto& style = original.menu(); const auto& look = original.pause_menu(); auto art = look.art;
     require(original.main_menu().setup_focus_padding == Vector2F(28.0f, 7.0f) && original.main_menu().setup_shadow_offset == 2.0f,
@@ -228,9 +228,9 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     hide(); in_trial = true; age = 0; timeout = presentation.main_menu().display_trial_seconds; hold(keyboard, GamepadButton::a, false); tick(); tick(); tick(10.25f); compare("held-cross-device-entry", false); tap(GamepadButton::b); reverted();
     seed(); begin(); hold(keyboard, GamepadButton::a, true); tick(); hold(3, GamepadButton::dpad_up, true); hold(keyboard, GamepadButton::a, false); tick(); hold(3, GamepadButton::dpad_up, false); tick(); tick(settled); compare("simultaneous-move-confirm", true); tap(GamepadButton::b); reverted();
     seed(); begin(); select_keep(); hold(3, GamepadButton::a, true); hold(keyboard, GamepadButton::b, true); tick(); hold(3, GamepadButton::a, false); hold(keyboard, GamepadButton::b, false); tick(); reverted();
-    seed(); begin(); select_keep(); require(std::filesystem::create_directory(blocked), "Cannot block the isolated trial Keep write"); tap(GamepadButton::a); hide(); kept(); require(bytes() == before_bytes, "Failed Keep replaced the prior durable save");
+    seed(); begin(); select_keep(); require(blocked.hold(), "Cannot block the isolated trial Keep write"); tap(GamepadButton::a); hide(); kept(); require(bytes() == before_bytes, "Failed Keep replaced the prior durable save");
     Save durable; SettingsSession durable_session(durable); durable_session.load_save_file(); preserved(durable_session.play_settings()); require(durable.resolution() == ScreenResolution::s_1280_720 && durable.team_palette() == TeamColourPair::blue_yellow, "Failed Keep lost prior durable choices");
-    require(std::filesystem::remove(blocked), "Cannot remove trial Keep write refusal"); tap(GamepadButton::a); hide(); kept(); Save recovered; SettingsSession recovered_session(recovered); recovered_session.load_save_file(); preserved(recovered_session.play_settings()); require(recovered.resolution() == ScreenResolution::s_1920_1080 && recovered.team_palette() == TeamColourPair::random, "Unchanged Apply did not recover failed Keep persistence");
+    require(blocked.release(), "Cannot remove trial Keep write refusal"); tap(GamepadButton::a); hide(); kept(); Save recovered; SettingsSession recovered_session(recovered); recovered_session.load_save_file(); preserved(recovered_session.play_settings()); require(recovered.resolution() == ScreenResolution::s_1920_1080 && recovered.team_palette() == TeamColourPair::random, "Unchanged Apply did not recover failed Keep persistence");
     seed(true); begin(); select_keep(); tap(GamepadButton::a); hide(); kept();
     const_cast<MainMenuPresentation&>(presentation.main_menu()).display_trial_seconds = 15.0f;
     seed(); begin(); compare("shipped-fifteen-second-timeout", false, true); tap(GamepadButton::b); reverted();

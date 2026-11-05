@@ -203,6 +203,24 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = false;
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
+		// A replay is replaced whole (replace_file_atomically): a refused write
+		// throws, keeps the earlier replay and leaves no temporary beside it.
+		{
+			acceptance::ReplacementLock lock(path);
+			require(lock.hold(), "Cannot lock the replay fixture");
+			std::string refused;
+			try { file.write(path); } catch (const std::exception& error) { refused = error.what(); }
+			require(refused.find("could not be written") != std::string::npos,
+				"A replay that cannot replace its file is reported: " + refused);
+			require(lock.release() && read_text(path) == legacy_encoding && !acceptance::temporary_beside(path),
+				"A refused replay write kept the earlier replay whole and left no temporary");
+			const std::filesystem::path not_a_folder = directory / L"not-a-folder";
+			write_text(not_a_folder, "a file where the replay folder should be");
+			refused.clear();
+			try { file.write(not_a_folder / L"x.json"); } catch (const std::exception& error) { refused = error.what(); }
+			require(refused.find("could not be written") != std::string::npos,
+				"A replay whose folder cannot be created is refused: " + refused);
+		}
 		const std::vector<SeatSetup> seats = read.tape.settings().player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&

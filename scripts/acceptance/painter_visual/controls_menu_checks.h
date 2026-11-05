@@ -395,14 +395,14 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         "Controls/audio Apply failed reload or replaced display preferences");
     std::ignore = capture("applied", 9, values, L"Applied and saved for all players.", art.focus_ink);
     const std::string last_saved = saved_bytes();
-    const std::filesystem::path blocked = save_path.wstring() + L".tmp";
-    require(std::filesystem::create_directory(blocked), "Cannot block the isolated Controls/audio temporary save");
+    acceptance::ReplacementLock blocked(save_path);
+    require(blocked.hold(), "Cannot lock the isolated Controls/audio save");
     tap(Key::up); tap(Key::left); values[8] = L"Off"; tap(Key::down); tap(Key::enter);
     require(!play.reduce_effects && saved_bytes() == last_saved,
         "Failed Controls/audio save lost its active choice or replaced previous JSON");
     std::ignore = capture("save-failed", 9, values, L"Active for this run. Could not save.",
         presentation.main_menu().options_warning_colour);
-    require(std::filesystem::remove(blocked), "Cannot remove isolated Controls/audio write refusal");
+    require(blocked.release(), "Cannot remove isolated Controls/audio write refusal");
     tap(Key::down); tap(Key::enter);
     require(stack.depth() == 1, "Controls/audio Back action did not pop its own page");
     open(std::make_unique<ControlsSettingsMenu>(&context)); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::right);

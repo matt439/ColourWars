@@ -423,13 +423,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     for (int row = 7; row > 1; --row) { tap(Key::up); }
     tap(Key::right);
     for (int row = 1; row < 7; ++row) { tap(Key::down); }
-    const std::filesystem::path blocked = save_path.wstring() + L".tmp";
-    require(std::filesystem::create_directory(blocked), "Cannot block the private percentage temporary save");
-    struct RemovePercentageBlocker
-    {
-        std::filesystem::path path;
-        ~RemovePercentageBlocker() { std::error_code error; std::filesystem::remove(this->path, error); }
-    } blocker{ blocked };
+    acceptance::ReplacementLock blocked(save_path);
+    require(blocked.hold(), "Cannot lock the private percentage save");
     tap(Key::enter);
     PlaySettings active = applied;
     active.sticks[static_cast<size_t>(selected_slot)].movement_deadzone = 10;
@@ -437,7 +432,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     require(saved_bytes() == applied_bytes, "Failed percentage save replaced previous private bytes");
     check_status(L"Active for this run. Could not save.", true, true);
     std::ignore = compare("new-child-save-failed", true, 7, next, PercentageVariant::new_long, 10, 85, false);
-    require(std::filesystem::remove(blocked), "Cannot remove the owned private percentage write refusal");
+    require(blocked.release(), "Cannot remove the owned private percentage write refusal");
     for (int row = 7; row > 1; --row) { tap(Key::up); }
     tap(Key::right);
     std::ignore = compare("new-child-discard-pending", true, 1, next, PercentageVariant::new_long, 15, 85, false);

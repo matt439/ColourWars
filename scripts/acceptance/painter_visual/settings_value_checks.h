@@ -29,7 +29,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         ~ValueProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
     } isolated(profile);
     const auto save_path = profile / "ColourWars" / "save_data.json";
-    const auto blocked = std::filesystem::path(save_path.wstring() + L".tmp");
+    acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]
     {
@@ -52,11 +52,11 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
     struct RestoreValues
     {
-        StateContext& stack; Presentation& presentation; Presentation original; std::filesystem::path blocked;
+        StateContext& stack; Presentation& presentation; Presentation original; acceptance::ReplacementLock& blocked;
         ~RestoreValues()
         {
             this->stack.clear(); this->presentation = this->original;
-            std::error_code ignored; std::filesystem::remove(this->blocked, ignored);
+            this->blocked.release();
         }
     } restore{ stack, presentation, original, blocked };
     const auto tick = [&] { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
@@ -277,10 +277,10 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         const auto committed = saved_bytes(); require(committed != before, "Fresh value Apply did not persist edits");
         apply(); require(saved_bytes() == committed, "Repeated value Apply changed persisted preferences");
         compare_pending("after-repeated-apply", snapshot, words);
-        require(std::filesystem::create_directory(blocked), "Cannot refuse the isolated value save"); apply();
+        require(blocked.hold(), "Cannot refuse the isolated value save"); apply();
         require(saved_bytes() == committed, "Failed value Apply replaced the previous JSON");
         compare_pending("after-save-failure", snapshot, words);
-        require(std::filesystem::remove(blocked), "Cannot release isolated value save refusal"); apply();
+        require(blocked.release(), "Cannot release isolated value save refusal"); apply();
         compare_pending("after-save-recovery", snapshot, words);
         Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
         require(!reloaded.fullscreen() && reloaded.team_palette() == preferences.team_palette() &&
