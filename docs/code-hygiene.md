@@ -1337,9 +1337,10 @@ writes as before.
 
 - `labrador::narrow` replaces `debug_tokenizer.cpp`'s `WideCharToMultiByte`
   copy (both turn a lone surrogate into U+FFFD), `replay_commands.cpp`'s
-  `narrow_build_label` and a sibling in `text_wrap.cpp`; the last two wrote
-  `?` for a non-ASCII unit, and both read ASCII (the build label, drawable
-  text). `labrador::widen` replaces `ProfilesMenu`'s byte copy; profile names
+  `narrow_build_label`, its copy building the console banner in
+  `debug_director_impl.cpp` (found in review), and a sibling in
+  `text_wrap.cpp`; the last three wrote `?` for a non-ASCII unit, and all
+  read ASCII (the build label, drawable text). `labrador::widen` replaces `ProfilesMenu`'s byte copy; profile names
   are A-Z, 0-9 and spaces.
 - `labrador::path_to_utf8` replaces the screenshot line's `u8string` copy in
   `debug_director_hooks.cpp` and its two generic-form siblings, `reload`'s

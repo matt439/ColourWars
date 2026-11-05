@@ -4,6 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
 #include "engine/core/file_path.h"
+#include "engine/render/text_encoding.h"
 #include "game/build_info.h"
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/console/debug_console_state.h"
@@ -31,12 +32,7 @@ using namespace labrador;
 DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentation) :
 	tuning_(tuning), presentation_(presentation), planner_random_(std::random_device{}())
 {
-	std::string label;
-	for (const wchar_t* c = build_info::label; *c != 0; ++c)
-	{
-		label += *c < 0x80 ? static_cast<char>(*c) : '?';
-	}
-	this->log_.info("ColourWars developer console - " + label);
+	this->log_.info("ColourWars developer console - " + labrador::narrow(build_info::label));
 	this->log_.info("` toggles this console; type help. F10/F11 (or hold pad Back+Start) "
 		"opens the debug menu. F2-F4 overlays, F5 restart, F6 pause, F7 step, "
 		"F9 feedback; 'binds' lists the key table, 'exec.list' the scripts.");
