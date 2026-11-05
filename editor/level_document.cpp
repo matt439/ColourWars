@@ -792,8 +792,10 @@ namespace colourwars_editor
                             (paintable ? Collision::structure_paintable : Collision::structure))));
                     value.AddMember("collision_type", Json(collision, allocator), allocator);
                     // Each kind starts drawn as its usual terrain-atlas material.
-                    const char* material = ramp_left || ramp_right ? "set_square" :
-                        (jump ? "ruler" : (gate ? "eraser" : (paintable ? "pencil" : "ground")));
+                    namespace material_name = level_format::material_name;
+                    const char* material = ramp_left || ramp_right ? material_name::set_square :
+                        (jump ? material_name::ruler : (gate ? material_name::eraser :
+                            (paintable ? material_name::pencil : material_name::ground)));
                     value.AddMember("material", Json(material, allocator), allocator);
                 }
                 if (paintable)

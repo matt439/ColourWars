@@ -173,7 +173,11 @@ protected:
 
 	bool shooting_this_update_ = false;
 
-	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
+	// fired_this_update: a shot was paid this tick. shooting_this_update: the
+	// held-fire presentation is on (shooting_this_update_).
+	virtual void handle_shoot_sound(bool fired_this_update, bool shooting_this_update);
+	// The one-shot tools' answer: the fire wave once per paid shot, no loop.
+	void play_one_shot(bool fired_this_update);
 	void play_feedback_sound(labrador::SoundBank::WaveHandle sound,
 		const SoundTuning& tuning);
 
@@ -222,8 +226,6 @@ protected:
 	void set_ammo_timer(float ammo_timer);
 	void alter_ammo_timer(float dt);
 
-
-	static bool facing_left(float rotation);
 
 	virtual std::vector<std::unique_ptr<Projectile>> shoot(
 		const labrador::Vector2F& shoot_direction,

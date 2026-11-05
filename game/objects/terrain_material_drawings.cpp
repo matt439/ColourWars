@@ -1,6 +1,7 @@
 // The six leaf materials: each works out its drawing once, in its constructor.
 #include "game/pch.h"
 #include "game/objects/terrain_material.h"
+#include "game/contracts/level_format.h"
 #include "game/ai/bot_random.h"
 #include "engine/math/triangle.h"
 
@@ -198,7 +199,7 @@ namespace
 
 GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
 	RenderResources* render_resources, std::uint64_t hand) :
-	TerrainMaterial("ground", render_resources)
+	TerrainMaterial(level_format::material_name::ground, render_resources)
 {
 	constexpr float course = 16.0f * CELL;
 	constexpr float brick = 32.0f * CELL;
@@ -292,7 +293,7 @@ GroundMaterial::GroundMaterial(const RectangleF& rectangle, const TerrainFaces& 
 
 PencilMaterial::PencilMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
 	float mirror_x, RenderResources* render_resources) :
-	OrientedTerrainMaterial("pencil", rectangle, render_resources)
+	OrientedTerrainMaterial(level_format::material_name::pencil, rectangle, render_resources)
 {
 	const float length = this->length();
 	const float thickness = this->thickness();
@@ -373,7 +374,7 @@ PencilMaterial::PencilMaterial(const RectangleF& rectangle, const TerrainFaces& 
 
 RulerMaterial::RulerMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
 	RenderResources* render_resources) :
-	OrientedTerrainMaterial("ruler", rectangle, render_resources)
+	OrientedTerrainMaterial(level_format::material_name::ruler, rectangle, render_resources)
 {
 	const float length = this->length();
 	const float thickness = this->thickness();
@@ -409,7 +410,7 @@ RulerMaterial::RulerMaterial(const RectangleF& rectangle, const TerrainFaces& fa
 
 EraserMaterial::EraserMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
 	RenderResources* render_resources) :
-	OrientedTerrainMaterial("eraser", rectangle, render_resources)
+	OrientedTerrainMaterial(level_format::material_name::eraser, rectangle, render_resources)
 {
 	const float length = this->length();
 	const float thickness = this->thickness();
@@ -431,7 +432,7 @@ EraserMaterial::EraserMaterial(const RectangleF& rectangle, const TerrainFaces& 
 
 PaintTinMaterial::PaintTinMaterial(const RectangleF& rectangle, const TerrainFaces& faces,
 	RenderResources* render_resources) :
-	OrientedTerrainMaterial("paint_tin", rectangle, render_resources)
+	OrientedTerrainMaterial(level_format::material_name::paint_tin, rectangle, render_resources)
 {
 	const float length = this->length();
 	const float thickness = this->thickness();
@@ -454,7 +455,7 @@ PaintTinMaterial::PaintTinMaterial(const RectangleF& rectangle, const TerrainFac
 
 SetSquareMaterial::SetSquareMaterial(const Shape& shape, const TerrainFaces& faces,
 	RenderResources* render_resources) :
-	TerrainMaterial("set_square", render_resources)
+	TerrainMaterial(level_format::material_name::set_square, render_resources)
 {
 	const Triangle* triangle = dynamic_cast<const Triangle*>(&shape);
 	if (triangle == nullptr)

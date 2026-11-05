@@ -216,15 +216,25 @@ namespace level_format
 		std::array<std::optional<Collision>, 2> sits_on;
 	};
 
-	inline constexpr std::array<Material, 6> materials = { {
-		{ "ground", { Collision::structure, Collision::structure_paintable } },
-		{ "pencil", { Collision::structure_paintable, std::nullopt } },
-		{ "eraser", { Collision::structure_paintable, std::nullopt } },
-		{ "paint_tin", { Collision::structure_paintable, std::nullopt } },
-		{ "ruler", { Collision::structure_jump_through, std::nullopt } },
-		{ "set_square", { Collision::structure_ramp_left, Collision::structure_ramp_right } } } };
+	namespace material_name
+	{
+		inline constexpr const char* ground = "ground";
+		inline constexpr const char* pencil = "pencil";
+		inline constexpr const char* eraser = "eraser";
+		inline constexpr const char* paint_tin = "paint_tin";
+		inline constexpr const char* ruler = "ruler";
+		inline constexpr const char* set_square = "set_square";
+	}
 
-	inline constexpr const char* fixed_slab_material = "eraser";
+	inline constexpr std::array<Material, 6> materials = { {
+		{ material_name::ground, { Collision::structure, Collision::structure_paintable } },
+		{ material_name::pencil, { Collision::structure_paintable, std::nullopt } },
+		{ material_name::eraser, { Collision::structure_paintable, std::nullopt } },
+		{ material_name::paint_tin, { Collision::structure_paintable, std::nullopt } },
+		{ material_name::ruler, { Collision::structure_jump_through, std::nullopt } },
+		{ material_name::set_square, { Collision::structure_ramp_left, Collision::structure_ramp_right } } } };
+
+	inline constexpr const char* fixed_slab_material = material_name::eraser;
 
 	inline const Material* material_named(std::string_view name)
 	{

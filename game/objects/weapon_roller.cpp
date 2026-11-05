@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon_roller.h"
+#include "game/objects/aim_facing.h"
 
 using namespace labrador;
 
@@ -69,14 +70,7 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     }
     this->set_player_center(player_center);
 
-    if (facing_left(this->rotation()))
-    {
-        this->set_invert_y(true);
-    }
-    else
-    {
-        this->set_invert_y(false);
-    }
+    this->set_invert_y(aim_faces_left(this->rotation()));
 }
 
 void WeaponRoller::advance_travel_motion(bool supported, bool established_support,

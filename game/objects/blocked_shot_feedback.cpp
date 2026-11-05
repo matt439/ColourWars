@@ -13,12 +13,6 @@ BlockedShotFeedback::BlockedShotFeedback(const BlockedShotPresentation* presenta
 {
 }
 
-size_t BlockedShotFeedback::owner_index(int owner)
-{
-    return owner >= 0 && owner < paint_owners::count ?
-        static_cast<size_t>(owner) : static_cast<size_t>(paint_owners::count);
-}
-
 void BlockedShotFeedback::update(float dt)
 {
     // A paused or invalid step never rewinds, emits or poisons a snapshot.
@@ -58,7 +52,7 @@ void BlockedShotFeedback::emit(const BlockedShotContact& contact)
     }
     const float length = std::hypot(contact.normal.x, contact.normal.y);
     if (length <= 0.0f || !std::isfinite(length)) { return; }
-    float& repeat = this->repeat_remaining_[owner_index(contact.player_num)];
+    float& repeat = this->repeat_remaining_[paint_owners::slot_or_fallback(contact.player_num)];
     if (repeat > 0.0f) { return; }
     if (this->count_ == this->cues_.size())
     {
@@ -85,7 +79,7 @@ std::span<const BlockedShotFeedback::Cue> BlockedShotFeedback::cues() const
 
 float BlockedShotFeedback::repeat_remaining(int owner) const
 {
-    return this->repeat_remaining_[owner_index(owner)];
+    return this->repeat_remaining_[paint_owners::slot_or_fallback(owner)];
 }
 
 void BlockedShotFeedback::draw_block(DrawList& draw_list, const Vector2F& center,

@@ -1097,6 +1097,54 @@ unchanged on MattPC.
 
 ### Weapon, projectile and opening logic (`HYG#76`)
 
+**Done 2026-11-06.** One behaviour change, for a build fault only:
+`TerrainMaterial::make` now throws for a material the level format's table
+names but no look draws, where it used to draw a paint tin. Names outside the
+table were already refused.
+
+- `Weapon::play_one_shot` is the Bucket and Sniper overrides' one body.
+  `handle_shoot_sound` now takes `(fired_this_update, shooting_this_update)`,
+  the order its caller passes them in.
+- `game/objects/aim_facing.h`'s `aim_faces_left` replaces `Weapon::facing_left`
+  and the idle drip's copy; the roller and the base weapon set their flip from
+  it in one line each. The idle drip's disabled branch calls `clear()`.
+- `paint_owners::slot_or_fallback` serves `PaintAudio` and, also found,
+  `BlockedShotFeedback`, whose `owner_index` is gone. `Projectile::team()` is
+  now public and replaces the layer-to-team mapping in `StructurePaintable`
+  and, also found, `FixedSlabPaintable`; the layer guard stays.
+- `HorizontalMotionSpec::pose_at` and `axis_part` replace
+  `HorizontalMotion::at_offset`, both local `axis_part`s, the pose in
+  `level_structures.cpp` (which still checks the box) and the replay
+  reader's copy.
+- `opening_times` and `reveal_times` in `match_opening.cpp` give the beat, the
+  sounds, the click age and both lengths one set of edges, each the last plus
+  its span. The sound edges used to add `preview * 2` and `hover * 2`; at the
+  shipped tuning every edge is bit-identical either way. The figures' `alone`
+  test (`reveal_length() - react`) is left as found: for a draw it is not the
+  same edge.
+- `level_format::material_name` names the six materials for the table, the
+  fixed-slab rule, `TerrainMaterial::make`, the drawings' constructors and,
+  also found, the editor's new-object defaults. Refusals spell the tag with
+  `level_format::collision_name`, so a fixed slab now says
+  `STRUCTURE_FIXED_SLAB` instead of "this collision type".
+
+Left as found: the probes that restate the reveal timeline by hand
+(`story_checks.h`, `reveal_checks.h`, `monitor_checks.h`,
+`result_percentage_checks.h`, `level_checks.cpp`), for the probe rows; and
+`level_document.cpp`'s File > New template, which still spells `"ground"`
+and goes with [`HYG#78`](#editor-shell-and-document-hyg78).
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and Debug (79); it covers
+`weapon_feedback`, `blocked_shot`, `idle_drip`, `story_audio`, `terrain`,
+`moving_structure` and `instant_replay`. `check-level-editor.ps1` and 11
+`check-painter.ps1` leaves passed in both presets: `Monitor`, `Countdown`,
+`Closing`, `RevealTuneColours`, `SurfaceFinish`, `MiniatureTerrain`,
+`IdleDripTuneColours`, `FerryDirection`, `WeaponCatalog`, `Crossfeed` and
+`BlockedShotTuneColours` (each `...Only`).
+
+The row as filed:
+
 - Add `Weapon::play_one_shot` for the identical Bucket and Sniper overrides
   (`weapon_bucket.cpp:27`, `weapon_sniper.cpp:28`), and fix the inverted
   parameter name (`weapon.cpp:357`).

@@ -2,6 +2,8 @@
 
 #include "game/input/input_slots.h"
 
+#include <cstddef>
+
 // Humans retain their stable input-slot credit after pad reassignment. Bots
 // and device-less Debug players get separate credit by roster participant;
 // these owner indices never enter the input readers.
@@ -18,5 +20,13 @@ namespace paint_owners
 		}
 		return device_slot == -1 && view >= 0 && view < dummy_count ?
 			input_slots::count + view : -1;
+	}
+
+	// An owner's slot in a table sized count + 1: its own, or the shared last
+	// slot for -1 and anything else out of range.
+	constexpr std::size_t slot_or_fallback(int owner)
+	{
+		return owner >= 0 && owner < count ?
+			static_cast<std::size_t>(owner) : static_cast<std::size_t>(count);
 	}
 }

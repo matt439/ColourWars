@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/idle_drip.h"
+#include "game/objects/aim_facing.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/cosmetic_seed.h"
 #include "game/objects/crude_drawing.h"
@@ -70,9 +71,7 @@ void IdleDrip::advance(bool settled, const Vector2F& nozzle, float rotation,
     const IdleDripPresentation& look = *this->presentation_;
     if (!look.enabled)
     {
-        this->count_ = 0;
-        this->bead_age_ = -1.0f;
-        this->was_settled_ = false;
+        this->clear();
         this->interval_ = this->next_interval();
         return;
     }
@@ -105,7 +104,7 @@ void IdleDrip::advance(bool settled, const Vector2F& nozzle, float rotation,
 
     // Match the tool's vertical flip when facing left. Gravity stretches the
     // bead downwards even while its attachment follows continuous aiming.
-    const float side = rotation > pi * 0.5f || rotation < -pi * 0.5f ? -1.0f : 1.0f;
+    const float side = aim_faces_left(rotation) ? -1.0f : 1.0f;
     this->attachment_ = nozzle + Vector2F::rotate_vector(
         Vector2F(-look.nozzle_inset, side * look.nozzle_underside), rotation);
     if (!this->attached())

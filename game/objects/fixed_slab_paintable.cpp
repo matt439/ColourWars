@@ -186,7 +186,7 @@ void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
         projectile.layer() != collision_layers::PROJECTILE_TEAM_B) { return; }
     if (projectile.shape()->shape_type() != ShapeType::rectangle)
     { throw std::invalid_argument("Fixed slab paint currently requires rectangular projectile footprints"); }
-    const PlayerTeam team = projectile.layer() == collision_layers::PROJECTILE_TEAM_A ? PlayerTeam::a : PlayerTeam::b;
+    const PlayerTeam team = projectile.team();
     const Quad footprint = this->geometry_.local_quad(projectile.shape()->bounding_box());
     bool painted = false, captured = false;
     for (Tile& tile : this->tiles_)

@@ -135,30 +135,17 @@ RectangleF StructurePaintable::cull_bounds(float units_per_pixel) const
 void StructurePaintable::on_projectile_contact(const Projectile& other,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	// The mask also accepts players, but only projectiles paint the surface.
-	const CollisionLayer other_layer = other.layer();
-	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
-		other_layer != collision_layers::PROJECTILE_TEAM_B)
-	{
-		return;
-	}
-
-	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
-		PlayerTeam::a : PlayerTeam::b;
-
-	const RectangleF splash = other.shape()->bounding_box();
-	this->paint_from_projectile(other, splash, team);
+	this->paint_from_projectile(other, other.shape()->bounding_box());
 }
 
 void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 	const RectangleF& splash)
 {
+	// Only team paint marks a surface; a projectile's layer follows its team.
 	const CollisionLayer other_layer = projectile.layer();
 	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
 		other_layer != collision_layers::PROJECTILE_TEAM_B) { return; }
-	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
-		PlayerTeam::a : PlayerTeam::b;
-	this->paint_from_projectile(projectile, splash, team);
+	this->paint_from_projectile(projectile, splash, projectile.team());
 }
 
 void StructurePaintable::paint_from_projectile(const Projectile& projectile,

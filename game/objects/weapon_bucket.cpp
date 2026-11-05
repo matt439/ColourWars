@@ -24,11 +24,7 @@ WeaponBucket::WeaponBucket(const GameTuning* tuning,
 {
 
 }
-void WeaponBucket::handle_shoot_sound(bool shooting_this_update, bool /*holding_shoot*/)
+void WeaponBucket::handle_shoot_sound(bool fired_this_update, bool /*shooting_this_update*/)
 {
-    if (shooting_this_update)
-    {
-        this->play_wave(this->shoot_sound_,
-            this->details().shoot_sound_volume);
-    }
+    this->play_one_shot(fired_this_update);
 }

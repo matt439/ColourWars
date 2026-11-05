@@ -40,7 +40,6 @@ private:
     size_t count_ = 0;
     std::array<float, paint_owners::count + 1> repeat_remaining_{};
 
-    static size_t owner_index(int owner);
     void draw_block(labrador::DrawList& draw_list,
         const labrador::Vector2F& center, const labrador::Vector2F& size,
         float angle, const labrador::Colour& colour, float alpha) const;

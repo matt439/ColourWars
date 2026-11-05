@@ -220,12 +220,7 @@ namespace
                 if (offset < 0.0f || offset > spec.travel() ||
                     float_from_bits(value.offsets[frame * 2 + (1 - axis)]) != 0.0f)
                 { fail(path, "horizontal_motion offset outside its axis travel"); }
-                labrador::RectangleF pose = spec.anchor;
-                if (offset != 0.0f)
-                {
-                    if (spec.vertical()) { pose.y += offset; }
-                    else { pose.x += offset; }
-                }
+                const labrador::RectangleF pose = spec.pose_at(offset);
                 const std::uint32_t expected[] = { bits_from_float(pose.x), bits_from_float(pose.y),
                     bits_from_float(pose.width), bits_from_float(pose.height) };
                 for (std::size_t field = 0; field < 4; ++field)

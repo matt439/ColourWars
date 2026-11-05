@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon.h"
+#include "game/objects/aim_facing.h"
 
 #include <limits>
 
@@ -200,7 +201,7 @@ RectangleF Weapon::draw_bounds() const
 Vector2F Weapon::draw_pos() const
 {
 	Vector2F result = this->player_center();
-	if (this->facing_left(this->rotation_))
+	if (aim_faces_left(this->rotation_))
 	{
 		result.x -= this->details().offset.x;
 		result.y += this->details().offset.y;
@@ -212,23 +213,13 @@ Vector2F Weapon::draw_pos() const
 	return result;
 }
 
-bool Weapon::facing_left(float rotation)
-{
-	if (rotation > pi / 2.0f ||
-		rotation < pi / -2.0f)
-	{
-		return true;
-	}
-	return false;
-}
-
 Vector2F Weapon::nozzle_pos() const
 {
 	Vector2F result = this->details().nozzle_offset;
 	result.x += this->details().size.x;
 	result = Vector2F::rotate_vector(result, this->rotation_);
 	result += this->wep_rotation_origin_offset(
-		facing_left(this->rotation_));
+		aim_faces_left(this->rotation_));
 	result += this->player_center();
 	return result;
 }
@@ -479,14 +470,14 @@ bool Weapon::can_afford_shot() const
     return this->ammo() >= cost ||
         (this->ammo() > 0.0f && cost - this->ammo() <= rounding);
 }
-void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
+void Weapon::handle_shoot_sound(bool fired_this_update, bool shooting_this_update)
 {
     if (!this->loop_voice_.valid())
     {
         return;
     }
 
-    if (holding_shoot || shooting_this_update)
+    if (shooting_this_update || fired_this_update)
     {
         if (!this->loop_playing_)
         {
@@ -500,6 +491,14 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
     else if (this->loop_playing_)
     {
         this->stop_sounds();
+    }
+}
+void Weapon::play_one_shot(bool fired_this_update)
+{
+    if (fired_this_update)
+    {
+        this->play_wave(this->shoot_sound_,
+            this->details().shoot_sound_volume);
     }
 }
 void Weapon::stop_sounds()
@@ -560,14 +559,7 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
 
     this->set_player_center(player_center);
 
-    if (facing_left(this->rotation()))
-    {
-        this->set_invert_y(true);
-    }
-    else
-    {
-        this->set_invert_y(false);
-    }
+    this->set_invert_y(aim_faces_left(this->rotation()));
 }
 
 std::vector<std::unique_ptr<Projectile>>

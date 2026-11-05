@@ -37,19 +37,6 @@ namespace
 			std::trunc(projected.bottom()) - top);
 	}
 
-	const char* collision_type_label(CollisionObjectType type)
-	{
-		switch (type)
-		{
-		case CollisionObjectType::structure: return "STRUCTURE";
-		case CollisionObjectType::structure_jump_through: return "STRUCTURE_JUMP_THROUGH";
-		case CollisionObjectType::structure_paintable: return "STRUCTURE_PAINTABLE";
-		case CollisionObjectType::structure_ramp_left: return "STRUCTURE_RAMP_LEFT";
-		case CollisionObjectType::structure_ramp_right: return "STRUCTURE_RAMP_RIGHT";
-		default: return "this collision type";
-		}
-	}
-
 	// The terrain tags a level record can carry; anything else carries no material.
 	std::optional<level_format::Collision> format_collision(CollisionObjectType type)
 	{
@@ -63,6 +50,13 @@ namespace
 		case CollisionObjectType::structure_ramp_right: return level_format::Collision::structure_ramp_right;
 		default: return std::nullopt;
 		}
+	}
+
+	// The level format's own spelling of a terrain tag, for refusals.
+	const char* collision_type_label(CollisionObjectType type)
+	{
+		const std::optional<level_format::Collision> collision = format_collision(type);
+		return collision ? level_format::collision_name(*collision) : "this collision type";
 	}
 }
 
@@ -101,28 +95,34 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 	}
 	const std::optional<level_format::Collision> collision = format_collision(type);
 	if (!collision || !level_format::sits_on(*material, *collision)) { return refuse(); }
-	if (name == "set_square")
+	namespace material_name = level_format::material_name;
+	if (name == material_name::set_square)
 	{
 		return std::make_unique<SetSquareMaterial>(shape, faces, render_resources);
 	}
 	const RectangleF rectangle = shape.bounding_box();
-	if (name == "ground")
+	if (name == material_name::ground)
 	{
 		return std::make_unique<GroundMaterial>(rectangle, faces, render_resources, hand);
 	}
-	if (name == "ruler")
+	if (name == material_name::ruler)
 	{
 		return std::make_unique<RulerMaterial>(rectangle, faces, render_resources);
 	}
-	if (name == "pencil")
+	if (name == material_name::pencil)
 	{
 		return std::make_unique<PencilMaterial>(rectangle, faces, mirror_x, render_resources);
 	}
-	if (name == "eraser")
+	if (name == material_name::eraser)
 	{
 		return std::make_unique<EraserMaterial>(rectangle, faces, render_resources);
 	}
-	return std::make_unique<PaintTinMaterial>(rectangle, faces, render_resources);
+	if (name == material_name::paint_tin)
+	{
+		return std::make_unique<PaintTinMaterial>(rectangle, faces, render_resources);
+	}
+	// A table entry with no look is a build fault, not a fallback to paint.
+	throw std::invalid_argument("material '" + name + "' has no look to draw");
 }
 
 TerrainMaterial::TerrainMaterial(const std::string& name, RenderResources* render_resources) :
