@@ -171,8 +171,10 @@ namespace menu_text_acceptance
         {
             const bool keyboard = std::string(key) == "keyboard_jump";
             const bool pad_buttons = std::string(key) == "pad_buttons";
-            // Apply is row 8 on Controls and Pad Buttons and row 4 on Sticks.
-            const std::array<int, 2> rows{ keyboard ? 1 : (pad_buttons ? 2 : 8), keyboard || pad_buttons ? -1 : 4 };
+            // Keyboard Keys and Pad Buttons open from Controls rows 1 and 2.
+            // Apply is row 8 on Pad Buttons, 9 on Controls and 7 on Sticks.
+            const bool apply = !keyboard && !pad_buttons;
+            const std::array<int, 3> rows{ keyboard ? 1 : (pad_buttons ? 2 : 8), apply ? 9 : -1, apply ? 7 : -1 };
             for (const char* copy : { "i", "F", "Fi", "FF", "H" })
             {
                 const auto fitted = variants.load([&](rapidjson::Document& d)
@@ -283,9 +285,14 @@ namespace menu_text_acceptance
             "Controls fitted-row fixture no longer exercises the shipped column and height limits");
         for (size_t index = 0; index < std::size(controls_fitted_items); ++index)
         {
-            // Controls keeps Sticks/Keyboard Jump/Pad Buttons first; its five
-            // shared settings occupy rows3-7. The Sticks child occupies rows0-3.
-            const int row_index = index < 5 ? static_cast<int>(index) + 3 : static_cast<int>(index) - 5;
+            // Controls' five settings follow its four page actions; the Sticks
+            // child's Pad, Move, Aim and Rumble open its page.
+            constexpr int fitted_rows[]{ settings_rows::controls_music, settings_rows::controls_sfx,
+                settings_rows::controls_view_shake, settings_rows::controls_aim_marker,
+                settings_rows::controls_reduce_effects, settings_rows::sticks_pad, settings_rows::sticks_movement,
+                settings_rows::sticks_aim, settings_rows::sticks_rumble };
+            static_assert(std::size(fitted_rows) == std::size(controls_fitted_items));
+            const int row_index = fitted_rows[index];
             const auto position = controls.layout.position + labrador::Vector2F(0.0f,
                 controls.layout.spacing.y * static_cast<float>(row_index));
             const std::wstring& text = look.menu_text().item(controls_fitted_items[index]);

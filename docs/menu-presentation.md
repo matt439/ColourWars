@@ -602,7 +602,7 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string, still checked; no page draws a brand line |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits`, `bot_team`, `bot_weapon` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble`, `watch_replay`, `profiles`, `series_stage` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
@@ -967,29 +967,37 @@ available actions, navigation, focus, music timing or interrupted transitions.
 
 ### Controls / audio and Pad Sticks row labels
 
-Nine required `menu_text.items` roles supply the existing settings labels:
+Thirteen required `menu_text.items` roles supply the existing settings labels.
+Controls has eleven rows: four page actions, five settings, then Apply and
+Back. Pad Sticks has seven settings, then Apply and Back. The settings rows are
+named once in `settings_rows` (`game/config/presentation/menu_geometry.h`),
+which the pages and the startup validator share.
 
 | Key | Shipped text | Use |
 |---|---|---|
 | `pad_sticks` | `Pad sticks` | Controls / audio action, row 0 |
-| `music_volume` | `Music volume` | Controls / audio fitted label, row 1 |
-| `sfx_volume` | `SFX volume` | Controls / audio fitted label, row 2 |
-| `view_shake` | `View shake` | Controls / audio fitted label, row 3 |
-| `aim_marker` | `Aim marker` | Controls / audio fitted label, row 4 |
-| `reduce_effects` | `Reduce effects` | Controls / audio fitted label, row 5 |
+| `keyboard_jump` | `Keyboard Keys` | Controls / audio fitted action, row 1 |
+| `pad_buttons` | `Pad Buttons` | Controls / audio fitted action, row 2 |
+| `profiles` | `Profiles` | Controls / audio fitted action, row 3 |
+| `music_volume` | `Music volume` | Controls / audio fitted label, row 4 |
+| `sfx_volume` | `SFX volume` | Controls / audio fitted label, row 5 |
+| `view_shake` | `View shake` | Controls / audio fitted label, row 6; Pad Sticks, row 4 |
+| `aim_marker` | `Aim marker` | Controls / audio fitted label, row 7; Pad Sticks, row 5 |
+| `reduce_effects` | `Reduce effects` | Controls / audio fitted label, row 8; Pad Sticks, row 6 |
 | `pad` | `Pad` | Pad Sticks fitted label, row 0 |
 | `move_deadzone` | `Move deadzone` | Pad Sticks fitted label, row 1 |
 | `aim_deadzone` | `Aim deadzone` | Pad Sticks fitted label, row 2 |
+| `rumble` | `Rumble` | Pad Sticks fitted label, row 3 |
 
 Both pages reuse `menu_text.items.apply` and `menu_text.items.back`, at Controls
-rows 6/7 and Pad Sticks rows 3/4. All thirteen uses draw plain text with
+rows 9/10 and Pad Sticks rows 7/8. All twenty uses draw plain text with
 `controls_settings.item_font`, shipped as `lato_black_36`. This is a
 separate context from `menu_style.fonts.item` (`lato_black_48`) and from
-the shared heading font (`lato_black_72`). Shared Apply/Back labels are
-checked in each font and page where they appear.
+the shared heading font (`lato_black_72`). Shared labels are checked in each
+font and page where they appear.
 
 The normalized, nonblank, single-line rules apply. Startup checks actual font
-glyphs and finite, positive measured text bounds. All eight setting labels keep
+glyphs and finite, positive measured text bounds. All twelve setting rows keep
 the existing `OptionRow` fit: starting at scale one, shrink to the label-column
 width if needed, then shrink further to the available row height. The width is
 `controls_settings.layout.spacing.x - controls_settings.art.focus_padding.x`;
@@ -998,8 +1006,11 @@ the height is
 The fitted scale must remain finite and positive. Long supported labels remain
 valid when their fitted bounds fit, without a character-count limit.
 
-The Pad sticks action and both pages' Apply/Back actions retain their measured
-font size. Text bounds expanded by `controls_settings.art.focus_padding` must
+The Pad sticks action and both pages' Back actions retain their measured font
+size. Keyboard Keys, Pad Buttons, Profiles and Apply shrink uniformly, never
+upscaling, to the width left before the help column
+(`menu_geometry::settings_action_width`) and the row height less focus
+padding. Text bounds expanded by `controls_settings.art.focus_padding` must
 fit the Controls paper, centered in
 `(1920, menu_style.chrome.footer_y)` using `controls_settings.box_size`, and
 their row height. For each use, the padded right edge must be at most

@@ -62,6 +62,17 @@ and Release, `check-startup.ps1` passed on both executables, and
 also run by hand against that run's evidence with one Controls row changed, and
 threw the new message.
 
+A follow-up commit cleared the sibling sites review found. The
+[Controls row-label table](menu-presentation.md#controls--audio-and-pad-sticks-row-labels)
+gave the pre-Profiles rows (Music 1, Apply/Back 6/7 and 3/4) and left out the
+three Controls page actions, Rumble and the Sticks comfort rows; it now lists
+all thirteen roles on their real rows, names `settings_rows`, and says which
+actions are fitted. In `menu_text`'s `controls_checks.cpp` the fitted-label
+fixture placed Controls' settings on rows 3-7 and now takes every row from
+`settings_rows`, and the fitted-action fixture's Apply rows (8 and 4) are now
+Pad Buttons 8, Controls 9 and Sticks 7. `menu_text` passed in Debug and Release
+after it.
+
 ### Save and settings correctness (`HYG#59`)
 
 Four behaviour fixes, one commit each:
