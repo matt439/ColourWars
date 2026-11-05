@@ -623,9 +623,11 @@ the record lines and replace the Random mark; `qps-ploc` brackets both.
   `best_line` build them for Stage Select's `record_line`, the sibling the grep
   found in Results' `record_text`, and both validators. The Random mark is
   `menu_text.stage.random_mark`, checked at startup for its glyphs in the
-  announcement font; the page still refuses a mark that leaves the preview. A
-  startup fit check was tried and dropped: `menu_text` fixtures shrink the
-  preview to 2 pixels and must still load.
+  announcement font and for its unscaled title-shadow union fitting
+  `preview_size`, so overlong copy fails at load under its own key; the page
+  still repeats the containment check. The `menu_text` OptionRow fixture that
+  shrank the preview to 2 pixels for the Random arena name now uses a 200-pixel
+  preview and a taller name area instead.
 - `OptionRow` starts its value empty.
 - The Sticks page, its validator and the four probe copies of its layout
   measure the help-font line on `menu_text.help.aim_cutoff` instead of `"Move"`.
@@ -649,7 +651,16 @@ the record lines and replace the Random mark; `qps-ploc` brackets both.
 Left as found: the Debug menu's `"Queued"` measure and its English, which are
 developer text; the HUD identity separator and the results `A`/`B` marks,
 recorded choices (frozen review). The painter's Stage paper check now expects
-literal English record lines rather than gluing the copy itself.
+literal English record lines rather than gluing the copy itself, and its Results
+record check builds its lines through `new_best_line` and `stage_best_line`
+(review follow-up: it had appended the number to the template, so its boxes
+were measured on a wider string than the game draws).
+[menu-presentation.md](menu-presentation.md) describes the Sticks captions
+measuring `aim_cutoff`, not `Move`. The follow-up passed the full default
+Release list, Debug `menu_text`, `menu_presentation`, `locales`,
+`stage_selection`, `settings`, `user_stages`, `stick_settings` and
+`debug_console`, and in both presets `check-startup.ps1` (plain and
+`qps-ploc`) and `check-painter.ps1 -ResultsMenuOnly` and `-StagePaperOnly`.
 
 Both presets build under `/W4 /WX`. The full default acceptance list (78
 cases, `-Parallel 4`) passed in Release; in Debug, `input_bindings`,

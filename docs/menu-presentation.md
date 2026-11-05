@@ -1148,9 +1148,9 @@ backing or text shadow.
 
 The aim caption retains its measured size. Its x position is
 `controls_settings.stick_preview.aim.x`; its y position remains the preview's
-top minus the help font's measured `Move` height and
-`controls_settings.art.focus_padding.y`. `Move` is a geometry probe, not another
-display string. The caption must fit the right-hand help region, begin at or
+top minus the help font's measured height of the caption itself
+(`menu_text.help.aim_cutoff`) and `controls_settings.art.focus_padding.y`. The
+caption must fit the right-hand help region, begin at or
 below the movement-response preview's bottom, and end at or above the aim
 preview's top. Its width can extend beyond the aim square within that region;
 the square is not a text-width cap. Boundary equality is accepted.
@@ -1829,8 +1829,8 @@ assume the physically reachable stick vectors or that `100%` is widest.
 All six readouts remain plain, unscaled text in their original positions. The
 connection line ends before the raw caption, raw and response captions stay
 above their tracks, and the full aim block fits beside the aim box and before
-association help. Caption positions retain the existing measured `Move` probe
-and focus-padding offset. Pages capture their copy and font, refresh values from
+association help. Caption positions keep the measured height of
+`menu_text.help.aim_cutoff` and the focus-padding offset. Pages capture their copy and font, refresh values from
 the existing input snapshots, and adopt edits only when reopened. The Pad row
 and connection readout share the authored device label below. Both deadzone
 setting percentage values remain for later text slices.

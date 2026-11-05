@@ -413,6 +413,12 @@ namespace menu_text_acceptance
         // The Random mark draws in the announcement font.
         variants.rejects("menu_text.stage.random_mark", [](rapidjson::Document& d)
             { d["menu_text"]["stage"]["random_mark"].SetString("Glyph~"); d["main_menu"]["fonts"]["announcement"].SetString("menu_text_limited"); }, &world);
+        // It is drawn unscaled on the preview, so startup refuses copy that
+        // would leave it in either direction instead of Stage Select throwing.
+        variants.rejects("menu_text.stage.random_mark", [](rapidjson::Document& d)
+            { d["menu_text"]["stage"]["random_mark"].SetString(std::string(40, 'W').c_str(), d.GetAllocator()); }, &world);
+        variants.rejects("menu_text.stage.random_mark", [](rapidjson::Document& d)
+            { d["main_menu"]["stage_select"]["preview_size"]["y"].SetFloat(20.0f); }, &world);
     }
 
     void check_prompt_bar(World& world, const Presentation& look)

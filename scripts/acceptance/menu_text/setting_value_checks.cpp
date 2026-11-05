@@ -415,10 +415,12 @@ namespace menu_text_acceptance
                 d["controls_settings"]["item_font"].SetString(font_name, d.GetAllocator());
                 for (const auto& entry : value_text) { d["menu_text"]["values"][entry.key].SetString("~"); }
                 // Random also supplies the arena name, whose existing fit
-                // shrinks only to preview width. A narrow synthetic preview
-                // keeps that separate consumer valid while every real
+                // shrinks only to preview width. A narrower preview and a
+                // taller name area keep that separate consumer valid (the
+                // Random mark must still fit the preview) while every real
                 // OptionRow uses still exercise their width/height limits.
-                d["main_menu"]["stage_select"]["preview_size"]["x"].SetFloat(2.0f);
+                d["main_menu"]["stage_select"]["preview_size"]["x"].SetFloat(200.0f);
+                d["main_menu"]["stage_select"]["name_position"]["y"].SetFloat(100.0f);
             });
             tall.validate_resources(world.render, world.audio);
             check_rows(tall, wide_glyph, true);

@@ -115,10 +115,20 @@ void Presentation::Validation::validate_stage_select_briefing(StageGeometry& geo
 				"below the preview edge and above the footer.");
 		}
 	}
-	// The Random mark must draw in its font; the page itself refuses a mark
-	// that leaves the preview (MainMenuStageSelect's geometry check).
-	std::ignore = fixed_menu_size("menu_text.stage.random_mark", this->presentation_.menu_text_.stage.random_mark,
+	// The Random mark is drawn unscaled and centred on the preview with the
+	// title shadow, so it must draw in its font and its shadow union must fit
+	// the preview; the page repeats the containment check when it shows it.
+	const std::string mark_key = "menu_text.stage.random_mark";
+	const Vector2F mark_size = fixed_menu_size(mark_key, this->presentation_.menu_text_.stage.random_mark,
 		main.announcement_font);
+	const RectangleF mark = RectangleF::union_of(RectangleF(Vector2F::zero, mark_size),
+		RectangleF(this->presentation_.menu_.title_shadow_offset, mark_size));
+	if (!std::isfinite(mark.width) || !std::isfinite(mark.height) ||
+		!(mark.width <= stage.preview_size.x) || !(mark.height <= stage.preview_size.y))
+	{
+		throw std::runtime_error(this->presentation_.source_path_ + ": " + mark_key +
+			" must fit unscaled inside main_menu.stage_select.preview_size, including its title shadow.");
+	}
 	geometry.stage_briefing = stage_briefing;
 	geometry.stage_info = stage_info;
 	geometry.briefing_rows = std::move(briefing_rows);

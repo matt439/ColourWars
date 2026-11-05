@@ -474,7 +474,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             const Frame plain = shown(RecordOutcome(), true);
             const Frame hidden = shown(RecordOutcome(), false);
             const std::pair<const RecordOutcome*, std::wstring> lines[]{
-                { &best, words.new_best + L" 60.0%" }, { &held, words.stage_best + L" 72.1%" } };
+                { &best, words.new_best_line(L"60.0%") }, { &held, words.stage_best_line(L"72.1%") } };
             for (const auto& [record, line] : lines)
             {
                 const Vector2F measured = app.render_resources()->measure_text(contribution_font, line);
