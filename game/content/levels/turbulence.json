@@ -1,6 +1,7 @@
 {
     "format": 1,
     "display_name": "Turbulence",
+    "include_in_random": false,
     "icon_frame": "stage_turbulence",
     "sound":
     {

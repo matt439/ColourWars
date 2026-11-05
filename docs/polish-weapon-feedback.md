@@ -45,8 +45,8 @@ utility fill frame; no new atlas or build dependency is required.
 
 ## Low-paint advance warning (`POL#38`)
 
-**Implemented 2026-10-27, requested by the author the same day; listening and
-attended readability remain.** There was no separate depletion penalty in the
+**Implemented 2026-10-27, requested by the author the same day; accepted as
+built on 2026-11-05.** There was no separate depletion penalty in the
 code: the penalty is that an empty tool cannot fire until it regenerates a whole
 shot, and regeneration only starts `weapons.ammo_regen_delay` (0.5 s) after the
 last paid shot. The warning now arrives while at least one paid shot remains.
@@ -66,11 +66,12 @@ the line, or on any refill. The shot term is what keeps the sniper quiet: its
 0.3 shot is larger than the band, and the paint it regenerates between held
 shots would otherwise rearm the warning mid-burst. Like the
 other feedback edges it never fires on a zero-delta update. All five tools use
-the accepted `tool.drip` master at full gain, a provisional choice from the
-existing bank: it is distinct in kind from the empty pump and the recovery
-valve, but measures about 9 dB RMS below those cues (peak -12.7 dBFS against
--3.0). Whether it carries through a four-player mix, or needs a dedicated
-master, is a listening decision for `POL#23`.
+the accepted `tool.drip` master at full gain, chosen from the existing bank and
+accepted by the author on 2026-11-05: it is distinct in kind from the empty pump
+and the recovery valve, but measures about 9 dB RMS below those cues (peak
+-12.7 dBFS against -3.0). Whether it carries through a four-player mix was not
+listened for; the author accepted the mix as it stands (`POL#23`) and waived the
+listening pass (`ROAD#3`), which was not performed.
 
 **Pictures.** Two persistent cues show while the tool is below the line,
 including when empty, and blink on the tool's simulated low age (0.5-second
@@ -102,9 +103,12 @@ at the SFX gain.
 A Debug 4P Crossfeed launch with paint bots shows the tag and tank on every low
 seat.
 
-**Remaining (`DECISION`).** Listen to the cue in the 1/2/4-player mix (with
-`POL#23`), and look at the tag and tank at four-player size with the sound
-muted. Both values and the cue choice are provisional.
+**Decided 2026-11-05.** The author accepted the line values (0.25 of the tank,
+two shots, 0.15 rearm), the `tool.drip` cue, the HUD tag and the figure tank as
+shipped; they are no longer provisional. The 1/2/4-player listening check and
+the muted four-player look at the tag and tank were not performed: listening
+was waived with `ROAD#3`, and the readability look was not held before the
+acceptance.
 
 ## Reproduction
 
@@ -154,7 +158,8 @@ artwork.
   bank, excluding development assets. Isolated Debug and extracted Release
   startup pass with a system-only PATH and graceful close. Extracted Release
   also passes separately without its optional bank, reporting the expected
-  single silent-fallback diagnostic. Clean-PC acceptance remains `ROAD#1`.
+  single silent-fallback diagnostic. Clean-PC acceptance (`ROAD#1`) was waived
+by the author on 2026-11-05 and not performed.
 
 Final visual receipts, CSVs, lossless captures and paginated review sheets are
 under `out/validation/weapon-feedback/final-visual/`:
@@ -167,5 +172,5 @@ CPU evidence is in `out/acceptance/<preset>/`; package/startup evidence is in
 face-overlapping status position and the oversized contact-sheet export failure;
 the final receipts above use the corrected placement and bounded pages. The
 timings and intensity remain tunable. The author approved the current treatment
-for this development stage on 2026-10-20; reference-arena composition is rechecked
-with `POL#17`/`POL#24` as the layout and tuning evolve.
+for this development stage on 2026-10-20. The `POL#24` finish review that was to
+recheck it in the reference arena was waived on 2026-11-05 and not performed.

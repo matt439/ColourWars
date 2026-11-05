@@ -294,7 +294,8 @@ namespace
 		}
 	}
 
-	// Under the paint-underfoot trial a refill on enemy paint never finishes.
+	// With paint underfoot on, a refill on enemy paint never finishes. Off it
+	// the bot keeps walking and refilling, and holds only before enemy paint.
 	void check_refill_off_enemy_paint(const GameTuning& tuning, const GameTuning& unaware)
 	{
 		require(tuning.bots().refill_off_enemy_paint && !unaware.bots().refill_off_enemy_paint,
@@ -305,11 +306,16 @@ namespace
 			view.ammo = tuning.bots().reserve_low * 0.5f;
 			view.underfoot = true;
 			MatchBot bot(&tuning, difficulty, 7), plain(&unaware, difficulty, 7), off(&tuning, difficulty, 7);
-			require(react(bot, view, tuning, difficulty).x_movement == 0.0f,
-				"A refilling bot off enemy paint did not hold still");
+			MatchBot open(&tuning, difficulty, 7);
 			const float walked = react(plain, view, unaware, difficulty).x_movement;
 			require(walked != 0.0f, "The fixture's refilling bot did not walk with the toggle off");
-			MatchBotObservation trial_off = view;
+			require(react(open, view, tuning, difficulty).x_movement == walked,
+				"A refilling bot off enemy paint stopped with no enemy paint ahead");
+			MatchBotObservation blocked = view;
+			blocked.ahead_left = blocked.ahead_right = MatchBotFooting::enemy;
+			require(react(bot, blocked, tuning, difficulty).x_movement == 0.0f,
+				"A refilling bot off enemy paint walked on toward enemy paint ahead");
+			MatchBotObservation trial_off = blocked;
 			trial_off.underfoot = false;
 			require(react(off, trial_off, tuning, difficulty).x_movement == walked,
 				"The refill toggle changed a bot while paint underfoot was off");
@@ -317,12 +323,27 @@ namespace
 			view.center = { -400.0f, 0.0f };
 			react(bot, view, tuning, difficulty);
 			view.center = {};
-			view.on_enemy_paint = true;
+			view.footing = MatchBotFooting::enemy;
 			require(react(bot, view, tuning, difficulty).x_movement < 0.0f,
 				"A refilling bot on enemy paint did not walk back to the last ground off it");
 			MatchBot fresh(&tuning, difficulty, 7);
 			require(react(fresh, view, tuning, difficulty).x_movement != 0.0f,
 				"A refilling bot on enemy paint with nowhere known to go stood still");
+			// Ground off enemy paint along this floor wins, nearer side first,
+			// even against the remembered way back.
+			for (const float side : { -1.0f, 1.0f })
+			{
+				MatchBot remembered(&tuning, difficulty, 7);
+				MatchBotObservation back = view;
+				back.footing = MatchBotFooting::none;
+				back.center = { side * 400.0f, 0.0f };
+				react(remembered, back, tuning, difficulty);
+				MatchBotObservation over = view;
+				over.refuge_left = side < 0.0f ? 900.0f : 300.0f;
+				over.refuge_right = side < 0.0f ? 300.0f : -1.0f;
+				require(react(remembered, over, tuning, difficulty).x_movement == -side,
+					"A refilling bot on enemy paint did not make for the nearest ground off it");
+			}
 		}
 	}
 
@@ -507,7 +528,7 @@ int wmain(int argc, wchar_t** argv)
 		bot_ascent_acceptance::check(tuning);
 		bot_ascent_approach_acceptance::check(tuning);
 		bot_ramp_acceptance::check(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, refill off enemy paint under the underfoot trial, bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
+		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, refill off enemy paint with paint underfoot (walking on, holding only before enemy paint ahead), bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	});
 }

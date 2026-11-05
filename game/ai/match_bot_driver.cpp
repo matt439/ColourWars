@@ -11,6 +11,12 @@ using namespace labrador;
 
 namespace
 {
+	MatchBotFooting footing_of(PlayerTeam paint, const BotBody& body)
+	{
+		if (!body.underfoot_enabled || paint == PlayerTeam::none) { return MatchBotFooting::none; }
+		return paint == body.team ? MatchBotFooting::own : MatchBotFooting::enemy;
+	}
+
 	// A ready deliberate tool requalifies its top shot every step, airborne too.
 	bool support_shot(const MatchBot& bot, const BotBody& body)
 	{
@@ -138,8 +144,54 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 		view.ammo = player.ammo / this->tuning_->starting_ammo();
 		view.paint_refill = this->tuning_->handicap(player.handicap).paint_refill;
 		view.underfoot = player.underfoot_enabled;
-		view.on_enemy_paint = player.underfoot_enabled && player.underfoot_team != PlayerTeam::none &&
-			player.underfoot_team != player.team;
+		view.footing = footing_of(player.underfoot_team, player);
+		// Only the refill rule reads the ground ahead; skip the queries otherwise.
+		const bool low = bot->refilling() || player.tool_empty ||
+			view.ammo <= this->tuning_->bots().reserve_low;
+		if (player.underfoot_enabled && this->tuning_->bots().refill_off_enemy_paint && low &&
+			player.alive && player.grounded)
+		{
+			const float feet = view.center.y + view.size.y * 0.5f;
+			const auto footing_at = [&](float x)
+			{
+				const std::optional<PlayerTeam> paint = world.top_paint_team(Vector2F(x, feet));
+				return paint ? std::optional<MatchBotFooting>(footing_of(*paint, player)) : std::nullopt;
+			};
+			// The leading foot one step to either side, and one braking
+			// distance from top speed beyond it, on the line of these feet.
+			const MatchBotLocomotion locomotion(*this->tuning_);
+			const float lead = view.size.x * 0.5f + 1.0f;
+			const float beyond = lead + locomotion.stopping_distance(locomotion.ground(MatchBotFooting::own).top,
+				true, MatchBotFooting::enemy);
+			const auto ahead = [&](float direction)
+			{
+				MatchBotFooting found = MatchBotFooting::none;
+				for (const float offset : { lead, beyond })
+				{
+					found = footing_at(view.center.x + direction * offset).value_or(MatchBotFooting::none);
+					if (found == MatchBotFooting::enemy) { break; }
+				}
+				return found;
+			};
+			view.ahead_left = ahead(-1.0f);
+			view.ahead_right = ahead(1.0f);
+			if (view.footing == MatchBotFooting::enemy)
+			{
+				// Walk the floor out in half-body strides until it ends.
+				const auto refuge = [&](float direction)
+				{
+					for (float offset = lead; offset <= this->tuning_->bots().sight_distance; offset += view.size.x * 0.5f)
+					{
+						const std::optional<MatchBotFooting> found = footing_at(view.center.x + direction * offset);
+						if (!found) { break; }
+						if (*found != MatchBotFooting::enemy) { return offset; }
+					}
+					return -1.0f;
+				};
+				view.refuge_left = refuge(-1.0f);
+				view.refuge_right = refuge(1.0f);
+			}
+		}
 		view.shot_empty = player.tool_empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
 		view.weapon = player.weapon;
@@ -169,11 +221,13 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 				float best_support_cost = (std::numeric_limits<float>::max)();
 				float best_other_cost = (std::numeric_limits<float>::max)();
 				std::optional<match_bot_territory::SupportTop> other;
+				view.support_unpainted = 0;
 				for (const PaintSurfaceSample& surface : surfaces)
 				{
 					if (surface.team == player.team) { continue; }
 					const std::optional<match_bot_territory::SupportTop> top = match_bot_territory::support_top_point(
 						view, surface, this->tuning_->paint().thickness);
+					if (top) { ++view.support_unpainted; }
 					if (!top)
 					{
 						// Off this support, only a slow straight shot that lands qualifies.

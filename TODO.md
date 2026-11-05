@@ -9,105 +9,26 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (clarified 2026-10-20):** research comparable combat levels, create an original new map,
-then tune movement and all five weapons together against it. Preserve the existing arenas and CQ draft.
-The author approved the current gameplay style;
-it is a working baseline, open to further iteration, not final art or release acceptance.
-See the [stage approval](docs/polish-plan.md#development-order-2026-10-17).
+**Aim reached; no new aim yet (2026-11-05).** The 2026-10-20 aim was to research comparable
+combat levels, make an original reference map, then tune movement and all five tools against
+it. Crossfeed was accepted on 2026-10-25. On 2026-11-05 the author accepted every open
+decision without the attended sessions:
+- **Arenas.** The Turbulence slab trial and Press Tower replace the original Turbulence and King
+  of the Hill in Random; the originals stay selectable ([Turbulence](docs/polish-turbulence.md),
+  [Press Tower](docs/polish-press-tower.md)).
+- **Values.** The current five-tool, movement, bot and Boost values are accepted. Paint underfoot
+  now ships on ([`POL#30`](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30)).
+  The series stage rule defaults to Rotate, user stages may opt into Random, display scaling
+  stays fractional, enemies get no threat markers and no translation language is chosen.
+- **Waived checks.** The hardware, participant and listening checks were waived by the author,
+  not performed: pads, the clean PC, performance and startup captures, Study B, fresh players
+  and the audio mix. Each owner says so.
+- **Engine reports.** The owed reports are filed as
+  [labrador#122-#125](docs/review/engine-reports.md#live), and 28 is closed as declined.
 
-**Order** ([research and design criteria](docs/level-design-research.md)):
-1. **Research before values:** use the recorded primary sources, concrete level examples and
-   ColourWars-specific hypotheses to define required, optional and recovery routes.
-2. **New map (done 2026-10-25):** the author accepted [Crossfeed](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25)
-   as the reference arena. Preserve the earlier CQ experiment as a comparison.
-3. **Now, the other arenas (`POL#21`):** apply the Crossfeed process to King of the Hill and
-   Turbulence, keeping the current P3/five-tool values as the baseline. The King of the Hill
-   blockout is [Press Tower](docs/polish-press-tower.md) (explicit-only, beside the preserved
-   original; attended play is `POL#31`); Crossfeed is now in Random at the author's request.
-   Turbulence's [static, mover and scored-slab comparisons](docs/polish-turbulence.md)
-   are explicit-only. The scoped software qualification is complete: bounded
-   fire/escape, routes/replay, local paint/cover roles, native composition and
-   endings. Attended geometry choice, crossing comfort and opposed balance
-   are now the next step (`POL#21`); current values remain provisional.
-4. **Alongside, finish the coupled candidate (`POL#3`, `POL#27`):** five-tool balance (its first
-   fork is paint underfoot on or off, `POL#30`; keep it off in the step-3 arena sessions), C2
-   recognition and the pad half; Sniper supply and Mister lifetime remain hypotheses. The finish
-   review and fresh-player observations (`POL#24`) still gate wider art production.
-
-5. **Feeding the above:** the first headless five-tool report
-   is recorded in the arena owners; attended decisions remain above. The default-off
-   paint-underfoot prototype is available for the `POL#27` underfoot fork. Runtime horizontal motion
-   and public-loader replay, editor authoring and saved-stage round trips are qualified;
-   the Turbulence mover comparison qualifies a local paint role. Fixed scored
-   slabs now have core/editor/native, local Roller-role and public driven
-   route/replay qualification; arena pressure and selection remain `POL#21`
-   ([boundary](docs/feature-roadmap.md#horizontal-movement-capability-2026-10-26)).
-
-UI artwork uses the approved gameplay style and remains outside the current blockout aim.
-Rows outside this sequence (audio, release, engine, tooling) are picked from OPEN
-when they don't compete with it.
-
-**Independent implementation (2026-10-30).** The author asked for an architecture
-review on 2026-10-30 and for every finding to be worked through: its rows are
-complete (`HYG#51` last, 2026-11-02), and its owed reports `ENG#27`-`ENG#33` are
-drafted, with the author's filing calls made on 2026-11-03. Before them, the 2026-10-28 shortlists and the 2026-10-29 OPEN rows were complete. The pin moved to
-Labrador `v0.3.0` on 2026-11-03, spending its preparation (`HYG#23`-`HYG#25`). A new autonomous row starts in its
-owner with a concrete local next step, as the rules below require.
-This does not change the arena/tuning order above. `ROAD#28`'s two lift slices
-(cycling lifts on the Lift Trial, paint-driven ones on the Paint Lift Trial,
-both explicit-only) landed on 2026-11-03; bot lift routing is unscoped. Growing sponges (`ROAD#29`) are not ready work. Functional trial cues do not widen the
-deferred production-art pass.
-
-**Bots (`ROAD#10`):** Easy/Normal/Hard setup and the shipping driver are integrated,
-including mover painting and pane-clamped labels. Next is the attended difficulty
-comparison and physical-pad check; values remain provisional.
-[Scope and acceptance](docs/feature-roadmap.md#ai-bot-players-road10).
-
-**Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
-
-- **Turbulence play and selection:** choose among the explicit-only comparisons after
-  both-side 1-4P pressure, crossing-comfort and regional-value play (`POL#21`).
-- **Press Tower play:** both sides and 1-4P, the summit's value and the halves' feel (`POL#31`);
-  the shipping-bot evidence is in its owner.
-- **Bots and paint-object trials:** compare Easy/Normal/Hard usefulness (`ROAD#10`)
-  and play the explicit Ferry/Gate/Lift/Paint Lift Trials from both sides at 1-4P (`ROAD#30`).
-- **Reference-match review:** Crossfeed is accepted; its spawn pressure, C2 identity/rear-threat
-  recognition and 1-4P clean/heavy readability go to the finish review (`POL#24`), with
-  five-tool pressure/resource tradeoffs (`POL#27`) and C2/pad movement (`POL#3`).
-- **Paint underfoot:** on or off, as the first fork of the `POL#27` sessions (`POL#30`); the
-  painting-charged special was answered no on 2026-11-03.
-- **Low-paint warning:** listen to the provisional cue in the 1/2/4P mix and look at the
-  HUD tag and figure tank at 4P with sound muted (`POL#38`).
-- **Cursor marker:** judge the pointer marquee in play at 1/2/4P (`POL#39`).
-- **Overlay papers:** whether the footer band may cover the bottom of the Pause, End and
-  Results papers, and whether practice Pause's focus cards may overlap their neighbours (`POL#45`).
-- **Drawing-mistake study:** run Study B on the shipped stage 1 with participants; the kit
-  is ready (`POL#46`). Study A was replaced by the authored figure-slip pool.
-- **Practice workshop:** watch a fresh player try Movement Course solo practice, then keep
-  or cut it and settle the lesson wording (`POL#19`).
-- **Handicaps:** whether Boost +1/+2 feel fair against bots in play (`ROAD#5`).
-- **Vsync:** try Off on MattPC with a perf capture and look for tearing windowed (`GAP#L9`).
-- **User stages:** play a stage made with Save to My Stages, and decide whether user stages
-  may opt into Random, whether the briefing hint is enough of a marker, and the
-  provisional scan-details wording (`ROAD#16`).
-- **Series stage rule:** play Same stage, Rotate and Loser's pick, choose the default and
-  settle the draw, explicit-only and bot-loser calls (`ROAD#20`).
-- **Keyboard Keys:** rebind on a keyboard and confirm the slice's provisional calls (`GAP#4.2`).
-- **Languages:** which to translate into first; the locale axis and a test locale are in, and
-  what a real language still needs is listed in [its contract](docs/localisation.md) (`GAP#L11`).
-- **Off-screen markers:** whether enemies get threat markers, and a readability look at the
-  teammate markers at 1/2/4P (`ROAD#18`).
-- **Display policy:** choose the recorded fractional, camera-snap or integer-cell/letterbox
-  treatment (`POL#34`); current behavior is documented, with no candidate accepted.
-- **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
-  listening and optional-cue choices (`POL#23`), visible uncontended performance captures
-  and a supported hardware baseline (`POL#25`), and startup-window captures for Labrador
-  (`GAP#5.1`).
-- **Report posting:** filing is authorized (2026-11-03) and the `ENG#27` (with `ENG#26`
-  as rider), `ENG#30` and `ENG#33` issues are to be posted from the author's account; the
-  `ENG#28` `CHANGES.md` amendment did not ship in `v0.3.0`, so it is the author's call again. `ENG#34` (the runner's rasteriser reported as hardware) is new and needs the same call.
-- **Hands and hardware:** a physical-pad session (`ROAD#2`, `ROAD#7`, `ROAD#9`, `ROAD#21`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
-  a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
+The next aim is the author's to set. Until then, rows are picked from the sections below.
+`ROAD#22` (endless paint) is the one `OPEN` row. Art (`POL#16`) is unblocked but stays
+deferred. Bot lift routing, sponges and the controller rows remain unscoped.
 
 ## Art direction, characters and the UI
 
@@ -117,83 +38,8 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through accepted arenas after `POL#21`; remaining UI art is a later polish pass. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
-| `POL#34` | DECISION | MED | M | Choose the recorded fractional, camera-snap or integer-cell/letterbox display policy after 720p/1080p/QHD motion and 1/2/4P readability review. [Record](docs/polish-plan.md#display-scaling-record). |
+| `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through the accepted arenas (selected 2026-11-05); remaining UI art is a later polish pass. Waits on the author setting it as the next aim. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
-| `POL#46` | DECISION | LOW | M | Stage 1 shipped with per-match hands; stage 2 is built from 11 authored figure slips ([slips.json](game/art/painter/slips.json)). Left: run Study B with participants and take out what fails; kits in [scripts/studies/](scripts/studies/README.md). [Research](docs/drawing-mistakes-research.md#7-recommendation-and-stages). |
-
-## Feel and feedback
-
-**Owner:** [docs/polish-plan.md](docs/polish-plan.md) §2, §4 and §8, with the
-[Movement Course](docs/polish-movement-course.md) and [feedback prototype](docs/polish-feedback.md)
-records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live here.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `POL#3` | DECISION | MED | M | Retain the author's positive P3 movement baseline. Attended C2 identity/rear-threat recognition, input-margin and physical-pad review remain; preserve legacy climbs. [Acceptance](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25), [course](docs/polish-movement-course.md). |
-| `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
-| `POL#19` | DECISION | LOW | S | Built: menu solo practice on the Movement Course is untimed, with station lessons and a pause Tool row. Watch a fresh player use it, then keep or cut it and settle the lesson wording. [Workshop](docs/polish-movement-course.md#practice-workshop). |
-| `POL#38` | DECISION | MED | S | Implemented: HUD tag, figure tank and a once-per-descent cue before exhaustion. Listen to the provisional `tool.drip` cue in the 1/2/4P mix (with `POL#23`) and check tag/tank readability muted at 4P. [Record](docs/polish-weapon-feedback.md#low-paint-advance-warning-pol38). |
-| `POL#45` | DECISION | LOW | S | The footer band covers the bottom of the Pause/End (30 px) and Results (10 px) papers, and practice Pause's focus cards overlap their rows by 17 px. Look at them at 1/2/4P and say whether each is intended. [Record](docs/polish-plan.md#footer-band-over-the-overlay-papers-pol45). |
-| `POL#39` | DECISION | MED | S | A hollow marquee now marks the mouse pointer in matches. Judge it in play over pale, dark and painted scenes at 1/2/4P, including its one-frame trail. [Record](docs/polish-plan.md#mouse-cursor-visibility-pol39). |
-
-## Levels and the editor
-
-**Owner:** [docs/polish-plan.md](docs/polish-plan.md) §3 and §8 for the layouts;
-[docs/level-editor.md](docs/level-editor.md) for the editor.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `POL#27` | DECISION | HIGH | L | Attended five-tool balance/resource review remains, opening with the paint-underfoot on/off fork (`POL#30`); the author's acceptance session tried several tools without a complaint. Sniper reserve and Mister lifetime stay provisional hypotheses. [Evidence](docs/polish-crossfeed.md#author-arena-acceptance-2026-10-25). |
-| `POL#30` | DECISION | MED | S | Special: no (2026-11-03; revisit under `ROAD#11`). Left: paint underfoot on or off as the first fork of the `POL#27` sessions: Crossfeed 1/2/4P, stored amounts, health lockout off, bot refill on; off for `POL#21`/`POL#31`. [Levers](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `POL#21` | DECISION | MED | XL | Choose the explicit-only [Turbulence Yard](docs/polish-turbulence.md) geometry after attended both-side 1-4P pressure, crossing-comfort and regional-value play. Scoped software comparisons are qualified; optional CQ work follows selection. |
-| `POL#31` | DECISION | MED | M | Attended Press Tower play on both sides and 1-4P: spawn pressure, the summit's value and whether the crown halves feel fiddly. [Open](docs/polish-press-tower.md#open). |
-| `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
-
-## Audio replacement
-
-**Owner:** [docs/polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set). The
-accepted source set and live replacement bank are integrated. The remaining cue hooks and
-mix still belong here; a missing-bank silent fallback is not a defect.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `POL#23` | DECISION | HIGH | L | Listen to the in-game 1/2/4-player mix and decide whether optional detail earns a cue; world detail follows the reference arena. [Remaining work](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration). |
-| `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains (now Music/SFX sound-group volumes, report 6), mute, suspension, resumed loops, the multiplayer mix, a lost output device; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
-
-## Acceptance and release
-
-**Owner:** [docs/feature-roadmap.md](docs/feature-roadmap.md#review-follow-up-ammunition-coverage-and-release-checks)
-(its numbered hardware list) and [polish-plan §7](docs/polish-plan.md#7-acceptance-and-delivery).
-The 2026-09-26 fix docs leave the same hardware checks open; they are frozen, so the rows live
-here.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `ROAD#1` | DECISION | MED | S | Run the extracted Release ZIP on a clean Windows 10/11 x64 machine. Needs one. |
-| `ROAD#2` | DECISION | MED | M | Physical-pad sessions: 2P and 4P on every stage and weapon; join, unplug/replug (also into another slot, reclaimed with Start), pause, focus, fullscreen/resize, series draws, rematch, relaunch; a long soak past the display timers; one non-XInput pad; mouse-vs-pad fights (B8). Needs pads. |
-| `POL#24` | DECISION | MED | M | The finish review and fresh-player observations on the Crossfeed reference match, including its spawn pressure and 1-4P clean/heavy readability; the gate before production widens. [Process](docs/polish-plan.md#7-acceptance-and-delivery). |
-| `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
-
-## Game gaps
-
-**Owner:** [docs/review/gap-audit.md](docs/review/gap-audit.md), Class 1, by its section numbers.
-The audit is **frozen** (2026-08-11): it owns each finding and its suggested shape, not its
-status. Live implementation scopes are linked in the rows. The no-live-score and
-random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The live
-[match scope decisions](docs/feature-roadmap.md#match-scope-decisions-2026-10-15) own the
-2026-10-15 calls on rulesets, solo practice, random teams and handicaps.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `ROAD#7` | DECISION | LOW | S | Review the per-pad View shake, Aim marker and Reduce effects overrides on 1-4P panes with pads; the settings, save and CPU checks are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#per-seat-accessibility-toggles-road7). |
-| `ROAD#5` | DECISION | LOW | S | Per-seat Boost (Off/+1/+2: less damage taken, faster paint refill) is built on Weapon Select (mechanic chosen 2026-10-27); judge the provisional values in attended play against bots. [Scope](docs/feature-roadmap.md#handicaps). |
-| `ROAD#9` | DECISION | MED | M | Review the four candidate rumble cues on physical pads, including comfort and distinctness; owner, settings and fake-sink qualification are complete. Needs `ROAD#2`. [Scope](docs/feature-roadmap.md#controller-rumble-road9). |
-| `ROAD#10` | DECISION | HIGH | M | Compare Easy/Normal/Hard usefulness in attended play and check physical pads. Mover painting and pane-clamped labels are implemented; difficulty values remain provisional. [Scope](docs/feature-roadmap.md#ai-bot-players-road10). |
-| `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
-| `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
-| `GAP#L9` | DECISION | LOW | S | Vsync row, save key and engine `set_vsync` built 2026-11-04. Owed: the author's MattPC check of Off (perf capture, no tearing windowed). [Setting](docs/feature-roadmap.md#vsync-setting-gapl9) |
-| `GAP#L11` | DECISION | LOW | M | Locale overlays, fallback, font substitution and the `qps-ploc` test locale are in; choose the first languages. Then: accented atlases, `GO!`, the practice lessons and the scan-refusal reasons into data, the save/failure dialogs decided, an Options row and save field. [Contract](docs/localisation.md). |
 
 ## Comparable-game gaps
 
@@ -204,17 +50,12 @@ excluded modes.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#11` | BLOCKED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#13` | BLOCKED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#14` | BLOCKED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. Waits on `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. Play is `ROAD#30`. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |
+| `ROAD#11` | UNSCOPED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. No longer blocked: `POL#27` was accepted 2026-11-05. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#13` | UNSCOPED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials; trial values accepted 2026-11-05). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |
 | `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
-| `ROAD#30` | DECISION | MED | M | Play the Ferry/Gate/Lift/Paint Lift Trials from both sides at 1-4P; judge route value, held-open clarity, whether a lift at 160 u/s is a free escape, the paint lifts' sign and side assignment, and provisional values. Arena selection remains `POL#21`. [Scope](docs/feature-roadmap.md#paint-object-trial-play-road30) |
-| `ROAD#16` | DECISION | LOW | S | User stages and scan details are implemented. Left: attended saved-stage play, Random opt-in and hint-only marker choices, and provisional scan-details wording. [Owner](docs/feature-roadmap.md#user-stages-road16). |
-| `ROAD#18` | DECISION | LOW | S | Off-screen teammate markers are in. Left: decide whether enemies get threat markers (an information-model change; see `POL#3` rear threats), and an attended readability look at 1/2/4P. [Owner](docs/feature-roadmap.md#teammate-markers-road18). |
-| `ROAD#20` | DECISION | LOW | S | The Series stage rule is in (Same stage, Rotate, Loser's pick on Mode). Left: play the three, choose the default, and confirm the provisional calls for draws, explicit-only stages and bot-only losers. [Owner](docs/feature-roadmap.md#series-stage-rule-road20). |
-| `ROAD#21` | DECISION | LOW | S | Player profiles are in and their MattPC painter checks pass. Left: try profiles with real pads (`ROAD#2`). [Owner](docs/feature-roadmap.md#player-profiles-road21). |
-| `ROAD#22` | BLOCKED | LOW | M | Ruled 2026-11-03: variants keep most-painted-at-time-up, so they are match options, not modes. Waits on `POL#27`; first slice is endless paint as a C++-owned named variant. [Ruling](docs/feature-roadmap.md#match-scope-decisions-2026-10-15) |
+| `ROAD#22` | OPEN | LOW | M | Variants keep most-painted-at-time-up, so they are match options, not modes (ruled 2026-11-03). Unblocked 2026-11-05; first slice: endless paint as a C++-owned named variant, with a bot refill switch. [Ruling](docs/feature-roadmap.md#match-scope-decisions-2026-10-15) |
 | `ROAD#23` | UNSCOPED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The reader is Labrador's, so the engine part is a report with an exhibit; Steam Input covers a Steam release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#24` | UNSCOPED | LOW | M | Pad aim assist so pad players can hold their own against the one mouse player; relates to `POL#3`, `POL#18` and `ROAD#5`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 
@@ -232,21 +73,14 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. Labrador `v0.3.0` (pinned 2026-11-03; the pin is now master `e7fc50e`, for vsync)
-answered `ENG#23`, `ENG#25`, `ENG#31` and `ENG#32`; 23 and 32 were spent at the bump, 31 and
-25 on 2026-11-05. On 2026-11-03 the
-author authorized filing `ENG#27`, `ENG#30` and `ENG#33` (with `ENG#26` riding on `ENG#27`),
-chose to fix `ENG#28` in Labrador directly, which the tag did not carry, and withdrew `ENG#29`
-(its client-side change, `HYG#52`, is done). Minimal engine-focused reports with
-reproducible examples are approved; recheck upstream and prepare each report for
-Labrador's established issue route. These rows do not represent fixes already requested.
+`GAP#F*`. The pin is master `e7fc50e` (`v0.3.0` plus vsync). On 2026-11-05 the owed reports were
+filed after a recheck against master `6189072`, and 28 was closed as declined. A pin bump that
+answers one is when its workaround is deleted.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DEFERRED | LOW | S | Asks to ride with a report: ignored `window_size_changed`, desktop-size query, atomic JSON write (F5, F9); registry name forgetting (report 26, with 27); install facts (PI-11; report 15); listener/voice cap (report 6); mouse-button names; display-awake owner; non-XInput reader. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `ENG#27`, `ENG#30`, `ENG#33` | DECISION | LOW | S | Filing authorized 2026-11-03; Engine-request drafts are ready (headless pad backend with the `ENG#26` rider, typed startup failure, a contact's `const` other party). Left: recheck master and post from the author's account. A decline of 33 keeps `HYG#49`'s cast. [Ledger](docs/review/engine-reports.md#owed-from-the-architecture-review-2026-10-30) |
-| `ENG#34` | DECISION | LOW | S | The engine reports the runner's software rasteriser as hardware, and CI's strict gates rely on it. File it, and settle what those gates accept before any fix lands. [Report](docs/review/engine-reports.md#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit). |
-| `ENG#28` | DECISION | LOW | S | `v0.3.0` shipped `730dd99`/`fdfc24e` without the three-place count. Choose: amend later, close as declined (`game/carried/` the migration), or file a Bug. [Report](docs/review/engine-reports.md#28-public-types-and-members-removed-with-an-engine-only-caller-count---draft-with-carried-copy-exhibit) |
+| `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -259,7 +93,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console-record.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step; across rounds is done ([record](docs/debug-console-record.md#replays-across-rounds-dbg2)). |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
-| `DBG#7` | DECISION | LOW | S | No driven check of the pad Back+Start chord or a bot on an unplugged seat. Run it in the `ROAD#2` session. |
 
 ## Tooling, CI and docs
 
@@ -276,10 +109,15 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Feel and feedback | [polish-plan.md](docs/polish-plan.md) §2, §4, §8; [Movement Course](docs/polish-movement-course.md) | a feel or feedback regression, or a reopened call; `POL#3`, `POL#18`, `POL#19`, `POL#38`, `POL#39` and `POL#45` were accepted or waived 2026-11-05 |
+| Levels and the editor | [polish-plan.md](docs/polish-plan.md) §3, §8; [level-editor.md](docs/level-editor.md) | a new arena or editor slice; `POL#21`, `POL#27`, `POL#30`, `POL#31` and `ED#5` were settled 2026-11-05 |
+| Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |
+| Acceptance and release | [feature-roadmap.md](docs/feature-roadmap.md#review-follow-up-ammunition-coverage-and-release-checks), [polish-plan §7](docs/polish-plan.md#7-acceptance-and-delivery) | a release candidate needing a check the author has not waived; `ROAD#1`, `ROAD#2`, `POL#24` and `POL#25` were waived 2026-11-05, not performed |
+| Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
 | Code hygiene | [code-hygiene.md](docs/code-hygiene.md) | a new hygiene finding with a concrete local step; `HYG#57` was the last (2026-11-05) |
-| Closed engine reports (1–25, 29, 31, 32) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
+| Closed engine reports (1–25, 28, 29, 31, 32) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |

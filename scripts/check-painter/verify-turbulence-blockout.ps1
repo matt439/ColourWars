@@ -33,7 +33,7 @@ $turbulenceHeavy = Turbulence-Number $turbulenceSummary.heavy_initial_fraction_m
 $turbulenceUpdates = Turbulence-Number $turbulenceSummary.level_updates 'updates'
 if ($turbulenceSummary.controlled_heavy_contacts -ne 5*$turbulencePaintables -or $turbulenceHeavy -le 0.99 -or $turbulenceHeavy -gt 1.0 -or
     $turbulenceUpdates -le 0 -or $turbulenceUpdates -gt 8000 -or $turbulenceUpdates -ne [Math]::Truncate($turbulenceUpdates) -or
-    $turbulenceTuning.player.paint_underfoot.enabled) { throw 'Turbulence ownership/contact/update/underfoot fixture differs.' }
+    -not $turbulenceTuning.player.paint_underfoot.enabled) { throw 'Turbulence ownership/contact/update/underfoot fixture differs.' }
 $turbulenceColumns = 'capture,kind,phase,paint,players,view,input_slot,scene_views,camera_source,player_x,player_y,velocity_x,velocity_y,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,landing,landing_x,landing_y,landing_width,landing_height,landing_visible,escape,escape_x,escape_y,escape_width,escape_height,escape_visible,frozen_pixels,public_state,debug_fingerprint,rng,evidence_scope'
 if ($turbulenceRows.Count -ne 51 -or ($turbulenceRows[0].PSObject.Properties.Name -join ',') -cne $turbulenceColumns) { throw 'Turbulence CSV schema/count differs.' }
 

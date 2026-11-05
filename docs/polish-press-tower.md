@@ -6,8 +6,10 @@ the reference arena. It answers the King of the Hill row of the
 [initial arena briefs](polish-plan.md#initial-arena-briefs). It is a new stage,
 `press_tower`, and the original
 [king_of_the_hill.json](../game/content/levels/king_of_the_hill.json) is
-unchanged beside it: still selectable, still in Random. Press Tower is
-explicitly selectable and excluded from Random until attended arena acceptance.
+unchanged beside it. On 2026-11-05 the author accepted Press Tower (`POL#31`):
+it sets `include_in_random: true` and is now the King of the Hill arena in
+Random, while `king_of_the_hill.json` stays selectable with
+`include_in_random: false`. The crown width is unchanged.
 It reuses King of the Hill's accepted music, ending sting and stage icon. That
 adds no cue and claims no listening acceptance.
 
@@ -243,9 +245,9 @@ solver. Five prespecified seeds describe these runs; they provide no population,
 significance or human-acceptance result. Held paint is not time held, visits,
 route occupancy, spawn pressure or hill control. Keep the existing values for
 attended review rather than retuning automatically from these bot observations.
-`POL#31` still requires both sides and 1-4P attended play, including spawn pressure,
-summit value and whether the halves feel fiddly. Support art and the explicit-only
-stage policy remain unchanged.
+`POL#31` asked for both sides and 1-4P attended play, including spawn pressure,
+summit value and whether the halves feel fiddly; the author accepted the stage
+into Random on 2026-11-05 without that session (see [Open](#open)).
 
 ## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
 
@@ -386,8 +388,8 @@ preserved; they are not relabeled as successful.
 These are controlled native inspection and renderer-integration results.
 They establish no attended readability, spawn pressure, summit value, route
 comfort, competitive balance, listening, physical-device or performance
-acceptance. Press Tower remains explicit-only and excluded from Random;
-`POL#31` and the support-art question below remain open.
+acceptance. Press Tower was explicit-only until the author accepted it into
+Random on 2026-11-05 (`POL#31`); the support-art question below remains open.
 
 ### Shipping-bot routes and team trials (`POL#41`)
 
@@ -465,8 +467,9 @@ Measured limits, named:
 
 What this does not decide is unchanged. It does not settle whether the summit
 is worth holding, whether the crown halves are fiddly or whether spawn pressure
-is fair; those remain `POL#31`, attended. It does not decide Easy/Normal/Hard
-values (`ROAD#10`) and does not move Press Tower into Random. The A/B R3
+is fair; those were `POL#31`'s, accepted as built on 2026-11-05. It does not
+decide Easy/Normal/Hard values (`ROAD#10`), and the author's Random call is
+`POL#31`'s, not this evidence's. The A/B R3
 asymmetry and the bot preferring the hoist to R2 are bot facts for `ROAD#10` to
 weigh. They are not geometry findings, and no row follows unless attended play
 shows bots abandoning the floor matters.
@@ -476,11 +479,15 @@ Rerun: `scripts/run-acceptance.ps1 -Cases bot_arena_routes,bot_team_trials`
 
 ## Open
 
-- Attended play on both sides and 1-4P (`POL#31`), including spawn pressure, the summit's
-  value and the summit halves' feel. If the halves read as fiddly, narrow the
-  crown to 24 (halves 148) and re-run the sightline and live-fire checks.
-- Bot evidence for that session (`POL#41`, above): bots favour the hoist and
-  summit, and seldom take R2 to the far yard at Normal or Hard.
+- **Decided 2026-11-05 (`POL#31`).** The author accepted Press Tower into Random
+  as the King of the Hill arena, with the crown width unchanged; the original
+  `king_of_the_hill.json` stays selectable and leaves Random. The attended
+  both-side 1-4P session (spawn pressure, the summit's value, the halves' feel)
+  was not held; those are accepted as built. If play later shows the halves are
+  fiddly, narrow the crown to 24 (halves 148) and re-run the sightline and
+  live-fire checks.
+- Bot evidence (`POL#41`, above): bots favour the hoist and summit, and seldom
+  take R2 to the far yard at Normal or Hard.
 - Support art for the brief, above.
 - Review frames: `ColourWars.exe +exec review_press_tower +quit` writes the
   seeded 1-4P clean and heavy frames and every station

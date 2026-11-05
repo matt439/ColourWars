@@ -331,8 +331,9 @@ native clean/heavy pane evidence remains a separate record.
 These controlled measurements support paid repaint integration and expose
 limited new coverage on some return paths. Live opposing fire, alternate aim
 and routes, home-loop travel incentives and attended spawn-pressure/balance
-observations still determine the next `POL#17` / `POL#27` iteration. They do
-not justify a tuning or geometry change by themselves.
+observations were to determine the next `POL#17` / `POL#27` iteration; the
+author accepted the current values instead on 2026-11-05. They do not justify a
+tuning or geometry change by themselves.
 
 ### Fixed-time home and advancing loops (2026-10-24)
 
@@ -573,7 +574,8 @@ the existing native 1-4P clean/heavy captures remain separate evidence.
 
 The walking comparison below adds actual-input lower-approach motion against
 these retained subject routes and both aim policies. Human arena/balance,
-physical-pad and camera-recognition acceptance remain open.
+physical-pad and camera-recognition acceptance were not established here (see
+the [2026-11-05 decisions](#author-arena-acceptance-2026-10-25)).
 
 ### Walking lower-approach pressure (2026-10-24)
 
@@ -833,16 +835,27 @@ now", answering the 2026-10-24 coverage complaint. They tried several of the
 five tools and **accepted Crossfeed as the reference arena**. That closes the
 arena-acceptance part of `POL#17` and opens `POL#21`.
 
-The session did not cover these, so they stay open: spawn pressure, C2 identity
-and rear-threat recognition, and 1-4P clean/heavy readability carry into the
-reference-match finish review (`POL#24`). A full five-tool balance and resource
-review remains `POL#27`, and the pad half of movement remains `POL#3`. The input
-device and player count were not stated; this machine has no pad. The author
-then asked for Crossfeed in Random, so `crossfeed.json` sets
-`"include_in_random": true` and the `stage_selection` acceptance case now
-requires it among the Random candidates. Press Tower
-([polish-press-tower.md](polish-press-tower.md)) took its place as the
-explicit-only stage under evaluation.
+The session did not cover spawn pressure, C2 identity and rear-threat
+recognition, or 1-4P clean/heavy readability; those were carried into the
+reference-match finish review (`POL#24`). The input device and player count
+were not stated; this machine has no pad. The author then asked for Crossfeed
+in Random, so `crossfeed.json` sets `"include_in_random": true` and the
+`stage_selection` acceptance case now requires it among the Random candidates.
+Press Tower ([polish-press-tower.md](polish-press-tower.md)) took its place as
+the stage under evaluation, and joined Random itself on 2026-11-05.
+
+**Decided 2026-11-05.** The author accepted the remaining calls without further
+sessions: P3 movement (`POL#3`) and the five-tool values below, including the
+Sniper reserve and Mister lifetime (`POL#27`), are the accepted values, no
+longer provisional. These were **waived by the author on 2026-11-05 and not
+performed**, so nothing here reads as passed: the pad half of `POL#3`, and the
+`POL#24` fresh-player observation and finish review on this reference match.
+Paint underfoot ships on from the same date (`POL#30`), so the `crossfeed` case
+now requires the shipped tuning to have it on, and runs the paid repaint,
+home-loop and opposed-loop checks below on a copy with it off: those compare
+one route whatever the floor's owner, which paint underfoot changes by design.
+The geometry, spawn, route, tool, supply, painting and opening checks keep the
+shipped tuning.
 
 ## Coupled movement and five-tool comparison (2026-10-20)
 
@@ -850,7 +863,8 @@ This comparison retains the six-object coverage from 2026-10-20. P3 movement
 and C2 framing remain selected; current coverage receipts are recorded in the
 2026-10-24 iteration above.
 
-**P3 is the selected provisional global tuning.** P2 passed the Crossfeed
+**P3 is the selected global tuning**, accepted by the author on 2026-11-05
+(`POL#3`; it was provisional until then). P2 passed the Crossfeed
 comparison but failed 13 actual climbs in the preserved older arenas. P3 keeps
 the shorter air time and tool changes while restoring their required jump
 height. The comparison keeps Crossfeed geometry identical and uses one compiled
@@ -929,7 +943,8 @@ height; it returns to the lower supports. This negative control demonstrates
 that the case catches the regression. P3 reaches the 200-unit targets with a
 207.375-unit peak and one takeoff. Both preserved arena source files remain
 unchanged. These 15 local climbs do not qualify full arena routes, long gaps,
-cameras, competitive play or physical pads; those remain `POL#21` / `ROAD#2`.
+cameras, competitive play or physical pads; those were `POL#21` (closed
+2026-11-05) and `ROAD#2` (waived by the author on 2026-11-05, not performed).
 The separate static route screen found no blocked core connection in either
 arena, but predicts that two mirrored Turbulence descending shortcuts land on
 an intermediate platform sooner with P3. Staged alternatives remain available;
@@ -973,7 +988,10 @@ It uses scripted current-centre tracking without lead or ballistic compensation.
 Damage below is stationary / retreating, and does not establish a human hit rate.
 The current P3 observations retain P2's tool results in these bounded policies.
 
-| Tool | Provisional decision | Evidence and remaining question |
+The author accepted every value in this table on 2026-11-05 (`POL#27`); the
+remaining questions are recorded as asked, not answered.
+
+| Tool | Decision | Evidence and remaining question |
 |---|---|---|
 | Sprayer | Keep speed 1100, cost 0.007, damage 0.01 and full horizontal inheritance. | Moving lower-cover contact takes 0.1500 s; damage is 0.90 / 0.19. The P3 shared route owns 7,824-7,968 area. Fast sustained pressure remains useful while retreat changes the outcome. |
 | Sniper | Raise cost 0.25 to 0.30; keep speed 2000, authored 1 s cadence and damage 0.334. | The plinth stops its straight shot; damage is 0.668 / 0.334. P1 and P3 both pay five shots and own 576-864 area on the prepared route, but P3 ends with 0.30-0.333 ammunition instead of P1's 0.55-0.583. The cost is a reserve/pressure hypothesis, not a demonstrated fix for excess power. Long-lane competitive utility remains to be established. |
@@ -1022,8 +1040,9 @@ P1/P2/P3, Sniper first pays on tick 62, pays only twice in that window, and prod
 **no contested paint from six of the eight spawns** under this policy. The
 other two first paint on tick 123. This is a material limitation of this
 opening policy, not a measurement of the earliest possible aimed/delayed shot.
-The cost increase is therefore provisional, not justified by superior opening
-paint or observed excessive spawn pressure.
+The cost increase is therefore not justified by superior opening paint or
+observed excessive spawn pressure; the author accepted it as shipped on
+2026-11-05 (`POL#27`).
 
 Mirrored geometry also does not guarantee identical results. P1/P2/P3's shared
 painting route returns in 281 ticks for A and 275 for B, compared with 299 for
@@ -1294,8 +1313,9 @@ solver. Five prespecified seeds describe these runs; they provide no population,
 significance or human-acceptance result. Held paint is not time held, visits,
 route occupancy, spawn pressure or hill control. Keep the existing values for
 attended review rather than retuning automatically from these bot observations.
-`POL#27` remains the attended balance/resource gate; this report does not change
-the author's arena acceptance, C2/pad or finish-review gates.
+`POL#27` was the attended balance/resource gate, closed by the author on
+2026-11-05 at the current values; this report did not change the author's
+arena acceptance, C2/pad or finish-review gates.
 
 ## Hard five-tool matrix (`TOOL#3`, 2026-10-30)
 
@@ -1336,7 +1356,8 @@ almost wholly its own team's at the median, with single matches where the other
 team holds most of it. In the equal-tool controls the Sniper mirror covers
 28 [20, 33]% of the centre band and the Sprayer mirror 84 [71, 89]% (all faces
 together; `TOOL#1`'s Skirmish figures above are per face under another policy).
-These are questions for the attended `POL#27` review, not a tuning signal.
+These were questions for the attended `POL#27` review, not a tuning signal;
+the author closed it on 2026-11-05 by accepting the current values.
 
 ## Verification record
 
@@ -1417,7 +1438,8 @@ The final receipt root is
   the revised Course guide, scoring and file preservation. Evidence IDs are
   `326bb88aa5e944c48b2d655781017587` (Debug) and
   `31fb5bdc5c4947148d2a75fb350ab2ff` (Release), under
-  `out/acceptance/<preset>/level-editor/`. Attended `ED#5` remains open.
+  `out/acceptance/<preset>/level-editor/`. `ED#5` was accepted as built on
+  2026-11-05, without its attended pass.
 - Normal Debug/Release startups passed with system-only PATH, accepted bank,
   isolated saves, per-monitor-v2 DPI and graceful shutdown. Receipts are
   `startup/x64-debug/a59ba92f532f4075a5a44bf246cff23c/result.json` and
@@ -1508,7 +1530,8 @@ hashes; numeric tuning was unchanged at the `fd5a6e9` checkpoint:
   GUI checks passed in both presets. Evidence IDs are
   `2956c50de0204d0b88df70ebed8b7165` (Debug) and
   `e453699924cd4e14a0cb45ef2823bab9` (Release), under
-  `out/acceptance/<preset>/level-editor/`. These do not close attended `ED#5`.
+  `out/acceptance/<preset>/level-editor/`. These did not close `ED#5`; the
+  author accepted it as built on 2026-11-05, without its attended pass.
 - Both D3D11 native matrices passed on the RTX 5080, with 21 full frames,
   51 native crops and 43 readbacks each. Final receipts are
   `playable-v2/native/x64-debug/c60b5a5363334d08a16b5c87a7688909/result.json`
@@ -1563,6 +1586,8 @@ recovery; runtime regional/face-area reconciliation; five paid tool contacts
 and sampled firing breaks; clean/heavy 1/2/3/4P native panes, actual overview
 and StagePreview; normal content staging and Release packaging.
 
-Attended 1v1/2v2, uneven three-player matches, side/loadout swaps, fresh-player
-observations, comfort and physical-pad acceptance remain open. Automated
-feasibility and hidden native capture do not close those gates.
+Attended 1v1/2v2, uneven three-player matches, side/loadout swaps and comfort
+were not held; the author accepted the arena and values without them on
+2026-11-05. Fresh-player observations and physical-pad acceptance were waived
+by the author on 2026-11-05 and not performed. Automated feasibility and hidden
+native capture do not stand in for any of them.

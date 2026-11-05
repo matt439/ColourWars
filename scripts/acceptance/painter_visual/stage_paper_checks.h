@@ -4,6 +4,9 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
+    // King of the Hill and Turbulence left Random on 2026-11-05 (Press Tower and
+    // the slab trial replaced them). This fixture still holds its copies
+    // eligible, so its three-candidate pages are the ones it always read.
     const StageList shipped{
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },
         { "turbulence", "Turbulence", "stage_turbulence", true },
@@ -12,7 +15,8 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     for (const auto& stage : shipped)
     {
         const auto* info = levels.get(stage.name);
-        require(info->display_name() == stage.display_name && info->icon_frame() == stage.icon_frame && info->include_in_random() == stage.include_in_random,
+        require(info->display_name() == stage.display_name && info->icon_frame() == stage.icon_frame &&
+            info->include_in_random() == (stage.name == "close_quarters"),
             "Shipped Stage paper metadata drifted from its independent arena list");
         // Stage Select draws menu_text.stage_names, whose English is display_name.
         require(presentation.menu_text().stage_title(stage.name, stage.display_name, stage.name) ==

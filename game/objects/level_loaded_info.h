@@ -42,6 +42,9 @@ public:
 	std::string display_name() const;
 	std::string icon_frame() const;
 	bool include_in_random() const;
+	// True only when the file says "include_in_random": true. A shipped stage
+	// without the key is a Random candidate; a user stage (ROAD#16) must ask.
+	bool asks_for_random() const;
 
 	std::vector<labrador::Vector2F> team_a_spawns() const;
 	std::vector<labrador::Vector2F> team_b_spawns() const;

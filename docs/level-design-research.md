@@ -8,7 +8,8 @@ available for comparison.
 
 The numeric baseline below records the state before tuning. The resulting
 [Crossfeed comparison](polish-crossfeed.md#coupled-movement-and-five-tool-comparison-2026-10-20)
-owns the selected provisional values and their measured limits.
+owns the selected values and their measured limits; the author accepted them
+on 2026-11-05 (`POL#3`, `POL#27`).
 
 ## What the comparison must account for
 
@@ -16,7 +17,10 @@ ColourWars is a local, one-to-four-player platform shooter with individual
 split-screen cameras and two colour teams. The final held painted surface wins;
 eliminations deny presence but award no score. Painting over an opponent changes
 ownership. Exposed floors, walls and undersides score, while buried faces do not.
-Paint ownership changes neither movement nor ammunition recovery.
+When this was researched, paint ownership changed neither movement nor
+ammunition recovery; since 2026-11-05 paint underfoot ships on (`POL#30`), so
+own paint speeds both and enemy paint slows movement and stops ammunition
+recovery.
 
 Each player chooses one primary. Ammunition recovers anywhere after 0.5 seconds
 without a paid shot, at 0.4 tank/second: an empty tank needs about three seconds
@@ -204,7 +208,8 @@ still require play observations.
 3. Tune movement and all five weapons against that map, revisiting geometry when
    a failure comes from an unintended route or firing opportunity. Re-run the
    Movement Course and consumer / native checks; retain candidate measurements.
-4. Continue the remaining actionable TODOs. Human acceptance gates stay open.
+4. Continue the remaining actionable TODOs. Human acceptance gates stayed open
+   until the author accepted the current values on 2026-11-05.
 
 The preserved CQ draft is an earlier experiment, not research evidence or the
 new-map deliverable. Its 140-unit main / upper access rises, long lower lane,

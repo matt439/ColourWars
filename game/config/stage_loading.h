@@ -43,7 +43,9 @@ struct UserStageScan
 // most 64 characters) that no stage already has, compared without case. A
 // file that fails is refused with one line and the scan goes on; a missing
 // folder is no stages and no line. Never throws for what is in the folder.
-// User stages are marked `user` and are never Random candidates.
+// User stages are marked `user` and are Random candidates only when the file
+// says "include_in_random": true; without the key, unlike a shipped stage,
+// they are explicit-only.
 //
 // Call after the manifest has loaded and before validate_game_content and
 // sound_groups::assign, which then see the accepted stages like any other.

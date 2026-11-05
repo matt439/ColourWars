@@ -1495,7 +1495,8 @@ population columns. Completion requires every engine frame to be paired;
 unavailable phases are blank, never invented zeroes. The analyzer accepts
 historical schema 1 captures without adding engine-phase measurements. The
 [frame-pacing workflow](polish-frame-pacing.md) adds isolated workloads,
-machine/load metadata, percentile summaries and the remaining POL#25 acceptance.
+machine/load metadata, percentile summaries and the POL#25 acceptance, which the
+author waived on 2026-11-05 (not performed).
 
 ## Movement Course review recipes
 
@@ -1748,19 +1749,22 @@ none.
   implemented; see [the remaining scope](debug-console-record.md#remaining-live-tuning-work-dbg1) (`DBG#1`).
 - **Replays across builds or machines**, and across step sizes (`DBG#2`).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
-  this machine has no pad; both are covered on the CPU side (`DBG#7`).
+  this machine has no pad; both are covered on the CPU side only (`DBG#7`).
+  The physical-pad check was waived by the author on 2026-11-05 and was not
+  performed, so neither has been tried on a real pad.
 
 ## Experimental paint underfoot (`POL#36`)
 
-The prototype is disabled in shipped tuning. In an isolated Debug match:
+Paint underfoot ships on (the author's `POL#30` call, 2026-11-05). To compare
+against the game without it, in an isolated Debug match:
 
 ```
 tune tuning.player.paint_underfoot.enabled
-tune tuning.player.paint_underfoot.enabled on
 tune tuning.player.paint_underfoot.enabled off
+tune tuning.player.paint_underfoot.enabled on
 ```
 
-The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
+The shipped factors are own speed `1.10`, own ammunition recovery
 `1.25`, enemy speed `0.85`, and enemy recovery `0`. Their full paths are
 `tuning.player.paint_underfoot.own_speed_multiplier`,
 `tuning.player.paint_underfoot.own_ammo_regen_multiplier`,
@@ -1769,7 +1773,8 @@ The stored opt-in trial factors are own speed `1.10`, own ammunition recovery
 numeric fields; `tune.reset` restores file tokens. Do not use `tune.save` for an
 unattended experiment. There is no new special, damage or jump boost.
 
-Two switches only act while the prototype is enabled:
+Two switches only act while paint underfoot is enabled, which it is in the
+shipped game:
 
 ```
 tune tuning.player.paint_underfoot.enemy_blocks_health_regen on
@@ -1778,8 +1783,8 @@ tune tuning.bots.refill_off_enemy_paint off
 
 The first (shipped `false`) pauses health regeneration, and its delay, while a
 player stands on enemy paint. The second (shipped `true`) sends a refilling bot
-back off enemy paint and holds it still until its reserve resumes; turn it off to
-see the unaware bots.
+off enemy paint to the nearest ground that isn't, and stops it short of enemy
+paint ahead until its reserve resumes; turn it off to see the unaware bots.
 
 A completed confirmed flat top contact is sampled at the foot center by team;
 the selected fixed scored slabs use their actual support corner in the local
@@ -1796,7 +1801,9 @@ the existing explicit force policy is used. Gameplay identity is established
 separately by the frozen old-build/direct-input and report controls, not by
 weakening those guards. The [owner](polish-plan.md#experimental-underfoot-prototype)
 records the completed CPU, Release, disabled-identity and real-Application checks
-and their observation limits. Human `POL#27`/`POL#30`/`POL#31` decisions remain open.
+and their observation limits. The author decided `POL#27`, `POL#30` and `POL#31`
+on 2026-11-05: current tool balance kept, paint underfoot on, Press Tower in
+Random.
 
 ## Horizontal moving-state replay boundary
 

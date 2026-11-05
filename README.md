@@ -53,14 +53,17 @@ with a separate confirmation before starting. The opening countdown shows
 compact controls cards for the keyboard/mouse and gamepads present in the match.
 
 Choose **Single Match**, **Best of 3** (first to two wins), or **Best of 5**
-(first to three). Series keep the same players, teams, weapons and stage;
-draws award no win and are replayed. Pause > Restart restarts only the current
+(first to three). Series keep the same players, teams and weapons; by default
+each round moves on to the next Random arena (Mode's series stage rule also
+offers Same stage and Loser's pick), and draws award no win and replay their
+stage. Pause > Restart restarts only the current
 round. After the series, Play Series Again clears the wins. Quitting discards
 the session. For solo practice, choose Single Match and 1 Player. The experimental
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
-and platform-drop trials; select it explicitly, as Random uses the four arenas
-(including Crossfeed). The provisional Press Tower and the static, mover, scored-slab,
-gate, ferry, lift and paint-lift Turbulence Yard comparisons are also explicit-only.
+and platform-drop trials; select it explicitly, as Random uses four arenas:
+Close Quarters, Crossfeed, Press Tower and Turbulence Yard - Slab Trial. The
+original King of the Hill and Turbulence, and the static, mover, gate, ferry,
+lift and paint-lift Turbulence Yard comparisons, are explicit-only.
 The chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads.
 Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-establish-the-art-and-display-rules);
 the superseded workshop comparison was retired on 2026-10-15. Open work is in
@@ -175,7 +178,8 @@ name: up to 64 plain letters (A to Z, no accents), digits, `_` or `-`, not
 starting with `-`, ending in `.json`, not a reserved Windows name (`CON`,
 `PRN`, `AUX`, `NUL`, `COM0`-`COM9`, `LPT0`-`LPT9`), and not the name of a stage
 the game already has in any mix of capitals. Your stages come after the built-in ones
-in Stage Select, marked "Built by you." Random never picks them.
+in Stage Select, marked "Built by you." Random picks one only when its file
+says `"include_in_random": true`.
 
 The game reads the folder when it starts and again each time Stage Select opens
 from the main menu, so a new or changed file shows up without restarting. It

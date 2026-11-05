@@ -9,9 +9,10 @@ produced later the same day is recorded in [section 7](#7-pol22-production-candi
 The author accepted the complete set on 2026-10-14; that response, rather than
 the technical checks, closes POL#22. The 2026-10-15
 [runtime migration](#9-runtime-migration-and-remaining-integration) replaces the
-existing game bindings and closes STORY#1, STORY#2 and POL#26. POL#23 retains
-the remaining new cue hooks and gameplay mix; ROAD#3 retains actual listening
-and release acceptance.
+existing game bindings and closes STORY#1, STORY#2 and POL#26. On 2026-11-05
+the author accepted the integrated hooks and gameplay mix as they stand, closing
+POL#23, and waived ROAD#3's listening and release acceptance, which was **not
+performed** ([section 9](#9-runtime-migration-and-remaining-integration)).
 
 This page lists every legacy wave, bank entry, loop instance and cue reference,
 and gives each one a replace-or-retire entry. It then lists every cue the
@@ -502,11 +503,12 @@ An asset with an empty licence field does not go into `waves`.
   not actual gameplay acceptance.
 - **`POL#23`** has migrated the existing bindings, explicit runtime voices,
   bank validation, staging and release packaging to the accepted replacement
-  set. It retains the new cue hooks and gameplay mix listed in
-  [section 9](#9-runtime-migration-and-remaining-integration).
-- **`ROAD#3`** accepts the result: gains, mute, focus loss, pause and resume,
-  resumed loops, the multiplayer mix, then the audible release and the
-  missing-bank fallback, each checked separately.
+  set. The author accepted its hooks and gameplay mix as they stand on
+  2026-11-05, closing it ([section 9](#9-runtime-migration-and-remaining-integration)).
+- **`ROAD#3`** was to accept the result: gains, mute, focus loss, pause and
+  resume, resumed loops, the multiplayer mix, then the audible release and the
+  missing-bank fallback, each checked separately. The author waived it on
+  2026-11-05; **none of those listening checks was performed**.
 
 ### 6.3 Decisions and what is still open
 
@@ -588,17 +590,18 @@ their exact hashes. Regenerated catalogues show acceptance only while those
 masters match. Original technical snapshots retain their pre-approval status.
 
 POL#22 is closed. The later runtime migration closes the story integration rows;
-POL#23 retains remaining new cue hooks and mix. Tier 3 remains optional with the
-existing default-off direction. ROAD#3 still tests the actual game, mix and
-release; accepting the assets does not close those checks.
+POL#23 was closed on 2026-11-05 with the hooks and mix as they stand. Tier 3
+remains optional with the existing default-off direction. ROAD#3, the test of
+the actual game, mix and release, was waived on 2026-11-05 and not performed;
+accepting the assets did not perform those checks.
 
 ## 8. Runtime defect follow-up (POL#26)
 
 2026-10-15: countdown voice ownership, pause confirmation returns, the time-up
 transition tail and the post-reveal fanfare are repaired. The runtime migration
 also replaces the oversized legacy countdown recording with separate
-`match.count_beat` and `match.go` cues, closing POL#26. ROAD#3 retains listening,
-multiplayer and hardware acceptance.
+`match.count_beat` and `match.go` cues, closing POL#26. ROAD#3's listening,
+multiplayer and hardware acceptance was waived on 2026-11-05 and not performed.
 
 Lifecycle validation before the bank migration: `scripts/run-acceptance.ps1 -Preset x64-debug` and `x64-release`
 both passed, including the Debug real-Level opening/reveal/replay checks and
@@ -608,6 +611,14 @@ shutdown (`out/validation/pol26-debug/`). These checks exercise construction,
 validation and state flow; they do not listen to or assert the emitted audio.
 
 ## 9. Runtime migration and remaining integration
+
+**Status, 2026-11-05.** The author accepted the integrated hooks, authored gains
+and gameplay mix as they stand, closing `POL#23`, and waived `ROAD#3`. The
+listening passes this section keeps deferring to `ROAD#3` (gains, timing, the
+1/2/4-player mix, loops, device loss) were therefore **not performed**: where an
+increment below says listening "remains" or calls a gain a "listening
+candidate", read it as shipped at that value without a listening pass. Further
+hooks are new work, not a remainder of `POL#23`.
 
 **2026-10-15: the existing live audio bindings use the accepted Paint.exe set.**
 The runtime definition and tracked derived bank are
@@ -642,7 +653,7 @@ legacy names do not make them migration inputs.
 | Redraw and painted support (2026-10-15) | Four independent redraw voices follow the visible pen phase; four wet variants replace dry steps/landings on exposed painted top tiles |
 | Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
 | Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
-| Low paint (2026-10-27) | All five tools play `tool.drip` once as a paid shot crosses the low line (`POL#38`); provisional, about 9 dB RMS under the other weapon cues |
+| Low paint (2026-10-27) | All five tools play `tool.drip` once as a paid shot crosses the low line (`POL#38`); accepted 2026-11-05 without a listening pass, about 9 dB RMS under the other weapon cues |
 | Paint feedback (2026-10-15) | Six rotating splashes, all five tools' impacts, neutral/enemy capture and retiring bare-geometry duds, bounded per paint owner across all surfaces |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
 | Menu feedback (2026-10-15) | Distinct unready, pending SFX-volume preview, participating-pad lost/back and completed-series cues |
@@ -880,10 +891,13 @@ Native window close and teardown stop the owned voice immediately. These are aud
 visual screen cuts remain `GAP#5.1` (the level build was
 [measured](polish-plan.md#level-build-pause-measured-2026-10-17) too short to need a loading card).
 
-**POL#23 is `DECISION`: an in-game listening pass and optional-cue choices.**
-The required cue migration is implemented. Putting another accepted wave into
-the bank does not establish a need for its gameplay trigger. Assess Tier 3
-detail individually during listening and keep it off or nearly off by default:
+**POL#23 decided 2026-11-05: the mix and the current cue set stand.** The
+required cue migration is implemented, and the author accepted it with its
+authored gains as the gameplay mix, without the in-game listening pass. No
+optional Tier 3 cue was added; putting another accepted wave into the bank does
+not establish a need for its gameplay trigger. The choices the pass was to make
+are kept below for any later audio work, which would assess Tier 3 detail
+individually during listening and keep it off or nearly off by default:
 
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
@@ -893,10 +907,11 @@ detail individually during listening and keep it off or nearly off by default:
   detail; limits on repeating impacts/steps; actual one-, two- and four-player
   audition with music/SFX gains, mute, focus, suspension and resumed loops.
 
-ROAD#3 then qualifies listening from the extracted Release ZIP and the missing-bank
-fallback separately. Offline listening-page acceptance and automated construction
+ROAD#3 was then to qualify listening from the extracted Release ZIP and the
+missing-bank fallback separately; the author waived it on 2026-11-05 and it was
+**not performed**. Offline listening-page acceptance and automated construction
 checks do not establish the in-game mix, physical-pad behaviour or an audible
-release check.
+release check, so none of those is established.
 
 Migration validation: full Debug and Release consumer acceptance pass, including
 the focused `story_audio` null-recorder check for cue edges, zero-delta updates,
@@ -1091,8 +1106,9 @@ separately without it, using a system-only PATH and graceful close. Evidence
 is under `out/validation/menu-music-flow/` and `out/acceptance/`; final hardware
 runs are `final-debug/x64-debug/9005e062a2a14253b062c97cada46919` and
 `final-release/x64-release/5232a20aff7244ac853e8c0cb87472c5`. These checks
-establish requests, ownership and flow; optional detail/mix assessment remains
-POL#23, listening remains ROAD#3 and visual transitions/loading remain GAP#5.1.
+establish requests, ownership and flow; the mix was accepted as it stands
+(POL#23, 2026-11-05), listening (ROAD#3) was waived the same day and not
+performed, and visual transitions/loading remain GAP#5.1.
 
 ### Looping music after device recovery (`ROAD#36`)
 
@@ -1105,8 +1121,8 @@ the handling below is what a lost output reaches in play. Still not covered,
 and left as found: the opening's room tone (`set_room_tone` ignores a repeated
 state, so it stays silent for the rest of the opening), the weapon loop and
 `Player::RedrawVoice` (silent until their next trigger), and the short-lived
-results fill loop. Whether they should replay too is a listening call for
-`ROAD#3`.
+results fill loop. Whether they should replay too was a listening call for
+`ROAD#3`, which was waived on 2026-11-05 and not performed; they stay as found.
 
 Labrador `2b3b97b` (on engine
 `master`, not in the pinned `v0.2.0`) retries a lost XAudio2 output, and its
@@ -1144,8 +1160,8 @@ silent bank; existing screen-music and arena-mix checks still pass in Debug
 and Release. No device, speaker or gamepad is needed.
 
 Not decided here: whether the restart should resume position instead of
-starting over (the engine contract gives none), and how it sounds, which stays
-with `ROAD#3`.
+starting over (the engine contract gives none), and how it sounds, which was
+`ROAD#3`'s to judge; that check was waived on 2026-11-05 and not performed.
 
 Result (2026-10-29). Nothing in the handling depends on the engine revision:
 it reacts to a stopped voice, whoever stopped it. It is therefore in place
@@ -1186,5 +1202,6 @@ restart failed the case at the countdown assertion. Debug and Release build
 under `/W4 /WX`; the Debug `story_audio` case and the full Release acceptance
 suite (75 cases) pass.
 
-Left: room tone, redraw, weapon and results-fill loops (outside this scope),
-resume-position, and hearing a real device loss and recovery (`ROAD#3`).
+Not done: room tone, redraw, weapon and results-fill loops (outside this scope)
+and resume-position. Hearing a real device loss and recovery (`ROAD#3`) was
+waived by the author on 2026-11-05 and not performed.

@@ -76,7 +76,7 @@
 #endif
     }
 
-    void identity_matrix(Application& app, LevelBuilder& builder, Registry<LevelLoadedInfo>& levels,
+    void identity_matrix(Application& app, LevelBuilder& builder,
         GameTuning& tuning, Presentation& presentation, PlaySettings& preferences,
         const std::filesystem::path& content, const std::filesystem::path& output)
     {
@@ -111,10 +111,10 @@
                 identity_ink_consumer_checks(app, *level, presentation, output);
                 identity_background_consumer_checks(app, *level, presentation, output);
 #if COLOURWARS_DEV_TOOLS
-                identity_ink_tune_checks(app, *level, levels, tuning, presentation, content, output);
-                identity_background_tune_checks(app, *level, levels, tuning, presentation, content, output);
+                identity_ink_tune_checks(app, *level, tuning, presentation, content, output);
+                identity_background_tune_checks(app, *level, tuning, presentation, content, output);
 #else
-                std::ignore = levels; std::ignore = tuning; std::ignore = content;
+                std::ignore = tuning; std::ignore = content;
 #endif
                 // Pin the shared renderer at exactly one pane-local position
                 // and native gameplay size. Team tint, bodies and subpixel

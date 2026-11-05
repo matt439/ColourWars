@@ -642,5 +642,5 @@
         }
     ],
     "format": 1,
-    "include_in_random": false
+    "include_in_random": true
 }

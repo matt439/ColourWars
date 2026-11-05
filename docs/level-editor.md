@@ -824,7 +824,9 @@ from the main menu. A stage saved while the game runs joins the list, and an
 edited one plays its new version. You can also copy a file there by hand. A
 user stage appears in Stage Select after the shipped stages, with "Built by
 you." in the briefing, and `+stage <name>` starts it from the Debug command
-line. It is never a Random candidate. The game checks it as it checks a
+line. It joins Random only when its file says `"include_in_random": true`
+(the author's 2026-11-05 call for `ROAD#16`); without the key, or with `false`,
+it stays out. The game checks it as it checks a
 shipped stage. A file that fails prints one `user stage refused: <file>:
 <reason>` line on stderr and is left out; the game goes on without it. Main-menu
 Stage Select also shows an issue count: Down while browsing opens the retained
@@ -875,6 +877,8 @@ An optional top-level `include_in_random` boolean defaults to `true`. Set it to
 should remain explicitly selectable without appearing in Random matches. When
 the JSON omits the field, the inspector shows its default `true` without changing
 the document. Applying a changed value adds the field; undo restores its omission.
+The game reads a missing field as `true` only for a shipped stage: a stage
+saved to My Stages joins Random only when the field is present and `true`.
 
 Each team must retain at least four spawns inside `out_of_bounds`. The other
 bounds control camera limits and the match's zoom-out presentation. Resizing
@@ -885,7 +889,8 @@ can be intentional boundary geometry and are allowed.
 
 These independent source slices need neither pads nor an author decision.
 Their entries record implementation status and document/native qualification;
-actual GUI comfort and saved-stage play remain the attended `ED#5` review.
+actual GUI comfort and saved-stage play were the attended `ED#5` review, which
+the author set aside on 2026-11-05 by accepting the editor as built.
 
 ### External-change save protection (`ED#7`)
 
@@ -1318,9 +1323,11 @@ windows belongs to the attended pass (`ED#5`).
 
 ## Acceptance checks
 
-`ED#5` is `DECISION`: the remaining GUI and saved-stage gameplay checks need an
-attended session and a recorded result. The automated checks below establish
-document behaviour and hidden-window operation, not that manual acceptance.
+`ED#5` was accepted by the author on 2026-11-05: the editor is accepted as
+built. The attended GUI and saved-stage gameplay session was not held, so there
+is no recorded manual result. The automated checks below establish document
+behaviour and hidden-window operation, not that manual acceptance; the manual
+checklist below stays as what such a pass would cover.
 
 ```powershell
 ./scripts/check-level-editor.ps1 -Preset x64-debug
@@ -1368,12 +1375,13 @@ On 2026-10-15, both presets passed the document checks (including the optional
 Random setting) and hidden GUI launch/open/respond/close checks. Evidence:
 `out/acceptance/x64-debug/level-editor/088ef35b371047ee97c715f163c61008/`
 and `out/acceptance/x64-release/level-editor/2ca17df03ee24d7683cb8131b44fb245/`.
-The manual GUI and saved-stage play checks below remain open (`ED#5`).
+The manual GUI and saved-stage play checks below were not run; `ED#5` was
+accepted without them on 2026-11-05.
 
 On 2026-10-28, both presets also pass the expanded DPI/canvas and native
 save-guidance checks: Debug `8c23b3aacabc4e26a2b4e25bb1986fcd`, Release
 `9f85cf04ebba419c94034365360a57bf`, under the same evidence root. These are
-software checks; the attended GUI and saved-stage play boundary remains.
+software checks; the attended GUI and saved-stage play pass was not held.
 
 For a manual GUI check, open each shipped arena, select a platform, move and
 resize it, edit a field, duplicate/delete, undo/redo, and save a copy. Reopen
@@ -1650,7 +1658,7 @@ and per-monitor v2 DPI awareness. No hardware skip was used. Evidence is under
 `integration/x64-debug/6821efb469a946b89b2b943419b58153/` and
 `integration/x64-release/3850fed0b130438a814d23c6ee7817aa/`.
 These automated checks complete `ED#4`; the attended editor and saved-stage
-play review remains `ED#5`.
+play review was `ED#5`, accepted without that session on 2026-11-05.
 
 Since 2026-10-29 CI runs `-SkipBuild` in both jobs, after building
 `ColourWarsRegisterStage`, and uploads the receipts and logs. Timing and focus

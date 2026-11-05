@@ -7,11 +7,11 @@
         "Optional climbs are the stair (four 80-unit taps or held jumps) and the hoist (bed to frame to shoulder, two held jumps, then a tap).",
         "Ramps support players but pass paint. Rulers are one-way supports, solid to projectiles; press_base is covered and never scores.",
         "Interior dressing only: works wall, skylights, roof truss and hanging signs; no sun, clouds or hills.",
-        "Explicit-only, excluded from Random until attended arena acceptance. King of the Hill's original file is kept unchanged beside it.",
+        "Accepted by the author as the King of the Hill arena on 2026-11-05 and included in Random; the original King of the Hill file stays selectable but leaves Random.",
         "Reuses accepted King of the Hill audio and icon; this does not create a new cue or claim listening acceptance."
     ],
     "display_name": "Press Tower",
-    "include_in_random": false,
+    "include_in_random": true,
     "icon_frame": "stage_king_of_the_hill",
     "sound": {
         "sound_bank_name": "paint_exe",

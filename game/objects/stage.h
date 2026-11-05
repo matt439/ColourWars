@@ -9,7 +9,8 @@
 // file name without .json; display_name and icon_frame are copied from the
 // level file at load time. A shipped stage is drawn by its menu_text.stage_names
 // entry (MenuText::stage_title), whose English equals display_name; a user
-// stage draws display_name itself. A user stage is never a Random candidate.
+// stage draws display_name itself. A user stage is a Random candidate only when
+// its file says "include_in_random": true.
 struct Stage
 {
 	std::string name;

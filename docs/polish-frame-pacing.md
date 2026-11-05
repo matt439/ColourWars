@@ -1,9 +1,10 @@
 # Frame pacing and the reference hardware (POL#25)
 
-POL#25 is `DECISION`: arrange an attended measurement session and choose the
-hardware baseline. The target is a consistent 60 fps on a recorded reference
-machine, followed by an explicit supported hardware baseline. The capture and
-analysis workflow below is implemented; it does not select that baseline.
+POL#25 asked for an attended measurement session and a chosen hardware
+baseline. The author **waived both on 2026-11-05; they were not performed**, so
+no performance capture has passed and no supported hardware baseline exists. The
+target stays a consistent 60 fps on a recorded reference machine. The capture
+and analysis workflow below is implemented; it does not select that baseline.
 
 ## What is measured
 
@@ -52,7 +53,7 @@ The per-player F1/Back readout (`GAP#5.4`, 2026-10-15) now labels simulation
 uses one main-thread snapshot shared by every pane, with no clock read or
 mutation in worker drawing. Unavailable timing is `render fps: n/a`, including
 Release's inert developer timing service. This diagnostic fix does not qualify
-the visible, uncontended baseline retained by POL#25.
+the visible, uncontended baseline that POL#25 waived (2026-11-05, not performed).
 
 Validation (2026-10-15): Debug and Release builds and both full consumer suites
 pass. Deterministic checks cover 30/60/120 FPS with zero, one and four simulation
@@ -216,9 +217,12 @@ measurement path appropriate to the build being qualified. Repeat representative
 matches, including ordinary combat/elimination/respawn as well as paint-heavy
 play, and establish the supported CPU/GPU/RAM/display floor from that evidence;
 one high-end machine cannot establish a minimum specification. No minimum hardware
-or performance acceptance is claimed by this increment.
+or performance acceptance is claimed by this increment. The author waived this
+session on 2026-11-05 and it was not performed; this paragraph stays as the
+method for whoever runs it later.
 
-These captures also decide whether `GAP#L9` resumes: its Debug receipt showed a
+These captures were also to decide whether `GAP#L9` resumes; the author
+accepted the vsync setting as built on 2026-11-05 without them. Its Debug receipt showed a
 ~33.5 ms, two-update interval once a second on uncontrolled load. If a visible,
 uncontended capture repeats it, record it in the
 [presentation-rate slice](feature-roadmap.md#presentation-rate-inspection-slice-gapl9).

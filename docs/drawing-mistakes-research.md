@@ -9,7 +9,7 @@ Investigation, 2026-11-01. Nothing is decided and nothing in the repository was 
   - 3 px at 4P 1080p.
   - 4 px at 1P and 2P 1080p and at 4P QHD.
   - **8/3 px** at 1P and 2P 720p, and **16/3 px** at 1P and 2P QHD.
-- **At the fractional scales, a one-cell mistake is not stable.** One cell draws 2 px wide in some places and 3 px in others. It can change width as the camera moves, which reads as flicker. Display policy is still open as `POL#34` [E]. Any mistake therefore has to be judged at an 8/3 layout as well as at the integer layouts [I].
+- **At the fractional scales, a one-cell mistake is not stable.** One cell draws 2 px wide in some places and 3 px in others. It can change width as the camera moves, which reads as flicker. Display policy keeps fractional scaling (`POL#34`, decided 2026-11-05) [E]. Any mistake therefore has to be judged at an 8/3 layout as well as at the integer layouts [I].
 - **The figure canvas is 17x30 cells.** The middle 13 columns are the hitbox. The two columns on each side are overhang, and columns 0 and 16 must stay empty ([painter README](../game/art/painter/README.md), `build-painter-art.ps1:86,114`) [E].
 - **The figure is not perfectly symmetric now** [E, from `painter.json`]:
   - the cap brim sticks out on one side only (torso row 4);
@@ -184,8 +184,9 @@ Frequencies are not known. Study A exists to find them.
    - Run the `terrain` acceptance case (`miniature_checks.h` samples touching ground pieces) and `check-painter.ps1 -MiniatureTerrainOnly` on MattPC. CI only compiles the painter checks.
 
 **Stage 1 as built (2026-11-01, branch `drawing-mistakes-research`).** Shipped
-before Study B by the author's call (section 9, decision 7). Study B now checks
-it after the fact.
+before Study B by the author's call (section 9, decision 7). Study B was to check
+it after the fact; the author waived Study B on 2026-11-05 and it was not
+performed (decision 9).
 
 - **Skill ceiling.** `brush_pot` lost its three brush-head glints, the body
   highlight and the shaded inner rim. Its mouth is now a plain `bg_line` ring
@@ -292,7 +293,7 @@ it after the fact.
   `slips.json`). The author chose them by eye anyway, so "each must survive
   the flip" above no longer holds for stage 2.
 
-**Stage 3: after Study B and an author call.**
+**Stage 3: an author call** (it was to follow Study B, which was waived on 2026-11-05).
 
 - Story beats: one small patched leak or overdraw inside a single backdrop prop.
 - Per-match hands are decided (section 9); the figure's pool is the authored one in decision 8.
@@ -313,7 +314,7 @@ it after the fact.
 
 ## 8. Human tests
 
-No playtest with anyone other than the author is on record ([design-process.md](design-process.md)) [E]. Study B fits inside `POL#24`. Study A was set aside on 2026-11-02 (section 9, decision 8); its kit stays in case real drawings are wanted later.
+No playtest with anyone other than the author is on record ([design-process.md](design-process.md)) [E]. Study B was to fit inside `POL#24`; the author waived both on 2026-11-05 and neither was performed (section 9, decision 9). The design below is kept as written. Study A was set aside on 2026-11-02 (section 9, decision 8); its kit stays in case real drawings are wanted later.
 
 **Kits:** [scripts/studies/](../scripts/studies/README.md) holds both studies ready to run: Study A's reference images, participant and run sheets, consent sheet, codebook and analysis, and Study B's stimulus capture, test page and analysis. Two thresholds were fixed there before any data, beyond this section: `ASYM_MIN_PAIRS = 2` and `PROP_MIN_ERROR = 0.05` (a relative error).
 
@@ -388,7 +389,7 @@ This is a screen for gross failures, not a measurement.
   - Jitter or glitch comments no more than V0's rate plus one participant, with each one traced to a cause.
   - Pick one primary comparison in advance. If a heavier variant only squeaks past, ship the next lighter one.
 - **Ethics:** consent sheet, screen-only recording, anonymous IDs, data kept outside the repo. **No participant pixels enter the repo**: use the mistake patterns, not the drawings.
-- **Effort:** about 7-9 days in full. The minimum is about 4 days: Study A on the figure only, plus Study B's paired choice, find-the-bug and team-ID tests. Stage 1 shipped before Study B; any part of it that Study B fails comes back out. Study A is not needed for stage 1.
+- **Effort:** about 7-9 days in full. The minimum is about 4 days: Study A on the figure only, plus Study B's paired choice, find-the-bug and team-ID tests. Stage 1 shipped before Study B, and Study B was then waived (2026-11-05, not performed). Study A is not needed for stage 1.
 
 ## 9. Author decisions and open questions
 
@@ -458,10 +459,17 @@ This is a screen for gross failures, not a measurement.
    All 12 are `exclusive` in `presentation.json` `figure.slips`: a person never
    draws both. The other 43 pairs combine cleanly.
 
+9. **Study B is waived** (2026-11-05). The author accepted stage 1 and stage 2
+   as built and waived Study B. **It was not performed**: no participant has
+   seen the variants, and none of the pass rules in section 8 has been tested.
+   Nothing ships or comes out on its account. The kit in
+   [scripts/studies/](../scripts/studies/README.md) stays ready if the mistakes
+   are ever questioned.
+
 Nothing in this research is open now. Stage 1 has shipped, with per-match hands
-since 2026-11-02, and Study B checks it after the fact. Stage 2 is built from
-the authored pool (stage 2, "as built"). Study B needs participants, so
-`POL#46` waits on the author.
+since 2026-11-02, and stage 2 is built from the authored pool (stage 2, "as
+built"). Both are accepted by the author's eye, not by Study B, which was waived
+on 2026-11-05 (decision 9), closing `POL#46`.
 
 ---
 

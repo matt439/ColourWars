@@ -6,6 +6,7 @@
 #include "game/objects/weapon_type.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
+#include <optional>
 #include <vector>
 
 // One participant as a shipping bot may observe it: public state only, by
@@ -56,6 +57,10 @@ public:
 	virtual std::vector<labrador::RectangleF> obstacles(PlayerTeam permitted) const = 0;
 	virtual std::vector<MatchBotSupport> supports(PlayerTeam permitted) const = 0;
 	virtual std::vector<MatchBotRamp> ramps() const = 0;
+	// The team whose paint covers a flat support's top at this foot point (a
+	// body's bottom centre), as paint underfoot reads it: none where the top is
+	// unpainted or two supports disagree, nullopt where no support top lies.
+	virtual std::optional<PlayerTeam> top_paint_team(labrador::Vector2F foot) const = 0;
 	// Projectile cover includes every gate, even one the bot can walk through.
 	virtual bool line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const = 0;
 	// Candidate route visibility only; the policy separately sweeps its body.

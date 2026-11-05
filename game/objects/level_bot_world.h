@@ -33,6 +33,7 @@ public:
     std::vector<labrador::RectangleF> obstacles(PlayerTeam permitted) const override;
     std::vector<MatchBotSupport> supports(PlayerTeam permitted) const override;
     std::vector<MatchBotRamp> ramps() const override;
+    std::optional<PlayerTeam> top_paint_team(labrador::Vector2F foot) const override;
     bool line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const override;
     bool traversal_line_of_sight(labrador::Vector2F from, labrador::Vector2F to,
         PlayerTeam team) const override;

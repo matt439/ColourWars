@@ -527,7 +527,7 @@ HudPaperFrames hud_paper_consumer_checks(HudPaperColourProbe& probe, HudPresenta
     return references;
 }
 #if COLOURWARS_DEV_TOOLS
-void hud_paper_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning, Presentation& presentation,
+void hud_paper_tune_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output, HudPaperColourProbe& probe, const HudPaperFrames& references)
 {
     const auto root = output / "hud-paper-tune-scratch", source = root / "source", staged = root / "staged";
@@ -542,10 +542,8 @@ void hud_paper_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         auto values = limb_preference_values(preferences_session.play_settings()); values.insert(values.end(), { static_cast<int>(preferences.resolution()),
             preferences.fullscreen() ? 1 : 0, static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
     };
-    const auto original_preferences = preferences_now(); StageList stages;
-    for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence", "crossfeed" })
-    { const auto* info = levels.get(name); require(info != nullptr, "HUD paper requires shipped stage metadata"); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() }); }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
+    const auto original_preferences = preferences_now();
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
@@ -668,7 +666,7 @@ void hud_paper_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     std::cout << "PASS HUD paper tune: 20 actual statements, 9 accepted rendered states, 5 typed atomic refusals and held-frame reads; 36 additional reads, exact3-token Save/rebase and sibling-preserving resets. No game Saves, updates or input polls.\n";
 }
 #endif
-void hud_paper_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning, Presentation& presentation,
+void hud_paper_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
@@ -677,12 +675,12 @@ void hud_paper_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
 #if COLOURWARS_DEV_TOOLS
     constexpr size_t budget = 100;
 #else
-    constexpr size_t budget = 64; (void)levels; (void)content;
+    constexpr size_t budget = 64; (void)content;
 #endif
     HudPaperColourProbe probe(app, presentation, output, budget); auto& look = const_cast<HudPresentation&>(presentation.hud());
     const HudPaperFrames references = hud_paper_consumer_checks(probe, look, output);
 #if COLOURWARS_DEV_TOOLS
-    hud_paper_tune_checks(app, levels, tuning, presentation, content, output, probe, references);
+    hud_paper_tune_checks(app, tuning, presentation, content, output, probe, references);
 #else
     (void)references; std::cout << "PASS hud-paper-tune-colours-only Release consumer scope; no developer commands executed\n";
 #endif

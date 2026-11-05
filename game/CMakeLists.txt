@@ -7,6 +7,7 @@ add_library(colourwars_game STATIC
     ai/match_bot_ascent.cpp
     ai/match_bot_ballistics.cpp
     ai/match_bot_driver.cpp
+    ai/match_bot_locomotion.cpp
     ai/match_bot_navigation.cpp
     ai/match_bot_ramp.cpp
     carried/animation_object.cpp

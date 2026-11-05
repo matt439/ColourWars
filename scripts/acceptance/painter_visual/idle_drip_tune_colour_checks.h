@@ -300,8 +300,7 @@ void idle_drip_colour_consumer_checks(Application& app, const Presentation& pres
 #if COLOURWARS_DEV_TOOLS
 // Debug adds nine real commands, 60 readbacks and 20 CSV rows; no extra crops.
 // All six consumers borrow their profile records before the first edit.
-void idle_drip_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& levels,
-    GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
+void idle_drip_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
     const auto root = output / "idle-drip-tune-scratch", source = root / "source", staged = root / "staged";
@@ -342,14 +341,8 @@ void idle_drip_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& l
         return values;
     };
     const std::vector<int> initial_preferences = preference_values();
-    StageList stages;
-    for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence" })
-    {
-        const auto* info = levels.get(name);
-        stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
-    }
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+    const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
     impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);

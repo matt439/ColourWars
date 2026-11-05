@@ -161,7 +161,7 @@ void program_colour_consumer_checks(Application& app, const Presentation& presen
         "full-ROI equality, mask-only deltas and alpha0 glass retention. Whole-Monitor adoption only; zero all updates.\n";
 }
 #if COLOURWARS_DEV_TOOLS
-void program_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning, Presentation& presentation,
+void program_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const auto root = output / "program-colour-tune-scratch", source = root / "source", staged = root / "staged";
@@ -182,10 +182,8 @@ void program_tune_colour_checks(Application& app, Registry<LevelLoadedInfo>& lev
         static_cast<int>(preferences.team_palette()), p.aim_sensitivity, p.music_volume, p.sfx_volume, p.view_shake ? 1 : 0,
         p.aim_marker ? 1 : 0, p.reduce_effects ? 1 : 0, static_cast<int>(preferences_session.input_bindings().keyboard_jump) };
       for (const auto& stick : p.sticks) { v.push_back(stick.movement_deadzone); v.push_back(stick.aim_deadzone); } return v; };
-    const auto saved_values = pref_values(); StageList stages;
-    for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence" })
-    { const auto* info = levels.get(name); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() }); }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
+    const auto saved_values = pref_values();
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);

@@ -198,8 +198,7 @@
     }
 
 #if COLOURWARS_DEV_TOOLS
-    void identity_ink_tune_checks(Application& app, Level& level, Registry<LevelLoadedInfo>& levels,
-        GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
+    void identity_ink_tune_checks(Application& app, Level& level, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
         const std::filesystem::path& output)
     {
         const auto root = output / "identity-ink-tune-scratch", source = root / "source", staged = root / "staged";
@@ -223,14 +222,8 @@
         require(preferences_session.set_play_settings_and_save(play), "Cannot seed private identity ink preferences");
         const auto save_path = root / "profile/ColourWars/save_data.json";
         const std::string saved_preferences = tune_colour_bytes(save_path);
-        StageList stages;
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed" })
-        {
-            const auto* info = levels.get(name);
-            stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
-        }
         GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-        const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
+        const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
         DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
         impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
         impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);

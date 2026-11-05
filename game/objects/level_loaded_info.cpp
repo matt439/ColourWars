@@ -407,6 +407,11 @@ bool LevelLoadedInfo::include_in_random() const
 	const JsonValue root = this->json_doc_.root();
 	return !root.has(key::include_in_random) || root.boolean(key::include_in_random);
 }
+bool LevelLoadedInfo::asks_for_random() const
+{
+	const JsonValue root = this->json_doc_.root();
+	return root.has(key::include_in_random) && root.boolean(key::include_in_random);
+}
 std::vector<Vector2F> LevelLoadedInfo::team_a_spawns() const
 {
 	return decode_team_spawns(

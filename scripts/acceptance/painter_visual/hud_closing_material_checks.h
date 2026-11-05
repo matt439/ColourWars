@@ -283,7 +283,7 @@ void hud_closing_material_consumer_checks(Application& app, const Presentation& 
     std::cout << "PASS closing materials: 64 reads, 27 rows and 9 native 209 by 103 crops; 12 opaque source patches, 24 per-site negative discriminations and normal/settled/reduced invariance.\n";
 }
 #if COLOURWARS_DEV_TOOLS
-void hud_closing_material_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
+void hud_closing_material_tune_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
@@ -303,10 +303,8 @@ void hud_closing_material_tune_checks(Application& app, Registry<LevelLoadedInfo
         values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
             static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
     };
-    const auto original_preferences = preferences_now(); StageList stages;
-    for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence", "crossfeed" })
-    { const auto* info = levels.get(name); require(info != nullptr, "Closing materials require shipped stage metadata"); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() }); }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "crossfeed", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
+    const auto original_preferences = preferences_now();
+    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
     auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
     impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);

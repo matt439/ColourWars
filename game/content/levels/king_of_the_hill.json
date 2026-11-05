@@ -1,6 +1,7 @@
 {
     "format": 1,
     "display_name": "King of the Hill",
+    "include_in_random": false,
     "icon_frame": "stage_king_of_the_hill",
     "sound":
     {

@@ -30,7 +30,7 @@ $moverBody=$moverTuning.player.size; $moverWorld=$moverStage.level_bounds.zoom_o
 $moverBounds=$moverStage.level_bounds.camera_bounds
 if ($moverStage.collision_objects.Count -ne 22 -or $moverObjects.Count -ne 2 -or $moverStage.include_in_random -isnot [bool] -or
     $moverStage.include_in_random -or $moverStage.display_name -cne 'Turbulence Yard - Mover Trial' -or
-    $moverTuning.player.paint_underfoot.enabled -or $moverShadowTile.Count -ne 1 -or $moverShadowTile[0].size.h -le 0) {
+    -not $moverTuning.player.paint_underfoot.enabled -or $moverShadowTile.Count -ne 1 -or $moverShadowTile[0].size.h -le 0) {
     throw 'Private mover trial/underfoot/shadow resource fixture differs.'
 }
 for ($side=0; $side -lt 2; ++$side) {

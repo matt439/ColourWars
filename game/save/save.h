@@ -42,8 +42,10 @@ public:
 	// entries keep the defaults. An older "pad_jump" face-button array is still
 	// read when "pads" is absent, without changing version-3 meanings.
 	// 4 adds the independent "profiles" list; older saves have none.
-	// 5 adds "last_match.stage_rule", the series stage rule; older saves have
-	// none and read as Same, which is how they played.
+	// 5 adds "last_match.stage_rule", the series stage rule, written only when
+	// it is not the default. The default became Rotate on 2026-11-05 without a
+	// version change: every save without the key, older ones included, reads
+	// as Rotate, and Same is now written explicitly.
 	// 6 adds the flat "vsync" preference; older saves have none and read as
 	// On, which is how they played.
 	static constexpr int version = 6;

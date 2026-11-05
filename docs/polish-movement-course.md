@@ -52,7 +52,7 @@ lesson. The lessons follow the proposal's tasks:
 Lesson text is level content, read and checked at startup. A lesson's area must
 be finite, positive, inside the camera bounds and contain its station. Its
 title and text must be non-blank and drawable in the card's fonts. The
-wording is provisional until a fresh player has been watched using it.
+author accepted the current wording on 2026-11-05 (`POL#19`).
 
 **Tool and clean paint.** The practice pause menu adds a fifth row,
 **Tool: < Sprayer >**, under Resume. Left and right choose among the five
@@ -76,10 +76,12 @@ through `LevelBuilder` and checks the following:
 - A tool-change rebuild starts at GO with the chosen tool.
 - Bad lessons are rejected at load.
 
-**Keep it if** the polish plan's test holds: a fresh player who has used it can
-join an ordinary match knowing how to move, recover paint and choose a useful
-tool without another person explaining the game. That observation is the open
-part of `POL#19`.
+**Kept, 2026-11-05 (`POL#19`).** The test was the polish plan's: a fresh player
+who has used it can join an ordinary match knowing how to move, recover paint
+and choose a useful tool without another person explaining the game. The author
+kept the workshop and its current wording. That fresh-player observation was
+waived by the author on 2026-11-05 and not performed, so the test has not been
+passed, only set aside.
 
 ## Dimensions and route
 
@@ -143,7 +145,8 @@ competitive spawn protection.
 
 ## Measured baseline and current evidence
 
-The provisional 2026-10-20 global compatibility profile, **P3**, uses gravity **3000**,
+The 2026-10-20 global compatibility profile, **P3** (accepted by the author on
+2026-11-05, `POL#3`), uses gravity **3000**,
 launch velocity **-730**, held-jump acceleration **-2250** and maximum hold time **0.22 s**.
 Horizontal acceleration, braking, maximum speed, buffer and ledge grace are unchanged.
 The actual Player/Scene Debug fixture measured these same-height jumps at a fixed
@@ -432,12 +435,16 @@ Debug startup and extracted Release startup passed with isolated saves and
 graceful shutdown. The 49-file Release ZIP contains the exact revised
 presentation data and the accepted audio bank. Evidence is under
 `out/acceptance/<preset>/` and `out/validation/pol4-pol5/`. These are scripted
-checks, with physical-controller feel still to be reviewed under `POL#3`.
+checks. The physical-controller review under `POL#3` was waived by the author
+on 2026-11-05 and not performed.
 
 ## Qualification still required
 
-The 2026-10-24 author playtest supports the current movement feel. The launch,
-gravity and acceleration settings remain open to further observations.
+The 2026-10-24 author playtest supports the current movement feel, and on
+2026-11-05 the author accepted P3 and the current input decisions as the movement
+baseline (`POL#3`), no longer provisional. Nothing below blocks work. The pad
+half was waived by the author on 2026-11-05 and not performed; the list stays
+as the checks a later movement change, or a pad on this machine, would run.
 The old movement note is not used as a specification.
 
 - Compare keyboard/mouse with physical controllers, including partial stick

@@ -83,7 +83,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const std::filesystem::path& trial_json, const std::filesystem::path& output)
 {
     const RestoreFlag restore{ preferences.reduce_effects, preferences.reduce_effects }; preferences.reduce_effects = false;
-    require(!tuning.player().paint_underfoot.enabled, "Slab clean/heavy inspection needs shipped underfoot behavior off");
+    require(!tuning.player().paint_underfoot.enabled, "Slab clean/heavy inspection needs its underfoot-off tuning copy");
     const auto read_source = [&]()
     {
         std::ifstream input(trial_json, std::ios::binary); require(input.good(), "Cannot read explicit slab trial");
@@ -95,10 +95,12 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     auto loaded = std::make_unique<LevelLoadedInfo>(path_to_utf8(trial_json).c_str()); loaded->validate();
     const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
-    require(loaded->collision_objects_json().size() == 24 && !loaded->include_in_random() &&
-        (loaded->display_name() == "Turbulence Yard - Mover Trial" || loaded->display_name() == "Turbulence Yard - Slab Trial") &&
+    // The registered slab trial has joined Random; a private trial copy stays explicit-only.
+    require(loaded->collision_objects_json().size() == 24 &&
+        (loaded->display_name() == "Turbulence Yard - Slab Trial" ||
+            (loaded->display_name() == "Turbulence Yard - Mover Trial" && !loaded->include_in_random())) &&
         loaded->camera_bounds_rectangle() == levels.get("turbulence_blockout")->camera_bounds_rectangle(),
-        "Slab native source differs from the explicit-only authored comparison");
+        "Slab native source differs from the authored comparison");
     trial_levels.add("turbulence_slab_trial", std::move(loaded));
     const LevelLoadedInfo& info = *trial_levels.get("turbulence_slab_trial");
     const Vector2F body = tuning.player().size;

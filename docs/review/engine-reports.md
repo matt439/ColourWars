@@ -6,12 +6,14 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Six are live (26-28, 30, 33 and 34).** On the author's 2026-11-03 decision,
-> 27, 30 and 33 are to be filed, with 26 riding on 27; none is posted yet. 28
-> was to be fixed in the engine before `v0.3.0`, but the tag shipped without
-> the fix, so it is back with the author. 34 is new and waits for the same
-> decision.
-> **Twenty-eight are closed** (1–25, 29, 31 and 32) and kept below as one paragraph
+> **Five are live (26, 27, 30, 33 and 34), all filed on 2026-11-05** after a
+> recheck against upstream master `6189072`: 27 as
+> [labrador#122](https://github.com/matt439/Labrador/issues/122) with 26 as its
+> rider, 30 as [#123](https://github.com/matt439/Labrador/issues/123), 33 as
+> [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
+> [#125](https://github.com/matt439/Labrador/issues/125). Each waits on the
+> engine's answer.
+> **Twenty-nine are closed** (1–25, 28, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -126,6 +128,14 @@ closed. All nine are in master `11292fa`, where the 2026-11-05 rechecks below
 find 26, 27, 30, 33 and 34 still unanswered; 28 has no recheck there and
 stands as the 2026-11-03 bump left it.
 
+**Filed 2026-11-05, against upstream master `6189072`** (confirmed with
+`ls-remote`; its eight commits since `11292fa` change only `CHANGES.md`). The
+author accepted every open decision that day: 27 (with 26 as a rider), 30 and
+33 went through the Engine request form and 34 through the Bug form, each
+rewritten to the publication gate below with synthetic code and engine paths
+only. Labrador had no earlier issue, so none duplicates another. 28 was closed
+as declined, with `game/carried/` as the migration.
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -221,11 +231,11 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | drafted locally 2026-10-28 against pin `1e60fb2`; narrowed 2026-10-30 to reclaiming memory (`HYG#47`); still unanswered at master `aa8f5a2`; author's decision 2026-11-03: not filed alone, rides with report 27's filing |
-| 27, 28, 30, 33 | Four still live from the 2026-10-30 architecture review (29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | author's decision 2026-11-03: 27, 30 and 33 to be filed (drafted, not posted); 28 was to be fixed in the engine before the tag, but `v0.3.0` shipped without it, so it is back with the author |
-| 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | drafted 2026-11-04, not posted; filing, and what those gates accept, is the author's call (`ENG#34`) |
+| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | narrowed 2026-10-30 to reclaiming memory (`HYG#47`); filed 2026-11-05 as the rider on [labrador#122](https://github.com/matt439/Labrador/issues/122); awaiting an answer |
+| 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
+| 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
 
-Nothing else is outstanding, on either side, beyond reports 26 and 34 below, the four still live
+Nothing else is outstanding, on either side, beyond reports 26 and 34 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -246,7 +256,10 @@ by a second reader. 31 and 32 were answered unfiled and released in `v0.3.0`,
 and are [closed](#closed). The author decided
 the other five on 2026-11-03: 27, 30 and 33 are to be filed as Engine requests, with
 26 as a rider on 27; 28 was to be fixed in Labrador directly, and `v0.3.0`
-shipped without the fix; 29 is withdrawn and
+shipped without the fix, so on 2026-11-05 the author closed it as declined
+([Closed](#closed)); 27, 30 and 33 were filed that day as
+[labrador#122](https://github.com/matt439/Labrador/issues/122) to
+[#124](https://github.com/matt439/Labrador/issues/124); 29 is withdrawn and
 [closed](#closed), its client-side change `HYG#52` (done 2026-11-03) in
 [code hygiene](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52).
 
@@ -261,6 +274,8 @@ shipped without the fix; 29 is withdrawn and
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
 
 ## 26. `Registry` cannot forget a name - **draft with rescan exhibit**
+
+**Filed 2026-11-05** as the rider section of [labrador#122](https://github.com/matt439/Labrador/issues/122), checked against master `6189072`.
 
 **Author's decision 2026-11-03: not filed alone; it rides with report 27.**
 Since `HYG#47` what is left is a comment and some unreachable definitions held
@@ -326,6 +341,8 @@ local draft; it is posted only as report 27's rider.
 ---
 
 ## 27. No headless or recording pad backend - **draft with link-seam exhibit**
+
+**Filed 2026-11-05** as [labrador#122](https://github.com/matt439/Labrador/issues/122) (Engine request), checked against master `6189072`, with report 26 as its rider.
 
 **Shipped unanswered, 2026-11-03.** `v0.3.0` carries `PI-21`'s vibration with
 no pad seam beside it, so the growth this draft predicted has happened. At the
@@ -442,169 +459,9 @@ with synthetic content only, after a fresh check of upstream master.
 
 ---
 
-## 28. Public types and members removed with an engine-only caller count - **draft with carried-copy exhibit**
-
-**Shipped unanswered, 2026-11-03.** `v0.3.0` carries `730dd99` and `fdfc24e`
-with their `CHANGES.md` entries as they were. They still count only "the
-engine, the samples, the tests or the benchmark" and "No sample, tool or engine
-code", and `git log v0.2.0..v0.3.0 -- CHANGES.md` shows no commit amending
-them. The decision below set the tag as the deadline, so the next step is the
-author's: amend the entries in a later release and close this report; accept
-them as shipped and close it as declined, with `game/carried/` as the
-documented migration; or reopen it as a public Bug report. The bump also
-carried the two removed members this repository called, as
-[`game/carried/removed_members.h`](../../game/carried/removed_members.h).
-`set_position_y_from_bottom` and `UiTexture::set_position_from_top_right_origin`
-are written out at their four call sites. The record below is as decided
-before the tag.
-
-**Author's decision 2026-11-03: not filed; fixed in Labrador directly.** The
-author maintains the engine alone and the ask is an edit to two documentation
-entries, so a public issue would only have the maintainer report the
-maintainer. Before the tag that carries `730dd99` and `fdfc24e`, an engine
-commit amends their two Unreleased `CHANGES.md` entries with the three-place
-count, and for `730dd99` a cost statement or a restoration, as the ask below
-says. The tag is the deadline: once those entries ship under a version,
-"removed with no caller" is the precedent. This report closes when that engine
-commit lands, citing it. If the entries are only amended, nothing here changes
-in code and `game/carried/` becomes the documented migration. **Reopen** as a
-public Bug report if the author wants the count failure on record as a teaching
-example for adopters, or if Labrador gains other maintainers and the tracker
-becomes the real intake. Bringing the types back, rather than counting them, is
-a larger engine change that deletes `game/carried/` and its includes in 41
-files, and it gets a decision of its own.
-
-**The row's original ask, a deprecation release, is already answered on the pin
-and on master: it is declined by written policy. This report narrows to the
-count.** Upstream checked 2026-10-30 against engine `origin/master` `47be5a3`
-(2026-10-30). The only tags are `v0.1.0` and `v0.2.0`, so both removals below
-sit under `## Unreleased` in `CHANGES.md` (`:78`). `c369e8b` (2026-10-13,
-*Version releases now, and say how a public name leaves*) was already in the
-pin `1e60fb2`. On master, `PHILOSOPHY.md:835-840` says a name leaves through a
-`CHANGES.md` entry carried by the next tag, and that "Before 1.0 there is no
-alias and no `[[deprecated]]`" (`:837`). `CHANGES.md:47` says "There is no
-deprecation machinery". Engine story `OCA-69` (gap `G19`) is checked done in
-`docs/product/BACKLOG.md:117`. So this report does not ask for a deprecation
-release.
-
-The same section also states the rule two removals did not follow. Report 7's
-answer (`343433c`, 2026-08-15) added the requirement that a caller count say
-which repositories it counted (`PHILOSOPHY.md:810-819`). `c369e8b` extended it
-at `:820-833`, and both are in the pin. Under the extended rule, the commit
-that removes a public name names a count over three places: the engine, the
-paint-shooter's `master`, and the public repositories pinning the engine. The
-same passage says "having no caller is never the reason a name goes" (`:827`)
-and "a name with no caller and no cost stays" (`:830`).
-
-- `730dd99` (2026-10-27, *Remove engine types nothing uses*) deletes
-  `MovingObject`, `RotationOrigin`, `SoundBankObject`, `AnimationObject`,
-  `CameraTools`, `TextDropShadow` and `UiTextDropShadow`. Its message counts
-  only "the engine, the samples, the bench or the tools". Its entry
-  (`CHANGES.md:320-339`) gives no cost argument. At `:333` it says "There is
-  no replacement. A game that used one should copy the class from the
-  previous release".
-- `fdfc24e` (2026-10-27, *Remove public members that nothing calls or
-  tests*) removes 28 members. Its count covers "the engine, the samples, the
-  tests or the benchmark" (`CHANGES.md:259-278`). Unlike `730dd99`, it gives
-  a cost: each member is "a promise the engine keeps without evidence that it
-  holds", with "no test, which a public primitive needs". It also gives a
-  migration. Only the count is missing here.
-
-Neither count names the paint-shooter's `master`, and that branch held callers
-of both. At `7c0b7aba`, `master` on the removal date, `player.h`,
-`projectile.h`, `figure_clothing.h`, `paint_tile.h` and `debug_menu_page.h`
-derived from `labrador::` copies of the removed types. `level.cpp` and
-`level_intro.cpp` called `Camera::calculate_intermediate_camera`. No later
-master commit revisits either removal. `gh issue list -R matt439/Labrador
---state all` returned no issues at all.
-
-**Exhibit (HEAD `f5303302`, branch `arch-review-3`; the carried copies arrived
-in `cc0a2fff`, 2026-10-29, and have since reached `master`).**
-[game/carried/](../../game/carried/) holds 13 files and 1,028 lines copied
-from `v0.2.0` into `namespace colourwars`. Each file has a provenance note
-(`game/carried/moving_object.h:3`). The copies are hierarchy rungs, not
-helpers. Fifteen class heads outside `game/carried/` name a carried type as a
-base:
-
-- `player.h:106-109` (`MovingObject`, `AnimationObject` and `SoundBankObject`)
-- `projectile.h:27-28`, `menu_page.h:34`, `level.h:85`, `weapon.h:48`
-- `figure_clothing.h:10`, `paint_tile.h:29`, `screen_music.h:10`
-- `connection_audio.h:10`, `resume_audio.h:8`, `match_voices.h:14`
-- `movement_audio.h:20`, `paint_audio.h:11`
-- `prompt_bar.h:13` and `wrapped_text_drop_shadow.h:13`
-
-Outside `game/carried/`, 41 files include a carried header. 94 source files
-name a carried type as `colourwars::`, and 56 of them name
-`colourwars::UiTextDropShadow`.
-
-The repository still builds against the pin, where `fdfc24e`'s members exist.
-Each of these calls becomes a source break at the bump:
-
-- `Camera::calculate_intermediate_camera`: `game/objects/level.cpp:396`,
-  `:627` and `level_intro.cpp:246`
-- `RectangleF::set_position_y_from_bottom`: `player.cpp:910`, `:1308` and
-  `:1317`
-- `RectangleF::from_top_left_bottom_right`: `level_object_builder.cpp:117`
-- `UiTexture::set_position_from_top_right_origin`:
-  `game/states/results_menu.cpp:445`
-- acceptance, all `from_top_left_bottom_right`:
-  - `scripts/acceptance/cq_blockout/fixtures.cpp:79`
-  - `crossfeed/fixtures.cpp:79`
-  - `press_tower/fire_checks.cpp:38`
-  - `press_tower/fixtures.cpp:100`
-  - `terrain.cpp:110`
-  - `painter_visual/surface_finish_checks.h:114`
-
-  The last one is missing from the removed-member list under
-  [Trial-build against engine master (`HYG#24`)](#trial-build-against-engine-master-hyg24),
-  and that list's line numbers are stale (for example, `level.cpp:384` there
-  is `:396` now).
-
-**Reproduction.**
-
-1. On engine master, run `git show 730dd99 -s` and `git show fdfc24e -s`.
-2. Compare each count with `PHILOSOPHY.md:820-833` on the same revision.
-3. Take any client that builds at `v0.2.0` and derives from
-   `labrador::SoundBankObject` or calls `Camera::calculate_intermediate_camera`.
-   A three-line class and one call are enough. Build it against master. It
-   fails to compile.
-
-Neither commit nor its `CHANGES.md` entry says whether a counted client held
-the name. `730dd99` also gives no reason beyond having no caller, which `:827`
-says is never the reason a name goes.
-
-**The ask.** Before the tag that carries `730dd99` and `fdfc24e`, bring both
-under the engine's own rule.
-
-- For both entries, add the three-place count: what the engine, the
-  paint-shooter's `master` and pinning public repositories each held.
-- For `730dd99`, also either state the cost of keeping each type (T1, T2, T4
-  or T5), or restore the types whose only stated reason was having no caller.
-
-Which names go, and whether any come back, are engine decisions. An alias or a
-`[[deprecated]]` period is not asked for, because `PHILOSOPHY.md:837` declines
-both before 1.0.
-
-**What an answer lets this repository delete.**
-
-- If the types come back: `game/carried/`, its includes in 41 files, and the
-  `colourwars::` qualifiers in 94. The rungs go back on `labrador::` at the
-  same depth.
-- If the members come back: the local replacements the bump would otherwise
-  need at the 8 game and 6 acceptance sites above.
-- If the entries are only amended: nothing in code changes. The carried copies
-  are then the documented migration, and this report closes as answered.
-
-This is a local draft, not a filed issue, and on the 2026-11-03 decision it
-stays one: the engine commit is the answer.
-
-Ledger table row, refreshed:
-
-| 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 (`343433c`) as extended by `c369e8b` (`PHILOSOPHY.md:810-833`); the deprecation-release ask is declined by policy (`PHILOSOPHY.md:837`) | `game/carried/` (13 files; 15 class heads derive from it), plus the `fdfc24e` call sites `game/objects/level.cpp:396`, `:627`, `level_intro.cpp:246`, `level_object_builder.cpp:117`, `player.cpp:910`, `:1308`, `:1317` and `game/states/results_menu.cpp:445`, at `f5303302` |
-
----
-
 ## 30. A device-unavailable startup failure can be classified only by its message text - **draft with string-match exhibit**
+
+**Filed 2026-11-05** as [labrador#123](https://github.com/matt439/Labrador/issues/123) (Engine request), checked against master `6189072`.
 
 **Author's decision 2026-11-03: file now as an Engine request.** The exhibit
 spans four places in two languages, and the failure record and the sandbox
@@ -694,6 +551,8 @@ from this text with a synthetic repro.
 
 ## 34. `RenderDeviceKind::hardware` describes a software rasteriser - **draft with hosted-runner exhibit**
 
+**Filed 2026-11-05** as the Bug [labrador#125](https://github.com/matt439/Labrador/issues/125), checked against master `6189072`; the filing asks the engine not to keep the current behaviour for this client's sake.
+
 **Exhibit.** A GitHub `windows-latest` runner has no GPU. Every retained run
 of `check-movement-feedback.ps1` there logs
 `DEVICE ... kind=hardware ... name=Microsoft Basic Render Driver vendor=5140 device=140`:
@@ -736,6 +595,8 @@ the `AGENTS.md` note go.
 ---
 
 ## 33. `on_contact` hands the other party over `const` - **draft with const_cast exhibit**
+
+**Filed 2026-11-05** as [labrador#124](https://github.com/matt439/Labrador/issues/124) (Engine request), checked against master `6189072`; the cast is now at `game/objects/projectile_contacts.cpp:557`.
 
 **Author's decision 2026-11-03: file now as an Engine request.** The exhibit is
 small, live and the single exception to the rule `HYG#49` just enforced
@@ -804,14 +665,15 @@ comment on or open anything upstream.
 
 # Closed
 
-Twenty-eight reports: twenty-seven answered and one withdrawn. Twenty were
+Twenty-nine reports: twenty-seven answered, one declined by this repository's author and one withdrawn. Twenty were
 spent here in code: 23 and 32 at the 2026-11-03 bump, and 31 and 25 on
 2026-11-05. Seven spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
 leaves the workaround where it is still closes the report. 29 was withdrawn by
-this repository, because its exhibit was the game's own choice. Kept as outcomes rather than as
+this repository, because its exhibit was the game's own choice, and 28 was
+declined by the author once `v0.3.0` shipped without its fix. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
 [What the audit changed](#what-the-audit-changed) for reports 1–5, `a7da897`
@@ -820,7 +682,8 @@ for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
 `83544c2` for 18, 20 and 22, the parents of `d647cf8`, `b4f2201` and
 `1553ba5` for 6, 12 and 15, the parent of the commit that moved the pin
 to `1e60fb2` for 24, `8bfa00f7` for 29, and the parent of the commit that
-moved the pin to `v0.3.0` for 23, 25, 31 and 32.
+moved the pin to `v0.3.0` for 23, 25, 31 and 32, and the parent of the commit
+that closed it (2026-11-05) for 28.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -1857,6 +1720,22 @@ Physical output is still unchecked: there is no pad on this machine, and
 The four probe `GamepadReader` fakes needed exactly the two members
 [report 27](#27-no-headless-or-recording-pad-backend---draft-with-link-seam-exhibit)
 predicted, and got them at the bump.
+
+---
+
+## 28. ~~Public types and members removed with an engine-only caller count~~ — declined by the author, 2026-11-05
+
+Drafted 2026-10-30 from the architecture review: `730dd99` and `fdfc24e`
+removed public types and members while counting only engine, sample, test and
+benchmark callers, against the rule report 7 established. The author chose on
+2026-11-03 to fix the `CHANGES.md` entries in Labrador before `v0.3.0`; the
+tag shipped without the amendment. On 2026-11-05 the author accepted the
+entries as shipped and closed the report as declined, so nothing was filed.
+The migration is this repository's own:
+[`game/carried/`](../../game/carried/) holds the removed types, and
+[`removed_members.h`](../../game/carried/removed_members.h) plus four written-out
+call sites cover the removed members. Reopen it as a Bug if a later engine
+release removes a public name a client calls without saying so.
 
 ---
 

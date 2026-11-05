@@ -146,9 +146,11 @@ namespace
 		const PlayerTuning& player = tuning.player();
 		// The farthest step Player::update can take: x_initial_velocity is
 		// unclamped on the first step of input, drop_down_velocity is added
-		// after the y clamp.
+		// after the y clamp, and paint underfoot (on as shipped) scales the
+		// horizontal pair by the friendly speed factor.
+		const float boost = player.paint_underfoot.enabled ? player.paint_underfoot.own_speed_multiplier : 1.0f;
 		const Vector2F travel = Vector2F(
-			std::max(player.max_velocity.x, std::abs(player.x_initial_velocity)),
+			std::max(player.max_velocity.x, std::abs(player.x_initial_velocity)) * boost,
 			player.max_velocity.y + std::abs(player.drop_down_velocity)) * SECONDS_PER_STEP;
 		for (const auto& path : shipped_levels(content))
 		{
