@@ -138,6 +138,7 @@ namespace level_editor_acceptance
         for (bool rises_right : { true, false })
         {
             LevelDocument seam;
+            erase_template_walls(seam);
             const Entry slope = seam.add_object(rises_right ? "FixedSlabRight" : "FixedSlabLeft",
                 { 0, rises_right ? 80.0 : 0.0, 1, 1 });
             const auto represented = *seam.slab_guide(slope);

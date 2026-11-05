@@ -24,6 +24,12 @@ namespace colourwars_editor
         std::string label;
     };
 
+    // The same list position; labels are display text.
+    inline bool same_entry(const Entry& a, const Entry& b)
+    {
+        return a.kind == b.kind && a.index == b.index;
+    }
+
     struct Rect
     {
         double x = 0.0;

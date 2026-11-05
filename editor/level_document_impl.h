@@ -2,6 +2,7 @@
 
 // Private to the colourwars_level_document library; included only by the level_document TUs.
 
+#include "editor/horizontal_authoring.h"
 #include "editor/level_document.h"
 #include "editor/level_json.h"
 
@@ -20,6 +21,8 @@ namespace colourwars_editor
         Json& entry_array(Document& document, EntryKind kind);
         void set_number(Json& object, const char* name, double value);
         void move_shape(Json& object, const Rect& rectangle);
+        // The added entry as entries() lists it, label included.
+        Entry labelled(const std::vector<Entry>& entries, const Entry& added);
     }
 
     using namespace level_document_detail;
@@ -34,6 +37,13 @@ namespace colourwars_editor
         std::string saved;
         std::filesystem::path source_path;
         std::string source_bytes;
+
+        // A spawn or station is the character's top-left: source tuning's
+        // player size, or the shipped 52 by 120 for a document without tuning.
+        MotionPlayerSize player_size() const
+        {
+            return motion_tuning.empty() ? MotionPlayerSize{ 52.0f, 120.0f } : load_motion_player_size(motion_tuning);
+        }
 
         template<typename Operation> void mutate(Operation operation)
         {

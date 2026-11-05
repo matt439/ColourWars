@@ -26,11 +26,6 @@ namespace colourwars_editor
         edit_copy, edit_paste
     };
 
-    inline bool same_entry(const Entry& a, const Entry& b)
-    {
-        return a.kind == b.kind && a.index == b.index;
-    }
-
     struct DrawItem
     {
         Entry entry;

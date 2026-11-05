@@ -14,6 +14,7 @@
 #include "editor/prepared_file.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
+#include "editor/new_level_template.h"
 #include "game/contracts/level_format.h"
 #include <rapidjson/pointer.h>
 
@@ -36,6 +37,8 @@ namespace colourwars_editor
     {
         constexpr std::array<const char*, 4> bounds_labels = {
             "Out of bounds", "Camera bounds", "Zoom start", "Zoom finish" };
+        // One list label per level_format bounds key, in its order.
+        static_assert(bounds_labels.size() == level_format::bounds_keys.size());
     }
 
     namespace level_document_detail
@@ -100,6 +103,15 @@ namespace colourwars_editor
                     kind == EntryKind::collision ? "collision_objects" : "non_collision_objects");
             }
             fail("Level metadata and bounds cannot be duplicated or deleted.");
+        }
+
+        Entry labelled(const std::vector<Entry>& entries, const Entry& added)
+        {
+            for (const Entry& entry : entries)
+            {
+                if (same_entry(entry, added)) { return entry; }
+            }
+            return added;
         }
 
         void set_number(Json& object, const char* name, double value)
@@ -282,28 +294,13 @@ namespace colourwars_editor
 
     void LevelDocument::create()
     {
-        Document document = parse(R"({
-            "display_name":"New Stage", "icon_frame":"stage_close_quarters",
-            "sound":{"sound_bank_name":"paint_exe","music_name":"music.close_quarters","music_volume":0.65,
-                "end_sting_name":"music.end_sting.close_quarters","end_sting_volume":0.65},
-            "spawn_locations":{
-                "team_a":[{"x":100,"y":1000},{"x":170,"y":1000},{"x":240,"y":1000},{"x":310,"y":1000}],
-                "team_b":[{"x":2530,"y":1000},{"x":2600,"y":1000},{"x":2670,"y":1000},{"x":2740,"y":1000}]},
-            "level_bounds":{
-                "out_of_bounds":{"x":-200,"y":-200,"width":3400,"height":1800},
-                "camera_bounds":{"x":0,"y":0,"width":3000,"height":1400},
-                "zoom_out_start_bounds":{"x":540,"y":320,"width":1920,"height":1080},
-                "zoom_out_finish_bounds":{"x":0,"y":0,"width":3000,"height":1400}},
-            "collision_objects":[{"name":"floor","type":"StructurePaintable",
-                "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"GAINSBORO",
-                "rectangle":{"x":0,"y":1200,"width":3000,"height":100},
-                "collision_type":"STRUCTURE_PAINTABLE","material":"ground",
-                "paintable_faces":{"left":false,"top":true,"right":false,"bottom":false}}],
-            "non_collision_objects":[{"name":"background","type":"Visual",
-                "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"404040",
-                "rectangle":{"x":-200,"y":-200,"width":3400,"height":1800}}]
-        })");
-        document.AddMember("format", level_format::current, document.GetAllocator());
+        // The template's _comment describes the template file, not the new level.
+        Document document = parse(new_level_template);
+        document.RemoveMember("_comment");
+        if (!document.HasMember("format"))
+        {
+            document.AddMember("format", level_format::current, document.GetAllocator());
+        }
         validate_document(document, impl_->motion_tuning);
         auto next = std::make_unique<Impl>();
         next->motion_tuning = impl_->motion_tuning;
@@ -425,8 +422,11 @@ namespace colourwars_editor
             return plain_rectangle(member(member(value, "level_bounds"), "camera_bounds"));
         }
         if (entry.kind == EntryKind::bounds) { return plain_rectangle(value); }
-        // Spawns and stations are the character's top-left.
-        if (is_point(entry.kind)) { return { number(value, "x"), number(value, "y"), 52.0, 120.0 }; }
+        if (is_point(entry.kind))
+        {
+            const MotionPlayerSize player = impl_->player_size();
+            return { number(value, "x"), number(value, "y"), player.width, player.height };
+        }
         return object_rectangle(value);
     }
 
@@ -824,11 +824,7 @@ namespace colourwars_editor
             added.index = objects.Size();
             objects.PushBack(value, allocator);
         });
-        for (const Entry& entry : entries())
-        {
-            if (entry.kind == added.kind && entry.index == added.index) { return entry; }
-        }
-        return added;
+        return labelled(entries(), added);
     }
 
     Entry LevelDocument::duplicate(const Entry& entry)
@@ -910,11 +906,7 @@ namespace colourwars_editor
             added.index = objects.Size();
             objects.PushBack(value, document.GetAllocator());
         });
-        for (const Entry& candidate : entries())
-        {
-            if (candidate.kind == added.kind && candidate.index == added.index) { return candidate; }
-        }
-        return added;
+        return labelled(entries(), added);
     }
 
     namespace
@@ -985,11 +977,7 @@ namespace colourwars_editor
             added.index = objects.Size();
             objects.PushBack(value, allocator);
         });
-        for (const Entry& candidate : entries())
-        {
-            if (candidate.kind == added.kind && candidate.index == added.index) { return candidate; }
-        }
-        return added;
+        return labelled(entries(), added);
     }
 
     void LevelDocument::erase(const Entry& entry)

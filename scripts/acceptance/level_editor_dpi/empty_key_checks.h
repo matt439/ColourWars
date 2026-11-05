@@ -98,6 +98,10 @@ namespace colourwars_editor
                 "Empty-key native metadata row was not selected for ordinary editing");
             SetWindowTextW(editor.value_edit_, replacement);
             require(editor.pending(), "Empty-key native edit did not reach the inspector text control");
+            // A palette selection is not a command: it must leave the text pending.
+            SendMessageW(editor.window_, WM_COMMAND, MAKEWPARAM(palette, CBN_SELCHANGE),
+                reinterpret_cast<LPARAM>(editor.palette_));
+            require(editor.pending(), "A palette selection applied pending property text");
             SendMessageW(editor.window_, WM_COMMAND, MAKEWPARAM(apply_property, BN_CLICKED),
                 reinterpret_cast<LPARAM>(editor.apply_));
             require(!editor.pending(), "Empty-key native Apply left its text pending");

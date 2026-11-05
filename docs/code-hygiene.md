@@ -1249,6 +1249,59 @@ Replay and the Debug bots:
 
 ### Editor shell and document (`HYG#78`)
 
+**Done 2026-11-06; behaviour change.** File > New opens a different level, a
+combo selection no longer applies pending property text, a spawn or station
+box follows source tuning's player size, and a failed registration says
+"Registration failed:" once.
+
+- [editor/CMakeLists.txt](../editor/CMakeLists.txt) compiles
+  [template.json](../editor/template.json) into a generated
+  `new_level_template.h` (editing it reconfigures; the build refuses a template
+  the raw string cannot hold), and `LevelDocument::create` parses it, dropping
+  only its `_comment`. New therefore has the template's two walls, ceiling,
+  `centre` station, spawns at y 1075 and `"include_in_random": false`, where
+  the inline string had a floor alone, spawns at y 1000 and no Random setting.
+  `level_editor`'s resource check now requires New to equal the template.
+- [editor_window.cpp](../editor/editor_window.cpp) has one `{label, type}`
+  palette table and one `{label, size}` snap table; the snap list selects the
+  entry equal to `snap_`. `WM_COMMAND` reaches `command()` only for a menu or
+  accelerator (no control) or `BN_CLICKED`; before, `HIWORD` 1 also matched
+  `CBN_SELCHANGE`, so choosing a palette entry applied pending text. The DPI
+  probe's empty-key check sends a palette `CBN_SELCHANGE` with text pending
+  and requires it still pending.
+- `labelled` is the three add/duplicate/paste loops' and the mirror's one way
+  to return the added entry with its label; `same_entry` moved beside `Entry`.
+  `LevelDocument::Impl::player_size` (tuning's size, or 52 by 120 without
+  tuning) sizes a spawn or station rectangle and replaces the mirror's and the
+  symmetry report's two copies of that fallback. `bounds_labels` is held to
+  `bounds_keys`' length.
+- `apply_stage_registration`'s two rollback errors start with the cause;
+  `ColourWarsRegisterStage` adds the prefix. `level_editor`'s registration
+  checks refuse a message that repeats it.
+- The shell sources build once, as `colourwars_editor_shell`, which the editor
+  and `colourwars_editor_dpi_acceptance` link.
+
+Probes that took New's old layout as a blank: the Random-setting check writes
+New without `include_in_random`, the station palette check deletes `centre`
+first, the mover float-binade check finds its object by position instead of
+index 1, the slab seam check erases the walls and ceiling (a new
+`erase_template_walls` fixture), and the DPI metadata fixture names
+`left_wall`, New's first object, instead of `floor`.
+
+Left as found: `level_document.cpp`'s `AddMember` key literals for new palette
+objects and the canvas's `paintable_faces/...` and station `name` property
+paths, which the `HYG#67` and `HYG#76` notes above handed here with File > New; the inline
+template's literals are gone, and these are not in the row's sites.
+
+Both presets build under `/W4 /WX`. `check-level-editor.ps1` (document,
+DPI, gesture, pending and hidden GUI checks) and `check-stage-registration.ps1`
+passed in Debug and Release, as did the acceptance cases that compile the
+editor document: `level_format`, `moving_structure`, `fixed_slab` and
+`turbulence_blockout`, and the `Quick` opt-in `turbulence_movers`,
+`turbulence_slopes` and `turbulence_slab_stage`.
+
+The row as filed:
+
 - Make File > New read `template.json` (`level_document.cpp:285`).
 - Use one `{label, type}` palette table (`editor_window.cpp:189`) and one snap
   table (`:719`).

@@ -44,7 +44,8 @@ game/                  the game executable and the colourwars_game library
                        presentation, levels, fonts, textures, the sound bank
   art/, audio/         sources, recipes and provenance for that content; never staged
 editor/                ColourWarsEditor.exe, the desktop level editor, and the
-                       colourwars_level_document library it shares with its checks
+                       colourwars_level_document library it shares with its checks;
+                       colourwars_editor_shell is the window the DPI probe also links
 scripts/               acceptance probes, check and build scripts; see scripts/README.md
 docs/                  guides, owners of open work and frozen reviews; see docs/README.md
 cmake/                 runtime staging, the build stamp, wave-bank and font checks,

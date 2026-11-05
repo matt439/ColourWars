@@ -755,12 +755,12 @@ namespace colourwars_editor
                     originals[index]->retain();
                     retained.push_back(originals[index]->path());
                 }
-                throw StageRegistrationError(std::string("Registration failed: ") + failure_text(failure) +
+                // The caller says "Registration failed:"; the message is the cause.
+                throw StageRegistrationError(failure_text(failure) +
                     "; rollback could not complete: " + rollback_failures +
                     ". Original backups retained; inspect all three content files before retrying.", retained);
             }
-            throw StageRegistrationError(std::string("Registration failed; the replaced files were restored: ") +
-                failure_text(failure));
+            throw StageRegistrationError(failure_text(failure) + "; the replaced files were restored.");
         }
         return true;
     }

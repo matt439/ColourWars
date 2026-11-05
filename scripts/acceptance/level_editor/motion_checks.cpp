@@ -155,7 +155,7 @@ namespace level_editor_acceptance
         const auto binade_path = scratch / "motion-binade.json";
         write(binade_path, encode(binade_json));
         LevelDocument binade(tuning); binade.load(binade_path);
-        const Entry fractional_entry{ EntryKind::collision, 1, "" };
+        const Entry fractional_entry{ EntryKind::collision, binade_json["collision_objects"].Size() - 1, "" };
         const auto local_faces = scoring_faces(binade, scoring);
         const double local_area = scoring_area(local_faces);
         binade.set_property(fractional_entry, "motion/phase", "0.25");

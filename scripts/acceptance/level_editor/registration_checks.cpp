@@ -129,6 +129,9 @@ namespace level_editor_acceptance
         {
             rejected = true;
             require(std::string(error.what()).size() > 0, "Registration failure needs a diagnostic");
+            // ColourWarsRegisterStage prefixes "Registration failed: " itself.
+            require(!std::string(error.what()).starts_with("Registration failed"),
+                "A registration diagnostic repeats the caller's prefix: " + std::string(error.what()));
         }
         require(rejected, reason);
         before.unchanged(fixture, times);
@@ -565,7 +568,8 @@ namespace level_editor_acceptance
         catch (const StageRegistrationError& error)
         {
             recovery = error.recovery_files();
-            require(std::string(error.what()).find("Original backups retained") != std::string::npos,
+            require(std::string(error.what()).find("Original backups retained") != std::string::npos &&
+                !std::string(error.what()).starts_with("Registration failed"),
                 "Rollback failure did not explain the retained-original recovery path");
         }
         require(calls == 3 && recovery.size() == 3 && contents(fixture.manifest) == preview.manifest.proposed &&

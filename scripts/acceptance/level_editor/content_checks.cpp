@@ -113,6 +113,10 @@ namespace level_editor_acceptance
         }
         LevelDocument created;
         require(created.unresolved_resources(catalog).empty(), "New-level defaults have an unresolved name");
+        // File > New is the template, less the note about the template file.
+        rapidjson::Document from_template = parse(contents(repo / "editor/template.json"));
+        from_template.RemoveMember("_comment");
+        require(parse(created.serialize()) == from_template, "File > New does not start from editor/template.json");
         LevelDocument templated;
         templated.load(repo / "editor/template.json");
         require(templated.unresolved_resources(catalog).empty(), "The template has an unresolved name");

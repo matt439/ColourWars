@@ -134,10 +134,8 @@ namespace colourwars_editor
             value.CopyFrom(entry_json(document, entry), allocator);
             if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
             {
-                // A spawn point is the body's top-left, so reflect the whole
-                // character from source tuning (the editor's 52-unit box without it).
-                const double width = impl_->motion_tuning.empty() ? this->rectangle(entry).width :
-                    static_cast<double>(load_motion_player_size(impl_->motion_tuning).width);
+                // A spawn point is the body's top-left, so reflect the whole character.
+                const double width = static_cast<double>(impl_->player_size().width);
                 set_number(value, "x", sum - number(value, "x") - width);
                 added.kind = entry.kind == EntryKind::spawn_a ? EntryKind::spawn_b : EntryKind::spawn_a;
             }
@@ -146,11 +144,7 @@ namespace colourwars_editor
             added.index = objects.Size();
             objects.PushBack(value, allocator);
         });
-        for (const Entry& candidate : entries())
-        {
-            if (candidate.kind == added.kind && candidate.index == added.index) { return candidate; }
-        }
-        return added;
+        return labelled(entries(), added);
     }
 
     namespace
@@ -214,8 +208,7 @@ namespace colourwars_editor
         Allocator& allocator = work.GetAllocator();
         const Rect world = plain_rectangle(member(member(work, key::level_bounds), key::out_of_bounds));
         const double sum = world.x + (world.x + world.width);
-        const double spawn_width = impl_->motion_tuning.empty() ? 52.0 :
-            static_cast<double>(load_motion_player_size(impl_->motion_tuning).width);
+        const double spawn_width = static_cast<double>(impl_->player_size().width);
         const std::vector<Entry> all = entries();
         const auto listed = [&](EntryKind kind)
         {

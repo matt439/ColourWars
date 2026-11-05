@@ -146,9 +146,12 @@ namespace level_editor_acceptance
         require(document.redo() && station_count(document) == 10, "Redo did not delete the station again");
 
         // Add from the palette, to a stage with none: station_1, then
-        // station_2; deleting both leaves no stations array.
+        // station_2; deleting both leaves no stations array. File > New has
+        // the template's one station, centre; delete it first.
         LevelDocument fresh(tuning);
-        require(!parse(fresh.serialize()).HasMember("stations"), "The template already has stations");
+        require(station_count(fresh) == 1, "File > New lost the template's station");
+        fresh.erase(station_named(fresh, "centre"));
+        require(!parse(fresh.serialize()).HasMember("stations"), "Deleting the template's station left an empty array");
         const Entry added = fresh.add_object("Station", { 1000.0, 600.0, 200.0, 100.0 });
         require(added.kind == EntryKind::station && added.label == "Station station_1" &&
             equal(fresh.rectangle(added), { 1000.0, 600.0, 52.0, 120.0 }),
