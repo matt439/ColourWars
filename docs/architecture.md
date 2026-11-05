@@ -29,7 +29,7 @@ game/                  the game executable and the colourwars_game library
   save/                the save file, its sections, profiles, records and the
                        remembered setup
   input/               bindings, input slots, the controls text, and rumble
-                       with its XInput adapter
+                       with its engine-Gamepads adapter (`rumble_gamepads.cpp`)
   states/              the engine states: GameMenu, GameLevel and the menu pages
   objects/             one match: Level, Player, weapons, projectiles,
                        structures, terrain, HUD and the builders
@@ -128,7 +128,7 @@ What holds at `272ecb75`:
 - **Gameplay headers see only the in-match presentation.** `objects/` headers
   include [presentation_match.h](../game/config/presentation/presentation_match.h), and `level.h`
   and the builders forward-declare `Presentation`, so no `objects/` or `ai/`
-  header reaches the menu records. Ten `objects/` sources do, by including
+  header reaches the menu records. Some `objects/` sources do, by including
   `presentation.h` (or `presentation_menu_text.h`) themselves; since `HYG#38`
   no presentation source includes a `states/` header.
 - **The editor sees only the contracts**: it includes eight of the nine
@@ -187,13 +187,14 @@ brings the types back.
 
 ## Services: `GameData`
 
-[game/game_data.h](../game/game_data.h) is a bag of seven borrowed pointers:
+[game/game_data.h](../game/game_data.h) is a bag of eight borrowed pointers:
 the engine `Application`, this game's `Save`, its `SettingsSession`, the
-`StageCatalog`, the tuning, the presentation and the developer `DebugDirector`
+`StageCatalog`, the tuning, the presentation, the `ActiveLocale` and the
+developer `DebugDirector`
 (inert in Release, and `DebugDirector::inert()` when unset). Everything else
 that looks like a service (`ThreadPool`, `Gamepads`, `RenderResources`, ...) is
 a forward to the `Application`. `wWinMain` in [game/main.cpp](../game/main.cpp)
-declares all seven before the `Application`, so they outlive every state that
+declares the other seven before the `Application`, so they outlive every state that
 borrows them.
 
 The `Save` ([game/save/save.h](../game/save/save.h)) is what the file holds, each pad slot
@@ -352,14 +353,15 @@ chains, with every base:
 
 ```text
 ProjectileMist -> DiffusingProjectile -> Projectile
-    -> colourwars::MovingObject + colourwars::AnimationObject + labrador::CollisionObject
+    -> colourwars::MovingObject + colourwars::AnimationObject + Collider
 WeaponBucket -> RelativeVelocityWeapon -> Weapon
     -> labrador::TextureObject + colourwars::SoundBankObject
 StructurePaintable -> Structure + PaintableObject
-    Structure -> labrador::TextureObject + labrador::CollisionObject
-Player -> colourwars::MovingObject + labrador::CollisionObject
+    Structure -> labrador::TextureObject + Collider
+Player -> colourwars::MovingObject + Collider
     + colourwars::AnimationObject + labrador::TextureObject
     + colourwars::SoundBankObject
+Collider -> labrador::CollisionObject
 MainMenuStageSelect -> RosterSetupPage -> MainMenuPage -> MenuPage
     -> labrador::State + colourwars::SoundBankObject + protected DebugPageTarget
 ```
