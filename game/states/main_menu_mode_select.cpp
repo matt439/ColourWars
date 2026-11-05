@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/match/series_stage_rule.h"
 #include "game/objects/crude_drawing.h"
 #include "game/carried/ui_text_drop_shadow.h"
@@ -109,7 +110,7 @@ void MainMenuModeSelect::cycle_duration(Direction direction)
 		if (current && *current == choices[index]) { slot = index + 1; break; }
 	}
 	const size_t count = choices.size() + 1;
-	slot = direction == Direction::left ? (slot + count - 1) % count : (slot + 1) % count;
+	slot = wrap_step(slot, count, direction);
 	this->level_settings()->set_duration(slot == 0 ? std::nullopt :
 		std::optional<float>(choices[slot - 1]));
 	this->refresh_duration();
@@ -141,7 +142,7 @@ void MainMenuModeSelect::cycle_stage_rule(Direction direction)
 	const auto& rules = series_stage_rules;
 	const auto found = std::find(rules.begin(), rules.end(), this->level_settings()->series_stage_rule());
 	size_t slot = found == rules.end() ? 0 : static_cast<size_t>(found - rules.begin());
-	slot = direction == Direction::left ? (slot + rules.size() - 1) % rules.size() : (slot + 1) % rules.size();
+	slot = wrap_step(slot, rules.size(), direction);
 	this->level_settings()->set_series_stage_rule(rules[slot]);
 	this->refresh_stage_rule();
 }

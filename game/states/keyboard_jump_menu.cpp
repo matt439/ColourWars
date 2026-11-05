@@ -61,7 +61,7 @@ void KeyboardJumpMenu::init()
 	const int last = static_cast<int>(keyboard_action_count);
 	action("reset", copy.reset, last, [this] { this->reset_pending(); });
 	action("apply", this->text().item(MenuItem::apply), last + 1, [this] { this->apply(); });
-	action("back", this->text().item(MenuItem::back), last + 2, [this] { this->close(); });
+	action("back", this->text().item(MenuItem::back), last + 2, [this] { this->pop_page(); });
 
 	this->help_limit_ = RectangleF(look.controls_position, look.controls_size);
 	this->status_limit_ = this->status_limit(style);
@@ -273,7 +273,7 @@ void KeyboardJumpMenu::update_page(float /*dt*/)
 	if (this->opening_slot() >= 0) { inputs = { this->opening_slot_input(inputs) }; }
 	for (const ProcessedMenuInput& input : inputs)
 	{
-		if (input.action == MenuInputAction::back) { this->close(); return; }
+		if (input.action == MenuInputAction::back) { this->pop_page(); return; }
 		if (input.action == MenuInputAction::proceed)
 		{
 			if (this->activate_focus() == Activation::ran) { return; }

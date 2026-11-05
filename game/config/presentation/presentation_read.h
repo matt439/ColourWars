@@ -5,6 +5,7 @@
 // Nothing else includes it.
 
 #include "game/config/presentation/presentation.h"
+#include "game/config/presentation/menu_geometry.h"
 #include "engine/assets/json.h"
 #include "engine/math/rectanglef.h"
 #include "engine/render/colour.h"
@@ -49,21 +50,9 @@ namespace presentation_read
 	std::wstring format_label_template(const std::wstring& text,
 		std::initializer_list<LabelToken> tokens, bool multiline = false);
 
-	// A rectangle whose edges are all finite and whose size is positive.
-	inline bool finite_rectangle(const labrador::RectangleF& bounds)
-	{
-		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
-			std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
-			std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
-			bounds.width > 0.0f && bounds.height > 0.0f;
-	}
-
-	// Whether two rectangles share area; touching edges do not overlap.
-	inline bool overlaps(const labrador::RectangleF& first, const labrador::RectangleF& second)
-	{
-		return first.x < second.right() && first.right() > second.x &&
-			first.y < second.bottom() && first.bottom() > second.y;
-	}
+	// The rectangle predicates the pages use too (menu_geometry.h).
+	using menu_geometry::finite_rectangle;
+	using menu_geometry::overlaps;
 
 	labrador::Colour read_colour(const labrador::JsonValue& parent, const char* key);
 	labrador::Colour colour_from_text(const labrador::JsonValue& where, const std::string& text);

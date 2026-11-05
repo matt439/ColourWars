@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/profiles_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/match/player_control.h"
 #include <algorithm>
 
@@ -62,7 +63,7 @@ void ProfilesMenu::init()
 	};
 	this->new_ = action("new_profile", copy.new_profile, 4, [this] { this->add_profile(); });
 	this->delete_ = action("delete_profile", copy.delete_profile, 5, [this] { this->delete_profile(); });
-	action("back", this->text().item(MenuItem::back), 6, [this] { this->close(); });
+	action("back", this->text().item(MenuItem::back), 6, [this] { this->pop_page(); });
 	this->status_limit_ = this->status_limit(style);
 	this->help_ = this->add_text("help", copy.help, look.help_font, look.controls_position);
 	fit_text(*this->help_, RectangleF(look.controls_position, look.controls_size));
@@ -265,7 +266,7 @@ void ProfilesMenu::update_name_edit(const ProcessedMenuInput& input)
 		const size_t count = characters.size();
 		const size_t at = characters.find(edit.buffer[edit.cursor]);
 		const size_t current = at == std::string_view::npos ? 0 : at;
-		edit.buffer[edit.cursor] = characters[(current + (input.direction == Direction::up ? 1 : count - 1)) % count];
+		edit.buffer[edit.cursor] = characters[wrap_step(current, count, input.direction == Direction::up)];
 		break;
 	}
 	case Direction::left:
@@ -310,7 +311,7 @@ void ProfilesMenu::update_page(float /*dt*/)
 			this->update_name_edit(input);
 			continue;
 		}
-		if (input.action == MenuInputAction::back) { this->close(); return; }
+		if (input.action == MenuInputAction::back) { this->pop_page(); return; }
 		if (input.action == MenuInputAction::proceed)
 		{
 			if (this->focus_.focused(0) != this->delete_) { this->delete_armed_ = false; }

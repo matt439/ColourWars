@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/objects/crude_drawing.h"
 #include "game/carried/ui_text_drop_shadow.h"
 #include "game/states/player_label.h"
@@ -132,34 +133,8 @@ WeaponType MainMenuWeaponSelect::random_weapon()
 void MainMenuWeaponSelect::cycle_weapons(
 	labrador::Direction direction, int player_index)
 {
-	int enum_max = static_cast<int>(WeaponType::max_prim_wep);
 	const WeaponType previous = this->select_states_[player_index].type;
-	int enum_pos =
-		static_cast<int>(previous);
-	if (direction == labrador::Direction::left)
-	{
-		if (enum_pos == 0)
-		{
-			enum_pos = enum_max;
-		}
-		else
-		{
-			enum_pos--;
-		}
-	}
-	else if (direction == labrador::Direction::right)
-	{
-		if (enum_pos == enum_max)
-		{
-			enum_pos = 0;
-		}
-		else
-		{
-			enum_pos++;
-		}
-	}
-	this->select_states_[player_index].type =
-		static_cast<WeaponType>(enum_pos);
+	this->select_states_[player_index].type = step_tool(previous, direction, SELECTABLE_WEAPON_COUNT);
 	if (this->select_states_[player_index].type != previous)
 	{
 		// The icon is reused for every tool, so its enum is the selection identity.
@@ -398,9 +373,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 	const RectangleF inside = menu_geometry::paper_interior(panel, this->paper_art_);
 	const auto check = [&](const RectangleF& bounds, const char* role)
 	{
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-			bounds.width <= 0.0f || bounds.height <= 0.0f || !inside.contains(bounds))
+		if (!menu_geometry::fits(bounds, inside))
 		{
 			throw std::runtime_error(std::string("main_menu.weapon_box_size: Weapon Select ") + role +
 				" must fit the paper including its retained text, badge and tile bounds.");

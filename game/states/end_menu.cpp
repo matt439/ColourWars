@@ -169,18 +169,9 @@ void EndMenuInitial::init()
 	const auto repick = [this](bool tools)
 		{
 			this->play_wave(this->confirm_sound_);
-			if (tools)
-			{
-				this->context()->transition_to(make_main_menu_page(this->menu_context(),
-					MainMenuRoute::re_pick(MainMenuScreen::weapon_select, this->session_,
-						PlayerTeam::none, this->replay_)));
-			}
-			else
-			{
-				this->context()->transition_to(make_main_menu_page(this->menu_context(),
-					MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->session_,
-						PlayerTeam::none, this->replay_)));
-			}
+			this->context()->transition_to(make_main_menu_page(this->menu_context(),
+				MainMenuRoute::re_pick(tools ? MainMenuScreen::weapon_select : MainMenuScreen::stage_select,
+					this->session_, PlayerTeam::none, this->replay_)));
 		};
 
 	this->change_teams_->set_hidden(ongoing);

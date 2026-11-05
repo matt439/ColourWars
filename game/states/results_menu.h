@@ -20,7 +20,7 @@ public:
 protected:
 	const ResultsMenuPresentation& look() const;
 
-	LevelEndInfo level_end_info() const;
+	const LevelEndInfo& level_end_info() const;
 
 	// The fill sound loops until the score reveal completes.
 	labrador::SoundBank::WaveHandle winner_sound_;
@@ -73,8 +73,9 @@ private:
 	float show_results_timer_ = 0.0f;
 	float fill_time_ratio() const;
 	labrador::Vector2F calculate_team_b_fill_top_right_position() const;
-	static int check_for_continue_input(const std::vector<ProcessedMenuInput>& menu_input);
+	static bool continue_pressed(const std::vector<ProcessedMenuInput>& menu_input);
+	// Grows both score bars with the fill clock, team B's from the right.
 	void update_fill_box() const;
-	void update_team_a_fill() const;
-	void update_team_b_fill() const;
+	// A bar's width at the fill clock for a team's share of the paint.
+	float fill_width(float ratio) const;
 };

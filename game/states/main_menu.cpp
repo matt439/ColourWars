@@ -195,20 +195,16 @@ MainMenuTitle::MainMenuTitle(MenuContext* context) :
 
 void MainMenuTitle::update_page(float /*dt*/)
 {
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	if (this->context()->active())
 	{
-		this->no_pad_->set_hidden(!title_shows_no_controller(this->menu_inputs()));
+		this->no_pad_->set_hidden(!title_shows_no_controller(inputs));
 	}
-
-	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	for (int i = 0; i < inputs.size(); i++)
+	if (std::any_of(inputs.begin(), inputs.end(),
+		[](const ProcessedMenuInput& input) { return input.action == MenuInputAction::proceed; }))
 	{
-		if (inputs[i].action == MenuInputAction::proceed)
-		{
-			this->play_wave(this->confirm_sound_);
-			this->go_to(MainMenuScreen::home);
-			return;
-		}
+		this->play_wave(this->confirm_sound_);
+		this->go_to(MainMenuScreen::home);
 	}
 }
 void MainMenuTitle::init()

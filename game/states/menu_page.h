@@ -107,6 +107,9 @@ protected:
 	MenuFocusMotion focus_motion_;
 	labrador::Activation activate_focus();
 	void press_focus();
+	// Leaves a page pushed with no result, like Back: plays the cancel sound,
+	// forgets armed presses and pops this page.
+	void pop_page();
 	// Per-player clocks are owned by the derived page's stable widget rows.
 	void register_selection_motion(MenuFocusMotion* motion);
 	void reset_menu_motion();

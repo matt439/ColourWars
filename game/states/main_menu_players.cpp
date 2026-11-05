@@ -267,9 +267,7 @@ RectangleF MainMenuJoin::check_paper_bounds(const UiWidget& widget, const char* 
 	const RectangleF inside = menu_geometry::paper_interior(panel, this->setup_art_);
 	const RectangleF bounds = accent == nullptr ? widget.bounds() :
 		RectangleF::union_of(widget.bounds(), accent->bounds());
-	if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-		!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-		bounds.width <= 0.0f || bounds.height <= 0.0f || !inside.contains(bounds))
+	if (!menu_geometry::fits(bounds, inside))
 	{
 		throw std::runtime_error(std::string("main_menu.setup_box_size: Join ") + role +
 			" must fit the paper including its retained text and acknowledgement bounds.");

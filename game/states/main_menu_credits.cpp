@@ -57,21 +57,12 @@ void MainMenuCredits::init()
 		&this->focus_motion_, &this->settings_session()->play_settings());
 
 	// Keep every authored credit visible above Back and inside the paper face.
-	const RectangleF body = this->body_->bounds();
 	const float available_width = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
 		look.credits_position.x;
 	const float available_height = look.credits_back_position.y - look.art.focus_padding.y -
 		look.credits_position.y;
-	float scale = 1.0f;
-	if (available_width > 0.0f && body.width > available_width)
-	{
-		scale = available_width / body.width;
-	}
-	if (available_height > 0.0f && body.height * scale > available_height)
-	{
-		scale = available_height / body.height;
-	}
-	this->body_->set_scale(scale);
+	this->body_->set_scale(menu_geometry::fit_scale(this->body_->bounds().size(),
+		Vector2F(available_width, available_height)));
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());

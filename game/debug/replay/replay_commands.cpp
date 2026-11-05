@@ -152,7 +152,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 	}
 	if (this->match_ != nullptr)
 	{
-		const std::vector<SeatSetup> seats = this->match_->debug_settings().player_settings();
+		const std::vector<SeatSetup>& seats = this->match_->debug_settings().player_settings();
 		for (std::size_t i = 0; i < seats.size(); ++i)
 		{
 			if (seats[i].num == slot && !this->bot_for_seat(static_cast<int>(i), slot).empty())

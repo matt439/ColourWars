@@ -33,9 +33,9 @@ void ControlsSettingsMenu::init()
 	const auto fit_action = [&look](UiText* widget)
 	{
 		const RectangleF bounds = widget->bounds();
-		widget->set_scale(std::min({ 1.0f,
-			menu_geometry::settings_action_width(look, bounds.x) / bounds.width,
-			(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / bounds.height }));
+		widget->set_scale(menu_geometry::fit_scale(bounds.size(), Vector2F(
+			menu_geometry::settings_action_width(look, bounds.x),
+			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 	};
 	this->add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
 		look.heading_position, look.art.ink);
@@ -141,7 +141,7 @@ void ControlsSettingsMenu::init()
 	this->status_ = this->add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
 	this->set_status(this->text().status.controls_pending, look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
-	this->focus_.add(back, [this] { this->close(); });
+	this->focus_.add(back, [this] { this->pop_page(); });
 	this->controls_ = this->add_text("controls", L"",
 		look.help_font, look.controls_position, look.art.ink);
 	this->controls_limit_ = RectangleF(look.controls_position, look.controls_size);
@@ -154,10 +154,7 @@ void ControlsSettingsMenu::refresh_help()
 	// effective keys, retaining the page's authored template, font and geometry.
 	this->controls_->set_text(controls_text::controls_help(this->text().controls, this->text().help.controls,
 		this->settings_session()->input_bindings()));
-	this->controls_->set_scale(1.0f);
-	const RectangleF bounds = this->controls_->bounds();
-	this->controls_->set_scale(std::min({ 1.0f, this->controls_limit_.width / bounds.width,
-		this->controls_limit_.height / bounds.height }));
+	fit_text(*this->controls_, this->controls_limit_);
 }
 
 void ControlsSettingsMenu::on_resume()
@@ -171,14 +168,7 @@ void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& co
 {
 	this->status_->set_text(text);
 	this->status_->set_colour(colour);
-	this->status_->set_scale(1.0f);
-	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	const float available = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
-		look.status_position.x;
-	if (this->status_->bounds().width > available)
-	{
-		this->status_->set_scale(available / this->status_->bounds().width);
-	}
+	fit_text(*this->status_, this->status_limit(this->panel_style()));
 }
 
 void ControlsSettingsMenu::refresh_values()
@@ -231,7 +221,7 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 	{
 		if (input.action == MenuInputAction::back)
 		{
-			this->close();
+			this->pop_page();
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)

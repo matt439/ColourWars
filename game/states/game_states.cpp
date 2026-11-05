@@ -201,7 +201,7 @@ void GameLevel::init()
 	this->build_and_enter_level();
 	// Remember only a normally confirmed setup, after its first complete build.
 	// Later restarts/series rounds use build_and_enter_level without this write.
-	const std::vector<SeatSetup> seats = this->settings_.player_settings();
+	const std::vector<SeatSetup>& seats = this->settings_.player_settings();
 	if (this->start_ == MatchStart::menu &&
 		std::none_of(seats.begin(), seats.end(), [this](const SeatSetup& seat)
 			{ return this->data()->debug().drives_slot(seat.num); }))
@@ -675,7 +675,7 @@ void GameLevel::open_results_menu()
 	// Every finished round counts toward its stage's record, unless a Debug
 	// bot or replay played a seat (never in Release).
 	RecordOutcome record;
-	const std::vector<SeatSetup> seats = this->settings_.player_settings();
+	const std::vector<SeatSetup>& seats = this->settings_.player_settings();
 	if (std::none_of(seats.begin(), seats.end(), [this](const SeatSetup& seat)
 		{ return this->data()->debug().drives_slot(seat.num); }))
 	{

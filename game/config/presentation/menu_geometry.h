@@ -12,6 +12,8 @@
 #include "engine/math/vector2f.h"
 #include "game/config/presentation/presentation_menu.h"
 
+#include <cmath>
+
 namespace menu_consts
 {
 	// Menu geometry stays in these design units; ui_camera() maps it to the window.
@@ -55,6 +57,33 @@ namespace menu_geometry
 
 	// The whole design: backgrounds fill it and the UI camera frames it.
 	labrador::RectangleF design_area();
+
+	// The scale, never above 1, that fits size within vailable, per axis
+	// or on both at once. A size or limit that is not positive does not
+	// constrain its axis.
+	float fit_scale(float size, float available);
+	float fit_scale(const labrador::Vector2F& size, const labrador::Vector2F& available);
+
+	// A rectangle whose edges are all finite and whose size is positive.
+	inline bool finite_rectangle(const labrador::RectangleF& bounds)
+	{
+		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
+			std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
+			std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
+			bounds.width > 0.0f && bounds.height > 0.0f;
+	}
+	// A finite, non-empty rectangle that lies within container: what a page
+	// checks its retained widgets against before it draws them on a paper.
+	inline bool fits(const labrador::RectangleF& bounds, const labrador::RectangleF& container)
+	{
+		return finite_rectangle(bounds) && container.contains(bounds);
+	}
+	// Whether two rectangles share area; touching edges do not overlap.
+	inline bool overlaps(const labrador::RectangleF& first, const labrador::RectangleF& second)
+	{
+		return first.x < second.right() && first.right() > second.x &&
+			first.y < second.bottom() && first.bottom() > second.y;
+	}
 
 	// The x that centres a span of `size` in `extent`, and in the design width.
 	float centred(float size, float extent);

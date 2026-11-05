@@ -13,7 +13,7 @@
 
 // A settings panel: Controls / audio and the four pages it opens (Pad sticks,
 // Keyboard keys, Pad buttons, Profiles). Each is pushed above Options or Pause
-// with no result, so its only way out is close(), which pops it like Back;
+// with no result, so its only way out is MenuPage::pop_page(), as for Back;
 // leaving one never resumes a paused match. A non-negative opening slot is the
 // pause owner's input slot; -1 allows the main menu's any-device navigation.
 // All five draw on the same paper card from controls_settings.
@@ -55,9 +55,6 @@ protected:
 	// The status line's box: from controls_settings.status_position to the
 	// paper's padded right edge and down to the footer.
 	labrador::RectangleF status_limit(const MenuStyle& style) const;
-
-	// Plays the cancel sound, forgets armed presses and pops this page.
-	void close();
 
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;

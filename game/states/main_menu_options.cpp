@@ -2,6 +2,7 @@
 #include "game/states/controls_settings_menu.h"
 #include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/input/input_slots.h"
 #include "game/objects/crude_drawing.h"
 #include "engine/render/renderer.h"
@@ -118,11 +119,8 @@ void MainMenuOptions::set_status(const std::wstring& text, const Colour& colour)
 	this->status_->set_colour(colour);
 	this->status_->set_scale(1.0f);
 	const float right = menu_geometry::paper_text_right(this->paper_->rectangle(), this->options_art_);
-	const float available = right - this->look().options_status_position.x;
-	if (available > 0.0f && this->status_->bounds().width > available)
-	{
-		this->status_->set_scale(available / this->status_->bounds().width);
-	}
+	this->status_->set_scale(menu_geometry::fit_scale(this->status_->bounds().width,
+		right - this->look().options_status_position.x));
 }
 
 void MainMenuOptions::apply_settings()
@@ -376,33 +374,8 @@ void MainMenuOptions::init()
 void MainMenuOptions::cycle_resolution(
 	labrador::Direction direction)
 {
-	int enum_max = static_cast<int>(ScreenResolution::max);
-	int enum_pos =
-		static_cast<int>(this->resolution_selection_);
-	if (direction == labrador::Direction::left)
-	{
-		if (enum_pos == 0)
-		{
-			enum_pos = enum_max;
-		}
-		else
-		{
-			enum_pos--;
-		}
-	}
-	else if (direction == labrador::Direction::right)
-	{
-		if (enum_pos == enum_max)
-		{
-			enum_pos = 0;
-		}
-		else
-		{
-			enum_pos++;
-		}
-	}
-	this->resolution_selection_ =
-		static_cast<ScreenResolution>(enum_pos);
+	this->resolution_selection_ = static_cast<ScreenResolution>(wrap_step(
+		static_cast<int>(this->resolution_selection_), static_cast<int>(ScreenResolution::max) + 1, direction));
 	this->update_resolution_selection_text();
 }
 
@@ -484,19 +457,11 @@ void MainMenuOptions::apply_saved_vsync() const
 
 void MainMenuOptions::cycle_team_palette(labrador::Direction direction)
 {
+	// Random is -1, so the choices are counted from it.
 	const int first = static_cast<int>(TeamColourPair::random);
 	const int end = static_cast<int>(TeamColourPair::count);
-	int value = static_cast<int>(this->team_palette_selection_) +
-		(direction == Direction::left ? -1 : 1);
-	if (value < first)
-	{
-		value = end - 1;
-	}
-	else if (value >= end)
-	{
-		value = first;
-	}
-	this->team_palette_selection_ = static_cast<TeamColourPair>(value);
+	this->team_palette_selection_ = static_cast<TeamColourPair>(first + wrap_step(
+		static_cast<int>(this->team_palette_selection_) - first, end - first, direction));
 	this->update_team_palette_selection_text();
 }
 

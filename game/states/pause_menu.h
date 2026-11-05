@@ -55,6 +55,8 @@ public:
 	~PauseMenuPage() override = default;
 	void init() override = 0;
 	void update_page(float dt) override = 0;
+	// Resume (or quit, to leave the match) through the PauseMenuAction frame.
+	bool debug_dismiss(bool leaving_match) override;
 protected:
 	const PauseMenuPresentation& look() const;
 
@@ -95,8 +97,6 @@ public:
 		bool practice = false);
 	void init() override;
 	void update_page(float dt) override;
-	// Resume (or quit, to leave the match) through the PauseMenuAction frame.
-	bool debug_dismiss(bool leaving_match) override;
 private:
 	bool opening_ = true;
 	void refresh_connections();
@@ -123,7 +123,6 @@ public:
 		ConfirmationType type, bool practice = false);
 	void init() override;
 	void update_page(float dt) override;
-	bool debug_dismiss(bool leaving_match) override;
 private:
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiText> player_num_ = nullptr;

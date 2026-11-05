@@ -166,7 +166,6 @@ public:
 protected:
 	bool shows_focus_backing() const override { return false; }
 private:
-	void cancel();
 	PauseMenuPresentation look_;
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;

@@ -371,7 +371,7 @@ namespace
 		}
 		out << "    \"layout\": " << static_cast<int>(roster.screen_layout()) << ",\n";
 		out << "    \"seats\": [\n";
-		const std::vector<SeatSetup> seats = roster.player_settings();
+		const std::vector<SeatSetup>& seats = roster.player_settings();
 		for (std::size_t i = 0; i < seats.size(); ++i)
 		{
 			out << "      { \"slot\": " << seats[i].num << ", \"team\": " <<

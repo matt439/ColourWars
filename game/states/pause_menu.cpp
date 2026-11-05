@@ -2,6 +2,7 @@
 #include "game/states/menu_panel.h"
 #include "game/states/main_menu.h"
 #include "game/states/pause_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/debug/debug_director.h"
 #include "game/states/player_label.h"
 
@@ -127,13 +128,7 @@ void PauseMenuPage::finish(PauseMenuAction action) const
 	this->context()->pop(action);
 }
 
-bool PauseMenuInitial::debug_dismiss(bool leaving_match)
-{
-	this->finish(leaving_match ? PauseMenuAction::quit : PauseMenuAction::resume);
-	return true;
-}
-
-bool PauseMenuConfirmation::debug_dismiss(bool leaving_match)
+bool PauseMenuPage::debug_dismiss(bool leaving_match)
 {
 	this->finish(leaving_match ? PauseMenuAction::quit : PauseMenuAction::resume);
 	return true;
@@ -154,9 +149,7 @@ PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool op
 
 WeaponType practice_tool_after(WeaponType tool, Direction direction)
 {
-	const int count = static_cast<int>(WeaponType::max_prim_wep);
-	const int step = direction == Direction::left ? count - 1 : 1;
-	return static_cast<WeaponType>((static_cast<int>(tool) + step) % count);
+	return step_tool(tool, direction, TUNED_WEAPON_COUNT);
 }
 
 void PauseMenuInitial::cycle_tool(Direction direction)

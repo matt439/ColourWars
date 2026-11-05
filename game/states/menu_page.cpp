@@ -124,6 +124,13 @@ Activation MenuPage::activate_focus()
 	return result;
 }
 
+void MenuPage::pop_page()
+{
+	this->play_wave(this->cancel_sound_);
+	this->input()->reset_actions();
+	this->context()->pop();
+}
+
 void MenuPage::press_focus()
 {
 	if (!this->context()->active() || this->settings_session()->play_settings().reduce_effects)

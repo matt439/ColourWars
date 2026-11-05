@@ -952,6 +952,62 @@ Write the validate-only calls one way (`save.cpp:577`), and merge
 
 ### Menu-page helpers (`HYG#74`)
 
+**Done 2026-11-06; nothing drawn or played differently.**
+
+- `menu_geometry::fit_scale` (one axis or both; a size or limit that is not
+  positive does not constrain) fits the two `OptionRow` labels and values,
+  Credits, `SettingsPanelPage::fit_text`, the Controls and Sticks action rows,
+  Sticks' association line, the Options status, Stage Select's name, record,
+  hint and scan status, and the refusals page's progress line. Controls'
+  help reuses `fit_text`.
+- `finite_rectangle` and `overlaps` moved from `presentation_read` to
+  `menu_geometry`, which `presentation_read` re-exports, and `fits` (finite,
+  non-empty and inside) replaced the Join, Team, Weapon and Stage Select paper
+  checks; Stage Select's briefing/preview test is `overlaps`.
+- `released_action` in `menu_input.cpp` arms and releases both the pad and
+  the keyboard actions.
+- `menu_cycle.h` has `wrap_step` and `step_tool`: Options' resolution and team
+  palette, Mode's duration and series stage, Stage Select, Weapon Select (with
+  Random), the practice Tool row (`practice_tool_after`, kept for its probe),
+  the refusals file list and a profile name's letters.
+- `MenuPage::pop_page` replaces `SettingsPanelPage::close`,
+  `UserStageRefusalsMenu::close` and `MainMenuExitConfirmation::cancel`, and
+  `PauseMenuPage::debug_dismiss` replaces the two pause pages' copies.
+- Controls and Sticks fit their status through `fit_text` and
+  `status_limit`, like Keyboard Jump, Pad Buttons and Profiles. The added
+  height limit cannot bind, since the validator keeps a status line inside
+  the paper.
+- The End menu's re-pick is one call; Results has one `fill_width`, both bars
+  updated in `update_fill_box`, `continue_pressed` returns a `bool`, and
+  `level_end_info()` returns a reference. The title page reads its inputs
+  once. The read-only roster copies in `game_states.cpp` (two),
+  `player_commands.cpp`, `replay_commands.cpp` and the replay writer are
+  references.
+
+Left as found: the presentation validators' own fit formulas and
+`!finite_rectangle(b) || !inside.contains(b)` pairs, where a non-positive
+limit gives a non-positive scale that their later checks refuse;
+`fit_scale` would give 1 there. `MainMenuOptions::close`, which resets the
+focus motion and may return Home instead of popping; and the replay reader's
+`claimed` roster, a copy taken before the loop changes the teams.
+Where `fit_text` or a fit had no limit check, a non-positive limit now leaves
+the text at full size instead of a zero or negative scale; the validators
+refuse such content first.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and in Debug (79, the slow four
+included); it covers `menu_navigation`, `menu_text`, `menu_presentation`,
+`practice_workshop`, `user_stages` and `debug_console`. `check-painter.ps1`'s
+`MenuTextOnly`, `PauseMenuOnly`, `ResultsMenuOnly`, `EndMenuOnly`,
+`MainMenuOnly`, `JoinPaperOnly`, `TeamPaperOnly`, `WeaponPaperOnly`, `StagePaperOnly`,
+`ControlsMenuOnly`, `StickSettingsOnly`, `KeyboardJumpOnly`, `StageScanOnly`,
+`ResolutionTextOnly`, `DurationTextOnly` and `PercentageTextOnly` passed in
+both presets; in Release `MenuTextOnly` and `ControlsMenuOnly` first failed
+with capture and save writes refused under a long evidence path, and passed
+rerun with a short `-OutputDirectory`.
+
+The row as filed:
+
 Add `menu_geometry::fit_scale` and `fits`, `wrap_step` and `step_tool`,
 `MenuPage::pop_page` and one action-arming helper. Then convert:
 

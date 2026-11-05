@@ -21,7 +21,7 @@ const ResultsMenuPresentation& ResultsMenuPage::look() const
 	return this->presentation().results_menu();
 }
 
-LevelEndInfo ResultsMenuPage::level_end_info() const
+const LevelEndInfo& ResultsMenuPage::level_end_info() const
 {
 	return this->level_end_info_;
 }
@@ -111,9 +111,7 @@ void ResultsMenuInitial::update_page(float dt)
 			if (this->show_results_timer_ >= look.show_results_delay)
 			{
 				this->proceed_->set_hidden(false);
-				int continue_input = this->check_for_continue_input(menu_inputs);
-
-				if (continue_input != -1)
+				if (continue_pressed(menu_inputs))
 				{
 					this->play_wave(this->confirm_sound_);
 
@@ -131,7 +129,7 @@ void ResultsMenuInitial::init()
 	const MenuStyle& style = this->menu_style();
 	const ResultsMenuPresentation& look = this->look();
 
-	const LevelEndInfo end_info = this->level_end_info();
+	const LevelEndInfo& end_info = this->level_end_info();
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		menu_geometry::screen_paper(look.box_size),
@@ -396,8 +394,11 @@ void ResultsMenuInitial::init()
 
 void ResultsMenuInitial::update_fill_box() const
 {
-	this->update_team_a_fill();
-	this->update_team_b_fill();
+	this->team_a_fill_->set_width(this->fill_width(this->level_end_info().team_a_ratio()));
+	this->team_b_fill_->set_width(this->fill_width(this->level_end_info().team_b_ratio()));
+	const Vector2F top_right = this->calculate_team_b_fill_top_right_position();
+	this->team_b_fill_->set_position(
+		Vector2F(top_right.x - this->team_b_fill_->rectangle().width, top_right.y));
 }
 
 float ResultsMenuInitial::fill_time_ratio() const
@@ -407,37 +408,9 @@ float ResultsMenuInitial::fill_time_ratio() const
 	return this->fill_timer_ / look.team_fill_time;
 }
 
-void ResultsMenuInitial::update_team_a_fill() const
+float ResultsMenuInitial::fill_width(float ratio) const
 {
-	const ResultsMenuPresentation& look = this->look();
-
-	float score = this->level_end_info().team_a_ratio();
-	float max_width = look.team_fill_size.x * score;
-	float fill = this->fill_time_ratio();
-	if (fill > 1.0f)
-	{
-		fill = 1.0f;
-	}
-	float width = fill * max_width;
-	this->team_a_fill_->set_width(width);
-}
-
-void ResultsMenuInitial::update_team_b_fill() const
-{
-	const ResultsMenuPresentation& look = this->look();
-
-	float score = this->level_end_info().team_b_ratio();
-	float max_width = look.team_fill_size.x * score;
-	float fill = this->fill_time_ratio();
-	if (fill > 1.0f)
-	{
-		fill = 1.0f;
-	}
-	float width = fill * max_width;
-	this->team_b_fill_->set_width(width);
-	const Vector2F top_right = this->calculate_team_b_fill_top_right_position();
-	this->team_b_fill_->set_position(
-		Vector2F(top_right.x - this->team_b_fill_->rectangle().width, top_right.y));
+	return std::min(this->fill_time_ratio(), 1.0f) * (this->look().team_fill_size.x * ratio);
 }
 
 Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const
@@ -451,15 +424,8 @@ Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const
 	return team_b_top_right_position;
 }
 
-int ResultsMenuInitial::check_for_continue_input(
-	const std::vector<ProcessedMenuInput>& menu_input)
+bool ResultsMenuInitial::continue_pressed(const std::vector<ProcessedMenuInput>& menu_input)
 {
-	for (int i = 0; i < menu_input.size(); i++)
-	{
-		if (menu_input[i].action == MenuInputAction::proceed)
-		{
-			return i;
-		}
-	}
-	return -1;
+	return std::any_of(menu_input.begin(), menu_input.end(),
+		[](const ProcessedMenuInput& input) { return input.action == MenuInputAction::proceed; });
 }

@@ -47,7 +47,7 @@ void MainMenuExitConfirmation::init()
 	this->text_container_->add_child(this->question_.get());
 	this->text_container_->add_child(this->yes_.get());
 	this->text_container_->add_child(this->no_.get());
-	this->focus_.add(this->no_.get(), [this] { this->cancel(); });
+	this->focus_.add(this->no_.get(), [this] { this->pop_page(); });
 	this->focus_.add(this->yes_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
@@ -58,17 +58,10 @@ void MainMenuExitConfirmation::init()
 		});
 }
 
-void MainMenuExitConfirmation::cancel()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
-}
-
 bool MainMenuExitConfirmation::debug_dismiss(bool /*leaving_match*/)
 {
 	this->menu_context()->cancel_music_exit();
-	this->cancel();
+	this->pop_page();
 	return true;
 }
 
@@ -81,7 +74,7 @@ void MainMenuExitConfirmation::update_page(float /*dt*/)
 	{
 		if (input.action == MenuInputAction::back)
 		{
-			this->cancel();
+			this->pop_page();
 			return;
 		}
 	}
