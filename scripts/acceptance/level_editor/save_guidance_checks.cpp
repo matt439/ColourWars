@@ -200,6 +200,33 @@ namespace level_editor_acceptance
                 "My Stages feedback ignored the game's filename/extension/shipped-name contract");
         }
 
+        // A registered source level whose display_name has drifted from
+        // presentation.json's menu_text.stage_names says the game will not start.
+        catalog.stage_names = { { "registered", "Registered Arena" } };
+        catalog.stage_names_read = true;
+        require(stage_name_warning(source / "registered.json", source, catalog, "Registered Arena").empty() &&
+            stage_name_warning(source / "REGISTERED.json", source, catalog, "Registered Arena").empty(),
+            "An agreeing registered display_name was warned about");
+        const std::wstring drifted = stage_name_warning(source / "registered.json", source, catalog, "Renamed Arena");
+        require(has(drifted, L"menu_text.stage_names.registered") && has(drifted, L"'Registered Arena'") &&
+            has(drifted, L"will not start"), "A drifted registered display_name was not warned about");
+        require(stage_name_warning(source / "new_source.json", source, catalog, "Renamed Arena").empty() &&
+            stage_name_warning(user / "registered.json", source, catalog, "Renamed Arena").empty() &&
+            stage_name_warning(elsewhere, source, catalog, "Renamed Arena").empty() &&
+            stage_name_warning({}, source, catalog, "Renamed Arena").empty(),
+            "An unregistered, user, elsewhere or unsaved level was held to stage_names");
+        catalog.stage_names.clear();
+        require(has(stage_name_warning(source / "registered.json", source, catalog, "Registered Arena"), L"has no 'registered'"),
+            "A registered level stage_names lacks was not warned about");
+        catalog.stage_names_read = false;
+        catalog.stage_names_problem = "presentation.json needs a 'stage_names' object";
+        const std::wstring unread = stage_name_warning(source / "registered.json", source, catalog, "Renamed Arena");
+        require(has(unread, L"Stage title unchecked") && has(unread, L"'stage_names' object") &&
+            !has(unread, L"will not start"), "An unread presentation.json was reported as a disagreement");
+        require(stage_name_warning(source / "new_source.json", source, catalog, "Renamed Arena").empty(),
+            "An unread presentation.json was reported for an unregistered level");
+        catalog.stage_names_problem.clear();
+
         catalog.manifest_read = false;
         require(has(guidance(user / "my_arena.json", true), L"unchecked") &&
             !has(guidance(user / "my_arena.json", true), L"no rebuild needed") &&

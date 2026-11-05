@@ -80,7 +80,10 @@ struct InputBindings
 
 // This first domain is explicitly A-Z and Space, independent of Key ordinals.
 // Names are labrador::key_name's tokens ("a", "space"), restricted to that
-// domain: the spelling is the engine's file format. Labels are this game's.
+// domain: the spelling is the engine's file format. Labels are this game's,
+// and here are the base locale's twins of them, for probes and diagnostics:
+// player-facing text uses controls_text's labels, whose words (Space, None,
+// Start, the mouse buttons) a locale reaches through menu_text.controls.
 // Conversion outside this domain throws invalid_argument. Conflict checks use
 // other default gameplay keyboard sources, excluding Jump and intro skip.
 bool keyboard_jump_key_supported(labrador::Key key);

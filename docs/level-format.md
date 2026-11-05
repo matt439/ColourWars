@@ -84,7 +84,7 @@ checks and full Release qualification in
 | Key | Type | Meaning |
 |---|---|---|
 | `format` | Optional integer | `1`; omission selects legacy format 1. |
-| `display_name` | String | Authored stage label. Startup checks it against the game's drawable text rules and fonts. |
+| `display_name` | String | Authored stage label. Startup checks it against the game's drawable text rules and fonts. A shipped stage is drawn by its `presentation.json` `menu_text.stage_names` entry, whose English must equal this byte for byte ([Stage names](localisation.md#stage-names)); a user stage draws this itself. |
 | `icon_frame` | String | Existing frame in `sprite_sheet_1`. Required legacy icon metadata; stage selection now draws a live arena preview. |
 | `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. A [user stage](feature-roadmap.md#user-stages-road16) is never in Random, whatever this says. |
 | `sound` | Object | Bank identifier and independent optional music/sting pairs, below. |

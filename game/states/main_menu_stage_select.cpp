@@ -3,7 +3,6 @@
 #include "game/states/match_start.h"
 #include "game/states/end_menu_action.h"
 #include "game/states/user_stage_refusals_menu.h"
-#include "game/config/drawable_text.h"
 #include "game/save/save.h"
 #include "game/objects/level_end_info.h"
 #include "game/objects/crude_drawing.h"
@@ -306,10 +305,10 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 	const StageList* stages = this->data()->stages();
 	if (slot >= 0 && slot < static_cast<int>(stages->size()))
 	{
-		// Startup validates stage names with this same text conversion.
-		return drawable_text::widen_drawable(
-			stages->at(static_cast<size_t>(slot)).display_name,
-			"the stage list");
+		// A shipped stage's title is the locale's menu_text.stage_names; a user
+		// stage keeps its own display_name. Startup validates both.
+		const Stage& stage = stages->at(static_cast<size_t>(slot));
+		return this->text().stage_title(stage.name, stage.display_name, "the stage list");
 	}
 	return L"ERROR";
 }

@@ -148,7 +148,7 @@ void ControlsSettingsMenu::refresh_help()
 {
 	// MenuPage captured this copy when it was constructed. Refresh only the
 	// effective keys, retaining the page's authored template, font and geometry.
-	this->controls_->set_text(controls_text::controls_help(this->text().help.controls,
+	this->controls_->set_text(controls_text::controls_help(this->text().controls, this->text().help.controls,
 		this->settings_session()->input_bindings()));
 	this->controls_->set_scale(1.0f);
 	const RectangleF bounds = this->controls_->bounds();

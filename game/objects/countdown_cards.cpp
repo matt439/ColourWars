@@ -88,18 +88,19 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 		this->controls_reminders_.push_back(std::move(reminder));
 	};
 
+	const ControlsCopy& copy = this->presentation_->menu_text().controls;
 	if (anyone_on_gamepad)
 	{
 		const InputBindings bindings = this->input_bindings_ ? *this->input_bindings_ : InputBindings{};
-		add_reminder(L"GAMEPAD", controls_text::pad_controls_reminder(bindings, this->gamepad_slots_));
+		add_reminder(copy.gamepad_heading, controls_text::pad_controls_reminder(copy, bindings, this->gamepad_slots_));
 		this->gamepad_controls_ = this->controls_reminders_.back().text.get();
 		this->gamepad_pads_ = bindings.pads;
 	}
 	if (anyone_on_keyboard)
 	{
 		const InputBindings bindings = this->input_bindings_ ? *this->input_bindings_ : InputBindings{};
-		this->keyboard_controls_words_ = controls_text::keyboard_controls_reminder(bindings);
-		add_reminder(L"KEYBOARD + MOUSE", this->keyboard_controls_words_);
+		this->keyboard_controls_words_ = controls_text::keyboard_controls_reminder(copy, bindings);
+		add_reminder(copy.keyboard_heading, this->keyboard_controls_words_);
 		this->keyboard_controls_ = this->controls_reminders_.back().text.get();
 	}
 	this->centre_controls_text();
@@ -107,16 +108,17 @@ void CountdownCards::build(const std::vector<Player*>& players, const PaperCard&
 
 void CountdownCards::refresh_controls()
 {
+	const ControlsCopy& copy = this->presentation_->menu_text().controls;
 	bool changed = false;
 	if (this->gamepad_controls_ && this->input_bindings_ && this->gamepad_pads_ != this->input_bindings_->pads)
 	{
-		this->gamepad_controls_->set_text(controls_text::pad_controls_reminder(*this->input_bindings_, this->gamepad_slots_));
+		this->gamepad_controls_->set_text(controls_text::pad_controls_reminder(copy, *this->input_bindings_, this->gamepad_slots_));
 		this->gamepad_pads_ = this->input_bindings_->pads;
 		changed = true;
 	}
 	if (this->keyboard_controls_)
 	{
-		const std::wstring words = controls_text::keyboard_controls_reminder(
+		const std::wstring words = controls_text::keyboard_controls_reminder(copy,
 			this->input_bindings_ ? *this->input_bindings_ : InputBindings{});
 		if (this->keyboard_controls_words_ != words)
 		{

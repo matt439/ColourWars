@@ -7,6 +7,7 @@
 #include "engine/assets/json.h"
 #include "game/game_data.h"
 #include "game/config/presentation/presentation.h"
+#include "game/config/content_validation.h"
 #include "game/save/save.h"
 #include "game/states/menu_content_validation.h"
 #include "game/config/tuning.h"
@@ -56,6 +57,7 @@ void TuningTarget::validate(std::string_view candidate_text, const std::string& 
 		// Startup's checks of numbers against the loaded resources, without
 		// building every stage.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
+		validate_controls_reminders(*candidate, *this->presentation_, *context->render_resources());
 		validate_mode_durations(context->render_resources(), *candidate, *this->presentation_);
 	}
 	this->candidate_ = std::move(candidate);
@@ -89,6 +91,10 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		labrador::parse_json(candidate_text, source_name));
 	if (checks_levels && can_check_levels(context))
 	{
+		// The candidate is the base text, so its stage_names must still be
+		// the levels' display_names.
+		check_stage_names_agree(labrador::parse_json(candidate_text, source_name).root(),
+			*context->stages());
 		check_levels(*this->tuning_, *candidate, *context);
 	}
 	else if (can_check_resources(context))
@@ -96,6 +102,7 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		// Frame sizes against each frame's native texels, and the countdown
 		// box against its heading: startup's checks that need the resources.
 		candidate->validate_resources(*context->render_resources(), *context->audio_resources());
+		validate_controls_reminders(*this->tuning_, *candidate, *context->render_resources());
 		validate_mode_durations(context->render_resources(), *this->tuning_, *candidate);
 		validate_mode_stage_rules(context->render_resources(), *candidate);
 	}

@@ -139,8 +139,10 @@ struct MatchTuning
 	// How much of the round's end the End menu's Watch Replay plays (ROAD#19).
 	float replay = 0.0f;
 
-	// Controls reminder shown during the countdown. Keep its text in sync with
-	// the input mapping; the drawn start signal lives in MatchPresentation.
+	// The controls reminder's look during the countdown. Its words are
+	// presentation.json's menu_text.controls, measured in this font by
+	// validate_controls_reminders (content_validation.h); the drawn start
+	// signal lives in MatchPresentation.
 	std::string controls_font;
 	labrador::Colour controls_colour = labrador::Colour::white;
 	labrador::Colour controls_shadow_colour = labrador::Colour::black;

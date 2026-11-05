@@ -28,8 +28,9 @@ namespace
             "       ColourWarsRegisterStage --help\n\n"
             "Preview registration of an existing game/content/levels/<name>.json.\n"
             "Relative stage paths are relative to --repo. Preview writes nothing.\n"
-            "--apply explicitly applies the previewed manifest and runtime asset entries.\n"
-            "Already registered in both lists is a successful no-op.\n"
+            "--apply explicitly applies the previewed manifest, runtime asset and\n"
+            "presentation.json menu_text.stage_names entries.\n"
+            "Already registered in all three files is a successful no-op.\n"
             "Ordinary editor Save/Save As does not register stages.\n"
             "Exit codes: 0 success/no-op, 2 usage error, 1 validation or apply failure.\n";
     }
@@ -73,9 +74,10 @@ namespace
             << "Name: " << preview.name << '\n';
         if (preview.already_registered)
         {
-            std::cout << "Already registered in both files; no changes.\n"
+            std::cout << "Already registered in all three files; no changes.\n"
                 << "  " << shown(preview.manifest.path) << '\n'
-                << "  " << shown(preview.runtime_assets.path) << '\n';
+                << "  " << shown(preview.runtime_assets.path) << '\n'
+                << "  " << shown(preview.presentation.path) << '\n';
         }
         else
         {
@@ -83,7 +85,9 @@ namespace
                 << "  " << shown(preview.manifest.path) << '\n'
                 << "    Add to the level asset group's names: \"" << preview.name << "\"\n"
                 << "  " << shown(preview.runtime_assets.path) << '\n'
-                << "    Add to COLOURWARS_RUNTIME_ASSETS: \"levels/" << preview.name << ".json\"\n";
+                << "    Add to COLOURWARS_RUNTIME_ASSETS: \"levels/" << preview.name << ".json\"\n"
+                << "  " << shown(preview.presentation.path) << '\n'
+                << "    Add to menu_text.stage_names: \"" << preview.name << "\" with the level's display_name\n";
         }
         std::cout.flush();
         if (!std::cout) throw std::runtime_error("Cannot write the registration preview; no changes applied.");
@@ -119,8 +123,8 @@ int wmain(int argc, wchar_t** argv)
             return std::cout ? 0 : 1;
         }
         const bool applied = colourwars_editor::apply_stage_registration(preview);
-        std::cout << (applied ? "Registered in both files. Configure/build the game to stage the level.\n" :
-            "Already registered in both files; no changes.\n");
+        std::cout << (applied ? "Registered in all three files. Configure/build the game to stage the level.\n" :
+            "Already registered in all three files; no changes.\n");
         return std::cout ? 0 : 1;
     }
     catch (const colourwars_editor::StageRegistrationError& error)

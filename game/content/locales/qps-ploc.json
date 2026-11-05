@@ -173,6 +173,21 @@
         "team_a_picks": "[Team A picks the arena]",
         "team_b_picks": "[Team B picks the arena]"
       },
+      "stage_names": {
+        "king_of_the_hill": "[King of the Hill]",
+        "turbulence": "[Turbulence]",
+        "close_quarters": "[Close Quarters]",
+        "movement_course": "[Movement Course]",
+        "crossfeed": "[Crossfeed]",
+        "press_tower": "[Press Tower]",
+        "turbulence_blockout": "[Turbulence Yard]",
+        "turbulence_mover_trial": "[Turbulence Yard - Mover Trial]",
+        "turbulence_slab_trial": "[Turbulence Yard - Slab Trial]",
+        "turbulence_ferry_trial": "[Turbulence Yard - Ferry Trial]",
+        "turbulence_gate_trial": "[Turbulence Yard - Gate Trial]",
+        "turbulence_lift_trial": "[Turbulence Yard - Lift Trial]",
+        "turbulence_paint_lift_trial": "[Turbulence Yard - Paint Lift Trial]"
+      },
       "records": {
         "new_best": "[NEW BEST]",
         "stage_best": "[STAGE BEST]",
@@ -220,6 +235,26 @@
         "get_ready": "[GET READY]",
         "resuming": "[RESUMING]",
         "replay": "[REPLAY]"
+      },
+      "controls": {
+        "keyboard_heading": "[KEYBOARD + MOUSE]",
+        "gamepad_heading": "[GAMEPAD]",
+        "keyboard_reminder": "[{left} / {right}  Move    |    {drop}  Drop through]\n[{jump}  Jump    |    {shoot}  Shoot]\n[Mouse  Aim    |    {pause}  Pause]",
+        "gamepad_reminder": "[Left stick  Move    |    Stick down  Drop through]\n[{pad_jump}  Jump    |    {pad_shoot}  Shoot]\n[Right stick  Aim    |    {pad_pause}  Pause]",
+        "gamepad_per_pad_reminder": "[Left stick  Move    |    Stick down  Drop through]\n{pads}\n[Right stick  Aim]",
+        "gamepad_pad_line": "[Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_pause} Pause]",
+        "per_pad": "[per pad]",
+        "labels": {
+          "space": "[Space]",
+          "escape": "[Esc]",
+          "none": "[None]",
+          "start": "[Start]",
+          "mouse_left": "[Left click]",
+          "mouse_right": "[Right click]",
+          "mouse_middle": "[Middle click]",
+          "mouse_x1": "[Mouse 4]",
+          "mouse_x2": "[Mouse 5]"
+        }
       },
       "headings": {
         "home": "[Make your mark.]",

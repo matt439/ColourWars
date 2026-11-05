@@ -138,6 +138,8 @@ namespace colourwars_editor
         bool can_redo() const;
         bool dirty() const;
         const std::filesystem::path& path() const;
+        // The root display_name, or empty when it is absent or not text.
+        std::string display_name() const;
         std::vector<std::string> validate() const;
         // Resource names the game would refuse at startup: one line each, empty when
         // every name resolves in the catalog. Separate from validate(), which is

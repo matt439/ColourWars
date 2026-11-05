@@ -2,6 +2,7 @@
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
+#include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
 #include "game/directory_consts.h"
 #include "game/fatal_report.h"
@@ -122,6 +123,10 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// Check every name, stage and authored string against the loaded assets
 		// before the first menu. The Debug `reload` command runs the same checks.
 		phase = FailurePhase::validation;
+		// A shipped stage's title is presentation.json's menu_text.stage_names,
+		// whose English must stay its level file's display_name; judged on the
+		// base file, whatever the run's locale.
+		check_stage_names_agree(presentation_path, stage_catalog.stages());
 		validate_shell_content(tuning, presentation, app.render_resources(),
 			app.audio_resources(), stage_catalog.level_infos(), stage_catalog.stages(),
 			settings_session.play_settings());

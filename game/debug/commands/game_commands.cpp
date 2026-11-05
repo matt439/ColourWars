@@ -5,6 +5,7 @@
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/render/text_encoding.h"
+#include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
 #include "game/debug/replay/bot.h"
 #include "game/debug/debug_director_impl.h"
@@ -406,6 +407,7 @@ DebugStatus DebugDirectorImpl::reload_content()
 		auto presentation = locale != nullptr ?
 			std::make_unique<Presentation>(locale->presentation(presentation_path)) :
 			std::make_unique<Presentation>(presentation_path.c_str());
+		check_stage_names_agree(presentation_path, *this->data_->stages());
 		validate_shell_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
 			*this->data_->stages(), this->data_->settings_session()->play_settings());

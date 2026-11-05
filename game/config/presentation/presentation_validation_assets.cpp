@@ -84,6 +84,17 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 		}
 	}
 
+	// The controls reminders' headings. Each card is as wide as its widest
+	// line and the cards scale together to fit the window (CountdownCards::
+	// centre_controls_text), so only the glyphs and bounds are checked here;
+	// the reminders themselves are measured in tuning's controls font by
+	// validate_controls_reminders (game/config/content_validation.h).
+	const ControlsCopy& controls = this->presentation_.menu_text_.controls;
+	std::ignore = fixed_menu_size("menu_text.controls.keyboard_heading", controls.keyboard_heading,
+		this->presentation_.menu_.detail_font);
+	std::ignore = fixed_menu_size("menu_text.controls.gamepad_heading", controls.gamepad_heading,
+		this->presentation_.menu_.detail_font);
+
 	// The HUD's copy: the team labels in the identity box, which grows with
 	// its text, and the meter labels, which must fit above their meter at
 	// any pane size (the label scales by at most width / reference_width).

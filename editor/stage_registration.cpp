@@ -15,12 +15,14 @@
 #include <rapidjson/reader.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cctype>
 #include <exception>
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <set>
 #include <string_view>
 #include <system_error>
@@ -146,16 +148,55 @@ namespace colourwars_editor
             return { value.GetString(), value.GetStringLength() };
         }
 
-        rapidjson::Document manifest_document(const std::string& source)
+        rapidjson::Document json_document(const std::string& source, const std::string& label)
         {
             std::string_view bytes = source;
             if (bytes.starts_with("\xEF\xBB\xBF")) bytes.remove_prefix(3);
             rapidjson::Document document;
             document.Parse<rapidjson::kParseValidateEncodingFlag>(bytes.data(), bytes.size());
-            if (document.HasParseError()) fail("Invalid manifest JSON at byte " +
+            if (document.HasParseError()) fail("Invalid " + label + " JSON at byte " +
                 std::to_string(document.GetErrorOffset()) + ": " + rapidjson::GetParseError_En(document.GetParseError()));
-            if (!document.IsObject()) fail("manifest.json must be an object");
+            if (!document.IsObject()) fail(label + " must be an object");
             return document;
+        }
+
+        rapidjson::Document manifest_document(const std::string& source) { return json_document(source, "manifest.json"); }
+
+        // presentation.json's menu_text.stage_names (docs/localisation.md):
+        // each shipped stage's title by manifest id, which the game requires
+        // to equal the level's display_name. Comment keys are skipped.
+        struct StageNames
+        {
+            std::vector<std::pair<std::string, std::string>> entries;
+        };
+
+        StageNames stage_names(const std::string& source)
+        {
+            const rapidjson::Document presentation = json_document(source, "presentation.json");
+            const auto member = [](const Json& object, const char* name) -> const Json&
+            {
+                const Json* found = nullptr;
+                for (auto it = object.MemberBegin(); it != object.MemberEnd(); ++it)
+                {
+                    if (std::string_view(it->name.GetString(), it->name.GetStringLength()) != name) continue;
+                    if (found) fail(std::string("Duplicate presentation.json field: ") + name);
+                    found = &it->value;
+                }
+                if (!found || !found->IsObject()) fail(std::string("presentation.json needs a '") + name + "' object");
+                return *found;
+            };
+            const Json& names = member(member(presentation, "menu_text"), "stage_names");
+            StageNames result;
+            std::set<std::string> seen;
+            for (auto it = names.MemberBegin(); it != names.MemberEnd(); ++it)
+            {
+                const std::string id(it->name.GetString(), it->name.GetStringLength());
+                if (!seen.insert(id).second) fail("Duplicate presentation.json menu_text.stage_names key: " + id);
+                if (!id.empty() && id.front() == '_') continue;
+                if (!it->value.IsString()) fail("presentation.json menu_text.stage_names." + id + " must be text");
+                result.entries.emplace_back(id, std::string(it->value.GetString(), it->value.GetStringLength()));
+            }
+            return result;
         }
 
         // Only literal lists are editable. Other commands/comments survive byte
@@ -347,6 +388,109 @@ namespace colourwars_editor
             return result;
         }
 
+        // Where menu_text.stage_names' members are, by NamesSpan's means: the
+        // reader parses a copied StringStream, so Tell() is at a string's quote.
+        class StageNamesSpan : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, StageNamesSpan>
+        {
+        public:
+            explicit StageNamesSpan(const rapidjson::StringStream& stream) : stream_(stream) {}
+            bool Null() { scalar(); return true; }
+            bool Bool(bool) { scalar(); return true; }
+            bool Int(int) { scalar(); return true; }
+            bool Uint(unsigned) { scalar(); return true; }
+            bool Int64(std::int64_t) { scalar(); return true; }
+            bool Uint64(std::uint64_t) { scalar(); return true; }
+            bool Double(double) { scalar(); return true; }
+            bool String(const char*, rapidjson::SizeType, bool)
+            {
+                if (inside())
+                {
+                    std::size_t end = stream_.Tell() + 1;
+                    while (stream_.head_[end] != '"')
+                    {
+                        if (stream_.head_[end] == '\\') ++end;
+                        ++end;
+                    }
+                    value_end = end + 1;
+                }
+                return true;
+            }
+            bool Key(const char* value, rapidjson::SizeType length, bool)
+            {
+                if (inside())
+                {
+                    if (first_key == std::string::npos) first_key = stream_.Tell();
+                    last_key = stream_.Tell();
+                }
+                frames_.back().key.assign(value, length);
+                return true;
+            }
+            bool StartObject() { scalar(); open(); return true; }
+            bool StartArray() { scalar(); open(); return true; }
+            bool EndObject(rapidjson::SizeType)
+            {
+                if (frames_.back().path == wanted_) { closing = stream_.Tell() - 1; ++found; }
+                frames_.pop_back(); return true;
+            }
+            bool EndArray(rapidjson::SizeType) { frames_.pop_back(); return true; }
+            std::size_t first_key = std::string::npos, last_key = std::string::npos;
+            std::size_t value_end = std::string::npos, closing = std::string::npos;
+            std::size_t found = 0;
+            bool other = false;
+        private:
+            struct Frame { std::string path, key; };
+            const rapidjson::StringStream& stream_;
+            const std::string wanted_ = "/k9:menu_text/k11:stage_names";
+            std::vector<Frame> frames_;
+            bool inside() const { return !frames_.empty() && frames_.back().path == wanted_; }
+            void scalar() { if (inside()) other = true; }
+            // Array elements are never under the wanted object's path.
+            void open()
+            {
+                const std::string path = frames_.empty() ? std::string() :
+                    frames_.back().path + "/k" + std::to_string(frames_.back().key.size()) + ":" + frames_.back().key;
+                frames_.push_back({ path, {} });
+            }
+        };
+
+        std::string json_string(const std::string& text)
+        {
+            constexpr char digits[] = "0123456789abcdef";
+            std::string result = "\"";
+            for (const char c : text)
+            {
+                const unsigned char byte = static_cast<unsigned char>(c);
+                if (c == '"' || c == '\\') { result += '\\'; result += c; }
+                else if (byte < 0x20) { result += "\\u00"; result += digits[byte >> 4]; result += digits[byte & 15]; }
+                else result += c;
+            }
+            return result + "\"";
+        }
+
+        // The new entry as the table's last member, laid out like the one before it.
+        std::string append_stage_name(const std::string& source, const std::string& name, const std::string& display_name)
+        {
+            const std::size_t bom = source.starts_with("\xEF\xBB\xBF") ? 3 : 0;
+            rapidjson::StringStream stream(source.c_str() + bom);
+            StageNamesSpan handler(stream);
+            rapidjson::Reader reader;
+            if (!reader.Parse<rapidjson::kParseValidateEncodingFlag>(stream, handler) || handler.found != 1 ||
+                handler.closing == std::string::npos)
+                fail("Cannot locate presentation.json's menu_text.stage_names object");
+            if (handler.other) fail("presentation.json menu_text.stage_names may hold only text");
+            if (handler.last_key == std::string::npos || handler.value_end == std::string::npos)
+                fail("presentation.json menu_text.stage_names is empty; add its first entry by hand");
+            const std::size_t first = bom + handler.first_key;
+            const std::size_t last = bom + handler.last_key;
+            const std::size_t end = bom + handler.value_end;
+            const std::size_t close = bom + handler.closing;
+            const std::string entry = "\"" + name + "\": " + json_string(display_name);
+            const bool multiline = source.find('\n', first) < close;
+            std::string result = source;
+            result.insert(end, multiline ? "," + newline(source, end) + indentation(source, last) + entry : ", " + entry);
+            return result;
+        }
+
         std::string append_asset(const std::string& source, const AssetList& list, const std::string& path)
         {
             if (list.entries.empty()) fail("The reviewed runtime asset list is empty");
@@ -446,11 +590,15 @@ namespace colourwars_editor
         result.name = shown(result.stage.stem());
         if (!valid_basename(result.name)) fail("Invalid stage basename: use ASCII letters/digits/_/-, "
             "no leading hyphen or Windows device name");
+        if (result.name.front() == '_') fail("A shipped stage's basename must not start with '_': "
+            "presentation.json's menu_text.stage_names would read its entry as a comment");
         result.stage_original = read(result.stage);
         result.manifest.path = safe_existing(content / "manifest.json", false);
         result.runtime_assets.path = safe_existing(result.repository / "cmake/runtime_assets.cmake", false);
+        result.presentation.path = safe_existing(content / "presentation.json", false);
         result.manifest.original = read(result.manifest.path);
         result.runtime_assets.original = read(result.runtime_assets.path);
+        result.presentation.original = read(result.presentation.path);
 
         const rapidjson::Document manifest = manifest_document(result.manifest.original);
         const Json& groups = field(manifest, "assets");
@@ -458,6 +606,7 @@ namespace colourwars_editor
         std::vector<std::string> expected{ "manifest.json", "tuning.json", "presentation.json" };
         std::set<std::string> identifiers;
         std::size_t level_group = 0, level_groups = 0, registered = 0;
+        std::vector<std::string> level_names;
         for (rapidjson::SizeType index = 0; index < groups.Size(); ++index)
         {
             const Json& group = groups[index];
@@ -489,6 +638,7 @@ namespace colourwars_editor
                 if (!valid_basename(name)) fail("Invalid manifest basename: " + name);
                 if (!identifiers.insert(kind + ":" + folded(name)).second)
                     fail("Duplicate/case-alias manifest identifier: " + name);
+                if (kind == "level") level_names.push_back(name);
                 if (kind == "level" && folded(name) == folded(result.name))
                 {
                     if (name != result.name) fail("Stage basename has different case from its manifest identifier");
@@ -535,10 +685,24 @@ namespace colourwars_editor
             }
             else safe_existing(path, false);
         }
-        if ((registered == 0) != (staged == 0))
-            fail("Partial stage registration: the name is present in only one content list; reconcile both lists first");
+        const StageNames titles = stage_names(result.presentation.original);
+        std::vector<std::string> titled;
+        const std::string* title = nullptr;
+        for (const auto& [id, text] : titles.entries)
+        {
+            titled.push_back(id);
+            if (folded(id) != folded(result.name)) continue;
+            if (id != result.name) fail("Stage basename has different case in presentation.json's menu_text.stage_names");
+            title = &text;
+        }
+        if ((registered == 0) != (staged == 0) || (registered == 0) != (title == nullptr))
+            fail("Partial stage registration: the name is present in only some of manifest.json, "
+                "runtime_assets.cmake and presentation.json's menu_text.stage_names; reconcile all three first");
         std::sort(expected.begin(), expected.end()); std::sort(actual.begin(), actual.end());
         if (expected != actual) fail("Manifest and runtime asset list already disagree; reconcile them before registering a stage");
+        std::sort(level_names.begin(), level_names.end()); std::sort(titled.begin(), titled.end());
+        if (level_names != titled) fail("Manifest levels and presentation.json's menu_text.stage_names already disagree; "
+            "reconcile them before registering a stage");
 
         const ContentCatalog catalog = load_content_catalog(content);
         if (!catalog.manifest_read || !catalog.problems.empty())
@@ -552,64 +716,113 @@ namespace colourwars_editor
         document.load(result.stage);
         const std::vector<std::string> unresolved = document.unresolved_resources(catalog);
         if (!unresolved.empty()) fail("Stage resource validation failed: " + unresolved.front());
+        // The game draws a shipped stage by its stage_names entry, whose base
+        // English must be the level's display_name byte for byte, on one line.
+        const rapidjson::Document level = json_document(result.stage_original, shown(result.stage.filename()));
+        const std::string display_name = text(field(level, "display_name"), "display_name");
+        if (display_name.find_first_not_of(' ') == std::string::npos ||
+            display_name.find_first_of("\r\n") != std::string::npos)
+            fail("A shipped stage's display_name must be one nonblank line: "
+                "presentation.json's menu_text.stage_names carries it as the stage's title");
+        if (title && *title != display_name)
+            fail("presentation.json's menu_text.stage_names." + result.name + " is '" + *title +
+                "' but the level's display_name is '" + display_name + "'; make them agree");
         recheck(result.stage, result.stage_original);
         recheck(result.manifest.path, result.manifest.original);
         recheck(result.runtime_assets.path, result.runtime_assets.original);
+        recheck(result.presentation.path, result.presentation.original);
         result.already_registered = registered == 1;
         result.manifest.proposed = result.already_registered ? result.manifest.original :
             append_name(result.manifest.original, level_group, result.name);
         result.runtime_assets.proposed = result.already_registered ? result.runtime_assets.original :
             append_asset(result.runtime_assets.original, runtime, level_asset);
+        result.presentation.proposed = result.already_registered ? result.presentation.original :
+            append_stage_name(result.presentation.original, result.name, display_name);
+        if (!result.already_registered)
+        {
+            const StageNames proposed = stage_names(result.presentation.proposed);
+            if (proposed.entries.size() != titles.entries.size() + 1 || proposed.entries.back().first != result.name ||
+                proposed.entries.back().second != display_name)
+                fail("The proposed presentation.json does not read back the new stage name; add it by hand");
+        }
         return result;
     }
 
     bool apply_stage_registration(const StageRegistrationPreview& preview, const StageRegistrationReplace& replace)
     {
         const StageRegistrationPreview fresh = preview_stage_registration(preview.repository, preview.stage);
-        if (fresh.name != preview.name || fresh.stage_original != preview.stage_original ||
-            !same_path(fresh.manifest.path, preview.manifest.path) ||
-            !same_path(fresh.runtime_assets.path, preview.runtime_assets.path) ||
-            fresh.manifest.original != preview.manifest.original || fresh.manifest.proposed != preview.manifest.proposed ||
-            fresh.runtime_assets.original != preview.runtime_assets.original ||
-            fresh.runtime_assets.proposed != preview.runtime_assets.proposed ||
-            fresh.already_registered != preview.already_registered)
-            fail("Registration inputs or proposal changed; preview again");
+        const std::array<const StageRegistrationFile*, 3> files{ &fresh.manifest, &fresh.runtime_assets, &fresh.presentation };
+        const std::array<const StageRegistrationFile*, 3> previewed{ &preview.manifest, &preview.runtime_assets,
+            &preview.presentation };
+        bool same = fresh.name == preview.name && fresh.stage_original == preview.stage_original &&
+            fresh.already_registered == preview.already_registered;
+        for (std::size_t index = 0; index < files.size(); ++index)
+            same = same && same_path(files[index]->path, previewed[index]->path) &&
+                files[index]->original == previewed[index]->original && files[index]->proposed == previewed[index]->proposed;
+        if (!same) fail("Registration inputs or proposal changed; preview again");
         if (fresh.already_registered) return false;
-        Prepared manifest_new(fresh.manifest.path, "candidate", fresh.manifest.proposed);
-        Prepared runtime_new(fresh.runtime_assets.path, "candidate", fresh.runtime_assets.proposed);
-        Prepared manifest_original(fresh.manifest.path, "original", fresh.manifest.original);
-        Prepared runtime_original(fresh.runtime_assets.path, "original", fresh.runtime_assets.original);
-        recheck(fresh.stage, fresh.stage_original);
-        recheck(fresh.manifest.path, fresh.manifest.original);
-        recheck(fresh.runtime_assets.path, fresh.runtime_assets.original);
+        std::vector<std::unique_ptr<Prepared>> candidates, originals;
+        for (const StageRegistrationFile* file : files)
+            candidates.push_back(std::make_unique<Prepared>(file->path, "candidate", file->proposed));
+        for (const StageRegistrationFile* file : files)
+            originals.push_back(std::make_unique<Prepared>(file->path, "original", file->original));
         const auto perform = [&](const fs::path& source, const fs::path& target)
         { if (replace) replace(source, target); else replace_file(source, target); };
-        perform(manifest_new.path, fresh.manifest.path);
-        try
+        // Before each replacement, every file is what the order says it should
+        // be by then: the ones done are proposed, the rest still original.
+        const auto recheck_all = [&](std::size_t done)
         {
             recheck(fresh.stage, fresh.stage_original);
-            recheck(fresh.manifest.path, fresh.manifest.proposed);
-            recheck(fresh.runtime_assets.path, fresh.runtime_assets.original);
-            perform(runtime_new.path, fresh.runtime_assets.path);
+            for (std::size_t index = 0; index < files.size(); ++index)
+                recheck(files[index]->path, index < done ? files[index]->proposed : files[index]->original);
+        };
+        std::size_t done = 0;
+        try
+        {
+            for (; done < files.size(); ++done)
+            {
+                recheck_all(done);
+                perform(candidates[done]->path, files[done]->path);
+            }
         }
         catch (...)
         {
-            const std::exception_ptr second = std::current_exception();
-            try
+            const std::exception_ptr failure = std::current_exception();
+            if (done == 0) throw;
+            // Restore the replaced files newest first. If any cannot be
+            // restored, every original backup not used up by a restore is
+            // retained and named, in file order.
+            std::vector<bool> restored(files.size(), false);
+            std::string rollback_failures;
+            for (std::size_t index = done; index-- > 0;)
             {
-                recheck(fresh.manifest.path, fresh.manifest.proposed);
-                perform(manifest_original.path, fresh.manifest.path);
+                try
+                {
+                    recheck(files[index]->path, files[index]->proposed);
+                    perform(originals[index]->path, files[index]->path);
+                    restored[index] = true;
+                }
+                catch (...)
+                {
+                    rollback_failures += (rollback_failures.empty() ? "" : "; ") + shown(files[index]->path) + ": " +
+                        failure_text(std::current_exception());
+                }
             }
-            catch (...)
+            if (!rollback_failures.empty())
             {
-                const std::exception_ptr rollback = std::current_exception();
-                manifest_original.retain(); runtime_original.retain();
-                throw StageRegistrationError(std::string("Registration failed: ") + failure_text(second) +
-                    "; first-file rollback could not complete: " + failure_text(rollback) +
-                    ". Original backups retained; inspect both content lists before retrying.",
-                    { manifest_original.path, runtime_original.path });
+                std::vector<fs::path> retained;
+                for (std::size_t index = 0; index < files.size(); ++index)
+                {
+                    if (restored[index]) continue;
+                    originals[index]->retain();
+                    retained.push_back(originals[index]->path);
+                }
+                throw StageRegistrationError(std::string("Registration failed: ") + failure_text(failure) +
+                    "; rollback could not complete: " + rollback_failures +
+                    ". Original backups retained; inspect all three content files before retrying.", retained);
             }
-            throw StageRegistrationError(std::string("Registration failed; the first file was restored: ") + failure_text(second));
+            throw StageRegistrationError(std::string("Registration failed; the replaced files were restored: ") +
+                failure_text(failure));
         }
         return true;
     }

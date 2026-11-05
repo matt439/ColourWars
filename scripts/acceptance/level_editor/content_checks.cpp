@@ -80,6 +80,17 @@ namespace level_editor_acceptance
         const fs::path content = repo / "game/content";
         const ContentCatalog catalog = load_content_catalog(content);
         require(catalog.manifest_read && catalog.problems.empty(), "Source content catalog did not load cleanly");
+        // presentation.json's stage_names: one entry per manifest stage, its
+        // English the level's display_name, which save guidance compares.
+        require(catalog.stage_names_read && catalog.stage_names.size() == catalog.stages.size(),
+            "Catalog did not read one menu_text.stage_names entry per manifest stage");
+        for (const std::string& stage : catalog.stages)
+        {
+            const rapidjson::Document level = parse(contents(content / "levels" / (stage + ".json")));
+            require(catalog.stage_names.contains(stage) &&
+                catalog.stage_names.at(stage) == level["display_name"].GetString(),
+                "menu_text.stage_names disagrees with the display_name of " + stage);
+        }
         for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
             require(catalog.sprite_frames.contains(sheet) && catalog.sprite_frames.at(sheet).has_value(),
                 std::string("Catalog lacks manifest sprite sheet ") + sheet);
@@ -165,6 +176,7 @@ namespace level_editor_acceptance
         fs::create_directories(partial / "textures");
         fs::create_directories(partial / "sounds");
         fs::copy_file(content / "manifest.json", partial / "manifest.json");
+        fs::copy_file(content / "presentation.json", partial / "presentation.json");
         fs::copy_file(content / "textures/sprite_sheet_1.json", partial / "textures/sprite_sheet_1.json");
         write(partial / "textures/painter.json", "{ \"sprite_frames\": [");
         write(partial / "sounds/paint_exe.json",
@@ -196,6 +208,21 @@ namespace level_editor_acceptance
             " \"sound_effect_instances\": [{ \"name\": \"c\", \"wave\": \"a\" }] }");
         require(*load_content_catalog(partial).sound_effects.at("paint_exe") ==
             std::set<std::string>{ "a", "b", "c" }, "Each wave must be an effect when the bank asks for it");
+
+        // A broken stage_names leaves only titles unchecked: it is not a
+        // resource problem, so resource names are still checked.
+        const fs::path untitled = scratch / "untitled-content";
+        fs::create_directories(untitled);
+        fs::copy_file(content / "manifest.json", untitled / "manifest.json");
+        write(untitled / "presentation.json", "{ \"menu_text\": {} }");
+        const ContentCatalog untitled_catalog = load_content_catalog(untitled);
+        require(untitled_catalog.manifest_read && !untitled_catalog.stage_names_read &&
+            untitled_catalog.stage_names.empty() &&
+            untitled_catalog.stage_names_problem.find("'stage_names' object") != std::string::npos &&
+            untitled_catalog.problems.size() == untitled_catalog.sprite_frames.size() + untitled_catalog.sound_effects.size(),
+            "A broken menu_text.stage_names was reported as a resource problem");
+        require(catalog.stage_names_problem.empty() && partial_catalog.stage_names_problem.empty(),
+            "Readable stage_names reported a problem");
 
         const ContentCatalog missing = load_content_catalog(scratch / "no-content-here");
         require(!missing.manifest_read && missing.problems.size() == 1 &&

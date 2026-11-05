@@ -129,6 +129,30 @@ namespace colourwars_editor
             catalog.sprite_frames.clear();
             catalog.sound_effects.clear();
             catalog.stages.clear();
+            return catalog;
+        }
+        try
+        {
+            const rapidjson::Document presentation = read(content_directory / "presentation.json", "presentation.json");
+            const auto member = [](const Json& object, const char* field) -> const Json&
+            {
+                if (!object.IsObject() || !object.HasMember(field) || !object[field].IsObject())
+                    throw std::runtime_error(std::string("presentation.json needs a '") + field + "' object");
+                return object[field];
+            };
+            const Json& names = member(member(presentation, "menu_text"), "stage_names");
+            for (auto entry = names.MemberBegin(); entry != names.MemberEnd(); ++entry)
+            {
+                const std::string id(entry->name.GetString(), entry->name.GetStringLength());
+                if (!id.empty() && id.front() == '_') continue;
+                catalog.stage_names[id] = text(entry->value, "presentation.json menu_text.stage_names");
+            }
+            catalog.stage_names_read = true;
+        }
+        catch (const std::exception& error)
+        {
+            catalog.stage_names_problem = error.what();
+            catalog.stage_names.clear();
         }
         return catalog;
     }

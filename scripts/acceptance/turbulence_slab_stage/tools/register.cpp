@@ -58,7 +58,9 @@ namespace
         return names;
     }
 
-    void check_originals(const fs::path& repo, const fs::path& receipt)
+    // Registration's third file is presentation.json (its stage_names entry),
+    // so once applied only tuning.json must still match its receipt copy.
+    void check_originals(const fs::path& repo, const fs::path& receipt, bool registered = false)
     {
         const auto content = repo / "game/content";
         for (const auto& name : old_names(read(receipt / "manifest-before.json")))
@@ -67,7 +69,10 @@ namespace
                 "An existing source arena changed during slab authoring/registration");
         }
         for (const char* name : { "tuning.json", "presentation.json" })
-        { require(read(content / name) == read(receipt / "before" / name), "Source tuning/presentation changed during registration"); }
+        {
+            if (registered && std::string_view(name) == "presentation.json") { continue; }
+            require(read(content / name) == read(receipt / "before" / name), "Source tuning/presentation changed during registration");
+        }
     }
 
     void check_geometry(const fs::path& repo, const std::string& private_bytes, const std::string& authored_bytes)
@@ -125,8 +130,9 @@ namespace
         require(!preview.already_registered && preview.name == stage_name, "Slab stage preview was not a fresh explicit registration");
         write_new(receipt / "manifest-proposed.json", preview.manifest.proposed);
         write_new(receipt / "runtime-proposed.cmake", preview.runtime_assets.proposed);
+        write_new(receipt / "presentation-proposed.json", preview.presentation.proposed);
         write_new(receipt / "author-result.json", "{\"outcome\":\"authored-and-previewed\",\"registered\":false,\"actual_editor_save_reopen\":true,\"preserved_source_arenas\":8,\"objects\":24,\"original_objects\":22}\n");
-        std::cout << "PASS actual editor slab author/save/reopen and registration preview; no list mutation. Review receipt manifest/runtime proposals before --apply.\n";
+        std::cout << "PASS actual editor slab author/save/reopen and registration preview; no list mutation. Review receipt manifest/runtime/presentation proposals before --apply.\n";
     }
 
     void apply(const fs::path& repo, const fs::path& source, const fs::path& receipt)
@@ -139,27 +145,32 @@ namespace
         const auto preview = preview_stage_registration(repo, target);
         const auto proposed_manifest = read(receipt / "manifest-proposed.json");
         const auto proposed_runtime = read(receipt / "runtime-proposed.cmake");
+        const auto proposed_presentation = read(receipt / "presentation-proposed.json");
         if (preview.already_registered)
         {
-            require(preview.manifest.original == proposed_manifest && preview.runtime_assets.original == proposed_runtime,
+            require(preview.manifest.original == proposed_manifest && preview.runtime_assets.original == proposed_runtime &&
+                preview.presentation.original == proposed_presentation,
                 "An existing registration differs from the exact task-owned proposal");
-            std::cout << "PASS reconciled registration already matches both exact proposals; no mutation or repeated apply.\n";
+            std::cout << "PASS reconciled registration already matches all three exact proposals; no mutation or repeated apply.\n";
             return;
         }
         require(!fs::exists(receipt / "apply-started.json"), "Uncertain earlier apply requires receipt/outcome inspection before retry");
         require(preview.manifest.original == read(receipt / "manifest-before.json") &&
             preview.runtime_assets.original == read(receipt / "runtime-before.cmake") &&
-            preview.manifest.proposed == proposed_manifest && preview.runtime_assets.proposed == proposed_runtime,
-            "Registration lists/proposals changed after review; refusing stale two-file mutation");
+            preview.presentation.original == read(receipt / "before/presentation.json") &&
+            preview.manifest.proposed == proposed_manifest && preview.runtime_assets.proposed == proposed_runtime &&
+            preview.presentation.proposed == proposed_presentation,
+            "Registration lists/proposals changed after review; refusing stale three-file mutation");
         write_new(receipt / "apply-started.json", "{\"operation\":\"apply_stage_registration\",\"state\":\"started\"}\n");
         require(apply_stage_registration(preview), "Fresh slab registration unexpectedly did not apply");
         const auto after = preview_stage_registration(repo, target);
         require(after.already_registered && after.manifest.original == proposed_manifest &&
-            after.runtime_assets.original == proposed_runtime && read(target) == preview.stage_original,
-            "Slab registration did not produce both exact reviewed lists");
-        check_originals(repo, receipt);
+            after.runtime_assets.original == proposed_runtime && after.presentation.original == proposed_presentation &&
+            read(target) == preview.stage_original,
+            "Slab registration did not produce all three exact reviewed files");
+        check_originals(repo, receipt, true);
         write_new(receipt / "apply-result.json", "{\"outcome\":\"registered\",\"stage\":\"turbulence_slab_trial\",\"random\":false,\"actual_registration_api\":true,\"preserved_source_arenas\":8,\"objects\":24,\"original_objects\":22}\n");
-        std::cout << "PASS actual two-file slab registration API; stage explicit-only and source8/tuning preserved.\n";
+        std::cout << "PASS actual three-file slab registration API; stage explicit-only and source8/tuning preserved.\n";
     }
 }
 

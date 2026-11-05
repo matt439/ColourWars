@@ -7,11 +7,14 @@
 #include "game/match/match_award.h"
 #include <array>
 #include <cstddef>
+#include <functional>
+#include <map>
 #include <string>
 #include <string_view>
 #include "game/match/player_control.h"
 #include "game/match/series_stage_rule.h"
 #include "game/config/presentation/presentation_match.h"
+#include "game/input/controls_copy.h"
 
 enum class MenuHeading
 {
@@ -59,6 +62,8 @@ struct KeyboardJumpMenuText
 	std::wstring heading, move_left, move_right, jump, drop, shoot, pause, reset, help;
 	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_ready_mouse;
 	std::wstring capture_release, capture_rejected, capture_conflict, capture_cancelled, debug_collision;
+	// menu_text.controls.labels, copied when read, which release_key names.
+	ControlLabels labels;
 	std::wstring release_key(std::wstring_view label) const;
 	// Index by KeyboardAction: move_left, move_right, jump, drop, shoot, pause.
 	const std::wstring& row(size_t index) const;
@@ -297,6 +302,11 @@ struct MenuText
 	MenuEndText end;
 	MenuResultsText results;
 	MenuStageText stage;
+	// menu_text.stage_names: each shipped stage's title by manifest id, in
+	// the run's language. The base text equals the level file's display_name
+	// (validate_stage_names, check_stage_names_agree); a user stage is never
+	// in it and keeps its own display_name.
+	std::map<std::string, std::wstring, std::less<>> stage_names;
 	StageScanMenuText stage_scan;
 	MenuRecordText records;
 	MenuLabelText labels;
@@ -304,6 +314,8 @@ struct MenuText
 	MenuStickReadoutsText stick_readouts;
 	HudLabels hud;
 	MenuCountdownText countdown;
+	// The in-match controls reminder and the control-label words (controls_copy.h).
+	ControlsCopy controls;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;
@@ -328,6 +340,15 @@ struct MenuText
 	// Concrete Arena indices are one-based; Random needs at least one eligible stage.
 	std::wstring stage_navigation(size_t index, size_t total) const;
 	std::wstring stage_random_hint(size_t count) const;
+	// The stage_names entry for `id`, or nullptr when it has none.
+	const std::wstring* stage_name(std::string_view id) const;
+	// What a stage is called on screen: its stage_names entry, or the level's
+	// own `authored` display_name (a user stage, a test fixture), widened and
+	// checked as drawable with `where` naming it on failure. A user stage's id
+	// never equals a shipped one in any case (user_stage_contract::same_name),
+	// so the id alone decides.
+	std::wstring stage_title(std::string_view id, const std::string& authored,
+		const std::string& where) const;
 	// -1 is unclaimed, 0-3 are pads and 4 is keyboard/mouse. Roster indices
 	// are 0-3 and substitute the canonical badge label, never a device number.
 	std::wstring device_label(int slot) const;

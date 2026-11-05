@@ -69,7 +69,7 @@ The role folders date from `HYG#51`:
 | `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |
 | `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators) |
 | `save/` | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles` |
-| `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `rumble*`, `rumble_gamepads.cpp` |
+| `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `controls_copy.h`, `rumble*`, `rumble_gamepads.cpp` |
 
 `play_settings.h` and `settings_session` are in `config/` rather than `save/`:
 every gameplay object reads the play settings, and the save is one of their

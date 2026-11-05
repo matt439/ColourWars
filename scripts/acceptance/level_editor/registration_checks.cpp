@@ -21,14 +21,15 @@ namespace level_editor_acceptance
     {
     struct RegistrationFixture
     {
-        fs::path repository, stage, manifest, runtime;
-        std::string stage_bytes, manifest_bytes, runtime_bytes;
+        fs::path repository, stage, manifest, runtime, presentation;
+        std::string stage_bytes, manifest_bytes, runtime_bytes, presentation_bytes;
         std::string last_level_name;
 
         RegistrationFixture(const fs::path& repo, const fs::path& scratch) :
             repository(scratch / "registration-repository"),
             stage(repository / "game/content/levels/acceptance_arena.json"),
-            manifest(repository / "game/content/manifest.json"), runtime(repository / "cmake/runtime_assets.cmake")
+            manifest(repository / "game/content/manifest.json"), runtime(repository / "cmake/runtime_assets.cmake"),
+            presentation(repository / "game/content/presentation.json")
         {
             require(!fs::exists(repository), "Registration acceptance needs a fresh private repository");
             const fs::path source_content = repo / "game/content";
@@ -80,22 +81,25 @@ namespace level_editor_acceptance
             stage_bytes = contents(repo / "game/content/levels/close_quarters.json");
             manifest_bytes = contents(manifest);
             runtime_bytes = contents(runtime);
+            presentation_bytes = contents(presentation);
             write(stage, stage_bytes);
         }
 
         void reset() const
         {
             write(stage, stage_bytes); write(manifest, manifest_bytes); write(runtime, runtime_bytes);
+            write(presentation, presentation_bytes);
         }
     };
 
     struct RegistrationSnapshot
     {
-        std::string stage, manifest, runtime;
+        std::string stage, manifest, runtime, presentation;
         std::map<fs::path, fs::file_time_type> files;
 
         explicit RegistrationSnapshot(const RegistrationFixture& fixture) :
-            stage(contents(fixture.stage)), manifest(contents(fixture.manifest)), runtime(contents(fixture.runtime))
+            stage(contents(fixture.stage)), manifest(contents(fixture.manifest)), runtime(contents(fixture.runtime)),
+            presentation(contents(fixture.presentation))
         {
             for (const fs::directory_entry& file : fs::recursive_directory_iterator(fixture.repository))
                 if (file.is_regular_file()) files.emplace(file.path(), file.last_write_time());
@@ -104,7 +108,8 @@ namespace level_editor_acceptance
         void unchanged(const RegistrationFixture& fixture, bool times = true) const
         {
             require(contents(fixture.stage) == stage && contents(fixture.manifest) == manifest &&
-                contents(fixture.runtime) == runtime, "Rejected registration changed an original input file");
+                contents(fixture.runtime) == runtime && contents(fixture.presentation) == presentation,
+                "Rejected registration changed an original input file");
             const RegistrationSnapshot after(fixture);
             require(after.files.size() == files.size(), "Registration leaked or removed a private repository file");
             for (const auto& [path, time] : files)
@@ -160,14 +165,16 @@ namespace level_editor_acceptance
                 const std::string prefix = (bom ? std::string("\xEF\xBB\xBF") : std::string()) +
                     "# Keep this unrelated registration note" + newline + "#[=[retain ) ${opaque}]=]" + newline;
                 const std::string runtime = prefix + registration_lines(fixture.runtime_bytes, newline, false);
-                write(fixture.manifest, manifest); write(fixture.runtime, runtime);
+                const std::string presentation = registration_lines(fixture.presentation_bytes, newline, bom);
+                write(fixture.manifest, manifest); write(fixture.runtime, runtime); write(fixture.presentation, presentation);
                 const RegistrationSnapshot before(fixture);
                 const StageRegistrationPreview preview = preview_stage_registration(fixture.repository,
                     "game/content/levels/acceptance_arena.json");
                 before.unchanged(fixture);
                 require(!preview.already_registered && preview.name == "acceptance_arena" &&
                     preview.stage_original == fixture.stage_bytes && preview.manifest.original == manifest &&
-                    preview.runtime_assets.original == runtime, "Preview did not retain exact original bytes and basename");
+                    preview.runtime_assets.original == runtime && preview.presentation.original == presentation,
+                    "Preview did not retain exact original bytes and basename");
 
                 // The independent byte oracle adds one literal name after the
                 // existing last stage, and one literal path before the first
@@ -184,8 +191,18 @@ namespace level_editor_acceptance
                 require(begin != std::string::npos && closing != std::string::npos,
                     "The registration runtime fixture needs its reviewed literal list");
                 expected_runtime.insert(closing + newline.size(), "    levels/acceptance_arena.json" + newline);
-                require(preview.manifest.proposed == expected_manifest && preview.runtime_assets.proposed == expected_runtime,
-                    "Registration changed bytes outside its single name/path append, including BOM, comments or line endings");
+                // And one stage_names member after the last stage's, carrying
+                // the level's display_name (close_quarters.json's).
+                std::string expected_presentation = presentation;
+                const std::string last_title = "\"" + fixture.last_level_name + "\": \"";
+                const std::size_t title = expected_presentation.find(last_title);
+                require(title != std::string::npos && expected_presentation.rfind(last_title) == title,
+                    "The independent registration byte oracle needs the last stage's title exactly once");
+                const std::size_t title_end = expected_presentation.find('"', title + last_title.size());
+                expected_presentation.insert(title_end + 1, "," + newline + "      \"acceptance_arena\": \"Close Quarters\"");
+                require(preview.manifest.proposed == expected_manifest && preview.runtime_assets.proposed == expected_runtime &&
+                    preview.presentation.proposed == expected_presentation,
+                    "Registration changed bytes outside its single name/path/title append, including BOM, comments or line endings");
 
                 int replacements = 0;
                 require(apply_stage_registration(preview, [&](const fs::path& prepared, const fs::path& destination)
@@ -201,27 +218,32 @@ namespace level_editor_acceptance
                             if (filename.ends_with("-candidate"))
                             {
                                 ++candidates;
-                                require(bytes == expected_manifest || bytes == expected_runtime, "Prepared candidate bytes are incomplete");
+                                require(bytes == expected_manifest || bytes == expected_runtime || bytes == expected_presentation,
+                                    "Prepared candidate bytes are incomplete");
                             }
                             if (filename.ends_with("-original"))
                             {
                                 ++originals;
-                                require(bytes == manifest || bytes == runtime, "Prepared original backup bytes are incomplete");
+                                require(bytes == manifest || bytes == runtime || bytes == presentation,
+                                    "Prepared original backup bytes are incomplete");
                             }
                         }
-                        require(candidates == 2 && originals == 2 && contents(fixture.manifest) == manifest &&
-                            contents(fixture.runtime) == runtime, "Both complete candidates and originals must exist before the first replacement");
+                        require(candidates == 3 && originals == 3 && contents(fixture.manifest) == manifest &&
+                            contents(fixture.runtime) == runtime && contents(fixture.presentation) == presentation,
+                            "All three complete candidates and originals must exist before the first replacement");
                     }
-                    require(fs::equivalent(destination, replacements == 1 ? fixture.manifest : fixture.runtime),
-                        "Registration replaced a file outside the two reviewed targets");
+                    require(fs::equivalent(destination, replacements == 1 ? fixture.manifest :
+                        replacements == 2 ? fixture.runtime : fixture.presentation),
+                        "Registration replaced a file outside the three reviewed targets, or out of order");
                     registration_replace(prepared, destination);
-                }) && replacements == 2 && contents(fixture.manifest) == expected_manifest &&
-                    contents(fixture.runtime) == expected_runtime && contents(fixture.stage) == fixture.stage_bytes,
-                    "Opt-in registration did not apply exactly the previewed two-file append");
+                }) && replacements == 3 && contents(fixture.manifest) == expected_manifest &&
+                    contents(fixture.runtime) == expected_runtime && contents(fixture.presentation) == expected_presentation &&
+                    contents(fixture.stage) == fixture.stage_bytes,
+                    "Opt-in registration did not apply exactly the previewed three-file append");
                 const RegistrationSnapshot registered(fixture);
                 const StageRegistrationPreview again = preview_stage_registration(fixture.repository, fixture.stage);
                 require(again.already_registered && again.manifest.proposed == expected_manifest &&
-                    again.runtime_assets.proposed == expected_runtime &&
+                    again.runtime_assets.proposed == expected_runtime && again.presentation.proposed == expected_presentation &&
                     !apply_stage_registration(again, [](const fs::path&, const fs::path&)
                         { throw std::runtime_error("A registered no-op must not replace files"); }),
                     "Fully registered content must be a validated no-op");
@@ -252,26 +274,93 @@ namespace level_editor_acceptance
     void check_registration_refusals(RegistrationFixture& fixture, const fs::path& scratch)
     {
         const StageRegistrationPreview preview = preview_stage_registration(fixture.repository, fixture.stage);
-        for (const bool manifest_only : { false, true })
+        // The name in one or two of the three files: every proper subset.
+        for (int registered = 1; registered < 7; ++registered)
         {
-            write(manifest_only ? fixture.manifest : fixture.runtime,
-                manifest_only ? preview.manifest.proposed : preview.runtime_assets.proposed);
+            if ((registered & 1) != 0) write(fixture.manifest, preview.manifest.proposed);
+            if ((registered & 2) != 0) write(fixture.runtime, preview.runtime_assets.proposed);
+            if ((registered & 4) != 0) write(fixture.presentation, preview.presentation.proposed);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
                 "A partially registered stage was accepted");
             fixture.reset();
         }
-        for (const bool manifest_alias : { false, true })
+        for (int alias = 0; alias < 3; ++alias)
         {
             std::string manifest = preview.manifest.proposed;
             std::string runtime = preview.runtime_assets.proposed;
-            std::string& aliased = manifest_alias ? manifest : runtime;
+            std::string presentation = preview.presentation.proposed;
+            std::string& aliased = alias == 0 ? manifest : alias == 1 ? runtime : presentation;
             const std::size_t at = aliased.find("acceptance_arena");
             require(at != std::string::npos, "Missing newly registered stage for case-alias check");
             aliased.replace(at, std::string("acceptance_arena").size(), "ACCEPTANCE_ARENA");
-            write(fixture.manifest, manifest); write(fixture.runtime, runtime);
+            write(fixture.manifest, manifest); write(fixture.runtime, runtime); write(fixture.presentation, presentation);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
-                "A stage identifier or runtime path with different case was accepted");
+                "A stage identifier, runtime path or stage_names key with different case was accepted");
             fixture.reset();
+        }
+        {
+            // Registered in all three, but its stage_names English is not the
+            // level's display_name: the game would refuse to start.
+            write(fixture.manifest, preview.manifest.proposed); write(fixture.runtime, preview.runtime_assets.proposed);
+            std::string presentation = preview.presentation.proposed;
+            const std::string title = "\"acceptance_arena\": \"Close Quarters\"";
+            const std::size_t at = presentation.find(title);
+            require(at != std::string::npos, "The disagreement fixture needs the proposed title");
+            presentation.replace(at, title.size(), "\"acceptance_arena\": \"Not Close Quarters\"");
+            write(fixture.presentation, presentation);
+            std::string diagnostic;
+            try { preview_stage_registration(fixture.repository, fixture.stage); }
+            catch (const std::exception& error) { diagnostic = error.what(); }
+            require(diagnostic.find("Not Close Quarters") != std::string::npos && diagnostic.find("agree") != std::string::npos,
+                "A registered stage whose stage_names entry disagrees with its display_name was accepted: " + diagnostic);
+            fixture.reset();
+        }
+        const auto bad_presentation = [&](const std::string& bytes, const char* reason)
+        {
+            write(fixture.presentation, bytes);
+            reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); }, reason);
+            fixture.reset();
+        };
+        {
+            // stage_names already disagreeing with the manifest's levels.
+            const std::string crossfeed = "\"crossfeed\": \"Crossfeed\",";
+            std::string without = fixture.presentation_bytes;
+            const std::size_t at = without.find(crossfeed);
+            require(at != std::string::npos, "The stage_names fixture needs Crossfeed's entry");
+            without.erase(at, crossfeed.size());
+            bad_presentation(without, "A stage_names table missing a manifest stage was accepted");
+            std::string extra = fixture.presentation_bytes;
+            extra.insert(at, "\"ghost_stage\": \"Ghost\", ");
+            bad_presentation(extra, "A stage_names entry for an unlisted stage was accepted");
+            std::string number = fixture.presentation_bytes;
+            number.replace(number.find("\"Crossfeed\","), std::string("\"Crossfeed\"").size(), "7");
+            bad_presentation(number, "A stage_names entry that is not text was accepted");
+            std::string twice = fixture.presentation_bytes;
+            twice.insert(at, crossfeed + " ");
+            bad_presentation(twice, "A duplicate stage_names key was accepted");
+        }
+        bad_presentation("{broken", "Malformed presentation JSON was accepted");
+        {
+            std::string renamed = fixture.presentation_bytes;
+            const std::size_t at = renamed.find("\"stage_names\"");
+            require(at != std::string::npos, "The stage_names fixture needs the table");
+            renamed.replace(at, std::string("\"stage_names\"").size(), "\"stage_titles\"");
+            bad_presentation(renamed, "A presentation.json without menu_text.stage_names was accepted");
+        }
+        {
+            // The title must be one line: stage_names cannot carry a break.
+            rapidjson::Document two_lines = parse(fixture.stage_bytes);
+            two_lines["display_name"].SetString("Close\nQuarters", two_lines.GetAllocator());
+            write(fixture.stage, encode(two_lines));
+            reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
+                "A multi-line display_name was accepted for a shipped stage's title");
+            fixture.reset();
+        }
+        {
+            const fs::path comment = fixture.stage.parent_path() / "_comment_like.json";
+            write(comment, fixture.stage_bytes);
+            reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, comment); },
+                "A basename stage_names would read as a comment was accepted");
         }
         const auto bad_runtime = [&](const std::string& bytes)
         {
@@ -368,10 +457,11 @@ namespace level_editor_acceptance
 
     void check_registration_stale(RegistrationFixture& fixture)
     {
-        for (int target = 0; target < 3; ++target)
+        for (int target = 0; target < 4; ++target)
         {
             const StageRegistrationPreview preview = preview_stage_registration(fixture.repository, fixture.stage);
-            const fs::path changed = target == 0 ? fixture.stage : target == 1 ? fixture.manifest : fixture.runtime;
+            const fs::path changed = target == 0 ? fixture.stage : target == 1 ? fixture.manifest :
+                target == 2 ? fixture.runtime : fixture.presentation;
             write(changed, contents(changed) + "\n");
             int replacements = 0;
             reject_registration(fixture, [&] { apply_stage_registration(preview,
@@ -380,7 +470,7 @@ namespace level_editor_acceptance
             require(replacements == 0, "A stale preview attempted a replacement");
             fixture.reset();
         }
-        for (int field = 0; field < 8; ++field)
+        for (int field = 0; field < 11; ++field)
         {
             StageRegistrationPreview preview = preview_stage_registration(fixture.repository, fixture.stage);
             if (field == 0) preview.manifest.proposed += " ";
@@ -391,6 +481,9 @@ namespace level_editor_acceptance
             if (field == 5) preview.stage_original += " ";
             if (field == 6) preview.manifest.original += " ";
             if (field == 7) preview.runtime_assets.original += " ";
+            if (field == 8) preview.presentation.proposed += " ";
+            if (field == 9) preview.presentation.original += " ";
+            if (field == 10) preview.presentation.path = fixture.manifest;
             reject_registration(fixture, [&] { apply_stage_registration(preview); },
                 "Apply accepted a modified registration proposal or target");
         }
@@ -412,6 +505,14 @@ namespace level_editor_acceptance
                 registration_replace(prepared, destination);
             }); }, "A second replacement failure did not roll the first file back", false);
         require(calls == 3, "Second-file failure did not invoke exactly one first-file rollback");
+        calls = 0;
+        reject_registration(fixture, [&] { apply_stage_registration(preview,
+            [&](const fs::path& prepared, const fs::path& destination)
+            {
+                if (++calls == 3) throw std::runtime_error("injected third replacement failure");
+                registration_replace(prepared, destination);
+            }); }, "A third replacement failure did not roll both earlier files back", false);
+        require(calls == 5, "Third-file failure did not invoke exactly two rollbacks");
 
         // Actual Win32 denial of the second replacement, after both candidates
         // have been prepared, must restore the first file and clean siblings.
@@ -437,9 +538,20 @@ namespace level_editor_acceptance
         catch (...) { SetFileAttributesW(fixture.runtime.c_str(), attributes); throw; }
         require(SetFileAttributesW(fixture.runtime.c_str(), attributes) != 0,
             "Could not restore private runtime-list attributes");
+        // Denial of the third file restores the first two.
+        const HANDLE locked_presentation = CreateFileW(fixture.presentation.c_str(), GENERIC_READ, FILE_SHARE_READ,
+            nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        require(locked_presentation != INVALID_HANDLE_VALUE, "Could not lock the private presentation.json");
+        try
+        {
+            reject_registration(fixture, [&] { apply_stage_registration(preview); },
+                "Registration replaced a presentation.json without delete sharing", false);
+        }
+        catch (...) { CloseHandle(locked_presentation); throw; }
+        CloseHandle(locked_presentation);
 
         // This intentionally leaves a partial result only in the newly copied
-        // test repository, then proves recovery from the two named originals.
+        // test repository, then proves recovery from the three named originals.
         calls = 0;
         std::vector<fs::path> recovery;
         try
@@ -456,18 +568,47 @@ namespace level_editor_acceptance
             require(std::string(error.what()).find("Original backups retained") != std::string::npos,
                 "Rollback failure did not explain the retained-original recovery path");
         }
-        require(calls == 3 && recovery.size() == 2 && contents(fixture.manifest) == preview.manifest.proposed &&
-            contents(fixture.runtime) == preview.runtime_assets.original,
-            "An injected rollback failure did not expose the exact partial result and two original backups");
+        require(calls == 3 && recovery.size() == 3 && contents(fixture.manifest) == preview.manifest.proposed &&
+            contents(fixture.runtime) == preview.runtime_assets.original &&
+            contents(fixture.presentation) == preview.presentation.original,
+            "An injected rollback failure did not expose the exact partial result and three original backups");
         require(fs::equivalent(recovery[0].parent_path(), fixture.manifest.parent_path()) &&
             fs::equivalent(recovery[1].parent_path(), fixture.runtime.parent_path()) &&
+            fs::equivalent(recovery[2].parent_path(), fixture.presentation.parent_path()) &&
             recovery[0].filename().string().ends_with("-original") && recovery[1].filename().string().ends_with("-original") &&
-            contents(recovery[0]) == preview.manifest.original && contents(recovery[1]) == preview.runtime_assets.original,
-            "Retained recovery paths do not contain both byte-exact original files beside their private targets");
+            recovery[2].filename().string().ends_with("-original") &&
+            contents(recovery[0]) == preview.manifest.original && contents(recovery[1]) == preview.runtime_assets.original &&
+            contents(recovery[2]) == preview.presentation.original,
+            "Retained recovery paths do not contain the byte-exact original files beside their private targets");
         registration_replace(recovery[0], fixture.manifest);
         registration_replace(recovery[1], fixture.runtime);
-        require(contents(fixture.manifest) == fixture.manifest_bytes && contents(fixture.runtime) == fixture.runtime_bytes,
-            "Restoring the named private backups did not recover both original lists");
+        registration_replace(recovery[2], fixture.presentation);
+        require(contents(fixture.manifest) == fixture.manifest_bytes && contents(fixture.runtime) == fixture.runtime_bytes &&
+            contents(fixture.presentation) == fixture.presentation_bytes,
+            "Restoring the named private backups did not recover the three original files");
+
+        // The third file fails and the runtime list is restored, but the
+        // manifest is not: only the backups a restore did not use up are named.
+        calls = 0;
+        recovery.clear();
+        try
+        {
+            apply_stage_registration(preview, [&](const fs::path& prepared, const fs::path& destination)
+            {
+                ++calls;
+                if (calls == 3 || calls == 5) throw std::runtime_error("injected third/manifest rollback failure");
+                registration_replace(prepared, destination);
+            });
+        }
+        catch (const StageRegistrationError& error) { recovery = error.recovery_files(); }
+        require(calls == 5 && recovery.size() == 2 && contents(fixture.manifest) == preview.manifest.proposed &&
+            contents(fixture.runtime) == preview.runtime_assets.original &&
+            contents(fixture.presentation) == preview.presentation.original &&
+            contents(recovery[0]) == preview.manifest.original && contents(recovery[1]) == preview.presentation.original,
+            "A partial rollback did not name exactly the manifest and presentation backups");
+        registration_replace(recovery[0], fixture.manifest);
+        DeleteFileW(recovery[1].c_str());
+        require(contents(fixture.manifest) == fixture.manifest_bytes, "The retained manifest backup did not restore it");
         for (const fs::directory_entry& file : fs::recursive_directory_iterator(fixture.repository))
             require(file.path().filename().wstring().find(L".registration-") == std::wstring::npos,
                 "A completed registration/recovery left an unreported sibling file");
@@ -481,9 +622,10 @@ namespace level_editor_acceptance
         check_registration_refusals(fixture, scratch);
         check_registration_stale(fixture);
         check_registration_failures(fixture);
-        std::cout << "PASS stage registration: read-only exact previews; LF/CRLF/BOM appends and validated no-op; "
-            "partial/aliased/malformed/nonliteral lists, outside/invalid levels and incomplete resources refused; "
-            "stale inputs/proposals, first/second replacement failures, locked/read-only second files, "
-            "and byte-exact named-backup recovery in a fresh private repository\n";
+        std::cout << "PASS stage registration: read-only exact previews of the manifest, runtime list and "
+            "presentation.json stage_names; LF/CRLF/BOM appends and validated no-op; partial (any one or two of three)/"
+            "aliased/malformed/nonliteral lists, a disagreeing or multi-line title, outside/invalid levels and "
+            "incomplete resources refused; stale inputs/proposals, first/second/third replacement failures, "
+            "locked/read-only files, and byte-exact named-backup recovery in a fresh private repository\n";
     }
 }

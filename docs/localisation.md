@@ -65,8 +65,13 @@ element leaves that element as it is. A locale changes **copy only**:
 
 - everything under `menu_text`, the match's own copy included:
   `menu_text.hud` (the identity box's team labels and the HEALTH and PAINT
-  meter labels; its device line is `menu_text.labels`) and
-  `menu_text.countdown` (the GET READY, RESUMING and REPLAY headings);
+  meter labels; its device line is `menu_text.labels`),
+  `menu_text.countdown` (the GET READY, RESUMING and REPLAY headings) and
+  `menu_text.controls` (the in-match controls reminder, its KEYBOARD + MOUSE
+  and GAMEPAD headings, the Controls help's "per pad", and the words among
+  the control labels - see [Control labels](#control-labels)) and
+  `menu_text.stage_names` (the shipped stages' titles - see
+  [Stage names](#stage-names));
 - `main_menu.weapon_descriptions.*` and `main_menu.weapon_select.choices.*.name`;
 - `main_menu.credits.text`;
 - `team_palette.pairs[].label`.
@@ -182,23 +187,95 @@ with no room for two more characters, which fall back to English:
 Select roster row must end before the first choice icon). A translation longer
 than English by more than a few characters will meet the same limit there.
 
+## Control labels
+
+A control's label is a legend or a word. The legends - the letters `A`-`Z`
+and the pad's `A`, `B`, `X`, `Y`, `LB`, `RB`, `LT`, `RT`, `LS` and `RS` - are
+what is printed on the key or button, the same in every language as digits
+are, and stay in code ([input_bindings.cpp](../game/input/input_bindings.cpp)),
+as does the ` / ` between a primary control and its alternate. The words are
+`menu_text.controls.labels`: `space`, `escape` (the fixed pause key), `none`
+(an unbound Pause key or alternate), `start` and the five mouse buttons
+(`mouse_left` ... `mouse_x2`). [controls_text](../game/input/controls_text.h)
+puts the two together for the reminder, the Controls help, the Keyboard Keys
+and Pad Buttons rows and the Keys capture status. `input_bindings.cpp`'s own
+labels are the base locale's twins of those words, for probes and
+diagnostics; the `menu_text` case fails if the two drift. The save tokens
+(`"space"`, `"mouse_left"`, `"start"`, ...) are a file format and never
+change with a locale.
+
+## Stage names
+
+A shipped stage's title - Stage Select's arena name and the countdown's
+stage-entry card, which every Random, series and losers' pick resolves to -
+is `menu_text.stage_names`, an object keyed by the manifest's stage id:
+
+```json
+"stage_names": { "king_of_the_hill": "King of the Hill", "turbulence": "Turbulence" }
+```
+
+Its English is a mirror of each level file's `display_name`, kept honest by
+two startup checks ([content_validation.h](../game/config/content_validation.h)):
+`validate_stage_names` requires an entry for every stage the manifest lists
+and none for anything else, in every locale, and `check_stage_names_agree`
+requires each base entry to equal its level's `display_name` byte for byte. The
+second is judged on the base `presentation.json`, not the composed locale, at
+startup, by the Debug `reload` and by the presentation `tune` target. Both fail
+startup, as a missing level does. A stage the editor registers gets its entry
+from the registration tool ([Registration assistance](level-editor.md#registration-assistance-ed4)),
+so a registered stage cannot fail the check, and a shipped stage's id may not
+start with `_`, which the table would read as a comment.
+
+A locale names any subset; a stage it leaves out keeps the base's English.
+Registration writes only the base, so a newly registered stage is untranslated
+in every locale, `qps-ploc` included, until someone adds it there: add
+`"<name>": "[<display_name>]"` to `qps-ploc.json`'s `stage_names` to keep the
+test locale bracketing every stage. Nothing fails meanwhile - the `locales`
+case brackets the stages `qps-ploc` names and holds the rest to the base, and
+the `menu_text` case pins the stages shipped when it was written and lets a
+later one join. A locale
+cannot add a stage: an id `presentation.json` lacks is refused like any other
+unknown key. A **user stage** (Save to My Stages, `ROAD#16`) is never in the
+table and draws its own `display_name` in every locale, untranslated: it is
+the player's own text. `MenuText::stage_title` is the one reader, so a
+fixture stage the table does not name falls back the same way.
+
 ## Not yet localisable
 
-Three groups of text still come from somewhere a locale does not reach:
+These still come from somewhere a locale does not reach:
 
-- **Stage names.** Each level file's `display_name` ("King of the Hill") is
-  read by Stage Select and by the match's stage title, from the level, not
-  `presentation.json`.
-- **The in-match controls reminder**, its GAMEPAD and KEYBOARD + MOUSE
-  headings ([countdown_cards.cpp](../game/objects/countdown_cards.cpp)) and
-  the pad and key labels it is built from
-  ([controls_text.cpp](../game/input/controls_text.cpp),
-  [input_bindings.cpp](../game/input/input_bindings.cpp)): "Move",
-  "Drop through", "Left click" are written in C++.
+- **Practice lesson cards.** Movement Course's station lessons (`DROP
+  THROUGH`, `SHORT HOP`, `HELD JUMP` ...) are each station's `lesson.title`
+  and `lesson.text` in [movement_course.json](../game/content/levels/movement_course.json),
+  level copy that no locale reaches.
+- **The countdown's `GO!`**, the start signal's last beat
+  ([countdown_cards.cpp](../game/objects/countdown_cards.cpp),
+  [level.cpp](../game/objects/level.cpp),
+  [level_practice.cpp](../game/objects/level_practice.cpp)). It is also an
+  identifier: [countdown_art.cpp](../game/objects/countdown_art.cpp) compares
+  the label against `L"GO!"` to choose the go beat's look, so moving it needs
+  that comparison replaced by a flag first.
+- **User-stage scan details.** Stage Select's Scan details page (Down while
+  browsing, Release included) draws each refused file as `user stage refused:
+  <file>: <reason>`, built in C++ by
+  [stage_loading.cpp](../game/config/stage_loading.cpp) with English reasons
+  (`is not a folder`, the name rule, a loader's exception text). The page's
+  heading, prompts and counter are `menu_text.stage_scan`; the lines are the
+  same text stderr prints, so the reasons need codes before they can be copy.
+- **System dialogs.** The first-save failure warning
+  ([save.cpp](../game/save/save.cpp): `Could not write <path>. Your settings
+  will not be remembered.`, captioned `ColourWars - save failure`) and the
+  startup/runtime failure report
+  ([fatal_report.cpp](../game/fatal_report.cpp)) are `MessageBoxW` text in
+  C++. Both can fire before a locale exists: `Save` writes its first-run
+  defaults before `wWinMain` reads the locales, and the failure report covers
+  a failure to load them. Localising them means reading the locale earlier,
+  or deciding they stay English.
 - **Developer text**: the Debug console, overlays and diagnostics stay English.
 
-The first two need moving into `presentation.json` before a real translation
-ships; the third is not player-facing.
+All but the last need moving into data (or, for the dialogs, a decision to
+keep them English) before a real translation ships; developer text is not
+player-facing.
 
 ## Checks
 
@@ -206,12 +283,25 @@ ships; the third is not player-facing.
   composes every shipped locale over `presentation.json` and runs startup's
   text checks on it against the real atlases, then holds the composition
   rules with fixtures: the three-step fallback chain, font substitution, null
-  array elements, and the refusals (unknown key, non-copy value, number,
-  changed shape, array length, bad tag, duplicate, a fallback not listed above,
-  a missing file, an undrawable language name, an unknown root key, a
-  character outside the fonts, a line that does not fit).
+  array elements, a translated stage name, and the refusals (unknown key, an
+  unknown stage id, non-copy value, number, changed shape, array length, bad
+  tag, duplicate, a fallback not listed above, a missing file, an undrawable
+  language name, an unknown root key, a character outside the fonts, in a stage
+  name too, a line that does not fit). Its judge names every shipped stage
+  through `stage_names` in every locale, and checks the base agrees with the
+  levels; `qps-ploc` must bracket each stage it names and leave the rest to
+  the base.
+- [`scripts/acceptance/user_stages.cpp`](../scripts/acceptance/user_stages.cpp)
+  holds the stage-name checks against the stage list: a missing, extra, user
+  or `_` entry and a drifted `display_name` are refused; a user stage keeps its
+  own name.
 - CI starts both builds with `check-startup.ps1 -Locale qps-ploc`, so the test
   locale passes the whole of startup, stage text and Mode rows included.
 - `cmake/runtime_assets.cmake` stages and packages `locales/`;
   `cmake/release_assets.cmake` and the level editor's stage registration
   check that the list names the index and every file it lists.
+- The level editor's registration adds a new stage's `stage_names` entry
+  with the manifest and runtime-list entries, and refuses a stage named in only
+  some of the three; its status line warns when a registered source level's
+  `display_name` no longer matches its entry (`check-level-editor.ps1`,
+  `check-stage-registration.ps1`).

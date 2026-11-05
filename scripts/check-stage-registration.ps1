@@ -191,8 +191,10 @@ include(cmake/release_assets.cmake)
     $before | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $run 'source-before.json') -Encoding utf8
     $manifestPath = Join-Path $content 'manifest.json'
     $runtimePath = Join-Path $scratch 'cmake/runtime_assets.cmake'
+    $presentationPath = Join-Path $content 'presentation.json'
     $manifestBefore = [IO.File]::ReadAllText($manifestPath)
     $runtimeBefore = [IO.File]::ReadAllText($runtimePath)
+    $presentationBefore = [IO.File]::ReadAllText($presentationPath)
 
     Invoke-NativeCheck $tool @('--repo', $scratch, '--stage', $stage) 'preview'
     Assert-Inventory $before (Get-Inventory $scratch)
@@ -212,7 +214,7 @@ include(cmake/release_assets.cmake)
 
     Invoke-NativeCheck $tool @('--repo', $scratch, '--stage', $stage, '--apply') 'apply'
     $after = Get-Inventory $scratch
-    $changed = @('game/content/manifest.json', 'cmake/runtime_assets.cmake')
+    $changed = @('game/content/manifest.json', 'cmake/runtime_assets.cmake', 'game/content/presentation.json')
     Assert-Inventory $before $after $changed
     foreach ($name in $changed) {
         Assert-Check ($before[$name].sha256 -cne $after[$name].sha256) "Apply did not update $name"
@@ -220,8 +222,9 @@ include(cmake/release_assets.cmake)
     $result.changed_files = $changed
     $manifestAfter = [IO.File]::ReadAllText($manifestPath)
     $runtimeAfter = [IO.File]::ReadAllText($runtimePath)
+    $presentationAfter = [IO.File]::ReadAllText($presentationPath)
     # Independently remove exactly the new literal entry. Every other byte in
-    # both reviewed files must survive, including formatting/comments/order.
+    # the three reviewed files must survive, including formatting/comments/order.
     $removeName = ',(?<space>\s*)"' + [regex]::Escape($stageName) + '"'
     $nameMatches = [regex]::Matches($manifestAfter, $removeName)
     Assert-Check ($nameMatches.Count -eq 1) 'Manifest must gain exactly one stage-name entry.'
@@ -229,6 +232,10 @@ include(cmake/release_assets.cmake)
     $removeAsset = '(?m)^[ \t]*' + [regex]::Escape($stageAsset) + '\r?\n'
     Assert-Check ([regex]::Matches($runtimeAfter, $removeAsset).Count -eq 1) 'Runtime list must gain exactly one new stage path.'
     Assert-Check ([regex]::new($removeAsset).Replace($runtimeAfter, '', 1) -ceq $runtimeBefore) 'Runtime list changed beyond its one added stage path.'
+    # The stage's title: movement_course.json's display_name, in menu_text.stage_names.
+    $removeTitle = ',\s*"' + [regex]::Escape($stageName) + '": "Movement Course"'
+    Assert-Check ([regex]::Matches($presentationAfter, $removeTitle).Count -eq 1) 'presentation.json must gain exactly one stage_names entry.'
+    Assert-Check ([regex]::new($removeTitle).Replace($presentationAfter, '', 1) -ceq $presentationBefore) 'presentation.json changed beyond its one added stage title.'
     $after | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $run 'source-after-apply.json') -Encoding utf8
     Invoke-NativeCheck $tool @('--repo', $scratch, '--stage', $stage, '--apply') 'repeat-noop'
     Assert-Inventory $after (Get-Inventory $scratch)
@@ -294,7 +301,7 @@ include(cmake/release_assets.cmake)
     $result.startup = [ordered]@{ receipt = $receipts[0].FullName; sha256 = Get-Hash $receipts[0].FullName; outcome = $startup.outcome }
     Assert-Inventory $after (Get-Inventory $scratch)
     $result.outcome = 'passed'
-    $result.diagnostic = 'Scratch-only preview/apply/no-op/rejection, add-only file changes, existing CMake agreement and staging checks passed; startup outcome is recorded separately.'
+    $result.diagnostic = 'Scratch-only preview/apply/no-op/rejection, add-only changes to the three files, existing CMake agreement and staging checks passed; startup outcome is recorded separately.'
 }
 catch {
     $result.diagnostic = $_.Exception.Message

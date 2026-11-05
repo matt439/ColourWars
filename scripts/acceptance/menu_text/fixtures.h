@@ -295,6 +295,45 @@ namespace menu_text_acceptance
         { "resuming", L"RESUMING", &MenuCountdownText::resuming },
         { "replay", L"REPLAY", &MenuCountdownText::replay }
     };
+    struct ControlsText { const char* key; const wchar_t* text; std::wstring ControlsCopy::* field; bool multiline; };
+    constexpr ControlsText controls_text_defaults[]{
+        { "keyboard_heading", L"KEYBOARD + MOUSE", &ControlsCopy::keyboard_heading, false },
+        { "gamepad_heading", L"GAMEPAD", &ControlsCopy::gamepad_heading, false },
+        { "keyboard_reminder", L"{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot\n"
+            L"Mouse  Aim    |    {pause}  Pause", &ControlsCopy::keyboard_reminder, true },
+        { "gamepad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot\n"
+            L"Right stick  Aim    |    {pad_pause}  Pause", &ControlsCopy::gamepad_reminder, true },
+        { "gamepad_per_pad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pads}\nRight stick  Aim",
+            &ControlsCopy::gamepad_per_pad_reminder, true },
+        { "gamepad_pad_line", L"Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_pause} Pause",
+            &ControlsCopy::gamepad_pad_line, false },
+        { "per_pad", L"per pad", &ControlsCopy::per_pad, false }
+    };
+    struct ControlLabelText { const char* key; const wchar_t* text; std::wstring ControlLabels::* field; };
+    constexpr ControlLabelText control_label_text[]{
+        { "space", L"Space", &ControlLabels::space }, { "escape", L"Esc", &ControlLabels::escape },
+        { "none", L"None", &ControlLabels::none }, { "start", L"Start", &ControlLabels::start },
+        { "mouse_left", L"Left click", &ControlLabels::mouse_left },
+        { "mouse_right", L"Right click", &ControlLabels::mouse_right },
+        { "mouse_middle", L"Middle click", &ControlLabels::mouse_middle },
+        { "mouse_x1", L"Mouse 4", &ControlLabels::mouse_x1 }, { "mouse_x2", L"Mouse 5", &ControlLabels::mouse_x2 }
+    };
+    // menu_text.stage_names: the stages shipped when this was pinned, each its
+    // level's display_name. A stage registered later joins the table without
+    // joining this list; removing one of these is a deliberate edit here.
+    struct StageNameText { const char* key; const wchar_t* text; };
+    constexpr StageNameText stage_names_text[]{
+        { "king_of_the_hill", L"King of the Hill" }, { "turbulence", L"Turbulence" },
+        { "close_quarters", L"Close Quarters" }, { "movement_course", L"Movement Course" },
+        { "crossfeed", L"Crossfeed" }, { "press_tower", L"Press Tower" },
+        { "turbulence_blockout", L"Turbulence Yard" },
+        { "turbulence_mover_trial", L"Turbulence Yard - Mover Trial" },
+        { "turbulence_slab_trial", L"Turbulence Yard - Slab Trial" },
+        { "turbulence_ferry_trial", L"Turbulence Yard - Ferry Trial" },
+        { "turbulence_gate_trial", L"Turbulence Yard - Gate Trial" },
+        { "turbulence_lift_trial", L"Turbulence Yard - Lift Trial" },
+        { "turbulence_paint_lift_trial", L"Turbulence Yard - Paint Lift Trial" }
+    };
     struct StageText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; };
     constexpr StageText stage_text[]{
         { "browse_status", L"FIND YOUR ARENA", &MenuStageText::browse_status },

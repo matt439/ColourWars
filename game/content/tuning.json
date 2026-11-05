@@ -53,8 +53,8 @@
         "replay": 8.0,
         "controls_text": {
             "_comment": [
-                "What it says is in level.cpp, next to nothing: it has to agree",
-                "with player_input.cpp and a copy in a data file would drift.",
+                "What it says is presentation.json's menu_text.controls, filled",
+                "in with the player's own controls; this is only how it looks.",
                 "y is a fraction of the screen height, under the countdown."
             ],
             "font": "lato_black_24",

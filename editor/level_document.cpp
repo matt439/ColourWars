@@ -1081,6 +1081,15 @@ namespace colourwars_editor
     const std::filesystem::path& LevelDocument::path() const { return impl_->path; }
     std::string LevelDocument::serialize() const { return json_text(impl_->document); }
 
+    std::string LevelDocument::display_name() const
+    {
+        const Document& document = impl_->document;
+        if (!document.IsObject()) return {};
+        const auto member = document.FindMember("display_name");
+        if (member == document.MemberEnd() || !member->value.IsString()) return {};
+        return { member->value.GetString(), member->value.GetStringLength() };
+    }
+
     std::vector<std::string> LevelDocument::validate() const
     {
         try { validate_document(impl_->document, impl_->motion_tuning); }
