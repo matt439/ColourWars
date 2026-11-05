@@ -394,7 +394,6 @@
   },
 
   "main_menu": {
-    "backdrop": { "sheet": "menu_paint", "frame": "backdrop" },
     "title_box_size": { "x": 1320.0, "y": 920.0 },
     "home_box_size": { "x": 1320.0, "y": 920.0 },
     "options_box_size": { "x": 1640.0, "y": 920.0 },
@@ -443,9 +442,7 @@
     "build_id_y": 880.0,
     "backgrounds": {
       "title": "B0B0A8",
-      "home": "B0B0A8",
-      "options": "485467",
-      "play": "485467"
+      "home": "B0B0A8"
     },
     "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",

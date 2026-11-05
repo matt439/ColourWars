@@ -194,8 +194,6 @@ struct StageScanPresentation
 
 struct MainMenuPresentation
 {
-	std::string backdrop_sheet;
-	std::string backdrop_frame;
 	// Entry, settings and setup pages share the paper treatment.
 	MenuPaperArtPresentation art;
 	labrador::Vector2F title_box_size;
@@ -225,11 +223,9 @@ struct MainMenuPresentation
 	std::string weapon_description_font;
 	float build_id_y = 0.0f;
 
-	// Separate colours allow each main-menu screen to be themed independently.
+	// The title page has its own surround; every other main-menu page paints home's.
 	labrador::Colour title_background_colour = labrador::Colour::black;
 	labrador::Colour home_background_colour = labrador::Colour::black;
-	labrador::Colour options_background_colour = labrador::Colour::black;
-	labrador::Colour play_background_colour = labrador::Colour::black;
 
 	labrador::Colour options_value_colour = labrador::Colour::white;
 	labrador::Colour options_warning_colour;

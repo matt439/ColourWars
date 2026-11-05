@@ -37,8 +37,6 @@ void Presentation::Validation::validate_menu_chrome() const
 	check.font("menu_style.fonts.item", this->presentation_.menu_.item_font);
 	check.font("menu_style.fonts.detail", this->presentation_.menu_.detail_font);
 	check.font("menu_style.chrome.brand_font", this->presentation_.menu_.brand_font);
-	check.frame("main_menu.backdrop.frame", this->presentation_.main_menu_.backdrop_sheet,
-		this->presentation_.main_menu_.backdrop_frame);
 	check.font("main_menu.fonts.title", this->presentation_.main_menu_.title_font);
 	check.font("main_menu.fonts.announcement", this->presentation_.main_menu_.announcement_font);
 	check.font("main_menu.fonts.options", this->presentation_.main_menu_.options_font);
