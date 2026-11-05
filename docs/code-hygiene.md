@@ -419,7 +419,11 @@ instead of truncating its length.
   fills an array of `pad_count`. It replaces the four-element literals in
   `PlayerIdentityHud::pad_devices_`, the entry boosts in `game_states.cpp`,
   `SettingsSession::worn_`, and the siblings the grep found:
-  `MatchSetup::devices_` and `PlaySettings::pad_rumble`. `shuffle_teams`' seat
+  `MatchSetup::devices_` and `PlaySettings::pad_rumble`. Review found one more,
+  `MatchPlanner::ConnectedPads`, now an array of `pad_count` too. The
+  acceptance fakes that stand in for the engine's four-slot reader
+  (`rumble_adapter.cpp`) and the frozen legacy menu mapping in
+  `action_bindings.cpp` keep their literal four on purpose. `shuffle_teams`' seat
   order is `std::iota` instead of `{ 0, 1, 2, 3 }`.
 - `Level::update_level_logic`'s `was_dead` is a `std::vector<bool>` of
   `players_.size()`, not a fixed four.

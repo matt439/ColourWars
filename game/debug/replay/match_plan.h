@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/stage.h"
+#include "game/input/input_slots.h"
 #include "game/match/match_setup.h"
 #include <array>
 #include <functional>
@@ -63,7 +64,7 @@ struct MatchPlan
 class MatchPlanner
 {
 public:
-	using ConnectedPads = std::array<bool, 4>;
+	using ConnectedPads = std::array<bool, input_slots::pad_count>;
 	using Random = std::function<unsigned int()>;
 
 	explicit MatchPlanner(const StageList* stages);
