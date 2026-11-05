@@ -20,10 +20,13 @@
 
 namespace acceptance
 {
-    // Holds an existing file open for reading without delete sharing. Readers
-    // still open it, the writer still writes its temporary, but the move over
-    // the file fails, so the write fails after serialization, as a real
-    // sharing violation would. Released on destruction.
+    // Holds an existing file open for reading, sharing read and write but not
+    // delete. Readers still open it and the writer still writes its temporary,
+    // but the replacing move over the file fails, so the write fails after
+    // serialization, as a real sharing violation would. Write sharing is what
+    // lets a probe tell the two writes apart: a writer that truncated the file
+    // in place would get through this lock and change the bytes, so a check
+    // that the earlier file survived can fail. Released on destruction.
     class ReplacementLock
     {
     public:
@@ -37,7 +40,8 @@ namespace acceptance
         bool hold()
         {
             if (this->handle_ != INVALID_HANDLE_VALUE) { return false; }
-            this->handle_ = CreateFileW(this->path_.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+            this->handle_ = CreateFileW(this->path_.c_str(), GENERIC_READ,
+                FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
             return this->handle_ != INVALID_HANDLE_VALUE;
         }

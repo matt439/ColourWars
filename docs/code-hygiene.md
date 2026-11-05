@@ -326,17 +326,25 @@ a failed screenshot no longer leaves a partial PNG, and `exec` and
 
 The unique temporary changed how probes fail a save on purpose. Sixteen sites
 made a directory at the fixed `save_data.json.tmp`, which no longer blocks
-anything. They now hold the old save open without delete sharing through
-`acceptance::ReplacementLock` ([replacement_lock.h](../scripts/acceptance/support/replacement_lock.h)):
+anything. They now hold the old save open, sharing read and write but not
+delete, through `acceptance::ReplacementLock` ([replacement_lock.h](../scripts/acceptance/support/replacement_lock.h)):
 `display_trial`, `input_bindings` (twice), `remembered_setup` and twelve painter
 leaves. The three probes that ran a write both ways (blocked temporary, then
 locked save) now run only the locked one, because the writer's temporary can no
 longer be named from outside. The 50-odd checks that a fixed `*.tmp` was absent
 would now pass vacuously; they ask `acceptance::temporary_beside`, which finds
-any `<file>.*.tmp`. New checks: a locked replay and a locked PNG refuse the
-write, keep the earlier file whole and leave no temporary; a replay whose folder
-cannot be created is refused; `exec CON`, `nul.cfg` and `Com1` and
-`perf.capture` with `CON`, `nul`, `Com1` and `lpt9` are refused.
+any `<file>.*.tmp`. New checks: a locked replay and a locked PNG refuse a
+write of different bytes, keep the earlier file whole and leave no temporary;
+`exec CON`, `nul.cfg` and `Com1` and `perf.capture` with `CON`, `nul`, `Com1`
+and `lpt9` are refused. The lock shares writing on purpose: the old in-place
+writers (a truncating `ofstream`, WIC's `InitializeFromFilename`) open through
+it and change the bytes, while the replacing move is refused, so the two
+locked-write checks fail against the old code. The first cut of the lock denied
+write sharing, which refused the old writers too and made those checks
+vacuous. A replay whose folder cannot be created was refused before as well
+(its stream failed to open), so its check guards the same outcome; only the
+ignored `create_directories` error is new, and the commit message's claim of a
+new refusal was wrong.
 
 Handed to [`HYG#84`](#probe-save-isolation-and-json-fixtures-hyg84):
 `settings.cpp`'s hand-made lock and the dead `save_data.json.tmp` removals in
@@ -354,6 +362,12 @@ save-guidance check) and `check-startup.ps1` passed in both presets. On MattPC,
 `-DisplayTrialOnly`, `-KeyboardJumpOnly`, `-OptionsDefaultsOnly`,
 `-PausedOptionsOnly`, `-PercentageTextOnly`, `-RumbleOnly` and
 `-StickSettingsOnly` in both presets: the twelve ported save-failure leaves.
+After the lock gained write sharing, a scratch program confirmed that under it
+a truncating `ofstream` and WIC's `GENERIC_WRITE` stream both rewrite the file
+while the replacing move is refused (and that under read-only sharing all three
+are refused). Both presets rebuilt; `debug_console`, `display_trial`,
+`input_bindings`, `remembered_setup`, `match_records` and `settings` and the
+same nine painter switches passed again in Debug and Release.
 
 ### Diagnostics and impossible states (`HYG#64`)
 

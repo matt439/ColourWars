@@ -205,15 +205,21 @@ namespace debug_console_acceptance
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
 		// A replay is replaced whole (replace_file_atomically): a refused write
 		// throws, keeps the earlier replay and leaves no temporary beside it.
+		// The lock shares writing, so an in-place truncating writer would get
+		// through it; the write carries different bytes so that would show.
 		{
 			acceptance::ReplacementLock lock(path);
 			require(lock.hold(), "Cannot lock the replay fixture");
+			file.final_print.seats[0].paint_underfoot = true;
 			std::string refused;
 			try { file.write(path); } catch (const std::exception& error) { refused = error.what(); }
+			file.final_print.seats[0].paint_underfoot = false;
 			require(refused.find("could not be written") != std::string::npos,
 				"A replay that cannot replace its file is reported: " + refused);
 			require(lock.release() && read_text(path) == legacy_encoding && !acceptance::temporary_beside(path),
 				"A refused replay write kept the earlier replay whole and left no temporary");
+			// Refused before HYG#63 too (the stream failed to open); the
+			// create_directories error is no longer ignored on the way there.
 			const std::filesystem::path not_a_folder = directory / L"not-a-folder";
 			write_text(not_a_folder, "a file where the replay folder should be");
 			refused.clear();

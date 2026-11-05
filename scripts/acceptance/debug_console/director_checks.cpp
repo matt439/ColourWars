@@ -648,12 +648,16 @@ namespace debug_console_acceptance
 			bytes.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 		}
 		// Encoded in memory and replaced whole: a refused write keeps the
-		// earlier PNG and leaves no partial file or temporary beside it.
+		// earlier PNG and leaves no partial file or temporary beside it. The
+		// lock shares writing, so the old in-place writer would get through
+		// it; the refused image differs so a change to the file would show.
 		{
 			acceptance::ReplacementLock lock(path);
 			require(lock.hold(), "Cannot lock the screenshot fixture");
+			ScreenCapture other = image;
+			other.rgba[0] = static_cast<unsigned char>(other.rgba[0] ^ 0xff);
 			error.clear();
-			require(!write_png(path, image, error) && !error.empty(), "A refused PNG write is reported");
+			require(!write_png(path, other, error) && !error.empty(), "A refused PNG write is reported");
 			require(lock.release(), "Cannot release the screenshot fixture");
 			std::ifstream stream(path, std::ios::binary);
 			const std::string kept((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
