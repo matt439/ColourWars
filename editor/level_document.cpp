@@ -424,7 +424,7 @@ namespace colourwars_editor
         if (entry.kind == EntryKind::bounds) { return plain_rectangle(value); }
         if (is_point(entry.kind))
         {
-            const MotionPlayerSize player = impl_->player_size();
+            const MotionPlayerSize player = impl_->marker_size();
             return { number(value, "x"), number(value, "y"), player.width, player.height };
         }
         return object_rectangle(value);

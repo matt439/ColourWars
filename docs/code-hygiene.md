@@ -562,8 +562,11 @@ since lifts reach them too.
 
 Left as found: `level_document.cpp`'s own key literals (about 140, most in the
 File > New template string and the `AddMember` calls) and the canvas's
-`paintable_faces/...` and station `name` property paths, which go with File > New reading `template.json` in
-[`HYG#78`](#editor-shell-and-document-hyg78); and `level_structures.cpp`'s
+`paintable_faces/...` and station `name` property paths. The template string
+went when File > New began reading `template.json` in
+[`HYG#78`](#editor-shell-and-document-hyg78); the `AddMember` literals and the
+property paths moved on to [`HYG#79`](#use-the-engines-text-path-and-environment-helpers-hyg79),
+the next editor row. Also left: `level_structures.cpp`'s
 "Horizontal motion ..." admission refusals, which name the game's
 `HorizontalMotion` type rather than the contract and which the
 `moving_structure` probe matches by those words.
@@ -1136,8 +1139,8 @@ table were already refused.
 Left as found: the probes that restate the reveal timeline by hand
 (`story_checks.h`, `reveal_checks.h`, `monitor_checks.h`,
 `result_percentage_checks.h`, `level_checks.cpp`), for the probe rows; and
-`level_document.cpp`'s File > New template, which still spells `"ground"`
-and goes with [`HYG#78`](#editor-shell-and-document-hyg78).
+`level_document.cpp`'s File > New template, which still spelt `"ground"`;
+[`HYG#78`](#editor-shell-and-document-hyg78) replaced it with `template.json`.
 
 Both presets build under `/W4 /WX`. The full default acceptance list
 (`-Parallel 4`) passed in Release (78 cases) and Debug (79); it covers
@@ -1272,9 +1275,14 @@ box follows source tuning's player size, and a failed registration says
 - `labelled` is the three add/duplicate/paste loops' and the mirror's one way
   to return the added entry with its label; `same_entry` moved beside `Entry`.
   `LevelDocument::Impl::player_size` (tuning's size, or 52 by 120 without
-  tuning) sizes a spawn or station rectangle and replaces the mirror's and the
-  symmetry report's two copies of that fallback. `bounds_labels` is held to
-  `bounds_keys`' length.
+  tuning) replaces the mirror's and the symmetry report's two copies of that
+  fallback, and still throws on unreadable tuning there. A spawn or station
+  rectangle reads `marker_size`, which never throws: it gives 52 by 120 when
+  tuning is unreadable and parses tuning again only when the file's write time
+  changes, so the editor's refresh and paint neither fail on a bad tuning file
+  nor reread it per entry. `level_editor`'s station checks load New with a
+  70 by 140 player and with an unparseable tuning file and require those
+  sizes and the fallback. `bounds_labels` is held to `bounds_keys`' length.
 - `apply_stage_registration`'s two rollback errors start with the cause;
   `ColourWarsRegisterStage` adds the prefix. `level_editor`'s registration
   checks refuse a message that repeats it.
@@ -1288,17 +1296,23 @@ index 1, the slab seam check erases the walls and ceiling (a new
 `erase_template_walls` fixture), and the DPI metadata fixture names
 `left_wall`, New's first object, instead of `floor`.
 
-Left as found: `level_document.cpp`'s `AddMember` key literals for new palette
+Handed on: `level_document.cpp`'s `AddMember` key literals for new palette
 objects and the canvas's `paintable_faces/...` and station `name` property
-paths, which the `HYG#67` and `HYG#76` notes above handed here with File > New; the inline
-template's literals are gone, and these are not in the row's sites.
+paths, which the `HYG#67` note handed here with File > New. They are not in
+this row's sites, so they go to
+[`HYG#79`](#use-the-engines-text-path-and-environment-helpers-hyg79), the next
+row in the editor's sources. The inline template's literals, and the `"ground"`
+the `HYG#76` note handed here, went with it.
 
 Both presets build under `/W4 /WX`. `check-level-editor.ps1` (document,
 DPI, gesture, pending and hidden GUI checks) and `check-stage-registration.ps1`
 passed in Debug and Release, as did the acceptance cases that compile the
 editor document: `level_format`, `moving_structure`, `fixed_slab` and
 `turbulence_blockout`, and the `Quick` opt-in `turbulence_movers`,
-`turbulence_slopes` and `turbulence_slab_stage`.
+`turbulence_slopes` and `turbulence_slab_stage`. The review follow-up
+(`marker_size`) rebuilt both presets and passed `check-level-editor.ps1` and
+`level_format`, `moving_structure`, `fixed_slab` and `turbulence_blockout` in
+each.
 
 The row as filed:
 
@@ -1327,6 +1341,12 @@ Replace the local copies with the engine's helpers:
 - a `DebugArgs::parse_double` for tune's copy;
 - an `environment_variable()` helper for the two `_dupenv_s` readers
   (`sound_groups.cpp:149`).
+
+Handed here by [`HYG#78`](#editor-shell-and-document-hyg78) (first from
+`HYG#67`), as the next row in the editor's sources: spell `level_document.cpp`'s
+`AddMember` key literals for new palette objects with `level_format`'s `key::*`
+names, and the canvas's `paintable_faces/...` and station `name` property paths
+likewise.
 
 ### Debug console commands (`HYG#80`)
 
