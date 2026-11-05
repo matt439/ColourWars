@@ -16,8 +16,9 @@ param(
     [int] $Shards = 1,
     [ValidateRange(0, 63)]
     [int] $Shard = 0,
-    # One leaf name per line, '#' comments allowed: leaves whose pixel pins hold
-    # only on a real GPU. A listed leaf that passes is reported, not failed.
+    # Leaves whose pixel pins hold only on a real GPU: one leaf name per line,
+    # without its dash, with the reason after '#'. A listed leaf that passes is
+    # reported, not failed.
     [string] $KnownFailures,
     [switch] $DebugOnlyLeaves,
     [string] $OutputDirectory
