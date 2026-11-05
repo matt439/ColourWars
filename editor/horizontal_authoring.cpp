@@ -1,4 +1,5 @@
 #include "editor/horizontal_authoring.h"
+#include "editor/path_text.h"
 #include "editor/slab_authoring.h"
 
 #include <algorithm>
@@ -104,9 +105,9 @@ namespace colourwars_editor
     {
         if (tuning.empty()) { fail("motion needs an explicit source tuning.json authoring context for player size."); }
         std::ifstream input(tuning, std::ios::binary);
-        if (!input) { fail("motion cannot read source tuning.json: " + tuning.string()); }
+        if (!input) { fail("motion cannot read source tuning.json: " + path_text(tuning)); }
         const std::string text{ std::istreambuf_iterator<char>(input), {} };
-        if (input.bad()) { fail("motion could not read complete source tuning.json: " + tuning.string()); }
+        if (input.bad()) { fail("motion could not read complete source tuning.json: " + path_text(tuning)); }
         const Document document = parse(text);
         const Json& size = member(member(document, "player"), "size");
         const MotionPlayerSize result{ static_cast<float>(number(size, "x")), static_cast<float>(number(size, "y")) };

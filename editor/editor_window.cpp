@@ -1,4 +1,5 @@
 #include "editor/editor.h"
+#include "editor/path_text.h"
 #include "editor/win32_text.h"
 #include "editor/user_stage_save.h"
 #include "editor/save_guidance.h"
@@ -546,7 +547,7 @@ namespace colourwars_editor
         // away only what this command made, and only while it is empty.
         const bool parent_existed = std::filesystem::exists(folder.parent_path(), error);
         const bool created = std::filesystem::create_directories(folder, error);
-        if (error) throw std::runtime_error("Cannot create " + narrow(folder.wstring()) + ": " + error.message());
+        if (error) throw std::runtime_error("Cannot create " + path_text(folder) + ": " + error.message());
         const auto tidy = [&folder, parent_existed]
         {
             std::error_code ignored;

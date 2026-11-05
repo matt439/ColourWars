@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#79` | OPEN | LOW | S | Use the engine's narrow, widen and path helpers instead of local copies; no `path.string()` in editor messages; the editor document's and canvas's last format-key literals. [Scope](docs/code-hygiene.md#use-the-engines-text-path-and-environment-helpers-hyg79). |
 | `HYG#80` | OPEN | LOW | M | Debug console messages that say the wrong thing, duplicated command helpers, and `reload` validating different text from what it applies. [Scope](docs/code-hygiene.md#debug-console-commands-hyg80). |
 | `HYG#81` | DECISION | LOW | L | AGENTS.md reserves `SCREAMING_SNAKE` for macros, but about 59 constants use it. The author amends the rule or approves the renames. [Scope](docs/code-hygiene.md#the-screaming_snake-constant-rule-hyg81). |
 | `HYG#82` | OPEN | LOW | M | Mechanical renames for names that now mislead (`KeyboardJumpMenu`, `match_owns_pad_slot`, ...), and `MenuInputAction` moves to `game/input`. [Scope](docs/code-hygiene.md#names-that-mislead-hyg82). |

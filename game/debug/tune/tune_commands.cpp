@@ -3,6 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/content_root.h"
+#include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/tune/tune_document.h"
@@ -11,7 +12,6 @@
 #include "game/config/presentation/presentation.h"
 #include "game/save/atomic_file.h"
 #include "game/source_paths.h"
-#include <charconv>
 #include <cmath>
 #include <fstream>
 
@@ -42,20 +42,7 @@ namespace
 	// Forward slashes throughout, as reload prints its directory.
 	std::string shown(const std::filesystem::path& path)
 	{
-		const std::u8string text = path.lexically_normal().generic_u8string();
-		return std::string(text.begin(), text.end());
-	}
-
-	bool parse_double(std::string_view text, double& value)
-	{
-		if (!text.empty() && text.front() == '+')
-		{
-			text.remove_prefix(1);
-		}
-		const char* end = text.data() + text.size();
-		const auto result = std::from_chars(text.data(), end, value);
-		return !text.empty() && result.ec == std::errc() && result.ptr == end &&
-			std::isfinite(value);
+		return labrador::path_to_utf8(path.lexically_normal().generic_wstring());
 	}
 
 	// Console quoting and JSON quoting have different escape rules. Encode the
@@ -364,7 +351,7 @@ DebugStatus DebugDirectorImpl::tune_value(const std::string& path, const std::st
 	else
 	{
 		double current = 0.0;
-		parse_double(token, current);
+		DebugArgs::parse_double(token, current);
 		const bool integer = tune_integer_token(token);
 		double value = 0.0;
 		if (word == "next" || word == "prev")
@@ -375,13 +362,13 @@ DebugStatus DebugDirectorImpl::tune_value(const std::string& path, const std::st
 		else if (word.size() > 2 && (word.compare(0, 2, "+=") == 0 || word.compare(0, 2, "-=") == 0))
 		{
 			double delta = 0.0;
-			if (!parse_double(std::string_view(word).substr(2), delta))
+			if (!DebugArgs::parse_double(std::string_view(word).substr(2), delta))
 			{
 				return DebugStatus::failure("tune: '" + word + "' is not +=number or -=number");
 			}
 			value = word[0] == '+' ? current + delta : current - delta;
 		}
-		else if (!parse_double(word, value))
+		else if (!DebugArgs::parse_double(word, value))
 		{
 			return DebugStatus::failure("tune: '" + word + "' is not a number, next, prev, "
 				"+=x or -=x");

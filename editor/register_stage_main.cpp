@@ -1,4 +1,5 @@
 #include "editor/stage_registration.h"
+#include "editor/path_text.h"
 
 #include <exception>
 #include <filesystem>
@@ -9,18 +10,14 @@
 
 namespace
 {
+    using colourwars_editor::path_text;
+
     struct Options
     {
         std::filesystem::path repository;
         std::filesystem::path stage;
         bool apply = false;
     };
-
-    std::string shown(const std::filesystem::path& path)
-    {
-        const std::u8string bytes = path.u8string();
-        return { reinterpret_cast<const char*>(bytes.data()), bytes.size() };
-    }
 
     void usage(std::ostream& output)
     {
@@ -50,7 +47,7 @@ namespace
             }
             if (flag == L"--help") throw std::invalid_argument("Use --help by itself.");
             if (flag != L"--repo" && flag != L"--stage")
-                throw std::invalid_argument("Unknown argument: " + shown(std::filesystem::path(flag)));
+                throw std::invalid_argument("Unknown argument: " + path_text(std::filesystem::path(flag)));
             bool& present = flag == L"--repo" ? has_repository : has_stage;
             if (present) throw std::invalid_argument(flag == L"--repo" ?
                 "--repo was supplied twice." : "--stage was supplied twice.");
@@ -70,23 +67,23 @@ namespace
 
     void print_preview(const colourwars_editor::StageRegistrationPreview& preview)
     {
-        std::cout << "Stage: " << shown(preview.stage) << '\n'
+        std::cout << "Stage: " << path_text(preview.stage) << '\n'
             << "Name: " << preview.name << '\n';
         if (preview.already_registered)
         {
             std::cout << "Already registered in all three files; no changes.\n"
-                << "  " << shown(preview.manifest.path) << '\n'
-                << "  " << shown(preview.runtime_assets.path) << '\n'
-                << "  " << shown(preview.presentation.path) << '\n';
+                << "  " << path_text(preview.manifest.path) << '\n'
+                << "  " << path_text(preview.runtime_assets.path) << '\n'
+                << "  " << path_text(preview.presentation.path) << '\n';
         }
         else
         {
             std::cout << "Proposed entries:\n"
-                << "  " << shown(preview.manifest.path) << '\n'
+                << "  " << path_text(preview.manifest.path) << '\n'
                 << "    Add to the level asset group's names: \"" << preview.name << "\"\n"
-                << "  " << shown(preview.runtime_assets.path) << '\n'
+                << "  " << path_text(preview.runtime_assets.path) << '\n'
                 << "    Add to COLOURWARS_RUNTIME_ASSETS: \"levels/" << preview.name << ".json\"\n"
-                << "  " << shown(preview.presentation.path) << '\n'
+                << "  " << path_text(preview.presentation.path) << '\n'
                 << "    Add to menu_text.stage_names: \"" << preview.name << "\" with the level's display_name\n";
         }
         std::cout.flush();
@@ -131,7 +128,7 @@ int wmain(int argc, wchar_t** argv)
     {
         std::cerr << "Registration failed: " << error.what() << '\n';
         for (const auto& path : error.recovery_files())
-            std::cerr << "Retained original for recovery: " << shown(path) << '\n';
+            std::cerr << "Retained original for recovery: " << path_text(path) << '\n';
         return 1;
     }
     catch (const std::exception& error)

@@ -1,5 +1,6 @@
 #include "editor/save_guidance.h"
 #include "editor/content_catalog.h"
+#include "editor/path_text.h"
 #include "editor/user_stage_save.h"
 #include "game/contracts/user_stage_contract.h"
 
@@ -19,16 +20,10 @@ namespace colourwars_editor
             return extension == L".json";
         }
 
-        std::string stage_name(const std::filesystem::path& path)
-        {
-            const std::u8string bytes = path.stem().u8string();
-            return { reinterpret_cast<const char*>(bytes.data()), bytes.size() };
-        }
-
         // UTF-8 for a status line; std::filesystem does the conversion.
         std::wstring widen(const std::string& text)
         {
-            return std::filesystem::path(std::u8string(text.begin(), text.end())).wstring();
+            return utf8_path(text).wstring();
         }
     }
 
@@ -39,7 +34,7 @@ namespace colourwars_editor
         if (destination.empty() || !catalog.manifest_read || !json_file(destination) ||
             !same_stage_folder(destination.parent_path(), source_levels))
             return {};
-        const std::string name = stage_name(destination);
+        const std::string name = path_text(destination.stem());
         const auto registered = std::find_if(catalog.stages.begin(), catalog.stages.end(),
             [&name](const std::string& stage) { return user_stage_contract::same_name(stage, name); });
         if (registered == catalog.stages.end()) return {};
@@ -85,7 +80,7 @@ namespace colourwars_editor
         }
         if (json_file(destination) && same_stage_folder(destination.parent_path(), source_levels))
         {
-            const std::string name = stage_name(destination);
+            const std::string name = path_text(destination.stem());
             const bool registered = catalog.manifest_read && std::any_of(catalog.stages.begin(), catalog.stages.end(),
                 [&name](const std::string& stage) { return user_stage_contract::same_name(stage, name); });
             if (registered)

@@ -35,16 +35,6 @@ namespace
 		return traits;
 	}
 
-	std::string narrow_build_label()
-	{
-		std::string label;
-		for (const wchar_t* c = build_info::label; *c != 0; ++c)
-		{
-			label += *c < 0x80 ? static_cast<char>(*c) : '?';
-		}
-		return label;
-	}
-
 	std::filesystem::path replay_path(const std::string& name)
 	{
 		return std::filesystem::path(labrador::widen(directory_consts::replay_directory())) /
@@ -223,7 +213,7 @@ std::uint64_t DebugDirectorImpl::content_hash(std::string_view file)
 ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 {
 	ReplayFile file;
-	file.build = narrow_build_label();
+	file.build = labrador::narrow(build_info::label);
 	file.dt_bits = this->last_dt_bits_;
 	file.seed = this->round_seed_;
 	file.tuning_hash = this->content_hash("tuning");
@@ -791,7 +781,7 @@ void DebugDirectorImpl::register_replay_commands()
 				log.warning("play: presentation.json differs from the recording (camera and "
 					"layout only; the simulation does not read it)");
 			}
-			if (file.build != narrow_build_label())
+			if (file.build != labrador::narrow(build_info::label))
 			{
 				log.warning("play: recorded by " + file.build + "; a replay is exact only on the "
 					"build that made it");

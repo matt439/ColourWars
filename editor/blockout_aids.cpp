@@ -1,5 +1,6 @@
 #include "editor/blockout_aids.h"
 #include "editor/level_json.h"
+#include "editor/path_text.h"
 #include "game/contracts/paint_face_geometry.h"
 #include "game/contracts/fixed_slab_paint_geometry.h"
 #include "editor/horizontal_authoring.h"
@@ -19,7 +20,7 @@ namespace colourwars_editor
         level_json::Document read_json(const std::filesystem::path& path)
         {
             std::ifstream stream(path, std::ios::binary);
-            if (!stream) throw std::runtime_error("Cannot read editor aid data: " + path.string());
+            if (!stream) throw std::runtime_error("Cannot read editor aid data: " + path_text(path));
             const std::string text{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
             return level_json::parse(text);
         }

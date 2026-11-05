@@ -3,6 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
+#include "engine/core/file_path.h"
 #include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
 #include "game/debug/replay/bot.h"
@@ -39,8 +40,7 @@ namespace
 
 	std::string utf8(const std::filesystem::path& path)
 	{
-		const std::u8string text = path.generic_u8string();
-		return std::string(text.begin(), text.end());
+		return labrador::path_to_utf8(path.generic_wstring());
 	}
 
 	using Form = DebugMenuTraits::Form;

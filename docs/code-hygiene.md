@@ -1329,7 +1329,57 @@ The row as filed:
 
 ### Use the engine's text, path and environment helpers (`HYG#79`)
 
-Replace the local copies with the engine's helpers:
+**Done 2026-11-06; behaviour change, for non-ANSI paths only.** Two editor
+messages, a bad aid-data file and an unreadable motion `tuning.json`, used
+`path.string()`, which throws a conversion error on a name the ANSI code page
+cannot spell; they now name the path in UTF-8. Everything else reads and
+writes as before.
+
+- `labrador::narrow` replaces `debug_tokenizer.cpp`'s `WideCharToMultiByte`
+  copy (both turn a lone surrogate into U+FFFD), `replay_commands.cpp`'s
+  `narrow_build_label` and a sibling in `text_wrap.cpp`; the last two wrote
+  `?` for a non-ASCII unit, and both read ASCII (the build label, drawable
+  text). `labrador::widen` replaces `ProfilesMenu`'s byte copy; profile names
+  are A-Z, 0-9 and spaces.
+- `labrador::path_to_utf8` replaces the screenshot line's `u8string` copy in
+  `debug_director_hooks.cpp` and its two generic-form siblings, `reload`'s
+  `utf8` (`game_commands.cpp`) and tune's `shown`, which pass
+  `generic_wstring()` so they keep their forward slashes.
+- [editor/path_text.h](../editor/path_text.h) holds `path_text` (UTF-8 for
+  messages) and `utf8_path` (its inverse). It replaces the `shown` copies in
+  `user_stage_save.cpp`, `register_stage_main.cpp`, `stage_registration.cpp`
+  and `prepared_file.cpp`, `LevelDocument::load`'s inline copy,
+  `save_guidance.cpp`'s `stage_name`, the `utf8_path` in
+  `stage_registration.cpp`, the conversions in `content_catalog.cpp` and
+  `save_guidance.cpp`'s `widen`, the two `path.string()` messages and
+  `editor_window.cpp`'s `narrow(folder.wstring())`. The editor has no engine,
+  so it keeps its own header.
+- `DebugArgs::parse_double` replaces tune's copy; it and `parse_float` share
+  one template.
+- [game/config/environment.h](../game/config/environment.h)'s
+  `environment_variable()` replaces the two `_dupenv_s` readers
+  (`COLOURWARS_MUTE`, `COLOURWARS_LOCALE`).
+- `level_document.cpp` spells every level-format key with `level_format::key::*`
+  (114 literals, the new palette objects' `AddMember` keys among them) and its
+  face loops with `paintable_face_names` and `face::bottom`; the canvas's
+  station `name` and `paintable_faces/...` paths use `key::` and `face::`.
+
+Left as they are: the two wide `LOCALAPPDATA` readers
+(`directory_consts.cpp`, `user_stage_save.cpp`), which return paths, not text;
+`user_stage_save.cpp`'s `stem_of`, whose `?` for a non-ASCII unit is how such a
+name fails the name rule; a motion record's `"type"`, and the coordinate and
+small fields `level_format.h` says are written where they are read; and
+`stage_registration.cpp`'s `"name"` and `"display_name"` literals, which are
+outside the document and canvas. Tune's unchecked `parse_double` call stays
+with [`HYG#80`](#debug-console-commands-hyg80).
+
+Both presets build under `/W4 /WX`. `debug_console`, `locales`, `text_wrap`,
+`menu_text`, `player_profiles`, `menu_navigation`, `settings`, `level_format`,
+`moving_structure`, `fixed_slab` and `turbulence_blockout` passed in Debug and
+Release, as did `check-level-editor.ps1`, `check-stage-registration.ps1` and
+`check-startup.ps1` (plain and `-Locale qps-ploc`).
+
+The row as filed:
 
 - `labrador::narrow` for the local `narrow` (`debug_tokenizer.cpp:25`) and
   `narrow_build_label` (`replay_commands.cpp:37`);

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/locale.h"
 #include "game/config/drawable_text.h"
+#include "game/config/environment.h"
 
 #include "engine/core/file_path.h"
 
@@ -10,7 +11,6 @@
 #include <rapidjson/writer.h>
 
 #include <cstdio>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <initializer_list>
@@ -654,10 +654,5 @@ JsonDocument ActiveLocale::presentation(std::string_view base_text, const std::s
 
 std::string locale_selection::requested_from_environment()
 {
-	char* value = nullptr;
-	size_t length = 0;
-	if (_dupenv_s(&value, &length, "COLOURWARS_LOCALE") != 0 || value == nullptr) { return {}; }
-	const std::string text(value);
-	std::free(value);
-	return text;
+	return environment_variable("COLOURWARS_LOCALE");
 }

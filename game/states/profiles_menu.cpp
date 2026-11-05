@@ -1,18 +1,11 @@
 #include "game/pch.h"
 #include "game/states/profiles_menu.h"
+#include "engine/render/text_encoding.h"
 #include "game/states/menu_cycle.h"
 #include "game/match/player_control.h"
 #include <algorithm>
 
 using namespace labrador;
-
-namespace
-{
-	std::wstring widened(std::string_view name)
-	{
-		return std::wstring(name.begin(), name.end());
-	}
-}
 
 ProfilesMenu::ProfilesMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
 
@@ -112,7 +105,7 @@ void ProfilesMenu::refresh_values()
 		return;
 	}
 	const PlayerProfile& profile = profiles.list[static_cast<size_t>(this->profile_)];
-	this->profile_row_->set_value(widened(profile.name));
+	this->profile_row_->set_value(widen(profile.name));
 	if (this->name_edit_)
 	{
 		// The cursor's character sits in brackets; spaces show as underscores.
@@ -128,7 +121,7 @@ void ProfilesMenu::refresh_values()
 	}
 	else
 	{
-		this->name_row_->set_value(widened(profile.name));
+		this->name_row_->set_value(widen(profile.name));
 	}
 	this->boost_row_->set_value(this->text().handicap_label(profile.boost));
 	const int wearer = this->settings_session()->profile_wearer(this->profile_);

@@ -1,4 +1,5 @@
 #include "editor/user_stage_save.h"
+#include "editor/path_text.h"
 #include "game/contracts/user_stage_contract.h"
 
 #include <windows.h>
@@ -15,12 +16,6 @@ namespace colourwars_editor
     namespace
     {
         namespace fs = std::filesystem;
-
-        std::string shown(const fs::path& path)
-        {
-            const std::u8string bytes = path.u8string();
-            return { reinterpret_cast<const char*>(bytes.data()), bytes.size() };
-        }
 
         std::wstring folded(std::wstring text)
         {
@@ -80,14 +75,14 @@ namespace colourwars_editor
         const std::vector<std::string>& shipped)
     {
         if (!same_stage_folder(chosen.parent_path(), folder))
-            throw std::runtime_error("Save to My Stages saves directly in " + shown(folder) +
+            throw std::runtime_error("Save to My Stages saves directly in " + path_text(folder) +
                 ", which the game reads at startup and when Stage Select opens. "
                 "Use Save As for any other folder.");
         if (folded(chosen.extension().native()) != L".json")
             throw std::runtime_error("The game reads only .json files from My Stages.");
         const std::string name = stem_of(chosen);
         if (!user_stage_contract::usable_name(name))
-            throw std::runtime_error("The game would refuse '" + shown(chosen.filename()) + "': " +
+            throw std::runtime_error("The game would refuse '" + path_text(chosen.filename()) + "': " +
                 user_stage_contract::name_rule() + ".");
         std::string taken;
         if (shipped_name(shipped, name, taken))
@@ -105,14 +100,14 @@ namespace colourwars_editor
             if (!user_stage_contract::same_name(stem_of(entry.path()), name)) continue;
             std::error_code kind;
             if (!entry.is_regular_file(kind))
-                throw std::runtime_error(shown(entry.path()) + " is not a file; move it out of the way first.");
+                throw std::runtime_error(path_text(entry.path()) + " is not a file; move it out of the way first.");
             target.file = entry.path();
             target.name = stem_of(entry.path());
             target.replaces = true;
             break;
         }
         if (error)
-            throw std::runtime_error("Cannot list " + shown(folder) + ": " + error.message());
+            throw std::runtime_error("Cannot list " + path_text(folder) + ": " + error.message());
         return target;
     }
 
@@ -133,7 +128,7 @@ namespace colourwars_editor
         std::error_code error;
         fs::create_directories(folder, error);
         if (error)
-            throw std::runtime_error("Cannot create " + shown(folder) + ": " + error.message());
+            throw std::runtime_error("Cannot create " + path_text(folder) + ": " + error.message());
         document.save(target.file);
     }
 }

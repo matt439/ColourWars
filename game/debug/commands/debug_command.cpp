@@ -35,16 +35,30 @@ bool DebugArgs::parse_int(std::string_view text, int& value)
 	return !text.empty() && result.ec == std::errc() && result.ptr == end;
 }
 
+namespace
+{
+	template <typename Real>
+	bool parse_finite(std::string_view text, Real& value)
+	{
+		if (!text.empty() && text.front() == '+')
+		{
+			text.remove_prefix(1);
+		}
+		const char* end = text.data() + text.size();
+		const auto result = std::from_chars(text.data(), end, value);
+		return !text.empty() && result.ec == std::errc() && result.ptr == end &&
+			std::isfinite(value);
+	}
+}
+
 bool DebugArgs::parse_float(std::string_view text, float& value)
 {
-	if (!text.empty() && text.front() == '+')
-	{
-		text.remove_prefix(1);
-	}
-	const char* end = text.data() + text.size();
-	const auto result = std::from_chars(text.data(), end, value);
-	return !text.empty() && result.ec == std::errc() && result.ptr == end &&
-		std::isfinite(value);
+	return parse_finite(text, value);
+}
+
+bool DebugArgs::parse_double(std::string_view text, double& value)
+{
+	return parse_finite(text, value);
 }
 
 DebugCommand::DebugCommand(std::string name, std::string help,

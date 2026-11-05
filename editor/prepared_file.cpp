@@ -1,4 +1,5 @@
 #include "editor/prepared_file.h"
+#include "editor/path_text.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -22,12 +23,6 @@ namespace colourwars_editor
         {
             throw std::system_error(static_cast<int>(GetLastError()), std::system_category(), what);
         }
-
-        std::string shown(const std::filesystem::path& path)
-        {
-            const std::u8string text = path.u8string();
-            return std::string(text.begin(), text.end());
-        }
     }
 
     PreparedFile::PreparedFile(const std::filesystem::path& destination, std::string_view tag,
@@ -41,7 +36,7 @@ namespace colourwars_editor
         HANDLE output = CreateFileW(path_.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
             FILE_ATTRIBUTE_NORMAL, nullptr);
         if (output == INVALID_HANDLE_VALUE) throw_last_error("Cannot create a temporary file beside " +
-            shown(destination));
+            path_text(destination));
         try
         {
             std::size_t offset = 0;
@@ -51,16 +46,16 @@ namespace colourwars_editor
                     static_cast<std::size_t>((std::numeric_limits<DWORD>::max)())));
                 DWORD written = 0;
                 if (!WriteFile(output, bytes.data() + offset, size, &written, nullptr))
-                    throw_last_error("Cannot write all of the temporary file beside " + shown(destination));
+                    throw_last_error("Cannot write all of the temporary file beside " + path_text(destination));
                 if (written == 0) throw std::system_error(std::make_error_code(std::errc::io_error),
-                    "The temporary file beside " + shown(destination) + " stopped accepting data");
+                    "The temporary file beside " + path_text(destination) + " stopped accepting data");
                 offset += written;
             }
             if (!FlushFileBuffers(output)) throw_last_error("Cannot flush the temporary file beside " +
-                shown(destination));
+                path_text(destination));
             const BOOL closed = CloseHandle(output);
             output = INVALID_HANDLE_VALUE;
-            if (!closed) throw_last_error("Cannot close the temporary file beside " + shown(destination));
+            if (!closed) throw_last_error("Cannot close the temporary file beside " + path_text(destination));
         }
         catch (...)
         {
@@ -86,6 +81,6 @@ namespace colourwars_editor
         // temp->destination renames leave the file absent between calls, and
         // ReplaceFileW without a backup can also remove it on error 1176.
         if (!MoveFileExW(prepared.c_str(), destination.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-            throw_last_error("Cannot replace " + shown(destination));
+            throw_last_error("Cannot replace " + path_text(destination));
     }
 }

@@ -1,6 +1,7 @@
 #include "editor/stage_registration.h"
 #include "editor/content_catalog.h"
 #include "editor/level_document.h"
+#include "editor/path_text.h"
 #include "editor/prepared_file.h"
 #include "game/contracts/user_stage_contract.h"
 
@@ -38,24 +39,13 @@ namespace colourwars_editor
 
         [[noreturn]] void fail(const std::string& text) { throw StageRegistrationError(text); }
 
-        std::string shown(const fs::path& path)
-        {
-            const std::u8string bytes = path.u8string();
-            return { reinterpret_cast<const char*>(bytes.data()), bytes.size() };
-        }
-
-        fs::path utf8_path(const std::string& text)
-        {
-            return fs::path(std::u8string(text.begin(), text.end()));
-        }
-
         std::string read(const fs::path& path)
         {
             std::ifstream input(path, std::ios::binary);
-            if (!input) fail("Cannot read " + shown(path));
+            if (!input) fail("Cannot read " + path_text(path));
             std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-            if (input.bad()) fail("Cannot read all of " + shown(path));
-            if (text.find('\0') != std::string::npos) fail("NUL byte in " + shown(path));
+            if (input.bad()) fail("Cannot read all of " + path_text(path));
+            if (text.find('\0') != std::string::npos) fail("NUL byte in " + path_text(path));
             return text;
         }
 
@@ -79,14 +69,14 @@ namespace colourwars_editor
                 const DWORD attributes = GetFileAttributesW(at.c_str());
                 if (attributes == INVALID_FILE_ATTRIBUTES)
                     throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                        "Cannot inspect " + shown(at));
+                        "Cannot inspect " + path_text(at));
                 if ((attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
-                    fail("Registration refuses a linked/reparse path: " + shown(at));
+                    fail("Registration refuses a linked/reparse path: " + path_text(at));
             }
             const fs::path canonical = fs::canonical(absolute);
-            if (!same_path(absolute, canonical)) fail("Registration path is not canonical: " + shown(absolute));
+            if (!same_path(absolute, canonical)) fail("Registration path is not canonical: " + path_text(absolute));
             if (directory ? !fs::is_directory(canonical) : !fs::is_regular_file(canonical))
-                fail("Registration needs an existing " + std::string(directory ? "directory: " : "file: ") + shown(canonical));
+                fail("Registration needs an existing " + std::string(directory ? "directory: " : "file: ") + path_text(canonical));
             return canonical;
         }
 
@@ -501,7 +491,7 @@ namespace colourwars_editor
         void recheck(const fs::path& path, const std::string& expected)
         {
             safe_existing(path, false);
-            if (read(path) != expected) fail("Changed since registration preview; preview again: " + shown(path));
+            if (read(path) != expected) fail("Changed since registration preview; preview again: " + path_text(path));
         }
 
         std::string failure_text(const std::exception_ptr& error)
@@ -524,7 +514,7 @@ namespace colourwars_editor
         result.stage = safe_existing(stage.is_absolute() ? stage : result.repository / stage, false);
         if (!same_path(result.stage.parent_path(), levels) || result.stage.extension() != ".json")
             fail("Choose an existing .json file directly inside this source tree's game/content/levels");
-        result.name = shown(result.stage.stem());
+        result.name = path_text(result.stage.stem());
         if (!valid_basename(result.name)) fail("Invalid stage basename: " + user_stage_contract::name_rule());
         if (result.name.front() == '_') fail("A shipped stage's basename must not start with '_': "
             "presentation.json's menu_text.stage_names would read its entry as a comment");
@@ -654,7 +644,7 @@ namespace colourwars_editor
         if (!unresolved.empty()) fail("Stage resource validation failed: " + unresolved.front());
         // The game draws a shipped stage by its stage_names entry, whose base
         // English must be the level's display_name byte for byte, on one line.
-        const rapidjson::Document level = json_document(result.stage_original, shown(result.stage.filename()));
+        const rapidjson::Document level = json_document(result.stage_original, path_text(result.stage.filename()));
         const std::string display_name = text(field(level, "display_name"), "display_name");
         if (display_name.find_first_not_of(' ') == std::string::npos ||
             display_name.find_first_of("\r\n") != std::string::npos)
@@ -742,7 +732,7 @@ namespace colourwars_editor
                 }
                 catch (...)
                 {
-                    rollback_failures += (rollback_failures.empty() ? "" : "; ") + shown(files[index]->path) + ": " +
+                    rollback_failures += (rollback_failures.empty() ? "" : "; ") + path_text(files[index]->path) + ": " +
                         failure_text(std::current_exception());
                 }
             }

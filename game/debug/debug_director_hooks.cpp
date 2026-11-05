@@ -2,6 +2,7 @@
 #include "game/debug/dev_tools.h"
 
 #if COLOURWARS_DEV_TOOLS
+#include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/console/debug_console_view.h"
@@ -495,8 +496,7 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 			this->log_.error("screenshot failed: " + error);
 			return;
 		}
-		const std::u8string text = path.u8string();
-		this->log_.info("screenshot: " + std::string(text.begin(), text.end()) + " (" +
+		this->log_.info("screenshot: " + labrador::path_to_utf8(path) + " (" +
 			std::to_string(image.width) + "x" + std::to_string(image.height) + ")");
 	}
 	catch (const std::exception& e)
