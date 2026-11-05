@@ -204,7 +204,7 @@ namespace
 		{ throw std::runtime_error(slab.where() + ": rise must be 'left' or 'right'"); }
 		const FixedSlabSpec spec{ { slab.number("x"), slab.number("y") },
 			rise == "right" ? FixedSlabRise::right : FixedSlabRise::left };
-		try { (void)FixedSlabGeometry(spec); }
+		try { std::ignore = FixedSlabGeometry(spec); }
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(slab.where() + ": " + error.what()); }
 		return spec;
@@ -569,7 +569,7 @@ std::unique_ptr<FixedSlabPaintable>
 		const TeamColour& team_colours, const StageContext& context) const
 {
 	const std::string type = json.string(key::type);
-	(void)collision_type_of(json, type);
+	std::ignore = collision_type_of(json, type);
 	const FixedSlabSpec spec = decode_slab(json);
 	const JsonValue face = json.object(key::paintable_faces);
 	const PaintableFaces faces{ face.boolean(level_format::face::left), face.boolean(level_format::face::top),
@@ -624,7 +624,7 @@ std::vector<std::unique_ptr<GameObject>>
 		if (object.has(key::motion)) { continue; }
 		if (type == object_type::fixed_slab_paintable)
 		{
-			(void)checked_record_gate(object);
+			std::ignore = checked_record_gate(object);
 			const auto slab = this->build_fixed_slab(object, TeamColour{}, context);
 			shadows.push_back(std::make_unique<FixedSlabShadow>(slab->geometry(), slab->exposed_bottom(), this->render_resources_));
 			continue;

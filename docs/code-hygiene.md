@@ -904,8 +904,12 @@ Everything else listed below is deleted as written, with these notes:
   and `directory_consts.h`, which `save.cpp` now includes itself. The CMake
   comment on `source_paths.h` names its real users.
 - The validate-only calls are written `std::ignore = ...`, the game's usual
-  form: the palette check in `save.cpp` and the two `(void)` siblings in
-  `match_bot.cpp` and `locale.cpp`.
+  form: the palette check in `save.cpp`, the `(void)` siblings in
+  `match_bot.cpp` and `locale.cpp`, and the three in `level_object_builder.cpp`
+  (slab geometry, collision type, record gate). The `(void)` in
+  `display_awake.h` and `rumble_gamepads.cpp` discard a best-effort platform
+  call's result rather than validate, and the probes under `scripts/acceptance/`
+  are not the game, so both are left.
 
 Left: `Player`'s constructor still takes the `primary` and `secondary` weapon
 types and reads neither. Removing them touches about thirty probe constructions

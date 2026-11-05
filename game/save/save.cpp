@@ -6,6 +6,7 @@
 #include "engine/core/file_path.h"
 #include "engine/math/vector2i.h"
 #include "game/directory_consts.h"
+#include <chrono>
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
