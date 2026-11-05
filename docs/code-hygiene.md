@@ -277,10 +277,11 @@ Each named site now says what the code does:
   `save.cpp` says the first save fails before any page could report it, which
   is why it gets a dialog.
 - `debug-console.md` lists all sixteen RTTI names (`DebugBackgroundInput` was
-  missing) and `SkirmishBot` in the bot hierarchy. `README.md`'s tree has
-  today's line counts (~78k, ~17k, ~7k), what RapidJSON reads and what `cmake/`
-  holds (no wave-bank recipe; staging and checks). `level-format.md` says the
-  archived levels had their bank and music renamed and all use `level_name`,
+  missing) and `SkirmishBot` in the bot hierarchy, and says Release passes
+  `Level::update` only the round tape as `seats` (not "always null").
+  `README.md`'s tree has today's line counts (~78k, ~17k, ~7k), what RapidJSON
+  reads and what `cmake/` holds (no wave-bank recipe; staging and checks).
+  `level-format.md` says three of the four archived levels had their bank and music renamed and all use `level_name`,
   names the two drives (they are described below the line, not above), and
   counts thirteen registered stages. `docs/README.md` says what
   `gameplay-tuning.md` covers and that Press Tower and Turbulence's slab trial

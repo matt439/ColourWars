@@ -1575,8 +1575,8 @@ as the game. In Release:
   `debug_screen_obstacles` with their `GameLevel` adapters, and
   `DebugDirector::begin_match_draw`, an inline no-op; the
   `SeatInputFilter` interface, also used by the shipping round tape, and
-  the developer `seats` parameter of `Level::update`, always null in Release
-  (shipping bots are owned by Level); `DebugMatchView::debug_level`;
+  the `seats` parameter of `Level::update`, which in Release only ever
+  carries that tape (shipping bots are owned by Level); `DebugMatchView::debug_level`;
   `pad_seat_missing`, whose "driven by a bot or replay" half is always false;
   `DebugDirector` itself, one null pointer with inline no-op hooks
   (`match_suspended`, `drives_slot` among them) and four inline step hooks

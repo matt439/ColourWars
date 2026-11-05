@@ -33,8 +33,9 @@ rotate, move, position or reorder a level object. Unsupported `type` and
 `collision_type` values are errors.
 
 The old JSON examples in [game/art/archive/levels](../game/art/archive/levels)
-are historical sources, retained as authored except that the Paint.exe audio
-renamed their sound bank and music. All use `level_name` instead of the current
+are historical sources, retained as authored except that the switch to the
+Paint.exe audio renamed the sound bank and music of three of them
+(`level_0.json` names neither). All use `level_name` instead of the current
 metadata and some carry unsupported object tags; `base.json` there is not a
 template for the current loader. The Publisher documents in
 [game/art/sources/levels](../game/art/sources/levels) are layout source material,
