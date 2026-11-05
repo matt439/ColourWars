@@ -770,7 +770,9 @@ frame is refused at load.
   and `content_value.h` says where the check runs.
 - `menu_style.box_size` is gone from the file, the reader and `MenuStyle`.
 - `main_menu.options_value_colour` is `debug_overlay.menu_value_colour`
-  (`DebugOverlayPresentation`), which the Debug menu reads.
+  (`DebugOverlayPresentation`), which the Debug menu reads. It is a string
+  outside `tune`'s colour allowlist, so it was not a `tune` path before the
+  move and is not one now; `debug_console`'s allowlist check keeps it so.
 - `hud.player_identity.background_colour` is
   `main_menu.stage_select.preview_background` (`StageSelectPresentation`). Its
   `tune` path, scope (next screen) and every `debug_console` and
@@ -808,6 +810,14 @@ passed in both. `check-painter.ps1`'s `HudHealthTuneColourOnly`,
 `CountdownOnly` and `PracticeReplayOnly` passed in both presets. Seven of them
 first failed with capture or save writes refused under a long evidence path;
 they passed rerun with a short `-OutputDirectory`.
+
+After review, `menu_presentation` checks each new `require_known_keys` site
+(`camera`, `main_menu`, `menu_text`, `pause_menu`, both `stage_scan` blocks,
+both kinds of slip stroke edit, `match.controls_text` and its `shadow_offset`):
+a misspelt key is refused with the file and object named, a `_` key still
+loads, and a misspelt `remove` is refused. It, `user_stages` and
+`debug_console` passed in both presets; with the `camera` check disabled (not
+committed), it failed.
 
 ### Tuning and content-validation readers (`HYG#72`)
 

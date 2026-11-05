@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <rapidjson/document.h>
@@ -416,6 +417,63 @@ namespace
         std::cout << "PASS figure cross-checks: respawn canvas and slip refusals name their position in the file\n";
     }
 
+    void check_unknown_keys(Variants& variants)
+    {
+        // Each object with an optional member refuses a key its reader does not
+        // read, so a misspelt optional key stops the load instead of falling
+        // back. A '_' comment key is still accepted.
+        const auto slip = [](rapidjson::Document& d, const char* id, rapidjson::SizeType edit) -> rapidjson::Value&
+        {
+            for (auto& entry : d["figure"]["slips"]["list"].GetArray())
+            {
+                if (std::string(entry["id"].GetString()) == id) { return entry["strokes"][edit]; }
+            }
+            throw std::runtime_error(std::string("figure.slips has no slip '") + id + "'");
+        };
+        struct Site
+        {
+            const char* owner;
+            std::function<rapidjson::Value& (rapidjson::Document&)> object;
+        };
+        const std::vector<Site> sites{
+            { "camera", [](rapidjson::Document& d) -> rapidjson::Value& { return d["camera"]; } },
+            { "main_menu", [](rapidjson::Document& d) -> rapidjson::Value& { return d["main_menu"]; } },
+            { "menu_text", [](rapidjson::Document& d) -> rapidjson::Value& { return d["menu_text"]; } },
+            { "pause_menu", [](rapidjson::Document& d) -> rapidjson::Value& { return d["pause_menu"]; } },
+            { "main_menu.stage_scan", [](rapidjson::Document& d) -> rapidjson::Value&
+                { return d["main_menu"]["stage_scan"]; } },
+            { "menu_text.stage_scan", [](rapidjson::Document& d) -> rapidjson::Value&
+                { return d["menu_text"]["stage_scan"]; } },
+            { "strokes", [slip](rapidjson::Document& d) -> rapidjson::Value&
+                { return slip(d, "smirk_line_overshoot", 0); } },
+            { "strokes", [slip](rapidjson::Document& d) -> rapidjson::Value&
+                { return slip(d, "smirk_line_overshoot", 1); } },
+            { "strokes", [slip](rapidjson::Document& d) -> rapidjson::Value&
+                { return slip(d, "front_ear_short", 0); } },
+            { "match.controls_text", [](rapidjson::Document& d) -> rapidjson::Value&
+                { return d["match"]["controls_text"]; } },
+            { "shadow_offset", [](rapidjson::Document& d) -> rapidjson::Value&
+                { return d["match"]["controls_text"]["shadow_offset"]; } },
+        };
+        for (const Site& site : sites)
+        {
+            variants.rejects(site.owner, "misspelt_optional_key", [&](rapidjson::Document& d)
+                { site.object(d).AddMember("misspelt_optional_key", true, d.GetAllocator()); });
+            variants.load([&](rapidjson::Document& d)
+                { site.object(d).AddMember("_reviewer_note", "kept", d.GetAllocator()); });
+        }
+        // The key that chooses a slip edit, misspelt, is refused rather than
+        // read as a replacement.
+        variants.rejects("strokes", "remvoe", [&](rapidjson::Document& d)
+        {
+            auto& edit = slip(d, "front_ear_short", 0);
+            edit.RemoveMember("remove");
+            edit.AddMember("remvoe", true, d.GetAllocator());
+        });
+        std::cout << "PASS unknown keys: camera, main_menu, menu_text, pause_menu, both stage_scan blocks, "
+            "slip stroke edits and match.controls_text refuse a misspelt key and accept a comment key\n";
+    }
+
     void check_layout(Variants& variants, World& world)
     {
         const auto custom = variants.load([](rapidjson::Document& d)
@@ -631,6 +689,7 @@ int main(int argc, char** argv)
         check_camera_options(variants);
         check_practice_row_spacing(variants);
         check_figure_cross_checks(variants);
+        check_unknown_keys(variants);
         check_gate_permission(variants);
         check_ferry_direction(variants);
         check_layout(variants, world);
