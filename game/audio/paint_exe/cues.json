@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "Author accepted this set on 2026-10-14 for POL#23 integration.",
+  "status": "Author accepted this set on 2026-10-14; the game ships it.",
   "required_cues": [
     "music.menu",
     "music.close_quarters",

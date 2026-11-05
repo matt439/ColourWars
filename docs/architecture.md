@@ -181,7 +181,7 @@ engine-only caller count is report `ENG#28` in the
 [engine-report ledger](review/engine-reports.md). `HYG#51` kept the name: the
 folder is that report's exhibit. The author's 2026-11-03 answer was to amend the
 engine's changelog before the tag, but `v0.3.0` shipped both entries unamended,
-so the report is open again for the author's call. Either way the folder is the
+so on 2026-11-05 the author closed the report as declined. The folder is the
 migration in use; its contents are deleted, not renamed, only if the engine
 brings the types back.
 

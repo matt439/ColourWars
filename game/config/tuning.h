@@ -45,8 +45,9 @@ struct InputTuning
 	float menu_release_threshold = 0.0f;
 };
 
-// Provisional shipped-opponent policy. Every difficulty uses the same world
-// observations, movement and resource rules; these only govern decisions.
+// Shipped-opponent policy, accepted as it stands on 2026-11-05 (ROAD#10).
+// Every difficulty uses the same world observations, movement and resource
+// rules; these only govern decisions.
 struct BotDifficultyTuning
 {
 	int reaction_steps = 1;
@@ -258,8 +259,8 @@ struct PlayerMovementSounds
 	float skid_repeat_delay = 0.0f;
 };
 
-// Experimental POL36 mechanics. Missing old content stays disabled/neutral.
-// Trial amounts require attended POL30/POL27 acceptance.
+// Paint underfoot (POL#36). These defaults are the off state a missing old
+// block reads as; tuning.json ships it on since POL#30 was accepted on 2026-11-05.
 struct PaintUnderfootTuning
 {
     bool enabled = false;
@@ -268,7 +269,7 @@ struct PaintUnderfootTuning
     float enemy_speed_multiplier = 1.0f;
     float enemy_ammo_regen_multiplier = 1.0f;
     // Health does not regenerate while standing on enemy paint. Optional;
-    // missing reads as false, and nothing changes while the trial is off.
+    // missing reads as false, and nothing changes while the mechanic is off.
     bool enemy_blocks_health_regen = false;
 };
 struct PlayerTuning

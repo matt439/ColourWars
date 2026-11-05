@@ -453,9 +453,10 @@ The private legacy bank is retired and never staged or packaged. See
 [NOTICE](NOTICE) for licence terms and voluntary credits.
 
 The existing game bindings use the replacement cues, including separate
-countdown beats/GO and the story's pop, sigh and chair creak. Further new cue
-hooks and the gameplay mix remain [open](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration);
-asset acceptance does not establish listening or multiplayer acceptance.
+countdown beats/GO and the story's pop, sigh and chair creak. On 2026-11-05 the
+author accepted the hooks and gameplay mix as they stand and waived the listening
+and multiplayer checks, which were not performed; a further cue hook is
+[new work](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration).
 
 The manifest still marks the bank `"optional": true`. If it is missing, the
 loader substitutes a silent bank and reports it once on stderr. Gameplay

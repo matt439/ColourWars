@@ -594,14 +594,14 @@ namespace debug_console_acceptance
         // switch on, as it ships (POL#30). This remains a CPU determinism check.
         // A completed replay retains its input player until explicitly stopped;
         // recording correctly refuses that attached player, even after MATCH.
-        const DebugStatus stopped_trial_replay = impl.execute("play stop");
-        require(stopped_trial_replay.ok && !impl.playing(),
-            "Cannot release the completed replay before active recording: " + stopped_trial_replay.message);
+        const DebugStatus stopped_replay = impl.execute("play stop");
+        require(stopped_replay.ok && !impl.playing(),
+            "Cannot release the completed replay before active recording: " + stopped_replay.message);
         require(impl.execute("pause off").ok && tuning.player().paint_underfoot.enabled,
             "The active replay fixture expects paint underfoot to ship enabled");
-        const std::string trial_name = "pol36_active_" + std::to_string(_getpid());
-        const DebugStatus trial_record = impl.execute("record " + trial_name + " 600");
-        require(trial_record.ok, "Cannot queue actual active-prototype recording: " + trial_record.message);
+        const std::string underfoot_name = "pol36_active_" + std::to_string(_getpid());
+        const DebugStatus underfoot_record = impl.execute("record " + underfoot_name + " 600");
+        require(underfoot_record.ok, "Cannot queue actual paint-underfoot recording: " + underfoot_record.message);
         drive(director, fresh, dt, 2000, [&] { return impl.recording(); });
         require(impl.recording(), "Active recording did not start after its fresh build");
         bool consumed_owned_step = false;
@@ -618,18 +618,18 @@ namespace debug_console_acceptance
             return !impl.recording();
         });
         require(!impl.recording() && consumed_owned_step, "Active replay control never consumed a nonneutral step_team");
-        const std::filesystem::path trial_path = std::filesystem::path(labrador::widen(
-            directory_consts::replay_directory())) / labrador::path_from_utf8(trial_name + ".json");
-        const ReplayFile trial = ReplayFile::read(trial_path);
-        require(trial.updates == 600 && !trial.final_print.seats.empty() &&
-            std::all_of(trial.final_print.seats.begin(), trial.final_print.seats.end(),
+        const std::filesystem::path underfoot_path = std::filesystem::path(labrador::widen(
+            directory_consts::replay_directory())) / labrador::path_from_utf8(underfoot_name + ".json");
+        const ReplayFile underfoot = ReplayFile::read(underfoot_path);
+        require(underfoot.updates == 600 && !underfoot.final_print.seats.empty() &&
+            std::all_of(underfoot.final_print.seats.begin(), underfoot.final_print.seats.end(),
                 [](const MatchFingerprint::Seat& seat) { return seat.paint_underfoot; }),
             "Actual active fingerprints omitted their future-affecting effect state");
-        require(impl.execute("play " + trial_name).ok && director.before_match_update(fresh, dt) && impl.playing(),
-            "Cannot build actual active-prototype replay");
+        require(impl.execute("play " + underfoot_name).ok && director.before_match_update(fresh, dt) && impl.playing(),
+            "Cannot build actual paint-underfoot replay");
         drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= 600; });
-        require(log_contains(log, "replay " + trial_name + ": MATCH (600 updates", DebugSeverity::info),
-            "Actual active-prototype replay diverged");
+        require(log_contains(log, "replay " + underfoot_name + ": MATCH (600 updates", DebugSeverity::info),
+            "Actual paint-underfoot replay diverged");
         require(tuning.player().paint_underfoot.enabled,
             "Active replay fixture changed the shipped paint-underfoot switch");
 		// HYG#39: with no seed, a recording writes the round seed the build

@@ -1,10 +1,11 @@
-"""Validate the POL#22 sources and build an isolated audition wave bank.
+"""Validate the Paint.exe masters and build the wave bank the game ships.
 
     python scripts/audio/audio_pipeline.py validate
     python scripts/audio/audio_pipeline.py build
 
 Python standard library only; build also needs ffmpeg and the checked-in
-XWBTool. The live content bank and game are deliberately not changed here.
+XWBTool. build writes only under out/; publish_runtime_bank.py stages its
+bank into game content once the masters match acceptance.json.
 """
 
 from __future__ import annotations
@@ -344,7 +345,7 @@ def inspect_bank(path: Path, exports: list[dict]) -> dict:
 
 def build(manifest: dict, report: dict, output: Path, root: Path = REPOSITORY) -> dict:
     require(output.resolve().is_relative_to((root / "out").resolve()),
-            "derived output must stay under repository out/; this task does not replace the live bank")
+            "derived output must stay under repository out/; publish_runtime_bank.py replaces the live bank")
     ffmpeg = shutil.which("ffmpeg")
     require(ffmpeg is not None, "ffmpeg is required to encode music")
     xwbtool = root / "scripts/audio/tools/XWBTool.exe"

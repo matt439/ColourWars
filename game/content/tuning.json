@@ -7,7 +7,7 @@
         "menu_release_threshold": 0.6
     },
     "bots": {
-        "_comment": "Initial policy only; attended play must establish distinct and useful difficulty.",
+        "_comment": "Shipped-opponent policy; the author accepted these values as they stand on 2026-11-05 (ROAD#10) without the attended difficulty comparison.",
         "sight_distance": 1600.0,
         "reserve_low": 0.15,
         "reserve_resume": 0.80,
@@ -26,7 +26,7 @@
         "hard": { "reaction_steps": 4, "replan_steps": 15, "territory_candidates": 32, "aim_error_radians": 0.05 }
     },
     "handicaps": {
-        "_comment": "Per-seat Boost chosen on the Tools page. Provisional until couch play (ROAD#2) says whether +1 and +2 are worth it.",
+        "_comment": "Per-seat Boost chosen on the Tools page. The author accepted +1 and +2 at these values on 2026-11-05 (ROAD#5) without the couch sessions.",
         "none": { "damage_taken": 1.0, "paint_refill": 1.0 },
         "plus_one": { "damage_taken": 0.8, "paint_refill": 1.25 },
         "plus_two": { "damage_taken": 0.65, "paint_refill": 1.5 }
@@ -184,7 +184,7 @@
         "x_acceleration": 900.0,
         "x_deacceleration": 2500.0,
         "paint_underfoot": {
-          "_comment": "POL30 accepted 2026-11-05: on, at the POL36 trial amounts; the health lockout stays off.",
+          "_comment": "POL#30 accepted 2026-11-05: on, at the amounts POL#36 built; the health lockout stays off.",
           "enabled": true,
           "own_speed_multiplier": 1.10,
           "own_ammo_regen_multiplier": 1.25,

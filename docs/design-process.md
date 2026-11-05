@@ -361,7 +361,8 @@ does not decide" says, that reorders nothing and closes no gate.
    good session to `POL#19` and `ROAD#10`; P5's player authors to
    `ROAD#16`/`ED#5`, blocked while the editor is unshipped. POL#46's Study B
    is not one of them: its participants judge screenshots and never play.
-   *Reopen* if a later study kit gains a background questionnaire on play
+   On 2026-11-05 the author waived those sessions, so every (H) stays
+   unobserved. *Reopen* if a later study kit gains a background questionnaire on play
    habits, which could then be a P2 source.
 3. **The unserved stories.** B8 (pad aim against the mouse seat) and F6
    (user stages in Random) map to "none"; F7 (sharing) is served by copying

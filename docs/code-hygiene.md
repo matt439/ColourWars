@@ -209,16 +209,44 @@ passed and rewrote its outputs unchanged.
 
 ### Status text after the 2026-11-05 decisions (`HYG#61`)
 
-Reword every comment, `_comment` and doc line that still describes a row settled
-on 2026-11-05 as an open trial or pending review. The sites are
-`tuning.h:261`, `tuning.json:29` and `:187`, `audio_pipeline.py:1`, `README.md:456`
-and the matching AGENTS.md audio paragraph, `architecture.md:182` (report 28 was
-declined), `game/art/README.md:300`, `gameplay-tuning.md:536`,
-`level-editor.md:1082`, `design-process.md:358`, `game/art/painter/README.md:58`,
-the `scripts/debug/*.cfg` headers and the "prototype" diagnostics in
-`replay_checks.cpp:604`. Fix `prepare_review.py:50`'s status text and regenerate
-`PROVENANCE.md`, `cues.json` and the review page from it. Write row ids with `#`.
-Frozen reviews are not touched.
+**Done 2026-11-05.** Text only; the game's behaviour is unchanged. Every named
+site now says what was decided on 2026-11-05: the bot policy and Boost values
+in `tuning.h` and `tuning.json` were accepted (`ROAD#10`, `ROAD#5`), paint
+underfoot ships on (`POL#30`, at the amounts `POL#36` built), report 28 was
+declined, `ED#5` was accepted without its session, and the listening,
+clean-PC, pad and finish checks (`ROAD#1`-`ROAD#3`, `POL#24`) were waived, not
+performed. Sibling sites done with them: the bot comments in `tuning.h` and
+`tuning.json`, `audio_pipeline.py`'s build refusal, the Paint.exe production
+READMEs (`paint_exe/README.md`, `foley/README.md`, `music/PRODUCTION.md`),
+foley's `review_status` in `build.py` and in the `PROVENANCE.json` it wrote
+(edited in place, not re-rendered), `check-finish-details.ps1`'s header, the
+`crossfeed_coupled`, `review_bots_boost` and `review_finish_details` headers,
+and the "prototype" and "trial amounts" wording in `match_fingerprint`, the
+`debug_console`, `paint_underfoot`, `handicap` and `moving_structure` probes.
+
+`prepare_review.py` now says the accepted set ships and, only while the masters
+match `acceptance.json`, what became of `POL#23` and `ROAD#3`; a changed set
+still reads as candidates. Running it rewrote `cues.json`'s status, the
+provenance header and its 103 per-wave status lines, and the review page's
+status paragraph, and nothing else. It also re-encoded the three audition Oggs
+with this machine's FFmpeg; those bytes are not reproducible, so they were put
+back and are not part of the change.
+
+Left as found: `acceptance.json`'s `remaining` field, the author's 2026-10-14
+record as given; dated increment logs whose owner already carries a 2026-11-05
+status note (audio inventory §9, `ROAD#10` and the `ED#5` checkpoints in
+feature-roadmap.md and level-editor.md); and the probes' PASS summaries that
+say attended acceptance "remains open", which are output rather than comments
+and go to `HYG#87`.
+
+Both presets build under `/W4 /WX`, and the build's wave-bank check passed in
+both. `paint_underfoot`, `handicap`, `moving_structure`, `debug_console`,
+`menu_navigation`, `gameplay_tuning`, `settings`, `bot_driver` and
+`instant_replay` passed in Debug and Release. The audio unit tests and
+`audio_pipeline.py validate` passed, the Release ZIP passed
+`check-release-package.ps1`, and `check-startup.ps1` passed on both executables
+and the extracted ZIP. `check-finish-details.ps1` needs a foreground desktop and
+was not run; only its comment changed.
 
 ### Comments and reference docs that drifted (`HYG#62`)
 
@@ -708,7 +736,14 @@ pins.
   `story_audio` include convention, internal linkage for file-local helpers, the
   BOM in `team_palette.cpp` and the fixture folders `fatal_report` leaves.
 - Fix the fused words (`exceeded500`), the `#`-less row ids (`ROAD34`, `POL36`,
-  `CI1`) and the stale "draft" headers.
+  `CI1`) and the stale "draft" headers. `HYG#61` already wrote `POL#36` in
+  `moving_structure/replay_checks.cpp`.
+- Reword the PASS summaries that still say attended or human acceptance
+  "remains open" (from `HYG#61`): `cq_blockout.cpp`, `crossfeed.cpp`,
+  `crossfeed/pressure_checks.cpp`, `press_tower.cpp`, `fixed_slab.cpp`,
+  `turbulence_blockout.cpp`, `turbulence_slopes.cpp`,
+  `balance_runner/self_checks.cpp` and the painter's `cq_blockout_checks.h`
+  and `crossfeed_checks.h`.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 

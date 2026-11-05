@@ -200,7 +200,7 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
 		hash = mix(hash, bits_from_float(area));
 	}
 	hash = mix(hash, static_cast<std::uint32_t>(print.level_state));
-    // All static/POL36 hash operations above retain their original order. The
+    // All static/POL#36 hash operations above retain their original order. The
     // Level owns completed-boundary scratch overwrite/consume invariants.
     append_motion(print, level, hash);
 	print.hash = hash;

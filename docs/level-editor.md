@@ -1079,7 +1079,8 @@ checker pass in both presets. Evidence is under
 
 Builds used the installed-dependency offline workflow above, restoring both
 manifest-install cache settings to `ON` before runtime checks. No engine or
-vendored RapidJSON source changed. The attended `ED#5` gate remains open.
+vendored RapidJSON source changed. The attended `ED#5` session was never held;
+the author accepted the editor without it on 2026-11-05.
 
 ## Station and copy backlog (2026-10-29)
 

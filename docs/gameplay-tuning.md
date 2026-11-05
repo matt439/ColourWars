@@ -533,8 +533,8 @@ SHA256 `5C89F9A5C460EAAB0E03E04C14925520F675DF4ED04B8D14EC67F6B66FFD61E1`.
 
 This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` were attended
 decisions, accepted by the author on 2026-11-05 at current values; the report neither authorizes retuning nor accepts a new bot opponent.
-`POL#36` remains its separately selected paint-underfoot prototype, using a future
-explicit switch-off comparison; no such mechanic was enabled in this baseline.
+`POL#36`, paint underfoot, was off in this baseline. It has shipped on since the
+author accepted `POL#30` on 2026-11-05, without the switch-off comparison planned here.
 
 ## Shipping bots in the headless runner (`TOOL#2`, 2026-10-29)
 

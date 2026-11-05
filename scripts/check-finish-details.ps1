@@ -12,7 +12,8 @@ param(
 # Opt-in, local (POL#43): runs the finish-review detail A/B,
 # `ColourWars.exe +exec review_finish_details +quit`, on the real Debug
 # executable with an isolated profile, and checks what it prepares for the
-# attended finish review (POL#24):
+# attended finish review (POL#24), which the author waived on 2026-11-05; the
+# frames stay as material for a later review:
 #   - the game exits cleanly, the script reaches its end, nothing logs an error;
 #   - 33 PNGs: frames t07s, t17s and t54s for all_on and for each of the ten
 #     presentation `enabled` flags turned off (no_<detail>);

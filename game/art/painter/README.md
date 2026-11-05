@@ -55,7 +55,8 @@ action after its two frames and returns to locomotion.
 These are full-body drawings, but `fire` changes only the face so repeated
 shots never redraw the legs. Runtime shows it only on a standing body and holds
 its second frame under sustained fire; physics and the muzzle continue to use
-their existing positions. Action timing and moving-fire readability still need human review.
+their existing positions. Action timing and moving-fire readability had no human
+review: the finish review that was to look (`POL#24`) was waived on 2026-11-05.
 
 Each frame reserves four transparent texels on both horizontal edges, giving
 eight texels between visible art in contiguous animation frames. There are

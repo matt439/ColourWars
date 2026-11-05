@@ -188,7 +188,7 @@ namespace debug_console_acceptance
 			MatchFingerprint::difference(file.final_print, read.final_print).empty() &&
 			read.final_print.hash == 99, "A replay file round-trips");
         // The optional active state round-trips; disabled files retain exactly
-        // the legacy encoding and contain no prototype-only fields.
+        // the legacy encoding and contain no paint-underfoot fields.
         const std::string legacy_encoding = read_text(path);
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = static_cast<int>(PlayerTeam::a);
