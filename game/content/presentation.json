@@ -318,6 +318,26 @@
       "resuming": "RESUMING",
       "replay": "REPLAY"
     },
+    "controls": {
+      "keyboard_heading": "KEYBOARD + MOUSE",
+      "gamepad_heading": "GAMEPAD",
+      "keyboard_reminder": "{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot\nMouse  Aim    |    {pause}  Pause",
+      "gamepad_reminder": "Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot\nRight stick  Aim    |    {pad_pause}  Pause",
+      "gamepad_per_pad_reminder": "Left stick  Move    |    Stick down  Drop through\n{pads}\nRight stick  Aim",
+      "gamepad_pad_line": "Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_pause} Pause",
+      "per_pad": "per pad",
+      "labels": {
+        "space": "Space",
+        "escape": "Esc",
+        "none": "None",
+        "start": "Start",
+        "mouse_left": "Left click",
+        "mouse_right": "Right click",
+        "mouse_middle": "Middle click",
+        "mouse_x1": "Mouse 4",
+        "mouse_x2": "Mouse 5"
+      }
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

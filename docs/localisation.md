@@ -65,8 +65,11 @@ element leaves that element as it is. A locale changes **copy only**:
 
 - everything under `menu_text`, the match's own copy included:
   `menu_text.hud` (the identity box's team labels and the HEALTH and PAINT
-  meter labels; its device line is `menu_text.labels`) and
-  `menu_text.countdown` (the GET READY, RESUMING and REPLAY headings);
+  meter labels; its device line is `menu_text.labels`),
+  `menu_text.countdown` (the GET READY, RESUMING and REPLAY headings) and
+  `menu_text.controls` (the in-match controls reminder, its KEYBOARD + MOUSE
+  and GAMEPAD headings, the Controls help's "per pad", and the words among
+  the control labels - see [Control labels](#control-labels));
 - `main_menu.weapon_descriptions.*` and `main_menu.weapon_select.choices.*.name`;
 - `main_menu.credits.text`;
 - `team_palette.pairs[].label`.
@@ -182,6 +185,23 @@ with no room for two more characters, which fall back to English:
 Select roster row must end before the first choice icon). A translation longer
 than English by more than a few characters will meet the same limit there.
 
+## Control labels
+
+A control's label is a legend or a word. The legends - the letters `A`-`Z`
+and the pad's `A`, `B`, `X`, `Y`, `LB`, `RB`, `LT`, `RT`, `LS` and `RS` - are
+what is printed on the key or button, the same in every language as digits
+are, and stay in code ([input_bindings.cpp](../game/input/input_bindings.cpp)),
+as does the ` / ` between a primary control and its alternate. The words are
+`menu_text.controls.labels`: `space`, `escape` (the fixed pause key), `none`
+(an unbound Pause key or alternate), `start` and the five mouse buttons
+(`mouse_left` ... `mouse_x2`). [controls_text](../game/input/controls_text.h)
+puts the two together for the reminder, the Controls help, the Keyboard Keys
+and Pad Buttons rows and the Keys capture status. `input_bindings.cpp`'s own
+labels are the base locale's twins of those words, for probes and
+diagnostics; the `menu_text` case fails if the two drift. The save tokens
+(`"space"`, `"mouse_left"`, `"start"`, ...) are a file format and never
+change with a locale.
+
 ## Not yet localisable
 
 Three groups of text still come from somewhere a locale does not reach:
@@ -189,12 +209,13 @@ Three groups of text still come from somewhere a locale does not reach:
 - **Stage names.** Each level file's `display_name` ("King of the Hill") is
   read by Stage Select and by the match's stage title, from the level, not
   `presentation.json`.
-- **The in-match controls reminder**, its GAMEPAD and KEYBOARD + MOUSE
-  headings ([countdown_cards.cpp](../game/objects/countdown_cards.cpp)) and
-  the pad and key labels it is built from
-  ([controls_text.cpp](../game/input/controls_text.cpp),
-  [input_bindings.cpp](../game/input/input_bindings.cpp)): "Move",
-  "Drop through", "Left click" are written in C++.
+- **The countdown's `GO!`**, the start signal's last beat
+  ([countdown_cards.cpp](../game/objects/countdown_cards.cpp),
+  [level.cpp](../game/objects/level.cpp),
+  [level_practice.cpp](../game/objects/level_practice.cpp)). It is also an
+  identifier: [countdown_art.cpp](../game/objects/countdown_art.cpp) compares
+  the label against `L"GO!"` to choose the go beat's look, so moving it needs
+  that comparison replaced by a flag first.
 - **Developer text**: the Debug console, overlays and diagnostics stay English.
 
 The first two need moving into `presentation.json` before a real translation

@@ -1,5 +1,7 @@
 #include "game/pch.h"
 #include "game/config/locale.h"
+#include "game/config/content_validation.h"
+#include "game/input/controls_text.h"
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
 #include "game/states/menu_content_validation.h"
@@ -8,6 +10,7 @@
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -71,6 +74,7 @@ namespace
     void judge(const Presentation& presentation, World& world, const GameTuning& tuning)
     {
         presentation.validate_resources(world.render, world.audio);
+        validate_controls_reminders(tuning, presentation, world.render);
         validate_mode_durations(&world.render, tuning, presentation);
         validate_mode_stage_rules(&world.render, presentation);
     }
@@ -170,6 +174,30 @@ namespace
             "qps-ploc must bracket the HUD's labels, and the HUD must draw them.");
         require(pseudo.menu_text().countdown.get_ready == L"[" + english.menu_text().countdown.get_ready + L"]",
             "qps-ploc must bracket menu_text.countdown.get_ready.");
+        // The in-match controls reminder, its headings and the control-label words.
+        const ControlsCopy& pseudo_controls = pseudo.menu_text().controls;
+        const ControlsCopy& english_controls = english.menu_text().controls;
+        require(pseudo_controls.keyboard_heading == L"[" + english_controls.keyboard_heading + L"]" &&
+            pseudo_controls.gamepad_heading == L"[" + english_controls.gamepad_heading + L"]" &&
+            pseudo_controls.labels.mouse_left == L"[" + english_controls.labels.mouse_left + L"]" &&
+            pseudo.menu_text().keyboard_jump.labels.space == L"[" + english_controls.labels.space + L"]",
+            "qps-ploc must bracket menu_text.controls' headings and labels, and Keyboard Keys must name them.");
+        const std::array<int, 1> one_pad{ 0 };
+        require(controls_text::pad_controls_reminder(pseudo_controls, InputBindings{}, one_pad) ==
+            L"[Left stick  Move    |    Stick down  Drop through]\n[A / LT  Jump    |    RT  Shoot]\n"
+            L"[Right stick  Aim    |    [Start]  Pause]" &&
+            controls_text::keyboard_controls_reminder(pseudo_controls, InputBindings{}) ==
+            L"[A / D  Move    |    S  Drop through]\n[[Space]  Jump    |    [Left click]  Shoot]\n"
+            L"[Mouse  Aim    |    [Esc]  Pause]",
+            "qps-ploc must reach every line of the controls reminder and its label words.");
+        InputBindings mixed;
+        mixed.pads[1][PadAction::jump] = { PadControl::b, PadControl::none };
+        const std::array<int, 2> two_pads{ 0, 1 };
+        require(controls_text::pad_controls_reminder(pseudo_controls, mixed, two_pads) ==
+            L"[Left stick  Move    |    Stick down  Drop through]\n"
+            L"[Pad 1: A / LT Jump, RT Shoot, [Start] Pause]\n[Pad 2: B Jump, RT Shoot, [Start] Pause]\n"
+            L"[Right stick  Aim]",
+            "qps-ploc must reach the per-pad reminder lines.");
         require(pseudo.main_menu().weapon_select_art.choice(WeaponType::sprayer).name ==
             L"[" + english.main_menu().weapon_select_art.choice(WeaponType::sprayer).name + L"]",
             "qps-ploc must bracket the Sprayer's name.");

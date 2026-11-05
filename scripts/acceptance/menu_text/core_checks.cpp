@@ -139,6 +139,25 @@ namespace menu_text_acceptance
         {
             require(text.countdown.*entry.field == entry.text, std::string("Countdown heading default changed: ") + entry.key);
         }
+        for (const auto& entry : controls_text_defaults)
+        {
+            require(text.controls.*entry.field == entry.text, std::string("Controls reminder default changed: ") + entry.key);
+        }
+        for (const auto& entry : control_label_text)
+        {
+            require(text.controls.labels.*entry.field == entry.text && text.keyboard_jump.labels.*entry.field == entry.text,
+                std::string("Control label default changed, or Keyboard Keys lost it: ") + entry.key);
+        }
+        // input_bindings.cpp's labels are the base locale's twins of these words.
+        const ControlLabels& words = text.controls.labels;
+        require(words.space == input_key_label(Key::space) && words.none == desktop_control_label({}) &&
+            words.none == pad_control_label(PadControl::none) && words.start == pad_control_label(PadControl::start) &&
+            words.mouse_left == desktop_control_label({ Key::none, MouseButton::left }) &&
+            words.mouse_right == desktop_control_label({ Key::none, MouseButton::right }) &&
+            words.mouse_middle == desktop_control_label({ Key::none, MouseButton::middle }) &&
+            words.mouse_x1 == desktop_control_label({ Key::none, MouseButton::x1 }) &&
+            words.mouse_x2 == desktop_control_label({ Key::none, MouseButton::x2 }),
+            "presentation.json's control labels drifted from input_bindings.cpp's base-locale twins");
         for (const auto& entry : stage_briefing_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
@@ -192,7 +211,7 @@ namespace menu_text_acceptance
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown", "controls" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -211,7 +230,7 @@ namespace menu_text_acceptance
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown", "controls" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -251,6 +270,19 @@ namespace menu_text_acceptance
         for (const auto& entry : record_text) { required("records", entry.key); }
         for (const auto& entry : hud_text) { required("hud", entry.key); }
         for (const auto& entry : countdown_text) { required("countdown", entry.key); }
+        for (const auto& entry : controls_text_defaults) { required("controls", entry.key); }
+        variants.rejects("controls.labels", [](rapidjson::Document& d) { d["menu_text"]["controls"].RemoveMember("labels"); });
+        variants.rejects("controls.labels", [](rapidjson::Document& d) { d["menu_text"]["controls"]["labels"].SetArray(); });
+        for (const auto& entry : control_label_text)
+        {
+            const std::string field = std::string("controls.labels.") + entry.key;
+            const char* key = entry.key;
+            variants.rejects(field, [key](rapidjson::Document& d) { d["menu_text"]["controls"]["labels"].RemoveMember(key); });
+            variants.rejects(field, [key](rapidjson::Document& d) { d["menu_text"]["controls"]["labels"][key].SetNull(); });
+            variants.rejects(field, [key](rapidjson::Document& d) { d["menu_text"]["controls"]["labels"][key].SetString(""); });
+            variants.rejects(field, [key](rapidjson::Document& d)
+                { d["menu_text"]["controls"]["labels"][key].SetString("line\nbreak"); });
+        }
         for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : stage_count_text) { required("stage", entry.key); }
         for (const auto& entry : stage_summary_text) { required("stage", entry.key); }

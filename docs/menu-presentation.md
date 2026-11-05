@@ -1083,8 +1083,9 @@ placeholders are introduced.
 The separate `menu_text.pad_buttons` block owns the Pad Buttons heading, the six
 action-row labels (Jump, Shoot and Pause, each with an "also" row), the reset
 label, multiline help and the pending/saved/conflict statuses. It has no
-substitutions: the rows show the pending controls, whose labels (A, LB, LT, LS,
-Start, None and so on) are the game's, in `input_bindings.cpp`. The page captures
+substitutions: the rows show the pending controls, whose labels are the pad
+legends (A, LB, LT, LS and so on, in code) and the words Start and None
+(`menu_text.controls.labels`, below). The page captures
 its copy on opening and fits actual glyph bounds within the existing Controls
 paper/help/status regions; validation measures every control label in every
 row's value column. The shared Controls block names the defaults; the opening
@@ -1096,11 +1097,27 @@ the heading, the six action-row labels (Move left, Move right, Jump, Drop,
 Shoot, Pause (also)), the reset label, multiline help, the capture statuses
 (`capture_ready_mouse` is Shoot's, which also takes a click) and the
 `capture_release` template, whose `{key}` is any key or Shoot mouse label. The
-rows show the pending controls, whose labels (A-Z, Space, Left click ... Mouse
-5, None) are the game's. Validation measures every label in every row's value
+rows show the pending controls, whose labels are the letters A-Z (in code) and
+the words Space, Left click ... Mouse 5 and None (`menu_text.controls.labels`).
+Validation measures every label in every row's value
 column, the release template with every label, and the help with and without
 the developer-bind warning. See the
 [keyboard actions slice](feature-roadmap.md#keyboard-actions-slice-gap42).
+
+`menu_text.controls` owns the in-match controls reminder: the two card
+headings (`keyboard_heading`, `gamepad_heading`), the keyboard and shared pad
+templates (`keyboard_reminder` with all six keyboard tokens, `gamepad_reminder`
+with `{pad_jump}`, `{pad_shoot}` and `{pad_pause}`), the mixed-profile pad
+reminder (`gamepad_per_pad_reminder`, whose `{pads}` is one single-line
+`gamepad_pad_line` per pad, `{pad}` being the slot's number), the Controls
+help's `per_pad`, and `labels`: the words among the control labels (`space`,
+`escape`, `none`, `start` and the five mouse buttons). Each token is required
+exactly once, and each template is formatted with the default controls when
+read. Startup measures the reminders for every keyboard and pad choice in
+tuning's `match.controls_text.font` and the headings in the detail font; the
+cards scale to fit, so only glyphs and bounds are checked. The letters, the pad
+legends and the " / " between a primary and its alternate stay in code, and
+`input_bindings.cpp`'s labels are the base locale's twins of these words.
 
 Startup checks actual help-font glyphs and finite, positive measured bounds.
 The help region begins at `controls_settings.controls_position`, has size

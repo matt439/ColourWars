@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/pad_buttons_menu.h"
+#include "game/input/controls_text.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -96,7 +97,8 @@ void PadButtonsMenu::refresh_values()
 	for (size_t entry = 0; entry < entry_count; ++entry)
 	{
 		const PadActionChoice& choice = profile.actions[entry / 2];
-		this->entries_[entry]->set_value(std::wstring(pad_control_label(entry % 2 == 0 ? choice.primary : choice.alternate)));
+		this->entries_[entry]->set_value(controls_text::pad_label(this->text().controls.labels,
+			entry % 2 == 0 ? choice.primary : choice.alternate));
 	}
 }
 

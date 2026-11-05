@@ -220,9 +220,44 @@ namespace presentation_read
 		text.title.start = read_menu_line(title, "start");
 		text.title.no_controller = read_menu_line(title, "no_controller");
 		text.home_subtitle = read_menu_line(json, "home_subtitle");
+		// The control-label words and the in-match reminder, before the help
+		// and the Keys status that format with them. Each template is
+		// formatted once with the default controls, so a malformed token is
+		// refused at startup rather than at a countdown.
+		const JsonValue controls = json.object("controls");
+		ControlsCopy& copy = text.controls;
+		copy.keyboard_heading = read_menu_line(controls, "keyboard_heading");
+		copy.gamepad_heading = read_menu_line(controls, "gamepad_heading");
+		copy.keyboard_reminder = read_menu_block(controls, "keyboard_reminder");
+		copy.gamepad_reminder = read_menu_block(controls, "gamepad_reminder");
+		copy.gamepad_per_pad_reminder = read_menu_block(controls, "gamepad_per_pad_reminder");
+		copy.gamepad_pad_line = read_menu_line(controls, "gamepad_pad_line");
+		copy.per_pad = read_menu_line(controls, "per_pad");
+		const JsonValue control_labels = controls.object("labels");
+		for (const auto& field : { std::pair{ "space", &ControlLabels::space }, std::pair{ "escape", &ControlLabels::escape },
+			std::pair{ "none", &ControlLabels::none }, std::pair{ "start", &ControlLabels::start },
+			std::pair{ "mouse_left", &ControlLabels::mouse_left }, std::pair{ "mouse_right", &ControlLabels::mouse_right },
+			std::pair{ "mouse_middle", &ControlLabels::mouse_middle }, std::pair{ "mouse_x1", &ControlLabels::mouse_x1 },
+			std::pair{ "mouse_x2", &ControlLabels::mouse_x2 } })
+		{ copy.labels.*field.second = read_menu_line(control_labels, field.first); }
+		const auto check_controls = [&](const char* key, const auto& format)
+		{
+			try { std::ignore = format(); }
+			catch (const std::invalid_argument& error)
+			{ throw std::runtime_error(controls.where() + ": " + key + ": " + error.what()); }
+		};
+		const InputBindings defaults;
+		check_controls("keyboard_reminder", [&] { return controls_text::keyboard_controls_reminder(copy, defaults); });
+		const std::array<int, 1> one_pad{ 0 };
+		check_controls("gamepad_reminder", [&] { return controls_text::pad_controls_reminder(copy, defaults, one_pad); });
+		InputBindings mixed;
+		mixed.pads.back()[PadAction::pause] = { PadControl::y, PadControl::none };
+		const std::array<int, 2> mixed_pads{ 0, input_slots::pad_count - 1 };
+		check_controls("gamepad_per_pad_reminder and gamepad_pad_line",
+			[&] { return controls_text::pad_controls_reminder(copy, mixed, mixed_pads); });
 		const JsonValue help = json.object("help");
 		text.help.controls = read_menu_block(help, "controls");
-		try { std::ignore = controls_text::controls_help(text.help.controls, Key::space); }
+		try { std::ignore = controls_text::controls_help(copy, text.help.controls, Key::space); }
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(help.where() + ": controls: " + error.what()); }
 		text.help.pad_association = read_menu_block(help, "pad_association");
@@ -242,9 +277,10 @@ namespace presentation_read
 			std::pair{ "debug_collision", &KeyboardJumpMenuText::debug_collision } })
 		{ keys.*field.second = read_menu_line(jump, field.first); }
 		keys.help = read_menu_block(jump, "help");
+		keys.labels = copy.labels;
 		for (const auto& field : { std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
 		{
-			try { std::ignore = controls_text::key_line(keys.*field.second, L"Space"); }
+			try { std::ignore = controls_text::key_line(keys.labels, keys.*field.second, keys.labels.space); }
 			catch (const std::invalid_argument& error)
 			{ throw std::runtime_error(jump.where() + ": " + field.first + ": " + error.what()); }
 		}
@@ -575,7 +611,7 @@ std::wstring StageScanMenuText::progress(size_t file, size_t files, size_t page,
 }
 
 std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const
-{ return controls_text::key_line(this->capture_release, label); }
+{ return controls_text::key_line(this->labels, this->capture_release, label); }
 
 const std::wstring& KeyboardJumpMenuText::row(size_t index) const
 {

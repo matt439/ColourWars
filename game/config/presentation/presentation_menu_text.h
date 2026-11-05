@@ -12,6 +12,7 @@
 #include "game/match/player_control.h"
 #include "game/match/series_stage_rule.h"
 #include "game/config/presentation/presentation_match.h"
+#include "game/input/controls_copy.h"
 
 enum class MenuHeading
 {
@@ -59,6 +60,8 @@ struct KeyboardJumpMenuText
 	std::wstring heading, move_left, move_right, jump, drop, shoot, pause, reset, help;
 	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_ready_mouse;
 	std::wstring capture_release, capture_rejected, capture_conflict, capture_cancelled, debug_collision;
+	// menu_text.controls.labels, copied when read, which release_key names.
+	ControlLabels labels;
 	std::wstring release_key(std::wstring_view label) const;
 	// Index by KeyboardAction: move_left, move_right, jump, drop, shoot, pause.
 	const std::wstring& row(size_t index) const;
@@ -304,6 +307,8 @@ struct MenuText
 	MenuStickReadoutsText stick_readouts;
 	HudLabels hud;
 	MenuCountdownText countdown;
+	// The in-match controls reminder and the control-label words (controls_copy.h).
+	ControlsCopy controls;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

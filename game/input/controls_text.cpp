@@ -2,6 +2,8 @@
 #include "game/input/controls_text.h"
 #include <algorithm>
 #include <stdexcept>
+#include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -70,116 +72,158 @@ namespace
         return result;
     }
 
-    std::wstring label(const InputBindings& bindings, KeyboardAction action)
+    std::wstring label(const ControlLabels& labels, const InputBindings& bindings, KeyboardAction action)
     {
-        return std::wstring(desktop_control_label(keyboard_control(bindings, action)));
+        return controls_text::desktop_label(labels, keyboard_control(bindings, action));
     }
 
     // Escape always pauses; an extra key follows it.
-    std::wstring pause_label(const InputBindings& bindings)
+    std::wstring pause_label(const ControlLabels& labels, const InputBindings& bindings)
     {
-        std::wstring text = L"Esc";
+        std::wstring text = labels.escape;
         if (bindings.keyboard_pause != labrador::Key::none)
         {
             text += L" / ";
-            text.append(input_key_label(bindings.keyboard_pause));
+            text += controls_text::key_label(labels, bindings.keyboard_pause);
         }
         return text;
     }
 
-    // The pad lines name the shared profile's choices. Profiles that differ
-    // by slot are named per pad on the countdown and on Pad buttons instead.
-    std::vector<Token> pad_tokens(const InputBindings& bindings)
+    // {jump} is always required; the other five are required by the reminder
+    // and optional in the Controls help.
+    std::vector<Token> keyboard_tokens(const ControlLabels& labels, const InputBindings& bindings,
+        bool all_required)
+    {
+        return {
+            { L"{jump}", label(labels, bindings, KeyboardAction::jump) },
+            { L"{left}", label(labels, bindings, KeyboardAction::move_left), all_required },
+            { L"{right}", label(labels, bindings, KeyboardAction::move_right), all_required },
+            { L"{drop}", label(labels, bindings, KeyboardAction::drop), all_required },
+            { L"{shoot}", label(labels, bindings, KeyboardAction::shoot), all_required },
+            { L"{pause}", pause_label(labels, bindings), all_required } };
+    }
+
+    std::vector<Token> choice_tokens(const ControlLabels& labels, const PadProfile& pad)
+    {
+        return {
+            { L"{pad_jump}", controls_text::pad_choice_label(labels, pad[PadAction::jump]) },
+            { L"{pad_shoot}", controls_text::pad_choice_label(labels, pad[PadAction::shoot]) },
+            { L"{pad_pause}", controls_text::pad_choice_label(labels, pad[PadAction::pause]) } };
+    }
+
+    // The help's pad lines name the shared profile's choices. Profiles that
+    // differ by slot are named per pad on the countdown and on Pad buttons.
+    std::vector<Token> with_pad_tokens(std::vector<Token> tokens, const ControlsCopy& copy,
+        const InputBindings& bindings)
     {
         const PadProfile& first = bindings.pads.front();
         const bool common = std::all_of(bindings.pads.begin(), bindings.pads.end(),
             [&](const PadProfile& pad) { return pad == first; });
-        const auto pad_label = [&](PadAction action)
+        for (Token& token : choice_tokens(copy.labels, first))
         {
-            return common ? controls_text::pad_choice_label(first[action]) : std::wstring(L"per pad");
-        };
-        return {
-            { L"{pad_jump}", pad_label(PadAction::jump), false },
-            { L"{pad_shoot}", pad_label(PadAction::shoot), false },
-            { L"{pad_pause}", pad_label(PadAction::pause), false } };
-    }
-
-    std::vector<Token> with_pad_tokens(std::vector<Token> tokens, const InputBindings& bindings)
-    {
-        for (Token& token : pad_tokens(bindings)) { tokens.push_back(std::move(token)); }
+            if (!common) { token.label = copy.per_pad; }
+            token.required = false;
+            tokens.push_back(std::move(token));
+        }
         return tokens;
     }
 
+    // The defaults with that Jump key. Its label is checked here, as none
+    // would otherwise read as the unbound control.
     InputBindings with_jump(labrador::Key jump)
     {
+        std::ignore = input_key_label(jump);
         InputBindings bindings;
         bindings.keyboard_jump = jump;
         return bindings;
+    }
+
+    const std::wstring& mouse_label(const ControlLabels& labels, labrador::MouseButton button)
+    {
+        switch (button)
+        {
+        case labrador::MouseButton::left: return labels.mouse_left;
+        case labrador::MouseButton::right: return labels.mouse_right;
+        case labrador::MouseButton::middle: return labels.mouse_middle;
+        case labrador::MouseButton::x1: return labels.mouse_x1;
+        case labrador::MouseButton::x2: return labels.mouse_x2;
+        default: throw std::invalid_argument("Unsupported mouse button");
+        }
     }
 }
 
 std::array<labrador::Key, 27> controls_text::jump_keys()
 {
-	return keyboard_jump_keys();
+    return keyboard_jump_keys();
 }
 
-std::wstring controls_text::controls_help(std::wstring_view authored, labrador::Key jump)
+std::wstring controls_text::key_label(const ControlLabels& labels, labrador::Key key)
+{
+    // input_key_label refuses a key outside A-Z and Space.
+    const std::wstring_view legend = input_key_label(key);
+    return key == labrador::Key::space ? labels.space : std::wstring(legend);
+}
+
+std::wstring controls_text::desktop_label(const ControlLabels& labels, const DesktopControl& control)
+{
+    // desktop_control_label refuses a control that is both or an unsupported button.
+    std::ignore = desktop_control_label(control);
+    if (control.key == labrador::Key::none && control.button == labrador::MouseButton::none) { return labels.none; }
+    if (control.button != labrador::MouseButton::none) { return mouse_label(labels, control.button); }
+    return key_label(labels, control.key);
+}
+
+std::wstring controls_text::pad_label(const ControlLabels& labels, PadControl control)
+{
+    // pad_control_label refuses an unknown control.
+    const std::wstring_view legend = pad_control_label(control);
+    if (control == PadControl::none) { return labels.none; }
+    if (control == PadControl::start) { return labels.start; }
+    return std::wstring(legend);
+}
+
+std::wstring controls_text::controls_help(const ControlsCopy& copy, std::wstring_view authored, labrador::Key jump)
 {
     // Only the label is checked here; a Jump key that conflicts with a
     // default still formats, as label coverage includes A/D/S.
-    InputBindings bindings;
-    std::wstring jump_label(input_key_label(jump));
-    return replace_tokens(authored, with_pad_tokens({
-        { L"{jump}", jump_label },
-        { L"{left}", label(bindings, KeyboardAction::move_left), false },
-        { L"{right}", label(bindings, KeyboardAction::move_right), false },
-        { L"{drop}", label(bindings, KeyboardAction::drop), false },
-        { L"{shoot}", label(bindings, KeyboardAction::shoot), false },
-        { L"{pause}", pause_label(bindings), false } }, bindings), true);
+    const InputBindings bindings = with_jump(jump);
+    return replace_tokens(authored,
+        with_pad_tokens(keyboard_tokens(copy.labels, bindings, false), copy, bindings), true);
 }
 
-std::wstring controls_text::controls_help(std::wstring_view authored, const InputBindings& bindings)
+std::wstring controls_text::controls_help(const ControlsCopy& copy, std::wstring_view authored,
+    const InputBindings& bindings)
 {
     bindings.validate_keyboard();
-    return replace_tokens(authored, with_pad_tokens({
-        { L"{jump}", label(bindings, KeyboardAction::jump) },
-        { L"{left}", label(bindings, KeyboardAction::move_left), false },
-        { L"{right}", label(bindings, KeyboardAction::move_right), false },
-        { L"{drop}", label(bindings, KeyboardAction::drop), false },
-        { L"{shoot}", label(bindings, KeyboardAction::shoot), false },
-        { L"{pause}", pause_label(bindings), false } }, bindings), true);
+    return replace_tokens(authored,
+        with_pad_tokens(keyboard_tokens(copy.labels, bindings, false), copy, bindings), true);
 }
 
-std::wstring controls_text::keyboard_controls_reminder(labrador::Key jump)
+std::wstring controls_text::keyboard_controls_reminder(const ControlsCopy& copy, labrador::Key jump)
 {
     // Formatting only: label coverage includes keys that conflict with a default.
-    std::wstring text = L"A / D  Move    |    S  Drop through\n";
-    text.append(input_key_label(jump));
-    text += L"  Jump    |    Left click  Shoot\nMouse  Aim    |    Esc  Pause";
-    return text;
+    return replace_tokens(copy.keyboard_reminder, keyboard_tokens(copy.labels, with_jump(jump), true), true);
 }
 
-std::wstring controls_text::keyboard_controls_reminder(const InputBindings& bindings)
+std::wstring controls_text::keyboard_controls_reminder(const ControlsCopy& copy, const InputBindings& bindings)
 {
     bindings.validate_keyboard();
-    return label(bindings, KeyboardAction::move_left) + L" / " + label(bindings, KeyboardAction::move_right) +
-        L"  Move    |    " + label(bindings, KeyboardAction::drop) + L"  Drop through\n" +
-        label(bindings, KeyboardAction::jump) + L"  Jump    |    " + label(bindings, KeyboardAction::shoot) +
-        L"  Shoot\nMouse  Aim    |    " + pause_label(bindings) + L"  Pause";
+    return replace_tokens(copy.keyboard_reminder, keyboard_tokens(copy.labels, bindings, true), true);
 }
 
-std::wstring controls_text::pad_choice_label(const PadActionChoice& choice)
+std::wstring controls_text::pad_choice_label(const ControlLabels& labels, const PadActionChoice& choice)
 {
-    std::wstring text(pad_control_label(choice.primary));
+    std::wstring text = pad_label(labels, choice.primary);
     if (choice.alternate != PadControl::none)
     {
         text += L" / ";
-        text.append(pad_control_label(choice.alternate));
+        text += pad_label(labels, choice.alternate);
     }
     return text;
 }
 
-std::wstring controls_text::pad_controls_reminder(const InputBindings& bindings, std::span<const int> slots)
+std::wstring controls_text::pad_controls_reminder(const ControlsCopy& copy, const InputBindings& bindings,
+    std::span<const int> slots)
 {
     bindings.validate();
     if (slots.empty()) { throw std::invalid_argument("Pad controls reminder needs a physical slot"); }
@@ -189,47 +233,40 @@ std::wstring controls_text::pad_controls_reminder(const InputBindings& bindings,
     };
     const PadProfile& first = profile(slots.front());
     const bool common = std::all_of(slots.begin(), slots.end(), [&](int slot) { return profile(slot) == first; });
-    std::wstring text = L"Left stick  Move    |    Stick down  Drop through\n";
-    if (common)
+    if (common) { return replace_tokens(copy.gamepad_reminder, choice_tokens(copy.labels, first), true); }
+    // One line per present slot, LF between them; replace_tokens inserts the
+    // joined lines verbatim, so the breaks they carry are not re-read.
+    std::wstring pads;
+    for (int slot : slots)
     {
-        text += pad_choice_label(first[PadAction::jump]) + L"  Jump    |    " +
-            pad_choice_label(first[PadAction::shoot]) + L"  Shoot\n";
-        text += L"Right stick  Aim    |    " + pad_choice_label(first[PadAction::pause]) + L"  Pause";
+        std::vector<Token> tokens = choice_tokens(copy.labels, profile(slot));
+        tokens.push_back({ L"{pad}", std::to_wstring(slot + 1) });
+        if (!pads.empty()) { pads += L'\n'; }
+        pads += replace_tokens(copy.gamepad_pad_line, tokens, false);
     }
-    else
-    {
-        for (int slot : slots)
-        {
-            const PadProfile& pad = profile(slot);
-            text += L"Pad " + std::to_wstring(slot + 1) + L": " + pad_choice_label(pad[PadAction::jump]) +
-                L" Jump, " + pad_choice_label(pad[PadAction::shoot]) + L" Shoot, " +
-                pad_choice_label(pad[PadAction::pause]) + L" Pause\n";
-        }
-        text += L"Right stick  Aim";
-    }
-    return text;
+    return replace_tokens(copy.gamepad_per_pad_reminder, { { L"{pads}", pads } }, true);
 }
 
-std::wstring controls_text::key_line(std::wstring_view authored, std::wstring_view label)
+std::wstring controls_text::key_line(const ControlLabels& labels, std::wstring_view authored, std::wstring_view label)
 {
     const auto keys = jump_keys();
     const auto buttons = shoot_mouse_buttons();
-    if (std::none_of(keys.begin(), keys.end(), [&](labrador::Key key) { return input_key_label(key) == label; }) &&
+    if (std::none_of(keys.begin(), keys.end(), [&](labrador::Key key) { return key_label(labels, key) == label; }) &&
         std::none_of(buttons.begin(), buttons.end(), [&](labrador::MouseButton button)
-            { return desktop_control_label({ labrador::Key::none, button }) == label; }))
+            { return mouse_label(labels, button) == label; }))
     { throw std::invalid_argument("Controls key label must name A-Z, Space or a Shoot mouse button."); }
     return replace_tokens(authored, { { L"{key}", std::wstring(label) } }, false);
 }
 
-std::vector<std::wstring> controls_text::keyboard_control_labels(KeyboardAction action)
+std::vector<std::wstring> controls_text::keyboard_control_labels(const ControlLabels& labels, KeyboardAction action)
 {
     std::vector<std::wstring> result;
-    if (action == KeyboardAction::pause) { result.emplace_back(desktop_control_label({})); }
-    for (const labrador::Key key : jump_keys()) { result.emplace_back(input_key_label(key)); }
+    if (action == KeyboardAction::pause) { result.push_back(labels.none); }
+    for (const labrador::Key key : jump_keys()) { result.push_back(key_label(labels, key)); }
     if (action == KeyboardAction::shoot)
     {
         for (const labrador::MouseButton button : shoot_mouse_buttons())
-        { result.emplace_back(desktop_control_label({ labrador::Key::none, button })); }
+        { result.push_back(mouse_label(labels, button)); }
     }
     return result;
 }

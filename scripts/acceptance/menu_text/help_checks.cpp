@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "scripts/acceptance/menu_text/fixtures.h"
 
+#include <array>
+
 // Help text: fonts, the Controls help {jump} formatting, fitting and bounds.
 namespace menu_text_acceptance
 {
@@ -102,7 +104,7 @@ namespace menu_text_acceptance
         });
         single_line_blocks.validate_resources(world.render, world.audio);
         require(single_line_blocks.menu_text().help.controls == L"Controls {jump}" &&
-            controls_text::controls_help(single_line_blocks.menu_text().help.controls, Key::space) == L"Controls Space" &&
+            controls_text::controls_help(single_line_blocks.menu_text().controls, single_line_blocks.menu_text().help.controls, Key::space) == L"Controls Space" &&
             single_line_blocks.menu_text().help.pad_association == L"Slots",
             "Help blocks replaced authored copy with fixed line counts");
         variants.rejects("help.aim_cutoff", [](rapidjson::Document& d)
@@ -115,7 +117,7 @@ namespace menu_text_acceptance
             variants.rejects("help.controls", [invalid](rapidjson::Document& d)
             { d["menu_text"]["help"]["controls"].SetString(invalid, d.GetAllocator()); });
             bool rejected = false;
-            try { std::ignore = controls_text::controls_help(std::wstring(invalid, invalid + std::strlen(invalid)), Key::space); }
+            try { std::ignore = controls_text::controls_help(single_line_blocks.menu_text().controls, std::wstring(invalid, invalid + std::strlen(invalid)), Key::space); }
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected, "Public controls-help formatter accepted a missing, duplicate or malformed jump token");
         }
@@ -127,7 +129,7 @@ namespace menu_text_acceptance
         {
             const JumpLabel& entry = jump_labels[index];
             require(keys[index] == entry.key, "Controls formatting domain depends on enum ordinals or lost a physical key");
-            const std::wstring copy = controls_text::controls_help(single_line_blocks.menu_text().help.controls, entry.key);
+            const std::wstring copy = controls_text::controls_help(single_line_blocks.menu_text().controls, single_line_blocks.menu_text().help.controls, entry.key);
             require(copy == expected_jump_help(single_line_blocks.menu_text().help.controls, entry.label) &&
                 world.render.can_render(font, copy), "Actual Controls help font cannot draw an independently expected key variant");
             const auto measured = world.render.measure_text(font, copy);
@@ -139,7 +141,7 @@ namespace menu_text_acceptance
                 "An actual-font Controls key variant lost its finite positive uniform fitting contract");
             const std::wstring expected_reminder = std::wstring(L"A / D  Move    |    S  Drop through\n") + entry.label +
                 L"  Jump    |    Left click  Shoot\nMouse  Aim    |    Esc  Pause";
-            require(controls_text::keyboard_controls_reminder(entry.key) == expected_reminder,
+            require(controls_text::keyboard_controls_reminder(single_line_blocks.menu_text().controls, entry.key) == expected_reminder,
                 "Keyboard opening reminder retained Space or changed its fixed movement/aim/pause instructions");
         }
         // The font has a working stand-in and can draw the complete default
@@ -230,7 +232,7 @@ namespace menu_text_acceptance
         for (const JumpLabel& entry : jump_labels)
         {
             const std::wstring label(entry.label);
-            const std::wstring full_help = controls_text::controls_help(shipped.menu_text().help.controls, entry.key);
+            const std::wstring full_help = controls_text::controls_help(shipped.menu_text().controls, shipped.menu_text().help.controls, entry.key);
             require(full_help == expected_jump_help(help_text[0].text, entry.label) && world.render.can_render(jump_font, full_help),
                 "A complete authored Controls help variant changed literal copy or lost actual font coverage");
             const auto full_size = world.render.measure_text(jump_font, full_help);
@@ -262,19 +264,19 @@ namespace menu_text_acceptance
         InputBindings custom;
         custom.keyboard_move_left = Key::j; custom.keyboard_move_right = Key::l; custom.keyboard_jump = Key::a;
         custom.keyboard_drop = Key::k; custom.keyboard_shoot = { Key::none, MouseButton::right }; custom.keyboard_pause = Key::p;
-        const std::wstring custom_help = controls_text::controls_help(shipped.menu_text().help.controls, custom);
+        const std::wstring custom_help = controls_text::controls_help(shipped.menu_text().controls, shipped.menu_text().help.controls, custom);
         require(custom_help == expected_keys_help(help_text[0].text, L"A", L"J", L"L", L"K", L"Right click", L"Esc / P") &&
             world.render.can_render(jump_font, custom_help),
             "Controls help did not name every effective keyboard key or lost its actual font coverage");
         custom.keyboard_shoot = { Key::f, MouseButton::none }; custom.keyboard_pause = Key::none;
-        require(controls_text::controls_help(L"{jump} {left} {right} {drop} {shoot} {pause}", custom) == L"A J L K F Esc" &&
-            controls_text::controls_help(L"{jump}", custom) == L"A",
+        require(controls_text::controls_help(shipped.menu_text().controls, L"{jump} {left} {right} {drop} {shoot} {pause}", custom) == L"A J L K F Esc" &&
+            controls_text::controls_help(shipped.menu_text().controls, L"{jump}", custom) == L"A",
             "Optional keyboard tokens did not substitute independently or were required");
         for (const wchar_t* invalid : { L"{left} {left} {jump}", L"{jump} {pause}{pause}", L"{shoot}", L"{jump} {Left}",
             L"{jump} {moveleft}", L"{jump} {left" })
         {
             bool rejected = false;
-            try { std::ignore = controls_text::controls_help(invalid, custom); }
+            try { std::ignore = controls_text::controls_help(shipped.menu_text().controls, invalid, custom); }
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected, "Controls help accepted a repeated, missing-Jump or malformed keyboard token");
         }
@@ -287,26 +289,107 @@ namespace menu_text_acceptance
             pad[PadAction::shoot] = { PadControl::right_shoulder, PadControl::right_trigger };
             pad[PadAction::pause] = { PadControl::y, PadControl::none };
         }
-        require(controls_text::controls_help(shipped.menu_text().help.controls, pads) ==
+        require(controls_text::controls_help(shipped.menu_text().controls, shipped.menu_text().help.controls, pads) ==
             expected_keys_help(help_text[0].text, L"Space", L"A", L"D", L"S", L"Left click", L"Esc", L"B", L"RB / RT", L"Y") &&
-            controls_text::controls_help(L"{jump} {pad_jump} {pad_shoot} {pad_pause}", pads) == L"Space B RB / RT Y",
+            controls_text::controls_help(shipped.menu_text().controls, L"{jump} {pad_jump} {pad_shoot} {pad_pause}", pads) == L"Space B RB / RT Y",
             "Controls help did not name the pads' shared rebound Jump, Shoot and Pause");
         pads.pads[2][PadAction::jump] = { PadControl::a, PadControl::none };
-        require(controls_text::controls_help(L"{jump} {pad_jump} {pad_shoot} {pad_pause}", pads) ==
+        require(controls_text::controls_help(shipped.menu_text().controls, L"{jump} {pad_jump} {pad_shoot} {pad_pause}", pads) ==
             L"Space per pad per pad per pad",
             "Controls help named one pad's buttons although the slots' profiles differ");
         InputBindings conflicting; conflicting.keyboard_move_left = Key::space;
         bool conflict_rejected = false;
-        try { std::ignore = controls_text::controls_help(shipped.menu_text().help.controls, conflicting); }
+        try { std::ignore = controls_text::controls_help(shipped.menu_text().controls, shipped.menu_text().help.controls, conflicting); }
         catch (const std::invalid_argument&) { conflict_rejected = true; }
         require(conflict_rejected, "Controls help formatted a conflicting keyboard preference");
         for (const Key invalid : { Key::none, Key::enter, Key::escape })
         {
             bool rejected = false;
-            try { std::ignore = controls_text::controls_help(shipped.menu_text().help.controls, invalid); }
+            try { std::ignore = controls_text::controls_help(shipped.menu_text().controls, shipped.menu_text().help.controls, invalid); }
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected, "Controls help formatter accepted a key outside its finite label domain");
         }
+
+        // The in-match reminder is menu_text.controls, and formats to the
+        // copy it always had.
+        const ControlsCopy& copy = shipped.menu_text().controls;
+        const std::array<int, 1> first_pad{ 0 };
+        require(controls_text::pad_controls_reminder(copy, InputBindings{}, first_pad) ==
+            L"Left stick  Move    |    Stick down  Drop through\nA / LT  Jump    |    RT  Shoot\nRight stick  Aim    |    Start  Pause",
+            "The shared pad reminder changed its default copy");
+        InputBindings two_profiles;
+        two_profiles.pads[1][PadAction::jump] = { PadControl::b, PadControl::none };
+        const std::array<int, 2> two_pads{ 0, 1 };
+        require(controls_text::pad_controls_reminder(copy, two_profiles, two_pads) ==
+            L"Left stick  Move    |    Stick down  Drop through\nPad 1: A / LT Jump, RT Shoot, Start Pause\n"
+            L"Pad 2: B Jump, RT Shoot, Start Pause\nRight stick  Aim",
+            "The per-pad reminder changed its default copy or line breaks");
+        require(controls_text::keyboard_controls_reminder(copy, custom) ==
+            L"J / L  Move    |    K  Drop through\nA  Jump    |    F  Shoot\nMouse  Aim    |    Esc  Pause",
+            "The keyboard reminder did not name every effective key");
+        // Each template's tokens: a missing, repeated or unknown one, or a
+        // break where the line must be single, is refused naming the key.
+        for (const auto& [key, text] : {
+            std::pair<const char*, const char*>{ "keyboard_reminder", "{left} {right} {drop} {shoot} {pause}" },
+            { "keyboard_reminder", "{left} {right} {drop} {jump} {shoot} {pause} {jump}" },
+            { "keyboard_reminder", "{left} {right} {drop} {jump} {shoot} {pause} {pad_jump}" },
+            { "gamepad_reminder", "{pad_jump} {pad_shoot}" },
+            { "gamepad_reminder", "{pad_jump} {pad_shoot} {pad_pause} {jump}" },
+            { "gamepad_per_pad_reminder", "Pads" },
+            { "gamepad_per_pad_reminder", "{pads} {pad}" },
+            { "gamepad_pad_line", "{pad_jump} {pad_shoot} {pad_pause}" },
+            { "gamepad_pad_line", "{pad} {pad_jump} {pad_shoot} {pad_pause} {pads}" } })
+        {
+            const char* member = key;
+            const char* authored = text;
+            variants.rejects(std::string("controls.") + member, [member, authored](rapidjson::Document& d)
+                { d["menu_text"]["controls"][member].SetString(authored, d.GetAllocator()); });
+        }
+        variants.rejects("controls.gamepad_pad_line", [](rapidjson::Document& d)
+            { d["menu_text"]["controls"]["gamepad_pad_line"].SetString("{pad}\n{pad_jump} {pad_shoot} {pad_pause}"); });
+        // A locale's words reach every label, the Keys status and the help;
+        // the letters and pad legends stay as they are.
+        const auto worded = variants.load([](rapidjson::Document& d)
+        {
+            auto& labels = d["menu_text"]["controls"]["labels"];
+            labels["space"].SetString("Barre");
+            labels["escape"].SetString("Echap");
+            labels["start"].SetString("Menu");
+            labels["mouse_left"].SetString("Clic gauche");
+            labels["none"].SetString("Aucune");
+            d["menu_text"]["controls"]["per_pad"].SetString("par manette");
+            d["menu_text"]["controls"]["gamepad_heading"].SetString("MANETTE");
+        });
+        worded.validate_resources(world.render, world.audio);
+        const MenuText& worded_text = worded.menu_text();
+        const ControlLabels& words = worded_text.controls.labels;
+        require(worded_text.keyboard_jump.release_key(L"Barre") == L"Release Barre to keep this choice." &&
+            worded_text.keyboard_jump.release_key(L"Clic gauche") == L"Release Clic gauche to keep this choice.",
+            "Keyboard Keys' status did not take the localised key and mouse words");
+        for (const wchar_t* english : { L"Space", L"Left click" })
+        {
+            bool rejected = false;
+            try { std::ignore = worded_text.keyboard_jump.release_key(english); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Keyboard Keys' status accepted an English label the locale replaced");
+        }
+        require(controls_text::key_label(words, Key::space) == L"Barre" && controls_text::key_label(words, Key::q) == L"Q" &&
+            controls_text::desktop_label(words, {}) == L"Aucune" &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::left }) == L"Clic gauche" &&
+            controls_text::desktop_label(words, { Key::none, MouseButton::x1 }) == L"Mouse 4" &&
+            controls_text::pad_label(words, PadControl::start) == L"Menu" &&
+            controls_text::pad_label(words, PadControl::none) == L"Aucune" &&
+            controls_text::pad_label(words, PadControl::left_trigger) == L"LT" &&
+            controls_text::keyboard_control_labels(words, KeyboardAction::pause).front() == L"Aucune",
+            "A control label did not take the localised word, or a legend changed with it");
+        require(controls_text::keyboard_controls_reminder(worded_text.controls, InputBindings{}) ==
+            L"A / D  Move    |    S  Drop through\nBarre  Jump    |    Clic gauche  Shoot\nMouse  Aim    |    Echap  Pause" &&
+            controls_text::pad_controls_reminder(worded_text.controls, InputBindings{}, first_pad) ==
+            L"Left stick  Move    |    Stick down  Drop through\nA / LT  Jump    |    RT  Shoot\nRight stick  Aim    |    Menu  Pause" &&
+            controls_text::controls_help(worded_text.controls, L"{jump} {pad_jump} {pad_shoot} {pad_pause}", two_profiles) ==
+            L"Barre par manette par manette par manette" &&
+            worded_text.controls.gamepad_heading == L"MANETTE",
+            "The reminder or the Controls help did not take the localised words");
     }
 
     void check_help_fitting(Variants& variants, World& world)
@@ -322,7 +405,7 @@ namespace menu_text_acceptance
                 const auto position = is_controls ? controls.controls_position : controls.stick_preview.association_position;
                 const auto available = is_controls ? controls.controls_size :
                     controls.controls_position + controls.controls_size - position;
-                std::wstring authored = is_controls ? controls_text::controls_help(look.menu_text().help.controls, Key::space) :
+                std::wstring authored = is_controls ? controls_text::controls_help(look.menu_text().controls, look.menu_text().help.controls, Key::space) :
                     look.menu_text().help.*entry.field;
                 const auto measured = world.render.measure_text(font, authored);
                 if (width_limited)

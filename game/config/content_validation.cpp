@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/content_validation.h"
 #include "game/config/drawable_text.h"
+#include "game/input/controls_text.h"
 #include "game/objects/figure_person.h"
 #include "game/objects/level_object_builder.h"
 #include "game/config/resource_validation.h"
@@ -8,6 +9,11 @@
 #include "game/config/tunnelling_limits.h"
 #include "game/contracts/team_gate_contract.h"
 #include "game/objects/team_gate_structure_paintable.h"
+
+#include <array>
+#include <cmath>
+#include <stdexcept>
+#include <vector>
 
 using namespace labrador;
 
@@ -78,6 +84,71 @@ void validate_stage_text(const GameTuning& tuning, const Presentation& presentat
 	}
 }
 
+void validate_controls_reminders(const GameTuning& tuning, const Presentation& presentation,
+	const RenderResources& render)
+{
+	const ControlsCopy& copy = presentation.menu_text().controls;
+	const std::string& font = tuning.match().controls_font;
+	const auto check = [&](const char* key, const std::wstring& words)
+	{
+		const std::string where = std::string("presentation.json: menu_text.controls.") + key +
+			" in tuning.json's match.controls_text.font";
+		drawable_text::check_font_can_draw(&render, font, words, where);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), words);
+		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
+		{ throw std::runtime_error(where + " requires finite positive reminder bounds."); }
+	};
+	for (const Key key : controls_text::jump_keys())
+	{
+		check("keyboard_reminder", controls_text::keyboard_controls_reminder(copy, key));
+	}
+	// Every control each keyboard action can show (Shoot's mouse buttons,
+	// Pause's extra key), the others at their defaults where that is valid.
+	for (size_t index = 0; index < keyboard_action_count; ++index)
+	{
+		const KeyboardAction action = static_cast<KeyboardAction>(index);
+		std::vector<DesktopControl> choices;
+		if (action == KeyboardAction::pause) { choices.push_back({}); }
+		for (const Key key : controls_text::jump_keys()) { choices.push_back({ key, MouseButton::none }); }
+		if (action == KeyboardAction::shoot)
+		{
+			for (const MouseButton button : shoot_mouse_buttons()) { choices.push_back({ Key::none, button }); }
+		}
+		for (const DesktopControl& choice : choices)
+		{
+			InputBindings bindings;
+			set_keyboard_control(bindings, action, choice);
+			if (keyboard_control_conflict(bindings, action, choice)) { continue; }
+			check("keyboard_reminder", controls_text::keyboard_controls_reminder(copy, bindings));
+		}
+	}
+	// Each pad action's every primary, with and without an alternate, the
+	// others at their defaults where valid, so every pad label is drawn;
+	// then the per-pad lines of four slots whose profiles differ.
+	std::array<int, input_slots::pad_count> every_pad{};
+	for (int slot = 0; slot < input_slots::pad_count; ++slot) { every_pad[static_cast<size_t>(slot)] = slot; }
+	for (size_t index = 0; index < pad_action_count; ++index)
+	{
+		const PadAction action = static_cast<PadAction>(index);
+		for (const PadControl primary : pad_controls())
+		{
+			for (const PadControl alternate : { PadControl::none, PadControl::start, PadControl::right_shoulder })
+			{
+				InputBindings bindings;
+				for (PadProfile& pad : bindings.pads) { pad[action] = { primary, alternate }; }
+				try { bindings.validate(); }
+				catch (const std::invalid_argument&) { continue; }
+				check("gamepad_reminder", controls_text::pad_controls_reminder(copy, bindings, every_pad));
+			}
+		}
+	}
+	InputBindings mixed;
+	mixed.pads[1][PadAction::jump] = { PadControl::b, PadControl::right_shoulder };
+	mixed.pads[2][PadAction::shoot] = { PadControl::left_shoulder, PadControl::none };
+	mixed.pads[3][PadAction::pause] = { PadControl::y, PadControl::none };
+	check("gamepad_per_pad_reminder", controls_text::pad_controls_reminder(copy, mixed, every_pad));
+}
+
 void validate_game_content(const GameTuning& tuning, const Presentation& presentation,
 	RenderResources* render, const AudioResources* audio,
 	const Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
@@ -87,6 +158,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	// Optional silent banks remain valid; these checks do not play audio.
 	tuning.validate_resources(*render, *audio);
 	presentation.validate_resources(*render, *audio);
+	validate_controls_reminders(tuning, presentation, *render);
 	// Every person the figure slips allow has a face band over every body
 	// frame (presentation.json figure.slips, built by build-painter-art.ps1),
 	// so no match can draw a person the atlas lacks.

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/keyboard_jump_menu.h"
+#include "game/input/controls_text.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -91,8 +92,8 @@ void KeyboardJumpMenu::refresh_values()
 {
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
-		this->rows_[index]->set_value(std::wstring(desktop_control_label(
-			keyboard_control(this->selection_, static_cast<KeyboardAction>(index)))));
+		this->rows_[index]->set_value(controls_text::desktop_label(this->text().controls.labels,
+			keyboard_control(this->selection_, static_cast<KeyboardAction>(index))));
 	}
 	// The help text follows only the debug collision flag, so it is rebuilt
 	// when that changes.
@@ -153,7 +154,7 @@ void KeyboardJumpMenu::refresh_capture_status()
 	const auto& copy = this->text().keyboard_jump;
 	if (this->capture_.phase() == KeyboardJumpCapture::Phase::holding)
 	{
-		this->set_status(copy.release_key(std::wstring(desktop_control_label(this->capture_.candidate_control()))));
+		this->set_status(copy.release_key(controls_text::desktop_label(copy.labels, this->capture_.candidate_control())));
 	}
 	else if (this->capture_.phase() == KeyboardJumpCapture::Phase::cancelling)
 	{

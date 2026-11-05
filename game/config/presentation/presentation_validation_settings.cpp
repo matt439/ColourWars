@@ -139,7 +139,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 	};
 	for (const Key key : controls_text::jump_keys())
 	{
-		controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, key));
+		controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, key));
 	}
 	// Each keyboard action's every label, the others at their defaults where
 	// valid, so every glyph the Controls help can show is measured.
@@ -157,7 +157,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 			set_keyboard_control(bindings, action, choice);
 			try { bindings.validate_keyboard(); }
 			catch (const std::invalid_argument&) { continue; }
-			controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, bindings));
+			controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, bindings));
 		}
 	}
 	// Each pad action's every primary, with and without the widest
@@ -175,13 +175,13 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 				for (PadProfile& pad : bindings.pads) { pad[action] = { primary, alternate }; }
 				try { bindings.validate(); }
 				catch (const std::invalid_argument&) { continue; }
-				controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, bindings));
+				controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, bindings));
 			}
 		}
 	}
 	InputBindings mixed;
 	mixed.pads.back()[PadAction::pause] = { PadControl::y, PadControl::none };
-	controls_variant(controls_text::controls_help(this->presentation_.menu_text_.help.controls, mixed));
+	controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, mixed));
 	return controls_help;
 }
 
@@ -225,7 +225,7 @@ void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& hel
 		label *= std::min({ 1.0f, label_available.x / label.x, label_available.y / label.y });
 		check_fixed_paper(std::string("menu_text.keyboard_jump.") + keyboard_rows[index], RectangleF(position, label),
 			controls.box_size, controls.art.focus_padding);
-		for (const std::wstring& value : controls_text::keyboard_control_labels(static_cast<KeyboardAction>(index)))
+		for (const std::wstring& value : controls_text::keyboard_control_labels(this->presentation_.menu_text_.controls.labels, static_cast<KeyboardAction>(index)))
 		{
 			jump_text(keyboard_rows[index], value, controls.item_font, position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 		}
@@ -279,10 +279,10 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 		pad_buttons_text(pad_button_rows[index], pad_buttons.row(index), controls.item_font, position, true, true);
 		for (const PadControl control : pad_controls())
 		{
-			pad_buttons_text(pad_button_rows[index], std::wstring(pad_control_label(control)), controls.item_font,
+			pad_buttons_text(pad_button_rows[index], controls_text::pad_label(this->presentation_.menu_text_.controls.labels, control), controls.item_font,
 				position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 		}
-		pad_buttons_text(pad_button_rows[index], std::wstring(pad_control_label(PadControl::none)), controls.item_font,
+		pad_buttons_text(pad_button_rows[index], controls_text::pad_label(this->presentation_.menu_text_.controls.labels, PadControl::none), controls.item_font,
 			position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 	}
 	pad_buttons_text("reset", pad_buttons.reset, controls.item_font,
@@ -401,7 +401,7 @@ void Presentation::Validation::validate_keyboard_jump_statuses(const RectangleF&
 		{ "keyboard_jump.capture_cancelled", jump.capture_cancelled }, { "keyboard_jump.debug_collision", jump.debug_collision } };
 	for (const StatusMessage& message : jump_statuses)
 	{ check_status(message, controls.help_font, controls.status_position, controls.box_size, controls.art, { jump_back, help_area }); }
-	for (const std::wstring& label : controls_text::keyboard_control_labels(KeyboardAction::shoot))
+	for (const std::wstring& label : controls_text::keyboard_control_labels(this->presentation_.menu_text_.controls.labels, KeyboardAction::shoot))
 	{
 		const std::wstring words = jump.release_key(label);
 		check_status({ "keyboard_jump.capture_release", words }, controls.help_font, controls.status_position,

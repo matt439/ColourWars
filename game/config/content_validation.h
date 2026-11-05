@@ -24,6 +24,13 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	const labrador::Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
 	const PlaySettings& play_settings);
 
+// The in-match controls reminder: presentation.json's menu_text.controls
+// copy, formatted for every keyboard and pad choice, drawn and measured in
+// tuning.json's match.controls_text.font. validate_game_content runs it, and
+// the Debug `tune` targets run it on a candidate tuning or presentation.
+void validate_controls_reminders(const GameTuning& tuning, const Presentation& presentation,
+	const labrador::RenderResources& render);
+
 // validate_game_content's two per-stage halves, in the order it runs them: the
 // built objects, their anti-tunnelling bound, team gates clear of every spawn
 // body and the stage's match sounds; then

@@ -295,6 +295,29 @@ namespace menu_text_acceptance
         { "resuming", L"RESUMING", &MenuCountdownText::resuming },
         { "replay", L"REPLAY", &MenuCountdownText::replay }
     };
+    struct ControlsText { const char* key; const wchar_t* text; std::wstring ControlsCopy::* field; bool multiline; };
+    constexpr ControlsText controls_text_defaults[]{
+        { "keyboard_heading", L"KEYBOARD + MOUSE", &ControlsCopy::keyboard_heading, false },
+        { "gamepad_heading", L"GAMEPAD", &ControlsCopy::gamepad_heading, false },
+        { "keyboard_reminder", L"{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot\n"
+            L"Mouse  Aim    |    {pause}  Pause", &ControlsCopy::keyboard_reminder, true },
+        { "gamepad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot\n"
+            L"Right stick  Aim    |    {pad_pause}  Pause", &ControlsCopy::gamepad_reminder, true },
+        { "gamepad_per_pad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pads}\nRight stick  Aim",
+            &ControlsCopy::gamepad_per_pad_reminder, true },
+        { "gamepad_pad_line", L"Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_pause} Pause",
+            &ControlsCopy::gamepad_pad_line, false },
+        { "per_pad", L"per pad", &ControlsCopy::per_pad, false }
+    };
+    struct ControlLabelText { const char* key; const wchar_t* text; std::wstring ControlLabels::* field; };
+    constexpr ControlLabelText control_label_text[]{
+        { "space", L"Space", &ControlLabels::space }, { "escape", L"Esc", &ControlLabels::escape },
+        { "none", L"None", &ControlLabels::none }, { "start", L"Start", &ControlLabels::start },
+        { "mouse_left", L"Left click", &ControlLabels::mouse_left },
+        { "mouse_right", L"Right click", &ControlLabels::mouse_right },
+        { "mouse_middle", L"Middle click", &ControlLabels::mouse_middle },
+        { "mouse_x1", L"Mouse 4", &ControlLabels::mouse_x1 }, { "mouse_x2", L"Mouse 5", &ControlLabels::mouse_x2 }
+    };
     struct StageText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; };
     constexpr StageText stage_text[]{
         { "browse_status", L"FIND YOUR ARENA", &MenuStageText::browse_status },
