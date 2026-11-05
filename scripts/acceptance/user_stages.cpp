@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_content_validation.h"
+#include "game/config/content_validation.h"
 #include "game/directory_consts.h"
 #include "game/objects/stage.h"
 #include "game/config/play_settings.h"
@@ -505,6 +506,11 @@ namespace
 		const Stage& mine = shipped.stages[13];
 		require(mine.name == "my_arena" && mine.display_name == "My Arena" && mine.user && !mine.include_in_random,
 			"A user stage must follow the shipped ones, marked and explicit-only");
+		// menu_text.stage_names names only shipped stages: a user stage's
+		// title is its own display_name, which no locale reaches.
+		require(fixture.presentation->menu_text().stage_name("my_arena") == nullptr &&
+			fixture.presentation->menu_text().stage_title(mine.name, mine.display_name, "my_arena") == L"My Arena",
+			"A user stage's title must be its own display_name");
 		require(shipped.stages[14].name == "zz-second" && shipped.stages[14].user,
 			"The second user stage must follow the first");
 		require(shipped.levels.contains("my_arena") && shipped.levels.contains("zz-second") &&
@@ -526,6 +532,84 @@ namespace
 		std::cout << "PASS a folder of ten files loads its two valid stages after the shipped thirteen and refuses "
 			"broken JSON, a missing key, a missing frame, a sound conflict, a shipped-name collision, "
 			"two bad file names and an undrawable name, one line each\n";
+	}
+
+	// presentation.json's menu_text.stage_names against the stage list
+	// (validate_stage_names) and its English against the levels
+	// (check_stage_names_agree): exactly the shipped stages, each its level's
+	// display_name; user stages never in it.
+	void check_stage_names(const Fixture& fixture, const std::filesystem::path& content,
+		const std::filesystem::path& scratch)
+	{
+		Shipped shipped;
+		load_shipped(content, shipped);
+		validate_stage_names(*fixture.presentation, shipped.stages);
+		const std::string base_path = (content / "presentation.json").string();
+		check_stage_names_agree(base_path, shipped.stages);
+		const auto refuses = [](const char* what, std::initializer_list<const char*> fragments, auto action)
+		{
+			std::string message = "accepted";
+			try { action(); }
+			catch (const std::exception& error)
+			{
+				message = error.what();
+				bool all = true;
+				for (const char* fragment : fragments) { all = all && message.find(fragment) != std::string::npos; }
+				if (all) { return; }
+			}
+			throw std::runtime_error(std::string(what) + " was not refused as expected: " + message);
+		};
+		const auto edited = [&](const char* name, auto edit)
+		{
+			rapidjson::Document document = read_document(content / "presentation.json");
+			edit(document);
+			rapidjson::StringBuffer buffer;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+			require(document.Accept(writer), "Cannot encode a stage-names fixture");
+			const std::filesystem::path path = scratch / (std::string("stage-names-") + name + ".json");
+			write_text(path, buffer.GetString());
+			return path.string();
+		};
+		const std::string missing = edited("missing",
+			[](rapidjson::Document& d) { d["menu_text"]["stage_names"].RemoveMember("crossfeed"); });
+		refuses("A shipped stage stage_names lacks", { "menu_text.stage_names", "'crossfeed'", "manifest" },
+			[&] { validate_stage_names(Presentation(missing.c_str()), shipped.stages); });
+		const std::string extra = edited("extra", [](rapidjson::Document& d)
+			{ d["menu_text"]["stage_names"].AddMember("nowhere", "Nowhere", d.GetAllocator()); });
+		refuses("A stage_names entry the manifest lacks", { "menu_text.stage_names", "'nowhere'", "not a stage" },
+			[&] { validate_stage_names(Presentation(extra.c_str()), shipped.stages); });
+		// Startup's whole check refuses both before the first menu.
+		refuses("validate_shell_content with a missing stage name", { "'crossfeed'" }, [&]
+			{
+				validate_shell_content(*fixture.tuning, Presentation(missing.c_str()), &fixture.world->render,
+					&fixture.world->audio, shipped.levels, shipped.stages, fixture.play_settings);
+			});
+
+		StageList listed = shipped.stages;
+		// A user stage is never in the table, and an entry for one is refused.
+		listed.push_back({ "my_arena", "My Arena", "stage_close_quarters", false, true });
+		validate_stage_names(*fixture.presentation, listed);
+		const std::string user_named = edited("user", [](rapidjson::Document& d)
+			{ d["menu_text"]["stage_names"].AddMember("my_arena", "My Arena", d.GetAllocator()); });
+		refuses("A stage_names entry for a user stage", { "'my_arena'", "not a stage" },
+			[&] { validate_stage_names(Presentation(user_named.c_str()), listed); });
+		StageList hidden = shipped.stages;
+		hidden.push_back({ "_hidden", "Hidden", "stage_close_quarters", true, false });
+		refuses("A shipped stage named like a comment", { "'_hidden'", "'_'" },
+			[&] { validate_stage_names(*fixture.presentation, hidden); });
+
+		// The base English must be the level's display_name, byte for byte.
+		StageList drifted = shipped.stages;
+		const auto crossfeed = std::find_if(drifted.begin(), drifted.end(),
+			[](const Stage& stage) { return stage.name == "crossfeed"; });
+		require(crossfeed != drifted.end(), "The stage-names fixture needs Crossfeed");
+		crossfeed->display_name = "Crossfeed ";
+		refuses("A stage_names entry that differs from its level", { "'crossfeed'", "'Crossfeed'", "'Crossfeed '",
+			"levels/crossfeed.json", "agree" }, [&] { check_stage_names_agree(base_path, drifted); });
+		// A user stage's own display_name is never compared.
+		check_stage_names_agree(base_path, listed);
+		std::cout << "PASS stage names: presentation.json names exactly the shipped stages, each its level's "
+			"display_name; a missing, extra, user or '_' entry and a drifted display_name are refused\n";
 	}
 
 	void check_user_collision(const Fixture& fixture, const std::filesystem::path& content,
@@ -832,6 +916,7 @@ int main(int argc, char** argv)
 		check_empty(fixture, content, scratch);
 		check_mixed(fixture, content, scratch);
 		check_user_collision(fixture, content, scratch);
+		check_stage_names(fixture, content, scratch);
 		check_rescan(fixture, content, scratch);
 		std::cout << "PASS user stages: per-user folder, per-file validation and refusal, "
 			"no shipped or user name collisions, Stage Select order and marker, outside Random.\n";

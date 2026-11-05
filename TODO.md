@@ -193,7 +193,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#4.2` | DECISION | LOW | S | Keyboard Keys rebinds Move, Jump, Drop, Shoot (key or click) and an extra Pause; pad buttons are done. Left: try it and confirm the provisional calls (refuse not swap, clicks only for Shoot, fixed Esc/Down, A-Z/Space). [Owner](docs/feature-roadmap.md#keyboard-actions-slice-gap42). |
 | `GAP#5.1` | DECISION | LOW | M | Blank startup window: capture a visible Release launch to first present, and a hidden one shown natively, for Labrador ([report 19](docs/review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)). Hard cuts are a later UI-art slice. |
 | `GAP#L9` | DECISION | LOW | S | Vsync row, save key and engine `set_vsync` built 2026-11-04. Owed: the author's MattPC check of Off (perf capture, no tearing windowed). [Setting](docs/feature-roadmap.md#vsync-setting-gapl9) |
-| `GAP#L11` | DECISION | LOW | M | Locale overlays, fallback, font substitution and the `qps-ploc` test locale are in; choose the first languages. Then: accented atlases, stage names and `GO!` into data, an Options row and save field. [Contract](docs/localisation.md). |
+| `GAP#L11` | DECISION | LOW | M | Locale overlays, fallback, font substitution and the `qps-ploc` test locale are in; choose the first languages. Then: accented atlases, `GO!` and the practice lessons into data, an Options row and save field. [Contract](docs/localisation.md). |
 
 ## Comparable-game gaps
 

@@ -84,8 +84,10 @@ landed; the remaining interface treatment stays open under `POL#16`.
 
 Implemented 2026-10-15 as another match-presentation increment of `POL#16`.
 The countdown now names the selected arena on a shared paper header above the
-start signal. It uses the loaded level's `display_name`, including when Random
-resolved the selection. The stepped black edge, pale face and quiet offset shade
+start signal. It uses the stage's title, including when Random resolved the
+selection: since 2026-11-05 a shipped stage's `menu_text.stage_names` entry,
+whose English is the loaded level's `display_name`, and a user stage's own
+`display_name` ([Stage names](localisation.md#stage-names)). The stepped black edge, pale face and quiet offset shade
 reuse the countdown drawing; the arena name uses the existing heading font in
 dark ink. No new atlas or authoring tool is needed.
 

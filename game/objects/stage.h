@@ -7,7 +7,9 @@
 // A pickable level: registered by the manifest, or a user stage found in the
 // player's stage folder (game/config/stage_loading.h). name is its registry key, the
 // file name without .json; display_name and icon_frame are copied from the
-// level file at load time. A user stage is never a Random candidate.
+// level file at load time. A shipped stage is drawn by its menu_text.stage_names
+// entry (MenuText::stage_title), whose English equals display_name; a user
+// stage draws display_name itself. A user stage is never a Random candidate.
 struct Stage
 {
 	std::string name;

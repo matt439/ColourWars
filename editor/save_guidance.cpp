@@ -24,6 +24,33 @@ namespace colourwars_editor
             const std::u8string bytes = path.stem().u8string();
             return { reinterpret_cast<const char*>(bytes.data()), bytes.size() };
         }
+
+        // UTF-8 for a status line; std::filesystem does the conversion.
+        std::wstring widen(const std::string& text)
+        {
+            return std::filesystem::path(std::u8string(text.begin(), text.end())).wstring();
+        }
+    }
+
+    std::wstring stage_name_warning(const std::filesystem::path& destination,
+        const std::filesystem::path& source_levels, const ContentCatalog& catalog,
+        const std::string& display_name)
+    {
+        if (destination.empty() || !catalog.manifest_read || !catalog.stage_names_read || !json_file(destination) ||
+            !same_stage_folder(destination.parent_path(), source_levels))
+            return {};
+        const std::string name = stage_name(destination);
+        const auto registered = std::find_if(catalog.stages.begin(), catalog.stages.end(),
+            [&name](const std::string& stage) { return user_stage_contract::same_name(stage, name); });
+        if (registered == catalog.stages.end()) return {};
+        const auto entry = catalog.stage_names.find(*registered);
+        const std::wstring id = widen(*registered);
+        if (entry == catalog.stage_names.end())
+            return L"presentation.json's menu_text.stage_names has no '" + id +
+                L"'; the game will not start until it names this stage.";
+        if (entry->second == display_name) return {};
+        return L"presentation.json's menu_text.stage_names." + id + L" says '" + widen(entry->second) +
+            L"'; the game will not start until it and display_name agree.";
     }
 
     std::wstring save_guidance(const std::filesystem::path& destination,

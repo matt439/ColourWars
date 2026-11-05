@@ -8,7 +8,17 @@ namespace menu_text_acceptance
     void check_setting_duration_content(Variants& variants, World& world, const std::filesystem::path& content)
     {
         Registry<LevelLoadedInfo> levels("Duration acceptance level"); StageList stages;
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower" })
+        // Every manifest stage: presentation.json's stage_names must name
+        // exactly the listed shipped stages, or startup's checks refuse.
+        std::vector<std::string> names;
+        const rapidjson::Document manifest = read_document(content / "manifest.json");
+        for (const auto& group : manifest["assets"].GetArray())
+        {
+            if (std::string_view(group["kind"].GetString()) != "level") { continue; }
+            for (const auto& name : group["names"].GetArray()) { names.emplace_back(name.GetString()); }
+        }
+        require(names.size() == std::size(stage_names_text), "The duration fixture did not read the manifest's stages");
+        for (const std::string& name : names)
         {
             auto info = std::make_unique<LevelLoadedInfo>((content / "levels" / (std::string(name) + ".json")).string().c_str());
             info->validate(); stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });

@@ -475,6 +475,19 @@ namespace presentation_read
 		}
 		text.stage.team_a_picks = read_menu_line(stage, "team_a_picks");
 		text.stage.team_b_picks = read_menu_line(stage, "team_b_picks");
+		// Keyed by data, not by a C++ list: which ids are shipped is the
+		// manifest's, so validate_stage_names judges the key set once it loads.
+		const JsonValue stage_names = json.object("stage_names");
+		for (const std::string& id : stage_names.keys())
+		{
+			if (!id.empty() && id.front() == '_') { continue; }
+			if (text.stage_names.contains(id))
+			{
+				throw std::runtime_error(stage_names.where() + ": '" + id +
+					"' appears more than once. Only the first would be read, so name it once.");
+			}
+			text.stage_names.emplace(id, read_menu_line(stage_names, id.c_str()));
+		}
 		const JsonValue records = json.object("records");
 		text.records.new_best = read_menu_line(records, "new_best");
 		text.records.stage_best = read_menu_line(records, "stage_best");
@@ -836,6 +849,19 @@ std::wstring MenuText::stage_random_hint(size_t count) const
 		throw std::invalid_argument("Stage Random hint requires a positive eligible stage count.");
 	}
 	return format_stick_template(this->stage.random_hint, { { L"{count}", std::to_wstring(count) } }, true);
+}
+
+const std::wstring* MenuText::stage_name(std::string_view id) const
+{
+	const auto found = this->stage_names.find(id);
+	return found == this->stage_names.end() ? nullptr : &found->second;
+}
+
+std::wstring MenuText::stage_title(std::string_view id, const std::string& authored,
+	const std::string& where) const
+{
+	if (const std::wstring* name = this->stage_name(id)) { return *name; }
+	return drawable_text::widen_drawable(authored, where);
 }
 
 std::wstring MenuText::roster_label(int roster_index, int slot) const

@@ -10,6 +10,7 @@
 #include "game/contracts/team_gate_contract.h"
 #include "game/objects/team_gate_structure_paintable.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <stdexcept>
@@ -68,8 +69,19 @@ void validate_stage_text(const GameTuning& tuning, const Presentation& presentat
 	RenderResources* render, const LevelLoadedInfo& info, const Stage& stage)
 {
 	const MenuStyle& menu = presentation.menu();
-	const std::string where = "the display_name of stage '" + stage.name + "'";
-	const std::wstring name = drawable_text::widen_drawable(stage.display_name, where);
+	const std::string authored_where = "the display_name of stage '" + stage.name + "'";
+	const std::wstring authored = drawable_text::widen_drawable(stage.display_name, authored_where);
+	// What Stage Select and the countdown card draw: a shipped stage's
+	// menu_text.stage_names entry, a user stage's own display_name.
+	const std::wstring* shipped = stage.user ? nullptr : presentation.menu_text().stage_name(stage.name);
+	if (!stage.user && shipped == nullptr)
+	{
+		throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage.name +
+			"', a stage the manifest lists. Add it with the level's display_name.");
+	}
+	const std::wstring& name = shipped != nullptr ? *shipped : authored;
+	const std::string where = shipped != nullptr ?
+		"presentation.json: menu_text.stage_names." + stage.name : authored_where;
 	drawable_text::check_font_can_draw(render, menu.item_font, name, where);
 	drawable_text::check_font_can_draw(render, menu.heading_font, name, where);
 	// Practice lesson cards: the reminder's heading and controls fonts.
@@ -82,6 +94,56 @@ void validate_stage_text(const GameTuning& tuning, const Presentation& presentat
 		drawable_text::check_font_can_draw(render, tuning.match().controls_font,
 			drawable_text::widen_drawable(lesson.text, lesson_where), lesson_where + ": text");
 	}
+}
+
+void validate_stage_names(const Presentation& presentation, const StageList& stages)
+{
+	for (const Stage& stage : stages)
+	{
+		if (stage.user) { continue; }
+		if (!stage.name.empty() && stage.name.front() == '_')
+		{
+			throw std::runtime_error("stage '" + stage.name + "': a shipped stage's name must not "
+				"start with '_', which presentation.json's menu_text.stage_names reads as a comment.");
+		}
+		if (presentation.menu_text().stage_name(stage.name) == nullptr)
+		{
+			throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage.name +
+				"', a stage the manifest lists. Add it with the level's display_name.");
+		}
+	}
+	for (const auto& entry : presentation.menu_text().stage_names)
+	{
+		const auto listed = std::find_if(stages.begin(), stages.end(),
+			[&entry](const Stage& stage) { return !stage.user && stage.name == entry.first; });
+		if (listed == stages.end())
+		{
+			throw std::runtime_error("presentation.json: menu_text.stage_names has '" + entry.first +
+				"', which is not a stage the manifest lists. Remove it, or register the stage.");
+		}
+	}
+}
+
+void check_stage_names_agree(const JsonValue& base_presentation, const StageList& stages)
+{
+	const JsonValue names = base_presentation.object("menu_text").object("stage_names");
+	for (const Stage& stage : stages)
+	{
+		if (stage.user || !names.has(stage.name.c_str())) { continue; }
+		const std::string base = names.string(stage.name.c_str());
+		if (base != stage.display_name)
+		{
+			throw std::runtime_error(names.where() + ": '" + stage.name + "' is '" + base +
+				"', but the display_name in levels/" + stage.name + ".json is '" +
+				stage.display_name + "'; the two must agree.");
+		}
+	}
+}
+
+void check_stage_names_agree(const std::string& presentation_path, const StageList& stages)
+{
+	const JsonDocument base = read_json_file(presentation_path.c_str());
+	check_stage_names_agree(base.root(), stages);
 }
 
 void validate_controls_reminders(const GameTuning& tuning, const Presentation& presentation,
@@ -279,6 +341,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 			"main_menu.weapon_description.max_width: " + where);
 	}
 
+	validate_stage_names(presentation, stages);
 	for (const Stage& stage : stages)
 	{
 		validate_stage_text(tuning, presentation, render, *level_infos.get(stage.name), stage);

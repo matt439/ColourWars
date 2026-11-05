@@ -14,6 +14,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const auto* info = levels.get(stage.name);
         require(info->display_name() == stage.display_name && info->icon_frame() == stage.icon_frame && info->include_in_random() == stage.include_in_random,
             "Shipped Stage paper metadata drifted from its independent arena list");
+        // Stage Select draws menu_text.stage_names, whose English is display_name.
+        require(presentation.menu_text().stage_title(stage.name, stage.display_name, stage.name) ==
+            std::wstring(stage.display_name.cbegin(), stage.display_name.cend()),
+            "Shipped Stage paper title drifted from menu_text.stage_names");
     }
     const auto& words = original.menu_text();
     require(words.heading(MenuHeading::arena) == L"Choose your arena" && words.values.random == L"Random" &&

@@ -26,8 +26,13 @@ namespace colourwars_editor
         // The manifest's level names: the shipped stages a player's own stage
         // may not be named after (Save to My Stages, ROAD#16).
         std::vector<std::string> stages;
+        // presentation.json's menu_text.stage_names: each shipped stage's title
+        // by manifest id, whose English the game requires to equal the level's
+        // display_name. Comment keys are left out. Read only after the manifest.
+        std::map<std::string, std::string> stage_names;
         std::vector<std::string> problems;
         bool manifest_read = false;
+        bool stage_names_read = false;
     };
 
     // Never throws for missing or invalid content: each failure is a problem line.

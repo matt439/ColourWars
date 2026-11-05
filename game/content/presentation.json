@@ -268,6 +268,22 @@
       "team_a_picks": "Team A picks the arena",
       "team_b_picks": "Team B picks the arena"
     },
+    "stage_names": {
+      "_comment": "Shipped stages by manifest id. Each must equal its level file's display_name; user stages keep their own name (docs/localisation.md).",
+      "king_of_the_hill": "King of the Hill",
+      "turbulence": "Turbulence",
+      "close_quarters": "Close Quarters",
+      "movement_course": "Movement Course",
+      "crossfeed": "Crossfeed",
+      "press_tower": "Press Tower",
+      "turbulence_blockout": "Turbulence Yard",
+      "turbulence_mover_trial": "Turbulence Yard - Mover Trial",
+      "turbulence_slab_trial": "Turbulence Yard - Slab Trial",
+      "turbulence_ferry_trial": "Turbulence Yard - Ferry Trial",
+      "turbulence_gate_trial": "Turbulence Yard - Gate Trial",
+      "turbulence_lift_trial": "Turbulence Yard - Lift Trial",
+      "turbulence_paint_lift_trial": "Turbulence Yard - Paint Lift Trial"
+    },
     "records": {
       "new_best": "NEW BEST",
       "stage_best": "STAGE BEST",

@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_builder.h"
 #include "game/config/presentation/presentation.h"
-#include "game/config/drawable_text.h"
 
 using namespace labrador;
 
@@ -110,7 +109,7 @@ std::unique_ptr<Level>
 			.preferences = this->preferences_,
 			.input_bindings = this->input_bindings_ };
 		LevelStage stage{
-			.name = drawable_text::widen_drawable(load_info->display_name(),
+			.name = this->presentation_->menu_text().stage_title(settings.stage(), load_info->display_name(),
 				"the display_name of stage '" + settings.stage() + "'"),
 			.camera_bounds = load_info->camera_bounds_rectangle(),
 			.zoom_out_start_bounds = load_info->zoom_out_start_bounds_rectangle(),

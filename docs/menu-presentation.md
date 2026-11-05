@@ -1283,7 +1283,9 @@ records its completion.
 Stage Select reuses the existing `menu_text.values.random` value for its Random
 slot's display name. The shipped text remains `Random`; no JSON field or group
 is added. The same string continues to supply Options' random team-palette
-choice, with its separate `OptionRow` fit.
+choice, with its separate `OptionRow` fit. A concrete arena's name is its
+`menu_text.stage_names` entry for a shipped stage, or a user stage's own
+`display_name` ([Stage names](localisation.md#stage-names)), fitted the same way.
 
 The Stage Select name uses `menu_style.fonts.item`, shipped as
 `lato_black_48`, and the existing `UiTextDropShadow` style. Its raw bounds

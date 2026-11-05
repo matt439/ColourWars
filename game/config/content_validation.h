@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/assets/json.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/core/registry.h"
 #include "engine/render/render_resources.h"
@@ -23,6 +24,22 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	labrador::RenderResources* render, const labrador::AudioResources* audio,
 	const labrador::Registry<LevelLoadedInfo>& level_infos, const StageList& stages,
 	const PlaySettings& play_settings);
+
+// presentation.json's menu_text.stage_names against the stage list: an
+// entry for every shipped (non-user) stage and none for anything else. A
+// shipped name may not start with '_', which the table would read as a
+// comment. validate_game_content runs it on every Presentation, whatever its
+// locale.
+void validate_stage_names(const Presentation& presentation, const StageList& stages);
+
+// That the base presentation.json's menu_text.stage_names entry for each
+// shipped stage is its level file's display_name, byte for byte. Judged on
+// the base document, never a composed locale, so it runs where that document
+// is at hand: wWinMain and the Debug `reload` read the file at
+// `presentation_path`, the Debug presentation `tune` target passes its
+// candidate. A stage without an entry is validate_stage_names' to refuse.
+void check_stage_names_agree(const labrador::JsonValue& base_presentation, const StageList& stages);
+void check_stage_names_agree(const std::string& presentation_path, const StageList& stages);
 
 // The in-match controls reminder: presentation.json's menu_text.controls
 // copy, formatted for every keyboard and pad choice, drawn and measured in

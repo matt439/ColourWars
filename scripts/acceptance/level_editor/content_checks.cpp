@@ -80,6 +80,17 @@ namespace level_editor_acceptance
         const fs::path content = repo / "game/content";
         const ContentCatalog catalog = load_content_catalog(content);
         require(catalog.manifest_read && catalog.problems.empty(), "Source content catalog did not load cleanly");
+        // presentation.json's stage_names: one entry per manifest stage, its
+        // English the level's display_name, which save guidance compares.
+        require(catalog.stage_names_read && catalog.stage_names.size() == catalog.stages.size(),
+            "Catalog did not read one menu_text.stage_names entry per manifest stage");
+        for (const std::string& stage : catalog.stages)
+        {
+            const rapidjson::Document level = parse(contents(content / "levels" / (stage + ".json")));
+            require(catalog.stage_names.contains(stage) &&
+                catalog.stage_names.at(stage) == level["display_name"].GetString(),
+                "menu_text.stage_names disagrees with the display_name of " + stage);
+        }
         for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
             require(catalog.sprite_frames.contains(sheet) && catalog.sprite_frames.at(sheet).has_value(),
                 std::string("Catalog lacks manifest sprite sheet ") + sheet);
@@ -165,6 +176,7 @@ namespace level_editor_acceptance
         fs::create_directories(partial / "textures");
         fs::create_directories(partial / "sounds");
         fs::copy_file(content / "manifest.json", partial / "manifest.json");
+        fs::copy_file(content / "presentation.json", partial / "presentation.json");
         fs::copy_file(content / "textures/sprite_sheet_1.json", partial / "textures/sprite_sheet_1.json");
         write(partial / "textures/painter.json", "{ \"sprite_frames\": [");
         write(partial / "sounds/paint_exe.json",

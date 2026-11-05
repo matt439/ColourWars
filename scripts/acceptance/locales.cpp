@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/locale.h"
 #include "game/config/content_validation.h"
+#include "game/config/stage_loading.h"
 #include "game/input/controls_text.h"
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
@@ -70,13 +71,40 @@ namespace
         require(output.good(), "Cannot write " + path.string());
     }
 
-    // Startup's checks of one composed Presentation that need no stage list.
-    void judge(const Presentation& presentation, World& world, const GameTuning& tuning)
+    // The manifest's stages, read as startup reads them.
+    void read_shipped_stages(const std::filesystem::path& content, StageCatalog& catalog)
+    {
+        const JsonDocument manifest = read_json_file((content / "manifest.json").string().c_str());
+        const JsonValue groups = manifest.root().array("assets");
+        for (size_t index = 0; index < groups.size(); ++index)
+        {
+            const JsonValue group = groups.at(index);
+            if (group.string("kind") != "level") { continue; }
+            const JsonValue names = group.array("names");
+            for (size_t name = 0; name < names.size(); ++name)
+            {
+                const std::string stage = names.at(name).as_string();
+                catalog.add(read_stage_definition((content / "levels" / (stage + ".json")).string(), stage));
+            }
+        }
+        require(!catalog.stages().empty(), "The manifest must list the shipped stages.");
+    }
+
+    // Startup's text checks of one composed Presentation: its resources, the
+    // controls reminder, the Mode rows, and the stage titles - every shipped
+    // stage named by stage_names, each drawable in the fonts that draw it.
+    void judge(const Presentation& presentation, World& world, const GameTuning& tuning,
+        const StageCatalog& stages)
     {
         presentation.validate_resources(world.render, world.audio);
         validate_controls_reminders(tuning, presentation, world.render);
         validate_mode_durations(&world.render, tuning, presentation);
         validate_mode_stage_rules(&world.render, presentation);
+        validate_stage_names(presentation, stages.stages());
+        for (const Stage& stage : stages.stages())
+        {
+            validate_stage_text(tuning, presentation, &world.render, *stages.level_infos().get(stage.name), stage);
+        }
     }
 
     // A scratch locales folder: the index and each file, written fresh.
@@ -135,7 +163,8 @@ namespace
         return R"({ "presentation": )" + presentation + " }";
     }
 
-    void check_shipped(const std::filesystem::path& content, World& world, const GameTuning& tuning)
+    void check_shipped(const std::filesystem::path& content, World& world, const GameTuning& tuning,
+        const StageCatalog& stages)
     {
         const std::string base_path = (content / "presentation.json").string();
         const std::string base_text = read_text(base_path);
@@ -146,6 +175,8 @@ namespace
         require(test != nullptr && test->test && test->fallback == "en",
             "qps-ploc must be listed as a test locale falling back to en.");
         locales.check_structure(base_text, base_path);
+        // stage_names' English is each level's display_name.
+        check_stage_names_agree(read_json_file(base_path.c_str()).root(), stages.stages());
 
         // The base is presentation.json byte for byte.
         require(locales.compose("en", base_text, base_path) == base_text,
@@ -157,7 +188,7 @@ namespace
             try
             {
                 const Presentation localised(locales.presentation(entry.tag, base_path));
-                judge(localised, world, tuning);
+                judge(localised, world, tuning, stages);
             }
             catch (const std::exception& error)
             {
@@ -198,6 +229,20 @@ namespace
             L"[Pad 1: A / LT Jump, RT Shoot, [Start] Pause]\n[Pad 2: B Jump, RT Shoot, [Start] Pause]\n"
             L"[Right stick  Aim]",
             "qps-ploc must reach the per-pad reminder lines.");
+        // Every shipped stage's title, which Stage Select and the countdown draw.
+        for (const Stage& stage : stages.stages())
+        {
+            const std::wstring* localised = pseudo.menu_text().stage_name(stage.name);
+            const std::wstring* base = english.menu_text().stage_name(stage.name);
+            require(localised != nullptr && base != nullptr && *localised == L"[" + *base + L"]" &&
+                pseudo.menu_text().stage_title(stage.name, stage.display_name, stage.name) == *localised,
+                "qps-ploc must bracket menu_text.stage_names." + stage.name);
+        }
+        require(*pseudo.menu_text().stage_name("king_of_the_hill") == L"[King of the Hill]",
+            "qps-ploc must name King of the Hill in brackets.");
+        // A user stage is never in the table: it keeps its own name in any locale.
+        require(pseudo.menu_text().stage_title("my_arena", "My Arena", "my_arena") == L"My Arena",
+            "A user stage's own display_name must survive a locale.");
         require(pseudo.main_menu().weapon_select_art.choice(WeaponType::sprayer).name ==
             L"[" + english.main_menu().weapon_select_art.choice(WeaponType::sprayer).name + L"]",
             "qps-ploc must bracket the Sprayer's name.");
@@ -215,7 +260,7 @@ namespace
     }
 
     void check_rules(const std::filesystem::path& content, const std::filesystem::path& scratch,
-        World& world, const GameTuning& tuning)
+        World& world, const GameTuning& tuning, const StageCatalog& stages)
     {
         const std::string base_path = (content / "presentation.json").string();
         const std::string base_text = read_text(base_path);
@@ -245,7 +290,7 @@ namespace
             require(canadian.menu_text().title.subtitle == L"SALIS TOUT", "A missing string must come from the fallback.");
             require(canadian.menu_text().title.no_controller == english.menu_text().title.no_controller,
                 "A string no locale names must come from presentation.json.");
-            judge(canadian, world, tuning);
+            judge(canadian, world, tuning, stages);
         }
 
         // Fonts: a table substitutes every use of a font presentation.json names.
@@ -255,7 +300,7 @@ namespace
                 .file("de", R"({ "fonts": { "lato_black_48": "lato_black_36" }, "presentation": {} })");
             const Presentation german(fonts.read().presentation("de", base_path));
             require(german.menu().item_font == "lato_black_36", "A font table must replace the font it names.");
-            judge(german, world, tuning);
+            judge(german, world, tuning, stages);
 
             Fixture unknown(scratch, "unknown-font");
             unknown.index(one_locale("de"))
@@ -291,6 +336,12 @@ namespace
             { "xx.json", "menu_text.title", "an object" });
         composing("array-length", R"({ "team_palette": { "pairs": [ { "label": "A / B" } ] } })",
             { "xx.json", "team_palette.pairs", "same length" });
+        // stage_names is keyed by the manifest's stages, which the base lists:
+        // a locale names a subset, never a stage of its own, and only text.
+        composing("unknown-stage", R"({ "menu_text": { "stage_names": { "nowhere": "Nowhere" } } })",
+            { "xx.json", "menu_text.stage_names", "nowhere" });
+        composing("stage-number", R"({ "menu_text": { "stage_names": { "crossfeed": 7 } } })",
+            { "xx.json", "menu_text.stage_names.crossfeed", "a number" });
         composing("pair-key", R"({ "team_palette": { "pairs": [ { "key": "x" }, null, null, null, null, null ] } })",
             { "xx.json", "team_palette.pairs[0].key", "only text" });
 
@@ -334,13 +385,28 @@ namespace
             refuses("A character outside the fonts", { "(locale fr)", "menu_text.title", "start", "U+00C0" },
                 [&] { static_cast<void>(Presentation(coverage.read().presentation("fr", base_path))); });
 
+            // A stage name the locale translates, kept where it is not.
+            Fixture named(scratch, "stage-name");
+            named.index(one_locale("fr"))
+                .file("fr", overlay(R"({ "menu_text": { "stage_names": { "crossfeed": "Croisement" } } })"));
+            const Presentation french(named.read().presentation("fr", base_path));
+            require(*french.menu_text().stage_name("crossfeed") == L"Croisement" &&
+                *french.menu_text().stage_name("press_tower") == L"Press Tower",
+                "A locale must name the stages it translates, and the base the rest.");
+            judge(french, world, tuning, stages);
+            Fixture stage_coverage(scratch, "stage-coverage");
+            stage_coverage.index(one_locale("fr"))
+                .file("fr", overlay(R"({ "menu_text": { "stage_names": { "crossfeed": "CroisÉ" } } })"));
+            refuses("A stage name outside the fonts", { "(locale fr)", "menu_text.stage_names", "crossfeed" },
+                [&] { static_cast<void>(Presentation(stage_coverage.read().presentation("fr", base_path))); });
+
             Fixture fit(scratch, "fit");
             fit.index(one_locale("fr"))
                 .file("fr", overlay(R"({ "menu_text": { "title": { "start": ")" + std::string(200, 'W') + R"(" } } })"));
             refuses("A string too long for its box", { "(locale fr)" }, [&]
                 {
                     const Presentation refused(fit.read().presentation("fr", base_path));
-                    judge(refused, world, tuning);
+                    judge(refused, world, tuning, stages);
                 });
         }
     }
@@ -356,9 +422,11 @@ int main(int argc, char** argv)
             std::filesystem::absolute(argv[0]).parent_path() / "locale-fixtures";
         World world(content);
         const GameTuning tuning((content / "tuning.json").string().c_str());
-        check_shipped(content, world, tuning);
-        check_rules(content, scratch, world, tuning);
-        std::cout << "locales: every shipped locale passes startup's text checks; composition rules hold\n";
+        StageCatalog stages;
+        read_shipped_stages(content, stages);
+        check_shipped(content, world, tuning, stages);
+        check_rules(content, scratch, world, tuning, stages);
+        std::cout << "locales: every shipped locale passes startup's text checks, stage titles included; composition rules hold\n";
         return 0;
     });
 }

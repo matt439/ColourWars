@@ -23,14 +23,18 @@ namespace colourwars_editor
 {
     namespace
     {
+        // A registered source level whose display_name has drifted from
+        // presentation.json's stage_names says so first.
         std::wstring destination_guidance(const std::filesystem::path& path,
-            const ContentCatalog& catalog, bool saved)
+            const ContentCatalog& catalog, const LevelDocument& document, bool saved)
         {
             std::optional<std::filesystem::path> my_stages;
             try { my_stages = user_stage_folder(); }
             catch (const std::runtime_error&) {}
-            return save_guidance(path, std::filesystem::path(COLOURWARS_CONTENT_DIR) / L"levels",
-                catalog, my_stages, saved);
+            const std::filesystem::path source_levels = std::filesystem::path(COLOURWARS_CONTENT_DIR) / L"levels";
+            const std::wstring warning = stage_name_warning(path, source_levels, catalog, document.display_name());
+            return (warning.empty() ? std::wstring() : warning + L"  |  ") +
+                save_guidance(path, source_levels, catalog, my_stages, saved);
         }
 
         bool contains_nul(const std::string& text) { return text.find('\0') != std::string::npos; }
@@ -361,7 +365,7 @@ namespace colourwars_editor
                 + L" the game will refuse: " + visible_text(unresolved_.front()));
         else if (!content_catalog_.problems.empty())
             set_status(ready + L"Resource names unchecked: " + wide(content_catalog_.problems.front()));
-        else set_status(ready + destination_guidance(document_.path(), content_catalog_, false));
+        else set_status(ready + destination_guidance(document_.path(), content_catalog_, document_, false));
         InvalidateRect(canvas_, nullptr, FALSE);
     }
 
@@ -490,7 +494,7 @@ namespace colourwars_editor
         document_.save(path);
         refresh(true);
         set_status(L"Saved " + path.filename().wstring() + L"  |  " +
-            destination_guidance(path, content_catalog_, true) + L"  |  " + path.wstring());
+            destination_guidance(path, content_catalog_, document_, true) + L"  |  " + path.wstring());
         return true;
     }
 
@@ -550,7 +554,7 @@ namespace colourwars_editor
                     saved = true;
                     refresh(true);
                     set_status(L"Saved to My Stages as '" + wide(target.name) + L"'  |  " +
-                        destination_guidance(target.file, content_catalog_, true) + L"  |  " + target.file.wstring());
+                        destination_guidance(target.file, content_catalog_, document_, true) + L"  |  " + target.file.wstring());
                 }
             }
         }
@@ -615,8 +619,9 @@ namespace colourwars_editor
                 L"row renames it, and a move out of its lesson area is refused. Lessons are kept as written. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
-                L"and its relative path in cmake/runtime_assets.cmake. The opt-in ColourWarsRegisterStage helper previews both entries; --apply registers them. "
-                L"Existing registered levels need no registration.\n\n"
+                L"and its relative path in cmake/runtime_assets.cmake, and its display_name as its title in game/content/presentation.json's "
+                L"menu_text.stage_names. The opt-in ColourWarsRegisterStage helper previews all three entries; --apply registers them. "
+                L"Existing registered levels need no registration, but a changed display_name must change in menu_text.stage_names too.\n\n"
                 L"To play a level without rebuilding, use File > Save to My Stages (Ctrl+M). It saves into %LOCALAPPDATA%\\ColourWars\\stages, "
                 L"which the game reads at startup and whenever Stage Select opens from its main menu. The name must not be a shipped stage's. "
                 L"Asset names must match your content: the status line names any the game would refuse, and Save asks first. See docs/level-editor.md.",

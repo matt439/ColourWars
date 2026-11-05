@@ -91,6 +91,10 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		labrador::parse_json(candidate_text, source_name));
 	if (checks_levels && can_check_levels(context))
 	{
+		// The candidate is the base text, so its stage_names must still be
+		// the levels' display_names.
+		check_stage_names_agree(labrador::parse_json(candidate_text, source_name).root(),
+			*context->stages());
 		check_levels(*this->tuning_, *candidate, *context);
 	}
 	else if (can_check_resources(context))

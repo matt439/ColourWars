@@ -162,6 +162,18 @@ namespace menu_text_acceptance
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
         }
+        require(text.stage_names.size() == std::size(stage_names_text), "menu_text.stage_names gained or lost a stage");
+        for (const auto& entry : stage_names_text)
+        {
+            const std::wstring* name = text.stage_name(entry.key);
+            require(name != nullptr && *name == entry.text &&
+                text.stage_title(entry.key, "Authored elsewhere", "fixture") == entry.text,
+                std::string("Stage name default changed, or stage_title ignored it: ") + entry.key);
+        }
+        // A stage the table does not name - a user stage - keeps its own text.
+        require(text.stage_name("my_arena") == nullptr &&
+            text.stage_title("my_arena", "My Arena", "fixture") == L"My Arena",
+            "A user stage's display_name did not reach its title");
         for (const auto& entry : stage_cue_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena cue default changed: ") + entry.key);
@@ -211,7 +223,7 @@ namespace menu_text_acceptance
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown", "controls" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "stage_names", "records", "connection", "stick_readouts", "labels", "hud", "countdown", "controls" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -230,7 +242,7 @@ namespace menu_text_acceptance
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "records", "connection", "stick_readouts", "labels", "hud", "countdown", "controls" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "keyboard_jump", "pad_buttons", "status", "values", "confirmations", "end", "stage", "stage_names", "records", "connection", "stick_readouts", "labels", "hud", "countdown", "controls" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -283,6 +295,24 @@ namespace menu_text_acceptance
             variants.rejects(field, [key](rapidjson::Document& d)
                 { d["menu_text"]["controls"]["labels"][key].SetString("line\nbreak"); });
         }
+        for (const auto& entry : stage_names_text)
+        {
+            // The key set is the manifest's, so a missing entry is refused by
+            // validate_stage_names once it loads (the user_stages case), not here.
+            const std::string field = std::string("stage_names.") + entry.key;
+            const char* key = entry.key;
+            variants.rejects(field, [key](rapidjson::Document& d) { d["menu_text"]["stage_names"][key].SetBool(true); });
+            variants.rejects(field, [key](rapidjson::Document& d) { d["menu_text"]["stage_names"][key].SetNull(); });
+            variants.rejects(field, [key](rapidjson::Document& d) { d["menu_text"]["stage_names"][key].SetString(""); });
+            variants.rejects(field, [key](rapidjson::Document& d)
+                { d["menu_text"]["stage_names"][key].SetString("bad\0text", 8, d.GetAllocator()); });
+            variants.rejects(field, [key](rapidjson::Document& d)
+                { d["menu_text"]["stage_names"][key].SetString("line\nbreak"); });
+            variants.rejects(field, [key](rapidjson::Document& d)
+                { d["menu_text"]["stage_names"][key].SetString("Caf\xC3\xA9"); });
+        }
+        variants.rejects("stage_names.crossfeed", [](rapidjson::Document& d)
+            { d["menu_text"]["stage_names"].AddMember("crossfeed", "Crossfeed Again", d.GetAllocator()); });
         for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : stage_count_text) { required("stage", entry.key); }
         for (const auto& entry : stage_summary_text) { required("stage", entry.key); }

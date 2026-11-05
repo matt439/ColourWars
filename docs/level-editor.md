@@ -841,10 +841,23 @@ To ship a stage with the game, register it instead. A new file in
 3. Add `levels/<name>.json` to `COLOURWARS_RUNTIME_ASSETS` in
    `cmake/runtime_assets.cmake`, shared by development staging and Release.
    Configure checks that these two lists agree.
-4. Configure/build again, then start the game and choose the new stage.
+4. Add `"<name>": "<its display_name>"` to `menu_text.stage_names` in
+   `game/content/presentation.json`, the copy a locale translates
+   ([Stage names](localisation.md#stage-names)). Startup refuses a manifest
+   stage without an entry, an entry without a stage, and an entry whose
+   English is not the level's `display_name` byte for byte.
+5. Configure/build again, then start the game and choose the new stage.
+
+[Registration assistance](#registration-assistance-ed4) makes steps 2-4 in
+one previewed operation.
 
 The file's `display_name` is the stage's label on the stage-select page, which
-also draws a live preview of the arena itself.
+also draws a live preview of the arena itself. For a registered stage it is
+also the English of its `stage_names` entry: change both together, or the game
+will not start. The status line says so when a source level the manifest names
+no longer matches its entry. A Save to My Stages copy keeps its
+`display_name` and is never in `stage_names`, so it shows that name,
+untranslated, in every locale.
 Stage names use the glyphs supported by the game's compiled fonts; unsupported
 characters such as emoji are rejected before saving.
 `icon_frame` is required legacy icon metadata that no screen draws today; it
@@ -1558,7 +1571,7 @@ composition or competitive value.
 
 `ColourWarsRegisterStage` previews and explicitly registers a level already
 saved directly under `game/content/levels/`. Build the opt-in tool, then preview
-the two additions before choosing to apply them:
+the three additions before choosing to apply them:
 
 ```powershell
 cmake --build --preset x64-debug --target ColourWarsRegisterStage --parallel 2
@@ -1574,22 +1587,29 @@ editor Help names `cmake/runtime_assets.cmake` and this separate helper.
 
 Preview writes nothing. It checks the existing level's structure and references
 against a complete content catalog, verifies that the complete manifest/runtime
-asset lists already agree, then shows the exact added name and runtime path.
+asset lists already agree and that `presentation.json`'s `menu_text.stage_names`
+names exactly the manifest's levels, then shows the exact added name, runtime
+path and stage-name entry, whose English is the level's `display_name`.
 The basename uses ASCII letters, digits, `_` or `-`, with no leading hyphen or
-Windows device name. The file must have a `.json` extension and be directly in
-this source tree's levels directory; linked/reparse paths are refused. Duplicate
-or case-alias names, one-sided registration and unsupported/nonliteral CMake list
-syntax are diagnosed rather than guessed at. An entry already present in both
-lists is a validated no-op.
+`_` (which `stage_names` would read as a comment) or Windows device name. The
+file must have a `.json` extension and be directly in this source tree's levels
+directory; linked/reparse paths are refused. Its `display_name` must be one
+nonblank line, since a stage title is. Duplicate or case-alias names, a stage in
+only some of the three files, an existing entry that differs from the
+`display_name`, and unsupported/nonliteral CMake list syntax are diagnosed
+rather than guessed at. An entry already present in all three is a validated
+no-op.
 
 Apply revalidates the proposal and unchanged stage/source bytes. It prepares and
-flushes both candidates and both original backups before replacing either list.
-Only the two entries are inserted; surrounding bytes, line endings and unrelated
-metadata remain. If the second replacement fails, the first is restored while
-it is still this operation's candidate. A failed rollback retains both originals
-at the recovery paths printed in the error; inspect both lists before retrying.
-Each replacement is atomic; the pair is not crash-atomic. The saved stage itself
-is never rewritten.
+flushes the three candidates and original backups before replacing any file,
+then replaces the manifest, the runtime list and `presentation.json` in that
+order, rechecking every file's bytes before each. Only the three entries are
+inserted; surrounding bytes, line endings and unrelated metadata remain. If a
+later replacement fails, the files already replaced are restored, newest first,
+while each is still this operation's candidate. A failed rollback retains every
+original not used by a restore at the recovery paths printed in the error;
+inspect all three files before retrying. Each replacement is atomic; the set is
+not crash-atomic. The saved stage itself is never rewritten.
 
 Configure/build the game after registration to copy the stage beside the
 executable. The game's startup/content validation remains authoritative;
@@ -1604,9 +1624,12 @@ route and composition evidence; this automated use does not close `ED#5`.
 
 The document acceptance case also checks exact LF/CRLF and BOM-preserving
 appends, malformed/partial/aliased lists, resource validation, stale inputs and
-proposals, first/second replacement failures, locked/read-only files and named
-original backups after a failed rollback. The separate integration check uses
-a fresh scratch repository and only the reviewed runtime assets:
+proposals, first/second/third replacement failures, locked/read-only files and
+named original backups after a failed or partial rollback, a stage named in any
+one or two of the three files, and a stage-name entry that disagrees with its
+level. The separate integration check uses a fresh scratch repository and only
+the reviewed runtime assets, and since 2026-11-05 checks that apply changed only
+the manifest, the runtime list and `presentation.json`, each by its one entry:
 
 ```powershell
 ./scripts/check-stage-registration.ps1 -Preset x64-debug
