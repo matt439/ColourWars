@@ -82,7 +82,8 @@ Player::Player(const RectangleF& rectangle,
     int sound_index,
     const FigurePresentation* figure,
     const ViewShakePresentation* view_shake,
-    const FigurePerson& person) :
+    const FigurePerson& person,
+    MatchVariant variant) :
     colourwars::MovingObject(velocity),
     colourwars::AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
@@ -112,6 +113,11 @@ Player::Player(const RectangleF& rectangle,
     prev_rectangle_(rectangle),
     respawn_position_(respawn_position)
 {
+    if (!valid_match_variant(variant))
+    {
+        throw std::invalid_argument("Unknown player match variant");
+    }
+    this->primary_->set_endless_paint(variant == MatchVariant::endless_paint);
     this->preferences_ = preferences;
     this->movement_feedback_look_ = movement_feedback;
     this->person_ = person;
@@ -1157,6 +1163,8 @@ std::vector<std::unique_ptr<Projectile>>
     }
 
     // Before, so the shot is affordable; after, so the HUD shows a full tank.
+    // The shipping variant lives in the weapon's supply policy, independently
+    // of this Debug cheat, so restoring normal cheats cannot disable it.
     if (this->infinite_ammo_)
     {
         this->primary_->reset_ammo(false);

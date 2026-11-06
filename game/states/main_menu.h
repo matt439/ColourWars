@@ -257,11 +257,13 @@ public:
 	// Candidate validation (game/states/menu_content_validation.h) uses the
 	// same unscaled row and complete ornament as a real Mode page, after the
 	// ordinary resource checks have passed.
-	// Rows of mode_select_spacing under the heading; Match length and Series
-	// stage are the two OptionRows. The practice hint sits on Single Match's
+	// Mode's heading sits at the paper top and its actions on rows 1-7, retaining
+	// the shared font and complete focus-card spacing inside the setup paper.
+	// Match length, Series stage and Variant are OptionRows. The practice hint sits on Single Match's
 	// row, one card padding after that row's complete focus card.
-	static constexpr int duration_row = 5;
-	static constexpr int stage_rule_row = 6;
+	static constexpr int duration_row = 4;
+	static constexpr int stage_rule_row = 5;
+	static constexpr int variant_row = 6;
 	static constexpr int back_row = 7;
 	static std::unique_ptr<OptionRow> make_duration_row(labrador::RenderResources* render,
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
@@ -274,6 +276,11 @@ public:
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 		OptionRow::Adjust on_adjust = {});
 	static void check_stage_rule_row(const OptionRow& row,
+		const labrador::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
+	static std::unique_ptr<OptionRow> make_variant_row(labrador::RenderResources* render,
+		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+		OptionRow::Adjust on_adjust = {});
+	static void check_variant_row(const OptionRow& row,
 		const labrador::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 protected:
 	bool shows_focus_backing() const override { return false; }
@@ -288,10 +295,13 @@ private:
 	void refresh_duration();
 	void cycle_stage_rule(labrador::Direction direction);
 	void refresh_stage_rule();
+	void cycle_variant(labrador::Direction direction);
+	void refresh_variant();
 	static labrador::Vector2F practice_hint_position(const labrador::UiWidget& single_match,
 		const MenuPaperArtPresentation& art);
 	std::unique_ptr<OptionRow> duration_row_;
 	std::unique_ptr<OptionRow> stage_rule_row_;
+	std::unique_ptr<OptionRow> variant_row_;
 	labrador::FontHandle value_font_{};
 	std::string value_font_name_;
 	float duration_row_spacing_ = 0.0f;

@@ -56,6 +56,7 @@ namespace
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MatchSetup& settings,
 	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed)
 {
+	this->refill_enabled_ = settings.variant() != MatchVariant::endless_paint;
 }
 
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning,
@@ -142,13 +143,14 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 		view.on_platform = player.on_platform;
 		view.facing_right = player.facing_right;
 		view.ammo = player.ammo / this->tuning_->starting_ammo();
+		view.refill_enabled = this->refill_enabled_;
 		view.paint_refill = this->tuning_->handicap(player.handicap).paint_refill;
 		view.underfoot = player.underfoot_enabled;
 		view.footing = footing_of(player.underfoot_team, player);
 		// Only the refill rule reads the ground ahead; skip the queries otherwise.
 		const bool low = bot->refilling() || player.tool_empty ||
 			view.ammo <= this->tuning_->bots().reserve_low;
-		if (player.underfoot_enabled && this->tuning_->bots().refill_off_enemy_paint && low &&
+		if (this->refill_enabled_ && player.underfoot_enabled && this->tuning_->bots().refill_off_enemy_paint && low &&
 			player.alive && player.grounded)
 		{
 			const float feet = view.center.y + view.size.y * 0.5f;

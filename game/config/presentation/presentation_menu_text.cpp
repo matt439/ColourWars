@@ -293,6 +293,8 @@ namespace presentation_read
 		text.values.series_stage_same = read_menu_line(values, "series_stage_same");
 		text.values.series_stage_rotate = read_menu_line(values, "series_stage_rotate");
 		text.values.series_stage_losers_pick = read_menu_line(values, "series_stage_losers_pick");
+		text.values.variant_standard = read_menu_line(values, "variant_standard");
+		text.values.variant_endless_paint = read_menu_line(values, "variant_endless_paint");
 		text.values.resolution = read_menu_line(values, "resolution");
 		try
 		{
@@ -762,6 +764,16 @@ const std::wstring& MenuText::series_stage_value(SeriesStageRule rule) const
 	case SeriesStageRule::losers_pick: return this->values.series_stage_losers_pick;
 	}
 	throw std::invalid_argument("Unknown series stage rule");
+}
+
+const std::wstring& MenuText::variant_value(MatchVariant variant) const
+{
+	switch (variant)
+	{
+	case MatchVariant::standard: return this->values.variant_standard;
+	case MatchVariant::endless_paint: return this->values.variant_endless_paint;
+	}
+	throw std::invalid_argument("Unknown match variant");
 }
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const

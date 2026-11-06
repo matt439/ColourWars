@@ -10,7 +10,7 @@ namespace menu_text_acceptance
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
             "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert",
-            "watch_replay", "series_stage" })
+            "watch_replay", "series_stage", "variant" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -256,6 +256,38 @@ namespace menu_text_acceptance
             left_edge(d);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(149.25f);
         }, &world);
+
+        // Every named variant must fit the actual unfitted compound row,
+        // including the value, captured invisible shadow and focus ornament.
+        validate_mode_variants(&world.render, original);
+        bool unknown_refused = false;
+        try { std::ignore = original.menu_text().variant_value(static_cast<MatchVariant>(9)); }
+        catch (const std::invalid_argument&) { unknown_refused = true; }
+        require(unknown_refused, "An unknown variant selected display copy");
+        for (const char* key : { "variant_standard", "variant_endless_paint" })
+        {
+            acceptance::rejects_variant<std::runtime_error>(variants,
+                [key](rapidjson::Document& d)
+                {
+                    d["menu_text"]["values"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+                },
+                [&](const std::filesystem::path& path)
+                {
+                    const Presentation candidate(path.string().c_str());
+                    validate_mode_variants(&world.render, candidate);
+                }, { "complete variant row" }, "An oversized named variant escaped its actual Mode row");
+            acceptance::rejects_variant<std::runtime_error>(variants,
+                [key](rapidjson::Document& d)
+                {
+                    d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                    d["menu_text"]["values"][key].SetString("Glyph~");
+                },
+                [&](const std::filesystem::path& path)
+                {
+                    const Presentation candidate(path.string().c_str());
+                    validate_mode_variants(&world.render, candidate);
+                }, { key }, "An undrawable named variant escaped its captured font");
+        }
     }
 
     void check_pause_text(Variants& variants, World& world)

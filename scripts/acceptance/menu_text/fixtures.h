@@ -406,7 +406,8 @@ namespace menu_text_acceptance
         { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" },
         { "keyboard_jump", L"Keyboard Keys" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
         { "watch_replay", L"Watch Replay" },
-        { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" }
+        { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" },
+        { "variant", L"Variant" }
     };
 
     using World = acceptance::ContentWorld;

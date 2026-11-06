@@ -29,6 +29,7 @@ public:
 
 private:
 	const GameTuning* tuning_;
+	bool refill_enabled_ = true;
 	std::vector<std::unique_ptr<MatchBot>> bots_;
 	std::vector<BotDifficulty> difficulties_;
 	std::vector<PlayerTeam> gate_permissions_;

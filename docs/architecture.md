@@ -65,7 +65,7 @@ The role folders date from `HYG#51`:
 | Folder | Holds (examples) |
 |---|---|
 | the `game/` root | the shell: `main.cpp`, `game_data`, `fatal_report`, `directory_consts`, `display_awake`, `pch.h`, `resource.rc` and the `colourwars.ico` it embeds |
-| `contracts/` | the nine engine-free headers [below](#the-engine-free-contract-headers) and `level.schema.json` |
+| `contracts/` | the twelve engine-free headers [below](#the-engine-free-contract-headers) and `level.schema.json` |
 | `match/` | `match_setup`, `match_rules.h`, `seat_setup.h`, `player_control.h`, `session`, `series_stage_rule`, `round_tape`, `match_award.h`, `paint_owners.h` |
 | `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |
 | `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size, every page rectangle, the fit-to-box scale and rectangle predicates, and the settings pages' value rows, shared by the pages, the reader and the validators) |
@@ -132,9 +132,10 @@ What holds (checked 2026-11-05):
   header reaches the menu records. Some `objects/` sources do, by including
   `presentation.h` (or `presentation_menu_text.h`) themselves; since `HYG#38`
   no presentation source includes a `states/` header.
-- **The editor sees only the contracts**: it includes eight of the nine
-  contract headers (and `simulation.h` through `horizontal_motion_contract.h`),
-  and `colourwars_level_document` compiles without the engine's include path.
+- **The editor sees only the contracts**: it includes nine contract headers
+  directly, and `rectangle_contract.h` and `simulation.h` through them;
+  `match_variant.h` belongs to match setup and is not an editor dependency.
+  `colourwars_level_document` compiles without the engine's include path.
 
 Where it does not hold yet:
 
@@ -145,8 +146,9 @@ Where it does not hold yet:
 
 ## The engine-free contract headers
 
-Eleven headers in `game/contracts/` hold rules the game and the editor must apply
-in the same words, with no engine include:
+Twelve headers in `game/contracts/` hold engine-free rules. Eleven give the game
+and the editor the same level vocabulary and geometry; `match_variant.h` gives
+match setup, persistence and replay one vocabulary for named variants:
 
 | Header | Holds |
 |---|---|
@@ -160,10 +162,11 @@ in the same words, with no engine include:
 | `drawable_text_contract.h` | the characters the fonts draw and the punctuation folded to ASCII, for `drawable_text` and the editor's display-name check |
 | `paint_face_geometry.h`, `paint_polygon_geometry.h` | how paint tiles a face and a polygon, for the runtime tiles and the editor's scoring diagnostics |
 | `fixed_slab_paint_geometry.h` | the fixed slab's footprint (`slab_span`, `slab_rise`, `slab_thickness`) and paint polygon (uses the two above) |
+| `match_variant.h` | `MatchVariant` (`standard`, `endless_paint`), its ordered choices, validation and stable serialization keys; variants are fixed C++ policies |
 
 They are header-only and include only the standard library and one another.
-The game's builders and startup validation read them; so do the editor's level
-document and JSON reader. The `colourwars_check_contract_includes` target
+The game's builders, setup and startup validation read them; the editor's level
+document and JSON reader read the level contracts. The `colourwars_check_contract_includes` target
 ([cmake/check_contract_includes.cmake](../cmake/check_contract_includes.cmake))
 fails the build when one includes anything else. Both `colourwars_game` and the
 editor's `colourwars_level_document` depend on it. The engine's
@@ -319,6 +322,16 @@ tuning and hand finished objects to the scene. `LevelBuilder` owns a
 players, dividers), the services and live records it borrows, what the stage
 says, and this round's decisions.
 
+`MatchSetup` carries one `MatchVariant`, selected on Mode and retained across
+series rounds. `PlayerBuilder` passes that policy to each `Player`; Endless
+paint gives the tool a supply policy that bypasses ammunition cost and keeps
+the tank full, while the weapon keeps its normal cooldown and shot feedback.
+`MatchBotDriver` turns off the bot's reserve
+and refill rules for that variant, including refill-only ground queries.
+Scoring, duration, movement and the other bot decisions keep their normal
+rules. The match policy is independent of the Debug infinite-ammunition cheat,
+and recorded setup preserves the selected variant.
+
 ## Data
 
 Five JSON files are read at startup, before any asset:
@@ -329,7 +342,7 @@ Five JSON files are read at startup, before any asset:
 | `tuning.json` | every number a match is balanced on ([game/config/tuning.h](../game/config/tuning.h)) |
 | `presentation.json` | every font, colour, offset and box size the shell is laid out from ([game/config/presentation/presentation.h](../game/config/presentation/presentation.h), with the in-match records in [presentation_match.h](../game/config/presentation/presentation_match.h), the menu-page layout records in [presentation_menu.h](../game/config/presentation/presentation_menu.h) and the menu text in [presentation_menu_text.h](../game/config/presentation/presentation_menu_text.h)) |
 | `locales/locales.json` | the languages the copy is in; each listed `locales/<tag>.json` is laid over `presentation.json`'s text before it is read ([localisation.md](localisation.md), [game/config/locale.h](../game/config/locale.h)) |
-| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records, in versioned `SaveSection`s ([game/save/save_section.h](../game/save/save_section.h)) |
+| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, remembered match setup and per-stage records, in versioned `SaveSection`s ([game/save/save_section.h](../game/save/save_section.h)) |
 
 Tuning and presentation are two files for two audiences (a balance pass and an
 art pass), and neither is a manifest entry: they are read before every asset
@@ -339,6 +352,10 @@ stages beside the executable; the save is written by the player and created by
 nothing but the game. An older save at `./save/save_data.json` in the staged
 folder is read once, if nothing is at the real path, to carry it across
 ([game/directory_consts.h](../game/directory_consts.h)).
+
+Save version 7 adds the remembered setup's `last_match.variant`. An absent or
+unrecognized variant restores Standard, so older saves keep their existing
+match policy; Endless paint is written with its stable `endless_paint` key.
 
 Content resolves beside the executable, not the working directory: the engine's
 rule (`engine/app/content_root.h`), which `Application::load_manifest` applies

@@ -100,7 +100,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			viewport,
 			position, Vector2F::zero, 0.0f, Vector2F::zero,
 			SpriteFlip::none, 0.0f, participant_index, &this->presentation_->figure(),
-			&this->presentation_->camera().shake, person);
+			&this->presentation_->camera().shake, person, settings.variant());
 		player->set_handicap(setting.handicap);
 
 		players.push_back(std::move(player));

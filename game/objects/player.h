@@ -3,6 +3,7 @@
 #include "game/objects/horizontal_motion.h"
 
 #include "game/config/play_settings.h"
+#include "game/contracts/match_variant.h"
 #include "game/match/paint_owners.h"
 
 #include "game/config/tuning.h"
@@ -123,6 +124,7 @@ public:
     // secondary is currently accepted but ignored; players carry one weapon.
     // The builder supplies sound_index as the roster participant, independently
     // of sparse input slots and device-less bots or Debug dummy players.
+    // The match variant captures the weapon's supply policy for this player.
     Player(const labrador::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
@@ -147,7 +149,8 @@ public:
         int sound_index = -1,
         const FigurePresentation* figure = nullptr,
         const ViewShakePresentation* view_shake = nullptr,
-        const FigurePerson& person = FigurePerson());
+        const FigurePerson& person = FigurePerson(),
+        MatchVariant variant = MatchVariant::standard);
 
     ~Player() override;
 

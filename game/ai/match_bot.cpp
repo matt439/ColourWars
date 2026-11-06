@@ -396,7 +396,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 	}
 	// Untargeted fire paints the floor ahead. On a known non-scoring floor it
 	// only drains the reserve the bot needs on reaching scoring ground.
-	this->decision_.primary_shoot = !this->refilling_ && !view.shot_empty &&
+	this->decision_.primary_shoot = !this->refilling_ && (!view.refill_enabled || !view.shot_empty) &&
 		(targeted || !this->unscored_floor(view));
 	// The window steers each step; a held decision would count as blocked.
 	if (finishing) { this->decision_.x_movement = 0.0f; this->decision_.left_analog_stick = {}; }
@@ -427,7 +427,14 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		this->progress_origin_ = view.center;
 	}
 	const BotTuning& policy = this->tuning_->bots();
-	if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
+	if (!view.refill_enabled)
+	{
+		// Disabling refill also releases an existing reserve hold and its
+		// retreat immediately, without waiting for ammunition to recover.
+		if (this->refilling_) { this->ride_stalled_ = 0; this->react_in_ = 1; }
+		this->refilling_ = false;
+	}
+	else if (view.shot_empty || view.ammo <= policy.reserve_low) { this->refilling_ = true; }
 	else if (this->refilling_ && view.ammo >= policy.reserve_resume) { this->refilling_ = false; this->ride_stalled_ = 0; }
 	if (view.grounded && view.footing != MatchBotFooting::enemy)
 	{ this->has_off_enemy_ = true; this->off_enemy_center_ = view.center; }
@@ -488,7 +495,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	{
 		if (this->ride_unpainted_ < 0 || view.support_unpainted < this->ride_unpainted_)
 		{ this->ride_unpainted_ = view.support_unpainted; this->ride_stalled_ = 0; }
-		else if (!this->refilling_ && !view.shot_empty)
+		else if (!this->refilling_ && (!view.refill_enabled || !view.shot_empty))
 		{
 			const int shots = static_cast<int>(std::ceil(2.0 * static_cast<double>(
 				this->tuning_->weapon(view.weapon).details.shoot_interval) * simulation::simulation_hz));
@@ -535,7 +542,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	input.connected = true;
 	// The reserve guard is immediate, even between policy reactions. It cannot
 	// buy an unaffordable shot or inherit firing from a depleted decision.
-	if (this->refilling_ || view.shot_empty) { input.primary_shoot = false; }
+	if (this->refilling_ || (view.refill_enabled && view.shot_empty)) { input.primary_shoot = false; }
 	input.jump_held = this->jump_left_ > 0;
 	input.jump_pressed = input.jump_held && !this->jump_was_held_;
 	this->jump_was_held_ = input.jump_held;

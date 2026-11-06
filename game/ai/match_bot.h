@@ -33,6 +33,8 @@ struct MatchBotObservation
 	bool on_platform = false;
 	bool facing_right = true;
 	float ammo = 0.0f;
+	// Endless paint ignores reserve and full-shot affordability observations.
+	bool refill_enabled = true;
 	// The seat's handicap refill boost. MatchBotLocomotion adds the footing's.
 	float paint_refill = 1.0f;
 	// Paint underfoot is on. footing is the support top under the body this

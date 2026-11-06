@@ -86,6 +86,9 @@ public:
 		float dt, float ammo_regen_multiplier = 1.0f);
 
 	float ammo() const;
+	// Match policy, captured when Player is built. Full supply ignores shot
+	// cost, including a cost larger than a tank; cooldown and feedback stay real.
+	void set_endless_paint(bool enabled);
 	// POL#38: below the larger of the tank share and the shot reserve in
 	// tuning, never above a full tank. Feedback only; firing ignores it.
 	float low_paint_level() const;
@@ -286,6 +289,7 @@ private:
 
 	// Initialized from tuning in the constructor.
 	float ammo_ = 0.0f;
+	bool endless_paint_ = false;
 	float shoot_timer_ = 0.0f;
 	float rotation_ = 0.0f;
 	bool invert_y_ = false;

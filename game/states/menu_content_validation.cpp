@@ -7,6 +7,24 @@
 
 using namespace labrador;
 
+void validate_mode_variants(RenderResources* render, const Presentation& presentation)
+{
+	const MenuStyle& style = presentation.menu();
+	const MainMenuPresentation& look = presentation.main_menu();
+	const MenuText& text = presentation.menu_text();
+	const RectangleF panel = menu_geometry::footer_paper(look.setup_box_size, style.footer_y);
+	const MenuPaperArtPresentation art = menu_geometry::setup_art(look);
+	for (const MatchVariant variant : match_variants)
+	{
+		const std::wstring& value = text.variant_value(variant);
+		drawable_text::check_font_can_draw(render, style.item_font, value,
+			std::string("presentation.json: menu_text.values.variant_") + match_variant_key(variant));
+		auto row = MainMenuModeSelect::make_variant_row(render, style, look, text);
+		row->set_value(value);
+		MainMenuModeSelect::check_variant_row(*row, panel, art, look.mode_select_spacing.y);
+	}
+}
+
 void validate_mode_stage_rules(RenderResources* render, const Presentation& presentation)
 {
 	const MenuStyle& style = presentation.menu();
@@ -57,4 +75,5 @@ void validate_shell_content(const GameTuning& tuning, const Presentation& presen
 	// row/shadow/card/shade/arrow geometry without fitting the value.
 	validate_mode_durations(render, tuning, presentation);
 	validate_mode_stage_rules(render, presentation);
+	validate_mode_variants(render, presentation);
 }

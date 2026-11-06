@@ -372,6 +372,7 @@ namespace
 		out << "  \"settings\": {\n";
 		out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
 		out << "    \"best_of\": " << roster.best_of() << ",\n";
+		out << "    \"variant\": " << quoted(match_variant_key(roster.variant())) << ",\n";
 		if (roster.duration())
 		{
 			out << "    \"duration\": " << std::setprecision(std::numeric_limits<float>::max_digits10)
@@ -605,6 +606,12 @@ namespace
 		}
 		rebuilt.set_stage(setup.string("stage"));
 		rebuilt.set_best_of(setup.integer("best_of"));
+		MatchVariant variant = MatchVariant::standard;
+		if (!read_match_variant(setup.identifier("variant"), variant))
+		{
+			fail(path, "settings variant must be standard or endless_paint");
+		}
+		rebuilt.set_variant(variant);
 		if (setup.has("duration")) { rebuilt.set_duration(setup.number("duration")); }
 		// Bots remain participants but have no split-screen pane.
 		rebuilt.set_screen_layout(static_cast<labrador::ScreenLayout>(setup.integer("layout")));

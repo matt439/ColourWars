@@ -96,6 +96,7 @@ namespace
         result.set_screen_layout(layouts[static_cast<size_t>(count - 1)]);
         result.set_stage(variant % 2 == 0 ? "arena" : "movement_course");
         result.set_duration(variant % 2 == 0 ? std::nullopt : std::optional<float>{123.5f});
+        result.set_variant(variant % 2 == 0 ? MatchVariant::standard : MatchVariant::endless_paint);
         result.set_best_of(count == 1 ? 1 : std::array<int, 3>{1, 3, 5}[variant % 3]);
         result.begin_input_claims(input_slots::keyboard_and_mouse);
         const std::array<int, 3> slots{2, 0, 3};
@@ -115,7 +116,7 @@ namespace
     {
         if (actual.players.size() != expected.players.size() || actual.stage != expected.stage ||
             actual.layout != expected.layout || actual.duration != expected.duration ||
-            actual.best_of != expected.best_of) { return false; }
+            actual.best_of != expected.best_of || actual.variant != expected.variant) { return false; }
         for (size_t seat = 0; seat < actual.players.size(); ++seat)
         {
             if (actual.players[seat].team != expected.players[seat].team ||
@@ -130,7 +131,8 @@ namespace
     {
         require(actual.players.size() == static_cast<size_t>(expected.player_count()) &&
             actual.stage == expected.stage() && actual.layout == expected.screen_layout() &&
-            actual.duration == expected.duration() && actual.best_of == expected.best_of(),
+            actual.duration == expected.duration() && actual.best_of == expected.best_of() &&
+            actual.variant == expected.variant(),
             "Remembered setup changed concrete match choices");
         for (int seat = 0; seat < expected.player_count(); ++seat)
         {
@@ -182,6 +184,10 @@ namespace
                     section.has("duration") == original.duration().has_value(), "Saved setup schema or enum keys drifted");
                 if (original.duration()) { require(section.number("duration") == 123.5f,
                     "Saved duration lost its fractional seconds"); }
+                require(section.has("variant") == (original.variant() != MatchVariant::standard),
+                    "Saved setup must omit Standard and explicitly name Endless paint");
+                if (section.has("variant")) { require(section.identifier("variant") == "endless_paint",
+                    "Saved match variant did not use its named contract"); }
                 for (int seat = 0; seat < count; ++seat)
                 {
                     const auto player = players.at(static_cast<size_t>(seat));
@@ -229,7 +235,7 @@ namespace
 
     void check_versions_and_sections(const acceptance::IsolatedSave& directory)
     {
-        for (const std::string version : {std::string(), std::string("1"), std::string("2"), std::string("7")})
+        for (const std::string version : {std::string(), std::string("1"), std::string("2"), std::string("8")})
         {
             Save legacy = load(directory, "", version);
             require(!legacy.last_match_setup(), "Save without remembered section gained a remembered match");
@@ -242,7 +248,8 @@ namespace
             require(known.last_match_setup() && known.last_match_setup()->players.size() == 2 &&
                 known.last_match_setup()->players[0].team == PlayerTeam::b &&
                 known.last_match_setup()->players[0].weapon == WeaponType::bucket &&
-                known.last_match_setup()->best_of == 5 && known.last_match_setup()->duration == 45.25f,
+                known.last_match_setup()->best_of == 5 && known.last_match_setup()->duration == 45.25f &&
+                known.last_match_setup()->variant == MatchVariant::standard,
                 "Versioned save discarded a known remembered section");
             require_other_sections(known);
         }
@@ -303,6 +310,15 @@ namespace
             require(save.last_match_setup() && !save.last_match_setup()->restore(stages).duration(),
                 "Invalid duration survived recovery or discarded the roster");
         }
+        for (const char* variant : {"\"roulette\"", "\"\"", "null", "true", "1", "[]", "{}"})
+        {
+            Save save = load(directory, std::string("{\"players\":[{\"weapon\":\"bucket\"}],\"variant\":") +
+                variant + "}");
+            require(save.last_match_setup() && save.last_match_setup()->variant == MatchVariant::standard &&
+                save.last_match_setup()->players[0].weapon == WeaponType::bucket,
+                "Invalid match variant discarded the roster or changed independent choices");
+            require_other_sections(save);
+        }
         for (const char* best_of : {"0", "-1", "2", "7", "1.5", "null", "\"3\""})
         {
             Save save = load(directory, std::string("{\"players\":[{\"team\":\"a\"},{\"team\":\"b\"}],\"best_of\":") +
@@ -322,6 +338,7 @@ namespace
         raw.layout = static_cast<labrador::ScreenLayout>(-1);
         raw.duration = std::numeric_limits<float>::quiet_NaN();
         raw.best_of = 4;
+        raw.variant = static_cast<MatchVariant>(-1);
         raw.stage = "removed";
         std::srand(7723); const int expected_random = std::rand(); std::srand(7723);
         const auto restored = raw.restore(stages);
@@ -329,7 +346,8 @@ namespace
         require(restored.player_team(0) == PlayerTeam::a && restored.player_team(1) == PlayerTeam::b &&
             restored.player_team(2) == PlayerTeam::a && restored.player_weapon(1) == WeaponType::sprayer &&
             restored.screen_layout() == labrador::ScreenLayout::three_player && restored.best_of() == 1 &&
-            !restored.duration() && restored.stage() == "arena", "Restore did not defensively normalise direct aggregate data");
+            !restored.duration() && restored.stage() == "arena" && restored.variant() == MatchVariant::standard,
+            "Restore did not defensively normalise direct aggregate data");
         require_fresh(restored);
         rejects([&] { raw.restore({}); }, "Empty stage catalogue was accepted");
         for (size_t count : {size_t{0}, size_t{5}})
@@ -352,6 +370,18 @@ namespace
 
     void check_validation(const acceptance::IsolatedSave& directory)
     {
+        MatchSetup selected;
+        require(selected.variant() == MatchVariant::standard, "A fresh setup changed the standard match policy");
+        selected.set_variant(MatchVariant::endless_paint);
+        for (const MatchVariant bad : { static_cast<MatchVariant>(-1), static_cast<MatchVariant>(2) })
+        {
+            rejects([&] { selected.set_variant(bad); }, "An unknown named match variant was accepted");
+            require(selected.variant() == MatchVariant::endless_paint, "Refused variant changed selected setup");
+        }
+        MatchSetup copied = selected;
+        copied.set_player_count(4); copied.begin_input_claims(0); copied.set_best_of(5);
+        require(copied.variant() == MatchVariant::endless_paint && selected.variant() == MatchVariant::endless_paint,
+            "Copying or completing setup dropped the chosen match variant");
         Save save = load(directory, valid_section);
         const LastMatchSetup before = *save.last_match_setup();
         const std::string bytes = directory.save_bytes();
@@ -377,6 +407,7 @@ namespace
         }
         candidate = before; candidate.layout = labrador::ScreenLayout::four_player; invalid(candidate);
         candidate = before; candidate.layout = static_cast<labrador::ScreenLayout>(-1); invalid(candidate);
+        candidate = before; candidate.variant = static_cast<MatchVariant>(-1); invalid(candidate);
         for (int best_of : {0, 2, 7}) { candidate = before; candidate.best_of = best_of; invalid(candidate); }
         candidate = LastMatchSetup::capture(settings(1, 1)); candidate.best_of = 3; invalid(candidate);
         for (float duration : {0.0f, -1.0f, std::numeric_limits<float>::infinity(),

@@ -2,9 +2,11 @@
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_driver.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "game/contracts/simulation.h"
 #include "scripts/acceptance/bot_driver/ascent_checks.h"
 #include "scripts/acceptance/bot_driver/ascent_approach_checks.h"
 #include "scripts/acceptance/bot_driver/ramp_checks.h"
+#include "scripts/acceptance/bot_driver/refill_checks.h"
 #include "engine/assets/json.h"
 #include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
@@ -347,6 +349,83 @@ namespace
 		}
 	}
 
+	void check_disabled_refill(const GameTuning& tuning)
+	{
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
+				WeaponType::mister, WeaponType::bucket })
+			{
+				for (const bool empty : { false, true })
+				{
+					for (const MatchBotFooting footing : { MatchBotFooting::none, MatchBotFooting::enemy })
+					{
+						MatchBot ordinary_bot(&tuning, difficulty, 23), endless(&tuning, difficulty, 23);
+						MatchBotObservation supplied = fixture(tuning, tool);
+						supplied.enemies.push_back({ { 600.0f, 0.0f }, {}, 800.0f });
+						supplied.underfoot = true;
+						supplied.footing = footing;
+						supplied.ahead_left = supplied.ahead_right = MatchBotFooting::enemy;
+						supplied.refuge_left = 100.0f;
+						MatchBotObservation unlimited = supplied;
+						unlimited.refill_enabled = false;
+						unlimited.ammo = empty ? 0.0f : tuning.bots().reserve_low * 0.5f;
+						unlimited.shot_empty = empty;
+						PlayerInputData input;
+						for (int step = 0; step < tuning.bot(difficulty).reaction_steps * 2; ++step)
+						{
+							const PlayerInputData expected = ordinary_bot.think(supplied);
+							input = endless.think(unlimited); ordinary(input);
+							require(same(expected, input) && !endless.refilling(),
+								"Disabled refill changed firing, aiming, movement or reaction against a full-reserve control");
+						}
+						require(input.primary_shoot && input.x_movement > 0.0f,
+							"An endless-paint bot stopped firing or approached refuge instead of its visible opponent");
+					}
+				}
+				// The switch releases a previously latched refill and retreat on
+				// this observation, without waiting for the tank or reaction timer.
+				MatchBot held(&tuning, difficulty, 23);
+				MatchBotObservation view = fixture(tuning, tool);
+				view.ammo = 0.0f; view.shot_empty = true;
+				view.enemies.push_back({ { 600.0f, 0.0f }, {}, 800.0f });
+				view.underfoot = true; view.footing = MatchBotFooting::enemy;
+				view.refuge_left = 100.0f;
+				const PlayerInputData retreat = react(held, view, tuning, difficulty);
+				require(held.refilling() && !retreat.primary_shoot && retreat.x_movement < 0.0f,
+					"The disabled-refill fixture never latched an ordinary refill retreat");
+				view.refill_enabled = false;
+				const PlayerInputData released = held.think(view); ordinary(released);
+				require(!held.refilling() && released.primary_shoot && released.x_movement > 0.0f,
+					"Disabling refill retained an old hold, empty-shot guard or retreat");
+			}
+			// An empty observation must not suspend the moving-support stall
+			// budget: endless paint can fire on every ordinary ready step.
+			MatchBot moving(&tuning, difficulty, 7), unlimited_moving(&tuning, difficulty, 7);
+			MatchBotObservation supplied = platform_fixture(tuning, true);
+			supplied.supports.front().paintable = supplied.supports.front().moving = true;
+			supplied.supports.front().id = 1; supplied.supports.back().id = 2;
+			supplied.support_open = true; supplied.support_unpainted = 10;
+			supplied.support_paint = Vector2F(200.0f, supplied.size.y * 0.5f - 4.0f);
+			supplied.support_bounds = supplied.supports.front().bounds;
+			MatchBotObservation unlimited = supplied;
+			unlimited.refill_enabled = false; unlimited.ammo = 0.0f; unlimited.shot_empty = true;
+			const int shots = static_cast<int>(std::ceil(2.0 * static_cast<double>(
+				tuning.weapon(supplied.weapon).details.shoot_interval) * simulation::simulation_hz));
+			const int window = std::max(tuning.bots().progress_window_steps, shots) +
+				tuning.bot(difficulty).reaction_steps * 4;
+			bool dropped = false;
+			for (int step = 0; step < window; ++step)
+			{
+				const PlayerInputData expected = moving.think(supplied);
+				const PlayerInputData actual = unlimited_moving.think(unlimited);
+				require(same(expected, actual), "An endless-paint bot extended a stalled moving-support hold");
+				dropped = dropped || actual.drop_through;
+			}
+			require(dropped, "The endless-paint moving-support control never exhausted its stalled hold");
+		}
+	}
+
 	void check_standing_and_descent(const GameTuning& tuning)
 	{
 		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
@@ -513,6 +592,8 @@ int wmain(int argc, wchar_t** argv)
 		check_private_sequences(tuning);
 		check_visible_approach(tuning);
 		check_refill_retreat(tuning);
+		check_disabled_refill(tuning);
+		bot_refill_acceptance::check_driver(tuning);
 		{
 			std::ifstream stream(content / "tuning.json", std::ios::binary);
 			const std::string source{ std::istreambuf_iterator<char>(stream), {} };
@@ -528,7 +609,7 @@ int wmain(int argc, wchar_t** argv)
 		bot_ascent_acceptance::check(tuning);
 		bot_ascent_approach_acceptance::check(tuning);
 		bot_ramp_acceptance::check(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, refill retreat only within an enemy's reach, refill off enemy paint with paint underfoot (walking on, holding only before enemy paint ahead), bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
+		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, endless paint bypasses refill holds/retreats/ground scans, refill retreat only within an enemy's reach, refill off enemy paint with paint underfoot (walking on, holding only before enemy paint ahead), bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	});
 }

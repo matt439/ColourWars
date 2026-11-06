@@ -10,6 +10,7 @@
 #include "game/input/input_slots.h"
 #include "game/match/series_stage_rule.h"
 #include "game/match/match_rules.h"
+#include "game/contracts/match_variant.h"
 
 // The roster is empty until a player count is chosen, then contains 1 to
 // max_players seats (game/match/match_rules.h).
@@ -27,6 +28,8 @@ public:
 	std::optional<float> duration() const;
 	// No override uses match.duration from tuning, including live Debug tuning.
 	void set_duration(std::optional<float> seconds);
+	MatchVariant variant() const;
+	void set_variant(MatchVariant variant);
 	// Which stage a series' later rounds play; Same unless chosen (ROAD#20).
 	SeriesStageRule series_stage_rule() const;
 	void set_series_stage_rule(SeriesStageRule rule);
@@ -94,6 +97,7 @@ private:
 	std::array<int, input_slots::pad_count> devices_ = input_slots::per_pad(-1);
 	int best_of_ = 1;
 	std::optional<float> duration_;
+	MatchVariant variant_ = MatchVariant::standard;
 	SeriesStageRule series_stage_rule_ = default_series_stage_rule;
 	std::string stage_;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;

@@ -28,18 +28,22 @@ void Presentation::Validation::validate_setup_actions(const SetupGeometry& setup
 {
 	const MainMenuPresentation& main = this->presentation.main_menu_;
 	const auto& setup_inside = setup.setup_inside;
-	float setup_heading_bottom = 0.0f;
+	float mode_heading_bottom = 0.0f;
+	float players_heading_bottom = 0.0f;
 	for (const MenuHeading role : { MenuHeading::mode, MenuHeading::players })
 	{
+		const Vector2F position = role == MenuHeading::mode ?
+			menu_geometry::mode_heading_position(this->presentation.menu_, main) : this->presentation.menu_.layout.position;
 		const RectangleF heading = check_setup_paper(setup_inside,
 			std::string("menu_text.headings.") + menu_heading_keys[static_cast<size_t>(role)],
-			this->presentation.menu_text_.heading(role), this->presentation.menu_.heading_font, this->presentation.menu_.layout.position,
+			this->presentation.menu_text_.heading(role), this->presentation.menu_.heading_font, position,
 			this->presentation.menu_.heading_shadow_offset, false, 0.0f);
-		setup_heading_bottom = std::max(setup_heading_bottom, heading.bottom());
+		(role == MenuHeading::mode ? mode_heading_bottom : players_heading_bottom) = heading.bottom();
 	}
 	check_setup_paper(setup_inside, "menu_text.headings.join_players", this->presentation.menu_text_.heading(MenuHeading::join_players),
 		this->presentation.menu_.heading_font, this->presentation.menu_.layout.position, this->presentation.menu_.heading_shadow_offset, false, 0.0f);
-	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
+	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label,
+		int first_row, float heading_bottom)
 	{
 		const std::string key = std::string("menu_text.items.") + menu_item_keys[static_cast<size_t>(item)];
 		const std::string where = this->presentation.source_path_ + ": " + key;
@@ -70,21 +74,22 @@ void Presentation::Validation::validate_setup_actions(const SetupGeometry& setup
 				" must leave positive duration value space inside main_menu.setup_box_size.");
 		}
 		const RectangleF card = check_setup_paper(setup_inside, key, text, this->presentation.menu_.item_font, position, shadow, true, spacing.y);
-		if (row == 2 && card.y < setup_heading_bottom)
+		if (row == first_row && card.y < heading_bottom)
 		{
 			throw std::runtime_error(where + " must leave its setup heading clear of the first focus card.");
 		}
 		return card;
 	};
-	// Mode rows 2-7; Match length and Series stage carry a value column.
+	// Mode rows 1-7; Match length, Series stage and Variant carry a value column.
 	const MenuItem mode_items[]{ MenuItem::single_match, MenuItem::best_of_three, MenuItem::best_of_five,
-		MenuItem::match_length, MenuItem::series_stage, MenuItem::back };
+		MenuItem::match_length, MenuItem::series_stage, MenuItem::variant, MenuItem::back };
 	float single_match_right = 0.0f;
 	std::vector<RectangleF> mode_cards;
 	for (size_t index = 0; index < std::size(mode_items); ++index)
 	{
-		const RectangleF card = check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
-			mode_items[index] == MenuItem::match_length || mode_items[index] == MenuItem::series_stage);
+		const RectangleF card = check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 1,
+			mode_items[index] == MenuItem::match_length || mode_items[index] == MenuItem::series_stage ||
+			mode_items[index] == MenuItem::variant, 1, mode_heading_bottom);
 		if (mode_items[index] == MenuItem::single_match) { single_match_right = card.right(); }
 		else { mode_cards.push_back(card); }
 	}
@@ -92,13 +97,14 @@ void Presentation::Validation::validate_setup_actions(const SetupGeometry& setup
 		MenuItem::three_players, MenuItem::four_players, MenuItem::back };
 	for (size_t index = 0; index < std::size(player_items); ++index)
 	{
-		check_setup_item(player_items[index], main.player_count_spacing, static_cast<int>(index) + 2, false);
+		check_setup_item(player_items[index], main.player_count_spacing, static_cast<int>(index) + 2, false,
+			2, players_heading_bottom);
 	}
 	// The nonfocusable hint retains the detail font and the item-shadow offset
 	// that its existing widget uses; it has no action-row fit or focus padding.
-	// Beside Single Match on row 2, one card padding after its complete card.
+	// Beside Single Match on row 1, one card padding after its complete card.
 	const Vector2F hint_position(single_match_right + main.setup_focus_padding.x,
-		this->presentation.menu_.layout.position.y + main.mode_select_spacing.y * 2.0f);
+		this->presentation.menu_.layout.position.y + main.mode_select_spacing.y);
 	check_menu_line("menu_text.solo_practice_hint", this->presentation.menu_text_.solo_practice_hint, this->presentation.menu_.detail_font,
 		hint_position, this->presentation.menu_.footer_y, this->presentation.menu_.item_shadow_offset);
 	const RectangleF practice_hint = check_setup_paper(setup_inside,
