@@ -142,6 +142,7 @@ LastMatchSetup LastMatchSetup::capture(const MatchSetup& settings)
 	setup.duration = settings.duration();
 	setup.best_of = settings.best_of();
 	setup.stage_rule = settings.series_stage_rule();
+	setup.variant = settings.variant();
 	setup.validate();
 	return setup;
 }
@@ -193,6 +194,10 @@ void LastMatchSetup::validate() const
 	{
 		throw std::invalid_argument("Remembered series stage rule must be Same, Rotate or Loser's pick");
 	}
+	if (!valid_match_variant(this->variant))
+	{
+		throw std::invalid_argument("Remembered match variant must be Standard or Endless paint");
+	}
 }
 
 LastMatchSetup LastMatchSetup::normalised() const
@@ -229,6 +234,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 	}
 	if (setup.stage.find('\0') != std::string::npos) { setup.stage.clear(); }
 	if (!valid_series_stage_rule(setup.stage_rule)) { setup.stage_rule = default_series_stage_rule; }
+	if (!valid_match_variant(setup.variant)) { setup.variant = MatchVariant::standard; }
 	return setup;
 }
 
@@ -256,6 +262,7 @@ MatchSetup LastMatchSetup::restore(const StageList& stages) const
 	settings.set_duration(setup.duration);
 	settings.set_best_of(setup.best_of);
 	settings.set_series_stage_rule(setup.stage_rule);
+	settings.set_variant(setup.variant);
 	return settings;
 }
 
@@ -323,6 +330,13 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	catch (const std::runtime_error&)
 	{
 	}
+	try
+	{
+		if (entry.has("variant")) { std::ignore = read_match_variant(entry.identifier("variant"), setup.variant); }
+	}
+	catch (const std::runtime_error&)
+	{
+	}
 	data.last_match = setup.normalised();
 }
 
@@ -368,6 +382,11 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 	{
 		writer.key("stage_rule");
 		writer.string(series_stage_rule_key(setup.stage_rule));
+	}
+	if (setup.variant != MatchVariant::standard)
+	{
+		writer.key("variant");
+		writer.string(match_variant_key(setup.variant));
 	}
 	writer.end_object();
 }

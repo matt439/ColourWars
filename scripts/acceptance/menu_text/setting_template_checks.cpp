@@ -85,7 +85,7 @@ namespace menu_text_acceptance
         {
             const MainMenuPresentation& main = look.main_menu(); MenuStyle style = look.menu();
             style.shadow_colour = Colour{};
-            const labrador::Vector2F label_position = style.layout.position + labrador::Vector2F(0.0f, main.mode_select_spacing.y * 5.0f);
+            const labrador::Vector2F label_position = style.layout.position + labrador::Vector2F(0.0f, main.mode_select_spacing.y * 4.0f);
             const labrador::Vector2F value_position = label_position + labrador::Vector2F(main.mode_select_spacing.x * 2.0f, 0.0f);
             int adjustments = 0;
             OptionRow row("duration", L"Match Length", label_position, value_position, style, main.art.ink, &world.render,
@@ -99,7 +99,7 @@ namespace menu_text_acceptance
             const auto value_bounds = value_widget->bounds();
             require(value_widget->text() == L"~4" && value_bounds.position() == value_position &&
                 value_bounds.size() == measured + labrador::Vector2F(1.5f, 1.5f) &&
-                label_position == labrador::Vector2F(150.0f, 630.0f) && value_position == labrador::Vector2F(650.0f, 630.0f),
+                label_position == labrador::Vector2F(150.0f, 534.0f) && value_position == labrador::Vector2F(650.0f, 534.0f),
                 "Duration value changed copied text, unscaled font, inherited invisible shadow or authored columns");
             auto padded = row.bounds(); padded.inflate(main.setup_focus_padding);
             require(!right_edge || (measured == labrador::Vector2F(1144.5f, 20.0f) &&
@@ -168,6 +168,8 @@ namespace menu_text_acceptance
             d["menu_text"]["values"]["series_stage_same"].SetString("S");
             d["menu_text"]["values"]["series_stage_rotate"].SetString("R");
             d["menu_text"]["values"]["series_stage_losers_pick"].SetString("L");
+            d["menu_text"]["values"]["variant_standard"].SetString("S");
+            d["menu_text"]["values"]["variant_endless_paint"].SetString("E");
         });
         narrow.validate_resources(world.render, world.audio);
         complete(authored, narrow);

@@ -96,9 +96,9 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::wostringstream words; words << settings.duration().value_or(tuning.match().duration) / 60.0f << L" min";
         const std::wstring value = settings.duration() ? words.str() : L"Default (" + words.str() + L")";
         const colourwars::UiTextDropShadow text("independent-setup-motion-value", value, style.item_font,
-            style.layout.position + Vector2F(spacing.x * 2.0f, spacing.y * 5.0f), app.render_resources(),
+            style.layout.position + Vector2F(spacing.x * 2.0f, spacing.y * 4.0f), app.render_resources(),
             look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
-        RectangleF bounds = RectangleF::union_of(setup_bounds(spacing, 5,
+        RectangleF bounds = RectangleF::union_of(setup_bounds(spacing, 4,
             presentation.menu_text().item(MenuItem::match_length)), text.bounds());
         bounds.inflate(look.setup_focus_padding + Vector2F(2.0f)); return bounds;
     };
@@ -281,7 +281,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(mode_arrival.pixels == frame().pixels, "Nonpositive setup time advanced focus motion");
         tick(motion.focus_duration * 0.4f); const Frame mode_middle = frame(); tick(settle_time);
         const Frame mode_rest = frame();
-        const RectangleF mode_stripe = focus_arrow(look.mode_select_spacing, 3, presentation.menu_text().item(MenuItem::best_of_three));
+        const RectangleF mode_stripe = focus_arrow(look.mode_select_spacing, 2, presentation.menu_text().item(MenuItem::best_of_three));
         changed("mode-arrival", mode_arrival, mode_rest, { mode_stripe });
         changed("mode-middle", mode_middle, mode_rest, { mode_stripe });
         require(mode_arrival.pixels != mode_middle.pixels, "Mode focus did not progress with positive time");

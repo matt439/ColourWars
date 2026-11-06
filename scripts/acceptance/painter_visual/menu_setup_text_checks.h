@@ -85,8 +85,12 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                 app.render_resources(), colour, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
             colourwars::UiTextDropShadow* result = widget.get(); widgets.push_back(std::move(widget)); return result;
         };
+        const RectangleF setup_panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.setup_box_size) / 2.0f,
+            look.setup_box_size);
+        const Vector2F heading_position = count ? position(0, 0) :
+            Vector2F(style.layout.position.x, setup_panel.y + art.keyline_width * 3.0f + art.focus_padding.y);
         add(snapshot.menu_text().heading(count ? MenuHeading::players : MenuHeading::mode),
-            style.heading_font, position(0, 0), art.ink, style.heading_shadow_offset);
+            style.heading_font, heading_position, art.ink, style.heading_shadow_offset);
         RectangleF focused;
         std::vector<RectangleF> actions;
         const int choices = count ? 4 : 3;
@@ -95,36 +99,43 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             const bool disabled = count && row == 0 && settings.best_of() > 1;
             const Colour colour = disabled ? art.disabled_ink : row == focus ? art.focus_ink : art.ink;
             const auto* label = add(words.items[static_cast<size_t>(row + (count ? 4 : 0))], style.item_font,
-                position(0, row + 2), colour, style.item_shadow_offset);
+                position(0, row + (count ? 2 : 1)), colour, style.item_shadow_offset);
             actions.push_back(label->bounds());
             if (row == focus) { focused = label->bounds(); }
         }
         if (!count)
         {
-            const auto* label = add(words.items[3], style.item_font, position(0, 5),
+            const auto* label = add(words.items[3], style.item_font, position(0, 4),
                 focus == 3 ? art.focus_ink : art.ink, style.item_shadow_offset);
             std::wostringstream duration;
             duration << settings.duration().value_or(tuning.match().duration) / 60.0f << L" min";
             const std::wstring value = settings.duration() ? duration.str() : L"Default (" + duration.str() + L")";
-            const auto* time = add(value, style.item_font, position(2, 5), art.ink,
+            const auto* time = add(value, style.item_font, position(2, 4), art.ink,
                 style.item_shadow_offset);
             const RectangleF duration_bounds = RectangleF::union_of(label->bounds(), time->bounds());
             actions.push_back(duration_bounds);
             if (focus == 3) { focused = duration_bounds; }
-            // ROAD#20: Series stage on row 6, its value in the duration's
+            // ROAD#20: Series stage on row 5, its value in the duration's
             // column; the hint moved beside Single Match's card to make room.
-            const auto* rule = add(snapshot.menu_text().item(MenuItem::series_stage), style.item_font, position(0, 6),
+            const auto* rule = add(snapshot.menu_text().item(MenuItem::series_stage), style.item_font, position(0, 5),
                 focus == 4 ? art.focus_ink : art.ink, style.item_shadow_offset);
             const auto* rule_value = add(snapshot.menu_text().series_stage_value(settings.series_stage_rule()),
-                style.item_font, position(2, 6), art.ink, style.item_shadow_offset);
+                style.item_font, position(2, 5), art.ink, style.item_shadow_offset);
             const RectangleF rule_bounds = RectangleF::union_of(rule->bounds(), rule_value->bounds());
             actions.push_back(rule_bounds);
             if (focus == 4) { focused = rule_bounds; }
+            const auto* variant = add(snapshot.menu_text().item(MenuItem::variant), style.item_font, position(0, 6),
+                focus == 5 ? art.focus_ink : art.ink, style.item_shadow_offset);
+            const auto* variant_value = add(snapshot.menu_text().variant_value(settings.variant()),
+                style.item_font, position(2, 6), art.ink, style.item_shadow_offset);
+            const RectangleF variant_bounds = RectangleF::union_of(variant->bounds(), variant_value->bounds());
+            actions.push_back(variant_bounds);
+            if (focus == 5) { focused = variant_bounds; }
             add(words.hint, style.detail_font, Vector2F(actions.front().right() +
-                art.focus_padding.x * 2.0f + art.shadow_offset, position(0, 2).y), art.ink,
+                art.focus_padding.x * 2.0f + art.shadow_offset, position(0, 1).y), art.ink,
                 style.item_shadow_offset);
         }
-        const int back_focus = count ? 4 : 5;
+        const int back_focus = count ? 4 : 6;
         const auto* back = add(words.back, style.item_font, position(0, count ? 6 : 7),
             focus == back_focus ? art.focus_ink : art.ink, style.item_shadow_offset);
         actions.push_back(back->bounds());
@@ -228,7 +239,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (bool count : { false, true })
         {
             open(count);
-            for (int focus = 0; focus < (count ? 5 : 6); ++focus)
+            for (int focus = 0; focus < (count ? 5 : 7); ++focus)
             {
                 if (focus > 0) { tap(Key::down); }
                 compare("default-focus-" + std::to_string(focus), count, focus, original, legacy);
@@ -274,6 +285,25 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     tap(Key::enter); require(settings.series_stage_rule() == SeriesStageRule::same && !settings.duration(),
         "Confirming Series stage did not cycle right, or changed the duration");
     compare("series-stage-confirm-wrap", false, 4, original, legacy);
+    tap(Key::down); require(settings.variant() == MatchVariant::standard, "Variant did not open on Standard");
+    compare("variant-standard", false, 5, original, legacy);
+    tap(Key::right); require(settings.variant() == MatchVariant::endless_paint, "Variant Right did not select Endless paint");
+    compare("variant-endless-paint", false, 5, original, legacy);
+    tap(Key::right); require(settings.variant() == MatchVariant::standard, "Variant Right did not wrap to Standard");
+    tap(Key::left); require(settings.variant() == MatchVariant::endless_paint, "Variant Left did not wrap to Endless paint");
+    tap(Key::enter); require(settings.variant() == MatchVariant::standard &&
+        settings.series_stage_rule() == SeriesStageRule::same && !settings.duration(),
+        "Confirming Variant did not cycle right, or changed duration/series stage");
+    compare("variant-confirm-wrap", false, 5, original, legacy);
+    tap(Key::left);
+    for (int move = 0; move < 5; ++move) { tap(Key::up); }
+    tap(Key::enter);
+    require(settings.variant() == MatchVariant::endless_paint && settings.best_of() == 1,
+        "Choosing a session format lost its Endless paint variant");
+    compare("variant-count-retained", true, 0, original, legacy);
+    tap(Key::escape);
+    require(settings.variant() == MatchVariant::endless_paint, "Returning from Player Count reset the match variant");
+    compare("variant-return-retained", false, 0, original, legacy);
     for (int mode = 0; mode < 3; ++mode)
     {
         open(false); for (int move = 0; move < mode; ++move) { tap(Key::down); }
@@ -310,7 +340,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     tap(Key::down);
     tap(Key::enter); const Frame returned_mode = compare("count-back-button", false, 0, original, legacy);
     tick(); require(frame().pixels == returned_mode.pixels, "Neutral Count Back changed initial Mode focus");
-    for (int move = 0; move < 5; ++move) { tap(Key::down); }
+    for (int move = 0; move < 6; ++move) { tap(Key::down); }
     tap(Key::enter); require(frame().pixels == destination(false).pixels, "Mode Back button did not reach actual Home");
     open(false); tap(Key::escape);
     require(frame().pixels == destination(false).pixels, "Mode Escape did not reach actual Home");
@@ -364,6 +394,6 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     open(true, 3); compare("restored-default-series", true, 1, original, legacy);
     require(records.good(), "Setup menu text evidence write failed");
     std::cout << "PASS actual Mode/Player Count: eight independent legacy items and solo hint across six sizes/aspects; "
-        "duration and Series stage cycles, three mode choices, solo-disabled series, all count/layout/claim and Back routes; "
+        "duration, Series stage and Variant cycles, three mode choices, solo-disabled series, all count/layout/claim and Back routes; "
         "custom item/detail fonts, retained/reopened/reversed snapshots and duration/child return, frozen draw RNG\n";
 }

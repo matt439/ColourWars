@@ -104,6 +104,7 @@ void PresentationTarget::validate(std::string_view candidate_text, const std::st
 		validate_controls_reminders(*candidate, *context->render_resources());
 		validate_mode_durations(context->render_resources(), *this->tuning_, *candidate);
 		validate_mode_stage_rules(context->render_resources(), *candidate);
+		validate_mode_variants(context->render_resources(), *candidate);
 	}
 	this->candidate_ = std::move(candidate);
 }

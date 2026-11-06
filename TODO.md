@@ -30,8 +30,10 @@ The next aim is the author's to set. Until then, rows are picked from the sectio
 The remaining queued hygiene rows (`HYG#81`, `HYG#88`-`HYG#92` and `CI#8`) are
 complete (2026-11-07), recorded in [their owner](docs/code-hygiene.md#hygiene-review-2026-11-05).
 The review's engine draft, `ENG#35`, still waits on the author's filing decision.
-`ROAD#22` (endless paint) is the roadmap's one `OPEN` row. Art (`POL#16`) is unblocked but stays
-deferred. Bot lift routing, sponges and the controller rows remain unscoped.
+`ROAD#22`'s endless-paint slice is complete (2026-11-07), recorded in the
+[roadmap](docs/feature-roadmap.md#endless-paint-road22). No implementation-ready row remains.
+Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
+rows remain unscoped.
 
 ## Art direction, characters and the UI
 
@@ -58,7 +60,6 @@ excluded modes.
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials; trial values accepted 2026-11-05). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |
 | `ROAD#29` | UNSCOPED | MED | XL | Growing sponges need occupied resize, changing-area scoring and paint-credit contracts before implementation. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
-| `ROAD#22` | OPEN | LOW | M | Variants keep most-painted-at-time-up, so they are match options, not modes (ruled 2026-11-03). Unblocked 2026-11-05; first slice: endless paint as a C++-owned named variant, with a bot refill switch. [Ruling](docs/feature-roadmap.md#match-scope-decisions-2026-10-15) |
 | `ROAD#23` | UNSCOPED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The reader is Labrador's, so the engine part is a report with an exhibit; Steam Input covers a Steam release. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#24` | UNSCOPED | LOW | M | Pad aim assist so pad players can hold their own against the one mouse player; relates to `POL#3`, `POL#18` and `ROAD#5`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 

@@ -169,13 +169,17 @@ namespace
             d["menu_style"]["layout"]["position"]["x"].SetFloat(149.5f);
             d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(-1.5f);
         }, [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["x"].SetFloat(149.25f); });
-        check_edge("menu_text.headings", "mode", [](rapidjson::Document& d)
+        check_edge("menu_text.headings", "players", [](rapidjson::Document& d)
             { d["menu_style"]["layout"]["position"]["y"].SetFloat(32.0f); },
             [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(31.75f); });
-        // Single Match's card starts at 150 + 2*96 - 7 = 335.
+        // Mode's heading starts at paper inset y39 and Single Match's card
+        // starts at 150 + 96 - 7 = 239; their exact shadow gap is 180.
         check_edge("menu_text.items", "single_match", [](rapidjson::Document& d)
-            { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(165.0f); },
-            [](rapidjson::Document& d) { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(165.25f); });
+        {
+            d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(180.0f);
+            d["main_menu"]["player_count_spacing"]["y"].SetFloat(104.0f);
+        },
+            [](rapidjson::Document& d) { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(180.25f); });
         check_edge("menu_text", "solo_practice_hint", [](rapidjson::Document& d)
         {
             // The hint follows Single Match's card by one card padding

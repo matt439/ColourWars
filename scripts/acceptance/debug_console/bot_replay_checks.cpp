@@ -101,6 +101,7 @@ namespace debug_console_acceptance
 			require(expected_roster.player_count() == actual_roster.player_count() &&
 				expected_roster.screen_layout() == actual_roster.screen_layout() &&
 				expected_roster.stage() == actual_roster.stage() && expected.updates == actual.updates &&
+				expected_roster.variant() == actual_roster.variant() &&
 				expected_inputs.size() == actual_inputs.size(), "Bot replay header or participant count changed");
 			for (std::size_t seat = 0; seat < expected_roster.player_settings().size(); ++seat)
 			{
@@ -156,14 +157,14 @@ namespace debug_console_acceptance
 		require_same_recording(humans, ReplayFile::read(path));
 		const std::string current = read_text(path);
 		const std::string metadata = ", \"controller\": \"human\", \"difficulty\": \"normal\"";
-		for (const int legacy_version : { 3, 4, 5, 6, 7 })
+		for (const int legacy_version : { 3, 4, 5, 6, 7, 8 })
 		{
 			std::string legacy = replace_once(current, current_version, "\"version\": " + std::to_string(legacy_version));
 			while (legacy.find(metadata) != std::string::npos) { legacy = replace_once(legacy, metadata, ""); }
 			write_text(path, legacy);
 			std::string error;
 			try { ReplayFile::read(path); } catch (const std::exception& failure) { error = failure.what(); }
-			require(error.find("format version " + std::to_string(legacy_version) + "; this build reads only 8") !=
+			require(error.find("format version " + std::to_string(legacy_version) + "; this build reads only 9") !=
 				std::string::npos, "A human-only legacy recording was not refused by version: " + error);
 		}
 

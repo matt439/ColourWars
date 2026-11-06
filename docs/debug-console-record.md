@@ -484,6 +484,11 @@ gate is closed by these checks.
 
 ## Replays across rounds (`DBG#2`)
 
+**Current format: 9 (`ROAD#22`, 2026-11-07).** Each round's settings require its
+named match variant. Endless paint is restored independently of Debug cheats;
+unknown, malformed or missing variants and prior format versions are refused.
+The dated format-8 implementation record follows.
+
 **Done (2026-11-04).** A recording now crosses the round boundary, and `play`
 replays every round it holds. The rest of `DBG#2` (another build, machine or
 step size) stays deferred.

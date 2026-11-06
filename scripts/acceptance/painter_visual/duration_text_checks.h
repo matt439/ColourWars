@@ -103,7 +103,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     {
         const auto& style = snapshot.menu(); const auto& main = snapshot.main_menu();
         auto art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
-        const Vector2F position = style.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 5.0f);
+        const Vector2F position = style.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 4.0f);
         const colourwars::UiTextDropShadow label("independent-duration-label", L"Match length", font, position,
             app.render_resources(), art.focus_ink, Colour{}, style.item_shadow_offset);
         const colourwars::UiTextDropShadow number("independent-duration-value", value, font,
@@ -138,9 +138,9 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     const auto pixels = [&]
     {
         // Covers the full row including shade/arrow, but no neighbouring row:
-        // row 5 sits at 630 with Mode's rows 96 apart (ROAD#20).
+        // row 4 sits at 534 with Mode's rows 96 apart (ROAD#22).
         return app.resolution_manager()->resolution_ivec() == Vector2I(1280, 720) ?
-            RectangleI(56, 410, 1168, 72) : RectangleI(84, 615, 1752, 108);
+            RectangleI(56, 346, 1168, 72) : RectangleI(84, 519, 1752, 108);
     };
     std::ofstream records(output / "duration-values.csv");
     records << "case,width,height,focus,duration_override,live_default,expected_value,font,value_width,value_height,row_width,row_height,scale,full_row_match,ornament_inside,frozen_state_rng\n";
@@ -153,7 +153,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
             "Duration drawing changed frozen page pixels or consumed match RNG");
         const Frame wanted = reference(snapshot, expected, snapshot.menu().item_font);
         const RowMetrics measured = metrics;
-        require(RectangleF(84.0f, 615.0f, 1752.0f, 108.0f).contains(measured.ornament),
+        require(RectangleF(84.0f, 519.0f, 1752.0f, 108.0f).contains(measured.ornament),
             "Duration comparison crop omitted part of the complete independent ornament");
         const RectangleI area = pixels();
         const Frame observed = foreground_crop(actual, area, 0), expected_crop = foreground_crop(wanted, area, 0);

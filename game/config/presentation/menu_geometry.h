@@ -106,6 +106,9 @@ namespace menu_geometry
 
 	// The setup pages' paper: the main art with the setup focus card and shade.
 	MenuPaperArtPresentation setup_art(const MainMenuPresentation& main);
+	// Mode's seven actions use rows 1-7, leaving its heading at the paper top.
+	// The shared row origin still controls the actions and the other setup pages.
+	labrador::Vector2F mode_heading_position(const MenuStyle& style, const MainMenuPresentation& main);
 	// Display confirmation draws the pause record with the setup card and shade.
 	MenuPaperArtPresentation display_art(const PauseMenuPresentation& pause,
 		const MainMenuPresentation& main);

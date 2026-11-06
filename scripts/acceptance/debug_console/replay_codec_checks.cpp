@@ -147,6 +147,7 @@ namespace debug_console_acceptance
 		file.tune_diff = { "tuning.player.gravity 2000.0 -> 2100.0" };
 		setup = planned(3);
 		setup.set_duration(120.12345f);
+		setup.set_variant(MatchVariant::endless_paint);
 		setup.set_player_weapon(1, WeaponType::roller);
 		file.tape.start(0, setup);
 		file.tape.set_cheats(true, false);
@@ -225,23 +226,38 @@ namespace debug_console_acceptance
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
 			read.tape.settings().stage() == "x" &&
 			read.tape.settings().screen_layout() == labrador::ScreenLayout::three_player &&
-			read.tape.settings().duration() == file.tape.settings().duration(),
+			read.tape.settings().duration() == file.tape.settings().duration() &&
+			read.tape.settings().variant() == MatchVariant::endless_paint,
 			"The recorded settings rebuild verbatim");
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 9 })
+		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 8, 10 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 8"), 12,
+			text.replace(text.find("\"version\": 9"), 12,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads only 8") != std::string::npos,
+				"; this build reads only 9") != std::string::npos,
 				"A previous workshop recording, an older replay or another format is refused: " + message);
+		}
+		// A missing, malformed or unknown option may not silently replay as
+		// Standard: that would change ammunition and the bot's refill decisions.
+		for (const char* replacement : { "", "\"variant\": \"roulette\",",
+			"\"variant\": true,", "\"variant\": 1," })
+		{
+			file.write(path);
+			text = read_text(path);
+			const std::string variant = "\"variant\": \"endless_paint\",";
+			text.replace(text.find(variant), variant.size(), replacement);
+			write_text(path, text);
+			message.clear();
+			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+			require(!message.empty(), "A replay with missing or invalid match variant was accepted");
 		}
 		// Every participant's inputs cover every step.
 		file.write(path);

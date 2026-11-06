@@ -206,21 +206,19 @@ interior, retaining the transparent text-shadow extents. Focused rows reserve
 their card padding, detached arrow and extra shade clearance; this reserved
 height must fit the authored row spacing. The drawing includes its shade inside
 the card, while validation conservatively reserves the extra clearance. The
-setup-specific vertical padding preserves the existing 100-unit row stride:
-the tallest shipped glyph bounds (`82`) plus retained shadow extent (`1.5`),
-both 7-unit pads and 2-unit shade clearance total `99.5` design units. These
-checks reject content that would cross the paper edge or another row, without
-adding a new fitting path.
+setup-specific vertical padding keeps each actual text envelope, retained
+shadow extent, both 7-unit pads and 2-unit shade clearance within that page's
+authored row stride. These checks reject content that would cross the paper
+edge or another row, without adding a new fitting path.
 
-Every existing widget anchor, font, scale and logical bound is retained. Heading,
-item and hint shadows have zero alpha, while their existing authored offsets
-still participate in layout bounds. The duration `OptionRow` retains its label
-and value positions and existing fitting path, using a local style copy with
-transparent shadows and the paper inks. Startup requires positive value-column
-space within the usable paper interior; each duration refresh checks the actual
-compound label/value bounds with the full card and arrow reserve. This changes
-visible artwork without moving controls, changing text, introducing new choices
-or adding RNG draws.
+Heading, item and hint shadows have zero alpha, while their authored offsets
+still participate in layout bounds. Mode's three `OptionRow`s (Match length,
+Series stage and Variant) use a local style copy with transparent shadows and
+the paper inks. Their values retain scale 1. Startup requires positive
+value-column space within the usable paper interior; each value refresh checks
+the actual compound label/value bounds with the full card and arrow reserve.
+The page captures the item font, paper art and row spacing for those checks.
+The current row positions and choices are [below](#mode-and-player-count-labels).
 The paper uses the existing shared solid texel with point sampling; the text
 layer remains linear-filtered. Each page captures its setup-art copy when it
 opens; reopening adopts edited values.
@@ -604,14 +602,14 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string, still checked; no page draws a brand line |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits`, `bot_team`, `bot_weapon` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble`, `watch_replay`, `profiles`, `series_stage` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble`, `watch_replay`, `profiles`, `series_stage`, `variant` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
 | `menu_text.home_subtitle` | One Home subtitle string |
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
 | `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved`, `options_reverted`, `options_display_failed`, `options_rollback_failed` |
-| `menu_text.values` | `on`, `off`, `random` |
+| `menu_text.values` | `on`, `off`, `random`, `series_stage_same`, `series_stage_rotate`, `series_stage_losers_pick`, `variant_standard`, `variant_endless_paint` |
 | `menu_text.confirmations` | `restart`, `quit`, `exit`, `display` |
 | `menu_text.display_trial_countdown` | One countdown string with exactly one `{seconds}` token |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
@@ -756,32 +754,36 @@ adopts the edits. The names are string settings edited in JSON, outside numeric
 
 ### Mode and Player Count labels
 
-Nine required `menu_text.items` roles preserve the existing
-mode-selection and player-count choices and the Series stage row (`ROAD#20`):
+Ten required `menu_text.items` roles supply the mode-selection and player-count
+choices, Series stage (`ROAD#20`) and Variant (`ROAD#22`):
 
 | Key | Shipped text | Use |
 |---|---|---|
-| `single_match` | `Single Match` | Mode row 2 |
-| `best_of_three` | `Best of 3` | Mode row 3 |
-| `best_of_five` | `Best of 5` | Mode row 4 |
-| `match_length` | `Match length` | Mode duration-row label, row 5 |
-| `series_stage` | `Series stage` | Mode series-stage-row label, row 6 |
+| `single_match` | `Single Match` | Mode row 1 |
+| `best_of_three` | `Best of 3` | Mode row 2 |
+| `best_of_five` | `Best of 5` | Mode row 3 |
+| `match_length` | `Match length` | Mode duration-row label, row 4 |
+| `series_stage` | `Series stage` | Mode series-stage-row label, row 5 |
+| `variant` | `Variant` | Mode variant-row label, row 6 |
 | `one_player_practice` | `1 Player (practice)` | Player Count row 2 |
 | `two_players` | `2 Players` | Player Count row 3 |
 | `three_players` | `3 Players` | Player Count row 4 |
 | `four_players` | `4 Players` | Player Count row 5 |
 
 Player Count reuses `menu_text.items.back` at row 6 and Mode at row 7, under
-Series stage. The separate required `menu_text.solo_practice_hint` defaults to
-`Solo practice: choose Single Match` and sits on Single Match's row 2, one
+Variant. The separate required `menu_text.solo_practice_hint` defaults to
+`Solo practice: choose Single Match` and sits on Single Match's row 1, one
 `setup_focus_padding.x` after that row's complete focus card (label, padding
 and shade), so it never touches the card; it must fit the paper and the right
-margin and stay clear of every lower Mode row's complete card. It moved there from row 7
-when Series stage took a row, and Mode's shipped
-`main_menu.mode_select_spacing.y` went from 100 to 96 so that Back on row 7
-still fits the 920-high paper. Rows use the existing widget origin and each
-page's authored spacing; these are display roles, with the existing choice
-order, actions and input handling retained.
+margin and stay clear of every lower Mode row's complete card. `ROAD#22` moved
+Mode's existing choices up one 96-unit stride so Variant fits above Back.
+The heading is anchored at the paper interior's top plus setup focus padding
+(design y39 for the shipped geometry). The shipped
+`main_menu.mode_select_spacing.y` remains `96`; Back stays at row 7 within the
+920-high paper. Player Count's positions are unchanged. Up/Down traverses the
+choices, Match length, Series stage, Variant and Back. Left/Right adjusts a
+focused value row, and Confirm advances that value to the next choice; selecting
+a match or series length still continues to Player Count.
 
 The Series stage values are `menu_text.values.series_stage_same` (`Same
 stage`), `series_stage_rotate` (`Rotate`) and `series_stage_losers_pick`
@@ -792,7 +794,17 @@ arrow fit the paper and row stride, as it does for every duration value. Under
 Loser's pick, Stage Select's heading becomes `menu_text.stage.team_a_picks` or
 `team_b_picks` (`Team A picks the arena`, `Team B picks the arena`), checked
 like `headings.arena` against `main_menu.stage_box_size`. The Mode prompt reads
-`Left/Right Change` because two rows now take Left and Right.
+`Left/Right Change` for the three adjustable rows.
+
+The Variant values are `menu_text.values.variant_standard` (`Standard`) and
+`variant_endless_paint` (`Endless paint`). Standard is the default; Endless paint
+selects the C++-owned unlimited-paint policy while retaining the same scoring
+and match duration. The row uses the duration's value column and captured item
+font. Startup constructs both complete label/value rows and checks font
+coverage, paper containment and the row stride, including the card, arrow and
+transparent shadow extents. Each later refresh repeats the glyph and complete
+row check against the page's captured font, art and spacing. Values remain
+unscaled, so an overlong translation is refused rather than shrinking its row.
 
 The same normalized, nonblank, single-line text rules apply. Mode and Player
 Count labels use `menu_style.fonts.item` and retain
@@ -809,7 +821,7 @@ absolute item-shadow y offset must be at most the page's vertical spacing
 (`main_menu.mode_select_spacing.y` or `main_menu.player_count_spacing.y`). This
 retains the existing text and shadow extents within one row's stride. The
 additional paper/card checks above include art padding, shade and arrow space.
-`match_length` and `series_stage` must additionally satisfy
+`match_length`, `series_stage` and `variant` must additionally satisfy
 `measured_width + abs(item_shadow.x) <= 2 * main_menu.mode_select_spacing.x`
 to fit before their value column. That is one complete
 `OptionRow`, so this column check adds no inner focus padding. Boundary equality

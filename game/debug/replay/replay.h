@@ -19,7 +19,7 @@
 // each later round the same way, in `later_rounds`. Written as JSON to
 // %LOCALAPPDATA%\ColourWars\replays\<name>.json. Debug-only.
 //
-// Format version 8 (versions 3 to 7 are refused: a replay holds only on the
+// Format version 9 (versions 3 to 8 are refused: a replay holds only on the
 // build that recorded it, DBG#2):
 //   rounds:  written only when the recording crossed a round boundary: one
 //            object per later round, in order, each with its own seed,
@@ -31,6 +31,7 @@
 //   lift's travel_y (ROAD#28), and offsets on the mover's own axis;
 //   settings preserves each seat's controller kind, bot difficulty and
 //   handicap (written only when a seat has one);
+//   settings.variant is required on every round (ROAD#22), including Standard.
 //   layout counts human views, while inputs remain indexed by participant.
 //   inputs:  one array per participant, all the same length, each a
 //            run-length list of
@@ -52,7 +53,7 @@
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 8;
+	static constexpr int format_version = 9;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint

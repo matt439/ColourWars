@@ -22,6 +22,9 @@ namespace menu_text_acceptance
         require(text.values.duration_minutes == L"{value} min" && text.values.duration_default == L"Default ({value})",
             "Default match-duration templates changed");
         require(text.values.resolution == L"{width}x{height}", "Default resolution template changed");
+        require(text.variant_value(MatchVariant::standard) == L"Standard" &&
+            text.variant_value(MatchVariant::endless_paint) == L"Endless paint",
+            "Named match variant copy changed");
         require(text.brand == brand && text.solo_practice_hint == practice_hint && text.home_subtitle == home_subtitle &&
             text.options_palette_timing == palette_timing &&
             text.display_trial_countdown == L"Reverting in {seconds}s" &&
@@ -289,6 +292,8 @@ namespace menu_text_acceptance
         required("values", "percentage");
         required("values", "duration_minutes");
         required("values", "duration_default");
+        required("values", "variant_standard");
+        required("values", "variant_endless_paint");
         required("values", "resolution");
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }

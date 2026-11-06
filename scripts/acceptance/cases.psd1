@@ -31,6 +31,7 @@ Cases = @(
     @{ Name = 'input_bindings' }
     @{ Name = 'keyboard_jump_capture' }
     @{ Name = 'ammo' }
+    @{ Name = 'match_variants' }
     @{ Name = 'settings' }
     @{ Name = 'player_profiles' }
     @{ Name = 'match_records' }

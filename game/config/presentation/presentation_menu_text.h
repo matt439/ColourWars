@@ -13,6 +13,7 @@
 #include <string_view>
 #include "game/match/player_control.h"
 #include "game/match/series_stage_rule.h"
+#include "game/contracts/match_variant.h"
 #include "game/config/presentation/presentation_match.h"
 #include "game/input/controls_copy.h"
 
@@ -36,7 +37,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, count
 };
 
 struct MenuTitleText
@@ -117,6 +118,9 @@ struct MenuValueText
 	std::wstring series_stage_same;
 	std::wstring series_stage_rotate;
 	std::wstring series_stage_losers_pick;
+	// The Mode page's named match variants, one per MatchVariant.
+	std::wstring variant_standard;
+	std::wstring variant_endless_paint;
 };
 
 struct MenuConfirmationText
@@ -342,6 +346,7 @@ struct MenuText
 	// Window presets and live fullscreen sizes share the positive int domain.
 	std::wstring setting_resolution(int width, int height) const;
 	const std::wstring& series_stage_value(SeriesStageRule rule) const;
+	const std::wstring& variant_value(MatchVariant variant) const;
 	// Stage summary domains follow the existing choices: best-of 3/5, and
 	// one solo player or two through four versus players.
 	std::wstring stage_best_of_mode(int best_of) const;

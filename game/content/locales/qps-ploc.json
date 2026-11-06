@@ -103,7 +103,9 @@
         "shared": "[Shared ({value})]",
         "series_stage_same": "[Same stage]",
         "series_stage_rotate": "[Rotate]",
-        "series_stage_losers_pick": "[Loser's pick]"
+        "series_stage_losers_pick": "[Loser's pick]",
+        "variant_standard": "[Standard]",
+        "variant_endless_paint": "[Endless paint]"
       },
       "confirmations": {
         "restart": "[Are you sure you want to restart?]",
@@ -339,7 +341,8 @@
         "rumble": "[Rumble]",
         "watch_replay": "[Watch Replay]",
         "profiles": "[Profiles]",
-        "series_stage": "[Series stage]"
+        "series_stage": "[Series stage]",
+        "variant": "[Variant]"
       }
     },
     "main_menu": {

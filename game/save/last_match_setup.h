@@ -10,6 +10,7 @@
 #include "game/match/player_control.h"
 #include "game/save/save_section.h"
 #include "game/match/series_stage_rule.h"
+#include "game/contracts/match_variant.h"
 
 class MatchSetup;
 
@@ -37,6 +38,7 @@ struct LastMatchSetup
 	int best_of = 1;
 	// Kept for single matches too, so the Mode page shows what was last chosen.
 	SeriesStageRule stage_rule = default_series_stage_rule;
+	MatchVariant variant = MatchVariant::standard;
 
 	// Rejects unresolved or invalid choices; input claims are neither required
 	// nor copied. The caller establishes that this was a normal user start.
@@ -56,7 +58,7 @@ struct LastMatchSetup
 // "last_match": { "players": [ { "team": "a", "weapon": "sprayer",
 // "controller": "human", "difficulty": "normal", "handicap": 1 } ],
 // "stage": "...", "layout": "one_player", "best_of": 1, "duration": ...,
-// "stage_rule": "rotate" }.
+// "stage_rule": "rotate", "variant": "endless_paint" }.
 // Default duration is represented by omitting duration. Invalid whole sections
 // or counts reset to absent; recoverable fields are normalised independently.
 // Legacy seats without controller/difficulty are human/Normal. Handicap is
@@ -64,6 +66,8 @@ struct LastMatchSetup
 // stage rule (save version 5) is written only when it is not the default,
 // Rotate; absent or unknown is Rotate, so Same is written explicitly. P1 is human,
 // and the layout follows the number of humans rather than all participants.
+// The variant (save version 7) is omitted for Standard; absent, malformed or
+// unknown is Standard, preserving the way older saved matches played.
 class LastMatchSetupSection final : public SaveSection
 {
 public:

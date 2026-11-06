@@ -10,7 +10,7 @@
 #include "game/config/tuning.h"
 
 // The startup checks that need a menu page, kept here so the content checks in
-// game/config/content_validation.h never name one. Both build the Mode page's actual
+// game/config/content_validation.h never name one. Each builds the Mode page's actual
 // setup row (MainMenuModeSelect) for every value it can show and refuse a value
 // the font cannot draw or a complete row that leaves main_menu.setup_box_size.
 // Duration words depend on actual tuning, not a Presentation-only sample.
@@ -18,9 +18,11 @@ void validate_mode_durations(labrador::RenderResources* render,
 	const GameTuning& tuning, const Presentation& presentation);
 // The Series stage row (ROAD#20), checked like the duration row for every rule.
 void validate_mode_stage_rules(labrador::RenderResources* render, const Presentation& presentation);
+// The named Variant row (ROAD#22), including each complete captured value.
+void validate_mode_variants(labrador::RenderResources* render, const Presentation& presentation);
 
 // Everything startup checks before the first menu: validate_game_content, then
-// the two Mode row checks above, after all of its diagnostics. Shared by
+// the three Mode row checks above, after all of its diagnostics. Shared by
 // wWinMain and the Debug `reload` and level-checking `tune` commands.
 void validate_shell_content(const GameTuning& tuning, const Presentation& presentation,
 	labrador::RenderResources* render, const labrador::AudioResources* audio,

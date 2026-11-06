@@ -46,11 +46,12 @@ namespace
         return fixture;
     }
 
-    // Independent literal version-8 wire control; the dynamic domain stays absent.
+    // Independent literal version-9 wire control; the dynamic domain stays absent.
     // The version-3 literal (with the old zero shorthand), version 4, which
     // added roster metadata, version 5, whose seed was optional, version 6,
     // whose motion block was schema 1 (before ROAD#28's lifts), and version 7,
-    // which had no later rounds (DBG#2), are refused by version.
+    // which had no later rounds (DBG#2), and version 8, before named match
+    // variants (ROAD#22), are refused by version.
     void legacy_bytes(const std::filesystem::path& path)
     {
         ReplayFile file = header(); file.build = "legacy"; file.dt_bits = 0; file.seed = 0;
@@ -88,16 +89,22 @@ namespace
         version_7.replace(version_7.find("\"version\": 6"), 12, "\"version\": 7");
         // Version 8 adds later rounds, written only when there are some: a
         // one-round file matches 7's.
-        std::string current = version_7;
-        current.replace(current.find("\"version\": 7"), 12, "\"version\": 8");
-        file.write(path); require(read_text(path) == current, "Static version-8 replay bytes changed");
+        std::string version_8 = version_7;
+        version_8.replace(version_8.find("\"version\": 7"), 12, "\"version\": 8");
+        // Version 9 records every round's named match variant, including Standard.
+        std::string current = version_8;
+        current.replace(current.find("\"version\": 8"), 12, "\"version\": 9");
+        const std::string old_best_of = "    \"best_of\": 1,\n";
+        current.replace(current.find(old_best_of), old_best_of.size(),
+            old_best_of + "    \"variant\": \"standard\",\n");
+        file.write(path); require(read_text(path) == current, "Static version-9 replay bytes changed");
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = 1; file.final_print.seats[0].step_paint_team = 2;
         std::string active = current;
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL#36-only version-8 replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL#36-only version-9 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
@@ -106,16 +113,16 @@ namespace
         const ReplayFile static_read = ReplayFile::read(path);
         require(!static_read.final_print.horizontal_motion && static_read.tape.settings().human_count() == 1 &&
             static_read.tape.settings().bot_count() == 0 && static_read.seed == 0,
-            "Static domain, bot or seed changed on version-8 read");
+            "Static domain, bot or seed changed on version-9 read");
         // A replay holds only on the build that recorded it: older versions are refused, not read.
         for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 },
-            std::pair{ version_5, 5 }, std::pair{ version_6, 6 }, std::pair{ version_7, 7 } })
+            std::pair{ version_5, 5 }, std::pair{ version_6, 6 }, std::pair{ version_7, 7 }, std::pair{ version_8, 8 } })
         {
             write_text(path, text);
             throws_with([&] { static_cast<void>(ReplayFile::read(path)); },
-                "format version " + std::to_string(version) + "; this build reads only 8");
+                "format version " + std::to_string(version) + "; this build reads only 9");
         }
-        // The seed is required: a version-8 file without one is refused.
+        // The seed is required: a version-9 file without one is refused.
         std::string seedless = current;
         seedless.erase(seedless.find("  \"seed\": \"0\",\n"), std::string("  \"seed\": \"0\",\n").size());
         write_text(path, seedless);

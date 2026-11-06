@@ -47,6 +47,14 @@ std::unique_ptr<OptionRow> MainMenuModeSelect::make_stage_rule_row(RenderResourc
 		std::move(on_adjust));
 }
 
+std::unique_ptr<OptionRow> MainMenuModeSelect::make_variant_row(RenderResources* render,
+	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
+	OptionRow::Adjust on_adjust)
+{
+	return make_setup_row("variant", MenuItem::variant, variant_row, render, style, look, text,
+		std::move(on_adjust));
+}
+
 bool MainMenuModeSelect::setup_row_fits(const OptionRow& row_widget,
 	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
 {
@@ -79,6 +87,15 @@ void MainMenuModeSelect::check_stage_rule_row(const OptionRow& row,
 	if (!setup_row_fits(row, panel, art, row_spacing))
 	{
 		throw std::runtime_error("main_menu.mode_select_spacing: the complete series stage row must fit main_menu.setup_box_size.");
+	}
+}
+
+void MainMenuModeSelect::check_variant_row(const OptionRow& row,
+	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
+{
+	if (!setup_row_fits(row, panel, art, row_spacing))
+	{
+		throw std::runtime_error("main_menu.mode_select_spacing: the complete variant row must fit main_menu.setup_box_size.");
 	}
 }
 
@@ -147,6 +164,29 @@ void MainMenuModeSelect::cycle_stage_rule(Direction direction)
 	this->refresh_stage_rule();
 }
 
+void MainMenuModeSelect::refresh_variant()
+{
+	const std::wstring& value = this->text().variant_value(this->level_settings()->variant());
+	const size_t missing = this->render_resources()->first_unrenderable(this->value_font_, value);
+	if (missing != std::wstring::npos)
+	{
+		throw std::runtime_error("menu_text.values.variant cannot draw character at index " +
+			std::to_string(missing) + " with the captured item font '" + this->value_font_name_ + "'.");
+	}
+	this->variant_row_->set_value(value);
+	check_variant_row(*this->variant_row_, this->paper_->rectangle(), this->setup_art_,
+		this->duration_row_spacing_);
+}
+
+void MainMenuModeSelect::cycle_variant(Direction direction)
+{
+	const auto found = std::find(match_variants.begin(), match_variants.end(), this->level_settings()->variant());
+	size_t slot = found == match_variants.end() ? 0 : static_cast<size_t>(found - match_variants.begin());
+	slot = wrap_step(slot, match_variants.size(), direction);
+	this->level_settings()->set_variant(match_variants[slot]);
+	this->refresh_variant();
+}
+
 void MainMenuModeSelect::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
@@ -168,14 +208,18 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		{
 			this->play_wave(this->direction_sound_);
 		}
-		else if ((this->focus_.focused(0) == this->duration_row_.get() ||
-			this->focus_.focused(0) == this->stage_rule_row_.get()) &&
-			(input.direction == Direction::left || input.direction == Direction::right))
+		else if (input.direction == Direction::left || input.direction == Direction::right)
 		{
-			this->play_wave(this->direction_sound_);
-			(this->focus_.focused(0) == this->duration_row_.get() ?
-				this->duration_row_ : this->stage_rule_row_)->adjust(input.direction);
-			this->press_focus();
+			for (OptionRow* row : { this->duration_row_.get(), this->stage_rule_row_.get(), this->variant_row_.get() })
+			{
+				if (this->focus_.focused(0) == row)
+				{
+					this->play_wave(this->direction_sound_);
+					row->adjust(input.direction);
+					this->press_focus();
+					break;
+				}
+			}
 		}
 	}
 }
@@ -205,7 +249,7 @@ void MainMenuModeSelect::init()
 		"heading",
 		this->text().heading(MenuHeading::mode),
 		style.heading_font,
-		this->calculate_widget_position(0, 0),
+		menu_geometry::mode_heading_position(style, look),
 		this->render_resources(),
 		look.art.ink,
 		Colour{},
@@ -215,7 +259,7 @@ void MainMenuModeSelect::init()
 		"standard",
 		this->text().item(MenuItem::single_match),
 		style.item_font,
-		this->calculate_widget_position(0, 2),
+		this->calculate_widget_position(0, 1),
 		this->render_resources(),
 		look.art.focus_ink,
 		Colour{},
@@ -225,7 +269,7 @@ void MainMenuModeSelect::init()
 		"best_of_three",
 		this->text().item(MenuItem::best_of_three),
 		style.item_font,
-		this->calculate_widget_position(0, 3),
+		this->calculate_widget_position(0, 2),
 		this->render_resources(),
 		look.art.ink,
 		Colour{},
@@ -235,7 +279,7 @@ void MainMenuModeSelect::init()
 		"best_of_five",
 		this->text().item(MenuItem::best_of_five),
 		style.item_font,
-		this->calculate_widget_position(0, 4),
+		this->calculate_widget_position(0, 3),
 		this->render_resources(),
 		look.art.ink,
 		Colour{},
@@ -268,12 +312,15 @@ void MainMenuModeSelect::init()
 		[this](Direction direction) { this->cycle_duration(direction); });
 	this->stage_rule_row_ = make_stage_rule_row(this->render_resources(), style, look, this->text(),
 		[this](Direction direction) { this->cycle_stage_rule(direction); });
+	this->variant_row_ = make_variant_row(this->render_resources(), style, look, this->text(),
+		[this](Direction direction) { this->cycle_variant(direction); });
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		menu_geometry::footer_paper(look.setup_box_size, style.footer_y),
 		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 	this->refresh_duration();
 	this->refresh_stage_rule();
+	this->refresh_variant();
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -288,6 +335,7 @@ void MainMenuModeSelect::init()
 	this->text_container_->add_child(this->best_of_five_.get());
 	this->text_container_->add_child(this->duration_row_.get());
 	this->text_container_->add_child(this->stage_rule_row_.get());
+	this->text_container_->add_child(this->variant_row_.get());
 	this->text_container_->add_child(this->practice_.get());
 	this->text_container_->add_child(this->back_.get());
 
@@ -309,6 +357,11 @@ void MainMenuModeSelect::init()
 		{
 			this->play_wave(this->direction_sound_);
 			this->cycle_stage_rule(Direction::right);
+		});
+	this->focus_.add(this->variant_row_.get(), [this]
+		{
+			this->play_wave(this->direction_sound_);
+			this->cycle_variant(Direction::right);
 		});
 
 	this->focus_.add(this->back_.get(), [this]

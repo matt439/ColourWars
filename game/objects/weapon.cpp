@@ -271,6 +271,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
     float dt, float ammo_regen_multiplier)
 {
     const bool ok_to_shoot = input.primary_shoot;
+    if (this->endless_paint_) { this->ammo_ = this->tuning_->starting_ammo(); }
     const bool affordable_before = this->can_afford_shot();
     bool result = false;
 
@@ -279,7 +280,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
         result = true;
 
         this->set_shoot_timer(0.0f);
-        this->alter_ammo(-this->ammo_usage());
+        if (!this->endless_paint_) { this->alter_ammo(-this->ammo_usage()); }
         if (this->ammo() < 0.0f)
         {
             this->set_ammo(0.0f);
@@ -463,6 +464,7 @@ LowPaintCue Weapon::low_paint_cue() const
 }
 bool Weapon::can_afford_shot() const
 {
+    if (this->endless_paint_) { return true; }
     const float cost = this->ammo_usage();
     // Bound the allowance to less than one millionth of a shot, even when
     // authors choose a tiny cost. A tank-sized epsilon could buy those shots.
@@ -631,6 +633,12 @@ void Weapon::alter_ammo_timer(float dt)
 float Weapon::ammo() const
 {
 	return this->ammo_;
+}
+
+void Weapon::set_endless_paint(bool enabled)
+{
+	this->endless_paint_ = enabled;
+	if (enabled) { this->reset_ammo(false); }
 }
 
 const WeaponDetails& Weapon::details() const

@@ -65,6 +65,13 @@ RectangleF menu_geometry::footer_rule(const MenuStyle& style)
 		design_resolution.x - style.brand_position.x * 2.0f, style.rule_height);
 }
 
+Vector2F menu_geometry::mode_heading_position(const MenuStyle& style, const MainMenuPresentation& main)
+{
+	const MenuPaperArtPresentation art = setup_art(main);
+	const RectangleF inside = paper_interior(footer_paper(main.setup_box_size, style.footer_y), art);
+	return { style.layout.position.x, inside.y + art.focus_padding.y };
+}
+
 MenuPaperArtPresentation menu_geometry::setup_art(const MainMenuPresentation& main)
 {
 	MenuPaperArtPresentation art = main.art;

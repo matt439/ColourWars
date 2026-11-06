@@ -2177,18 +2177,68 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   `GAP#4.2`), so swapping controllers swapped settings. A pad can now wear a
   named profile that carries them. See [Player profiles](#player-profiles-road21)
   below.
-- **Match variants (`ROAD#22`, unblocked 2026-11-05).** TowerFall variants,
-  Smash rules and INVERSUS custom rules: low gravity, endless paint, tool
-  roulette. The author ruled on 2026-11-03 that they are match options, not
-  modes (see [Match scope decisions](#match-scope-decisions-2026-10-15)). They
-  waited on `POL#27`, as `ROAD#11`, `ROAD#13` and `ROAD#14` did, because
-  reserves and tool balance decide what endless paint and roulette mean. The
-  author accepted the five-tool balance at its current values on 2026-11-05,
-  so none of the four is blocked any more; tuning settling is not a gate. The
-  first slice is endless paint: a named variant owned by C++ that overrides a
-  few specific values, not a free-form override block, and a refill switch for
-  bots. Revisit treating tool roulette separately if it is the variant people
-  actually want.
+- **Match variants (`ROAD#22`, endless paint implemented 2026-11-07).** The
+  selected first slice is a named C++ option with a bot refill switch. See
+  [Endless paint](#endless-paint-road22). The author's 2026-11-03 ruling keeps
+  variants inside timed territory scoring; the accepted five-tool balance
+  (`POL#27`, 2026-11-05) removed the implementation dependency. Low gravity and
+  tool roulette have no implementation scope; revisit them only when selected.
+
+### Endless paint (`ROAD#22`)
+
+**Implemented 2026-11-07.** Mode has a **Variant** row, cycling **Standard** /
+**Endless paint**, for single matches, series and solo practice. Standard is the
+default. `MatchVariant` is an engine-free C++ vocabulary; `MatchSetup` owns the
+choice, and no arbitrary JSON overrides or new ruleset seam is introduced.
+
+Endless paint keeps every participant's tank full across all five tools. A
+weapon's supply policy bypasses ammunition cost and affordability, including
+valid tuning whose shot costs more than a full tank. Cooldowns, volleys, aim,
+damage and movement retain their normal behavior. Supply never temporarily
+falls low during a shot, so low/empty/recovered feedback does not chatter;
+normal shot and cooldown-ready cues still apply. Respawn retains the policy.
+The Debug `ammo` cheat remains independent: restoring normal cheats cannot
+disable the shipping match option.
+
+Shipping bots receive an explicit refill switch. Under Endless paint they
+continue normal painting and engagement without reserve holds, refill retreats
+or refill-only ground queries. Disabling refill also clears an existing refill
+state. Difficulty, navigation and combat otherwise keep their normal policy.
+
+The choice is copied through restart, rematch, series re-picks and shipping
+instant replay. Save version **7** adds optional `last_match.variant`:
+`endless_paint` is written explicitly; omitted, malformed or unknown values use
+Standard. Debug replay format **9** requires each round's variant and refuses
+older formats, consistent with replay's same-build contract. Player-facing copy,
+including the bracketed test locale, lives in `presentation.json` and its locale
+overlay; startup checks every label/value with the captured Mode font and paper.
+
+The win condition remains the most painted surface at time up; solo practice
+retains its existing untimed flow. Results and records follow their existing
+paths, with no separate variant leaderboard.
+
+**Validation.** Debug and Release game/editor builds pass under `/W4 /WX`,
+along with the 13 selected consumer cases `match_variants`, `ammo`, `low_paint`,
+`weapon_feedback`, `bot_driver`, `settings`, `remembered_setup`,
+`moving_structure`, `menu_text`, `menu_presentation`, `series_stage_rule`,
+`instant_replay` and `debug_console` in both presets. The new variant case
+checks all five tools for human and bot players, multiple tanks of held fire,
+normal cooldowns, release/death/respawn, valid expensive-shot tuning, timed
+coverage scoring and shipping replay with Debug cheats off. Bot coverage checks
+all difficulties and tools, low/empty observations, releasing an existing refill,
+moving-support stall timing and the setup-to-driver switch. Save and Debug codec
+cases cover legacy/default recovery, invalid values and multi-round replay.
+
+The focused `-SetupPaperOnly` native matrices pass on hardware D3D11 (NVIDIA
+GeForce RTX 5080) in both builds: actual Mode/Player Count pages across six
+sizes/aspects, variant cycling and retention, independent paper/card fixtures,
+focus motion and resize. Debug's `-DurationTextOnly` also passes its moved-row
+capture and live-text/resource checks. These are selected regression and native
+presentation checks, not full CI, physical-pad or human gameplay acceptance.
+Isolated startup passes with the accepted audio bank and a system-only PATH in
+Debug and Release, for both base English and the bracketed test locale, including
+per-monitor v2 DPI awareness and graceful shutdown. Markdown links and whitespace
+checks pass. Evidence: `out/validation/road22/`.
 
 ### Input
 
@@ -3655,10 +3705,10 @@ stderr line with its key and the error, and leaves the others intact. There is
 no migration pass: each section reads every older layout in place, as
 [save_section.h](../game/save/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 6` is written first (version 1 introduced records, version 2
+`"save_version": 7` is written first (version 1 introduced records, version 2
 remembered setup, version 3 independent input bindings, version 4
-`"profiles"`, version 5 `"last_match.stage_rule"` and version 6 the flat
-`"vsync"` display key; [save.h](../game/save/save.h)
+`"profiles"`, version 5 `"last_match.stage_rule"`, version 6 the flat
+`"vsync"` display key and version 7 `"last_match.variant"`; [save.h](../game/save/save.h)
 keeps the list). A missing key is version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
@@ -3723,8 +3773,8 @@ probe's shared save fixture stays byte-identical.
 The save's independent `"last_match"` section stores the resolved choices of a
 normally started match. Its seat-ordered `players` array holds team and concrete
 weapon keys and supplies the player count; the other fields are stage, layout,
-best-of length and an optional duration override. Omitted duration keeps using
-the tuning default. Random weapons and stages resolve before capture;
+best-of length, match variant and an optional duration override. Omitted duration keeps using
+the tuning default; an omitted variant is Standard. Random weapons and stages resolve before capture;
 remembering Random intent would be separate work.
 
 `GameMenu` restores these choices once on launch, after content has supplied the

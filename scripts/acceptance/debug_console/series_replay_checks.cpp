@@ -9,7 +9,7 @@
 #include <process.h>
 
 // DBG#2: a recording carried over a round boundary by the End menu's next
-// round, written as format 8's later rounds, and played back round by round
+// round, written as format 9's later rounds, and played back round by round
 // on a real Level. CpuMatch::build stands in for the End menu's next round:
 // a build no debug request asked for.
 namespace debug_console_acceptance
@@ -65,6 +65,7 @@ namespace debug_console_acceptance
 		match.settings = first.settings;
 		match.settings.set_duration(2.0f);
 		match.settings.set_best_of(3);
+		match.settings.set_variant(MatchVariant::endless_paint);
 		match.drawn_seed = 101;
 		director.attach_match(match);
 		match.build();
@@ -84,6 +85,7 @@ namespace debug_console_acceptance
 			"The first round's end saves the recording and keeps it for the next round");
 		const ReplayFile one = ReplayFile::read(path);
 		require(one.round_count() == 1 && one.seed == 101u &&
+			one.tape.settings().variant() == MatchVariant::endless_paint &&
 			one.final_print.level_state == static_cast<int>(LevelState::finished) &&
 			read_text(path).find("\"rounds\"") == std::string::npos,
 			"After one round the file is a one-round file");
@@ -106,14 +108,16 @@ namespace debug_console_acceptance
 			both.round(0).seed == 101u && both.round(1).seed == 202u &&
 			both.round(0).tape.settings().stage() == "movement_course" &&
 			both.round(1).tape.settings().stage() == "close_quarters" &&
+			both.round(0).tape.settings().variant() == MatchVariant::endless_paint &&
+			both.round(1).tape.settings().variant() == MatchVariant::endless_paint &&
 			both.round(1).stage_hash.has_value() && both.round(1).checkpoints.size() >= 5 &&
 			both.round(1).final_print.level_state == static_cast<int>(LevelState::finished) &&
 			both.round(1).build == both.build && both.round(1).dt_bits == both.dt_bits &&
 			MatchFingerprint::difference(one.final_print, both.round(0).final_print).empty(),
 			"The file holds both rounds, each with its own seed, stage and checks");
 		const std::string bytes = read_text(path);
-		require(bytes.find("\"version\": 8") != std::string::npos &&
-			bytes.find("\"rounds\": [") != std::string::npos, "Format 8 writes the later round");
+		require(bytes.find("\"version\": 9") != std::string::npos &&
+			bytes.find("\"rounds\": [") != std::string::npos, "Format 9 writes the later round");
 		// A written file reads back to the same bytes.
 		both.write(path);
 		require(read_text(path) == bytes, "A two-round file round-trips byte for byte");

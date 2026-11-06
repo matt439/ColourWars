@@ -21,6 +21,20 @@ void MatchSetup::set_duration(std::optional<float> seconds)
 	this->duration_ = seconds;
 }
 
+MatchVariant MatchSetup::variant() const
+{
+	return this->variant_;
+}
+
+void MatchSetup::set_variant(MatchVariant variant)
+{
+	if (!valid_match_variant(variant))
+	{
+		throw std::invalid_argument("Match variant must be Standard or Endless paint");
+	}
+	this->variant_ = variant;
+}
+
 const std::vector<SeatSetup>& MatchSetup::player_settings() const
 {
 	return this->player_settings_;
