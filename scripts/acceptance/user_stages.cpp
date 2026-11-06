@@ -17,6 +17,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/scratch.h"
@@ -129,16 +130,7 @@ namespace
 		shipped.count = shipped.stages.size();
 	}
 
-	rapidjson::Document read_document(const std::filesystem::path& path)
-	{
-		std::ifstream input(path, std::ios::binary);
-		require(input.good(), "Cannot read " + path.string());
-		const std::string source{ std::istreambuf_iterator<char>(input), {} };
-		rapidjson::Document document;
-		document.Parse(source.c_str());
-		require(!document.HasParseError(), "Cannot parse " + path.string());
-		return document;
-	}
+	using acceptance::read_document;
 
 
 
@@ -278,10 +270,7 @@ namespace
 		rapidjson::Document document;
 		document.CopyFrom(base, document.GetAllocator());
 		edit(document);
-		rapidjson::StringBuffer buffer;
-		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		require(document.Accept(writer), "Cannot encode fixture " + path_to_utf8(path));
-		acceptance::write_text(path, std::string(buffer.GetString(), buffer.GetSize()));
+		acceptance::write_document(document, path);
 	}
 
 	void set_string(rapidjson::Document& document, rapidjson::Value& owner, const char* key, const char* value)
@@ -535,11 +524,8 @@ namespace
 		{
 			rapidjson::Document document = read_document(content / "presentation.json");
 			edit(document);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			require(document.Accept(writer), "Cannot encode a stage-names fixture");
 			const std::filesystem::path path = scratch / (std::string("stage-names-") + name + ".json");
-			acceptance::write_text(path, buffer.GetString());
+			acceptance::write_document(document, path);
 			return path.string();
 		};
 		const std::string missing = edited("missing",

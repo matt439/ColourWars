@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/moving_structure/fixtures.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/scratch.h"
 #include <iostream>
 
@@ -178,8 +179,7 @@ namespace
     {
         rapidjson::Document document; document.Parse(original.c_str());
         require(!document.HasParseError(), "Cannot parse valid moving fixture output"); edit(document);
-        rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(document.Accept(writer), "Cannot encode malformed moving control"); write_text(path, buffer.GetString());
+        acceptance::write_document(document, path);
         throws_with([&] { static_cast<void>(ReplayFile::read(path)); }, diagnostic);
     }
     void codec_controls(const std::filesystem::path& path, const ReplayFile& file)
@@ -196,8 +196,7 @@ namespace
         {
             rapidjson::Document upper; upper.Parse(original.c_str());
             upper["final"]["horizontal_motion"]["structures"][0u]["spec"][0u].SetString("447A0000",upper.GetAllocator());
-            rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(upper.Accept(writer),"Cannot encode uppercase dynamic control"); write_text(path,buffer.GetString());
+            acceptance::write_document(upper, path);
             ReplayFile::read(path).write(path); require(read_text(path)==original,"Uppercase dynamic hex did not canonicalize");
         }
         // Every mutation starts from the same valid actual-Level final snapshot.
