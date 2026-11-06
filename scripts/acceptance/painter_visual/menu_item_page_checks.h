@@ -14,9 +14,8 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     for (size_t index = 0; index < legacy.size(); ++index) { defaults[index] = legacy[index]; }
     defaults[static_cast<size_t>(MenuItem::restore_defaults)] = L"Restore defaults";
     defaults[static_cast<size_t>(MenuItem::vsync)] = L"Vsync";
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -49,7 +48,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (page == 0) { stack.push(std::make_unique<MainMenuHome>(&context)); }
         else if (page == 1) { stack.push(std::make_unique<MainMenuOptions>(&context)); }
         else { stack.push(std::make_unique<MainMenuCredits>(&context)); }
@@ -162,7 +161,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
             const Frame reference = read(renderer);
             RectangleF crop = expected.bounds(); crop.inflate(Vector2F(2.0f));
             camera.calculate_view_rectangle(crop);
-            const RectangleI pixels = countdown_crop_bounds(crop);
+            const RectangleI pixels = pixel_bounds(crop);
             const Frame observed = foreground_crop(actual, pixels, 0);
             const Frame wanted = foreground_crop(reference, pixels, 0);
             const std::string stem = "menu-text-items-" + name + '-' + std::to_string(page) + '-' +
@@ -220,20 +219,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     // Home and Credits draw the item font; Options draws its own, so each needs
     // a replacement without the old labels' glyph.
     const auto without_tilde = [&](const std::string& font, const std::string& name)
-    {
-        const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(font));
-        std::vector<Glyph> glyphs;
-        for (char32_t character = U' '; character < U'~'; ++character)
-        {
-            const Glyph* glyph = source->find(character);
-            require(glyph != nullptr, "Static-item font fixture lacks a baseline printable glyph");
-            glyphs.push_back(*glyph);
-        }
-        app.render_resources()->add_font(name,
-            std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-        require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(name), L"~"),
-            "Static-item replacement font still contains the old labels' glyph");
-    };
+    { add_probe_font(*app.render_resources(), font, name); };
     const std::string narrow_name = "acceptance_menu_items_without_tilde";
     const std::string narrow_options_name = "acceptance_options_items_without_tilde";
     without_tilde(original.menu().item_font, narrow_name);

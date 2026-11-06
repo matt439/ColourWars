@@ -6,19 +6,19 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const auto profile = output / "keyboard-jump-ownership-profile";
-    const NestedSaveProfile isolated(profile);
+    const acceptance::IsolatedSave isolated(profile);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     InputBindings initial; initial.keyboard_jump = Key::j;
     require(preferences_session.set_play_settings_and_save(quiet) && preferences_session.set_input_bindings_and_save(initial),
         "Cannot seed private Jump ownership preferences");
     const auto bytes = [&]
     {
-        std::ifstream file(profile / "ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(profile), std::ios::binary);
         require(file.good(), "Private Jump ownership save disappeared");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = bytes();
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
@@ -46,7 +46,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
             this->app.keyboard()->poll(); this->app.keyboard()->poll();
         }
     } restore{ stack, app };
-    int updates = 0, cases = 0; KeyboardJumpMenu* page = nullptr;
+    int updates = 0, cases = 0; KeyboardKeysMenu* page = nullptr;
     std::ofstream records(output / "keyboard-jump-ownership.csv");
     records << "case,capture_active,pending,active,stack_depth,updates,save_unchanged\n";
     const auto tick = [&](float elapsed = 0.0f)
@@ -79,8 +79,8 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
         for (unsigned int key = 1; key < static_cast<unsigned int>(Key::count); ++key)
             { app.keyboard()->on_key_up(static_cast<Key>(key)); }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
-        auto owned = std::make_unique<KeyboardJumpMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
+        auto owned = std::make_unique<KeyboardKeysMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
         tick();
         // Jump is the Keyboard Keys page's third row, after Move left and Move right.
         for (int row = 0; row < 2; ++row)

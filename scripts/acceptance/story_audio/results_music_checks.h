@@ -1,12 +1,5 @@
-#pragma once
-
-#include "game/states/menu_context.h"
-#include "game/states/screen_music.h"
-#include <limits>
-
-// Included after story_audio.cpp's recording world and content helpers.
-namespace
-{
+// Included inside the story-audio fixture's anonymous namespace, after the
+// other pieces.
 	int music_voice_calls(const World& world, const std::string& name, SoundCall kind)
 	{
 		int count = 0;
@@ -359,46 +352,20 @@ namespace
 		require(completed == 3 && !context.music_exit_pending(), "Reentrant exit bookkeeping lost or duplicated a callback");
 	}
 
-	class EndingStageVariant
+	// Edited copies of a shipped stage's sound block, each in its own scratch
+	// file.
+	class EndingStageVariant : public acceptance::JsonVariants
 	{
 	public:
-		explicit EndingStageVariant(const std::filesystem::path& content)
-		{
-			std::ifstream stream(content / "levels/close_quarters.json");
-			require(stream.good(), "Cannot read ending-sting acceptance stage");
-			this->source_ = std::string(std::istreambuf_iterator<char>(stream), {});
-			wchar_t name[MAX_PATH]{};
-			require(GetTempFileNameW(std::filesystem::temp_directory_path().c_str(), L"cwe", 0, name) != 0,
-				"Cannot reserve ending-sting acceptance stage file");
-			this->path_ = name;
-		}
-
-		~EndingStageVariant()
-		{
-			std::error_code ignored;
-			std::filesystem::remove(this->path_, ignored);
-		}
+		explicit EndingStageVariant(const std::filesystem::path& content) :
+			acceptance::JsonVariants(content / "levels/close_quarters.json", L"ending-sting-stage") {}
 
 		template<typename Edit>
 		LevelLoadedInfo load(Edit edit) const
 		{
-			rapidjson::Document json;
-			json.Parse(this->source_.c_str());
-			require(!json.HasParseError(), "Cannot parse ending-sting acceptance stage");
-			edit(json["sound"], json.GetAllocator());
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			json.Accept(writer);
-			std::ofstream stream(this->path_, std::ios::binary | std::ios::trunc);
-			stream.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-			stream.close();
-			require(stream.good(), "Cannot write ending-sting acceptance stage variant");
-			return LevelLoadedInfo(this->path_.string().c_str());
+			return LevelLoadedInfo(this->write([&](rapidjson::Document& json)
+				{ edit(json["sound"], json.GetAllocator()); }).string().c_str());
 		}
-
-	private:
-		std::string source_;
-		std::filesystem::path path_;
 	};
 
 	void check_ending_sting_content(World& world, const std::filesystem::path& content)
@@ -540,4 +507,3 @@ namespace
 		world.set_music_volume(original_music);
 		world.set_sfx_volume(original_sfx);
 	}
-}

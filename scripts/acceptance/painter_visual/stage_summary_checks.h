@@ -44,17 +44,16 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     replacement_font(original.menu().detail_font, next_style.detail_font); replacement_font(original.menu().brand_font, next_style.brand_font);
     next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "stage-summary-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    const acceptance::IsolatedSave isolated(output / "stage-summary-profile"); Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed private summary preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "stage-summary-profile/ColourWars/save_data.json", std::ios::binary);
-        require(file.good(), "Cannot read the private summary save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     const std::string saved = saved_bytes();
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters") };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 }, "Summary refresh fixture needs an actual eligible Random slot");
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
@@ -87,7 +86,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         require(saved_bytes() == saved, "Summary formatting/navigation persisted private preferences");
     };
     const auto tick = [&]
-    { require(++ticks <= 120, "Stage summary exceeded120 bounded page updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    { require(++ticks <= 120, "Stage summary exceeded 120 bounded page updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     {
         std::srand(3581); const int random = std::rand(); std::srand(3581);
@@ -108,7 +107,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (int seat = 0; seat < fixture.players; ++seat)
         { settings.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]); }
         expected = settings; app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
     };
     std::ofstream records(output / "stage-summary.csv"); records << "case,context,role,random_slot,locked,width,height,font,x,y,text_width,text_height,shadow_x,shadow_y,scale,fixture_matches,refresh_state_verified\n";
     const auto compare = [&](const char* name, const SummaryCase& fixture, const Presentation& snapshot,
@@ -138,8 +137,8 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
                 bounds.bottom() <= (info + geometry.briefing.spacing * static_cast<float>(role + 2)).y,
                 "Independent unscaled summary/shadow bounds escape the paper or reach the following row");
         }
-        std::srand(8131); const int random_value = std::rand(); std::srand(8131); const Frame actual = main_menu_frame(app);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == random_value, "Frozen summary drawing changed pixels or consumed match randomness");
+        std::srand(8131); const int random_value = std::rand(); std::srand(8131); const Frame actual = stack_frame(app);
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == random_value, "Frozen summary drawing changed pixels or consumed match randomness");
         const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
         list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
@@ -158,7 +157,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
             for (const auto& text : state_texts)
             {
                 RectangleF bounds = text.bounds(); bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-                const RectangleI crop = countdown_crop_bounds(bounds);
+                const RectangleI crop = pixel_bounds(bounds);
                 require(foreground_crop(actual, crop, 0).pixels == foreground_crop(reference, crop, 0).pixels,
                     "Actual Stage navigation/status did not reach the independently expected Random/browse/locked/unlocked/concrete state");
                 ++state_guards;
@@ -167,7 +166,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (size_t role = 0; role < texts.size(); ++role)
         {
             RectangleF box = texts[role].bounds(); const RectangleF design = box; box.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(box);
-            const RectangleI crop = countdown_crop_bounds(box); const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(reference, crop, 0);
+            const RectangleI crop = pixel_bounds(box); const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(reference, crop, 0);
             require(observed.pixels == wanted.pixels, "Actual Stage summary differs from its independently supplied literal/font/shadow raster");
             records << name << ',' << fixture.name << ',' << (role == 0 ? "mode" : "roster") << ',' << random << ',' << locked << ',' << actual.width << ',' << actual.height << ',' <<
                 (role == 0 ? style.detail_font : style.brand_font) << ',' << design.x << ',' << design.y << ',' << design.width << ',' << design.height << ',' <<
@@ -176,7 +175,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         if (capture)
         {
             RectangleF strip = RectangleF::union_of(texts[0].bounds(), texts[1].bounds()); strip.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(strip);
-            save(foreground_crop(actual, countdown_crop_bounds(strip), 0), output / ("stage-summary-" + std::string(name) + '-' + fixture.name + "-detail.ppm")); ++captures;
+            save(foreground_crop(actual, pixel_bounds(strip), 0), output / ("stage-summary-" + std::string(name) + '-' + fixture.name + "-detail.ppm")); ++captures;
         }
         ++comparisons; unchanged();
     };
@@ -206,6 +205,6 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     }
     require(ticks == 112 && comparisons == 60 && rows == 120 && captures == 8 && state_guards == 64, "Stage summary checked counts differ from the bounded source loops");
     require(records.good(), "Stage summary CSV write failed");
-    std::cout << "PASS stage summaries: all1-4 sparse rosters, literal BEST OF3/5, solo-bestof5 precedence and Single Match at720/1080; custom3template copy and separate visible detail/brand font IDs, captured unscaled positions/clear shadows/paper bounds through actual browse/Random-lock/unlock refresh, reopen and reversal; unchanged plan/claims/save/input/frozen RNG, no final Random draw. " <<
-        ticks << " updates(hard120), " << comparisons << " summary comparisons, " << state_guards << " independent navigation/status raster guards after32 taps, " << rows << " CSV data rows, " << captures << " compact crops; no broad matrix, match launch or physical/human/performance acceptance\n";
+    std::cout << "PASS stage summaries: all 1-4 sparse rosters, literal BEST OF 3/5, solo-bestof5 precedence and Single Match at 720/1080; custom 3-template copy and separate visible detail/brand font IDs, captured unscaled positions/clear shadows/paper bounds through actual browse/Random-lock/unlock refresh, reopen and reversal; unchanged plan/claims/save/input/frozen RNG, no final Random draw. " <<
+        ticks << " updates (hard cap 120), " << comparisons << " summary comparisons, " << state_guards << " independent navigation/status raster guards after 32 taps, " << rows << " CSV data rows, " << captures << " compact crops; no broad matrix, match launch or physical/human/performance acceptance\n";
 }

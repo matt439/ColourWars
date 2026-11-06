@@ -1,4 +1,4 @@
-#include "editor/horizontal_authoring.h"
+#include "editor/motion_authoring.h"
 #include "editor/path_text.h"
 #include "editor/slab_authoring.h"
 
@@ -63,7 +63,7 @@ namespace colourwars_editor
             static_cast<float>(number(bounds, "bottom")) - top };
     }
 
-    motion::Spec decode_horizontal_motion(const Json& object)
+    motion::Spec decode_motion(const Json& object)
     {
         if (string(object, key::type) != object_type::structure_paintable)
         { fail("motion belongs only on flat StructurePaintable entries."); }
@@ -116,10 +116,10 @@ namespace colourwars_editor
         return result;
     }
 
-    MotionGuide horizontal_motion_guide(const Json& object, const MotionPlayerSize& player,
+    MotionGuide object_motion_guide(const Json& object, const MotionPlayerSize& player,
         const std::optional<Rect>& preview)
     {
-        motion::Spec spec = decode_horizontal_motion(object);
+        motion::Spec spec = decode_motion(object);
         if (preview)
         {
             spec.anchor = { static_cast<float>(preview->x), static_cast<float>(preview->y),
@@ -147,7 +147,7 @@ namespace colourwars_editor
             if (!object.HasMember(key::motion)) { continue; }
             try
             {
-                const auto spec = decode_horizontal_motion(object);
+                const auto spec = decode_motion(object);
                 const auto path = motion::path(spec);
                 if (!motion::contains(world, path)) { fail("motion platform envelope leaves Scene bounds."); }
                 const auto standing = motion::standing(path, player.width, player.height);
@@ -164,7 +164,7 @@ namespace colourwars_editor
                     if (other == index) { continue; }
                     const auto actual = motion_rectangle(objects[other]);
                     const auto obstacle = objects[other].HasMember(key::motion) ?
-                        motion::path(decode_horizontal_motion(objects[other])) : motion::box(actual);
+                        motion::path(decode_motion(objects[other])) : motion::box(actual);
                     motion::finite(static_cast<double>(player.width) + actual.width);
                     motion::finite(static_cast<double>(player.height) + actual.height);
                     if (motion::intersects(path, obstacle))

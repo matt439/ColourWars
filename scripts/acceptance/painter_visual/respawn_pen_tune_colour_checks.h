@@ -14,7 +14,7 @@ public:
         frame_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.pen_frame)))
     {
         require(look_.canvas_size == Vector2F(68, 120) && look_.pen_width == 4.0f,
-            "Pen fixture requires the reviewed68x120/nib4 recipe");
+            "Pen fixture requires the reviewed 68x120/nib4 recipe");
         preferences_.music_volume = 0; preferences_.sfx_volume = 0;
         preferences_.view_shake = false; preferences_.reduce_effects = false;
         MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course");
@@ -325,48 +325,21 @@ void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
-    const auto root = output / "respawn-pen-tune-scratch", source = root / "source", staged = root / "staged";
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
-    std::array<std::string, 2> real_bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { real_bytes[i] = tune_colour_bytes(content / files[i]);
-      tune_colour_write(source / files[i], real_bytes[i]); tune_colour_write(staged / files[i], real_bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    const GameTuning original_tuning = tuning; const Presentation original = presentation;
-    struct RestorePenContent
-    { GameTuning& tuning; Presentation& presentation; GameTuning old_tuning; Presentation old_presentation;
-      ~RestorePenContent() { tuning = old_tuning; presentation = old_presentation; } }
-        restore{ tuning, presentation, original_tuning, original };
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
-    play.aim_sensitivity = 4; play.view_shake = false; play.aim_marker = true; play.reduce_effects = true;
-    play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
-    InputBindings bindings; bindings.keyboard_jump = Key::j;
-    require(preferences_session.set_play_settings_and_save(play) && preferences_session.set_input_bindings_and_save(bindings),
-        "Cannot seed private pen PlaySettings and JumpJ preferences");
-    const auto save_path = root / "profile/ColourWars/save_data.json";
-    const std::string saved_preferences = tune_colour_bytes(save_path);
-    const auto preference_values = [&]
-    {
-        const auto& p = preferences_session.play_settings();
-        std::vector<int> v{ static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), p.aim_sensitivity, p.music_volume, p.sfx_volume,
-            p.view_shake ? 1 : 0, p.aim_marker ? 1 : 0, p.reduce_effects ? 1 : 0,
-            static_cast<int>(preferences_session.input_bindings().keyboard_jump) };
-        for (const auto& stick : p.sticks) { v.push_back(stick.movement_deadzone); v.push_back(stick.aim_deadzone); }
-        return v;
-    };
-    const auto saved_values = preference_values();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director); auto& impl = *director.impl();
-    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
-    impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "respawn-pen-tune-commands.log").string()), "Cannot retain pen transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "respawn-pen-tune-scratch", .transcript = "respawn-pen-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto preference_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     RespawnPenProbe probe(app, levels, tuning, presentation);
     JsonSpanDocument initial(real_bytes[1], "private pen source");
     const JsonLeaf* leaf = initial.find("respawn_redraw.pen_colour");

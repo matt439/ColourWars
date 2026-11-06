@@ -1,10 +1,6 @@
 #include "game/pch.h"
-#include "scripts/acceptance/paint_surfaces/fixtures.h"
-#include "game/debug/dev_tools.h"
+#include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -14,11 +10,16 @@ namespace
 {
     using namespace labrador;
     using paint_surfaces_acceptance::require;
+    // This case loads four stages into one World of its own, so it takes the
+    // shared roster, tape and replay check by name rather than their World.
+    using bot_navigation_acceptance::check_final_input_replay;
+    using bot_navigation_acceptance::dt;
+    using bot_navigation_acceptance::one_bot_roster;
+    using bot_navigation_acceptance::physical_inputs;
+    using bot_navigation_acceptance::Tape;
+    using bot_navigation_acceptance::trial_seed;
 
     constexpr int trial_steps = 600;
-    // The bot seed srand(41731) gave before HYG#39.
-    constexpr unsigned int trial_seed = 5242;
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
 
     class World
     {
@@ -44,7 +45,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "bot-trials" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     };
 
@@ -56,27 +56,6 @@ namespace
         BotDifficulty difficulty;
         bool local_combat = false;
     };
-
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage(trial.stage); settings.set_duration(20.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
-
-    std::vector<PlayerInputData> physical_inputs()
-    {
-        std::vector<PlayerInputData> physical(input_slots::count);
-        for (PlayerInputData& input : physical) { input.connected = true; }
-        return physical;
-    }
 
     // Initial local-combat placement is an explicitly separate capability
     // trial. Natural-spawn trials never inject positions or use cheats.
@@ -100,26 +79,6 @@ namespace
         }
     }
 
-    // The public final-input seam records after the shipping driver. Playback
-    // tells Level to bypass that driver, in Debug and Release alike.
-    class Tape final : public SeatInputFilter
-    {
-    public:
-        void filter_seats(std::vector<PlayerInputData>& seats, const Level&) override
-        {
-            if (playback)
-            {
-                require(next < steps.size(), "Final-input playback exhausted its finite tape");
-                seats = steps[next++];
-            }
-            else { steps.push_back(seats); }
-        }
-        bool replaces_bot_inputs() const override { return playback; }
-        std::vector<std::vector<PlayerInputData>> steps;
-        bool playback = false;
-        std::size_t next = 0;
-    };
-
     struct Metrics
     {
         Vector2F initial;
@@ -134,27 +93,9 @@ namespace
         std::uint64_t kills = 0;
     };
 
-    std::vector<std::uint64_t> snapshot(const Level& level)
-    {
-        std::vector<std::uint64_t> state = paint_surfaces_acceptance::sample_state(level.paint_surfaces());
-        for (int seat = 0; seat < level.player_count(); ++seat)
-        {
-            const Player& player = level.player(seat);
-            for (const float value : { player.center().x, player.center().y, player.velocity().x,
-                player.velocity().y, player.weapon_ammo(), player.health() })
-            { state.push_back(paint_surfaces_acceptance::bits(value)); }
-            state.push_back(static_cast<std::uint64_t>(player.state()));
-            state.push_back(static_cast<std::uint64_t>(player.move_state()));
-            for (const std::uint64_t count : player.lethal_projectiles().enemy_by_owner) { state.push_back(count); }
-            state.push_back(player.lethal_projectiles().uncredited);
-        }
-        state.push_back(static_cast<std::uint64_t>(level.projectile_count()));
-        return state;
-    }
-
     Metrics run(World& world, const Trial& trial, bool replay_check)
     {
-        const MatchSetup settings = roster(trial);
+        const MatchSetup settings = one_bot_roster(trial.stage, 20.0f, trial.team, trial.tool, trial.difficulty);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, trial);
         Metrics metrics;
@@ -167,7 +108,7 @@ namespace
         PlayerState previous_state = level->player(1).state();
         bool was_low = false;
         const std::vector<PlayerInputData> physical = physical_inputs();
-        Tape tape;
+        Tape tape("Final-input playback exhausted its finite tape");
         for (int tick = 0; tick < trial_steps; ++tick)
         {
             level->update(physical, dt, &tape);
@@ -227,21 +168,11 @@ namespace
         metrics.painted_sources = static_cast<int>(sources.size());
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, trial_steps);
-#endif
-            // Destroy before reconstructing because both scenes borrow the same partitioner.
-            level.reset();
-            level = world.build(settings); prepare(*level, trial);
-            tape.playback = true;
-            for (int tick = 0; tick < trial_steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == trial_steps && snapshot(*level) == expected,
-                "Trial final-input replay changed actors, projectiles or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, trial_steps)).empty(),
-                "Trial final-input replay changed the complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, trial_steps, physical, [&]
+            {
+                auto replayed = world.build(settings); prepare(*replayed, trial);
+                return replayed;
+            }, "Trial");
         }
         return metrics;
     }

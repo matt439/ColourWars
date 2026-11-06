@@ -87,12 +87,12 @@ void MainMenuModeSelect::refresh_duration()
 	const std::optional<float> seconds = this->level_settings()->duration();
 	const std::wstring value = this->text().setting_duration(
 		seconds.value_or(this->data()->tuning()->match().duration), !seconds.has_value());
-	const size_t missing = this->render_resources()->first_unrenderable(this->duration_font_, value);
+	const size_t missing = this->render_resources()->first_unrenderable(this->value_font_, value);
 	if (missing != std::wstring::npos)
 	{
 		throw std::runtime_error(std::string("menu_text.values.") +
 			(seconds ? "duration_minutes" : "duration_default") + " cannot draw character at index " +
-			std::to_string(missing) + " with the captured duration font '" + this->duration_font_name_ + "'.");
+			std::to_string(missing) + " with the captured item font '" + this->value_font_name_ + "'.");
 	}
 	this->duration_row_->set_value(value);
 	// The row, font, spacing, shadow and paper were captured at construction.
@@ -126,11 +126,11 @@ Vector2F MainMenuModeSelect::practice_hint_position(const UiWidget& single_match
 void MainMenuModeSelect::refresh_stage_rule()
 {
 	const std::wstring& value = this->text().series_stage_value(this->level_settings()->series_stage_rule());
-	const size_t missing = this->render_resources()->first_unrenderable(this->duration_font_, value);
+	const size_t missing = this->render_resources()->first_unrenderable(this->value_font_, value);
 	if (missing != std::wstring::npos)
 	{
 		throw std::runtime_error("menu_text.values.series_stage cannot draw character at index " +
-			std::to_string(missing) + " with the captured item font '" + this->duration_font_name_ + "'.");
+			std::to_string(missing) + " with the captured item font '" + this->value_font_name_ + "'.");
 	}
 	this->stage_rule_row_->set_value(value);
 	check_stage_rule_row(*this->stage_rule_row_, this->paper_->rectangle(), this->setup_art_,
@@ -261,8 +261,8 @@ void MainMenuModeSelect::init()
 		Colour{},
 		style.item_shadow_offset);
 
-	this->duration_font_name_ = style.item_font;
-	this->duration_font_ = this->render_resources()->resolve_sprite_font(this->duration_font_name_);
+	this->value_font_name_ = style.item_font;
+	this->value_font_ = this->render_resources()->resolve_sprite_font(this->value_font_name_);
 	this->duration_row_spacing_ = look.mode_select_spacing.y;
 	this->duration_row_ = make_duration_row(this->render_resources(), style, look, this->text(),
 		[this](Direction direction) { this->cycle_duration(direction); });

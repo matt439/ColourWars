@@ -1,8 +1,5 @@
-#pragma once
-
-// Included after story_audio.cpp's shared recording world and content helpers.
-namespace
-{
+// Included inside the story-audio fixture's anonymous namespace, after the
+// other pieces.
     std::unique_ptr<Player> redraw_player(World& world, const GameTuning& tuning,
         const RespawnRedrawPresentation& presentation, int index = 0, int device = 0)
     {
@@ -250,4 +247,3 @@ namespace
         }
         world.level.reset();
     }
-}

@@ -1,10 +1,9 @@
 // Actual GameLevel lifecycle with a bot between two sparse human seats.
 void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& levels,
-    GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
+    GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& output)
 {
-    std::ignore = content;
-    const NestedSaveProfile profile(output / "bot-players-runtime-profile");
+    const acceptance::IsolatedSave profile(output / "bot-players-runtime-profile");
     Save preferences; SettingsSession preferences_session(preferences); preferences_session.load_save_file();
     PlaySettings silent = preferences_session.play_settings(); silent.music_volume = silent.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(silent), "Cannot silence private runtime fixture");
@@ -141,8 +140,8 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
         const auto before = observation(game->level());
-        const Frame image = resume_stack_frame(app);
-        require(image.pixels == resume_stack_frame(app).pixels && observation(game->level()) == before,
+        const Frame image = stack_frame(app);
+        require(image.pixels == stack_frame(app).pixels && observation(game->level()) == before,
             "Frozen mixed-roster drawing advanced bots, identity or pixels");
         save(image, output / (std::string("bot-players-runtime-") + std::to_string(size.y) + "-detail.ppm"));
     }
@@ -155,7 +154,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         {
             app.resolution_manager()->set_resolution_exactly(size);
             std::ignore = app.renderer()->window_size_changed(size.x, size.y);
-            save(resume_stack_frame(app), output / ("bot-players-" + name + "-" + std::to_string(size.y) + "-detail.ppm"));
+            save(stack_frame(app), output / ("bot-players-" + name + "-" + std::to_string(size.y) + "-detail.ppm"));
         }
         app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
         std::ignore = app.renderer()->window_size_changed(1280, 720);
@@ -247,5 +246,5 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         game->level().bot_identity(2) == L"P3 - Bot (Hard)", "One-pane bot match lost its pane or bot labels");
     capture("one-pane");
     stack.clear();
-    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at720/1080, Pause/Restart, focus count-in, human disconnect/reconnect, a best-of-5 played to Play Series Again with its ledger kept by Pause Restart and Next Round and reset by Play Series Again; one-pane bot match and Results captured\n";
+    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at 720/1080, Pause/Restart, focus count-in, human disconnect/reconnect, a best-of-5 played to Play Series Again with its ledger kept by Pause Restart and Next Round and reset by Play Series Again; one-pane bot match and Results captured\n";
 }

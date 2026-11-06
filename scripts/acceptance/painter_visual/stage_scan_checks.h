@@ -1,29 +1,11 @@
 // ROAD#32: actual optional-folder scans, Stage Select and the diagnostic child.
 // Controlled raw diagnostics exercise wrapping; no physical input is claimed.
-struct StageScanStderrCapture
-{
-    int saved = -1;
-    explicit StageScanStderrCapture(const std::filesystem::path& path)
-    {
-        std::fflush(stderr); this->saved = _dup(_fileno(stderr));
-        require(this->saved >= 0, "Cannot retain the probe stderr descriptor");
-        FILE* redirected = nullptr;
-        if (_wfreopen_s(&redirected, path.c_str(), L"w", stderr) != 0)
-        { _close(this->saved); this->saved = -1; throw std::runtime_error("Cannot capture isolated stage-scan diagnostics"); }
-    }
-    void finish()
-    {
-        if (this->saved >= 0) { std::fflush(stderr); _dup2(this->saved, _fileno(stderr)); _close(this->saved); this->saved = -1; std::clearerr(stderr); }
-    }
-    ~StageScanStderrCapture() { this->finish(); }
-};
-
 void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const NestedSaveProfile isolated(output / "stage-scan-profile");
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    const acceptance::IsolatedSave isolated(output / "stage-scan-profile");
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = true; });
+    SettingsSession preferences_session(preferences); const PlaySettings& play = preferences_session.play_settings();
     StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
     catalog.add(read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course"));
     const auto folder_path = output / "stage-scan-profile/ColourWars/stages";
@@ -38,7 +20,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     UserStageFolder folder; folder.attach(folder_path, { &tuning, &presentation, app.render_resources(),
         app.audio_resources(), &play }, app.audio_resources(), &catalog);
     const auto diagnostic_path = output / "stage-scan-stderr.txt";
-    StageScanStderrCapture captured_errors(diagnostic_path);
+    acceptance::StderrCapture captured_errors(diagnostic_path);
     int scans = 0; folder.scan(); ++scans;
     require(folder.latest_scan().accepted == std::vector<std::string>{ "my_course" } &&
         folder.latest_scan().refused.size() == 1 && stages.size() == 2 && stages.back().user,
@@ -56,10 +38,10 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     struct ClearStageScanStates { StateContext& stack; ~ClearStageScanStates() { this->stack.clear(); } } clear{ stack };
     int updates = 0, level_updates = 0, reads = 0, frames = 0, crops = 0, rows = 0, comparisons = 0;
     const auto tick = [&]
-    { require(++updates <= 500, "Stage scan native input exceeded500 updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    { require(++updates <= 500, "Stage scan native input exceeded 500 updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
-    const auto frame = [&]() { ++reads; return main_menu_frame(app); };
+    const auto frame = [&]() { ++reads; return stack_frame(app); };
     const auto resize = [&](const Vector2I& size)
     { app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y); };
     const auto prepare = [&]
@@ -67,7 +49,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); input.reset_directions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
     };
     const auto unchanged = [&]
     {
@@ -113,7 +95,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             const MenuPaperArtwork paper(layout.paper, app.render_resources(), &style, &art, &no_focus); paper.draw(list);
             list.set_filter(TextureFilter::linear); text.draw(list); const Frame wanted = read(renderer); ++reads;
             RectangleF projected = bounds; projected.inflate(2.0f); camera.calculate_view_rectangle(projected);
-            const RectangleI roi = countdown_crop_bounds(projected);
+            const RectangleI roi = pixel_bounds(projected);
             const Frame observed = foreground_crop(actual, roi, 0), reference = foreground_crop(wanted, roi, 0);
             if (observed.pixels != reference.pixels)
             {
@@ -139,7 +121,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         const UiTexture dim("prompt-reference-footer", style.sprite_sheet, style.fill_frame, footer, app.render_resources(), style.scrim_colour); dim.draw(list);
         list.set_filter(TextureFilter::linear); prompt.draw(list); const Frame wanted = read(renderer); ++reads;
         RectangleF projected = prompt.bounds(); projected.inflate(2.0f); camera.calculate_view_rectangle(projected);
-        const RectangleI roi = countdown_crop_bounds(projected);
+        const RectangleI roi = pixel_bounds(projected);
         require(foreground_crop(actual, roi, 0).pixels == foreground_crop(wanted, roi, 0).pixels,
             "Actual diagnostic footer differs from its supplied legend/font/position/scale reference");
         records << name << ',' << actual.width << ',' << actual.height << ",prompt," << file << ',' << page << ',' << pages << ',' <<
@@ -179,7 +161,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             app.render_resources(), style.panel_edge_colour); rule.draw(list);
         list.set_filter(TextureFilter::linear); status.draw(list); const Frame wanted = read(renderer); ++reads;
         RectangleF projected = status.bounds(); projected.inflate(2.0f); camera.calculate_view_rectangle(projected);
-        const RectangleI roi = countdown_crop_bounds(projected); const Frame observed = foreground_crop(before_details, roi, 0);
+        const RectangleI roi = pixel_bounds(projected); const Frame observed = foreground_crop(before_details, roi, 0);
         require(observed.pixels == foreground_crop(wanted, roi, 0).pixels,
             "Actual Stage Select scan summary is absent or differs from its independent literal/font/fit/footer reference");
         save(before_details, output / "stage-scan-parent-status-1280x720-context.ppm"); ++frames;

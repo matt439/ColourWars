@@ -17,17 +17,17 @@ using namespace labrador;
 // the Tool row's name for every tool.
 void Presentation::Validation::validate_pause_actions() const
 {
-	const MainMenuPresentation& main = this->presentation_.main_menu_;
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const MainMenuPresentation& main = this->presentation.main_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	if (!std::isfinite(pause.layout.spacing.y) || pause.layout.spacing.y <= 0.0f)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": menu_text.items.resume requires positive finite pause_menu.layout.spacing.y.");
 	}
 	const MenuItem pause_items[]{ MenuItem::resume, MenuItem::restart, MenuItem::options, MenuItem::quit };
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
-		check_menu_item(pause_items[index], this->presentation_.menu_.item_font, pause.layout.position +
+		check_menu_item(pause_items[index], this->presentation.menu_.item_font, pause.layout.position +
 			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
 			menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
 	}
@@ -39,7 +39,7 @@ void Presentation::Validation::validate_pause_actions() const
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
 		const int row = index == 0 ? 0 : static_cast<int>(index) + 1;
-		check_menu_item(pause_items[index], this->presentation_.menu_.item_font, pause.layout.position +
+		check_menu_item(pause_items[index], this->presentation.menu_.item_font, pause.layout.position +
 			Vector2F(0.0f, practice_spacing * static_cast<float>(row)),
 			menu_geometry::screen_paper(pause.box_size), 0.0f, std::nullopt, pause.art);
 	}
@@ -50,18 +50,18 @@ void Presentation::Validation::validate_pause_actions() const
 		const Vector2F face_bottom = paper.position() + paper.size() - Vector2F(pause.art.shadow_offset);
 		const Vector2F position = pause.layout.position + Vector2F(0.0f, practice_spacing);
 		const Vector2F padding = pause.art.focus_padding;
-		const FontHandle font = render.resolve_sprite_font(this->presentation_.menu_.item_font);
+		const FontHandle font = render.resolve_sprite_font(this->presentation.menu_.item_font);
 		for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)
 		{
 			std::wstring label;
 			try
 			{
-				label = this->presentation_.menu_text_.practice_tool_label(
+				label = this->presentation.menu_text_.practice_tool_label(
 					main.weapon_select_art.choice(static_cast<WeaponType>(tool)).name);
 			}
 			catch (const std::invalid_argument& error)
 			{
-				throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.practice_tool: " + error.what());
+				throw std::runtime_error(this->presentation.source_path_ + ": menu_text.practice_tool: " + error.what());
 			}
 			if (!render.can_render(font, label)) { continue; }
 			const Vector2F size = render.measure_text(font, label);
@@ -70,7 +70,7 @@ void Presentation::Validation::validate_pause_actions() const
 				position.x + size.x + padding.x > face_bottom.x ||
 				position.y + size.y + padding.y > face_bottom.y)
 			{
-				throw std::runtime_error(this->presentation_.source_path_ +
+				throw std::runtime_error(this->presentation.source_path_ +
 					": menu_text.practice_tool with main_menu.weapon_select.choices." +
 					weapon_name(static_cast<WeaponType>(tool)) +
 					".name must fit the practice Pause paper including focus padding.");
@@ -82,21 +82,21 @@ void Presentation::Validation::validate_pause_actions() const
 // Phase 1: the Exit confirmation's Yes and No on the Pause paper.
 void Presentation::Validation::validate_exit_actions() const
 {
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
-	check_menu_item(MenuItem::yes, this->presentation_.menu_.item_font, pause.layout.position,
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
+	check_menu_item(MenuItem::yes, this->presentation.menu_.item_font, pause.layout.position,
 		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
-	check_menu_item(MenuItem::no, this->presentation_.menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
+	check_menu_item(MenuItem::no, this->presentation.menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
 		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
 }
 
 // Phase 1: the Display confirmation's Keep and Revert, in the setup shade.
 void Presentation::Validation::validate_display_actions(const SetupGeometry& setup) const
 {
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	const auto& display_art = setup.display_art;
-	check_menu_item(MenuItem::keep, this->presentation_.menu_.item_font, pause.layout.position,
+	check_menu_item(MenuItem::keep, this->presentation.menu_.item_font, pause.layout.position,
 		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, display_art);
-	check_menu_item(MenuItem::revert, this->presentation_.menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
+	check_menu_item(MenuItem::revert, this->presentation.menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
 		menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, display_art);
 }
 
@@ -104,11 +104,11 @@ void Presentation::Validation::validate_display_actions(const SetupGeometry& set
 // action's focus card.
 void Presentation::Validation::validate_confirmations(const SetupGeometry& setup) const
 {
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	const auto& display_art = setup.display_art;
 	const auto& confirmation_paper = setup.confirmation_paper;
 	RectangleF first_confirmation_action(pause.layout.position,
-		fixed_menu_size("menu_text.items.yes", this->presentation_.menu_text_.item(MenuItem::yes), this->presentation_.menu_.item_font));
+		fixed_menu_size("menu_text.items.yes", this->presentation.menu_text_.item(MenuItem::yes), this->presentation.menu_.item_font));
 	first_confirmation_action.inflate(pause.art.focus_padding);
 	// Display draws the same paper with the setup shade, so its rows stay on
 	// the face that shade leaves.
@@ -118,42 +118,42 @@ void Presentation::Validation::validate_confirmations(const SetupGeometry& setup
 		const RectangleF& paper)
 	{
 		const std::string key = std::string("menu_text.confirmations.") + role;
-		const Vector2F size = fixed_menu_size(key, text, this->presentation_.menu_.detail_font);
+		const Vector2F size = fixed_menu_size(key, text, this->presentation.menu_.detail_font);
 		// Confirmation questions remain plain, unscaled and centered on the
 		// full-design Pause paper rather than the footer-centered menu paper.
 		const RectangleF bounds(menu_geometry::centred_x(size.x), pause.status_y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !paper.contains(bounds) ||
 			bounds.bottom() > action_top)
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 				" must fit unscaled inside the Pause paper before the first action's focus padding.");
 		}
 	};
-	check_confirmation("restart", this->presentation_.menu_text_.confirmations.restart, first_confirmation_action.y,
+	check_confirmation("restart", this->presentation.menu_text_.confirmations.restart, first_confirmation_action.y,
 		confirmation_paper);
-	check_confirmation("quit", this->presentation_.menu_text_.confirmations.quit, first_confirmation_action.y,
+	check_confirmation("quit", this->presentation.menu_text_.confirmations.quit, first_confirmation_action.y,
 		confirmation_paper);
-	check_confirmation("exit", this->presentation_.menu_text_.confirmations.exit, first_confirmation_action.y,
+	check_confirmation("exit", this->presentation.menu_text_.confirmations.exit, first_confirmation_action.y,
 		confirmation_paper);
-	check_confirmation("display", this->presentation_.menu_text_.confirmations.display,
+	check_confirmation("display", this->presentation.menu_text_.confirmations.display,
 		pause.layout.position.y - display_art.focus_padding.y, display_face);
 }
 
 // Phase 5: the Exit confirmation's heading.
 void Presentation::Validation::validate_exit_heading(const SetupGeometry& setup) const
 {
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	const auto& confirmation_paper = setup.confirmation_paper;
 	// Home's Exit confirmation reuses Pause paper/layout, with the existing
 	// Exit label rendered once more in the actual heading font.
 	const Vector2F exit_heading_size = fixed_menu_size("menu_text.items.exit",
-		this->presentation_.menu_text_.item(MenuItem::exit), this->presentation_.menu_.heading_font);
+		this->presentation.menu_text_.item(MenuItem::exit), this->presentation.menu_.heading_font);
 	const RectangleF exit_heading(menu_geometry::centred_x(exit_heading_size.x), pause.heading_y,
 		exit_heading_size.x, exit_heading_size.y);
 	if (!std::isfinite(exit_heading.x) || !std::isfinite(exit_heading.y) ||
 		!confirmation_paper.contains(exit_heading) || exit_heading.bottom() > pause.status_y)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": menu_text.items.exit must fit unscaled inside the Pause paper before the Exit confirmation question.");
 	}
 }
@@ -162,12 +162,12 @@ void Presentation::Validation::validate_exit_heading(const SetupGeometry& setup)
 // it shares with Pause.
 void Presentation::Validation::validate_display_text(const SetupGeometry& setup) const
 {
-	const MainMenuPresentation& main = this->presentation_.main_menu_;
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const MainMenuPresentation& main = this->presentation.main_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	const auto& confirmation_paper = setup.confirmation_paper;
 	const auto& display_art = setup.display_art;
 	const Vector2F display_heading_size = fixed_menu_size("menu_text.headings.options",
-		this->presentation_.menu_text_.heading(MenuHeading::options), this->presentation_.menu_.heading_font);
+		this->presentation.menu_text_.heading(MenuHeading::options), this->presentation.menu_.heading_font);
 	const RectangleF display_heading(menu_geometry::centred_x(display_heading_size.x), pause.heading_y,
 		display_heading_size.x, display_heading_size.y);
 	// Display draws the Pause paper with the setup shade; its rows keep to
@@ -177,22 +177,22 @@ void Presentation::Validation::validate_display_text(const SetupGeometry& setup)
 	if (!std::isfinite(display_heading.x) || !std::isfinite(display_heading.y) ||
 		!display_face.contains(display_heading) || display_heading.bottom() > pause.status_y)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": menu_text.headings.options must fit unscaled inside the Pause paper before the display confirmation question.");
 	}
 	RectangleF revert_card(pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
-		fixed_menu_size("menu_text.items.revert", this->presentation_.menu_text_.item(MenuItem::revert), this->presentation_.menu_.item_font));
+		fixed_menu_size("menu_text.items.revert", this->presentation.menu_text_.item(MenuItem::revert), this->presentation.menu_.item_font));
 	revert_card.inflate(display_art.focus_padding);
 	const float countdown_y = pause.layout.position.y + pause.layout.spacing.y * 2.0f;
 	for (int seconds = 0; seconds <= static_cast<int>(std::ceil(main.display_trial_seconds)); ++seconds)
 	{
 		const std::string key = "menu_text.display_trial_countdown";
-		const Vector2F size = fixed_menu_size(key, this->presentation_.menu_text_.display_countdown(seconds), this->presentation_.menu_.detail_font);
+		const Vector2F size = fixed_menu_size(key, this->presentation.menu_text_.display_countdown(seconds), this->presentation.menu_.detail_font);
 		const RectangleF bounds(menu_geometry::centred_x(size.x), countdown_y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !display_face.contains(bounds) ||
 			bounds.y < revert_card.bottom())
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 				" must fit unscaled inside the Pause paper after the Revert focus card for every countdown value.");
 		}
 	}
@@ -201,7 +201,7 @@ void Presentation::Validation::validate_display_text(const SetupGeometry& setup)
 	if (display_art.focus_padding.x <= display_art.shadow_offset + display_art.keyline_width ||
 		display_art.focus_padding.y <= display_art.shadow_offset + display_art.keyline_width)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": main_menu.setup_focus_padding must exceed main_menu.setup_shadow_offset + "
 			"pause_menu.art.keyline_width on both axes for the Display confirmation paper.");
 	}
@@ -210,7 +210,7 @@ void Presentation::Validation::validate_display_text(const SetupGeometry& setup)
 	if (pause.box_size.x <= display_art.shadow_offset + display_art.keyline_width * 6.0f ||
 		pause.box_size.y <= display_art.shadow_offset + display_art.keyline_width * 6.0f)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": pause_menu.box_size must exceed main_menu.setup_shadow_offset + "
 			"pause_menu.art.keyline_width * 6 on both axes for the Display confirmation paper.");
 	}
@@ -219,14 +219,14 @@ void Presentation::Validation::validate_display_text(const SetupGeometry& setup)
 // Phase 6: Pause's connection headings and status.
 void Presentation::Validation::validate_pause_connection(const SetupGeometry& setup) const
 {
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	const auto& confirmation_paper = setup.confirmation_paper;
-	const MenuConnectionText& connection = this->presentation_.menu_text_.connection;
+	const MenuConnectionText& connection = this->presentation.menu_text_.connection;
 	const auto check_pause_connection = [&](const char* role, const std::wstring& words, bool heading)
 	{
 		const std::string key = std::string("menu_text.connection.") + role;
 		const Vector2F size = fixed_menu_size(key, words,
-			heading ? this->presentation_.menu_.heading_font : this->presentation_.menu_.detail_font);
+			heading ? this->presentation.menu_.heading_font : this->presentation.menu_.detail_font);
 		// Pause uses plain UiText, centered on the full-design paper. It has
 		// neither Main's footer centering nor retained text-shadow bounds.
 		const RectangleF bounds(menu_geometry::centred_x(size.x),
@@ -235,14 +235,14 @@ void Presentation::Validation::validate_pause_connection(const SetupGeometry& se
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !std::isfinite(bottom) ||
 			!confirmation_paper.contains(bounds) || bounds.bottom() > bottom)
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 				" must fit unscaled inside the Pause paper in heading, status, first-action order including the action's focus padding.");
 		}
 	};
 	check_pause_connection("pause_title", connection.pause_title, true);
 	for (int number = 1; number <= max_players; ++number)
 	{
-		check_pause_connection("pause_player_title", this->presentation_.menu_text_.pause_title_for_player(number), true);
+		check_pause_connection("pause_player_title", this->presentation.menu_text_.pause_title_for_player(number), true);
 	}
 	check_pause_connection("controller_lost", connection.controller_lost, true);
 	check_pause_connection("all_connected", connection.all_connected, false);
@@ -251,7 +251,7 @@ void Presentation::Validation::validate_pause_connection(const SetupGeometry& se
 // Phase 6: every list of missing players Pause can show.
 void Presentation::Validation::validate_pause_missing_lists(const SetupGeometry& setup) const
 {
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	const auto& confirmation_paper = setup.confirmation_paper;
 	// A missing list contains distinct pad slots in roster order; keyboard
 	// never goes missing. Skipping a seat or choosing one remaining pad gives
@@ -263,13 +263,13 @@ void Presentation::Validation::validate_pause_missing_lists(const SetupGeometry&
 		if (player == max_players)
 		{
 			if (count == 0) { return; }
-			const Vector2F size = label_size(missing_key, words, this->presentation_.menu_.detail_font);
+			const Vector2F size = label_size(missing_key, words, this->presentation.menu_.detail_font);
 			const RectangleF bounds(menu_geometry::centred_x(size.x), pause.status_y, size.x, size.y);
 			check_label_bounds(missing_key, bounds, confirmation_paper);
 			if (!std::isfinite(pause.layout.position.y) || !std::isfinite(pause.art.focus_padding.y) ||
 				bounds.bottom() > pause.layout.position.y - pause.art.focus_padding.y)
 			{
-				throw std::runtime_error(this->presentation_.source_path_ + ": " + missing_key +
+				throw std::runtime_error(this->presentation.source_path_ + ": " + missing_key +
 					" must fit before the first Pause action including its focus padding.");
 			}
 			return;
@@ -281,7 +281,7 @@ void Presentation::Validation::validate_pause_missing_lists(const SetupGeometry&
 			if ((used & bit) != 0u) { continue; }
 			std::wstring next = words;
 			if (count > 0) { next += count % 2 == 0 ? L"\n" : L"   "; }
-			next += this->presentation_.menu_text_.roster_label(player, slot);
+			next += this->presentation.menu_text_.roster_label(player, slot);
 			self(self, player + 1, used | bit, count + 1, next);
 		}
 	};

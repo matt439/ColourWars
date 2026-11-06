@@ -13,7 +13,7 @@
 #include "editor/level_json.h"
 #include "editor/path_text.h"
 #include "editor/prepared_file.h"
-#include "editor/horizontal_authoring.h"
+#include "editor/motion_authoring.h"
 #include "editor/slab_authoring.h"
 #include "editor/new_level_template.h"
 #include "game/contracts/level_format.h"
@@ -488,7 +488,7 @@ namespace colourwars_editor
         if (entry.kind != EntryKind::collision) { return std::nullopt; }
         const Json& object = entry_json(impl_->document, entry);
         if (!object.HasMember(key::motion)) { return std::nullopt; }
-        return horizontal_motion_guide(object, load_motion_player_size(impl_->motion_tuning), preview);
+        return object_motion_guide(object, load_motion_player_size(impl_->motion_tuning), preview);
     }
 
     std::optional<PaintPolygon> LevelDocument::slab_guide(const Entry& entry,
@@ -845,7 +845,7 @@ namespace colourwars_editor
                     // lift, the clear room beneath its lowest pose), not +50
                     // into the original sweep. Final validation checks all
                     // other geometry and bounds before publishing the copy.
-                    const auto source = decode_horizontal_motion(value);
+                    const auto source = decode_motion(value);
                     const auto player = load_motion_player_size(impl_->motion_tuning);
                     const auto source_path = horizontal_motion_contract::path(source);
                     const double clear = source.vertical() ?

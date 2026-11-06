@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_slab_tools/fixtures.h"
+#include "scripts/acceptance/support/scratch.h"
 #include "editor/level_document.h"
 #include "game/objects/level_builder.h"
 #include <array>
@@ -17,15 +18,7 @@ namespace turbulence_slab_tools_acceptance
         constexpr std::array<const char*, 3> group_names{ "own_slab", "other_slab", "lower_bed" };
         constexpr std::array<const char*, 4> face_names{ "top", "bottom", "left", "right" };
         using Areas = std::array<std::array<double, 4>, 3>;
-
-        std::string read_text(const fs::path& path)
-        {
-            std::ifstream input(path, std::ios::binary);
-            require(input.good(), "Cannot read lower-approach source: " + path.string());
-            const std::string bytes{ std::istreambuf_iterator<char>(input), {} };
-            require(!input.bad(), "Cannot finish reading lower-approach source: " + path.string());
-            return bytes;
-        }
+        using acceptance::read_text;
 
         rapidjson::Document parse(const std::string& bytes)
         {
@@ -199,7 +192,6 @@ namespace turbulence_slab_tools_acceptance
             labrador::Registry<LevelLoadedInfo> infos_{ "Lower-approach tool Level" };
             labrador::ResolutionManager resolution_;
             labrador::ViewportManager viewports_{ &resolution_ };
-            labrador::Mouse mouse_;
             labrador::Partitioner partitioner_;
             RectangleF bounds_;
             std::ofstream& trace_;

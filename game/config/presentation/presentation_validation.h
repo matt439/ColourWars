@@ -64,13 +64,13 @@ struct Presentation::Validation
     };
     struct StatusMessage { const char* key; const std::wstring& text; };
 
-    const Presentation& presentation_;
+    const Presentation& presentation;
     const labrador::RenderResources& render;
     const ResourceValidation check;
 
-    Validation(const Presentation& presentation, const labrador::RenderResources& render_resources,
-        const labrador::AudioResources& audio) : presentation_(presentation), render(render_resources),
-        check(presentation.source_path_, render_resources, audio) {}
+    Validation(const Presentation& validated, const labrador::RenderResources& render_resources,
+        const labrador::AudioResources& audio) : presentation(validated), render(render_resources),
+        check(validated.source_path_, render_resources, audio) {}
     void validate();
 
 	SetupGeometry validate_menu_actions();
@@ -112,7 +112,7 @@ struct Presentation::Validation
 	void validate_end_actions() const;
 	void validate_end_headings() const;
 	void validate_end_session_labels() const;
-	// presentation_validation_settings.cpp: Controls, Sticks, Keyboard Jump,
+	// presentation_validation_settings.cpp: Controls, Sticks, Keyboard Keys,
 	// Pad Buttons and Profiles.
 	void validate_controls_actions() const;
 	void validate_sticks_actions() const;

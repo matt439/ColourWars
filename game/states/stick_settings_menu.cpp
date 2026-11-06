@@ -98,7 +98,7 @@ namespace
 	}
 }
 
-StickSettingsMenu::StickSettingsMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
+StickSettingsMenu::StickSettingsMenu(MenuContext* context, int opening_slot) : SettingsPanelPage(context, opening_slot) {}
 StickSettingsMenu::~StickSettingsMenu() = default;
 
 void StickSettingsMenu::init()

@@ -53,22 +53,22 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         for (const char* token : { "false", "null", "17", "{}", "[]" })
         {
             bool rejected = false;
-            try { document.commit(document.edited(*document.find(local), token), local); }
+            try { document.commit(document.edited(require_leaf(document, local), token), local); }
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected && document.current().text() == pending && document.baseline().text() == baseline &&
                 document.edits().size() == 1 && document.edits().at(local).baseline_token == edit.baseline_token &&
                 document.edits().at(local).current_token == edit.current_token,
                 "Wrong-type timer commits preserve all current/baseline bytes and both ledger tokens");
         }
-        const std::string external = reference.replaced(*reference.find("number"), "25");
+        const std::string external = reference.replaced(require_leaf(reference, "number"), "25");
         const JsonSpanDocument external_reference(external, "normal-timer-external-reference");
         const TuneSplice merged = document.splice(external, false);
         require(merged.conflicts.empty() && merged.written == 1 && merged.text ==
-            external_reference.replaced(*external_reference.find(local), saved_token),
+            external_reference.replaced(require_leaf(external_reference, local), saved_token),
             "The nested timer splice preserves unrelated external bytes, normal/closing sibling and font strings and line endings");
         for (const std::string& unavailable : { std::string("{}"),
-            reference.replaced(*reference.find(local), "null"),
-            reference.replaced(*reference.find(local), "{\"value\":\"141414\"}"),
+            reference.replaced(require_leaf(reference, local), "null"),
+            reference.replaced(require_leaf(reference, local), "{\"value\":\"141414\"}"),
             std::string("{\"") + local + "\":\"141414\"}",
             std::string("{\"hud\":{\"") + local.substr(4) + ".r\":\"141414\"}}" })
         {
@@ -198,7 +198,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         original.player_identity_shadow_colour == labrador::Colour(0, 0, 0, 34) &&
         held_measurements[0].x > 0.0f && held_measurements[1].x > 0.0f &&
         held_measurements[2].x > 0.0f && held_measurements[3].x > 0.0f,
-        "The retained CPU HUD loads authored141414/00000022 and actual HEALTH/PAINT/timer/identity font metadata");
+        "The retained CPU HUD loads authored 141414/00000022 and actual HEALTH/PAINT/timer/identity font metadata");
     const auto unchanged = [&]
     {
         require(retained_hud == &hud && &presentation.hud() == look && &presentation.player_identity() == identity &&
@@ -219,7 +219,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         presentation.validate_resources(resources, complete_audio);
         const JsonSpanDocument resource_reference(baseline, "closing-material-resource-reference");
         const auto invalid_path = scratch.root / L"closing-material-missing-resource.json";
-        write_text(invalid_path, resource_reference.replaced(*resource_reference.find("menu_style.fill_frame"), "\"__missing_closing_frame__\""));
+        write_text(invalid_path, resource_reference.replaced(require_leaf(resource_reference, "menu_style.fill_frame"), "\"__missing_closing_frame__\""));
         const Presentation invalid_resource(invalid_path.string().c_str());
         bool refused_resource = false;
         try { invalid_resource.validate_resources(resources, complete_audio); }
@@ -289,7 +289,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         log_contains(impl.log(), path, DebugSeverity::info), "The real command diff includes the nested timer edit");unchanged();
     const std::string external = " \r\n" + baseline;
     const JsonSpanDocument external_reference(external, "normal-timer-save-reference");
-    const std::string saved = external_reference.replaced(*external_reference.find(local), saved_token);
+    const std::string saved = external_reference.replaced(require_leaf(external_reference, local), saved_token);
     write_text(scratch.source / L"presentation.json", external);
     require(impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && document->baseline().text() == saved &&
@@ -302,7 +302,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     expected[sibling_index] = labrador::Colour(sibling_word);
     require(impl.execute("tune " + sibling + " " + sibling_word).ok && document->edits().size() == 2,
         "The selected HUD colour and independent selected sibling retain separate pending edits");unchanged();
-    expected[3] = labrador::Colour("789ABC");
+    expected[overlay_colour_index] = labrador::Colour("789ABC");
     require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok && document->edits().size() == 3,
         "Selected HUD colour, its independent sibling and unrelated overlay have three pending ledger entries");unchanged();
     expected[index] = labrador::Colour(saved_word);
@@ -315,11 +315,11 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const auto held_ledger = ledger();const std::string current = document->current().text();
     const JsonSpanDocument saved_reference(saved, "normal-timer-invalid-merge-reference");
     std::vector<std::string> invalid_sources{
-        saved_reference.replaced(*saved_reference.find("hud.paper.keyline_width"), "4.1") };
+        saved_reference.replaced(require_leaf(saved_reference, "hud.paper.keyline_width"), "4.1") };
     if (opaque || positive_alpha)
     {
         for (const char* token : { "\"FFF5DF80\"", "\"FFF5DF00\"" })
-            { invalid_sources.push_back(saved_reference.replaced(*saved_reference.find((shared_paper || closing_material || closing_shade) ? "hud.closing_clock.text" : "hud.closing_clock.paper"), token)); }
+            { invalid_sources.push_back(saved_reference.replaced(require_leaf(saved_reference, (shared_paper || closing_material || closing_shade) ? "hud.closing_clock.text" : "hud.closing_clock.paper"), token)); }
     }
     for (const std::string& invalid_source : invalid_sources)
     {
@@ -349,7 +349,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         const std::array<const char*, 2> invalid_selected{ positive_alpha ? "\"00000000\"" : "\"2060C080\"", "\"A532D600\"" };
         for (const char* token : invalid_selected)
         {
-            invalid = saved_reference.replaced(*saved_reference.find(local), token);
+            invalid = saved_reference.replaced(require_leaf(saved_reference, local), token);
             write_text(scratch.source / L"presentation.json", invalid);
             for (const char* command : { "tune.save presentation", "tune.save presentation force" })
             {
@@ -381,9 +381,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             impl.execute("tune " + sibling + " " + sibling_word).ok && document->edits().size() == 2,
             "Both HUD label/material colours are independently pending before their combined private save");unchanged();
         const JsonSpanDocument paired_reference(paired_external, "hud-label-paired-save-reference");
-        const std::string first = paired_reference.replaced(*paired_reference.find(local), '"' + pending_word + '"');
+        const std::string first = paired_reference.replaced(require_leaf(paired_reference, local), '"' + pending_word + '"');
         const JsonSpanDocument first_reference(first, "hud-label-paired-second-reference");
-        const std::string paired_saved = first_reference.replaced(*first_reference.find(sibling_local), (std::string("\"") + sibling_word + "\""));
+        const std::string paired_saved = first_reference.replaced(require_leaf(first_reference, sibling_local), (std::string("\"") + sibling_word + "\""));
         require(impl.execute("tune.save presentation").ok && document->edits().empty() &&
             document->current().text() == paired_saved && document->baseline().text() == paired_saved &&
             read_text(scratch.source / L"presentation.json") == paired_saved &&

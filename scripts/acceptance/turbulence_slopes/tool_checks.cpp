@@ -317,7 +317,7 @@ namespace turbulence_slopes_acceptance
             "\"post_countin_pre_readiness_placements\":10,\"projectile_count_snapshots_only\":true,\"sloped_face_score_measured\":false,"
             "\"earned_travel_measured\":false,\"human_acceptance\":false}\n";
         summary.close(); require(summary.good(), "Cannot finish controlled shoulder tool summary");
-        std::cout << "PASS6 actual public controlled Sniper scenes: mirrored shoe-block/ramp-pass health pairs and raw-slot4 flat-top paint; "
+        std::cout << "PASS 6 actual public controlled Sniper scenes: mirrored shoe-block/ramp-pass health pairs and raw-slot 4 flat-top paint; "
             "one paid pulse each, no sloped-face/OBB, earned-travel or human acceptance\n";
     }
 }

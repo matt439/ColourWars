@@ -1,33 +1,5 @@
 // Actual EndMenuInitial pages, driven through StateContext and MenuInput. The
 // fixture uses memory-only preferences and never opens the player's save.
-class EndMenuProbeRoot final : public State
-{
-public:
-    EndMenuProbeRoot(Application& app, const Canvas& canvas) : app_(app), canvas_(canvas) {}
-    void init() override {}
-    void update(float) override {}
-    void draw(Renderer& renderer) const override
-    {
-        renderer.set_view_count(1);
-        DrawList list = renderer.view(0);
-        list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::default_camera);
-        list.set_filter(TextureFilter::point);
-        this->canvas_.draw(list, RectangleF(Vector2F::zero,
-            this->app_.resolution_manager()->resolution_vec()));
-    }
-private:
-    Application& app_;
-    const Canvas& canvas_;
-};
-
-Frame end_menu_frame(Application& app)
-{
-    app.renderer()->begin_frame();
-    static_cast<StateContext&>(app).draw(*app.renderer());
-    return read(*app.renderer());
-}
-
 struct EndMenuProbeCase
 {
     Session session;
@@ -46,9 +18,8 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     constexpr std::array<MenuItem, 4> roles{ MenuItem::change_teams, MenuItem::change_weapons,
         MenuItem::change_level, MenuItem::exit_to_main_menu };
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -95,7 +66,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             Key::space, Key::escape }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); choice.reset(); results = 0;
-        stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, fixture.session),
             [&](const EndMenuAction& result) { choice = result; ++results; });
         tick(); tick();
@@ -109,7 +80,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.end_menu(); const auto& art = look.art;
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
-        const Frame actual = end_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> rows;
@@ -171,7 +142,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const auto compare_bounds = [&](RectangleF bounds, int item, int row)
         {
             bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-            const RectangleI pixels = countdown_crop_bounds(bounds);
+            const RectangleI pixels = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, pixels, 0);
             const Frame wanted = foreground_crop(reference, pixels, 0);
             const std::string stem = "end-menu-items-" + name + '-' + fixture.name + '-' +
@@ -206,7 +177,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
                 panel.right() - look.layout.position.x - art.keyline_width * 3.0f, height), 4, 4);
         }
         std::srand(6089); const int next_random = std::rand(); std::srand(6089);
-        require(actual.pixels == end_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "End label drawing changed frozen pixels or consumed random numbers");
         return actual;
     };
@@ -234,19 +205,8 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
     };
     Presentation old = with_labels(old_labels);
     old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "End replacement font lacks a baseline printable glyph"); glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_end_items_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "End replacement font still contains the old labels' glyph");
+    add_probe_font(*app.render_resources(), original.menu().item_font, font_name);
     Presentation next = with_labels(new_labels);
     const_cast<MenuStyle&>(next.menu()).item_font = font_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
@@ -271,11 +231,11 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             const int focus = static_cast<int>(selected);
             const Frame retained = compare("custom-old", fixture, focus, old, old_labels);
             presentation = next; tick();
-            require(retained.pixels == end_menu_frame(app).pixels,
+            require(retained.pixels == stack_frame(app).pixels,
                 "Live End label/font replacement changed an existing page");
             if (selected == 0) { tap(Key::down); tap(Key::up); }
             else { tap(Key::up); tap(Key::down); }
-            require(retained.pixels == end_menu_frame(app).pixels,
+            require(retained.pixels == stack_frame(app).pixels,
                 "End focus movement rebased old labels into a font missing their glyph");
             compare("retained-old", fixture, focus, old, old_labels);
 
@@ -289,13 +249,13 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
                 "End action bypassed or failed to start its owner-controlled music exit");
             tap(Key::down); tap(Key::enter); tap(Key::escape); tick(0.1f);
             require(context.music_exit_pending() && !choice && music_updates > 1 &&
-                retained.pixels == end_menu_frame(app).pixels,
+                retained.pixels == stack_frame(app).pixels,
                 "Pending End music exit accepted another action, moved focus or rebased labels");
             app.keyboard()->on_key_down(Key::enter); tick();
             static_cast<WindowNotify&>(app).on_deactivated(); tick();
             static_cast<WindowNotify&>(app).on_activated(); tick();
             app.keyboard()->on_key_up(Key::enter); tick(); tick();
-            require(context.music_exit_pending() && !choice && retained.pixels == end_menu_frame(app).pixels,
+            require(context.music_exit_pending() && !choice && retained.pixels == stack_frame(app).pixels,
                 "Focus interruption completed an End music exit or changed its cached page");
             compare("pending-music-focus-return", fixture, focus, old, old_labels);
             context.complete_music_exit();
@@ -309,11 +269,11 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             const Frame adopted = compare("reopened-new-font", fixture, focus, next, new_labels);
             require(adopted.pixels != retained.pixels, "Reopened End did not adopt custom labels and item font");
             presentation = original; tick();
-            require(adopted.pixels == end_menu_frame(app).pixels,
+            require(adopted.pixels == stack_frame(app).pixels,
                 "End label/font reversal changed an already reopened page");
             if (selected == 0) { tap(Key::down); tap(Key::up); }
             else { tap(Key::up); tap(Key::down); }
-            require(adopted.pixels == end_menu_frame(app).pixels,
+            require(adopted.pixels == stack_frame(app).pixels,
                 "End focus after reversal changed cached labels or font");
             compare("retained-new-after-reversal", fixture, focus, next, new_labels);
             // Interrupted Enter must return to neutral and require a new
@@ -323,7 +283,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
             static_cast<WindowNotify&>(app).on_activated(); tick();
             app.keyboard()->on_key_up(Key::enter); tick(); tick();
             require(!choice && stack.depth() == 2 && !context.music_exit_pending() &&
-                adopted.pixels == end_menu_frame(app).pixels,
+                adopted.pixels == stack_frame(app).pixels,
                 "Interrupted End Enter release selected an action or rebased cached labels");
             compare("focus-return-held-release", fixture, focus, next, new_labels);
             tap(Key::enter);
@@ -352,9 +312,8 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
 void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -437,7 +396,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
         stack.notify_activation(true);
         input.reset_actions();
         choice.reset();
-        stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, session),
             [&](const EndMenuAction& result) { choice = result; });
         tick();
@@ -470,7 +429,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             RectangleF frame_bounds = panel;
             frame_bounds.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
             camera.calculate_view_rectangle(frame_bounds);
-            const RectangleI pixels = countdown_crop_bounds(frame_bounds);
+            const RectangleI pixels = pixel_bounds(frame_bounds);
             require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= size.x && pixels.bottom() <= size.y,
                 "End-menu paper frame escaped a supported display/aspect ratio");
 
@@ -507,7 +466,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             std::srand(5693);
             const int expected_random = std::rand();
             std::srand(5693);
-            const Frame normal = end_menu_frame(app);
+            const Frame normal = stack_frame(app);
             if (ongoing)
             {
                 // The row below Exit must contain paper, not merely an
@@ -517,7 +476,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                 const Vector2F absent_size = app.render_resources()->measure_text(font, L"Change Teams");
                 const RectangleF absent(look.layout.position + Vector2F(0.0f, look.layout.spacing.y * 4.0f),
                     absent_size);
-                const RectangleI empty_rows = countdown_crop_bounds(camera.calculate_view_rectangle(absent));
+                const RectangleI empty_rows = pixel_bounds(camera.calculate_view_rectangle(absent));
                 const int sample_x = static_cast<int>(camera.calculate_view_position(
                     Vector2F((panel.x + look.layout.position.x) * 0.5f, 0.0f)).x);
                 for (int y = empty_rows.y; y < empty_rows.bottom(); ++y)
@@ -541,16 +500,16 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                     }
                 }
             }
-            require(normal.pixels == end_menu_frame(app).pixels &&
-                normal.pixels == end_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels &&
+                normal.pixels == stack_frame(app).pixels,
                 "Frozen actual end page changed pixels");
             require(std::rand() == expected_random, "End-page drawing consumed random numbers");
             tick(0.5f);
-            require(normal.pixels == end_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels,
                 "Neutral end-page time moved the static continuation artwork");
             play.reduce_effects = true;
             tick(0.75f);
-            require(normal.pixels == end_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels,
                 "Reduce effects changed or animated the readable end-page card");
             play.reduce_effects = false;
 
@@ -558,7 +517,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             // bounds. No second implementation of the artwork is drawn here.
             const Colour paper = art.paper;
             art.paper = Colour(1.0f, 0.0f, 1.0f);
-            const Frame tinted_paper = end_menu_frame(app);
+            const Frame tinted_paper = stack_frame(app);
             art.paper = paper;
             const RectangleI paper_delta = foreground_delta_bounds(normal, tinted_paper);
             require(paper_delta.width > 0 && paper_delta.height > 0 && pixels.contains(paper_delta),
@@ -569,12 +528,12 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
 
             const Colour focus_fill = art.focus_fill;
             art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
-            const Frame tinted_primary = end_menu_frame(app);
+            const Frame tinted_primary = stack_frame(app);
             art.focus_fill = focus_fill;
             const RectangleI primary_delta = foreground_delta_bounds(normal, tinted_primary);
             RectangleF projected_primary = primary;
             camera.calculate_view_rectangle(projected_primary);
-            const RectangleI primary_pixels = countdown_crop_bounds(projected_primary);
+            const RectangleI primary_pixels = pixel_bounds(projected_primary);
             require(primary_delta.width > 0 && primary_delta.height > 0 && primary_pixels.contains(primary_delta),
                 "Initial focus did not highlight the continuation's actual first-row paper card");
             const size_t primary_changed = foreground_local_delta(normal, tinted_primary,
@@ -598,10 +557,10 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                 // geometry is design-space data, recomputed at draw time.
                 app.resolution_manager()->set_resolution_exactly({ 1920, 1080 });
                 std::ignore = app.renderer()->window_size_changed(1920, 1080);
-                std::ignore = end_menu_frame(app);
+                std::ignore = stack_frame(app);
                 app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
                 std::ignore = app.renderer()->window_size_changed(1280, 720);
-                require(normal.pixels == end_menu_frame(app).pixels && !choice.has_value(),
+                require(normal.pixels == stack_frame(app).pixels && !choice.has_value(),
                     "Resizing the same actual end page changed its pixels, focus or action");
                 if (fixture.session.continue_string(presentation.menu_text().end) == L"Next Round") { next_round_pixels = normal.pixels; }
                 if (fixture.session.continue_string(presentation.menu_text().end) == L"Replay Draw")
@@ -626,9 +585,9 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
         {
             if (!actions[selected]) { continue; }
             open(fixture.session);
-            const Frame initial = end_menu_frame(app);
+            const Frame initial = stack_frame(app);
             for (size_t move = 0; move < selected; ++move) { tap(Key::down); }
-            const Frame moved = end_menu_frame(app);
+            const Frame moved = stack_frame(app);
             require(initial.pixels != moved.pixels,
                 "Actual end-page navigation did not move the visible focus treatment");
             if (selected == 1)
@@ -636,7 +595,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
                 save(moved, output / (std::string("end-menu-") + fixture.name + "-secondary-720p.ppm"));
                 const Camera camera = Camera::frame(RectangleF(Vector2F::zero,
                     menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
-                save(foreground_crop(moved, countdown_crop_bounds(camera.calculate_view_rectangle(panel))),
+                save(foreground_crop(moved, pixel_bounds(camera.calculate_view_rectangle(panel))),
                     output / (std::string("end-menu-") + fixture.name + "-secondary-720p-detail.ppm"));
             }
             tap(Key::enter);

@@ -86,7 +86,7 @@ namespace press_tower_acceptance
                 float stairs = 0.0f;
                 for (const auto& [base, centre] : treads)
                 {
-                    jump_to(run, s.map.named(side(base, true)), x(centre), 0, 1);
+                    jump_once(run, s.map.named(side(base, true)), x(centre), 0, 1);
                     fire_in_place(run, angle);
                 }
                 for (const auto& [base, centre] : treads)

@@ -13,7 +13,7 @@
 class PadButtonsMenu final : public SettingsPanelPage
 {
 public:
-	explicit PadButtonsMenu(MenuContext* context, int player = -1);
+	explicit PadButtonsMenu(MenuContext* context, int opening_slot = -1);
 	void init() override;
 	void update_page(float dt) override;
 	int selected_slot() const { return this->slot_; }

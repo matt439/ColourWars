@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
 #include "game/ai/match_bot_driver.h"
 #include "scripts/acceptance/support/probe.h"
 #include <algorithm>
@@ -21,7 +22,7 @@ namespace
     constexpr unsigned int trial_seed = 41731;
     constexpr unsigned int level_seed = 5242;
     constexpr double frame_budget_us = 1.0e6 / 60.0;
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
     const char* const stages[] = { "crossfeed", "close_quarters", "king_of_the_hill", "turbulence", "press_tower" };
 
     double micros(Clock::duration elapsed)
@@ -51,7 +52,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "bot-scan-cost" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     };
 

@@ -30,7 +30,28 @@ full.
 [acceptance/](acceptance/) holds one `.cpp` per case declared in
 [cases.psd1](acceptance/cases.psd1), a same-named folder of its checks where it
 has one, and [acceptance/support/probe.h](acceptance/support/probe.h)
-(`acceptance::require` and `acceptance::run_probe`). It also holds the sources
+(`acceptance::require` and `acceptance::run_probe`). A probe that builds game
+objects loads the manifest's sheets, fonts and banks with
+[support/content_world.h](acceptance/support/content_world.h), and one that
+claims every stage walks `manifest_level_paths` in
+[support/stage_catalog.h](acceptance/support/stage_catalog.h), not a list of its
+own. A probe that touches the save points `LOCALAPPDATA` at a private root with
+`acceptance::IsolatedSave` in
+[support/isolated_save.h](acceptance/support/isolated_save.h), and one that
+checks a reader refuses bad JSON writes edited copies with
+[support/json_fixture.h](acceptance/support/json_fixture.h); both keep their
+scratch by [support/scratch.h](acceptance/support/scratch.h), whose checked
+`read_text` and `write_text` the probes use for whole files. A probe that reads what
+the game prints to stderr captures it with
+[support/stderr_capture.h](acceptance/support/stderr_capture.h). A probe that
+steps one real Player in a bare Scene derives its course from
+`acceptance::PlayerCourse` in
+[support/player_course.h](acceptance/support/player_course.h), which keeps
+`Level`'s tick order; the Crossfeed, Close Quarters and Press Tower cases share
+one stage's route-run fixture in
+[support/route_run.h](acceptance/support/route_run.h), whose `.cpp` they list
+as a source; and the bot cases share their rosters, tape and replay check in
+[bot_navigation/fixtures.h](acceptance/bot_navigation/fixtures.h). It also holds the sources
 of probes that are not cases and that their own entry points build:
 `painter_visual` ([check-painter.ps1](check-painter.ps1)), `paint_fx_visual`
 ([check-paint-fx.ps1](check-paint-fx.ps1)), `movement_feedback_visual`

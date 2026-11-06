@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/debug_console/fixtures.h"
+#include "scripts/acceptance/support/content_world.h"
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/console/debug_menu_model.h"
@@ -71,18 +72,9 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         hud->closing_clock.ink, hud->closing_clock.paper, hud->closing_clock.shade, hud->closing_clock.accent,
         presentation.main_menu().stage_select.unselected };
     labrador::RenderResources render; labrador::AudioResources audio;
-    for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-        { render.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / "textures" / (std::string(name) + ".json")).string().c_str(), labrador::TextureHandle{})); }
+    acceptance::load_cpu_assets(game_directory, render, audio);
     const std::array<const char*, 7> font_names{ "bowlby_one_144", "lato_black_24", "lato_black_36",
         "lato_black_48", "lato_black_72", "lato_black_144", "courier_prime_bold_16" };
-    for (const char* name : font_names)
-    {
-        const auto file = labrador::read_sprite_font_file((game_directory / "fonts" / (std::string(name) + ".spritefont")).string());
-        auto font = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs, file.line_spacing);
-        if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-        render.add_font(name, std::move(font));
-    }
-    audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
     // TestDirector has no Application: commands exercise the actual full reader,
     // while resource validation below is a separate, direct public operation.
     presentation.validate_resources(render, audio);
@@ -104,7 +96,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         presentation.main_menu().stage_select.preview_position == rectangle.position() &&
         presentation.main_menu().stage_select.preview_size == rectangle.size() &&
         tune_scope_of(path) == TuneScope::next_screen,
-        "Stage preview backing retains authored121827EE, its existing rectangle and exact next-screen scope");
+        "Stage preview backing retains authored 121827EE, its existing rectangle and exact next-screen scope");
     const labrador::Colour default_tint((18.0f / 255.0f) * (238.0f / 255.0f), (24.0f / 255.0f) * (238.0f / 255.0f),
         (39.0f / 255.0f) * (238.0f / 255.0f), 238.0f / 255.0f);
     const auto capture_widget_chain = [&]
@@ -141,7 +133,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     };
     const auto resource_path = scratch.root / L"missing-preview-resource.json";
     const JsonSpanDocument reference(baseline, "stage-preview-resource-reference");
-    write_text(resource_path, reference.replaced(*reference.find("menu_style.fill_frame"), "\"__missing_preview_fill__\""));
+    write_text(resource_path, reference.replaced(require_leaf(reference, "menu_style.fill_frame"), "\"__missing_preview_fill__\""));
     const Presentation missing_resource(resource_path.string().c_str());
     bool resource_refused = false;
     try { missing_resource.validate_resources(render, audio); }
@@ -180,7 +172,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     require(impl.execute("tune " + path + " 2060C080").ok, "A field-valid backing edit is pending for exact save/rebase");
     const std::string external = "\r\n" + baseline;
     const JsonSpanDocument save_reference(external, "stage-preview-backing-save-reference");
-    const std::string saved = save_reference.replaced(*save_reference.find(local), "\"2060C080\"");
+    const std::string saved = save_reference.replaced(require_leaf(save_reference, local), "\"2060C080\"");
     write_text(scratch.source / L"presentation.json", external);
     require(impl.execute("tune.save presentation").ok && document->current().text() == saved && document->baseline().text() == saved &&
         document->edits().empty() && read_text(scratch.source / L"presentation.json") == saved && read_text(scratch.staged / L"presentation.json") == saved &&
@@ -188,7 +180,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         "Backing Save changes exactly one literal token, preserves external bytes, reads back and rebases source/staging"); unchanged();
     expected[stage_preview_background_colour_index] = labrador::Colour(165, 50, 214, 0);
     require(impl.execute("tune " + path + " A532D600").ok, "The saved backing can be edited independently");
-    expected[3] = labrador::Colour(120, 154, 188);
+    expected[overlay_colour_index] = labrador::Colour(120, 154, 188);
     require(impl.execute("tune presentation.debug_overlay.colour 789ABC").ok && document->edits().size() == 2,
         "Backing and unrelated overlay retain independent edit entries"); unchanged();
     expected[stage_preview_background_colour_index] = labrador::Colour(32, 96, 192, 128);
@@ -204,7 +196,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
     };
     const auto held_ledger = ledger(); const std::string held_current = document->current().text();
     const JsonSpanDocument invalid_reference(saved, "stage-preview-backing-invalid-merge-reference");
-    const std::string invalid = invalid_reference.replaced(*invalid_reference.find("hud.paper.keyline_width"), "4.1");
+    const std::string invalid = invalid_reference.replaced(require_leaf(invalid_reference, "hud.paper.keyline_width"), "4.1");
     write_text(scratch.source / L"presentation.json", invalid);
     for (const char* command : { "tune.save presentation", "tune.save presentation force" })
     {
@@ -270,7 +262,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
 			registry.complete("tune presentation.debug_overlay.font ").candidates.empty(),
 			"Colour leaves complete as paths while arbitrary font strings stay outside the tree");
 		const auto colour_choices = registry.complete("tune presentation.movement_feedback.colour ").candidates;
-		for (const char* path : { colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
+		for (const char* path : { colour_paths[team_selected_colour_index], colour_paths[team_unselected_colour_index], colour_paths[weapon_selected_colour_index], colour_paths[weapon_unselected_colour_index],
 			colour_paths[11], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index] })
 		{
 			require(registry.complete(std::string("tune ") + path).line == std::string("tune ") + path + " " &&
@@ -279,7 +271,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
 		}
 		// The colour leaf shares its prefix with the existing numeric width.
 		// Keep both path choices until a space explicitly selects the colour.
-		const std::string feedback_keyline_prefix = colour_paths[12];
+		const std::string feedback_keyline_prefix = colour_paths[feedback_keyline_colour_index];
 		const DebugCompletion feedback_keyline_matches = registry.complete("tune " + feedback_keyline_prefix);
 		require(feedback_keyline_matches.line == "tune " + feedback_keyline_prefix &&
 			feedback_keyline_matches.candidates == std::vector<std::string>{

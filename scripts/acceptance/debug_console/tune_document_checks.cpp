@@ -65,7 +65,7 @@ namespace debug_console_acceptance
 			"o.x=false" }, "Nested arrays get [i] paths, exponents and signs are one token, and a "
 			"repeated key resolves to the first; got" + joined);
 
-		const std::string spliced = document.replaced(*document.find("b"), "2");
+		const std::string spliced = document.replaced(require_leaf(document, "b"), "2");
 		require(count_of(spliced, "\r\n") == count_of(synthetic, "\r\n") &&
 			spliced.find("q\\\"\xc3\xa9") != std::string::npos,
 			"CRLF and escapes survive a splice");
@@ -91,12 +91,12 @@ namespace debug_console_acceptance
 		const JsonSpanDocument duplicates(R"({"a":"first","\u0061":2,"b":null,"b":"later",
 			"c":{"x":"kept"},"c":false,"d":[null,"one",{"x":"two"}],"e":true,"e":"later"})",
 			"first-key-wins");
-		require(duplicates.leaves().size() == 5 && duplicates.token(*duplicates.find("a")) == "\"first\"" &&
+		require(duplicates.leaves().size() == 5 && duplicates.token(require_leaf(duplicates, "a")) == "\"first\"" &&
 			duplicates.find("b") == nullptr && duplicates.find("c") == nullptr &&
-			duplicates.token(*duplicates.find("c.x")) == "\"kept\"" &&
-			duplicates.token(*duplicates.find("d[1]")) == "\"one\"" &&
-			duplicates.token(*duplicates.find("d[2].x")) == "\"two\"" &&
-			duplicates.token(*duplicates.find("e")) == "true",
+			duplicates.token(require_leaf(duplicates, "c.x")) == "\"kept\"" &&
+			duplicates.token(require_leaf(duplicates, "d[1]")) == "\"one\"" &&
+			duplicates.token(require_leaf(duplicates, "d[2].x")) == "\"two\"" &&
+			duplicates.token(require_leaf(duplicates, "e")) == "true",
 			"First string, null, container and boolean keys suppress later scalar keys, including escaped duplicate names");
 		for (const char* bad : { "{\"a\": 1,}", "{ // c\n \"a\": 1 }", "{\"a\": \"x }", "{\"a\": 1}\n2",
 			R"({"a":"\q"})", R"({"a":"\u00ZZ"})" })
@@ -141,7 +141,7 @@ namespace debug_console_acceptance
 		{
 			const std::string path = colour_paths[index];
 			require(tune_colour_path(path) && tune_scope_of(path) ==
-				(index == 6 || index == stage_preview_background_colour_index ? TuneScope::next_screen : TuneScope::live),
+				(index == home_background_colour_index || index == stage_preview_background_colour_index ? TuneScope::next_screen : TuneScope::live),
 				"The audited colour allowlist preserves its exact live/next-screen scope: " + path);
 		}
 		for (const char* path : { "movement_feedback.colour", "tuning.movement_feedback.colour",

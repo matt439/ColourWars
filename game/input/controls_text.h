@@ -16,7 +16,7 @@ namespace controls_text
 {
     // Label coverage includes A/D/S even though those keys conflict with other
     // gameplay actions. Formatting is not input-preference validation.
-    std::array<labrador::Key, 27> jump_keys();
+    std::array<labrador::Key, 27> keyboard_keys();
     // "A" ... "Z" as legends, then the copy's Space.
     std::wstring key_label(const ControlLabels& labels, labrador::Key key);
     // A key, a Shoot mouse button, or the copy's None for the unbound extra Pause key.

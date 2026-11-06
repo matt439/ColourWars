@@ -6,8 +6,8 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     using Headings = decltype(MenuText{}.end);
     const Headings legacy{ L"Match Complete", L"Round Complete", L"Series Complete" };
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
@@ -57,7 +57,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        choice.reset(); results = 0; stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+        choice.reset(); results = 0; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, fixture.session),
             [&](const EndMenuAction& result) { choice = result; ++results; });
         tick(); tick();
@@ -80,7 +80,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         require(expected.bounds().size() == raw && panel.contains(expected.bounds()) &&
             expected.bounds().bottom() <= look.layout.position.y - art.focus_padding.y,
             "End heading reference changed its unscaled paper containment or reached its primary action");
-        const Frame actual = end_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -115,7 +115,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         expected.draw(list);
         const Frame reference = read(renderer);
         RectangleF bounds = expected.bounds(); bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-        const RectangleI pixels = countdown_crop_bounds(bounds);
+        const RectangleI pixels = pixel_bounds(bounds);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "end-menu-heading-" + name + '-' + fixture.name + '-' +
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -133,7 +133,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         records << name << ',' << fixture.name << ',' << actual.width << ',' << actual.height << ',' <<
             style.heading_font << ',' << raw.x << ',' << raw.y << ",1,true\n";
         std::srand(8231); const int next_random = std::rand(); std::srand(8231);
-        require(actual.pixels == end_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "End heading drawing changed frozen pixels or consumed random numbers");
         return actual;
     };
@@ -163,19 +163,8 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         return result;
     };
     Presentation old = with_words(old_words); old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().heading_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "End heading replacement font lacks a baseline printable glyph"); glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_end_headings_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "End heading replacement font still contains the old heading glyph");
+    add_probe_font(*app.render_resources(), original.menu().heading_font, font_name);
     Presentation next = with_words(new_words); const_cast<MenuStyle&>(next.menu()).heading_font = font_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
@@ -195,7 +184,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             "Custom End heading fixture must change its centered width");
         presentation = old; open(fixture); const Frame retained = compare("custom-old", fixture, old, old_words);
         presentation = next; tick(); tap(Key::down); tap(Key::up);
-        require(retained.pixels == end_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Live End heading/font replacement or focus movement changed an existing page");
         compare("retained-old", fixture, old, old_words);
         int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
@@ -203,13 +192,13 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         require(context.music_exit_pending() && !choice && results == 0 && stack.depth() == 2 && music_updates == 1,
             "End heading continuation bypassed its owner-controlled music exit");
         tap(Key::down); tap(Key::enter); tap(Key::escape); tick(0.1f);
-        require(context.music_exit_pending() && !choice && retained.pixels == end_menu_frame(app).pixels,
+        require(context.music_exit_pending() && !choice && retained.pixels == stack_frame(app).pixels,
             "Pending End exit accepted another action, changed focus or rebased the heading");
         presentation = original; app.keyboard()->on_key_down(Key::enter); tick();
         static_cast<WindowNotify&>(app).on_deactivated(); tick();
         static_cast<WindowNotify&>(app).on_activated(); tick();
         app.keyboard()->on_key_up(Key::enter); tick(); tick();
-        require(context.music_exit_pending() && !choice && retained.pixels == end_menu_frame(app).pixels,
+        require(context.music_exit_pending() && !choice && retained.pixels == stack_frame(app).pixels,
             "Pending End music exit or focus interruption rebased its captured heading");
         compare("pending-music-focus-return", fixture, old, old_words);
         context.complete_music_exit(); context.complete_music_exit();
@@ -220,7 +209,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         for (int move = 0; move < (ongoing ? 3 : 4); ++move) { tap(Key::down); }
         const Frame adopted = compare("reopened-new-font-exit", fixture, next, new_words);
         presentation = old; tick(); tap(Key::up); tap(Key::down);
-        require(adopted.pixels == end_menu_frame(app).pixels,
+        require(adopted.pixels == stack_frame(app).pixels,
             "End heading/font reversal or focus movement changed an already reopened page");
         compare("retained-new-after-reversal", fixture, next, new_words);
         app.keyboard()->on_key_down(Key::enter); tick();
@@ -228,7 +217,7 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         static_cast<WindowNotify&>(app).on_activated(); tick();
         app.keyboard()->on_key_up(Key::enter); tick(); tick();
         require(!choice && results == 0 && stack.depth() == 2 && !context.music_exit_pending() &&
-            adopted.pixels == end_menu_frame(app).pixels,
+            adopted.pixels == stack_frame(app).pixels,
             "Interrupted End Enter selected Exit or rebased its captured heading");
         compare("focus-return-held-release", fixture, next, new_words); tap(Key::enter);
         require(choice == EndMenuAction::exit && results == 1 && stack.depth() == 1,

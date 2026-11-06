@@ -26,28 +26,9 @@ Frame hud_fixture(Application& app, const Canvas& canvas, const InterfaceGamepla
     return read(renderer);
 }
 
-size_t hud_pixel_offset(const Frame& frame, int x, int y)
-{
-    return (static_cast<size_t>(y) * static_cast<size_t>(frame.width) +
-        static_cast<size_t>(x)) * 4;
-}
-
-float hud_luminance(const Frame& frame, size_t offset)
-{
-    const auto linear = [](unsigned char value)
-    {
-        const float channel = static_cast<float>(value) / 255.0f;
-        return channel <= 0.04045f ? channel / 12.92f :
-            std::pow((channel + 0.055f) / 1.055f, 2.4f);
-    };
-    return 0.2126f * linear(frame.pixels[offset]) +
-        0.7152f * linear(frame.pixels[offset + 1]) +
-        0.0722f * linear(frame.pixels[offset + 2]);
-}
-
 void hud_text_contrast(const Frame& frame, const RectangleF& area)
 {
-    const RectangleI box = countdown_crop_bounds(area);
+    const RectangleI box = pixel_bounds(area);
     require(box.x >= 0 && box.y >= 0 && box.right() <= frame.width && box.bottom() <= frame.height,
         "HUD text bounds escaped the display");
     float darkest = 1.0f, lightest = 0.0f;
@@ -56,7 +37,7 @@ void hud_text_contrast(const Frame& frame, const RectangleF& area)
     {
         for (int x = box.x; x < box.right(); ++x)
         {
-            const float value = hud_luminance(frame, hud_pixel_offset(frame, x, y));
+            const float value = srgb_luminance(frame, pixel_offset(frame, x, y));
             darkest = std::min(darkest, value);
             lightest = std::max(lightest, value);
             if (value < 0.1f) { ++dark_pixels; }
@@ -75,7 +56,7 @@ void hud_meter_raster(const Frame& empty, const Frame& half, const Frame& full,
     {
         for (int x = 0; x < full.width; ++x)
         {
-            const size_t offset = hud_pixel_offset(full, x, y);
+            const size_t offset = pixel_offset(full, x, y);
             if (same_pixel(empty, full, offset))
             {
                 require(same_pixel(empty, half, offset), "Half HUD meter altered stationary paper, ink or labels");
@@ -85,7 +66,7 @@ void hud_meter_raster(const Frame& empty, const Frame& half, const Frame& full,
             for (size_t index = 0; index < tracks.size(); ++index)
             {
                 const RectangleF& track = tracks[index];
-                const RectangleI pixels = countdown_crop_bounds(track);
+                const RectangleI pixels = pixel_bounds(track);
                 if (x < pixels.x || x >= pixels.right() || y < pixels.y || y >= pixels.bottom()) { continue; }
                 local = true;
                 ++changed[index];
@@ -115,12 +96,12 @@ void hud_meter_raster(const Frame& empty, const Frame& half, const Frame& full,
         for (int x = static_cast<int>(std::ceil(track.x + 1.0f));
             x < static_cast<int>(std::floor(track.right() - 1.0f)); ++x)
         {
-            const size_t offset = hud_pixel_offset(full, x, row);
+            const size_t offset = pixel_offset(full, x, row);
             require(!same_pixel(empty, full, offset), "HUD meter left an unfilled column at full supply");
         }
         // The keyline belongs outside the unchanged track. Observe at least
         // one dark border pixel there without assuming stepped corner pixels.
-        const RectangleI around = countdown_crop_bounds(RectangleF(track.position() - Vector2F(2.0f),
+        const RectangleI around = pixel_bounds(RectangleF(track.position() - Vector2F(2.0f),
             track.size() + Vector2F(4.0f)));
         size_t border = 0;
         for (int y = std::max(0, around.y); y < std::min(full.height, around.bottom()); ++y)
@@ -130,7 +111,7 @@ void hud_meter_raster(const Frame& empty, const Frame& half, const Frame& full,
                 const Vector2F center(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
                 if (center.x >= track.left() && center.x < track.right() &&
                     center.y >= track.top() && center.y < track.bottom()) { continue; }
-                if (hud_luminance(full, hud_pixel_offset(full, x, y)) < 0.05f) { ++border; }
+                if (srgb_luminance(full, pixel_offset(full, x, y)) < 0.05f) { ++border; }
             }
         }
         require(border > 2, "HUD meter lost its exterior dark keyline");
@@ -238,11 +219,11 @@ void hud_static_matrix(Application& app, const Canvas& canvas, const Presentatio
                 {
                     for (int x = 0; x < full.width; ++x)
                     {
-                        const size_t offset = hud_pixel_offset(full, x, y);
+                        const size_t offset = pixel_offset(full, x, y);
                         bool in_health = false, in_paint = false;
                         for (size_t track = 0; track < tracks.size(); ++track)
                         {
-                            const RectangleI area = countdown_crop_bounds(tracks[track]);
+                            const RectangleI area = pixel_bounds(tracks[track]);
                             if (x < area.x || x >= area.right() || y < area.y || y >= area.bottom()) { continue; }
                             (track % 2 == 0 ? in_health : in_paint) = true;
                         }

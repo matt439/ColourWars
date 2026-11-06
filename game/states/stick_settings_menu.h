@@ -14,7 +14,7 @@ class StickResponsePreview;
 class StickSettingsMenu final : public SettingsPanelPage
 {
 public:
-	explicit StickSettingsMenu(MenuContext* context, int player = -1);
+	explicit StickSettingsMenu(MenuContext* context, int opening_slot = -1);
 	~StickSettingsMenu() override;
 	void init() override;
 	void update_page(float dt) override;

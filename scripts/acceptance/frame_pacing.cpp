@@ -128,12 +128,12 @@ namespace
             capture.HasMember("complete") && capture["complete"].IsBool() && capture["complete"].GetBool() &&
             word("reason", "complete") && word("timing_scope", "match_draw_begin_to_begin_cpu_wall_ms") &&
             word("engine_timing_scope", "matched_completed_application_frame_cpu_wall_ms"),
-            "Actual perf.capture must finish with every requested Application frame paired as schema2");
+            "Actual perf.capture must finish with every requested Application frame paired as schema 2");
         std::ifstream csv(output / "debug/perf/sample.csv");
         std::string line;
         require(static_cast<bool>(std::getline(csv, line)) && line ==
             "frame,application_frame,frame_ms,update_ms,draw_ms,begin_frame_ms,submit_ms,end_frame_ms,updates,objects,projectiles",
-            "Actual schema2 capture columns differ");
+            "Actual schema 2 capture columns differ");
         int rows = 0;
         std::uint64_t previous = 0;
         while (std::getline(csv, line))
@@ -144,7 +144,7 @@ namespace
             while (std::getline(record, cell, ',')) { cells.push_back(cell); }
             require(cells.size() == 11 && cells[0] == std::to_string(++rows) && !cells[1].empty() &&
                 std::all_of(cells[1].begin(), cells[1].end(), [](char c) { return c >= '0' && c <= '9'; }),
-                "Actual schema2 rows must be chronological with an explicit Application ID");
+                "Actual schema 2 rows must be chronological with an explicit Application ID");
             const std::uint64_t id = std::stoull(cells[1]);
             require(id > 0 && (previous == 0 || id == previous + 1),
                 "Actual capture must use distinct consecutive completed Application frames");

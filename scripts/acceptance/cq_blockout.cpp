@@ -10,7 +10,7 @@ int main(int argc, char** argv)
     return acceptance::run_probe("CQ blockout", [&]
     {
         require(argc == 2, "Usage: cq_blockout.exe <content directory>");
-        Services services(argv[1]);
+        Services services(argv[1], "close_quarters", "CQ");
         const std::filesystem::path output = std::filesystem::absolute(argv[0]).parent_path();
         std::cout << "NOTE CQ authored Player/Scene trials dt=" << dt <<
             "; current tuning; no devices or player save; both directions are scripted CPU evidence\n";
@@ -20,7 +20,7 @@ int main(int argc, char** argv)
         tool_checks(services);
         std::cout << "PASS CQ first blockout: mirrored gameplay geometry, spawn clearance/respawn, "
             "exposed regional budget, driven routes and five-tool paint contact. "
-            "Attended multiplayer, readability, balance and physical-pad acceptance remain open.\n";
+            "Attended multiplayer, readability, balance and physical pads are outside this probe.\n";
         return 0;
     });
 }

@@ -1,42 +1,26 @@
 // Actual Level integration: painting is a role, while one-way collision keeps
 // its existing jump/drop and projectile-blocking semantics.
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/level.h"
 #include "game/objects/player_builder.h"
-#include "engine/core/step_timer.h"
 #include "engine/collision/partitioner.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/slot_seats.h"
-#include "engine/input/mouse.h"
 
 namespace
 {
     void check_paintable_jump_through(const std::filesystem::path& content)
     {
         RenderResources render;
-        for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-        {
-            render.add_sprite_sheet(sheet, read_sprite_sheet(
-                (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-        }
-        for (const char* font : { "bowlby_one_144", "lato_black_24",
-            "lato_black_36", "lato_black_48", "lato_black_72",
-            "lato_black_144", "courier_prime_bold_16" })
-        {
-            const SpriteFontFile file = read_sprite_font_file(
-                (content / "fonts" / (std::string(font) + ".spritefont")).string());
-            auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-            if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-            render.add_font(font, std::move(loaded));
-        }
         AudioResources audio;
-        audio.add_sound_bank("paint_exe", SoundBank::silent());
+        acceptance::load_cpu_assets(content, render, audio);
         const PlaySettings preferences;
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const Presentation presentation((content / "presentation.json").string().c_str());
         ResolutionManager resolution;
         ViewportManager viewports(&resolution);
-        Mouse mouse;
         Partitioner partitioner;
         const LevelLoadedInfo info((content / "levels/crossfeed.json").string().c_str());
         const TeamColour colours;
@@ -95,8 +79,7 @@ namespace
                     .end_sting_volume = info.end_sting_volume() },
                 .stations = info.stations() },
             LevelMatch{ .team_colours = colours, .opening = OpeningMode::off, .duration = 300.0f });
-        const float step = static_cast<float>(StepTimer::TicksToSeconds(
-            StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float step = SECONDS_PER_STEP;
         std::vector<PlayerInputData> inputs(input_slots::count);
         inputs[3].connected = true;
         const auto tick = [&] { level.update(acceptance::slot_seats(level, inputs), step); };

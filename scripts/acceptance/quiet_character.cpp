@@ -5,6 +5,8 @@
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <rapidjson/document.h>
@@ -124,15 +126,18 @@ namespace
         }
     };
 
-    struct Course
+    // The Course's own preferences, a base so they outlive its Scene and Player.
+    struct CoursePreferences
     {
         PlaySettings preferences;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
+    };
 
+    struct Course : CoursePreferences, acceptance::PlayerCourse
+    {
         Course(World& world, const FigurePresentation* figure, WeaponType type) :
-            preferences(world.preferences)
+            CoursePreferences{ world.preferences }
         {
+            seconds = dt;
             const RectangleF body(0.0f, -world.tuning.player().size.y,
                 world.tuning.player().size.x, world.tuning.player().size.y);
             auto weapon = WeaponBuilder::build_weapon(&world.tuning, PlayerTeam::a, 0, 0,
@@ -143,23 +148,13 @@ namespace
                 0, PlayerTeam::a, type, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, body.position(), Vector2F::zero, 0.0f, Vector2F::zero,
                 SpriteFlip::none, 0.0f, 0, figure));
-            const RectangleF floor(-10000.0f, 0.0f, 20000.0f, 100.0f);
-            scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", floor,
-                std::make_unique<RectangleF>(floor), &world.render, CollisionObjectType::structure));
+            add_structure(RectangleF(-10000.0f, 0.0f, 20000.0f, 100.0f), world.render);
             scene.end_tick();
         }
 
         std::vector<std::unique_ptr<Projectile>> tick(const PlayerInputData& input)
         {
-            player->set_player_input(input);
-            scene.update(dt);
-            auto projectiles = player->update_weapon_and_get_projectiles(dt, scene.collision_objects());
-            scene.resolve();
-            player->end_contacts(scene.contacts());
-            player->update_weapon_position();
-            player->update_prev_rectangle();
-            scene.end_tick();
-            return projectiles;
+            return step(input, true);
         }
     };
 
@@ -274,35 +269,13 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream file(content / "presentation.json");
-        const std::string source((std::istreambuf_iterator<char>(file)), {});
-        const auto path = std::filesystem::temp_directory_path() /
-            ("colourwars-quiet-character-" + std::to_string(GetCurrentProcessId()) + ".json");
-        struct Cleanup
-        {
-            std::filesystem::path path;
-            ~Cleanup() { std::error_code ignored; std::filesystem::remove(path, ignored); }
-        } cleanup{ path };
+        const acceptance::JsonVariants variants(content / "presentation.json", L"quiet-character");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Invalid source presentation for character fixture");
-            edit(json["figure"]["quiet"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream output(path);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write character presentation fixture");
-            bool rejected = false;
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("figure.quiet") != std::string::npos;
-            }
-            require(rejected, "Malformed quiet character presentation lacked a contextual rejection");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["figure"]["quiet"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "figure.quiet" }, "Malformed quiet character presentation lacked a contextual rejection");
         };
         reject([](rapidjson::Value& quiet) { quiet["breath_period"].SetInt(0); });
         reject([](rapidjson::Value& quiet) { quiet["lean_settle_time"].SetInt(-1); });

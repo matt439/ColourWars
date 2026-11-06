@@ -88,14 +88,8 @@ namespace crossfeed_acceptance
 
             float steer(float canonical_goal) const
             {
-                const float goal = this->canonical_x(canonical_goal);
-                const float error = goal - this->target.center().x;
-                const float velocity = this->target.velocity().x;
-                const float stopping = velocity * velocity /
-                    (2.0f * this->run.services.tuning.player().x_deacceleration) + std::fabs(velocity) * dt + 4.0f;
-                if (std::fabs(error) < 5.0f || (velocity != 0.0f &&
-                    (velocity > 0.0f) == (error > 0.0f) && std::fabs(error) <= stopping)) { return 0.0f; }
-                return error > 0.0f ? 1.0f : -1.0f;
+                return acceptance::route_run::steer(this->target, this->canonical_x(canonical_goal),
+                    this->run.services.tuning.player());
             }
 
             PlayerInputData next()
@@ -259,6 +253,6 @@ namespace crossfeed_acceptance
         require(idle_trials == 200 && departure_trials == 100, "Crossfeed pressure matrix changed its bounded sample count");
         std::cout << "PASS Crossfeed sampled pressure observations: 200 authored-spawn controls and 100 representative "
             "actual-input departures; target bounds and solid clearance checked each step. Unobserved aim, attacker "
-            "movement, all-spawn departure combinations and attended pressure/balance remain open\n";
+            "movement, all-spawn departure combinations and attended pressure/balance are outside this probe\n";
     }
 }

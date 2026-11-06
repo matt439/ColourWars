@@ -103,7 +103,7 @@ namespace balance_regions
         MatchMetadata match;
         Measurement metrics;
     };
-    // Independent companion schema1. Does not change/serialize the main row.
+    // Independent companion schema 1. Does not change/serialize the main row.
     // Records must follow their main rows contiguously, starting at one.
     // UTF-8-compatible bytes, quoted text fields, classic locale, max_digits10,
     // LF terminators and no wall clock/file I/O. Parent owns atomic output policy.

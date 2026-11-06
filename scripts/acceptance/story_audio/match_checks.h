@@ -1,8 +1,5 @@
-#pragma once
-
-// Included after story_audio.cpp's shared recording world and content helpers.
-namespace
-{
+// Included inside the story-audio fixture's anonymous namespace, after the
+// other pieces.
 	void step_match_clock(World& world, float dt)
 	{
 		// These coarse ticks test the clock, not movement. Reset the players to
@@ -227,4 +224,3 @@ namespace
 		world.level.reset();
 		require(world.state(sound.name) == SoundState::stopped, "Reveal teardown left room tone alive");
 	}
-}

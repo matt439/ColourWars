@@ -2,7 +2,7 @@
 
 // Private to the colourwars_level_document library; included only by the level_document TUs.
 
-#include "editor/horizontal_authoring.h"
+#include "editor/motion_authoring.h"
 #include "editor/level_document.h"
 #include "editor/level_json.h"
 

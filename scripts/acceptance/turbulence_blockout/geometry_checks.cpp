@@ -40,21 +40,6 @@ namespace turbulence_blockout_acceptance
             }
             return result;
         }
-
-        std::size_t region(const Surface& surface, const PaintSurfaceSample& tile)
-        {
-            // Partition the whole walking floor at home/approach/contest boundaries;
-            // give other objects one stable role, including all their scored faces.
-            if (surface.name == "ground")
-            {
-                const float x = (tile.corners[0].x + tile.corners[2].x) / 2.0f;
-                return x < 600 ? 0 : x < 1100 ? 2 : x < 2900 ? 4 : x < 3400 ? 3 : 1;
-            }
-            if (surface.name.starts_with("home_")) { return surface.name.ends_with("_a") ? 0 : 1; }
-            if (surface.name.starts_with("lower_bed")) { return 4; }
-            if (surface.name.starts_with("crossover") || surface.name == "centre_baffle") { return 5; }
-            return surface.name.ends_with("_a") ? 2 : 3;
-        }
     }
 
     void geometry(Services& services, const std::filesystem::path& output)
@@ -89,7 +74,7 @@ namespace turbulence_blockout_acceptance
                     require(face < actual.size() && tile.team == PlayerTeam::none && tile.scored_area > 0.0f,
                         "New static stage contains invalid or already-owned scoring tiles");
                     actual[face] += tile.scored_area;
-                    regions[region(surface, tile)] += tile.scored_area;
+                    regions[paint_region(surface, tile)] += tile.scored_area;
                 }
                 const auto owned = scoring->paint_total();
                 const double sampled = actual[0] + actual[1] + actual[2] + actual[3];

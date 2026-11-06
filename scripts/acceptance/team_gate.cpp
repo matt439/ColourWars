@@ -418,25 +418,13 @@ namespace
     // Seat 0 is an idle human on team A; seats 1-3 are bots, two of them on B.
     MatchSetup roster(const Roster& variant)
     {
-        MatchSetup settings;
-        settings.set_player_count(4);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage("turbulence_gate_trial");
-        settings.set_duration(120.0f);
-        for (int seat = 0; seat < 4; ++seat)
-        {
-            if (seat > 0) { settings.set_player_bot(seat, variant.difficulty); }
-            settings.set_player_team(seat, seat < 2 ? PlayerTeam::a : PlayerTeam::b);
-            settings.set_player_weapon(seat, variant.tools[static_cast<std::size_t>(seat)]);
-        }
-        return settings;
+        return two_a_side_roster("turbulence_gate_trial", 120.0f, PlayerTeam::a, variant.tools,
+            { false, true, true, true }, variant.difficulty);
     }
 
     struct Totals
     {
         int open_steps = 0;
-        int bot_passes = 0;
     };
 
     void check_stage(World& world, const Roster& variant, Totals& totals)
@@ -523,7 +511,6 @@ namespace
             " bot_entries=" << passes << " longest_still=" << std::max({ longest_still[1], longest_still[2],
                 longest_still[3] }) << '\n';
         totals.open_steps += open_steps;
-        totals.bot_passes += passes;
     }
 }
 

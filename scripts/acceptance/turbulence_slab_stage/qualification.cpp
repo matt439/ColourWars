@@ -48,7 +48,7 @@ namespace turbulence_slab_stage_acceptance
             const auto stage = parse(read(content / "levels/turbulence_slab_trial.json"));
             const auto original = parse(read(content / "levels/turbulence_mover_trial.json"));
             require(stage["collision_objects"].Size() == 24 && original["collision_objects"].Size() == 22,
-                "Registered slab stage lost its qualified24/22 object inventory");
+                "Registered slab stage lost its qualified 24/22 object inventory");
             for (rapidjson::SizeType index = 0; index < 22; ++index)
             { require(stage["collision_objects"][index] == original["collision_objects"][index], "Registered slab stage changed an original object"); }
             for (auto field = original.MemberBegin(); field != original.MemberEnd(); ++field)
@@ -114,9 +114,8 @@ namespace turbulence_slab_stage_acceptance
                     infos.add(name, std::move(info));
                 }
             }
-            require(result.size() == 13, "Registered slab catalog must expose thirteen explicit stages");
+            // The exact stage and Random counts are stage_selection's pins.
             const auto random = random_stage_indices(result);
-            require(random.size() == 4, "Registered slab stage must be one of the four accepted Random arenas");
             bool found = false;
             for (std::size_t index = 0; index < result.size(); ++index)
             {
@@ -165,7 +164,7 @@ namespace turbulence_slab_stage_acceptance
 
         int short_match(World& world, const Registry<LevelLoadedInfo>& infos, int count, std::ofstream& csv)
         {
-            ResolutionManager resolution; ViewportManager viewports{ &resolution }; Mouse mouse; Partitioner partitioner;
+            ResolutionManager resolution; ViewportManager viewports{ &resolution }; Partitioner partitioner;
             const auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
                 &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);

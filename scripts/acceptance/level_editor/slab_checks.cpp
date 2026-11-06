@@ -71,7 +71,7 @@ namespace level_editor_acceptance
         value.AddMember("future_object", "preserve", extended.GetAllocator());
         value["slab"].AddMember("future_slab", "preserve", extended.GetAllocator());
         const auto metadata = scratch / "slab-metadata.json";
-        write(metadata, encode(extended)); document.load(metadata);
+        write_text(metadata, encode(extended)); document.load(metadata);
         document.set_property(right, "slab/rise", "left");
         const Entry copy = document.duplicate(right);
         const auto saved = scratch / "slab-roundtrip.json"; document.save(saved);
@@ -103,7 +103,7 @@ namespace level_editor_acceptance
         reject_without_change(pairs, [&] { pairs.set_property(separate, "slab/y", "880"); },
             "A property edit intersected fixed slabs without preserving state");
 
-        rapidjson::SchemaDocument schema(parse(contents(repo / "game/contracts/level.schema.json")));
+        rapidjson::SchemaDocument schema(parse(read_text(repo / "game/contracts/level.schema.json")));
         rapidjson::SchemaValidator validator(schema);
         require(roundtrip.Accept(validator), "JSON schema refused a saved fixed slab");
         for (const char* unsupported : { "motion", "drift", "rotation", "rectangle", "rectangle_tlbr", "triangle" })
@@ -112,7 +112,7 @@ namespace level_editor_acceptance
             auto& object = invalid["collision_objects"][static_cast<rapidjson::SizeType>(right.index)];
             object.AddMember(rapidjson::Value(unsupported, invalid.GetAllocator()), rapidjson::Value(0), invalid.GetAllocator());
             const auto path = scratch / (std::string("slab-invalid-") + unsupported + ".json");
-            write(path, encode(invalid));
+            write_text(path, encode(invalid));
             reject_without_change(reopened, [&] { reopened.load(path); }, "Slab load accepted unsupported geometry/motion");
             validator.Reset(); require(!invalid.Accept(validator), "Schema accepted unsupported slab geometry/motion");
         }

@@ -76,7 +76,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().heading_shadow_offset);
 
-	this->_1_player = std::make_unique<colourwars::UiTextDropShadow>(
+	this->one_player_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"1_player",
 		this->text().item(MenuItem::one_player_practice),
 		this->menu_style().item_font,
@@ -86,7 +86,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_2_players = std::make_unique<colourwars::UiTextDropShadow>(
+	this->two_players_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"2_players",
 		this->text().item(MenuItem::two_players),
 		this->menu_style().item_font,
@@ -96,7 +96,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_3_players = std::make_unique<colourwars::UiTextDropShadow>(
+	this->three_players_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"3_players",
 		this->text().item(MenuItem::three_players),
 		this->menu_style().item_font,
@@ -106,7 +106,7 @@ void MainMenuPlayerCount::init()
 		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
-	this->_4_players = std::make_unique<colourwars::UiTextDropShadow>(
+	this->four_players_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"4_players",
 		this->text().item(MenuItem::four_players),
 		this->menu_style().item_font,
@@ -138,22 +138,22 @@ void MainMenuPlayerCount::init()
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
-	this->text_container_->add_child(this->_1_player.get());
-	this->text_container_->add_child(this->_2_players.get());
-	this->text_container_->add_child(this->_3_players.get());
-	this->text_container_->add_child(this->_4_players.get());
+	this->text_container_->add_child(this->one_player_.get());
+	this->text_container_->add_child(this->two_players_.get());
+	this->text_container_->add_child(this->three_players_.get());
+	this->text_container_->add_child(this->four_players_.get());
 	this->text_container_->add_child(this->back_.get());
 
-	this->focus_.add(this->_1_player.get(),
+	this->focus_.add(this->one_player_.get(),
 		[this] { this->start_join(1); });
-	this->focus_.add(this->_2_players.get(),
+	this->focus_.add(this->two_players_.get(),
 		[this] { this->start_join(2); });
-	this->focus_.add(this->_3_players.get(),
+	this->focus_.add(this->three_players_.get(),
 		[this] { this->start_join(3); });
-	this->focus_.add(this->_4_players.get(),
+	this->focus_.add(this->four_players_.get(),
 		[this] { this->start_join(4); });
 	// A series needs both teams; solo remains available through Single Match.
-	this->focus_.set_enabled(this->_1_player.get(),
+	this->focus_.set_enabled(this->one_player_.get(),
 		this->level_settings()->best_of() == 1);
 	// Retain the previous count's focus, without retaining any device claims.
 	const int count = std::max(this->level_settings()->player_count(),
@@ -161,16 +161,16 @@ void MainMenuPlayerCount::init()
 	switch (count)
 	{
 	case 4:
-		this->focus_.set_focused(0, this->_4_players.get());
+		this->focus_.set_focused(0, this->four_players_.get());
 		break;
 	case 3:
-		this->focus_.set_focused(0, this->_3_players.get());
+		this->focus_.set_focused(0, this->three_players_.get());
 		break;
 	case 2:
-		this->focus_.set_focused(0, this->_2_players.get());
+		this->focus_.set_focused(0, this->two_players_.get());
 		break;
 	default:
-		this->focus_.set_focused(0, this->_1_player.get());
+		this->focus_.set_focused(0, this->one_player_.get());
 		break;
 	}
 	this->focus_.add(this->back_.get(), [this]

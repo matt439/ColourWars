@@ -1,4 +1,4 @@
-// Body38: nine local ordered-overlap patches, not a full raw silhouette mask.
+// Body 38: nine local ordered-overlap patches, not a full raw silhouette mask.
 // The copied-record whole-frame reference proves retained adoption only.
 enum class SilhouetteBodyReference { correct, straight, squared_base, collapsed_one, collapsed_two };
 struct SilhouetteBodyPatch { int x, y, writes; };
@@ -13,11 +13,11 @@ const char* silhouette_body_context_name(size_t context)
 { constexpr std::array<const char*,3> names{ "adult-rest-mug","adult-half-stand","child-rest" }; return names.at(context); }
 const char* silhouette_body_write_counts(size_t context)
 { constexpr std::array<const char*,3> counts{ "1;2;2;1;2;3","2","1;2" }; return counts.at(context); }
-std::vector<float> silhouette_body_fixed_style(const OpeningPresentation& p)
+// Every opening field but the silhouette body colour this leaf tunes.
+std::vector<float> silhouette_body_fixed_style(OpeningPresentation p)
 {
-    OpeningPresentation stable=p; stable.silhouette=Colour(14,14,14);
-    auto values=program_fixed_style(stable);
-    values.insert(values.end(),{p.program_colour.r,p.program_colour.g,p.program_colour.b,p.program_colour.a}); return values;
+    p.silhouette = Colour();
+    return opening_style(p);
 }
 
 class SilhouetteBodyColourProbe
@@ -91,7 +91,7 @@ Frame SilhouetteBodyColourProbe::render(const std::function<void(DrawList&)>& dr
     const Canvas canvas(app_.render_resources(),Colour(32,64,96));Renderer& renderer=*app_.renderer();renderer.begin_frame();renderer.set_view_count(1);
     DrawList list=renderer.view(0);list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);canvas.draw(list,{0,0,1280,720});draw(list);++readbacks_;Frame result=read(renderer);
-    if(result.width!=1280||result.height!=720){failure(0,"backbuffer-size",result);throw std::runtime_error("Body proof requires exact1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(0,"backbuffer-size",result);throw std::runtime_error("Body proof requires exact 1280x720 backbuffer");}
     require(std::rand()==next && look_.silhouette==selected && expected_.silhouette==expected_selected,"Body draw consumed RNG or changed selected records");
     unchanged();return result;
 }
@@ -139,7 +139,7 @@ void SilhouetteBodyColourProbe::uniform_patch(const Frame& frame,const Silhouett
     const size_t first=offset(frame,patch.x,patch.y);
     for(int y=patch.y-1;y<=patch.y+1;++y){for(int x=patch.x-1;x<=patch.x+1;++x)
     {const size_t at=offset(frame,x,y);for(size_t channel=0;channel<4;++channel)
-        {require(frame.pixels[at+channel]==frame.pixels[first+channel],"Body declared3x3 RGBA patch is not uniform");}}}
+        {require(frame.pixels[at+channel]==frame.pixels[first+channel],"Body declared 3x3 RGBA patch is not uniform");}}}
 }
 void SilhouetteBodyColourProbe::check_patches(size_t context,const Frame& actual,const Frame& raw,const Colour& body)
 {
@@ -237,37 +237,25 @@ void silhouette_body_colour_consumer_checks(Application& app,const Presentation&
         "\"alpha0_straight_reads\":3,\"affected_rejections\":34,\"unaffected_guards\":8,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,"
         "\"viewport\":\"1280x720\",\"event_fade\":false,\"whole_frame_reference\":\"copied-production-consumer-adoption-only\",\"raw_reference\":\"nine-local-ordered-rgba-patches-only\",\"adult_crop\":[320,224],\"child_crop\":[208,224]}\n";
     require(summary.good(),"Cannot write Body shared summary");
-    std::cout<<"PASS silhouette-body:61readbacks/12rows/12crops759808pixels;9local3x3 RGBA patches, ordered1/2/3 separate writes overBLACK,13controls/34patch refusals/8unchanged guards. "
+    std::cout<<"PASS silhouette-body: 61 readbacks/12 rows/12 crops of 759808 pixels; 9 local 3x3 RGBA patches, ordered 1/2/3 separate writes over BLACK, 13 controls/34 patch refusals/8 unchanged guards. "
         "Copied full frame adoption only; frozen caller/resource/RNG and zero all updates; no complete-mask or actual-Level claim.\n";
 }
 #if COLOURWARS_DEV_TOOLS
 void silhouette_body_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,
     const std::filesystem::path& content,const std::filesystem::path& output)
 {
-    const auto root=output/"silhouette-body-colour-tune-scratch",source=root/"source",staged=root/"staged";
-    std::filesystem::create_directories(source);std::filesystem::create_directories(staged);
-    constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
-    for(size_t i=0;i<files.size();++i){real_bytes[i]=tune_colour_bytes(content/files[i]);
-        tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const NestedSaveProfile profile(root/"profile");const TuneColourTemp temporary(root/"temp");
-    struct RestoreSilhouetteBody {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreSilhouetteBody(){t=old_t;p=old_p;}}
-        restore{tuning,presentation,tuning,presentation};
-    Save preferences; SettingsSession preferences_session(preferences);PlaySettings play;play.music_volume=17;play.sfx_volume=83;play.aim_sensitivity=4;
-    play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
-    InputBindings bindings;bindings.keyboard_jump=Key::j;
-    require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed Body private preferences");
-    const auto save_path=root/"profile/ColourWars/save_data.json";const std::string saved_preferences=tune_colour_bytes(save_path);
-    const auto pref_values=[&]
-    {const auto& p=preferences_session.play_settings();std::vector<int> v{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,
-        static_cast<int>(preferences.team_palette()),p.aim_sensitivity,p.music_volume,p.sfx_volume,p.view_shake?1:0,p.aim_marker?1:0,
-        p.reduce_effects?1:0,static_cast<int>(preferences_session.input_bindings().keyboard_jump)};
-        for(const auto& stick:p.sticks){v.push_back(stick.movement_deadzone);v.push_back(stick.aim_deadzone);}return v;};
-    const auto saved_values=pref_values();
-    GameData data;data.set_application(&app);data.set_save(&preferences); data.set_settings_session(&preferences_session);const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning);data.set_presentation(&presentation);DebugDirector director(&tuning,&presentation);data.set_debug(&director);
-    auto& impl=*director.impl();impl.set_content_directories(source,staged);impl.set_user_directory(root/"user");
-    impl.set_script_directories({root/"scripts"});director.attach(&app,&data);impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output/"silhouette-body-colour-tune-commands.log").string()),"Cannot retain Body transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "silhouette-body-colour-tune-scratch", .transcript = "silhouette-body-colour-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto pref_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     SilhouetteBodyColourProbe probe(app,presentation,output);JsonSpanDocument initial(real_bytes[1],"Body private source");
     const JsonLeaf* leaf=initial.find("opening.silhouette");require(leaf!=nullptr,"Body source lacks exact existing token");
     const std::string expected_saved=initial.replaced(*leaf,"\"2060C080\"");bool persisted=false;size_t commands=0,rows=0;

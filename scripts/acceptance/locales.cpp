@@ -9,7 +9,9 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <array>
 #include <filesystem>
@@ -30,65 +32,9 @@ using acceptance::require;
 
 namespace
 {
-    struct World
-    {
-        RenderResources render;
-        AudioResources audio;
-
-        explicit World(const std::filesystem::path& content)
-        {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                render.add_sprite_sheet(name, read_sprite_sheet(
-                    (content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* name : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(name) + ".spritefont")).string());
-                auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-                render.add_font(name, std::move(font));
-            }
-            audio.add_sound_bank("paint_exe", SoundBank::silent());
-        }
-    };
-
-    std::string read_text(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        return { std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-    }
-
-    void write_text(const std::filesystem::path& path, const std::string& text)
-    {
-        std::ofstream output(path, std::ios::binary | std::ios::trunc);
-        output << text;
-        output.close();
-        require(output.good(), "Cannot write " + path.string());
-    }
-
-    // The manifest's stages, read as startup reads them.
-    void read_shipped_stages(const std::filesystem::path& content, StageCatalog& catalog)
-    {
-        const JsonDocument manifest = read_json_file((content / "manifest.json").string().c_str());
-        const JsonValue groups = manifest.root().array("assets");
-        for (size_t index = 0; index < groups.size(); ++index)
-        {
-            const JsonValue group = groups.at(index);
-            if (group.string("kind") != "level") { continue; }
-            const JsonValue names = group.array("names");
-            for (size_t name = 0; name < names.size(); ++name)
-            {
-                const std::string stage = names.at(name).as_string();
-                catalog.add(read_stage_definition((content / "levels" / (stage + ".json")).string(), stage));
-            }
-        }
-        require(!catalog.stages().empty(), "The manifest must list the shipped stages.");
-    }
+    using World = acceptance::ContentWorld;
+    using acceptance::read_text;
+    using acceptance::write_text;
 
     // Startup's text checks of one composed Presentation: its resources, the
     // controls reminder, the Mode rows, and the stage titles - every shipped
@@ -431,8 +377,8 @@ int main(int argc, char** argv)
             std::filesystem::absolute(argv[0]).parent_path() / "locale-fixtures";
         World world(content);
         const GameTuning tuning((content / "tuning.json").string().c_str());
-        StageCatalog stages;
-        read_shipped_stages(content, stages);
+        // The manifest's stages, read as startup reads them.
+        const StageCatalog stages = acceptance::manifest_catalog(content);
         check_shipped(content, world, tuning, stages);
         check_rules(content, scratch, world, tuning, stages);
         std::cout << "locales: every shipped locale passes startup's text checks, stage titles included; composition rules hold\n";

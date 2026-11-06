@@ -5,10 +5,10 @@
 #include "game/objects/player_out_of_bounds.h"
 #include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <new>
@@ -290,21 +290,6 @@ namespace
         std::wstring previous_;
     };
 
-    std::string contents(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read isolated fatal report");
-        return { std::istreambuf_iterator<char>(input), {} };
-    }
-
-    void write_text(const std::filesystem::path& path, const char* text)
-    {
-        std::ofstream output(path, std::ios::binary | std::ios::trunc);
-        output << text;
-        output.close();
-        require(output.good(), "Cannot create isolated failure fixture");
-    }
-
     void no_temporaries(const std::filesystem::path& scratch)
     {
         for (const auto& entry : std::filesystem::recursive_directory_iterator(scratch))
@@ -328,20 +313,20 @@ namespace
             !std::filesystem::exists(profile), "Profile lookup must preserve Unicode and must not create a file");
         require(first.write_record(labrador::path_from_utf8(directory_consts::fatal_report_path())),
             "Could not write isolated Unicode per-user diagnostic metadata");
-        require(parse_record(contents(path)).at("phase") == "preferences" &&
-            contents(path).find("SECRET_FIRST_LOCAL_CAUSE") == std::string::npos,
+        require(parse_record(acceptance::read_text(path)).at("phase") == "preferences" &&
+            acceptance::read_text(path).find("SECRET_FIRST_LOCAL_CAUSE") == std::string::npos,
             "Saved diagnostic lost phase metadata or leaked its original text");
 
         const FatalReport latest(FailurePhase::running,
             std::make_exception_ptr(std::runtime_error("SECRET_ORIGINAL_RUNTIME_CAUSE")));
         require(latest.write_record(path), "Replacing a complete previous report failed");
-        const std::string old = contents(path);
+        const std::string old = acceptance::read_text(path);
         require(parse_record(old).at("phase") == "run_loop" && parse_record(old).at("category") == "runtime" &&
             old.find("SECRET_ORIGINAL_RUNTIME_CAUSE") == std::string::npos,
             "Latest report was appended, incomplete or contained original diagnostic text");
         const auto failed_preserves = [&]
         {
-            require(contents(path) == old && latest.message() == "SECRET_ORIGINAL_RUNTIME_CAUSE",
+            require(acceptance::read_text(path) == old && latest.message() == "SECRET_ORIGINAL_RUNTIME_CAUSE",
                 "A failed write replaced the complete prior record or original cause");
             no_temporaries(scratch);
         };
@@ -365,31 +350,31 @@ namespace
 
         const auto directory_destination = scratch / L"directory-destination";
         std::filesystem::create_directory(directory_destination);
-        write_text(directory_destination / L"retained.txt", "directory sentinel");
+        acceptance::write_text(directory_destination / L"retained.txt", "directory sentinel");
         require(!latest.write_record(directory_destination) &&
-            contents(directory_destination / L"retained.txt") == "directory sentinel",
+            acceptance::read_text(directory_destination / L"retained.txt") == "directory sentinel",
             "A directory destination was replaced or reported saved");
         failed_preserves();
 
         const auto blocked_parent = scratch / L"blocked-parent";
-        write_text(blocked_parent, "blocked parent sentinel");
+        acceptance::write_text(blocked_parent, "blocked parent sentinel");
         require(!latest.write_record(blocked_parent / L"last-error.log") &&
-            contents(blocked_parent) == "blocked parent sentinel", "A blocked parent was damaged or reported saved");
+            acceptance::read_text(blocked_parent) == "blocked parent sentinel", "A blocked parent was damaged or reported saved");
         failed_preserves();
-        require(first.write_record(path) && parse_record(contents(path)).at("phase") == "preferences",
+        require(first.write_record(path) && parse_record(acceptance::read_text(path)).at("phase") == "preferences",
             "Report writing did not recover after isolated destination failures");
         no_temporaries(scratch);
     }
 }
 
-int main(int argc, char** argv)
+int main(int argc, char**)
 {
     return acceptance::run_probe("fatal report", [&]
     {
         require(argc == 2, "Usage: fatal_report.exe <staged content directory>");
-        const auto scratch = std::filesystem::absolute(argv[0]).parent_path() /
-            (L"fatal-report-fixtures-" + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64()));
-        require(std::filesystem::create_directory(scratch), "Cannot reserve isolated fatal-report fixtures");
+        // Removed with everything in it when the probe ends, pass or fail.
+        const acceptance::ScratchDirectory fixtures(L"fatal-report");
+        const std::filesystem::path& scratch = fixtures.root();
         check_phases();
         check_kinds_and_privacy();
         check_bounds_and_unicode();

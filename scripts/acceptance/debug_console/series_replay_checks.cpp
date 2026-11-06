@@ -150,7 +150,7 @@ namespace debug_console_acceptance
 		director.detach_match(match);
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
-		std::printf("DBG2: a recording carried across a round boundary (%d + %d updates, two stages) "
+		std::printf("DBG#2: a recording carried across a round boundary (%d + %d updates, two stages) "
 			"replays round by round\n", both.round(0).updates, both.round(1).updates);
 	}
 }

@@ -255,7 +255,7 @@ namespace crossfeed_acceptance
             "The no-fire policy is a negative control. Public paid-launch observations "
             "include launch retirements and ordinary scene sweeps. First paint includes home and identifies actual scored surfaces "
             "and their bounds, with the owner's simultaneous centre separately, not an exact impact point. "
-            "The snapshot credits only paint observed by tick180, with surviving projectiles counted but no later "
+            "The snapshot credits only paint observed by tick 180, with surviving projectiles counted but no later "
             "flight or released settling credited. Failure to paint is reported, not rejected. These policies are "
             "not earliest possible openings, human aim, whole-tank efficiency or evidence that Sniper needs a nerf\n";
         for (const OpeningPolicy policy : {

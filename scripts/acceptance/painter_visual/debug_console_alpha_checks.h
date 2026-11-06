@@ -1,4 +1,4 @@
-// Debug-only source draft. Included inside painter_visual's anonymous namespace,
+// Debug-only checks. Included inside painter_visual's anonymous namespace,
 // after its ordinary renderer helpers and tune_colour_checks.h. No input events,
 // state updates, active match, wall clock, Save writes or production tint helper.
 #if COLOURWARS_DEV_TOOLS
@@ -6,53 +6,9 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
-    const auto root = output / "alpha-console-scratch";
-    require(!std::filesystem::exists(root), "Console alpha scratch directory must be fresh");
-    const auto source = root / "source", staged = root / "staged";
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    const std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
-    std::array<std::string, 2> real_bytes;
-    for (size_t file_index = 0; file_index < files.size(); ++file_index)
-    {
-        real_bytes[file_index] = tune_colour_bytes(content / files[file_index]);
-        tune_colour_write(source / files[file_index], real_bytes[file_index]);
-        tune_colour_write(staged / files[file_index], real_bytes[file_index]);
-    }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    const GameTuning original_tuning = tuning; const Presentation original = presentation;
-    struct RestoreConsoleAlphaContent
-    {
-        GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original;
-        ~RestoreConsoleAlphaContent() { this->tuning = this->original_tuning; this->presentation = this->original; }
-    } restore{ tuning, presentation, original_tuning, original };
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-
-    // Seed bytes directly: loading an existing file never invokes Save's writer.
-    // Non-default preferences make accidental memory changes observable too.
-    const auto save_path = root / "profile/ColourWars/save_data.json";
-    std::filesystem::create_directories(save_path.parent_path());
-    const std::string saved_preferences = "{\"save_version\":2,\"resolution\":{\"x\":1280,\"y\":720},"
-        "\"fullscreen\":false,\"team_palette\":\"blue_orange\",\"aim_sensitivity\":4,"
-        "\"music_volume\":37,\"sfx_volume\":61,\"view_shake\":false,\"aim_marker\":true,"
-        "\"reduce_effects\":false,\"pad_sticks\":[{\"movement_deadzone\":17,\"aim_deadzone\":29}]}\r\n";
-    tune_colour_write(save_path, saved_preferences);
-    Save preferences; SettingsSession preferences_session(preferences); preferences_session.load_save_file();
-    require(preferences_session.play_settings().music_volume == 37 && preferences_session.play_settings().sfx_volume == 61 &&
-        preferences_session.play_settings().sticks[0].movement_deadzone == 17,
-        "Console alpha private preference fixture was not loaded");
-    const auto preference_values = [&]()
-    {
-        const PlaySettings& play = preferences_session.play_settings();
-        std::vector<int> values{ static_cast<int>(preferences.resolution()), preferences.fullscreen(),
-            static_cast<int>(preferences.team_palette()), play.aim_sensitivity, play.music_volume,
-            play.sfx_volume, play.view_shake, play.aim_marker, play.reduce_effects };
-        for (const StickSettings& stick : play.sticks)
-        { values.push_back(stick.movement_deadzone); values.push_back(stick.aim_deadzone); }
-        return values;
-    };
-    const auto initial_preferences = preference_values();
     StageList stages;
     for (const char* name : { "movement_course", "close_quarters", "king_of_the_hill", "turbulence" })
     {
@@ -60,15 +16,35 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         require(info != nullptr, "Console alpha fixture requires the shipped stage catalog");
         stages.push_back({ name, info->display_name(), info->icon_frame(), info->include_in_random() });
     }
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    DebugDirectorImpl& impl = *director.impl();
-    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
-    impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "alpha-console-commands.log").string()),
-        "Cannot retain console alpha command transcript");
+    // Seed bytes directly: loading an existing file never invokes Save's writer.
+    // Non-default preferences make accidental memory changes observable too.
+    const std::string saved_preferences = "{\"save_version\":2,\"resolution\":{\"x\":1280,\"y\":720},"
+        "\"fullscreen\":false,\"team_palette\":\"blue_orange\",\"aim_sensitivity\":4,"
+        "\"music_volume\":37,\"sfx_volume\":61,\"view_shake\":false,\"aim_marker\":true,"
+        "\"reduce_effects\":false,\"pad_sticks\":[{\"movement_deadzone\":17,\"aim_deadzone\":29}]}\r\n";
+    TuneColourSession session(app, tuning, presentation, content, output, { .scratch = "alpha-console-scratch",
+        .transcript = "alpha-console-commands.log", .fresh = true,
+        .seed = [&](Save&, SettingsSession& settings)
+        {
+            const auto save_path = acceptance::save_path_in(output / "alpha-console-scratch" / "profile");
+            std::filesystem::create_directories(save_path.parent_path());
+            tune_colour_write(save_path, saved_preferences); settings.load_save_file();
+            require(settings.play_settings().music_volume == 37 && settings.play_settings().sfx_volume == 61 &&
+                settings.play_settings().sticks[0].movement_deadzone == 17,
+                "Console alpha private preference fixture was not loaded");
+        },
+        .catalog = [&] { return acceptance::catalog_of(levels, stages,
+            { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); } });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const Presentation& original = session.original_presentation();
+    const auto save_path = session.save_path();
+    GameData& data = session.data();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preference_values = [&] { return session.preference_values(); };
+    const auto initial_preferences = preference_values();
 
     const DebugOverlayPresentation geometry = original.debug_overlay();
     const DebugOverlayPresentation* const borrowed_look = &presentation.debug_overlay();

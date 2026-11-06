@@ -118,7 +118,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
 {
     using namespace debug_background_acceptance;
     window_checks();
-    const NestedSaveProfile profile(output / "debug-background-profile");
+    const acceptance::IsolatedSave profile(output / "debug-background-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     // A run quieted by COLOURWARS_MUTE would hold both groups at zero through
     // sound_groups::apply, which would make every muted() check below pass
@@ -135,15 +135,12 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     sound_groups::set_muted(false);
     PlaySettings initial; initial.music_volume = was_muted ? 1 : 17; initial.sfx_volume = was_muted ? 2 : 23;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed private background preferences");
-    const auto save_path = output / "debug-background-profile" / "ColourWars" / "save_data.json";
     const auto save_bytes = [&]
     {
-        std::ifstream file(save_path, std::ios::binary);
-        require(file.good(), "Cannot read private background save witness");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const std::string saved = save_bytes();
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugBackgroundState facts{ true, false, false };
@@ -326,9 +323,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     const size_t damage_begin = motors.count;
     Player& victim = const_cast<Player&>(game->level().player(1));
     victim.force_respawn();
-    const auto& damage_values = tuning.projectile(ProjectileType::spray);
-    const ProjectileSpray damage(RectangleF(0, 0, 10, 10), Vector2F::zero, PlayerTeam::a,
-        3, Colour::white, app.render_resources(), resolve_projectile_strip(damage_values, *app.render_resources()), &damage_values);
+    const ProjectileSpray damage = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10), PlayerTeam::a, 3, Colour::white);
     const float health_before = victim.health();
     victim.on_contact(damage, Vector2F::zero, 0.0f); tick();
     require(victim.health() < health_before, "Inactive motor control did not produce actual damage");
@@ -384,7 +379,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     require(muted(), "Turning background mode off restored inactive audio"); note("off-inactive-freezes");
     // A current in-memory preference change is an independent restoration
     // witness. This fixture deliberately does not call a Save writer here.
-    auto& current = const_cast<PlaySettings&>(preferences_session.play_settings());
+    auto& current = live_play_settings(preferences_session);
     current.music_volume = was_muted ? 3 : 31; current.sfx_volume = was_muted ? 4 : 47;
     painter_scripted_pads::states[3].buttons = static_cast<std::uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
     app.gamepads()->poll();
@@ -479,7 +474,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
         ",\"recorded_updates\":" << tape.updates << ",\"save_unchanged\":true,"
         "\"limits\":\"Private HWND native visibility/minimize and forwarded synthetic power messages; "
         "actual GameLevel on hidden hardware shell with injected window facts and synthetic StateContext activation; "
-        "scripted readers and recording motors only; no real OS focus/power-sleep, physical pad, listening, CI1 or performance acceptance\"}\n";
+        "scripted readers and recording motors only; no real OS focus/power-sleep, physical pad, listening, CI#1 or performance acceptance\"}\n";
     require(summary.good(), "Cannot write background supplement summary");
     std::cout << "PASS Debug background supplement: actual GameLevel, neutral physical baseline, script/bot/replay, "
         "hard gates, immediate toggle, current-preference restoration and unchanged Save; synthetic activation only.\n";

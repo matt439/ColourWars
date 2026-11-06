@@ -8,8 +8,8 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     require(original.menu_text().confirmations.exit == L"Exit ColourWars?" &&
         original.menu_text().item(MenuItem::exit) == L"Exit" && original.menu_text().item(MenuItem::yes) == L"Yes" &&
         original.menu_text().item(MenuItem::no) == L"No", "Home Exit copy drifted from independent literals");
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
@@ -40,7 +40,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         }
     };
     const auto tap = [&](GamepadButton button) { hold(device, button, true); tick(); hold(device, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto resize = [&](Vector2I size)
     {
         app.resolution_manager()->set_resolution_exactly(size);
@@ -66,7 +66,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = connect_pad;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); settings = MatchSetup();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuHome>(&context)); tick(); tick();
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuHome>(&context)); tick(); tick();
         for (int row = 0; row < 3; ++row) { tap(GamepadButton::dpad_down); }
         tick(settled); retained_home = frame(); home();
     };
@@ -136,7 +136,7 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             save(actual, output / (stem + ".ppm"));
             const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
             const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
-            save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm"));
+            save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm"));
         }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << yes << ',' << context.music_exit_pending() << ",true\n";
         return actual;

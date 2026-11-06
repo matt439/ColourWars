@@ -1,11 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
 #include "scripts/acceptance/balance_regions/exchange.h"
-#include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <array>
 #include <bit>
 #include <fstream>
@@ -41,6 +37,7 @@ namespace
         WeaponType tool(int seat) const { return this->tools[static_cast<std::size_t>(seat)]; }
         bool mixed() const { return this->kind != Matrix::same_tool; }
         bool bot(int seat) const { return this->kind == Matrix::sustained ? seat == 1 || seat == 2 : seat > 0; }
+        PlayerTeam team(int seat) const { return seat < 2 ? this->human_team : opposing(this->human_team); }
         int steps() const { return this->kind == Matrix::sustained ? sustained_steps : trial_steps; }
     };
     // The bot seeds srand(52807) and srand(61403) gave before HYG#39.
@@ -89,23 +86,12 @@ namespace
     }
     const char* tool_label(const Trial& trial) { return trial.mixed() ? "mixed" : name(trial.tool(1)); }
 
+    // A sustained trial's second neutral human claims an ordinary pad slot
+    // and never acts.
     MatchSetup roster(const Trial& trial)
     {
-        MatchSetup settings;
-        settings.set_player_count(seats);
-        for (int seat = 1; seat < seats; ++seat) { if (trial.bot(seat)) { settings.set_player_bot(seat, trial.difficulty); } }
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        // The second neutral human claims an ordinary pad slot and never acts.
-        if (!trial.bot(3)) { require(settings.claim_input_slot(0), "Sustained trial could not seat its second human"); }
-        settings.set_screen_layout(trial.bot(3) ? ScreenLayout::one_player : ScreenLayout::two_player);
-        settings.set_stage(trial.stage); settings.set_duration(trial.kind == Matrix::sustained ? 180.0f : 60.0f);
-        const PlayerTeam other = trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-        for (int seat = 0; seat < seats; ++seat)
-        {
-            settings.set_player_team(seat, seat < 2 ? trial.human_team : other);
-            settings.set_player_weapon(seat, trial.tool(seat));
-        }
-        return settings;
+        return two_a_side_roster(trial.stage, trial.kind == Matrix::sustained ? 180.0f : 60.0f, trial.human_team,
+            trial.tools, { false, trial.bot(1), trial.bot(2), trial.bot(3) }, trial.difficulty);
     }
 
     void prepare(Level& level)
@@ -318,8 +304,7 @@ namespace
             {
                 if (!trial.bot(seat)) { continue; }
                 const balance_regions::SeatRegionExchange& x = ledger.seat(region, static_cast<std::size_t>(seat));
-                const PlayerTeam team = seat < 2 ? trial.human_team :
-                    (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                const PlayerTeam team = trial.team(seat);
                 prefix("seat", name(team), seat + 1);
                 csv << ',' << x.neutral_claim << ',' << x.enemy_capture << ',' << x.enemy_capture_tiles << ",,,," <<
                     x.ally_owner_change << ",,,,," << mutual << '\n';
@@ -539,19 +524,11 @@ namespace
         result.final_state = snapshot(*level);
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, steps);
-#endif
-            level.reset(); level = world.build(settings, trial.seed); prepare(*level);
-            tape.playback = true;
-            for (int tick = 0; tick < steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == static_cast<std::size_t>(steps) && snapshot(*level) == expected,
-                "Team final-input replay changed players, projectile count or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, steps)).empty(),
-                "Team final-input replay changed complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, steps, physical, [&]
+            {
+                auto replayed = world.build(settings, trial.seed); prepare(*replayed);
+                return replayed;
+            }, "Team");
         }
         return result;
     }
@@ -561,8 +538,7 @@ namespace
         for (int seat = 0; seat < seats; ++seat)
         {
             const ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
-            const PlayerTeam team = seat < 2 ? trial.human_team :
-                (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+            const PlayerTeam team = trial.team(seat);
             const std::size_t team_index = team == PlayerTeam::a ? 0 : 1;
             csv << trial_id << ',' << trial.stage << ',' << tool_label(trial) << ',' << name(trial.human_team) << ',' <<
                 trial.seed << ',' << trial.steps() << ',' << seat + 1 << ',' << (trial.bot(seat) ? name(trial.difficulty) : "human") << ',' <<
@@ -588,8 +564,7 @@ namespace
         for (int seat = 1; seat < seats; ++seat)
         {
             const ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
-            const PlayerTeam team = seat < 2 ? trial.human_team :
-                (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+            const PlayerTeam team = trial.team(seat);
             int landed = 0;
             std::string names;
             for (std::size_t contact = 0; contact < tower_contacts.size(); ++contact)
@@ -612,8 +587,7 @@ namespace
         for (int seat = 1; seat < seats; ++seat)
         {
             const ActorMetrics& m = result.actors[static_cast<std::size_t>(seat)];
-            const PlayerTeam team = seat < 2 ? trial.human_team :
-                (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+            const PlayerTeam team = trial.team(seat);
             const std::size_t t = team == PlayerTeam::a ? 0 : 1;
             int completion = -1;
             const char* first_far = "";
@@ -641,8 +615,7 @@ namespace
             int bots = 0;
             for (int seat = 0; seat < seats; ++seat)
             {
-                const PlayerTeam seat_team = seat < 2 ? trial.human_team :
-                    (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                const PlayerTeam seat_team = trial.team(seat);
                 bots += trial.bot(seat) && seat_team == side ? 1 : 0;
             }
             csv << trial_id << ',' << matrix(trial) << ',' << trial.stage << ',' << trial.rotation << ',' <<
@@ -877,8 +850,7 @@ int main(int argc, char** argv)
                     for (int seat = 1; seat < seats; ++seat)
                     {
                         const ActorMetrics& m = metrics.actors[static_cast<std::size_t>(seat)];
-                        const PlayerTeam team = seat < 2 ? human_team :
-                            (human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                        const PlayerTeam team = trial.team(seat);
                         for (TowerTally* x : { &tower_difficulty[static_cast<std::size_t>(difficulty)],
                             &tower_team[team == PlayerTeam::a ? 0 : 1] })
                         {
@@ -971,8 +943,7 @@ int main(int argc, char** argv)
                 for (int seat = 1; seat < seats; ++seat)
                 {
                     const ActorMetrics& m = metrics.actors[static_cast<std::size_t>(seat)];
-                    const PlayerTeam team = seat < 2 ? trial.human_team :
-                        (trial.human_team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                    const PlayerTeam team = trial.team(seat);
                     CrossingTally& x = by_team[team == PlayerTeam::a ? 0 : 1];
                     ++x.bots; x.takeoffs += m.jumps; x.deaths += m.deaths; x.left_home += m.off_home_steps > 0 ? 1 : 0;
                     int completion = -1;

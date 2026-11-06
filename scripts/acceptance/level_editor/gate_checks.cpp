@@ -11,52 +11,15 @@
 
 namespace level_editor_acceptance
 {
-    namespace
-    {
-        Entry named(const LevelDocument& document, const std::string& name)
-        {
-            for (const Entry& candidate : document.entries())
-            {
-                if (candidate.kind == EntryKind::collision && candidate.label == name) { return candidate; }
-            }
-            throw std::runtime_error("Expected entry '" + name + "' is absent");
-        }
-
-        const Property* property(const std::vector<Property>& properties, const std::string& path)
-        {
-            for (const Property& candidate : properties)
-            {
-                if (candidate.path == path) { return &candidate; }
-            }
-            return nullptr;
-        }
-
-        void refuses_file(LevelDocument& document, const fs::path& path, const std::string& expected,
-            const char* message)
-        {
-            const std::string before = document.serialize();
-            bool rejected = false;
-            try { document.load(path); }
-            catch (const std::exception& error)
-            {
-                rejected = true;
-                require(std::string(error.what()).find(expected) != std::string::npos,
-                    std::string(message) + ": diagnostic was '" + error.what() + "'");
-            }
-            require(rejected, message);
-            require(document.serialize() == before, "A refused gate load changed the open document");
-        }
-    }
-
     void check_team_gate(const fs::path& repo, const fs::path& scratch)
     {
         const auto tuning = repo / "game/content/tuning.json";
         const auto source = repo / "game/content/levels/turbulence_gate_trial.json";
-        const std::string original = contents(source);
+        const std::string original = read_text(source);
         LevelDocument document(tuning);
         document.load(source);
         require(document.validate().empty() && !document.dirty(), "The Gate Trial did not open clean");
-        const Entry gate = named(document, "centre_gate");
+        const Entry gate = named(document, EntryKind::collision, "centre_gate");
         {
             const auto fields = document.properties(gate);
             const Property* field = property(fields, "gate");
@@ -71,7 +34,7 @@ namespace level_editor_acceptance
         LevelDocument reopened(tuning);
         reopened.load(copy);
         require(parse(reopened.serialize()) == parse(original) && !reopened.dirty() &&
-            contents(source) == original, "The Gate Trial lost its gate across save and reopen");
+            read_text(source) == original, "The Gate Trial lost its gate across save and reopen");
 
         // Every edit the game would refuse, through the inspector.
         for (const auto& [path, invalid] : {
@@ -120,7 +83,7 @@ namespace level_editor_acceptance
                 if (std::string(entry["name"].GetString()) == "centre_gate") { edit(entry, document_json); }
             }
             const auto path = scratch / (std::string("gate-") + name + ".json");
-            write(path, encode(document_json));
+            write_text(path, encode(document_json));
             return path;
         };
         LevelDocument checker(tuning);

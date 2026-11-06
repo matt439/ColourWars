@@ -41,15 +41,13 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     };
     std::array<std::vector<int>, 4> ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { ledgers[index] = ledger(cases[index].session); }
-    const NestedSaveProfile profile(output / "competitive-winner-profile");
+    const acceptance::IsolatedSave profile(output / "competitive-winner-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed competitive winner's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "competitive-winner-profile/ColourWars/save_data.json", std::ios::binary);
-        require(file.good(), "Competitive winner probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -134,7 +132,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         for (const Key key : { Key::up, Key::down, Key::left, Key::right,
             Key::enter, Key::escape, Key::space, Key::backspace }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, fixture.info, fixture.session, revealed));
         ++openings; tick();
         require(stack.depth() == 2, "Competitive winner consumed entry input or lost its actual page"); unchanged();
@@ -150,9 +148,10 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         require(readbacks < 99, "Competitive winner exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // Shipped48-font winners end329.21875, authored braces end335; the next
-    // score starts340. Actual72-font headings end236.328125 before winner255.
-    // The unchanged score/outcome end402/460.6640625, before the plates482.
+    // Shipped 48-font winners end at 329.21875, authored braces at 335; the next
+    // score starts at 340. Actual 72-font headings end at 236.328125 before the
+    // winner at 255.
+    // The unchanged score/outcome end at 402/460.6640625, before the plates at 482.
     const RectangleF winner_region(600.0f, 246.0f, 720.0f, 93.0f);
     const RectangleF row_region(420.0f, 339.0f, 1080.0f, 135.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
@@ -160,7 +159,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     RectangleF winner_bounds;
     const auto reference = [&](const WinnerCase& fixture, const Presentation& snapshot, const std::wstring& literal,
@@ -269,21 +268,8 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     auto& next_text = const_cast<MenuText&>(next.menu_text()).results;
     next_text.competitive_team_a_wins = next_words[0]; next_text.competitive_team_b_wins = next_words[1];
     next_text.competitive_draw = next_words[2];
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* source_glyph = source->find(character);
-        require(source_glyph != nullptr, "Competitive winner font fixture lacks an original printable glyph");
-        Glyph glyph = *source_glyph;
-        if (character == U'{' || character == U'}') { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-        glyphs.push_back(glyph);
-    }
     const std::string next_font = "competitive_winner_braces";
-    app.render_resources()->add_font(next_font,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_font), L"~"),
-        "Competitive winner replacement font still renders retained old copy's tilde");
+    add_probe_font(*app.render_resources(), original.menu().item_font, next_font, is_brace);
     const_cast<MenuStyle&>(next.menu()).item_font = next_font;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     next.validate_resources(*app.render_resources(), *app.audio_resources());

@@ -57,7 +57,7 @@
 						"Identity colour accepts named/RGB/opaque RGBA on its borrowed record without changing other colours: " + path);
 				}
 				const JsonSpanDocument authored(baseline, "identity-colour-reference");
-				const std::string sibling_token(authored.token(*authored.find(sibling_local)));
+				const std::string sibling_token(authored.token(require_leaf(authored, sibling_local)));
 				for (const std::string& word : { std::string("11223380"), std::string("11223300"),
 					sibling_token.substr(1, sibling_token.size() - 2) })
 				{
@@ -75,7 +75,7 @@
 
 				// Both identity leaves can be pending at once. Validate against the
 				// currently edited sibling, and reset one without resetting the other.
-				require(initial[3] != labrador::Colour(32, 48, 64) &&
+				require(initial[overlay_colour_index] != labrador::Colour(32, 48, 64) &&
 					impl.execute("tune " + path + " RED").ok && impl.execute("tune " + sibling_path + " BLUE").ok &&
 					impl.execute("tune presentation.debug_overlay.colour 203040").ok,
 					"Both distinct opaque identity fields and an unrelated colour can be pending together: " + path);
@@ -107,11 +107,11 @@
 
 				// Saving merges a fresh unrelated disk edit, splices only our colour,
 				// then adopts and rebases the full validated file.
-				const std::string external = authored.replaced(*authored.find("debug_overlay.colour"), "\"203040\"");
-				require(initial[3] != labrador::Colour(32, 48, 64), "The identity save introduces a fresh unrelated external colour");
+				const std::string external = authored.replaced(require_leaf(authored, "debug_overlay.colour"), "\"203040\"");
+				require(initial[overlay_colour_index] != labrador::Colour(32, 48, 64), "The identity save introduces a fresh unrelated external colour");
 				write_text(source, external);
 				const JsonSpanDocument external_document(external, "identity-colour-reference");
-				const std::string saved = external_document.replaced(*external_document.find(local), "\"123456FF\"");
+				const std::string saved = external_document.replaced(require_leaf(external_document, local), "\"123456FF\"");
 				auto saved_values = initial;
 				saved_values[3] = labrador::Colour(32, 48, 64);
 				saved_values[index] = labrador::Colour(18, 52, 86);
@@ -126,7 +126,7 @@
 					"Identity reset after save restores the saved opaque spelling and adopted external baseline: " + path);
 
 				const JsonSpanDocument saved_document(saved, "identity-colour-conflict");
-				const std::string conflicting = saved_document.replaced(*saved_document.find(local), "\"FEDCBA\"");
+				const std::string conflicting = saved_document.replaced(require_leaf(saved_document, local), "\"FEDCBA\"");
 				write_text(source, conflicting);
 				require(impl.execute("tune " + path + " ABCDEF").ok, "Identity colour is pending before an on-disk token conflict: " + path);
 				const auto conflict_state = state();
@@ -136,7 +136,7 @@
 					state() == conflict_state && edits() == conflict_edits && impl.tune_document("presentation")->current().text() == conflict_text,
 					"An identity colour token conflict preserves source, staging, live colours and the complete pending edit: " + path);
 				const JsonSpanDocument conflicting_document(conflicting, "identity-colour-conflict");
-				const std::string forced = conflicting_document.replaced(*conflicting_document.find(local), "\"ABCDEF\"");
+				const std::string forced = conflicting_document.replaced(require_leaf(conflicting_document, local), "\"ABCDEF\"");
 				require(impl.execute("tune.save presentation force").ok && read_text(source) == forced && read_text(staged) == forced &&
 					value_of(*identity) == labrador::Colour(171, 205, 239) && impl.tune_document("presentation")->baseline().text() == forced && edits().empty(),
 					"Force resolves only the identity token conflict and rebases the validated opaque colour: " + path);
@@ -145,7 +145,7 @@
 				// background, and the inverse, must fail only at the merged candidate.
 				require(impl.execute("tune " + path + " RED").ok, "A distinct red identity colour is pending before the coupled disk conflict: " + path);
 				const JsonSpanDocument forced_document(forced, "identity-colour-merged-conflict");
-				const std::string coupled = forced_document.replaced(*forced_document.find(sibling_local), "\"RED\"");
+				const std::string coupled = forced_document.replaced(require_leaf(forced_document, sibling_local), "\"RED\"");
 				write_text(source, coupled);
 				require(sibling_of(Presentation(source.string().c_str()).player_identity()) == labrador::Colour::red &&
 					sibling_of(*identity) != labrador::Colour::red, "The external red sibling is valid before merging and is not yet live: " + path);
@@ -264,24 +264,24 @@ void check_hud_paper_colour_tunes(const std::filesystem::path& game_directory)
             // external colour. Both pending and disk pairs remain reader-valid.
             set(index, "123456FF");
             const JsonSpanDocument authored(baseline, "hud-paper-single-save-reference");
-            const std::string saved = authored.replaced(*authored.find(local), "\"123456FF\"");
+            const std::string saved = authored.replaced(require_leaf(authored, local), "\"123456FF\"");
             require(impl.execute("tune.save presentation").ok && read_text(source) == saved && read_text(staged) == saved &&
                 document->current().text() == saved && document->baseline().text() == saved &&
                 document->edits().empty() && no_temporary(),
                 "Shared opaque paper Save replaces exactly one LF/CRLF token and rebases both copies");held();
             set(index, "ABCDEF");
             const JsonSpanDocument disk(saved, "hud-paper-conflict-reference");
-            const std::string changed = disk.replaced(*disk.find(local), "\"FEDCBA\"");
+            const std::string changed = disk.replaced(require_leaf(disk, local), "\"FEDCBA\"");
             const JsonSpanDocument changed_reference(changed, "hud-paper-conflict-overlay-reference");
-            const std::string external = changed_reference.replaced(*changed_reference.find("debug_overlay.colour"), "\"203040\"");
+            const std::string external = changed_reference.replaced(require_leaf(changed_reference, "debug_overlay.colour"), "\"203040\"");
             write_text(source, external);
             require(colour_values(Presentation(source.string().c_str()))[index] == labrador::Colour("FEDCBA") &&
                 !document->edits().contains(sibling_local),
                 "The opaque conflict source is valid with a genuinely unedited distinct counterpart");
             refuse("tune.save presentation");
             const JsonSpanDocument force_reference(external, "hud-paper-force-reference");
-            const std::string forced = force_reference.replaced(*force_reference.find(local), "\"ABCDEF\"");
-            expected[3] = labrador::Colour("203040");
+            const std::string forced = force_reference.replaced(require_leaf(force_reference, local), "\"ABCDEF\"");
+            expected[overlay_colour_index] = labrador::Colour("203040");
             require(impl.execute("tune.save presentation force").ok && read_text(source) == forced && read_text(staged) == forced &&
                 document->current().text() == forced && document->baseline().text() == forced &&
                 document->edits().empty() && colour_values(Presentation(source.string().c_str())) == expected && no_temporary() &&
@@ -300,9 +300,9 @@ void check_hud_paper_colour_tunes(const std::filesystem::path& game_directory)
             require(document->edits().size() == 2, "Both distinct shared-paper material tokens are pending");
             const std::string pair_external = (crlf ? std::string("\r\n") : std::string("\n")) + forced;
             const JsonSpanDocument pair_reference(pair_external, "hud-paper-pair-first-reference");
-            const std::string first = pair_reference.replaced(*pair_reference.find("hud.paper.ink"), "\"RED\"");
+            const std::string first = pair_reference.replaced(require_leaf(pair_reference, "hud.paper.ink"), "\"RED\"");
             const JsonSpanDocument first_reference(first, "hud-paper-pair-second-reference");
-            const std::string pair_saved = first_reference.replaced(*first_reference.find("hud.paper.paper"), "\"35BCE1FF\"");
+            const std::string pair_saved = first_reference.replaced(require_leaf(first_reference, "hud.paper.paper"), "\"35BCE1FF\"");
             write_text(source, pair_external);
             require(impl.execute("tune.save presentation").ok && document->edits().empty() &&
                 document->current().text() == pair_saved && document->baseline().text() == pair_saved &&
@@ -341,7 +341,7 @@ void check_hud_paper_colour_tunes(const std::filesystem::path& game_directory)
             require(document->edits().size() == 2 && document->edits().contains(local) &&
                 !document->edits().contains(sibling_local), "Equality merge counterpart is genuinely unedited");
             const JsonSpanDocument pair_disk(pair_saved, "hud-paper-equality-merge-reference");
-            const std::string equal_disk = pair_disk.replaced(*pair_disk.find(sibling_local), "\"2060C0\"");
+            const std::string equal_disk = pair_disk.replaced(require_leaf(pair_disk, sibling_local), "\"2060C0\"");
             write_text(source, equal_disk);
             const auto disk_values = colour_values(Presentation(source.string().c_str()));
             require(disk_values[index] == pair_values[index] && disk_values[sibling_index] == labrador::Colour("2060C0FF") &&
@@ -358,7 +358,7 @@ void check_hud_paper_colour_tunes(const std::filesystem::path& game_directory)
             require(impl.execute("tune.reset " + path).ok && document->edits().size() == 2 &&
                 !document->edits().contains(local) && document->edits().contains(sibling_local),
                 "Selected reset leaves only sibling and overlay pending before external equality");held();
-            const std::string selected_external = pair_disk.replaced(*pair_disk.find(local), "\"008000FF\"");
+            const std::string selected_external = pair_disk.replaced(require_leaf(pair_disk, local), "\"008000FF\"");
             write_text(source, selected_external);
             const auto reset_disk_values = colour_values(Presentation(source.string().c_str()));
             require(reset_disk_values[index] == labrador::Colour::green && reset_disk_values[sibling_index] == pair_values[sibling_index] &&

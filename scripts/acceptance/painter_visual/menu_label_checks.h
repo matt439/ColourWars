@@ -13,17 +13,15 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     controls.item_font = "lato_black_24"; controls.help_font = "courier_prime_bold_16";
     const_cast<ResultsMenuPresentation&>(alternate.results_menu()).contribution_font = "courier_prime_bold_16";
     alternate.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "menu-label-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    const acceptance::IsolatedSave isolated(output / "menu-label-profile"); Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private menu-label profile");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "menu-label-profile/ColourWars/save_data.json", std::ios::binary);
-        require(file.good(), "Cannot read the private menu-label save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     const std::string saved = saved_bytes();
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected;
@@ -42,7 +40,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     int ticks = 0, captures = 0, rows = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
-        require(++ticks <= 120, "Menu labels exceeded the bounded120 update budget");
+        require(++ticks <= 120, "Menu labels exceeded the bounded 120-update budget");
         app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto key = [&](Key value)
@@ -53,7 +51,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         painter_scripted_pads::states[0].buttons = a; tick(); painter_scripted_pads::states[0].buttons = 0; tick();
         require(settings.player_index_for_slot(0) == 2, "A fresh device did not explicitly claim the waiting third Join seat"); expected = settings;
     };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto unchanged = [&]
     {
         require(stack.depth() == 2 && settings.player_count() == expected.player_count() && settings.stage() == expected.stage() &&
@@ -85,7 +83,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         settings.set_screen_layout(kind == 0 ? ScreenLayout::three_player : ScreenLayout::four_player);
         for (int seat = 0; seat < settings.player_count(); ++seat)
         { settings.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]); }
-        expected = settings; stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        expected = settings; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (kind == 0) { stack.push(std::make_unique<MainMenuJoin>(&context)); }
         else if (kind == 1) { stack.push(std::make_unique<MainMenuTeamSelect>(&context)); }
         else if (kind == 2) { stack.push(std::make_unique<MainMenuWeaponSelect>(&context)); }
@@ -96,7 +94,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     std::ofstream records(output / "menu-labels.csv");
     records << "case,role,width,height,font,x,y,text_width,text_height,raster_matches,settings_preserved\n";
-    // Roles: Join0, Team1, Weapon2, Pause3, Results4, Stick option5, connection6.
+    // Roles: Join 0, Team 1, Weapon 2, Pause 3, Results 4, Stick option 5, connection 6.
     const auto compare = [&](const char* name, int role, const Presentation& snapshot, const std::wstring& literal,
         int seat = 0, bool connected = true, bool capture = false)
     {
@@ -200,7 +198,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         if (role != 3) { list.set_filter(TextureFilter::linear); }
         text->draw(list); const Frame wanted = read(renderer);
         RectangleF bounds = text_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-        const RectangleI crop = countdown_crop_bounds(bounds);
+        const RectangleI crop = pixel_bounds(bounds);
         const Frame observed = foreground_crop(actual, crop, 0), reference = foreground_crop(wanted, crop, 0);
         const std::string stem = std::string("menu-labels-") + name + '-' + std::to_string(role) + '-' + std::to_string(seat) + '-' + std::to_string(actual.width);
         if (observed.pixels != reference.pixels)

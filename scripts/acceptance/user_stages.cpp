@@ -17,7 +17,10 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <algorithm>
 #include <array>
@@ -104,21 +107,7 @@ namespace
 
 		explicit World(const std::filesystem::path& content)
 		{
-			for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-			{
-				render.add_sprite_sheet(name, read_sprite_sheet(
-					(content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));
-			}
-			for (const char* name : { "bowlby_one_144", "lato_black_24", "lato_black_36", "lato_black_48",
-				"lato_black_72", "lato_black_144", "courier_prime_bold_16" })
-			{
-				const SpriteFontFile file = read_sprite_font_file(
-					(content / "fonts" / (std::string(name) + ".spritefont")).string());
-				auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-				if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-				render.add_font(name, std::move(font));
-			}
-			audio.add_sound_bank("paint_exe", SoundBank::silent());
+			acceptance::load_cpu_assets(content, render, audio);
 		}
 	};
 
@@ -128,54 +117,22 @@ namespace
 		StageCatalog catalog;
 		const Registry<LevelLoadedInfo>& levels = catalog.level_infos();
 		const StageList& stages = catalog.stages();
+		// How many stages the manifest lists: the user stages follow them.
+		size_t count = 0;
 	};
 
 	void load_shipped(const std::filesystem::path& content, Shipped& shipped)
 	{
-		const JsonDocument manifest = read_json_file((content / "manifest.json").string().c_str());
-		const JsonValue assets = manifest.root().array("assets");
-		for (size_t group = 0; group < assets.size(); ++group)
+		for (const acceptance::ManifestEntry& level : acceptance::manifest_level_paths(content))
 		{
-			const JsonValue asset = assets.at(group);
-			if (asset.string("kind") != "level") { continue; }
-			const JsonValue names = asset.array("names");
-			for (size_t index = 0; index < names.size(); ++index)
-			{
-				const std::string name = names.at(index).as_string();
-				shipped.catalog.add(read_stage_definition(
-					(content / asset.string("directory") / (name + ".json")).string(), name));
-			}
+			shipped.catalog.add(read_stage_definition(path_to_utf8(level.path), level.name));
 		}
-		require(shipped.stages.size() == 13, "User-stage acceptance expects the thirteen shipped stages");
+		shipped.count = shipped.stages.size();
 	}
 
-	rapidjson::Document read_document(const std::filesystem::path& path)
-	{
-		std::ifstream input(path, std::ios::binary);
-		require(input.good(), "Cannot read " + path.string());
-		const std::string source{ std::istreambuf_iterator<char>(input), {} };
-		rapidjson::Document document;
-		document.Parse(source.c_str());
-		require(!document.HasParseError(), "Cannot parse " + path.string());
-		return document;
-	}
+	using acceptance::read_document;
 
-	void write_text(const std::filesystem::path& path, const std::string& text)
-	{
-		std::ofstream output(path, std::ios::binary | std::ios::trunc);
-		output << text;
-		output.close();
-		require(output.good(), "Cannot write fixture " + path_to_utf8(path));
-	}
 
-	std::string read_bytes(const std::filesystem::path& path)
-	{
-		std::ifstream input(path, std::ios::binary);
-		require(input.good(), "Cannot read source fixture " + path_to_utf8(path));
-		const std::string text{ std::istreambuf_iterator<char>(input), {} };
-		require(!input.bad(), "Cannot read complete source fixture " + path_to_utf8(path));
-		return text;
-	}
 
 	std::string with_source_metadata(const std::string& stage, const std::string& member)
 	{
@@ -187,19 +144,19 @@ namespace
 	void check_runtime_source(const std::filesystem::path& content, const std::filesystem::path& scratch)
 	{
 		const auto original = content / "levels/close_quarters.json";
-		const std::string stage = read_bytes(original);
+		const std::string stage = acceptance::read_text(original);
 		const auto path = scratch / "complete-source.json";
 		const std::string name = path_to_utf8(path);
-		write_text(path, stage);
+		acceptance::write_text(path, stage);
 		const LevelLoadedInfo pristine(name.c_str());
 		pristine.validate();
 		const auto refusal = [&](const std::string& bytes)
 		{
-			write_text(path, bytes);
+			acceptance::write_text(path, bytes);
 			std::string diagnostic;
 			try { const LevelLoadedInfo loaded(name.c_str()); }
 			catch (const std::runtime_error& error) { diagnostic = error.what(); }
-			require(read_bytes(path) == bytes, "Runtime admission changed its private source bytes");
+			require(acceptance::read_text(path) == bytes, "Runtime admission changed its private source bytes");
 			return diagnostic;
 		};
 		const auto named_offset = [&](const std::string& diagnostic, std::size_t offset)
@@ -278,10 +235,10 @@ namespace
 
 		const auto hash = [&](const std::string& bytes)
 		{
-			write_text(path, bytes);
+			acceptance::write_text(path, bytes);
 			const LevelLoadedInfo loaded(name.c_str());
 			loaded.validate();
-			require(read_bytes(path) == bytes, "Loading a valid snapshot changed its bytes");
+			require(acceptance::read_text(path) == bytes, "Loading a valid snapshot changed its bytes");
 			return loaded.semantic_hash();
 		};
 		const std::string metadata = with_source_metadata(stage,
@@ -296,12 +253,12 @@ namespace
 		require(hash(with_source_metadata(stage,
 			R"("unknown":{"text":"A\u0000B","utf8":"caf\u00e9","number":1,"order":{"second":null,"first":true}})")) != valid_hash,
 			"Runtime fingerprint lost authored unknown-member order");
-		write_text(path, metadata);
+		acceptance::write_text(path, metadata);
 		const LevelLoadedInfo cached(name.c_str());
-		write_text(path, hidden_suffix);
+		acceptance::write_text(path, hidden_suffix);
 		require(cached.semantic_hash() == valid_hash && !cached.display_name().empty(),
 			"An admitted runtime definition reread subsequently malformed disk bytes");
-		require(read_bytes(original) == stage, "Runtime source checks changed the staged input asset");
+		require(acceptance::read_text(original) == stage, "Runtime source checks changed the staged input asset");
 		std::cout << "PASS complete runtime source: raw NUL suffixes, " << malformed_cases <<
 			" malformed UTF-8 key/value/BOM cases, original offsets, syntax/format precedence, "
 			"valid decoded/hash equivalence and cached private snapshot\n";
@@ -313,10 +270,7 @@ namespace
 		rapidjson::Document document;
 		document.CopyFrom(base, document.GetAllocator());
 		edit(document);
-		rapidjson::StringBuffer buffer;
-		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		require(document.Accept(writer), "Cannot encode fixture " + path_to_utf8(path));
-		write_text(path, std::string(buffer.GetString(), buffer.GetSize()));
+		acceptance::write_document(document, path);
 	}
 
 	void set_string(rapidjson::Document& document, rapidjson::Value& owner, const char* key, const char* value)
@@ -365,15 +319,15 @@ namespace
 		const std::filesystem::path& scratch)
 	{
 		const auto folder = fresh(scratch / "complete-source-scan");
-		const std::string stage = read_bytes(content / "levels/close_quarters.json");
-		write_text(folder / "a-valid.json", stage);
-		write_text(folder / "b-nul.json", stage + '\0' + "unparsed suffix");
-		write_text(folder / "c-value.json", with_source_metadata(stage, "\"unknown\":\"\xc0\xaf\""));
-		write_text(folder / "d-key.json", with_source_metadata(stage, "\"unknown-\xed\xa0\x80\":true"));
+		const std::string stage = acceptance::read_text(content / "levels/close_quarters.json");
+		acceptance::write_text(folder / "a-valid.json", stage);
+		acceptance::write_text(folder / "b-nul.json", stage + '\0' + "unparsed suffix");
+		acceptance::write_text(folder / "c-value.json", with_source_metadata(stage, "\"unknown\":\"\xc0\xaf\""));
+		acceptance::write_text(folder / "d-key.json", with_source_metadata(stage, "\"unknown-\xed\xa0\x80\":true"));
 		Shipped shipped;
 		const UserStageScan result = scan(fixture, content, folder, shipped);
 		require(result.accepted == std::vector<std::string>{ "a-valid" } && result.refused.size() == 3 &&
-			shipped.stages.size() == 14 && shipped.levels.contains("a-valid") &&
+			shipped.stages.size() == shipped.count + 1 && shipped.levels.contains("a-valid") &&
 			!shipped.levels.contains("b-nul") && !shipped.levels.contains("c-value") && !shipped.levels.contains("d-key"),
 			"Mixed runtime source scan lost its valid sibling or published malformed definitions");
 		require(refused(result, "b-nul.json", "NUL") && refused(result, "c-value.json", "encoding") &&
@@ -408,26 +362,26 @@ namespace
 		{
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, scratch / "no-such-folder", shipped);
-			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == 13,
+			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == shipped.count,
 				"A missing user stage folder must add nothing and say nothing");
 		}
 		{
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, fresh(scratch / "empty"), shipped);
-			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == 13,
+			require(result.accepted.empty() && result.refused.empty() && shipped.stages.size() == shipped.count,
 				"An empty user stage folder must add nothing and say nothing");
 		}
 		{
 			const std::filesystem::path file = scratch / "not-a-folder";
 			std::filesystem::remove_all(file);
-			write_text(file, "x");
+			acceptance::write_text(file, "x");
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, file, shipped);
 			require(result.accepted.empty() && result.refused.size() == 1 &&
-				result.refused.front().find("is not a folder") != std::string::npos && shipped.stages.size() == 13,
+				result.refused.front().find("is not a folder") != std::string::npos && shipped.stages.size() == shipped.count,
 				"A file where the folder should be must be one refusal line and no stages");
 		}
-		std::cout << "PASS missing, empty and non-folder user stage paths leave the thirteen shipped stages\n";
+		std::cout << "PASS missing, empty and non-folder user stage paths leave the shipped stages\n";
 	}
 
 	void check_mixed(const Fixture& fixture, const std::filesystem::path& content,
@@ -448,7 +402,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "Second Of Mine");
 		});
-		write_text(folder / "broken.json", "{ \"display_name\": \"Broken\", ");
+		acceptance::write_text(folder / "broken.json", "{ \"display_name\": \"Broken\", ");
 		write_level(base, folder / "no_spawns.json", [](rapidjson::Document& d)
 		{
 			d.RemoveMember("spawn_locations");
@@ -473,7 +427,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "Paint \xF0\x9F\x8E\xA8");
 		});
-		write_text(folder / "notes.txt", "not a stage");
+		acceptance::write_text(folder / "notes.txt", "not a stage");
 		std::filesystem::create_directories(folder / "nested.json");
 
 		Shipped shipped;
@@ -499,12 +453,12 @@ namespace
 		require(refused(result, "-leading.json", "file name"), "A leading hyphen was not refused");
 		require(refused(result, "emoji_name.json", "display_name"), "An undrawable display name was not refused");
 
-		require(shipped.stages.size() == 15, "Stage Select must offer thirteen shipped and two user stages");
-		for (size_t index = 0; index < 13; ++index)
+		require(shipped.stages.size() == shipped.count + 2, "Stage Select must offer the shipped stages and two user stages");
+		for (size_t index = 0; index < shipped.count; ++index)
 		{
 			require(!shipped.stages[index].user, "Shipped stages must stay first and unmarked");
 		}
-		const Stage& mine = shipped.stages[13];
+		const Stage& mine = shipped.stages[shipped.count];
 		require(mine.name == "my_arena" && mine.display_name == "My Arena" && mine.user && mine.include_in_random,
 			"A user stage asking for Random must follow the shipped ones, marked and a Random candidate");
 		// menu_text.stage_names names only shipped stages: a user stage's
@@ -512,7 +466,8 @@ namespace
 		require(fixture.presentation->menu_text().stage_name("my_arena") == nullptr &&
 			fixture.presentation->menu_text().stage_title(mine.name, mine.display_name, "my_arena") == L"My Arena",
 			"A user stage's title must be its own display_name");
-		require(shipped.stages[14].name == "zz-second" && shipped.stages[14].user && !shipped.stages[14].include_in_random,
+		require(shipped.stages[shipped.count + 1].name == "zz-second" && shipped.stages[shipped.count + 1].user &&
+			!shipped.stages[shipped.count + 1].include_in_random,
 			"The second user stage must follow the first, explicit-only without include_in_random");
 		require(shipped.levels.contains("my_arena") && shipped.levels.contains("zz-second") &&
 			!shipped.levels.contains("broken") && !shipped.levels.contains("Crossfeed"),
@@ -521,10 +476,10 @@ namespace
 			"A colliding user stage must not replace the shipped stage");
 		// The opted-in user stage joins the shipped Random pool, which the
 		// hint counts; the one without the key does not.
-		const StageList shipped_only(shipped.stages.begin(), shipped.stages.begin() + 13);
+		const StageList shipped_only(shipped.stages.begin(), shipped.stages.begin() + static_cast<std::ptrdiff_t>(shipped.count));
 		const std::vector<size_t> shipped_random = random_stage_indices(shipped_only);
 		std::vector<size_t> expected_random = shipped_random;
-		expected_random.push_back(13);
+		expected_random.push_back(shipped.count);
 		require(!shipped_random.empty() && random_stage_indices(shipped.stages) == expected_random,
 			"Only the user stage asking for Random may join the Random pool, after the shipped candidates");
 
@@ -535,7 +490,7 @@ namespace
 		AudioResources audio;
 		audio.add_sound_bank("paint_exe", SoundBank::silent());
 		sound_groups::assign(audio, *fixture.tuning, *fixture.presentation, shipped.levels, shipped.stages);
-		std::cout << "PASS a folder of ten files loads its two valid stages after the shipped thirteen and refuses "
+		std::cout << "PASS a folder of ten files loads its two valid stages after the shipped stages and refuses "
 			"broken JSON, a missing key, a missing frame, a sound conflict, a shipped-name collision, "
 			"two bad file names and an undrawable name, one line each\n";
 	}
@@ -569,11 +524,8 @@ namespace
 		{
 			rapidjson::Document document = read_document(content / "presentation.json");
 			edit(document);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			require(document.Accept(writer), "Cannot encode a stage-names fixture");
 			const std::filesystem::path path = scratch / (std::string("stage-names-") + name + ".json");
-			write_text(path, buffer.GetString());
+			acceptance::write_document(document, path);
 			return path.string();
 		};
 		const std::string missing = edited("missing",
@@ -632,7 +584,7 @@ namespace
 		const UserStageScan once = scan(fixture, content, first, shipped);
 		const UserStageScan twice = load_user_stages(second, fixture.checks(), shipped.catalog);
 		require(once.accepted == std::vector<std::string>{ "Twin" } && twice.accepted.empty() &&
-			refused(twice, "twin.json", "another user stage's ('Twin')") && shipped.stages.size() == 14,
+			refused(twice, "twin.json", "another user stage's ('Twin')") && shipped.stages.size() == shipped.count + 1,
 			"A user stage may not take another user stage's name");
 		std::cout << "PASS a user stage cannot take another user stage's name\n";
 	}
@@ -682,7 +634,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "B Arena Edited");
 		});
-		write_text(folder / "broken.json", "{");
+		acceptance::write_text(folder / "broken.json", "{");
 		const UserStageScan second = session.rescan();
 		require(session.latest_scan().accepted == second.accepted && session.latest_scan().refused == second.refused,
 			"The retained rescan outcome lost a refused file");

@@ -15,7 +15,7 @@ int main(int argc, char** argv)
         require(!fs::exists(evidence), "Refusing earlier registered slab stage receipts");
         fs::create_directories(evidence);
         qualify(fs::absolute(argv[1]), fs::absolute(argv[2]), evidence);
-        std::cout << "PASS registered slab stage: source/staged identity, explicit-only selection and public1/2/3/4P short endings. "
+        std::cout << "PASS registered slab stage: source/staged identity, explicit-only selection and public 1/2/3/4P short endings. "
             "CPU preconditions only; no native rendering or human balance acceptance. Receipts=" << evidence.string() << '\n';
         return 0;
     });

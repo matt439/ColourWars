@@ -292,8 +292,8 @@ private:
 		const MenuPaperArtPresentation& art);
 	std::unique_ptr<OptionRow> duration_row_;
 	std::unique_ptr<OptionRow> stage_rule_row_;
-	labrador::FontHandle duration_font_{};
-	std::string duration_font_name_;
+	labrador::FontHandle value_font_{};
+	std::string value_font_name_;
 	float duration_row_spacing_ = 0.0f;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -318,10 +318,10 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _1_player = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _2_players = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _3_players = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _4_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> one_player_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> two_players_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> three_players_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> four_players_ = nullptr;
 	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 
 	int activating_slot_ = -1;

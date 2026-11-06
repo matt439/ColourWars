@@ -6,7 +6,7 @@
 #include "game/input/input_slots.h"
 #include "game/input/action_bindings.h"
 #include "game/config/tuning.h"
-#include "game/states/menu_input_action.h"
+#include "game/input/menu_input_action.h"
 #include <array>
 #include <vector>
 

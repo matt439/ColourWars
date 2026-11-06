@@ -22,6 +22,7 @@
 #include "engine/render/resolution_manager.h"
 #include "engine/render/sprite_font_file.h"
 #include "engine/render/viewport_manager.h"
+#include "scripts/acceptance/support/content_world.h"
 #include <memory>
 
 namespace debug_console_acceptance
@@ -49,24 +50,7 @@ namespace debug_console_acceptance
 		CpuWorld(const std::filesystem::path& content, const GameTuning& tuning,
 			const Presentation& presentation)
 		{
-			for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-			{
-				this->render.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
-					(content / "textures" / (std::string(sheet) + ".json")).string().c_str(),
-					labrador::TextureHandle{}));
-			}
-			for (const char* font : { "bowlby_one_144", "lato_black_24",
-				"lato_black_36", "lato_black_48", "lato_black_72",
-				"lato_black_144", "courier_prime_bold_16" })
-			{
-				const labrador::SpriteFontFile file = labrador::read_sprite_font_file(
-					(content / "fonts" / (std::string(font) + ".spritefont")).string());
-				auto loaded = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs,
-					file.line_spacing);
-				if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-				this->render.add_font(font, std::move(loaded));
-			}
-			this->audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
+			acceptance::load_cpu_assets(content, this->render, this->audio);
 			const Stage listed[] = { { "movement_course", "Movement Course", "icon", false },
 				{ "close_quarters", "Close Quarters", "icon", true } };
 			for (const Stage& stage : listed)

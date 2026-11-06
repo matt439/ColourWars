@@ -5,8 +5,8 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     Presentation& presentation, const std::filesystem::path& output)
 {
     const auto profile = output / "rumble-settings-profile";
-    const NestedSaveProfile isolated(profile);
-    const auto save_path = profile / "ColourWars/save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto save_path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;
@@ -96,20 +96,20 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     tick(); tick(); input.reset_actions();
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+    stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
     stack.push(std::make_unique<ControlsSettingsMenu>(&context, 3)); tick(); tick();
     // Parent audio remains pending while its physical owner opens the child.
     move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::dpad_right);
     move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::a);
     require(stack.depth() == 3, "Controls did not open actual Pad sticks for its sparse physical owner");
     move(GamepadButton::dpad_down, 3);
-    const Frame on = main_menu_frame(app);
+    const Frame on = stack_frame(app);
     const std::string initial_bytes = bytes();
     pad(1, GamepadButton::dpad_left); keyboard(Key::left);
-    require(main_menu_frame(app).pixels == on.pixels && bytes() == initial_bytes,
+    require(stack_frame(app).pixels == on.pixels && bytes() == initial_bytes,
         "Another pad or keyboard changed a connected owner's rumble selection");
     pad(3, GamepadButton::dpad_left);
-    const Frame off = main_menu_frame(app);
+    const Frame off = stack_frame(app);
     require(bytes() == initial_bytes, "Pending rumble Off wrote the save before Apply");
     verify("pending-off", { true, true, true, true }, { true, true, true, true }, 0, 0);
     const auto& look = presentation.controls_settings();
@@ -121,9 +121,9 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
         app.viewport_manager()->fullscreen_viewport());
     camera.calculate_view_rectangle(changed);
     const RectangleI delta = foreground_delta_bounds(on, off);
-    require(delta.width > 0 && delta.height > 0 && countdown_crop_bounds(changed).contains(delta),
+    require(delta.width > 0 && delta.height > 0 && pixel_bounds(changed).contains(delta),
         "Actual rumble On/Off lettering did not change within its complete row");
-    require(off.pixels == main_menu_frame(app).pixels, "Frozen rumble settings draw changed pixels");
+    require(off.pixels == stack_frame(app).pixels, "Frozen rumble settings draw changed pixels");
     save(on, output / "rumble-settings-on.ppm"); save(off, output / "rumble-settings-off.ppm");
     move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     verify("applied-off", { true, true, true, false }, { true, true, true, false }, 0, 0);
@@ -181,7 +181,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     pad(3, GamepadButton::dpad_down); pad(3, GamepadButton::a);
     require(stack.depth() == 2, "Pad sticks Back after a comfort Apply did not return to Controls");
     require(cases == 10 && records.good(), "Rumble settings evidence is incomplete");
-    std::cout << "PASS rumble settings: actual Controls/Pad sticks, sparse owner3 with earlier connected slot1, "
+    std::cout << "PASS rumble settings: actual Controls/Pad sticks, sparse owner 3 with earlier connected slot 1, "
         "pending On/Off, Apply/reload/repeat, Back/Escape discard, one failed save/recovery, unrelated settings and "
         "parent/edited-slot merge; one pad's View shake Off pending then applied to that slot only; two 720p captures, no native motor call or physical comfort claim\n";
 }

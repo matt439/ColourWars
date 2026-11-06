@@ -54,12 +54,12 @@ namespace colourwars_editor
         auto& collision = source["collision_objects"][static_cast<rapidjson::SizeType>(object.index)];
         const std::string object_name = collision["name"].GetString();
         rapidjson::Value level_metadata(rapidjson::kObjectType);
-        level_metadata.AddMember("display_name", "ED16 nested level name", allocator);
+        level_metadata.AddMember("display_name", "ED#16 nested level name", allocator);
         source.AddMember("", level_metadata, allocator);
         rapidjson::Value object_metadata(rapidjson::kObjectType);
         object_metadata.AddMember("type", "StructureRamp", allocator);
         object_metadata.AddMember("collision_type", "STRUCTURE_RAMP_RIGHT", allocator);
-        object_metadata.AddMember("name", "ED16 nested object name", allocator);
+        object_metadata.AddMember("name", "ED#16 nested object name", allocator);
         collision.AddMember("", object_metadata, allocator);
         const std::string disk = empty_key_native_json(source);
         {
@@ -109,12 +109,12 @@ namespace colourwars_editor
 
         // First new regression uses the real row chosen by its unique value,
         // not a hand-written pointer that would bypass the faulty generator.
-        edit_value("ED16 nested level name", L"ED16 edited level metadata");
+        edit_value("ED#16 nested level name", L"ED#16 edited level metadata");
         auto parsed = empty_key_native_parse(editor.document_.serialize());
         require(std::string(parsed["display_name"].GetString()) == stage_name &&
-            std::string(parsed[""]["display_name"].GetString()) == "ED16 edited level metadata",
+            std::string(parsed[""]["display_name"].GetString()) == "ED#16 edited level metadata",
             "Empty-key inspector edit changed the real level field instead of its metadata leaf");
-        require(editor.properties_[static_cast<std::size_t>(row_for_value("ED16 edited level metadata"))].path ==
+        require(editor.properties_[static_cast<std::size_t>(row_for_value("ED#16 edited level metadata"))].path ==
             "//display_name", "Empty-key inspector row lost its explicit empty first pointer token");
         const std::string first = editor.document_.serialize();
         require(editor.document_.dirty() && editor.document_.can_undo() && !editor.document_.can_redo() &&
@@ -122,13 +122,13 @@ namespace colourwars_editor
             "Empty-key native Apply changed the path/source or lost its first history entry");
 
         editor.select(object);
-        edit_value("ED16 nested object name", L"ED16 edited object metadata");
+        edit_value("ED#16 nested object name", L"ED#16 edited object metadata");
         parsed = empty_key_native_parse(editor.document_.serialize());
         const auto& actual = parsed["collision_objects"][static_cast<rapidjson::SizeType>(object.index)];
         require(std::string(actual["name"].GetString()) == object_name &&
-            std::string(actual[""]["name"].GetString()) == "ED16 edited object metadata" &&
+            std::string(actual[""]["name"].GetString()) == "ED#16 edited object metadata" &&
             std::string(parsed["display_name"].GetString()) == stage_name &&
-            std::string(parsed[""]["display_name"].GetString()) == "ED16 edited level metadata",
+            std::string(parsed[""]["display_name"].GetString()) == "ED#16 edited level metadata",
             "Empty-key native object Apply changed a real object field or another metadata target");
         const std::string second = editor.document_.serialize();
 

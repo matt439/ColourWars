@@ -50,17 +50,6 @@ namespace crossfeed_acceptance
                 "Crossfeed repaint seed did not cover every actual runtime scoring tile");
         }
 
-        float steer(const Run& run, float goal)
-        {
-            const float error = goal - run.player->center().x;
-            const float velocity = run.player->velocity().x;
-            const float stopping = velocity * velocity /
-                (2.0f * run.services.tuning.player().x_deacceleration) + std::fabs(velocity) * dt + 4.0f;
-            if (std::fabs(error) < 5.0f || (velocity != 0.0f &&
-                (velocity > 0.0f) == (error > 0.0f) && std::fabs(error) <= stopping)) { return 0.0f; }
-            return error > 0.0f ? 1.0f : -1.0f;
-        }
-
         bool arrived(const Run& run, float goal)
         {
             return std::fabs(run.player->center().x - goal) <= 8.0f &&
@@ -111,7 +100,6 @@ namespace crossfeed_acceptance
             seed_paint(run, initial);
             // Initial paint can trigger cosmetic work. Seed immediately before
             // identical active inputs, so each ownership condition shares RNG.
-            std::srand(2401026);
             const float total = run.total_area();
             const float owned_before = run.team_area(team);
             const float enemy_before = run.team_area(opposing_team(team));
@@ -140,7 +128,7 @@ namespace crossfeed_acceptance
                 const float goal = x(phase == 0 ? 2450.0f : 1150.0f);
                 const float direction = (right != (phase == 1)) ? 1.0f : -1.0f;
                 PlayerInputData actions = aimed(direction > 0.0f ? pi / 3.0f : 2.0f * pi / 3.0f,
-                    input(steer(run, goal)));
+                    input(steering(run, goal)));
                 actions.primary_shoot = fire;
                 run.tick(actions);
                 result.trajectory.push_back({ actions.x_movement, run.player->center().x, run.player->center().y,

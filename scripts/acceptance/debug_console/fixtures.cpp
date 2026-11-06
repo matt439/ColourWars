@@ -62,20 +62,7 @@ namespace debug_console_acceptance
 		return result;
 	}
 
-	std::string read_text(const std::filesystem::path& path)
-	{
-		std::ifstream stream(path, std::ios::binary);
-		require(stream.good(), "Could not read " + path.string());
-		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-	}
 
-	void write_text(const std::filesystem::path& path, const std::string& text)
-	{
-		std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-		stream.write(text.data(), static_cast<std::streamsize>(text.size()));
-		stream.close();
-		require(!stream.fail(), "Could not write " + path.string());
-	}
 
 	std::string to_lf(std::string text)
 	{
@@ -118,24 +105,10 @@ namespace debug_console_acceptance
 
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation)
 	{
-		return { presentation.movement_feedback().colour, presentation.movement_feedback().highlight,
-			presentation.movement_feedback().keyline, presentation.debug_overlay().colour,
-			presentation.debug_overlay().shadow_colour, presentation.debug_overlay().station_label.colour,
-			presentation.main_menu().home_background_colour, presentation.main_menu().team_select.selected,
-			presentation.main_menu().team_select.unselected, presentation.main_menu().weapon_select.selected,
-			presentation.main_menu().weapon_select.unselected, presentation.weapon_feedback().highlight,
-			presentation.weapon_feedback().keyline, presentation.player_identity().ink_colour,
-			presentation.player_identity().background_colour, presentation.combat_feedback().highlight,
-			presentation.combat_feedback().keyline, presentation.blocked_shot().highlight,
-			presentation.blocked_shot().keyline, presentation.idle_drip().keyline,
-			presentation.respawn_redraw().pen_colour, presentation.opening().cursor_art.ink,
-			presentation.opening().cursor_art.fill, presentation.opening().silhouette_art.ink,
-			presentation.opening().silhouette_art.rim, presentation.opening().silhouette_art.shade,
-			presentation.opening().reveal_art.ink, presentation.opening().reveal_art.paper,
-			presentation.opening().reveal_art.shade, presentation.opening().cursor_art.shade,
-			presentation.opening().cursor_art.shadow, presentation.opening().desktop_colour,
-			presentation.opening().monitor_art.power_light, presentation.opening().program_colour,
-			presentation.opening().face, presentation.opening().sweat, presentation.opening().glass_colour, presentation.opening().silhouette, presentation.opening().scribble, presentation.hud().health_colour, presentation.hud().meter_track_colour, presentation.opening().crack, presentation.figure().arm_colour, presentation.figure().hand_colour, presentation.figure().quiet.face_colour, presentation.hud().timer_colour, presentation.hud().timer_shadow_colour, presentation.hud().closing_clock.text, presentation.hud().player_identity_colour, presentation.hud().player_identity_shadow_colour, presentation.main_menu().stage_select.preview_background, presentation.hud().closing_clock.ink, presentation.hud().closing_clock.paper, presentation.hud().closing_clock.accent, presentation.hud().closing_clock.shade, presentation.hud().paper.ink, presentation.hud().paper.paper, presentation.hud().paper.shade };
+		std::vector<labrador::Colour> values;
+		values.reserve(tuned_colours.size());
+		for (const TunedColour& colour : tuned_colours) { values.push_back(colour.value(presentation)); }
+		return values;
 	}
 #endif
 }

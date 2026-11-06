@@ -6,11 +6,10 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const Presentation original = presentation;
     const MatchTuning original_match = tuning.match();
     require(!app.fullscreen(), "Resolution text probe requires its ordinary hidden windowed application");
-    const NestedSaveProfile profile(output / "resolution-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
+    const acceptance::IsolatedSave profile(output / "resolution-profile");
     PlaySettings play; play.music_volume = play.sfx_volume = 0;
     play.aim_sensitivity = 4; play.view_shake = false; play.reduce_effects = true;
-    const_cast<PlaySettings&>(preferences_session.play_settings()) = play;
+    Save preferences; preferences.set_play_settings(play); SettingsSession preferences_session(preferences);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
@@ -31,9 +30,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     std::string saved, saved_preset = "1920x1080";
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "resolution-profile/ColourWars/save_data.json", std::ios::binary);
-        require(file.good(), "Resolution text probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const auto seed = [&](ScreenResolution resolution, bool fullscreen, const char* literal)
     {
@@ -191,7 +188,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(rectangle); return countdown_crop_bounds(rectangle);
+        camera.calculate_view_rectangle(rectangle); return pixel_bounds(rectangle);
     };
     std::ofstream records(output / "resolution-values.csv");
     records << "case,width,height,focus,saved_preset,saved_fullscreen,pending_fullscreen,enabled,expected_value,font,raw_width,raw_height,width_scale,height_scale,scale,row_width,row_height,fit,full_row_match,ornament_inside,frozen_state_rng\n";
@@ -262,7 +259,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     tap(Key::left); compare("pending-on-cycle", original, L"1920x1080", 0, true);
 
     const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.main_menu().options_font));
-    std::vector<Glyph> tall, shifted;
+    std::vector<Glyph> tall;
     for (char32_t character = U' '; character <= U'~'; ++character)
     {
         const Glyph* source_glyph = source->find(character);
@@ -270,16 +267,10 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         Glyph glyph = *source_glyph;
         if (character == U'~') { glyph.y_offset += 100.0f; }
         tall.push_back(glyph);
-        if (character == U'~') { continue; }
-        glyph = *source_glyph;
-        if (character >= U'0' && character <= U'9') { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-        shifted.push_back(glyph);
     }
     const std::string old_font = "resolution_tall_tilde", next_font = "resolution_numeric_shift";
     app.render_resources()->add_font(old_font, std::make_unique<Font>(source->atlas(), std::move(tall), source->line_spacing()));
-    app.render_resources()->add_font(next_font, std::make_unique<Font>(source->atlas(), std::move(shifted), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_font), L"~"),
-        "Resolution replacement numeric font still draws the old retained template's tilde");
+    add_probe_font(*app.render_resources(), original.main_menu().options_font, next_font, is_digit);
     Presentation old = original, next = original;
     const_cast<MenuText&>(old.menu_text()).values.resolution = L"OLD~ real studio display pixels: {width}x{height}";
     const_cast<MainMenuPresentation&>(old.main_menu()).options_font = old_font;

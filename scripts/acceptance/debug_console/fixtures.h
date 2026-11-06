@@ -10,7 +10,8 @@
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/scratch.h"
+#include "scripts/acceptance/support/isolated_save.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>
@@ -18,6 +19,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -26,14 +28,31 @@
 #include "game/debug/commands/debug_log.h"
 #include "game/debug/console/debug_menu_model.h"
 #include "game/debug/replay/match_plan.h"
+#include "game/debug/tune/json_spans.h"
 #include "game/game_data.h"
 #include <process.h>
+class Level;
 #endif
 
 namespace debug_console_acceptance
 {
 	using acceptance::require;
+	// stage_replay_checks.cpp; the one check here Release also runs. The
+	// Debug checks main calls are declared at the end of this file.
 	void check_loaded_stage_semantics();
+
+	// The Windows device stems every debug file name refuses: CON, PRN, AUX,
+	// NUL, then COM1-COM9 and LPT1-LPT9 in pairs.
+	inline std::vector<std::string> reserved_windows_stems()
+	{
+		std::vector<std::string> stems{ "CON", "PRN", "AUX", "NUL" };
+		for (int digit = 1; digit <= 9; ++digit)
+		{
+			stems.push_back("COM" + std::to_string(digit));
+			stems.push_back("LPT" + std::to_string(digit));
+		}
+		return stems;
+	}
 
 	// A match as the director sees it: counts updates and rebuilds, records
 	// each update's jump/debug/intro edges, and can finish after a number of updates.
@@ -269,8 +288,8 @@ namespace debug_console_acceptance
 
 	std::size_t row_index(const std::vector<DebugMenuRow>& rows, const std::string& label);
 	std::vector<std::string> labels(const std::vector<DebugMenuRow>& rows);
-	std::string read_text(const std::filesystem::path& path);
-	void write_text(const std::filesystem::path& path, const std::string& text);
+	using acceptance::read_text;
+	using acceptance::write_text;
 	std::string to_lf(std::string text);
 	std::size_t count_of(const std::string& text, const std::string& what);
 
@@ -339,11 +358,37 @@ namespace debug_console_acceptance
 		ScratchFolder& operator=(const ScratchFolder&) = delete;
 	};
 
+	// A leaf the check needs: a missing path fails the check by name, where
+	// dereferencing find() would crash the probe.
+	// Takes a JsonSpanDocument or a TuneDocument.
+	template <typename Document>
+	const JsonLeaf& require_leaf(const Document& document, std::string_view path)
+	{
+		const JsonLeaf* const found = document.find(path);
+		require(found != nullptr, "The JSON document has no leaf " + std::string(path));
+		return *found;
+	}
+
 	std::size_t log_index(const DebugLog& log, const std::string& text);
 	bool any_line(const DebugLog& log, const std::string& text);
 
-	// The fifty-eight audited colour tune paths and their values, in the same order;
-	// shared by tune_checks.cpp, tune_document_checks.cpp and tune_menu_checks.cpp.
+	// The fifty-eight audited colour tune paths, one row each: the path and the
+	// Presentation field it sets. Shared by tune_checks.cpp, tune_document_checks.cpp,
+	// tune_menu_checks.cpp and the tune_*_colour_checks.h pieces, which name a row by
+	// its index.
+	inline constexpr std::size_t movement_colour_index = 0;
+	inline constexpr std::size_t movement_highlight_colour_index = 1;
+	inline constexpr std::size_t movement_keyline_colour_index = 2;
+	inline constexpr std::size_t overlay_colour_index = 3;
+	inline constexpr std::size_t overlay_shadow_colour_index = 4;
+	inline constexpr std::size_t station_label_colour_index = 5;
+	inline constexpr std::size_t home_background_colour_index = 6;
+	inline constexpr std::size_t team_selected_colour_index = 7;
+	inline constexpr std::size_t team_unselected_colour_index = 8;
+	inline constexpr std::size_t weapon_selected_colour_index = 9;
+	inline constexpr std::size_t weapon_unselected_colour_index = 10;
+	inline constexpr std::size_t feedback_highlight_colour_index = 11;
+	inline constexpr std::size_t feedback_keyline_colour_index = 12;
 	inline constexpr std::size_t identity_ink_colour_index = 13;
 	inline constexpr std::size_t identity_background_colour_index = 14;
 	inline constexpr std::size_t combat_highlight_colour_index = 15;
@@ -383,52 +428,104 @@ namespace debug_console_acceptance
 	inline constexpr std::size_t hud_identity_shadow_colour_index = 49;
 	inline constexpr std::size_t stage_preview_background_colour_index = 50;
 	inline constexpr std::size_t closing_clock_ink_colour_index = 51;
-    inline constexpr std::size_t closing_clock_paper_colour_index = 52;
-    inline constexpr std::size_t closing_clock_accent_colour_index = 53;
-    // Independent reader contract: these four exact closing fields are opaque.
-    inline constexpr bool opaque_closing_colour_index(std::size_t index)
-    {
-        return index == closing_clock_text_colour_index || index == closing_clock_ink_colour_index ||
-            index == closing_clock_paper_colour_index || index == closing_clock_accent_colour_index;
-    }
-    inline constexpr std::size_t closing_clock_shade_colour_index = 54;
-    inline constexpr std::size_t hud_paper_ink_colour_index = 55;
-    inline constexpr std::size_t hud_paper_paper_colour_index = 56;
-    inline constexpr std::size_t hud_paper_shade_colour_index = 57;
-    // Shared HUD paper has its own coupled opaque/distinct reader contract.
-    inline constexpr bool opaque_hud_paper_colour_index(std::size_t index)
-    {
-        return index == hud_paper_ink_colour_index || index == hud_paper_paper_colour_index;
-    }
-    inline constexpr bool hud_paper_colour_index(std::size_t index)
-    {
-        return opaque_hud_paper_colour_index(index) || index == hud_paper_shade_colour_index;
-    }
-    // Positive alpha is independent of family routing and opaque/zero-allowed fields.
-    inline constexpr bool positive_alpha_colour_index(std::size_t index)
-    {
-        return index == closing_clock_shade_colour_index || index == hud_paper_shade_colour_index;
-    }
-    inline const std::array<const char*, 58> colour_paths{
-		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
-		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
-		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
-		"presentation.main_menu.backgrounds.home", "presentation.main_menu.team_select.selected",
-		"presentation.main_menu.team_select.unselected", "presentation.main_menu.weapon_select.selected",
-		"presentation.main_menu.weapon_select.unselected", "presentation.weapon_feedback.highlight",
-		"presentation.weapon_feedback.keyline", "presentation.player_identity.ink_colour",
-		"presentation.player_identity.background_colour", "presentation.combat_feedback.highlight",
-		"presentation.combat_feedback.keyline", "presentation.blocked_shot.highlight",
-		"presentation.blocked_shot.keyline", "presentation.idle_drip.keyline",
-		"presentation.respawn_redraw.pen_colour", "presentation.opening.cursor_art.ink",
-		"presentation.opening.cursor_art.fill", "presentation.opening.silhouette_art.ink",
-		"presentation.opening.silhouette_art.rim", "presentation.opening.silhouette_art.shade",
-		"presentation.opening.reveal_art.ink", "presentation.opening.reveal_art.paper",
-		"presentation.opening.reveal_art.shade", "presentation.opening.cursor_art.shade",
-		"presentation.opening.cursor_art.shadow", "presentation.opening.desktop_colour",
-		"presentation.opening.monitor_art.power_light", "presentation.opening.program_colour",
-		"presentation.opening.acting.face", "presentation.opening.acting.sweat",
-		"presentation.opening.glass_colour", "presentation.opening.silhouette", "presentation.opening.scribble", "presentation.hud.health_colour", "presentation.hud.meter_track_colour", "presentation.opening.crack", "presentation.figure.arm_colour", "presentation.figure.hand_colour", "presentation.figure.quiet.face_colour", "presentation.hud.timer.colour", "presentation.hud.timer.shadow_colour", "presentation.hud.closing_clock.text", "presentation.hud.player_identity.colour", "presentation.hud.player_identity.shadow_colour", "presentation.main_menu.stage_select.preview_background", "presentation.hud.closing_clock.ink", "presentation.hud.closing_clock.paper", "presentation.hud.closing_clock.accent", "presentation.hud.closing_clock.shade", "presentation.hud.paper.ink", "presentation.hud.paper.paper", "presentation.hud.paper.shade" };
+	inline constexpr std::size_t closing_clock_paper_colour_index = 52;
+	inline constexpr std::size_t closing_clock_accent_colour_index = 53;
+	inline constexpr std::size_t closing_clock_shade_colour_index = 54;
+	inline constexpr std::size_t hud_paper_ink_colour_index = 55;
+	inline constexpr std::size_t hud_paper_paper_colour_index = 56;
+	inline constexpr std::size_t hud_paper_shade_colour_index = 57;
+	struct TunedColour
+	{
+		const char* path;
+		labrador::Colour (*value)(const Presentation&);
+	};
+	inline constexpr std::array<TunedColour, 58> tuned_colours{ {
+		{ "presentation.movement_feedback.colour", [](const Presentation& p) { return p.movement_feedback().colour; } },
+		{ "presentation.movement_feedback.highlight", [](const Presentation& p) { return p.movement_feedback().highlight; } },
+		{ "presentation.movement_feedback.keyline", [](const Presentation& p) { return p.movement_feedback().keyline; } },
+		{ "presentation.debug_overlay.colour", [](const Presentation& p) { return p.debug_overlay().colour; } },
+		{ "presentation.debug_overlay.shadow_colour", [](const Presentation& p) { return p.debug_overlay().shadow_colour; } },
+		{ "presentation.debug_overlay.station_label.colour", [](const Presentation& p) { return p.debug_overlay().station_label.colour; } },
+		{ "presentation.main_menu.backgrounds.home", [](const Presentation& p) { return p.main_menu().home_background_colour; } },
+		{ "presentation.main_menu.team_select.selected", [](const Presentation& p) { return p.main_menu().team_select.selected; } },
+		{ "presentation.main_menu.team_select.unselected", [](const Presentation& p) { return p.main_menu().team_select.unselected; } },
+		{ "presentation.main_menu.weapon_select.selected", [](const Presentation& p) { return p.main_menu().weapon_select.selected; } },
+		{ "presentation.main_menu.weapon_select.unselected", [](const Presentation& p) { return p.main_menu().weapon_select.unselected; } },
+		{ "presentation.weapon_feedback.highlight", [](const Presentation& p) { return p.weapon_feedback().highlight; } },
+		{ "presentation.weapon_feedback.keyline", [](const Presentation& p) { return p.weapon_feedback().keyline; } },
+		{ "presentation.player_identity.ink_colour", [](const Presentation& p) { return p.player_identity().ink_colour; } },
+		{ "presentation.player_identity.background_colour", [](const Presentation& p) { return p.player_identity().background_colour; } },
+		{ "presentation.combat_feedback.highlight", [](const Presentation& p) { return p.combat_feedback().highlight; } },
+		{ "presentation.combat_feedback.keyline", [](const Presentation& p) { return p.combat_feedback().keyline; } },
+		{ "presentation.blocked_shot.highlight", [](const Presentation& p) { return p.blocked_shot().highlight; } },
+		{ "presentation.blocked_shot.keyline", [](const Presentation& p) { return p.blocked_shot().keyline; } },
+		{ "presentation.idle_drip.keyline", [](const Presentation& p) { return p.idle_drip().keyline; } },
+		{ "presentation.respawn_redraw.pen_colour", [](const Presentation& p) { return p.respawn_redraw().pen_colour; } },
+		{ "presentation.opening.cursor_art.ink", [](const Presentation& p) { return p.opening().cursor_art.ink; } },
+		{ "presentation.opening.cursor_art.fill", [](const Presentation& p) { return p.opening().cursor_art.fill; } },
+		{ "presentation.opening.silhouette_art.ink", [](const Presentation& p) { return p.opening().silhouette_art.ink; } },
+		{ "presentation.opening.silhouette_art.rim", [](const Presentation& p) { return p.opening().silhouette_art.rim; } },
+		{ "presentation.opening.silhouette_art.shade", [](const Presentation& p) { return p.opening().silhouette_art.shade; } },
+		{ "presentation.opening.reveal_art.ink", [](const Presentation& p) { return p.opening().reveal_art.ink; } },
+		{ "presentation.opening.reveal_art.paper", [](const Presentation& p) { return p.opening().reveal_art.paper; } },
+		{ "presentation.opening.reveal_art.shade", [](const Presentation& p) { return p.opening().reveal_art.shade; } },
+		{ "presentation.opening.cursor_art.shade", [](const Presentation& p) { return p.opening().cursor_art.shade; } },
+		{ "presentation.opening.cursor_art.shadow", [](const Presentation& p) { return p.opening().cursor_art.shadow; } },
+		{ "presentation.opening.desktop_colour", [](const Presentation& p) { return p.opening().desktop_colour; } },
+		{ "presentation.opening.monitor_art.power_light", [](const Presentation& p) { return p.opening().monitor_art.power_light; } },
+		{ "presentation.opening.program_colour", [](const Presentation& p) { return p.opening().program_colour; } },
+		{ "presentation.opening.acting.face", [](const Presentation& p) { return p.opening().face; } },
+		{ "presentation.opening.acting.sweat", [](const Presentation& p) { return p.opening().sweat; } },
+		{ "presentation.opening.glass_colour", [](const Presentation& p) { return p.opening().glass_colour; } },
+		{ "presentation.opening.silhouette", [](const Presentation& p) { return p.opening().silhouette; } },
+		{ "presentation.opening.scribble", [](const Presentation& p) { return p.opening().scribble; } },
+		{ "presentation.hud.health_colour", [](const Presentation& p) { return p.hud().health_colour; } },
+		{ "presentation.hud.meter_track_colour", [](const Presentation& p) { return p.hud().meter_track_colour; } },
+		{ "presentation.opening.crack", [](const Presentation& p) { return p.opening().crack; } },
+		{ "presentation.figure.arm_colour", [](const Presentation& p) { return p.figure().arm_colour; } },
+		{ "presentation.figure.hand_colour", [](const Presentation& p) { return p.figure().hand_colour; } },
+		{ "presentation.figure.quiet.face_colour", [](const Presentation& p) { return p.figure().quiet.face_colour; } },
+		{ "presentation.hud.timer.colour", [](const Presentation& p) { return p.hud().timer_colour; } },
+		{ "presentation.hud.timer.shadow_colour", [](const Presentation& p) { return p.hud().timer_shadow_colour; } },
+		{ "presentation.hud.closing_clock.text", [](const Presentation& p) { return p.hud().closing_clock.text; } },
+		{ "presentation.hud.player_identity.colour", [](const Presentation& p) { return p.hud().player_identity_colour; } },
+		{ "presentation.hud.player_identity.shadow_colour", [](const Presentation& p) { return p.hud().player_identity_shadow_colour; } },
+		{ "presentation.main_menu.stage_select.preview_background", [](const Presentation& p) { return p.main_menu().stage_select.preview_background; } },
+		{ "presentation.hud.closing_clock.ink", [](const Presentation& p) { return p.hud().closing_clock.ink; } },
+		{ "presentation.hud.closing_clock.paper", [](const Presentation& p) { return p.hud().closing_clock.paper; } },
+		{ "presentation.hud.closing_clock.accent", [](const Presentation& p) { return p.hud().closing_clock.accent; } },
+		{ "presentation.hud.closing_clock.shade", [](const Presentation& p) { return p.hud().closing_clock.shade; } },
+		{ "presentation.hud.paper.ink", [](const Presentation& p) { return p.hud().paper.ink; } },
+		{ "presentation.hud.paper.paper", [](const Presentation& p) { return p.hud().paper.paper; } },
+		{ "presentation.hud.paper.shade", [](const Presentation& p) { return p.hud().paper.shade; } },
+	} };
+	static_assert(hud_paper_shade_colour_index + 1 == tuned_colours.size(), "Every row has a named index");
+	inline const std::array<const char*, 58> colour_paths = []
+	{
+		std::array<const char*, 58> paths{};
+		for (std::size_t index = 0; index < paths.size(); ++index) { paths[index] = tuned_colours[index].path; }
+		return paths;
+	}();
+	// Independent reader contract: these four exact closing fields are opaque.
+	inline constexpr bool opaque_closing_colour_index(std::size_t index)
+	{
+		return index == closing_clock_text_colour_index || index == closing_clock_ink_colour_index ||
+			index == closing_clock_paper_colour_index || index == closing_clock_accent_colour_index;
+	}
+	// Shared HUD paper has its own coupled opaque/distinct reader contract.
+	inline constexpr bool opaque_hud_paper_colour_index(std::size_t index)
+	{
+		return index == hud_paper_ink_colour_index || index == hud_paper_paper_colour_index;
+	}
+	inline constexpr bool hud_paper_colour_index(std::size_t index)
+	{
+		return opaque_hud_paper_colour_index(index) || index == hud_paper_shade_colour_index;
+	}
+	// Positive alpha is independent of family routing and opaque/zero-allowed fields.
+	inline constexpr bool positive_alpha_colour_index(std::size_t index)
+	{
+		return index == closing_clock_shade_colour_index || index == hud_paper_shade_colour_index;
+	}
 	std::vector<labrador::Colour> colour_values(const Presentation& presentation);
 
 	// bind_persistence_checks.cpp
@@ -482,6 +579,15 @@ namespace debug_console_acceptance
 
 	// replay_codec_checks.cpp
 	void check_replay_codec();
+
+	// bot_status_checks.cpp
+	void check_bot_status_labels(GameTuning& tuning, Presentation& presentation);
+
+	// bot_replay_checks.cpp
+	void check_bot_replay_inputs(const Level& level);
+
+	// stage_replay_checks.cpp
+	void check_loaded_stage_replay(const std::filesystem::path& game_directory);
 
 	// replay_checks.cpp
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);

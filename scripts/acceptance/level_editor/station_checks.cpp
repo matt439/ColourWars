@@ -2,6 +2,7 @@
 // game's own rules (game/contracts/station_contract.h), on every edit and at load, in
 // the game's words, before save rather than at game load.
 #include "scripts/acceptance/level_editor/fixtures.h"
+#include "editor/content_catalog.h"
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -20,18 +21,6 @@ namespace level_editor_acceptance
             throw std::runtime_error("Out of bounds entry is absent");
         }
 
-        void refuses(const std::function<void()>& action, const std::string& expected, const char* message)
-        {
-            bool rejected = false;
-            try { action(); }
-            catch (const std::exception& error)
-            {
-                rejected = true;
-                require(std::string(error.what()).find(expected) != std::string::npos,
-                    std::string(message) + ": diagnostic was '" + error.what() + "'");
-            }
-            require(rejected, message);
-        }
     }
 
     void check_stations(const fs::path& repo, const fs::path& scratch)
@@ -41,7 +30,7 @@ namespace level_editor_acceptance
         // Shrinking Press Tower's out_of_bounds past `crown` (1774, 620) is
         // refused like the game's startup check, with history intact.
         const auto press_tower = repo / "game/content/levels/press_tower.json";
-        const std::string original = contents(press_tower);
+        const std::string original = read_text(press_tower);
         LevelDocument document(tuning);
         document.load(press_tower);
         require(document.validate().empty() && !document.dirty(), "Press Tower did not open clean");
@@ -59,7 +48,7 @@ namespace level_editor_acceptance
         // Every invalid station shape, as a file: refused at load with the
         // shared rules' words, leaving the open document as it was.
         const auto course = repo / "game/content/levels/movement_course.json";
-        const std::string course_text = contents(course);
+        const std::string course_text = read_text(course);
         const auto variant = [&](const char* name, const std::function<void(rapidjson::Value&, rapidjson::Document&)>& edit)
         {
             auto document_json = parse(course_text);
@@ -68,7 +57,7 @@ namespace level_editor_acceptance
                 if (std::string(entry["name"].GetString()) == "drop_through") { edit(entry, document_json); }
             }
             const auto path = scratch / (std::string("station-") + name + ".json");
-            write(path, encode(document_json));
+            write_text(path, encode(document_json));
             return path;
         };
         LevelDocument checker(tuning);
@@ -106,20 +95,28 @@ namespace level_editor_acceptance
             { entry["lesson"]["title"].SetString(" \n"); }),
             ".lesson.title is empty; a lesson needs a title and a line to read.", "A blank lesson opened");
 
-        // Every shipped stage with stations still opens and saves clean.
-        for (const char* stage : { "crossfeed", "close_quarters", "press_tower", "movement_course" })
+        // Every manifest stage with stations still opens and saves clean. This
+        // target has no engine, so it walks the editor's own manifest read.
+        const ContentCatalog catalog = load_content_catalog(repo / "game/content");
+        require(catalog.manifest_read && !catalog.stages.empty(), "Station check read no manifest stage");
+        int with_stations = 0;
+        for (const std::string& stage : catalog.stages)
         {
+            const auto path = repo / "game/content/levels" / (stage + ".json");
+            if (!parse(read_text(path)).HasMember("stations")) { continue; }
+            ++with_stations;
             LevelDocument shipped(tuning);
-            shipped.load(repo / "game/content/levels" / (std::string(stage) + ".json"));
-            require(shipped.validate().empty(), std::string(stage) + " has a station the editor refuses");
-            const auto copy = scratch / (std::string("station-saved-") + stage + ".json");
+            shipped.load(path);
+            require(shipped.validate().empty(), stage + " has a station the editor refuses");
+            const auto copy = scratch / ("station-saved-" + stage + ".json");
             shipped.save(copy);
             LevelDocument reopened(tuning);
             reopened.load(copy);
             require(parse(reopened.serialize()) == parse(shipped.serialize()),
-                std::string(stage) + " lost its stations across save and reopen");
+                stage + " lost its stations across save and reopen");
         }
+        require(with_stations > 0, "No manifest stage has stations to check");
         std::cout << "PASS stations: bounds edit past a station refused with history intact, eight station "
-            "refusals in the game's words, shipped stations save and reopen\n";
+            "refusals in the game's words, " << with_stations << " manifest stages' stations save and reopen\n";
     }
 }

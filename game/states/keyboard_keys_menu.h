@@ -2,18 +2,18 @@
 
 #include "game/states/settings_panel_page.h"
 #include "game/states/option_row.h"
-#include "game/states/keyboard_jump_capture.h"
+#include "game/states/keyboard_key_capture.h"
 #include "game/input/input_bindings.h"
 
 // The shared keyboard player's gameplay keys (the Keyboard Keys page, which
 // grew from Keyboard Jump): one capture row per KeyboardAction, then Reset,
 // Apply and Back. This child owns only the input-bindings section's keyboard
 // choices; pending parent play settings and pad profiles stay intact.
-class KeyboardJumpMenu final : public SettingsPanelPage
+class KeyboardKeysMenu final : public SettingsPanelPage
 {
 public:
-	explicit KeyboardJumpMenu(MenuContext* context, int player = -1);
-	~KeyboardJumpMenu() override;
+	explicit KeyboardKeysMenu(MenuContext* context, int opening_slot = -1);
+	~KeyboardKeysMenu() override;
 	void init() override;
 	void update_page(float dt) override;
 	void on_suspend() override;
@@ -42,7 +42,7 @@ private:
 	bool debug_collision() const;
 
 	InputBindings selection_;
-	KeyboardJumpCapture capture_;
+	KeyboardKeyCapture capture_;
 	// A separate armed reader supplies only pad Back during capture. Its
 	// keyboard/menu aliases never affect the shared parent's input ownership.
 	MenuInput capture_input_;

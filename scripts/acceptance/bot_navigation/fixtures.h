@@ -1,6 +1,13 @@
 #pragma once
 
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
+#include "game/debug/dev_tools.h"
+#if COLOURWARS_DEV_TOOLS
+#include "game/debug/replay/match_fingerprint.h"
+#endif
+#include <array>
+#include <string>
 
 namespace bot_navigation_acceptance
 {
@@ -11,7 +18,7 @@ namespace bot_navigation_acceptance
     // shipping bots' seed itself, so the trials' bots are unchanged.
     constexpr unsigned int trial_seed = 5242;
     constexpr float endpoint_tolerance = 0.05f;
-    inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+    inline const float dt = SECONDS_PER_STEP;
 
     class World
     {
@@ -58,17 +65,80 @@ namespace bot_navigation_acceptance
         Registry<LevelLoadedInfo> levels;
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     private:
         const char* support_error_;
     };
+
+    inline PlayerTeam opposing(PlayerTeam team)
+    {
+        return team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
+    }
+
+    // The route and trial cases' roster: an idle human on the keyboard in
+    // seat 0, opposing the one bot in seat 1, both carrying `tool`.
+    inline MatchSetup one_bot_roster(const std::string& stage, float duration, PlayerTeam bot_team,
+        WeaponType tool, BotDifficulty difficulty)
+    {
+        MatchSetup settings;
+        settings.set_player_count(2);
+        settings.set_player_bot(1, difficulty);
+        settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        settings.set_screen_layout(ScreenLayout::one_player);
+        settings.set_stage(stage); settings.set_duration(duration);
+        settings.set_player_team(0, opposing(bot_team));
+        settings.set_player_team(1, bot_team);
+        settings.set_player_weapon(0, tool); settings.set_player_weapon(1, tool);
+        return settings;
+    }
+
+    // Two a side: seats 0 and 1 on `near_team`, seats 2 and 3 against them.
+    // Seat 0 is an idle human on the keyboard. `bots` marks the bot seats; a
+    // human seat 3 is a second idle human on pad slot 0, with its own pane.
+    inline MatchSetup two_a_side_roster(const std::string& stage, float duration, PlayerTeam near_team,
+        const std::array<WeaponType, 4>& tools, const std::array<bool, 4>& bots, BotDifficulty difficulty)
+    {
+        MatchSetup settings;
+        settings.set_player_count(4);
+        for (int seat = 1; seat < 4; ++seat)
+        { if (bots[static_cast<std::size_t>(seat)]) { settings.set_player_bot(seat, difficulty); } }
+        settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        if (!bots[3]) { require(settings.claim_input_slot(0), "A two-a-side roster could not seat its second human"); }
+        settings.set_screen_layout(bots[3] ? ScreenLayout::one_player : ScreenLayout::two_player);
+        settings.set_stage(stage); settings.set_duration(duration);
+        for (int seat = 0; seat < 4; ++seat)
+        {
+            settings.set_player_team(seat, seat < 2 ? near_team : opposing(near_team));
+            settings.set_player_weapon(seat, tools[static_cast<std::size_t>(seat)]);
+        }
+        return settings;
+    }
 
     inline std::vector<PlayerInputData> physical_inputs()
     {
         std::vector<PlayerInputData> physical(input_slots::count);
         for (PlayerInputData& input : physical) { input.connected = true; }
         return physical;
+    }
+
+    // Top-face paint the bot in seat 1 owns on `support`'s top.
+    inline float owned_top_paint(const Level& level, const RectangleF& support, float thickness)
+    {
+        const int owner = paint_owners::index(-1, 1);
+        float area = 0.0f;
+        for (const PaintSurfaceSample& surface : level.paint_surfaces())
+        {
+            if (surface.face != PaintSurfaceFace::top || surface.paint_owner != owner) { continue; }
+            bool belongs = true;
+            for (const Vector2F& corner : surface.corners)
+            {
+                belongs = belongs && corner.x >= support.left() - endpoint_tolerance &&
+                    corner.x <= support.right() + endpoint_tolerance &&
+                    std::fabs(corner.y - support.top()) <= thickness + endpoint_tolerance;
+            }
+            if (belongs) { area += surface.scored_area; }
+        }
+        return area;
     }
 
     inline bool grounded(const Player& player)
@@ -122,5 +192,30 @@ namespace bot_navigation_acceptance
         }
         state.push_back(static_cast<std::uint64_t>(level.projectile_count()));
         return state;
+    }
+
+    // Replays a recorded trial: rebuilds its level through `rebuild`, plays
+    // `tape` back for `steps` steps and requires the same public state and, in
+    // Debug, the same complete fingerprint. The public final-input seam records
+    // after the shipping driver; playback tells Level to bypass that driver.
+    template <typename Rebuild>
+    void check_final_input_replay(std::unique_ptr<Level>& level, Tape& tape, int steps,
+        const std::vector<PlayerInputData>& physical, Rebuild&& rebuild, const std::string& trial)
+    {
+        const std::vector<std::uint64_t> expected = snapshot(*level);
+#if COLOURWARS_DEV_TOOLS
+        const MatchFingerprint expected_full = MatchFingerprint::of(*level, steps);
+#endif
+        // Both levels borrow the same partitioner, so destroy before rebuilding.
+        level.reset();
+        level = rebuild();
+        tape.playback = true;
+        for (int tick = 0; tick < steps; ++tick) { level->update(physical, dt, &tape); }
+        require(tape.next == static_cast<std::size_t>(steps) && snapshot(*level) == expected,
+            trial + " final-input replay changed players, projectiles or exact paint state");
+#if COLOURWARS_DEV_TOOLS
+        require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, steps)).empty(),
+            trial + " final-input replay changed the complete Debug fingerprint");
+#endif
     }
 }

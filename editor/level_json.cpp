@@ -1,5 +1,5 @@
 #include "editor/level_json.h"
-#include "editor/horizontal_authoring.h"
+#include "editor/motion_authoring.h"
 #include "editor/slab_authoring.h"
 #include "game/contracts/drawable_text_contract.h"
 #include "game/contracts/station_contract.h"
@@ -369,7 +369,7 @@ namespace colourwars_editor
             }
             if (object.HasMember(key::motion))
             {
-                try { decode_horizontal_motion(object); }
+                try { decode_motion(object); }
                 catch (const std::exception& error) { fail(std::string("motion: ") + error.what()); }
             }
             if (string(object, key::sheet_name).empty() || string(object, key::frame_name).empty())

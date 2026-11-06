@@ -70,7 +70,7 @@ The role folders date from `HYG#51`:
 | `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |
 | `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size, every page rectangle, the fit-to-box scale and rectangle predicates, and the settings pages' value rows, shared by the pages, the reader and the validators) |
 | `save/` | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings_json` (the one `StickSettings` and `SeatComfort` reader and writer), and `atomic_file` (`replace_file_atomically`, the one whole-file writer the save, the fatal-error record and the developer tools share) |
-| `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `controls_copy.h`, `rumble*`, `rumble_gamepads.cpp` |
+| `input/` | `action_bindings`, `menu_input_action.h`, `input_bindings`, `input_slots.h`, `controls_text`, `controls_copy.h`, `rumble*`, `rumble_gamepads.cpp` |
 
 `play_settings.h` and `settings_session` are in `config/` rather than `save/`:
 every gameplay object reads the play settings, and the save is one of their
@@ -138,8 +138,7 @@ What holds (checked 2026-11-05):
 
 Where it does not hold yet:
 
-- The root is not a layer of its own: `game_data.h` includes `objects/` headers,
-  and `action_bindings.h` includes `states/menu_input_action.h`.
+- The root is not a layer of its own: `game_data.h` includes `objects/` headers.
 - The role folders include each other: `save/` reads `config/`'s play
   settings and `match/`'s setup, and `config/` names `match/` and `input/`
   types. Only `contracts/` has a checked boundary.
@@ -250,7 +249,7 @@ as one graph. The shapes that occur:
 [GameMenu, MainMenuOptions, MainMenuDisplayConfirmation]
 [GameMenu, MainMenuOptions, ControlsSettingsMenu]
 [GameMenu, MainMenuOptions, ControlsSettingsMenu,
-    StickSettingsMenu | KeyboardJumpMenu | PadButtonsMenu | ProfilesMenu]
+    StickSettingsMenu | KeyboardKeysMenu | PadButtonsMenu | ProfilesMenu]
 [GameMenu, GameLevel]
 [GameMenu, GameLevel, PauseMenuInitial | PauseMenuConfirmation]
 [GameMenu, GameLevel, PauseMenuInitial, MainMenuOptions, ...]   the Options shapes above

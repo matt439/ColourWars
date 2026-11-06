@@ -72,12 +72,12 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     const Presentation original = presentation;
     const std::wstring legacy = L"Random";
     const std::wstring legacy_browse_status = L"FIND YOUR ARENA", legacy_locked_status = L"ARENA LOCKED";
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters") };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 },
         "Random stage text fixture must exclude Movement Course and include the real arena");
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
@@ -125,7 +125,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         settings.set_player_weapon(0, WeaponType::bucket);
         settings.set_stage(course ? "movement_course" : "close_quarters");
         settings.set_duration(73.0f);
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick();
         require(stack.depth() == 2 && !context.music_exit_pending(), "Random text fixture consumed neutral stage entry");
     };
@@ -189,7 +189,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         list.set_filter(TextureFilter::linear); heading.draw(list); expected.draw(list);
         const Frame reference = read(renderer);
         RectangleF bounds = expected_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-        const RectangleI pixels = countdown_crop_bounds(bounds);
+        const RectangleI pixels = pixel_bounds(bounds);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "menu-text-stage-random-" + name + '-' +
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -245,7 +245,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         list.set_filter(TextureFilter::linear); expected.draw(list);
         const Frame reference = read(renderer);
         RectangleF crop = bounds; crop.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(crop);
-        const RectangleI pixels = countdown_crop_bounds(crop);
+        const RectangleI pixels = pixel_bounds(crop);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "menu-text-stage-status-" + name + '-' + (random ? "random-" : "real-") +
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -298,20 +298,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     const std::wstring old_word = L"Random~ " + std::wstring(70, L'W'), new_word = L"Lotto arena";
     Presentation old = original; const_cast<MenuText&>(old.menu_text()).values.random = old_word;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Stage Random replacement item font lacks a baseline printable glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_stage_random_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "Stage Random replacement item font still has the old copy's glyph");
+    add_probe_font(*app.render_resources(), original.menu().item_font, font_name);
     Presentation next = original; const_cast<MenuText&>(next.menu_text()).values.random = new_word;
     const_cast<MenuStyle&>(next.menu()).item_font = font_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
@@ -388,20 +376,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     Presentation status_old = original;
     const_cast<MenuText&>(status_old.menu_text()).stage = old_status;
     status_old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* status_source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().detail_font));
-    std::vector<Glyph> status_glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = status_source->find(character);
-        require(glyph != nullptr, "Stage status replacement detail font lacks a baseline printable glyph");
-        status_glyphs.push_back(*glyph);
-    }
     const std::string status_font = "acceptance_stage_status_without_tilde";
-    app.render_resources()->add_font(status_font, std::make_unique<Font>(status_source->atlas(),
-        std::move(status_glyphs), status_source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(status_font), L"~"),
-        "Stage status replacement detail font still contains the old status glyph");
+    add_probe_font(*app.render_resources(), original.menu().detail_font, status_font);
     Presentation status_next = original;
     const_cast<MenuText&>(status_next.menu_text()).stage = new_status;
     auto& next_style = const_cast<MenuStyle&>(status_next.menu());

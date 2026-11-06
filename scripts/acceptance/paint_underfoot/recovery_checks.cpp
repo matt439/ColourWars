@@ -134,6 +134,6 @@ namespace paint_underfoot_acceptance
             require(bits(player.player->health()) == bits(world.tuning.player().starting_health),
                 "Enemy paint harmed health");
         }
-        std::cout << "PASS underfoot recovery: all5 actual tools, paid depletion/delay/shot cost, clamp and shared Player context\n";
+        std::cout << "PASS underfoot recovery: all 5 actual tools, paid depletion/delay/shot cost, clamp and shared Player context\n";
     }
 }

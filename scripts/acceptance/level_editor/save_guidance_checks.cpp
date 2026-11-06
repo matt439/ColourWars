@@ -106,7 +106,7 @@ namespace level_editor_acceptance
                 LevelDocument document;
                 document.set_property(entry(document, EntryKind::level), "/display_name", "Unicode alias arena");
                 save_user_stage(document, pair.folder, target);
-                const std::string first = contents(target.file);
+                const std::string first = read_text(target.file);
                 const fs::path reopen_path = pair.alias / L"CASE_ARENA.json";
                 error.clear();
                 require(fs::equivalent(target.file, reopen_path, error) && !error,
@@ -117,7 +117,7 @@ namespace level_editor_acceptance
                     "A stage saved through a Unicode folder alias did not reopen unchanged");
                 reopened.set_property(entry(reopened, EntryKind::level), "/display_name", "Unicode alias ordinary save");
                 reopened.save(target.file);
-                require(contents(target.file) != first && !reopened.dirty(),
+                require(read_text(target.file) != first && !reopened.dirty(),
                     "Ordinary Save across Unicode folder aliases did not retain the actual stage file");
                 const UserStageTarget replacement = check_user_stage_target(pair.alias, reopen_path, catalog.stages);
                 error.clear();
@@ -160,14 +160,14 @@ namespace level_editor_acceptance
         LevelDocument document;
         const UserStageTarget target = check_user_stage_target(user, user / "my_arena.json", catalog.stages);
         save_user_stage(document, user, target);
-        const std::string user_bytes = contents(target.file);
+        const std::string user_bytes = read_text(target.file);
         const fs::path chosen = document.path();
         check_user_guidance(guidance(document.path(), true));
         document.set_property(entry(document, EntryKind::level), "/display_name", "Guidance local edit");
         document.save(document.path());
         check_user_guidance(guidance(document.path(), true));
         check_user_guidance(guidance(document.path(), false));
-        require(document.path() == chosen && contents(target.file) != user_bytes && !document.dirty(),
+        require(document.path() == chosen && read_text(target.file) != user_bytes && !document.dirty(),
             "Ordinary Save after Save to My Stages did not retain its destination");
 
         fs::create_directories(source);

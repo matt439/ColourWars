@@ -1,5 +1,5 @@
 #include "game/pch.h"
-#include "game/states/keyboard_jump_capture.h"
+#include "game/states/keyboard_key_capture.h"
 
 using namespace labrador;
 
@@ -20,14 +20,14 @@ namespace
 	}
 }
 
-void KeyboardJumpCapture::reset(const InputBindings& pending, KeyboardAction action)
+void KeyboardKeyCapture::reset(const InputBindings& pending, KeyboardAction action)
 {
 	this->pending_ = pending;
 	this->action_ = action;
 	this->reset();
 }
 
-void KeyboardJumpCapture::reset()
+void KeyboardKeyCapture::reset()
 {
 	this->phase_ = Phase::waiting_neutral;
 	this->rejection_ = Rejection::none;
@@ -36,33 +36,33 @@ void KeyboardJumpCapture::reset()
 	this->focus_cancelled_ = false;
 }
 
-std::optional<Key> KeyboardJumpCapture::result() const
+std::optional<Key> KeyboardKeyCapture::result() const
 {
 	if (!this->result_ || this->result_->key == Key::none) { return std::nullopt; }
 	return this->result_->key;
 }
 
-void KeyboardJumpCapture::focus_lost()
+void KeyboardKeyCapture::focus_lost()
 {
 	this->reset();
 	this->focus_cancelled_ = true;
 }
 
-void KeyboardJumpCapture::reject(Rejection reason)
+void KeyboardKeyCapture::reject(Rejection reason)
 {
 	this->phase_ = Phase::waiting_neutral;
 	this->rejection_ = reason;
 	this->candidate_ = {};
 }
 
-void KeyboardJumpCapture::update(const KeyboardState& now,
+void KeyboardKeyCapture::update(const KeyboardState& now,
 	const KeyboardState& before, bool cancel_requested)
 {
 	// An unfocused mouse contributes no buttons.
 	this->update(now, before, MouseState{}, MouseState{}, cancel_requested);
 }
 
-void KeyboardJumpCapture::update(const KeyboardState& now, const KeyboardState& before,
+void KeyboardKeyCapture::update(const KeyboardState& now, const KeyboardState& before,
 	const MouseState& mouse_now, const MouseState& mouse_before, bool cancel_requested)
 {
 	if (this->phase_ == Phase::complete || this->phase_ == Phase::cancelled) { return; }

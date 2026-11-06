@@ -12,47 +12,17 @@ namespace level_editor_acceptance
 {
     namespace
     {
-        Entry named(const LevelDocument& document, const std::string& name)
+        // A copy of the entry's motion block as the document would save it.
+        rapidjson::Document motion_of(const LevelDocument& document, const Entry& entry)
         {
-            for (const Entry& candidate : document.entries())
-            {
-                if (candidate.kind == EntryKind::collision && candidate.label == name) { return candidate; }
-            }
-            throw std::runtime_error("Expected entry '" + name + "' is absent");
-        }
-
-        const Property* property(const std::vector<Property>& properties, const std::string& path)
-        {
-            for (const Property& candidate : properties)
-            {
-                if (candidate.path == path) { return &candidate; }
-            }
-            return nullptr;
-        }
-
-        const rapidjson::Value& motion_of(const LevelDocument& document, const Entry& entry)
-        {
-            static rapidjson::Document held;
-            held = parse(document.serialize());
-            return held["collision_objects"][static_cast<rapidjson::SizeType>(entry.index)]["motion"];
-        }
-
-        // A file the game would refuse at load is refused by the editor at
-        // load too, naming the shared rule's own words.
-        void refuses_file(LevelDocument& document, const fs::path& path, const std::string& expected,
-            const char* message)
-        {
-            const std::string before = document.serialize();
-            bool rejected = false;
-            try { document.load(path); }
-            catch (const std::exception& error)
-            {
-                rejected = true;
-                require(std::string(error.what()).find(expected) != std::string::npos,
-                    std::string(message) + ": diagnostic was '" + error.what() + "'");
-            }
-            require(rejected, message);
-            require(document.serialize() == before, "A refused drive load changed the open document");
+            const rapidjson::Document saved = parse(document.serialize());
+            const rapidjson::Value& objects = saved["collision_objects"];
+            require(objects.IsArray() && entry.index < objects.Size() &&
+                objects[static_cast<rapidjson::SizeType>(entry.index)].HasMember("motion"),
+                "The saved entry has no motion block");
+            rapidjson::Document motion;
+            motion.CopyFrom(objects[static_cast<rapidjson::SizeType>(entry.index)]["motion"], motion.GetAllocator());
+            return motion;
         }
     }
 
@@ -60,12 +30,12 @@ namespace level_editor_acceptance
     {
         const auto tuning = repo / "game/content/tuning.json";
         const auto source = repo / "game/content/levels/turbulence_ferry_trial.json";
-        const std::string original = contents(source);
+        const std::string original = read_text(source);
         LevelDocument document(tuning);
         document.load(source);
         require(document.validate().empty() && !document.dirty(), "The Ferry Trial did not open clean");
-        const Entry ferry = named(document, "ferry_a");
-        const Entry other = named(document, "ferry_b");
+        const Entry ferry = named(document, EntryKind::collision, "ferry_a");
+        const Entry other = named(document, EntryKind::collision, "ferry_b");
         {
             const auto fields = document.properties(ferry);
             const Property* drive = property(fields, "motion/drive");
@@ -83,7 +53,7 @@ namespace level_editor_acceptance
         LevelDocument reopened(tuning);
         reopened.load(copy);
         require(parse(reopened.serialize()) == parse(original) && !reopened.dirty() &&
-            contents(source) == original, "The Ferry Trial lost drive fields across save and reopen");
+            read_text(source) == original, "The Ferry Trial lost drive fields across save and reopen");
 
         // Valid inspector edits: heading flips, cycle sheds its heading, paint
         // gains team A heading right, and both undo exactly.
@@ -147,7 +117,7 @@ namespace level_editor_acceptance
                 if (std::string(object["name"].GetString()) == "ferry_a") { edit(object["motion"], document_json); }
             }
             const auto path = scratch / (std::string("drive-") + name + ".json");
-            write(path, encode(document_json));
+            write_text(path, encode(document_json));
             return path;
         };
         LevelDocument checker(tuning);
@@ -209,7 +179,7 @@ namespace level_editor_acceptance
             auto document_json = parse(lift_json);
             edit(document_json["collision_objects"][static_cast<rapidjson::SizeType>(lift.index)]["motion"]);
             const auto path = scratch / (std::string("drive-lift-") + name + ".json");
-            write(path, encode(document_json));
+            write_text(path, encode(document_json));
             return path;
         };
         refuses_file(checker, lift_variant("right", [](rapidjson::Value& motion)

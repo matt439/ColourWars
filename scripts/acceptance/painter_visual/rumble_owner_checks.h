@@ -2,11 +2,10 @@
 // recording default factory replace every physical pad and motor operation.
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
-    const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
+    GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    static_cast<void>(canvas);
-    const NestedSaveProfile profile(output / "rumble-owner-profile");
+    const acceptance::IsolatedSave profile(output / "rumble-owner-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(quiet), "Cannot seed private rumble owner settings");
@@ -14,7 +13,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     // A longer local hit keeps a positive witness active across each boundary;
     // these are fixture values, not a claim about the authored physical feel.
     const_cast<RumbleProfile&>(local.rumble())[static_cast<size_t>(RumbleEvent::hit)].duration_seconds = 0.5f;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&local); data.set_presentation(&presentation);
     DebugDirector director(&local, &presentation); data.set_debug(&director);
@@ -111,9 +110,8 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         Player& player = const_cast<Player&>(game->level().player(view));
         player.force_respawn();
         const PlayerTeam enemy = player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-        const auto& values = local.projectile(ProjectileType::spray);
-        const ProjectileSpray projectile(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy,
-            view == 1 ? 3 : 1, Colour::white, app.render_resources(), resolve_projectile_strip(values, *app.render_resources()), &values);
+        const ProjectileSpray projectile = controlled_spray(app, local, RectangleF(0, 0, 10, 10), enemy,
+            view == 1 ? 3 : 1, Colour::white);
         player.on_contact(projectile, Vector2F::zero, 0.0f);
         tick();
     };

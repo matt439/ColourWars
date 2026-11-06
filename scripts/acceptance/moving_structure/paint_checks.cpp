@@ -103,8 +103,8 @@ namespace moving_structure_acceptance
         }
         void half_open_world_edge(World& world)
         {
-            // This actual float offset crosses the1024 binade. The published
-            // leading edge rounds to1032, but inverse subtraction rounds below
+            // This actual float offset crosses the 1024 binade. The published
+            // leading edge rounds to 1032, but inverse subtraction rounds below
             //1000; comparing transformed tile edges is the independent oracle.
             const float phase = std::bit_cast<float>(std::uint32_t{ 0x3e800009 });
             const HorizontalMotionSpec spec{ { 1000.0f, 500.0f, 81.5f, 50.75f }, 64.0f, 2.0f, phase };

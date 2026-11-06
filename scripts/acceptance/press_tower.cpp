@@ -12,7 +12,8 @@ int main(int argc, char** argv)
     return acceptance::run_probe("Press Tower", [&]
     {
         require(argc == 2, "Usage: press_tower.exe <content directory>");
-        Services services(argv[1]);
+        Services services(argv[1], "press_tower", "Press Tower");
+        services.paint_accounting = false;
         std::cout << "NOTE Press Tower baseline dt=" << dt <<
             "; actual authored Player/Scene; current tuning; no devices or player save\n";
         geometry_checks(services, std::filesystem::absolute(argv[0]).parent_path());
@@ -24,7 +25,7 @@ int main(int argc, char** argv)
         std::cout << "PASS Press Tower baseline: mirrored authored geometry, independent paint budget, "
             "summit sightline claims, live-fire spawn safety, spawn respawn safety, jump-free required "
             "crossing, optional climbs and five-tool paint contact. Attended play, camera framing, balance "
-            "and physical-pad acceptance remain open\n";
+            "and physical pads are outside this probe\n";
         return 0;
     });
 }

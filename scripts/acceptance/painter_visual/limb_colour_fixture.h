@@ -1,5 +1,5 @@
 // Included inside painter_visual.cpp's private namespace, right before
-// limb_tune_colour_checks.h: the Limb43/44 frozen literal ROIs, dabs, witnesses and masks.
+// limb_tune_colour_checks.h: the Limb 43/44 frozen literal ROIs, dabs, witnesses and masks.
 enum class LimbMaterial { arm, hand, face };
 struct LimbDab { size_t context;int left,top,right,bottom;LimbMaterial material; };
 struct LimbWitness { size_t context;int x,y;LimbMaterial material; };

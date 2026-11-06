@@ -5,23 +5,8 @@
 void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct PercentageProfile
-    {
-        std::wstring previous;
-        explicit PercentageProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the percentage probe's runner profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate the percentage probe's save");
-        }
-        ~PercentageProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } profile(output / "percentage-profile");
-    const std::filesystem::path save_path = output / "percentage-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave profile(output / "percentage-profile");
+    const std::filesystem::path save_path = acceptance::save_path_in(output / "percentage-profile");
     const Presentation original = presentation;
     const float original_cutoff = tuning.input().movement_deadzone;
     StateContext& stack = app;
@@ -41,9 +26,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     Save preferences; SettingsSession preferences_session(preferences);
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Percentage fixture lost its private save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const auto same_play = [](const PlaySettings& first, const PlaySettings& second)
     {
@@ -114,7 +97,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); tick();
         require(stack.depth() == 2, "Percentage probe did not open actual Controls/audio");
     };
@@ -134,7 +117,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
     };
-    const auto actual_frame = [&] { ++readbacks; return main_menu_frame(app); };
+    const auto actual_frame = [&] { ++readbacks; return stack_frame(app); };
     const auto camera = [&]
     {
         return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
@@ -143,7 +126,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto project = [&](RectangleF bounds)
     {
         camera().calculate_view_rectangle(bounds);
-        return countdown_crop_bounds(bounds);
+        return pixel_bounds(bounds);
     };
     enum class PercentageVariant { legacy, old_long, new_long };
     const auto literal_value = [](PercentageVariant variant, int value)
@@ -477,7 +460,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         "  \"inputs\": \"normal production keyboard reader; actual Controls parent and Sticks child\",\n" <<
         "  \"limits\": \"No global input, foreground/hardware/physical-pad, gameplay, listening or human acceptance\"\n}\n";
     require(summary.good(), "Percentage summary evidence write failed");
-    std::cout << "PASS preference percentage leaf: actual four rows, saved17/0/100 and inherited100/explicit0/90; "
+    std::cout << "PASS preference percentage leaf: actual four rows, saved 17/0/100 and inherited 100/explicit 0/90; "
         "independent literals, long value fitting, distinct font aliases, retained/reopened/reversed snapshots; "
         "child return, Apply/reload/repeat, active-versus-disk save failure and discard; stable preview/frozen RNG; "
         "updates=" << updates << " readbacks=" << readbacks << " csv_rows=" << csv_rows << " crops=" << crops << '\n';

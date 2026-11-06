@@ -7,7 +7,7 @@
 
 using namespace labrador;
 
-ProfilesMenu::ProfilesMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
+ProfilesMenu::ProfilesMenu(MenuContext* context, int opening_slot) : SettingsPanelPage(context, opening_slot) {}
 
 void ProfilesMenu::init()
 {

@@ -4,11 +4,10 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& output)
 {
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters") };
     const StageList original_stages = stages;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
@@ -64,7 +63,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     const auto join_gutter = [&](int row)
     {
@@ -114,7 +113,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         {
             for (int x = delta.x; x < delta.right(); ++x)
             {
-                if (same_pixel(moving, rest, hud_pixel_offset(moving, x, y))) { continue; }
+                if (same_pixel(moving, rest, pixel_offset(moving, x, y))) { continue; }
                 bool found = false;
                 for (size_t i = 0; i < allowed.size(); ++i)
                 {
@@ -165,7 +164,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
             settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_weapon(player, player == 0 ? WeaponType::bucket : WeaponType::sprayer);
         }
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::unique_ptr<MenuPage> opened;
         if (stage) { opened = std::make_unique<MainMenuStageSelect>(&context); }
         else { opened = std::make_unique<MainMenuJoin>(&context); }
@@ -194,7 +193,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
                 for (int x = 0; x < normal.width; ++x)
                 {
                     if (x >= preview.x && x < preview.right() && y >= preview.y && y < preview.bottom()) { continue; }
-                    if (!same_pixel(normal, reduced_rest, hud_pixel_offset(normal, x, y))) { outside_same = false; break; }
+                    if (!same_pixel(normal, reduced_rest, pixel_offset(normal, x, y))) { outside_same = false; break; }
                 }
             }
             require(reduced.pixels == reduced_rest.pixels && outside_same, message);

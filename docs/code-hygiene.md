@@ -327,7 +327,7 @@ a failed screenshot no longer leaves a partial PNG, and `exec` and
 The unique temporary changed how probes fail a save on purpose. Sixteen sites
 made a directory at the fixed `save_data.json.tmp`, which no longer blocks
 anything. They now hold the old save open, sharing read and write but not
-delete, through `acceptance::ReplacementLock` ([replacement_lock.h](../scripts/acceptance/support/replacement_lock.h)):
+delete, through `acceptance::ReplacementLock` (then `replacement_lock.h`; since `HYG#84`, [isolated_save.h](../scripts/acceptance/support/isolated_save.h)):
 `display_trial`, `input_bindings` (twice), `remembered_setup` and twelve painter
 leaves. The three probes that ran a write both ways (blocked temporary, then
 locked save) now run only the locked one, because the writer's temporary can no
@@ -1494,7 +1494,49 @@ arrays. That last change is worth doing whichever way the rule goes.
 
 ### Names that mislead (`HYG#82`)
 
-Mechanical renames, one per commit:
+**Done 2026-11-06; no behaviour change.** One commit per rename:
+
+- The A-Z/Space helpers are `keyboard_key_supported`, `keyboard_keys` and
+  `controls_text::keyboard_keys`, and their three exception messages drop
+  "Jump". The page and its gesture are `KeyboardKeysMenu` and
+  `KeyboardKeyCapture` (`game/states/keyboard_keys_menu.*`,
+  `keyboard_key_capture.*`), the page text `KeyboardKeysMenuText`, and the
+  presentation comments name the page Keyboard Keys. The developer-bind
+  warning the page checks for each of its keys is
+  `DebugDirector::keyboard_key_collision` (a follow-up commit; it was missed
+  in the first pass).
+- The five settings panels take `opening_slot`, as `SettingsPanelPage` does.
+- `match_owns_input_slot`.
+- `MainMenuPlayerCount`'s rows are `one_player_` ... `four_players_`; their
+  widget names stay.
+- `MainMenuModeSelect::value_font_` (and `value_font_name_`): the item font
+  both value rows measure with. The Duration error now says "captured item
+  font", as the stage-rule one did.
+- `SettingsPanelPage::text_widgets_`, which no longer shadows `MenuPage::text_`.
+- `Validation::presentation`, a public field like `render` and `check`.
+- [editor/motion_authoring.h](../editor/motion_authoring.h), with
+  `decode_motion` and `object_motion_guide`.
+- `MenuInputAction` is
+  [game/input/menu_input_action.h](../game/input/menu_input_action.h), and
+  docs/architecture.md drops the exception.
+
+Left as they are: the save key `keyboard_jump`, the presentation key
+`menu_text.keyboard_jump` and its `MenuText::keyboard_jump` field (content
+formats); `keyboard_jump_conflict` and the Jump-only validation message, which
+are about Jump; the `keyboard_jump_capture` acceptance case, the painter's
+`-KeyboardJumpOnly` switch and the `keyboard_jump_*_checks.h` probe files,
+whose names CI, the nightly and the evidence records use; the game's
+`horizontal_motion_contract` and `HorizontalMotionSpec`, whose contract comment
+already says it keeps the name it began as; `MainMenuModeSelect`'s
+`duration_row_spacing_`, which the stage-rule row also uses (not filed); and
+the historical slice records in feature-roadmap.md and engine-reports.md.
+
+Both presets build under `/W4 /WX`. Every default acceptance case passed in
+Debug and Release (78 each), as did `check-level-editor.ps1`, `check-startup.ps1`
+and `check-painter.ps1 -CompileOnly` in both presets, and
+`check-painter.ps1 -KeyboardJumpOnly` in Release.
+
+The row as filed. Mechanical renames, one per commit:
 
 - the key-domain helpers' "Jump" (`input_bindings.cpp:285`) and
   `KeyboardJumpMenu`/`KeyboardJumpCapture` (the save key `keyboard_jump` stays);
@@ -1513,7 +1555,98 @@ from docs/architecture.md.
 
 ### Probe stages and assets from the manifest (`HYG#83`)
 
-In `support/stage_catalog.h`, add `manifest_level_paths` and `shipped_stage`. In
+**Done 2026-11-06; probes only, no game behaviour change.** Three probes now
+cover more than they did.
+
+- [support/stage_catalog.h](../scripts/acceptance/support/stage_catalog.h)
+  has `manifest_entries` (one manifest kind's names and files),
+  `manifest_level_paths` (every manifest stage and its file; refuses an empty
+  list or a missing file) and `shipped_stage(levels, name)` (the `Stage` its
+  manifest-loaded definition describes). `manifest_catalog` is built on them.
+- [support/content_world.h](../scripts/acceptance/support/content_world.h)
+  has `load_cpu_render_assets` (every manifest sheet and font, with the '?'
+  stand-in), `load_cpu_assets` (those, plus a silent bank per manifest bank),
+  and `ContentWorld`. Both refuse a manifest kind they do not load. They
+  replace the sheet-and-font copies in `aim_marker`, `blocked_shot`,
+  `cursor_marker`, `idle_drip`, `locales`, `menu_presentation`, `menu_text`,
+  `player_identity`, `practice_workshop`, `series_stage_rule`, `story_audio`
+  (render half; it opens its own recording bank), `teammate_markers`,
+  `user_stages`, `weapon_catalog` (its no-legacy-sheet World skips
+  `weapon_paint`), `paint` (`jump_through_checks.h`), `paint_surfaces`,
+  `debug_console` (`cpu_level.h`, `tune_menu_checks.cpp`) and the private
+  manifest walks in `moving_structure`, `skirmish_bot` and `balance_runner`.
+  `menu_text`, `menu_presentation` and `locales` share `ContentWorld`.
+- "Every" claims walk the manifest. `story_audio` registers every stage, not
+  six. The painter's countdown stage-entry matrix shows each manifest stage's
+  `display_name`, not four hand-picked names; its evidence and diagnostic text
+  say so. The editor's shipped-level check walks the catalog's manifest
+  stages. That target has no engine, so it cannot use the support header. Its
+  wider coverage needed the source `tuning.json` as authoring context for the
+  motion trials, which is how the editor opens them. Its station check
+  (`station_checks.cpp`) walks the same catalog and saves and reopens every
+  stage with stations (eleven), not four hand-picked ones.
+- The `terrain` and `tunnelling` guards ("four shipped stages", and
+  terrain's 13-stage pin and named list) are gone. Both walk
+  `manifest_level_paths`. `locales` uses `manifest_catalog`, and
+  `user_stages` counts the manifest instead of pinning 13, 14 and 15.
+  `level_format` drops its 13-stage pin, and `turbulence_slab_stage`'s
+  qualification its 13-stage and four-Random pins; both still require the
+  slab, Turbulence and every stage they name.
+  `instant_replay` registers every manifest stage and names the nine it
+  plays once. The miniature matrices name their six arenas once
+  (`miniature_stages`). `stage_selection` keeps the exact pins, now one table
+  of each stage and its Random eligibility, not twelve flags beside a list.
+- The painter's 30 hand-written `movement_course` descriptors, and the nine
+  `close_quarters` ones beside them, are `acceptance::shipped_stage(levels,
+  ...)`, as is `practice_replay`'s `crossfeed`, whose copy had the wrong icon.
+  The arena-music flow reads Close Quarters' cue from its level file.
+- [support/paint_samples.h](../scripts/acceptance/support/paint_samples.h)
+  holds `bits`, `snapshot`, `sample_state` and `same_total`. `paint_surfaces`
+  and `moving_structure` (whose `sample_bits` forwards to it) share it.
+
+Left as they are:
+
+- Worlds that load a chosen subset of sheets, usually without fonts or
+  `menu_paint`. These are `ammo`, `combat_feedback`, `figure_slips`,
+  `gameplay_tuning`, `handicap`, `lethal_provenance`, `level_format`,
+  `low_paint`, `movement`, `movement_contact`, `movement_course`, `paint.cpp`,
+  `quiet_character`, `results_awards`, `terrain`, `tool_motion`,
+  `tunnelling`, `view_shake`, `weapon_feedback`, `fixed_slab`,
+  `paint_underfoot` and the `crossfeed`/`cq_blockout`/`press_tower`/
+  `turbulence_blockout` fixtures. They do not copy the manifest's sheets and
+  fonts. `HYG#85`'s route-run fixture can adopt `load_cpu_assets` for the
+  last four.
+- `debug_console`'s `tune_*_colour_checks.h`, which reload a sheet subset
+  per check, and the `painter_visual` Worlds (`HYG#86`).
+- Three private manifest walks that check more than the list:
+  `turbulence_blockout/public_load_checks.cpp` (how the candidate stage is
+  registered), `level_format`'s `manifest_levels` (the level directories, and
+  source against staged inventory) and `turbulence_slab_stage/qualification.cpp`
+  (source against staged bytes, under its file guard).
+- Fixtures, not copies of the file: the synthetic `{ "movement_course", ...,
+  "icon", false }` descriptors in `debug_console`, `remembered_setup`'s
+  blank-icon one, the eligible King of the Hill and Turbulence copies in the
+  painter's `stage_paper` and `stage_count` lists (both left Random on
+  2026-11-05), and `stage_paper`'s four literals, which are the independent
+  pin its drift check holds each level file to.
+- Selections that do not claim "every": the painter's drift and
+  surface-finish lists, and `story_audio`'s accepted cue-binding table.
+  `instant_replay`'s played list is a selection too.
+
+Both presets build under `/W4 /WX`. Every default acceptance case passed in
+Release (78) and Debug (74 under `-SkipSlowDebug`, plus `menu_text` and
+`debug_console` run on their own; `crossfeed` and `press_tower` include no
+touched file and were not run in Debug). `bot_trials` and `bot_scan_cost`
+passed in both presets. `check-level-editor.ps1` passed in both presets.
+`check-painter.ps1 -CompileOnly` passed in both presets. In Release,
+`check-painter.ps1` passed with `-CountdownOnly` (all 13 stage entries),
+`-ResumeOnly` (arena music), `-MiniatureTerrainOnly`, `-StageCountsOnly` and
+`-TeamSetupOnly`. After review, the station walk, the dropped pins and the
+painter fixture fixes passed `level_format`, `turbulence_slab_stage` and
+`check-level-editor.ps1` in both presets, and `check-painter.ps1`
+`-StagePaperOnly`, `-StageCountsOnly` and `-PracticeReplayOnly` in both.
+
+The row as filed. In `support/stage_catalog.h`, add `manifest_level_paths` and `shipped_stage`. In
 a new `support/content_world.h`, add `load_cpu_assets(content, render, audio)`,
 which reads `manifest.json`. Then replace these copies:
 
@@ -1536,7 +1669,92 @@ find new failures; fix them in the same row, or record them as their own rows.
 
 ### Probe save isolation and JSON fixtures (`HYG#84`)
 
-Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
+**Done 2026-11-06; probes only, no game behaviour change.**
+
+- [support/isolated_save.h](../scripts/acceptance/support/isolated_save.h)
+  holds `acceptance::IsolatedSave`, non-copyable, which points the CRT's
+  `LOCALAPPDATA` at a private root and restores the earlier value. Given a
+  label it takes a fresh `ColourWars-<label>-<GUID>` folder under `%TEMP%`,
+  with an empty `ColourWars` folder, and removes it whole. Given a root (the
+  painter's evidence folders, the input-binding relaunch profile, the editor's
+  user-stage profile) it creates it and keeps it. It has `save_path()`,
+  `save_bytes()`, `write_save()` and `temporary_left()`, and
+  `save_path_in(root)` is the one spelling of where the save lives.
+  `ReplacementLock` and `temporary_beside` moved in; `replacement_lock.h` is
+  gone.
+- [support/scratch.h](../scripts/acceptance/support/scratch.h), new and shared
+  by both headers, is the one scratch policy: checked `read_text` and
+  `write_text`, `unique_temporary_directory` and the self-removing
+  `ScratchDirectory`.
+- [support/json_fixture.h](../scripts/acceptance/support/json_fixture.h) holds
+  `read_document`, `write_document`, `JsonVariants` (numbered edited copies of
+  one file, in a private scratch folder or a folder the caller names) and
+  `rejects_variant` (the copy's loader must throw with every expected
+  fragment).
+- Save isolation now comes from that one class in `settings`,
+  `match_records` (its side-copy paths derive from it), `player_profiles`,
+  `display_trial`, `remembered_setup`, `series_stage_rule`, `input_bindings`,
+  `debug_console`'s phase-3 replay root, the editor's `user_stage_checks`, the
+  painter's `NestedSaveProfile` (about seventy matrices) and the painter's
+  twelve one-matrix copies (`controls_menu`, `display_trial`, `menu_motion`,
+  `options_defaults`, `paused_options`, `percentage`, `save_status`,
+  `settings_menu`, `setup_motion`, `settings_value`, `stick_settings`,
+  `weapon_paper`). Every save path the C++ probes spelled out is now
+  `save_path()` or `save_path_in`.
+- The drifted cleanup is gone. `settings`, `match_records` and
+  `player_profiles` removed only the files they named, including the dead
+  `save_data.json.tmp`, and left the root behind if anything else was in it;
+  `debug_console` named its root by process id and left it behind on a failure.
+  All now remove the whole root.
+- `settings`' hand-made lock is a `ReplacementLock`. It shared only reading, so
+  it also refused a writer that truncates in place; it now shares writing, so
+  its check that the earlier save survived can fail against such a writer, as
+  `HYG#63`'s ports can.
+- `combat_feedback`, `view_shake`, `practice_workshop` (which wrote a fixed
+  name in `%TEMP%` that two runs could share) and `series_stage_rule` refuse
+  through `rejects_variant`. `story_audio`'s and `idle_drip`'s `ContentVariant`
+  and `menu_presentation`'s and `weapon_catalog`'s `Variants` derive from
+  `JsonVariants`. `locales`, `menu_text` and `text_wrap` use the shared
+  helpers. Only `practice_workshop`'s failure wording changed.
+- After review, the same edit-a-copy fixtures in `quiet_character` (which also
+  wrote a fixed name in `%TEMP%`), `low_paint`, `movement_contact`,
+  `weapon_feedback` and `paint`'s `runoff_content_checks.h` refuse through
+  `rejects_variant`; `story_audio`'s `MenuPresentationVariant` and
+  `EndingStageVariant` derive from `JsonVariants`; and `text_wrap` writes its
+  copies with `write_document`. Their failure messages now end with the
+  loader's own message. `idle_drip`'s `ContentVariant` (used by
+  `idle_drip/standalone_checks.h`) keeps its own refusal loop, because it
+  requires the copy's path in the message and `rejects_variant` takes fixed
+  fragments.
+
+Left as they are:
+
+- Probes that set `LOCALAPPDATA` for another purpose: `fatal_report` empties
+  it, then names a Unicode profile that must not exist yet; `user_stages` points it at its scratch
+  for the whole process; `debug_console`'s `replay_checks.cpp` and
+  `level_editor_dpi`'s `pending_checks.h` set the CRT and Win32 copies
+  together, which `IsolatedSave` does not.
+- The PowerShell spellings of the save path, handed to
+  [`HYG#88`](#painter-verifier-evidence-helpers-hyg88), and the other private
+  file readers and `Variants`, handed to
+  [`HYG#87`](#probe-tidy-ups-hyg87). `movement`'s `ContentVariant` also
+  rewrites text by hand, so it stays with that probe.
+
+Both presets build under `/W4 /WX`. The eighteen touched cases (`settings`,
+`match_records`, `player_profiles`, `display_trial`, `remembered_setup`,
+`series_stage_rule`, `input_bindings`, `combat_feedback`, `view_shake`,
+`story_audio`, `practice_workshop`, `locales`, `menu_presentation`,
+`weapon_catalog`, `text_wrap`, `idle_drip`, `debug_console` and `menu_text`)
+passed in Debug and Release, and no `ColourWars-*` folder was left in
+`%TEMP%`. `check-level-editor.ps1` and `check-painter.ps1 -CompileOnly` passed
+in both presets. On MattPC the plain painter matrix and every focused leaf but
+the three that need the private trial passed in Debug; in Release the same
+passed, less the three tune-colour leaves that refuse Release by design. The review
+follow-up rebuilt both presets and passed `story_audio`, `quiet_character`,
+`low_paint`, `movement_contact`, `weapon_feedback`, `paint`, `idle_drip` and
+`text_wrap` in Debug and Release.
+
+The row as filed. Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
 `LOCALAPPDATA` override with `remove_all`, `save_path()`, `save_bytes()` and a RAII
 `ReplacementLock`. Replace the about twenty copies (`display_trial.cpp:26`,
 `settings.cpp:20`, `remembered_setup.cpp:40`, `menu_motion_checks.h:7`,
@@ -1555,7 +1773,78 @@ exist in `support/replacement_lock.h`; fold them into `isolated_save.h`. Port
 
 ### Level-driving and route fixtures (`HYG#85`)
 
-After `HYG#83`. Move `one_bot_roster`, `owned_top_paint`,
+**Done 2026-11-06; probes only, no game behaviour change.** Trial counts,
+measurements and receipts are unchanged.
+
+- [bot_navigation/fixtures.h](../scripts/acceptance/bot_navigation/fixtures.h)
+  has `opposing`, `one_bot_roster` (an idle keyboard human against the bot in
+  seat 1), `two_a_side_roster`, `owned_top_paint` and
+  `check_final_input_replay`. The nine one-bot roster copies are gone
+  (`bot_trials`, `bot_arena_routes`, `bot_ascents`, `bot_blockout_routes`,
+  `bot_hill_routes`, `bot_mover_routes`, `bot_navigation`, `bot_slab_routes`,
+  `bot_turbulence_routes`). So are six `owned_top_paint` copies (arena,
+  ascents, mover, navigation, territory and turbulence) and nine replay blocks
+  (the route and trial cases, `bot_combat_trials` and `bot_team_trials`).
+  `team_gate` and `bot_team_trials` share `two_a_side_roster`.
+  `bot_team_trials`' `Trial::team(seat)` replaces eight copies of the
+  seat-to-team expression. `bot_trials` dropped its `Tape`, `snapshot` and
+  `physical_inputs` copies; it keeps its own four-stage `World`.
+- [support/player_course.h](../scripts/acceptance/support/player_course.h)
+  holds `acceptance::PlayerCourse`: one Player in a bare Scene, stepped in
+  `Level`'s order (`begin_step`, `finish_step`, `step`). The `Course`
+  fixtures in `tool_motion`, `combat_feedback`, `movement_contact`,
+  `quiet_character`, `results_awards`, `view_shake`, `weapon_feedback`,
+  `movement`, `paint_underfoot` and `fixed_slab` derive from it, and so does
+  `movement`'s `LegacyRun` (`movement/legacy_map_checks.cpp`), ported after
+  review, which steps with the weapon moved and requires no shot. Those that
+  own their preferences hold them in a base declared first, so the
+  preferences outlive the Player.
+- [support/route_run.h](../scripts/acceptance/support/route_run.h) and its
+  `.cpp`, a source of the three cases in `cases.psd1`, hold the Map, Services
+  and Run that `crossfeed`, `cq_blockout` and `press_tower` each copied. The
+  shared copy is Crossfeed's, the superset. `cq_blockout/fixtures.cpp` and
+  `crossfeed/fixtures.cpp` are gone. Press Tower keeps only its own helpers,
+  and its jumps go through `jump_once`, which keeps its single-takeoff check.
+  CQ's jumps hold through the landing window, as before. `Services` loads the
+  manifest's assets with `load_cpu_assets`, as `turbulence_blockout`'s does
+  (handed over by `HYG#83`). One `steer` replaces crossfeed's five steering
+  copies and the ones in CQ and Press Tower. Press Tower turns off the
+  shared tick's swept and launch paint totals, which it never reads and which
+  made its run half again as long.
+- `turbulence_blockout`'s geometry and tool checks share `paint_region`.
+  `movement_feedback_visual`'s main calls `build_course` instead of a copy of
+  it.
+
+Only failure wording changed. The route-run messages name the stage from one
+template, and the replay and second-human messages name the trial.
+
+Left as they are:
+
+- `turbulence_blockout`'s own Services and Run. That fixture is shaped
+  differently (no Map, its own target player). Its steering, and
+  `turbulence_movers`', `movement_course`'s, `turbulence_slab_routes`' and
+  the painter's braking copies, keep their own copies.
+- `bot_combat_trials`' and `bot_scan_cost`'s rosters (three seats; a bot count
+  and per-seat tools). `bot_territory`'s roster, which leaves the human's tool
+  at its default. `bot_slab_routes`' slab-frame `owned_slab_paint`.
+  `bot_gate_routes`' per-step replay. `bot_scan_cost`'s `physical_inputs`.
+
+Both presets build under `/W4 /WX`. The 28 touched cases passed in Release
+and Debug: the thirteen bot cases (`bot_team_trials` and the other opt-in
+trials included), `team_gate`, `crossfeed`, `cq_blockout`, `press_tower`,
+`turbulence_blockout`, the ten `Course` cases and `fixed_slab`.
+Release run logs and CSVs were compared with a run of the parent commit: all 44
+match, trial counts, `MEASURE` lines and the crossfeed, CQ and Turbulence
+blockout receipts included, apart from `fixed_slab`'s process-id folder name.
+No fingerprint was compared before and after: the bot cases print none, and no
+Debug baseline was run. Fingerprints were checked only within each run, where
+every replay must reproduce its recording's state (and, in Debug, its complete
+`MatchFingerprint`) in both presets.
+`check-movement-feedback.ps1` passed in both presets, and
+`check-acceptance-selection.ps1` passed.
+
+The row as filed. After `HYG#83`, which is done: its `support/content_world.h` and
+`manifest_level_paths` are there to build on. Move `one_bot_roster`, `owned_top_paint`,
 `check_final_input_replay` and the trial rosters into
 `bot_navigation/fixtures.h`. Delete the copies in `bot_trials.cpp:137`,
 `bot_arena_routes.cpp:89` and `:119`, `team_gate.cpp:411` and the other bot
@@ -1570,7 +1859,80 @@ The trial fingerprints and counts must match before and after.
 
 ### `painter_visual` fixtures (`HYG#86`)
 
-Add the following to `painter_fixtures.h`:
+**Done 2026-11-06; probes only, no game behaviour change.** Pins and evidence
+counts are unchanged; one seeding change is noted below.
+
+- [painter_fixtures.h](../scripts/acceptance/painter_visual/painter_fixtures.h)
+  now holds the shared fixtures. `TuneColourScratch` is the private copies of
+  `tuning.json` and `presentation.json`, the isolated save and TEMP, and the
+  live content restored when a leaf ends. `TuneColourSession` derives from it
+  and adds the Save, session, GameData, stage catalog and attached
+  `DebugDirector`, with its transcript, seeds (`seed_tune_colour_display`,
+  `seed_tune_colour_jump` or the leaf's own) and one `preference_values`. All
+  33 tune-colour leaves use the session, and `stage_preview_background` uses
+  the scratch alone, because its probe builds its own GameData.
+  `TuneColourTemp`, `tune_colour_bytes` and `tune_colour_write` moved in from
+  `tune_colour_checks.h`.
+- `add_probe_font` builds the probe font that drops '~' and can shift chosen
+  glyphs, with `is_digit` and `is_brace`. It replaces the nine shifted copies
+  and the fifteen unshifted copies of the same loop (`menu_text` and
+  `save_status` were ported after review).
+- `CanvasProbeRoot` and `stack_frame` replace the End, Pause and Results
+  probe roots and five copies of the stack read-back (`ResumeProbeRoot`, which
+  draws nothing, stays). `pixel_bounds`, `pixel_offset` and `srgb_luminance`
+  replace `countdown_crop_bounds` and the HUD helpers. `controlled_spray`
+  replaces fourteen hand-built spray contacts.
+- `opening_style`, `hud_style` and `player_identity_style` fingerprint every
+  field, strings and lists included. `field_count` static asserts pin each
+  struct's member count, so a new field fails the build until it is added. The
+  per-leaf `*_fixed_style` functions name what they mask on a copy. The old
+  lists had dropped the opening's strings, the HUD's low-paint, cursor,
+  teammate and label fields, and the identity's bot label. Identity style,
+  palette comparison and resource names are now shared, not copied.
+- `seed_play_settings` seeds memory-only play preferences in the Save before
+  its session is built, replacing the `const_cast` seeding in 34 leaves
+  (`resolution_text` sets the Save's play settings itself).
+  Because the Save now holds them, a later save write by the leaf carries the
+  seeded volumes and comfort switches. Before, the session's next refresh
+  undid them. `live_play_settings` is the one named `const_cast` left. It is for
+  leaves that flip Reduce effects or a volume under an open page, which the
+  session has no setter for; `stage_scan`, which only reads them, takes the
+  session's `play_settings()` (fixed after review).
+- `options_reference.h` holds the independent Options page reference that the
+  defaults and paused Options leaves had each written. `controls_help_copy`
+  and `with_default_keys` hold the Controls help copy that the help,
+  Controls/audio and Pad sticks leaves spelled out.
+- `StageScanStderrCapture` is non-copyable. It points the descriptor at the
+  file with `_dup2` instead of reopening the stream, so a failed start leaves
+  stderr intact. `finish()` fails if the descriptor cannot be restored.
+
+Only failure wording changed (the shared fixtures' messages).
+
+Left as they are:
+
+- Probe fonts of other shapes: `duration_text`'s font without '+',
+  `resolution_text`'s tall '~', the 1-pixel digit shifts in `percentage`,
+  `stage_count` and `stage_summary`, `result_percentage`'s 4/2 shift,
+  `title_home_text`'s font that skips missing glyphs and `settings_value`'s
+  tall '~'.
+- `live_play_settings` users, and `stage_preview_background`'s fixture class,
+  which seeds through it in its constructor after its session exists. The same
+  seeding in `display_awake_lifecycle.cpp`, outside the painter, goes to
+  [`HYG#87`](#probe-tidy-ups-hyg87).
+- Each tune leaf's own `unchanged` and `command` lambdas, whose checks and log
+  prefixes differ.
+
+Both presets build under `/W4 /WX`, and `check-painter.ps1 -CompileOnly`
+passed in both, with both pad readers. On MattPC every focused leaf passed in
+Debug (99, the slab and mover leaves with the shipped trial files) and in
+Release (96, all but the three Debug-only tune leaves), with the pins as they
+were. The plain matrix also passed in both presets. Only
+`-TurbulenceShoulderOnly`, which no change touched, was not run. The review fixes
+(`stage_scan`'s read-only play settings, the `menu_text` and `save_status`
+fonts) passed `-StageScanOnly`, `-MenuTextOnly`, `-SettingsMenuOnly` and
+`-ControlsMenuOnly` in both presets.
+
+The row as filed. Add the following to `painter_fixtures.h`:
 
 - `TuneColourSession`, the about-90-line scaffold copied into about twenty
   `*_tune_colour` headers (`blocked_shot_tune_colour_checks.h:275`);
@@ -1595,6 +1957,129 @@ Port leaves in batches. Each batch runs its leaves on MattPC with identical
 pins.
 
 ### Probe tidy-ups (`HYG#87`)
+
+**Done 2026-11-06; probes only, no game behaviour change.** Every probe takes the
+same steps, seeds and pins. Besides failure wording and PASS summaries, a few
+checks are stricter: `require_leaf`, `motion_of`, the clipboard restore,
+`DeleteFileW` and `display_awake_lifecycle`'s seeded settings.
+
+- **Stale `srand`.** A level build and `Level::update` have read no `rand()`
+  since `HYG#39`, so the `srand` calls before builds and updates went: the six
+  named (Press Tower's painter leaf, `aim_marker`, `player_identity`,
+  `debug_console`'s `level_checks.cpp`, crossfeed's `home_loop_checks.cpp`,
+  `paint_surfaces/fixtures.h`) and their siblings in `blocked_shot`, three more
+  crossfeed checks, `idle_drip`, `turbulence_blockout` and ten more painter
+  leaves. Those before a `rand()` the probe compares, a terminal-RNG witness
+  or a `shuffle_teams` call stay.
+- **Dead code.** 24 unused `Mouse` members and their `mouse.h` includes,
+  `remembered_setup`'s nine unused `SettingsSession` locals, `team_gate`'s
+  write-only `bot_passes`, `instant_replay`'s claim of the slot
+  `begin_input_claims` already gave seat 0, the painter's three `#else` throws
+  its startup requires already refuse, the `content` and `canvas` parameters
+  three painter checks only silenced, five unused standard includes and the
+  unbuilt `turbulence_slab_stage/tools/register.cpp`. Crossfeed's
+  `swept_surface` is not dead any more: since `HYG#85` it is the shared
+  route-run fixture's, and CQ sets it.
+- **`debug_console`.** One `{path, accessor}` table, `tuned_colours`, lists the
+  58 audited colours, with a named index for every row (the first thirteen were
+  bare numbers); `colour_paths` and `colour_values` derive from it, and the
+  sweep's hand-written list is a loop. `require_leaf` replaces 200 dereferenced
+  JSON `find()` results. `reserved_windows_stems` replaces three copies of the
+  device-name list. `DebugPerf::capacity` and `max_capture_frames` and
+  `ReplayFile::format_version` and `checkpoint_interval` replace their literal
+  values. `fixtures.h` is the one index of the checks `main` calls, and its
+  colour comment names all its users.
+- **`level_editor`.** `named`, `property`, `refuses` and `refuses_file` live in
+  the folder's fixtures (seven copies gone), and its `contents`/`write` pair
+  gave way to `read_text` and `write_text`. `motion_of` returns a copy of the
+  motion block and checks it exists. The registration check requires its
+  `DeleteFileW`, and `level_editor_dpi`'s clipboard check requires the caller's
+  text back before its PASS line says so.
+- **Idioms.** [support/stderr_capture.h](../scripts/acceptance/support/stderr_capture.h)
+  holds the painter's descriptor capture as `acceptance::StderrCapture`;
+  `match_records`' and `debug_console`'s `captured_stderr` use it, so a
+  throwing body no longer leaves stderr redirected. `story_audio`'s last five
+  pieces are included inside the fixture's namespace like the rest. File-local
+  helpers in `input_bindings` and the perf checks have internal linkage.
+  `team_palette.cpp` lost its BOM (the runner compiles with `/utf-8`).
+  `fatal_report` takes a `ScratchDirectory` instead of leaving
+  `fatal-report-fixtures-*` beside its executable. `scratch.h`, `json_fixture.h`
+  and `stderr_capture.h` name paths in messages as UTF-8 (`utf8_path`):
+  `path.string()` threw on `fatal_report`'s Unicode profile before the check
+  could report.
+- **Wording.** Row ids in probe messages and comments take their `#`
+  (`ROAD#34`, `ROAD#35`, `ED#16`, `DBG#2`-`DBG#17`, `HYG#17`, `CI#1`), three
+  `.ps1` messages included. About forty words fused to numbers are split
+  (`exceeded 500`, `requires 1280x720`); evidence stems and CSV keys are not
+  touched. Review found that sweep partial, so a second pass split about 145
+  more across 75 probe files: messages (`must be 1..4`, `at exactly 46 units`),
+  comments (`ends at 329.21875`, `Crack 42`) and the painter tune leaves'
+  packed PASS lines (`glass: 100 readbacks/20 rows`). What stays fused is
+  data: evidence and route names (`tap120`), receipt values, `key=value`
+  diagnostics (`failed200=`) and identifiers (`row0`, `seat0`, `series3`).
+  The sweep is still partial in one place: about twenty painter leaves' PASS
+  receipts glue counts to punctuation and units (`acting:90readbacks/16rows`,
+  `,45 updates`), the same packed style as the `diagnostics.ps1` lines that
+  mirror them; both go to [`HYG#88`](#painter-verifier-evidence-helpers-hyg88). The two painter headers that called themselves drafts don't. The
+  ten named PASS summaries say attended, human or pad checks are outside the
+  probe instead of "remain open".
+- **From `HYG#62`.** 35 probe files spelled the shipping step through
+  `StepTimer`; they use `SECONDS_PER_STEP`, the same value.
+- **From `HYG#84`.** The listed private readers and writers use `read_text`,
+  `write_text`, `read_document` and `write_document`. 19 painter leaves read
+  their save through `IsolatedSave::save_bytes`, and two through `read_text` of
+  the path they are handed. `menu_text`'s and `menu_focus_motion`'s `Variants`
+  and `gameplay_tuning`'s and `tunnelling`'s `Fixtures` derive from
+  `JsonVariants`. The edit-a-copy writers in `aim_marker`, `blocked_shot`,
+  `cursor_marker`, `player_identity`, `teammate_markers`, `team_palette`,
+  `user_stages`, `moving_structure` (loader, editor-save and replay checks) and
+  the ferry, landmark and monitor painter leaves write with `write_document`.
+- **From `HYG#86`.** `display_awake_lifecycle` seeds its play settings in the
+  Save before the session reads them, and checks the session took them.
+
+Left as they are:
+
+- `srand` before a compared `rand()`, a terminal-RNG witness or a shuffle (see
+  above). The comments that name an old seed (`srand(41731)` and the like)
+  record what `HYG#39` replaced.
+- Writers that only encode to a string and parse it back (`bot_driver`,
+  `crossfeed`, `fixed_slab`, `handicap`, `level_editor`'s `encode`,
+  `moving_structure/fixtures.h`, `paint_underfoot`, `painter_visual.cpp`,
+  `pad_buttons`, `remembered_setup`'s section, `debug_console`'s
+  `stage_replay_checks.cpp`), `frame_pacing`'s streaming metadata writer and
+  `movement`'s text-editing `ContentVariant` (as `HYG#84` left it).
+- The "tick and `command()` helpers": no copy of either was found in
+  `debug_console` at this tree. The `command` and `unchanged` lambdas are the
+  painter tune leaves', which `HYG#86` left as they differ.
+- Unused includes beyond those the removed code served and five standard
+  headers a scan found; there is no include checker to sweep the rest.
+- The PowerShell side: `check-painter/diagnostics.ps1` and
+  `evidence-record/*.ps1` still say acceptance "remains open" and fuse words to
+  numbers (`Debug adds15`, `full720p`); handed to
+  [`HYG#88`](#painter-verifier-evidence-helpers-hyg88).
+  `check-display-awake.ps1`'s `exceeded180` is `HYG#89`'s `:80` message.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Debug (79 cases) and Release (78), the runnable
+opt-in cases (`-OptIn`, 14) passed in both, and the `Quick` opt-in cases passed
+in both. `user_stages` and `moving_structure`, touched again after the Release
+run had compiled, passed again in Release. After the second wording pass the
+touched cases (`balance_regions`, `balance_runner` in Debug, `debug_console`,
+`menu_text`, `paint_underfoot`, `moving_structure`, `fixed_slab` and the three
+runnable Turbulence cases) passed again in both presets, and the two
+`NeedsTrial` cases, the painter and frame pacing compiled (`-CompileOnly`). On MattPC `check-painter-sweep.ps1`
+passed every focused leaf it runs in Debug (97) and Release (94); the three
+Turbulence trial leaves need a private file and were not run, though their
+only changes were dropped `srand` calls and wording. `check-level-editor.ps1`,
+`check-display-awake.ps1`, `check-movement-feedback.ps1` and
+`check-paint-fx.ps1 -CompileOnly` passed in both presets, and both selection
+checkers passed in pwsh and Windows PowerShell 5.1. One Debug
+`check-level-editor.ps1` run, made while other probes loaded the machine,
+failed `level_editor_dpi`'s "MK_CONTROL canvas messages changed the probe
+thread's keyboard state" with and without this row's clipboard change; it
+passed when rerun alone.
+
+The row as filed:
 
 - Delete the `srand` calls that have seeded nothing since `HYG#39`
   (`press_tower_checks.h:49`, `aim_marker.cpp:320`, `player_identity.cpp:328`,
@@ -1622,11 +2107,8 @@ pins.
   `CI1`) and the stale "draft" headers. `HYG#61` already wrote `POL#36` in
   `moving_structure/replay_checks.cpp`.
 - Reword the PASS summaries that still say attended or human acceptance
-  "remains open" (from `HYG#61`): `cq_blockout.cpp`, `crossfeed.cpp`,
-  `crossfeed/pressure_checks.cpp`, `press_tower.cpp`, `fixed_slab.cpp`,
-  `turbulence_blockout.cpp`, `turbulence_slopes.cpp`,
-  `balance_runner/self_checks.cpp` and the painter's `cq_blockout_checks.h`
-  and `crossfeed_checks.h`.
+  "remains open" (from `HYG#61`), and the hand-offs from `HYG#62`, `HYG#84` and
+  `HYG#86` recorded above.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 
@@ -1646,6 +2128,17 @@ Also:
 - Check the git exit codes (`evidence-record.ps1:13`).
 - Treat `check-path.ps1` as required (`check-painter-selection.ps1:265`).
 - Fix the contact sheet's rumble filter (`contact-sheet.ps1:145`).
+- From `HYG#84`: the PowerShell side still spells the private save path out,
+  in `check-painter.ps1`'s expected save-failure lines and about thirty
+  `verify-*.ps1`. One helper beside `Get-PainterSaveCounts` can own it.
+- From `HYG#87`: `check-painter/diagnostics.ps1` and `evidence-record/*.ps1`
+  still say attended or human acceptance "remains open", which the 2026-11-05
+  decisions waived, and fuse words to numbers (`Debug adds15`, `full720p`,
+  `exceeds99percent`). The probes' own PASS lines were reworded in `HYG#87`,
+  except the packed receipts of about twenty painter leaves
+  (`acting_tune_colour_checks.h:220`, `crack_tune_colour_checks.h:257`,
+  `glass_tune_colour_checks.h:342`: `acting:90readbacks/16rows`,
+  `,45 updates`); split them with the `diagnostics.ps1` lines that mirror them.
 
 Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
 

@@ -228,7 +228,7 @@ function Check-PainterPaths([string] $CaseName, [bool] $AbsoluteOutput, [string]
             "Path preflight did not reach missing CMake: $($pathObservation.diagnostic)"
         Require-Selection ($pathObservation.actual_output_directory -ceq $expectedOutput -and
             $pathObservation.output_created -and -not $pathRecord.process_relative_output_created) `
-            'HYG17 painter OutputDirectory resolved against process cwd instead of caller PowerShell location.'
+            'HYG#17 painter OutputDirectory resolved against process cwd instead of caller PowerShell location.'
         Require-Selection ($pathObservation.artifact_files -eq 1) 'Painter path preflight lost its single private save fixture.'
         if ($TrialSelector) {
             Require-Selection ($providerDigest -cne $processDigest -and
@@ -237,7 +237,7 @@ function Check-PainterPaths([string] $CaseName, [bool] $AbsoluteOutput, [string]
                 $pathObservation.arguments.Count -eq 2 -and
                 $pathObservation.arguments[1] -ceq ('"' + $providerTrial + '"') -and
                 -not $pathObservation.trial_after_attempted) `
-                'HYG17 painter relative TrialPath did not retain the provider file, initial hash and quoted native argument.'
+                'HYG#17 painter relative TrialPath did not retain the provider file, initial hash and quoted native argument.'
             Require-Selection ((Get-FileHash -LiteralPath $providerTrial -Algorithm SHA256).Hash -ceq $providerDigest -and
                 (Get-FileHash -LiteralPath $processTrial -Algorithm SHA256).Hash -ceq $processDigest) `
                 'Painter path preflight changed private provider/decoy trial bytes.'

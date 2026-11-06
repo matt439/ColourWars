@@ -6,6 +6,7 @@
 #include "game/config/settings_session.h"
 #include "game/match/match_setup.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <filesystem>
 #include <fstream>
@@ -21,17 +22,9 @@ namespace
 
     void write_section(const std::filesystem::path& path, const std::string& section)
     {
-        std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-        stream << "{\"save_version\":2,\"music_volume\":41,\"last_match\":" << section << '}';
-        require(stream.good(), "Cannot write isolated handicap remembered-setup fixture");
+        acceptance::write_text(path, "{\"save_version\":2,\"music_volume\":41,\"last_match\":" + section + '}');
     }
 
-    std::string read_bytes(const std::filesystem::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        require(stream.good(), "Cannot read isolated handicap remembered-setup fixture");
-        return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-    }
 
     MatchSetup handicapped_roster()
     {
@@ -103,7 +96,7 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path)
         legacy.last_match_setup()->players[1].handicap == 0, "A save from before handicaps gained one");
 
     // Strict validation refuses an unresolved handicap without touching the save.
-    const std::string before = read_bytes(save_path);
+    const std::string before = acceptance::read_text(save_path);
     LastMatchSetup invalid = captured;
     invalid.players[1].handicap = handicaps::count;
     bool rejected = false;
@@ -113,6 +106,6 @@ void check_handicap_remembered_setup(const std::filesystem::path& save_path)
     rejected = false;
     try { legacy.remember_match_setup_and_save(invalid); }
     catch (const std::invalid_argument&) { rejected = true; }
-    require(rejected && read_bytes(save_path) == before, "An out-of-range handicap reached the save");
+    require(rejected && acceptance::read_text(save_path) == before, "An out-of-range handicap reached the save");
     require(invalid.normalised().players[1].handicap == 0, "Recovery kept an out-of-range handicap");
 }

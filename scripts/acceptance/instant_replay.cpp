@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
 #include "game/match/round_tape.h"
-#include "engine/input/mouse.h"
 #include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
@@ -23,12 +23,10 @@ namespace
     public:
         explicit World(const std::filesystem::path& content) : assets(content)
         {
-            for (const char* stage : { "crossfeed", "turbulence", "king_of_the_hill", "close_quarters", "press_tower",
-                "turbulence_ferry_trial", "turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" })
+            for (const acceptance::ManifestEntry& stage : acceptance::manifest_level_paths(content))
             {
-                auto info = std::make_unique<LevelLoadedInfo>((content / "levels" /
-                    (std::string(stage) + ".json")).string().c_str());
-                info->validate(); levels.add(stage, std::move(info));
+                auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage.path).c_str());
+                info->validate(); levels.add(stage.name, std::move(info));
             }
         }
         std::unique_ptr<Level> build(const MatchSetup& settings, OpeningMode opening, const MatchRandom& random)
@@ -43,7 +41,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "instant-replay" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     };
 
@@ -52,7 +49,6 @@ namespace
     {
         MatchSetup settings; settings.set_player_count(4);
         settings.begin_input_claims(0);
-        std::ignore = settings.claim_input_slot(0);
         for (int seat = 1; seat < 4; ++seat)
         {
             settings.set_player_bot(seat, static_cast<BotDifficulty>(seat % 3));
@@ -151,7 +147,7 @@ namespace
     void check_stage(World& world, const char* stage, unsigned int seed)
     {
         const MatchSetup settings = roster(stage);
-        const float step = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float step = SECONDS_PER_STEP;
 
         // The round, as GameLevel plays it.
         RoundTape tape;

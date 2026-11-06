@@ -33,13 +33,13 @@ bool remembered_setup_matches(const LastMatchSetup& actual, const MatchSetup& ex
     return true;
 }
 
-void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
+void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output, bool reader)
 {
     const auto root = output / "remembered-setup-profile";
-    const NestedSaveProfile profile(root);
-    const auto save_path = root / "ColourWars/save_data.json";
+    const acceptance::IsolatedSave profile(root);
+    const auto save_path = acceptance::save_path_in(root);
     const auto completed = output / "remembered-setup-writer.complete";
     require(!reader || std::filesystem::is_regular_file(completed), "The separate reader needs a completed writer process");
     std::unique_ptr<Save> preferences = std::make_unique<Save>(); SettingsSession preferences_session(*preferences);
@@ -101,7 +101,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     };
     const auto key_tap = [&](Key key)
         { app.keyboard()->on_key_down(key); tick(dt); app.keyboard()->on_key_up(key); tick(dt); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto neutral = [&](bool pad_present)
     {
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
@@ -288,7 +288,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
             presentation.menu().item_font), session.continue_string(presentation.menu_text().end));
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        const RectangleI card = countdown_crop_bounds(camera.calculate_view_rectangle(RectangleF(end.layout.position, extent)));
+        const RectangleI card = pixel_bounds(camera.calculate_view_rectangle(RectangleF(end.layout.position, extent)));
         require(foreground_crop(frame(), card, 0).pixels == foreground_crop(wanted, card, 0).pixels,
             "The real series lost its expected ongoing Replay Draw card"); preserved();
         if (round == 1)
@@ -354,6 +354,5 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         "A fresh Save object did not reload the final user choices after all exclusions");
     { std::ofstream done(completed); done << committed << '\n'; require(done.good(), "Cannot retain writer completion evidence"); }
     require(evidence.good(), "Remembered setup writer evidence write failed");
-    std::ignore = canvas;
     std::cout << "PASS remembered setup actual normal GameMenu start/save, editable/cancelled choices, sparse explicit joining, Pause Restart and two drawn series rounds; Debug script/bot/replay exclusions where compiled; separate reader required for process relaunch\n";
 }

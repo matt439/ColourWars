@@ -6,7 +6,8 @@
 #include "game/directory_consts.h"
 #include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
+#include "scripts/acceptance/support/stderr_capture.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,7 +15,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <io.h>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -26,75 +26,17 @@ namespace
 {
 	using acceptance::require;
 
-	// Save reads LOCALAPPDATA through the CRT. This process never opens the
-	// player's real save, and removes only the paths it creates here.
-	class IsolatedSaveDirectory
+	// The probe's private save root, and where Save puts its copies of an
+	// unreadable save there.
+	class IsolatedSaveDirectory : public acceptance::IsolatedSave
 	{
 	public:
-		IsolatedSaveDirectory()
-		{
-			wchar_t* previous = nullptr;
-			size_t length = 0;
-			require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0,
-				"Could not read LOCALAPPDATA");
-			if (previous != nullptr)
-			{
-				this->previous_ = previous;
-				std::free(previous);
-			}
+		IsolatedSaveDirectory() : acceptance::IsolatedSave(L"match-records") {}
 
-			const std::filesystem::path temporary = std::filesystem::temp_directory_path();
-			wchar_t unique[MAX_PATH] = {};
-			require(GetTempFileNameW(temporary.c_str(), L"cwr", 0, unique) != 0,
-				"Could not reserve the acceptance directory");
-			this->root_ = unique;
-			require(DeleteFileW(unique) != 0 &&
-				std::filesystem::create_directory(this->root_),
-				"Could not create the acceptance directory");
-			require(_wputenv_s(L"LOCALAPPDATA", this->root_.c_str()) == 0,
-				"Could not isolate LOCALAPPDATA");
-		}
-
-		~IsolatedSaveDirectory()
-		{
-			_wputenv_s(L"LOCALAPPDATA", this->previous_.c_str());
-			std::error_code ignored;
-			std::filesystem::remove(this->save_path().wstring() + L".tmp", ignored);
-			std::filesystem::remove(this->save_path(), ignored);
-			for (int copy = 1; copy <= 9; ++copy) { std::filesystem::remove(this->side_copy(copy), ignored); }
-			std::filesystem::remove(this->root_ / L"ColourWars", ignored);
-			std::filesystem::remove(this->root_, ignored);
-		}
-
-		std::filesystem::path save_path() const
-		{
-			return this->root_ / L"ColourWars" / L"save_data.json";
-		}
-
-		// Where Save keeps its nth copy of an unreadable save.
 		std::filesystem::path side_copy(int copy) const
 		{
-			return this->root_ / L"ColourWars" / (L"save_data.unreadable-" + std::to_wstring(copy) + L".json");
+			return this->save_path().parent_path() / (L"save_data.unreadable-" + std::to_wstring(copy) + L".json");
 		}
-
-		void write(const std::string& json) const
-		{
-			std::filesystem::create_directories(this->save_path().parent_path());
-			std::ofstream output(this->save_path(), std::ios::binary | std::ios::trunc);
-			output << json;
-			require(output.good(), "Could not write a save fixture");
-		}
-
-		std::string contents() const
-		{
-			std::ifstream stream(this->save_path(), std::ios::binary);
-			require(stream.good(), "Could not read the acceptance save");
-			return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-		}
-
-	private:
-		std::filesystem::path root_;
-		std::wstring previous_;
 	};
 
 	// The flat version-0 layout every existing save has.
@@ -243,13 +185,13 @@ namespace
 	void check_versions(const IsolatedSaveDirectory& directory)
 	{
 		// Version 0: the flat file every existing install has.
-		directory.write("{" + flat_preferences + "}");
+		directory.write_save("{" + flat_preferences + "}");
 		Save legacy;
 		legacy.load_save_file();
 		require_flat_preferences(legacy, "An unversioned save lost a preference");
 		require(legacy.records().stages().empty(), "An unversioned save gained records");
 		require(legacy.save_to_file(), "Could not rewrite an unversioned save");
-		const std::string rewritten = directory.contents();
+		const std::string rewritten = directory.save_bytes();
 		require(rewritten.rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0 &&
 			rewritten.find("\"aim_sensitivity\":4") != std::string::npos &&
 			rewritten.find("\"records\":[]") != std::string::npos,
@@ -259,20 +201,20 @@ namespace
 		require_flat_preferences(reread, "A rewritten current-version save lost a preference");
 
 		// A newer layout still loads what this build knows; unknown parts go.
-		directory.write("{\"save_version\":7," + flat_preferences +
+		directory.write_save("{\"save_version\":7," + flat_preferences +
 			",\"records\":[{\"stage\":\"arena\",\"versus_played\":3}],\"future\":{\"x\":1}}");
 		Save newer;
 		newer.load_save_file();
 		require_flat_preferences(newer, "A newer save lost a preference this build knows");
 		require(newer.records().find("arena") != nullptr && newer.records().find("arena")->versus_played == 3,
 			"A newer save lost records this build knows");
-		require(newer.save_to_file() && directory.contents().find("future") == std::string::npos &&
-			directory.contents().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0,
+		require(newer.save_to_file() && directory.save_bytes().find("future") == std::string::npos &&
+			directory.save_bytes().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0,
 			"Saving over a newer layout did not write this build's version");
 
 		for (const char* version : { "\"one\"", "null", "-1", "1.5" })
 		{
-			directory.write(std::string("{\"save_version\":") + version + "," + flat_preferences + "}");
+			directory.write_save(std::string("{\"save_version\":") + version + "," + flat_preferences + "}");
 			Save odd;
 			odd.load_save_file();
 			require_flat_preferences(odd, "A malformed version key reset a preference");
@@ -288,14 +230,14 @@ namespace
 		// A broken records section leaves every preference.
 		for (const char* broken : { "{}", "true", "null", "\"records\"", "7" })
 		{
-			directory.write("{\"save_version\":1," + flat_preferences + ",\"records\":" + broken + "}");
+			directory.write_save("{\"save_version\":1," + flat_preferences + ",\"records\":" + broken + "}");
 			Save save;
 			save.load_save_file();
 			require_flat_preferences(save, "A corrupt records section reset a preference");
 			require(save.records().stages().empty(), "A corrupt records section produced records");
 		}
 		// Broken preferences leave the records.
-		directory.write("{\"save_version\":1,\"resolution\":true,\"fullscreen\":3,"
+		directory.write_save("{\"save_version\":1,\"resolution\":true,\"fullscreen\":3,"
 			"\"team_palette\":[],\"aim_sensitivity\":\"x\",\"pad_sticks\":7,\"view_shake\":null," +
 			valid_records + "}");
 		Save broken_preferences;
@@ -310,7 +252,7 @@ namespace
 			"Corrupt preferences did not use their defaults");
 
 		// Malformed entries are skipped one by one; values are bounded.
-		directory.write("{\"save_version\":1," + flat_preferences + ",\"records\":["
+		directory.write_save("{\"save_version\":1," + flat_preferences + ",\"records\":["
 			"null,7,{\"versus_played\":3},{\"stage\":\"\"},{\"stage\":5},"
 			"{\"stage\":\"kept\",\"versus_played\":-4,\"team_a_wins\":1.5,\"draws\":\"2\","
 			"\"best_win_percentage\":150,\"best_coverage_percentage\":-3,\"practice_played\":6},"
@@ -333,7 +275,7 @@ namespace
 	void check_round_trip(const IsolatedSaveDirectory& directory)
 	{
 		// A stage the manifest no longer lists keeps its record through a write.
-		directory.write("{" + flat_preferences + ",\"records\":[{\"stage\":\"retired\","
+		directory.write_save("{" + flat_preferences + ",\"records\":[{\"stage\":\"retired\","
 			"\"versus_played\":9,\"team_a_wins\":5,\"team_b_wins\":3,\"draws\":1,"
 			"\"best_win_percentage\":88.5,\"practice_played\":0}]}");
 		Save save;
@@ -342,7 +284,7 @@ namespace
 		require(won.recorded && won.new_best, "Recording a result did not report a new best");
 		save.record_result_and_save("movement_course", versus(100.0f, 100.0f));
 		save.record_result_and_save("close_quarters", practice(42.42f));
-		require(directory.contents().find("\"close_quarters\"") != std::string::npos,
+		require(directory.save_bytes().find("\"close_quarters\"") != std::string::npos,
 			"Recording a result did not write the save");
 
 		Save restored;
@@ -369,34 +311,17 @@ namespace
 			"Recorded practice results did not reload");
 	}
 
-	std::string read_bytes(const std::filesystem::path& path)
-	{
-		std::ifstream stream(path, std::ios::binary);
-		require(stream.good(), "Could not read a save side copy");
-		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-	}
-
 	// What `body` writes to stderr (the C stream), with \r\n read back as \n.
 	template <typename Body>
 	std::string captured_stderr(const IsolatedSaveDirectory& directory, Body body)
 	{
 		const std::filesystem::path path = directory.save_path().parent_path() / L"stderr.txt";
-		std::fflush(stderr);
-		const int saved = _dup(_fileno(stderr));
-		require(saved != -1, "Could not duplicate stderr");
-		FILE* file = nullptr;
-		if (_wfopen_s(&file, path.c_str(), L"wb") != 0 || file == nullptr)
 		{
-			_close(saved);
-			throw std::runtime_error("Could not open the stderr capture file");
+			acceptance::StderrCapture capture(path);
+			body();
+			capture.finish();
 		}
-		_dup2(_fileno(file), _fileno(stderr));
-		body();
-		std::fflush(stderr);
-		_dup2(saved, _fileno(stderr));
-		_close(saved);
-		std::fclose(file);
-		std::string text = read_bytes(path);
+		std::string text = acceptance::read_text(path);
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
 		std::erase(text, '\r');
@@ -408,7 +333,7 @@ namespace
 	// recover field by field throw nothing and print nothing.
 	void check_section_reset_report(const IsolatedSaveDirectory& directory)
 	{
-		directory.write("{\"save_version\":1," + flat_preferences + ",\"records\":7}");
+		directory.write_save("{\"save_version\":1," + flat_preferences + ",\"records\":7}");
 		Save broken_records;
 		const std::string errors = captured_stderr(directory, [&] { broken_records.load_save_file(); });
 		require(broken_records.records().stages().empty(), "A corrupt records section produced records");
@@ -419,7 +344,7 @@ namespace
 			errors.find("); it starts from defaults.") != std::string::npos,
 			"A reset section did not print one stderr line naming the save, its key and the error");
 
-		directory.write("{\"save_version\":1,\"resolution\":true,\"fullscreen\":3,"
+		directory.write_save("{\"save_version\":1,\"resolution\":true,\"fullscreen\":3,"
 			"\"team_palette\":[],\"aim_sensitivity\":\"x\",\"pad_sticks\":7,\"view_shake\":null}");
 		Save broken_fields;
 		const std::string quiet = captured_stderr(directory, [&] { broken_fields.load_save_file(); });
@@ -437,7 +362,7 @@ namespace
 		for (int copy = 1; copy <= 2; ++copy)
 		{
 			const std::string& bytes = corrupt[copy - 1];
-			directory.write(bytes);
+			directory.write_save(bytes);
 			auto save = std::make_unique<Save>();
 			const std::string errors = captured_stderr(directory, [&] { save->load_save_file(); });
 			require(save->resolution() == SaveData{}.resolution &&
@@ -447,20 +372,20 @@ namespace
 				errors.find("save_data.json") != std::string::npos &&
 				errors.find("save_data.unreadable-" + std::to_string(copy) + ".json") != std::string::npos,
 				"An unreadable save did not print one stderr line naming both paths");
-			require(std::filesystem::exists(directory.side_copy(copy)) && read_bytes(directory.side_copy(copy)) == bytes,
+			require(std::filesystem::exists(directory.side_copy(copy)) && acceptance::read_text(directory.side_copy(copy)) == bytes,
 				"An unreadable save was not copied aside byte for byte");
-			require(directory.contents() == bytes, "Loading an unreadable save changed it");
+			require(directory.save_bytes() == bytes, "Loading an unreadable save changed it");
 			// The earlier copy survives the second corrupt load untouched.
-			require(read_bytes(directory.side_copy(1)) == corrupt[0], "A later corrupt load overwrote an earlier copy");
+			require(acceptance::read_text(directory.side_copy(1)) == corrupt[0], "A later corrupt load overwrote an earlier copy");
 			require(!std::filesystem::exists(directory.side_copy(copy + 1)), "An unreadable save was copied twice");
 			last = std::move(save);
 		}
 		require(last->save_to_file(), "A save after an unreadable load did not write");
 		Save restored;
 		const std::string errors = captured_stderr(directory, [&] { restored.load_save_file(); });
-		require(errors.empty() && directory.contents().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
+		require(errors.empty() && directory.save_bytes().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
 			"A save after an unreadable load did not write the real path");
-		require(read_bytes(directory.side_copy(1)) == corrupt[0] && read_bytes(directory.side_copy(2)) == corrupt[1] &&
+		require(acceptance::read_text(directory.side_copy(1)) == corrupt[0] && acceptance::read_text(directory.side_copy(2)) == corrupt[1] &&
 			!std::filesystem::exists(directory.side_copy(3)), "Writing the save disturbed its side copies");
 	}
 
@@ -492,7 +417,7 @@ namespace
 		std::error_code ignored;
 		for (int copy = 1; copy <= 3; ++copy) { std::filesystem::remove(directory.side_copy(copy), ignored); }
 		const std::string bytes = "{" + flat_preferences + "}";
-		directory.write(bytes);
+		directory.write_save(bytes);
 		Save save;
 		std::string errors;
 		{
@@ -509,9 +434,9 @@ namespace
 			errors.find("save_data.json") != std::string::npos &&
 			errors.find("save_data.unreadable-1.json") != std::string::npos,
 			"An unopenable save did not print one stderr line naming both paths");
-		require(std::filesystem::exists(directory.side_copy(1)) && read_bytes(directory.side_copy(1)) == bytes,
+		require(std::filesystem::exists(directory.side_copy(1)) && acceptance::read_text(directory.side_copy(1)) == bytes,
 			"An unopenable save was not copied aside byte for byte");
-		require(directory.contents() == bytes, "Loading an unopenable save wrote over it");
+		require(directory.save_bytes() == bytes, "Loading an unopenable save wrote over it");
 		require(!acceptance::temporary_beside(directory.save_path()),
 			"Loading an unopenable save left a temporary file");
 	}
@@ -527,7 +452,7 @@ namespace
 	{
 		const IsolatedSaveDirectory directory;
 		const std::filesystem::path legacy = labrador::path_from_utf8(directory_consts::legacy_save_file_path());
-		require(read_bytes(legacy) == corrupt_legacy, "The legacy fixture is not the parent's");
+		require(acceptance::read_text(legacy) == corrupt_legacy, "The legacy fixture is not the parent's");
 		// The stderr capture goes beside the per-user save, which is not there yet.
 		std::filesystem::create_directories(directory.save_path().parent_path());
 		for (const bool held : { false, true })
@@ -548,8 +473,8 @@ namespace
 				errors.find("legacy save " + labrador::path_to_utf8(legacy) + " could not be read (") != std::string::npos &&
 				errors.find("it was left in place") != std::string::npos,
 				std::string(which) + " was not reported in one stderr line naming it");
-			require(read_bytes(legacy) == corrupt_legacy, std::string(which) + " was changed");
-			require(directory.contents().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
+			require(acceptance::read_text(legacy) == corrupt_legacy, std::string(which) + " was changed");
+			require(directory.save_bytes().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
 				std::string(which) + " did not leave the defaults written to the per-user save");
 		}
 		return 0;
@@ -586,7 +511,7 @@ namespace
 		GetExitCodeProcess(process.hProcess, &exit_code);
 		CloseHandle(process.hThread);
 		CloseHandle(process.hProcess);
-		const bool kept = read_bytes(scratch / L"save" / L"save_data.json") == corrupt_legacy;
+		const bool kept = acceptance::read_text(scratch / L"save" / L"save_data.json") == corrupt_legacy;
 		std::filesystem::remove_all(scratch, ignored);
 		require(exit_code == 0, "The legacy-save child failed; its FAIL line is above");
 		require(kept, "Loading changed the legacy save");

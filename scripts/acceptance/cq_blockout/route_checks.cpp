@@ -61,8 +61,8 @@ namespace cq_blockout_acceptance
                         { return right ? value : bounds.left() + bounds.right() - value; };
                     const int return_start = run.ticks;
                     drive_to(run, x(700.0f));
-                    jump_to(run, s.map.named(right ? "spawn_a_recovery" : "spawn_b_recovery"), x(500.0f), 0);
-                    jump_to(run, s.map.named(home), x(500.0f), 0);
+                    held_jump_to(run, s.map.named(right ? "spawn_a_recovery" : "spawn_b_recovery"), x(500.0f), 0);
+                    held_jump_to(run, s.map.named(home), x(500.0f), 0);
                     require(run.support() == home, "CQ lower recovery route did not return to its home room");
                     std::cout << "MEASURE CQ lower home return team=" << (right ? 'a' : 'b') <<
                         " ticks=" << run.ticks - return_start << " support=" << run.support() << '\n';
@@ -75,8 +75,8 @@ namespace cq_blockout_acceptance
             upper.settle();
             const auto x = [&](float value) { return right ? value : bounds.left() + bounds.right() - value; };
             drive_to(upper, x(550.0f));
-            jump_to(upper, s.map.named(right ? "spawn_a_inner_step" : "spawn_b_inner_step"), x(750.0f), 0);
-            jump_to(upper, s.map.named(right ? "spawn_a_baffle" : "spawn_b_baffle"), x(900.0f), 0);
+            held_jump_to(upper, s.map.named(right ? "spawn_a_inner_step" : "spawn_b_inner_step"), x(750.0f), 0);
+            held_jump_to(upper, s.map.named(right ? "spawn_a_baffle" : "spawn_b_baffle"), x(900.0f), 0);
             drive_to(upper, x(1050.0f));
             require(upper.support() == (right ? "spawn_a_outer_step" : "spawn_b_outer_step"),
                 "CQ upper exit skipped its outer landing");
@@ -88,9 +88,9 @@ namespace cq_blockout_acceptance
             std::cout << "MEASURE CQ upper spawn exit team=" << (right ? 'a' : 'b') << " total_ticks=" <<
                 upper.ticks << " support=" << upper.support() << '\n';
             const int return_start = upper.ticks;
-            jump_to(upper, s.map.named(right ? "approach_a_bridge" : "approach_b_bridge"), x(1280.0f), 0);
-            jump_to(upper, s.map.named(right ? "spawn_a_outer_step" : "spawn_b_outer_step"), x(1050.0f), 0);
-            jump_to(upper, s.map.named(right ? "spawn_a_baffle" : "spawn_b_baffle"), x(900.0f), 0);
+            held_jump_to(upper, s.map.named(right ? "approach_a_bridge" : "approach_b_bridge"), x(1280.0f), 0);
+            held_jump_to(upper, s.map.named(right ? "spawn_a_outer_step" : "spawn_b_outer_step"), x(1050.0f), 0);
+            held_jump_to(upper, s.map.named(right ? "spawn_a_baffle" : "spawn_b_baffle"), x(900.0f), 0);
             drive_to(upper, x(750.0f));
             require(upper.support() == (right ? "spawn_a_inner_step" : "spawn_b_inner_step"),
                 "CQ upper home return skipped the inner landing");
@@ -126,10 +126,10 @@ namespace cq_blockout_acceptance
                 Run run(s, standing_on(s, start, x(1100.0f)), right ? PlayerTeam::a : PlayerTeam::b);
                 run.settle();
                 const int before = run.ticks;
-                jump_to(run, s.map.named(right ? "lower_left_platform" : "lower_right_platform"), x(1350.0f), delay);
-                jump_to(run, s.map.named("lower_paint"), x(1650.0f), delay);
+                held_jump_to(run, s.map.named(right ? "lower_left_platform" : "lower_right_platform"), x(1350.0f), delay);
+                held_jump_to(run, s.map.named("lower_paint"), x(1650.0f), delay);
                 drive_to(run, x(2800.0f));
-                jump_to(run, s.map.named("lower_paint"), x(3200.0f), delay);
+                held_jump_to(run, s.map.named("lower_paint"), x(3200.0f), delay);
                 drive_to(run, x(4350.0f));
                 drive_to(run, x(4650.0f));
                 require(run.support() == (right ? "lower_right_platform" : "lower_left_platform"),
@@ -143,11 +143,11 @@ namespace cq_blockout_acceptance
                 Run upper(s, standing_on(s, start, x(1100.0f)), right ? PlayerTeam::a : PlayerTeam::b);
                 upper.settle();
                 const int upper_before = upper.ticks;
-                jump_to(upper, s.map.named(right ? "lower_left_platform" : "lower_right_platform"), x(1350.0f), delay);
-                jump_to(upper, s.map.named("lower_paint"), x(1650.0f), delay);
+                held_jump_to(upper, s.map.named(right ? "lower_left_platform" : "lower_right_platform"), x(1350.0f), delay);
+                held_jump_to(upper, s.map.named("lower_paint"), x(1650.0f), delay);
                 drive_to(upper, x(2100.0f));
-                jump_to(upper, s.map.named(right ? "upper_left_platform" : "upper_right_platform"), x(2350.0f), delay);
-                jump_to(upper, s.map.named("upper_paint"), x(2650.0f), delay);
+                held_jump_to(upper, s.map.named(right ? "upper_left_platform" : "upper_right_platform"), x(2350.0f), delay);
+                held_jump_to(upper, s.map.named("upper_paint"), x(2650.0f), delay);
                 drive_to(upper, x(3350.0f));
                 drive_to(upper, x(3650.0f));
                 require(upper.support() == (right ? "upper_right_platform" : "upper_left_platform"),

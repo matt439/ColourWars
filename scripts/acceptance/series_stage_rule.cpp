@@ -14,6 +14,9 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/isolated_save.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <objbase.h>
@@ -38,53 +41,6 @@ using namespace labrador;
 namespace
 {
     using acceptance::require;
-
-    // A fresh GUID directory is the only profile this process touches.
-    class IsolatedSaveDirectory
-    {
-    public:
-        IsolatedSaveDirectory()
-        {
-            wchar_t* previous = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0, "Cannot read LOCALAPPDATA");
-            if (previous != nullptr) { previous_ = previous; std::free(previous); }
-            GUID guid{};
-            wchar_t name[40]{};
-            require(SUCCEEDED(CoCreateGuid(&guid)) && StringFromGUID2(guid, name, 40) > 0,
-                "Cannot name the series stage rule profile");
-            root_ = std::filesystem::temp_directory_path() / (std::wstring(L"ColourWars-stage-rule-") + name);
-            require(std::filesystem::create_directory(root_) &&
-                std::filesystem::create_directory(root_ / L"ColourWars"),
-                "Cannot create the series stage rule profile");
-            require(_wputenv_s(L"LOCALAPPDATA", root_.c_str()) == 0, "Cannot isolate the save profile");
-        }
-        ~IsolatedSaveDirectory()
-        {
-            _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
-            std::error_code ignored;
-            std::filesystem::remove_all(root_, ignored);
-        }
-        IsolatedSaveDirectory(const IsolatedSaveDirectory&) = delete;
-        IsolatedSaveDirectory& operator=(const IsolatedSaveDirectory&) = delete;
-        std::filesystem::path root() const { return root_; }
-        std::filesystem::path save_path() const { return root_ / L"ColourWars" / L"save_data.json"; }
-        void write(const std::string& json) const
-        {
-            std::ofstream stream(save_path(), std::ios::binary | std::ios::trunc);
-            stream << json;
-            require(stream.good(), "Cannot write the isolated save");
-        }
-        std::string contents() const
-        {
-            std::ifstream stream(save_path(), std::ios::binary);
-            require(stream.good(), "Cannot read the isolated save");
-            return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-        }
-    private:
-        std::filesystem::path root_;
-        std::wstring previous_;
-    };
 
     // Manifest order: two pool stages around an explicit-only trial, then a third.
     const StageList stages{ { "arena", "Arena", "", true }, { "trial", "Trial", "", false },
@@ -255,15 +211,15 @@ namespace
             "\"difficulty\":\"hard\"}],\"stage\":\"hill\",\"layout\":\"one_player\",\"best_of\":3" + extra + "}";
     }
 
-    std::optional<LastMatchSetup> load(const IsolatedSaveDirectory& directory, const std::string& json)
+    std::optional<LastMatchSetup> load(const acceptance::IsolatedSave& directory, const std::string& json)
     {
-        directory.write(json);
+        directory.write_save(json);
         Save save; SettingsSession save_session(save);
         save_session.load_save_file();
         return save.last_match_setup();
     }
 
-    void check_remembered(const IsolatedSaveDirectory& directory)
+    void check_remembered(const acceptance::IsolatedSave& directory)
     {
         require(Save::version >= 5, "The series stage rule needs save version 5 or later");
         // Every rule survives capture, the file and restore.
@@ -282,7 +238,7 @@ namespace
                 save_session.load_save_file();
                 require(save.remember_match_setup_and_save(captured), "Cannot save the remembered setup");
             }
-            const std::string bytes = directory.contents();
+            const std::string bytes = directory.save_bytes();
             const bool written = bytes.find("\"stage_rule\"") != std::string::npos;
             // Written only when it is not the default: Same is now explicit.
             require(written == (rule != SeriesStageRule::rotate) &&
@@ -340,33 +296,9 @@ namespace
         AudioResources audio;
         explicit World(const std::filesystem::path& content)
         {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                render.add_sprite_sheet(name, read_sprite_sheet(path_to_utf8(content / "textures" /
-                    path_from_utf8(std::string(name) + ".json")).c_str(), TextureHandle{}));
-            }
-            for (const char* name : { "bowlby_one_144", "lato_black_24", "lato_black_36", "lato_black_48",
-                "lato_black_72", "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    path_to_utf8(content / "fonts" / path_from_utf8(std::string(name) + ".spritefont")));
-                auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-                render.add_font(name, std::move(font));
-            }
-            audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, render, audio);
         }
     };
-
-    rapidjson::Document read_document(const std::filesystem::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        const std::string text{ std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-        rapidjson::Document document;
-        document.Parse(text.c_str());
-        require(!document.HasParseError(), "Cannot parse presentation.json");
-        return document;
-    }
 
     void check_text(const std::filesystem::path& content, const std::filesystem::path& scratch)
     {
@@ -383,36 +315,17 @@ namespace
         shipped.validate_resources(world.render, world.audio);
         validate_mode_stage_rules(&world.render, shipped);
 
-        const rapidjson::Document source = read_document(content / "presentation.json");
-        int next = 0;
-        const auto variant = [&](auto edit)
-        {
-            rapidjson::Document document;
-            document.CopyFrom(source, document.GetAllocator());
-            edit(document);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(document.Accept(writer), "Cannot encode a presentation variant");
-            const auto path = scratch / ("series-stage-" + std::to_string(next++) + ".json");
-            std::ofstream output(path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write a presentation variant");
-            return path;
-        };
+        const acceptance::JsonVariants variants(content / "presentation.json", L"series-stage", scratch);
         const auto refused = [&](const std::string& key, auto edit, bool resources, bool row)
         {
-            const auto path = variant(edit);
-            std::string diagnostic = "accepted";
-            try
-            {
-                const Presentation candidate(path_to_utf8(path).c_str());
-                if (resources) { candidate.validate_resources(world.render, world.audio); }
-                if (row) { validate_mode_stage_rules(&world.render, candidate); }
-            }
-            catch (const std::runtime_error& error) { diagnostic = error.what(); }
-            require(diagnostic.find(key) != std::string::npos,
-                "Series stage text " + key + " was not refused with its key: " + diagnostic);
+            acceptance::rejects_variant<std::runtime_error>(variants, edit,
+                [&](const std::filesystem::path& path)
+                {
+                    const Presentation candidate(path_to_utf8(path).c_str());
+                    if (resources) { candidate.validate_resources(world.render, world.audio); }
+                    if (row) { validate_mode_stage_rules(&world.render, candidate); }
+                },
+                { key }, "Series stage text " + key + " was not refused with its key");
         };
         const std::string wide(120, 'W');
         for (const char* key : { "series_stage_same", "series_stage_rotate", "series_stage_losers_pick" })
@@ -444,7 +357,7 @@ int wmain(int argc, wchar_t* argv[])
     {
         require(argc == 2, "usage: series_stage_rule <content>");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
-        const IsolatedSaveDirectory directory;
+        const acceptance::IsolatedSave directory(L"stage-rule");
         check_keys();
         check_rotation();
         check_rules();

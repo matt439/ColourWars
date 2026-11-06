@@ -2,6 +2,7 @@
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
 #include "engine/assets/json.h"
+#include "scripts/acceptance/support/isolated_save.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
@@ -32,61 +33,6 @@ namespace
 		}
 		throw std::runtime_error(message);
 	}
-
-	// Save reads LOCALAPPDATA through the CRT. This process never opens the
-	// player's real preferences, and removes only the paths it creates here.
-	class IsolatedSaveDirectory
-	{
-	public:
-		IsolatedSaveDirectory()
-		{
-			wchar_t* previous = nullptr;
-			size_t length = 0;
-			require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0,
-				"Could not read LOCALAPPDATA");
-			if (previous != nullptr)
-			{
-				this->previous_ = previous;
-				std::free(previous);
-			}
-			const std::filesystem::path temporary = std::filesystem::temp_directory_path();
-			wchar_t unique[MAX_PATH] = {};
-			require(GetTempFileNameW(temporary.c_str(), L"cwp", 0, unique) != 0,
-				"Could not reserve the acceptance directory");
-			this->root_ = unique;
-			require(DeleteFileW(unique) != 0 && std::filesystem::create_directory(this->root_),
-				"Could not create the acceptance directory");
-			require(_wputenv_s(L"LOCALAPPDATA", this->root_.c_str()) == 0,
-				"Could not isolate LOCALAPPDATA");
-		}
-
-		~IsolatedSaveDirectory()
-		{
-			_wputenv_s(L"LOCALAPPDATA", this->previous_.c_str());
-			std::error_code ignored;
-			std::filesystem::remove(this->save_path().wstring() + L".tmp", ignored);
-			std::filesystem::remove(this->save_path(), ignored);
-			std::filesystem::remove(this->root_ / L"ColourWars", ignored);
-			std::filesystem::remove(this->root_, ignored);
-		}
-
-		std::filesystem::path save_path() const
-		{
-			return this->root_ / L"ColourWars" / L"save_data.json";
-		}
-
-		void write(const std::string& text) const
-		{
-			std::filesystem::create_directories(this->save_path().parent_path());
-			std::ofstream output(this->save_path(), std::ios::binary | std::ios::trunc);
-			output << text;
-			require(output.good(), "Could not write the profile save fixture");
-		}
-
-	private:
-		std::filesystem::path root_;
-		std::wstring previous_;
-	};
 
 	Save load()
 	{
@@ -122,7 +68,7 @@ namespace
 
 	// The worn profile replaces its slot's values in what every borrower reads,
 	// and writes through the usual setters land in the profile, not the slot.
-	void check_overlay(const IsolatedSaveDirectory& directory)
+	void check_overlay(const acceptance::IsolatedSave& directory)
 	{
 		std::filesystem::remove(directory.save_path());
 		Save save = load();
@@ -194,7 +140,7 @@ namespace
 			"A pad's own settings did not survive beside the profiles");
 	}
 
-	void check_cycling_and_delete(const IsolatedSaveDirectory& directory)
+	void check_cycling_and_delete(const acceptance::IsolatedSave& directory)
 	{
 		std::filesystem::remove(directory.save_path());
 		Save save = load();
@@ -241,9 +187,9 @@ namespace
 		rejects([&] { session.add_profile_and_save("ONE MORE", -1, saved); }, "A ninth profile was added");
 	}
 
-	void check_recovery(const IsolatedSaveDirectory& directory)
+	void check_recovery(const acceptance::IsolatedSave& directory)
 	{
-		directory.write("{\"save_version\":4,\"profiles\":["
+		directory.write_save("{\"save_version\":4,\"profiles\":["
 			"{\"name\":\" ALEX \",\"movement_deadzone\":30,\"aim_deadzone\":95,\"rumble\":\"no\","
 			"\"view_shake\":\"on\",\"aim_marker\":\"maybe\",\"reduce_effects\":\"off\","
 			"\"buttons\":{\"jump\":[\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]},\"boost\":2},"
@@ -271,7 +217,7 @@ namespace
 		require(save.saved_play_settings().aim_sensitivity == 4, "A profile entry disturbed another section");
 		profiles.validate();
 
-		directory.write("{\"profiles\":{\"name\":\"ALEX\"},\"aim_sensitivity\":2}");
+		directory.write_save("{\"profiles\":{\"name\":\"ALEX\"},\"aim_sensitivity\":2}");
 		const Save malformed = load();
 		require(malformed.profiles().list.empty() && malformed.saved_play_settings().aim_sensitivity == 2,
 			"A malformed profile list was not reset alone");
@@ -282,7 +228,7 @@ int main()
 {
 	return acceptance::run_probe("player profiles", [&]
 	{
-		IsolatedSaveDirectory directory;
+		acceptance::IsolatedSave directory(L"player-profiles");
 		check_names();
 		check_overlay(directory);
 		check_cycling_and_delete(directory);

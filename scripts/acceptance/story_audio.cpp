@@ -11,16 +11,19 @@
 #include "game/states/connection_audio.h"
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
+#include "game/states/menu_context.h"
+#include "game/states/screen_music.h"
 #include "game/config/sound_groups.h"
 #include "game/objects/projectile_jet.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/null/recording.h"
-#include "engine/input/mouse.h"
 #include "engine/collision/partitioner.h"
 #include "engine/math/triangle.h"
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/slot_seats.h"
 
@@ -56,48 +59,18 @@ namespace
 	}
 
 	// Content variants keep real factory weapons and their paid-shot workflow.
-	// Only authored numbers/names change, in a reserved temporary file.
-	class ContentVariant
+	// Only authored numbers/names change, each in its own scratch file.
+	class ContentVariant : public acceptance::JsonVariants
 	{
 	public:
-		explicit ContentVariant(const std::filesystem::path& original)
-		{
-			std::ifstream stream(original);
-			require(stream.good(), "Cannot read audio acceptance tuning");
-			this->source_ = std::string(std::istreambuf_iterator<char>(stream), {});
-			wchar_t name[MAX_PATH]{};
-			const auto temporary = std::filesystem::temp_directory_path();
-			require(GetTempFileNameW(temporary.c_str(), L"cwa", 0, name) != 0,
-				"Cannot reserve audio acceptance tuning file");
-			this->path_ = name;
-		}
-
-		~ContentVariant()
-		{
-			std::error_code ignored;
-			std::filesystem::remove(this->path_, ignored);
-		}
+		explicit ContentVariant(const std::filesystem::path& original) :
+			acceptance::JsonVariants(original, L"audio-tuning") {}
 
 		template<typename Edit>
 		GameTuning tuning(Edit edit) const
 		{
-			rapidjson::Document json;
-			json.Parse(this->source_.c_str());
-			require(!json.HasParseError(), "Cannot parse audio acceptance tuning");
-			edit(json);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			json.Accept(writer);
-			std::ofstream stream(this->path_, std::ios::binary | std::ios::trunc);
-			stream.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-			stream.close();
-			require(stream.good(), "Cannot write audio acceptance tuning variant");
-			return GameTuning(this->path_.string().c_str());
+			return GameTuning(this->write(edit).string().c_str());
 		}
-
-	private:
-		std::string source_;
-		std::filesystem::path path_;
 	};
 
 	// The normal game objects, with the engine's recording audio backend.
@@ -114,7 +87,6 @@ namespace
 		StageList stages;
 		ResolutionManager resolution;
 		ViewportManager viewports{ &resolution };
-		Mouse mouse;
 		Partitioner partitioner;
 		std::map<std::string, AudioDevice::VoiceHandle> voices;
 		std::map<std::string, int> waves;
@@ -127,21 +99,7 @@ namespace
 			tuning((content / "tuning.json").string().c_str()),
 			presentation((content / "presentation.json").string().c_str())
 		{
-			for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-			{
-				this->render.add_sprite_sheet(sheet, read_sprite_sheet(
-					(content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-			}
-			for (const char* font : { "bowlby_one_144", "lato_black_24",
-				"lato_black_36", "lato_black_48", "lato_black_72",
-				"lato_black_144", "courier_prime_bold_16" })
-			{
-				const SpriteFontFile file = read_sprite_font_file(
-					(content / "fonts" / (std::string(font) + ".spritefont")).string());
-				auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-				if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-				this->render.add_font(font, std::move(loaded));
-			}
+			acceptance::load_cpu_render_assets(content, this->render);
 
 			const SoundBankDefinition definition = read_sound_bank_definition(
 				(content / "sounds/paint_exe.json").string().c_str());
@@ -161,13 +119,13 @@ namespace
 				&this->device, bank, std::move(effects)));
 			this->tuning.validate_resources(this->render, this->audio);
 			this->tuning.validate_match_sounds(this->render, this->audio, "paint_exe");
-			for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
+			// Every manifest stage, so every authored stage cue is resolved.
+			for (const acceptance::ManifestEntry& stage : acceptance::manifest_level_paths(content))
 			{
-				auto info = std::make_unique<LevelLoadedInfo>(
-					(content / "levels" / (std::string(stage) + ".json")).string().c_str());
+				auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage.path).c_str());
 				info->validate();
-				this->levels.add(stage, std::move(info));
-				this->stages.push_back(Stage{ stage });
+				this->levels.add(stage.name, std::move(info));
+				this->stages.push_back(Stage{ stage.name });
 			}
 			// The groups main.cpp assigns. Every volume change below goes
 			// through set_*_volume, as the Controls page's Apply does.
@@ -335,13 +293,12 @@ namespace
 #include "scripts/acceptance/story_audio/end_menu_content_checks.h"
 #include "scripts/acceptance/story_audio/pause_menu_content_checks.h"
 #include "scripts/acceptance/story_audio/results_menu_content_checks.h"
-}
-
 #include "scripts/acceptance/story_audio/redraw_checks.h"
 #include "scripts/acceptance/story_audio/match_checks.h"
 #include "scripts/acceptance/story_audio/results_music_checks.h"
 #include "scripts/acceptance/story_audio/music_mix_checks.h"
 #include "scripts/acceptance/story_audio/music_recovery_checks.h"
+}
 
 int main(int argc, char** argv)
 {

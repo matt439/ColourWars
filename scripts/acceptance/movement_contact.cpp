@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/structure.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/projectile_jet.h"
@@ -7,8 +8,9 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -25,8 +27,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
     const TeamColour surface_colours{ Colour::orange, Colour::cyan };
 
     PlayerInputData input(float movement = 0.0f, bool jump = false, bool fire = false)
@@ -69,12 +70,10 @@ namespace
         }
     };
 
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
         struct Event { MovementFeedback::Effect effect; int tick; };
         World& world;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
         std::vector<Event> events;
         int ticks = 0;
         size_t emitted_projectiles = 0;
@@ -98,9 +97,7 @@ namespace
 
         void surface(const RectangleF& rectangle)
         {
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                rectangle, std::make_unique<RectangleF>(rectangle), &world.render,
-                CollisionObjectType::structure));
+            this->add_structure(rectangle, world.render);
             this->scene.end_tick();
         }
 
@@ -120,19 +117,14 @@ namespace
         void begin(const PlayerInputData& actions = input())
         {
             ++this->ticks;
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
             // Keep the real paid-shot path; projectiles are accounted for and
             // retired by this fixture rather than introducing unrelated hits.
-            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects()).size();
+            this->emitted_projectiles += this->begin_step(actions).size();
         }
 
         void finish()
         {
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            this->finish_step();
             for (const auto& effect : this->player->movement_feedback().effects())
             {
                 if (effect.age == 0.0f) { this->events.push_back({ effect, this->ticks }); }
@@ -501,38 +493,13 @@ namespace
 
     void check_content(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read movement contact presentation");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t name[MAX_PATH]{};
-        const auto temporary = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(temporary.c_str(), L"cwc", 0, name) != 0,
-            "Cannot reserve movement contact presentation variant");
-        struct Cleanup
-        {
-            std::filesystem::path path;
-            ~Cleanup() { std::error_code ignored; std::filesystem::remove(this->path, ignored); }
-        } cleanup{ name };
+        const acceptance::JsonVariants variants(content / "presentation.json", L"movement-contact-presentation");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse movement contact presentation fixture");
-            edit(json["movement_feedback"], json.GetAllocator());
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(cleanup.path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write movement contact presentation variant");
-            bool rejected = false;
-            try { const Presentation invalid(cleanup.path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("movement_feedback") != std::string::npos;
-            }
-            require(rejected, "Invalid contact presentation was accepted or lost its authored section");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["movement_feedback"], json.GetAllocator()); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "movement_feedback" }, "Invalid contact presentation was accepted or lost its authored section");
         };
         for (const char* burst : { "step", "skid" })
         {

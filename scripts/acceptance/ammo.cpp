@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/weapon_builder.h"
+#include "game/contracts/simulation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -101,8 +101,7 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning(tuning_path.c_str());
         const PlaySettings preferences;
-        const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-            StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float dt = SECONDS_PER_STEP;
         WeaponBuilder builder;
 
         for (const auto& item : cases)

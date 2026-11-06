@@ -1,5 +1,5 @@
-// Field55: positive-alpha closing-clock shade. This isolated leaf preserves
-// the opaque52-54 fixtures and their authored fixed-shade guards unchanged.
+// Field 55: positive-alpha closing-clock shade. This isolated leaf preserves
+// the opaque 52-54 fixtures and their authored fixed-shade guards unchanged.
 // Independent scope: eight literal material patches (128 pixels), not all art.
 enum class ClosingShadeReference { correct, straight, squared, black_band, no_scale, missing_bottom, missing_right };
 struct ClosingShadePatch { const char* name; RectangleI box; size_t layers; };
@@ -19,12 +19,11 @@ const std::array<Colour, 4>& closing_shade_values()
     static const std::array<Colour, 4> values{ Colour(0, 0, 0, 85), Colour(255, 0, 0),
         Colour(32, 96, 192, 128), Colour(165, 50, 214, 1) }; return values;
 }
-std::vector<float> closing_shade_fixed_style(const HudPresentation& look)
+// Every HUD field but the closing shade this leaf tunes.
+std::vector<float> closing_shade_fixed_style(HudPresentation look)
 {
-    auto copy = look; copy.closing_clock.shade = Colour(0, 0, 0, 85);
-    auto values = hud_track_fixed_style(copy); const auto& track = look.meter_track_colour;
-    values.insert(values.end(), { track.r, track.g, track.b, track.a });
-    return values; // Only closing shade is masked: ink/paper/accent/text remain guarded.
+    look.closing_clock.shade = Colour();
+    return hud_style(look);
 }
 using ClosingShadeFrames = std::array<std::array<Frame, 2>, 4>;
 class HudClosingShadeProbe
@@ -36,7 +35,7 @@ public:
         copied_(app.render_resources(), &expected_, &expected_identity_), black_(app.render_resources(), Colour::black),
         nonblack_(app.render_resources(), Colour(32, 64, 96)),
         sheet_(app.render_resources()->sprite_sheet(look_.sprite_sheet)), pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))),
-        fixed_(closing_shade_fixed_style(look_)), identity_fixed_(hud_track_identity_style(identity_)), names_(hud_track_resource_names(look_)),
+        fixed_(closing_shade_fixed_style(look_)), identity_fixed_(player_identity_style(identity_)), names_(hud_resource_names(look_)),
         palette_(presentation.team_palette()), output_(output), budget_(budget)
     {
         require(look_.closing_clock.shade == Colour(0, 0, 0, 85) && look_.closing_clock.ink == Colour(20, 20, 20) &&
@@ -57,9 +56,9 @@ public:
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.hud() && &identity_ == &presentation_.player_identity() &&
             closing_shade_fixed_style(look_) == fixed_ && closing_shade_fixed_style(expected_) == fixed_ &&
-            hud_track_identity_style(identity_) == identity_fixed_ && hud_track_identity_style(expected_identity_) == identity_fixed_ &&
-            hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
-            hud_track_same_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
+            player_identity_style(identity_) == identity_fixed_ && player_identity_style(expected_identity_) == identity_fixed_ &&
+            hud_resource_names(look_) == names_ && hud_resource_names(expected_) == names_ &&
+            same_team_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ &&
             pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080) &&
@@ -95,8 +94,8 @@ public:
                     Colour(colour.r * alpha, colour.g * alpha, colour.b * alpha, alpha);
                 for (size_t layer = 0; layer < patch.layers; ++layer)
                 {
-                    // Source passes are 3,2,1. At depth2/3, the middle pass is
-                    // layer1; the one-pass outer band has no middle layer.
+                    // Source passes are 3,2,1. At depth 2/3, the middle pass is
+                    // layer 1; the one-pass outer band has no middle layer.
                     const bool missing = layer == 1 && ((mode == ClosingShadeReference::missing_bottom && site >= 2 && site <= 4) ||
                         (mode == ClosingShadeReference::missing_right && site >= 5));
                     if (!missing) { rectangle(list, patch.box, tint); }
@@ -305,26 +304,18 @@ ClosingShadeFrames hud_closing_shade_consumer_checks(HudClosingShadeProbe& probe
 void hud_closing_shade_tune_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output, HudClosingShadeProbe& probe, const ClosingShadeFrames& references)
 {
-    const auto root = output / "closing-shade-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "Closing shade private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    Save preferences; SettingsSession preferences_session(preferences);
-    const auto preferences_now = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings());
-        values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto original_preferences = preferences_now();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "closing-shade-tune-commands.log").string()), "Cannot retain closing shade command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "closing-shade-tune-scratch", .transcript = "closing-shade-tune-commands.log",
+        .fresh = true,
+        .restore_content = false });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preferences_now = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     constexpr const char* path = "hud.closing_clock.shade";
     JsonSpanDocument initial(bytes[1], "Closing shade private source"); const auto* token = initial.find(path);
     require(token != nullptr, "Closing shade exact existing token is absent");
@@ -333,7 +324,7 @@ void hud_closing_shade_tune_checks(Application& app, GameTuning& tuning, Present
     const size_t initial_reads = probe.readbacks(); Frame baseline{}, saved{};
     const auto unchanged = [&]()
     {
-        probe.unchanged(); require(preferences_now() == original_preferences && !std::filesystem::exists(root / "profile/ColourWars/save_data.json") &&
+        probe.unchanged(); require(preferences_now() == original_preferences && !std::filesystem::exists(acceptance::save_path_in(root / "profile")) &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty() && impl.total_updates() == 0 && impl.level_updates() == 0,
             "Closing shade commands changed preferences, saved a game, requested gameplay or advanced updates");
         for (size_t i = 0; i < files.size(); ++i)

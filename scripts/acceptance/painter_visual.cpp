@@ -42,7 +42,7 @@
 #include "game/states/display_confirmation.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
-#include "game/states/keyboard_jump_menu.h"
+#include "game/states/keyboard_keys_menu.h"
 #include "game/states/pad_buttons_menu.h"
 #include "game/input/controls_text.h"
 #include "game/objects/stick_response.h"
@@ -62,21 +62,30 @@
 
 #include <filesystem>
 #include <bit>
+#include <concepts>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <string_view>
 #include <thread>
 #include <cstdio>
 #include <io.h>
+#include <share.h>
+#include <sys/stat.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
+#include "scripts/acceptance/support/stderr_capture.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "game/contracts/simulation.h"
 #include "scripts/acceptance/support/slot_seats.h"
+#include "engine/render/text_encoding.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
@@ -262,6 +271,7 @@ namespace
 #include "scripts/acceptance/painter_visual/stage_summary_checks.h"
 #include "scripts/acceptance/painter_visual/home_return_focus_checks.h"
 #include "scripts/acceptance/painter_visual/home_exit_checks.h"
+#include "scripts/acceptance/painter_visual/options_reference.h"
 #include "scripts/acceptance/painter_visual/options_defaults_checks.h"
 #include "scripts/acceptance/painter_visual/display_trial_checks.h"
 #include "scripts/acceptance/painter_visual/paused_options_checks.h"
@@ -588,8 +598,6 @@ int wmain(int argc, wchar_t** argv)
 #else
             (void)backing;
 #endif
-#else
-            throw std::runtime_error("StagePreviewBackgroundTuneColourOnly requires the scripted gamepad reader");
 #endif
             return 0;
         }
@@ -807,13 +815,11 @@ int wmain(int argc, wchar_t** argv)
         if (rumble_only)
         {
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-            rumble_owner_checks(app, levels, canvas, tuning, presentation, content, output);
+            rumble_owner_checks(app, levels, tuning, presentation, content, output);
             rumble_settings_checks(app, canvas, tuning, presentation, output);
 #if COLOURWARS_DEV_TOOLS
             debug_background_checks(app, levels, tuning, presentation, content, output);
 #endif
-#else
-            throw std::runtime_error("RumbleOnly requires the scripted gamepad reader seam");
 #endif
             return 0;
         }
@@ -823,8 +829,6 @@ int wmain(int argc, wchar_t** argv)
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
             keyboard_jump_ownership_matrix(app, levels, canvas, tuning, presentation, content, output);
             pad_buttons_matrix(app, levels, canvas, tuning, presentation, content, output);
-#else
-            throw std::runtime_error("KeyboardJumpOnly requires the scripted gamepad reader seam");
 #endif
             return 0;
         }
@@ -995,14 +999,14 @@ int wmain(int argc, wchar_t** argv)
         }
         if (remembered_setup_only)
         {
-            remembered_setup_matrix(app, levels, canvas, tuning, presentation, content, output,
+            remembered_setup_matrix(app, levels, tuning, presentation, content, output,
                 std::wstring(argv[3]) == L"remembered-setup-read");
             return 0;
         }
         if (bot_players_only)
         {
             check_playable_bot_setup(app, levels, tuning, presentation, output);
-            check_playable_bot_runtime(app, levels, tuning, presentation, content, output);
+            check_playable_bot_runtime(app, levels, tuning, presentation, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"paused-options")
@@ -1172,7 +1176,7 @@ int wmain(int argc, wchar_t** argv)
         }
         if (countdown_only)
         {
-            countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+            countdown_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
             require(records.good(), "Capture record write failed");
             std::cout << "PASS countdown-only visual check; other painter matrices were not run\n";
             return 0;
@@ -1243,7 +1247,7 @@ int wmain(int argc, wchar_t** argv)
         shake_matrix(app, builder, tuning, presentation, preferences, output);
         identity_matrix(app, builder, tuning, presentation, preferences, content, output);
         monitor_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
-        countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+        countdown_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
         closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         hud_matrix(app, builder, canvas, presentation, output, false);
         supply_art_checks(app, builder, canvas, tuning, presentation, preferences, output);

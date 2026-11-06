@@ -26,14 +26,14 @@ namespace press_tower_acceptance
             Run run(s, standing_on(s, side.surface("catwalk"), side.x(900.0f)), side.team());
             run.settle();
             const int start = run.ticks;
-            jump_to(run, side.surface("stair_1"), side.x(1080.0f), delay, hold_ticks);
-            jump_to(run, side.surface("stair_2"), side.x(1240.0f), delay, hold_ticks);
-            jump_to(run, side.surface("stair_3"), side.x(1400.0f), delay, hold_ticks);
+            jump_once(run, side.surface("stair_1"), side.x(1080.0f), delay, hold_ticks);
+            jump_once(run, side.surface("stair_2"), side.x(1240.0f), delay, hold_ticks);
+            jump_once(run, side.surface("stair_3"), side.x(1400.0f), delay, hold_ticks);
             const int takeoffs = run.takeoffs;
             drive_to(run, side.x(1560.0f));
             require_support(run, side.name("shoulder"), "R3 level stair_3-to-shoulder walk");
             require(run.takeoffs == takeoffs, "Press Tower R3 stair_3-to-shoulder walk needed a jump");
-            jump_to(run, s.map.named("press_head"), side.x(1710.0f), delay, hold_ticks);
+            jump_once(run, s.map.named("press_head"), side.x(1710.0f), delay, hold_ticks);
             require(run.takeoffs == 4, "Press Tower R3 did not use exactly its four declared rises");
             std::cout << "MEASURE Press Tower R3 stair_climb team=" << side.letter() << " delay=" << delay <<
                 " hold_ticks=" << hold_ticks << " ticks=" << run.ticks - start << " takeoffs=" << run.takeoffs << '\n';
@@ -126,9 +126,9 @@ namespace press_tower_acceptance
                     Run run(s, standing_on(s, s.map.named("press_bed"), side.x(1534.0f)), side.team());
                     run.settle();
                     const int start = run.ticks;
-                    jump_to(run, side.surface("frame"), side.x(1534.0f), delay);
-                    jump_to(run, side.surface("shoulder"), side.x(1534.0f), delay);
-                    jump_to(run, s.map.named("press_head"), side.x(1710.0f), delay, 1);
+                    jump_once(run, side.surface("frame"), side.x(1534.0f), delay);
+                    jump_once(run, side.surface("shoulder"), side.x(1534.0f), delay);
+                    jump_once(run, s.map.named("press_head"), side.x(1710.0f), delay, 1);
                     require(run.takeoffs == 3, "Press Tower R4 did not use exactly its three declared rises");
                     std::cout << "MEASURE Press Tower R4 hoist team=" << side.letter() << " delay=" << delay <<
                         " ticks=" << run.ticks - start << " takeoffs=" << run.takeoffs << '\n';
@@ -140,12 +140,12 @@ namespace press_tower_acceptance
                     Run run(s, standing_on(s, side.surface("home_floor"), side.x(260.0f)), side.team());
                     run.settle();
                     const int start = run.ticks;
-                    jump_to(run, side.surface("home_roof"), side.x(260.0f), delay);
+                    jump_once(run, side.surface("home_roof"), side.x(260.0f), delay);
                     const int takeoffs = run.takeoffs;
                     drive_to(run, side.x(960.0f));
                     require_support(run, side.name("gantry"), "R5 roof-to-gantry walk");
                     require(run.takeoffs == takeoffs, "Press Tower R5 roof-to-gantry walk needed a jump");
-                    jump_to(run, side.surface("stair_2"), side.x(1240.0f), delay);
+                    jump_once(run, side.surface("stair_2"), side.x(1240.0f), delay);
                     require(run.takeoffs == 2, "Press Tower R5 did not use exactly its two declared jumps");
                     std::cout << "MEASURE Press Tower R5 roof_shortcut team=" << side.letter() << " delay=" << delay <<
                         " ticks=" << run.ticks - start << " takeoffs=" << run.takeoffs << '\n';
@@ -156,39 +156,39 @@ namespace press_tower_acceptance
                 {
                     Run run(s, standing_on(s, side.surface("stair_1"), side.x(1080.0f)), side.team());
                     run.settle();
-                    jump_to(run, side.surface("gantry"), side.x(900.0f), delay, 1);
+                    jump_once(run, side.surface("gantry"), side.x(900.0f), delay, 1);
                 }
                 {
                     Run run(s, standing_on(s, side.surface("catwalk"), side.x(760.0f)), side.team());
                     run.settle();
-                    jump_to(run, side.surface("gantry"), side.x(760.0f), delay);
+                    jump_once(run, side.surface("gantry"), side.x(760.0f), delay);
                 }
                 {
                     Run run(s, standing_on(s, side.surface("frame"), side.x(1520.0f)), side.team());
                     run.settle();
-                    jump_to(run, side.surface("stair_3"), side.x(1400.0f), delay);
+                    jump_once(run, side.surface("stair_3"), side.x(1400.0f), delay);
                 }
                 {
                     Run run(s, standing_on(s, s.map.named("press_head"), side.x(1710.0f)), side.team());
                     run.settle();
-                    jump_to(run, s.map.named("press_crown"), 1800.0f, delay, 1);
+                    jump_once(run, s.map.named("press_crown"), 1800.0f, delay, 1);
                 }
                 {
                     Run run(s, standing_on(s, s.map.named("press_head"), side.x(1710.0f)), side.team());
                     run.settle();
-                    jump_to(run, s.map.named("press_head"), side.x(1890.0f), delay, 1);
+                    jump_once(run, s.map.named("press_head"), side.x(1890.0f), delay, 1);
                     require(std::fabs(run.player->center().x - side.x(1890.0f)) <= 8.0f,
                         "Press Tower R10 crown crossing did not stop on the far half");
                 }
                 {
                     Run run(s, standing_on(s, side.surface("floor_yard"), side.x(760.0f)), side.team());
                     run.settle();
-                    jump_to(run, side.surface("catwalk"), side.x(760.0f), delay);
+                    jump_once(run, side.surface("catwalk"), side.x(760.0f), delay);
                 }
                 {
                     Run run(s, standing_on(s, side.surface("floor_home"), side.x(260.0f)), side.team());
                     run.settle();
-                    jump_to(run, side.surface("home_floor"), side.x(260.0f), delay);
+                    jump_once(run, side.surface("home_floor"), side.x(260.0f), delay);
                 }
                 std::cout << "MEASURE Press Tower R6-R11 single edges team=" << side.letter() << " delay=" << delay <<
                     ": stair_1->gantry tap, catwalk->gantry held, frame->stair_3 held, head->crown tap, "

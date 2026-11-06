@@ -41,13 +41,13 @@ namespace level_editor_acceptance
             // runtime input nor appropriate acceptance evidence.
             std::set<fs::path> runtime_files{ "manifest.json", "tuning.json", "presentation.json" };
             // And the locales, which their own index names (docs/localisation.md).
-            const rapidjson::Document locale_index = parse(contents(source_content / "locales/locales.json"));
+            const rapidjson::Document locale_index = parse(read_text(source_content / "locales/locales.json"));
             runtime_files.insert("locales/locales.json");
             for (const rapidjson::Value& locale : locale_index["locales"].GetArray())
             {
                 runtime_files.insert(fs::path("locales") / (std::string(locale["tag"].GetString()) + ".json"));
             }
-            const rapidjson::Document source_manifest = parse(contents(source_content / "manifest.json"));
+            const rapidjson::Document source_manifest = parse(read_text(source_content / "manifest.json"));
             const std::map<std::string, std::vector<std::string>> extensions{
                 { "font", { "spritefont" } }, { "sprite_sheet", { "json", "dds" } },
                 { "level", { "json" } }, { "sound_bank", { "json", "xwb" } } };
@@ -78,17 +78,17 @@ namespace level_editor_acceptance
                 fs::copy_file(source_content / relative, copied_content / relative);
             }
             fs::copy_file(repo / "cmake/runtime_assets.cmake", runtime);
-            stage_bytes = contents(repo / "game/content/levels/close_quarters.json");
-            manifest_bytes = contents(manifest);
-            runtime_bytes = contents(runtime);
-            presentation_bytes = contents(presentation);
-            write(stage, stage_bytes);
+            stage_bytes = read_text(repo / "game/content/levels/close_quarters.json");
+            manifest_bytes = read_text(manifest);
+            runtime_bytes = read_text(runtime);
+            presentation_bytes = read_text(presentation);
+            write_text(stage, stage_bytes);
         }
 
         void reset() const
         {
-            write(stage, stage_bytes); write(manifest, manifest_bytes); write(runtime, runtime_bytes);
-            write(presentation, presentation_bytes);
+            write_text(stage, stage_bytes); write_text(manifest, manifest_bytes); write_text(runtime, runtime_bytes);
+            write_text(presentation, presentation_bytes);
         }
     };
 
@@ -98,8 +98,8 @@ namespace level_editor_acceptance
         std::map<fs::path, fs::file_time_type> files;
 
         explicit RegistrationSnapshot(const RegistrationFixture& fixture) :
-            stage(contents(fixture.stage)), manifest(contents(fixture.manifest)), runtime(contents(fixture.runtime)),
-            presentation(contents(fixture.presentation))
+            stage(read_text(fixture.stage)), manifest(read_text(fixture.manifest)), runtime(read_text(fixture.runtime)),
+            presentation(read_text(fixture.presentation))
         {
             for (const fs::directory_entry& file : fs::recursive_directory_iterator(fixture.repository))
                 if (file.is_regular_file()) files.emplace(file.path(), file.last_write_time());
@@ -107,8 +107,8 @@ namespace level_editor_acceptance
 
         void unchanged(const RegistrationFixture& fixture, bool times = true) const
         {
-            require(contents(fixture.stage) == stage && contents(fixture.manifest) == manifest &&
-                contents(fixture.runtime) == runtime && contents(fixture.presentation) == presentation,
+            require(read_text(fixture.stage) == stage && read_text(fixture.manifest) == manifest &&
+                read_text(fixture.runtime) == runtime && read_text(fixture.presentation) == presentation,
                 "Rejected registration changed an original input file");
             const RegistrationSnapshot after(fixture);
             require(after.files.size() == files.size(), "Registration leaked or removed a private repository file");
@@ -169,7 +169,7 @@ namespace level_editor_acceptance
                     "# Keep this unrelated registration note" + newline + "#[=[retain ) ${opaque}]=]" + newline;
                 const std::string runtime = prefix + registration_lines(fixture.runtime_bytes, newline, false);
                 const std::string presentation = registration_lines(fixture.presentation_bytes, newline, bom);
-                write(fixture.manifest, manifest); write(fixture.runtime, runtime); write(fixture.presentation, presentation);
+                write_text(fixture.manifest, manifest); write_text(fixture.runtime, runtime); write_text(fixture.presentation, presentation);
                 const RegistrationSnapshot before(fixture);
                 const StageRegistrationPreview preview = preview_stage_registration(fixture.repository,
                     "game/content/levels/acceptance_arena.json");
@@ -217,7 +217,7 @@ namespace level_editor_acceptance
                         {
                             const std::string filename = file.path().filename().string();
                             if (filename.find(".registration-") == std::string::npos) continue;
-                            const std::string bytes = contents(file.path());
+                            const std::string bytes = read_text(file.path());
                             if (filename.ends_with("-candidate"))
                             {
                                 ++candidates;
@@ -231,17 +231,17 @@ namespace level_editor_acceptance
                                     "Prepared original backup bytes are incomplete");
                             }
                         }
-                        require(candidates == 3 && originals == 3 && contents(fixture.manifest) == manifest &&
-                            contents(fixture.runtime) == runtime && contents(fixture.presentation) == presentation,
+                        require(candidates == 3 && originals == 3 && read_text(fixture.manifest) == manifest &&
+                            read_text(fixture.runtime) == runtime && read_text(fixture.presentation) == presentation,
                             "All three complete candidates and originals must exist before the first replacement");
                     }
                     require(fs::equivalent(destination, replacements == 1 ? fixture.manifest :
                         replacements == 2 ? fixture.runtime : fixture.presentation),
                         "Registration replaced a file outside the three reviewed targets, or out of order");
                     registration_replace(prepared, destination);
-                }) && replacements == 3 && contents(fixture.manifest) == expected_manifest &&
-                    contents(fixture.runtime) == expected_runtime && contents(fixture.presentation) == expected_presentation &&
-                    contents(fixture.stage) == fixture.stage_bytes,
+                }) && replacements == 3 && read_text(fixture.manifest) == expected_manifest &&
+                    read_text(fixture.runtime) == expected_runtime && read_text(fixture.presentation) == expected_presentation &&
+                    read_text(fixture.stage) == fixture.stage_bytes,
                     "Opt-in registration did not apply exactly the previewed three-file append");
                 const RegistrationSnapshot registered(fixture);
                 const StageRegistrationPreview again = preview_stage_registration(fixture.repository, fixture.stage);
@@ -258,7 +258,7 @@ namespace level_editor_acceptance
         const std::size_t asset = quoted.find("    manifest.json");
         require(asset != std::string::npos, "Quoted-asset fixture needs its first runtime asset");
         quoted.replace(asset, std::string("    manifest.json").size(), "    \"manifest.json\"");
-        write(fixture.runtime, quoted);
+        write_text(fixture.runtime, quoted);
         const RegistrationSnapshot before_quoted(fixture);
         const StageRegistrationPreview quoted_preview = preview_stage_registration(fixture.repository, fixture.stage);
         before_quoted.unchanged(fixture);
@@ -269,7 +269,7 @@ namespace level_editor_acceptance
         require(append != std::string::npos, "A canonical quoted asset prevented the stage append");
         without_append.erase(append, added.size());
         require(without_append == quoted && apply_stage_registration(quoted_preview) &&
-            contents(fixture.runtime) == quoted_preview.runtime_assets.proposed,
+            read_text(fixture.runtime) == quoted_preview.runtime_assets.proposed,
             "Canonical quoted asset arguments must remain supported and retain their exact bytes");
         fixture.reset();
     }
@@ -280,9 +280,9 @@ namespace level_editor_acceptance
         // The name in one or two of the three files: every proper subset.
         for (int registered = 1; registered < 7; ++registered)
         {
-            if ((registered & 1) != 0) write(fixture.manifest, preview.manifest.proposed);
-            if ((registered & 2) != 0) write(fixture.runtime, preview.runtime_assets.proposed);
-            if ((registered & 4) != 0) write(fixture.presentation, preview.presentation.proposed);
+            if ((registered & 1) != 0) write_text(fixture.manifest, preview.manifest.proposed);
+            if ((registered & 2) != 0) write_text(fixture.runtime, preview.runtime_assets.proposed);
+            if ((registered & 4) != 0) write_text(fixture.presentation, preview.presentation.proposed);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
                 "A partially registered stage was accepted");
             fixture.reset();
@@ -296,7 +296,7 @@ namespace level_editor_acceptance
             const std::size_t at = aliased.find("acceptance_arena");
             require(at != std::string::npos, "Missing newly registered stage for case-alias check");
             aliased.replace(at, std::string("acceptance_arena").size(), "ACCEPTANCE_ARENA");
-            write(fixture.manifest, manifest); write(fixture.runtime, runtime); write(fixture.presentation, presentation);
+            write_text(fixture.manifest, manifest); write_text(fixture.runtime, runtime); write_text(fixture.presentation, presentation);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
                 "A stage identifier, runtime path or stage_names key with different case was accepted");
             fixture.reset();
@@ -304,13 +304,13 @@ namespace level_editor_acceptance
         {
             // Registered in all three, but its stage_names English is not the
             // level's display_name: the game would refuse to start.
-            write(fixture.manifest, preview.manifest.proposed); write(fixture.runtime, preview.runtime_assets.proposed);
+            write_text(fixture.manifest, preview.manifest.proposed); write_text(fixture.runtime, preview.runtime_assets.proposed);
             std::string presentation = preview.presentation.proposed;
             const std::string title = "\"acceptance_arena\": \"Close Quarters\"";
             const std::size_t at = presentation.find(title);
             require(at != std::string::npos, "The disagreement fixture needs the proposed title");
             presentation.replace(at, title.size(), "\"acceptance_arena\": \"Not Close Quarters\"");
-            write(fixture.presentation, presentation);
+            write_text(fixture.presentation, presentation);
             std::string diagnostic;
             try { preview_stage_registration(fixture.repository, fixture.stage); }
             catch (const std::exception& error) { diagnostic = error.what(); }
@@ -320,7 +320,7 @@ namespace level_editor_acceptance
         }
         const auto bad_presentation = [&](const std::string& bytes, const char* reason)
         {
-            write(fixture.presentation, bytes);
+            write_text(fixture.presentation, bytes);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); }, reason);
             fixture.reset();
         };
@@ -354,20 +354,20 @@ namespace level_editor_acceptance
             // The title must be one line: stage_names cannot carry a break.
             rapidjson::Document two_lines = parse(fixture.stage_bytes);
             two_lines["display_name"].SetString("Close\nQuarters", two_lines.GetAllocator());
-            write(fixture.stage, encode(two_lines));
+            write_text(fixture.stage, encode(two_lines));
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
                 "A multi-line display_name was accepted for a shipped stage's title");
             fixture.reset();
         }
         {
             const fs::path comment = fixture.stage.parent_path() / "_comment_like.json";
-            write(comment, fixture.stage_bytes);
+            write_text(comment, fixture.stage_bytes);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, comment); },
                 "A basename stage_names would read as a comment was accepted");
         }
         const auto bad_runtime = [&](const std::string& bytes)
         {
-            write(fixture.runtime, bytes);
+            write_text(fixture.runtime, bytes);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
                 "Malformed, duplicate, aliased or nonliteral runtime assets were accepted");
             fixture.reset();
@@ -412,12 +412,12 @@ namespace level_editor_acceptance
             std::string bytes = fixture.manifest_bytes;
             const std::string token = "\"movement_course\"";
             bytes.replace(bytes.rfind(token), token.size(), replacement);
-            write(fixture.manifest, bytes);
+            write_text(fixture.manifest, bytes);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
                 "A case-alias or malformed manifest name was accepted");
             fixture.reset();
         }
-        write(fixture.manifest, "{broken");
+        write_text(fixture.manifest, "{broken");
         reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
             "Malformed manifest JSON was accepted");
         fixture.reset();
@@ -425,37 +425,37 @@ namespace level_editor_acceptance
         for (const wchar_t* filename : { L"bad name.json", L"-leading.json", L"bad.dot.json", L"bad_\x00e9.json", L"upper.JSON" })
         {
             const fs::path invalid = fixture.stage.parent_path() / filename;
-            write(invalid, fixture.stage_bytes);
+            write_text(invalid, fixture.stage_bytes);
             reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, invalid); },
                 "An invalid stage basename or noncanonical extension was accepted");
         }
         const fs::path outside = scratch / "registration-outside.json";
-        write(outside, fixture.stage_bytes);
+        write_text(outside, fixture.stage_bytes);
         reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, outside); },
             "A stage outside the private repository content directory was accepted");
         fs::create_directory(fixture.stage.parent_path() / "nested");
         const fs::path nested = fixture.stage.parent_path() / "nested/arena.json";
-        write(nested, fixture.stage_bytes);
+        write_text(nested, fixture.stage_bytes);
         reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, nested); },
             "A nested stage path was accepted instead of a direct levels child");
 
-        write(fixture.stage, "{}");
+        write_text(fixture.stage, "{}");
         reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
             "An invalid level document was accepted for registration");
         fixture.reset();
         rapidjson::Document unresolved = parse(fixture.stage_bytes);
         unresolved["icon_frame"].SetString("registration_missing_frame", unresolved.GetAllocator());
-        write(fixture.stage, encode(unresolved));
+        write_text(fixture.stage, encode(unresolved));
         reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
             "A structurally valid stage with an unresolved resource was accepted");
         fixture.reset();
         const fs::path sheet = fixture.repository / "game/content/textures/terrain.json";
-        const std::string sheet_original = contents(sheet);
-        write(sheet, "{\"sprite_frames\":null}");
+        const std::string sheet_original = read_text(sheet);
+        write_text(sheet, "{\"sprite_frames\":null}");
         reject_registration(fixture, [&] { preview_stage_registration(fixture.repository, fixture.stage); },
             "Registration accepted an incomplete content catalog");
-        require(contents(sheet) == "{\"sprite_frames\":null}", "A refused catalog validation rewrote the private sheet");
-        write(sheet, sheet_original);
+        require(read_text(sheet) == "{\"sprite_frames\":null}", "A refused catalog validation rewrote the private sheet");
+        write_text(sheet, sheet_original);
     }
 
     void check_registration_stale(RegistrationFixture& fixture)
@@ -465,7 +465,7 @@ namespace level_editor_acceptance
             const StageRegistrationPreview preview = preview_stage_registration(fixture.repository, fixture.stage);
             const fs::path changed = target == 0 ? fixture.stage : target == 1 ? fixture.manifest :
                 target == 2 ? fixture.runtime : fixture.presentation;
-            write(changed, contents(changed) + "\n");
+            write_text(changed, read_text(changed) + "\n");
             int replacements = 0;
             reject_registration(fixture, [&] { apply_stage_registration(preview,
                 [&](const fs::path&, const fs::path&) { ++replacements; }); },
@@ -572,23 +572,23 @@ namespace level_editor_acceptance
                 !std::string(error.what()).starts_with("Registration failed"),
                 "Rollback failure did not explain the retained-original recovery path");
         }
-        require(calls == 3 && recovery.size() == 3 && contents(fixture.manifest) == preview.manifest.proposed &&
-            contents(fixture.runtime) == preview.runtime_assets.original &&
-            contents(fixture.presentation) == preview.presentation.original,
+        require(calls == 3 && recovery.size() == 3 && read_text(fixture.manifest) == preview.manifest.proposed &&
+            read_text(fixture.runtime) == preview.runtime_assets.original &&
+            read_text(fixture.presentation) == preview.presentation.original,
             "An injected rollback failure did not expose the exact partial result and three original backups");
         require(fs::equivalent(recovery[0].parent_path(), fixture.manifest.parent_path()) &&
             fs::equivalent(recovery[1].parent_path(), fixture.runtime.parent_path()) &&
             fs::equivalent(recovery[2].parent_path(), fixture.presentation.parent_path()) &&
             recovery[0].filename().string().ends_with("-original") && recovery[1].filename().string().ends_with("-original") &&
             recovery[2].filename().string().ends_with("-original") &&
-            contents(recovery[0]) == preview.manifest.original && contents(recovery[1]) == preview.runtime_assets.original &&
-            contents(recovery[2]) == preview.presentation.original,
+            read_text(recovery[0]) == preview.manifest.original && read_text(recovery[1]) == preview.runtime_assets.original &&
+            read_text(recovery[2]) == preview.presentation.original,
             "Retained recovery paths do not contain the byte-exact original files beside their private targets");
         registration_replace(recovery[0], fixture.manifest);
         registration_replace(recovery[1], fixture.runtime);
         registration_replace(recovery[2], fixture.presentation);
-        require(contents(fixture.manifest) == fixture.manifest_bytes && contents(fixture.runtime) == fixture.runtime_bytes &&
-            contents(fixture.presentation) == fixture.presentation_bytes,
+        require(read_text(fixture.manifest) == fixture.manifest_bytes && read_text(fixture.runtime) == fixture.runtime_bytes &&
+            read_text(fixture.presentation) == fixture.presentation_bytes,
             "Restoring the named private backups did not recover the three original files");
 
         // The third file fails and the runtime list is restored, but the
@@ -605,14 +605,14 @@ namespace level_editor_acceptance
             });
         }
         catch (const StageRegistrationError& error) { recovery = error.recovery_files(); }
-        require(calls == 5 && recovery.size() == 2 && contents(fixture.manifest) == preview.manifest.proposed &&
-            contents(fixture.runtime) == preview.runtime_assets.original &&
-            contents(fixture.presentation) == preview.presentation.original &&
-            contents(recovery[0]) == preview.manifest.original && contents(recovery[1]) == preview.presentation.original,
+        require(calls == 5 && recovery.size() == 2 && read_text(fixture.manifest) == preview.manifest.proposed &&
+            read_text(fixture.runtime) == preview.runtime_assets.original &&
+            read_text(fixture.presentation) == preview.presentation.original &&
+            read_text(recovery[0]) == preview.manifest.original && read_text(recovery[1]) == preview.presentation.original,
             "A partial rollback did not name exactly the manifest and presentation backups");
         registration_replace(recovery[0], fixture.manifest);
-        DeleteFileW(recovery[1].c_str());
-        require(contents(fixture.manifest) == fixture.manifest_bytes, "The retained manifest backup did not restore it");
+        require(DeleteFileW(recovery[1].c_str()) != 0, "Could not remove the retained presentation backup");
+        require(read_text(fixture.manifest) == fixture.manifest_bytes, "The retained manifest backup did not restore it");
         for (const fs::directory_entry& file : fs::recursive_directory_iterator(fixture.repository))
             require(file.path().filename().wstring().find(L".registration-") == std::wstring::npos,
                 "A completed registration/recovery left an unreported sibling file");

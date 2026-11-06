@@ -1,12 +1,14 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/structure.h"
 #include "game/objects/weapon_builder.h"
 #include "game/objects/weapon_feedback.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -28,8 +30,7 @@ namespace
         return std::abs(actual - expected) < 0.00001f;
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     constexpr WeaponType tools[] = { WeaponType::sprayer, WeaponType::sniper,
         WeaponType::roller, WeaponType::mister, WeaponType::bucket };
@@ -344,11 +345,8 @@ namespace
         std::cout << "PASS weapon feedback: disabled/omitted tool motion preserves independent pulses and cull bounds\n";
     }
 
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
-        Scene scene{ nullptr, nullptr };
-        Player* player;
-
         explicit Course(World& world)
         {
             const RectangleF body(0, -world.tuning.player().size.y,
@@ -359,23 +357,13 @@ namespace
                 &world.preferences, 2, PlayerTeam::a, WeaponType::sprayer,
                 world.weapon(WeaponType::sprayer), WeaponType::none, Colour::white,
                 Viewport{}, body.position()));
-            const RectangleF floor(-10000, 0, 20000, 100);
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                floor, std::make_unique<RectangleF>(floor), &world.render,
-                CollisionObjectType::structure));
+            this->add_structure(RectangleF(-10000, 0, 20000, 100), world.render);
             this->scene.end_tick();
         }
 
         void tick(const PlayerInputData& actions = input())
         {
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
-            std::ignore = this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects());
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            std::ignore = this->step(actions);
         }
 
         void fire()
@@ -505,52 +493,15 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read weapon feedback presentation content");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t temporary_name[MAX_PATH]{};
-        const auto directory = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(directory.c_str(), L"cww", 0, temporary_name) != 0,
-            "Cannot reserve weapon feedback presentation variant");
-        const std::filesystem::path path(temporary_name);
-        struct RemoveOnExit
-        {
-            std::filesystem::path path;
-            ~RemoveOnExit()
-            {
-                std::error_code ignored;
-                std::filesystem::remove(this->path, ignored);
-            }
-        } cleanup{ path };
-
+        const acceptance::JsonVariants variants(content / "presentation.json", L"weapon-feedback-presentation");
         int fixture = 0;
         const auto reject = [&](auto edit)
         {
             ++fixture;
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse weapon feedback presentation fixture");
-            edit(json["weapon_feedback"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write weapon feedback presentation fixture");
-            bool rejected = false;
-            std::string diagnostic = "content was accepted";
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                diagnostic = error.what();
-                rejected = diagnostic.find("weapon_feedback") != std::string::npos;
-            }
-            if (!rejected)
-            {
-                throw std::runtime_error("Weapon feedback schema fixture " +
-                    std::to_string(fixture) + ": " + diagnostic);
-            }
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["weapon_feedback"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "weapon_feedback" }, "Weapon feedback schema fixture " + std::to_string(fixture));
         };
         for (const char* field : { "muzzle_duration", "empty_duration", "recovered_duration",
             "keyline_width", "status_size", "status_offset" })

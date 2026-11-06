@@ -45,10 +45,9 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         WeaponChoicePresentation{ L"Bucket", "bucket", "bucket_paint", "" },
         WeaponChoicePresentation{ L"Random", "random", "", "" }
     };
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
@@ -145,7 +144,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const auto pixels = [&](const RectangleF& box)
-            { return countdown_crop_bounds(camera.calculate_view_rectangle(box)); };
+            { return pixel_bounds(camera.calculate_view_rectangle(box)); };
         const Frame actual = frame();
         app.renderer()->begin_frame(); app.renderer()->set_view_count(1);
         DrawList list = app.renderer()->view(0);

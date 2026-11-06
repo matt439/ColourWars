@@ -1,4 +1,4 @@
-// Scribble39: complete independent67x67 note ROI; copied full-front adoption only.
+// Scribble 39: complete independent 67x67 note ROI; copied full-front adoption only.
 // Frozen literal source tables are hypotheses until actual backend qualification.
 enum class ScribbleReference { correct, straight, squared_base, collapsed_union };
 struct ScribbleDab { int left, top, right, bottom, row; };
@@ -17,10 +17,11 @@ MonitorPersona scribble_persona(size_t context)
     require(context<2,"Unknown Scribble note context");MonitorPersona persona;
     persona.sticky_notes.push_back({Vector2F(.015f,.47f),context==0?size_t{0}:size_t{2},context==0?0.0f:.1f});return persona;
 }
-std::vector<float> scribble_fixed_style(const OpeningPresentation& p)
+// Every opening field but the scribble colour this leaf tunes.
+std::vector<float> scribble_fixed_style(OpeningPresentation p)
 {
-    OpeningPresentation stable=p;stable.scribble=Colour(48,80,192);auto values=program_fixed_style(stable);
-    values.insert(values.end(),{p.program_colour.r,p.program_colour.g,p.program_colour.b,p.program_colour.a});return values;
+    p.scribble = Colour();
+    return opening_style(p);
 }
 const std::array<ScribbleDab,74>& scribble_dabs(size_t context)
 {
@@ -307,7 +308,7 @@ Frame ScribbleColourProbe::render(size_t context,const std::function<void(DrawLi
     renderer.begin_frame();renderer.set_view_count(1);DrawList list=renderer.view(0);
     list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(camera_);list.set_filter(TextureFilter::point);
     canvas.draw(list,screen_);draw(list);++readbacks_;Frame result=read(renderer);
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Scribble requires1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Scribble requires 1280x720 backbuffer");}
     const bool fixed_draw=std::rand()==next&&look_.scribble==selected&&expected_.scribble==expected_selected;
     if(!fixed_draw){failure(context,"unknown","draw-state-or-rng",result);}
     require(fixed_draw,"Scribble draw consumed RNG or changed selected records");
@@ -374,15 +375,15 @@ void ScribbleColourProbe::check_roi(size_t context,const Frame& actual,const Fra
     for(int y=337;y<404;++y){for(int x=18;x<85;++x)
     {
         const size_t at=offset(actual,x,y);
-        require(same_pixel(actual,raw,at),"Scribble complete ordered67x67 raw ROI differs from actual RGBA");
+        require(same_pixel(actual,raw,at),"Scribble complete ordered 67x67 raw ROI differs from actual RGBA");
         require(actual.pixels[at+3]==255,"Scribble note ROI lost opaque Canvas/paper alpha");
     }}
     // Two source-derived representative RGB blend models, not vertex packing
     // or proof of a GPU's internals/conformance. F retains the source RGB term;
-    // Q rounds that term to8UNORM before blending. Selected alpha128/255 is
-    // already8UNORM in both. The independent PPM verifier checks four whole-
+    // Q rounds that term to 8-bit UNORM before blending. Selected alpha 128/255 is
+    // already 8-bit UNORM in both. The independent PPM verifier checks four whole-
     // crop RGB-float/RGB8 by alpha-float/alpha8 source representatives; their
-    // selected128/255 tuples reduce to these two matrices. Require ONE coherent
+    // selected 128/255 tuples reduce to these two matrices. Require ONE coherent
     // matrix over the entire selected partial ROI; per-pixel mixing is refused.
     constexpr std::array<std::array<std::uint32_t,2>,2> partial_f{{{0x8FA99Du,0x5784AFu},{0x67A5DFu,0x4382CFu}}};
     constexpr std::array<std::array<std::uint32_t,2>,2> partial_q{{{0x8FA99Du,0x5784AEu},{0x67A5DFu,0x4382CFu}}};
@@ -500,7 +501,7 @@ void scribble_colour_consumer_checks(Application& app,const Presentation& presen
         "\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"complete67x67-ordered-five-plus74-literal-rectangles-only\","
         "\"whole_frame_reference\":\"copied-production-front-consumer-adoption-only\",\"roi_half_open\":[18,337,85,404]}\n";
     require(summary.good(),"Cannot retain Scribble shared summary");
-    std::cout<<"PASS scribble consumer:40readbacks/8rows/8native67x67 crops35912pixels; complete independent note ROI,8controls/24row discriminations,"
+    std::cout<<"PASS scribble consumer: 40 readbacks/8 rows/8 native 67x67 crops of 35912 pixels; complete independent note ROI, 8 controls/24 row discriminations, "
         "full copied-front adoption only; retained caller/resource/RNG and zero all updates. Actual Level/story/human/performance not exercised.\n";
 }
 
@@ -508,33 +509,18 @@ void scribble_colour_consumer_checks(Application& app,const Presentation& presen
 void scribble_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,
     const std::filesystem::path& content,const std::filesystem::path& output)
 {
-    const auto root=output/"scribble-colour-tune-scratch",source=root/"source",staged=root/"staged";
-    std::filesystem::create_directories(source);std::filesystem::create_directories(staged);
-    constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
-    for(size_t i=0;i<files.size();++i)
-    {real_bytes[i]=tune_colour_bytes(content/files[i]);tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const NestedSaveProfile profile(root/"profile");const TuneColourTemp temporary(root/"temp");
-    struct RestoreScribble
-    {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreScribble(){t=old_t;p=old_p;}}
-        restore{tuning,presentation,tuning,presentation};
-    Save preferences; SettingsSession preferences_session(preferences);PlaySettings play;play.music_volume=17;play.sfx_volume=83;play.aim_sensitivity=4;
-    play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
-    InputBindings bindings;bindings.keyboard_jump=Key::j;
-    require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed Scribble private preferences");
-    const auto save_path=root/"profile/ColourWars/save_data.json";const std::string saved_preferences=tune_colour_bytes(save_path);
-    const auto pref_values=[&]
-    {
-        const auto& p=preferences_session.play_settings();std::vector<int> v{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,
-            static_cast<int>(preferences.team_palette()),p.aim_sensitivity,p.music_volume,p.sfx_volume,p.view_shake?1:0,p.aim_marker?1:0,
-            p.reduce_effects?1:0,static_cast<int>(preferences_session.input_bindings().keyboard_jump)};
-        for(const auto& stick:p.sticks){v.push_back(stick.movement_deadzone);v.push_back(stick.aim_deadzone);}return v;
-    };
-    const auto saved_values=pref_values();
-    GameData data;data.set_application(&app);data.set_save(&preferences); data.set_settings_session(&preferences_session);const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning);data.set_presentation(&presentation);DebugDirector director(&tuning,&presentation);data.set_debug(&director);
-    auto& impl=*director.impl();impl.set_content_directories(source,staged);impl.set_user_directory(root/"user");
-    impl.set_script_directories({root/"scripts"});director.attach(&app,&data);impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output/"scribble-colour-tune-commands.log").string()),"Cannot retain Scribble command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "scribble-colour-tune-scratch", .transcript = "scribble-colour-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto pref_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     ScribbleColourProbe probe(app,presentation,output);JsonSpanDocument initial(real_bytes[1],"Scribble private source");
     const JsonLeaf* leaf=initial.find("opening.scribble");require(leaf!=nullptr,"Scribble source lacks exact existing token");
     require(presentation.opening().scribble==Colour(48,80,192),"Scribble Debug baseline differs from authored default");

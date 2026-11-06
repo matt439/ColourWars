@@ -17,6 +17,7 @@
 #include "engine/render/visual.h"
 #include "engine/math/triangle.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>
 #include <array>
@@ -57,26 +58,6 @@ namespace
 			audio.add_sound_bank("paint_exe", SoundBank::silent());
 		}
 	};
-
-	std::vector<std::filesystem::path> shipped_levels(const std::filesystem::path& content)
-	{
-		const JsonDocument manifest = read_json_file((content / "manifest.json").string().c_str());
-		const JsonValue assets = manifest.root().array("assets");
-		std::vector<std::filesystem::path> levels;
-		for (size_t group = 0; group < assets.size(); ++group)
-		{
-			const JsonValue asset = assets.at(group);
-			if (asset.string("kind") != "level") { continue; }
-			const JsonValue names = asset.array("names");
-			for (size_t index = 0; index < names.size(); ++index)
-			{
-				levels.push_back(content / asset.string("directory") /
-					(names.at(index).as_string() + ".json"));
-			}
-		}
-		require(levels.size() >= 4, "Acceptance needs the four shipped stages");
-		return levels;
-	}
 
 	bool inside(const RectangleF& inner, const RectangleF& outer)
 	{
@@ -464,18 +445,10 @@ int main(int argc, char** argv)
 		check_landmark_atlas(world, content);
 		const GameTuning tuning((content / "tuning.json").string().c_str());
 		size_t stages = 0;
-		const auto levels = shipped_levels(content);
-		require(levels.size() == 13, "Terrain acceptance needs all thirteen registered stages");
-		for (const char* stage : {"movement_course", "king_of_the_hill", "turbulence", "close_quarters", "crossfeed", "press_tower",
-			"turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial", "turbulence_ferry_trial",
-			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial"})
+		// Every stage the manifest lists; stage_selection pins which ones.
+		for (const acceptance::ManifestEntry& level : acceptance::manifest_level_paths(content))
 		{
-			require(std::count_if(levels.begin(), levels.end(), [&](const auto& path) { return path.stem().string() == stage; }) == 1,
-				std::string("Landmark acceptance needs each shipped arena exactly once: ") + stage);
-		}
-		for (const std::filesystem::path& level : levels)
-		{
-			check_stage(world, tuning, level);
+			check_stage(world, tuning, level.path);
 			++stages;
 		}
 		check_rejections(world);

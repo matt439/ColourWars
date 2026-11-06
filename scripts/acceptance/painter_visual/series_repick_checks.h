@@ -5,10 +5,9 @@
 void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
-    const NestedSaveProfile profile(output / "series-repick-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    const acceptance::IsolatedSave profile(output / "series-repick-profile");
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = true; });
+    SettingsSession preferences_session(preferences);
     // King of the Hill stands in for the Random pool whatever the shipped
     // flags say, so Rotate from the explicit-only course always has a stage
     // to move on to.
@@ -56,7 +55,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); choice.reset(); delivered = 0;
-        stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, round.is_series() ? round : series, replay),
             [&](const EndMenuAction& result) { choice = result; ++delivered; });
         tick(); tick();
@@ -223,7 +222,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     stack.clear(); stack.notify_activation(true);
     for (const Key key : keys) { app.keyboard()->on_key_up(key); }
     app.keyboard()->poll(); app.keyboard()->poll(); input.reset_actions(); choice.reset(); delivered = 0;
-    stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+    stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
     stack.push<EndMenuAction>(std::make_unique<MainMenuStageSelect>(&context, std::optional<Session>(series), PlayerTeam::b),
         [&](const EndMenuAction& result) { choice = result; ++delivered; });
     tick(); tick();

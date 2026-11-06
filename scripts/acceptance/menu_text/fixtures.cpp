@@ -8,17 +8,6 @@
 // The fixture helpers more than one group of checks uses.
 namespace menu_text_acceptance
 {
-    rapidjson::Document read_document(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        const std::string text{ std::istreambuf_iterator<char>(input), {} };
-        rapidjson::Document result;
-        result.Parse(text.c_str());
-        require(!result.HasParseError(), "Cannot parse " + path.string());
-        return result;
-    }
-
     UiText* row_text(OptionRow& row, const std::string& name)
     {
         for (const auto& child : row.children())

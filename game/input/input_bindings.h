@@ -86,8 +86,8 @@ struct InputBindings
 // None, Start, the mouse buttons) from menu_text.controls.labels.
 // Conversion outside this domain throws invalid_argument. Conflict checks use
 // other default gameplay keyboard sources, excluding Jump and intro skip.
-bool keyboard_jump_key_supported(labrador::Key key);
-std::array<labrador::Key, 27> keyboard_jump_keys();
+bool keyboard_key_supported(labrador::Key key);
+std::array<labrador::Key, 27> keyboard_keys();
 // Against the default keyboard choices, as the Keyboard Jump slice defined it.
 std::optional<GameAction> keyboard_jump_conflict(labrador::Key key);
 std::string_view input_key_name(labrador::Key key);

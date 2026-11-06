@@ -12,6 +12,9 @@ namespace debug_console_acceptance
 {
 	namespace
 	{
+		// The version line a current recording writes.
+		const std::string current_version = "\"version\": " + std::to_string(ReplayFile::format_version);
+
 		struct ReplayScratch
 		{
 			std::filesystem::path directory;
@@ -155,7 +158,7 @@ namespace debug_console_acceptance
 		const std::string metadata = ", \"controller\": \"human\", \"difficulty\": \"normal\"";
 		for (const int legacy_version : { 3, 4, 5, 6, 7 })
 		{
-			std::string legacy = replace_once(current, "\"version\": 8", "\"version\": " + std::to_string(legacy_version));
+			std::string legacy = replace_once(current, current_version, "\"version\": " + std::to_string(legacy_version));
 			while (legacy.find(metadata) != std::string::npos) { legacy = replace_once(legacy, metadata, ""); }
 			write_text(path, legacy);
 			std::string error;
@@ -186,11 +189,11 @@ namespace debug_console_acceptance
 		rejects(replace_once(valid, "\"slot\": 0", "\"slot\": 5"), "out-of-range human device");
 		rejects(replace_once(valid, "\"slot\": 0", "\"slot\": -2"), "invalid unclaimed human device");
 		rejects(replace_once(valid, "\"layout\": 1", "\"layout\": 2"), "participant layout instead of human layout");
-		rejects(replace_once(valid, "\"version\": 8", "\"version\": 3"), "new metadata in old schema");
-		rejects(replace_once(valid, "\"version\": 8", "\"version\": 4"), "new metadata in an earlier schema");
-		rejects(replace_once(valid, "\"version\": 8", "\"version\": 5"), "an earlier schema, whose seed was optional");
-		rejects(replace_once(valid, "\"version\": 8", "\"version\": 6"), "an earlier schema, before vertical lifts");
-		rejects(replace_once(valid, "\"version\": 8", "\"version\": 7"), "the previous schema, before rounds");
+		rejects(replace_once(valid, current_version, "\"version\": 3"), "new metadata in old schema");
+		rejects(replace_once(valid, current_version, "\"version\": 4"), "new metadata in an earlier schema");
+		rejects(replace_once(valid, current_version, "\"version\": 5"), "an earlier schema, whose seed was optional");
+		rejects(replace_once(valid, current_version, "\"version\": 6"), "an earlier schema, before vertical lifts");
+		rejects(replace_once(valid, current_version, "\"version\": 7"), "the previous schema, before rounds");
 
 		write_text(path, "existing recording");
 		MatchSetup invalid_roster = mixed.tape.settings();

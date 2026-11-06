@@ -10,7 +10,7 @@
 // choice a second time. All named keys participate in neutral/chord detection,
 // including keys outside the small binding domain. Shoot's gesture also counts
 // mouse buttons; every other action ignores the mouse.
-class KeyboardJumpCapture
+class KeyboardKeyCapture
 {
 public:
 	enum class Phase { waiting_neutral, ready, holding, cancelling, complete, cancelled };

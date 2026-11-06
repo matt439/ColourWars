@@ -7,6 +7,8 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     // King of the Hill and Turbulence left Random on 2026-11-05 (Press Tower and
     // the slab trial replaced them). This fixture still holds its copies
     // eligible, so its three-candidate pages are the ones it always read.
+    // The names and icons are literals, not acceptance::shipped_stage: they
+    // are the independent pin the drift check below holds each level file to.
     const StageList shipped{
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },
         { "turbulence", "Turbulence", "stage_turbulence", true },
@@ -30,7 +32,8 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         words.stage.browse_status == L"FIND YOUR ARENA" && words.stage.locked_status == L"ARENA LOCKED" && words.stage.random_navigation == L"<   SURPRISE ME   >" &&
         words.stage.browse_hint == L"Left/Right to browse.\nConfirm to lock your choice." && words.stage.locked_hint == L"Confirm again to start.\nBack to change your choice.",
         "Shipped Stage paper copy drifted from its independent literals");
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     StageList stages = shipped;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog);
     // The catalog owns a copy of the list, so each edit of `stages` below is
@@ -58,7 +61,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         else { const auto bit = static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); auto& buttons = painter_scripted_pads::states[static_cast<size_t>(device)].buttons; buttons = down ? static_cast<uint16_t>(buttons | bit) : static_cast<uint16_t>(buttons & static_cast<uint16_t>(~bit)); }
     };
     const auto tap = [&](int player, GamepadButton button) { hold(player, button, true); tick(); hold(player, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto motion = original.menu().motion; const float settled = std::max(motion.focus_duration, motion.press_duration) + 0.01f;
     const auto eligible = [&]
     {
@@ -75,7 +78,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Stage paper fixture claim failed"); }
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, tools[static_cast<size_t>(player)]); }
         initial = settings; captured = refreshed = presentation; slot = selected; locked = missing = false; committed.clear();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::srand(617); const int next_random = std::rand(); std::srand(617);
         auto page = std::make_unique<MainMenuStageSelect>(&context); active = page.get(); stack.push(std::move(page)); tick(); tick();
         require(stack.depth() == 2 && std::rand() == next_random && !context.music_exit_pending(), "Stage paper neutral entry changed state or consumed RNG");
@@ -166,22 +169,22 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const Frame expected = read(renderer); const std::string stem = "stage-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-best" + std::to_string(best_of) + "-slot" + std::to_string(slot) + '-' + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "STAGE PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(actual.pixels == expected.pixels, "Actual Stage paper differs from independent paper/briefing/text and actual miniature StagePreview raster");
-        const RectangleI pane = countdown_crop_bounds(camera.calculate_view_rectangle(preview)); require(foreground_crop(actual, pane, 0).pixels == foreground_crop(expected, pane, 0).pixels, "Stage paper changed the actual preview raster or its physical pane/camera");
+        const RectangleI pane = pixel_bounds(camera.calculate_view_rectangle(preview)); require(foreground_crop(actual, pane, 0).pixels == foreground_crop(expected, pane, 0).pixels, "Stage paper changed the actual preview raster or its physical pane/camera");
         const auto contrast = [&](RectangleF bounds)
         {
-            camera.calculate_view_rectangle(bounds); const RectangleI box = countdown_crop_bounds(bounds); float dark = 1.0f, light = 0.0f; size_t ink = 0, pale = 0;
-            for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = hud_luminance(actual, hud_pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
+            camera.calculate_view_rectangle(bounds); const RectangleI box = pixel_bounds(bounds); float dark = 1.0f, light = 0.0f; size_t ink = 0, pale = 0;
+            for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = srgb_luminance(actual, pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
             require(ink > 2 && pale > 2 && (light + 0.05f) / (dark + 0.05f) >= 7.0f, "Stage paper lost native dark lettering/pale-paper contrast");
         };
         contrast(heading->bounds()); contrast(arena_name->bounds()); contrast(labels[2]->bounds()); for (const auto& bounds : briefing_bounds) { contrast(bounds); }
-        if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
+        if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         std::srand(7919); const int next_random = std::rand(); std::srand(7919); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next_random, "Frozen Stage paper changed pixels or RNG"); plan();
         records << name << ',' << actual.width << ',' << actual.height << ',' << settings.player_count() << ',' << best_of << ',' << slot << ',' << locked << ',' << missing << ',' << context.music_exit_pending() << ',' << (offset > 0.0f) << ",true,true\n"; return actual;
     };
     const auto destination = [&](bool count)
     {
         MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
-        other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); if (count) { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); } else { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); }
+        other.push(std::make_unique<CanvasProbeRoot>(app, canvas)); if (count) { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); } else { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };
     const std::array<std::pair<int, int>, 4> sessions{{ { 1, 1 }, { 2, 1 }, { 2, 3 }, { 4, 5 } }};
@@ -278,7 +281,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         {
             app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y);
             const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
-            const auto pixels = [&](RectangleF bounds) { bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds); };
+            const auto pixels = [&](RectangleF bounds) { bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds); };
             const auto expect = [&](const char* name, int count, int selected, const std::wstring& line)
             {
                 const Frame without = shown(count, selected, false, {});

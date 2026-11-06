@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scripts/acceptance/moving_structure/fixtures.h"
+#include "scripts/acceptance/support/scratch.h"
 #include "game/objects/level_builder.h"
 #include "editor/level_document.h"
 #include "engine/math/shape.h"
@@ -22,7 +23,7 @@ namespace turbulence_movers_acceptance
     };
 
     void author_trial(const fs::path& static_stage, const fs::path& tuning, const fs::path& output);
-    std::string read_text(const fs::path& path);
+    using acceptance::read_text;
     MatchSetup settings(int count = 1, PlayerTeam first_team = PlayerTeam::a);
     labrador::RectangleF named_rectangle(const fs::path& path, const std::string& name);
     fs::path station_variant(Context& context, const std::string& label, float phase,
@@ -51,7 +52,6 @@ namespace turbulence_movers_acceptance
         labrador::Registry<LevelLoadedInfo> infos{ "Turbulence mover trial Level" };
         labrador::ResolutionManager resolution;
         labrador::ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         labrador::Partitioner partitioner;
         std::unique_ptr<Level> level;
         int updates = 0;

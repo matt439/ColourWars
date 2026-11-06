@@ -205,22 +205,22 @@ namespace presentation_read
 		text.help.pad_association = read_menu_block(help, "pad_association");
 		text.help.aim_cutoff = read_menu_line(help, "aim_cutoff");
 		const JsonValue jump = json.object("keyboard_jump");
-		KeyboardJumpMenuText& keys = text.keyboard_jump;
-		for (const auto& field : { std::pair{ "heading", &KeyboardJumpMenuText::heading },
-			std::pair{ "move_left", &KeyboardJumpMenuText::move_left }, std::pair{ "move_right", &KeyboardJumpMenuText::move_right },
-			std::pair{ "jump", &KeyboardJumpMenuText::jump }, std::pair{ "drop", &KeyboardJumpMenuText::drop },
-			std::pair{ "shoot", &KeyboardJumpMenuText::shoot }, std::pair{ "pause", &KeyboardJumpMenuText::pause },
-			std::pair{ "reset", &KeyboardJumpMenuText::reset },
-			std::pair{ "pending_status", &KeyboardJumpMenuText::pending_status }, std::pair{ "saved_status", &KeyboardJumpMenuText::saved_status },
-			std::pair{ "capture_wait_neutral", &KeyboardJumpMenuText::capture_wait_neutral }, std::pair{ "capture_ready", &KeyboardJumpMenuText::capture_ready },
-			std::pair{ "capture_ready_mouse", &KeyboardJumpMenuText::capture_ready_mouse },
-			std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release }, std::pair{ "capture_rejected", &KeyboardJumpMenuText::capture_rejected },
-			std::pair{ "capture_conflict", &KeyboardJumpMenuText::capture_conflict }, std::pair{ "capture_cancelled", &KeyboardJumpMenuText::capture_cancelled },
-			std::pair{ "debug_collision", &KeyboardJumpMenuText::debug_collision } })
+		KeyboardKeysMenuText& keys = text.keyboard_jump;
+		for (const auto& field : { std::pair{ "heading", &KeyboardKeysMenuText::heading },
+			std::pair{ "move_left", &KeyboardKeysMenuText::move_left }, std::pair{ "move_right", &KeyboardKeysMenuText::move_right },
+			std::pair{ "jump", &KeyboardKeysMenuText::jump }, std::pair{ "drop", &KeyboardKeysMenuText::drop },
+			std::pair{ "shoot", &KeyboardKeysMenuText::shoot }, std::pair{ "pause", &KeyboardKeysMenuText::pause },
+			std::pair{ "reset", &KeyboardKeysMenuText::reset },
+			std::pair{ "pending_status", &KeyboardKeysMenuText::pending_status }, std::pair{ "saved_status", &KeyboardKeysMenuText::saved_status },
+			std::pair{ "capture_wait_neutral", &KeyboardKeysMenuText::capture_wait_neutral }, std::pair{ "capture_ready", &KeyboardKeysMenuText::capture_ready },
+			std::pair{ "capture_ready_mouse", &KeyboardKeysMenuText::capture_ready_mouse },
+			std::pair{ "capture_release", &KeyboardKeysMenuText::capture_release }, std::pair{ "capture_rejected", &KeyboardKeysMenuText::capture_rejected },
+			std::pair{ "capture_conflict", &KeyboardKeysMenuText::capture_conflict }, std::pair{ "capture_cancelled", &KeyboardKeysMenuText::capture_cancelled },
+			std::pair{ "debug_collision", &KeyboardKeysMenuText::debug_collision } })
 		{ keys.*field.second = read_menu_line(jump, field.first); }
 		keys.help = read_menu_block(jump, "help");
 		keys.labels = copy.labels;
-		for (const auto& field : { std::pair{ "capture_release", &KeyboardJumpMenuText::capture_release } })
+		for (const auto& field : { std::pair{ "capture_release", &KeyboardKeysMenuText::capture_release } })
 		{
 			try { std::ignore = controls_text::key_line(keys.labels, keys.*field.second, keys.labels.space); }
 			catch (const std::invalid_argument& error)
@@ -570,10 +570,10 @@ std::wstring StageScanMenuText::progress(size_t file, size_t files, size_t page,
 		  { L"{page}", std::to_wstring(page) }, { L"{pages}", std::to_wstring(pages) } });
 }
 
-std::wstring KeyboardJumpMenuText::release_key(std::wstring_view label) const
+std::wstring KeyboardKeysMenuText::release_key(std::wstring_view label) const
 { return controls_text::key_line(this->labels, this->capture_release, label); }
 
-const std::wstring& KeyboardJumpMenuText::row(size_t index) const
+const std::wstring& KeyboardKeysMenuText::row(size_t index) const
 {
 	const std::array<const std::wstring*, 6> rows{ &this->move_left, &this->move_right, &this->jump,
 		&this->drop, &this->shoot, &this->pause };

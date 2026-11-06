@@ -251,25 +251,6 @@ namespace
         }
     }
 
-    float owned_top_paint(const Level& level, const RectangleF& support, float thickness)
-    {
-        float area = 0.0f;
-        for (const PaintSurfaceSample& surface : level.paint_surfaces())
-        {
-            if (surface.face != PaintSurfaceFace::top || surface.paint_owner != paint_owners::index(-1, 1))
-            { continue; }
-            bool belongs = true;
-            for (const Vector2F& corner : surface.corners)
-            {
-                belongs = belongs && corner.x >= support.left() - endpoint_tolerance &&
-                    corner.x <= support.right() + endpoint_tolerance &&
-                    std::fabs(corner.y - support.top()) <= thickness + endpoint_tolerance;
-            }
-            if (belongs) { area += surface.scored_area; }
-        }
-        return area;
-    }
-
     void check_driver(World& world)
     {
         constexpr int steps = 180;
@@ -285,7 +266,7 @@ namespace
                     settings.begin_input_claims(input_slots::keyboard_and_mouse);
                     settings.set_screen_layout(ScreenLayout::one_player);
                     settings.set_stage("turbulence"); settings.set_duration(20.0f);
-                    settings.set_player_team(0, team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
+                    settings.set_player_team(0, opposing(team));
                     settings.set_player_team(1, team);
                     settings.set_player_weapon(1, static_cast<WeaponType>(tool));
                     std::unique_ptr<Level> level = world.build(settings);

@@ -1,11 +1,8 @@
-#pragma once
-
+// Included inside the story-audio fixture's anonymous namespace, after
+// music_mix_checks.h and results_music_checks.h.
 // ROAD#36: Labrador's device recovery (engine 2b3b97b, in v0.3.0)
 // stops persistent voices without an event. Stopping each music effect through
 // its own sound bank stands in for that; the recorder has no device to lose.
-// Included after music_mix_checks.h and results_music_checks.h.
-namespace
-{
 	int looping_plays(const World& world, const std::string& name)
 	{
 		const auto voice = world.voices.at(name);
@@ -192,4 +189,3 @@ namespace
 			"Silent-bank arena music tried to replay a voice it never had");
 		world.set_music_volume(original_music);
 	}
-}

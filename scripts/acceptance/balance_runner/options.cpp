@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_runner/runner.h"
+#include "game/contracts/simulation.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/bot.h"
 #include "engine/core/step_timer.h"
@@ -313,8 +314,7 @@ namespace balance_runner
 
     float fixed_dt()
     {
-        return static_cast<float>(labrador::StepTimer::TicksToSeconds(
-            labrador::StepTimer::TicksPerSecond / 60));
+        return SECONDS_PER_STEP;
     }
 
     std::string tool_name(WeaponType tool)

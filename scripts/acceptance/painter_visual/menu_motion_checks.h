@@ -4,29 +4,14 @@
 void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct MotionProfile
-    {
-        std::wstring previous;
-        explicit MotionProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the isolated painter profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate the menu-motion preferences");
-        }
-        ~MotionProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "menu-motion-profile");
+    const acceptance::IsolatedSave isolated(output / "menu-motion-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;
     initial.music_volume = initial.sfx_volume = 0;
     initial.reduce_effects = false;
     require(preferences_session.set_play_settings_and_save(initial),
         "Cannot seed the isolated menu-motion preferences");
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
+    PlaySettings& play = live_play_settings(preferences_session);
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -59,7 +44,7 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         for (const Key key : { Key::up, Key::down, Key::left, Key::right,
             Key::enter, Key::space, Key::escape }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::move(page)); tick(); tick();
         require(stack.depth() == 2, "The menu-motion production page did not open");
     };
@@ -73,7 +58,7 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds);
-        return countdown_crop_bounds(bounds);
+        return pixel_bounds(bounds);
     };
     const auto measured = [&](const std::string& font, const std::wstring& text, Vector2F position)
     {
@@ -91,8 +76,8 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
     const auto frozen = [&](const Frame& frame)
     {
         std::srand(4673); const int expected = std::rand(); std::srand(4673);
-        require(frame.pixels == main_menu_frame(app).pixels &&
-            frame.pixels == main_menu_frame(app).pixels && std::rand() == expected,
+        require(frame.pixels == stack_frame(app).pixels &&
+            frame.pixels == stack_frame(app).pixels && std::rand() == expected,
             "Frozen menu-motion drawing changed pixels or consumed RNG");
     };
     std::ofstream records(output / "menu-motion.csv");
@@ -131,8 +116,8 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         resize_page(size);
         require(preferences_session.set_play_settings_and_save(initial), "Cannot reset menu-motion preferences");
         open(std::make_unique<MainMenuHome>(&context));
-        const Frame first = main_menu_frame(app); tick(settle_time);
-        require(first.pixels == main_menu_frame(app).pixels,
+        const Frame first = stack_frame(app); tick(settle_time);
+        require(first.pixels == stack_frame(app).pixels,
             "A newly opened menu animated its initial focus");
         const auto& home = presentation.main_menu();
         const auto home_row = [&](MenuItem item, int row)
@@ -142,35 +127,35 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         };
         const RectangleF options_arrow = arrow_bounds(home_row(MenuItem::options, 1), home.art);
         tap(Key::down);
-        const Frame arrival = main_menu_frame(app); frozen(arrival);
+        const Frame arrival = stack_frame(app); frozen(arrival);
         tick(0.0f); tick(-0.5f);
-        require(arrival.pixels == main_menu_frame(app).pixels,
+        require(arrival.pixels == stack_frame(app).pixels,
             "Nonpositive menu time advanced the focus ornament");
-        tick(motion.focus_duration * 0.4f); const Frame middle = main_menu_frame(app); frozen(middle);
-        tick(settle_time); const Frame rest = main_menu_frame(app);
+        tick(motion.focus_duration * 0.4f); const Frame middle = stack_frame(app); frozen(middle);
+        tick(settle_time); const Frame rest = stack_frame(app);
         changed("home-focus-initial", arrival, rest, options_arrow);
         changed("home-focus-middle", middle, rest, options_arrow);
         require(arrival.pixels != middle.pixels, "Focus ornament did not progress with positive time");
         // Applied preferences are borrowed during draw, so suppression does
         // not need another simulation update and drawing cannot consume age.
-        tap(Key::up); tap(Key::down); const Frame live = main_menu_frame(app);
+        tap(Key::up); tap(Key::down); const Frame live = stack_frame(app);
         play.reduce_effects = true;
-        require(rest.pixels == main_menu_frame(app).pixels,
+        require(rest.pixels == stack_frame(app).pixels,
             "Applied Reduce effects did not suppress focus motion immediately");
         play.reduce_effects = false;
-        require(live.pixels == main_menu_frame(app).pixels,
+        require(live.pixels == stack_frame(app).pixels,
             "Suppressed drawing mutated the focus-motion clock");
         stack.notify_activation(false);
-        require(rest.pixels == main_menu_frame(app).pixels,
+        require(rest.pixels == stack_frame(app).pixels,
             "Deactivation did not clear the current focus motion");
         stack.notify_activation(true); tick();
-        require(rest.pixels == main_menu_frame(app).pixels,
+        require(rest.pixels == stack_frame(app).pixels,
             "Activation restarted interrupted focus motion");
         // Several changes before any positive time may restart one response,
         // but only the last selected row may retain moving pixels.
         tap(Key::down); tap(Key::down); tap(Key::up);
-        const Frame rapid = main_menu_frame(app); frozen(rapid); tick(settle_time);
-        changed("home-rapid-focus", rapid, main_menu_frame(app),
+        const Frame rapid = stack_frame(app); frozen(rapid); tick(settle_time);
+        changed("home-rapid-focus", rapid, stack_frame(app),
             arrow_bounds(home_row(MenuItem::credits, 2), home.art));
         capture("home-arrival", arrival, options_arrow);
         capture("home-middle", middle, options_arrow);
@@ -181,9 +166,9 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         const auto& art = controls.art;
         tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::down); tick(settle_time);
         tap(Key::right);
-        const Frame pressed = main_menu_frame(app); frozen(pressed);
-        tick(motion.press_duration * 0.4f); const Frame release = main_menu_frame(app); frozen(release);
-        tick(settle_time); const Frame released = main_menu_frame(app);
+        const Frame pressed = stack_frame(app); frozen(pressed);
+        tick(motion.press_duration * 0.4f); const Frame release = stack_frame(app); frozen(release);
+        tick(settle_time); const Frame released = stack_frame(app);
         RectangleF music_row(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
             Vector2F(controls.controls_position.x - controls.layout.position.x -
                 art.focus_padding.x * 2.0f - art.shadow_offset, controls.layout.spacing.y));
@@ -228,7 +213,7 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
             {
                 for (int x = pixels.x; x < pixels.right(); ++x)
                 {
-                    const size_t offset = hud_pixel_offset(pressed, x, y);
+                    const size_t offset = pixel_offset(pressed, x, y);
                     // Equal independent lettering over black/white is fully
                     // opaque. Antialiased edges blend with the paper shade;
                     // opaque glyph interiors retain their exact coordinates.
@@ -245,34 +230,34 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         capture("controls-pressed", pressed, music_row);
         capture("controls-releasing", release, music_row);
         capture("controls-rest", released, music_row);
-        resize_page({ 1920, 1080 }); std::ignore = main_menu_frame(app); resize_page(size);
-        require(released.pixels == main_menu_frame(app).pixels,
+        resize_page({ 1920, 1080 }); std::ignore = stack_frame(app); resize_page(size);
+        require(released.pixels == stack_frame(app).pixels,
             "Settled selection paper changed after a resize round-trip");
-        tap(Key::left); const Frame repeat_press = main_menu_frame(app);
-        play.reduce_effects = true; const Frame reduced_press = main_menu_frame(app);
+        tap(Key::left); const Frame repeat_press = stack_frame(app);
+        play.reduce_effects = true; const Frame reduced_press = stack_frame(app);
         play.reduce_effects = false;
-        require(repeat_press.pixels == main_menu_frame(app).pixels,
+        require(repeat_press.pixels == stack_frame(app).pixels,
             "Suppressed selection drawing consumed the paper press");
         tick(settle_time);
-        require(reduced_press.pixels == main_menu_frame(app).pixels,
+        require(reduced_press.pixels == stack_frame(app).pixels,
             "Applied Reduce effects did not suppress selection paper immediately");
         tap(Key::right); stack.notify_activation(false);
-        const Frame interrupted_press = main_menu_frame(app); stack.notify_activation(true); tick(settle_time);
-        require(interrupted_press.pixels == main_menu_frame(app).pixels,
+        const Frame interrupted_press = stack_frame(app); stack.notify_activation(true); tick(settle_time);
+        require(interrupted_press.pixels == stack_frame(app).pixels,
             "Deactivation retained or restarted a selection paper press");
 
         // The real child pushes over this parent, then pops back to the same
         // focus. Its successful activation must leave no pressed parent card.
-        tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up); tick(settle_time); const Frame parent = main_menu_frame(app);
+        tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up); tick(settle_time); const Frame parent = stack_frame(app);
         tap(Key::enter); require(stack.depth() == 3, "Pad sticks did not push its actual child");
-        tap(Key::escape); require(stack.depth() == 2 && parent.pixels == main_menu_frame(app).pixels,
+        tap(Key::escape); require(stack.depth() == 2 && parent.pixels == stack_frame(app).pixels,
             "Suspended/resumed Controls retained its successful child-activation press");
         tick(); // Arm fresh parent navigation only after returning to neutral.
 
         for (int row = 0; row < 9; ++row) { tap(Key::down); }
         tick(settle_time); tap(Key::enter);
-        const Frame applied_press = main_menu_frame(app); frozen(applied_press); tick(settle_time);
-        const Frame applied_rest = main_menu_frame(app);
+        const Frame applied_press = stack_frame(app); frozen(applied_press); tick(settle_time);
+        const Frame applied_rest = stack_frame(app);
         RectangleF apply_row = measured(controls.item_font, presentation.menu_text().item(MenuItem::apply),
             controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f));
         const float apply_scale = std::min({ 1.0f,
@@ -292,21 +277,21 @@ void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         require(play.reduce_effects, "Actual Controls Apply did not commit Reduce effects");
         Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file();
         require(reloaded_session.play_settings().reduce_effects, "Applied Reduce effects did not survive save reload");
-        const Frame reduced_apply = main_menu_frame(app); tick(settle_time);
-        require(reduced_apply.pixels == main_menu_frame(app).pixels,
+        const Frame reduced_apply = stack_frame(app); tick(settle_time);
+        require(reduced_apply.pixels == stack_frame(app).pixels,
             "Applying Reduce effects left an animated selection paper");
-        tap(Key::up); const Frame reduced_focus = main_menu_frame(app); tick(settle_time);
-        require(reduced_focus.pixels == main_menu_frame(app).pixels,
+        tap(Key::up); const Frame reduced_focus = stack_frame(app); tick(settle_time);
+        require(reduced_focus.pixels == stack_frame(app).pixels,
             "Applied Reduce effects allowed a subsequent focus animation");
-        tap(Key::left); const Frame pending_off = main_menu_frame(app); tick(settle_time);
-        require(play.reduce_effects && pending_off.pixels == main_menu_frame(app).pixels,
+        tap(Key::left); const Frame pending_off = stack_frame(app); tick(settle_time);
+        require(play.reduce_effects && pending_off.pixels == stack_frame(app).pixels,
             "An unapplied reduction reversal restarted menu motion");
         tap(Key::down); tap(Key::enter); require(!play.reduce_effects,
             "Actual Controls Apply did not restore ordinary menu motion");
         for (int row = 0; row < 5; ++row) { tap(Key::up); }
         tick(settle_time); tap(Key::right);
-        const Frame restored_press = main_menu_frame(app); frozen(restored_press); tick(settle_time);
-        const Frame restored_rest = main_menu_frame(app);
+        const Frame restored_press = stack_frame(app); frozen(restored_press); tick(settle_time);
+        const Frame restored_rest = stack_frame(app);
         changed("controls-motion-restored", restored_press, restored_rest, music_row);
         capture("reduced-applied", reduced_apply, apply_row);
         capture("restored-value-pressed", restored_press, music_row);

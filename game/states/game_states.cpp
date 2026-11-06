@@ -736,7 +736,7 @@ int GameLevel::check_for_pause_input(
 	for (int i = 0; i < static_cast<int>(player_inputs.size()); i++)
 	{
 		if (player_inputs[i].toggle_pause_menu &&
-			match_owns_pad_slot(this->settings_, i))
+			match_owns_input_slot(this->settings_, i))
 		{
 			return i;
 		}

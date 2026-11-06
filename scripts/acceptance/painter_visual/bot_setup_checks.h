@@ -3,31 +3,31 @@
 void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
-    // ROAD34: drive Player Count's real host claim before the existing Join
+    // ROAD#34: drive Player Count's real host claim before the existing Join
     // matrix. The private profile and scripted reader never borrow a player save.
     {
         const auto profile_root = output / "host-profile-boost-profile";
-        const NestedSaveProfile host_profile(profile_root);
+        const acceptance::IsolatedSave host_profile(profile_root);
         Save host_preferences; SettingsSession host_preferences_session(host_preferences);
         PlaySettings quiet;
         quiet.music_volume = quiet.sfx_volume = 0; quiet.reduce_effects = true;
-        require(host_preferences_session.set_play_settings_and_save(quiet), "ROAD34 could not seed private quiet preferences");
+        require(host_preferences_session.set_play_settings_and_save(quiet), "ROAD#34 could not seed private quiet preferences");
         bool saved = false;
         const int host_id = host_preferences_session.add_profile_and_save("HOST", 0, saved);
-        require(saved, "ROAD34 could not create its private host profile");
+        require(saved, "ROAD#34 could not create its private host profile");
         const int guest_id = host_preferences_session.add_profile_and_save("GUEST", 3, saved);
         require(saved && host_preferences.set_profile_boost_and_save(guest_id, 2),
-            "ROAD34 could not create its private guest profile");
-        const auto save_path = profile_root / "ColourWars/save_data.json";
+            "ROAD#34 could not create its private guest profile");
+        const auto save_path = acceptance::save_path_in(profile_root);
         const auto profile_bytes = [&]
         {
             std::ifstream stream(save_path, std::ios::binary);
-            require(stream.good(), "ROAD34 private profile file disappeared");
+            require(stream.good(), "ROAD#34 private profile file disappeared");
             const std::string text{ std::istreambuf_iterator<char>(stream), {} };
-            require(!stream.bad(), "ROAD34 could not read its complete private profile file");
+            require(!stream.bad(), "ROAD#34 could not read its complete private profile file");
             return text;
         };
-        StageList host_stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+        StageList host_stages{ acceptance::shipped_stage(levels, "movement_course") };
         GameData host_data; host_data.set_application(&app); host_data.set_save(&host_preferences); host_data.set_settings_session(&host_preferences_session);
         const StageCatalog host_stage_catalog = acceptance::catalog_of(levels, host_stages, { "movement_course" }); host_data.set_stage_catalog(&host_stage_catalog);
         host_data.set_tuning(&tuning); host_data.set_presentation(&presentation);
@@ -35,7 +35,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         MatchSetup host_settings;
         MenuContext host_context(&host_data, &host_input, &host_settings);
         StateContext& host_stack = app;
-        require(host_stack.depth() == 0, "ROAD34 needs the painter's empty owned state stack");
+        require(host_stack.depth() == 0, "ROAD#34 needs the painter's empty owned state stack");
         const std::array<Key, 3> host_keys{ Key::enter, Key::escape, Key::r };
         struct ClearHostProfiles
         {
@@ -81,7 +81,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             app.renderer()->begin_frame(); host_stack.draw(*app.renderer()); return read(*app.renderer());
         };
         std::ofstream host_records(output / "host-profile-boost.csv");
-        require(host_records.good(), "ROAD34 could not create its private observations");
+        require(host_records.good(), "ROAD#34 could not create its private observations");
         host_records << "phase,host_slot,players,profile_boost,expected_host,actual_host,expected_guest,actual_guest,private_save_unchanged,passed\n";
         std::string before_host_ui;
         PlayerProfiles profiles_before_host_ui;
@@ -102,8 +102,8 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
                 << current_profile_boost << ',' << expected_host << ',' << actual_host << ',' << expected_guest << ','
                 << actual_guest << ',' << source_unchanged << ',' << passed << '\n';
             host_records.flush();
-            require(host_records.good(), "ROAD34 could not retain its complete observation");
-            require(passed, "ROAD34 actual setup did not retain its literal profile Boost and private save");
+            require(host_records.good(), "ROAD#34 could not retain its complete observation");
+            require(passed, "ROAD#34 actual setup did not retain its literal profile Boost and private save");
         };
         const auto host_expect_page = [&](int page, int expected_host, int expected_guest)
         {
@@ -124,7 +124,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
                 save(actual, output / "host-profile-failure-actual.ppm");
                 save(wanted, output / "host-profile-failure-expected.ppm");
             }
-            require(actual.pixels == wanted.pixels, "ROAD34 actual setup page differs from its literal Boost reference");
+            require(actual.pixels == wanted.pixels, "ROAD#34 actual setup page differs from its literal Boost reference");
         };
         const auto host_open = [&](int slot, int count, int boost, int previous_boost, bool wearing, bool guest_wearing = false)
         {
@@ -133,13 +133,13 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             for (const Key key : host_keys) app.keyboard()->on_key_up(key);
             painter_scripted_pads::states = {};
             for (int pad = 0; pad < input_slots::pad_count; ++pad)
-                require(host_preferences_session.wear_profile(pad, -1), "ROAD34 could not clear a private profile wearer");
-            require(host_preferences.set_profile_boost_and_save(host_id, boost), "ROAD34 could not seed a private Boost");
-            if (wearing) require(host_preferences_session.wear_profile(slot, host_id), "ROAD34 could not wear the host profile");
+                require(host_preferences_session.wear_profile(pad, -1), "ROAD#34 could not clear a private profile wearer");
+            require(host_preferences.set_profile_boost_and_save(host_id, boost), "ROAD#34 could not seed a private Boost");
+            if (wearing) require(host_preferences_session.wear_profile(slot, host_id), "ROAD#34 could not wear the host profile");
             else if (slot == input_slots::keyboard_and_mouse)
-                require(host_preferences_session.wear_profile(0, host_id), "ROAD34 could not seed its unrelated-pad control");
+                require(host_preferences_session.wear_profile(0, host_id), "ROAD#34 could not seed its unrelated-pad control");
             current_host = slot; current_guest = slot == 3 ? 0 : 3; current_profile_boost = boost;
-            if (guest_wearing) require(host_preferences_session.wear_profile(current_guest, guest_id), "ROAD34 could not wear the guest profile");
+            if (guest_wearing) require(host_preferences_session.wear_profile(current_guest, guest_id), "ROAD#34 could not wear the guest profile");
             if (input_slots::is_pad(slot)) painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true;
             if (count == 2) painter_scripted_pads::states[static_cast<size_t>(current_guest)].connected = true;
             app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
@@ -153,19 +153,19 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
                 host_settings.set_player_weapon(seat, WeaponType::sprayer);
                 if (seat == 1) host_settings.set_player_handicap(seat, 1);
             }
-            require(host_settings.player_settings()[0].num == -1, "ROAD34 fixture claimed its host before Player Count");
+            require(host_settings.player_settings()[0].num == -1, "ROAD#34 fixture claimed its host before Player Count");
             before_host_ui = profile_bytes(); profiles_before_host_ui = host_preferences.profiles();
             host_input.reset_actions(); host_stack.push(std::make_unique<MainMenuPlayerCount>(&host_context));
             host_tick(); host_tick(); host_tap(slot, GamepadButton::a);
             require(host_settings.player_settings()[0].num == slot && host_settings.player_count() == count,
-                "ROAD34 actual Player Count action did not claim the initiating host");
+                "ROAD#34 actual Player Count action did not claim the initiating host");
             // This first observation precedes every reference page and later matrix case.
             host_observe("host-join", wearing ? boost : previous_boost, count == 2 ? 1 : -1);
             host_expect_page(0, wearing ? boost : previous_boost, count == 2 ? 1 : -1);
             if (count == 2)
             {
                 host_tap(current_guest, GamepadButton::a);
-                require(host_settings.player_settings()[1].num == current_guest, "ROAD34 guest did not claim its own device");
+                require(host_settings.player_settings()[1].num == current_guest, "ROAD#34 guest did not claim its own device");
                 host_observe("guest-join", wearing ? boost : previous_boost, guest_wearing ? 2 : 1);
             }
             host_tap(slot, GamepadButton::a);
@@ -203,27 +203,26 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         const InputBindings before_bindings = host_preferences_session.input_bindings();
         std::array<int, input_slots::pad_count> carry{ -1, -1, -1, -1 };
         carry[0] = host_settings.player_handicap(0); carry[3] = host_settings.player_handicap(1);
-        require(host_preferences_session.remember_profile_boosts_and_save(carry), "ROAD34 private Save API carry-back failed");
+        require(host_preferences_session.remember_profile_boosts_and_save(carry), "ROAD#34 private Save API carry-back failed");
         require(host_preferences.profiles() == expected_profiles && profile_bytes() != before_host_ui,
-            "ROAD34 Save API carry-back changed more than the selected profile Boost or did not persist it");
+            "ROAD#34 Save API carry-back changed more than the selected profile Boost or did not persist it");
         Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); // The verified private file already exists; no legacy fallback is read.
         require(reloaded.profiles() == expected_profiles && reloaded_session.input_bindings() == before_bindings &&
             reloaded_session.play_settings().music_volume == 0 && reloaded_session.play_settings().sfx_volume == 0 &&
-            reloaded_session.play_settings().reduce_effects, "ROAD34 private carry-back did not reopen with its original settings");
+            reloaded_session.play_settings().reduce_effects, "ROAD#34 private carry-back did not reopen with its original settings");
         for (int pad = 0; pad < input_slots::pad_count; ++pad)
-            require(reloaded_session.worn_profile(pad) == -1, "ROAD34 runtime profile wearing leaked into the save");
+            require(reloaded_session.worn_profile(pad) == -1, "ROAD#34 runtime profile wearing leaked into the save");
         host_records << "save-api-carry-back,0,2,1,2,2,2,2,0,1\n";
-        host_records.flush(); require(host_records.good(), "ROAD34 could not retain its Save API boundary observation");
+        host_records.flush(); require(host_records.good(), "ROAD#34 could not retain its Save API boundary observation");
         std::cout << "PASS host profile Boost: 16 actual Player Count/Join/Weapon paths, Pad0/Pad3 Off/+1/+2 and 1/2P, "
             "bare-pad/keyboard controls, guest inheritance, committed manual Back navigation and private Save API carry-back; "
             "no actual match-start or physical-pad acceptance\n";
     }
 
-    const NestedSaveProfile profile(output / "bot-setup-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    const acceptance::IsolatedSave profile(output / "bot-setup-profile");
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = true; });
+    SettingsSession preferences_session(preferences);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -381,7 +380,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     open(1); tap(Key::right); tap(Key::down); tap(Key::left);
     require(settings.bot_count() == 0 && settings.human_count() == 1, "Solo practice gained a bot");
     tap(Key::enter); expect_page(2, "Bot-free solo practice did not retain its direct tool flow");
-    std::cout << "PASS playable bot setup: native720/1080 Join Human/Normal/Easy/Hard, human layouts and host protection; "
+    std::cout << "PASS playable bot setup: native 720/1080 Join Human/Normal/Easy/Hard, human layouts and host protection; "
         "P1 and bot team/tool readiness, empty-team refusal, row Back/reconfirm, sparse independent human input, "
         "inactive/disconnected gating, metadata continuity and bot-free solo practice\n";
 }

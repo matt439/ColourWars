@@ -47,15 +47,13 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     };
     std::array<std::vector<int>, 3> frozen_ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { frozen_ledgers[index] = ledger(cases[index].session); }
-    const NestedSaveProfile profile(output / "result-percentage-profile");
+    const acceptance::IsolatedSave profile(output / "result-percentage-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed result percentage's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "result-percentage-profile/ColourWars/save_data.json", std::ios::binary);
-        require(file.good(), "Result percentage probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -145,7 +143,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::escape, Key::space, Key::backspace })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, fixture.info, fixture.session, revealed));
         ++openings; tick(); require(stack.depth() == 2, "Result percentage consumed entry input or lost its page"); unchanged();
     };
@@ -164,7 +162,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     const RectangleF winner_region(600.0f, 246.0f, 720.0f, 93.0f);
     const RectangleF plate_region(588.0f, 480.0f, 744.0f, 96.0f);
@@ -485,8 +483,8 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     const auto monitor_regions = [&]
     {
         const float scale = app.resolution_manager()->resolution_vec().y / 720.0f;
-        return std::array<RectangleI, 2>{ countdown_crop_bounds(RectangleF(194.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)),
-            countdown_crop_bounds(RectangleF(698.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)) };
+        return std::array<RectangleI, 2>{ pixel_bounds(RectangleF(194.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)),
+            pixel_bounds(RectangleF(698.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)) };
     };
     std::array<TextMetric, 2> monitor_metrics;
     const auto monitor_reference = [&](const Presentation& snapshot, const std::array<const wchar_t*, 2>& words, bool wrong_font = false)
@@ -637,10 +635,10 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     require(summary.good(), "Cannot retain result percentage summary");
     std::cout << "PASS Result percentage leaf: independent solo coverage and A/B plate literals with original participation, hidden-winner and input gates; "
         "captured templates/three caret-only font aliases through retained pages, reopening, seeded Level rebuilds, reversal and zero-update resizing. "
-        "Three actual public-builder two-player roller Levels intentionally advance80 updates each to clicked overview; "
+        "Three actual public-builder two-player roller Levels intentionally advance 80 updates each to clicked overview; "
         "only opaque monitor inner-card interiors compare independent literal font/outline/width-height fitting over unchanged paper. "
         "Frozen drawing preserves public state, draw RNG and Debug replay fingerprint when available; private preferences/bytes remain unchanged. "
-        "60 StateContext updates plus240 separate Level updates,120 readbacks,105 CSV rows,8 page openings/pops,6 font controls, "
+        "60 StateContext updates plus 240 separate Level updates, 120 readbacks,105 CSV rows,8 page openings/pops,6 font controls, "
         "8 compact crops (681072 pixels /2043334 PPM bytes),one private seed Save. Both presets use the normal reader. "
         "No whole-picture/foreground, global-input, physical-pad, listening, human readability or performance acceptance.\n";
 }

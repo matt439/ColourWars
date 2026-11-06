@@ -5,13 +5,14 @@
 // content to a reserved temporary file, the Suite main builds once, and the
 // checks main calls in order.
 #include "game/objects/player.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/structure.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
-#include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
@@ -34,8 +35,7 @@ namespace movement_acceptance
 
     using acceptance::require;
 
-    inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    inline const float dt = SECONDS_PER_STEP;
 
     inline PlayerInputData input(bool pressed = false, bool held = false,
         float movement = 0.0f, bool drop = false)
@@ -51,7 +51,7 @@ namespace movement_acceptance
 
     // Uses the same update/resolve/end_contacts ordering as Level, with actual
     // Player, Structure and engine collision objects. No renderer/audio device.
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
         struct FeedbackEvent
         {
@@ -59,8 +59,6 @@ namespace movement_acceptance
             int tick;
         };
 
-        Scene scene{ nullptr, nullptr };
-        Player* player;
         RenderResources* render;
         std::vector<FeedbackEvent> feedback_events;
         int tick_count = 0;
@@ -89,26 +87,17 @@ namespace movement_acceptance
         void surface(const RectangleF& rectangle,
             CollisionObjectType type = CollisionObjectType::structure)
         {
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1",
-                "square_white_4", rectangle, std::make_unique<RectangleF>(rectangle),
-                this->render, type));
+            this->add_structure(rectangle, *this->render, type);
             this->scene.end_tick();
         }
 
         void tick(const PlayerInputData& actions = input())
         {
             ++this->tick_count;
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
             // Exercise the real paid-shot path between movement and contacts,
             // as Level does. The launch results are counted, then discarded so
             // this movement fixture has no unrelated projectile collisions.
-            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects()).size();
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            this->emitted_projectiles += this->step(actions).size();
             // Advancing and emitting happen in simulation, so a fresh effect is
             // age zero at the end of exactly its event tick. Keep history even
             // after the bounded live list expires an older effect.

@@ -1,16 +1,17 @@
 #include "game/pch.h"
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/player_badge.h"
 #include "game/config/presentation/presentation.h"
 #include "game/debug/dev_tools.h"
-#include "engine/input/mouse.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
 #endif
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cstdlib>
@@ -35,8 +36,7 @@ namespace
         return std::abs(first - second) < 0.001f;
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     // Metadata only: no graphics/audio device, window or player's save.
     struct World
@@ -49,7 +49,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "Level" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         Partitioner partitioner;
         std::unique_ptr<LevelBuilder> builder;
 
@@ -57,22 +56,7 @@ namespace
             tuning((content / "tuning.json").string().c_str()),
             presentation((content / "presentation.json").string().c_str())
         {
-            for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                this->render.add_sprite_sheet(sheet, read_sprite_sheet(
-                    (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* font : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(font) + ".spritefont")).string());
-                auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-                this->render.add_font(font, std::move(loaded));
-            }
-            this->audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, this->render, this->audio);
             auto info = std::make_unique<LevelLoadedInfo>(
                 (content / "levels/movement_course.json").string().c_str());
             info->validate();
@@ -326,9 +310,7 @@ namespace
         World disabled_world(content);
         auto& look = const_cast<PlayerIdentityPresentation&>(disabled_world.presentation.player_identity());
         look.enabled = false;
-        std::srand(734);
         auto enabled = enabled_world.build();
-        std::srand(734);
         auto disabled = disabled_world.build();
         std::vector<PlayerInputData> inputs(input_slots::count, input());
         activate(*enabled, inputs);
@@ -349,9 +331,8 @@ namespace
                     "Could not eliminate identity-equivalence player");
             }
             if (tick % 30 == 0) { enabled->emphasise_players(); }
-            const unsigned seed = static_cast<unsigned>(tick + 123);
-            std::srand(seed); enabled->update(acceptance::slot_seats(*enabled, inputs), dt);
-            std::srand(seed); disabled->update(acceptance::slot_seats(*disabled, inputs), dt);
+            enabled->update(acceptance::slot_seats(*enabled, inputs), dt);
+            disabled->update(acceptance::slot_seats(*disabled, inputs), dt);
             compare_gameplay(*enabled, *disabled);
             shots = shots || enabled->projectile_count() > 0;
             require(!disabled->player_identity_visible(0),
@@ -542,10 +523,7 @@ namespace
             json.Parse(source.c_str());
             require(!json.HasParseError(), "Cannot parse identity presentation fixture");
             edit(json["player_identity"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            { std::ofstream variant(path); variant << buffer.GetString(); require(variant.good(), "Cannot write identity variant"); }
+            acceptance::write_document(json, path);
             bool rejected = false;
             try { const Presentation invalid(path.string().c_str()); }
             catch (const std::exception& error)

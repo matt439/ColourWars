@@ -1,12 +1,11 @@
-// Crack42: complete independent115x34 front-details ROI per source path.
+// Crack 42: complete independent 115x34 front-details ROI per source path.
 // Copied complete front-details frames establish adoption only, not full art.
 enum class CrackReference { correct, straight, squared_base, collapsed_coverage, all_ink_first };
-std::vector<float> crack_fixed_style(const OpeningPresentation& p)
+// Every opening field but the crack colour this leaf tunes.
+std::vector<float> crack_fixed_style(OpeningPresentation p)
 {
-    OpeningPresentation stable=p;stable.crack=Colour(58,58,58);auto values=program_fixed_style(stable);
-    // program_fixed_style omits program_colour: append the ACTUAL input record,
-    // never a baseline-substituted value, for live AND each copied look.
-    values.insert(values.end(),{p.program_colour.r,p.program_colour.g,p.program_colour.b,p.program_colour.a});return values;
+    p.crack = Colour();
+    return opening_style(p);
 }
 class CrackColourProbe
 {
@@ -97,7 +96,7 @@ Frame CrackColourProbe::render(size_t context,const std::function<void(DrawList&
     // stay in all full-frame guards; they are not mask exemptions or extra reads.
     list.set_filter(TextureFilter::point);write_raw(list,20,20,24,24,Colour(255,255,255));write_raw(list,25,20,29,24,Colour(0,0,0));
     Frame result=read(renderer);++readbacks_;
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Crack requires1280x720 native frame");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Crack requires 1280x720 native frame");}
     bool calibrated=true;for(int y=20;y<24;++y){for(int x=20;x<29;++x)
     {if(x==24){continue;}const size_t at=offset(result,x,y);const unsigned char value=x<24?255:0;
         calibrated=calibrated&&result.pixels[at]==value&&result.pixels[at+1]==value&&result.pixels[at+2]==value&&result.pixels[at+3]==255;}}
@@ -147,7 +146,7 @@ void CrackColourProbe::failure(size_t context,const char* state,const char* stag
 void CrackColourProbe::check_roi(size_t context,const Frame& actual,const Frame& raw,const Colour& colour)
 {
     const int left=crack_left(context);const auto& map=crack_coverage(context);
-    // Complete3910 actual/raw RGBA and opaque-alpha checks FIRST. Supplementary
+    // Complete 3910 actual/raw RGBA and opaque-alpha checks FIRST. Supplementary
     // source channels do not substitute for the independent ordered geometry.
     for(int y=472;y<506;++y){for(int x=left;x<left+115;++x)
     {const size_t at=offset(actual,x,y);require(same_pixel(actual,raw,at),"Crack independent ordered ROI differs from actual RGBA");
@@ -263,33 +262,18 @@ void crack_colour_consumer_checks(Application& app,const Presentation& presentat
 void crack_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,
     const std::filesystem::path& content,const std::filesystem::path& output)
 {
-    const auto root=output/"crack-colour-tune-scratch",source=root/"source",staged=root/"staged";
-    std::filesystem::create_directories(source);std::filesystem::create_directories(staged);
-    constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
-    for(size_t i=0;i<files.size();++i)
-    {real_bytes[i]=tune_colour_bytes(content/files[i]);tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const NestedSaveProfile profile(root/"profile");const TuneColourTemp temporary(root/"temp");
-    struct RestoreCrack
-    {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreCrack(){t=old_t;p=old_p;}}
-        restore{tuning,presentation,tuning,presentation};
-    Save preferences; SettingsSession preferences_session(preferences);PlaySettings play;play.music_volume=17;play.sfx_volume=83;play.aim_sensitivity=4;
-    play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
-    InputBindings bindings;bindings.keyboard_jump=Key::j;
-    require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed Crack private preferences");
-    const auto save_path=root/"profile/ColourWars/save_data.json";const std::string saved_preferences=tune_colour_bytes(save_path);
-    const auto pref_values=[&]
-    {
-        const auto& p=preferences_session.play_settings();std::vector<int> v{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,
-            static_cast<int>(preferences.team_palette()),p.aim_sensitivity,p.music_volume,p.sfx_volume,p.view_shake?1:0,p.aim_marker?1:0,
-            p.reduce_effects?1:0,static_cast<int>(preferences_session.input_bindings().keyboard_jump)};
-        for(const auto& stick:p.sticks){v.push_back(stick.movement_deadzone);v.push_back(stick.aim_deadzone);}return v;
-    };
-    const auto saved_values=pref_values();
-    GameData data;data.set_application(&app);data.set_save(&preferences); data.set_settings_session(&preferences_session);const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning);data.set_presentation(&presentation);DebugDirector director(&tuning,&presentation);data.set_debug(&director);
-    auto& impl=*director.impl();impl.set_content_directories(source,staged);impl.set_user_directory(root/"user");
-    impl.set_script_directories({root/"scripts"});director.attach(&app,&data);impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output/"crack-colour-tune-commands.log").string()),"Cannot retain Crack private command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "crack-colour-tune-scratch", .transcript = "crack-colour-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto pref_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     CrackColourProbe probe(app,presentation,output);JsonSpanDocument initial(real_bytes[1],"Crack private source");
     const JsonLeaf* leaf=initial.find("opening.crack");require(leaf!=nullptr,"Crack source lacks exact existing token");
     require(presentation.opening().crack==Colour(58,58,58),"Crack Debug baseline differs from authored default");

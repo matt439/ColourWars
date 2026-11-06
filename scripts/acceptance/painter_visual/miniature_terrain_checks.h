@@ -295,8 +295,7 @@ void miniature_paint_matrix(Application& app, const Canvas& canvas, const GameTu
     RectangleF splash(64, 60, 320, 16);
     const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
     splash.offset(half.x, half.y);
-    const ProjectileSpray shot(splash, Vector2F::zero, PlayerTeam::a, 3, colours.team_a,
-        app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+    const ProjectileSpray shot = controlled_spray(app, tuning, splash, PlayerTeam::a, 3, colours.team_a);
     painted->on_contact(shot, Vector2F::zero, 0); overlay_reference->on_contact(shot, Vector2F::zero, 0);
     painted->update(10); overlay_reference->update(10);
     const PaintTotal before = painted->paint_total();
@@ -432,13 +431,20 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
     { require(changed > 0, "actual StagePreview never differed from disappearing-stroke legacy terrain"); }
 }
 
+// The six arenas the miniature matrices compare against legacy terrain: the
+// original four as positive controls, Crossfeed and Press Tower for exact
+// reference coverage. A selection, not "every stage": the evidence counts
+// are pinned to it.
+constexpr std::array<const char*, 6> miniature_stages{
+    "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" };
+
 void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences, const std::filesystem::path& output,
     std::ofstream& records)
 {
     const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     size_t changed_overviews = 0;
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
+    for (const char* stage : miniature_stages)
     {
         const LevelLoadedInfo* info = levels.get(stage);
         Scene scene(app.thread_pool(), app.partitioner()); std::vector<GameObject*> scenery;
@@ -554,8 +560,8 @@ Frame miniature_story_frozen(Application& app, Level& level)
 void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameTuning& tuning,
     const std::filesystem::path& output, std::ofstream& records)
 {
-    const NestedSaveProfile isolated(output / "miniature-story-profile");
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
+    const acceptance::IsolatedSave isolated(output / "miniature-story-profile");
+    for (const char* stage : miniature_stages)
     {
         for (const int count : { 1, 4 })
         {
@@ -679,6 +685,6 @@ void miniature_terrain_matrix(Application& app, Registry<LevelLoadedInfo>& level
     require(records.good(), "miniature terrain comparison record write failed");
     std::cout << "PASS miniature terrain: independent exposed edge/masked seam/lit body/major ruler tick and ramp silhouette "
         "pixel oracles, legacy comparisons, actual owned paint overlay, exact native material and Scene parity; "
-        "all six selected stage 1P/4P overview/story contexts at720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
+        "all six selected stage 1P/4P overview/story contexts at 720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
         "Muted renderer evidence; human readability, physical pads and performance acceptance remain separate.\n";
 }

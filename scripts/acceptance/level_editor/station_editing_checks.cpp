@@ -3,7 +3,6 @@
 // as every other entry, and the ED#23 shared rules (game/contracts/station_contract.h)
 // refuse what the game refuses. Lessons are preserved as written.
 #include "scripts/acceptance/level_editor/fixtures.h"
-#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -13,19 +12,6 @@ namespace level_editor_acceptance
 {
     namespace
     {
-        void refuses(const std::function<void()>& action, const std::string& expected, const char* message)
-        {
-            bool rejected = false;
-            try { action(); }
-            catch (const std::exception& error)
-            {
-                rejected = true;
-                require(std::string(error.what()).find(expected) != std::string::npos,
-                    std::string(message) + ": diagnostic was '" + error.what() + "'");
-            }
-            require(rejected, message);
-        }
-
         Entry station_named(const LevelDocument& document, const std::string& name)
         {
             for (const Entry& candidate : document.entries())
@@ -60,7 +46,7 @@ namespace level_editor_acceptance
     {
         const auto tuning = repo / "game/content/tuning.json";
         const auto course = repo / "game/content/levels/movement_course.json";
-        const auto original = parse(contents(course));
+        const auto original = parse(read_text(course));
         LevelDocument document(tuning);
         document.load(course);
         require(station_count(document) == 10, "The Movement Course does not list its ten stations");
@@ -111,7 +97,7 @@ namespace level_editor_acceptance
         LevelDocument reopened(tuning);
         reopened.load(saved);
         require(parse(reopened.serialize()) == parse(document.serialize()), "Station edits did not survive save");
-        const auto reread = parse(contents(saved));
+        const auto reread = parse(read_text(saved));
         const auto* before = station_json(original, "drop_through");
         const auto* after = station_json(reread, "drop_lesson");
         require(before && after && (*before)["lesson"] == (*after)["lesson"], "The lesson changed across edit and save");
@@ -184,17 +170,17 @@ namespace level_editor_acceptance
             }
             return std::pair<Rect, Rect>{ spawn, station };
         };
-        auto resized = parse(contents(tuning));
+        auto resized = parse(read_text(tuning));
         resized["player"]["size"]["x"].SetDouble(70.0);
         resized["player"]["size"]["y"].SetDouble(140.0);
         const auto resized_path = scratch / "station-player-size.json";
-        write(resized_path, encode(resized));
+        write_text(resized_path, encode(resized));
         const auto [sized_spawn, sized_station] = marker_sizes(LevelDocument(resized_path));
         require(sized_spawn.width == 70.0 && sized_spawn.height == 140.0 &&
             sized_station.width == 70.0 && sized_station.height == 140.0,
             "A spawn or station box does not follow source tuning's player size");
         const auto broken_path = scratch / "station-broken-tuning.json";
-        write(broken_path, "{");
+        write_text(broken_path, "{");
         const auto [broken_spawn, broken_station] = marker_sizes(LevelDocument(broken_path));
         require(broken_spawn.width == 52.0 && broken_spawn.height == 120.0 &&
             broken_station.width == 52.0 && broken_station.height == 120.0,

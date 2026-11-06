@@ -12,7 +12,7 @@
 class ProfilesMenu final : public SettingsPanelPage
 {
 public:
-	explicit ProfilesMenu(MenuContext* context, int player = -1);
+	explicit ProfilesMenu(MenuContext* context, int opening_slot = -1);
 	void init() override;
 	void update_page(float dt) override;
 protected:

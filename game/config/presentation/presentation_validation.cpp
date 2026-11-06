@@ -35,13 +35,13 @@ void Presentation::Validation::validate()
 
 Presentation::Validation::SetupGeometry Presentation::Validation::validate_menu_actions()
 {
-	const MainMenuPresentation& main = this->presentation_.main_menu_;
-	const PauseMenuPresentation& pause = this->presentation_.pause_menu_;
+	const MainMenuPresentation& main = this->presentation.main_menu_;
+	const PauseMenuPresentation& pause = this->presentation.pause_menu_;
 	// Pure arithmetic on the records: deriving it first resolves and measures
 	// nothing, so no diagnostic moves.
 	const SetupGeometry setup{ menu_geometry::setup_art(main), menu_geometry::display_art(pause, main),
 		menu_geometry::paper_interior(
-			menu_geometry::footer_paper(main.setup_box_size, this->presentation_.menu_.footer_y),
+			menu_geometry::footer_paper(main.setup_box_size, this->presentation.menu_.footer_y),
 			menu_geometry::setup_art(main)),
 		menu_geometry::screen_paper(pause.box_size) };
 	this->validate_menu_chrome();
@@ -73,7 +73,7 @@ Presentation::Validation::StageGeometry Presentation::Validation::validate_stage
 
 Presentation::Validation::ControlsGeometry Presentation::Validation::validate_controls_text(const SetupGeometry& setup)
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const RectangleF help_area(controls.controls_position, controls.controls_size);
 	const Vector2F options_value_limit = this->validate_options_values(setup);
 	const Vector2F controls_value_limit = this->validate_settings_toggles();

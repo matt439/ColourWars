@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/turbulence_blockout/fixtures.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "engine/math/triangle.h"
 #include "game/objects/collision_object_type.h"
 
@@ -24,12 +25,7 @@ namespace turbulence_blockout_acceptance
         info((content / "levels/turbulence_blockout.json").string().c_str()),
         builder(&this->render, &this->preferences, &this->tuning.paint())
     {
-        for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
-        {
-            this->render.add_sprite_sheet(name, read_sprite_sheet(
-                (content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));
-        }
-        this->audio.add_sound_bank("paint_exe", SoundBank::silent());
+        acceptance::load_cpu_assets(content, this->render, this->audio);
         this->info.validate(); this->info.validate_content(this->builder, this->render, this->audio);
         const JsonValue entries = this->info.collision_objects_json();
         for (std::size_t index = 0; index < entries.size(); ++index)

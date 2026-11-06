@@ -5,7 +5,7 @@
 
 using namespace labrador;
 
-PadButtonsMenu::PadButtonsMenu(MenuContext* context, int player) : SettingsPanelPage(context, player) {}
+PadButtonsMenu::PadButtonsMenu(MenuContext* context, int opening_slot) : SettingsPanelPage(context, opening_slot) {}
 
 void PadButtonsMenu::init()
 {

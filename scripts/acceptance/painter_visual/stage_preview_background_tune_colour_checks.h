@@ -1,4 +1,4 @@
-// Field51 is captured by the actual Stage Select UiTexture. These tests use
+// Field 51 is captured by the actual Stage Select UiTexture. These tests use
 // public pages/input only; the small material oracle does not reconstruct art.
 enum class PreviewBackingReference { correct, straight, squared };
 struct PreviewBackingCounts
@@ -15,7 +15,7 @@ public:
         context_(&data_, &input_, &settings_), stack_(app),
         sheet_(app.render_resources()->sprite_sheet(presentation.menu().sprite_sheet)),
         pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(presentation.menu().fill_frame))),
-        fixed_(fixed_style(presentation)), identity_fixed_(hud_track_identity_style(presentation.player_identity())),
+        fixed_(fixed_style(presentation)), identity_fixed_(player_identity_style(presentation.player_identity())),
         palette_(presentation.team_palette()), output_(output), phase_(phase),
         initial_keyboard_(app.keyboard()->state()), initial_previous_(app.keyboard()->previous_state()),
         initial_mouse_focus_(app.mouse()->focused()), initial_activation_(stack_.active()),
@@ -48,7 +48,7 @@ public:
             random_stage_indices(stages_) == std::vector<size_t>{ 1 } &&
             levels.get("crossfeed")->zoom_out_finish_bounds_rectangle() == RectangleF(0, 500, 3600, 880),
             "Preview backing Crossfeed/eligible Random source geometry changed");
-        auto& play = const_cast<PlaySettings&>(preferences_settings_.play_settings());
+        auto& play = live_play_settings(preferences_settings_);
         play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
         preferences_before_ = preference_values();
         data_.set_application(&app); data_.set_save(&preferences_); data_.set_settings_session(&preferences_settings_); stage_catalog_ = acceptance::catalog_of(levels, stages_, { "crossfeed" }); data_.set_stage_catalog(&stage_catalog_);
@@ -81,8 +81,8 @@ public:
     {
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.main_menu().stage_select && fixed_style(presentation_) == fixed_ &&
-            hud_track_identity_style(presentation_.player_identity()) == identity_fixed_ &&
-            hud_track_same_palette(presentation_.team_palette(), palette_) && preference_values() == preferences_before_ &&
+            player_identity_style(presentation_.player_identity()) == identity_fixed_ &&
+            same_team_palette(presentation_.team_palette(), palette_) && preference_values() == preferences_before_ &&
             resources->sprite_sheet(presentation_.menu().sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(presentation_.menu().fill_frame)) == &pixel_ &&
             pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
@@ -113,7 +113,7 @@ public:
         settings_.set_stage("crossfeed"); settings_.set_screen_layout(ScreenLayout::one_player);
         settings_.begin_input_claims(input_slots::keyboard_and_mouse); settings_.set_player_team(0, PlayerTeam::a);
         settings_.set_player_weapon(0, WeaponType::sprayer); slot_ = 0; locked_ = false; captured_ = look_.preview_background;
-        stack_.push(std::make_unique<PauseMenuProbeRoot>(app_, canvas_));
+        stack_.push(std::make_unique<CanvasProbeRoot>(app_, canvas_));
         std::srand(51023); const int next = std::rand(); std::srand(51023);
         stack_.push(std::make_unique<MainMenuStageSelect>(&context_)); ++counts_.opens; opened_ = true;
         require(std::rand() == next, "Preview backing page construction consumed RNG"); tick(); tick();
@@ -202,8 +202,7 @@ private:
     static std::vector<float> fixed_style(const Presentation& presentation)
     {
         const auto& hud = presentation.hud();
-        auto v = hud_track_fixed_style(hud); const auto& track = hud.meter_track_colour;
-        v.insert(v.end(), { track.r, track.g, track.b, track.a });
+        auto v = hud_style(hud);
         const auto& menu = presentation.menu(); const auto& p = presentation.main_menu().stage_select;
         for (const auto& point : { p.preview_position, p.preview_size, p.name_position, p.navigation_position }) { v.insert(v.end(), { point.x, point.y }); }
         for (const auto& colour : { menu.panel_edge_colour, p.selected, p.selected_ink, p.unselected }) { v.insert(v.end(), { colour.r, colour.g, colour.b, colour.a }); }
@@ -368,15 +367,15 @@ void stage_preview_background_command_checks(Application& app, Registry<LevelLoa
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output,
     const PreviewBackingEvidence& shared)
 {
-    const auto root = output / "stage-preview-background-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "Preview backing private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestorePreview { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestorePreview() { t = old_t; p = old_p; } }
-        restore{ tuning, presentation, tuning, presentation };
+    // The probe builds its own GameData, so this leaf takes the scratch alone
+    // and attaches its director below.
+    const TuneColourScratch scratch(tuning, presentation, content, output,
+        { .scratch = "stage-preview-background-tune-scratch", .transcript = {}, .fresh = true });
+    const std::filesystem::path& root = scratch.root();
+    const std::filesystem::path& source = scratch.source();
+    const std::filesystem::path& staged = scratch.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = scratch.real_bytes();
     const std::string path = "main_menu.stage_select.preview_background", full = "presentation." + path;
     JsonSpanDocument document(bytes[1], "Preview backing private source"); const auto* token = document.find(path);
     require(token && document.token(*token) == "\"121827EE\"", "Preview authored exact RGBA token must stay 121827EE");
@@ -394,7 +393,7 @@ void stage_preview_background_command_checks(Application& app, Registry<LevelLoa
     const auto unchanged = [&]()
     {
         probe.unchanged(); require(!impl.in_match() && !impl.can_apply() && impl.request().empty() &&
-            impl.total_updates() == 0 && impl.level_updates() == 0 && !std::filesystem::exists(root / "profile/ColourWars/save_data.json"),
+            impl.total_updates() == 0 && impl.level_updates() == 0 && !std::filesystem::exists(acceptance::save_path_in(root / "profile")),
             "Preview commands launched/queued gameplay, wrote a game Save or advanced match hooks");
         for (size_t i = 0; i < files.size(); ++i)
         {

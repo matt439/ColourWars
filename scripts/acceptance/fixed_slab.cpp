@@ -92,7 +92,7 @@ namespace
     void sweep_checks()
     {
         // Independent ideal-coordinate oracle: on the top edge x+2y=160,
-        // the inside normal projection ends at160+24sqrt(5). These fractions
+        // the inside normal projection ends at 160+24sqrt(5). These fractions
         // use that equation, not the production clipping or shape projections.
         // The tolerance only covers reconstruction of the engine's float OBB.
         const FixedSlabGeometry slab({ { 0.0f, 80.0f }, FixedSlabRise::right });
@@ -190,9 +190,9 @@ int main(int argc, char** argv)
         std::filesystem::create_directories(evidence);
         std::cout << "Fixed slab receipts: " << evidence.string() << '\n';
         fixed_slab_acceptance::authoring_checks(std::filesystem::path(argv[1]), evidence);
-        std::cout << "PASS fixed slab geometry: selected mirrored160/80/normal24 frame, collider/paint transforms, exact four-axis "
-            "changing-box sweeps, thin/empty-corner/growth/initial/zero-step/tangent controls and560 independent SAT probes; "
-            "runtime object/Player checks reported separately; rendered and human acceptance remain open\n";
+        std::cout << "PASS fixed slab geometry: selected mirrored 160/80/normal 24 frame, collider/paint transforms, exact four-axis "
+            "changing-box sweeps, thin/empty-corner/growth/initial/zero-step/tangent controls and 560 independent SAT probes; "
+            "runtime object/Player checks reported separately; rendered and attended checks are outside this probe\n";
         return 0;
     });
 }

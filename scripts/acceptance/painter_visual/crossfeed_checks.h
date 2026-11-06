@@ -98,8 +98,8 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
                 RectangleF splash = object->shape()->bounding_box(); splash.inflate(32.0f);
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = fixture.paintables.size() % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 3 : 1,
-                    colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
+                    colours.team_colour(team));
                 surface->on_contact(shot, Vector2F::zero, 0.0f); surface->update(10.0f); ++heavy_contacts;
             }
             fixture.paintables.push_back(surface);
@@ -279,7 +279,7 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         std::array<CrossfeedFixture, 2> fixtures;
         for (int paint = 0; paint < 2; ++paint)
         {
-            std::srand(8282); fixtures[static_cast<size_t>(paint)] = crossfeed_fixture(app, info, tuning, presentation,
+            fixtures[static_cast<size_t>(paint)] = crossfeed_fixture(app, info, tuning, presentation,
                 preferences, count, paint == 1, 30.0f, heavy_contacts); ++builds;
             auto& fixture = fixtures[static_cast<size_t>(paint)];
             if (paint == 1) { heavy_min = std::min(heavy_min, crossfeed_ownership(fixture).second); }
@@ -405,5 +405,5 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         "H1-H5/H7-H8 route, pressure, weapon, recovery and balance measurements belong to separate CPU trials and attended play. No human readability, warning-time, physical-pad, listening or competitive-balance acceptance is established.\n";
     require(summary.good() && scope.good(), "Crossfeed native summary/scope write failed");
     std::cout << "PASS Crossfeed-only hidden native inspection: clean/controlled-heavy 1/2/3/4P moving approaches, actual overview/StagePreview; "
-        "21 full frames/51 native crops/43 readbacks, frozen state/RNG/fingerprint; human readability and balance remain open\n";
+        "21 full frames/51 native crops/43 readbacks, frozen state/RNG/fingerprint; human readability and balance are outside this probe\n";
 }

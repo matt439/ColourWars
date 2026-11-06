@@ -6,6 +6,7 @@
 #include "game/config/settings_session.h"
 #include "game/match/match_setup.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <array>
 #include <filesystem>
@@ -38,17 +39,9 @@ namespace
 
     void write(const std::filesystem::path& path, const std::string& section)
     {
-        std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-        stream << "{\"save_version\":2,\"music_volume\":37,\"last_match\":" << section << '}';
-        require(stream.good(), "Cannot write isolated bot remembered-setup fixture");
+        acceptance::write_text(path, "{\"save_version\":2,\"music_volume\":37,\"last_match\":" + section + '}');
     }
 
-    std::string bytes(const std::filesystem::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        require(stream.good(), "Cannot read isolated bot remembered-setup fixture");
-        return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-    }
 
     void check_round_trips(const std::filesystem::path& path)
     {
@@ -164,12 +157,12 @@ namespace
             missing_difficulty.players[1].difficulty == BotDifficulty::normal && missing_difficulty.layout == layouts[0],
             "Missing bot difficulty did not default independently to Normal");
         Save save; SettingsSession save_session(save); save_session.load_save_file();
-        const std::string before = bytes(path);
+        const std::string before = acceptance::read_text(path);
         const auto invalid = [&](LastMatchSetup candidate)
         {
             rejects([&] { candidate.validate(); });
             rejects([&] { save.remember_match_setup_and_save(candidate); });
-            require(bytes(path) == before && save.last_match_setup()->players[1].controller == PlayerController::bot,
+            require(acceptance::read_text(path) == before && save.last_match_setup()->players[1].controller == PlayerController::bot,
                 "Invalid bot metadata changed previous save bytes or remembered controller");
         };
         auto candidate = missing_difficulty; candidate.players[0].controller = PlayerController::bot; invalid(candidate);

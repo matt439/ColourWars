@@ -239,7 +239,7 @@ namespace colourwars_editor
                 editor.document_.redo() && editor.document_.serialize() == second_edit &&
                 editor.document_.undo() && editor.document_.serialize() == first_edit,
                 "DPI transitions changed the complete prepared undo/redo branch");
-            std::cout << "PASS native editor DPI: 28 in-process96/144/192 transitions, suggested rectangles, "
+            std::cout << "PASS native editor DPI: 28 in-process 96/144/192 transitions, suggested rectangles, "
                 "scaled fonts/controls/minimums, pending text+selection, view/hit conversion, full history and stable GDI "
                 << warmed_gdi << " -> " << final_gdi << '\n';
             check_mechanisms(editor, scratch);

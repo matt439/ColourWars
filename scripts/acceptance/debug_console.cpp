@@ -3,6 +3,8 @@
 #include "game/debug/commands/debug_tokenizer.h"
 #include "game/input/input_slots.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
+#include "scripts/acceptance/support/stderr_capture.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -39,9 +41,6 @@ static_assert(sizeof(DebugDirector) == sizeof(void*));
 // driver and the Release-only checks.
 namespace debug_console_acceptance
 {
-#if COLOURWARS_DEV_TOOLS
-	void check_bot_status_labels(GameTuning& tuning, Presentation& presentation);
-#endif
 	namespace
 	{
 	std::string executable_text(const std::filesystem::path& game_directory)
@@ -89,27 +88,13 @@ namespace debug_console_acceptance
 	{
 		const std::filesystem::path path = std::filesystem::temp_directory_path() /
 			(L"colourwars_debug_console_" + std::to_wstring(_getpid()) + L".txt");
-		std::fflush(stderr);
-		const int saved = _dup(_fileno(stderr));
-		require(saved != -1, "Could not duplicate stderr");
-		FILE* file = nullptr;
-		if (_wfopen_s(&file, path.c_str(), L"wb") != 0 || file == nullptr)
 		{
-			_close(saved);
-			throw std::runtime_error("Could not open the stderr capture file");
+			acceptance::StderrCapture capture(path);
+			body();
+			capture.finish();
 		}
-		_dup2(_fileno(file), _fileno(stderr));
-		body();
-		std::fflush(stderr);
-		_dup2(saved, _fileno(stderr));
-		_close(saved);
-		std::fclose(file);
 
-		std::string text;
-		{
-			std::ifstream stream(path, std::ios::binary);
-			text.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
-		}
+		std::string text = acceptance::read_text(path);
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
 		std::erase(text, '\r');
@@ -200,18 +185,9 @@ int main(int argc, char** argv)
 		const std::filesystem::path source(labrador::widen(source_paths::content_directory));
 		const std::string source_tuning = read_text(source / L"tuning.json");
 		const std::string source_presentation = read_text(source / L"presentation.json");
-		const std::filesystem::path local = std::filesystem::temp_directory_path() /
-			(L"colourwars_localappdata_" + std::to_wstring(_getpid()));
-		std::filesystem::create_directories(local);
-		size_t saved_length = 0;
-		wchar_t* saved_raw = nullptr;
-		_wdupenv_s(&saved_raw, &saved_length, L"LOCALAPPDATA");
-		const std::wstring saved_local = saved_raw != nullptr ? saved_raw : L"";
-		std::free(saved_raw);
-		_wputenv_s(L"LOCALAPPDATA", local.c_str());
 		std::string replay_case;
-		try
 		{
+			const acceptance::IsolatedSave replays(L"debug-console");
 			if (!background_only)
 			{
 				check_json_spans(game_directory);
@@ -234,14 +210,6 @@ int main(int argc, char** argv)
 				check_station_labels(game_directory);
 			}
 		}
-		catch (...)
-		{
-			_wputenv_s(L"LOCALAPPDATA", saved_local.c_str());
-			throw;
-		}
-		_wputenv_s(L"LOCALAPPDATA", saved_local.c_str());
-		std::error_code ignored;
-		std::filesystem::remove_all(local, ignored);
 		require(read_text(source / L"tuning.json") == source_tuning &&
 			read_text(source / L"presentation.json") == source_presentation,
 			"game/content/tuning.json and presentation.json are byte-for-byte unchanged");

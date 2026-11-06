@@ -12,7 +12,7 @@
 				"\"cursor_art\":{\"ink\":\"\\u0042LACK\",\"fill\":\"\\u0057HITE\",\"shade\":\"B4B4B4\",\"shadow\":\"00000066\"}},\r\n"
 				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 			const JsonSpanDocument cursor_reference(cursor_baseline, "cursor-colour-reference");
-			const std::string cursor_sibling_token(cursor_reference.token(*cursor_reference.find(cursor_sibling)));
+			const std::string cursor_sibling_token(cursor_reference.token(require_leaf(cursor_reference, cursor_sibling)));
 			TuneDocument cursor_document("presentation", cursor_baseline);
 			const JsonLeaf* cursor_leaf = cursor_document.find(cursor_path);
 			require(cursor_leaf != nullptr && cursor_leaf->kind == JsonLeaf::Kind::string &&
@@ -21,25 +21,25 @@
 				cursor_document.find("opening.cursor_art.shadow") != nullptr,
 				"All four audited cursor colours are eligible while captured texture names stay outside the tree: " + cursor_path);
 			cursor_document.commit(cursor_document.edited(*cursor_leaf, "\"11223344\""), cursor_path);
-			require(cursor_document.current().token(*cursor_document.find(cursor_sibling)) == cursor_sibling_token &&
+			require(cursor_document.current().token(require_leaf(cursor_document, cursor_sibling)) == cursor_sibling_token &&
 				cursor_document.reverted(cursor_path) == cursor_baseline,
 				"Each cursor colour reset preserves its sibling and restores its escaped token and every CRLF byte: " + cursor_path);
-			const std::string cursor_external_number = cursor_reference.replaced(*cursor_reference.find("number"), "25");
+			const std::string cursor_external_number = cursor_reference.replaced(require_leaf(cursor_reference, "number"), "25");
 			const JsonSpanDocument cursor_external_reference(cursor_external_number, "cursor-colour-reference");
 			const TuneSplice cursor_splice = cursor_document.splice(cursor_external_number, false);
 			require(cursor_splice.conflicts.empty() && cursor_splice.written == 1 && cursor_splice.text ==
-				cursor_external_reference.replaced(*cursor_external_reference.find(cursor_path), "\"11223344\"") &&
+				cursor_external_reference.replaced(require_leaf(cursor_external_reference, cursor_path), "\"11223344\"") &&
 				count_of(cursor_splice.text, "\r\n") == count_of(cursor_baseline, "\r\n"),
 				"Each cursor splice preserves its sibling, unselected materials, escaped bytes, an external number and every CRLF: " + cursor_path);
 			const std::string cursor_pending = cursor_document.current().text();
 			bool cursor_wrong_type = false;
-			try { cursor_document.commit(cursor_document.edited(*cursor_document.find(cursor_path), "false"), cursor_path); }
+			try { cursor_document.commit(cursor_document.edited(require_leaf(cursor_document, cursor_path), "false"), cursor_path); }
 			catch (const std::invalid_argument&) { cursor_wrong_type = true; }
 			require(cursor_wrong_type && cursor_document.current().text() == cursor_pending && cursor_document.edits().size() == 1,
 				"A wrong-type cursor commit retains its sibling and the pending string edit: " + cursor_path);
 			for (const std::string& cursor_invalid : { std::string("{}"),
-				cursor_reference.replaced(*cursor_reference.find(cursor_path), "null"),
-				cursor_reference.replaced(*cursor_reference.find(cursor_path), "{\"value\":\"RED\"}"),
+				cursor_reference.replaced(require_leaf(cursor_reference, cursor_path), "null"),
+				cursor_reference.replaced(require_leaf(cursor_reference, cursor_path), "{\"value\":\"RED\"}"),
 				"{\"" + cursor_path + "\":\"RED\"}",
 				std::string("{\"opening\":{\"cursor_art.") + cursor_field + "\":\"RED\"}}",
 				std::string("{\"opening.cursor_art\":{\"") + cursor_field + "\":\"RED\"}}",
@@ -61,7 +61,7 @@
 				"\"cursor_art\":{\"ink\":\"\\u0042LACK\",\"fill\":\"\\u0057HITE\",\"shade\":\"\\u00424B4B4\",\"shadow\":\"\\u00300000066\"}},\r\n"
 				"  \"note\":\"keep\\\\bytes\",\r\n  \"number\":1\r\n}\r\n";
 			const JsonSpanDocument material_reference(material_baseline, "cursor-material-reference");
-			const std::string material_sibling_token(material_reference.token(*material_reference.find(material_sibling)));
+			const std::string material_sibling_token(material_reference.token(require_leaf(material_reference, material_sibling)));
 			TuneDocument material_document("presentation", material_baseline);
 			const JsonLeaf* material_leaf = material_document.find(material_path);
 			require(material_leaf != nullptr && material_leaf->kind == JsonLeaf::Kind::string &&
@@ -70,25 +70,25 @@
 				material_document.find("opening.cursor_art.shadow") != nullptr,
 				"All four audited cursor colours are eligible while captured texture names stay outside the tree: " + material_path);
 			material_document.commit(material_document.edited(*material_leaf, "\"11223344\""), material_path);
-			require(material_document.current().token(*material_document.find(material_sibling)) == material_sibling_token &&
+			require(material_document.current().token(require_leaf(material_document, material_sibling)) == material_sibling_token &&
 				material_document.reverted(material_path) == material_baseline,
 				"Each cursor colour reset preserves its sibling and restores its escaped token and every CRLF byte: " + material_path);
-			const std::string material_external_number = material_reference.replaced(*material_reference.find("number"), "25");
+			const std::string material_external_number = material_reference.replaced(require_leaf(material_reference, "number"), "25");
 			const JsonSpanDocument material_external_reference(material_external_number, "cursor-material-reference");
 			const TuneSplice material_splice = material_document.splice(material_external_number, false);
 			require(material_splice.conflicts.empty() && material_splice.written == 1 && material_splice.text ==
-				material_external_reference.replaced(*material_external_reference.find(material_path), "\"11223344\"") &&
+				material_external_reference.replaced(require_leaf(material_external_reference, material_path), "\"11223344\"") &&
 				count_of(material_splice.text, "\r\n") == count_of(material_baseline, "\r\n"),
 				"Each cursor splice preserves its sibling, unselected materials, escaped bytes, an external number and every CRLF: " + material_path);
 			const std::string material_pending = material_document.current().text();
 			bool material_wrong_type = false;
-			try { material_document.commit(material_document.edited(*material_document.find(material_path), "false"), material_path); }
+			try { material_document.commit(material_document.edited(require_leaf(material_document, material_path), "false"), material_path); }
 			catch (const std::invalid_argument&) { material_wrong_type = true; }
 			require(material_wrong_type && material_document.current().text() == material_pending && material_document.edits().size() == 1,
 				"A wrong-type cursor commit retains its sibling and the pending string edit: " + material_path);
 			for (const std::string& material_invalid : { std::string("{}"),
-				material_reference.replaced(*material_reference.find(material_path), "null"),
-				material_reference.replaced(*material_reference.find(material_path), "{\"value\":\"RED\"}"),
+				material_reference.replaced(require_leaf(material_reference, material_path), "null"),
+				material_reference.replaced(require_leaf(material_reference, material_path), "{\"value\":\"RED\"}"),
 				"{\"" + material_path + "\":\"RED\"}",
 				std::string("{\"opening\":{\"cursor_art.") + material_field + "\":\"RED\"}}",
 				std::string("{\"opening.cursor_art\":{\"") + material_field + "\":\"RED\"}}",
@@ -119,28 +119,28 @@
 			{
 				if (std::string(sibling_field) == silhouette_field) { continue; }
 				const std::string silhouette_sibling = std::string("opening.silhouette_art.") + sibling_field;
-				require(silhouette_document.current().token(*silhouette_document.find(silhouette_sibling)) ==
-					silhouette_reference.token(*silhouette_reference.find(silhouette_sibling)),
+				require(silhouette_document.current().token(require_leaf(silhouette_document, silhouette_sibling)) ==
+					silhouette_reference.token(require_leaf(silhouette_reference, silhouette_sibling)),
 					"Each silhouette-art edit preserves both sibling quoted tokens byte for byte");
 			}
 			require(silhouette_document.reverted(silhouette_path) == silhouette_baseline,
 				"Each silhouette-art reset restores its authored spelling and every original CRLF byte");
-			const std::string silhouette_external_number = silhouette_reference.replaced(*silhouette_reference.find("number"), "25");
+			const std::string silhouette_external_number = silhouette_reference.replaced(require_leaf(silhouette_reference, "number"), "25");
 			const JsonSpanDocument silhouette_external_reference(silhouette_external_number, "silhouette-colour-reference");
 			const TuneSplice silhouette_splice = silhouette_document.splice(silhouette_external_number, false);
 			require(silhouette_splice.conflicts.empty() && silhouette_splice.written == 1 && silhouette_splice.text ==
-				silhouette_external_reference.replaced(*silhouette_external_reference.find(silhouette_path), "\"11223344\"") &&
+				silhouette_external_reference.replaced(require_leaf(silhouette_external_reference, silhouette_path), "\"11223344\"") &&
 				count_of(silhouette_splice.text, "\r\n") == count_of(silhouette_baseline, "\r\n"),
 				"A silhouette-art splice preserves both siblings, separate body fill, escape bytes, external number and every CRLF");
 			const std::string silhouette_pending = silhouette_document.current().text();
 			bool silhouette_wrong_type = false;
-			try { silhouette_document.commit(silhouette_document.edited(*silhouette_document.find(silhouette_path), "false"), silhouette_path); }
+			try { silhouette_document.commit(silhouette_document.edited(require_leaf(silhouette_document, silhouette_path), "false"), silhouette_path); }
 			catch (const std::invalid_argument&) { silhouette_wrong_type = true; }
 			require(silhouette_wrong_type && silhouette_document.current().text() == silhouette_pending && silhouette_document.edits().size() == 1,
 				"A wrong-type silhouette-art commit retains both siblings and the pending string edit");
 			for (const std::string& silhouette_invalid : { std::string("{}"),
-				silhouette_reference.replaced(*silhouette_reference.find(silhouette_path), "null"),
-				silhouette_reference.replaced(*silhouette_reference.find(silhouette_path), "{\"value\":\"RED\"}"),
+				silhouette_reference.replaced(require_leaf(silhouette_reference, silhouette_path), "null"),
+				silhouette_reference.replaced(require_leaf(silhouette_reference, silhouette_path), "{\"value\":\"RED\"}"),
 				"{\"" + silhouette_path + "\":\"RED\"}",
 				std::string("{\"opening\":{\"silhouette_art.") + silhouette_field + "\":\"RED\"}}",
 				std::string("{\"opening.silhouette_art\":{\"") + silhouette_field + "\":\"RED\"}}",
@@ -172,28 +172,28 @@
 				const std::string reveal_sibling = std::string("opening.reveal_art.") + reveal_sibling_field;
 				if (reveal_sibling == reveal_path) { continue; }
 				require(reveal_document.find(reveal_sibling) != nullptr &&
-					reveal_document.current().token(*reveal_document.find(reveal_sibling)) ==
-						reveal_reference.token(*reveal_reference.find(reveal_sibling)),
+					reveal_document.current().token(require_leaf(reveal_document, reveal_sibling)) ==
+						reveal_reference.token(require_leaf(reveal_reference, reveal_sibling)),
 					"Editing one reveal colour retains both siblings' exact escaped token spellings: " + reveal_path);
 			}
 			require(reveal_document.reverted(reveal_path) == reveal_baseline,
 				"Each reveal reset restores its escaped token, both siblings and every original CRLF byte: " + reveal_path);
-			const std::string reveal_external_number = reveal_reference.replaced(*reveal_reference.find("number"), "25");
+			const std::string reveal_external_number = reveal_reference.replaced(require_leaf(reveal_reference, "number"), "25");
 			const JsonSpanDocument reveal_external_reference(reveal_external_number, "reveal-colour-reference");
 			const TuneSplice reveal_splice = reveal_document.splice(reveal_external_number, false);
 			require(reveal_splice.conflicts.empty() && reveal_splice.written == 1 && reveal_splice.text ==
-				reveal_external_reference.replaced(*reveal_external_reference.find(reveal_path), "\"11223344\"") &&
+				reveal_external_reference.replaced(require_leaf(reveal_external_reference, reveal_path), "\"11223344\"") &&
 				count_of(reveal_splice.text, "\r\n") == count_of(reveal_baseline, "\r\n"),
 				"Each reveal splice preserves both siblings, captured strings, unrelated escapes, external numbers and every CRLF: " + reveal_path);
 			const std::string reveal_pending = reveal_document.current().text();
 			bool reveal_wrong_type = false;
-			try { reveal_document.commit(reveal_document.edited(*reveal_document.find(reveal_path), "false"), reveal_path); }
+			try { reveal_document.commit(reveal_document.edited(require_leaf(reveal_document, reveal_path), "false"), reveal_path); }
 			catch (const std::invalid_argument&) { reveal_wrong_type = true; }
 			require(reveal_wrong_type && reveal_document.current().text() == reveal_pending && reveal_document.edits().size() == 1,
 				"A wrong-type reveal commit retains its pending string and both siblings: " + reveal_path);
 			for (const std::string& reveal_invalid : { std::string("{}"),
-				reveal_reference.replaced(*reveal_reference.find(reveal_path), "null"),
-				reveal_reference.replaced(*reveal_reference.find(reveal_path), "{\"value\":\"RED\"}"),
+				reveal_reference.replaced(require_leaf(reveal_reference, reveal_path), "null"),
+				reveal_reference.replaced(require_leaf(reveal_reference, reveal_path), "{\"value\":\"RED\"}"),
 				"{\"" + reveal_path + "\":\"RED\"}",
 				std::string("{\"opening\":{\"reveal_art.") + reveal_field + "\":\"RED\"}}",
 				std::string("{\"opening.reveal_art\":{\"") + reveal_field + "\":\"RED\"}}",
@@ -221,22 +221,22 @@
 			desktop_document.commit(desktop_document.edited(*desktop_leaf, "\"11223344\""), desktop_path);
 			require(desktop_document.reverted(desktop_path) == desktop_baseline,
 				"Desktop reset restores its original escaped tint token and every CRLF byte");
-			const std::string desktop_external_number = desktop_reference.replaced(*desktop_reference.find("number"), "25");
+			const std::string desktop_external_number = desktop_reference.replaced(require_leaf(desktop_reference, "number"), "25");
 			const JsonSpanDocument desktop_external_reference(desktop_external_number, "desktop-colour-reference");
 			const TuneSplice desktop_splice = desktop_document.splice(desktop_external_number, false);
 			require(desktop_splice.conflicts.empty() && desktop_splice.written == 1 && desktop_splice.text ==
-				desktop_external_reference.replaced(*desktop_external_reference.find(desktop_path), "\"11223344\"") &&
+				desktop_external_reference.replaced(require_leaf(desktop_external_reference, desktop_path), "\"11223344\"") &&
 				count_of(desktop_splice.text, "\r\n") == count_of(desktop_baseline, "\r\n"),
 				"Desktop splice preserves every unrelated escaped byte, captured string, external number and CRLF");
 			const std::string desktop_pending = desktop_document.current().text();
 			bool desktop_wrong_type = false;
-			try { desktop_document.commit(desktop_document.edited(*desktop_document.find(desktop_path), "false"), desktop_path); }
+			try { desktop_document.commit(desktop_document.edited(require_leaf(desktop_document, desktop_path), "false"), desktop_path); }
 			catch (const std::invalid_argument&) { desktop_wrong_type = true; }
 			require(desktop_wrong_type && desktop_document.current().text() == desktop_pending && desktop_document.edits().size() == 1,
 				"A wrong-type desktop commit retains the pending string edit");
 			for (const std::string& desktop_invalid : { std::string("{}"),
-				desktop_reference.replaced(*desktop_reference.find(desktop_path), "null"),
-				desktop_reference.replaced(*desktop_reference.find(desktop_path), "{\"value\":\"RED\"}"),
+				desktop_reference.replaced(require_leaf(desktop_reference, desktop_path), "null"),
+				desktop_reference.replaced(require_leaf(desktop_reference, desktop_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.desktop_colour\":\"RED\"}"),
 				std::string("{\"opening\":{\"desktop_colour.r\":\"RED\"}}") })
 			{
@@ -264,22 +264,22 @@
 			power_light_document.commit(power_light_document.edited(*power_light_leaf, "\"11223344\""), power_light_path);
 			require(power_light_document.reverted(power_light_path) == power_light_baseline,
 				"Power-light reset restores its original escaped tint token and every CRLF byte");
-			const std::string power_light_external_number = power_light_reference.replaced(*power_light_reference.find("number"), "25");
+			const std::string power_light_external_number = power_light_reference.replaced(require_leaf(power_light_reference, "number"), "25");
 			const JsonSpanDocument power_light_external_reference(power_light_external_number, "power-light-colour-reference");
 			const TuneSplice power_light_splice = power_light_document.splice(power_light_external_number, false);
 			require(power_light_splice.conflicts.empty() && power_light_splice.written == 1 && power_light_splice.text ==
-				power_light_external_reference.replaced(*power_light_external_reference.find(power_light_path), "\"11223344\"") &&
+				power_light_external_reference.replaced(require_leaf(power_light_external_reference, power_light_path), "\"11223344\"") &&
 				count_of(power_light_splice.text, "\r\n") == count_of(power_light_baseline, "\r\n"),
 				"Power-light splice preserves every unrelated escaped byte, captured string, external number and CRLF");
 			const std::string power_light_pending = power_light_document.current().text();
 			bool power_light_wrong_type = false;
-			try { power_light_document.commit(power_light_document.edited(*power_light_document.find(power_light_path), "false"), power_light_path); }
+			try { power_light_document.commit(power_light_document.edited(require_leaf(power_light_document, power_light_path), "false"), power_light_path); }
 			catch (const std::invalid_argument&) { power_light_wrong_type = true; }
 			require(power_light_wrong_type && power_light_document.current().text() == power_light_pending && power_light_document.edits().size() == 1,
 				"A wrong-type power-light commit retains the pending string edit");
 			for (const std::string& power_light_invalid : { std::string("{}"),
-				power_light_reference.replaced(*power_light_reference.find(power_light_path), "null"),
-				power_light_reference.replaced(*power_light_reference.find(power_light_path), "{\"value\":\"RED\"}"),
+				power_light_reference.replaced(require_leaf(power_light_reference, power_light_path), "null"),
+				power_light_reference.replaced(require_leaf(power_light_reference, power_light_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.monitor_art.power_light\":\"RED\"}"),
 				std::string("{\"opening\":{\"monitor_art\":{\"power_light.r\":\"RED\"}}}") })
 			{
@@ -308,22 +308,22 @@
 			program_document.commit(program_document.edited(*program_leaf, "\"11223344\""), program_path);
 			require(program_document.reverted(program_path) == program_baseline,
 				"Program reset restores its original escaped tint token and every CRLF byte");
-			const std::string program_external_number = program_reference.replaced(*program_reference.find("number"), "25");
+			const std::string program_external_number = program_reference.replaced(require_leaf(program_reference, "number"), "25");
 			const JsonSpanDocument program_external_reference(program_external_number, "program-colour-reference");
 			const TuneSplice program_splice = program_document.splice(program_external_number, false);
 			require(program_splice.conflicts.empty() && program_splice.written == 1 && program_splice.text ==
-				program_external_reference.replaced(*program_external_reference.find(program_path), "\"11223344\"") &&
+				program_external_reference.replaced(require_leaf(program_external_reference, program_path), "\"11223344\"") &&
 				count_of(program_splice.text, "\r\n") == count_of(program_baseline, "\r\n"),
 				"Program splice preserves every unrelated escaped byte, captured string, external number and CRLF");
 			const std::string program_pending = program_document.current().text();
 			bool program_wrong_type = false;
-			try { program_document.commit(program_document.edited(*program_document.find(program_path), "false"), program_path); }
+			try { program_document.commit(program_document.edited(require_leaf(program_document, program_path), "false"), program_path); }
 			catch (const std::invalid_argument&) { program_wrong_type = true; }
 			require(program_wrong_type && program_document.current().text() == program_pending && program_document.edits().size() == 1,
 				"A wrong-type program commit retains the pending string edit");
 			for (const std::string& program_invalid : { std::string("{}"),
-				program_reference.replaced(*program_reference.find(program_path), "null"),
-				program_reference.replaced(*program_reference.find(program_path), "{\"value\":\"RED\"}"),
+				program_reference.replaced(require_leaf(program_reference, program_path), "null"),
+				program_reference.replaced(require_leaf(program_reference, program_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.program_colour\":\"RED\"}"),
 				std::string("{\"opening\":{\"program_colour.r\":\"RED\"}}") })
 			{
@@ -352,25 +352,25 @@
 			glass_document.commit(glass_document.edited(*glass_leaf, "\"11223344\""), glass_path);
 			require(glass_document.reverted(glass_path) == glass_baseline,
 				"Glass reset restores its original escaped tint token and every CRLF byte");
-			const std::string glass_external_number = glass_reference.replaced(*glass_reference.find("number"), "25");
+			const std::string glass_external_number = glass_reference.replaced(require_leaf(glass_reference, "number"), "25");
 			const JsonSpanDocument glass_external_reference(glass_external_number, "glass-colour-reference");
 			const TuneSplice glass_splice = glass_document.splice(glass_external_number, false);
 			require(glass_splice.conflicts.empty() && glass_splice.written == 1 && glass_splice.text ==
-				glass_external_reference.replaced(*glass_external_reference.find(glass_path), "\"11223344\"") &&
+				glass_external_reference.replaced(require_leaf(glass_external_reference, glass_path), "\"11223344\"") &&
 				count_of(glass_splice.text, "\r\n") == count_of(glass_baseline, "\r\n"),
 				"Glass splice preserves every unrelated escaped byte, captured string, external number and CRLF");
 			const std::string glass_pending = glass_document.current().text();
 			const TuneEdit glass_held_edit = glass_document.edits().at(glass_path);
 			bool glass_wrong_type = false;
-			try { glass_document.commit(glass_document.edited(*glass_document.find(glass_path), "false"), glass_path); }
+			try { glass_document.commit(glass_document.edited(require_leaf(glass_document, glass_path), "false"), glass_path); }
 			catch (const std::invalid_argument&) { glass_wrong_type = true; }
 			require(glass_wrong_type && glass_document.current().text() == glass_pending && glass_document.edits().size() == 1 &&
 				glass_document.edits().at(glass_path).baseline_token == glass_held_edit.baseline_token &&
 				glass_document.edits().at(glass_path).current_token == glass_held_edit.current_token,
 				"A wrong-type glass commit retains the pending string edit");
 			for (const std::string& glass_invalid : { std::string("{}"),
-				glass_reference.replaced(*glass_reference.find(glass_path), "null"),
-				glass_reference.replaced(*glass_reference.find(glass_path), "{\"value\":\"RED\"}"),
+				glass_reference.replaced(require_leaf(glass_reference, glass_path), "null"),
+				glass_reference.replaced(require_leaf(glass_reference, glass_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.glass_colour\":\"RED\"}"),
 				std::string("{\"opening\":{\"glass_colour.r\":\"RED\"}}") })
 			{
@@ -400,31 +400,31 @@
 			body_document.commit(body_document.edited(*body_leaf, "\"11223344\""), body_path);
 			for (const char* body_sibling : { "opening.silhouette_art.ink", "opening.silhouette_art.rim", "opening.silhouette_art.shade" })
 			{
-				require(body_document.current().token(*body_document.find(body_sibling)) ==
-					body_reference.token(*body_reference.find(body_sibling)),
+				require(body_document.current().token(require_leaf(body_document, body_sibling)) ==
+					body_reference.token(require_leaf(body_reference, body_sibling)),
 					"Body commit retains each exact ink/rim/shade sibling token");
 			}
 			require(body_document.reverted(body_path) == body_baseline,
 				"Silhouette body reset restores its original escaped tint token and every CRLF byte");
-			const std::string body_external_number = body_reference.replaced(*body_reference.find("number"), "25");
+			const std::string body_external_number = body_reference.replaced(require_leaf(body_reference, "number"), "25");
 			const JsonSpanDocument body_external_reference(body_external_number, "silhouette-body-colour-reference");
 			const TuneSplice body_splice = body_document.splice(body_external_number, false);
 			require(body_splice.conflicts.empty() && body_splice.written == 1 && body_splice.text ==
-				body_external_reference.replaced(*body_external_reference.find(body_path), "\"11223344\"") &&
+				body_external_reference.replaced(require_leaf(body_external_reference, body_path), "\"11223344\"") &&
 				count_of(body_splice.text, "\r\n") == count_of(body_baseline, "\r\n"),
 				"Silhouette body splice preserves every unrelated escaped byte, captured string, external number and CRLF");
 			const std::string body_pending = body_document.current().text();
 			const TuneEdit body_held_edit = body_document.edits().at(body_path);
 			bool body_wrong_type = false;
-			try { body_document.commit(body_document.edited(*body_document.find(body_path), "false"), body_path); }
+			try { body_document.commit(body_document.edited(require_leaf(body_document, body_path), "false"), body_path); }
 			catch (const std::invalid_argument&) { body_wrong_type = true; }
 			require(body_wrong_type && body_document.current().text() == body_pending && body_document.edits().size() == 1 &&
 				body_document.edits().at(body_path).baseline_token == body_held_edit.baseline_token &&
 				body_document.edits().at(body_path).current_token == body_held_edit.current_token,
 				"A wrong-type body commit retains the pending string edit");
 			for (const std::string& body_invalid : { std::string("{}"),
-				body_reference.replaced(*body_reference.find(body_path), "null"),
-				body_reference.replaced(*body_reference.find(body_path), "{\"value\":\"RED\"}"),
+				body_reference.replaced(require_leaf(body_reference, body_path), "null"),
+				body_reference.replaced(require_leaf(body_reference, body_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.silhouette\":\"RED\"}"),
 				std::string("{\"opening\":{\"silhouette.r\":\"RED\"}}") })
 			{
@@ -453,25 +453,25 @@
 			scribble_document.commit(scribble_document.edited(*scribble_leaf, "\"11223344\""), scribble_path);
 			require(scribble_document.reverted(scribble_path) == scribble_baseline,
 				"Scribble reset restores its original escaped tint token and every CRLF byte");
-			const std::string scribble_external_number = scribble_reference.replaced(*scribble_reference.find("number"), "25");
+			const std::string scribble_external_number = scribble_reference.replaced(require_leaf(scribble_reference, "number"), "25");
 			const JsonSpanDocument scribble_external_reference(scribble_external_number, "scribble-colour-reference");
 			const TuneSplice scribble_splice = scribble_document.splice(scribble_external_number, false);
 			require(scribble_splice.conflicts.empty() && scribble_splice.written == 1 && scribble_splice.text ==
-				scribble_external_reference.replaced(*scribble_external_reference.find(scribble_path), "\"11223344\"") &&
+				scribble_external_reference.replaced(require_leaf(scribble_external_reference, scribble_path), "\"11223344\"") &&
 				count_of(scribble_splice.text, "\r\n") == count_of(scribble_baseline, "\r\n"),
 				"Scribble splice preserves both note/sticker arrays, every unrelated escaped byte, captured string, external number and CRLF");
 			const std::string scribble_pending = scribble_document.current().text();
 			const TuneEdit scribble_held_edit = scribble_document.edits().at(scribble_path);
 			bool scribble_wrong_type = false;
-			try { scribble_document.commit(scribble_document.edited(*scribble_document.find(scribble_path), "false"), scribble_path); }
+			try { scribble_document.commit(scribble_document.edited(require_leaf(scribble_document, scribble_path), "false"), scribble_path); }
 			catch (const std::invalid_argument&) { scribble_wrong_type = true; }
 			require(scribble_wrong_type && scribble_document.current().text() == scribble_pending && scribble_document.edits().size() == 1 &&
 				scribble_document.edits().at(scribble_path).baseline_token == scribble_held_edit.baseline_token &&
 				scribble_document.edits().at(scribble_path).current_token == scribble_held_edit.current_token,
 				"A wrong-type scribble commit retains the pending string edit");
 			for (const std::string& scribble_invalid : { std::string("{}"),
-				scribble_reference.replaced(*scribble_reference.find(scribble_path), "null"),
-				scribble_reference.replaced(*scribble_reference.find(scribble_path), "{\"value\":\"RED\"}"),
+				scribble_reference.replaced(require_leaf(scribble_reference, scribble_path), "null"),
+				scribble_reference.replaced(require_leaf(scribble_reference, scribble_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.scribble\":\"RED\"}"),
 				std::string("{\"opening\":{\"scribble.r\":\"RED\"}}") })
 			{
@@ -487,7 +487,7 @@
 	void check_colour_document_opening_details()
 	{
 		{
-			// Save/conflict/force and LF/CRLF consumption reuse the42-path loops;
+			// Save/conflict/force and LF/CRLF consumption reuse the 42-path loops;
 			// retain only the new field's escaped-token/type/no-insertion checks here.
 			const std::string crack_path = "opening.crack";
 			const std::string crack_baseline = "{\r\n\"opening\":{\"crack\":\"\\u0033A3A3A\",\"coffee\":\"keep\"},\r\n\"number\":1\r\n}\r\n";
@@ -499,14 +499,14 @@
 			crack_document.commit(crack_document.edited(*crack_leaf, "\"2060C080\""), crack_path);
 			const auto crack_held = crack_document.edits().at(crack_path);const auto crack_pending = crack_document.current().text();
 			bool crack_bad_type = false;
-			try { crack_document.commit(crack_document.edited(*crack_document.find(crack_path), "false"), crack_path); }
+			try { crack_document.commit(crack_document.edited(require_leaf(crack_document, crack_path), "false"), crack_path); }
 			catch (const std::invalid_argument&) { crack_bad_type = true; }
 			require(crack_bad_type && crack_document.current().text() == crack_pending && crack_document.edits().size() == 1 &&
 				crack_document.edits().at(crack_path).baseline_token == crack_held.baseline_token &&
 				crack_document.edits().at(crack_path).current_token == crack_held.current_token && crack_document.reverted(crack_path) == crack_baseline,
 				"Crack wrong-type commit retains both exact tokens/current text and escaped CRLF reset bytes");
-			for (const std::string& missing : { std::string("{}"), crack_reference.replaced(*crack_reference.find(crack_path), "null"),
-				crack_reference.replaced(*crack_reference.find(crack_path), "{\"value\":\"RED\"}"),
+			for (const std::string& missing : { std::string("{}"), crack_reference.replaced(require_leaf(crack_reference, crack_path), "null"),
+				crack_reference.replaced(require_leaf(crack_reference, crack_path), "{\"value\":\"RED\"}"),
 				std::string("{\"opening.crack\":\"RED\"}"), std::string("{\"opening\":{\"crack.r\":\"RED\"}}") })
 			{
 				const TuneDocument unsupported("presentation", missing);const TuneSplice refused = crack_document.splice(missing, true);
@@ -532,25 +532,25 @@
 				acting_document.commit(acting_document.edited(*acting_leaf, "\"11223344\""), acting_path);
 				require(acting_document.reverted(acting_path) == acting_baseline,
 					"Each acting reset restores its original escaped token, sibling and every CRLF byte");
-				const std::string acting_external_number = acting_reference.replaced(*acting_reference.find("number"), "25");
+				const std::string acting_external_number = acting_reference.replaced(require_leaf(acting_reference, "number"), "25");
 				const JsonSpanDocument acting_external_reference(acting_external_number, "acting-colour-reference");
 				const TuneSplice acting_splice = acting_document.splice(acting_external_number, false);
 				require(acting_splice.conflicts.empty() && acting_splice.written == 1 && acting_splice.text ==
-					acting_external_reference.replaced(*acting_external_reference.find(acting_path), "\"11223344\"") &&
+					acting_external_reference.replaced(require_leaf(acting_external_reference, acting_path), "\"11223344\"") &&
 					count_of(acting_splice.text, "\r\n") == count_of(acting_baseline, "\r\n"),
 					"Each acting splice preserves its sibling, captured strings, unrelated escaped bytes/external number and CRLF");
 				const std::string acting_pending = acting_document.current().text();
 				const TuneEdit acting_held_edit = acting_document.edits().at(acting_path);
 				bool acting_wrong_type = false;
-				try { acting_document.commit(acting_document.edited(*acting_document.find(acting_path), "false"), acting_path); }
+				try { acting_document.commit(acting_document.edited(require_leaf(acting_document, acting_path), "false"), acting_path); }
 				catch (const std::invalid_argument&) { acting_wrong_type = true; }
 				require(acting_wrong_type && acting_document.current().text() == acting_pending && acting_document.edits().size() == 1 &&
 					acting_document.edits().at(acting_path).baseline_token == acting_held_edit.baseline_token &&
 					acting_document.edits().at(acting_path).current_token == acting_held_edit.current_token,
 					"A wrong-type acting commit retains the exact pending string and both edit tokens");
 				for (const std::string& acting_invalid : { std::string("{}"),
-					acting_reference.replaced(*acting_reference.find(acting_path), "null"),
-					acting_reference.replaced(*acting_reference.find(acting_path), "{\"value\":\"RED\"}"),
+					acting_reference.replaced(require_leaf(acting_reference, acting_path), "null"),
+					acting_reference.replaced(require_leaf(acting_reference, acting_path), "{\"value\":\"RED\"}"),
 					"{\"" + acting_path + "\":\"RED\"}",
 					std::string("{\"opening\":{\"acting.") + acting_field + "\":\"RED\"}}",
 					std::string("{\"opening.acting\":{\"") + acting_field + "\":\"RED\"}}",

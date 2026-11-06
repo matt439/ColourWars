@@ -67,8 +67,8 @@
 			"Resetting both cursor colours restores the exact original document");
 		const JsonSpanDocument baseline_document(baseline, "cursor-colour-save-reference");
 		const JsonSpanDocument saved_ink(baseline_document.replaced(
-			*baseline_document.find("opening.cursor_art.ink"), "\"2060C080\""), "cursor-colour-save-reference");
-		const std::string saved = saved_ink.replaced(*saved_ink.find("opening.cursor_art.fill"), "\"D973A6C0\"");
+			require_leaf(baseline_document, "opening.cursor_art.ink"), "\"2060C080\""), "cursor-colour-save-reference");
+		const std::string saved = saved_ink.replaced(require_leaf(saved_ink, "opening.cursor_art.fill"), "\"D973A6C0\"");
 		expected_colours[cursor_ink_colour_index] = labrador::Colour(32, 96, 192, 128);
 		expected_colours[cursor_fill_colour_index] = labrador::Colour(217, 115, 166, 192);
 		require(impl.execute("tune presentation.opening.cursor_art.ink 2060C080").ok &&
@@ -267,7 +267,7 @@
 			const std::size_t index = indices[position];
 			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
 			const JsonSpanDocument save_reference(saved, "silhouette-colour-save-reference");
-			saved = save_reference.replaced(*save_reference.find(local), std::string("\"") + saved_words[position] + '"');
+			saved = save_reference.replaced(require_leaf(save_reference, local), std::string("\"") + saved_words[position] + '"');
 			expected_colours[index] = labrador::Colour(saved_words[position]);
 			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + saved_words[position]).ok &&
 				colour_values(presentation) == expected_colours, "Each saved silhouette-art colour is independently validated before the private three-token save");
@@ -442,7 +442,7 @@
 			const std::string path = colour_paths[indices[slot]];
 			const std::string local = path.substr(std::string("presentation.").size());
 			const JsonSpanDocument saved_reference(saved, "reveal-colour-save-reference");
-			saved = saved_reference.replaced(*saved_reference.find(local), std::string("\"") + saved_words[slot] + '"');
+			saved = saved_reference.replaced(require_leaf(saved_reference, local), std::string("\"") + saved_words[slot] + '"');
 			require(impl.execute("tune " + path + ' ' + saved_words[slot]).ok,
 				"A distinct partial-alpha reveal palette is ready for a three-token save");
 			expected_colours[indices[slot]] = saved_colours[slot];
@@ -614,7 +614,7 @@
 			const std::string path = colour_paths[indices[slot]];
 			const std::string local = path.substr(std::string("presentation.").size());
 			const JsonSpanDocument saved_reference(saved, "cursor-material-colour-save-reference");
-			saved = saved_reference.replaced(*saved_reference.find(local), std::string("\"") + saved_words[slot] + '"');
+			saved = saved_reference.replaced(require_leaf(saved_reference, local), std::string("\"") + saved_words[slot] + '"');
 			require(impl.execute("tune " + path + ' ' + saved_words[slot]).ok,
 				"A distinct partial-alpha cursor-material palette is ready for a two-token save");
 			expected_colours[indices[slot]] = saved_colours[slot];

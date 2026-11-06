@@ -204,7 +204,6 @@ namespace debug_console_acceptance
 		require(stations.size() == 12, "The course has ten stations and two spawns");
 
 		// The reference: the same seed and keys with the overlay never on.
-		std::srand(7);
 		match.build();
 		require(match.level->station_label_count() == 0, "A level makes no labels until overlay.stations");
 		for (int step = 0; step < length; ++step)
@@ -214,7 +213,6 @@ namespace debug_console_acceptance
 		require(match.level->station_label_count() == 0, "Nor does a match without the overlay");
 		const MatchFingerprint reference = MatchFingerprint::of(*match.level, length);
 
-		std::srand(7);
 		match.build();
 		Level& level = *match.level;
 		require(impl.execute("overlay stations").ok && level.station_label_count() == 12,

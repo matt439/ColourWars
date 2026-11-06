@@ -1,18 +1,18 @@
 // Actual binding-page navigation uses private snapshots and its own save.
-// Included by the focused scripted-pad painter alongside Keyboard Jump.
+// Included by the focused scripted-pad painter alongside Keyboard Keys.
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const auto profile = output / "pad-jump-profile";
-    const NestedSaveProfile isolated(profile);
-    const auto path = profile / "ColourWars/save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(path);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump preferences");
     InputBindings initial; initial.keyboard_jump = Key::j;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director);
@@ -77,7 +77,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         stack.clear(); stack.notify_activation(true); painter_scripted_pads::states = {};
         if (first_connected >= 0) { painter_scripted_pads::states[first_connected].connected = true; }
-        neutral(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        neutral(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         auto child = std::make_unique<PadButtonsMenu>(&context, owner); page = child.get(); stack.push(std::move(child)); tick();
         require(stack.depth() == 2 && page->selected_slot() == (owner >= 0 ? owner : std::max(0, first_connected)),
             "Pad Jump did not choose pausing slot / first connected slot / disconnected Pad1 default");
@@ -109,9 +109,9 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             (style.footer_y - look.status_position.y) / raw_status.height }));
         require(RectangleF(look.controls_position, look.controls_size).contains(help_text.bounds()) && panel.contains(status_text.bounds()),
             "Pad Buttons actual-font fitted help/status escaped the paper");
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         std::srand(7331); const int next = std::rand(); std::srand(7331);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next,
             "Frozen Pad Jump draw mutated pixels or consumed RNG");
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
@@ -126,7 +126,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         for (const auto& word : { std::pair{ &help_text, "help" }, std::pair{ &status_text, "status" } })
         {
-            const RectangleI crop = countdown_crop_bounds(camera.calculate_view_rectangle(word.first->bounds()));
+            const RectangleI crop = pixel_bounds(camera.calculate_view_rectangle(word.first->bounds()));
             const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(expected, crop, 0);
             if (observed.pixels != wanted.pixels)
             {
@@ -207,12 +207,12 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(jump_of(retry_session.input_bindings().pads[0]) == PadControl::b, "Actual Pad Buttons Apply could not retry persistence");
     tap(Key::escape);
     // The real Controls entry opens its third action, with parent edits pending.
-    stack.clear(); painter_scripted_pads::states = {}; neutral(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+    stack.clear(); painter_scripted_pads::states = {}; neutral(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
     stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); move(Key::down, 4); tap(Key::right);
     move(Key::up, 2); tap(Key::enter); tick(); require(stack.depth() == 3, "Actual Controls Pad Jump entry did not push its child");
-    const Frame retained = main_menu_frame(app);
+    const Frame retained = stack_frame(app);
     const_cast<MenuText&>(presentation.menu_text()).pad_buttons.help = L"Help for a later page.";
-    tick(); require(main_menu_frame(app).pixels == retained.pixels, "Live text replacement changed existing Pad Jump copy");
+    tick(); require(stack_frame(app).pixels == retained.pixels, "Live text replacement changed existing Pad Jump copy");
     tap(Key::escape);
     tick(); // The resumed parent must observe neutral before fresh direction input.
     move(Key::down, 7); tap(Key::enter);
@@ -274,12 +274,12 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             card.width > 0.0f && card.contains(bounds) && RectangleF(Vector2F::zero, Vector2F(size)).contains(card) &&
             game->resume_remaining() == 0.0f && frozen == resume_observation(game->level()),
             "Paused pad reminder missed its live mapping, escaped its card or advanced the covered match");
-        const RectangleI crop = countdown_crop_bounds(card);
+        const RectangleI crop = pixel_bounds(card);
         require(foreground_crop(before, crop, 0).pixels != foreground_crop(changed, crop, 0).pixels &&
             changed.pixels == draw_game().pixels, "Paused pad mapping produced no native text delta or unstable redraw");
         require(preferences_session.set_input_bindings_and_save(initial), "Cannot reverse only the private paused pad mapping");
         const Frame reversed = draw_game();
-        const RectangleI reversed_crop = countdown_crop_bounds(game->level().gamepad_controls_card_bounds());
+        const RectangleI reversed_crop = pixel_bounds(game->level().gamepad_controls_card_bounds());
         require(foreground_crop(reversed, reversed_crop, 0).pixels == foreground_crop(before, reversed_crop, 0).pixels &&
             frozen == resume_observation(game->level()),
             "Paused pad mapping reversal changed simulation or failed to restore original native reminder");
@@ -314,7 +314,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             RectangleF(Vector2F::zero, Vector2F(size)).contains(four_card),
             "Mixed four-pad native-font reminder escaped its card or supported screen");
         require(four.pixels == render(*level, *app.renderer()).pixels, "Mixed four-pad reminder changed on frozen redraw");
-        save(foreground_crop(four, countdown_crop_bounds(four_card)), output /
+        save(foreground_crop(four, pixel_bounds(four_card)), output /
             ("pad-jump-four-pad-reminder-" + std::to_string(size.x) + ".ppm"));
         ++mixed_reminders;
     }
@@ -461,6 +461,6 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     std::cout << "PASS Pad Buttons native:32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
         "66 independently fitted help/status pairs; pending multi-slot merge, reset/discard, failed-write retry, Controls entry/parent audio, captured text and owner isolation; "
         "two actual owned paused countdown refresh/reversal routes and two mixed4-pad reminder captures; "
-        "private snapshots/save at720/1080, no physical-device or human acceptance\n";
+        "private snapshots/save at 720/1080, no physical-device or human acceptance\n";
 }
 #endif

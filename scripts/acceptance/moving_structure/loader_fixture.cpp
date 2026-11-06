@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/moving_structure/loader_fixture.h"
 
 namespace moving_structure_acceptance
@@ -50,13 +51,7 @@ namespace moving_structure_acceptance
             obstacle["rectangle"]["height"].SetInt(120);
             stage["collision_objects"].PushBack(obstacle, stage.GetAllocator());
         }
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(stage.Accept(writer), "Cannot encode the public-loader stage recipe");
-        std::ofstream output(path, std::ios::binary | std::ios::trunc);
-        output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-        output.close();
-        require(output.good(), "Cannot retain the public-loader stage receipt");
+        acceptance::write_document(stage, path);
     }
 
     MatchSetup loaded_settings()

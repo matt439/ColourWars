@@ -5,26 +5,12 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& output)
 {
-    struct SetupMotionProfile
-    {
-        std::wstring previous;
-        explicit SetupMotionProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the isolated setup-motion profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate setup-motion preferences");
-        }
-        ~SetupMotionProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "setup-motion-profile");
+    const acceptance::IsolatedSave isolated(output / "setup-motion-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial; initial.music_volume = initial.sfx_volume = 0; initial.reduce_effects = false;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed setup-motion preferences");
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    PlaySettings& play = live_play_settings(preferences_session);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
@@ -88,7 +74,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     const auto setup_bounds = [&](Vector2F spacing, int row, const std::wstring& words)
     {
@@ -151,7 +137,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         {
             for (int x = delta.x; x < delta.right(); ++x)
             {
-                if (same_pixel(moving, resting, hud_pixel_offset(moving, x, y))) { continue; }
+                if (same_pixel(moving, resting, pixel_offset(moving, x, y))) { continue; }
                 bool found = false;
                 for (size_t row = 0; row < allowed.size(); ++row)
                 {
@@ -224,7 +210,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_weapon(player, weapons[static_cast<size_t>(player)]);
         }
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::unique_ptr<MenuPage> opened;
         if (page == 0) { opened = std::make_unique<MainMenuModeSelect>(&context); }
         else if (page == 1) { opened = std::make_unique<MainMenuPlayerCount>(&context); }

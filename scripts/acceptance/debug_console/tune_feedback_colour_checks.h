@@ -192,8 +192,8 @@
 		unchanged();
 		write_text(scratch.source / L"presentation.json", baseline);
 		const JsonSpanDocument saved_highlight(baseline_document.replaced(
-			*baseline_document.find("blocked_shot.highlight"), "\"2060C080\""), "blocked-colour-save-reference");
-		const std::string saved = saved_highlight.replaced(*saved_highlight.find("blocked_shot.keyline"), "\"A532D600\"");
+			require_leaf(baseline_document, "blocked_shot.highlight"), "\"2060C080\""), "blocked-colour-save-reference");
+		const std::string saved = saved_highlight.replaced(require_leaf(saved_highlight, "blocked_shot.keyline"), "\"A532D600\"");
 		require(impl.execute("tune presentation.blocked_shot.highlight 2060C080").ok &&
 			impl.execute("tune presentation.blocked_shot.keyline A532D600").ok &&
 			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
@@ -313,7 +313,7 @@
 			pending->current().text() == baseline && colour_values(presentation) == initial_colours,
 			"Independent reset restores the exact original idle-drip document after retaining its active cues");
 		const JsonSpanDocument baseline_document(baseline, "idle-drip-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("idle_drip.keyline"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "idle_drip.keyline"), "\"2060C080\"");
 		require(impl.execute("tune presentation.idle_drip.keyline 2060C080").ok &&
 			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -479,7 +479,7 @@
 			pending->current().text() == baseline && colour_values(presentation) == initial_colours,
 			"Independent reset restores the exact original pen document while its actual dead player remains frozen");
 		const JsonSpanDocument baseline_document(baseline, "respawn-pen-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("respawn_redraw.pen_colour"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "respawn_redraw.pen_colour"), "\"2060C080\"");
 		require(impl.execute("tune presentation.respawn_redraw.pen_colour 2060C080").ok &&
 			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&

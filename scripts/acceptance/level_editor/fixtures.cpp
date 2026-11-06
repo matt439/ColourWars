@@ -4,27 +4,10 @@
 #include <rapidjson/writer.h>
 
 #include <cmath>
-#include <fstream>
-#include <iterator>
 #include <stdexcept>
 
 namespace level_editor_acceptance
 {
-    std::string contents(const fs::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        require(stream.good(), "Could not read acceptance input");
-        return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-    }
-
-    void write(const fs::path& path, const std::string& text)
-    {
-        std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-        stream << text;
-        stream.close();
-        require(stream.good(), "Could not write acceptance fixture");
-    }
-
     rapidjson::Document parse(const std::string& text)
     {
         rapidjson::Document result;
@@ -55,6 +38,41 @@ namespace level_editor_acceptance
         for (const Entry& candidate : document.entries())
             if (candidate.kind == kind && candidate.index == index) return candidate;
         throw std::runtime_error("Expected entry is absent");
+    }
+
+    Entry named(const LevelDocument& document, EntryKind kind, const std::string& name)
+    {
+        for (const Entry& candidate : document.entries())
+            if (candidate.kind == kind && candidate.label == name) return candidate;
+        throw std::runtime_error("Expected entry '" + name + "' is absent");
+    }
+
+    const Property* property(const std::vector<Property>& properties, const std::string& path)
+    {
+        for (const Property& candidate : properties)
+            if (candidate.path == path) return &candidate;
+        return nullptr;
+    }
+
+    void refuses(const std::function<void()>& action, const std::string& expected, const char* message)
+    {
+        bool rejected = false;
+        try { action(); }
+        catch (const std::exception& error)
+        {
+            rejected = true;
+            require(std::string(error.what()).find(expected) != std::string::npos,
+                std::string(message) + ": diagnostic was '" + error.what() + "'");
+        }
+        require(rejected, message);
+    }
+
+    void refuses_file(LevelDocument& document, const fs::path& path, const std::string& expected,
+        const char* message)
+    {
+        const std::string before = document.serialize();
+        refuses([&] { document.load(path); }, expected, message);
+        require(document.serialize() == before, std::string(message) + ": the refused load changed the open document");
     }
 
     void erase_template_walls(LevelDocument& document)

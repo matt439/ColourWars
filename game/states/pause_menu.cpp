@@ -8,7 +8,7 @@
 
 using namespace labrador;
 
-bool match_owns_pad_slot(const MatchSetup& settings, int slot)
+bool match_owns_input_slot(const MatchSetup& settings, int slot)
 {
 	if (slot < 0)
 	{

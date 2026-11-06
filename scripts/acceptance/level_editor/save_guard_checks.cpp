@@ -92,16 +92,16 @@ namespace level_editor_acceptance
         const fs::path source = scratch / "external-save-source.json";
         LevelDocument seed;
         seed.save(source);
-        const std::string normalized = contents(source);
+        const std::string normalized = read_text(source);
         const std::string original = " \n\t" + normalized + "\n ";
-        write(source, original);
+        write_text(source, original);
 
         LevelDocument local;
         local.load(source);
         require(local.serialize() != original && !local.dirty(),
             "Load fixture did not retain a distinct normalized document");
         local.save(source);
-        require(contents(source) == normalized && !local.dirty(),
+        require(read_text(source) == normalized && !local.dirty(),
             "Unchanged raw source was refused or failed to establish normalized save bytes");
         local.save(source);
 
@@ -110,19 +110,19 @@ namespace level_editor_acceptance
         edit_with_redo(local);
         other.set_property(entry(other, EntryKind::level), "/display_name", "Other writer's arena");
         other.save(source);
-        const std::string other_bytes = contents(source);
+        const std::string other_bytes = read_text(source);
         refuse_external_save(local, source.parent_path() / "." / source.filename(), scratch);
         refuse_external_save(local, scratch / "EXTERNAL-SAVE-SOURCE.JSON", scratch);
         const fs::path alias = scratch / "external-save-alias.json";
         fs::create_hard_link(source, alias);
         refuse_external_save(local, alias, scratch);
-        require(contents(alias) == other_bytes, "Refused equivalent-file save changed the external alias");
-        require(contents(source) == other_bytes, "Refused stale editor save changed the other editor's file");
+        require(read_text(alias) == other_bytes, "Refused equivalent-file save changed the external alias");
+        require(read_text(source) == other_bytes, "Refused stale editor save changed the other editor's file");
 
         const fs::path rescue = scratch / "external-save-rescue.json";
         const History conflicted = history(local);
         local.save(rescue);
-        require(local.path() == rescue && !local.dirty() && contents(source) == other_bytes &&
+        require(local.path() == rescue && !local.dirty() && read_text(source) == other_bytes &&
             local.serialize() == conflicted.current, "Save As failed to preserve conflicted open work elsewhere");
         require(local.can_undo() && local.can_redo(), "Save As discarded the open undo/redo history");
         local.set_property(entry(local, EntryKind::level), "/display_name", "Rescued later edit");
@@ -130,7 +130,7 @@ namespace level_editor_acceptance
         require(!local.dirty(), "Save As did not establish the new file's byte baseline");
 
         const fs::path same_length = scratch / "external-save-same-length.json";
-        write(same_length, normalized);
+        write_text(same_length, normalized);
         LevelDocument measured;
         measured.load(same_length);
         edit_with_redo(measured);
@@ -139,47 +139,47 @@ namespace level_editor_acceptance
         const std::size_t name = changed.find("New Stage");
         require(name != std::string::npos, "Same-length fixture could not find the source name");
         changed.replace(name, 9, "Off Stage");
-        write(same_length, changed);
+        write_text(same_length, changed);
         fs::last_write_time(same_length, timestamp);
         require(changed.size() == normalized.size() && fs::last_write_time(same_length) == timestamp,
             "External edit did not retain both byte length and timestamp");
         refuse_external_save(measured, same_length, scratch);
-        require(contents(same_length) == changed, "Refusal replaced a same-length external edit");
+        require(read_text(same_length) == changed, "Refusal replaced a same-length external edit");
         // A failed attempt must not adopt the rejected writer's bytes as its baseline.
-        write(same_length, normalized);
+        write_text(same_length, normalized);
         measured.save(same_length);
-        const std::string last_saved = contents(same_length);
+        const std::string last_saved = read_text(same_length);
         measured.set_property(entry(measured, EntryKind::level), "/display_name", "A newer local edit");
-        write(same_length, normalized);
+        write_text(same_length, normalized);
         refuse_external_save(measured, same_length, scratch);
-        require(contents(same_length) == normalized, "A later conflict changed external bytes");
-        write(same_length, last_saved);
+        require(read_text(same_length) == normalized, "A later conflict changed external bytes");
+        write_text(same_length, last_saved);
         measured.save(same_length);
         require(!measured.dirty(), "Retry did not use the most recent successful save baseline");
 
         const fs::path deleted = scratch / "external-save-deleted.json";
         LevelDocument missing;
         missing.save(deleted);
-        const std::string missing_baseline = contents(deleted);
+        const std::string missing_baseline = read_text(deleted);
         edit_with_redo(missing);
         require(fs::remove(deleted), "Could not remove the isolated saved stage");
         refuse_external_save(missing, deleted, scratch);
         refuse_external_save(missing, scratch / "EXTERNAL-SAVE-DELETED.JSON", scratch);
         require(!fs::exists(deleted), "Refused save silently recreated a removed external file");
-        write(deleted, missing_baseline);
+        write_text(deleted, missing_baseline);
         missing.save(deleted);
         require(!missing.dirty(), "Restoring the original bytes did not permit a retry");
 
         const fs::path unreadable = scratch / "external-save-unreadable.json";
         LevelDocument locked;
         locked.save(unreadable);
-        const std::string readable_bytes = contents(unreadable);
+        const std::string readable_bytes = read_text(unreadable);
         edit_with_redo(locked);
         {
             const ExclusiveReadLock lock(unreadable);
             refuse_external_save(locked, unreadable, scratch);
         }
-        require(contents(unreadable) == readable_bytes, "Unreadable-file refusal changed saved bytes");
+        require(read_text(unreadable) == readable_bytes, "Unreadable-file refusal changed saved bytes");
         locked.save(unreadable);
         require(!locked.dirty(), "Read failure damaged the baseline used after unlocking");
 

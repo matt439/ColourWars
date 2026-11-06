@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/sound_groups.h"
+#include "game/contracts/simulation.h"
 #include "game/game_data.h"
 #include "game/input/input_slots.h"
 
@@ -125,8 +126,7 @@ namespace
         throw std::runtime_error("a debug layer broke");
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     struct Frame
     {
@@ -723,22 +723,7 @@ int wmain(int argc, wchar_t** argv)
             app.resolution_manager(), app.thread_pool(), app.partitioner());
         for (int count : { 1, 4 })
         {
-            MatchSetup settings;
-            settings.set_player_count(count);
-            settings.set_stage("movement_course");
-            settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
-            settings.begin_input_claims(0);
-            for (int player = 1; player < count; ++player)
-            {
-                require(settings.claim_input_slot(player), "input claim failed");
-            }
-            for (int player = 0; player < count; ++player)
-            {
-                settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
-                settings.set_player_weapon(player, player % 2 == 0 ? WeaponType::sprayer : WeaponType::roller);
-            }
-            app.viewport_manager()->set_layout(settings.screen_layout());
-            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
+            auto level = build_course(app, builder, count);
             std::vector<PlayerInputData> inputs(input_slots::count);
             for (auto& input : inputs)
             {

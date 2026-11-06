@@ -165,9 +165,8 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             RectangleF splash = object->shape()->bounding_box(); splash.inflate(32);
             splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
             const auto team = source_index++ % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-            const auto& shot_tuning = tuning.projectile(ProjectileType::spray);
-            const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 3 : 1,
-                colours.team_colour(team), app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
+            const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
+                colours.team_colour(team));
             object->on_contact(shot, Vector2F::zero, 0); object->update(10); ++heavy_contacts;
         }
     };
@@ -244,7 +243,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::array<std::vector<std::uint64_t>, 2> slab_paint;
         for (std::size_t paint = 0; paint < 2; ++paint)
         {
-            std::srand(291026); pair[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
+            pair[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
                 count, false, 30, heavy_contacts, "turbulence_slab_trial"); ++builds;
             if (paint != 0)
             {
@@ -427,8 +426,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 RectangleF splash = slab->bounds(); splash.inflate(32);
                 splash.offset(shot_tuning.details.col_rect_size / 2.0f);
                 const auto team = side == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::zero, team, side == 0 ? 3 : 1, colours.team_colour(team),
-                    app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
+                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, side == 0 ? 3 : 1, colours.team_colour(team));
                 slab->on_contact(shot, Vector2F::zero, 0); ++heavy_contacts; ++wet_contacts;
             }
             require(before_paint == turbulence_slab_surface_state(fixture) && before_players == observation(*fixture.level),
@@ -465,7 +463,6 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     for (const int count : { 1, 4 })
     {
         const bool heavy = count == 4;
-        std::srand(291030);
         auto fixture = crossfeed_fixture(app, info, tuning, presentation, preferences,
             count, false, 0.75f, heavy_contacts, "turbulence_slab_trial"); ++builds; ++ending_levels;
         const auto slab_count = std::count_if(fixture.structures.begin(), fixture.structures.end(),
@@ -529,9 +526,8 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         while (fixture.level->state() != LevelState::finished) { tick(); }
         const LevelEndInfo actual_result = fixture.level->level_end_info();
         Session session; session.finish_round(actual_result);
-        Save saved; SettingsSession saved_session(saved); const_cast<PlaySettings&>(saved_session.play_settings()) = preferences;
-        auto& menu_preferences = const_cast<PlaySettings&>(saved_session.play_settings());
-        menu_preferences.music_volume = menu_preferences.sfx_volume = 0;
+        Save saved; seed_play_settings(saved, [&](PlaySettings& play) { play = preferences; quiet_play(play); });
+        SettingsSession saved_session(saved);
         GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_slab_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         MenuInput input(app.gamepads(), app.keyboard(), &tuning);
@@ -584,11 +580,11 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         "\"ending_full_frames\":4,\"ending_csv_rows\":4,\"gameplay_csv_rows\":71,\"ending_levels\":2,\"ending_level_updates\":" << ending_updates << ',' <<
         "\"trial_bytes_unchanged\":true,\"human_acceptance\":false}\n";
     std::ofstream scope(output / "turbulence-slab-scope.txt");
-    scope << "Explicit24-object fixed scored-slab source loaded into an isolated inspection registry; this probe edits no runtime registration. The source may be the qualified private comparison or the registered Slab Trial. Actual Level/Scene/object/player builders and real fixed/moving shadows; separate CPU evidence owns public LevelBuilder and longer route qualification.\n"
-        "Hidden720p all1/2/3/4-player clean/heavy phases: fixed crossover before descent, actual no-jump whole-body slab midpoint (centre1320/2680 within0.04; nominalfeet827, actual body-edge top plane), and actual upper flat stop1060/2940. One controlled placement per actor only; extra3P/4P actors wait on their upper approaches. Broad release-braking plus small analog input pulses reach supported personal-vx0 stops; no intermediate teleport, jump, respawn or cheat.\n"
+    scope << "Explicit 24-object fixed scored-slab source loaded into an isolated inspection registry; this probe edits no runtime registration. The source may be the qualified private comparison or the registered Slab Trial. Actual Level/Scene/object/player builders and real fixed/moving shadows; separate CPU evidence owns public LevelBuilder and longer route qualification.\n"
+        "Hidden 720p, all 1/2/3/4-player clean/heavy phases: fixed crossover before descent, actual no-jump whole-body slab midpoint (centre 1320/2680 within 0.04; nominal feet 827, actual body-edge top plane), and actual upper flat stop 1060/2940. One controlled placement per actor only; extra 3P/4P actors wait on their upper approaches. Broad release-braking plus small analog input pulses reach supported personal-vx0 stops; no intermediate teleport, jump, respawn or cheat.\n"
         "Every actual Scene pane retains whole player, standing-body slope warning, whole-body upper-stop patch and complete solid slab underside. The original mover pair retains its phase/credit/shadow invariants; slab walkers retain carrier0 and fixed slab world quads/local areas/credit stay unchanged during their walks. Controlled projectile contacts provide measured>99percent paint across all scoring roles, not weapon efficiency. Repeated Level draws preserve full pixels, public/structure/collider/local-material/static-shadow bounds, every paint tile's world corners/face/team/raw owner/area and complete moving-owner/carrier/shadow/view state, RNG and Debug fingerprints. Native RGBA crops equal actual source panes.\n"
         "Four additional heavy-only midpoint frames capture immediate actual friendly repaint on the two slabs, before aging. Actual paint ownership/local areas and personal poses remain identical; wet pixels/state/RNG are frozen across repeated draws. The ordinary walk then settles before the upper capture. Six source-derived geometric interior points at known old primer pinholes must be owned blue/black; a seventh candidate is outside the top edge and is explicitly not an interior assertion. Other wet ages, colors and tools are not inferred. Actual isolated StagePreview checks only initial-pose pixels/widget bounds/RNG. Its miniature and diagonal tile raster are retained for visual inspection; no math-only universal seam-absence claim follows.\n"
-        "Two further actual0.75-second matches (1Pclean/4Pheavy) run from their original spawns without placement to runtime overview and finished states. Each supplies one actual fullscreen overview and one actual EndMenuInitial over the finished Level. The page receives Session.finish_round(actualLevel.level_end_info()), never synthetic areas or a fake result; its neutral page update does not update the finished Level. This qualifies the displayed ending composition, not GameLevel results-navigation actions. All scoring/public/collider/paint/shadow state, Session ledger, pixels, RNG and Debug fingerprints remain frozen across repeated draws; retained native full-pane crops match all source RGBA/RGB rows. No human trajectory/readability/reaction, physical pad/motor, listening, performance, balance or arena acceptance is established.\n";
+        "Two further actual 0.75-second matches (1P clean/4P heavy) run from their original spawns without placement to runtime overview and finished states. Each supplies one actual fullscreen overview and one actual EndMenuInitial over the finished Level. The page receives Session.finish_round(actualLevel.level_end_info()), never synthetic areas or a fake result; its neutral page update does not update the finished Level. This qualifies the displayed ending composition, not GameLevel results-navigation actions. All scoring/public/collider/paint/shadow state, Session ledger, pixels, RNG and Debug fingerprints remain frozen across repeated draws; retained native full-pane crops match all source RGBA/RGB rows. No human trajectory/readability/reaction, physical pad/motor, listening, performance, balance or arena acceptance is established.\n";
     summary.close(); scope.close(); require(summary.good() && scope.good(), "Cannot flush slab native summary/scope");
     std::cout << "PASS slab native controlled descent/endings:33 full frames/75 native crops/67 reads, original all-layout wet/pinhole controls plus actual short-match overview/result-derived EndMenu; human acceptance open\n";
 }

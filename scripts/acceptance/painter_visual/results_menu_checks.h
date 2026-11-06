@@ -1,33 +1,5 @@
 // Real results pages, driven through StateContext and MenuInput. Scores and
 // preferences are memory-only; no player save or hardware pad is required.
-class ResultsMenuProbeRoot final : public State
-{
-public:
-    ResultsMenuProbeRoot(Application& app, const Canvas& canvas) : app_(app), canvas_(canvas) {}
-    void init() override {}
-    void update(float) override {}
-    void draw(Renderer& renderer) const override
-    {
-        renderer.set_view_count(1);
-        DrawList list = renderer.view(0);
-        list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::default_camera);
-        list.set_filter(TextureFilter::point);
-        this->canvas_.draw(list, RectangleF(Vector2F::zero,
-            this->app_.resolution_manager()->resolution_vec()));
-    }
-private:
-    Application& app_;
-    const Canvas& canvas_;
-};
-
-Frame results_menu_frame(Application& app)
-{
-    app.renderer()->begin_frame();
-    static_cast<StateContext&>(app).draw(*app.renderer());
-    return read(*app.renderer());
-}
-
 struct ResultsMenuProbeCase
 {
     LevelEndInfo info;
@@ -40,9 +12,8 @@ struct ResultsMenuProbeCase
 void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -129,7 +100,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
         stack.clear();
         stack.notify_activation(true);
         input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, info, session, revealed));
         tick();
         require(stack.depth() == 2, "Actual results page closed on neutral input");
@@ -269,29 +240,29 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             finish();
             tap(Key::escape);
             require(stack.depth() == 2, "Escape bypassed actual results continuation");
-            const Frame normal = results_menu_frame(app);
+            const Frame normal = stack_frame(app);
             std::srand(6197);
             const int expected_random = std::rand();
             std::srand(6197);
-            require(normal.pixels == results_menu_frame(app).pixels &&
-                normal.pixels == results_menu_frame(app).pixels && std::rand() == expected_random,
+            require(normal.pixels == stack_frame(app).pixels &&
+                normal.pixels == stack_frame(app).pixels && std::rand() == expected_random,
                 "Frozen results drawing changed pixels or consumed gameplay randomness");
             tick(0.75f);
-            require(normal.pixels == results_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels,
                 "Completed results artwork moved under neutral time");
             play.reduce_effects = true;
             tick(0.75f);
-            require(normal.pixels == results_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels,
                 "Reduce effects changed the readable results artwork");
             play.reduce_effects = false;
             RectangleF bounds = panel;
             bounds.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
-            const RectangleI pixels = countdown_crop_bounds(project(bounds));
+            const RectangleI pixels = pixel_bounds(project(bounds));
             require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= size.x && pixels.bottom() <= size.y,
                 "Results paper escaped a supported display/aspect ratio");
             const Colour original = art.paper;
             art.paper = Colour(1.0f, 0.0f, 1.0f);
-            const Frame tinted = results_menu_frame(app);
+            const Frame tinted = stack_frame(app);
             art.paper = original;
             const RectangleI changed = foreground_delta_bounds(normal, tinted);
             require(changed.width > 0 && changed.height > 0 && pixels.contains(changed),
@@ -316,9 +287,9 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             records << fixture.name << ',' << size.x << ',' << size.y << ',' << fixture.players << ',' <<
                 paper_pixels << '\n';
             resize_page(size.x == 1920 && size.y == 1080 ? Vector2I(1280, 720) : Vector2I(1920, 1080));
-            std::ignore = results_menu_frame(app);
+            std::ignore = stack_frame(app);
             resize_page(size);
-            require(normal.pixels == results_menu_frame(app).pixels && stack.depth() == 2,
+            require(normal.pixels == stack_frame(app).pixels && stack.depth() == 2,
                 "Resizing the same results page changed its pixels or selected an action");
             tap(Key::enter);
             require(stack.depth() == 1, "Fresh Enter did not proceed from the actual results page");
@@ -330,13 +301,13 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     resize_page({ 1280, 720 });
     roster(2);
     open(victory, single, false);
-    const Frame before_fill = results_menu_frame(app);
+    const Frame before_fill = stack_frame(app);
     tick(look.team_fill_delay + 0.01f);
     tick(look.team_fill_time * 0.5f);
     tick();
-    const Frame half_fill = results_menu_frame(app);
+    const Frame half_fill = stack_frame(app);
     const RectangleF scoring_track(fill_box.position() + look.team_fill_border, look.team_fill_size);
-    const RectangleI scoring_pixels = countdown_crop_bounds(project(scoring_track));
+    const RectangleI scoring_pixels = pixel_bounds(project(scoring_track));
     require(foreground_local_delta(before_fill, half_fill,
         RectangleF(Vector2F(scoring_pixels.position()), Vector2F(scoring_pixels.size()))) > 100,
         "Plain results fill failed to advance independently of its hidden numbers/details");
@@ -345,28 +316,28 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     unpainted.team_a_area = unpainted.team_b_area = 0.0f;
     unpainted.player_areas = {};
     open(unpainted, single, false); finish();
-    const Frame unpainted_draw = results_menu_frame(app);
+    const Frame unpainted_draw = stack_frame(app);
     LevelEndInfo even = unpainted;
     even.team_a_area = even.team_b_area = 50.0f;
     open(even, single, false); finish();
-    require(unpainted_draw.pixels == results_menu_frame(app).pixels,
+    require(unpainted_draw.pixels == stack_frame(app).pixels,
         "Unpainted competitive results lost their deliberate even draw presentation");
 
     roster(4);
     open(victory, next, true); finish();
-    const Frame credited = results_menu_frame(app);
+    const Frame credited = stack_frame(app);
     for (int player = 0; player < 4; ++player)
     {
         LevelEndInfo changed = victory;
         changed.player_areas[devices[player]] = 9.0f;
         open(changed, next, true); finish();
-        const Frame revised = results_menu_frame(app);
+        const Frame revised = stack_frame(app);
         RectangleF row = contribution(victory, player);
         const RectangleF shorter = contribution(changed, player);
         row.width = std::max(row.width, shorter.width);
         row.inflate(Vector2F(2.0f));
         const RectangleI delta = foreground_delta_bounds(credited, revised);
-        const RectangleI row_pixels = countdown_crop_bounds(project(row));
+        const RectangleI row_pixels = pixel_bounds(project(row));
         require(delta.width > 0 && delta.height > 0 && row_pixels.contains(delta),
             "Sparse input-owner credit altered pixels outside its own results row");
         require(foreground_local_delta(credited, revised, project(row)) > 5,
@@ -384,11 +355,11 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             LevelEndInfo info = victory;
             info.team_colours = TeamColourTools::team_colours(palette, presentation.team_palette());
             open(info, single, revealed); finish();
-            const Frame normal = results_menu_frame(app);
+            const Frame normal = stack_frame(app);
             LevelEndInfo changed = info;
             changed.team_colours = TeamColour(Colour(1.0f, 0.0f, 1.0f), Colour(0.0f, 1.0f, 1.0f));
             open(changed, single, revealed); finish();
-            const Frame recoloured = results_menu_frame(app);
+            const Frame recoloured = stack_frame(app);
             if (revealed)
             {
                 require(normal.pixels == recoloured.pixels,
@@ -397,14 +368,14 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             else
             {
                 const RectangleF track(fill_box.position() + look.team_fill_border, look.team_fill_size);
-                const RectangleI track_pixels = countdown_crop_bounds(project(track));
+                const RectangleI track_pixels = pixel_bounds(project(track));
                 require(foreground_local_delta(normal, recoloured,
                     RectangleF(Vector2F(track_pixels.position()), Vector2F(track_pixels.size()))) > 100,
                     "Plain results score bars disappeared or escaped the true scoring track");
                 changed = info;
                 changed.team_colours.team_a = Colour(1.0f, 0.0f, 1.0f);
                 open(changed, single, false); finish();
-                const RectangleI team_a_pixels = foreground_delta_bounds(normal, results_menu_frame(app));
+                const RectangleI team_a_pixels = foreground_delta_bounds(normal, stack_frame(app));
                 const RectangleF expected = project(RectangleF(track.position(),
                     Vector2F(track.width * info.team_a_ratio(), track.height)));
                 require(team_a_pixels.width > 0 && std::abs(static_cast<float>(team_a_pixels.x) - expected.x) < 2.0f &&
@@ -421,13 +392,13 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
         roster(1, team_b);
         const LevelEndInfo info = team_b ? solo_b : solo_a;
         open(info, single, false); finish();
-        const Frame normal = results_menu_frame(app);
+        const Frame normal = stack_frame(app);
         const RectangleF track(fill_box.position() + look.team_fill_border, look.team_fill_size);
         // The unused side is neutral, including near its edge. Linear
         // sampling of the one-texel frame leaks adjacent atlas colours here.
         const Vector2F sample = camera().calculate_view_position(Vector2F(
             team_b ? track.x + 4.0f : track.right() - 4.0f, track.bottom() - 4.0f));
-        const size_t offset = hud_pixel_offset(normal, static_cast<int>(sample.x), static_cast<int>(sample.y));
+        const size_t offset = pixel_offset(normal, static_cast<int>(sample.x), static_cast<int>(sample.y));
         const Colour expected = look.track_colour;
         require(std::abs(static_cast<float>(normal.pixels[offset]) - expected.r * 255.0f) <= 1.0f &&
             std::abs(static_cast<float>(normal.pixels[offset + 1]) - expected.g * 255.0f) <= 1.0f &&
@@ -437,13 +408,13 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
         if (team_b) { changed.team_colours.team_a = Colour(1.0f, 0.0f, 1.0f); }
         else { changed.team_colours.team_b = Colour(1.0f, 0.0f, 1.0f); }
         open(changed, single, false); finish();
-        require(normal.pixels == results_menu_frame(app).pixels,
+        require(normal.pixels == stack_frame(app).pixels,
             "Solo results rendered an absent team's score bar");
         changed = info;
         if (team_b) { changed.team_colours.team_b = Colour(1.0f, 0.0f, 1.0f); }
         else { changed.team_colours.team_a = Colour(1.0f, 0.0f, 1.0f); }
         open(changed, single, false); finish();
-        const RectangleI painted = foreground_delta_bounds(normal, results_menu_frame(app));
+        const RectangleI painted = foreground_delta_bounds(normal, stack_frame(app));
         const float expected_width = camera().scale * look.team_fill_size.x * info.coverage_ratio();
         require(painted.width > 0 && std::abs(static_cast<float>(painted.width) - expected_width) < 2.0f,
             "Solo results bar no longer shows actual arena coverage");
@@ -460,11 +431,11 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             stack.clear();
             stack.notify_activation(true);
             input.reset_actions();
-            stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+            stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
             stack.push(std::make_unique<ResultsMenuInitial>(&context, victory, single, false, record));
             tick();
             if (revealed_details) { finish(); }
-            return results_menu_frame(app);
+            return stack_frame(app);
         };
         const RectangleF proceed = centered(detail_font, L"Press A/Enter to proceed", look.proceed_y);
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
@@ -491,7 +462,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
                 RectangleF area = box;
                 area.inflate(Vector2F(2.0f));
                 const RectangleI delta = foreground_delta_bounds(with, plain);
-                require(delta.width > 0 && delta.height > 0 && countdown_crop_bounds(project(area)).contains(delta),
+                require(delta.width > 0 && delta.height > 0 && pixel_bounds(project(area)).contains(delta),
                     "Results record line was absent or drew outside its right-aligned row");
                 hud_text_contrast(with, project(box));
                 require(shown(*record, false).pixels == hidden.pixels,

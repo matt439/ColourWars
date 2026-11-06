@@ -56,9 +56,8 @@ namespace turbulence_blockout_acceptance
 
         EscapeResult escape_trial(Services& services, WeaponType tool, bool right, bool upper, EscapePolicy policy)
         {
-            // Each policy starts from a fresh scene and the same seed. Only
+            // Each policy starts from a fresh scene. Only
             // defender input changes; the attacker never tracks a moved target.
-            std::srand(260026u);
             const PlayerTeam attacker = right ? PlayerTeam::a : PlayerTeam::b;
             const PlayerTeam defender = right ? PlayerTeam::b : PlayerTeam::a;
             const std::string source = std::string(upper ? "crossover" : "lower_bed") + (right ? "_a" : "_b");

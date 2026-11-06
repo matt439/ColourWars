@@ -1,5 +1,5 @@
-// Fields56-58: one isolated shared HUD paper family. Existing fixtures stay
-// byte-identical; the independent oracle is bounded to35 material sites.
+// Fields 56-58: one isolated shared HUD paper family. Existing fixtures stay
+// byte-identical; the independent oracle is bounded to 35 material sites.
 enum class HudPaperReference { correct, wrong_ink, omitted_ink, wrong_paper, omitted_paper,
     straight, squared, black_band, no_scale, missing_bottom, missing_right };
 using HudPaperTuple = std::array<Colour, 3>;
@@ -104,12 +104,11 @@ const std::array<std::vector<Glyph>, 3>& hud_paper_literal_glyphs()
         },
     } }; return glyphs;
 }
-std::vector<float> hud_paper_fixed_style(const HudPresentation& look)
+// Every HUD field but the three shared-paper colours this leaf tunes.
+std::vector<float> hud_paper_fixed_style(HudPresentation look)
 {
-    auto copy = look; set_hud_paper_values(copy, hud_paper_palettes()[0]);
-    auto values = hud_track_fixed_style(copy); const auto& track = look.meter_track_colour;
-    values.insert(values.end(), { track.r, track.g, track.b, track.a });
-    return values; // Only selected shared-paper3 is masked; all55 styles remain.
+    set_hud_paper_values(look, hud_paper_palettes()[0]);
+    return hud_style(look);
 }
 using HudPaperFrames = std::array<std::array<Frame, 2>, 6>;
 class HudPaperColourProbe
@@ -120,7 +119,7 @@ public:
         expected_(look_), expected_identity_(identity_), hud_(app.render_resources(), &look_, &identity_), copied_(app.render_resources(), &expected_, &expected_identity_),
         black_(app.render_resources(), Colour::black), nonblack_(app.render_resources(), Colour(32, 64, 96)),
         sheet_(app.render_resources()->sprite_sheet(look_.sprite_sheet)), pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))),
-        fixed_(hud_paper_fixed_style(look_)), identity_fixed_(hud_track_identity_style(identity_)), names_(hud_track_resource_names(look_)),
+        fixed_(hud_paper_fixed_style(look_)), identity_fixed_(player_identity_style(identity_)), names_(hud_resource_names(look_)),
         palette_(presentation.team_palette()), output_(output), budget_(budget)
     {
         require(hud_paper_values(look_) == hud_paper_palettes()[0] && look_.paper.keyline_width == 2 && look_.paper.shadow_offset == 4 &&
@@ -149,12 +148,12 @@ public:
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.hud() && &identity_ == &presentation_.player_identity() &&
             hud_paper_fixed_style(look_) == fixed_ && hud_paper_fixed_style(expected_) == fixed_ &&
-            hud_track_identity_style(identity_) == identity_fixed_ && hud_track_identity_style(expected_identity_) == identity_fixed_ &&
-            hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
-            hud_track_same_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
+            player_identity_style(identity_) == identity_fixed_ && player_identity_style(expected_identity_) == identity_fixed_ &&
+            hud_resource_names(look_) == names_ && hud_resource_names(expected_) == names_ &&
+            same_team_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
             pixel_.origin() == Vector2F::zero && app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
-            "HUD paper edit changed unselected style including closing55, identity, palette, resource, geometry or viewport");
+            "HUD paper edit changed unselected style including closing 55, identity, palette, resource, geometry or viewport");
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
         for (size_t i = 0; i < names.size(); ++i)
         {
@@ -356,7 +355,7 @@ private:
         (background == 0 ? black_ : nonblack_).draw(list, { 0, 0, 1920, 1080 }); draw(list);
         rectangle(list, { 20, 20, 4, 4 }, Colour::white); rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame frame = read(renderer); ++readbacks_;
-        require(frame.width == 1920 && frame.height == 1080 && frame.pixels.size() == 1920 * 1080 * 4, "HUD paper requires native1920x1080 RGBA");
+        require(frame.width == 1920 && frame.height == 1080 && frame.pixels.size() == 1920 * 1080 * 4, "HUD paper requires native 1920x1080 RGBA");
         for (int y = 20; y < 24; ++y) { for (int x = 20; x < 29; ++x)
         { if (x == 24) { continue; } const size_t at = offset(x, y); const unsigned char c = x < 24 ? 255 : 0;
             require(frame.pixels[at] == c && frame.pixels[at + 1] == c && frame.pixels[at + 2] == c && frame.pixels[at + 3] == 255, "HUD paper WHITE/BLACK calibration differs"); } }
@@ -530,24 +529,18 @@ HudPaperFrames hud_paper_consumer_checks(HudPaperColourProbe& probe, HudPresenta
 void hud_paper_tune_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output, HudPaperColourProbe& probe, const HudPaperFrames& references)
 {
-    const auto root = output / "hud-paper-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "HUD paper private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp"); Save preferences; SettingsSession preferences_session(preferences);
-    const auto preferences_now = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings()); values.insert(values.end(), { static_cast<int>(preferences.resolution()),
-            preferences.fullscreen() ? 1 : 0, static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto original_preferences = preferences_now();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-paper-tune-commands.log").string()), "Cannot retain HUD paper actual command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-paper-tune-scratch", .transcript = "hud-paper-tune-commands.log",
+        .fresh = true,
+        .restore_content = false });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preferences_now = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     JsonSpanDocument original(bytes[1], "HUD paper exact original source"); std::string saved_bytes = bytes[1];
     const std::array<const char*, 3> saved_words{ "RED", "35BCE1", "2060C080" };
     for (size_t i = 0; i < 3; ++i)
@@ -557,7 +550,7 @@ void hud_paper_tune_checks(Application& app, GameTuning& tuning, Presentation& p
     const size_t initial_reads = probe.readbacks(); Frame baseline{}, pair{}, joint{};
     const auto unchanged = [&]()
     {
-        probe.unchanged(); require(preferences_now() == original_preferences && !std::filesystem::exists(root / "profile/ColourWars/save_data.json") &&
+        probe.unchanged(); require(preferences_now() == original_preferences && !std::filesystem::exists(acceptance::save_path_in(root / "profile")) &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty() && impl.total_updates() == 0 && impl.level_updates() == 0,
             "HUD paper command changed preferences, saved a game, queued gameplay or advanced updates");
         for (size_t i = 0; i < files.size(); ++i)
@@ -663,7 +656,7 @@ void hud_paper_tune_checks(Application& app, GameTuning& tuning, Presentation& p
         impl.tune_document("presentation")->edits().empty() && impl.tune_document("tuning")->edits().empty(), "HUD paper Debug frozen command/state/refusal/read counts or final ledgers differ");
     std::ofstream summary(output / "hud-paper-tune-summary.json"); summary << "{\"scope\":\"debug-live-hud-paper-family-and-policy-refusal\",\"accepted_rendered_states\":9,\"accepted_reads\":27,\"new_raw_reads\":4,\"cached_reference_observations\":5,\"refusal_reads\":5,\"readbacks\":36,\"accepted_rows\":9,\"refusal_rows\":5,\"csv_rows\":14,\"repeat_checks\":9,\"copied_adoption_checks\":9,\"independent_observations\":9,\"patch_pixel_checks\":5040,\"saved_tokens\":3,\"original_reset_frame_equalities\":1,\"saved_reset_frame_equalities\":1,\"sibling_pending_reset_checks\":3,\"refusal_json_records\":5,\"crops\":0,\"calibration_pixel_checks\":1152,\"commands\":20,\"accepted_commands\":15,\"query_commands\":3,\"tune_commands\":7,\"reset_commands\":4,\"presentation_save_commands\":1,\"refused_commands\":5,\"refusal_raster_reads\":5,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}" << '\n';
     require(summary.good(), "Cannot retain HUD paper Debug summary");
-    std::cout << "PASS HUD paper tune: 20 actual statements, 9 accepted rendered states, 5 typed atomic refusals and held-frame reads; 36 additional reads, exact3-token Save/rebase and sibling-preserving resets. No game Saves, updates or input polls.\n";
+    std::cout << "PASS HUD paper tune: 20 actual statements, 9 accepted rendered states, 5 typed atomic refusals and held-frame reads; 36 additional reads, exact 3-token Save/rebase and sibling-preserving resets. No game Saves, updates or input polls.\n";
 }
 #endif
 void hud_paper_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation,

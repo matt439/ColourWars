@@ -1,13 +1,14 @@
 #include "game/pch.h"
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/teammate_marker.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
-#include "engine/input/mouse.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -30,8 +31,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     enum class Seat { human, bot };
     struct SeatPlan { Seat seat; PlayerTeam team; };
@@ -46,7 +46,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "Level" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         Partitioner partitioner;
         std::unique_ptr<LevelBuilder> builder;
 
@@ -54,22 +53,7 @@ namespace
             tuning((content / "tuning.json").string().c_str()),
             presentation((content / "presentation.json").string().c_str())
         {
-            for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                this->render.add_sprite_sheet(sheet, read_sprite_sheet(
-                    (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* font : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(font) + ".spritefont")).string());
-                auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-                this->render.add_font(font, std::move(loaded));
-            }
-            this->audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, this->render, this->audio);
             auto info = std::make_unique<LevelLoadedInfo>(
                 (content / "levels/movement_course.json").string().c_str());
             info->validate();
@@ -432,10 +416,7 @@ namespace
             require(!json.HasParseError(), "Cannot parse marker presentation fixture");
             rapidjson::Value& look = json["hud"]["teammate_marker"];
             edit(look, json.GetAllocator());
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            { std::ofstream variant(path); variant << buffer.GetString(); require(variant.good(), "Cannot write marker variant"); }
+            acceptance::write_document(json, path);
             bool rejected = false;
             try { const Presentation invalid(path.string().c_str()); }
             catch (const std::exception& error)

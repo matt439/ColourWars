@@ -128,7 +128,6 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         std::array<CrossfeedFixture, 2> fixtures;
         for (int paint = 0; paint < 2; ++paint)
         {
-            std::srand(261026);
             fixtures[static_cast<std::size_t>(paint)] = crossfeed_fixture(app, info, tuning, presentation,
                 preferences, count, paint == 1, 30.0f, heavy_contacts, "turbulence_blockout"); ++builds;
             auto& fixture = fixtures[static_cast<std::size_t>(paint)];

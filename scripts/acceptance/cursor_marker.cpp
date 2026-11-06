@@ -5,6 +5,8 @@
 #include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <cmath>
@@ -49,22 +51,7 @@ namespace
             tuning((content / "tuning.json").string().c_str()),
             presentation((content / "presentation.json").string().c_str())
         {
-            for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                this->render.add_sprite_sheet(sheet, read_sprite_sheet(
-                    (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* font : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(font) + ".spritefont")).string());
-                auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-                this->render.add_font(font, std::move(loaded));
-            }
-            this->audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, this->render, this->audio);
             auto info = std::make_unique<LevelLoadedInfo>(
                 (content / "levels/movement_course.json").string().c_str());
             info->validate();
@@ -319,10 +306,7 @@ namespace
             json.Parse(source.c_str());
             require(!json.HasParseError(), "Cannot parse cursor presentation fixture");
             edit(json["hud"]["cursor_marker"], json.GetAllocator());
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            { std::ofstream variant(path); variant << buffer.GetString(); require(variant.good(), "Cannot write cursor variant"); }
+            acceptance::write_document(json, path);
             try { const Presentation loaded(path.string().c_str()); return true; }
             catch (const std::exception& error)
             {

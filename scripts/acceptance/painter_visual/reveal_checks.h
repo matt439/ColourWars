@@ -66,8 +66,8 @@ void reveal_card_matrix(Application& app, const Canvas& canvas,
                 require(std::rand() == expected_random, "Reveal card drawing consumed random numbers");
                 const std::string stem = std::string("closing-card-") + TeamColourTools::palette_key(palette) +
                     (team == PlayerTeam::a ? "-a-" : "-b-") + std::to_string(size.x);
-                save(foreground_crop(settled, countdown_crop_bounds(box)), output / (stem + "-settled-detail.ppm"));
-                save(foreground_crop(beat, countdown_crop_bounds(box)), output / (stem + "-beat-detail.ppm"));
+                save(foreground_crop(settled, pixel_bounds(box)), output / (stem + "-settled-detail.ppm"));
+                save(foreground_crop(beat, pixel_bounds(box)), output / (stem + "-beat-detail.ppm"));
             }
         }
         if (size.x == 1280)
@@ -80,7 +80,7 @@ void reveal_card_matrix(Application& app, const Canvas& canvas,
                 L"A 100.0%", Colour::yellow, extreme.reveal_art.beat_duration, false);
             require(foreground_local_delta(thick_frame, blank, box) > 100,
                 "Widest accepted reveal keyline and minimum padding escaped the card bounds");
-            save(foreground_crop(thick_frame, countdown_crop_bounds(box)),
+            save(foreground_crop(thick_frame, pixel_bounds(box)),
                 output / "closing-card-wide-keyline-min-padding-detail.ppm");
         }
     }
@@ -186,7 +186,7 @@ void closing_clock_matrix(Application& app, const Canvas& canvas,
                             // Raster pixels cover a unit square. Fractional
                             // geometry, including addition of a pane origin,
                             // must be rounded out before testing pixel indices.
-                            const RectangleI pixels = countdown_crop_bounds(area);
+                            const RectangleI pixels = pixel_bounds(area);
                             const float px = static_cast<float>(x);
                             if (x < pixels.x || x >= pixels.right() || y < pixels.y || y >= pixels.bottom()) { continue; }
                             require(!tick_pixel || px < face.x || px >= face.right(),
@@ -203,7 +203,7 @@ void closing_clock_matrix(Application& app, const Canvas& canvas,
                             for (size_t view = 0; view < bounds.size(); ++view)
                             {
                                 const auto& area = bounds[view];
-                                const RectangleI pixels = countdown_crop_bounds(area);
+                                const RectangleI pixels = pixel_bounds(area);
                                 std::cerr << " pane" << view << " bounds=" << area.x << ',' << area.y << ',' <<
                                     area.width << ',' << area.height << " pixels=" << pixels.x << ',' << pixels.y << ',' <<
                                     pixels.width << ',' << pixels.height;
@@ -232,7 +232,7 @@ void closing_clock_matrix(Application& app, const Canvas& canvas,
                 }
                 if (timer == 9.95f || timer == 9.5f || timer == 0.95f || timer == 0.0f)
                 {
-                    const RectangleI crop = countdown_crop_bounds(bounds.front());
+                    const RectangleI crop = pixel_bounds(bounds.front());
                     const std::string stem = "closing-clock-" + std::to_string(count) + "p-" +
                         std::to_string(size.x) + '-' + std::to_string(static_cast<int>(timer * 100.0f));
                     save(foreground_crop(normal, crop), output / (stem + "-detail.ppm"));

@@ -1,45 +1,6 @@
 // Debug-only renderer acceptance. Commands use the real validated director;
 // content, candidate files, user files and saves are confined to this run.
 
-class TuneColourTemp
-{
-public:
-    explicit TuneColourTemp(const std::filesystem::path& directory)
-    {
-        std::filesystem::create_directories(directory);
-        for (size_t index = 0; index < 2; ++index)
-        {
-            wchar_t* previous = nullptr; size_t length = 0;
-            require(_wdupenv_s(&previous, &length, this->names_[index]) == 0,
-                "cannot read the tune probe temporary directory");
-            if (previous != nullptr) { this->previous_[index] = previous; std::free(previous); }
-            require(_wputenv_s(this->names_[index], directory.c_str()) == 0,
-                "cannot isolate tune candidate temporary files");
-        }
-    }
-    ~TuneColourTemp()
-    {
-        for (size_t index = 0; index < 2; ++index)
-        { _wputenv_s(this->names_[index], this->previous_[index].c_str()); }
-    }
-private:
-    const std::array<const wchar_t*, 2> names_{ L"TEMP", L"TMP" };
-    std::array<std::wstring, 2> previous_;
-};
-
-std::string tune_colour_bytes(const std::filesystem::path& path)
-{
-    std::ifstream file(path, std::ios::binary); require(file.good(), "cannot read tune probe content");
-    return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
-}
-
-void tune_colour_write(const std::filesystem::path& path, const std::string& bytes)
-{
-    std::ofstream file(path, std::ios::binary | std::ios::trunc);
-    file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-    require(file.good(), "cannot write tune probe scratch content");
-}
-
 size_t tune_colour_pixels(const Frame& frame, std::uint32_t colour)
 {
     size_t count = 0;
@@ -73,39 +34,20 @@ Frame tune_colour_frozen(const std::function<Frame()>& draw)
 void tune_colour_matrix(Application& app, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
-    const auto root = output / "tune-colour-scratch";
-    const auto source = root / "source", staged = root / "staged";
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    std::array<std::string, 2> real_bytes;
-    constexpr const char* files[] = { "tuning.json", "presentation.json" };
-    for (size_t index = 0; index < 2; ++index)
-    {
-        real_bytes[index] = tune_colour_bytes(content / files[index]);
-        tune_colour_write(source / files[index], real_bytes[index]);
-        tune_colour_write(staged / files[index], real_bytes[index]);
-    }
-    const NestedSaveProfile profile(root / "profile");
-    const TuneColourTemp temporary(root / "temp");
-    const GameTuning original_tuning = tuning; const Presentation original_presentation = presentation;
-    struct RestoreContent
-    {
-        GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original_presentation;
-        ~RestoreContent() { this->tuning = this->original_tuning; this->presentation = this->original_presentation; }
-    } restore{ tuning, presentation, original_tuning, original_presentation };
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    DebugDirectorImpl& impl = *director.impl();
-    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
-    impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "tune-colour-commands.log").string()),
-        "cannot retain tune-colour command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "tune-colour-scratch", .transcript = "tune-colour-commands.log",
+        .memory_play = [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; } });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const Presentation& original_presentation = session.original_presentation();
+    GameData& data = session.data();
+    DebugDirectorImpl& impl = session.impl();
     StateContext& stack = app;
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup menu_settings;
     MenuContext context(&data, &input, &menu_settings);
@@ -259,7 +201,7 @@ void tune_colour_matrix(Application& app, GameTuning& tuning, Presentation& pres
 
     const auto home = [&] { stack.clear(); stack.push(std::make_unique<MainMenuHome>(&context)); };
     const auto mode = [&] { stack.push(std::make_unique<MainMenuModeSelect>(&context)); };
-    const auto menu_frame = [&] { return main_menu_frame(app); };
+    const auto menu_frame = [&] { return stack_frame(app); };
     home(); const Frame old_home = tune_colour_frozen(menu_frame);
     mode(); const Frame old_mode = tune_colour_frozen(menu_frame);
     const std::string home_path = "presentation.main_menu.backgrounds.home";
@@ -297,6 +239,6 @@ void tune_colour_matrix(Application& app, GameTuning& tuning, Presentation& pres
     require(records.good(), "tune-colour evidence record write failed");
     std::cout << "PASS tune colours: validated named/RGB/RGBA commands, six existing live consumers and "
         "captured/reopened Home+Mode, reset reversal, real resource rejection and queued scratch reload/rebase; "
-        "private save, frozen pixels/state/RNG and original content preserved. Debug-only hidden720p renderer scope; "
+        "private save, frozen pixels/state/RNG and original content preserved. Debug-only hidden 720p renderer scope; "
         "no physical-device, listening, human readability or performance acceptance.\n";
 }

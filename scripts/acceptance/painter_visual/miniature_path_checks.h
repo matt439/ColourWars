@@ -5,11 +5,10 @@ void miniature_path_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences,
     const std::filesystem::path& output, std::ofstream& records)
 {
-    const NestedSaveProfile isolated(output / "miniature-path-profile");
+    const acceptance::IsolatedSave isolated(output / "miniature-path-profile");
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
     size_t heavy_contacts = 0;
-    std::srand(314159);
     auto fixture = crossfeed_fixture(app, *levels.get("crossfeed"), tuning, presentation,
         preferences, 4, false, 0.75f, heavy_contacts, "crossfeed", std::nullopt, OpeningMode::full);
     require(heavy_contacts == 0, "Miniature path fixture unexpectedly painted its clean stage");
@@ -136,7 +135,7 @@ void miniature_path_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         ",\"maximum_gameplay_scale\":" << maximum_scale << ",\"wrong_miniature_changed_pixels\":" << changed <<
         ",\"restored_pixels\":true,\"state_ownership_rng_restored\":true}\n";
     require(summary.good(), "Cannot write miniature path accounting");
-    std::cout << "PASS miniature path selection:11 actual-Level state rows,3 native320x480 readbacks; "
+    std::cout << "PASS miniature path selection: 11 actual-Level state rows, 3 native 320x480 readbacks; "
         "four-player sub0.25 gameplay stays ordinary, wrong miniature differs and zero-dt update restores it. "
         "No route or human readability acceptance.\n";
 }

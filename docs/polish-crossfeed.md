@@ -404,7 +404,8 @@ The earlier native clean/heavy pane checks remain a separate record.
 
 ### Reciprocal firing and lower-approach pressure (2026-10-24)
 
-The CPU [fixture](../scripts/acceptance/crossfeed/fixtures.cpp) now runs the
+The CPU [fixture](../scripts/acceptance/support/route_run.cpp) (since `HYG#85`
+shared with CQ and Press Tower) now runs the
 additional players' weapon phases after moving-projectile contacts and the
 primary player's launch, before Scene contact resolution. This follows
 `Level`'s firing order; mirrored teams still launch the subject first, rather

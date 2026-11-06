@@ -2,6 +2,7 @@
 #include "game/objects/weapon_builder.h"
 #include "game/objects/projectile_builder.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -24,38 +25,10 @@ namespace
     constexpr const char* projectile_names[]{ "spray", "jet", "rolling", "mist", "ball" };
     constexpr float fan_order[]{ 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
 
-    struct Fixtures
+    struct Fixtures : acceptance::JsonVariants
     {
-        rapidjson::Document source;
-        std::filesystem::path scratch;
-        size_t next = 0;
-
-        Fixtures(const std::filesystem::path& content, const std::filesystem::path& folder) : scratch(folder)
-        {
-            std::ifstream input(content / "tuning.json", std::ios::binary);
-            require(input.good(), "Cannot read authored gameplay tuning");
-            const std::string text{ std::istreambuf_iterator<char>(input), {} };
-            source.Parse(text.c_str());
-            require(!source.HasParseError(), "Cannot parse authored gameplay tuning");
-            std::filesystem::create_directories(scratch);
-        }
-
-        template<class Edit>
-        std::filesystem::path write(Edit edit)
-        {
-            rapidjson::Document document;
-            document.CopyFrom(source, document.GetAllocator());
-            edit(document);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(document.Accept(writer), "Cannot encode isolated gameplay tuning");
-            const auto path = scratch / ("variant-" + std::to_string(next++) + ".json");
-            std::ofstream output(path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write isolated gameplay tuning");
-            return path;
-        }
+        Fixtures(const std::filesystem::path& content, const std::filesystem::path& folder) :
+            acceptance::JsonVariants(content / "tuning.json", L"variant", folder) {}
 
         template<class Edit>
         GameTuning load(Edit edit)

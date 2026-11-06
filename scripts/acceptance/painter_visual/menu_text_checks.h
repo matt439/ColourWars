@@ -62,10 +62,9 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     };
 
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
@@ -101,7 +100,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_player_team(0, PlayerTeam::a); settings.set_stage("movement_course");
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
     };
     const auto open_probe = [&](MenuHeading heading)
     {
@@ -181,7 +180,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         {
             RectangleF bounds = expected.bounds[index]; bounds.inflate(Vector2F(3.0f));
             camera.calculate_view_rectangle(bounds);
-            const RectangleI pixels = countdown_crop_bounds(bounds);
+            const RectangleI pixels = pixel_bounds(bounds);
             const Frame actual_crop = foreground_crop(actual, pixels, 0);
             const Frame expected_crop = foreground_crop(expected.frame, pixels, 0);
             if (actual_crop.pixels != expected_crop.pixels)
@@ -272,20 +271,10 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     // original glyphs everywhere except '~'. No existing font or device changes.
     RenderResources& resources = *app.render_resources();
     const FontHandle old_font_handle = resources.resolve_sprite_font(old_footer.font);
-    const Font* source = resources.font(old_font_handle);
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character <= U'~'; ++character)
-    {
-        if (character == U'~') { continue; }
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Menu text font fixture lacks a baseline printable glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string narrow_name = "acceptance_menu_text_without_tilde";
-    resources.add_font(narrow_name, std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    const FontHandle narrow = resources.resolve_sprite_font(narrow_name);
-    require(resources.can_render(old_font_handle, L"OLD~ PROMPT") && !resources.can_render(narrow, L"~"),
-        "Menu text font-rebase fixture did not exclude the old text's glyph");
+    add_probe_font(resources, old_footer.font, narrow_name);
+    require(resources.can_render(old_font_handle, L"OLD~ PROMPT"),
+        "Menu text font-rebase fixture's old font cannot draw the old prompt");
     Presentation next = original;
     auto& next_text = const_cast<MenuText&>(next.menu_text());
     next_text.brand = L"NEW BRAND";

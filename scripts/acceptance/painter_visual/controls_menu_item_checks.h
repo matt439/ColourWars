@@ -22,7 +22,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     for (size_t row = 0; row < stick_roles.size(); ++row)
         { defaults[static_cast<size_t>(stick_roles[row])] = stick_legacy[row]; }
     Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
+    const PlaySettings& play = preferences_session.play_settings();
     const auto reset_preferences = [&]
     {
         PlaySettings fresh;
@@ -32,9 +32,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     reset_preferences();
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Settings-label fixture lost its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return acceptance::read_text(save_path);
     };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
@@ -64,7 +62,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); tick();
         if (sticks)
         {
@@ -92,11 +90,11 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         const Presentation& snapshot, const Labels& labels, const Values& values, bool require_fitting = false)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const auto project = [&](RectangleF bounds)
-            { camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds); };
+            { camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds); };
         const size_t count = sticks ? stick_roles.size() : controls_roles.size();
         std::vector<std::unique_ptr<UiText>> text;
         std::vector<float> scales;
@@ -189,7 +187,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         RectangleF selected = row_bounds[focused]; selected.inflate(art.focus_padding);
         compare_bounds(selected, "complete-focus-card");
         std::srand(5099); const int next_random = std::rand(); std::srand(5099);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Controls/Sticks label drawing changed frozen pixels or consumed random numbers");
         return actual;
     };
@@ -222,19 +220,8 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         { new_labels[static_cast<size_t>(stick_roles[row])] = next_sticks[row]; }
     Presentation old = original; const_cast<MenuText&>(old.menu_text()).items = old_labels;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.controls_settings().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Controls item replacement font lacks a baseline printable glyph"); glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_controls_items_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "Controls item replacement font still contains the old labels' glyph");
+    add_probe_font(*app.render_resources(), original.controls_settings().item_font, font_name);
     Presentation next = original; const_cast<MenuText&>(next.menu_text()).items = new_labels;
     const_cast<ControlsSettingsPresentation&>(next.controls_settings()).item_font = font_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
@@ -246,10 +233,10 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         Values values = initial_values(sticks);
         const Frame retained = compare("custom-long", sticks, 0, old, old_labels, values, true);
         presentation = next; tick();
-        require(retained.pixels == main_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Live Controls/Sticks item/font replacement rebased an existing page");
         tap(Key::down); tap(Key::up);
-        require(retained.pixels == main_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Controls/Sticks focus movement rebased old labels into the replacement font");
         compare("retained-old", sticks, 0, old, old_labels, values, true);
         if (!sticks)
@@ -261,7 +248,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
                 for (int move = 0; move < input_slots::pad_count; ++move) { tap(Key::left); }
                 compare("new-child-from-old-parent", true, 0, next, new_labels, initial_values(true));
                 tap(Key::down); tap(Key::right); tap(Key::escape); tick();
-                require(stack.depth() == 2 && saved_bytes() == before_child && retained.pixels == main_menu_frame(app).pixels,
+                require(stack.depth() == 2 && saved_bytes() == before_child && retained.pixels == stack_frame(app).pixels,
                     "Custom Sticks discard/return changed the old Controls labels, font, focus or save");
             }
         }
@@ -278,7 +265,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         static_cast<WindowNotify&>(app).on_deactivated(); tick();
         static_cast<WindowNotify&>(app).on_activated(); tick();
         app.keyboard()->on_key_up(Key::enter); tick(); tick();
-        require(saved_bytes() == unapplied && before_apply.pixels == main_menu_frame(app).pixels,
+        require(saved_bytes() == unapplied && before_apply.pixels == stack_frame(app).pixels,
             "Interrupted Controls/Sticks Enter applied pending settings or rebased cached labels");
         tap(Key::enter);
         require(sticks ? play.sticks[0].movement_deadzone == std::stoi(values[1]) : play.music_volume == 10,
@@ -305,7 +292,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         const Frame adopted = compare("reopened-new-font", sticks, 0, next, new_labels, values);
         require(adopted.pixels != retained.pixels, "Reopened Controls/Sticks did not adopt authored labels and its own font");
         presentation = original; tick(); tap(Key::down); tap(Key::up);
-        require(adopted.pixels == main_menu_frame(app).pixels,
+        require(adopted.pixels == stack_frame(app).pixels,
             "Controls/Sticks font reversal or focus movement changed the reopened text snapshot");
         compare("retained-new-after-reversal", sticks, 0, next, new_labels, values);
         const std::string before_discard = saved_bytes();

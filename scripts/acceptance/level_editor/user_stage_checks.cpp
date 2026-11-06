@@ -6,12 +6,12 @@
 #include "editor/content_catalog.h"
 #include "editor/user_stage_save.h"
 #include "game/contracts/user_stage_contract.h"
+#include "scripts/acceptance/support/isolated_save.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -19,27 +19,6 @@ namespace level_editor_acceptance
 {
     namespace
     {
-        std::optional<std::wstring> environment(const wchar_t* name)
-        {
-            size_t length = 0;
-            wchar_t* raw = nullptr;
-            const errno_t result = _wdupenv_s(&raw, &length, name);
-            const std::unique_ptr<wchar_t, decltype(&std::free)> buffer(raw, &std::free);
-            if (result != 0 || buffer == nullptr) return std::nullopt;
-            return std::wstring(buffer.get());
-        }
-
-        // Restores LOCALAPPDATA however the check ends.
-        struct IsolatedProfile
-        {
-            std::optional<std::wstring> previous = environment(L"LOCALAPPDATA");
-            explicit IsolatedProfile(const fs::path& profile)
-            {
-                require(_wputenv_s(L"LOCALAPPDATA", profile.c_str()) == 0, "Cannot isolate LOCALAPPDATA");
-            }
-            ~IsolatedProfile() { _wputenv_s(L"LOCALAPPDATA", previous ? previous->c_str() : L""); }
-        };
-
         template<typename Action>
         void refused(Action action, const std::string& reason, const char* message)
         {
@@ -65,7 +44,7 @@ namespace level_editor_acceptance
             LevelDocument document;
             document.save(source);
             const std::string saved = document.serialize();
-            const std::string source_bytes = contents(source);
+            const std::string source_bytes = read_text(source);
             const Entry level = entry(document, EntryKind::level);
             document.set_property(level, "display_name", "First pending stage name");
             const std::string first = document.serialize();
@@ -107,7 +86,7 @@ namespace level_editor_acceptance
                         diagnostic.find(rule) != std::string::npos,
                         "Reserved destination was accepted or lost its filename/shared refusal reason");
                     require(!fs::exists(root) && document.serialize() == first && document.path() == source &&
-                        document.dirty() && document.can_undo() && document.can_redo() && contents(source) == source_bytes,
+                        document.dirty() && document.can_undo() && document.can_redo() && read_text(source) == source_bytes,
                         "Reserved target preflight created a folder or changed the document/source/history");
                 }
             }
@@ -122,8 +101,8 @@ namespace level_editor_acceptance
             LevelDocument reopened;
             reopened.load(safe.file);
             require(document.path() == safe.file && !document.dirty() && reopened.serialize() == first &&
-                reopened.serialize() == document.serialize() && contents(source) == source_bytes &&
-                !fs::exists(root / "ColourWars" / "save_data.json"),
+                reopened.serialize() == document.serialize() && read_text(source) == source_bytes &&
+                !fs::exists(acceptance::save_path_in(root)),
                 "A safe neighboring stage did not save/reopen without changing the source or player save");
             std::cout << "PASS reserved stage destinations: 22 stems in three cases, lexical refusal before folder creation, "
                 "unchanged source/history and safe console_map save/reopen; no reserved path I/O\n";
@@ -135,8 +114,7 @@ namespace level_editor_acceptance
         check_reserved_stage_names(scratch);
         const fs::path profile = scratch / "user-stage-profile";
         fs::remove_all(profile);
-        fs::create_directories(profile);
-        const IsolatedProfile isolated(profile);
+        const acceptance::IsolatedSave isolated(profile);
 
         const fs::path folder = user_stage_folder();
         require(folder == profile / "ColourWars" / "stages" &&
@@ -147,7 +125,7 @@ namespace level_editor_acceptance
         // Read the manifest's level names independently, so a new shipped
         // stage does not need a count updated here.
         std::vector<std::string> manifest_stages;
-        const rapidjson::Document manifest = parse(contents(repo / "game/content/manifest.json"));
+        const rapidjson::Document manifest = parse(read_text(repo / "game/content/manifest.json"));
         for (const auto& kind : manifest["assets"].GetArray())
         {
             if (std::string(kind["kind"].GetString()) != "level") { continue; }
@@ -211,7 +189,7 @@ namespace level_editor_acceptance
         refused([&] { check_user_stage_target(folder, folder / "Taken.json", shipped); },
             "is not a file", "A folder in the way of the name must be refused");
 
-        require(!fs::exists(profile / "ColourWars" / "save_data.json"), "The editor must never write the player's save");
+        require(!fs::exists(isolated.save_path()), "The editor must never write the player's save");
         std::cout << "PASS Save to My Stages: game folder and name rules, shipped-name refusal, overwrite warning, "
             "folder created only on save, no save file\n";
     }

@@ -14,9 +14,8 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         L"Solo practice: choose Single Match" };
     static_assert(static_cast<size_t>(MenuItem::resume) - static_cast<size_t>(MenuItem::single_match) == 8);
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -50,7 +49,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
         settings = MatchSetup(); settings.set_best_of(best_of);
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (count) { stack.push(std::make_unique<MainMenuPlayerCount>(&context)); }
         else { stack.push(std::make_unique<MainMenuModeSelect>(&context)); }
         tick(); tick();
@@ -62,7 +61,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &copy);
         StateContext reference_stack;
-        reference_stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        reference_stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (join) { reference_stack.push(std::make_unique<MainMenuJoin>(&reference_context)); }
         else { reference_stack.push(std::make_unique<MainMenuHome>(&reference_context)); }
         app.renderer()->begin_frame(); reference_stack.draw(*app.renderer()); return read(*app.renderer());
@@ -189,13 +188,13 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             app.viewport_manager()->fullscreen_viewport());
         for (RectangleF bounds : text_bounds)
         {
-            camera.calculate_view_rectangle(bounds); const RectangleI pixels = countdown_crop_bounds(bounds);
+            camera.calculate_view_rectangle(bounds); const RectangleI pixels = pixel_bounds(bounds);
             float darkest = 1.0f, lightest = 0.0f; size_t ink = 0, pale = 0;
             for (int y = pixels.y; y < pixels.bottom(); ++y)
             {
                 for (int x = pixels.x; x < pixels.right(); ++x)
                 {
-                    const float luminance = hud_luminance(actual, hud_pixel_offset(actual, x, y));
+                    const float luminance = srgb_luminance(actual, pixel_offset(actual, x, y));
                     darkest = std::min(darkest, luminance); lightest = std::max(lightest, luminance);
                     if (luminance < 0.2f) { ++ink; } if (luminance > 0.5f) { ++pale; }
                 }
@@ -206,7 +205,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const auto& look = snapshot.main_menu();
         const RectangleF crop((Vector2F(menu_consts::DESIGN_RESOLUTION.x, snapshot.menu().footer_y) -
             look.setup_box_size) / 2.0f, look.setup_box_size);
-        save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(crop)), 0),
+        save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(crop)), 0),
             output / (stem + "-detail.ppm"));
         if (actual.width == 1280 && actual.height == 720)
         {
@@ -330,19 +329,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     Presentation old = authored(old_words), next = authored(new_words);
     const auto narrow_font = [&](const std::string& original_name, const std::string& name)
-    {
-        const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original_name));
-        std::vector<Glyph> glyphs;
-        for (char32_t character = U' '; character < U'~'; ++character)
-        {
-            const Glyph* glyph = source->find(character);
-            require(glyph != nullptr, "Setup font fixture lacks a baseline printable glyph"); glyphs.push_back(*glyph);
-        }
-        app.render_resources()->add_font(name,
-            std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-        require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(name), L"~"),
-            "Setup replacement font retained the old text's glyph");
-    };
+    { add_probe_font(*app.render_resources(), original_name, name); };
     narrow_font(original.menu().item_font, "acceptance_setup_item_without_tilde");
     narrow_font(original.menu().detail_font, "acceptance_setup_detail_without_tilde");
     auto& next_style = const_cast<MenuStyle&>(next.menu());

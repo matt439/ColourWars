@@ -57,7 +57,7 @@ struct MenuHelpText
 // The Keyboard Keys page (formerly Keyboard Jump): one capture row per
 // KeyboardAction, then Reset, Apply and Back. Control labels are the game's
 // (input_bindings.h); capture_ready_mouse is the Shoot row's prompt.
-struct KeyboardJumpMenuText
+struct KeyboardKeysMenuText
 {
 	std::wstring heading, move_left, move_right, jump, drop, shoot, pause, reset, help;
 	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_ready_mouse;
@@ -302,7 +302,7 @@ struct MenuText
 	std::wstring display_trial_countdown;
 	std::wstring options_palette_timing;
 	MenuHelpText help;
-	KeyboardJumpMenuText keyboard_jump;
+	KeyboardKeysMenuText keyboard_jump;
 	PadButtonsMenuText pad_buttons;
 	ProfilesMenuText profiles;
 	MenuStatusText status;

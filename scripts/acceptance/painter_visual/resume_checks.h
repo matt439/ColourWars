@@ -5,14 +5,12 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     // Finished matches write stage records into this matrix's own profile.
-    const NestedSaveProfile profile(output / "resume-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
-    // Keep this fixture's preferences in memory; only stage records are saved.
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
-    play.aim_marker = false;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
+    const acceptance::IsolatedSave profile(output / "resume-profile");
+    // This fixture's preferences are seeded in memory; only stage records are saved.
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { quiet_play(play); play.aim_marker = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters") };
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -132,8 +130,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         require(level.place_player(0, { 559.0f, 715.0f }), "Cannot place resume fixture over the drop platform");
         for (int step = 0; step < 30; ++step) { tick(); }
         Player& player = const_cast<Player&>(level.player(0));
-        const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::zero,
-            PlayerTeam::b, 0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+        const ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10), PlayerTeam::b, 0, Colour::white);
         player.on_contact(hit, Vector2F::zero, 0.0f);
         require(player.health() < tuning.player().starting_health, "Resume fixture did not receive a nonfatal hit");
         // Put health close to regeneration, then pay a fresh shot so ammo,

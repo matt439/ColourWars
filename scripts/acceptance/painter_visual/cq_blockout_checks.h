@@ -263,5 +263,5 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
     require(scope.good(), "CQ capture scope record write failed");
     std::cout << "PASS CQ-only hidden native 720p inspection: actual runtime overview, main/lower 1P, distributed 4P, "
         "actual StagePreview; five full frames/eight native crops; frozen state/fingerprint/RNG; "
-        "attended gameplay/readability/balance acceptance remains open\n";
+        "attended gameplay, readability and balance are outside this probe\n";
 }

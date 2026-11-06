@@ -19,20 +19,8 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         return words;
     }();
     const auto profile = output / (controls_pages ? "status-controls-profile" : "status-options-profile");
-    struct StatusProfile
-    {
-        std::wstring previous;
-        explicit StatusProfile(const std::filesystem::path& path)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated status profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(path);
-            require(_wputenv_s(L"LOCALAPPDATA", path.c_str()) == 0, "Cannot isolate save-status writes");
-        }
-        ~StatusProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(profile);
-    const auto save_path = profile / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto save_path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]
@@ -46,9 +34,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     };
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Status fixture lost its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     reset();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -84,7 +70,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         for (Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (page == 0) { stack.push(std::make_unique<MainMenuOptions>(&context)); }
         else { stack.push(std::make_unique<ControlsSettingsMenu>(&context)); }
         tick(); tick();
@@ -148,7 +134,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         // Preserve every measured glyph, including descenders within the
         // paper's bevel. The reference reconstructs that complete background.
         const RectangleF region = text.bounds();
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -161,7 +147,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         artwork.draw(list);
         list.set_filter(TextureFilter::linear); text.draw(list); const Frame reference = read(renderer);
         RectangleF projected = region; camera.calculate_view_rectangle(projected);
-        const RectangleI pixels = countdown_crop_bounds(projected);
+        const RectangleI pixels = pixel_bounds(projected);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "save-status-" + name + '-' + std::to_string(page) + '-' + std::to_string(state) + '-' +
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -174,7 +160,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         records << name << ',' << page << ',' << state << ',' << actual.width << ',' << actual.height << ',' <<
             font_for(snapshot, page) << ',' << raw.x << ',' << raw.y << ',' << scale << ',' << text.bounds().width << ",true\n";
         std::srand(7331); const int next_random = std::rand(); std::srand(7331);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Status redraw changed frozen pixels or consumed random numbers");
     };
     const auto failure = [&](int page)
@@ -221,18 +207,9 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             next_words.*members[index] = L"Saved " + std::to_wstring(index) + L'.';
         }
     }
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(
-        controls_pages ? original.controls_settings().help_font : original.prompt_bar().font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character); require(glyph != nullptr, "Status font lacks printable baseline glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string replacement = controls_pages ? "acceptance_controls_status_no_tilde" : "acceptance_options_status_no_tilde";
-    app.render_resources()->add_font(replacement, std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(replacement), L"~"),
-        "Replacement status font still renders the retained page's old glyph");
+    add_probe_font(*app.render_resources(),
+        controls_pages ? original.controls_settings().help_font : original.prompt_bar().font, replacement);
     Presentation old = original; const_cast<MenuText&>(old.menu_text()).status = old_words;
     Presentation next = original; const_cast<MenuText&>(next.menu_text()).status = next_words;
     // Full-width fitted status messages can occupy the bottom of the help
@@ -259,10 +236,10 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             const Presentation& snapshot = reopened ? next : old; const Status& words = reopened ? next_words : old_words;
             compare(reopened ? "reopened-new-pending" : "custom-old-pending", page, 0, snapshot, words, true);
             presentation = reopened ? old : next; tick();
-            const Frame pending = main_menu_frame(app);
+            const Frame pending = stack_frame(app);
             app.keyboard()->on_key_down(Key::enter); tick(); static_cast<WindowNotify&>(app).on_deactivated(); tick();
             static_cast<WindowNotify&>(app).on_activated(); tick(); app.keyboard()->on_key_up(Key::enter); tick(); tick();
-            require(saved_bytes() == before && pending.pixels == main_menu_frame(app).pixels,
+            require(saved_bytes() == before && pending.pixels == stack_frame(app).pixels,
                 "Interrupted status Apply saved or changed the retained pending page");
             compare("retained-after-interruption", page, 0, snapshot, words, true);
             apply(page); compare("retained-saved", page, 1, snapshot, words);

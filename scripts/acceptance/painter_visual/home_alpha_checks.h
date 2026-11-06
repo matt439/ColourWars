@@ -1,4 +1,4 @@
-// Draft for inclusion after save_status_checks.h and the ordinary menu probes.
+// Included after save_status_checks.h and the ordinary menu probes.
 // Both presets use real production pages and the normal input backend. A local
 // state stack initializes 13 pages directly: no StateContext update or input
 // event is needed to observe the captured background tint.
@@ -18,8 +18,8 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const Presentation original = presentation;
     require(original.main_menu().home_background_colour == Colour(176, 176, 168),
         "Home alpha opaque parity fixture differs from the reviewed default");
-    const NestedSaveProfile profile(output / "alpha-home-profile");
-    const auto save_path = output / "alpha-home-profile/ColourWars/save_data.json";
+    const acceptance::IsolatedSave profile(output / "alpha-home-profile");
+    const auto save_path = acceptance::save_path_in(output / "alpha-home-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play;
     play.music_volume = play.sfx_volume = 0; play.aim_sensitivity = 4;

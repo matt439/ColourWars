@@ -3,7 +3,6 @@
 // level as one validated undo step. Malformed text, another shape and an
 // object the receiving level would refuse leave that level untouched.
 #include "scripts/acceptance/level_editor/fixtures.h"
-#include <functional>
 #include <optional>
 #include <iostream>
 #include <stdexcept>
@@ -13,19 +12,6 @@ namespace level_editor_acceptance
 {
     namespace
     {
-        void refuses(const std::function<void()>& action, const std::string& expected, const char* message)
-        {
-            bool rejected = false;
-            try { action(); }
-            catch (const std::exception& error)
-            {
-                rejected = true;
-                require(std::string(error.what()).find(expected) != std::string::npos,
-                    std::string(message) + ": diagnostic was '" + error.what() + "'");
-            }
-            require(rejected, message);
-        }
-
         Entry last(const LevelDocument& document, EntryKind kind)
         {
             std::optional<Entry> found;

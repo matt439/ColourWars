@@ -82,8 +82,7 @@ void ferry_direction_paint(Application& app, TranslatingStructurePaintable& ferr
     if (half) { splash.x = ferry.bounds().center().x + 0.25f; splash.width = ferry.bounds().right() + 24.0f - splash.x; }
     const ProjectileTuning& paint = tuning.projectile(ProjectileType::spray);
     splash.offset(paint.details.col_rect_size / 2.0f);
-    const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 0 : 1, Colour::white,
-        app.render_resources(), resolve_projectile_strip(paint, *app.render_resources()), &paint);
+    const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 0 : 1, Colour::white);
     ferry.on_contact(shot, Vector2F::zero, 0.0f); ferry.update(10.0f);
 }
 
@@ -111,9 +110,8 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     for (auto& object : restored["collision_objects"].GetArray())
     { if (object.HasMember("motion")) { object["motion"]["team_a_heads"].SetString("right"); } }
     require(restored == original, "Ferry mirror changed more than authored headings");
-    rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer); mirrored.Accept(writer);
     const auto left_path = output / "ferry-direction-left-stage.json";
-    { std::ofstream file(left_path, std::ios::binary); file << buffer.GetString(); require(file.good(), "Cannot write isolated ferry stage"); }
+    acceptance::write_document(mirrored, left_path);
     LevelLoadedInfo left_info(path_to_utf8(left_path).c_str()); left_info.validate();
     const LevelLoadedInfo& right_info = *levels.get("turbulence_ferry_trial");
     const auto& stage_look = presentation.main_menu().stage_select;
@@ -129,7 +127,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         for (const int count : { 1, 2, 4 })
         {
-            std::srand(227); auto fixture = ferry_direction_level(app, left ? left_info : right_info,
+            auto fixture = ferry_direction_level(app, left ? left_info : right_info,
                 tuning, presentation, preferences, count, left); ++builds;
             Level& level = *fixture.level; auto& ferry = *fixture.ferry; const auto inputs = neutral_inputs();
             const auto step = [&]() { level.update(acceptance::slot_seats(level, inputs), dt); require(++updates <= 5000, "Ferry native update budget exceeded"); };
@@ -264,6 +262,6 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     summary << "{\"outcome\":\"passed\",\"level_builds\":" << builds << ",\"level_updates\":" << updates << ",\"readbacks\":" << reads <<
         ",\"full_frames\":" << contexts << ",\"native_crops\":" << crops << ",\"rows\":" << rows << ",\"states\":7,\"headings\":2,\"miniature_scale\":" << miniature_camera.scale << '}';
     summary.close(); require(summary.good(), "Cannot flush ferry native summary");
-    std::cout << "PASS ferry direction native matrix: both headings, native1/2/4P/miniature, current demand versus committed movement/end stops, "
+    std::cout << "PASS ferry direction native matrix: both headings, native 1/2/4P/miniature, current demand versus committed movement/end stops, "
         "shape distinctions, reduced-effects parity, bounded pure drawing and actual StagePreview. Controlled inspection; attended trial play remains separate.\n";
 }

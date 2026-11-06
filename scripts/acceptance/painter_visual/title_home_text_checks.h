@@ -1,5 +1,5 @@
 // Included by painter_visual.cpp directly after main_menu_checks.h, whose
-// main_menu_frame it uses; called by main_menu_matrix and menu_text_checks.h.
+// stack_frame it uses; called by main_menu_matrix and menu_text_checks.h.
 // Independent fixed Title/Home copy, including the currently hidden keyboard
 // connection hint. MainMenuOnly owns six-size parity; MenuTextOnly owns reloads.
 void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
@@ -9,8 +9,8 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const Words legacy{ L"COLOUR\nWARS", L"MAKE A MESS. MAKE IT YOURS.", L"LET'S PLAY",
         L"Connect a controller", L"Paint the arena. Claim the win." };
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
@@ -38,7 +38,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (page == 0) { stack.push(std::make_unique<MainMenuTitle>(&context)); }
         else if (page == 1) { stack.push(std::make_unique<MainMenuHome>(&context)); }
         else { stack.push(std::make_unique<MainMenuModeSelect>(&context)); }
@@ -50,7 +50,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const Words& words, size_t focused = 0)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu(); const auto& art = look.art;
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> text;
@@ -104,7 +104,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const auto compare_bounds = [&](RectangleF bounds, const std::string& role, bool visible)
         {
             bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-            const RectangleI pixels = countdown_crop_bounds(bounds);
+            const RectangleI pixels = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
             const std::string stem = "title-home-text-" + name + '-' + (home ? "home-" : "title-") + role + '-' +
                 std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -131,7 +131,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             compare_bounds(start, "complete-start-card", true);
         }
         std::srand(6131); const int next_random = std::rand(); std::srand(6131);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Title/Home fixed text drawing changed frozen pixels or consumed random numbers");
         return actual;
     };
@@ -178,14 +178,14 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         next_style.item_font = replacement_font(original.menu().item_font, "acceptance_title_start_without_tilde");
         next_style.detail_font = replacement_font(original.menu().detail_font, "acceptance_title_detail_without_tilde");
         next.validate_resources(*app.render_resources(), *app.audio_resources());
-        presentation = next; open(2); const Frame next_mode = main_menu_frame(app);
+        presentation = next; open(2); const Frame next_mode = stack_frame(app);
         const auto interrupted_enter = [&](const Frame& before)
         {
             app.keyboard()->on_key_down(Key::enter); tick();
             static_cast<WindowNotify&>(app).on_deactivated(); tick();
             static_cast<WindowNotify&>(app).on_activated(); tick();
             app.keyboard()->on_key_up(Key::enter); tick(); tick();
-            require(stack.depth() == 2 && before.pixels == main_menu_frame(app).pixels,
+            require(stack.depth() == 2 && before.pixels == stack_frame(app).pixels,
                 "Interrupted Title/Home Enter release selected a page or rebased cached fixed text");
         };
         for (int repeat = 0; repeat < 2; ++repeat)
@@ -193,12 +193,12 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             const std::string suffix = '-' + std::to_string(repeat);
             presentation = old; open(0); const Frame old_title = compare("custom-old" + suffix, false, old, old_words);
             presentation = next; tick();
-            require(old_title.pixels == main_menu_frame(app).pixels,
+            require(old_title.pixels == stack_frame(app).pixels,
                 "Live Title text/font assignment rebased its multiline wordmark or Start-card bounds");
             interrupted_enter(old_title); compare("retained-old-title" + suffix, false, old, old_words);
             tap(Key::enter); tick(); const Frame new_home = compare("new-home-from-old-title" + suffix, true, next, new_words);
             presentation = original; tick(); tap(Key::down); tap(Key::up);
-            require(new_home.pixels == main_menu_frame(app).pixels,
+            require(new_home.pixels == stack_frame(app).pixels,
                 "Home subtitle/font reversal or focus movement changed its page snapshot");
             compare("retained-new-home" + suffix, true, next, new_words);
             tap(Key::escape); tick();
@@ -207,17 +207,17 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             presentation = old; tick(); tap(Key::enter); tick();
             const Frame old_home = compare("old-home-from-default-title" + suffix, true, old, old_words);
             presentation = next; tick(); interrupted_enter(old_home);
-            require(old_home.pixels == main_menu_frame(app).pixels,
+            require(old_home.pixels == stack_frame(app).pixels,
                 "Home text/font assignment or interrupted selection rebased its old subtitle");
             compare("retained-old-home" + suffix, true, old, old_words);
             tap(Key::enter); tick();
-            require(next_mode.pixels == main_menu_frame(app).pixels,
+            require(next_mode.pixels == stack_frame(app).pixels,
                 "Fresh Home selection after focus return did not reach the actual Mode page");
             tap(Key::escape); tick(); compare("new-home-after-mode-back" + suffix, true, next, new_words);
             tap(Key::escape); tick(); const Frame new_title = compare("reopened-new-title" + suffix, false, next, new_words);
             require(new_title.pixels != old_title.pixels, "Reopened Title did not adopt new wordmark/detail/item fonts and text");
             presentation = original; tick();
-            require(new_title.pixels == main_menu_frame(app).pixels,
+            require(new_title.pixels == stack_frame(app).pixels,
                 "Title source reversal changed its reopened wordmark, fixed copy or Start-card bounds");
             compare("retained-new-title-after-reversal" + suffix, false, next, new_words);
             tap(Key::enter); tick();

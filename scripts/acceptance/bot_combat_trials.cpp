@@ -1,10 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
-#include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <array>
 #include <fstream>
 #include <iomanip>
@@ -228,20 +224,12 @@ namespace
         }
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, trial_steps);
-#endif
-            level.reset(); level = world.build(settings); prepare(*level, world, trial);
-            tape.playback = true;
             const std::vector<PlayerInputData> physical = physical_inputs();
-            for (int tick = 0; tick < trial_steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == trial_steps && snapshot(*level) == expected,
-                "Combat final-input replay changed players, projectile count or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, trial_steps)).empty(),
-                "Combat final-input replay changed complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, trial_steps, physical, [&]
+            {
+                auto replayed = world.build(settings); prepare(*replayed, world, trial);
+                return replayed;
+            }, "Combat");
         }
         return result;
     }

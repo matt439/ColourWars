@@ -138,7 +138,7 @@ namespace turbulence_slopes_acceptance
         {
             if (!source.name.starts_with("shoulder_shoe")) { continue; }
             require(source.area[0] == 1920.0 && source.area[1] == 1920.0 && source.area[2] + source.area[3] == 288.0,
-                "Shoe must retain reachable top/underside and one exposed24-unit end; its abutting end is buried");
+                "Shoe must retain reachable top/underside and one exposed 24-unit end; its abutting end is buried");
         }
         colourwars_editor::LevelDocument document(context.content / "tuning.json"); document.load(context.stage);
         colourwars_editor::BlockoutTuning tuning;
@@ -169,7 +169,7 @@ namespace turbulence_slopes_acceptance
             }
         }
         csv.close(); require(csv.good(), "Cannot finish shoulder budget receipt");
-        std::cout << "PASS shoulder composite public1/4 loads+181countin: independent unit-edge/editor/runtime source-face budgets "
-            "agree at172800 (+7680); ramps remain unscored/paint-pass, flat shoes retain exposed top+underside/end credit\n";
+        std::cout << "PASS shoulder composite public 1/4 loads + 181 count-in updates: independent unit-edge/editor/runtime source-face budgets "
+            "agree at 172800 (+7680); ramps remain unscored/paint-pass, flat shoes retain exposed top+underside/end credit\n";
     }
 }

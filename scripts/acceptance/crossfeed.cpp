@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     return acceptance::run_probe("Crossfeed", [&]
     {
         require(argc == 2, "Usage: crossfeed.exe <content directory>");
-        Services services(argv[1]);
+        Services services(argv[1], "crossfeed", "Crossfeed");
         std::cout << "NOTE Crossfeed H1-H8 baseline dt=" << dt <<
             "; actual authored Player/Scene; no devices, player save or position injection after construction\n";
         geometry_checks(services, std::filesystem::absolute(argv[0]).parent_path());
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         }
         opening_checks(services);
         std::cout << "PASS Crossfeed baseline feasibility and measured score/tool access. "
-            "Human pressure, camera warning, weapon balance and physical-pad acceptance remain open\n";
+            "Human pressure, camera warning, weapon balance and physical pads are outside this probe\n";
         return 0;
     });
 }

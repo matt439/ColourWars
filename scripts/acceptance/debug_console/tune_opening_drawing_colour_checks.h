@@ -132,7 +132,7 @@
 			pending->edits().empty() && pending->current().text() == baseline,
 			"Independent reset restores the exact initial document after retaining the constructed Silhouette");
 		const JsonSpanDocument baseline_document(baseline, "silhouette-body-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.silhouette"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "opening.silhouette"), "\"2060C080\"");
 		require(impl.execute("tune presentation.opening.silhouette 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->silhouette == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -169,7 +169,7 @@
 				"External silhouette_art.shade_width 0.004 below pen_width 0.008 refuses the complete merged candidate while retaining exact source/staged/live/current/baseline and every ledger path/baseline/current token even with force");
 			unchanged();
 		}
-		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"),
+		const std::string overlay_only = saved_document.replaced(require_leaf(saved_document, "debug_overlay.colour"),
 			std::string("\"") + unrelated_word + '"');
 		auto restored_colours = pending_colours;
 		restored_colours[silhouette_body_colour_index] = labrador::Colour(32, 96, 192, 128);
@@ -347,7 +347,7 @@
 			pending->edits().empty() && pending->current().text() == baseline,
 			"Independent reset restores the exact initial document while retaining both constructed note consumers");
 		const JsonSpanDocument baseline_document(baseline, "scribble-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.scribble"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "opening.scribble"), "\"2060C080\"");
 		require(impl.execute("tune presentation.opening.scribble 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->scribble == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -386,7 +386,7 @@
 				"External monitor_art.corner_step 0.002 below pen_width 0.004 refuses the complete merged candidate while retaining exact source/staged/live/current/baseline and every ledger path/baseline/current token even with force");
 			unchanged();
 		}
-		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"),
+		const std::string overlay_only = saved_document.replaced(require_leaf(saved_document, "debug_overlay.colour"),
 			std::string("\"") + unrelated_word + '"');
 		auto restored_colours = pending_colours;
 		restored_colours[scribble_colour_index] = labrador::Colour(32, 96, 192, 128);

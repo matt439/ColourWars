@@ -15,20 +15,8 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     };
     const Values legacy = words_of(L"On", L"Off", L"Random");
     const auto profile = output / (controls ? "values-controls-profile" : "values-options-profile");
-    struct ValueProfile
-    {
-        std::wstring previous;
-        explicit ValueProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated value profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0, "Cannot isolate setting-value saves");
-        }
-        ~ValueProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(profile);
-    const auto save_path = profile / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto save_path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]
@@ -42,8 +30,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     };
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary); require(stream.good(), "Value fixture lost its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     reset();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -77,7 +64,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         for (Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (controls) { stack.push(std::make_unique<ControlsSettingsMenu>(&context)); }
         else { stack.push(std::make_unique<MainMenuOptions>(&context)); }
         tick(); tick(); require(stack.depth() == 2, "Value fixture failed to open its production page");
@@ -132,7 +119,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         require(panel.contains(text.bounds()) && text.bounds().width <= limit.x + 0.01f && text.bounds().height <= limit.y + 0.01f,
             "Independent setting value escaped its available column or row");
         const RectangleF row_bounds = RectangleF::union_of(label_text.bounds(), text.bounds());
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -145,7 +132,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         const MenuPaperArtwork artwork(panel, app.render_resources(), &style, &art, &focus); artwork.draw(list);
         list.set_filter(TextureFilter::linear); label_text.draw(list); text.draw(list); const Frame reference = read(renderer);
         RectangleF region = focused ? row_bounds : text.bounds(); if (focused) { region.inflate(art.focus_padding); }
-        RectangleF projected = region; camera.calculate_view_rectangle(projected); const RectangleI pixels = countdown_crop_bounds(projected);
+        RectangleF projected = region; camera.calculate_view_rectangle(projected); const RectangleI pixels = pixel_bounds(projected);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "setting-value-" + name + '-' + std::to_string(row) + '-' + std::to_string(actual.width) + 'x' +
             std::to_string(actual.height);
@@ -161,7 +148,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             actual.width << ',' << actual.height << ',' << font << ',' << raw.x << ',' << raw.y << ',' << scale << ',' <<
             width_scale << ',' << height_scale << ",true\n";
         std::srand(8819); const int next_random = std::rand(); std::srand(8819);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Setting-value redraw changed frozen pixels or consumed random numbers");
     };
     // Leave focus on Apply, with windowed Off and Random selected in Options;
@@ -268,10 +255,10 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         const Presentation& snapshot = reopened ? next : old; const Values& words = reopened ? next_words : long_words;
         presentation = snapshot; reset(); open(); presentation = reopened ? old : next; tick();
         exercise(reopened ? "reopened-new" : "retained-old", snapshot, words, true, reopened);
-        const std::string before = saved_bytes(); const Frame pending = main_menu_frame(app);
+        const std::string before = saved_bytes(); const Frame pending = stack_frame(app);
         app.keyboard()->on_key_down(Key::enter); tick(); static_cast<WindowNotify&>(app).on_deactivated(); tick();
         static_cast<WindowNotify&>(app).on_activated(); tick(); app.keyboard()->on_key_up(Key::enter); tick(); tick();
-        require(saved_bytes() == before && pending.pixels == main_menu_frame(app).pixels,
+        require(saved_bytes() == before && pending.pixels == stack_frame(app).pixels,
             "Interrupted value Apply saved or changed the retained pending page");
         compare_pending("after-interruption", snapshot, words); apply(); compare_pending("after-apply", snapshot, words);
         const auto committed = saved_bytes(); require(committed != before, "Fresh value Apply did not persist edits");

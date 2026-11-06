@@ -37,15 +37,13 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
     };
     std::array<std::vector<int>, 4> ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { ledgers[index] = ledger(cases[index].session); }
-    const NestedSaveProfile profile(output / "session-result-profile");
+    const acceptance::IsolatedSave profile(output / "session-result-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Session result's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "session-result-profile/ColourWars/save_data.json", std::ios::binary);
-        require(file.good(), "Session result probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -118,7 +116,7 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         for (const Key key : { Key::up, Key::down, Key::left, Key::right,
             Key::enter, Key::escape, Key::space, Key::backspace }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, fixture.info, fixture.session, revealed));
         ++openings; tick();
         require(stack.depth() == 2, "Session result consumed entry input or lost its actual page"); unchanged();
@@ -134,8 +132,9 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         require(readbacks < 94, "Session result exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // Preflight the real glyph extents: winner ends329.21875, score ends402,
-    // outcomes end460.6640625 (default) or467 (custom g/braces), plates start482.
+    // Preflight the real glyph extents: winner ends at 329.21875, score at 402,
+    // outcomes end at 460.6640625 (default) or 467 (custom g/braces), plates start
+    // at 482.
     // Multiples of three keep exact floor/ceil crops at both native sizes.
     const RectangleF row_region(420.0f, 333.0f, 1080.0f, 141.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
@@ -143,7 +142,7 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     RectangleF result_bounds;
     const auto reference = [&](const ResultCase& fixture, const Presentation& snapshot, const std::wstring& literal,
@@ -270,21 +269,8 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
     };
     assign(const_cast<MenuText&>(old.menu_text()).results, old_words);
     assign(const_cast<MenuText&>(next.menu_text()).results, next_words);
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.menu().detail_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* source_glyph = source->find(character);
-        require(source_glyph != nullptr, "Session outcome font fixture lacks an original printable glyph");
-        Glyph glyph = *source_glyph;
-        if (character == U'{' || character == U'}') { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-        glyphs.push_back(glyph);
-    }
     const std::string next_font = "session_result_braces";
-    app.render_resources()->add_font(next_font,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_font), L"~"),
-        "Session outcome replacement font still renders retained old copy's tilde");
+    add_probe_font(*app.render_resources(), original.menu().detail_font, next_font, is_brace);
     const_cast<MenuStyle&>(next.menu()).detail_font = next_font;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     next.validate_resources(*app.render_resources(), *app.audio_resources());
@@ -330,10 +316,10 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         "\"csv_rows\":30,\"compact_crops\":8,\"page_openings\":13,\"proceed_pops\":13,\"font_negative_controls\":4,"
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":710640}\n";
     require(summary.good(), "Cannot retain Session result summary");
-    std::cout << "PASS Session outcome leaf: four real best-of3/5 branches and independent plain literals including braces; "
-        "actual centered unscaled zero-offset outcome, unchanged score and generated Round heading; captured copy/detailfont "
-        "through assignment/reopen/reversal, real unrevealed/revealed delays, premature Enter/Escape refusal and13fresh pops; "
-        "frozen ledger/setup/private Save/RNG, zero-update720/1080/720resize,76updates94readbacks30CSVrows4fontcontrols "
-        "and8compactcrops710640pixels/2132036PPMbytes,oneprivate seedSave. Both presets normalreader; "
+    std::cout << "PASS Session outcome leaf: four real best-of 3/5 branches and independent plain literals including braces; "
+        "actual centered unscaled zero-offset outcome, unchanged score and generated Round heading; captured copy/detail font "
+        "through assignment/reopen/reversal, real unrevealed/revealed delays, premature Enter/Escape refusal and 13 fresh pops; "
+        "frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, 76 updates, 94 readbacks, 30 CSV rows, 4 font controls "
+        "and 8 compact crops of 710640 pixels/2132036 PPM bytes, one private seed Save. Both presets, normal reader; "
         "no match/global-input/physical-pad/listening/human/performance acceptance.\n";
 }

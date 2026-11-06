@@ -2,7 +2,7 @@
 #include "game/states/display_settings_trial.h"
 #include "game/config/settings_session.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -22,50 +22,6 @@ using labrador::ScreenResolution;
 namespace
 {
     using acceptance::require;
-
-    // All Save calls happen after replacing LOCALAPPDATA in this process.
-    // Cleanup removes only these individually created files/directories.
-    class IsolatedSaveDirectory
-    {
-    public:
-        IsolatedSaveDirectory()
-        {
-            wchar_t* previous = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the original LOCALAPPDATA");
-            if (previous != nullptr) { previous_ = previous; std::free(previous); }
-            const std::filesystem::path temporary = std::filesystem::temp_directory_path();
-            wchar_t unique[MAX_PATH] = {};
-            require(GetTempFileNameW(temporary.c_str(), L"cwd", 0, unique) != 0,
-                "Cannot reserve display-trial acceptance folder");
-            root_ = unique;
-            require(DeleteFileW(unique) != FALSE && std::filesystem::create_directory(root_),
-                "Cannot create display-trial acceptance folder");
-            require(_wputenv_s(L"LOCALAPPDATA", root_.c_str()) == 0,
-                "Cannot isolate display-trial saves");
-        }
-
-        ~IsolatedSaveDirectory()
-        {
-            _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
-            std::error_code ignored;
-            std::filesystem::remove_all(root_, ignored);
-        }
-
-        std::filesystem::path save_path() const { return root_ / L"ColourWars" / L"save_data.json"; }
-
-    private:
-        std::filesystem::path root_;
-        std::wstring previous_;
-    };
-
-    std::string contents(const std::filesystem::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        require(stream.good(), "Cannot read isolated display-trial save");
-        return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-    }
 
     bool same_play(const PlaySettings& actual, const PlaySettings& expected)
     {
@@ -186,9 +142,9 @@ namespace
     }
 
     void require_unchanged(const Save& save, const SaveData& before,
-        const IsolatedSaveDirectory& directory, const std::string& saved)
+        const acceptance::IsolatedSave& directory, const std::string& saved)
     {
-        require(same_save(save.save_data(), before) && contents(directory.save_path()) == saved,
+        require(same_save(save.save_data(), before) && directory.save_bytes() == saved,
             "Unconfirmed display trial changed active or persisted preferences");
     }
 
@@ -204,11 +160,11 @@ namespace
             "A terminal display trial changed result or countdown");
     }
 
-    void check_configuration(const IsolatedSaveDirectory& directory)
+    void check_configuration(const acceptance::IsolatedSave& directory)
     {
         Save save = seed_save(); SettingsSession save_session(save);
         const SaveData before = save.save_data();
-        const std::string saved = contents(directory.save_path());
+        const std::string saved = directory.save_bytes();
         int calls = 0;
         const std::function<void(ScreenResolution, bool)> apply = [&](ScreenResolution, bool) { ++calls; };
         const auto rejects = [&](Save* target, DisplaySettingsChoice candidate,
@@ -255,7 +211,7 @@ namespace
         require_unchanged(save, before, directory, saved);
     }
 
-    void check_cancel_and_lifetime(const IsolatedSaveDirectory& directory)
+    void check_cancel_and_lifetime(const acceptance::IsolatedSave& directory)
     {
         for (bool previous_actual_fullscreen : { false, true })
         {
@@ -263,7 +219,7 @@ namespace
             {
                 Save save = seed_save(); SettingsSession save_session(save);
                 const SaveData before = save.save_data();
-                const std::string saved = contents(directory.save_path());
+                const std::string saved = directory.save_bytes();
                 std::vector<DisplayCall> calls;
                 auto candidate = choice(candidate_fullscreen);
                 const auto captured = candidate;
@@ -301,13 +257,13 @@ namespace
         }
     }
 
-    void check_countdown(const IsolatedSaveDirectory& directory)
+    void check_countdown(const acceptance::IsolatedSave& directory)
     {
         for (float duration : { 1.0f, 10.0f, 60.0f })
         {
             Save save = seed_save(); SettingsSession save_session(save);
             const SaveData before = save.save_data();
-            const std::string saved = contents(directory.save_path());
+            const std::string saved = directory.save_bytes();
             std::vector<DisplayCall> calls;
             DisplaySettingsTrial trial(&save, choice(), false,
                 [&](ScreenResolution resolution, bool fullscreen) { calls.push_back({ resolution, fullscreen }); }, duration);
@@ -332,7 +288,7 @@ namespace
         }
         Save save = seed_save(); SettingsSession save_session(save);
         const SaveData before = save.save_data();
-        const std::string saved = contents(directory.save_path());
+        const std::string saved = directory.save_bytes();
         int calls = 0;
         DisplaySettingsTrial hitch(&save, choice(), false, [&](ScreenResolution, bool) { ++calls; }, 15.0f);
         hitch.begin(); hitch.advance((std::numeric_limits<float>::max)());
@@ -341,13 +297,13 @@ namespace
         require_unchanged(save, before, directory, saved);
     }
 
-    void check_keep_and_current_preferences(const IsolatedSaveDirectory& directory)
+    void check_keep_and_current_preferences(const acceptance::IsolatedSave& directory)
     {
         for (bool fullscreen : { false, true })
         {
             Save save = seed_save(); SettingsSession save_session(save);
             const SaveData before = save.save_data();
-            const std::string saved = contents(directory.save_path());
+            const std::string saved = directory.save_bytes();
             const auto candidate = choice(fullscreen);
             std::vector<DisplayCall> calls;
             {
@@ -365,7 +321,7 @@ namespace
                 require(save_session.set_play_settings_and_save(changed), "Cannot seed an independent preferences change");
                 const LastMatchSetup changed_setup = setup(true);
                 require(save.remember_match_setup_and_save(changed_setup), "Cannot seed an independent remembered setup");
-                const std::string changed_file = contents(directory.save_path());
+                const std::string changed_file = directory.save_bytes();
                 trial.advance(1.0f);
                 require(!trial.result(),
                     "Independent preference commit completed the display trial");
@@ -379,9 +335,9 @@ namespace
                 require(same_setup(save.last_match_setup(), current.last_match), "Keep overwrote current remembered choices");
                 require(calls.size() == 1, "Keep reapplied or rolled back the accepted display");
                 require_reloaded(save);
-                const std::string kept_file = contents(directory.save_path());
+                const std::string kept_file = directory.save_bytes();
                 terminal_noops(trial);
-                require(calls.size() == 1 && contents(directory.save_path()) == kept_file,
+                require(calls.size() == 1 && directory.save_bytes() == kept_file,
                     "Repeated terminal actions changed a kept trial or its file");
             }
             require(calls.size() == 1, "Destruction rolled back a kept display");
@@ -389,7 +345,7 @@ namespace
         }
     }
 
-    void check_revert_preserves_current_setup(const IsolatedSaveDirectory& directory)
+    void check_revert_preserves_current_setup(const acceptance::IsolatedSave& directory)
     {
         Save save = seed_save(); SettingsSession save_session(save);
         int calls = 0;
@@ -398,7 +354,7 @@ namespace
         trial.begin();
         require(save.remember_match_setup_and_save(setup(true)), "Cannot update remembered setup during display trial");
         const SaveData current = save.save_data();
-        const std::string bytes = contents(directory.save_path());
+        const std::string bytes = directory.save_bytes();
         trial.cancel();
         require_result(trial, DisplayTrialResult::reverted);
         require(calls == 2, "Revert did not restore the display exactly once");
@@ -408,12 +364,12 @@ namespace
 
     // The save writes a uniquely named temporary (replace_file_atomically), so
     // the failure is the replacing move, refused by a lock on the old save.
-    void check_failed_save(const IsolatedSaveDirectory& directory)
+    void check_failed_save(const acceptance::IsolatedSave& directory)
     {
         {
             Save save = seed_save(); SettingsSession save_session(save);
             const PlaySettings before_play = save_session.play_settings();
-            const std::string old_file = contents(directory.save_path());
+            const std::string old_file = directory.save_bytes();
             const auto candidate = choice(true);
             int calls = 0;
             {
@@ -426,13 +382,13 @@ namespace
                 require(lock.release(), "Cannot release isolated save replacement");
                 require_result(trial, DisplayTrialResult::save_failed);
                 require_choice(save, candidate);
-                require(same_play(save_session.play_settings(), before_play) && contents(directory.save_path()) == old_file,
+                require(same_play(save_session.play_settings(), before_play) && directory.save_bytes() == old_file,
                     "A failed Keep damaged the old save or unrelated preferences");
                 terminal_noops(trial);
             }
             require(calls == 1, "Failed persistence rolled back the accepted active display");
-            require(contents(directory.save_path()) == old_file &&
-                !acceptance::temporary_beside(directory.save_path()), "Failed Keep left a partial persisted file");
+            require(directory.save_bytes() == old_file &&
+                !directory.temporary_left(), "Failed Keep left a partial persisted file");
             Save old; SettingsSession old_session(old);
             old_session.load_save_file();
             require(old.resolution() == ScreenResolution::s_2560_1440 && !old.fullscreen() &&
@@ -447,11 +403,11 @@ namespace
         }
     }
 
-    void check_reentrant_cancel(const IsolatedSaveDirectory& directory)
+    void check_reentrant_cancel(const acceptance::IsolatedSave& directory)
     {
         Save save = seed_save(); SettingsSession save_session(save);
         const SaveData before = save.save_data();
-        const std::string saved = contents(directory.save_path());
+        const std::string saved = directory.save_bytes();
         std::vector<DisplayCall> calls;
         DisplaySettingsTrial* live = nullptr;
         int depth = 0, maximum_depth = 0;
@@ -485,7 +441,7 @@ namespace
         require(calls.size() == 2, "Reentrant terminal events applied display again");
     }
 
-    void check_display_exceptions(const IsolatedSaveDirectory& directory)
+    void check_display_exceptions(const acceptance::IsolatedSave& directory)
     {
         for (bool unknown : { false, true })
         {
@@ -493,7 +449,7 @@ namespace
             {
                 Save save = seed_save(); SettingsSession save_session(save);
                 const SaveData before = save.save_data();
-                const std::string saved = contents(directory.save_path());
+                const std::string saved = directory.save_bytes();
                 std::vector<DisplayCall> calls;
                 DisplaySettingsTrial trial(&save, choice(true), true,
                     [&](ScreenResolution resolution, bool fullscreen)
@@ -516,7 +472,7 @@ namespace
 
             Save save = seed_save(); SettingsSession save_session(save);
             const SaveData before = save.save_data();
-            const std::string saved = contents(directory.save_path());
+            const std::string saved = directory.save_bytes();
             int calls = 0;
             {
                 DisplaySettingsTrial trial(&save, choice(), false,
@@ -558,7 +514,7 @@ int main(int argc, char** /*argv*/)
     return acceptance::run_probe("display trial", [&]
     {
         require(argc == 2, "Usage: display_trial.exe <staged content directory>");
-        const IsolatedSaveDirectory directory;
+        const acceptance::IsolatedSave directory(L"display-trial");
         check_configuration(directory);
         check_cancel_and_lifetime(directory);
         check_countdown(directory);

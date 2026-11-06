@@ -3,7 +3,7 @@
 #include "editor/path_text.h"
 #include "game/contracts/paint_face_geometry.h"
 #include "game/contracts/fixed_slab_paint_geometry.h"
-#include "editor/horizontal_authoring.h"
+#include "editor/motion_authoring.h"
 #include "editor/slab_authoring.h"
 
 #include <algorithm>
@@ -182,7 +182,7 @@ namespace colourwars_editor
             bool vertical = false;
             if (moving)
             {
-                const auto spec = decode_horizontal_motion(object);
+                const auto spec = decode_motion(object);
                 offset = horizontal_motion_contract::offset_at(spec, spec.initial_phase);
                 vertical = spec.vertical();
             }

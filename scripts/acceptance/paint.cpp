@@ -4,6 +4,7 @@
 #include "game/objects/projectile_spray.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>

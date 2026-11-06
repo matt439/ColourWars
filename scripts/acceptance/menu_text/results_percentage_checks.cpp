@@ -194,7 +194,7 @@ namespace menu_text_acceptance
             const float width = solo ? 1300.0f : 962.0f;
             require(maximum == width && world.render.measure_text(handle, L"~88.8%") == labrador::Vector2F(width, 20.0f) &&
                 world.render.measure_text(handle, L"~100.0%").x == width - 88.0f,
-                "Reference percentage geometry must include the wider earlier string, rather than assume100.0% is widest");
+                "Reference percentage geometry must include the wider earlier string, rather than assume 100.0% is widest");
             const auto& look = edge.results_menu();
             require(look.box_size == labrador::Vector2F(1300.0f, 860.0f) && look.fill_box_size == labrador::Vector2F(700.0f, 120.0f) &&
                 look.fill_box_y_offset == 380.0f && look.team_fill_border == labrador::Vector2F(10.0f) && look.art.focus_padding == labrador::Vector2F(28.0f, 18.0f),

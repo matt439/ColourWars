@@ -1,15 +1,16 @@
 #include "game/pch.h"
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/structure.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
-#include "engine/input/mouse.h"
 
 #include <array>
 #include <cstdlib>
@@ -33,8 +34,7 @@ namespace
         return std::abs(first - second) < 0.0001f;
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     auto observation(const IdleDrip& drip)
     {
@@ -63,46 +63,12 @@ namespace
     constexpr std::array supported_tools{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket };
     constexpr std::array roster{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::roller };
 
-    class ContentVariant
+    // Edited copies of one content file, each in its own scratch file.
+    class ContentVariant : public acceptance::JsonVariants
     {
     public:
-        explicit ContentVariant(const std::filesystem::path& original)
-        {
-            std::ifstream stream(original);
-            require(stream.good(), "Cannot read idle-drip acceptance content");
-            this->source_ = std::string(std::istreambuf_iterator<char>(stream), {});
-            wchar_t name[MAX_PATH]{};
-            const auto temporary = std::filesystem::temp_directory_path();
-            require(GetTempFileNameW(temporary.c_str(), L"cwd", 0, name) != 0,
-                "Cannot reserve idle-drip acceptance content file");
-            this->path_ = name;
-        }
-
-        ~ContentVariant()
-        {
-            std::error_code ignored;
-            std::filesystem::remove(this->path_, ignored);
-        }
-
-        template<typename Edit>
-        const std::filesystem::path& write(Edit edit) const
-        {
-            rapidjson::Document json;
-            json.Parse(this->source_.c_str());
-            require(!json.HasParseError(), "Cannot parse idle-drip acceptance content");
-            edit(json);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream stream(this->path_);
-            stream.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            require(stream.good(), "Cannot write idle-drip acceptance content");
-            return this->path_;
-        }
-
-    private:
-        std::filesystem::path path_;
-        std::string source_;
+        explicit ContentVariant(const std::filesystem::path& original) :
+            acceptance::JsonVariants(original, L"idle-drip-content") {}
     };
 
     // Only metadata is loaded. These objects never create a device or a save.
@@ -116,7 +82,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "Level" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         Partitioner partitioner;
         std::unique_ptr<LevelBuilder> builder;
 
@@ -125,22 +90,7 @@ namespace
             tuning((tuning_source.empty() ? content / "tuning.json" : tuning_source).string().c_str()),
             presentation((content / "presentation.json").string().c_str())
         {
-            for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                this->render.add_sprite_sheet(sheet, read_sprite_sheet(
-                    (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* font : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(font) + ".spritefont")).string());
-                auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-                this->render.add_font(font, std::move(loaded));
-            }
-            this->audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, this->render, this->audio);
             auto info = std::make_unique<LevelLoadedInfo>(
                 (content / "levels/movement_course.json").string().c_str());
             info->validate();

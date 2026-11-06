@@ -64,14 +64,16 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     auto& new_geometry = const_cast<MainMenuPresentation&>(next.main_menu()).stage_select;
     new_geometry.navigation_position.x += 8.0f; new_geometry.briefing_padding.x += 8.0f;
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
-    const StageList mixed{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true },
+    // King of the Hill and Turbulence left Random on 2026-11-05; these copies
+    // stay eligible on purpose, as the 0/1/3 eligible counts below need.
+    const StageList mixed{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters"),
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },
         { "turbulence", "Turbulence", "stage_turbulence", true } };
     const StageList excluded{ mixed[0] }, one_eligible{ mixed[0], mixed[1] };
     require(random_stage_indices(mixed) == std::vector<size_t>({ 1, 2, 3 }) && random_stage_indices(excluded).empty() &&
         random_stage_indices(one_eligible) == std::vector<size_t>{ 1 }, "Count fixture lists do not have the independent 0/1/3 eligible counts");
-    const NestedSaveProfile isolated(output / "stage-count-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    const acceptance::IsolatedSave isolated(output / "stage-count-profile"); Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed the quiet private Stage count profile");
     for (const auto& stage : mixed)
@@ -81,7 +83,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     }
     require(preferences.save_to_file(), "Cannot persist the private Stage count fixture records");
     const auto bytes = [&]
-    { std::ifstream file(output / "stage-count-profile/ColourWars/save_data.json", std::ios::binary); require(file.good(), "Cannot read the private Stage count save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()); };
+    { std::ifstream file(acceptance::save_path_in(output / "stage-count-profile"), std::ios::binary); require(file.good(), "Cannot read the private Stage count save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()); };
     const std::string saved = bytes(); StageList stages;
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "king_of_the_hill", "movement_course", "turbulence" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, expected; MenuContext context(&data, &input, &settings); StateContext& stack = app;
@@ -119,7 +121,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_stage(stage); settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::bucket); settings.set_duration(83.0f); settings.set_screen_layout(ScreenLayout::one_player); expected = settings;
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
     };
     const std::wstring browse = L"Left/Right to browse.\nConfirm to lock your choice.", locked_hint = L"Confirm again to start.\nBack to change your choice.";
     const std::wstring random_three = L"Random: 3 available arenas.\nConfirm to lock your choice.", random_one = L"Random: 1 available arenas.\nConfirm to lock your choice.";
@@ -148,8 +150,8 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         record.set_scale(record_scale); record.set_shadow_scale(record_scale); record.set_shadow_offset(shadow * record_scale); record.set_position(Vector2F(preview_right - raw_record.width * record_scale, live.record_y));
         require(record.bounds().x >= nav.bounds().right() + fitted.menu().focus_padding.x - 0.01f && record.bounds().right() <= preview_right + 0.01f &&
             record.bounds().y >= live.preview_position.y + live.preview_size.y + style.rule_height, "Independent record fit crossed the navigation gutter or preview");
-        std::srand(9143); const int next_random = std::rand(); std::srand(9143); const Frame actual = main_menu_frame(app);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random, "Frozen Stage count drawing changed pixels or match RNG");
+        std::srand(9143); const int next_random = std::rand(); std::srand(9143); const Frame actual = stack_frame(app);
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random, "Frozen Stage count drawing changed pixels or match RNG");
         const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0); list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
@@ -164,7 +166,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         {
             RectangleF box = texts[role]->bounds();
             if (role == 3 && random) { box = RectangleF(nav.bounds().right() + fitted.menu().focus_padding.x, live.record_y, room, raw_record.height); }
-            box.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(box); const RectangleI crop = countdown_crop_bounds(box);
+            box.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(box); const RectangleI crop = pixel_bounds(box);
             const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(reference, crop, 0);
             require(observed.pixels == wanted.pixels, "Actual Stage count navigation/hint/status/record state differs from independent literals and fitted raster bounds");
             records << name << ',' << roles[role] << ',' << actual.width << ',' << actual.height << ',' << stages.size() << ',' << random_stage_indices(stages).size() << ',' << random << ',' << locked << ',' <<

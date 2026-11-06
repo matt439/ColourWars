@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/player_camera.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/structure.h"
@@ -7,10 +8,11 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -30,8 +32,7 @@ namespace
 
     bool close_to(float a, float b) { return std::abs(a - b) < 0.0001f; }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     float magnitude(const Vector2F& vector) { return std::hypot(vector.x, vector.y); }
 
@@ -277,11 +278,14 @@ namespace
 
     // Separate preferences model two independently owned player views. These
     // fixtures use real contacts and paid shots, without devices or a save.
-    struct Course
+    // The Course's own preferences, a base so they outlive its Scene and Player.
+    struct CoursePreferences
     {
         PlaySettings preferences;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
+    };
+
+    struct Course : CoursePreferences, acceptance::PlayerCourse
+    {
         size_t emitted_projectiles = 0;
 
         Course(World& world, bool enabled, int slot = 0)
@@ -299,10 +303,7 @@ namespace
                 WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, rectangle.top_left(), Vector2F::zero, 0.0f, Vector2F::zero,
                 SpriteFlip::none, 0.0f, -1, nullptr, &world.presentation.camera().shake));
-            const RectangleF floor(-10000, 0, 20000, 100);
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                floor, std::make_unique<RectangleF>(floor), &world.render,
-                CollisionObjectType::structure));
+            this->add_structure(RectangleF(-10000, 0, 20000, 100), world.render);
             this->scene.end_tick();
         }
 
@@ -316,14 +317,7 @@ namespace
             actions.primary_shoot = fire;
             actions.shoot_direction_requested = true;
             actions.shoot_direction = { 1.0f, 0.0f };
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
-            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects()).size();
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            this->emitted_projectiles += this->step(actions).size();
         }
 
         void hit(const ProjectileSpray& shot)
@@ -538,39 +532,13 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read view shake presentation content");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t temporary_name[MAX_PATH]{};
-        const auto directory = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(directory.c_str(), L"cws", 0, temporary_name) != 0,
-            "Cannot reserve view shake presentation variant");
-        const std::filesystem::path path(temporary_name);
-        struct RemoveOnExit
-        {
-            std::filesystem::path path;
-            ~RemoveOnExit() { std::error_code ignored; std::filesystem::remove(this->path, ignored); }
-        } cleanup{ path };
+        acceptance::JsonVariants variants(content / "presentation.json", L"view-shake-presentation");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse view shake fixture");
-            edit(json["camera"]["shake"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write view shake fixture");
-            bool rejected = false;
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("camera.shake") != std::string::npos;
-            }
-            require(rejected, "Malformed view shake presentation was accepted or lost its section");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["camera"]["shake"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "camera.shake" }, "Malformed view shake presentation was accepted or lost its section");
         };
         for (const char* field : { "hurt_amplitude", "elimination_amplitude", "landing_amplitude",
             "duration", "cycles", "repeat_delay" })

@@ -28,20 +28,6 @@ namespace
         BotDifficulty difficulty;
     };
 
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage("turbulence_mover_trial"); settings.set_duration(120.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
-
     // The mover on the bot's side of the stage, at its current position.
     RectangleF mover(const Level& level, PlayerTeam team)
     {
@@ -70,25 +56,6 @@ namespace
             "Mover-route trial could not place its initial endpoint");
     }
 
-    float owned_mover_paint(const Level& level, const RectangleF& bounds, float thickness)
-    {
-        const int owner = paint_owners::index(-1, 1);
-        float area = 0.0f;
-        for (const PaintSurfaceSample& surface : level.paint_surfaces())
-        {
-            if (surface.face != PaintSurfaceFace::top || surface.paint_owner != owner) { continue; }
-            bool belongs = true;
-            for (const Vector2F& corner : surface.corners)
-            {
-                belongs = belongs && corner.x >= bounds.left() - endpoint_tolerance &&
-                    corner.x <= bounds.right() + endpoint_tolerance &&
-                    std::fabs(corner.y - bounds.top()) <= thickness + endpoint_tolerance;
-            }
-            if (belongs) { area += surface.scored_area; }
-        }
-        return area;
-    }
-
     struct TrialResult
     {
         bool landed;
@@ -98,7 +65,7 @@ namespace
 
     TrialResult run(World& world, const Trial& trial)
     {
-        std::unique_ptr<Level> level = world.build(roster(trial));
+        std::unique_ptr<Level> level = world.build(one_bot_roster("turbulence_mover_trial", 120.0f, trial.team, trial.tool, trial.difficulty));
         prepare(*level, world, trial);
         const std::vector<PlayerInputData> physical = physical_inputs();
         const float thickness = world.assets.tuning.paint().thickness;
@@ -135,7 +102,7 @@ namespace
                 { left_step = tick; }
             }
             jumps += input.jump_pressed ? 1 : 0;
-            if (tick % 30 == 29) { peak_paint = std::max(peak_paint, owned_mover_paint(*level, bounds, thickness)); }
+            if (tick % 30 == 29) { peak_paint = std::max(peak_paint, owned_top_paint(*level, bounds, thickness)); }
             if (tick % 30 == 0 || input.jump_pressed)
             {
                 trace << "TRACE step=" << tick << " x=" << bot.center().x << " feet=" << bot.rectangle().bottom()
@@ -145,7 +112,7 @@ namespace
             }
         }
         const RectangleF bounds = mover(*level, trial.team);
-        const float final_paint = owned_mover_paint(*level, bounds, thickness);
+        const float final_paint = owned_top_paint(*level, bounds, thickness);
         peak_paint = std::max(peak_paint, final_paint);
         const Player& bot = level->player(1);
         std::cout << "MEASURE bot mover route=" << route_name(trial.route) <<

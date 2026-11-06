@@ -1,5 +1,5 @@
-// Path45 adds a separately counted blink-face scenario to the limb family.
-// The old43/44 fixtures, captures, controls and budgets remain unchanged.
+// Path 45 adds a separately counted blink-face scenario to the limb family.
+// The old 43/44 fixtures, captures, controls and budgets remain unchanged.
 enum class QuietFaceReference { correct, straight_face, squared_face, reversed_order };
 
 std::vector<float> quiet_face_fixed(const FigurePresentation& look)
@@ -135,7 +135,7 @@ public:
             require(equal != selected, "Quiet face negative reference lost exact role discrimination/exterior parity");
             if (!equal) { ++different; }
         } }
-        require(different == 64, "Quiet face negative reference must discriminate exactly64 role pixels");
+        require(different == 64, "Quiet face negative reference must discriminate exactly 64 role pixels");
         return different;
     }
 
@@ -175,7 +175,7 @@ private:
         rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame result = read(renderer); ++readbacks_;
         require(result.width == 1280 && result.height == 720 && result.pixels.size() == 1280 * 720 * 4,
-            "Quiet face requires a native1280x720 RGBA backbuffer");
+            "Quiet face requires a native 1280x720 RGBA backbuffer");
         for (int y = 20; y < 24; ++y) { for (int x = 20; x < 29; ++x)
         {
             if (x == 24) { continue; }
@@ -250,38 +250,17 @@ void quiet_face_colour_consumer_checks(Application& app, const Presentation& pre
 void quiet_face_tune_colour_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const auto root = output / "quiet-face-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "Quiet face private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
-    std::array<std::string, 2> original_bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    {
-        original_bytes[i] = tune_colour_bytes(content / files[i]);
-        tune_colour_write(source / files[i], original_bytes[i]); tune_colour_write(staged / files[i], original_bytes[i]);
-    }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestoreQuietFace
-    {
-        GameTuning& tuning; Presentation& presentation; GameTuning old_tuning; Presentation old_presentation;
-        ~RestoreQuietFace() { tuning = old_tuning; presentation = old_presentation; }
-    } restore{ tuning, presentation, tuning, presentation };
-    Save preferences; SettingsSession preferences_session(preferences);
-    const auto preference_values = [&]()
-    {
-        auto value = limb_preference_values(preferences_session.play_settings());
-        value.insert(value.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) });
-        return value;
-    };
-    const auto original_preferences = preference_values();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "quiet-face-tune-commands.log").string()),
-        "Cannot retain Quiet face command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "quiet-face-tune-scratch", .transcript = "quiet-face-tune-commands.log",
+        .fresh = true });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& original_bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preference_values = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     QuietFaceColourProbe probe(app, presentation);
     JsonSpanDocument initial(original_bytes[1], "Quiet face private source");
     const auto* face_leaf = initial.find("figure.quiet.face_colour");
@@ -295,7 +274,7 @@ void quiet_face_tune_colour_checks(Application& app, GameTuning& tuning,
     {
         probe.unchanged();
         require(preference_values() == original_preferences &&
-            !std::filesystem::exists(root / "profile/ColourWars/save_data.json") &&
+            !std::filesystem::exists(acceptance::save_path_in(root / "profile")) &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty(),
             "Quiet face command changed private defaults, wrote a game Save or queued gameplay work");
         for (size_t i = 0; i < files.size(); ++i)

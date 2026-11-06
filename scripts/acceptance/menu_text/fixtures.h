@@ -31,6 +31,8 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -48,7 +50,7 @@ using namespace labrador;
 namespace menu_text_acceptance
 {
     using acceptance::require;
-    rapidjson::Document read_document(const std::filesystem::path& path);
+    using acceptance::read_document;
     UiText* row_text(OptionRow& row, const std::string& name);
     MenuPaperArtPresentation options_art(const MainMenuPresentation& main);
 
@@ -107,32 +109,32 @@ namespace menu_text_acceptance
         { "aim_cutoff", L"Right stick: radial cutoff", &MenuHelpText::aim_cutoff, false }
     };
     struct KeyboardJumpText {
-        const char* key; const wchar_t* text; std::wstring KeyboardJumpMenuText::* field;
+        const char* key; const wchar_t* text; std::wstring KeyboardKeysMenuText::* field;
         bool multiline = false; bool key_template = false;
     };
     constexpr KeyboardJumpText keyboard_jump_text[]{
-        { "heading", L"Keyboard Keys", &KeyboardJumpMenuText::heading },
-        { "move_left", L"Move left", &KeyboardJumpMenuText::move_left },
-        { "move_right", L"Move right", &KeyboardJumpMenuText::move_right },
-        { "jump", L"Jump", &KeyboardJumpMenuText::jump },
-        { "drop", L"Drop", &KeyboardJumpMenuText::drop },
-        { "shoot", L"Shoot", &KeyboardJumpMenuText::shoot },
-        { "pause", L"Pause (also)", &KeyboardJumpMenuText::pause },
-        { "reset", L"Reset all keys", &KeyboardJumpMenuText::reset },
+        { "heading", L"Keyboard Keys", &KeyboardKeysMenuText::heading },
+        { "move_left", L"Move left", &KeyboardKeysMenuText::move_left },
+        { "move_right", L"Move right", &KeyboardKeysMenuText::move_right },
+        { "jump", L"Jump", &KeyboardKeysMenuText::jump },
+        { "drop", L"Drop", &KeyboardKeysMenuText::drop },
+        { "shoot", L"Shoot", &KeyboardKeysMenuText::shoot },
+        { "pause", L"Pause (also)", &KeyboardKeysMenuText::pause },
+        { "reset", L"Reset all keys", &KeyboardKeysMenuText::reset },
         { "help", L"Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot may also take a mouse button.\n"
             L"One key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\n"
             L"Apply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
-            &KeyboardJumpMenuText::help, true },
-        { "pending_status", L"Apply to activate these keys.", &KeyboardJumpMenuText::pending_status },
-        { "saved_status", L"Keyboard keys applied and saved.", &KeyboardJumpMenuText::saved_status },
-        { "capture_wait_neutral", L"Release all keys before choosing.", &KeyboardJumpMenuText::capture_wait_neutral },
-        { "capture_ready", L"Press one key. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready },
-        { "capture_ready_mouse", L"Press a key or click. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready_mouse },
-        { "capture_release", L"Release {key} to keep this choice.", &KeyboardJumpMenuText::capture_release, false, true },
-        { "capture_rejected", L"Use one A-Z key or Space. Try again.", &KeyboardJumpMenuText::capture_rejected },
-        { "capture_conflict", L"That key already does another action.", &KeyboardJumpMenuText::capture_conflict },
-        { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardJumpMenuText::capture_cancelled },
-        { "debug_collision", L"A chosen key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
+            &KeyboardKeysMenuText::help, true },
+        { "pending_status", L"Apply to activate these keys.", &KeyboardKeysMenuText::pending_status },
+        { "saved_status", L"Keyboard keys applied and saved.", &KeyboardKeysMenuText::saved_status },
+        { "capture_wait_neutral", L"Release all keys before choosing.", &KeyboardKeysMenuText::capture_wait_neutral },
+        { "capture_ready", L"Press one key. Esc / pad Back cancels.", &KeyboardKeysMenuText::capture_ready },
+        { "capture_ready_mouse", L"Press a key or click. Esc / pad Back cancels.", &KeyboardKeysMenuText::capture_ready_mouse },
+        { "capture_release", L"Release {key} to keep this choice.", &KeyboardKeysMenuText::capture_release, false, true },
+        { "capture_rejected", L"Use one A-Z key or Space. Try again.", &KeyboardKeysMenuText::capture_rejected },
+        { "capture_conflict", L"That key already does another action.", &KeyboardKeysMenuText::capture_conflict },
+        { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardKeysMenuText::capture_cancelled },
+        { "debug_collision", L"A chosen key also has a developer bind.", &KeyboardKeysMenuText::debug_collision }
     };
     struct PadButtonsText {
         const char* key; const wchar_t* text; std::wstring PadButtonsMenuText::* field;
@@ -407,60 +409,12 @@ namespace menu_text_acceptance
         { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" }
     };
 
-    struct World
+    using World = acceptance::ContentWorld;
+
+    struct Variants : acceptance::JsonVariants
     {
-        RenderResources render;
-        AudioResources audio;
-
-        explicit World(const std::filesystem::path& content)
-        {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                render.add_sprite_sheet(name, read_sprite_sheet(
-                    (content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* name : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(name) + ".spritefont")).string());
-                auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-                render.add_font(name, std::move(font));
-            }
-            audio.add_sound_bank("paint_exe", SoundBank::silent());
-        }
-    };
-
-    struct Variants
-    {
-        rapidjson::Document source;
-        std::filesystem::path scratch;
-        size_t next = 0;
-
         Variants(const std::filesystem::path& content, const std::filesystem::path& folder) :
-            source(read_document(content / "presentation.json")), scratch(folder)
-        {
-            std::filesystem::create_directories(scratch);
-        }
-
-        template<class Edit>
-        std::filesystem::path write(Edit edit)
-        {
-            rapidjson::Document document;
-            document.CopyFrom(source, document.GetAllocator());
-            edit(document);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(document.Accept(writer), "Cannot encode menu text fixture");
-            const auto path = scratch / ("menu-text-" + std::to_string(next++) + ".json");
-            std::ofstream output(path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write menu text fixture");
-            return path;
-        }
+            acceptance::JsonVariants(content / "presentation.json", L"menu-text", folder) {}
 
         template<class Edit>
         Presentation load(Edit edit)

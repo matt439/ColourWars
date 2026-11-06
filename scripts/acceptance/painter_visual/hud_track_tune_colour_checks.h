@@ -1,4 +1,4 @@
-// Track41: two independent192x16 track interiors; copied full HUD adoption only.
+// Track 41: two independent 192x16 track interiors; copied full HUD adoption only.
 // Literal geometry/channels remain source hypotheses until native qualification.
 enum class HudTrackReference { correct, straight, squared_base };
 const char* hud_track_context(size_t context)
@@ -7,36 +7,11 @@ float hud_track_amount(size_t context)
 { constexpr std::array<float,3> amounts{0.0f,.5f,1.0f};return amounts.at(context); }
 int hud_track_fill_width(size_t context)
 { constexpr std::array<int,3> widths{0,96,192};return widths.at(context); }
-std::array<std::string,5> hud_track_resource_names(const HudPresentation& p)
-{ return {p.meter_label_font,p.sprite_sheet,p.fill_frame,p.timer_font,p.player_identity_font}; }
-std::vector<float> hud_track_fixed_style(const HudPresentation& p)
+// Every HUD field but the meter track colour this leaf tunes.
+std::vector<float> hud_track_fixed_style(HudPresentation p)
 {
-    std::vector<float> v{p.paper.keyline_width,p.paper.shadow_offset,p.meter_label_gap,p.reference_height,p.right_margin,
-        p.ammo_top_margin,p.health_top_margin,p.box_fill_border,p.timer_reference_width,p.closing_clock.keyline_width,
-        p.closing_clock.shadow_offset,p.closing_clock.tick_reach,p.closing_clock.beat_duration,p.player_identity_reference_width};
-    for(const auto& point:{p.box_size,p.timer_offset,p.timer_shadow_offset,p.player_identity_offset,p.player_identity_shadow_offset,p.player_identity_padding})
-    {v.insert(v.end(),{point.x,point.y});}
-    for(const auto& c:{p.paper.ink,p.paper.paper,p.paper.shade,p.health_colour,p.timer_colour,p.timer_shadow_colour,
-        p.closing_clock.ink,p.closing_clock.paper,p.closing_clock.shade,p.closing_clock.text,p.closing_clock.accent,
-        p.player_identity_colour,p.player_identity_shadow_colour})
-    {v.insert(v.end(),{c.r,c.g,c.b,c.a});}
-    return v; // The sole omitted field is selected meter_track_colour; health_colour is frozen.
-}
-std::vector<float> hud_track_identity_style(const PlayerIdentityPresentation& p)
-{
-    std::vector<float> v{p.enabled?1.0f:0.0f,p.world_size.x,p.world_size.y,p.world_offset.x,p.world_offset.y,
-        p.emphasis_duration,p.emphasis_scale,p.ui_size.x,p.ui_size.y,p.ui_gap,p.border};
-    for(const auto& c:{p.background_colour,p.ink_colour}){v.insert(v.end(),{c.r,c.g,c.b,c.a});}return v;
-}
-bool hud_track_same_palette(const TeamPalettePresentation& a,const TeamPalettePresentation& b)
-{
-    if(a.colours.size()!=b.colours.size()||a.pairs.size()!=b.pairs.size()){return false;}
-    for(size_t i=0;i<a.colours.size();++i)
-    {if(a.colours[i].name!=b.colours[i].name||a.colours[i].colour!=b.colours[i].colour){return false;}}
-    for(size_t i=0;i<a.pairs.size();++i)
-    {if(a.pairs[i].key!=b.pairs[i].key||a.pairs[i].label!=b.pairs[i].label||
-        a.pairs[i].colours.team_a!=b.pairs[i].colours.team_a||a.pairs[i].colours.team_b!=b.pairs[i].colours.team_b){return false;}}
-    return true;
+    p.meter_track_colour = Colour();
+    return hud_style(p);
 }
 class HudTrackColourProbe
 {
@@ -77,7 +52,7 @@ HudTrackColourProbe::HudTrackColourProbe(Application& app,const Presentation& pr
     fill_handle_(sheet_->resolve_sprite_frame(look_.fill_frame)),frame_(sheet_->sprite_frame(fill_handle_)),
     fonts_{app.render_resources()->resolve_sprite_font(look_.meter_label_font),app.render_resources()->resolve_sprite_font(look_.timer_font),
         app.render_resources()->resolve_sprite_font(look_.player_identity_font)},output_(output),fixed_(hud_track_fixed_style(look_)),
-    fixed_identity_(hud_track_identity_style(identity_)),names_(hud_track_resource_names(look_))
+    fixed_identity_(player_identity_style(identity_)),names_(hud_resource_names(look_))
 {
     require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero&&
         look_.health_colour==Colour(118,232,181)&&look_.reference_height==1080&&look_.player_identity_reference_width==1920&&
@@ -95,9 +70,9 @@ void HudTrackColourProbe::unchanged() const
     require(&look_==&presentation_.hud()&& &look_.paper==&presentation_.hud().paper&& &look_.closing_clock==&presentation_.hud().closing_clock&&
         &identity_==&presentation_.player_identity()&& &palette_==&presentation_.team_palette()&&
         hud_track_fixed_style(look_)==fixed_&&hud_track_fixed_style(expected_)==fixed_&&
-        hud_track_resource_names(look_)==names_&&hud_track_resource_names(expected_)==names_&&
-        hud_track_identity_style(identity_)==fixed_identity_&&hud_track_identity_style(expected_identity_)==fixed_identity_&&
-        hud_track_same_palette(palette_,baseline_palette_)&&colours_.team_a==Colour(6,52,204)&&colours_.team_b==Colour(255,127,0)&&
+        hud_resource_names(look_)==names_&&hud_resource_names(expected_)==names_&&
+        player_identity_style(identity_)==fixed_identity_&&player_identity_style(expected_identity_)==fixed_identity_&&
+        same_team_palette(palette_,baseline_palette_)&&colours_.team_a==Colour(6,52,204)&&colours_.team_b==Colour(255,127,0)&&
         sheet_handle_==resources->resolve_sprite_sheet(look_.sprite_sheet)&&sheet_==resources->sprite_sheet(sheet_handle_)&&
         fill_handle_==sheet_->resolve_sprite_frame(look_.fill_frame)&& &frame_==&sheet_->sprite_frame(fill_handle_)&&
         resolution_==Vector2F(1280,720)&&device_==input_slots::device_name(input_slots::keyboard_and_mouse)&&
@@ -114,7 +89,7 @@ Frame HudTrackColourProbe::render(size_t context,const std::function<Frame()>& d
 {
     unchanged();const Colour selected=look_.meter_track_colour,expected_selected=expected_.meter_track_colour;
     std::srand(73401);const int next=std::rand();std::srand(73401);Frame result=draw();++readbacks_;
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Track proof requires1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Track proof requires 1280x720 backbuffer");}
     const bool fixed_draw=std::rand()==next&&look_.meter_track_colour==selected&&expected_.meter_track_colour==expected_selected;
     if(!fixed_draw){failure(context,"unknown","draw-state-or-rng",result);}require(fixed_draw,"Track draw consumed RNG or changed selected records");
     unchanged();return result;
@@ -179,7 +154,7 @@ void HudTrackColourProbe::failure(size_t context,const char* state,const char* s
 std::string HudTrackColourProbe::check_rois(size_t context,const Frame& actual,const Frame& raw,const Colour& colour)
 {
     constexpr std::array<int,2> tops{64,122};
-    // Complete BOTH disjoint interiors: all6144 exact RGBA/alpha comparisons
+    // Complete BOTH disjoint interiors: all 6144 exact RGBA/alpha comparisons
     // precede any supplementary representative source-channel admission.
     for(const int top:tops){for(int y=top;y<top+16;++y){for(int x=1036;x<1228;++x)
     {
@@ -195,7 +170,7 @@ std::string HudTrackColourProbe::check_rois(size_t context,const Frame& actual,c
     else if(colour.a!=0.0f)
     {
         require(colour==Colour(1,97,193,128),"Track source channels cover only declared partial palette");
-        f=0x0A3B6Bu;q=0x0B3B6Bu; // Predicted before captures; original alpha128 is already8UNORM.
+        f=0x0A3B6Bu;q=0x0B3B6Bu; // Predicted before captures; original alpha 128 is already 8-bit UNORM.
     }
     bool matches_f=true,matches_q=true;const int right=1036+hud_track_fill_width(context);
     for(size_t track=0;track<tops.size();++track){const int top=tops[track];
@@ -325,41 +300,26 @@ void hud_track_colour_consumer_checks(Application& app,const Presentation& prese
     std::ofstream summary(output/"hud-track-colour-consumer-summary.json");
     summary<<"{\"scope\":\"consumer-only\",\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"two-independent192x16-ink-track-prefix-interiors-only\",\"whole_frame_reference\":\"copied-complete-HUD-consumer-adoption-only\",\"health_roi_half_open\":[1036,64,1228,80],\"ammo_roi_half_open\":[1036,122,1228,138],\"capture_kind\":\"lossless-paired-ROI-stack\",\"paired_amounts_only\":true,\"readbacks\":54,\"csv_rows\":12,\"crops\":12,\"crop_width\":192,\"crop_height\":32,\"crop_pixels\":73728,\"ppm_bytes\":221352,\"contexts\":3,\"palettes\":4,\"roi_pixels\":6144,\"source_rois\":2,\"base_case_reads\":48,\"blank_reads\":0,\"selected_track_writes\":2,\"maximum_selected_writes_per_pixel\":1,\"controls\":6,\"track_discriminations\":12,\"partial_straight_reads\":2,\"partial_squared_reads\":2,\"alpha0_straight_reads\":2,\"changed_control_pixels\":27648,\"unchanged_control_pixels\":9216,\"full_cover_invariant_cases\":4,\"fill_role_guard_cases\":12,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Track shared summary");
-    std::cout<<"PASS track consumer:54readbacks/12rows/12lossless paired192x32 ROI stacks73728nativepixels;6144independentRGBA/case,"
-        "6controls/12track discriminations27648changed9216unchanged; coherent whole-composite source representatives. Full copiedHUD adoption only; zero all updates.\n";
+    std::cout<<"PASS track consumer: 54 readbacks/12 rows/12 lossless paired 192x32 ROI stacks of 73728 native pixels; 6144 independent RGBA per case, "
+        "6 controls/12 track discriminations with 27648 changed and 9216 unchanged pixels; coherent whole-composite source representatives. Full copied HUD adoption only; zero all updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
 void hud_track_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,
     const std::filesystem::path& content,const std::filesystem::path& output)
 {
-    const auto root=output/"hud-track-colour-tune-scratch",source=root/"source",staged=root/"staged";
-    std::filesystem::create_directories(source);std::filesystem::create_directories(staged);
-    constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
-    for(size_t i=0;i<files.size();++i)
-    {real_bytes[i]=tune_colour_bytes(content/files[i]);tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const NestedSaveProfile profile(root/"profile");const TuneColourTemp temporary(root/"temp");
-    struct RestoreHudTrack
-    {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreHudTrack(){t=old_t;p=old_p;}}
-        restore{tuning,presentation,tuning,presentation};
-    Save preferences; SettingsSession preferences_session(preferences);PlaySettings play;play.music_volume=17;play.sfx_volume=83;play.aim_sensitivity=4;
-    play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
-    InputBindings bindings;bindings.keyboard_jump=Key::j;
-    require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed Track private preferences");
-    const auto save_path=root/"profile/ColourWars/save_data.json";const std::string saved_preferences=tune_colour_bytes(save_path);
-    const auto pref_values=[&]
-    {
-        const auto& p=preferences_session.play_settings();std::vector<int> v{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,
-            static_cast<int>(preferences.team_palette()),p.aim_sensitivity,p.music_volume,p.sfx_volume,p.view_shake?1:0,p.aim_marker?1:0,
-            p.reduce_effects?1:0,static_cast<int>(preferences_session.input_bindings().keyboard_jump)};
-        for(const auto& stick:p.sticks){v.push_back(stick.movement_deadzone);v.push_back(stick.aim_deadzone);}return v;
-    };
-    const auto saved_values=pref_values();
-    GameData data;data.set_application(&app);data.set_save(&preferences); data.set_settings_session(&preferences_session);const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning);data.set_presentation(&presentation);DebugDirector director(&tuning,&presentation);data.set_debug(&director);
-    auto& impl=*director.impl();impl.set_content_directories(source,staged);impl.set_user_directory(root/"user");
-    impl.set_script_directories({root/"scripts"});director.attach(&app,&data);impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output/"hud-track-colour-tune-commands.log").string()),"Cannot retain Track private command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-track-colour-tune-scratch", .transcript = "hud-track-colour-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto pref_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     HudTrackColourProbe probe(app,presentation,output);JsonSpanDocument initial(real_bytes[1],"Track private source");
     const JsonLeaf* leaf=initial.find("hud.meter_track_colour");require(leaf!=nullptr,"Track source lacks exact existing token");
     require(presentation.hud().meter_track_colour==Colour(184,184,184),"Track Debug baseline differs from authored default");

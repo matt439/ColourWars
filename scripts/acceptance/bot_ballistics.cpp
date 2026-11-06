@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "game/contracts/simulation.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/objects/weapon_builder.h"
 #include "scripts/acceptance/support/probe.h"
@@ -86,8 +87,7 @@ namespace
 	void check_actual_flight(paint_surfaces_acceptance::World& world)
 	{
 		using namespace labrador;
-		const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-			labrador::StepTimer::TicksPerSecond / 60));
+		const float dt = SECONDS_PER_STEP;
 		int contacts = 0;
 		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper,
 			WeaponType::mister, WeaponType::bucket })

@@ -10,8 +10,8 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         words.item(MenuItem::play) == L"Play" && words.item(MenuItem::options) == L"Options" &&
         words.item(MenuItem::credits) == L"Credits" && words.item(MenuItem::exit) == L"Exit",
         "Home return-focus copy drifted from its independent literals");
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
@@ -44,7 +44,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
     };
     const auto tap = [&](GamepadButton button)
         { hold(button, true); tick(); hold(button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto resize = [&](Vector2I size)
     {
         app.resolution_manager()->set_resolution_exactly(size);
@@ -57,7 +57,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = pad;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); settings = MatchSetup();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); active_home = nullptr;
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); active_home = nullptr;
         if (page == 0)
         {
             auto home = initial_focus == 0 ? std::make_unique<MainMenuHome>(&context) :
@@ -147,7 +147,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             save(actual, output / (stem + ".ppm"));
             const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
             const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
-            save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(panel)), 0), output / (stem + "-detail.ppm"));
+            save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(panel)), 0), output / (stem + "-detail.ppm"));
         }
         records << name << ',' << actual.width << ',' << actual.height << ',' << (pad ? 3 : input_slots::keyboard_and_mouse) << ',' << selected << ",true\n";
         return actual;

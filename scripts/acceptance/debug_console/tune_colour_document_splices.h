@@ -27,10 +27,10 @@
 		};
 		const JsonLeaf* current = document.find(local);
 		rejected_commit(document.current().replaced(*current, "false"), local);
-		rejected_commit(document.current().replaced(*document.current().find("font"), "\"other\""), "font");
+		rejected_commit(document.current().replaced(require_leaf(document.current(), "font"), "\"other\""), "font");
 		const JsonSpanDocument other(document.current().replaced(*current, "\"BLUE\""), "multi-field");
-		rejected_commit(other.replaced(*other.find("number"), "2"), local);
-		for (const JsonLeaf leaf : { stale, *document.current().find("font") })
+		rejected_commit(other.replaced(require_leaf(other, "number"), "2"), local);
+		for (const JsonLeaf leaf : { stale, require_leaf(document.current(), "font") })
 		{
 			bool refused = false;
 			try { document.edited(leaf, "\"WHITE\""); } catch (const std::invalid_argument&) { refused = true; }
@@ -38,15 +38,15 @@
 				"A stale string span or arbitrary string cannot be edited through TuneDocument");
 		}
 		const JsonSpanDocument external_baseline(baseline, "external-colour");
-		const std::string external = external_baseline.replaced(*external_baseline.find("number"), "25");
+		const std::string external = external_baseline.replaced(require_leaf(external_baseline, "number"), "25");
 		const TuneSplice splice = document.splice(external, false);
 		const JsonSpanDocument external_document(external, "external-colour");
 		require(splice.conflicts.empty() && splice.written == 1 && splice.text ==
-			external_document.replaced(*external_document.find(local), "\"11223344\"") &&
+			external_document.replaced(require_leaf(external_document, local), "\"11223344\"") &&
 			count_of(splice.text, "\r\n") == count_of(baseline, "\r\n") &&
 			splice.text.find("untouched\\\\path") != std::string::npos,
 			"A CRLF colour splice preserves unrelated numeric edits, escape bytes and every newline");
-		const std::string conflicting = external_document.replaced(*external_document.find(local), "\"BLUE\"");
+		const std::string conflicting = external_document.replaced(require_leaf(external_document, local), "\"BLUE\"");
 		require(document.splice(conflicting, false).conflicts.size() == 1 &&
 			document.splice(conflicting, false).written == 0 && document.splice(conflicting, true).written == 1,
 			"A changed colour token conflicts unless explicitly forced");
@@ -78,13 +78,13 @@
 				"An alias before or beside the real object never exposes the literal-key string as a colour");
 		}
 		TuneDocument alias_edits("presentation", baseline);
-		alias_edits.commit(alias_edits.edited(*alias_edits.find(local), "\"BLUE\""), local);
+		alias_edits.commit(alias_edits.edited(require_leaf(alias_edits, local), "\"BLUE\""), local);
 		const std::string literal_disk = R"({"movement_feedback.colour":"RED"})";
 		const TuneSplice alias_disk = alias_edits.splice(literal_disk, true);
 		require(alias_disk.written == 0 && alias_disk.conflicts.size() == 1 && alias_disk.text == literal_disk,
 			"Even force cannot splice an audited colour edit into a literal path-alias string");
 		TuneDocument number("tuning", R"({"number":1})");
-		number.commit(number.edited(*number.find("number"), "2"), "number");
+		number.commit(number.edited(require_leaf(number, "number"), "2"), "number");
 		const TuneSplice number_string = number.splice(R"({"number":"1"})", true);
 		require(number_string.written == 0 && number_string.conflicts.size() == 1,
 			"Scanning general strings does not make an on-disk numeric-to-string change force-writable");

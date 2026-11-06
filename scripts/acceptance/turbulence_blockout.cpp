@@ -25,7 +25,7 @@ int main(int argc, char** argv)
         std::cout << "PASS Turbulence static skeleton: production object loader, mirrored geometry, "
             "independent face/region score, public 1/4-player LevelBuilder loads, eight spawns/respawns, "
             "jump-free required walking and driven optional/recovery edges. "
-            "Tool/escape and native composition use separate focused modes; mover/rotation, attended play and pad acceptance remain open\n";
+            "Tool/escape and native composition use separate focused modes; mover/rotation, attended play and physical pads are outside this probe\n";
         return 0;
     });
 }

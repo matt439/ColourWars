@@ -201,7 +201,7 @@ private:
 };
 
 // Fixed synthetic consumer inputs: tip(640,240), draw screen_height=720,
-// viewport1280x720, click_age=.09. These samples establish no small-view or
+// viewport 1280x720, click_age=.09. These samples establish no small-view or
 // human cursor-readability acceptance. No local/Level/State update is needed.
 void cursor_colour_consumer_checks(Application& app, const Presentation& presentation,
     const std::filesystem::path& output)
@@ -304,60 +304,31 @@ void cursor_colour_consumer_checks(Application& app, const Presentation& present
         "\"csv_rows\":112,\"case_rows\":14,\"sample_rows\":98,\"crops\":12,\"negative_reference_frames\":10,\"blank_readbacks\":2,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-raw-sample-patches\",\"event_fade\":false}\n";
     require(summary.good(), "Cannot retain cursor consumer summary");
-    std::cout << "PASS cursor colour consumers:124 readbacks,112 rows,twelve72x80 crops; preconstructed resting/clicking consumers, "
+    std::cout << "PASS cursor colour consumers:124 readbacks,112 rows,twelve 72x80 crops; preconstructed resting/clicking consumers, "
         "copied-baseline full-shape adoption parity,independent raw contour/interior/click alpha samples and negative controls, "
         "shade/shadow residuals and Reduce Effects arrow preservation. Synthetic draw screen_height720,zero local/Level/State updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
-// Debug adds15 real statements,168 readbacks and192 rows; no additional crops.
+// Debug adds 15 real statements, 168 readbacks and 192 rows; no additional crops.
 void cursor_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
-    const auto root = output / "cursor-tune-scratch", source = root / "source", staged = root / "staged";
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
-    std::array<std::string, 2> real_bytes;
-    for (size_t index = 0; index < files.size(); ++index)
-    {
-        real_bytes[index] = tune_colour_bytes(content / files[index]);
-        tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
-    }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestoreCursorTuneContent
-    {
-        GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original;
-        ~RestoreCursorTuneContent() { this->tuning = this->original_tuning; this->presentation = this->original; }
-    } restore{ tuning, presentation, tuning, presentation };
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
-    play.aim_sensitivity = 4; play.view_shake = false; play.aim_marker = true; play.reduce_effects = true;
-    play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
-    require(preferences_session.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
-        ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed private cursor tune preferences");
-    const auto save_path = root / "profile/ColourWars/save_data.json";
-    const std::string saved_preferences = tune_colour_bytes(save_path);
-    const auto preference_values = [&]
-    {
-        const PlaySettings& active = preferences_session.play_settings();
-        std::vector<int> values{ static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), active.aim_sensitivity, active.music_volume,
-            active.sfx_volume, active.view_shake ? 1 : 0, active.aim_marker ? 1 : 0,
-            active.reduce_effects ? 1 : 0, static_cast<int>(preferences_session.input_bindings().keyboard_jump) };
-        for (const StickSettings& stick : active.sticks)
-        { values.push_back(stick.movement_deadzone); values.push_back(stick.aim_deadzone); }
-        return values;
-    };
-    const std::vector<int> initial_preferences = preference_values();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
-    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
-    impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "cursor-tune-commands.log").string()), "Cannot retain cursor command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "cursor-tune-scratch", .transcript = "cursor-tune-commands.log",
+        .seed = seed_tune_colour_display });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto preference_values = [&] { return session.preference_values(); };
+    const auto initial_preferences = session.preference_values();
     CursorColourProbe probe(app, presentation);
     const std::array<Colour, 2> backgrounds{ Colour(0, 0, 0), Colour(32, 64, 96) };
     size_t commands = 0, rows = 0, sample_rows = 0; bool persisted = false;

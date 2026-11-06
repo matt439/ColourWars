@@ -1,4 +1,4 @@
-// Opaque closing text48 shares the font/resource probe, but has distinct
+// Opaque closing text 48 shares the font/resource probe, but has distinct
 // applicability and acceptance states. Alpha variants are refusals, not art.
 void hud_closing_text_colour_consumer_checks(Application& app, const Presentation& presentation,
     const std::filesystem::path& output)
@@ -14,7 +14,7 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
     for (size_t state = 0; state < colours.size(); ++state)
     {
         selected = colours[state]; require(selected.a == 1.0f, "Closing shared palette must stay opaque");
-        main[state] = probe.observe(2, selected, true); // Actual running10, not normal123.
+        main[state] = probe.observe(2, selected, true); // Actual running 10, not normal 123.
         try { HudTimerColourProbe::locality(main[state], main[0], state != 0); }
         catch (...) { probe.preserve_failure(2, "opaque-locality", main[state], main[0]); throw; }
         size_t case_controls = 0, case_pixels = 0;
@@ -57,7 +57,7 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
         require(branch[state][0].pixels == branch[state][6].pixels, "Normal clock Reduce Effects relation changed");
         require(branch[state][3].pixels == branch[state][7].pixels, "Settled/reduced closing text frames differ");
         require(main[state == 0 ? 0 : 3].pixels != branch[state][7].pixels,
-            "Closing text beat accents must still distinguish exact10 from reduced10");
+            "Closing text beat accents must still distinguish exact 10 from reduced 10");
     }
     require(csv.good() && branches.good() && probe.readbacks() == 50 && rows == 18 && crops == 4 && controls == 2 &&
         control_pixels > 0 && control_pixels <= 13624, "Closing shared finite read/row/crop/control budget differs");
@@ -77,31 +77,17 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
 void hud_closing_text_tune_colour_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const auto root = output / "hud-closing-text-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "Closing-text private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    {
-        bytes[i] = tune_colour_bytes(content / files[i]);
-        tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]);
-    }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestoreClosing { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreClosing() { t = old_t; p = old_p; } }
-        restore{ tuning, presentation, tuning, presentation };
-    Save preferences; SettingsSession preferences_session(preferences);
-    const auto preferences_now = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings());
-        values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto original_preferences = preferences_now();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-closing-text-tune-commands.log").string()), "Cannot retain closing-text transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-closing-text-tune-scratch", .transcript = "hud-closing-text-tune-commands.log",
+        .fresh = true });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preferences_now = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     HudTimerColourProbe probe(app, presentation, output, HudTimerSubject::closing_text);
     const std::string path = "hud.closing_clock.text";
     JsonSpanDocument initial(bytes[1], "Closing-text private source"); const auto* token = initial.find(path);
@@ -112,7 +98,7 @@ void hud_closing_text_tune_colour_checks(Application& app, GameTuning& tuning,
     const auto unchanged = [&]()
     {
         probe.unchanged(); require(preferences_now() == original_preferences &&
-            !std::filesystem::exists(root / "profile/ColourWars/save_data.json") && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
+            !std::filesystem::exists(acceptance::save_path_in(root / "profile")) && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
             "Closing text changed private defaults, wrote a game Save or queued gameplay");
         require(impl.total_updates() == 0 && impl.level_updates() == 0, "Closing native commands advanced director update hooks");
         for (size_t i = 0; i < files.size(); ++i)

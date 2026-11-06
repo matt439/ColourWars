@@ -5,8 +5,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const NestedSaveProfile isolated(output / "keyboard-jump-profile");
-    const auto save_path = output / "keyboard-jump-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "keyboard-jump-profile");
+    const auto save_path = acceptance::save_path_in(output / "keyboard-jump-profile");
     acceptance::ReplacementLock blocked_path(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet;
@@ -14,7 +14,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(preferences_session.set_play_settings_and_save(quiet), "Cannot seed the private Jump play preferences");
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Cannot seed the private Jump display preferences");
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
@@ -77,7 +77,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto open_controls = [&]
     {
         stack.clear(); stack.notify_activation(true); neutral();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick();
         require(stack.depth() == 2, "Jump fixture did not open actual Controls");
     };
@@ -94,7 +94,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     // The page's rows show each pending control, so its help is the static
     // authored block plus the developer-bind warning.
-    const auto help_copy = [&](const KeyboardJumpMenuText& copy, Key, Key, bool warning = false)
+    const auto help_copy = [&](const KeyboardKeysMenuText& copy, Key, Key, bool warning = false)
     {
         std::wstring result = copy.help;
         if (warning) { result += L'\n' + copy.debug_collision; }
@@ -117,7 +117,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)
-        { return countdown_crop_bounds(camera().calculate_view_rectangle(bounds)); };
+        { return pixel_bounds(camera().calculate_view_rectangle(bounds)); };
     std::ofstream records(output / "keyboard-jump.csv");
     records << "case,width,height,current,pending,stack_depth,copy_matches,frozen_rng,updates\n";
     // Independently rebuild the actual help and status in the captured font,
@@ -187,9 +187,9 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         require(RectangleF(look.controls_position, look.controls_size).contains(help_text.bounds()) &&
             panel.contains(status_text.bounds()), "Keyboard Jump fitted help/status escaped its paper");
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         std::srand(6353); const int next_random = std::rand(); std::srand(6353);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Frozen Keyboard Jump draw changed pixels or consumed randomness");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
@@ -329,11 +329,11 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             false, Key::j, Key::j);
 #if COLOURWARS_DEV_TOOLS
         require(director.impl()->execute("bind j \"overlay collision\"").ok &&
-            director.keyboard_jump_collision(Key::j), "Cannot seed a private bare J developer-bind collision");
+            director.keyboard_key_collision(Key::j), "Cannot seed a private bare J developer-bind collision");
         tick();
         copy_check("debug-bind-warning-j", original, help_copy(copy, Key::j, Key::j, true), copy.saved_status,
             false, Key::j, Key::j);
-        require(director.impl()->execute("unbind j").ok && !director.keyboard_jump_collision(Key::j),
+        require(director.impl()->execute("unbind j").ok && !director.keyboard_key_collision(Key::j),
             "Removing a bare developer bind left the visible Jump collision active");
         tick();
 #endif
@@ -467,7 +467,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const RectangleF card = game->level().keyboard_controls_card_bounds();
         require(bounds.width > 0.0f && bounds.height > 0.0f && card.contains(bounds),
             "Paused refreshed reminder lost fitted text/shadow inside its card");
-        const RectangleI pixels = countdown_crop_bounds(card);
+        const RectangleI pixels = pixel_bounds(card);
         require(foreground_crop(before, pixels, 0).pixels != foreground_crop(changed, pixels, 0).pixels,
             "Paused reminder key change produced no native ink delta");
         std::srand(6373); const int next_random = std::rand(); std::srand(6373);
@@ -479,7 +479,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         // restores the exact old reminder despite the live geometry edit.
         require(preferences_session.set_input_bindings_and_save(InputBindings{}), "Cannot reverse paused Jump key");
         const Frame reversed = draw_game();
-        const RectangleI restored = countdown_crop_bounds(game->level().keyboard_controls_card_bounds());
+        const RectangleI restored = pixel_bounds(game->level().keyboard_controls_card_bounds());
         require(foreground_crop(before, restored, 0).pixels == foreground_crop(reversed, restored, 0).pixels &&
             frozen == resume_observation(game->level()),
             "Paused key reversal adopted unrelated live geometry or advanced simulation");

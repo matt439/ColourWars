@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
-#include "game/states/keyboard_jump_menu.h"
+#include "game/states/keyboard_keys_menu.h"
 #include "game/states/pad_buttons_menu.h"
 #include "game/states/profiles_menu.h"
 #include "game/input/controls_text.h"
@@ -11,8 +11,8 @@
 
 using namespace labrador;
 
-ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
-	SettingsPanelPage(context, player)
+ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int opening_slot) :
+	SettingsPanelPage(context, opening_slot)
 {
 	this->volume_preview_sound_ = this->resolve_wave(
 		this->presentation().controls_settings().volume_preview_sound.name);
@@ -69,7 +69,7 @@ void ControlsSettingsMenu::init()
 	{
 		this->play_wave(this->confirm_sound_);
 		this->input()->reset_actions();
-		this->context()->push(std::make_unique<KeyboardJumpMenu>(this->menu_context(), this->opening_slot()));
+		this->context()->push(std::make_unique<KeyboardKeysMenu>(this->menu_context(), this->opening_slot()));
 	});
 	UiText* pad_buttons = this->add_text("pad_buttons", this->text().item(MenuItem::pad_buttons), style.item_font,
 		this->calculate_widget_position(0, 2), look.art.ink);

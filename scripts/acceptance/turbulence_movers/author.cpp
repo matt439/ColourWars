@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "editor/level_document.h"
+#include "scripts/acceptance/support/scratch.h"
 #include <rapidjson/document.h>
 
 #include <array>
@@ -22,14 +23,6 @@ namespace turbulence_movers_acceptance
             if (!condition) { throw std::runtime_error("Turbulence mover author: " + message); }
         }
 
-        std::string author_read(const std::filesystem::path& path)
-        {
-            std::ifstream input(path, std::ios::binary);
-            author_require(input.good(), "cannot read " + path.string());
-            const std::string bytes{ std::istreambuf_iterator<char>(input), {} };
-            author_require(!input.bad(), "incomplete read of " + path.string());
-            return bytes;
-        }
 
         rapidjson::Document author_parse(const std::string& bytes)
         {
@@ -99,9 +92,9 @@ namespace turbulence_movers_acceptance
         for (const char* name : names)
         {
             const auto path = static_stage.parent_path() / name;
-            original.push_back({ path, author_read(path) });
+            original.push_back({ path, acceptance::read_text(path) });
         }
-        const std::string tuning_bytes = author_read(tuning);
+        const std::string tuning_bytes = acceptance::read_text(tuning);
         const auto source = author_parse(original.back().bytes);
         author_require(source.HasMember("collision_objects") && source["collision_objects"].IsArray() &&
             source["collision_objects"].Size() == 20 && source.HasMember("display_name") &&
@@ -139,7 +132,7 @@ namespace turbulence_movers_acceptance
         reopened.load(output);
         author_require(reopened.validate().empty() && !reopened.dirty() && reopened.serialize() == document.serialize(),
             "actual editor save/reopen changed the trial or its admitted motion corridors");
-        const auto saved = author_parse(author_read(output));
+        const auto saved = author_parse(acceptance::read_text(output));
         author_require(saved.MemberCount() == source.MemberCount() && saved.HasMember("collision_objects") &&
             saved["collision_objects"].IsArray() && saved["collision_objects"].Size() == 22,
             "editor save did not retain exactly twenty original objects plus two movers");
@@ -163,11 +156,11 @@ namespace turbulence_movers_acceptance
         verify_mover(saved["collision_objects"][21], "mover_b", 2760.0, 0.5);
         for (const auto& snapshot : original)
         {
-            author_require(author_read(snapshot.path) == snapshot.bytes, "original arena bytes changed at " + snapshot.path.string());
+            author_require(acceptance::read_text(snapshot.path) == snapshot.bytes, "original arena bytes changed at " + snapshot.path.string());
         }
-        author_require(author_read(tuning) == tuning_bytes, "source tuning bytes changed");
+        author_require(acceptance::read_text(tuning) == tuning_bytes, "source tuning bytes changed");
         std::cout << "PASS actual LevelDocument mover trial save/reopen: twenty static objects preserved, two public-palette "
-            "one-way paintables, paired320-unit/4-second motion, seven original arena files and tuning byte-identical; "
+            "one-way paintables, paired 320-unit/4-second motion, seven original arena files and tuning byte-identical; "
             "trial remains explicit-only and unregistered pending qualification\n";
     }
 }

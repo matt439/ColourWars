@@ -7,7 +7,9 @@
 #include "game/objects/structure.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/collision/tunnelling.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -50,65 +52,18 @@ namespace
 		}
 	};
 
-	std::vector<std::filesystem::path> shipped_levels(const std::filesystem::path& content)
-	{
-		const JsonDocument manifest = read_json_file((content / "manifest.json").string().c_str());
-		const JsonValue assets = manifest.root().array("assets");
-		std::vector<std::filesystem::path> levels;
-		for (size_t group = 0; group < assets.size(); ++group)
-		{
-			const JsonValue asset = assets.at(group);
-			if (asset.string("kind") != "level") { continue; }
-			const JsonValue names = asset.array("names");
-			for (size_t index = 0; index < names.size(); ++index)
-			{
-				levels.push_back(content / asset.string("directory") /
-					(names.at(index).as_string() + ".json"));
-			}
-		}
-		require(levels.size() >= 4, "Acceptance needs the four shipped stages");
-		return levels;
-	}
-
 	// Copies of the authored tuning with one edit, written beside this case.
-	struct Fixtures
+	struct Fixtures : acceptance::JsonVariants
 	{
-		rapidjson::Document source;
-		std::filesystem::path scratch;
-		size_t next = 0;
-
 		Fixtures(const std::filesystem::path& content, const std::filesystem::path& folder) :
-			scratch(folder)
-		{
-			std::ifstream input(content / "tuning.json", std::ios::binary);
-			require(input.good(), "Cannot read authored tuning");
-			const std::string text{ std::istreambuf_iterator<char>(input), {} };
-			source.Parse(text.c_str());
-			require(!source.HasParseError(), "Cannot parse authored tuning");
-			std::filesystem::create_directories(scratch);
-		}
+			acceptance::JsonVariants(content / "tuning.json", L"tunnelling-tuning", folder) {}
 
+		// A fixture file of its own, beside the tuning variants.
 		std::filesystem::path write_text(const std::string& name, const std::string& text) const
 		{
-			const auto path = scratch / name;
-			std::ofstream output(path, std::ios::binary | std::ios::trunc);
-			output << text;
-			output.close();
-			require(output.good(), "Cannot write an isolated tunnelling fixture");
+			const auto path = this->folder() / name;
+			acceptance::write_text(path, text);
 			return path;
-		}
-
-		template<class Edit>
-		std::filesystem::path write(Edit edit)
-		{
-			rapidjson::Document document;
-			document.CopyFrom(source, document.GetAllocator());
-			edit(document);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			require(document.Accept(writer), "Cannot encode isolated tuning");
-			return write_text("tunnelling-tuning-" + std::to_string(next++) + ".json",
-				std::string(buffer.GetString(), buffer.GetSize()));
 		}
 
 		template<class Edit>
@@ -152,9 +107,9 @@ namespace
 		const Vector2F travel = Vector2F(
 			std::max(player.max_velocity.x, std::abs(player.x_initial_velocity)) * boost,
 			player.max_velocity.y + std::abs(player.drop_down_velocity)) * SECONDS_PER_STEP;
-		for (const auto& path : shipped_levels(content))
+		for (const acceptance::ManifestEntry& level : acceptance::manifest_level_paths(content))
 		{
-			const LevelLoadedInfo info(path.string().c_str());
+			const LevelLoadedInfo info(labrador::path_to_utf8(level.path).c_str());
 			info.validate();
 			const JsonValue objects = info.collision_objects_json();
 			const std::string failure = rejection(tuning, builder, objects);
@@ -168,7 +123,7 @@ namespace
 				thinnest_width = std::min(thinnest_width, box.width);
 				thinnest_height = std::min(thinnest_height, box.height);
 			}
-			std::cout << path.filename().string() << ": " << objects.size()
+			std::cout << level.path.filename().string() << ": " << objects.size()
 				<< " collision objects; thinnest " << thinnest_width << " wide, "
 				<< thinnest_height << " high; player travels " << travel.x << " x "
 				<< travel.y << " per step against bounds of "

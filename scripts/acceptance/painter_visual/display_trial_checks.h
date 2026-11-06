@@ -4,20 +4,8 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    struct TrialProfile
-    {
-        std::wstring previous;
-        explicit TrialProfile(const std::filesystem::path& path)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated trial profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(path);
-            require(_wputenv_s(L"LOCALAPPDATA", path.c_str()) == 0, "Cannot isolate display trial saves");
-        }
-        ~TrialProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "display-trial-profile");
-    const auto save_path = output / "display-trial-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "display-trial-profile");
+    const auto save_path = acceptance::save_path_in(output / "display-trial-profile");
     acceptance::ReplacementLock blocked(save_path);
     const HWND window = static_cast<HWND>(app.window());
     // Trials and rollbacks resize the hidden window; the engine keeps it hidden
@@ -87,7 +75,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         }
     };
     const auto tap = [&](GamepadButton button) { hold(device, button, true); tick(); hold(device, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto resize = [&](Vector2I size) { app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y); };
     const auto hide = [&]
     {
@@ -118,7 +106,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuOptions>(&context)); tick(); tick();
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuOptions>(&context)); tick(); tick();
         // Restore supplies independently known 1920/windowed/Random choices.
         for (int move = saved_fullscreen ? 1 : 0; move < 5; ++move) { tap(GamepadButton::dpad_down); }
         tap(GamepadButton::a); tap(GamepadButton::dpad_down); tick(settled); old(true);
@@ -178,7 +166,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         if (actual.pixels != expected_frame.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected_frame, output / (stem + "-failure-expected.ppm")); const auto delta = foreground_delta_bounds(actual, expected_frame); std::cerr << "DISPLAY TRIAL " << name << " seconds=" << seconds << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(stack.depth() == 3 && actual.pixels == expected_frame.pixels, "Actual display trial differs from independent complete paper/question/choices/countdown reference");
         std::srand(8231); const int next = std::rand(); std::srand(8231); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next, "Frozen display trial changed pixels or draw RNG");
-        if (capture) { save(actual, output / (stem + ".ppm")); const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport()); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
+        if (capture) { save(actual, output / (stem + ".ppm")); const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport()); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << keep << ',' << seconds << ",true\n"; return actual;
     };
     const auto select_keep = [&] { tap(GamepadButton::dpad_up); tick(settled); };
@@ -203,7 +191,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         else { tap(GamepadButton::b); reverted(); }
         seed(); begin(); select_keep(); hold(slot, GamepadButton::a, true); tick(); static_cast<WindowNotify&>(app).on_deactivated(); old(true); tick();
         hold(slot, GamepadButton::a, false); static_cast<WindowNotify&>(app).on_activated(); tick(); tick(); reverted();
-        seed(); begin(true); select_keep(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); old(true); require(stack.depth() == 4 && direct_results == 0, "Covered display trial popped its cover or delivered a premature result");
+        seed(); begin(true); select_keep(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); old(true); require(stack.depth() == 4 && direct_results == 0, "Covered display trial popped its cover or delivered a premature result");
         stack.pop(); tick(); reverted(); require(direct_result == DisplayTrialResult::reverted && direct_results == 1, "Covered display trial failed to close once after its cover returned");
         seed(); begin(true); require(direct_page->debug_dismiss(false), "Display trial developer dismissal was refused"); reverted(); require(direct_results == 1 && direct_result == DisplayTrialResult::reverted, "Developer dismissal lost the typed rollback result");
         seed(); begin(true); direct_page->debug_reset_input(slot); old(true); tick(); reverted(); require(direct_results == 1, "Developer input reset failed to roll back once");
@@ -214,11 +202,11 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         const float countdown_y = look.layout.position.y + look.layout.spacing.y * 2.0f;
         const auto line_size = app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(style.detail_font), L"Reverting in 60s");
         const RectangleF clock_band(0.0f, countdown_y - 2.0f, 1920.0f, line_size.y + 4.0f);
-        require((delta.width <= 0 || countdown_crop_bounds(camera.calculate_view_rectangle(clock_band)).contains(delta)),
+        require((delta.width <= 0 || pixel_bounds(camera.calculate_view_rectangle(clock_band)).contains(delta)),
             "Nonpositive display trial update changed geometry beyond the live wall-clock countdown");
         moving = after_nonpositive; old(false);
-        const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = true; expected.reduce_effects = true; compare("reduce-immediate", true, true);
-        const_cast<PlaySettings&>(preferences_session.play_settings()).reduce_effects = false; expected.reduce_effects = false; require(moving.pixels == frame().pixels, "Reduced display trial drawing consumed focus motion"); tap(GamepadButton::b); reverted();
+        live_play_settings(preferences_session).reduce_effects = true; expected.reduce_effects = true; compare("reduce-immediate", true, true);
+        live_play_settings(preferences_session).reduce_effects = false; expected.reduce_effects = false; require(moving.pixels == frame().pixels, "Reduced display trial drawing consumed focus motion"); tap(GamepadButton::b); reverted();
         seed(); begin(); select_keep(); compare("deliberate-keep", true); tap(GamepadButton::a); hide(); kept(); Save loaded; SettingsSession loaded_session(loaded); loaded_session.load_save_file(); preserved(loaded_session.play_settings()); require(loaded.resolution() == ScreenResolution::s_1920_1080 && !loaded.fullscreen() && loaded.team_palette() == TeamColourPair::random, "Keep failed to persist and reload its candidate");
         const auto once = bytes(); tap(GamepadButton::a); hide(); kept(); require(bytes() == once, "Repeated unchanged Apply reopened a trial or changed saved bytes");
     }

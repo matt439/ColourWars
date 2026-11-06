@@ -5,6 +5,7 @@
 #include "engine/render/font.h"
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
@@ -130,31 +131,15 @@ namespace
         require(widget.max_width() == 70.0f, "The widget lost its width");
     }
 
-    rapidjson::Document read_document(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        const std::string text{ std::istreambuf_iterator<char>(input), {} };
-        rapidjson::Document result;
-        result.Parse(text.c_str());
-        require(!result.HasParseError(), "Cannot parse " + path.string());
-        return result;
-    }
+    using acceptance::read_document;
 
     std::string presentation_rejection(const std::filesystem::path& content,
         const std::filesystem::path& scratch, const char* name, void (*edit)(rapidjson::Document&))
     {
         rapidjson::Document document = read_document(content / "presentation.json");
         edit(document);
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(document.Accept(writer), "Cannot encode text wrap fixture");
         const auto path = scratch / (std::string("text-wrap-") + name + ".json");
-        {
-            std::ofstream output(path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            require(output.good(), "Cannot write text wrap fixture");
-        }
+        acceptance::write_document(document, path);
         return thrown([&] { const Presentation rejected(path.string().c_str()); std::ignore = rejected; });
     }
 

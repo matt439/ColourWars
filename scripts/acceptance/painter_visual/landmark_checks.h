@@ -76,8 +76,8 @@ LandmarkWorld landmark_world(Application& app, const LevelLoadedInfo& info, cons
                 RectangleF splash = object->shape()->bounding_box(); splash.inflate(32.0f);
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = surfaces % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::zero, team, surfaces % 2 == 0 ? 3 : 1,
-                    colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, surfaces % 2 == 0 ? 3 : 1,
+                    colours.team_colour(team));
                 painted->on_contact(shot, Vector2F::zero, 0.0f); painted->update(10.0f);
             }
             const PaintTotal paint = painted->paint_total(); total += paint.total; owned += paint.team_a + paint.team_b; ++surfaces;
@@ -212,10 +212,8 @@ std::filesystem::path landmark_omission_copy(const std::filesystem::path& conten
     }
     restored["non_collision_objects"] = std::move(restored_objects);
     require(restored == original, "Landmark omission changed fields beyond the two scenery entries");
-    rapidjson::StringBuffer serialized; rapidjson::Writer<rapidjson::StringBuffer> writer(serialized); omitted.Accept(writer);
     const auto path = output / "landmark-omission" / (std::string(stage.name) + ".json"); std::filesystem::create_directories(path.parent_path());
-    std::ofstream file(path, std::ios::binary); file.write(serialized.GetString(), static_cast<std::streamsize>(serialized.GetSize()));
-    require(file.good(), "Cannot retain the private landmark omission proof"); return path;
+    acceptance::write_document(omitted, path); return path;
 }
 
 Frame landmark_frozen_level(Application& app, Level& level, size_t& rendered)
@@ -239,7 +237,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
     const std::filesystem::path& content, const std::filesystem::path& output, std::ofstream& extra,
     size_t& rendered, size_t& previews, size_t& stories, int& ticks)
 {
-    const NestedSaveProfile profile(output / "landmark-story-profile"); Registry<LevelLoadedInfo> omitted("Landmark omission Level");
+    const acceptance::IsolatedSave profile(output / "landmark-story-profile"); Registry<LevelLoadedInfo> omitted("Landmark omission Level");
     for (const auto& stage : landmark_stages)
     { const auto path = landmark_omission_copy(content, output, stage); auto info = std::make_unique<LevelLoadedInfo>(path.string().c_str()); info->validate(); omitted.add(stage.name, std::move(info)); }
     LevelBuilder without(app.viewport_manager(), app.render_resources(), app.audio_resources(), &preferences, &omitted, &tuning,
@@ -289,7 +287,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
             const auto step = [&]
             {
                 require(++ticks <= 16000, "Landmark story exceeded its hard update bound");
-                std::srand(6203 + ticks); actual->update(acceptance::slot_seats(*actual, inputs), dt); std::srand(6203 + ticks); missing->update(acceptance::slot_seats(*missing, inputs), dt);
+                actual->update(acceptance::slot_seats(*actual, inputs), dt); missing->update(acceptance::slot_seats(*missing, inputs), dt);
             };
             const auto sample = [&](const char* phase)
             {
@@ -360,7 +358,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
                         for (size_t prop = 0; prop < sources.size(); ++prop)
                         {
                             RectangleF box = stage.props[prop]; world.scene->view(0).camera.calculate_view_rectangle(box); box.offset(world.scene->view(0).viewport.position());
-                            const RectangleI crop = countdown_crop_bounds(box); visible[coverage * 2 + prop] = miniature_changed_pixels(foreground_crop(frames[coverage], crop, 0), foreground_crop(absent, crop, 0));
+                            const RectangleI crop = pixel_bounds(box); visible[coverage * 2 + prop] = miniature_changed_pixels(foreground_crop(frames[coverage], crop, 0), foreground_crop(absent, crop, 0));
                             require(visible[coverage * 2 + prop] > 0, "An authored landmark has no surviving pixels in a clean/heavy overview pane");
                         }
                     }
@@ -379,7 +377,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
                 const size_t prop = std::string(stage.name) == "movement_course" ? 1 : 0;
                 const Camera camera(stage.props[prop].center() - pane.size() / (2.0f * scale), scale);
                 clean.scene->clear_views(); clean.scene->add_view(pane, camera); heavy.scene->clear_views(); heavy.scene->add_view(pane, camera);
-                RectangleF area = stage.props[prop]; area.inflate(40.0f); camera.calculate_view_rectangle(area); const RectangleI crop = countdown_crop_bounds(area);
+                RectangleF area = stage.props[prop]; area.inflate(40.0f); camera.calculate_view_rectangle(area); const RectangleI crop = pixel_bounds(area);
                 for (size_t coverage = 0; coverage < 2; ++coverage)
                 {
                     const auto& world = coverage == 0 ? clean : heavy; const Frame frame = landmark_frame(app, world, stage, sources, LandmarkDraw::native, rendered);
@@ -400,7 +398,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
         pairs << ',' << primary_states << ',' << edges << ',' << previews << ',' << stories << ',' << rendered << ',' << ticks << ',' << crops << '\n';
     require(records.good() && extra.good() && counts.good(), "Landmark evidence CSV write failed");
     std::cout << "PASS landmarks: " << pairs << " clean/heavy paired static Scene comparisons / " << primary_states <<
-        " primary states, all4 arenas x3 palettes x1P/4P pane framing x720/1080; measured>99% real paint ownership, positive per-prop pixels, raw-atlas/order/cull parity, frozen geometry/ownership/RNG and resize. " <<
+        " primary states, all 4 arenas x 3 palettes x 1P/4P pane framing x 720/1080; measured>99% real paint ownership, positive per-prop pixels, raw-atlas/order/cull parity, frozen geometry/ownership/RNG and resize. " <<
         edges << " native clipped-edge cases, " << previews << " actual StagePreview size cases, " << stories << " actual Level monitor/overview size cases, " <<
         rendered << " total renderer readbacks including references/repeats; " << ticks << " paired story ticks, " << crops <<
         " compact crops. Solo monitor bypass preserved; static Visual Reduce effects invariance and Debug frozen fingerprints checked. No route, human readability, physical-device or performance acceptance.\n";

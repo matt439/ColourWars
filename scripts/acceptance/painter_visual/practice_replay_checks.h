@@ -100,12 +100,11 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     using namespace practice_replay_acceptance;
-    const NestedSaveProfile profile(output / "practice-replay-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "crossfeed", "Crossfeed", "stage_turbulence", true } };
+    const acceptance::IsolatedSave profile(output / "practice-replay-profile");
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.aim_marker = false; });
+    SettingsSession preferences_session(preferences);
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "crossfeed") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "crossfeed", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     // The inert director leaves the shipping path intact in both presets.

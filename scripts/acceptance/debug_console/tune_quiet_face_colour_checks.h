@@ -23,22 +23,22 @@ void check_quiet_face_colour_tunes(const std::filesystem::path& game_directory)
         for (const char* token : { "false", "null", "17", "{}", "[]" })
         {
             bool rejected = false;
-            try { document.commit(document.edited(*document.find(local), token), local); }
+            try { document.commit(document.edited(require_leaf(document, local), token), local); }
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected && document.current().text() == pending && document.baseline().text() == baseline &&
                 document.edits().size() == 1 && document.edits().at(local).baseline_token == edit.baseline_token &&
                 document.edits().at(local).current_token == edit.current_token,
                 "Wrong-type face commits preserve current/baseline bytes and both ledger tokens");
         }
-        const std::string external = reference.replaced(*reference.find("number"), "25");
+        const std::string external = reference.replaced(require_leaf(reference, "number"), "25");
         const JsonSpanDocument external_reference(external, "quiet-face-external-reference");
         const TuneSplice spliced = document.splice(external, false);
         require(spliced.conflicts.empty() && spliced.written == 1 && spliced.text ==
-            external_reference.replaced(*external_reference.find(local), "\"2060C080\""),
+            external_reference.replaced(require_leaf(external_reference, local), "\"2060C080\""),
             "A nested face splice preserves the external number, escaped sibling and all CRLF bytes");
         for (const std::string& unavailable : { std::string("{}"),
-            reference.replaced(*reference.find(local), "null"),
-            reference.replaced(*reference.find(local), "{\"value\":\"WHITE\"}"),
+            reference.replaced(require_leaf(reference, local), "null"),
+            reference.replaced(require_leaf(reference, local), "{\"value\":\"WHITE\"}"),
             std::string("{\"figure.quiet.face_colour\":\"WHITE\"}"),
             std::string("{\"figure\":{\"quiet\":{\"face_colour.r\":\"WHITE\"}}}") })
         {
@@ -138,7 +138,7 @@ void check_quiet_face_colour_tunes(const std::filesystem::path& game_directory)
         log_contains(impl.log(), path, DebugSeverity::info), "The nested face appears in its real command diff");unchanged();
     const std::string external = " \r\n" + source_before;
     const JsonSpanDocument external_reference(external, "quiet-face-save-reference");
-    const std::string saved = external_reference.replaced(*external_reference.find(local), "\"2060C080\"");
+    const std::string saved = external_reference.replaced(require_leaf(external_reference, local), "\"2060C080\"");
     write_text(scratch.source / L"presentation.json", external);
     require(impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && document->baseline().text() == saved &&
@@ -173,8 +173,8 @@ void check_quiet_face_colour_tunes(const std::filesystem::path& game_directory)
     };
     const auto held_ledger = ledger();const std::string current = document->current().text();
     const JsonSpanDocument saved_reference(saved, "quiet-face-invalid-merge-reference");
-    const std::string invalid = saved_reference.replaced(*saved_reference.find("figure.quiet.eyelid_height"),
-        saved_reference.token(*saved_reference.find("figure.quiet.eyes[0].height")));
+    const std::string invalid = saved_reference.replaced(require_leaf(saved_reference, "figure.quiet.eyelid_height"),
+        saved_reference.token(require_leaf(saved_reference, "figure.quiet.eyes[0].height")));
     write_text(scratch.source / L"presentation.json", invalid);
     for (const char* command : { "tune.save presentation", "tune.save presentation force" })
     {

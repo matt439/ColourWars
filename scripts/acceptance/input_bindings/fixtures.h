@@ -8,7 +8,7 @@
 #include "game/states/menu_input.h"
 #include "engine/input/gamepad_reader.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
 #include <objbase.h>
 #include <array>
 #include <cstdint>
@@ -102,50 +102,13 @@ namespace input_bindings_acceptance
         SlotInput desktop() { return this->sample()[input_slots::keyboard_and_mouse]; }
     };
 
-    class IsolatedSaveDirectory
+    // The probe's private save root. A relaunch check names its own, which
+    // its two processes share and its runner keeps.
+    class IsolatedSaveDirectory : public acceptance::IsolatedSave
     {
     public:
-        explicit IsolatedSaveDirectory(const std::filesystem::path& retained_root = {}) : retained_(!retained_root.empty())
-        {
-            wchar_t* previous = nullptr; size_t length = 0;
-            require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0, "Cannot read LOCALAPPDATA");
-            if (previous) { previous_ = previous; std::free(previous); }
-            if (retained_)
-            {
-                root_ = std::filesystem::absolute(retained_root);
-                std::filesystem::create_directories(root_ / L"ColourWars");
-            }
-            else
-            {
-                GUID guid{}; wchar_t name[40]{};
-                require(SUCCEEDED(CoCreateGuid(&guid)) && StringFromGUID2(guid, name, 40) > 0, "Cannot name input-binding acceptance profile");
-                root_ = std::filesystem::temp_directory_path() / (std::wstring(L"ColourWars-input-bindings-") + name);
-                require(std::filesystem::create_directory(root_) && std::filesystem::create_directory(root_ / L"ColourWars"),
-                    "Cannot create input-binding acceptance profile");
-            }
-            require(_wputenv_s(L"LOCALAPPDATA", root_.c_str()) == 0, "Cannot isolate input-binding saves");
-        }
-        ~IsolatedSaveDirectory()
-        {
-            _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
-            if (retained_) { return; } // Explicit relaunch profiles belong to the caller across processes.
-            std::error_code ignored;
-            std::filesystem::remove_all(root_, ignored);
-        }
-        std::filesystem::path save_path() const { return root_ / L"ColourWars/save_data.json"; }
-        bool temporary_left() const { return acceptance::temporary_beside(save_path()); }
-        void write(const std::string& json) const
-        {
-            std::ofstream stream(save_path(), std::ios::binary | std::ios::trunc); stream << json;
-            require(stream.good(), "Cannot write private input-binding fixture");
-        }
-        std::string contents() const
-        {
-            std::ifstream stream(save_path(), std::ios::binary); require(stream.good(), "Cannot read private input-binding save");
-            return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-        }
-    private:
-        std::filesystem::path root_; std::wstring previous_; bool retained_ = false;
+        explicit IsolatedSaveDirectory(const std::filesystem::path& retained_root = {}) :
+            acceptance::IsolatedSave(L"input-bindings", retained_root) {}
     };
 
     struct ExpectedKeyboard

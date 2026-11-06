@@ -11,6 +11,7 @@
 #include "engine/assets/sound_bank_loader.h"
 #include "editor/content_catalog.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/json_fixture.h"
 
 #include <filesystem>
 #include <fstream>
@@ -29,16 +30,6 @@ namespace
 {
     using acceptance::require;
 
-    rapidjson::Document read_document(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        const std::string source{ std::istreambuf_iterator<char>(input), {} };
-        rapidjson::Document document;
-        document.Parse(source.c_str());
-        require(!document.HasParseError(), "Cannot parse " + path.string());
-        return document;
-    }
 
     rapidjson::Document copy_document(const rapidjson::Document& source)
     {
@@ -50,7 +41,7 @@ namespace
     std::vector<std::filesystem::path> manifest_levels(const std::filesystem::path& content)
     {
         const auto root = content.lexically_normal();
-        const auto manifest = read_document(root / "manifest.json");
+        const auto manifest = acceptance::read_document(root / "manifest.json");
         require(manifest.IsObject() && manifest.HasMember("assets") && manifest["assets"].IsArray(),
             "Level inventory needs the actual manifest assets");
         std::vector<std::filesystem::path> result;
@@ -83,16 +74,6 @@ namespace
         return result;
     }
 
-    void write_document(const std::filesystem::path& path, const rapidjson::Document& document)
-    {
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(document.Accept(writer), "Cannot encode " + path.string());
-        std::ofstream output(path, std::ios::binary | std::ios::trunc);
-        output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-        output.close();
-        require(output.good(), "Cannot write " + path.string());
-    }
 
     void schema_is(const rapidjson::SchemaDocument& schema,
         const rapidjson::Document& document, bool expected, const std::string& name)
@@ -219,10 +200,7 @@ namespace
         {
             const auto path = scratch / ("version-" + std::to_string(index++) + ".json");
             {
-                std::ofstream output(path, std::ios::binary | std::ios::trunc);
-                output << "{\"format\":" << value << '}';
-                output.close();
-                require(output.good(), "Cannot write version rejection fixture");
+                acceptance::write_text(path, std::string("{\"format\":") + value + '}');
             }
             bool named = false;
             try { const LevelLoadedInfo invalid(path.string().c_str()); }
@@ -243,7 +221,7 @@ namespace
             rapidjson::Document document;
             document.Parse(source);
             const auto path = scratch / "supported-version-only.json";
-            write_document(path, document);
+            acceptance::write_document(document, path);
             const LevelLoadedInfo supported(path.string().c_str());
         }
     }
@@ -258,7 +236,7 @@ namespace
             edit(document);
             schema_is(schema, document, expected, name);
             const auto path = scratch / (std::string(name) + ".json");
-            write_document(path, document);
+            acceptance::write_document(document, path);
             return path;
         };
         const auto unknown = variant("unknown-metadata", true, [](rapidjson::Document& d)
@@ -398,7 +376,7 @@ namespace
             edit(document);
             schema_is(schema, document, schema_accepts, name);
             const auto path = scratch / (std::string(name) + ".json");
-            write_document(path, document);
+            acceptance::write_document(document, path);
             if (!runtime_accepts)
             {
                 runtime_rejects(path, "gate", builder, render, audio);
@@ -468,7 +446,7 @@ namespace
         spawned["collision_objects"][at]["rectangle"]["height"].SetInt(200);
         schema_is(schema, spawned, true, "gate-over-spawn");
         const auto spawn_path = scratch / "gate-over-spawn.json";
-        write_document(spawn_path, spawned);
+        acceptance::write_document(spawned, spawn_path);
         bool refused = false;
         try
         {
@@ -515,7 +493,7 @@ namespace
             edit(document);
             schema_is(schema, document, schema_accepts, name);
             const auto path = scratch / (std::string(name) + ".json");
-            write_document(path, document);
+            acceptance::write_document(document, path);
             if (!runtime_accepts)
             {
                 runtime_rejects(path, "motion", builder, render, audio);
@@ -665,7 +643,7 @@ namespace
             edit(document);
             schema_is(schema, document, schema_accepts, name);
             const auto path = scratch / (std::string(name) + ".json");
-            write_document(path, document);
+            acceptance::write_document(document, path);
             if (!runtime_accepts)
             {
                 runtime_rejects(path, "motion", builder, render, audio);
@@ -789,7 +767,7 @@ namespace
                 }
             }
             // A strip is not a frame to the engine, so the editor must not take one.
-            const rapidjson::Document json = read_document(path);
+            const rapidjson::Document json = acceptance::read_document(path);
             for (const auto& strip : json["animation_strips"].GetArray())
             {
                 const std::string name = strip["name"].GetString();
@@ -823,7 +801,7 @@ int main(int argc, char** argv)
         const std::filesystem::path repo(argv[2]);
         const auto scratch = std::filesystem::absolute(argv[0]).parent_path() / "level-format-fixtures";
         std::filesystem::create_directories(scratch);
-        const auto schema_json = read_document(repo / "game/contracts/level.schema.json");
+        const auto schema_json = acceptance::read_document(repo / "game/contracts/level.schema.json");
         const rapidjson::SchemaDocument schema(schema_json);
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(
@@ -841,7 +819,7 @@ int main(int argc, char** argv)
         size_t checked = 0;
         const auto check_compatible = [&](const std::filesystem::path& path)
         {
-            auto document = read_document(path);
+            auto document = acceptance::read_document(path);
             require(document.HasMember("format") && document["format"].IsInt() &&
                 document["format"].GetInt() == level_format::current,
                 path.string() + " needs an explicit current format tag");
@@ -852,7 +830,7 @@ int main(int argc, char** argv)
             document.RemoveMember("format");
             schema_is(schema, document, true, path.string() + " untagged legacy clone");
             const auto legacy_path = scratch / ("legacy-" + std::to_string(checked) + ".json");
-            write_document(legacy_path, document);
+            acceptance::write_document(document, legacy_path);
             const LevelLoadedInfo legacy(legacy_path.string().c_str());
             legacy.validate();
             legacy.validate_content(builder, render, audio);
@@ -862,7 +840,6 @@ int main(int argc, char** argv)
         const auto staged_levels = manifest_levels(content);
         const auto source_levels = manifest_levels(repo / "game/content");
         require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
-        require(staged_levels.size() == 13, "Current format acceptance needs all thirteen registered stages");
         for (const auto& file : staged_levels)
         {
             check_compatible(content / file);
@@ -873,8 +850,8 @@ int main(int argc, char** argv)
         }
         const auto template_path = repo / "editor/template.json";
         check_compatible(template_path);
-        const auto source = read_document(template_path);
-        write_document(scratch / "baseline.json", source);
+        const auto source = acceptance::read_document(template_path);
+        acceptance::write_document(source, scratch / "baseline.json");
         check_versions(scratch);
         check_schema_fixtures(schema, source, scratch, builder, render, audio);
         check_motion_fixtures(schema, source, scratch, builder, render, audio);

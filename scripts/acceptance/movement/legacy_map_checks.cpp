@@ -30,7 +30,7 @@ namespace movement_acceptance
             return player.grounded();
         }
 
-        struct LegacyRun
+        struct LegacyRun : acceptance::PlayerCourse
         {
             struct NamedObject
             {
@@ -38,9 +38,7 @@ namespace movement_acceptance
                 CollisionObject* object;
             };
 
-            Scene scene{ nullptr, nullptr };
             std::vector<NamedObject> objects;
-            Player* player = nullptr;
             size_t takeoffs = 0;
             int ticks = 0;
             std::string context;
@@ -115,16 +113,8 @@ namespace movement_acceptance
             void tick(const PlayerInputData& actions = input())
             {
                 ++this->ticks;
-                this->player->set_player_input(actions);
-                this->scene.update(dt);
-                const auto shots = this->player->update_weapon_and_get_projectiles(dt,
-                    this->scene.collision_objects());
-                require(shots.empty(), (this->context + ": a non-firing route emitted a projectile").c_str());
-                this->scene.resolve();
-                this->player->end_contacts(this->scene.contacts());
-                this->player->update_weapon_position();
-                this->player->update_prev_rectangle();
-                this->scene.end_tick();
+                require(this->step(actions, true).empty(),
+                    (this->context + ": a non-firing route emitted a projectile").c_str());
                 require(this->player->state() == PlayerState::alive && this->scene.in_bounds(*this->player),
                     (this->context + ": route died or left the authored bounds").c_str());
                 const RectangleF& body = this->player->rectangle();

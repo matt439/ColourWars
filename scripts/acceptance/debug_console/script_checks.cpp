@@ -93,7 +93,7 @@ namespace debug_console_acceptance
 		const DebugLog& log = impl.log();
 		const float dt = 1.0f / 60.0f;
 
-		// DBG12: discovery and execution share private directories. A separate
+		// DBG#12: discovery and execution share private directories. A separate
 		// director keeps these scripts, logs and frames out of the runner below.
 		{
 			const std::filesystem::path caller_directory = std::filesystem::current_path();
@@ -103,7 +103,7 @@ namespace debug_console_acceptance
 				if (needed == 0) { return std::wstring(); }
 				std::vector<wchar_t> value(needed);
 				const DWORD written = GetEnvironmentVariableW(L"LOCALAPPDATA", value.data(), needed);
-				require(written > 0 && written < needed, "DBG12 could not observe caller profile state");
+				require(written > 0 && written < needed, "DBG#12 could not observe caller profile state");
 				return std::wstring(value.data(), written);
 			};
 			const std::wstring profile_before = caller_profile();
@@ -144,7 +144,7 @@ namespace debug_console_acceptance
 					if (entry.is_directory()) { tree.emplace(name + L"/", "directory"); }
 					else
 					{
-						require(entry.is_regular_file(), "DBG12 private tree contains an unexpected entry type");
+						require(entry.is_regular_file(), "DBG#12 private tree contains an unexpected entry type");
 						tree.emplace(name, read_text(entry.path()));
 					}
 				}
@@ -154,7 +154,7 @@ namespace debug_console_acceptance
 			TestDirector discovery_test(tuning, presentation);
 			DebugDirectorImpl& discovery_impl = discovery_test.impl;
 			require(!discovery_impl.user_directory().has_value(),
-				"DBG12 application-free constructor unexpectedly selected a player profile");
+				"DBG#12 application-free constructor unexpectedly selected a player profile");
 			discovery_impl.set_user_directory(profile);
 			discovery_impl.set_script_directories({ first, second });
 			DebugLog& discovery_log = discovery_impl.log();
@@ -172,31 +172,31 @@ namespace debug_console_acceptance
 			const auto upper_output = info_lines();
 			require(std::count(upper_output.begin(), upper_output.end(), "DBG12_UPPER_FIRST") == 1 &&
 				!discovery_impl.scripts().running(),
-				"DBG12 private uppercase-extension script was not executable by its stem");
+				"DBG#12 private uppercase-extension script was not executable by its stem");
 			// Deliberately first new regression after proving actual execution.
 			const DebugCompletion upper = discovery_impl.registry().complete("exec Upp");
 			require(upper.line == "exec Upper " && upper.candidates.empty(),
-				"DBG12 completion omitted an executable uppercase-extension script");
+				"DBG#12 completion omitted an executable uppercase-extension script");
 
 			const DebugCompletion all = discovery_impl.registry().complete("exec ");
 			require(all.line == "exec " && all.candidates == std::vector<std::string>{
 				"MiXeD", "Upper", "UserMixed", "UserUpper", "fallback", "lower", "shared", "user_lower" },
-				"DBG12 discovery changed sorted unique names, stem spelling or candidate admission");
+				"DBG#12 discovery changed sorted unique names, stem spelling or candidate admission");
 			require(discovery_impl.registry().complete("exec MiX").line == "exec MiXeD " &&
 				discovery_impl.registry().complete("exec UserM").line == "exec UserMixed " &&
 				discovery_impl.registry().complete("exec UserU").line == "exec UserUpper " &&
 				discovery_impl.registry().complete("exec low").line == "exec lower " &&
 				discovery_impl.registry().complete("exec user_l").line == "exec user_lower " &&
 				discovery_impl.registry().complete("exec fal").line == "exec fallback ",
-				"DBG12 mixed/lowercase extensions or later-folder regular files lost completion");
+				"DBG#12 mixed/lowercase extensions or later-folder regular files lost completion");
 			for (const char* line : { "exec folder", "exec nested", "exec wrong", "exec almost", "exec bad" })
 			{
 				const DebugCompletion none = discovery_impl.registry().complete(line);
 				require(none.line == line && none.candidates.empty(),
-					"DBG12 completion advertised a directory, nested file, wrong extension or invalid stem");
+					"DBG#12 completion advertised a directory, nested file, wrong extension or invalid stem");
 			}
 			discovery_log.clear();
-			require(discovery_impl.execute("exec.list").ok, "DBG12 private script listing failed");
+			require(discovery_impl.execute("exec.list").ok, "DBG#12 private script listing failed");
 			const auto listed = info_lines();
 			const std::vector<std::string> expected_listing{
 				"  MiXeD  - mixed first", "  Upper  - uppercase first", "  UserMixed  - mixed second",
@@ -205,7 +205,7 @@ namespace debug_console_acceptance
 			};
 			require(listed.size() == 9 && std::equal(expected_listing.begin(), expected_listing.end(), listed.begin()) &&
 				listed.back().starts_with("8 script(s) in "),
-				"DBG12 listing lost exact summaries, regular-file filtering, sorted deduplication or folder precedence");
+				"DBG#12 listing lost exact summaries, regular-file filtering, sorted deduplication or folder precedence");
 			discovery_log.clear();
 			discovery_test.director.run_launch_arguments({ L"+exec", L"MiXeD", L"+exec", L"lower",
 				L"+exec", L"UserUpper", L"+exec", L"UserMixed", L"+exec", L"user_lower",
@@ -215,10 +215,10 @@ namespace debug_console_acceptance
 				"DBG12_MIXED_SECOND", "DBG12_LOWER_SECOND", "DBG12_SHARED_FIRST", "DBG12_FALLBACK_SECOND", "DBG12_UPPER_FIRST" })
 			{
 				require(std::count(executed.begin(), executed.end(), output) == 1,
-					"DBG12 discovered script did not execute exactly once with existing folder precedence");
+					"DBG#12 discovered script did not execute exactly once with existing folder precedence");
 			}
 			require(std::count(executed.begin(), executed.end(), "DBG12_SHARED_SECOND") == 0 &&
-				!discovery_impl.scripts().running(), "DBG12 execution selected the later duplicate or retained a script frame");
+				!discovery_impl.scripts().running(), "DBG#12 execution selected the later duplicate or retained a script frame");
 			discovery_log.clear();
 			require(!discovery_impl.execute("exec Upper.CFG").ok && !discovery_impl.execute("exec UserMixed.cFg").ok &&
 				!discovery_impl.execute("exec folderonly").ok && !discovery_impl.execute("exec nested").ok &&
@@ -226,13 +226,13 @@ namespace debug_console_acceptance
 				!discovery_impl.execute("exec \"bad name\"").ok && !discovery_impl.execute("exec bad.name").ok &&
 				!discovery_impl.execute("exec " + std::string(65, 'x')).ok && info_lines().empty() &&
 				!discovery_impl.scripts().running(),
-				"DBG12 changed explicit suffix/name refusals or executed an excluded candidate");
+				"DBG#12 changed explicit suffix/name refusals or executed an excluded candidate");
 			require(snapshot() == tree_before && std::filesystem::current_path() == caller_directory &&
 				caller_profile() == profile_before,
-				"DBG12 discovery/execution changed private files, directory entries or caller path/profile state");
+				"DBG#12 discovery/execution changed private files, directory entries or caller path/profile state");
 			for (const auto& file : files)
 			{
-				require(read_text(file.first) == file.second, "DBG12 changed a literal script, decoy or profile input");
+				require(read_text(file.first) == file.second, "DBG#12 changed a literal script, decoy or profile input");
 			}
 		}
 
