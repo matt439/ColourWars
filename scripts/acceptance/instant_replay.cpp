@@ -23,12 +23,10 @@ namespace
     public:
         explicit World(const std::filesystem::path& content) : assets(content)
         {
-            for (const char* stage : { "crossfeed", "turbulence", "king_of_the_hill", "close_quarters", "press_tower",
-                "turbulence_ferry_trial", "turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" })
+            for (const acceptance::ManifestEntry& stage : acceptance::manifest_level_paths(content))
             {
-                auto info = std::make_unique<LevelLoadedInfo>((content / "levels" /
-                    (std::string(stage) + ".json")).string().c_str());
-                info->validate(); levels.add(stage, std::move(info));
+                auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage.path).c_str());
+                info->validate(); levels.add(stage.name, std::move(info));
             }
         }
         std::unique_ptr<Level> build(const MatchSetup& settings, OpeningMode opening, const MatchRandom& random)

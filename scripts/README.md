@@ -30,7 +30,12 @@ full.
 [acceptance/](acceptance/) holds one `.cpp` per case declared in
 [cases.psd1](acceptance/cases.psd1), a same-named folder of its checks where it
 has one, and [acceptance/support/probe.h](acceptance/support/probe.h)
-(`acceptance::require` and `acceptance::run_probe`). It also holds the sources
+(`acceptance::require` and `acceptance::run_probe`). A probe that builds game
+objects loads the manifest's sheets, fonts and banks with
+[support/content_world.h](acceptance/support/content_world.h), and one that
+claims every stage walks `manifest_level_paths` in
+[support/stage_catalog.h](acceptance/support/stage_catalog.h), not a list of its
+own. It also holds the sources
 of probes that are not cases and that their own entry points build:
 `painter_visual` ([check-painter.ps1](check-painter.ps1)), `paint_fx_visual`
 ([check-paint-fx.ps1](check-paint-fx.ps1)), `movement_feedback_visual`

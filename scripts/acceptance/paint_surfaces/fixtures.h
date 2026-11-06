@@ -10,6 +10,8 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/paint_samples.h"
 #include "scripts/acceptance/support/probe.h"
 #include "engine/input/mouse.h"
 #include <bit>
@@ -26,7 +28,10 @@ namespace paint_surfaces_acceptance
 {
     using acceptance::require;
 
-    inline std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
+    using acceptance::bits;
+    using acceptance::sample_state;
+    using acceptance::same_total;
+    using acceptance::snapshot;
     inline void area_near(float actual, float expected)
     { require(std::fabs(actual - expected) < 0.02f, "Snapshot disagrees with analytical exposed area"); }
 
@@ -39,21 +44,7 @@ namespace paint_surfaces_acceptance
             presentation(labrador::path_to_utf8(content / "presentation.json").c_str())
         {
             using namespace labrador;
-            for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                render.add_sprite_sheet(sheet, read_sprite_sheet(path_to_utf8(content / "textures" /
-                    path_from_utf8(std::string(sheet) + ".json")).c_str(), TextureHandle{}));
-            }
-            for (const char* font : { "bowlby_one_144", "lato_black_24", "lato_black_36", "lato_black_48",
-                "lato_black_72", "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(path_to_utf8(content / "fonts" /
-                    path_from_utf8(std::string(font) + ".spritefont")));
-                auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-                render.add_font(font, std::move(loaded));
-            }
-            audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, render, audio);
             for (const char* stage : { "crossfeed", "press_tower" })
             {
                 auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(content / "levels" /
@@ -112,20 +103,6 @@ namespace paint_surfaces_acceptance
         std::unique_ptr<LevelBuilder> builder_;
     };
 
-    inline std::vector<std::uint64_t> sample_state(const std::vector<PaintSurfaceSample>& samples)
-    {
-        std::vector<std::uint64_t> result{ static_cast<std::uint64_t>(samples.size()) };
-        for (const PaintSurfaceSample& sample : samples)
-        {
-            for (const labrador::Vector2F& corner : sample.corners)
-            { result.push_back(bits(corner.x)); result.push_back(bits(corner.y)); }
-            result.push_back(static_cast<std::uint64_t>(sample.face));
-            result.push_back(static_cast<std::uint64_t>(sample.team));
-            result.push_back(static_cast<std::uint32_t>(sample.paint_owner));
-            result.push_back(bits(sample.scored_area)); result.push_back(sample.source_index);
-        }
-        return result;
-    }
     inline void add_total(PaintTotal& result, const PaintTotal& part)
     {
         result.total += part.total; result.team_a += part.team_a; result.team_b += part.team_b;
@@ -152,13 +129,6 @@ namespace paint_surfaces_acceptance
         if (started) { add_total(result, group); }
         return result;
     }
-    inline void same_total(const PaintTotal& actual, const PaintTotal& expected)
-    {
-        require(bits(actual.total) == bits(expected.total) && bits(actual.team_a) == bits(expected.team_a) &&
-            bits(actual.team_b) == bits(expected.team_b), "Grouped snapshot totals changed exact scoring arithmetic");
-        for (std::size_t owner = 0; owner < actual.player_areas.size(); ++owner)
-        { require(bits(actual.player_areas[owner]) == bits(expected.player_areas[owner]), "Snapshot owner area changed exact scoring arithmetic"); }
-    }
     inline PaintTotal from_end_info(const LevelEndInfo& info)
     {
         PaintTotal result;
@@ -175,8 +145,6 @@ namespace paint_surfaces_acceptance
             p[1].x > p[0].x && p[2].y > p[1].y, "Current static sample lost its ordered exact rectangle corners");
         return labrador::RectangleF(p[0].x, p[0].y, p[1].x - p[0].x, p[3].y - p[0].y);
     }
-    inline std::vector<PaintSurfaceSample> snapshot(const PaintableObject& object, std::size_t source = 0)
-    { std::vector<PaintSurfaceSample> samples; object.append_paint_surfaces(samples, source); return samples; }
 
     void check_surfaces(World& world);
     void check_levels(World& world);

@@ -25,7 +25,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
     require(preferences_session.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
         ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed the private Weapon tint profile/palette");
     const auto save_path = root / "profile/ColourWars/save_data.json"; const std::string saved = tune_colour_bytes(save_path);
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();

@@ -467,7 +467,10 @@ void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning&
     StateContext& stack = app;
     const SoundBank* bank = app.audio_resources()->sound_bank("paint_exe");
     require(bank->audible(), "Arena-music hardware flow requires the accepted real sound bank");
-    const auto music = bank->resolve_effect("music.close_quarters");
+    // The cue the stage's own file names, not a copy of it here.
+    const LevelLoadedInfo* stage = data.stage_catalog()->level_infos().get("close_quarters");
+    require(stage->has_music(), "Arena-music flow needs Close Quarters to name its music");
+    const auto music = bank->resolve_effect(stage->music_name());
     const auto weapon = bank->resolve_effect(
         tuning.weapon(WeaponType::sprayer).loop_sounds.sound_name(PlayerTeam::a, 0));
     const float duration = presentation.pause_menu().resume_countdown;

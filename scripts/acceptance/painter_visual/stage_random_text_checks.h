@@ -72,8 +72,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     const Presentation original = presentation;
     const std::wstring legacy = L"Random";
     const std::wstring legacy_browse_status = L"FIND YOUR ARENA", legacy_locked_status = L"ARENA LOCKED";
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters") };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 },
         "Random stage text fixture must exclude Movement Course and include the real arena");
     Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());

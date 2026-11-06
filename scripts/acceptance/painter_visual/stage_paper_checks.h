@@ -10,8 +10,8 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     const StageList shipped{
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },
         { "turbulence", "Turbulence", "stage_turbulence", true },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true },
-        { "movement_course", "Movement Course", "stage_turbulence", false } };
+        acceptance::shipped_stage(levels, "close_quarters"),
+        acceptance::shipped_stage(levels, "movement_course") };
     for (const auto& stage : shipped)
     {
         const auto* info = levels.get(stage.name);

@@ -5,6 +5,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -63,31 +64,7 @@ namespace
         d["menu_text"]["labels"]["worn_profile"].SetString("{device}{name}");
     }
 
-    struct World
-    {
-        RenderResources render;
-        AudioResources audio;
-
-        explicit World(const std::filesystem::path& content)
-        {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                render.add_sprite_sheet(name, read_sprite_sheet(
-                    (content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));
-            }
-            for (const char* name : { "bowlby_one_144", "lato_black_24",
-                "lato_black_36", "lato_black_48", "lato_black_72",
-                "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    (content / "fonts" / (std::string(name) + ".spritefont")).string());
-                auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-                render.add_font(name, std::move(font));
-            }
-            audio.add_sound_bank("paint_exe", SoundBank::silent());
-        }
-    };
+    using World = acceptance::ContentWorld;
 
     struct Variants
     {

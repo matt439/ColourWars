@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/debug_console/fixtures.h"
+#include "scripts/acceptance/support/content_world.h"
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/console/debug_menu_model.h"
@@ -71,18 +72,9 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         hud->closing_clock.ink, hud->closing_clock.paper, hud->closing_clock.shade, hud->closing_clock.accent,
         presentation.main_menu().stage_select.unselected };
     labrador::RenderResources render; labrador::AudioResources audio;
-    for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-        { render.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / "textures" / (std::string(name) + ".json")).string().c_str(), labrador::TextureHandle{})); }
+    acceptance::load_cpu_assets(game_directory, render, audio);
     const std::array<const char*, 7> font_names{ "bowlby_one_144", "lato_black_24", "lato_black_36",
         "lato_black_48", "lato_black_72", "lato_black_144", "courier_prime_bold_16" };
-    for (const char* name : font_names)
-    {
-        const auto file = labrador::read_sprite_font_file((game_directory / "fonts" / (std::string(name) + ".spritefont")).string());
-        auto font = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs, file.line_spacing);
-        if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-        render.add_font(name, std::move(font));
-    }
-    audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
     // TestDirector has no Application: commands exercise the actual full reader,
     // while resource validation below is a separate, direct public operation.
     presentation.validate_resources(render, audio);

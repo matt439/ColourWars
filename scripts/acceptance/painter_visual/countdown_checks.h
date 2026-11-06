@@ -206,32 +206,34 @@ void countdown_live_signal(Application& app, Level& level, const Presentation& p
         "GO signal was missing, expired early or survived its one-second beat");
 }
 
+// Every stage the manifest lists, each expected to show its level file's
+// display_name: "every authored stage name" is the manifest's, not a list here.
 void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
-    const GameTuning& tuning, PlaySettings& preferences,
+    const GameTuning& tuning, PlaySettings& preferences, const std::filesystem::path& content,
     const std::filesystem::path& output, std::ofstream& records)
 {
     struct NamedStage
     {
-        const char* stage;
-        std::wstring_view name;
+        std::string stage;
+        std::wstring name;
     };
-    const NamedStage stages[] = {
-        { "movement_course", L"Movement Course" },
-        { "close_quarters", L"Close Quarters" },
-        { "king_of_the_hill", L"King of the Hill" },
-        { "turbulence", L"Turbulence" }
-    };
+    std::vector<NamedStage> stages;
+    for (const acceptance::ManifestEntry& level : acceptance::manifest_level_paths(content))
+    {
+        const LevelLoadedInfo info(path_to_utf8(level.path).c_str());
+        stages.push_back({ level.name, widen(info.display_name()) });
+    }
     const Vector2I native(1280, 720);
     const auto inputs = neutral_inputs();
     for (const NamedStage& stage : stages)
     {
         // Close Quarters takes three players and their own three-pane layout.
-        const int count = std::string_view(stage.stage) == "close_quarters" ? 3 : 4;
+        const int count = stage.stage == "close_quarters" ? 3 : 4;
         auto level = countdown_level(app, builder, count, OpeningMode::off, stage.stage);
         resize(app, *level, native);
         stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), stage.name);
         const RectangleF card = level->opening_cards().front();
-        const std::string stem = "countdown-stage-" + std::string(stage.stage);
+        const std::string stem = "countdown-stage-" + stage.stage;
         countdown_capture(app, *level, preferences, card, output, stem, records, true);
         const Frame initial = render(*level, *app.renderer());
         std::vector<Camera> initial_cameras;
@@ -319,7 +321,7 @@ void stage_entry_skip_matrix(Application& app, LevelBuilder& builder,
 
 void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences,
-    const std::filesystem::path& output)
+    const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const RestoreFlag restore_reduced{ preferences.reduce_effects, preferences.reduce_effects };
     preferences.reduce_effects = false;
@@ -327,7 +329,7 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
     std::ofstream records(output / "countdown.csv");
     records << "capture,players,state,width,height,card_x,card_y,card_width,card_height,"
         "stage_x,stage_y,stage_width,stage_height\n";
-    stage_entry_stage_matrix(app, builder, tuning, preferences, output, records);
+    stage_entry_stage_matrix(app, builder, tuning, preferences, content, output, records);
     stage_entry_skip_matrix(app, builder, tuning, preferences, output, records);
     const auto inputs = neutral_inputs();
     for (int count : { 1, 2, 4 })
@@ -419,7 +421,7 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
     require(records.good(), "Countdown capture records could not be written");
     std::cout << "PASS countdown: distinct 0-9/GO glyphs, local beat/reduced/expired rasters at native "
         "720p/1080p/QHD; real solo and 2P/4P full/quick/off openings, device reminders, GO boundary, "
-        "all authored stage names and bounded fitted titles, three-player roster, narrow/wide aspect ratios, "
+        "every manifest stage's authored name and bounded fitted titles, three-player roster, narrow/wide aspect ratios, "
         "story/monitor skips, pause, nonpositive updates, resize round-trip, frozen pixels/state/draw RNG "
         "and Debug fingerprint\n";
 }

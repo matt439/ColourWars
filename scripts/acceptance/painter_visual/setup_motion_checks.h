@@ -24,7 +24,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     PlaySettings initial; initial.music_volume = initial.sfx_volume = 0; initial.reduce_effects = false;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed setup-motion preferences");
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);

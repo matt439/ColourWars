@@ -103,12 +103,18 @@ namespace level_editor_acceptance
             catalog.sound_effects.at("paint_exe")->contains("music.end_sting.close_quarters"),
             "Catalog lacks paint_exe music effects");
 
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower", "turbulence_blockout" })
+        // Every stage the manifest lists, as the catalog read it. This
+        // target has no engine, so it walks the editor's own manifest read
+        // rather than acceptance::manifest_level_paths.
+        require(!catalog.stages.empty(), "Catalog read no manifest stage");
+        for (const std::string& name : catalog.stages)
         {
-            LevelDocument document;
-            document.load(content / "levels" / (std::string(name) + ".json"));
+            // The source tuning is the authoring context the motion stages
+            // (the mover, ferry, gate and lift trials) need, as in the editor.
+            LevelDocument document(content / "tuning.json");
+            document.load(content / "levels" / (name + ".json"));
             const std::vector<std::string> found = document.unresolved_resources(catalog);
-            require(found.empty(), std::string("Shipped level ") + name + " has an unresolved name: " +
+            require(found.empty(), "Shipped level " + name + " has an unresolved name: " +
                 (found.empty() ? "" : found.front()));
         }
         LevelDocument created;

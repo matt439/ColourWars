@@ -2,12 +2,14 @@
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <stdexcept>
 #include <set>
 
@@ -51,115 +53,43 @@ namespace
 
 	void check_shipped_stages(const std::filesystem::path& content)
 	{
-		const std::string manifest_path = (content / "manifest.json").string();
-		const labrador::JsonDocument manifest = labrador::read_json_file(manifest_path.c_str());
-		const labrador::JsonValue assets = manifest.root().array("assets");
+		// The exact pins: the thirteen registered stages, and which of them
+		// Random may draw. Every other probe walks the manifest instead.
+		const std::map<std::string, bool> expected_random{
+			{ "movement_course", false }, { "king_of_the_hill", false }, { "turbulence", false },
+			{ "close_quarters", true }, { "crossfeed", true }, { "press_tower", true },
+			{ "turbulence_blockout", false }, { "turbulence_mover_trial", false },
+			{ "turbulence_slab_trial", true }, { "turbulence_ferry_trial", false },
+			{ "turbulence_gate_trial", false }, { "turbulence_lift_trial", false },
+			{ "turbulence_paint_lift_trial", false } };
 		StageList stages;
-		bool course_found = false;
-		bool crossfeed_found = false;
-		bool king_of_the_hill_found = false;
-		bool turbulence_found = false;
-		bool press_tower_found = false;
-		bool turbulence_blockout_found = false;
-		bool turbulence_mover_found = false;
-		bool turbulence_slab_found = false;
-		bool turbulence_ferry_found = false;
-		bool turbulence_gate_found = false;
-		bool turbulence_lift_found = false;
-		bool turbulence_paint_lift_found = false;
 		std::set<std::string> names_seen;
 		size_t crossfeed_index = 0;
 		size_t defaulted_arenas = 0;
-		for (size_t group = 0; group < assets.size(); ++group)
+		for (const acceptance::ManifestEntry& level : acceptance::manifest_level_paths(content))
 		{
-			const labrador::JsonValue asset = assets.at(group);
-			if (asset.string("kind") != "level") { continue; }
-			const labrador::JsonValue names = asset.array("names");
-			for (size_t index = 0; index < names.size(); ++index)
+			const std::string& name = level.name;
+			require(names_seen.insert(name).second, "Shipped stage names must be unique");
+			const std::string path = labrador::path_to_utf8(level.path);
+			const LevelLoadedInfo info(path.c_str());
+			info.validate();
+			stages.push_back({ name, info.display_name(), info.icon_frame(), info.include_in_random() });
+			const auto expected = expected_random.find(name);
+			require(expected != expected_random.end(), "Stage selection gained an unpinned stage: " + name);
+			require(info.include_in_random() == expected->second, expected->second ?
+				"An accepted Random arena left Random: " + name :
+				"An explicit-only stage joined Random: " + name);
+			if (name == "crossfeed") { crossfeed_index = stages.size() - 1; }
+			const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
+			if (!source.root().has("include_in_random"))
 			{
-				const std::string name = names.at(index).as_string();
-				require(names_seen.insert(name).second, "Shipped stage names must be unique");
-				const std::string path = (content / asset.string("directory") / (name + ".json")).string();
-				const LevelLoadedInfo info(path.c_str());
-				info.validate();
-				stages.push_back({ name, info.display_name(), info.icon_frame(), info.include_in_random() });
-				if (name == "movement_course")
-				{
-					course_found = true;
-					require(!info.include_in_random(), "Movement Course must require an explicit stage choice");
-				}
-				if (name == "crossfeed")
-				{
-					crossfeed_found = true;
-					crossfeed_index = stages.size() - 1;
-					require(info.include_in_random(), "Accepted Crossfeed must be eligible for Random");
-				}
-				if (name == "king_of_the_hill")
-				{
-					king_of_the_hill_found = true;
-					require(!info.include_in_random(), "The original King of the Hill must leave Random now Press Tower replaced it");
-				}
-				if (name == "turbulence")
-				{
-					turbulence_found = true;
-					require(!info.include_in_random(), "The original Turbulence must leave Random now the slab trial replaced it");
-				}
-				if (name == "press_tower")
-				{
-					press_tower_found = true;
-					require(info.include_in_random(), "Accepted Press Tower must be eligible for Random");
-				}
-				if (name == "turbulence_blockout")
-				{
-					turbulence_blockout_found = true;
-					require(!info.include_in_random(), "Turbulence blockout must remain explicit-only while provisional");
-				}
-				if (name == "turbulence_mover_trial")
-				{
-					turbulence_mover_found = true;
-					require(!info.include_in_random(), "Turbulence mover comparison must remain explicit-only while provisional");
-				}
-				if (name == "turbulence_slab_trial")
-				{
-					turbulence_slab_found = true;
-					require(info.include_in_random(), "Accepted Turbulence slab trial must be eligible for Random");
-				}
-				if (name == "turbulence_ferry_trial")
-				{
-					turbulence_ferry_found = true;
-					require(!info.include_in_random(), "Turbulence paint-ferry trial must remain explicit-only while provisional");
-				}
-				if (name == "turbulence_gate_trial")
-				{
-					turbulence_gate_found = true;
-					require(!info.include_in_random(), "Turbulence team-gate trial must remain explicit-only while provisional");
-				}
-				if (name == "turbulence_lift_trial")
-				{
-					turbulence_lift_found = true;
-					require(!info.include_in_random(), "Turbulence vertical-lift trial must remain explicit-only while provisional");
-				}
-				if (name == "turbulence_paint_lift_trial")
-				{
-					turbulence_paint_lift_found = true;
-					require(!info.include_in_random(), "Turbulence paint-lift trial must remain explicit-only while provisional");
-				}
-				const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
-				if (!source.root().has("include_in_random"))
-				{
-					++defaulted_arenas;
-					require(info.include_in_random(), "Existing stages without metadata must stay eligible");
-				}
+				++defaulted_arenas;
+				require(info.include_in_random(), "Existing stages without metadata must stay eligible");
 			}
 		}
-		require(course_found && crossfeed_found && king_of_the_hill_found && turbulence_found && press_tower_found &&
-			turbulence_blockout_found && turbulence_mover_found && turbulence_slab_found && turbulence_ferry_found &&
-			turbulence_gate_found && turbulence_lift_found && turbulence_paint_lift_found && defaulted_arenas == 1,
-			"Acceptance needs the explicit course, originals and Turbulence trials, eligible Crossfeed, Press Tower and slab trial and one unmarked arena");
-		const std::set<std::string> expected_names{ "king_of_the_hill", "turbulence", "close_quarters", "movement_course",
-			"crossfeed", "press_tower", "turbulence_blockout", "turbulence_mover_trial", "turbulence_slab_trial", "turbulence_ferry_trial",
-			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" };
-		require(stages.size() == 13 && names_seen == expected_names, "Stage selection must expose exactly the thirteen registered stages");
+		require(defaulted_arenas == 1, "Acceptance needs exactly one arena without include_in_random");
+		require(stages.size() == expected_random.size() && stages.size() == 13,
+			"Stage selection must expose exactly the thirteen registered stages");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
 		require(candidates.size() == 4, "Close Quarters, Crossfeed, Press Tower and the slab trial must be the four Random candidates");
 		std::set<std::string> candidate_names;
@@ -172,11 +102,7 @@ namespace
 		{
 			const size_t index = random_stage_index(stages, draw);
 			require(index == candidates[draw] && stages[index].include_in_random &&
-				stages[index].name != "movement_course" && stages[index].name != "king_of_the_hill" &&
-				stages[index].name != "turbulence" && stages[index].name != "turbulence_blockout" &&
-				stages[index].name != "turbulence_mover_trial" && stages[index].name != "turbulence_ferry_trial" &&
-				stages[index].name != "turbulence_gate_trial" && stages[index].name != "turbulence_lift_trial" &&
-				stages[index].name != "turbulence_paint_lift_trial",
+				expected_random.at(stages[index].name),
 				"Shipped Random selection admitted an explicit-only stage");
 		}
 		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "

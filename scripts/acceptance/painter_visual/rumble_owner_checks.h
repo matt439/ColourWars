@@ -14,7 +14,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     // A longer local hit keeps a positive witness active across each boundary;
     // these are fixture values, not a claim about the authored physical feel.
     const_cast<RumbleProfile&>(local.rumble())[static_cast<size_t>(RumbleEvent::hit)].duration_seconds = 0.5f;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&local); data.set_presentation(&presentation);
     DebugDirector director(&local, &presentation); data.set_debug(&director);

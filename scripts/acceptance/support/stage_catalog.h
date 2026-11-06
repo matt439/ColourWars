@@ -5,6 +5,7 @@
 // a catalog per list here, rereading the definitions it needs from their files.
 
 #include "engine/assets/json.h"
+#include "engine/core/file_path.h"
 #include "engine/core/registry.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
@@ -13,10 +14,81 @@
 #include <filesystem>
 #include <initializer_list>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace acceptance
 {
+    // One name a manifest group lists, and the file it names under the
+    // group's directory: `content`/directory/name`extension`.
+    struct ManifestEntry
+    {
+        std::string name;
+        std::filesystem::path path;
+    };
+
+    // Every name `content`/manifest.json lists under `kind`, in its order,
+    // across every group of that kind: what Application::load_manifest walks.
+    inline std::vector<ManifestEntry> manifest_entries(const std::filesystem::path& content,
+        std::string_view kind, std::string_view extension)
+    {
+        const labrador::JsonDocument manifest =
+            labrador::read_json_file(labrador::path_to_utf8(content / "manifest.json").c_str());
+        const labrador::JsonValue assets = manifest.root().array("assets");
+        std::vector<ManifestEntry> entries;
+        for (size_t group = 0; group < assets.size(); ++group)
+        {
+            const labrador::JsonValue asset = assets.at(group);
+            if (asset.string("kind") != kind) { continue; }
+            const labrador::JsonValue names = asset.array("names");
+            for (size_t index = 0; index < names.size(); ++index)
+            {
+                const std::string name = names.at(index).as_string();
+                entries.push_back({ name, content / labrador::path_from_utf8(asset.string("directory")) /
+                    labrador::path_from_utf8(name + std::string(extension)) });
+            }
+        }
+        return entries;
+    }
+
+    // Every stage the manifest lists, in its order, with the level file it
+    // names. A probe that claims "every stage" walks this rather than a list
+    // of its own, so a stage added to the manifest is covered the day it
+    // lands. Levels are never optional: an empty list, or a listed stage whose
+    // file is missing, is refused here.
+    inline std::vector<ManifestEntry> manifest_level_paths(const std::filesystem::path& content)
+    {
+        std::vector<ManifestEntry> levels = manifest_entries(content, "level", ".json");
+        if (levels.empty())
+        {
+            throw std::runtime_error("manifest.json lists no level");
+        }
+        for (const ManifestEntry& level : levels)
+        {
+            if (!std::filesystem::is_regular_file(level.path))
+            {
+                throw std::runtime_error("manifest.json lists " + level.name + ", whose level file is missing");
+            }
+        }
+        return levels;
+    }
+
+    // The stage `name` as the game lists it, its display name, icon and Random
+    // eligibility read from its definition in `levels`, the manifest-loaded
+    // registry: a probe that offers a shipped stage names it rather than
+    // restating its file, and fails plainly when that stage leaves the game.
+    inline Stage shipped_stage(const labrador::Registry<LevelLoadedInfo>& levels, const std::string& name)
+    {
+        if (!levels.contains(name))
+        {
+            throw std::runtime_error("No manifest-loaded definition for the stage " + name);
+        }
+        const LevelLoadedInfo& info = *levels.get(name);
+        return Stage{ name, info.display_name(), info.icon_frame(), info.include_in_random() };
+    }
+
     // Lists `stages` in order, each with its own reading of its definition in
     // `levels` when it has one. Each name in `unlisted` that `levels` holds and
     // `stages` does not list is registered without a list entry, as a user
@@ -69,21 +141,10 @@ namespace acceptance
     // stages, so a subset makes the shipped file look broken.
     inline StageCatalog manifest_catalog(const std::filesystem::path& content)
     {
-        const labrador::JsonDocument manifest =
-            labrador::read_json_file((content / "manifest.json").string().c_str());
-        const labrador::JsonValue assets = manifest.root().array("assets");
         StageCatalog catalog;
-        for (size_t group = 0; group < assets.size(); ++group)
+        for (const ManifestEntry& level : manifest_level_paths(content))
         {
-            const labrador::JsonValue asset = assets.at(group);
-            if (asset.string("kind") != "level") { continue; }
-            const labrador::JsonValue names = asset.array("names");
-            for (size_t index = 0; index < names.size(); ++index)
-            {
-                const std::string name = names.at(index).as_string();
-                catalog.add(read_stage_definition(
-                    (content / asset.string("directory") / (name + ".json")).string(), name));
-            }
+            catalog.add(read_stage_definition(labrador::path_to_utf8(level.path), level.name));
         }
         return catalog;
     }

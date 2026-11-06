@@ -64,8 +64,8 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     auto& new_geometry = const_cast<MainMenuPresentation&>(next.main_menu()).stage_select;
     new_geometry.navigation_position.x += 8.0f; new_geometry.briefing_padding.x += 8.0f;
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
-    const StageList mixed{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true },
+    const StageList mixed{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters"),
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },
         { "turbulence", "Turbulence", "stage_turbulence", true } };
     const StageList excluded{ mixed[0] }, one_eligible{ mixed[0], mixed[1] };

@@ -6,6 +6,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/collision/partitioner.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/slot_seats.h"
 #include "engine/input/mouse.h"
 
@@ -14,23 +15,8 @@ namespace
     void check_paintable_jump_through(const std::filesystem::path& content)
     {
         RenderResources render;
-        for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-        {
-            render.add_sprite_sheet(sheet, read_sprite_sheet(
-                (content / "textures" / (std::string(sheet) + ".json")).string().c_str(), TextureHandle{}));
-        }
-        for (const char* font : { "bowlby_one_144", "lato_black_24",
-            "lato_black_36", "lato_black_48", "lato_black_72",
-            "lato_black_144", "courier_prime_bold_16" })
-        {
-            const SpriteFontFile file = read_sprite_font_file(
-                (content / "fonts" / (std::string(font) + ".spritefont")).string());
-            auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-            if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-            render.add_font(font, std::move(loaded));
-        }
         AudioResources audio;
-        audio.add_sound_bank("paint_exe", SoundBank::silent());
+        acceptance::load_cpu_assets(content, render, audio);
         const PlaySettings preferences;
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const Presentation presentation((content / "presentation.json").string().c_str());

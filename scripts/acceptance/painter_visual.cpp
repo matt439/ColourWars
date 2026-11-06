@@ -77,6 +77,7 @@
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/replacement_lock.h"
 #include "scripts/acceptance/support/slot_seats.h"
+#include "engine/render/text_encoding.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
@@ -1172,7 +1173,7 @@ int wmain(int argc, wchar_t** argv)
         }
         if (countdown_only)
         {
-            countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+            countdown_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
             require(records.good(), "Capture record write failed");
             std::cout << "PASS countdown-only visual check; other painter matrices were not run\n";
             return 0;
@@ -1243,7 +1244,7 @@ int wmain(int argc, wchar_t** argv)
         shake_matrix(app, builder, tuning, presentation, preferences, output);
         identity_matrix(app, builder, tuning, presentation, preferences, content, output);
         monitor_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
-        countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+        countdown_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
         closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         hud_matrix(app, builder, canvas, presentation, output, false);
         supply_art_checks(app, builder, canvas, tuning, presentation, preferences, output);

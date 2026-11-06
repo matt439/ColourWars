@@ -10,7 +10,7 @@
     if ($debug) {
         $identityDiagnostic += ' Background tuning adds a separate40 readbacks,eight rows and ten real command attempts(seven accepted,three semantic refusals):translucent/zero-alpha/ink-matching candidates are refused atomically, one private background token is saved/rebased, and reset returns to that saved baseline. Actual content and unrelated private play/Jump preferences remain unchanged.'
     }
-    $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
+    $stageEntryDiagnostic = 'Stage entry passed the authored name of every manifest stage, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
     if ($PracticeReplayOnly) {
         $result.diagnostic = 'Actual GameLevel practice retained zero shipping input/timing/gap entries through sustained play, pause/resume/focus, Restart and timed-to-practice rebuild. Ordinary menu solo, developer timed Movement Course and multiplayer with a shipping bot offered Watch Replay through the End page and reproduced every taped step of public player gameplay bits, projectile count and exact paint-tile hash. Hidden native initialization only: zero raster draws/readbacks and no physical-pad, listening, performance or human acceptance claim.'
         if ($debug) { $result.diagnostic += ' Debug independently forwarded the real Debug recorder and inner input driver.' }

@@ -16,6 +16,8 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/paint_samples.h"
 #include "scripts/acceptance/support/probe.h"
 #include "engine/input/mouse.h"
 #include <algorithm>
@@ -47,7 +49,7 @@ namespace moving_structure_acceptance
         auto& push = match["opening"]["push"];
         push.SetFloat((std::min)(seconds, push.GetFloat()));
     }
-    inline std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
+    using acceptance::bits;
     inline std::uint64_t double_bits(double value) { return std::bit_cast<std::uint64_t>(value); }
     inline void require_near(float actual, float expected, float tolerance = 0.002f)
     { require(std::isfinite(actual) && std::fabs(actual - expected) <= tolerance, "Unexpected actual moving-structure value"); }
@@ -112,27 +114,11 @@ namespace moving_structure_acceptance
         }
         return out;
     }
-    inline std::vector<PaintSurfaceSample> snapshot(const PaintableObject& source, std::size_t index = 0)
-    { std::vector<PaintSurfaceSample> out; source.append_paint_surfaces(out, index); return out; }
+    using acceptance::same_total;
+    using acceptance::snapshot;
+    // The samples as bits; sample_state under the name these checks use.
     inline std::vector<std::uint64_t> sample_bits(const std::vector<PaintSurfaceSample>& samples)
-    {
-        std::vector<std::uint64_t> out{ static_cast<std::uint64_t>(samples.size()) };
-        for (const PaintSurfaceSample& sample : samples)
-        {
-            for (const auto& point : sample.corners) { out.push_back(bits(point.x)); out.push_back(bits(point.y)); }
-            out.push_back(static_cast<std::uint32_t>(sample.face)); out.push_back(static_cast<std::uint32_t>(sample.team));
-            out.push_back(static_cast<std::uint32_t>(sample.paint_owner));
-            out.push_back(bits(sample.scored_area)); out.push_back(sample.source_index);
-        }
-        return out;
-    }
-    inline void same_total(const PaintTotal& left, const PaintTotal& right)
-    {
-        require(bits(left.total) == bits(right.total) && bits(left.team_a) == bits(right.team_a) &&
-            bits(left.team_b) == bits(right.team_b), "Moving read changed exact paint totals");
-        for (std::size_t owner = 0; owner < left.player_areas.size(); ++owner)
-        { require(bits(left.player_areas[owner]) == bits(right.player_areas[owner]), "Moving read changed raw-owner total"); }
-    }
+    { return acceptance::sample_state(samples); }
 
     // Resources and source variants only: no Application/window/device/player save.
     class World final
@@ -146,34 +132,7 @@ namespace moving_structure_acceptance
             std::ifstream stream(content / "tuning.json", std::ios::binary);
             require(stream.good(), "Cannot read source tuning for moving fixtures");
             source.assign(std::istreambuf_iterator<char>(stream), {});
-            const JsonDocument manifest = read_json_file(path_to_utf8(content / "manifest.json").c_str());
-            const JsonValue assets = manifest.root().array("assets");
-            for (std::size_t index = 0; index < assets.size(); ++index)
-            {
-                const JsonValue asset = assets.at(index);
-                const std::string kind = asset.identifier("kind");
-                const std::filesystem::path directory = content / path_from_utf8(asset.identifier("directory"));
-                const JsonValue names = asset.array("names");
-                for (std::size_t entry = 0; entry < names.size(); ++entry)
-                {
-                    const std::string name = names.at(entry).as_identifier();
-                    if (kind == "sprite_sheet")
-                    {
-                        render.add_sprite_sheet(name, read_sprite_sheet(path_to_utf8(
-                            directory / path_from_utf8(name + ".json")).c_str(), TextureHandle{}));
-                    }
-                    else if (kind == "font")
-                    {
-                        const SpriteFontFile file = read_sprite_font_file(path_to_utf8(directory /
-                            path_from_utf8(name + ".spritefont")));
-                        auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                        if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-                        render.add_font(name, std::move(font));
-                    }
-                    else if (kind == "sound_bank") { audio.add_sound_bank(name, SoundBank::silent()); }
-                    else { require(kind == "level", "Unknown manifest resource kind in moving fixture"); }
-                }
-            }
+            acceptance::load_cpu_assets(content, render, audio);
             tuning.validate_resources(render, audio); presentation.validate_resources(render, audio);
             palette = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
         }

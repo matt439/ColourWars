@@ -16,6 +16,7 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/render/sprite_font_file.h"
 #include "engine/core/file_path.h"
+#include "scripts/acceptance/support/content_world.h"
 #include <array>
 #include <cmath>
 #include <cstdlib>
@@ -39,46 +40,15 @@ namespace balance_runner
                 tuning_(path_to_utf8(content / "tuning.json").c_str()),
                 presentation_(path_to_utf8(content / "presentation.json").c_str())
             {
-                const JsonDocument manifest = read_json_file(path_to_utf8(content / "manifest.json").c_str());
-                const JsonValue assets = manifest.root().array("assets");
-                for (std::size_t index = 0; index < assets.size(); ++index)
+                // The accepted bank is not read: this tool has no audio backend/device
+                // and never evaluates the mix, so every bank is a silent stand-in.
+                acceptance::load_cpu_assets(content, this->render_, this->audio_);
+                for (const acceptance::ManifestEntry& stage : acceptance::manifest_level_paths(content))
                 {
-                    const JsonValue asset = assets.at(index);
-                    const std::string kind = asset.identifier("kind");
-                    const std::filesystem::path directory = content / path_from_utf8(asset.identifier("directory"));
-                    const JsonValue names = asset.array("names");
-                    for (std::size_t entry = 0; entry < names.size(); ++entry)
-                    {
-                        const std::string name = names.at(entry).as_identifier();
-                        if (kind == "sprite_sheet")
-                        {
-                            this->render_.add_sprite_sheet(name, read_sprite_sheet(
-                                path_to_utf8(directory / path_from_utf8(name + ".json")).c_str(), TextureHandle{}));
-                        }
-                        else if (kind == "font")
-                        {
-                            const SpriteFontFile font = read_sprite_font_file(
-                                path_to_utf8(directory / path_from_utf8(name + ".spritefont")));
-                            auto loaded = std::make_unique<Font>(TextureHandle{}, font.glyphs, font.line_spacing);
-                            if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-                            this->render_.add_font(name, std::move(loaded));
-                        }
-                        else if (kind == "sound_bank")
-                        {
-                            // The accepted bank is not read: this tool has no
-                            // audio backend/device and never evaluates the mix.
-                            this->audio_.add_sound_bank(name, SoundBank::silent());
-                        }
-                        else if (kind == "level")
-                        {
-                            auto level = std::make_unique<LevelLoadedInfo>(
-                                path_to_utf8(directory / path_from_utf8(name + ".json")).c_str());
-                            level->validate();
-                            this->levels_.add(name, std::move(level));
-                            this->stages_.insert(name);
-                        }
-                        else { throw std::runtime_error("Unsupported manifest kind in balance runner: " + kind); }
-                    }
+                    auto level = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage.path).c_str());
+                    level->validate();
+                    this->levels_.add(stage.name, std::move(level));
+                    this->stages_.insert(stage.name);
                 }
                 this->tuning_.validate_resources(this->render_, this->audio_);
                 this->presentation_.validate_resources(this->render_, this->audio_);

@@ -432,13 +432,20 @@ void miniature_preview_matrix(Application& app, Registry<LevelLoadedInfo>& level
     { require(changed > 0, "actual StagePreview never differed from disappearing-stroke legacy terrain"); }
 }
 
+// The six arenas the miniature matrices compare against legacy terrain: the
+// original four as positive controls, Crossfeed and Press Tower for exact
+// reference coverage. A selection, not "every stage": the evidence counts
+// are pinned to it.
+constexpr std::array<const char*, 6> miniature_stages{
+    "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" };
+
 void miniature_stage_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences, const std::filesystem::path& output,
     std::ofstream& records)
 {
     const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     size_t changed_overviews = 0;
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
+    for (const char* stage : miniature_stages)
     {
         const LevelLoadedInfo* info = levels.get(stage);
         Scene scene(app.thread_pool(), app.partitioner()); std::vector<GameObject*> scenery;
@@ -555,7 +562,7 @@ void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameT
     const std::filesystem::path& output, std::ofstream& records)
 {
     const NestedSaveProfile isolated(output / "miniature-story-profile");
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course", "crossfeed", "press_tower" })
+    for (const char* stage : miniature_stages)
     {
         for (const int count : { 1, 4 })
         {

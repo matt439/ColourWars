@@ -15,6 +15,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
 #include <array>
 #include <cmath>
 #include <cstdlib>
@@ -33,39 +34,11 @@ namespace skirmish_acceptance
 				tuning(path_to_utf8(content / "tuning.json").c_str()),
 				presentation(path_to_utf8(content / "presentation.json").c_str())
 			{
-				const JsonDocument manifest = read_json_file(path_to_utf8(content / "manifest.json").c_str());
-				const JsonValue assets = manifest.root().array("assets");
-				for (std::size_t index = 0; index < assets.size(); ++index)
+				acceptance::load_cpu_assets(content, render, audio);
+				for (const acceptance::ManifestEntry& stage : acceptance::manifest_level_paths(content))
 				{
-					const JsonValue asset = assets.at(index);
-					const std::string kind = asset.identifier("kind");
-					const std::filesystem::path directory = content / path_from_utf8(asset.identifier("directory"));
-					const JsonValue names = asset.array("names");
-					for (std::size_t entry = 0; entry < names.size(); ++entry)
-					{
-						const std::string name = names.at(entry).as_identifier();
-						if (kind == "sprite_sheet")
-						{
-							render.add_sprite_sheet(name, read_sprite_sheet(
-								path_to_utf8(directory / path_from_utf8(name + ".json")).c_str(), TextureHandle{}));
-						}
-						else if (kind == "font")
-						{
-							const SpriteFontFile file = read_sprite_font_file(
-								path_to_utf8(directory / path_from_utf8(name + ".spritefont")));
-							auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-							if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
-							render.add_font(name, std::move(loaded));
-						}
-						else if (kind == "sound_bank") { audio.add_sound_bank(name, SoundBank::silent()); }
-						else if (kind == "level")
-						{
-							auto info = std::make_unique<LevelLoadedInfo>(
-								path_to_utf8(directory / path_from_utf8(name + ".json")).c_str());
-							info->validate(); levels.add(name, std::move(info));
-						}
-						else { throw std::runtime_error("Unsupported CPU fixture manifest kind: " + kind); }
-					}
+					auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage.path).c_str());
+					info->validate(); levels.add(stage.name, std::move(info));
 				}
 				builder = std::make_unique<LevelBuilder>(&viewports, &render, &audio, &preferences,
 					&levels, &tuning, &presentation, &resolution, nullptr, &partitioner);

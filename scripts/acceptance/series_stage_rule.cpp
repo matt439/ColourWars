@@ -14,6 +14,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/core/file_path.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <objbase.h>
@@ -340,21 +341,7 @@ namespace
         AudioResources audio;
         explicit World(const std::filesystem::path& content)
         {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
-            {
-                render.add_sprite_sheet(name, read_sprite_sheet(path_to_utf8(content / "textures" /
-                    path_from_utf8(std::string(name) + ".json")).c_str(), TextureHandle{}));
-            }
-            for (const char* name : { "bowlby_one_144", "lato_black_24", "lato_black_36", "lato_black_48",
-                "lato_black_72", "lato_black_144", "courier_prime_bold_16" })
-            {
-                const SpriteFontFile file = read_sprite_font_file(
-                    path_to_utf8(content / "fonts" / path_from_utf8(std::string(name) + ".spritefont")));
-                auto font = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
-                if (font->contains(U'?')) { font->set_stand_in(U'?'); }
-                render.add_font(name, std::move(font));
-            }
-            audio.add_sound_bank("paint_exe", SoundBank::silent());
+            acceptance::load_cpu_assets(content, render, audio);
         }
     };
 

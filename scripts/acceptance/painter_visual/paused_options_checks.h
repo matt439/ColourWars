@@ -165,8 +165,8 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         expected.sticks[slot].movement_deadzone = 9 + static_cast<int>(slot) * 11;
         expected.sticks[slot].aim_deadzone = 21 + static_cast<int>(slot) * 13;
     }
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
-        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
+    StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
+        acceptance::shipped_stage(levels, "close_quarters") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "close_quarters", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     StateContext& stack = app;
