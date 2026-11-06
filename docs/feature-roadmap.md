@@ -4481,7 +4481,7 @@ before the first frame. To fit eight rows, Options' rows draw in their own
 font, `main_menu.fonts.options` (`lato_black_36`), with
 `options_spacing.y` at `82`. The other pages keep `lato_black_48`.
 
-**What Off does here.** Gameplay still steps at `SIMULATION_HZ`, and nothing
+**What Off does here.** Gameplay still steps at `simulation::simulation_hz`, and nothing
 reads `Application::step_position()`. With vsync off the engine draws as fast
 as it can, and every frame between two steps shows the same picture. So Off
 lowers input-to-display latency and costs GPU time. It does not make motion

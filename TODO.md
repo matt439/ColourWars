@@ -28,8 +28,8 @@ decision without the attended sessions:
 
 The next aim is the author's to set. Until then, rows are picked from the sections below.
 The 2026-11-05 [hygiene review](#hygiene-review) added `HYG#58`-`HYG#92` and `CI#8`; its defect rows (`HYG#58`-`HYG#60`) are done;
-two of its rows wait on the author: `HYG#81` (the `SCREAMING_SNAKE` rule) and `ENG#35` (file or not).
-`ROAD#22` (endless paint) is the one `OPEN` row. Art (`POL#16`) is unblocked but stays
+its engine finding, `ENG#35`, still waits on the author's filing decision. The author chose renames for `HYG#81`, which is done.
+`ROAD#22` (endless paint) is the roadmap's one `OPEN` row. Art (`POL#16`) is unblocked but stays
 deferred. Bot lift routing, sponges and the controller rows remain unscoped.
 
 ## Hygiene review
@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#81` | DECISION | LOW | L | AGENTS.md reserves `SCREAMING_SNAKE` for macros, but about 59 constants use it. The author amends the rule or approves the renames. [Scope](docs/code-hygiene.md#the-screaming_snake-constant-rule-hyg81). |
 | `HYG#88` | OPEN | MED | L | Shared painter verifier evidence helpers for about forty hand-rolled PPM, number and CSV checks; one lost its payload check. [Scope](docs/code-hygiene.md#painter-verifier-evidence-helpers-hyg88). |
 | `HYG#89` | OPEN | MED | L | Shared PowerShell probe-build pipeline (six drifted copies), diagnostic scans, window enumeration and art PNG writer. [Scope](docs/code-hygiene.md#shared-powershell-probe-pipeline-and-art-helpers-hyg89). |
 

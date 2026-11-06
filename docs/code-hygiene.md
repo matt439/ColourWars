@@ -1484,13 +1484,31 @@ Also:
 
 ### The `SCREAMING_SNAKE` constant rule (`HYG#81`)
 
-AGENTS.md reserves `SCREAMING_SNAKE` for macros (`AGENTS.md:403`). About 59
-constants use it anyway, for example `SIMULATION_HZ`, `DESIGN_RESOLUTION`,
-`WEAPON_NAMES` and the `directory_consts.h` strings. The author decides first:
-amend the rule to admit constants, or rename. If renaming, do file-local
-constants first, then one header per commit, and make `directory_consts.h`'s
-per-translation-unit `const static std::string`s `inline constexpr` character
-arrays. That last change is worth doing whichever way the rule goes.
+**Done 2026-11-06; no runtime behaviour change.** The author chose renaming
+rather than amending AGENTS.md. All 58 remaining C++ constant declarations in
+`game/` now follow the rule: lowercase names, with trailing underscores on
+private members. File-local constants landed first, followed by one defining
+header per commit and its consumers. Simulation constants live in `simulation`
+to avoid colliding with the engine's descriptive parameter names.
+`directory_consts.h`'s per-translation-unit strings are now `inline constexpr`
+character arrays.
+
+The current architecture, extension guide, console, vsync and drawing-mistake
+docs name the new symbols; dated review/inspection records retain the spellings
+they reviewed. Study A's source-shape checks follow `cell`, and the Study B
+capture tool matches either spelling of `brick_slip_cells` while preserving the
+historical revision's case when it writes a variant. Its Visual Studio discovery
+uses the same query as the other build tools (`HYG#89`).
+
+Both presets build under `/W4 /WX`. All 79 Debug and 78 Release default cases
+passed (Debug's console and balance cases were rerun after the `HYG#92` script
+fix), as did all fourteen runnable opt-in cases in both presets. The two cases
+requiring private trial inputs compiled in each preset. Both complete synthetic
+study selftests passed, all four art scripts reproduced their runtime bytes,
+and movement/paint-effect rendering and startup passed in both presets. The
+source audit found no remaining uppercase constant declarations; Windows API
+types/macros and serialized strings retain their required spellings. Evidence:
+`out/hygiene-final/`, `out/hyg92/` and `out/hyg91/`.
 
 ### Names that mislead (`HYG#82`)
 

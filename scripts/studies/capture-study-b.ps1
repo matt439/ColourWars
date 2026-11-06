@@ -75,8 +75,11 @@ $null = New-Item -ItemType Directory -Path $output -Force
 $logs = Join-Path $output 'logs'
 $null = New-Item -ItemType Directory -Path $logs -Force
 
-$vcvars = 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat'
-$vcpkg = 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\vcpkg'
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+$install = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+if ($LASTEXITCODE -ne 0 -or -not $install) { throw 'Visual Studio with the x64 C++ tools is required.' }
+$vcvars = Join-Path $install 'VC/Auxiliary/Build/vcvars64.bat'
+$vcpkg = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { Join-Path $install 'VC/vcpkg' }
 $preset = 'x64-debug'
 $utf8 = New-Object Text.UTF8Encoding $false
 
@@ -104,7 +107,7 @@ $definitions = [ordered]@{
 Write-Host "V0 $v0Sha; V1 and V1b $v1Sha"
 
 $slipFile = 'game\objects\terrain_material_drawings.cpp'
-$slipPattern = 'constexpr float BRICK_SLIP_CELLS = [0-9.]+f;'
+$slipPattern = 'constexpr float (?<name>BRICK_SLIP_CELLS|brick_slip_cells) = [0-9.]+f;'
 
 function Get-Worktree([string]$variant) { return Join-Path $output "worktrees\$variant" }
 function Get-Executable([string]$variant) {
@@ -170,7 +173,7 @@ function Initialize-Worktree([string]$variant) {
         $text = [IO.File]::ReadAllText($path)
         $found = [regex]::Matches($text, $slipPattern)
         if ($found.Count -ne 1) { throw "$variant ${slipFile}: expected one BRICK_SLIP_CELLS line, found $($found.Count)." }
-        $wanted = "constexpr float BRICK_SLIP_CELLS = $($definition.slip_cells);"
+        $wanted = "constexpr float $($found[0].Groups['name'].Value) = $($definition.slip_cells);"
         if ($found[0].Value -ne $wanted) {
             [IO.File]::WriteAllText($path, $text.Replace($found[0].Value, $wanted), $utf8)
         }

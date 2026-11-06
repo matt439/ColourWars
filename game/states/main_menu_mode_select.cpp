@@ -35,7 +35,7 @@ std::unique_ptr<OptionRow> MainMenuModeSelect::make_duration_row(RenderResources
 	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 	OptionRow::Adjust on_adjust)
 {
-	return make_setup_row("duration", MenuItem::match_length, DURATION_ROW, render, style, look, text,
+	return make_setup_row("duration", MenuItem::match_length, duration_row, render, style, look, text,
 		std::move(on_adjust));
 }
 
@@ -43,7 +43,7 @@ std::unique_ptr<OptionRow> MainMenuModeSelect::make_stage_rule_row(RenderResourc
 	const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 	OptionRow::Adjust on_adjust)
 {
-	return make_setup_row("series_stage", MenuItem::series_stage, STAGE_RULE_ROW, render, style, look, text,
+	return make_setup_row("series_stage", MenuItem::series_stage, stage_rule_row, render, style, look, text,
 		std::move(on_adjust));
 }
 
@@ -64,19 +64,19 @@ bool MainMenuModeSelect::setup_row_fits(const OptionRow& row_widget,
 		inside.contains(ornament) && std::max(row.height + shade, pen * 6.0f) <= row_spacing;
 }
 
-void MainMenuModeSelect::check_duration_row(const OptionRow& duration_row,
+void MainMenuModeSelect::check_duration_row(const OptionRow& row,
 	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
 {
-	if (!setup_row_fits(duration_row, panel, art, row_spacing))
+	if (!setup_row_fits(row, panel, art, row_spacing))
 	{
 		throw std::runtime_error("main_menu.mode_select_spacing: the complete duration row must fit main_menu.setup_box_size.");
 	}
 }
 
-void MainMenuModeSelect::check_stage_rule_row(const OptionRow& stage_rule_row,
+void MainMenuModeSelect::check_stage_rule_row(const OptionRow& row,
 	const RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing)
 {
-	if (!setup_row_fits(stage_rule_row, panel, art, row_spacing))
+	if (!setup_row_fits(row, panel, art, row_spacing))
 	{
 		throw std::runtime_error("main_menu.mode_select_spacing: the complete series stage row must fit main_menu.setup_box_size.");
 	}
@@ -255,7 +255,7 @@ void MainMenuModeSelect::init()
 		"back",
 		this->text().item(MenuItem::back),
 		style.item_font,
-		this->calculate_widget_position(0, BACK_ROW),
+		this->calculate_widget_position(0, back_row),
 		this->render_resources(),
 		look.art.ink,
 		Colour{},

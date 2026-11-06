@@ -1153,7 +1153,7 @@ neither the mouse nor the camera is read on replay. The limits:
 
 - **Same build, same machine.** Floats are compared bit for bit.
 - **Same step size.** The executable steps 0.0166666 s (the engine's 10 MHz
-  timer rounds 1/60 down, `SECONDS_PER_STEP` in `simulation.h`); the CPU
+  timer rounds 1/60 down, `simulation::seconds_per_step` in `simulation.h`); the CPU
   acceptance case uses 1.0f/60. A recording
   from one never replays in the other, and `play` says so.
 - **Suspends.** Covering the match (the console, the debug menu, the pause

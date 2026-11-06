@@ -289,15 +289,15 @@ For a new selectable primary weapon, keep these registrations together:
 1. Add its enumerator in [weapon_type.h](../game/objects/weapon_type.h) among
    concrete primaries, before `random_primary`. Selection cycles the contiguous
    range from the first primary through Random; random selection excludes
-   Random itself. `TUNED_WEAPON_COUNT` beside the enum counts the concrete
-   primaries; [GameTuning](../game/config/tuning.h)'s `WEAPON_COUNT` and the
+   Random itself. `tuned_weapon_count` beside the enum counts the concrete
+   primaries; [GameTuning](../game/config/tuning.h)'s `weapon_count_` and the
    presentation's per-weapon arrays are sized from it, so no count is edited by
    hand. `max_prim_wep` aliases `random_primary`. Compile-time checks beside the
    enum enforce this contiguous order and the boundary after `bucket`; update
    them with the registrations.
    `grenade_std` is still passed as an ignored secondary placeholder, and `none`
    marks an unset weapon. Neither belongs in the primary range. Give it a name
-   in `WEAPON_NAMES` beside the enum, at the same position: that one spelling
+   in `weapon_names` beside the enum, at the same position: that one spelling
    is its key in tuning.json and presentation.json, in the save's `last_match`
    and in the Debug match plan.
 2. Add its record under `weapons` in [tuning.json](../game/content/tuning.json),
@@ -322,11 +322,11 @@ For a new selectable primary weapon, keep these registrations together:
    `paint_frame`, `supply_strip`) and its description under
    `main_menu.weapon_descriptions`, both keyed by that name.
    [presentation_read_menu.cpp](../game/config/presentation/presentation_read_menu.cpp)
-   reads both for every `WEAPON_NAMES` entry and refuses a missing one, and
+   reads both for every `weapon_names` entry and refuses a missing one, and
    [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp)
    only draws what they hold. The choice and description arrays in
    [presentation_menu.h](../game/config/presentation/presentation_menu.h) are
-   `SELECTABLE_WEAPON_COUNT` long, which includes `random_primary`; keep that
+   `selectable_weapon_count` long, which includes `random_primary`; keep that
    relationship if reorganizing the enum. The match
    presentation needs a record keyed by the name in three more tables, which
    [presentation_read_match.cpp](../game/config/presentation/presentation_read_match.cpp)
@@ -357,10 +357,10 @@ If the weapon introduces a new projectile kind, add its enumerator to
 [projectile_type.h](../game/objects/projectile_type.h) (`ProjectileType`, with
 snake_case scoped enumerators) before the `ProjectileType::count` sentinel.
 Every per-kind table is sized from that sentinel (`GameTuning`'s
-`PROJECTILE_COUNT`, PaintTuning's `splash_animations` and `impact_sounds`,
+`projectile_count_`, PaintTuning's `splash_animations` and `impact_sounds`,
 PaintAudio, PaintTile and ProjectileBuilder's arrays), so no count is edited by
 hand; what the sentinel cannot do is fill a slot. Give the kind its spelling
-in `PROJECTILE_NAMES` beside the enum, at the same position: that name is its
+in `projectile_names` beside the enum, at the same position: that name is its
 key in tuning.json, and every reader and validator in
 [tuning.cpp](../game/config/tuning.cpp) and
 [tuning_validation.cpp](../game/config/tuning_validation.cpp) walks
