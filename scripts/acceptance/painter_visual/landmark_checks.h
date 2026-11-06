@@ -289,7 +289,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
             const auto step = [&]
             {
                 require(++ticks <= 16000, "Landmark story exceeded its hard update bound");
-                std::srand(6203 + ticks); actual->update(acceptance::slot_seats(*actual, inputs), dt); std::srand(6203 + ticks); missing->update(acceptance::slot_seats(*missing, inputs), dt);
+                actual->update(acceptance::slot_seats(*actual, inputs), dt); missing->update(acceptance::slot_seats(*missing, inputs), dt);
             };
             const auto sample = [&](const char* phase)
             {

@@ -39,7 +39,6 @@ namespace crossfeed_acceptance
                 actions.primary_shoot = opponent_fire;
                 return actions;
             });
-            std::srand(2401031);
             float primary_damage = 0.0f, opponent_damage = 0.0f;
             int primary_first_damage = -1, opponent_first_damage = -1;
             for (int tick = 1; tick <= 150; ++tick)

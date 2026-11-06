@@ -279,7 +279,7 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         std::array<CrossfeedFixture, 2> fixtures;
         for (int paint = 0; paint < 2; ++paint)
         {
-            std::srand(8282); fixtures[static_cast<size_t>(paint)] = crossfeed_fixture(app, info, tuning, presentation,
+            fixtures[static_cast<size_t>(paint)] = crossfeed_fixture(app, info, tuning, presentation,
                 preferences, count, paint == 1, 30.0f, heavy_contacts); ++builds;
             auto& fixture = fixtures[static_cast<size_t>(paint)];
             if (paint == 1) { heavy_min = std::min(heavy_min, crossfeed_ownership(fixture).second); }

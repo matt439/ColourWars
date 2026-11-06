@@ -68,7 +68,6 @@ namespace crossfeed_acceptance
                 run.support() == home.name && !run.player->primary_weapon().ready_to_shoot() &&
                 approximately(run.player->weapon_ammo(), services.tuning.starting_ammo()),
                 "Crossfeed home-loop comparison did not start cold at its complete authored spawn zero");
-            std::srand(2401027);
             const float total = run.total_area();
             require(total > 0.0f, "Crossfeed home-loop comparison has no scored area");
             LoopResult result;

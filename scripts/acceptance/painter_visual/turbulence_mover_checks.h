@@ -157,7 +157,7 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         std::array<std::vector<std::uint64_t>, 2> initial_paint;
         for (std::size_t paint = 0; paint < 2; ++paint)
         {
-            std::srand(271026); fixtures[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
+            fixtures[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
                 count, paint != 0, 30.0f, heavy_contacts, "turbulence_mover_trial"); ++builds;
             const auto owners = fixtures[paint].level->horizontal_structure_states();
             require(owners.size() == 2 && fixtures[paint].structures.size() == 22 && fixtures[paint].moving_shadows.size() == 2,

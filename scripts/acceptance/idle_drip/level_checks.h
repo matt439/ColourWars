@@ -45,9 +45,7 @@ namespace
         {
             const_cast<IdleDripPresentation&>(disabled_world.presentation.idle_drip(type)).enabled = false;
         }
-        std::srand(753);
         auto enabled = enabled_world.build(900.0f);
-        std::srand(753);
         auto disabled = disabled_world.build(900.0f);
         require(enabled->idle_drip(0) != nullptr && enabled->idle_drip(1) != nullptr &&
             enabled->idle_drip(2) != nullptr && enabled->idle_drip(3) == nullptr,
@@ -60,13 +58,9 @@ namespace
                 "Mister inherited residual paint or supported tools depended on their roster position");
         }
         std::vector<PlayerInputData> inputs(input_slots::count, input());
-        unsigned tick_number = 0;
         const auto tick = [&]
         {
-            const unsigned seed = 753u + tick_number++;
-            std::srand(seed);
             enabled->update(inputs, dt);
-            std::srand(seed);
             disabled->update(inputs, dt);
             compare_gameplay(*enabled, *disabled);
             for (int view = 0; view < 3; ++view)

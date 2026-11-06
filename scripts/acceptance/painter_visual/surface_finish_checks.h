@@ -118,7 +118,6 @@ void surface_finish_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         {
             for (const bool heavy : { false, true })
             {
-                std::srand(2491);
                 auto fixture = crossfeed_fixture(app, info, tuning, presentation, preferences, count, heavy, 30.0f, contacts, stage);
                 const auto inputs = neutral_inputs();
                 for (int tick = 0; tick < 600 && fixture.level->state() != LevelState::active; ++tick)

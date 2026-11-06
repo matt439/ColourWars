@@ -312,9 +312,7 @@ namespace
         World disabled_world(content);
         auto& look = const_cast<PlayerIdentityPresentation&>(disabled_world.presentation.player_identity());
         look.enabled = false;
-        std::srand(734);
         auto enabled = enabled_world.build();
-        std::srand(734);
         auto disabled = disabled_world.build();
         std::vector<PlayerInputData> inputs(input_slots::count, input());
         activate(*enabled, inputs);
@@ -335,9 +333,8 @@ namespace
                     "Could not eliminate identity-equivalence player");
             }
             if (tick % 30 == 0) { enabled->emphasise_players(); }
-            const unsigned seed = static_cast<unsigned>(tick + 123);
-            std::srand(seed); enabled->update(acceptance::slot_seats(*enabled, inputs), dt);
-            std::srand(seed); disabled->update(acceptance::slot_seats(*disabled, inputs), dt);
+            enabled->update(acceptance::slot_seats(*enabled, inputs), dt);
+            disabled->update(acceptance::slot_seats(*disabled, inputs), dt);
             compare_gameplay(*enabled, *disabled);
             shots = shots || enabled->projectile_count() > 0;
             require(!disabled->player_identity_visible(0),

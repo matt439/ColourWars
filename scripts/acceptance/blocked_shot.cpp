@@ -469,7 +469,6 @@ namespace
     {
         auto& look = const_cast<BlockedShotPresentation&>(world.presentation.blocked_shot());
         look.enabled = enabled;
-        std::srand(8817);
         auto level = world.build();
         std::vector<PlayerInputData> inputs(input_slots::count, aimed(false, pi));
         activate(*level, inputs);

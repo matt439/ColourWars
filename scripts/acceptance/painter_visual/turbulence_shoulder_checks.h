@@ -136,7 +136,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         std::array<std::vector<std::uint64_t>, 2> local_paint;
         for (std::size_t paint = 0; paint < 2; ++paint)
         {
-            std::srand(291026); pair[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
+            pair[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
                 count, paint != 0, 30, heavy_contacts, "turbulence_shoulder_trial"); ++builds;
             const auto owners = pair[paint].level->horizontal_structure_states();
             require(pair[paint].structures.size() == 26 && owners.size() == 2 && pair[paint].moving_shadows.size() == 2,

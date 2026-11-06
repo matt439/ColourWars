@@ -100,7 +100,6 @@ namespace crossfeed_acceptance
             seed_paint(run, initial);
             // Initial paint can trigger cosmetic work. Seed immediately before
             // identical active inputs, so each ownership condition shares RNG.
-            std::srand(2401026);
             const float total = run.total_area();
             const float owned_before = run.team_area(team);
             const float enemy_before = run.team_area(opposing_team(team));

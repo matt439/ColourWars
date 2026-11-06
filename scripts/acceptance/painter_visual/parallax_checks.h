@@ -385,7 +385,6 @@ void parallax_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const 
         const LevelLoadedInfo& info = *levels.get(stage.name);
         for (const bool heavy : { false, true })
         {
-            std::srand(7319);
             ParallaxWorld world = parallax_world(app, info, stage, tuning, preferences, colours, heavy);
             Frame contact{ 1536, 720, std::vector<unsigned char>(static_cast<size_t>(1536 * 720 * 4), 255) };
             Frame return_static, return_both;

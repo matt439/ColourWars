@@ -216,7 +216,6 @@ namespace crossfeed_acceptance
                     ++verified_aim_ticks;
                 };
             }
-            std::srand(2401027);
             Result result;
             if (arrival_fire) { result.opponent_fire_lives.emplace_back(); }
             result.subject.minimum = run.player->health();

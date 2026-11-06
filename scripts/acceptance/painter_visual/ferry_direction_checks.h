@@ -128,7 +128,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         for (const int count : { 1, 2, 4 })
         {
-            std::srand(227); auto fixture = ferry_direction_level(app, left ? left_info : right_info,
+            auto fixture = ferry_direction_level(app, left ? left_info : right_info,
                 tuning, presentation, preferences, count, left); ++builds;
             Level& level = *fixture.level; auto& ferry = *fixture.ferry; const auto inputs = neutral_inputs();
             const auto step = [&]() { level.update(acceptance::slot_seats(level, inputs), dt); require(++updates <= 5000, "Ferry native update budget exceeded"); };

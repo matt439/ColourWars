@@ -243,7 +243,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::array<std::vector<std::uint64_t>, 2> slab_paint;
         for (std::size_t paint = 0; paint < 2; ++paint)
         {
-            std::srand(291026); pair[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
+            pair[paint] = crossfeed_fixture(app, info, tuning, presentation, preferences,
                 count, false, 30, heavy_contacts, "turbulence_slab_trial"); ++builds;
             if (paint != 0)
             {
@@ -463,7 +463,6 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     for (const int count : { 1, 4 })
     {
         const bool heavy = count == 4;
-        std::srand(291030);
         auto fixture = crossfeed_fixture(app, info, tuning, presentation, preferences,
             count, false, 0.75f, heavy_contacts, "turbulence_slab_trial"); ++builds; ++ending_levels;
         const auto slab_count = std::count_if(fixture.structures.begin(), fixture.structures.end(),

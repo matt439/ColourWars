@@ -46,7 +46,6 @@ void press_tower_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     float heavy_min = 1.0f;
     for (const bool heavy : { false, true })
     {
-        std::srand(2532);
         auto fixture = crossfeed_fixture(app, info, tuning, presentation, preferences, 4, heavy, 30.0f, contacts, "press_tower");
         ++builds;
         const auto initial = crossfeed_ownership(fixture);

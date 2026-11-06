@@ -73,7 +73,6 @@ namespace turbulence_blockout_acceptance
         ExchangeResult exchange_trial(Services& services, WeaponType tool, bool right, bool upper,
             ExchangePolicy policy, int& matrix_updates)
         {
-            std::srand(260026u);
             const PlayerTeam attacker_team = right ? PlayerTeam::a : PlayerTeam::b;
             const PlayerTeam defender_team = right ? PlayerTeam::b : PlayerTeam::a;
             const std::string source = std::string(upper ? "crossover" : "lower_bed") + (right ? "_a" : "_b");

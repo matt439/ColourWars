@@ -304,9 +304,7 @@ namespace
     {
         World disabled_world(content);
         disabled_world.preferences.aim_marker = false;
-        std::srand(734);
         auto enabled = enabled_world.build();
-        std::srand(734);
         auto disabled = disabled_world.build();
         std::vector<PlayerInputData> inputs(input_slots::count, input());
         activate(*enabled, inputs);
@@ -325,9 +323,8 @@ namespace
             {
                 require(enabled->kill_player(0) && disabled->kill_player(0), "Could not eliminate equivalence player");
             }
-            const unsigned seed = static_cast<unsigned>(tick + 123);
-            std::srand(seed); enabled->update(inputs, dt);
-            std::srand(seed); disabled->update(inputs, dt);
+            enabled->update(inputs, dt);
+            disabled->update(inputs, dt);
             compare_gameplay(*enabled, *disabled);
             shots = shots || enabled->projectile_count() > 0;
             require(!disabled->aim_marker_visible(0), "Disabled preference reappeared during gameplay");
