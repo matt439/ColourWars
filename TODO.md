@@ -44,7 +44,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 | `HYG#88` | OPEN | MED | L | Shared painter verifier evidence helpers for about forty hand-rolled PPM, number and CSV checks; one lost its payload check. [Scope](docs/code-hygiene.md#painter-verifier-evidence-helpers-hyg88). |
 | `HYG#89` | OPEN | MED | L | Shared PowerShell probe-build pipeline (six drifted copies), diagnostic scans, window enumeration and art PNG writer. [Scope](docs/code-hygiene.md#shared-powershell-probe-pipeline-and-art-helpers-hyg89). |
 | `HYG#90` | OPEN | LOW | M | Art build scripts read team colours from presentation; art READMEs corrected against the data. [Scope](docs/code-hygiene.md#art-build-scripts-and-art-docs-hyg90). |
-| `HYG#91` | OPEN | LOW | M | Python audio and study tools: one WAV writer, named ADPCM constants, Study B's crashing tie-break and CLI checks. [Scope](docs/code-hygiene.md#python-audio-and-study-tools-hyg91). |
 | `HYG#92` | OPEN | LOW | M | Debug `.cfg` scripts: the two stations the tour skips, and shared setup instead of byte-identical copies. [Scope](docs/code-hygiene.md#debug-cfg-scripts-hyg92). |
 
 ## Art direction, characters and the UI

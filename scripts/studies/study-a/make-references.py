@@ -20,6 +20,10 @@ import json
 import os
 import struct
 import sys
+
+# The study tools are also runnable directly from their own folders.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _paths import inside_repo_but_not_out
 import zlib
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -143,7 +147,7 @@ def figure_grid(legs="idle"):
     source = json.load(open(os.path.join(REPO, "game/art/painter/painter.json"), encoding="utf-8"))
     rows = list(source["torso"]) + list(source["legs"][legs])
     if len(rows) != source["height"] or any(len(r) != source["width"] for r in rows):
-        raise ValueError("painter.json: idle figure is not width x height")
+        raise ValueError(f"painter.json: {legs} figure is not width x height")
     grid = [list(r) for r in rows]
     # The rest arms are drawn over the body (build-painter-art.ps1).
     for y, row in enumerate(source["rest_arms"]):
@@ -322,19 +326,6 @@ def sha256(path):
     with open(os.path.join(REPO, path), "rb") as handle:
         return hashlib.sha256(handle.read()).hexdigest()
 
-
-def inside_repo_but_not_out(path):
-    path = os.path.normcase(os.path.abspath(path))
-    repo = os.path.normcase(REPO)
-    if os.path.splitdrive(path)[0] != os.path.splitdrive(repo)[0]:
-        return False      # another drive is outside the repository
-    try:
-        if os.path.commonpath([path, repo]) != repo:
-            return False
-        out = os.path.join(repo, "out")
-        return os.path.commonpath([path, out]) != out
-    except ValueError:    # paths that cannot share a root are not inside it
-        return False
 
 
 def main(argv):

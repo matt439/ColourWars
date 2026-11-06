@@ -2185,19 +2185,27 @@ Regenerated art must be byte-identical, or the commit says why not.
 
 ### Python audio and study tools (`HYG#91`)
 
-- Add one shared `write_wave` (`foley/build.py:104`; the three writers clip
-  differently).
-- Name the ADPCM geometry and the peak ceiling once in `audio_pipeline`
-  (`audio_pipeline.py:235`, `prepare_review.py:228`).
-- Fix the overwritten test fixture (`test_audio_pipeline.py:166`).
-- Make `--only` refuse unknown ids (`music/render.py:342`).
-- Report the publisher's failures on stderr (`publish_runtime_bank.py:69`).
-- Share the capture limit (`analyze_frame_pacing.py:71`).
-- Normalise Study B's tie-break (`study-b/analyse.py:111`).
-- Fix the pose error (`make-references.py:146`).
-- Add a `scripts/studies/_paths.py` for the four copies of the privacy guard.
+**Done 2026-11-06; tool behaviour changes.** The three authoring projects use
+`scripts/audio/wave_writer.py`: one finite PCM16 rounding/saturation rule, with
+explicit channel count and RIFF chunk order so accepted masters retain their
+bytes. `audio_pipeline.py` owns the ADPCM geometry and review peak ceiling;
+its overwritten test fixture is fixed. Music `--only` refuses unknown cue ids,
+and runtime-bank publication failures go to stderr.
 
-The tracked bank must be unchanged.
+The frame analyzer reads the capture bound from `DebugPerf`'s declaration.
+Study B normalizes the optional identity-cue value before participant tie-breaks,
+the reference builder names the actual pose in an error, and the four study
+entry points use `scripts/studies/_paths.py` for the output privacy guard. The
+guard resolves junctions while avoiding queries to another, possibly locked,
+volume. Synthetic tie-break and path/junction regressions cover the failures.
+
+All 24 audio tests passed, including real FFmpeg/XWB encoding, clipping and loop
+checks, CLI failures, and exact rewrites of all 103 accepted master containers.
+All 14 frame-analysis and three privacy-guard tests passed, as did both complete
+synthetic study selftests. Production validation reported 103 waves, 71 sources
+and no flags. The tracked bank remains byte-identical (SHA-256
+`1d0f6a7bcde1542980df1cb873682c3ba6f781d27f5c9c11ae51abfb06d72ea5`);
+no accepted masters were rewritten. Evidence: `out/hyg91/`.
 
 ### Debug `.cfg` scripts (`HYG#92`)
 

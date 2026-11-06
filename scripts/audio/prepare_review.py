@@ -14,7 +14,7 @@ import wave
 
 import numpy as np
 
-from audio_pipeline import loop_region, riff_chunks
+from audio_pipeline import MAX_PEAK, loop_region, riff_chunks
 
 ROOT = Path(__file__).resolve().parents[2]
 PRODUCTION = ROOT / "game/audio/paint_exe"
@@ -258,7 +258,7 @@ def audition(cues: list[dict]) -> dict:
         add("results.winner", 46)
         output *= metadata["fixed_output_gain"]
         peak = float(np.max(np.abs(output)))
-        if peak > 10 ** (-1 / 20):
+        if peak > MAX_PEAK:
             raise ValueError(f"{players}P audition clips/headroom fails: {peak}")
         encoded = np.rint(output * 32767).astype("<i2").tobytes()
         filename = f"mix-{players}p.ogg"

@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import hashlib
+import contextlib
+import io
 import json
 from pathlib import Path
 import struct
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 import audio_pipeline as pipeline
 import publish_runtime_bank as publication
@@ -18,6 +21,15 @@ ROOT = pipeline.REPOSITORY
 
 
 class RuntimeBankChecks(unittest.TestCase):
+    def test_publication_failure_uses_stderr(self) -> None:
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with mock.patch("sys.argv", ["publish_runtime_bank.py"]), \
+                mock.patch.object(publication, "publish", side_effect=pipeline.InvalidAudio("broken receipt")), \
+                contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            self.assertEqual(publication.main(), 1)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn("Runtime bank publication failed: broken receipt", stderr.getvalue())
+
     def setUp(self) -> None:
         self.scratch = tempfile.TemporaryDirectory()
         self.folder = Path(self.scratch.name)

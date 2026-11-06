@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 
 
 TIMING_SCOPE = "match_draw_begin_to_begin_cpu_wall_ms"
@@ -14,6 +15,19 @@ FIELDS = ["frame", "frame_ms", "update_ms", "draw_ms", "updates", "objects", "pr
 FIELDS_V2 = ["frame", "application_frame", "frame_ms", "update_ms", "draw_ms",
              "begin_frame_ms", "submit_ms", "end_frame_ms", "updates", "objects", "projectiles"]
 ENGINE_FIELDS = ("begin_frame_ms", "submit_ms", "end_frame_ms")
+
+
+def capture_frame_limit():
+    """Use the recorder's bound, rather than maintaining a second limit here."""
+    header = Path(__file__).resolve().parents[2] / "game/debug/capture/debug_perf.h"
+    matches = re.findall(r"static\s+constexpr\s+std::size_t\s+max_capture_frames\s*=\s*([1-9][0-9]*)\s*;",
+                         header.read_text(encoding="utf-8"))
+    if len(matches) != 1:
+        raise ValueError(f"Cannot read DebugPerf::max_capture_frames from {header}")
+    return int(matches[0])
+
+
+MAX_CAPTURE_FRAMES = capture_frame_limit()
 
 
 def percentile(values, fraction):
@@ -68,7 +82,7 @@ def summarize(capture, rows, metadata):
     fields = FIELDS if schema == 1 else FIELDS_V2
     requested = integer(capture.get("requested_frames"), "requested_frames", 1)
     captured = integer(capture.get("captured_frames"), "captured_frames", 1)
-    if requested > 36000 or captured != requested or len(rows) != captured:
+    if requested > MAX_CAPTURE_FRAMES or captured != requested or len(rows) != captured:
         raise ValueError("Capture length does not match its requested rendered intervals")
     if capture.get("complete") is not True or capture.get("reason") != "complete":
         raise ValueError("Interrupted/incomplete captures cannot be summarized as complete measurements")

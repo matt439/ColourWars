@@ -13,6 +13,7 @@ import argparse
 import json
 from pathlib import Path
 import shutil
+import sys
 
 import audio_pipeline as pipeline
 
@@ -42,10 +43,10 @@ def publish(output: Path, root: Path = pipeline.REPOSITORY) -> dict:
     receipt = {"version": 1, "bank": "paint_exe.xwb", "bytes": bank["bytes"],
                "sha256": bank["sha256"], "waves": [cue["id"] for cue in manifest["cues"]],
                "accepted_master_sha256": masters,
-               "music_encoding": {"format": "MS-ADPCM", "samples_per_block": 512,
-                                  "stereo_block_bytes": 524,
-                                  "loop_padding": "Hold the first boundary sample for at most 511 derived frames; accepted masters remain unchanged.",
-                                  "encoder": "FFmpeg 1012-frame overlapping windows, retain first 512 frames per independent block."},
+               "music_encoding": {"format": "MS-ADPCM", "samples_per_block": pipeline.ADPCM_FRAMES_PER_BLOCK,
+                                  "stereo_block_bytes": 2 * pipeline.ADPCM_BYTES_PER_CHANNEL,
+                                  "loop_padding": f"Hold the first boundary sample for at most {pipeline.ADPCM_FRAMES_PER_BLOCK - 1} derived frames; accepted masters remain unchanged.",
+                                  "encoder": f"FFmpeg {pipeline.FFMPEG_ADPCM_WINDOW_FRAMES}-frame overlapping windows, retain first {pipeline.ADPCM_FRAMES_PER_BLOCK} frames per independent block."},
                "music_exports": [{key: exported[key] for key in
                    ("id", "sha256", "export_sha256", "frames", "export_frames", "padding_frames",
                     "loop_start", "loop_length", "decoded")}
@@ -66,7 +67,7 @@ def main() -> int:
         print(f"Published {len(receipt['waves'])} accepted waves ({receipt['bytes']:,} bytes).")
         return 0
     except (pipeline.InvalidAudio, OSError, ValueError, KeyError) as error:
-        print(f"Runtime bank publication failed: {error}")
+        print(f"Runtime bank publication failed: {error}", file=sys.stderr)
         return 1
 
 
