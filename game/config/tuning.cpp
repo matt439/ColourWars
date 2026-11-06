@@ -46,7 +46,7 @@ namespace
 	// An object keyed by projectile name, one member per kind.
 	std::vector<std::string_view> projectile_keys()
 	{
-		return { PROJECTILE_NAMES.begin(), PROJECTILE_NAMES.end() };
+		return { projectile_names.begin(), projectile_names.end() };
 	}
 
 	// Enum parsers use JsonValue's source context for unknown names.
@@ -61,7 +61,7 @@ namespace
 		}
 
 		std::string expected;
-		for (const char* known : PROJECTILE_NAMES)
+		for (const char* known : projectile_names)
 		{
 			expected += std::string(expected.empty() ? "" : ", ") + known;
 		}
