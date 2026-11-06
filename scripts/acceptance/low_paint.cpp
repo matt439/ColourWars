@@ -4,6 +4,7 @@
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -273,49 +274,19 @@ namespace
         std::cout << "PASS low paint: frozen updates keep the warning; refill clears it; the tank stays inside draw bounds\n";
     }
 
-    std::string read_file(const std::filesystem::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        require(stream.good(), "Cannot read " + path.string());
-        return std::string(std::istreambuf_iterator<char>(stream), {});
-    }
-
-    // Writes an edited copy beside nothing else and expects its loader to
-    // reject it with a diagnostic naming `where`.
-    void reject(const std::string& source, const std::function<void(rapidjson::Document&)>& edit,
+    // Writes an edited copy and expects its loader to reject it with a
+    // diagnostic naming `where`.
+    void reject(const acceptance::JsonVariants& source, const std::function<void(rapidjson::Document&)>& edit,
         const std::function<void(const std::filesystem::path&)>& load, const char* where,
         const char* label)
     {
-        rapidjson::Document json;
-        json.Parse(source.c_str());
-        require(!json.HasParseError(), "Cannot parse shipped content");
-        edit(json);
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        json.Accept(writer);
-        wchar_t temporary_name[MAX_PATH]{};
-        const auto directory = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(directory.c_str(), L"cwl", 0, temporary_name) != 0,
-            "Cannot reserve a low-paint content variant");
-        const std::filesystem::path path(temporary_name);
-        {
-            std::ofstream variant(path, std::ios::binary);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-        }
-        bool rejected = false;
-        try { load(path); }
-        catch (const std::exception& error)
-        {
-            rejected = std::string(error.what()).find(where) != std::string::npos;
-        }
-        std::error_code ignored;
-        std::filesystem::remove(path, ignored);
-        require(rejected, std::string("Malformed low-paint content was accepted: ") + label);
+        acceptance::rejects_variant(source, edit, load, { where },
+            std::string("Malformed low-paint content was accepted: ") + label);
     }
 
     void check_validation(const std::filesystem::path& content)
     {
-        const std::string tuning = read_file(content / "tuning.json");
+        const acceptance::JsonVariants tuning(content / "tuning.json", L"low-paint-tuning");
         const auto load_tuning = [](const std::filesystem::path& path) { GameTuning loaded(path.string().c_str()); };
         const auto low = [](rapidjson::Document& json) -> rapidjson::Value& { return json["weapons"]["low_paint"]; };
         reject(tuning, [&](auto& json) { low(json)["shots"].SetFloat(1.5f); }, load_tuning, "low_paint", "one-shot reserve");
@@ -327,7 +298,7 @@ namespace
         reject(tuning, [&](auto& json) { json["weapons"]["sniper"]["feedback_sounds"]["low"]["volume"].SetFloat(2.0f); },
             load_tuning, "low", "sound gain above one");
 
-        const std::string presentation = read_file(content / "presentation.json");
+        const acceptance::JsonVariants presentation(content / "presentation.json", L"low-paint-presentation");
         const auto load_presentation = [](const std::filesystem::path& path) { Presentation loaded(path.string().c_str()); };
         const auto tank = [](rapidjson::Document& json) -> rapidjson::Value& { return json["weapon_feedback"]["low_paint"]; };
         const auto tag = [](rapidjson::Document& json) -> rapidjson::Value& { return json["hud"]["low_paint"]; };

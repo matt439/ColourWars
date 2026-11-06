@@ -9,6 +9,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -501,38 +502,13 @@ namespace
 
     void check_content(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read movement contact presentation");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t name[MAX_PATH]{};
-        const auto temporary = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(temporary.c_str(), L"cwc", 0, name) != 0,
-            "Cannot reserve movement contact presentation variant");
-        struct Cleanup
-        {
-            std::filesystem::path path;
-            ~Cleanup() { std::error_code ignored; std::filesystem::remove(this->path, ignored); }
-        } cleanup{ name };
+        const acceptance::JsonVariants variants(content / "presentation.json", L"movement-contact-presentation");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse movement contact presentation fixture");
-            edit(json["movement_feedback"], json.GetAllocator());
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(cleanup.path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write movement contact presentation variant");
-            bool rejected = false;
-            try { const Presentation invalid(cleanup.path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("movement_feedback") != std::string::npos;
-            }
-            require(rejected, "Invalid contact presentation was accepted or lost its authored section");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["movement_feedback"], json.GetAllocator()); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "movement_feedback" }, "Invalid contact presentation was accepted or lost its authored section");
         };
         for (const char* burst : { "step", "skid" })
         {

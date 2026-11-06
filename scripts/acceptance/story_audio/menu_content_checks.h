@@ -3,46 +3,18 @@
 // Included after story_audio.cpp's shared recording world.
 namespace
 {
-	class MenuPresentationVariant
+	// Edited copies of the shipped presentation, each in its own scratch file.
+	class MenuPresentationVariant : public acceptance::JsonVariants
 	{
 	public:
-		explicit MenuPresentationVariant(const std::filesystem::path& content)
-		{
-			std::ifstream stream(content / "presentation.json");
-			require(stream.good(), "Cannot read menu-audio acceptance presentation");
-			this->source_ = std::string(std::istreambuf_iterator<char>(stream), {});
-			wchar_t name[MAX_PATH]{};
-			require(GetTempFileNameW(std::filesystem::temp_directory_path().c_str(), L"cwm", 0, name) != 0,
-				"Cannot reserve menu-audio acceptance presentation file");
-			this->path_ = name;
-		}
-
-		~MenuPresentationVariant()
-		{
-			std::error_code ignored;
-			std::filesystem::remove(this->path_, ignored);
-		}
+		explicit MenuPresentationVariant(const std::filesystem::path& content) :
+			acceptance::JsonVariants(content / "presentation.json", L"menu-audio-presentation") {}
 
 		template<typename Edit>
 		Presentation load(Edit edit) const
 		{
-			rapidjson::Document json;
-			json.Parse(this->source_.c_str());
-			require(!json.HasParseError(), "Cannot parse menu-audio acceptance presentation");
-			edit(json);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			json.Accept(writer);
-			std::ofstream stream(this->path_, std::ios::binary | std::ios::trunc);
-			stream.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-			stream.close();
-			require(stream.good(), "Cannot write menu-audio acceptance presentation variant");
-			return Presentation(this->path_.string().c_str());
+			return Presentation(this->write(edit).string().c_str());
 		}
-
-	private:
-		std::string source_;
-		std::filesystem::path path_;
 	};
 
 	void check_menu_audio_content(World& world, const std::filesystem::path& content)

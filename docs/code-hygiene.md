@@ -1716,6 +1716,16 @@ find new failures; fix them in the same row, or record them as their own rows.
   and `menu_presentation`'s and `weapon_catalog`'s `Variants` derive from
   `JsonVariants`. `locales`, `menu_text` and `text_wrap` use the shared
   helpers. Only `practice_workshop`'s failure wording changed.
+- After review, the same edit-a-copy fixtures in `quiet_character` (which also
+  wrote a fixed name in `%TEMP%`), `low_paint`, `movement_contact`,
+  `weapon_feedback` and `paint`'s `runoff_content_checks.h` refuse through
+  `rejects_variant`; `story_audio`'s `MenuPresentationVariant` and
+  `EndingStageVariant` derive from `JsonVariants`; and `text_wrap` writes its
+  copies with `write_document`. Their failure messages now end with the
+  loader's own message. `idle_drip`'s `ContentVariant` (used by
+  `idle_drip/standalone_checks.h`) keeps its own refusal loop, because it
+  requires the copy's path in the message and `rejects_variant` takes fixed
+  fragments.
 
 Left as they are:
 
@@ -1739,7 +1749,10 @@ passed in Debug and Release, and no `ColourWars-*` folder was left in
 `%TEMP%`. `check-level-editor.ps1` and `check-painter.ps1 -CompileOnly` passed
 in both presets. On MattPC the plain painter matrix and every focused leaf but
 the three that need the private trial passed in Debug; in Release the same
-passed, less the three tune-colour leaves that refuse Release by design.
+passed, less the three tune-colour leaves that refuse Release by design. The review
+follow-up rebuilt both presets and passed `story_audio`, `quiet_character`,
+`low_paint`, `movement_contact`, `weapon_feedback`, `paint`, `idle_drip` and
+`text_wrap` in Debug and Release.
 
 The row as filed. Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
 `LOCALAPPDATA` override with `remove_all`, `save_path()`, `save_bytes()` and a RAII
@@ -1836,11 +1849,22 @@ pins.
 - From `HYG#84`: move the remaining private whole-file readers and writers onto
   `support/scratch.h`'s checked `read_text` and `write_text` (`debug_console`'s
   fixtures, `moving_structure`, `turbulence_movers`, `turbulence_slab_tools`,
-  `level_editor`'s `contents`, `user_stages`, `low_paint`, `balance_runner`,
+  `level_editor`'s `contents`, `user_stages`, `balance_runner`,
   `fatal_report`, `level_format`, `handicap_metadata`), and the painter's
   hand-read save lambdas onto `IsolatedSave::save_bytes`. `menu_text`'s and
   `menu_focus_motion`'s `Variants` can derive from `acceptance::JsonVariants`
-  as `menu_presentation`'s and `weapon_catalog`'s do.
+  as `menu_presentation`'s and `weapon_catalog`'s do. These still serialise
+  JSON with their own `rapidjson::Writer` and were not sorted in `HYG#84`:
+  `aim_marker`, `blocked_shot`, `bot_driver`, `crossfeed`, `cursor_marker`,
+  `frame_pacing`, `gameplay_tuning`, `handicap`, `level_format`,
+  `player_identity`, `teammate_markers`, `team_palette`, `tunnelling`,
+  `user_stages`, `debug_console/stage_replay_checks.cpp`,
+  `fixed_slab/support_checks.cpp`, `level_editor/fixtures.cpp`,
+  `moving_structure` (fixtures, loader, editor-save and replay checks),
+  `paint_underfoot/fixtures.h`, `painter_visual.cpp` and five
+  `painter_visual` headers. Move the edit-a-copy ones onto `JsonVariants` and
+  `rejects_variant` (or `write_document`), and leave the ones that only encode
+  to a string.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 

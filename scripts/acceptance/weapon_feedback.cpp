@@ -7,6 +7,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -505,52 +506,15 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read weapon feedback presentation content");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t temporary_name[MAX_PATH]{};
-        const auto directory = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(directory.c_str(), L"cww", 0, temporary_name) != 0,
-            "Cannot reserve weapon feedback presentation variant");
-        const std::filesystem::path path(temporary_name);
-        struct RemoveOnExit
-        {
-            std::filesystem::path path;
-            ~RemoveOnExit()
-            {
-                std::error_code ignored;
-                std::filesystem::remove(this->path, ignored);
-            }
-        } cleanup{ path };
-
+        const acceptance::JsonVariants variants(content / "presentation.json", L"weapon-feedback-presentation");
         int fixture = 0;
         const auto reject = [&](auto edit)
         {
             ++fixture;
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse weapon feedback presentation fixture");
-            edit(json["weapon_feedback"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write weapon feedback presentation fixture");
-            bool rejected = false;
-            std::string diagnostic = "content was accepted";
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                diagnostic = error.what();
-                rejected = diagnostic.find("weapon_feedback") != std::string::npos;
-            }
-            if (!rejected)
-            {
-                throw std::runtime_error("Weapon feedback schema fixture " +
-                    std::to_string(fixture) + ": " + diagnostic);
-            }
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["weapon_feedback"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "weapon_feedback" }, "Weapon feedback schema fixture " + std::to_string(fixture));
         };
         for (const char* field : { "muzzle_duration", "empty_duration", "recovered_duration",
             "keyline_width", "status_size", "status_offset" })

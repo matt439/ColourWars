@@ -138,15 +138,8 @@ namespace
     {
         rapidjson::Document document = read_document(content / "presentation.json");
         edit(document);
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(document.Accept(writer), "Cannot encode text wrap fixture");
         const auto path = scratch / (std::string("text-wrap-") + name + ".json");
-        {
-            std::ofstream output(path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            require(output.good(), "Cannot write text wrap fixture");
-        }
+        acceptance::write_document(document, path);
         return thrown([&] { const Presentation rejected(path.string().c_str()); std::ignore = rejected; });
     }
 

@@ -4,44 +4,23 @@ namespace
 {
     void check_runoff_content(const std::filesystem::path& content)
     {
-        std::ifstream input(content / "tuning.json");
-        require(input.good(), "Cannot read runoff acceptance tuning");
-        const std::string source(std::istreambuf_iterator<char>(input), {});
-        wchar_t name[MAX_PATH]{};
-        require(GetTempFileNameW(std::filesystem::temp_directory_path().c_str(), L"cwr", 0, name) != 0,
-            "Cannot reserve runoff tuning variant");
-        struct Temporary
-        {
-            std::filesystem::path path;
-            ~Temporary() { std::error_code ignored; std::filesystem::remove(path, ignored); }
-        } temporary{ name };
+        const acceptance::JsonVariants variants(content / "tuning.json", L"runoff-tuning");
         const auto load = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse runoff tuning variant");
-            edit(json);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream output(temporary.path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write runoff tuning variant");
-            return GameTuning(temporary.path.string().c_str());
+            return GameTuning(variants.write(edit).string().c_str());
         };
         const auto rejected = [&](const char* field, auto edit)
         {
-            bool named = false;
-            try { std::ignore = load(edit); }
-            catch (const std::runtime_error& error)
+            const auto load_path = [](const std::filesystem::path& path) { const GameTuning invalid(path.string().c_str()); };
+            const char* message = "Invalid runoff tuning did not fail at startup with its owning field named";
+            if (field == nullptr)
             {
-                const std::string message = error.what();
-                named = message.find("paint") != std::string::npos &&
-                    message.find("runoff") != std::string::npos &&
-                    (field == nullptr || message.find(field) != std::string::npos);
+                acceptance::rejects_variant<std::runtime_error>(variants, edit, load_path, { "paint", "runoff" }, message);
             }
-            require(named, "Invalid runoff tuning did not fail at startup with its owning field named");
+            else
+            {
+                acceptance::rejects_variant<std::runtime_error>(variants, edit, load_path, { "paint", "runoff", field }, message);
+            }
         };
         rejected(nullptr, [](rapidjson::Document& json)
             { json["paint"]["visual"].RemoveMember("runoff"); });

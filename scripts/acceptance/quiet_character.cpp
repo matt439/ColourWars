@@ -5,6 +5,7 @@
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <rapidjson/document.h>
@@ -274,35 +275,13 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream file(content / "presentation.json");
-        const std::string source((std::istreambuf_iterator<char>(file)), {});
-        const auto path = std::filesystem::temp_directory_path() /
-            ("colourwars-quiet-character-" + std::to_string(GetCurrentProcessId()) + ".json");
-        struct Cleanup
-        {
-            std::filesystem::path path;
-            ~Cleanup() { std::error_code ignored; std::filesystem::remove(path, ignored); }
-        } cleanup{ path };
+        const acceptance::JsonVariants variants(content / "presentation.json", L"quiet-character");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Invalid source presentation for character fixture");
-            edit(json["figure"]["quiet"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream output(path);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write character presentation fixture");
-            bool rejected = false;
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("figure.quiet") != std::string::npos;
-            }
-            require(rejected, "Malformed quiet character presentation lacked a contextual rejection");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["figure"]["quiet"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "figure.quiet" }, "Malformed quiet character presentation lacked a contextual rejection");
         };
         reject([](rapidjson::Value& quiet) { quiet["breath_period"].SetInt(0); });
         reject([](rapidjson::Value& quiet) { quiet["lean_settle_time"].SetInt(-1); });
