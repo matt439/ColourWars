@@ -67,7 +67,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         const auto& style = snapshot.menu(); const auto& look = snapshot.pause_menu();
         const auto& art = look.art;
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         const int rows = phase == 1 || phase == 2 ? 2 : 4;
         for (int row = 0; row < rows; ++row)
@@ -113,7 +113,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
                         width, inside.height - step * 2.0f), shade);
                 }
             };
-            card(RectangleF((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size), art.paper);
+            card(RectangleF((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size), art.paper);
             if (focused)
             {
                 RectangleF bounds = expected.bounds(); bounds.inflate(art.focus_padding);

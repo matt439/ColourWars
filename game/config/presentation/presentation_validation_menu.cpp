@@ -18,7 +18,7 @@
 
 using namespace labrador;
 using namespace presentation_read;
-using menu_consts::DESIGN_RESOLUTION;
+using menu_consts::design_resolution;
 
 // Phase 1: the resources every menu page draws with, the brand line, every
 // heading at its page's position and every prompt in the prompt bar.
@@ -72,7 +72,7 @@ void Presentation::Validation::validate_menu_chrome() const
 	{
 		check_menu_line(std::string("menu_text.prompts.") + menu_prompt_keys[index],
 			this->presentation.menu_text_.prompts[index], this->presentation.prompt_bar_.font, this->presentation.prompt_bar_.position,
-			DESIGN_RESOLUTION.y, this->presentation.prompt_bar_.shadow_offset);
+			design_resolution.y, this->presentation.prompt_bar_.shadow_offset);
 	}
 }
 

@@ -125,8 +125,8 @@ void home_alpha_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
     const SpriteFrame& pixel = sheet->sprite_frame(sheet->resolve_sprite_frame(style.fill_frame));
     const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
-    const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
+    const RectangleF design(Vector2F::zero, menu_consts::design_resolution);
     const RectangleI corner(8, 8, 16, 16);
     const std::array<Colour, 2> backgrounds{ Colour(0, 0, 0), Colour(32, 64, 96) };
     const std::array<Colour, 3> palettes{ Colour(176, 176, 168), Colour(32, 96, 192, 128), Colour(165, 50, 214, 0) };

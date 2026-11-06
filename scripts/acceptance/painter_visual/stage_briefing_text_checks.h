@@ -153,14 +153,14 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
                 info + row * reference.row, app.render_resources(), reference.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
                 style.detail_shadow_offset);
             const RectangleF bounds = expected[index]->bounds();
-            require(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION).contains(bounds) &&
+            require(RectangleF(Vector2F::zero, menu_consts::design_resolution).contains(bounds) &&
                 bounds.y >= panel.y && bounds.bottom() <= panel.bottom() &&
                 bounds.bottom() <= (info + row * reference.following).y,
                 "Independent unscaled briefing copy escapes the design or reaches its following row");
         }
         const Frame actual = frame();
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera);
         list.set_filter(TextureFilter::point);

@@ -361,12 +361,12 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         const auto& look = presentation.main_menu().stage_select; const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("crossfeed-actual-stage-preview", box, &data); preview.set_stage("crossfeed");
         const Viewport fullscreen = app.viewport_manager()->fullscreen_viewport();
-        const Camera menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const Camera menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), fullscreen);
         const auto draw = [&](bool shown)
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point);
-            canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
+            canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::design_resolution));
             if (shown) { preview.draw(list); } ++readbacks; return read(renderer);
         };
         std::srand(883); const int expected = std::rand(); std::srand(883); const Frame frame = draw(true);

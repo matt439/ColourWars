@@ -34,7 +34,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         MenuPaperArtPresentation original;
         ~RestoreStickArt() { this->art = this->original; }
     } restore{ art, art };
-    const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+    const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) -
         look.box_size) / 2.0f, look.box_size);
     const std::array<const wchar_t*, 9> labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
@@ -146,7 +146,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)

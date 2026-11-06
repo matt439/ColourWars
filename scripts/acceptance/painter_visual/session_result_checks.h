@@ -140,7 +140,7 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
@@ -152,14 +152,14 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         colourwars::UiTextDropShadow result("independent-session-result", literal,
             wrong_font ? original.menu().detail_font : style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
-        result.set_position({ (menu_consts::DESIGN_RESOLUTION.x - result.bounds().width) / 2.0f, look.session_result_y });
+        result.set_position({ (menu_consts::design_resolution.x - result.bounds().width) / 2.0f, look.session_result_y });
         colourwars::UiTextDropShadow score("independent-session-score", fixture.score, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
-        score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
+        score.set_position({ (menu_consts::design_resolution.x - score.bounds().width) / 2.0f, look.session_score_y });
         colourwars::UiTextDropShadow heading("independent-session-round", fixture.heading, style.heading_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
-        heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        heading.set_position({ (menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y });
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         result_bounds = result.bounds();
         require(result_bounds.width > 0.0f && result_bounds.height > 0.0f && panel.contains(result_bounds) &&
             row_region.contains(result_bounds) && row_region.contains(score.bounds()) &&
@@ -167,7 +167,7 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
             "Independent Session outcome/unchanged neighbor bounds escaped their measured unscaled zero-offset comparison regions");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);

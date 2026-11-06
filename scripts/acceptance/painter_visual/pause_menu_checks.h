@@ -33,7 +33,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         MenuPaperArtPresentation original;
         ~RestorePauseArt() { this->art = this->original; }
     } restore_art{ art, art };
-    const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f,
+    const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f,
         look.box_size);
     const auto item_font = app.render_resources()->resolve_sprite_font(style.item_font);
     const auto heading_font = app.render_resources()->resolve_sprite_font(style.heading_font);
@@ -59,7 +59,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     for (const wchar_t* title : { L"Pause Menu P1", L"Controller lost" })
     {
         const Vector2F measured = app.render_resources()->measure_text(heading_font, title);
-        const RectangleF heading((menu_consts::DESIGN_RESOLUTION.x - measured.x) / 2.0f,
+        const RectangleF heading((menu_consts::design_resolution.x - measured.x) / 2.0f,
             look.heading_y, measured.x, measured.y);
         if (!panel.contains(heading) || heading.bottom() >= look.status_y)
         {
@@ -75,7 +75,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         L"Are you sure you want to quit?" })
     {
         const Vector2F measured = app.render_resources()->measure_text(detail_font, question);
-        const RectangleF bounds((menu_consts::DESIGN_RESOLUTION.x - measured.x) / 2.0f,
+        const RectangleF bounds((menu_consts::design_resolution.x - measured.x) / 2.0f,
             look.status_y, measured.x, measured.y);
         require(panel.contains(bounds) && bounds.bottom() < look.layout.position.y - art.focus_padding.y,
             "Pause confirmation question escapes its paper or overlaps its first action");
@@ -147,7 +147,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto assert_focus = [&](const Frame& baseline, const RectangleF& expected)
@@ -337,7 +337,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             missing += L"P" + std::to_wstring(player + 1) + L" - " + device;
         }
         const Vector2F missing_size = app.render_resources()->measure_text(detail_font, missing);
-        const RectangleF missing_bounds((menu_consts::DESIGN_RESOLUTION.x - missing_size.x) / 2.0f,
+        const RectangleF missing_bounds((menu_consts::design_resolution.x - missing_size.x) / 2.0f,
             look.status_y, missing_size.x, missing_size.y);
         require(panel.contains(missing_bounds) && missing_bounds.bottom() <
             look.layout.position.y - art.focus_padding.y,

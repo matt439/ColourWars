@@ -55,17 +55,17 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         const auto font = app.render_resources()->resolve_sprite_font(style.detail_font);
         const Vector2F raw = app.render_resources()->measure_text(font, question);
         UiText expected("reference-pause-question", question, style.detail_font,
-            Vector2F((menu_consts::DESIGN_RESOLUTION.x - raw.x) / 2.0f, look.status_y),
+            Vector2F((menu_consts::design_resolution.x - raw.x) / 2.0f, look.status_y),
             app.render_resources(), art.ink);
         require(expected.bounds().size() == raw &&
-            expected.bounds().x == (menu_consts::DESIGN_RESOLUTION.x - raw.x) / 2.0f,
+            expected.bounds().x == (menu_consts::design_resolution.x - raw.x) / 2.0f,
             "Question reference changed its unscaled full-paper centering contract");
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         require(panel.contains(expected.bounds()) && expected.bounds().bottom() <=
             look.layout.position.y - art.focus_padding.y,
             "Question reference escapes its paper or reaches the first padded action");
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

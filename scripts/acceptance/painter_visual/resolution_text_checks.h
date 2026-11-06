@@ -173,7 +173,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             "Independent resolution/fullscreen row, focus card, shade or arrow escaped its complete comparison area");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         Canvas(app.render_resources(), look.home_background_colour).draw(list, camera.visible_rectangle(viewport));
         // Full resting paper, including its bevel, is reconstructed under both
@@ -186,7 +186,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     const auto project = [&](RectangleF rectangle)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(rectangle); return pixel_bounds(rectangle);
     };

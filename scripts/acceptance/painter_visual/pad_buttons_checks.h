@@ -100,7 +100,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         UiText help_text("independent-pad-help", help, look.help_font, look.controls_position, app.render_resources(), art.ink);
         const RectangleF raw_help = help_text.bounds();
         help_text.set_scale(std::min({ 1.0f, look.controls_size.x / raw_help.width, look.controls_size.y / raw_help.height }));
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
         UiText status_text("independent-pad-status", status, look.help_font, look.status_position, app.render_resources(),
             warning ? original.main_menu().options_warning_colour : art.focus_ink);
         const RectangleF raw_status = status_text.bounds();
@@ -113,7 +113,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::srand(7331); const int next = std::rand(); std::srand(7331);
         require(actual.pixels == stack_frame(app).pixels && std::rand() == next,
             "Frozen Pad Jump draw mutated pixels or consumed RNG");
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

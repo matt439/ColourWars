@@ -69,7 +69,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         }
         const Frame actual = frame();
         const int rows = page == 0 ? 4 : page == 1 ? static_cast<int>(options_items.size()) : 1;
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         for (int row = 0; row < rows; ++row)
         {
@@ -134,7 +134,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
             };
             const Vector2F panel_size = page == 0 ? look.home_box_size :
                 page == 1 ? look.options_box_size : look.credits_box_size;
-            const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+            const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) -
                 panel_size) / 2.0f, panel_size);
             card(panel, art.paper);
             // Only the focused action has a card; Home pins no Play card (POL#37).

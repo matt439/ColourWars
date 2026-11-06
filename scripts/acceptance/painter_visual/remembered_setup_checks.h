@@ -286,7 +286,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         const auto& end = presentation.end_menu();
         const Vector2F extent = app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(
             presentation.menu().item_font), session.continue_string(presentation.menu_text().end));
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         const RectangleI card = pixel_bounds(camera.calculate_view_rectangle(RectangleF(end.layout.position, extent)));
         require(foreground_crop(frame(), card, 0).pixels == foreground_crop(wanted, card, 0).pixels,

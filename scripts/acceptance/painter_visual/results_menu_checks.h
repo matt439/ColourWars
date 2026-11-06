@@ -41,8 +41,8 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     const auto item_font = app.render_resources()->resolve_sprite_font(style.item_font);
     const auto detail_font = app.render_resources()->resolve_sprite_font(style.detail_font);
     const auto contribution_font = app.render_resources()->resolve_sprite_font(look.contribution_font);
-    const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
-    const RectangleF fill_box(Vector2F((menu_consts::DESIGN_RESOLUTION.x - look.fill_box_size.x) / 2.0f,
+    const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
+    const RectangleF fill_box(Vector2F((menu_consts::design_resolution.x - look.fill_box_size.x) / 2.0f,
         panel.y + look.fill_box_y_offset), look.fill_box_size);
 
     app.keyboard()->set_focused(true);
@@ -72,7 +72,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](RectangleF rectangle)
@@ -119,7 +119,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     const auto centered = [&](const auto& font, const std::wstring& text, float y)
     {
         const Vector2F measured = app.render_resources()->measure_text(font, text);
-        return RectangleF((menu_consts::DESIGN_RESOLUTION.x - measured.x) / 2.0f,
+        return RectangleF((menu_consts::design_resolution.x - measured.x) / 2.0f,
             y, measured.x, measured.y);
     };
     const auto contribution = [&](const LevelEndInfo& info, int player)

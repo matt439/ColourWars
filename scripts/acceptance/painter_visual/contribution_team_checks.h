@@ -142,7 +142,7 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
     const RectangleF session_region(420.0f, 339.0f, 1080.0f, 135.0f);
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
@@ -156,17 +156,17 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         const std::string& font = wrong_font ? original.results_menu().contribution_font : look.contribution_font;
         colourwars::UiTextDropShadow heading("independent-contribution-title", L"Round 1", style.heading_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
-        heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
+        heading.set_position({ (menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y });
         colourwars::UiTextDropShadow score("independent-contribution-score", L"Wins: A 0 - B 0  |  First to 2", style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
-        score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
+        score.set_position({ (menu_consts::design_resolution.x - score.bounds().width) / 2.0f, look.session_score_y });
         colourwars::UiTextDropShadow outcome("independent-contribution-outcome", L"Draw - no win awarded", style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
-        outcome.set_position({ (menu_consts::DESIGN_RESOLUTION.x - outcome.bounds().width) / 2.0f, look.session_result_y });
+        outcome.set_position({ (menu_consts::design_resolution.x - outcome.bounds().width) / 2.0f, look.session_result_y });
         colourwars::UiTextDropShadow legend("independent-contribution-legend", L"Surface held (% of arena)", look.contribution_font,
             Vector2F(480.0f, 635.0f), app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
         std::array<std::unique_ptr<colourwars::UiTextDropShadow>, 4> labels;
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         require(heading_region.contains(heading.bounds()) && legend_region.contains(legend.bounds()) &&
             session_region.contains(score.bounds()) && session_region.contains(outcome.bounds()) &&
             score.bounds().bottom() < outcome.bounds().y,
@@ -187,7 +187,7 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus); paper.draw(list);

@@ -106,9 +106,9 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const Frame actual = frame(); const auto& style = captured.menu(); const auto& look = captured.main_menu(); const auto& geometry = look.stage_select; const auto& live = refreshed.main_menu().stage_select;
         const auto& text = captured.menu_text(); auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
         const bool random = slot == static_cast<int>(stages.size()); const size_t candidate_count = eligible().size();
-        const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), preview(geometry.preview_position, geometry.preview_size);
+        const RectangleF design(Vector2F::zero, menu_consts::design_resolution), preview(geometry.preview_position, geometry.preview_size);
         RectangleF edge = preview; edge.inflate(style.rule_height);
-        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.stage_box_size) / 2.0f, look.stage_box_size);
+        const RectangleF paper((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.stage_box_size) / 2.0f, look.stage_box_size);
         const float border = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(border), paper.size() - Vector2F(border * 2.0f + art.shadow_offset));
         std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
         const auto label = [&](const std::wstring& value, const std::string& font, const Vector2F& position, const Colour& ink, const Vector2F& shadow)
@@ -160,8 +160,8 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const UiTexture preview_back("independent-stage-pane", style.sprite_sheet, style.fill_frame, preview, app.render_resources(), backing_tint);
         preview_edge.draw(list); preview_back.draw(list);
         StagePreview stage_preview("independent-actual-stage-preview", preview, &data); if (!random) { stage_preview.set_stage(stages[static_cast<size_t>(slot)].name); } stage_preview.draw(list);
-        fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x, menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
-        fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
+        fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x, menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
+        fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear);
         for (size_t i = 0; i < labels.size(); ++i) { labels[i]->draw(list); if (i == 2 && random) { question.draw(list); } }
         const auto& footer = captured.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : locked ? L"A/Enter Start match    B/Esc Unlock arena" : L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back";
@@ -280,7 +280,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
         {
             app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
             const auto pixels = [&](RectangleF bounds) { bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds); };
             const auto expect = [&](const char* name, int count, int selected, const std::wstring& line)
             {

@@ -122,16 +122,16 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         unchanged(); const Frame actual = frame(); const MenuStyle& style = snapshot.menu();
         MenuPaperArtPresentation art = kind == 1 ? snapshot.pause_menu().art : snapshot.main_menu().art;
         RectangleF panel;
-        if (kind == 1) { panel = RectangleF((menu_consts::DESIGN_RESOLUTION - snapshot.pause_menu().box_size) / 2.0f,
+        if (kind == 1) { panel = RectangleF((menu_consts::design_resolution - snapshot.pause_menu().box_size) / 2.0f,
             snapshot.pause_menu().box_size); }
         else
         {
             art.focus_padding = snapshot.main_menu().setup_focus_padding; art.shadow_offset = snapshot.main_menu().setup_shadow_offset;
             const Vector2F size = kind == 0 ? snapshot.main_menu().setup_box_size : snapshot.main_menu().team_box_size;
-            panel = RectangleF((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - size) / 2.0f, size);
+            panel = RectangleF((Vector2F(menu_consts::design_resolution.x, style.footer_y) - size) / 2.0f, size);
         }
         const Vector2F size = app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(font), copy);
-        if (centred) { position.x = (menu_consts::DESIGN_RESOLUTION.x - size.x) / 2.0f; }
+        if (centred) { position.x = (menu_consts::design_resolution.x - size.x) / 2.0f; }
         std::unique_ptr<UiWidget> text_reference;
         if (shadowed)
         {
@@ -151,7 +151,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup no_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &art, &no_focus); paper.draw(list);

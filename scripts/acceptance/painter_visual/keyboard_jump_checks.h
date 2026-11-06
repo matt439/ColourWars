@@ -113,7 +113,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)
@@ -134,7 +134,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const RectangleF help_raw = help_text.bounds();
         help_text.set_scale(std::min({ 1.0f, look.controls_size.x / help_raw.width,
             look.controls_size.y / help_raw.height }));
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) -
             look.box_size) / 2.0f, look.box_size);
         UiText status_text("independent-jump-status", status, look.help_font, look.status_position,
             app.render_resources(), warning ? snapshot.main_menu().options_warning_colour : art.focus_ink);

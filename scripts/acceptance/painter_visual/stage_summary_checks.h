@@ -133,13 +133,13 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (size_t role = 0; role < texts.size(); ++role)
         {
             const RectangleF bounds = texts[role].bounds(); RectangleF padded = bounds; padded.inflate(main.art.keyline_width * 3.0f + main.setup_shadow_offset);
-            require(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION).contains(bounds) && authored.contains(padded) &&
+            require(RectangleF(Vector2F::zero, menu_consts::design_resolution).contains(bounds) && authored.contains(padded) &&
                 bounds.bottom() <= (info + geometry.briefing.spacing * static_cast<float>(role + 2)).y,
                 "Independent unscaled summary/shadow bounds escape the paper or reach the following row");
         }
         std::srand(8131); const int random_value = std::rand(); std::srand(8131); const Frame actual = stack_frame(app);
         require(actual.pixels == stack_frame(app).pixels && std::rand() == random_value, "Frozen summary drawing changed pixels or consumed match randomness");
-        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
+        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
         list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);

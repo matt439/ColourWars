@@ -53,12 +53,12 @@ void Presentation::validate_stage_scan_resources(const labrador::RenderResources
 			const labrador::Vector2F origin = look.prompt_position + labrador::Vector2F(0.0f, this->menu_.footer_y);
 			return origin.x + std::min(0.0f, shadow.x) >= 0.0f &&
 				origin.y + std::min(0.0f, shadow.y) >= status.bottom() &&
-				origin.x + size.x + std::max(0.0f, shadow.x) <= menu_consts::DESIGN_RESOLUTION.x &&
-				origin.y + size.y + std::max(0.0f, shadow.y) <= menu_consts::DESIGN_RESOLUTION.y;
+				origin.x + size.x + std::max(0.0f, shadow.x) <= menu_consts::design_resolution.x &&
+				origin.y + size.y + std::max(0.0f, shadow.y) <= menu_consts::design_resolution.y;
 		};
 		if (!std::isfinite(status.x) || !std::isfinite(status.y) || !std::isfinite(status.width) ||
 			!std::isfinite(status.height) || status.x < 0 || status.width <= 0 || status.height <= 0 ||
-			status.right() > menu_consts::DESIGN_RESOLUTION.x || status.y < this->menu_.footer_y + this->menu_.rule_height ||
+			status.right() > menu_consts::design_resolution.x || status.y < this->menu_.footer_y + this->menu_.rule_height ||
 			status.bottom() > this->menu_.footer_y + look.prompt_position.y ||
 			!std::isfinite(look.status_scale) || look.status_scale <= 0 ||
 			font.measure(copy.summary(1)).y * look.status_scale > status.height ||

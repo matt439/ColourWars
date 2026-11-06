@@ -75,7 +75,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
     std::ignore = app.renderer()->window_size_changed(1280, 720);
     const StageSelectPresentation& stage_look = presentation.main_menu().stage_select;
     const RectangleF preview_box(stage_look.preview_position, stage_look.preview_size);
-    const Camera menu_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+    const Camera menu_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
         app.viewport_manager()->fullscreen_viewport());
     const Viewport miniature_pane(menu_camera.calculate_view_rectangle(preview_box));
     const Camera miniature_camera = Camera::frame(levels.get("turbulence_gate_trial")->zoom_out_finish_bounds_rectangle(), miniature_pane);

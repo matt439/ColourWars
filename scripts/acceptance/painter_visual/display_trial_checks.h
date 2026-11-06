@@ -143,7 +143,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         const float countdown_y = look.layout.position.y + look.layout.spacing.y * 2.0f;
         UiText countdown("independent-display-countdown", L"Reverting in " + std::to_wstring(seconds) + L"s", style.detail_font, Vector2F(0.0f, countdown_y), app.render_resources(), art.ink);
         countdown.set_position(Vector2F((1920.0f - countdown.bounds().width) / 2.0f, countdown_y));
-        const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF design(Vector2F::zero, menu_consts::design_resolution), paper((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         require(paper.contains(heading.bounds()) && paper.contains(question.bounds()) && paper.contains(countdown.bounds()), "Independent display trial copy escaped its captured paper");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const auto viewport = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(design, viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
@@ -166,7 +166,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         if (actual.pixels != expected_frame.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected_frame, output / (stem + "-failure-expected.ppm")); const auto delta = foreground_delta_bounds(actual, expected_frame); std::cerr << "DISPLAY TRIAL " << name << " seconds=" << seconds << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
         require(stack.depth() == 3 && actual.pixels == expected_frame.pixels, "Actual display trial differs from independent complete paper/question/choices/countdown reference");
         std::srand(8231); const int next = std::rand(); std::srand(8231); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next, "Frozen display trial changed pixels or draw RNG");
-        if (capture) { save(actual, output / (stem + ".ppm")); const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport()); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
+        if (capture) { save(actual, output / (stem + ".ppm")); const RectangleF paper((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport()); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << keep << ',' << seconds << ",true\n"; return actual;
     };
     const auto select_keep = [&] { tap(GamepadButton::dpad_up); tick(settled); };
@@ -198,7 +198,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         seed(); begin(true); stack.clear(); old(true); hide(); require(stack.depth() == 0 && direct_results == 0, "Display trial clear delivered a callback or retained a frame");
         seed(); begin(); tap(GamepadButton::dpad_up); Frame moving = frame(); require(moving.pixels != reference(true, static_cast<int>(std::ceil(timeout - age))).pixels, "Display trial cursor response did not start");
         tick(0.0f); tick(-0.5f); const Frame after_nonpositive = frame(); const auto delta = foreground_delta_bounds(moving, after_nonpositive);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
         const float countdown_y = look.layout.position.y + look.layout.spacing.y * 2.0f;
         const auto line_size = app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(style.detail_font), L"Reverting in 60s");
         const RectangleF clock_band(0.0f, countdown_y - 2.0f, 1920.0f, line_size.y + 4.0f);

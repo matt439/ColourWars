@@ -227,12 +227,12 @@ void cq_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& levels, Lev
         const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("cq-blockout-actual-preview", box, &data); preview.set_stage("close_quarters");
         const Viewport fullscreen = app.viewport_manager()->fullscreen_viewport();
-        const Camera menu_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const Camera menu_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), fullscreen);
         const auto draw = [&](bool visible)
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(fullscreen); list.set_camera(menu_camera);
-            list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
+            list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::design_resolution));
             if (visible) { preview.draw(list); }
             ++readbacks; return read(renderer);
         };

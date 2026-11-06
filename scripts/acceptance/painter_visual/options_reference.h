@@ -33,8 +33,8 @@ Frame options_reference(Application& app, const Canvas& canvas, const Presentati
     const auto& style = captured.menu(); const auto& look = captured.main_menu();
     auto art = look.art; art.focus_padding = look.setup_focus_padding;
     art.shadow_offset = look.setup_shadow_offset;
-    const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
-    const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+    const RectangleF design(Vector2F::zero, menu_consts::design_resolution);
+    const RectangleF paper((Vector2F(menu_consts::design_resolution.x, style.footer_y) -
         look.options_box_size) / 2.0f, look.options_box_size);
     const float row_height = look.options_spacing.y - art.focus_padding.y * 2.0f;
     const float value_width = paper.right() - art.shadow_offset - art.focus_padding.x - look.options_value_x;
@@ -121,10 +121,10 @@ Frame options_reference(Application& app, const Canvas& canvas, const Presentati
     sheet->draw(list, texel, design, look.home_background_colour);
     setup_paper_reference(list, *app.render_resources(), style, art, paper,
         bounds[static_cast<size_t>(page.selected)]);
-    sheet->draw(list, texel, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
-        menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
+    sheet->draw(list, texel, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x,
+        menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
     sheet->draw(list, texel, RectangleF(style.brand_position.x, style.footer_y,
-        menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height),
+        menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height),
         style.panel_edge_colour);
     list.set_filter(TextureFilter::linear);
     for (const auto& widget : text) { widget->draw(list); }
