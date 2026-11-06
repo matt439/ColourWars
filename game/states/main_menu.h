@@ -292,8 +292,8 @@ private:
 		const MenuPaperArtPresentation& art);
 	std::unique_ptr<OptionRow> duration_row_;
 	std::unique_ptr<OptionRow> stage_rule_row_;
-	labrador::FontHandle duration_font_{};
-	std::string duration_font_name_;
+	labrador::FontHandle value_font_{};
+	std::string value_font_name_;
 	float duration_row_spacing_ = 0.0f;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
