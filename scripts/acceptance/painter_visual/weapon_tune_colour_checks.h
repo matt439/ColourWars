@@ -153,7 +153,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
     { require(tune_colour_bytes(content / files[index]) == real_bytes[index] && tune_colour_bytes(source / files[index]) == real_bytes[index] &&
         tune_colour_bytes(staged / files[index]) == real_bytes[index], "Weapon tune changed actual content or its scratch source/staged files"); }
     require(records.good(), "Weapon tune CSV write failed");
-    std::cout << "PASS Weapon tune colours: four validated RGBA tune/reset commands, actual sparse2P P1-ready/P2-unready, frozen/inactive/missing retention then neutral reconnect adoption, independent premultiplied cards, unchanged opaque body/paint/supply and all outside-card pixels, captured names/fonts/catalog/palette/roster/settings/save/input/RNG; " <<
+    std::cout << "PASS Weapon tune colours: four validated RGBA tune/reset commands, actual sparse 2P P1-ready/P2-unready, frozen/inactive/missing retention then neutral reconnect adoption, independent premultiplied cards, unchanged opaque body/paint/supply and all outside-card pixels, captured names/fonts/catalog/palette/roster/settings/save/input/RNG; " <<
         ticks << " bounded updates, six CSV checks and two compact crops; no broad matrix, full match or performance acceptance\n";
 }
 #endif

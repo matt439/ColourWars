@@ -69,7 +69,7 @@ public:
     { return compact(a).pixels == compact(b).pixels; }
     static void edges(const Frame& actual, const Frame& raw, const Frame& blank)
     {
-        require(roi_equal(actual, raw), "Power light ordered raw32x32 ROI differs from actual front raster");
+        require(roi_equal(actual, raw), "Power light ordered raw 32x32 ROI differs from actual front raster");
         for (const Vector2I p : { Vector2I(1251, 657), Vector2I(1249, 655), Vector2I(1253, 658), Vector2I(1246, 652), Vector2I(1245, 652) })
         { require(monitor_rgb(actual, p.x, p.y) == monitor_rgb(raw, p.x, p.y), "Power light inner/border/exterior sample differs"); }
         require(monitor_rgb(actual, 1246, 652) == 0 && monitor_rgb(actual, 1245, 652) == monitor_rgb(blank, 1245, 652),
@@ -80,7 +80,7 @@ public:
         for (int y = 0; y < actual.height; ++y) { for (int x = 0; x < actual.width; ++x)
             { if (x < 1249 || x >= 1254 || y < 655 || y >= 659)
                 { const size_t at = (static_cast<size_t>(y) * static_cast<size_t>(actual.width) + static_cast<size_t>(x)) * 4;
-                  require(same_pixel(actual, baseline, at), "Power-light palette delta escaped selected5x4 inset"); } } }
+                  require(same_pixel(actual, baseline, at), "Power-light palette delta escaped selected 5x4 inset"); } } }
     }
     static void alpha0_ink(const Frame& actual)
     { for (int y = 655; y < 659; ++y) { for (int x = 1249; x < 1254; ++x)

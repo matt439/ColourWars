@@ -21,7 +21,7 @@ public:
         require(look_.sprite_sheet == "sprite_sheet_1" && look_.fill_frame == "pixel" &&
             frame_.source_rectangle() == RectangleI(32, 0, 4, 4) && frame_.origin() == Vector2F::zero &&
             strokes_.canvas_size == Vector2F(68, 120) && strokes_.pen_width == 4.0f,
-            "Acting fixture lost captured solid frame or literal68x120/nib4 geometry");
+            "Acting fixture lost captured solid frame or literal 68x120/nib 4 geometry");
         const std::vector<RespawnStroke> authored{
             { "cap", { { 20, 4 }, { 44, 4 } } },
             { "cap", { { 4, 16 }, { 48, 16 }, { 48, 8 } } },

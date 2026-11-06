@@ -1,4 +1,4 @@
-// Separate composed-Level witness. Program34's direct Monitor alpha proof and
+// Separate composed-Level witness. Program 34's direct Monitor alpha proof and
 // counters stay unchanged; this leaf observes one declared opaque story frame.
 void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const GameTuning& tuning, const Presentation& presentation, const PlaySettings& preferences,

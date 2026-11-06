@@ -1,5 +1,5 @@
-// Field55: positive-alpha closing-clock shade. This isolated leaf preserves
-// the opaque52-54 fixtures and their authored fixed-shade guards unchanged.
+// Field 55: positive-alpha closing-clock shade. This isolated leaf preserves
+// the opaque 52-54 fixtures and their authored fixed-shade guards unchanged.
 // Independent scope: eight literal material patches (128 pixels), not all art.
 enum class ClosingShadeReference { correct, straight, squared, black_band, no_scale, missing_bottom, missing_right };
 struct ClosingShadePatch { const char* name; RectangleI box; size_t layers; };
@@ -94,8 +94,8 @@ public:
                     Colour(colour.r * alpha, colour.g * alpha, colour.b * alpha, alpha);
                 for (size_t layer = 0; layer < patch.layers; ++layer)
                 {
-                    // Source passes are 3,2,1. At depth2/3, the middle pass is
-                    // layer1; the one-pass outer band has no middle layer.
+                    // Source passes are 3,2,1. At depth 2/3, the middle pass is
+                    // layer 1; the one-pass outer band has no middle layer.
                     const bool missing = layer == 1 && ((mode == ClosingShadeReference::missing_bottom && site >= 2 && site <= 4) ||
                         (mode == ClosingShadeReference::missing_right && site >= 5));
                     if (!missing) { rectangle(list, patch.box, tint); }

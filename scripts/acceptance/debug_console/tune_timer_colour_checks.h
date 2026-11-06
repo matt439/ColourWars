@@ -198,7 +198,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         original.player_identity_shadow_colour == labrador::Colour(0, 0, 0, 34) &&
         held_measurements[0].x > 0.0f && held_measurements[1].x > 0.0f &&
         held_measurements[2].x > 0.0f && held_measurements[3].x > 0.0f,
-        "The retained CPU HUD loads authored141414/00000022 and actual HEALTH/PAINT/timer/identity font metadata");
+        "The retained CPU HUD loads authored 141414/00000022 and actual HEALTH/PAINT/timer/identity font metadata");
     const auto unchanged = [&]
     {
         require(retained_hud == &hud && &presentation.hud() == look && &presentation.player_identity() == identity &&

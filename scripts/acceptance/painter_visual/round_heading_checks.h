@@ -139,8 +139,8 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         require(readbacks < 81, "Round heading exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // Actual72-font headings, prefix/suffix templates and Results all end at
-    //236.328125; winner begins255. Unchanged score/outcome end402/460.6640625.
+    // Actual 72-font headings, prefix/suffix templates and Results all end at
+    // 236.328125; winner begins at 255. Unchanged score/outcome end at 402/460.6640625.
     // Multiples of three keep exact floor/ceil crops at both native sizes.
     const RectangleF row_region(420.0f, 333.0f, 1080.0f, 141.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);

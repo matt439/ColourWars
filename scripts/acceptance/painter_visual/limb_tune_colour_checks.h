@@ -1,4 +1,4 @@
-// Limb43/44: independent literal procedural ROIs; copied full fixture adoption only.
+// Limb 43/44: independent literal procedural ROIs; copied full fixture adoption only.
 // Ten explicit zero-delta Weapon preparations precede observations; no Player/Level is built.
 enum class LimbReference { correct, straight_arm, squared_arm, straight_hand, squared_hand };
 std::array<std::string,5> limb_figure_names(const FigurePresentation& p)
@@ -183,7 +183,7 @@ Frame LimbColourProbe::render(const std::function<void(DrawList&)>& draw)
     for(int y=20;y<24;++y){for(int x=20;x<29;++x)
     {if(x==24){continue;}const auto at=limb_offset(x,y);const unsigned char value=x<24?255:0;
         calibrated=calibrated&&result.pixels[at]==value&&result.pixels[at+1]==value&&result.pixels[at+2]==value&&result.pixels[at+3]==255;}}
-    if(!calibrated){failure("unknown","WHITE-BLACK-calibration",result);}require(calibrated,"Limb actual32pixel WHITE/BLACK RGBA calibration failed");calibration_checks_+=32;
+    if(!calibrated){failure("unknown","WHITE-BLACK-calibration",result);}require(calibrated,"Limb actual 32-pixel WHITE/BLACK RGBA calibration failed");calibration_checks_+=32;
     const std::array<Colour,6> after{look_.arm_colour,look_.hand_colour,expected_.arm_colour,expected_.hand_colour,disabled_look_.arm_colour,disabled_look_.hand_colour};
     const bool frozen=std::rand()==next&&selected==after;if(!frozen){failure("unknown","draw-state-or-rng",result);}
     require(frozen,"Limb draw consumed gameplay RNG or changed selected actual/copied records");unchanged();return result;
@@ -212,7 +212,7 @@ Frame LimbColourProbe::raw(const Colour& arm,const Colour& hand,LimbReference mo
 void LimbColourProbe::check_rois(const Frame& actual,const Frame& raw,const char* state) const
 {
     size_t checked=0;
-    // All21142 RGBA/alpha comparisons over all12 complete literal interiors.
+    // All 21142 RGBA/alpha comparisons over all 12 complete literal interiors.
     for(size_t i=0;i<limb_contexts().size();++i){const auto& c=limb_contexts()[i];for(int y=c.top;y<c.bottom;++y){for(int x=c.left;x<c.right;++x)
     {const auto at=limb_offset(x,y);const bool equal=same_pixel(actual,raw,at)&&actual.pixels[at+3]==255;
         if(!equal){failure(state,"ROI-RGBA",actual,&raw,static_cast<int>(i));}
@@ -437,7 +437,7 @@ void limb_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& p
     std::ofstream summary(output/"limb-colour-tune-summary.json");
     summary<<"{\"scope\":\"debug-validated-commands\",\"event_fade\":false,\"background\":\"canvas32-64-96\",\"adoption\":\"live\",\"commands\":9,\"states\":9,\"contexts\":12,\"readbacks\":36,\"csv_rows\":9,\"crops\":0,\"saved_tokens\":2,\"private_seed_saves\":2,\"named_arm_token_checks\":1,\"calibration_pixels_per_read\":32,\"calibration_pixel_checks\":1152,\"preparation_weapon_updates\":10,\"preparation_weapon_dt\":0,\"preparation_projectiles\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(),"Cannot retain Limb Debug summary");
-    std::cout<<"PASS limb tune:9real commands/9states/36additional readbacks/9rows; no-raster2quoted-tokenSave/rebase, sibling-retaining saved resets,"
-        "2private preferences/JumpJ/defaultdisplay;10zero-delta Weapon preps and0observation updates; direct attachments only.\n";
+    std::cout<<"PASS limb tune: 9 real commands/9 states/36 additional readbacks/9 rows; no-raster 2-quoted-token Save/rebase, sibling-retaining saved resets, "
+        "2 private preferences/JumpJ/default display; 10 zero-delta Weapon preps and 0 observation updates; direct attachments only.\n";
 }
 #endif

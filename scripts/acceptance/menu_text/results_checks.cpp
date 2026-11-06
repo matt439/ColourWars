@@ -697,7 +697,7 @@ namespace menu_text_acceptance
         // A's shorter text gives the higher badge top, while B's taller text
         // gives the lower badge bottom: their legal-team envelope is 46 high.
         require(681.0f - 9.0f == 672.0f && 681.0f + 37.0f == 718.0f && 727.0f - 9.0f == 718.0f,
-            "Mixed-team row envelope must touch the next row at exactly46 units");
+            "Mixed-team row envelope must touch the next row at exactly 46 units");
         variants.rejects("labels.roster_row.Results.menu_text.results.contribution_team_a.and menu_text.results.contribution_team_b", [&](rapidjson::Document& d)
         { edit(d, 376.0f); d["results_menu"]["contribution_spacing"].SetFloat(45.75f); }, &world);
         variants.rejects("results.contribution_heading", [](rapidjson::Document& d)

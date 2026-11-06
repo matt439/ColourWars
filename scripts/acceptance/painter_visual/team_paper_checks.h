@@ -230,5 +230,5 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         require(rejected, "Actual Team paper accepted an overflowing warning or reported the wrong diagnostic");
     }
     require(records.good(), "Team paper evidence write failed"); require(IsWindowVisible(static_cast<HWND>(app.window())) == FALSE && GetForegroundWindow() != static_cast<HWND>(app.window()), "Team paper probe exposed or activated its hidden window");
-    std::cout << "PASS Team paper independent full paper/cards/text/icons/badges at six sizes; solo and sparse2/3/4-roster choices/readiness/warning, seeded shuffle/RNG, recovery/routes, captured art/font/atlas, local motion/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";
+    std::cout << "PASS Team paper independent full paper/cards/text/icons/badges at six sizes; solo and sparse 2/3/4-roster choices/readiness/warning, seeded shuffle/RNG, recovery/routes, captured art/font/atlas, local motion/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";
 }

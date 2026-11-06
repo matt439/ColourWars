@@ -221,7 +221,7 @@ namespace moving_structure_acceptance
             viewports(&resolution), pending_(std::make_unique<labrador::Scene>(nullptr, nullptr)),
             expected_players_(player_count), bounds_(bounds)
         {
-            require(player_count >= 1 && player_count <= 4, "Fixture player count must be1..4");
+            require(player_count >= 1 && player_count <= 4, "Fixture player count must be 1..4");
             viewports.set_layout(player_count == 1 ? labrador::ScreenLayout::one_player :
                 player_count == 2 ? labrador::ScreenLayout::two_player :
                 player_count == 3 ? labrador::ScreenLayout::three_player : labrador::ScreenLayout::four_player);

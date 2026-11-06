@@ -151,7 +151,7 @@ public:
                 if (!item.normal)
                 {
                     // Independently audited CLOSING panel: max((16,10),3*2)
-                    // padding, own pen2/shade4, text0:10 at (891.5,54). Detached
+                    // padding, own pen 2/shade 4, text 0:10 at (891.5,54). Detached
                     // ticks are x859..872 / x1052..1065, outside this ROI.
                     const float pen = look_.closing_clock.keyline_width;
                     const Vector2F padding(std::max(look_.player_identity_padding.x, pen * 3),
@@ -303,7 +303,7 @@ public:
             }
             if (mode == HudTimerReference::added_normal_shadow)
             {
-                // Glyph1 shifted by (2,2) covers (970,117) from its fully
+                // Glyph 1 shifted by (2,2) covers (970,117) from its fully
                 // opaque base row (968,115), while NO unshifted glyph quad
                 // reaches row 117. Correct closing is paper.
                 const size_t at = offset(970, 117);

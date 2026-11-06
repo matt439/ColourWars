@@ -239,6 +239,6 @@ void tune_colour_matrix(Application& app, GameTuning& tuning, Presentation& pres
     require(records.good(), "tune-colour evidence record write failed");
     std::cout << "PASS tune colours: validated named/RGB/RGBA commands, six existing live consumers and "
         "captured/reopened Home+Mode, reset reversal, real resource rejection and queued scratch reload/rebase; "
-        "private save, frozen pixels/state/RNG and original content preserved. Debug-only hidden720p renderer scope; "
+        "private save, frozen pixels/state/RNG and original content preserved. Debug-only hidden 720p renderer scope; "
         "no physical-device, listening, human readability or performance acceptance.\n";
 }

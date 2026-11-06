@@ -1,4 +1,4 @@
-// Fields56-58: one isolated shared HUD paper family. Existing fixtures stay
+// Fields 56-58: one isolated shared HUD paper family. Existing fixtures stay
 // byte-identical; the independent oracle is bounded to 35 material sites.
 enum class HudPaperReference { correct, wrong_ink, omitted_ink, wrong_paper, omitted_paper,
     straight, squared, black_band, no_scale, missing_bottom, missing_right };
@@ -153,7 +153,7 @@ public:
             same_team_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
             pixel_.origin() == Vector2F::zero && app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
-            "HUD paper edit changed unselected style including closing55, identity, palette, resource, geometry or viewport");
+            "HUD paper edit changed unselected style including closing 55, identity, palette, resource, geometry or viewport");
         const std::array<std::string, 3> names{ look_.meter_label_font, look_.timer_font, look_.player_identity_font };
         for (size_t i = 0; i < names.size(); ++i)
         {
@@ -355,7 +355,7 @@ private:
         (background == 0 ? black_ : nonblack_).draw(list, { 0, 0, 1920, 1080 }); draw(list);
         rectangle(list, { 20, 20, 4, 4 }, Colour::white); rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame frame = read(renderer); ++readbacks_;
-        require(frame.width == 1920 && frame.height == 1080 && frame.pixels.size() == 1920 * 1080 * 4, "HUD paper requires native1920x1080 RGBA");
+        require(frame.width == 1920 && frame.height == 1080 && frame.pixels.size() == 1920 * 1080 * 4, "HUD paper requires native 1920x1080 RGBA");
         for (int y = 20; y < 24; ++y) { for (int x = 20; x < 29; ++x)
         { if (x == 24) { continue; } const size_t at = offset(x, y); const unsigned char c = x < 24 ? 255 : 0;
             require(frame.pixels[at] == c && frame.pixels[at + 1] == c && frame.pixels[at + 2] == c && frame.pixels[at + 3] == 255, "HUD paper WHITE/BLACK calibration differs"); } }
@@ -656,7 +656,7 @@ void hud_paper_tune_checks(Application& app, GameTuning& tuning, Presentation& p
         impl.tune_document("presentation")->edits().empty() && impl.tune_document("tuning")->edits().empty(), "HUD paper Debug frozen command/state/refusal/read counts or final ledgers differ");
     std::ofstream summary(output / "hud-paper-tune-summary.json"); summary << "{\"scope\":\"debug-live-hud-paper-family-and-policy-refusal\",\"accepted_rendered_states\":9,\"accepted_reads\":27,\"new_raw_reads\":4,\"cached_reference_observations\":5,\"refusal_reads\":5,\"readbacks\":36,\"accepted_rows\":9,\"refusal_rows\":5,\"csv_rows\":14,\"repeat_checks\":9,\"copied_adoption_checks\":9,\"independent_observations\":9,\"patch_pixel_checks\":5040,\"saved_tokens\":3,\"original_reset_frame_equalities\":1,\"saved_reset_frame_equalities\":1,\"sibling_pending_reset_checks\":3,\"refusal_json_records\":5,\"crops\":0,\"calibration_pixel_checks\":1152,\"commands\":20,\"accepted_commands\":15,\"query_commands\":3,\"tune_commands\":7,\"reset_commands\":4,\"presentation_save_commands\":1,\"refused_commands\":5,\"refusal_raster_reads\":5,\"private_game_saves\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}" << '\n';
     require(summary.good(), "Cannot retain HUD paper Debug summary");
-    std::cout << "PASS HUD paper tune: 20 actual statements, 9 accepted rendered states, 5 typed atomic refusals and held-frame reads; 36 additional reads, exact3-token Save/rebase and sibling-preserving resets. No game Saves, updates or input polls.\n";
+    std::cout << "PASS HUD paper tune: 20 actual statements, 9 accepted rendered states, 5 typed atomic refusals and held-frame reads; 36 additional reads, exact 3-token Save/rebase and sibling-preserving resets. No game Saves, updates or input polls.\n";
 }
 #endif
 void hud_paper_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation,

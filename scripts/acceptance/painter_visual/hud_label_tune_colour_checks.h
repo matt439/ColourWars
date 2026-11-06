@@ -1,4 +1,4 @@
-// Paths49/50: one prepared HUD, three foreground roles and identity-only shadow.
+// Paths 49/50: one prepared HUD, three foreground roles and identity-only shadow.
 // Bounds/backgrounds are pinned source hypotheses, not fitted raster results.
 enum class HudLabelSubject { foreground, shadow, pair };
 enum class HudLabelReference { correct, straight, squared, reversed_order };
@@ -110,8 +110,8 @@ public:
         return render([&](DrawList& list)
         {
             for (const auto& box : hud_label_rois()) { rectangle(list, box, Colour(255, 245, 223)); }
-            // Full multiline identity is NOT flat paper: only pass3's source
-            // shade enters rows172/173. Literal crop material precedes text.
+            // Full multiline identity is NOT flat paper: only pass 3's source
+            // shade enters rows 172/173. Literal crop material precedes text.
             rectangle(list, { 133, 172, 380, 2 }, Colour(0.0f, 0.0f, 0.0f, .04f));
             list.set_filter(TextureFilter::linear);
             const auto tint = [&](const Colour& colour, bool selected)

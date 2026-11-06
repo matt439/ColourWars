@@ -1,5 +1,5 @@
-// Path45 adds a separately counted blink-face scenario to the limb family.
-// The old43/44 fixtures, captures, controls and budgets remain unchanged.
+// Path 45 adds a separately counted blink-face scenario to the limb family.
+// The old 43/44 fixtures, captures, controls and budgets remain unchanged.
 enum class QuietFaceReference { correct, straight_face, squared_face, reversed_order };
 
 std::vector<float> quiet_face_fixed(const FigurePresentation& look)
@@ -135,7 +135,7 @@ public:
             require(equal != selected, "Quiet face negative reference lost exact role discrimination/exterior parity");
             if (!equal) { ++different; }
         } }
-        require(different == 64, "Quiet face negative reference must discriminate exactly64 role pixels");
+        require(different == 64, "Quiet face negative reference must discriminate exactly 64 role pixels");
         return different;
     }
 
@@ -175,7 +175,7 @@ private:
         rectangle(list, { 25, 20, 4, 4 }, Colour::black);
         Frame result = read(renderer); ++readbacks_;
         require(result.width == 1280 && result.height == 720 && result.pixels.size() == 1280 * 720 * 4,
-            "Quiet face requires a native1280x720 RGBA backbuffer");
+            "Quiet face requires a native 1280x720 RGBA backbuffer");
         for (int y = 20; y < 24; ++y) { for (int x = 20; x < 29; ++x)
         {
             if (x == 24) { continue; }

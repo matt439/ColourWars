@@ -388,7 +388,7 @@ namespace turbulence_movers_acceptance
             ",\"real_target_health_measured\":true,\"projectile_count_snapshots_only\":true,\"invader_camping_measured\":false,"
             "\"tracking_or_continuous_fire_measured\":false,\"human_acceptance\":false}\n";
         summary.close(); require(summary.good(), "Cannot finish actual forward-pressure summary");
-        std::cout << "PASS 280 own-mover phase/tool/real-target pulses plus 70 original-static upper-approach controls and 2 known-near positive controls via actual2P LevelBuilder; "
+        std::cout << "PASS 280 own-mover phase/tool/real-target pulses plus 70 original-static upper-approach controls and 2 known-near positive controls via actual 2P LevelBuilder; "
             "cross-arena forward pressure, actual health/paint and public projectile counts, no invader-camping/trajectory/balance acceptance\n";
     }
 }

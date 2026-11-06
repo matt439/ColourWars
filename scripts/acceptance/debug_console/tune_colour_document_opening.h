@@ -487,7 +487,7 @@
 	void check_colour_document_opening_details()
 	{
 		{
-			// Save/conflict/force and LF/CRLF consumption reuse the42-path loops;
+			// Save/conflict/force and LF/CRLF consumption reuse the 42-path loops;
 			// retain only the new field's escaped-token/type/no-insertion checks here.
 			const std::string crack_path = "opening.crack";
 			const std::string crack_baseline = "{\r\n\"opening\":{\"crack\":\"\\u0033A3A3A\",\"coffee\":\"keep\"},\r\n\"number\":1\r\n}\r\n";

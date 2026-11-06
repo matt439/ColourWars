@@ -1,4 +1,4 @@
-// Track41: two independent192x16 track interiors; copied full HUD adoption only.
+// Track 41: two independent 192x16 track interiors; copied full HUD adoption only.
 // Literal geometry/channels remain source hypotheses until native qualification.
 enum class HudTrackReference { correct, straight, squared_base };
 const char* hud_track_context(size_t context)
@@ -154,7 +154,7 @@ void HudTrackColourProbe::failure(size_t context,const char* state,const char* s
 std::string HudTrackColourProbe::check_rois(size_t context,const Frame& actual,const Frame& raw,const Colour& colour)
 {
     constexpr std::array<int,2> tops{64,122};
-    // Complete BOTH disjoint interiors: all6144 exact RGBA/alpha comparisons
+    // Complete BOTH disjoint interiors: all 6144 exact RGBA/alpha comparisons
     // precede any supplementary representative source-channel admission.
     for(const int top:tops){for(int y=top;y<top+16;++y){for(int x=1036;x<1228;++x)
     {
@@ -170,7 +170,7 @@ std::string HudTrackColourProbe::check_rois(size_t context,const Frame& actual,c
     else if(colour.a!=0.0f)
     {
         require(colour==Colour(1,97,193,128),"Track source channels cover only declared partial palette");
-        f=0x0A3B6Bu;q=0x0B3B6Bu; // Predicted before captures; original alpha128 is already8UNORM.
+        f=0x0A3B6Bu;q=0x0B3B6Bu; // Predicted before captures; original alpha 128 is already 8-bit UNORM.
     }
     bool matches_f=true,matches_q=true;const int right=1036+hud_track_fill_width(context);
     for(size_t track=0;track<tops.size();++track){const int top=tops[track];
@@ -300,8 +300,8 @@ void hud_track_colour_consumer_checks(Application& app,const Presentation& prese
     std::ofstream summary(output/"hud-track-colour-consumer-summary.json");
     summary<<"{\"scope\":\"consumer-only\",\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"two-independent192x16-ink-track-prefix-interiors-only\",\"whole_frame_reference\":\"copied-complete-HUD-consumer-adoption-only\",\"health_roi_half_open\":[1036,64,1228,80],\"ammo_roi_half_open\":[1036,122,1228,138],\"capture_kind\":\"lossless-paired-ROI-stack\",\"paired_amounts_only\":true,\"readbacks\":54,\"csv_rows\":12,\"crops\":12,\"crop_width\":192,\"crop_height\":32,\"crop_pixels\":73728,\"ppm_bytes\":221352,\"contexts\":3,\"palettes\":4,\"roi_pixels\":6144,\"source_rois\":2,\"base_case_reads\":48,\"blank_reads\":0,\"selected_track_writes\":2,\"maximum_selected_writes_per_pixel\":1,\"controls\":6,\"track_discriminations\":12,\"partial_straight_reads\":2,\"partial_squared_reads\":2,\"alpha0_straight_reads\":2,\"changed_control_pixels\":27648,\"unchanged_control_pixels\":9216,\"full_cover_invariant_cases\":4,\"fill_role_guard_cases\":12,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Track shared summary");
-    std::cout<<"PASS track consumer:54readbacks/12rows/12lossless paired192x32 ROI stacks73728nativepixels;6144independentRGBA/case,"
-        "6controls/12track discriminations27648changed9216unchanged; coherent whole-composite source representatives. Full copiedHUD adoption only; zero all updates.\n";
+    std::cout<<"PASS track consumer: 54 readbacks/12 rows/12 lossless paired 192x32 ROI stacks of 73728 native pixels; 6144 independent RGBA per case, "
+        "6 controls/12 track discriminations with 27648 changed and 9216 unchanged pixels; coherent whole-composite source representatives. Full copied HUD adoption only; zero all updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS

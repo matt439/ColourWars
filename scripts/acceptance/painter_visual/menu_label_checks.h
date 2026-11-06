@@ -40,7 +40,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     int ticks = 0, captures = 0, rows = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
-        require(++ticks <= 120, "Menu labels exceeded the bounded120 update budget");
+        require(++ticks <= 120, "Menu labels exceeded the bounded 120-update budget");
         app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto key = [&](Key value)
@@ -94,7 +94,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     std::ofstream records(output / "menu-labels.csv");
     records << "case,role,width,height,font,x,y,text_width,text_height,raster_matches,settings_preserved\n";
-    // Roles: Join0, Team1, Weapon2, Pause3, Results4, Stick option5, connection6.
+    // Roles: Join 0, Team 1, Weapon 2, Pause 3, Results 4, Stick option 5, connection 6.
     const auto compare = [&](const char* name, int role, const Presentation& snapshot, const std::wstring& literal,
         int seat = 0, bool connected = true, bool capture = false)
     {

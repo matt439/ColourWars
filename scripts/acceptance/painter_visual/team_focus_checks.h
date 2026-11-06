@@ -291,7 +291,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     app.render_resources()->add_sprite_sheet("team_focus_shifted", std::make_unique<SpriteSheet>(shipped->texture(), std::move(frames), std::move(strips)));
     auto& shifted = const_cast<MainMenuPresentation&>(presentation.main_menu()); shifted.team_select_sheet = "team_focus_shifted";
     presentation.validate_resources(*app.render_resources(), *app.audio_resources()); play.reduce_effects = true; open(4);
-    require(look.team_select.size == Vector2F(50.0f), "The swapped-pivot oracle needs shipped50-unit choice canvases");
+    require(look.team_select.size == Vector2F(50.0f), "The swapped-pivot oracle needs shipped 50-unit choice canvases");
     const SpriteSheet* shifted_atlas = app.render_resources()->sprite_sheet("team_focus_shifted");
     const auto& shifted_a = shifted_atlas->sprite_frame(shifted_atlas->resolve_sprite_frame(look.team_select_frames[0]));
     const auto& shifted_b = shifted_atlas->sprite_frame(shifted_atlas->resolve_sprite_frame(look.team_select_frames[2]));
@@ -306,7 +306,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     tap(0, GamepadButton::dpad_left); teams[0] = PlayerTeam::none;
     tap(0, GamepadButton::dpad_left); teams[0] = PlayerTeam::a; compare("origin-semantic-reverse");
     require(captures == 8 && records_written > 0 && records.good(), "Team focus evidence is incomplete or exceeded its eight-crop cap");
-    std::cout << "PASS Team focus actual Team/Weapon pages: independent choice/readiness icon rasters, sparse1-4 rosters, semantic nonwrap endpoints, ready-row tint retention, local cursor motion, confirm/Back/shuffle priority, empty-team refusal, reconnect fresh press, committed teams/Weapon return and nonzero-origin reversed physical order; " <<
+    std::cout << "PASS Team focus actual Team/Weapon pages: independent choice/readiness icon rasters, sparse 1-4 rosters, semantic nonwrap endpoints, ready-row tint retention, local cursor motion, confirm/Back/shuffle priority, empty-team refusal, reconnect fresh press, committed teams/Weapon return and nonzero-origin reversed physical order; " <<
         ticks << " updates, " << records_written << " CSV rows, eight compact crops; no broad matrix, full match, physical-pad or foreground acceptance\n";
 }
 

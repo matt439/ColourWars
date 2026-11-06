@@ -226,7 +226,7 @@ namespace turbulence_slab_routes_acceptance
                     MatchRandom(round_seed));
                 owner = paint_owners::index(player().player_num(), 0);
                 require(owner == 4 && player().primary_weapon().type() == WeaponType::roller,
-                    "Public Roller route lost actual device-less owner4 or tool");
+                    "Public Roller route lost actual device-less owner 4 or tool");
                 check();
             }
 

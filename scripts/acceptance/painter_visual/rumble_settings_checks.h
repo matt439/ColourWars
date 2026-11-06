@@ -181,7 +181,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     pad(3, GamepadButton::dpad_down); pad(3, GamepadButton::a);
     require(stack.depth() == 2, "Pad sticks Back after a comfort Apply did not return to Controls");
     require(cases == 10 && records.good(), "Rumble settings evidence is incomplete");
-    std::cout << "PASS rumble settings: actual Controls/Pad sticks, sparse owner3 with earlier connected slot1, "
+    std::cout << "PASS rumble settings: actual Controls/Pad sticks, sparse owner 3 with earlier connected slot 1, "
         "pending On/Off, Apply/reload/repeat, Back/Escape discard, one failed save/recovery, unrelated settings and "
         "parent/edited-slot merge; one pad's View shake Off pending then applied to that slot only; two 720p captures, no native motor call or physical comfort claim\n";
 }

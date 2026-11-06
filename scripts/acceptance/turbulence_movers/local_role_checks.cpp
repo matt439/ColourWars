@@ -465,6 +465,6 @@ namespace turbulence_movers_acceptance
         std::cout << "PASS unoccupied local receiver paint: 40 mover +10 static pulses, 50 placements before readiness, " << paint_updates <<
             " actual Level updates; crossover-top samples static=" << static_top << "/10 mover=" << mover_top <<
             "/40. Exact per-face raw-slot credit and first paint are measured at the fixed top point; " <<
-            "combined100-scene cap=" << 100 * maximum_trial_updates << " updates, no earned travel or balance qualification\n";
+            "combined 100-scene cap=" << 100 * maximum_trial_updates << " updates, no earned travel or balance qualification\n";
     }
 }

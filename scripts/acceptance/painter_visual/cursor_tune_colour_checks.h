@@ -201,7 +201,7 @@ private:
 };
 
 // Fixed synthetic consumer inputs: tip(640,240), draw screen_height=720,
-// viewport1280x720, click_age=.09. These samples establish no small-view or
+// viewport 1280x720, click_age=.09. These samples establish no small-view or
 // human cursor-readability acceptance. No local/Level/State update is needed.
 void cursor_colour_consumer_checks(Application& app, const Presentation& presentation,
     const std::filesystem::path& output)

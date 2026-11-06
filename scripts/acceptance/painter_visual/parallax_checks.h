@@ -230,7 +230,7 @@ void parallax_views(Application& app, ParallaxWorld& world, const LevelLoadedInf
             pane.width == static_cast<float>(pixels.width) && pane.height == static_cast<float>(pixels.height),
             "Parallax fixture changed its exact whole-pixel gameplay pane");
         // Current C2 law: full-window height, limited by physical pane width.
-        // Literal720p/1080p anchors are 1P2/3,1 and 4P1/2,3/4 respectively.
+        // Literal 720p/1080p anchors are 1P2/3,1 and 4P1/2,3/4 respectively.
         const float scale = std::min(static_cast<float>(resolution.y) / 1080.0f,
             static_cast<float>(pixels.width) / 1280.0f);
         const float literal_scale = resolution.y == 720 ?
@@ -487,6 +487,6 @@ void parallax_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const 
     counts << "primary_cases,edge_cases,prop_masks,resize_states,reduced_cases,anchor_cases,preview_cases,frozen_repeats,readbacks,composites,far_changed_pixels,hill_changed_pixels,matching_opaque_prop_reference_samples\n" <<
         cases << ",16,16,8,4,4,4,8," << rendered << ',' << captures << ',' << global_far << ',' << global_hill << ',' << opaque_props << '\n';
     require(records.good() && details.good() && counts.good(), "Parallax comparison evidence write failed");
-    std::cout << "PASS parallax comparison only:32 current-arena clean/heavy gameplay-camera cases,16 literal clipped edges,372 readbacks,8 native512x360-cell contact sheets; far changed=" <<
+    std::cout << "PASS parallax comparison only: 32 current-arena clean/heavy gameplay-camera cases, 16 literal clipped edges, 372 readbacks, 8 native 512x360-cell contact sheets; far changed=" <<
         global_far << " hill changed=" << global_hill << ". No shipped parallax, route/readability/performance acceptance.\n";
 }

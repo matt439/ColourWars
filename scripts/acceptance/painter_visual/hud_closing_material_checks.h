@@ -1,4 +1,4 @@
-// Paths52-54: isolated opaque closing-clock materials. Included after immutable
+// Paths 52-54: isolated opaque closing-clock materials. Included after immutable
 // hud_timer_tune_colour_checks.h; no existing timer subject or helper is changed.
 using ClosingMaterialTuple = std::array<Colour, 3>;
 ClosingMaterialTuple closing_materials(const HudPresentation& look)

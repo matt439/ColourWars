@@ -293,7 +293,7 @@ namespace balance_runner
             require(extension != std::string::npos &&
                 std::count(header.begin(), header.begin() + static_cast<std::ptrdiff_t>(extension), ',') == 66 &&
                 std::count(header.begin(), header.end(), ',') == 80 && csv_row(result).rfind("2,", 0) == 0,
-                "Schema2 must append14 columns after the67-field legacy schema");
+                "Schema 2 must append 14 columns after the 67-field legacy schema");
         }
     }
 

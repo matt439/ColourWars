@@ -317,7 +317,7 @@ namespace fixed_slab_acceptance
             "\"per_source_face_tolerance\":0.05,\"analytic_total_tolerance\":0.15,\"registered\":false,"
             "\"driven_routes_measured\":false,\"native_rendering_measured\":false,\"human_acceptance\":false}\n";
         write(evidence / "slab-public-summary.json", summary.str());
-        std::cout << "PASS public slab authoring: real editor save/reopen preserves 22 original objects/spawns/metadata, fresh1/4 LevelBuilder loads+386 updates, "
+        std::cout << "PASS public slab authoring: real editor save/reopen preserves 22 original objects/spawns/metadata, fresh 1/4 LevelBuilder loads + 386 updates, "
             "actual source-face scoring and 7 paired refusal controls; total=" << total1 << " receipts=" << evidence.string() << '\n';
     }
 }

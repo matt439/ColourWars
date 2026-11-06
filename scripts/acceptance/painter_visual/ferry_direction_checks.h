@@ -262,6 +262,6 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     summary << "{\"outcome\":\"passed\",\"level_builds\":" << builds << ",\"level_updates\":" << updates << ",\"readbacks\":" << reads <<
         ",\"full_frames\":" << contexts << ",\"native_crops\":" << crops << ",\"rows\":" << rows << ",\"states\":7,\"headings\":2,\"miniature_scale\":" << miniature_camera.scale << '}';
     summary.close(); require(summary.good(), "Cannot flush ferry native summary");
-    std::cout << "PASS ferry direction native matrix: both headings, native1/2/4P/miniature, current demand versus committed movement/end stops, "
+    std::cout << "PASS ferry direction native matrix: both headings, native 1/2/4P/miniature, current demand versus committed movement/end stops, "
         "shape distinctions, reduced-effects parity, bounded pure drawing and actual StagePreview. Controlled inspection; attended trial play remains separate.\n";
 }

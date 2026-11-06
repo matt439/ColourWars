@@ -132,8 +132,9 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         require(readbacks < 94, "Session result exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // Preflight the real glyph extents: winner ends329.21875, score ends402,
-    // outcomes end460.6640625 (default) or467 (custom g/braces), plates start482.
+    // Preflight the real glyph extents: winner ends at 329.21875, score at 402,
+    // outcomes end at 460.6640625 (default) or 467 (custom g/braces), plates start
+    // at 482.
     // Multiples of three keep exact floor/ceil crops at both native sizes.
     const RectangleF row_region(420.0f, 333.0f, 1080.0f, 141.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
@@ -316,9 +317,9 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":710640}\n";
     require(summary.good(), "Cannot retain Session result summary");
     std::cout << "PASS Session outcome leaf: four real best-of 3/5 branches and independent plain literals including braces; "
-        "actual centered unscaled zero-offset outcome, unchanged score and generated Round heading; captured copy/detailfont "
+        "actual centered unscaled zero-offset outcome, unchanged score and generated Round heading; captured copy/detail font "
         "through assignment/reopen/reversal, real unrevealed/revealed delays, premature Enter/Escape refusal and 13 fresh pops; "
-        "frozen ledger/setup/private Save/RNG, zero-update720/1080/720resize,76updates94readbacks30CSVrows4fontcontrols "
-        "and8compactcrops710640pixels/2132036PPMbytes,oneprivate seedSave. Both presets normalreader; "
+        "frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, 76 updates, 94 readbacks, 30 CSV rows, 4 font controls "
+        "and 8 compact crops of 710640 pixels/2132036 PPM bytes, one private seed Save. Both presets, normal reader; "
         "no match/global-input/physical-pad/listening/human/performance acceptance.\n";
 }

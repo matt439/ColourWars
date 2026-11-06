@@ -635,7 +635,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     require(summary.good(), "Cannot retain result percentage summary");
     std::cout << "PASS Result percentage leaf: independent solo coverage and A/B plate literals with original participation, hidden-winner and input gates; "
         "captured templates/three caret-only font aliases through retained pages, reopening, seeded Level rebuilds, reversal and zero-update resizing. "
-        "Three actual public-builder two-player roller Levels intentionally advance80 updates each to clicked overview; "
+        "Three actual public-builder two-player roller Levels intentionally advance 80 updates each to clicked overview; "
         "only opaque monitor inner-card interiors compare independent literal font/outline/width-height fitting over unchanged paper. "
         "Frozen drawing preserves public state, draw RNG and Debug replay fingerprint when available; private preferences/bytes remain unchanged. "
         "60 StateContext updates plus 240 separate Level updates, 120 readbacks,105 CSV rows,8 page openings/pops,6 font controls, "

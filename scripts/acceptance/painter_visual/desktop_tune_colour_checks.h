@@ -122,7 +122,7 @@ void desktop_colour_consumer_checks(Application& app, const Presentation& presen
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,"
         "\"rectangle\":[136,59,1007,529],\"viewport\":\"1280x720\",\"event_fade\":false,\"adoption_reference\":\"production-consumer-only\",\"alpha_reference\":\"independent-full-raw-rectangle\"}\n";
     require(summary.good(), "Cannot write desktop shared summary");
-    std::cout << "PASS desktop colour:40readbacks/8rows/8corner montage crops320x192/6controls; full independent snapped rectangle, opaque parity, "
+    std::cout << "PASS desktop colour: 40 readbacks/8 rows/8 corner montage crops 320x192/6 controls; full independent snapped rectangle, opaque parity, "
         "partial/zero alpha and exterior backdrop; retained Monitor adoption/style/persona/RNG. Zero local/Player/Level/State/input/time updates.\n";
 }
 

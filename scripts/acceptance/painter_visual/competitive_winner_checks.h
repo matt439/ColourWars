@@ -148,9 +148,10 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         require(readbacks < 99, "Competitive winner exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // Shipped48-font winners end329.21875, authored braces end335; the next
-    // score starts340. Actual72-font headings end236.328125 before winner255.
-    // The unchanged score/outcome end402/460.6640625, before the plates482.
+    // Shipped 48-font winners end at 329.21875, authored braces at 335; the next
+    // score starts at 340. Actual 72-font headings end at 236.328125 before the
+    // winner at 255.
+    // The unchanged score/outcome end at 402/460.6640625, before the plates at 482.
     const RectangleF winner_region(600.0f, 246.0f, 720.0f, 93.0f);
     const RectangleF row_region(420.0f, 339.0f, 1080.0f, 135.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);

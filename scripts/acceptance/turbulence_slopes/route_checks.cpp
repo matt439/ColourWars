@@ -144,7 +144,7 @@ namespace turbulence_slopes_acceptance
             }
             else { require(trial.player().velocity().x == 0.0f, "Rest shoulder trial did not begin at rest"); }
             // This is the actual driven mark, including its world position.
-            // The uphill800 mark can occur on the ramp, not before entry.
+            // The uphill 800 mark can occur on the ramp, not before entry.
             receipt(csv, label, "actual-driven-speed-mark", trial, side_b, requested_speed);
             if (requested_speed == 0.0f)
             {
@@ -202,7 +202,7 @@ namespace turbulence_slopes_acceptance
             "\"original_lower_trials\":2,\"maximum_trial_updates\":2400,\"total_updates\":" << updates <<
             ",\"jump_inputs\":0,\"post_construction_placements\":0,\"speed_marks_driven\":true,\"human_acceptance\":false}\n";
         summary.close(); require(summary.good(), "Cannot finish shoulder route summary");
-        std::cout << "PASS12 actual shoulder walks at driven0/415/800 personal-speed marks: mirrored uphill/downhill, "
-            "whole-body mid-ramp/flat stops and ordinary lower recovery;2 original home/lower crossings, no jumps or post-build placements\n";
+        std::cout << "PASS 12 actual shoulder walks at driven 0/415/800 personal-speed marks: mirrored uphill/downhill, "
+            "whole-body mid-ramp/flat stops and ordinary lower recovery; 2 original home/lower crossings, no jumps or post-build placements\n";
     }
 }

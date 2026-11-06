@@ -1,4 +1,4 @@
-// Glass37: all four selected writes, three retained public Monitor methods.
+// Glass 37: all four selected writes, three retained public Monitor methods.
 // Raw main proof covers ONLY five declared ROIs. Whole-frame copied Monitor
 // equality proves adoption; it is not a full independent Monitor oracle.
 enum class GlassMethod { main, picker, close };
@@ -261,8 +261,8 @@ void glass_colour_consumer_checks(Application& app,const Presentation& presentat
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"viewport\":\"1280x720\",\"event_fade\":false,"
         "\"adoption_reference\":\"production-consumer-only\",\"alpha_reference\":\"independent-ordered-main-five-rois-and-standalone-rois\",\"main_crop\":[80,24],\"picker_crop\":[99,53],\"close_crop\":[27,26]}\n";
     require(summary.good(),"Cannot write Glass shared summary");
-    std::cout<<"PASS glass:100readbacks/20rows/20crops55272pixels; all4writes, four separate quarter-shadow passes plus lip, five main ROIs and guarded picker/close ROIs. "
-        "Main one effective beige backdrop; standalone two Canvas backdrops;12partial and6alpha0 per-write controls. Copied Monitor adoption only; zero all updates/RNG-neutral draws.\n";
+    std::cout<<"PASS glass: 100 readbacks/20 rows/20 crops of 55272 pixels; all 4 writes, four separate quarter-shadow passes plus lip, five main ROIs and guarded picker/close ROIs. "
+        "Main one effective beige backdrop; standalone two Canvas backdrops; 12 partial and 6 alpha-0 per-write controls. Copied Monitor adoption only; zero all updates/RNG-neutral draws.\n";
 }
 #if COLOURWARS_DEV_TOOLS
 void glass_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,

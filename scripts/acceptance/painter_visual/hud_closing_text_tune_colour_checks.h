@@ -1,4 +1,4 @@
-// Opaque closing text48 shares the font/resource probe, but has distinct
+// Opaque closing text 48 shares the font/resource probe, but has distinct
 // applicability and acceptance states. Alpha variants are refusals, not art.
 void hud_closing_text_colour_consumer_checks(Application& app, const Presentation& presentation,
     const std::filesystem::path& output)

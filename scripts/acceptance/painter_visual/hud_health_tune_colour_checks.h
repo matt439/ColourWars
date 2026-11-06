@@ -1,4 +1,4 @@
-// Health40: independent192x16 health track only; copied full HUD adoption only.
+// Health 40: independent 192x16 health track only; copied full HUD adoption only.
 // Literal geometry/channels remain source hypotheses until native qualification.
 enum class HudHealthReference { correct, straight, squared_base };
 const char* hud_health_context(size_t context)
@@ -149,7 +149,7 @@ void HudHealthColourProbe::failure(size_t context,const char* state,const char* 
 
 void HudHealthColourProbe::check_roi(size_t context,const Frame& actual,const Frame& raw,const Colour& colour)
 {
-    // Complete all3072 exact actual/raw RGBA and alpha checks before the
+    // Complete all 3072 exact actual/raw RGBA and alpha checks before the
     // supplementary source-channel hypotheses. No literal failure can stop it early.
     for(int y=64;y<80;++y){for(int x=1036;x<1228;++x)
     {
@@ -259,8 +259,8 @@ void hud_health_colour_consumer_checks(Application& app,const Presentation& pres
         "\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"192x16-opaqueB8-track-then-literal-prefix-only\","
         "\"whole_frame_reference\":\"copied-complete-HUD-consumer-adoption-only\",\"roi_half_open\":[1036,64,1228,80]}\n";
     require(summary.good(),"Cannot retain Health shared summary");
-    std::cout<<"PASS health consumer:54readbacks/12rows/12native192x16 crops36864pixels; complete independent track RGBA,6controls13824changed4608unchanged,"
-        "four zero-health whole-frame invariants and retained ammunition bytes. Full copiedHUD adoption only; frozen resources/RNG, zero all updates.\n";
+    std::cout<<"PASS health consumer: 54 readbacks/12 rows/12 native 192x16 crops of 36864 pixels; complete independent track RGBA, 6 controls with 13824 changed and 4608 unchanged pixels, "
+        "four zero-health whole-frame invariants and retained ammunition bytes. Full copied HUD adoption only; frozen resources/RNG, zero all updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS

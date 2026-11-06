@@ -72,8 +72,8 @@ namespace balance_regions
             Measurement across(samples, roster(), bands());
             require_near(capacity(across, 0), 100); require_near(capacity(across, 1), 100); require_near(capacity(across, 2), 100); require_near(capacity(across, 3), 0);
             require_near(across.sample_totals().seat_areas[0], 300);
-            // A 45-degree rigid quad has geometric area200, versus AABB area400.
-            // Its authoritative score20 must split10/10 without being redefined.
+            // A 45-degree rigid quad has geometric area 200, versus AABB area 400.
+            // Its authoritative score 20 must split 10/10 without being redefined.
             PaintSurfaceSample diamond = rectangle(0, 0, 1, 1, 20, PlayerTeam::a, 5, 0, PaintSurfaceFace::left);
             diamond.corners = { labrador::Vector2F(10, 0), labrador::Vector2F(20, 10), labrador::Vector2F(10, 20), labrador::Vector2F(0, 10) };
             Measurement rotated(std::array{ diamond }, roster(), bands());
@@ -202,7 +202,7 @@ namespace balance_regions
             require(!first.empty() && first.back() == '\n' && first.find('\r') == std::string::npos &&
                 first.starts_with("region_schema_version,match_row,main_schema_version,"), "Companion encoding/schema/newlines are not stable");
             require(first.find("\"paint,\"\"quoted\"\"\"") != std::string::npos && first.find("1,1,2,\"fixture\",0,4,") != std::string::npos,
-                "Companion lost quoted metadata, valid seed0 or main-row/schema join");
+                "Companion lost quoted metadata, valid seed 0 or main-row/schema join");
             const auto header_end = first.find('\n');
             require(std::count(first.begin(), first.begin() + static_cast<std::ptrdiff_t>(header_end), ',') == 28,
                 "Companion header no longer has 29 declared columns");

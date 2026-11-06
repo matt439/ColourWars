@@ -398,7 +398,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
         pairs << ',' << primary_states << ',' << edges << ',' << previews << ',' << stories << ',' << rendered << ',' << ticks << ',' << crops << '\n';
     require(records.good() && extra.good() && counts.good(), "Landmark evidence CSV write failed");
     std::cout << "PASS landmarks: " << pairs << " clean/heavy paired static Scene comparisons / " << primary_states <<
-        " primary states, all4 arenas x3 palettes x1P/4P pane framing x720/1080; measured>99% real paint ownership, positive per-prop pixels, raw-atlas/order/cull parity, frozen geometry/ownership/RNG and resize. " <<
+        " primary states, all 4 arenas x 3 palettes x 1P/4P pane framing x 720/1080; measured>99% real paint ownership, positive per-prop pixels, raw-atlas/order/cull parity, frozen geometry/ownership/RNG and resize. " <<
         edges << " native clipped-edge cases, " << previews << " actual StagePreview size cases, " << stories << " actual Level monitor/overview size cases, " <<
         rendered << " total renderer readbacks including references/repeats; " << ticks << " paired story ticks, " << crops <<
         " compact crops. Solo monitor bypass preserved; static Visual Reduce effects invariance and Debug frozen fingerprints checked. No route, human readability, physical-device or performance acceptance.\n";

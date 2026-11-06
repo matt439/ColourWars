@@ -1,4 +1,4 @@
-// Separate sibling proof; the committed Cursor23 ink/fill helper stays intact.
+// Separate sibling proof; the committed Cursor 23 ink/fill helper stays intact.
 // Full-shape reference proves adoption only. Independent selected alpha samples
 // submit each ordered white-frame write, preserving target UNORM quantization.
 enum class CursorMaterialControl { shade_straight, shade_squared, shadow_straight, shadow_squared, pair_straight };
@@ -58,10 +58,10 @@ public:
             const auto patch = [&](float x, float y, const Colour& colour)
             { list.draw_sprite(sheet_->texture(), frame_.source_rectangle(), { x, y, 1, 1 }, colour, 0.0f, frame_.origin(), SpriteFlip::none, 0.0f); };
             patch(20, 20, Colour(255, 255, 255)); patch(24, 20, Colour(0, 0, 0));
-            // At649,262 the shifted row12 W run is below foreground row14 S.
+            // At 649,262 the shifted row 12 W run is below foreground row 14 S.
             // Never collapse these writes to one final-float composite.
             patch(649, 262, tint(shadow, false)); patch(649, 262, tint(shade, true));
-            // At656,273 only the shifted final-row run survives.
+            // At 656,273 only the shifted final-row run survives.
             patch(656, 273, tint(shadow, false));
         });
     }

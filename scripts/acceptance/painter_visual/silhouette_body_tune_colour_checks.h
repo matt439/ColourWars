@@ -1,4 +1,4 @@
-// Body38: nine local ordered-overlap patches, not a full raw silhouette mask.
+// Body 38: nine local ordered-overlap patches, not a full raw silhouette mask.
 // The copied-record whole-frame reference proves retained adoption only.
 enum class SilhouetteBodyReference { correct, straight, squared_base, collapsed_one, collapsed_two };
 struct SilhouetteBodyPatch { int x, y, writes; };
@@ -91,7 +91,7 @@ Frame SilhouetteBodyColourProbe::render(const std::function<void(DrawList&)>& dr
     const Canvas canvas(app_.render_resources(),Colour(32,64,96));Renderer& renderer=*app_.renderer();renderer.begin_frame();renderer.set_view_count(1);
     DrawList list=renderer.view(0);list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(Camera::default_camera);
     list.set_filter(TextureFilter::point);canvas.draw(list,{0,0,1280,720});draw(list);++readbacks_;Frame result=read(renderer);
-    if(result.width!=1280||result.height!=720){failure(0,"backbuffer-size",result);throw std::runtime_error("Body proof requires exact1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(0,"backbuffer-size",result);throw std::runtime_error("Body proof requires exact 1280x720 backbuffer");}
     require(std::rand()==next && look_.silhouette==selected && expected_.silhouette==expected_selected,"Body draw consumed RNG or changed selected records");
     unchanged();return result;
 }
@@ -139,7 +139,7 @@ void SilhouetteBodyColourProbe::uniform_patch(const Frame& frame,const Silhouett
     const size_t first=offset(frame,patch.x,patch.y);
     for(int y=patch.y-1;y<=patch.y+1;++y){for(int x=patch.x-1;x<=patch.x+1;++x)
     {const size_t at=offset(frame,x,y);for(size_t channel=0;channel<4;++channel)
-        {require(frame.pixels[at+channel]==frame.pixels[first+channel],"Body declared3x3 RGBA patch is not uniform");}}}
+        {require(frame.pixels[at+channel]==frame.pixels[first+channel],"Body declared 3x3 RGBA patch is not uniform");}}}
 }
 void SilhouetteBodyColourProbe::check_patches(size_t context,const Frame& actual,const Frame& raw,const Colour& body)
 {
@@ -237,7 +237,7 @@ void silhouette_body_colour_consumer_checks(Application& app,const Presentation&
         "\"alpha0_straight_reads\":3,\"affected_rejections\":34,\"unaffected_guards\":8,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,"
         "\"viewport\":\"1280x720\",\"event_fade\":false,\"whole_frame_reference\":\"copied-production-consumer-adoption-only\",\"raw_reference\":\"nine-local-ordered-rgba-patches-only\",\"adult_crop\":[320,224],\"child_crop\":[208,224]}\n";
     require(summary.good(),"Cannot write Body shared summary");
-    std::cout<<"PASS silhouette-body:61readbacks/12rows/12crops759808pixels;9local3x3 RGBA patches, ordered1/2/3 separate writes overBLACK,13controls/34patch refusals/8unchanged guards. "
+    std::cout<<"PASS silhouette-body: 61 readbacks/12 rows/12 crops of 759808 pixels; 9 local 3x3 RGBA patches, ordered 1/2/3 separate writes over BLACK, 13 controls/34 patch refusals/8 unchanged guards. "
         "Copied full frame adoption only; frozen caller/resource/RNG and zero all updates; no complete-mask or actual-Level claim.\n";
 }
 #if COLOURWARS_DEV_TOOLS

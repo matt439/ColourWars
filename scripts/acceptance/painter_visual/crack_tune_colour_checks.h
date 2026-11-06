@@ -1,4 +1,4 @@
-// Crack42: complete independent115x34 front-details ROI per source path.
+// Crack 42: complete independent 115x34 front-details ROI per source path.
 // Copied complete front-details frames establish adoption only, not full art.
 enum class CrackReference { correct, straight, squared_base, collapsed_coverage, all_ink_first };
 // Every opening field but the crack colour this leaf tunes.
@@ -146,7 +146,7 @@ void CrackColourProbe::failure(size_t context,const char* state,const char* stag
 void CrackColourProbe::check_roi(size_t context,const Frame& actual,const Frame& raw,const Colour& colour)
 {
     const int left=crack_left(context);const auto& map=crack_coverage(context);
-    // Complete3910 actual/raw RGBA and opaque-alpha checks FIRST. Supplementary
+    // Complete 3910 actual/raw RGBA and opaque-alpha checks FIRST. Supplementary
     // source channels do not substitute for the independent ordered geometry.
     for(int y=472;y<506;++y){for(int x=left;x<left+115;++x)
     {const size_t at=offset(actual,x,y);require(same_pixel(actual,raw,at),"Crack independent ordered ROI differs from actual RGBA");

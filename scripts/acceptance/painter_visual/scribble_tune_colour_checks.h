@@ -1,4 +1,4 @@
-// Scribble39: complete independent67x67 note ROI; copied full-front adoption only.
+// Scribble 39: complete independent 67x67 note ROI; copied full-front adoption only.
 // Frozen literal source tables are hypotheses until actual backend qualification.
 enum class ScribbleReference { correct, straight, squared_base, collapsed_union };
 struct ScribbleDab { int left, top, right, bottom, row; };
@@ -375,15 +375,15 @@ void ScribbleColourProbe::check_roi(size_t context,const Frame& actual,const Fra
     for(int y=337;y<404;++y){for(int x=18;x<85;++x)
     {
         const size_t at=offset(actual,x,y);
-        require(same_pixel(actual,raw,at),"Scribble complete ordered67x67 raw ROI differs from actual RGBA");
+        require(same_pixel(actual,raw,at),"Scribble complete ordered 67x67 raw ROI differs from actual RGBA");
         require(actual.pixels[at+3]==255,"Scribble note ROI lost opaque Canvas/paper alpha");
     }}
     // Two source-derived representative RGB blend models, not vertex packing
     // or proof of a GPU's internals/conformance. F retains the source RGB term;
-    // Q rounds that term to8UNORM before blending. Selected alpha128/255 is
-    // already8UNORM in both. The independent PPM verifier checks four whole-
+    // Q rounds that term to 8-bit UNORM before blending. Selected alpha 128/255 is
+    // already 8-bit UNORM in both. The independent PPM verifier checks four whole-
     // crop RGB-float/RGB8 by alpha-float/alpha8 source representatives; their
-    // selected128/255 tuples reduce to these two matrices. Require ONE coherent
+    // selected 128/255 tuples reduce to these two matrices. Require ONE coherent
     // matrix over the entire selected partial ROI; per-pixel mixing is refused.
     constexpr std::array<std::array<std::uint32_t,2>,2> partial_f{{{0x8FA99Du,0x5784AFu},{0x67A5DFu,0x4382CFu}}};
     constexpr std::array<std::array<std::uint32_t,2>,2> partial_q{{{0x8FA99Du,0x5784AEu},{0x67A5DFu,0x4382CFu}}};
@@ -501,7 +501,7 @@ void scribble_colour_consumer_checks(Application& app,const Presentation& presen
         "\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"complete67x67-ordered-five-plus74-literal-rectangles-only\","
         "\"whole_frame_reference\":\"copied-production-front-consumer-adoption-only\",\"roi_half_open\":[18,337,85,404]}\n";
     require(summary.good(),"Cannot retain Scribble shared summary");
-    std::cout<<"PASS scribble consumer:40readbacks/8rows/8native67x67 crops35912pixels; complete independent note ROI,8controls/24row discriminations,"
+    std::cout<<"PASS scribble consumer: 40 readbacks/8 rows/8 native 67x67 crops of 35912 pixels; complete independent note ROI, 8 controls/24 row discriminations, "
         "full copied-front adoption only; retained caller/resource/RNG and zero all updates. Actual Level/story/human/performance not exercised.\n";
 }
 

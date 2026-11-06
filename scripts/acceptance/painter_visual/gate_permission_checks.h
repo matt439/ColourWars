@@ -267,7 +267,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
         ",\"readbacks\":" << reads << ",\"full_frames\":" << full_frames << ",\"native_crops\":" << crops <<
         ",\"rows\":" << rows << ",\"palettes\":6,\"states\":7,\"miniature_scale\":" << miniature_camera.scale << '}';
     summary.close(); require(summary.good(), "Cannot flush gate native summary");
-    std::cout << "PASS gate permission native matrix: settled closed/A/B/occupied shapes, all six palettes, native1/2/4P and miniature, "
+    std::cout << "PASS gate permission native matrix: settled closed/A/B/occupied shapes, all six palettes, native 1/2/4P and miniature, "
         "reduced-effects parity, plaque containment, same-state base differential, frozen paint/permission/RNG and Debug fingerprint; "
         "22 context frames/155 native crops/112 rows. Controlled setup; attended trial play remains separate.\n";
 }

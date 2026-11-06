@@ -132,10 +132,10 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         require(readbacks < 56, "Contribution team exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // All actual24-font rows measure38 high (Lato Black 24's whole-pixel line
-    // spacing), so each literal54x42 badge centres 2 above its row: the four
-    // occupy 414,678 through468,857; the unchanged heading ends673, prompt
-    // starts880. The band starts on 675, a whole pixel at 720p.
+    // All actual 24-font rows measure 38 high (Lato Black 24's whole-pixel line
+    // spacing), so each literal 54x42 badge centres 2 above its row: the four
+    // occupy 414,678 through 468,857; the unchanged heading ends at 673, prompt
+    // starts at 880. The band starts on 675, a whole pixel at 720p.
     const RectangleF contribution_region(408.0f, 675.0f, 756.0f, 183.0f);
     const RectangleF legend_region(450.0f, 633.0f, 900.0f, 45.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
@@ -374,7 +374,7 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         "\"owner_negative_controls\":4,\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":599508}\n";
     require(summary.good(), "Cannot retain contribution team summary");
     std::cout << "PASS Contribution team leaf: four independent complete sparse-roster rows and raw P1-P4 badge cells; "
-        "device/view/paint-owner indices4/2/-1/0,0/1/2/3,4/2/7/0 retain 18.7/25.0/31.2/25.0 credit; "
+        "device/view/paint-owner indices 4/2/-1/0,0/1/2/3,4/2/7/0 retain 18.7/25.0/31.2/25.0 credit; "
         "literal default/custom separators and captured contribution font through assignment/reopen/reversal, "
         "four per-row brace font and wrong-view credit controls, unchanged title/legend/score/outcome neighbors; "
         "normal/already-revealed input gates, five fresh pops, frozen Session/setup/private Save/RNG, "

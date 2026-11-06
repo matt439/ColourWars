@@ -254,7 +254,7 @@ void silhouette_colour_consumer_checks(Application& app, const Presentation& pre
         "\"ink_sample_x\":963,\"ink_sample_y\":690,\"rim_sample_x\":932,\"rim_sample_y\":627,\"shade_sample_x\":959,\"shade_sample_y\":679,"
         "\"event_fade\":false,\"child_scope\":\"aggregate-colour-adoption\"}\n";
     require(summary.good(), "Cannot write silhouette shared summary");
-    std::cout << "PASS silhouette colours:38 readbacks/10 rows/8 compact440x240 crops/10 controls; independent ordered mug patch channels, "
+    std::cout << "PASS silhouette colours:38 readbacks/10 rows/8 compact 440x240 crops/10 controls; independent ordered mug patch channels, "
         "actual uniform interiors, unchanged body fill, child aggregate adoption and exact default restoration; zero simulation/input/time updates.\n";
 }
 

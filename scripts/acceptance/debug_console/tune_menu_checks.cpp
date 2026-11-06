@@ -96,7 +96,7 @@ void check_stage_preview_background_colour_tunes(const std::filesystem::path& ga
         presentation.main_menu().stage_select.preview_position == rectangle.position() &&
         presentation.main_menu().stage_select.preview_size == rectangle.size() &&
         tune_scope_of(path) == TuneScope::next_screen,
-        "Stage preview backing retains authored121827EE, its existing rectangle and exact next-screen scope");
+        "Stage preview backing retains authored 121827EE, its existing rectangle and exact next-screen scope");
     const labrador::Colour default_tint((18.0f / 255.0f) * (238.0f / 255.0f), (24.0f / 255.0f) * (238.0f / 255.0f),
         (39.0f / 255.0f) * (238.0f / 255.0f), 238.0f / 255.0f);
     const auto capture_widget_chain = [&]

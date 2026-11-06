@@ -2011,7 +2011,16 @@ checks are stricter: `require_leaf`, `motion_of`, the clipboard restore,
   (`ROAD#34`, `ROAD#35`, `ED#16`, `DBG#2`-`DBG#17`, `HYG#17`, `CI#1`), three
   `.ps1` messages included. About forty words fused to numbers are split
   (`exceeded 500`, `requires 1280x720`); evidence stems and CSV keys are not
-  touched. The two painter headers that called themselves drafts don't. The
+  touched. Review found that sweep partial, so a second pass split about 145
+  more across 75 probe files: messages (`must be 1..4`, `at exactly 46 units`),
+  comments (`ends at 329.21875`, `Crack 42`) and the painter tune leaves'
+  packed PASS lines (`glass: 100 readbacks/20 rows`). What stays fused is
+  data: evidence and route names (`tap120`), receipt values, `key=value`
+  diagnostics (`failed200=`) and identifiers (`row0`, `seat0`, `series3`).
+  The sweep is still partial in one place: about twenty painter leaves' PASS
+  receipts glue counts to punctuation and units (`acting:90readbacks/16rows`,
+  `,45 updates`), the same packed style as the `diagnostics.ps1` lines that
+  mirror them; both go to [`HYG#88`](#painter-verifier-evidence-helpers-hyg88). The two painter headers that called themselves drafts don't. The
   ten named PASS summaries say attended, human or pad checks are outside the
   probe instead of "remain open".
 - **From `HYG#62`.** 35 probe files spelled the shipping step through
@@ -2054,7 +2063,11 @@ Both presets build under `/W4 /WX`. The full default acceptance list
 (`-Parallel 4`) passed in Debug (79 cases) and Release (78), the runnable
 opt-in cases (`-OptIn`, 14) passed in both, and the `Quick` opt-in cases passed
 in both. `user_stages` and `moving_structure`, touched again after the Release
-run had compiled, passed again in Release. On MattPC `check-painter-sweep.ps1`
+run had compiled, passed again in Release. After the second wording pass the
+touched cases (`balance_regions`, `balance_runner` in Debug, `debug_console`,
+`menu_text`, `paint_underfoot`, `moving_structure`, `fixed_slab` and the three
+runnable Turbulence cases) passed again in both presets, and the two
+`NeedsTrial` cases, the painter and frame pacing compiled (`-CompileOnly`). On MattPC `check-painter-sweep.ps1`
 passed every focused leaf it runs in Debug (97) and Release (94); the three
 Turbulence trial leaves need a private file and were not run, though their
 only changes were dropped `srand` calls and wording. `check-level-editor.ps1`,
@@ -2121,7 +2134,11 @@ Also:
 - From `HYG#87`: `check-painter/diagnostics.ps1` and `evidence-record/*.ps1`
   still say attended or human acceptance "remains open", which the 2026-11-05
   decisions waived, and fuse words to numbers (`Debug adds15`, `full720p`,
-  `exceeds99percent`). The probes' own PASS lines were reworded in `HYG#87`.
+  `exceeds99percent`). The probes' own PASS lines were reworded in `HYG#87`,
+  except the packed receipts of about twenty painter leaves
+  (`acting_tune_colour_checks.h:220`, `crack_tune_colour_checks.h:257`,
+  `glass_tune_colour_checks.h:342`: `acting:90readbacks/16rows`,
+  `,45 updates`); split them with the `diagnostics.ps1` lines that mirror them.
 
 Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
 

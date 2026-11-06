@@ -1,5 +1,5 @@
 // Included inside painter_visual.cpp's private namespace, before crack_tune_colour_checks.h.
-// Crack42 frozen source geometry: two 242-dab literal paths, captured personas and derived coverage.
+// Crack 42 frozen source geometry: two 242-dab literal paths, captured personas and derived coverage.
 struct CrackDab { int left,top,right,bottom,segment;bool selected; };
 struct CrackCoverage
 {

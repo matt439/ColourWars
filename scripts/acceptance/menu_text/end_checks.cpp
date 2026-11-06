@@ -267,7 +267,7 @@ namespace menu_text_acceptance
         }, &world);
 
         // The heading's unscaled bottom at 940 is below a footer-centered
-        // paper's bottom930, but fits the actual full-height paper bottom990.
+        // paper's bottom 930, but fits the actual full-height paper bottom 990.
         std::vector<Glyph> small_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {

@@ -138,8 +138,9 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
         require(readbacks < 97, "Series score exceeded its fixed readback budget");
         app.renderer()->begin_frame(); stack.draw(*app.renderer()); ++readbacks; return read(*app.renderer());
     };
-    // Preflight the real glyph extents: winner ends329.21875, scores end402
-    // (default/old) or395.6640625 (new); outcomes end460.6640625, plates start482.
+    // Preflight the real glyph extents: winner ends at 329.21875, scores end at 402
+    // (default/old) or 395.6640625 (new); outcomes end at 460.6640625, plates start
+    // at 482.
     // Multiples of three keep exact floor/ceil crops at both native sizes.
     const RectangleF row_region(420.0f, 333.0f, 1080.0f, 141.0f);
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);

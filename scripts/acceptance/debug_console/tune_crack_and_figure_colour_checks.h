@@ -109,7 +109,7 @@
 			impl.tune_document("presentation")->edits().size() == 1 && impl.tune_document("presentation")->edits().contains("debug_overlay.colour"),
 			"Crack original reset retains the unrelated pending edit");unchanged();
 		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && colour_values(presentation) == initial,
-			"Independent reset retains all41 prior colours");
+			"Independent reset retains all 41 prior colours");
 		const JsonSpanDocument original_json(baseline, "crack-save-reference");
 		const std::string saved = original_json.replaced(require_leaf(original_json, "opening.crack"), "\"2060C080\"");
 		const auto* const pending = impl.tune_document("presentation");
@@ -154,7 +154,7 @@
 	void check_limb_colour_tunes(const std::filesystem::path& game_directory)
 	{
 		// Generic named/RGB/RGBA/strict words, exact LF/CRLF saves/conflicts,
-		// force and actual reader consumption already cover all45 paths.
+		// force and actual reader consumption already cover all 45 paths.
 		ScratchContent scratch(game_directory, L"limb-colour-records");
 		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
 		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());

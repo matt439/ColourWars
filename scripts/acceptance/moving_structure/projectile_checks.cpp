@@ -252,7 +252,7 @@ namespace moving_structure_acceptance
             const ProjectileTuning values = isolated_shot(world, ProjectileType::rolling, 4.0f, 1.0f);
             Fixture fixture(world, 3);
             fixture.plain({ -500.0f, 350.0f, 600.0f, 80.0f }); // Ends at anchor.left100.
-            const RectangleF body{ 53.0f, 230.0f, 52.0f, 120.0f }; // Supported5-unit overhang.
+            const RectangleF body{ 53.0f, 230.0f, 52.0f, 120.0f }; // Supported 5-unit overhang.
             auto& first = fixture.add_player(body, PlayerTeam::b);
             auto& second = fixture.add_player(body, PlayerTeam::b);
             auto& friendly = fixture.add_player(body, PlayerTeam::a);

@@ -205,6 +205,6 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     }
     require(ticks == 112 && comparisons == 60 && rows == 120 && captures == 8 && state_guards == 64, "Stage summary checked counts differ from the bounded source loops");
     require(records.good(), "Stage summary CSV write failed");
-    std::cout << "PASS stage summaries: all1-4 sparse rosters, literal BEST OF3/5, solo-bestof5 precedence and Single Match at 720/1080; custom3template copy and separate visible detail/brand font IDs, captured unscaled positions/clear shadows/paper bounds through actual browse/Random-lock/unlock refresh, reopen and reversal; unchanged plan/claims/save/input/frozen RNG, no final Random draw. " <<
-        ticks << " updates(hard120), " << comparisons << " summary comparisons, " << state_guards << " independent navigation/status raster guards after 32 taps, " << rows << " CSV data rows, " << captures << " compact crops; no broad matrix, match launch or physical/human/performance acceptance\n";
+    std::cout << "PASS stage summaries: all 1-4 sparse rosters, literal BEST OF 3/5, solo-bestof5 precedence and Single Match at 720/1080; custom 3-template copy and separate visible detail/brand font IDs, captured unscaled positions/clear shadows/paper bounds through actual browse/Random-lock/unlock refresh, reopen and reversal; unchanged plan/claims/save/input/frozen RNG, no final Random draw. " <<
+        ticks << " updates (hard cap 120), " << comparisons << " summary comparisons, " << state_guards << " independent navigation/status raster guards after 32 taps, " << rows << " CSV data rows, " << captures << " compact crops; no broad matrix, match launch or physical/human/performance acceptance\n";
 }

@@ -137,7 +137,7 @@ namespace menu_text_acceptance
         rejected("mode_select_spacing", [&] { complete(authored, height_overflow); });
 
         // An invisible negative item shadow still extends navigation geometry.
-        // Use literal widgets to prove the detached arrow's left92 contact;
+        // Use literal widgets to prove the detached arrow's left 92 contact;
         // moving the entire row a quarter left must refuse that same geometry.
         const auto negative_shadow = [&](float label_x, float expected_arrow_left, bool fits)
         {
