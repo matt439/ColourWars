@@ -1,6 +1,6 @@
 #include "editor/level_document_impl.h"
 
-#include "editor/horizontal_authoring.h"
+#include "editor/motion_authoring.h"
 #include "game/contracts/fixed_slab_paint_geometry.h"
 #include "game/contracts/level_format.h"
 
