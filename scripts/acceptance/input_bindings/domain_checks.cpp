@@ -8,25 +8,29 @@ namespace input_bindings_acceptance
     uint16_t button_bit(GamepadButton button)
     { return uint16_t(1u << static_cast<unsigned int>(button)); }
 
-    bool is_trigger(PadControl control)
-    { return control == PadControl::left_trigger || control == PadControl::right_trigger; }
-
-    // The oracle's own physical mapping for a non-trigger control.
-    GamepadButton oracle_button(PadControl control)
+    namespace
     {
-        switch (control)
+        bool is_trigger(PadControl control)
+        { return control == PadControl::left_trigger || control == PadControl::right_trigger; }
+
+        // The oracle's own physical mapping for a non-trigger control.
+        GamepadButton oracle_button(PadControl control)
         {
-        case PadControl::a: return GamepadButton::a;
-        case PadControl::b: return GamepadButton::b;
-        case PadControl::x: return GamepadButton::x;
-        case PadControl::y: return GamepadButton::y;
-        case PadControl::left_shoulder: return GamepadButton::left_shoulder;
-        case PadControl::right_shoulder: return GamepadButton::right_shoulder;
-        case PadControl::left_stick: return GamepadButton::left_stick;
-        case PadControl::right_stick: return GamepadButton::right_stick;
-        case PadControl::start: return GamepadButton::start;
-        default: throw std::logic_error("Oracle asked for a trigger or None as a button");
+            switch (control)
+            {
+            case PadControl::a: return GamepadButton::a;
+            case PadControl::b: return GamepadButton::b;
+            case PadControl::x: return GamepadButton::x;
+            case PadControl::y: return GamepadButton::y;
+            case PadControl::left_shoulder: return GamepadButton::left_shoulder;
+            case PadControl::right_shoulder: return GamepadButton::right_shoulder;
+            case PadControl::left_stick: return GamepadButton::left_stick;
+            case PadControl::right_stick: return GamepadButton::right_stick;
+            case PadControl::start: return GamepadButton::start;
+            default: throw std::logic_error("Oracle asked for a trigger or None as a button");
+            }
         }
+
     }
 
     // Presses one control fully: a button bit or a trigger at 1.0.
@@ -61,18 +65,21 @@ namespace input_bindings_acceptance
 
     bool conflicting(Key key) { return key == Key::a || key == Key::d || key == Key::s; }
 
-    std::vector<Key> expected_game_keys(GameAction action, Key jump)
+    namespace
     {
-        switch (action)
+        std::vector<Key> expected_game_keys(GameAction action, Key jump)
         {
-        case GameAction::move_left: return { Key::a };
-        case GameAction::move_right: return { Key::d };
-        case GameAction::jump: return { jump };
-        case GameAction::drop: return { Key::s, Key::down };
-        case GameAction::pause: return { Key::escape };
-        case GameAction::debug: return { Key::f1 };
-        case GameAction::skip_intro: return { Key::space, Key::escape, Key::enter };
-        default: return {};
+            switch (action)
+            {
+            case GameAction::move_left: return { Key::a };
+            case GameAction::move_right: return { Key::d };
+            case GameAction::jump: return { jump };
+            case GameAction::drop: return { Key::s, Key::down };
+            case GameAction::pause: return { Key::escape };
+            case GameAction::debug: return { Key::f1 };
+            case GameAction::skip_intro: return { Key::space, Key::escape, Key::enter };
+            default: return {};
+            }
         }
     }
 

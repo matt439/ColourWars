@@ -11,6 +11,8 @@
 #include "game/states/connection_audio.h"
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
+#include "game/states/menu_context.h"
+#include "game/states/screen_music.h"
 #include "game/config/sound_groups.h"
 #include "game/objects/projectile_jet.h"
 #include "engine/assets/sound_bank_loader.h"
@@ -291,13 +293,12 @@ namespace
 #include "scripts/acceptance/story_audio/end_menu_content_checks.h"
 #include "scripts/acceptance/story_audio/pause_menu_content_checks.h"
 #include "scripts/acceptance/story_audio/results_menu_content_checks.h"
-}
-
 #include "scripts/acceptance/story_audio/redraw_checks.h"
 #include "scripts/acceptance/story_audio/match_checks.h"
 #include "scripts/acceptance/story_audio/results_music_checks.h"
 #include "scripts/acceptance/story_audio/music_mix_checks.h"
 #include "scripts/acceptance/story_audio/music_recovery_checks.h"
+}
 
 int main(int argc, char** argv)
 {

@@ -29,7 +29,7 @@ namespace acceptance
         const std::string text = read_text(path);
         rapidjson::Document result;
         result.Parse(text.c_str());
-        require(!result.HasParseError(), "Cannot parse " + path.string());
+        require(!result.HasParseError(), "Cannot parse " + utf8_path(path));
         return result;
     }
 
@@ -38,7 +38,7 @@ namespace acceptance
     {
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(document.Accept(writer), "Cannot encode " + path.string());
+        require(document.Accept(writer), "Cannot encode " + utf8_path(path));
         write_text(path, std::string_view(buffer.GetString(), buffer.GetSize()));
     }
 

@@ -7,6 +7,7 @@
 #include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/isolated_save.h"
+#include "scripts/acceptance/support/stderr_capture.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,7 +15,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <io.h>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -316,21 +316,11 @@ namespace
 	std::string captured_stderr(const IsolatedSaveDirectory& directory, Body body)
 	{
 		const std::filesystem::path path = directory.save_path().parent_path() / L"stderr.txt";
-		std::fflush(stderr);
-		const int saved = _dup(_fileno(stderr));
-		require(saved != -1, "Could not duplicate stderr");
-		FILE* file = nullptr;
-		if (_wfopen_s(&file, path.c_str(), L"wb") != 0 || file == nullptr)
 		{
-			_close(saved);
-			throw std::runtime_error("Could not open the stderr capture file");
+			acceptance::StderrCapture capture(path);
+			body();
+			capture.finish();
 		}
-		_dup2(_fileno(file), _fileno(stderr));
-		body();
-		std::fflush(stderr);
-		_dup2(saved, _fileno(stderr));
-		_close(saved);
-		std::fclose(file);
 		std::string text = acceptance::read_text(path);
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);

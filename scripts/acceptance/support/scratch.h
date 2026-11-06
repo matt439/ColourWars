@@ -17,6 +17,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -25,11 +26,19 @@
 
 namespace acceptance
 {
+    // A path for a failure message, as UTF-8. path.string() throws on a name
+    // the ANSI code page cannot hold, which would hide the real failure.
+    inline std::string utf8_path(const std::filesystem::path& path)
+    {
+        const std::u8string text = path.u8string();
+        return { reinterpret_cast<const char*>(text.data()), text.size() };
+    }
+
     // The whole file, byte for byte. Throws when it cannot be read.
     inline std::string read_text(const std::filesystem::path& path)
     {
         std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
+        if (!input.good()) { throw std::runtime_error("Cannot read " + utf8_path(path)); }
         return { std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
     }
 
@@ -39,7 +48,7 @@ namespace acceptance
         std::ofstream output(path, std::ios::binary | std::ios::trunc);
         output.write(text.data(), static_cast<std::streamsize>(text.size()));
         output.close();
-        require(output.good(), "Cannot write " + path.string());
+        if (!output.good()) { throw std::runtime_error("Cannot write " + utf8_path(path)); }
     }
 
     // A fresh folder under %TEMP% named `ColourWars-<label>-<GUID>`, created
@@ -52,7 +61,7 @@ namespace acceptance
             "Cannot name a private probe folder");
         const std::filesystem::path root = std::filesystem::temp_directory_path() /
             (L"ColourWars-" + std::wstring(label) + L"-" + name);
-        require(std::filesystem::create_directory(root), "Cannot create " + root.string());
+        require(std::filesystem::create_directory(root), "Cannot create " + utf8_path(root));
         return root;
     }
 

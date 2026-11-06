@@ -1,12 +1,5 @@
-#pragma once
-
-#include "game/states/menu_context.h"
-#include "game/states/screen_music.h"
-#include <limits>
-
-// Included after story_audio.cpp's recording world and content helpers.
-namespace
-{
+// Included inside the story-audio fixture's anonymous namespace, after the
+// other pieces.
 	int music_voice_calls(const World& world, const std::string& name, SoundCall kind)
 	{
 		int count = 0;
@@ -514,4 +507,3 @@ namespace
 		world.set_music_volume(original_music);
 		world.set_sfx_volume(original_sfx);
 	}
-}

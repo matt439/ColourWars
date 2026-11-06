@@ -3,6 +3,8 @@
 #include "game/debug/commands/debug_tokenizer.h"
 #include "game/input/input_slots.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
+#include "scripts/acceptance/support/stderr_capture.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -86,27 +88,13 @@ namespace debug_console_acceptance
 	{
 		const std::filesystem::path path = std::filesystem::temp_directory_path() /
 			(L"colourwars_debug_console_" + std::to_wstring(_getpid()) + L".txt");
-		std::fflush(stderr);
-		const int saved = _dup(_fileno(stderr));
-		require(saved != -1, "Could not duplicate stderr");
-		FILE* file = nullptr;
-		if (_wfopen_s(&file, path.c_str(), L"wb") != 0 || file == nullptr)
 		{
-			_close(saved);
-			throw std::runtime_error("Could not open the stderr capture file");
+			acceptance::StderrCapture capture(path);
+			body();
+			capture.finish();
 		}
-		_dup2(_fileno(file), _fileno(stderr));
-		body();
-		std::fflush(stderr);
-		_dup2(saved, _fileno(stderr));
-		_close(saved);
-		std::fclose(file);
 
-		std::string text;
-		{
-			std::ifstream stream(path, std::ios::binary);
-			text.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
-		}
+		std::string text = acceptance::read_text(path);
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
 		std::erase(text, '\r');

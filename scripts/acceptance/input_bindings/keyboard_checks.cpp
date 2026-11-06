@@ -15,23 +15,25 @@ namespace input_bindings_acceptance
         KeyboardAction::jump, KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause };
     constexpr std::array<const char*, 6> keyboard_action_tokens{ "move_left", "move_right", "jump", "drop", "shoot", "pause" };
 
-    DesktopControl key_control(Key key) { return { key, MouseButton::none }; }
-    DesktopControl mouse_control(MouseButton button) { return { Key::none, button }; }
-
-    MouseState mouse_with(std::initializer_list<MouseButton> held)
+    namespace
     {
-        MouseState result; result.focused = true;
-        for (MouseButton button : held) { result.buttons |= uint8_t(1u << static_cast<unsigned int>(button)); }
-        return result;
-    }
+        DesktopControl key_control(Key key) { return { key, MouseButton::none }; }
+        DesktopControl mouse_control(MouseButton button) { return { Key::none, button }; }
+        MouseState mouse_with(std::initializer_list<MouseButton> held)
+        {
+            MouseState result; result.focused = true;
+            for (MouseButton button : held) { result.buttons |= uint8_t(1u << static_cast<unsigned int>(button)); }
+            return result;
+        }
 
-    // Every action moved off its default, spelt independently of the page.
-    InputBindings custom_keyboard()
-    {
-        InputBindings result;
-        result.keyboard_move_left = Key::j; result.keyboard_move_right = Key::l; result.keyboard_jump = Key::a;
-        result.keyboard_drop = Key::k; result.keyboard_shoot = mouse_control(MouseButton::right); result.keyboard_pause = Key::p;
-        return result;
+        // Every action moved off its default, spelt independently of the page.
+        InputBindings custom_keyboard()
+        {
+            InputBindings result;
+            result.keyboard_move_left = Key::j; result.keyboard_move_right = Key::l; result.keyboard_jump = Key::a;
+            result.keyboard_drop = Key::k; result.keyboard_shoot = mouse_control(MouseButton::right); result.keyboard_pause = Key::p;
+            return result;
+        }
     }
 
     void check_keyboard_domain_and_mapping(const InputTuning& tuning)

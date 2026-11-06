@@ -1,8 +1,5 @@
-#pragma once
-
-// Included after story_audio.cpp's recording world and content helpers.
-namespace
-{
+// Included inside the story-audio fixture's anonymous namespace, after the
+// other pieces.
 	void check_music_mix_content(World& world, const std::filesystem::path& content)
 	{
 		const MenuPresentationVariant variants(content);
@@ -336,4 +333,3 @@ namespace
 		require(recorded_sounds(world.device).size() == silent_calls,
 			"Missing-bank music fade/duck lifecycle reached an audible device");
 	}
-}

@@ -81,6 +81,7 @@
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/isolated_save.h"
+#include "scripts/acceptance/support/stderr_capture.h"
 #include "scripts/acceptance/support/slot_seats.h"
 #include "engine/render/text_encoding.h"
 #include "scripts/acceptance/support/stage_catalog.h"

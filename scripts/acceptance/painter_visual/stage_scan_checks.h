@@ -1,43 +1,5 @@
 // ROAD#32: actual optional-folder scans, Stage Select and the diagnostic child.
 // Controlled raw diagnostics exercise wrapping; no physical input is claimed.
-// Sends stderr's descriptor to `path` while it lives. The stderr stream is
-// never reopened, so a failed start leaves it as it was; finish() restores the
-// saved descriptor and fails if it cannot, and the destructor restores it
-// quietly when the probe ends early.
-class StageScanStderrCapture
-{
-public:
-    explicit StageScanStderrCapture(const std::filesystem::path& path)
-    {
-        std::fflush(stderr);
-        int file = -1;
-        require(_wsopen_s(&file, path.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC | _O_TEXT, _SH_DENYNO,
-            _S_IREAD | _S_IWRITE) == 0 && file >= 0, "Cannot open the isolated stage-scan diagnostics file");
-        this->saved_ = _dup(_fileno(stderr));
-        const bool redirected = this->saved_ >= 0 && _dup2(file, _fileno(stderr)) == 0;
-        _close(file);
-        if (!redirected)
-        {
-            if (this->saved_ >= 0) { _close(this->saved_); this->saved_ = -1; }
-            throw std::runtime_error("Cannot capture isolated stage-scan diagnostics");
-        }
-    }
-    StageScanStderrCapture(const StageScanStderrCapture&) = delete;
-    StageScanStderrCapture& operator=(const StageScanStderrCapture&) = delete;
-    ~StageScanStderrCapture() { this->restore(); }
-    void finish() { require(this->restore(), "Cannot restore the probe's stderr after stage-scan diagnostics"); }
-private:
-    bool restore() noexcept
-    {
-        if (this->saved_ < 0) { return true; }
-        std::fflush(stderr);
-        const bool restored = _dup2(this->saved_, _fileno(stderr)) == 0;
-        _close(this->saved_); this->saved_ = -1; std::clearerr(stderr);
-        return restored;
-    }
-    int saved_ = -1;
-};
-
 void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
@@ -58,7 +20,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     UserStageFolder folder; folder.attach(folder_path, { &tuning, &presentation, app.render_resources(),
         app.audio_resources(), &play }, app.audio_resources(), &catalog);
     const auto diagnostic_path = output / "stage-scan-stderr.txt";
-    StageScanStderrCapture captured_errors(diagnostic_path);
+    acceptance::StderrCapture captured_errors(diagnostic_path);
     int scans = 0; folder.scan(); ++scans;
     require(folder.latest_scan().accepted == std::vector<std::string>{ "my_course" } &&
         folder.latest_scan().refused.size() == 1 && stages.size() == 2 && stages.back().user,

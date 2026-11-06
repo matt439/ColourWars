@@ -1,4 +1,4 @@
-﻿#include "game/pch.h"
+#include "game/pch.h"
 #include "game/config/presentation/presentation.h"
 #include "game/objects/match_random.h"
 #include "scripts/acceptance/support/probe.h"
