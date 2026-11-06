@@ -16,10 +16,10 @@
 class AirbrushShadow final : public labrador::GameObject, public labrador::TextureObject
 {
 public:
-	static constexpr int VARIANTS = 4;
+	static constexpr int variants = 4;
 	// The terrain sheet's first baked tile, `shadow_0`; the rest follow it.
 	static constexpr const char* first_tile = "shadow_0";
-	using Tiles = std::array<labrador::RectangleI, VARIANTS>;
+	using Tiles = std::array<labrador::RectangleI, variants>;
 
 	// The source rectangles of the baked tiles, `shadow_0` onwards.
 	static Tiles tiles(const labrador::SpriteSheet& sheet);
@@ -36,7 +36,7 @@ public:
 		{
 			const long long cell = static_cast<long long>(std::floor(x / width));
 			const unsigned long long hash = static_cast<unsigned long long>(cell) * 2654435761ULL;
-			labrador::RectangleI source = tiles[static_cast<size_t>((hash >> 16) % VARIANTS)];
+			labrador::RectangleI source = tiles[static_cast<size_t>((hash >> 16) % variants)];
 			const float left = std::max(x, begin);
 			const float right = std::min(x + width, end);
 			const int skip = static_cast<int>(std::round(left - x));

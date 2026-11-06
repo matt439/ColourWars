@@ -18,7 +18,7 @@ AirbrushShadow::AirbrushShadow(float left, float right, float top,
 AirbrushShadow::Tiles AirbrushShadow::tiles(const SpriteSheet& sheet)
 {
 	Tiles result{};
-	for (int index = 0; index < VARIANTS; ++index)
+	for (int index = 0; index < variants; ++index)
 	{
 		result[static_cast<size_t>(index)] = sheet.sprite_frame(
 			sheet.resolve_sprite_frame("shadow_" + std::to_string(index))).source_rectangle();
