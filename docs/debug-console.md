@@ -1290,7 +1290,7 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | Script | Does |
 |---|---|
 | `review_feedback_ab` | the movement feedback A/B below |
-| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations, into `screens\station-tour-<time>\` |
+| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations and both spawns, into `screens\station-tour-<time>\` |
 | `bots_4p` | four paint bots on Close Quarters, seed 7, 20 match seconds at x4, then a paused screenshot with the paint overlay and the checksum, into `screens\bots-4p-<time>\` |
 | `feedback_ab_pass`, `feedback_ab_shot` | helpers of `review_feedback_ab` |
 | `review_finish_details` | the [finish-review detail A/B](polish-plan.md#finish-review-detail-ab-script-pol43): seed 7, four seats on Crossfeed (seat 4 idle with a sprayer), frames `t07s`, `t17s` and `t54s` with every presentation detail on, then once per `enabled` flag off (`tune ... off restart`), each with its checksum, into `screens\review-finish-details-<time>\`; ends with `tune.reset presentation`. `scripts/check-finish-details.ps1` runs it and requires equal checksums across the eleven variants |
@@ -1305,7 +1305,9 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `review_king_of_the_hill`, `review_turbulence` | `review_arena` for that stage |
 | `review_arena_frames`, `review_arena_pass`, `review_arena_end` | helpers of `review_arena` and the wrappers |
 | `turbulence_station_tours` | every Turbulence variant's stations, one screenshot each with the collision overlay: `turbulence_station_tour <stage>` (the ten shared stations) on the blockout and gate trial, `turbulence_mover_station_tour <stage>` (plus the four mover ends, photographed paused as placed) on the mover, ferry and slab trials, and `turbulence_lift_station_tour <stage>` (plus each lift's top and foot) on the lift and paint lift trials, into `screens\turbulence-stations-<stage>-<time>\` |
-| `turbulence_station_tour_shared` | helper of the three Turbulence tours |
+| `turbulence_station_tour_shared`, `station_tour_begin`, `station_tour_end` | shared station lists and setup/cleanup for the tours |
+| `review_turbulence_family`, `review_turbulence_extra_stations`, `review_turbulence_end` | shared Turbulence review frames, station tails and cleanup |
+| `tuning_profile_begin`, `movement_profile`, `tools_profile` | shared live-comparison setup and parameterized movement/tool tuning |
 | `review_bots_boost` | seed 7, four seats on Crossfeed: P1 (a paint bot drives it; drop `bot 1 paint` to play) with a Hard shipping bot against an Easy bot on Boost +2 and a Normal bot on Boost +1; `status` lists the roster, then 30 match seconds at x4, the checksum and a paused screenshot, into `screens\review-bots-boost-<time>\` |
 
 The jump and Crossfeed scripts change tuning live and globally, and do not put

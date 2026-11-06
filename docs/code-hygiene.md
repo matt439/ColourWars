@@ -2222,15 +2222,29 @@ no accepted masters were rewritten. Evidence: `out/hyg91/`.
 
 ### Debug `.cfg` scripts (`HYG#92`)
 
-- Add the two stations `station_tour.cfg` skips. It claims every station.
-- Extract `station_tour_begin` and `station_tour_end`.
-- Collapse the seven `review_turbulence_*` copies into one family script with
-  wrappers.
-- Factor the movement and tools profiles the `jump_*` and `crossfeed_*`
-  scripts restate.
-- Fix `review_finish_details.cfg:38`'s scope comment.
+**Done 2026-11-06.** `station_tour` now visits workshop and refill as well as
+the other eight authored stations and both spawns. `station_tour_begin` and
+`station_tour_end` share setup/cleanup across Movement and the three
+Turbulence tours. Seven `review_turbulence_*` wrappers call one family with
+shared ten-station capture, parameterized extra stations where needed, and
+common cleanup. Eight jump/crossfeed wrappers share live-comparison setup and
+parameterized movement/tool profiles. `review_finish_details`' scope comment
+follows `tune_scope`: HUD, movement feedback, weapon feedback and figure quiet
+flags are live; its other flags apply to new screens/objects.
 
-The shipped-script lint (`debug_console`) must still pass.
+Recursive expansion proved that all eighteen existing review/profile and
+Turbulence-tour entry points preserve the exact effective commands, order and
+arguments. Movement's tour now uniquely covers all ten authored stations plus
+the two spawns; the foreground driver's expected transcript/count is twelve.
+`docs/debug-console.md` lists the shared scripts and corrected coverage.
+
+`debug_console` passed in both presets; its final Debug run followed all 46
+shipped scripts and 2,072 expanded statements. The script lint was preserved:
+extra-station helpers express inherited inputs as parameters, so the walk
+checks every actual station against its caller's stage. Debug `balance_runner`
+also passed after the earlier failed script run had skipped its UTF-8 phase.
+Evidence: `out/hyg92/expanded-comparison.txt`, `out/hyg92/final-debug/`,
+`out/hyg92/final-balance-debug/` and the full Release acceptance receipt.
 
 ### Build, CI and repository housekeeping (`CI#8`)
 
