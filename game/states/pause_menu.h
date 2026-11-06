@@ -14,7 +14,7 @@ class DebugDirector;
 
 // Whether an input slot belongs to the match, including keyboard/mouse.
 // SeatSetup::num is the device slot; its roster index is the view.
-bool match_owns_pad_slot(const MatchSetup& settings, int slot);
+bool match_owns_input_slot(const MatchSetup& settings, int slot);
 
 // A pad the match waits for: a pad slot that is not connected and whose seat
 // the developer tools do not drive (a Debug bot or replay; never in Release).
