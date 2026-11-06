@@ -337,7 +337,7 @@ def analysis_checks(tmp, results_dir, regions_path, failures):
     other = ("Q:" if drive.upper() != "Q:" else "R:") + "\\study-b\\report.md"
     try:
         # Do not query an unrelated volume (which may be locked or removable).
-        with mock.patch("_paths.os.path.realpath", side_effect=lambda path: str(path)):
+        with mock.patch("_paths.os.path.realpath", side_effect=lambda path, **kwargs: str(path)):
             outside = analyse.inside_repo_unignored(other) is False
     except ValueError:
         outside = False
