@@ -22,8 +22,6 @@
 // Replay: record and play on a real Level built on the CPU without a device.
 namespace debug_console_acceptance
 {
-	void check_loaded_stage_replay(const std::filesystem::path& game_directory);
-	void check_bot_replay_inputs(const Level& level);
 	namespace
 	{
 	int count_of_lines(const DebugLog& log, const std::string& text)

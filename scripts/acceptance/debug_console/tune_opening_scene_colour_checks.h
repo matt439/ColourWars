@@ -116,7 +116,7 @@
 			pending->edits().empty() && pending->current().text() == baseline,
 			"Independent reset restores the exact initial document after retaining the constructed Monitor");
 		const JsonSpanDocument baseline_document(baseline, "desktop-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.desktop_colour"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "opening.desktop_colour"), "\"2060C080\"");
 		require(impl.execute("tune presentation.opening.desktop_colour 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->desktop_colour == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -272,7 +272,7 @@
 			pending->edits().empty() && pending->current().text() == baseline,
 			"Independent reset restores the exact initial document after retaining the constructed Monitor");
 		const JsonSpanDocument baseline_document(baseline, "power-light-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.monitor_art.power_light"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "opening.monitor_art.power_light"), "\"2060C080\"");
 		require(impl.execute("tune presentation.opening.monitor_art.power_light 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->monitor_art.power_light == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -432,7 +432,7 @@
 			pending->edits().empty() && pending->current().text() == baseline,
 			"Independent reset restores the exact initial document after retaining the constructed Monitor");
 		const JsonSpanDocument baseline_document(baseline, "program-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.program_colour"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "opening.program_colour"), "\"2060C080\"");
 		require(impl.execute("tune presentation.opening.program_colour 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->program_colour == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -592,7 +592,7 @@
 			pending->edits().empty() && pending->current().text() == baseline,
 			"Independent reset restores the exact initial document after retaining the constructed Monitor");
 		const JsonSpanDocument baseline_document(baseline, "glass-colour-save-reference");
-		const std::string saved = baseline_document.replaced(*baseline_document.find("opening.glass_colour"), "\"2060C080\"");
+		const std::string saved = baseline_document.replaced(require_leaf(baseline_document, "opening.glass_colour"), "\"2060C080\"");
 		require(impl.execute("tune presentation.opening.glass_colour 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->glass_colour == labrador::Colour(32, 96, 192, 128) && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
@@ -629,7 +629,7 @@
 				"External glass.width 0.95 with x 0.1 refuses the complete merged candidate while retaining exact source/staged/live/current/baseline and every ledger path/baseline/current token even with force");
 			unchanged();
 		}
-		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"),
+		const std::string overlay_only = saved_document.replaced(require_leaf(saved_document, "debug_overlay.colour"),
 			std::string("\"") + unrelated_word + '"');
 		auto restored_colours = pending_colours;
 		restored_colours[glass_colour_index] = labrador::Colour(32, 96, 192, 128);

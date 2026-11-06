@@ -89,12 +89,7 @@ namespace debug_console_acceptance
 		{
 			const std::string first = replay_name("CON");
 			require(first == "_CON", "DBG15 reserved replay stem was not protected: " + first);
-			std::vector<std::string> reserved{ "CON", "PRN", "AUX", "NUL" };
-			for (int digit = 1; digit <= 9; ++digit)
-			{
-				reserved.push_back("COM" + std::to_string(digit));
-				reserved.push_back("LPT" + std::to_string(digit));
-			}
+			const std::vector<std::string> reserved = reserved_windows_stems();
 			std::size_t protected_names = 1;
 			for (const std::string& stem : reserved)
 				for (int spelling = 0; spelling < 3; ++spelling)
@@ -167,7 +162,8 @@ namespace debug_console_acceptance
 			file.tape.record_step({ stream[step], PlayerInputData(), expanded[step] }, 1.0f / 60.0f);
 		}
 		file.gap_updates = { 0, 40, 40 };
-		file.checkpoints = { { 60, 0xfeedfacecafebeefull }, { 120, 7 } };
+		file.checkpoints = { { ReplayFile::checkpoint_interval, 0xfeedfacecafebeefull },
+			{ 2 * ReplayFile::checkpoint_interval, 7 } };
 		file.final_print.updates = 120;
 		file.final_print.hash = 99;
 		file.final_print.team_a = std::bit_cast<std::uint32_t>(12.5f);

@@ -63,10 +63,10 @@
 			{
 				// Identity colours are opaque/distinct; closing-clock text is opaque.
 				// Keep those fallbacks within their separate reader contracts.
-				words[index] = index == 0 ? "BLUE" : (index == identity_ink_colour_index || index == hud_paper_ink_colour_index) ? "FEDCBAFF" :
+				words[index] = index == movement_colour_index ? "BLUE" : (index == identity_ink_colour_index || index == hud_paper_ink_colour_index) ? "FEDCBAFF" :
 					(index == identity_background_colour_index || index == hud_paper_paper_colour_index) ? "0F1E2DFF" :
 					opaque_closing_colour_index(index) ? "FEDCBAFF" : "FEDCBA98";
-				expected[index] = index == 0 ? labrador::Colour(0, 0, 255) :
+				expected[index] = index == movement_colour_index ? labrador::Colour(0, 0, 255) :
 					(index == identity_ink_colour_index || index == hud_paper_ink_colour_index) ? labrador::Colour(254, 220, 186) :
 					(index == identity_background_colour_index || index == hud_paper_paper_colour_index) ? labrador::Colour(15, 30, 45) :
 					opaque_closing_colour_index(index) ? labrador::Colour(254, 220, 186) : labrador::Colour(254, 220, 186, 152);
@@ -123,7 +123,7 @@
 		{
 			const std::string path = colour_paths[index];
 			require(log_contains(impl.log(), "  " + path + "  ", DebugSeverity::info) &&
-				tune_scope_of(path) == (index == 6 || index == stage_preview_background_colour_index ? TuneScope::next_screen : TuneScope::live),
+				tune_scope_of(path) == (index == home_background_colour_index || index == stage_preview_background_colour_index ? TuneScope::next_screen : TuneScope::live),
 				"Each colour diff has its audited live/next-screen scope: " + path);
 		}
 		const auto reject = [&](const std::string& path, const std::string& value)
@@ -146,16 +146,12 @@
                 reject(colour_paths[index], "A532D600");
             }
         }
-        for (const char* path : { colour_paths.front(), colour_paths[7], colour_paths[8], colour_paths[9], colour_paths[10],
-			colour_paths[11], colour_paths[12], colour_paths[identity_ink_colour_index], colour_paths[identity_background_colour_index],
-			colour_paths[combat_highlight_colour_index], colour_paths[combat_keyline_colour_index],
-			colour_paths[blocked_highlight_colour_index], colour_paths[blocked_keyline_colour_index],
-			colour_paths[idle_drip_keyline_colour_index], colour_paths[respawn_pen_colour_index],
-			colour_paths[cursor_ink_colour_index], colour_paths[cursor_fill_colour_index],
-			colour_paths[silhouette_ink_colour_index], colour_paths[silhouette_rim_colour_index],
-			colour_paths[silhouette_shade_colour_index], colour_paths[reveal_ink_colour_index],
-			colour_paths[reveal_paper_colour_index], colour_paths[reveal_shade_colour_index], colour_paths[cursor_shade_colour_index], colour_paths[cursor_shadow_colour_index], colour_paths[desktop_colour_index], colour_paths[power_light_colour_index], colour_paths[program_colour_index], colour_paths[acting_face_colour_index], colour_paths[acting_sweat_colour_index], colour_paths[glass_colour_index], colour_paths[silhouette_body_colour_index], colour_paths[scribble_colour_index], colour_paths[hud_health_colour_index], colour_paths[hud_track_colour_index], colour_paths[crack_colour_index], colour_paths[limb_arm_colour_index], colour_paths[limb_hand_colour_index], colour_paths[quiet_face_colour_index], colour_paths[hud_timer_colour_index], colour_paths[hud_timer_shadow_colour_index], colour_paths[closing_clock_text_colour_index], colour_paths[hud_label_colour_index], colour_paths[hud_identity_shadow_colour_index], colour_paths[stage_preview_background_colour_index], colour_paths[closing_clock_ink_colour_index], colour_paths[closing_clock_paper_colour_index], colour_paths[closing_clock_accent_colour_index], colour_paths[closing_clock_shade_colour_index], colour_paths[hud_paper_ink_colour_index], colour_paths[hud_paper_paper_colour_index], colour_paths[hud_paper_shade_colour_index] })
+		// Every colour but the movement highlight and keyline, the three overlay
+		// colours and the home background.
+		for (std::size_t index = 0; index < colour_paths.size(); ++index)
 		{
+			if (index >= movement_highlight_colour_index && index <= home_background_colour_index) { continue; }
+			const char* const path = colour_paths[index];
 			for (const char* value : { "next", "prev", "toggle", "on", "off", "true", "false", "+=1", "-=1",
 				"#112233", "12345", "1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
 				"RED\",\"enabled\":true,\"injected\":\"x", "RED;feedback on" })
@@ -228,13 +224,13 @@
 			reject(path, "WHITE");
 		}
 		require(!presentation.movement_feedback().enabled, "A quoted injection cannot run a second console statement");
-		require(impl.execute(std::string("tune.reset ") + colour_paths.front()).ok &&
-			colour_values(presentation).front() == initial.front() &&
+		require(impl.execute(std::string("tune.reset ") + colour_paths[movement_colour_index]).ok &&
+			colour_values(presentation)[movement_colour_index] == initial[movement_colour_index] &&
 			colour_values(presentation)[identity_ink_colour_index] == expected[identity_ink_colour_index] &&
 			colour_values(presentation)[identity_background_colour_index] == expected[identity_background_colour_index],
 			"A colour path reset leaves both identity colour edits intact");
-		require(impl.execute(std::string("tune.reset ") + colour_paths[7]).ok &&
-			colour_values(presentation)[7] == initial[7] && colour_values(presentation)[8] == expected[8] &&
+		require(impl.execute(std::string("tune.reset ") + colour_paths[team_selected_colour_index]).ok &&
+			colour_values(presentation)[team_selected_colour_index] == initial[team_selected_colour_index] && colour_values(presentation)[team_unselected_colour_index] == expected[team_unselected_colour_index] &&
 			impl.tune_document("presentation")->edits().count("main_menu.team_select.selected") == 0 &&
 			impl.tune_document("presentation")->edits().count("main_menu.team_select.unselected") == 1,
 			"Resetting the selected Team tint retains the unselected tint's independent edit");
@@ -340,11 +336,11 @@
 				"The saved RGBA token loads through the real Presentation reader with its field opacity contract");
 			require(impl.execute("tune " + path + " ABCDEF").ok, "A second colour edit is pending before a disk conflict");
 			const JsonSpanDocument disk(saved, "colour-save-reference");
-			std::string external = disk.replaced(*disk.find(local), "\"FEDCBA\"");
+			std::string external = disk.replaced(require_leaf(disk, local), "\"FEDCBA\"");
 			const JsonSpanDocument external_document(external, "colour-save-reference");
-			const char* unrelated_word = index == 5 ? "102030" : index == 7 ? "203040" :
-				index == 8 ? "304050" : index == 9 ? "405060" : index == 10 ? "506070" :
-				index == 11 ? "607080" : index == 12 ? "708090" :
+			const char* unrelated_word = index == station_label_colour_index ? "102030" : index == team_selected_colour_index ? "203040" :
+				index == team_unselected_colour_index ? "304050" : index == weapon_selected_colour_index ? "405060" : index == weapon_unselected_colour_index ? "506070" :
+				index == feedback_highlight_colour_index ? "607080" : index == feedback_keyline_colour_index ? "708090" :
 				index == combat_highlight_colour_index ? "8192A3" : index == combat_keyline_colour_index ? "92A3B4" :
 				index == blocked_highlight_colour_index ? "A3B4C5" :
 				index == blocked_keyline_colour_index ? "B4C5D6" :
@@ -356,7 +352,7 @@
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(presentation.debug_overlay().colour != unrelated_colour,
 				"Each colour conflict must introduce a fresh unrelated external edit");
-			external = external_document.replaced(*external_document.find("debug_overlay.colour"),
+			external = external_document.replaced(require_leaf(external_document, "debug_overlay.colour"),
 				std::string("\"") + unrelated_word + '"');
 			write_text(scratch.source / L"presentation.json", external);
 			require(!impl.execute("tune.save presentation").ok &&
@@ -365,7 +361,7 @@
 				impl.tune_token(path) == "\"ABCDEF\"",
 				"A colour conflict leaves disk, staged baseline and our pending token intact");
 			const JsonSpanDocument theirs(external, "colour-save-reference");
-			const std::string forced = theirs.replaced(*theirs.find(local), "\"ABCDEF\"");
+			const std::string forced = theirs.replaced(require_leaf(theirs, local), "\"ABCDEF\"");
 			require(impl.execute("tune.save presentation force").ok &&
 				read_text(scratch.source / L"presentation.json") == forced &&
 				read_text(scratch.staged / L"presentation.json") == forced &&
@@ -384,9 +380,9 @@
 		{
 			// Each new path also starts from an independent CRLF document, so
 			// external adoption cannot pass by reusing an earlier case's value.
-			const wchar_t* const scratch_name = index == 9 ? L"weapon-selected-crlf" :
-				index == 10 ? L"weapon-unselected-crlf" : index == 11 ? L"feedback-highlight-crlf" :
-				index == 12 ? L"feedback-keyline-crlf" : index == combat_highlight_colour_index ?
+			const wchar_t* const scratch_name = index == weapon_selected_colour_index ? L"weapon-selected-crlf" :
+				index == weapon_unselected_colour_index ? L"weapon-unselected-crlf" : index == feedback_highlight_colour_index ? L"feedback-highlight-crlf" :
+				index == feedback_keyline_colour_index ? L"feedback-keyline-crlf" : index == combat_highlight_colour_index ?
 				L"combat-highlight-crlf" : index == combat_keyline_colour_index ? L"combat-keyline-crlf" :
 				index == blocked_highlight_colour_index ? L"blocked-highlight-crlf" :
 				index == blocked_keyline_colour_index ? L"blocked-keyline-crlf" :
@@ -431,10 +427,10 @@
 			require(crlf_impl.execute("tune " + path + " ABCDEF").ok,
 				"A selection/feedback CRLF edit is pending before its independent conflict: " + path);
 			const JsonSpanDocument saved_document(saved, "weapon-crlf-reference");
-			const std::string theirs = saved_document.replaced(*saved_document.find(local), "\"FEDCBA\"");
+			const std::string theirs = saved_document.replaced(require_leaf(saved_document, local), "\"FEDCBA\"");
 			const JsonSpanDocument theirs_document(theirs, "weapon-crlf-reference");
-			const char* unrelated_word = index == 9 ? "607080" : index == 10 ? "708090" :
-				index == 11 ? "8192A3" : index == 12 ? "92A3B4" :
+			const char* unrelated_word = index == weapon_selected_colour_index ? "607080" : index == weapon_unselected_colour_index ? "708090" :
+				index == feedback_highlight_colour_index ? "8192A3" : index == feedback_keyline_colour_index ? "92A3B4" :
 				index == combat_highlight_colour_index ? "A3B4C5" : index == combat_keyline_colour_index ? "B4C5D6" :
 				index == blocked_highlight_colour_index ? "C5D6E7" :
 				index == blocked_keyline_colour_index ? "D6E7F8" :
@@ -445,9 +441,9 @@
 				index == reveal_ink_colour_index ? "5E6F70" : index == reveal_paper_colour_index ? "6F7081" : index == reveal_shade_colour_index ? "708192" : index == cursor_shade_colour_index ? "8192A3" : index == cursor_shadow_colour_index ? "92A3B4" : index == desktop_colour_index ? "A3B4C5" : index == power_light_colour_index ? "B4C5D6" : index == program_colour_index ? "C5D6E7" : index == acting_face_colour_index ? "D6E7F8" : index == acting_sweat_colour_index ? "E7F809" : index == glass_colour_index ? "F8091A" : index == silhouette_body_colour_index ? "091A2B" : index == scribble_colour_index ? "1A2B3C" : index == hud_health_colour_index ? "2B3C4D" : index == hud_track_colour_index ? "3C4D5E" : index == hud_label_colour_index ? "5E6F70" : index == hud_identity_shadow_colour_index ? "6F7081" : index == stage_preview_background_colour_index ? "708192" : index == closing_clock_ink_colour_index ? "8192A3" : index == closing_clock_paper_colour_index ? "92A3B4" : index == closing_clock_accent_colour_index ? "A3B4C5" : index == closing_clock_shade_colour_index ? "B4C5D6" : index == hud_paper_shade_colour_index ? "C5D6E7" : "4D5E6F";
 			const labrador::Colour unrelated_colour(unrelated_word);
 			require(crlf_presentation.debug_overlay().colour != unrelated_colour &&
-				theirs_document.token(*theirs_document.find("debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
+				theirs_document.token(require_leaf(theirs_document, "debug_overlay.colour")) != std::string("\"") + unrelated_word + '"',
 				"Each selection/feedback CRLF conflict introduces a fresh live and disk unrelated colour: " + path);
-			const std::string external = theirs_document.replaced(*theirs_document.find("debug_overlay.colour"),
+			const std::string external = theirs_document.replaced(require_leaf(theirs_document, "debug_overlay.colour"),
 				std::string("\"") + unrelated_word + '"');
 			write_text(crlf_scratch.source / L"presentation.json", external);
 			require(!crlf_impl.execute("tune.save presentation").ok &&
@@ -455,7 +451,7 @@
 				read_text(crlf_scratch.staged / L"presentation.json") == saved && crlf_impl.tune_token(path) == "\"ABCDEF\"",
 				"A selection/feedback CRLF conflict preserves disk, staging and the pending token: " + path);
 			const JsonSpanDocument external_document(external, "weapon-crlf-reference");
-			const std::string forced = external_document.replaced(*external_document.find(local), "\"ABCDEF\"");
+			const std::string forced = external_document.replaced(require_leaf(external_document, local), "\"ABCDEF\"");
 			auto adopted = original_values;
 			adopted[index] = labrador::Colour(171, 205, 239);
 			adopted[3] = unrelated_colour;

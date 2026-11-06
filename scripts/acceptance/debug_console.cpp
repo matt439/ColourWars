@@ -39,9 +39,6 @@ static_assert(sizeof(DebugDirector) == sizeof(void*));
 // driver and the Release-only checks.
 namespace debug_console_acceptance
 {
-#if COLOURWARS_DEV_TOOLS
-	void check_bot_status_labels(GameTuning& tuning, Presentation& presentation);
-#endif
 	namespace
 	{
 	std::string executable_text(const std::filesystem::path& game_directory)

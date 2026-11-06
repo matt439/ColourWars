@@ -10,6 +10,7 @@
 #include "game/debug/console/debug_text_field.h"
 #include "game/objects/debug_text.h"
 #include <cmath>
+#include <initializer_list>
 #include <limits>
 #include <optional>
 
@@ -278,9 +279,9 @@ namespace debug_console_acceptance
 		// A real capture/barrier uses the hardware probe's Application loop.
 		TestDirector perf_test(tuning, presentation);
 		DebugDirectorImpl& perf_impl = perf_test.impl;
-		for (const std::string& command : { "perf.capture", "perf.capture 1",
+		for (const std::string& command : std::initializer_list<std::string>{ "perf.capture", "perf.capture 1",
 			"perf.capture 1 label extra", "perf.capture 0 label", "perf.capture -1 label",
-			"perf.capture 36001 label", "perf.capture 2147483648 label", "perf.capture abc label",
+			"perf.capture " + std::to_string(DebugPerf::max_capture_frames + 1) + " label", "perf.capture 2147483648 label", "perf.capture abc label",
 			"perf.capture 1.5 label", "perf.capture 1e2 label", "perf.capture nan label",
 			"perf.capture 1 \"\"", "perf.capture 1 ../escape", "perf.capture 1 sub/dir",
 			"perf.capture 1 sub\\dir", "perf.capture 1 C:escape", "perf.capture 1 \"two words\"" })
@@ -304,7 +305,7 @@ namespace debug_console_acceptance
 		require(!long_label.ok && long_label.message.find("label must use 1-64") != std::string::npos,
 			"Capture labels have a bounded safe filename");
 		for (const std::string& command : { std::string("perf.capture 1 valid-A_9"),
-			"perf.capture 36000 " + std::string(64, 'a') })
+			"perf.capture " + std::to_string(DebugPerf::max_capture_frames) + " " + std::string(64, 'a') })
 		{
 			const DebugStatus result = perf_impl.execute(command);
 			require(!result.ok && result.message.find("needs a focused live match") != std::string::npos &&

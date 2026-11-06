@@ -513,12 +513,7 @@ namespace debug_console_acceptance
 			accept("retained/session", "retained/session");
 			// First new assertion: the old setter succeeds, without accessing disk.
 			refuse("CON", "screenshot.dir: reserved Windows folder name: CON");
-			std::vector<std::string> reserved{ "CON", "PRN", "AUX", "NUL" };
-			for (int digit = 1; digit <= 9; ++digit)
-			{
-				reserved.push_back("COM" + std::to_string(digit));
-				reserved.push_back("LPT" + std::to_string(digit));
-			}
+			const std::vector<std::string> reserved = reserved_windows_stems();
 			std::size_t refusals = 1;
 			for (const std::string& stem : reserved)
 				for (int spelling = 0; spelling < 3; ++spelling)
@@ -581,12 +576,7 @@ namespace debug_console_acceptance
 		{
 			const std::string first = screenshot_file_name("CON", now);
 			require(first == "_CON.png", "DBG14 reserved screenshot basename was not protected: " + first);
-			std::vector<std::string> reserved{ "CON", "PRN", "AUX", "NUL" };
-			for (int digit = 1; digit <= 9; ++digit)
-			{
-				reserved.push_back("COM" + std::to_string(digit));
-				reserved.push_back("LPT" + std::to_string(digit));
-			}
+			const std::vector<std::string> reserved = reserved_windows_stems();
 			std::size_t protected_names = 1;
 			for (const std::string& stem : reserved)
 				for (int spelling = 0; spelling < 3; ++spelling)

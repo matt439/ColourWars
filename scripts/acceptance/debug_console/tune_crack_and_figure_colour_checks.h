@@ -111,7 +111,7 @@
 		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && colour_values(presentation) == initial,
 			"Independent reset retains all41 prior colours");
 		const JsonSpanDocument original_json(baseline, "crack-save-reference");
-		const std::string saved = original_json.replaced(*original_json.find("opening.crack"), "\"2060C080\"");
+		const std::string saved = original_json.replaced(require_leaf(original_json, "opening.crack"), "\"2060C080\"");
 		const auto* const pending = impl.tune_document("presentation");
 		require(impl.execute("tune " + path + " 2060C080").ok && impl.execute("tune.save presentation").ok &&
 			opening->crack == labrador::Colour(32, 96, 192, 128) && pending->edits().empty() &&
@@ -121,7 +121,7 @@
 		require(impl.execute("tune " + path + " A532D600").ok && impl.execute("tune presentation.debug_overlay.colour 789ABC").ok,
 			"Crack and unrelated colour edits are pending before complete-reader refusal");
 		const JsonSpanDocument saved_json(saved, "crack-merge-reference");
-		const std::string external = saved_json.replaced(*saved_json.find("opening.monitor_art.corner_step"), "0.002");
+		const std::string external = saved_json.replaced(require_leaf(saved_json, "opening.monitor_art.corner_step"), "0.002");
 		write_text(scratch.source / L"presentation.json", external);
 		const auto live = colour_values(presentation);const std::string current = pending->current().text();
 		const auto ledger = [&]
@@ -140,7 +140,7 @@
 				"Corner_step0.002 below pen_width0.004 refuses ordinary/forced complete merges with exact source/staged/live/current/baseline and BOTH ledger keys/baseline/current tokens");unchanged();
 		}
 		auto expected = live;expected[crack_colour_index] = labrador::Colour(32, 96, 192, 128);
-		const std::string overlay_only = saved_json.replaced(*saved_json.find("debug_overlay.colour"), "\"789ABC\"");
+		const std::string overlay_only = saved_json.replaced(require_leaf(saved_json, "debug_overlay.colour"), "\"789ABC\"");
 		require(impl.execute("tune.reset " + path).ok && colour_values(presentation) == expected &&
 			pending->edits().size() == 1 && pending->edits().contains("debug_overlay.colour") &&
 			pending->current().text() == overlay_only && pending->baseline().text() == saved &&
@@ -273,7 +273,7 @@
 		{
 			const auto index = indices[position];const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
 			const JsonSpanDocument save_reference(saved, "limb-one-token-reference");
-			saved = save_reference.replaced(*save_reference.find(local), std::string("\"") + saved_words[position] + '"');
+			saved = save_reference.replaced(require_leaf(save_reference, local), std::string("\"") + saved_words[position] + '"');
 			expected_colours[index] = labrador::Colour(saved_words[position]);
 			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + saved_words[position]).ok && pending->edits().size() == 1 &&
 				pending->edits().contains(local) && impl.execute("tune.save presentation").ok && pending->edits().empty() &&
@@ -299,10 +299,10 @@
 		const auto held_ledger = ledger();const JsonSpanDocument merged_reference(saved, "limb-invalid-merge-reference");
 		std::string last_external;
 		for (const auto& [field, token] : std::array<std::pair<const char*, std::string>, 2>{ {
-			{ "figure.hand_edge", std::string(merged_reference.token(*merged_reference.find("figure.hand_size"))) },
-			{ "figure.quiet.eyelid_height", std::string(merged_reference.token(*merged_reference.find("figure.quiet.eyes[0].height"))) } } })
+			{ "figure.hand_edge", std::string(merged_reference.token(require_leaf(merged_reference, "figure.hand_size"))) },
+			{ "figure.quiet.eyelid_height", std::string(merged_reference.token(require_leaf(merged_reference, "figure.quiet.eyes[0].height"))) } } })
 		{
-			last_external = merged_reference.replaced(*merged_reference.find(field), token);
+			last_external = merged_reference.replaced(require_leaf(merged_reference, field), token);
 			write_text(scratch.source / L"presentation.json", last_external);
 			for (const char* command : { "tune.save presentation", "tune.save presentation force" })
 			{
@@ -489,7 +489,7 @@
 			const std::size_t index = indices[position];
 			const std::string local = std::string(colour_paths[index]).substr(std::string("presentation.").size());
 			const JsonSpanDocument save_reference(saved, "acting-colour-save-reference");
-			saved = save_reference.replaced(*save_reference.find(local), std::string("\"") + saved_words[position] + '"');
+			saved = save_reference.replaced(require_leaf(save_reference, local), std::string("\"") + saved_words[position] + '"');
 			expected_colours[index] = labrador::Colour(saved_words[position]);
 			require(impl.execute(std::string("tune ") + colour_paths[index] + ' ' + saved_words[position]).ok &&
 				pending->edits().size() == 1 && pending->edits().contains(local) && impl.execute("tune.save presentation").ok &&

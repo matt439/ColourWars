@@ -20,22 +20,22 @@
 				require(selector_document.reverted(path) == selector_baseline,
 					"A selector colour reset restores its original escaped token and CRLF bytes: " + path);
 				const JsonSpanDocument baseline_document(selector_baseline, "selector-colour-reference");
-				const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
+				const std::string external_number = baseline_document.replaced(require_leaf(baseline_document, "number"), "25");
 				const JsonSpanDocument selector_external(external_number, "selector-colour-reference");
 				const TuneSplice selector_splice = selector_document.splice(external_number, false);
 				require(selector_splice.conflicts.empty() && selector_splice.written == 1 && selector_splice.text ==
-					selector_external.replaced(*selector_external.find(path), "\"11223344\"") &&
+					selector_external.replaced(require_leaf(selector_external, path), "\"11223344\"") &&
 					count_of(selector_splice.text, "\r\n") == count_of(selector_baseline, "\r\n"),
 					"A selector colour splice preserves every unrelated byte, external number and CRLF: " + path);
 				const std::string selector_pending = selector_document.current().text();
 				bool wrong_type = false;
-				try { selector_document.commit(selector_document.edited(*selector_document.find(path), "false"), path); }
+				try { selector_document.commit(selector_document.edited(require_leaf(selector_document, path), "false"), path); }
 				catch (const std::invalid_argument&) { wrong_type = true; }
 				require(wrong_type && selector_document.current().text() == selector_pending && selector_document.edits().size() == 1,
 					"A wrong-type selector colour commit preserves the pending string edit: " + path);
 				for (const std::string& missing : { std::string("{}"),
-					baseline_document.replaced(*baseline_document.find(path), "null"),
-					baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}") })
+					baseline_document.replaced(require_leaf(baseline_document, path), "null"),
+					baseline_document.replaced(require_leaf(baseline_document, path), "{\"value\":\"RED\"}") })
 				{
 					const TuneSplice refused = selector_document.splice(missing, true);
 					require(refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
@@ -58,7 +58,7 @@
 					const TuneDocument literal("presentation", text);
 					const JsonLeaf* actual = literal.find(path);
 					require(actual == nullptr || (actual->plain_path && literal.current().token(*actual) ==
-						baseline_document.token(*baseline_document.find(path))),
+						baseline_document.token(require_leaf(baseline_document, path))),
 						"An alias before or after the nested selector colour never exposes the literal-key token: " + path);
 				}
 			}
@@ -81,22 +81,22 @@
 				require(feedback_document.reverted(path) == feedback_baseline,
 					"A feedback reset restores its escaped token and every original CRLF byte: " + path);
 				const JsonSpanDocument baseline_document(feedback_baseline, "feedback-colour-reference");
-				const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
+				const std::string external_number = baseline_document.replaced(require_leaf(baseline_document, "number"), "25");
 				const JsonSpanDocument feedback_external(external_number, "feedback-colour-reference");
 				const TuneSplice feedback_splice = feedback_document.splice(external_number, false);
 				require(feedback_splice.conflicts.empty() && feedback_splice.written == 1 && feedback_splice.text ==
-					feedback_external.replaced(*feedback_external.find(path), "\"11223344\"") &&
+					feedback_external.replaced(require_leaf(feedback_external, path), "\"11223344\"") &&
 					count_of(feedback_splice.text, "\r\n") == count_of(feedback_baseline, "\r\n"),
 					"A feedback splice preserves unrelated fields, escaped bytes, external edits and CRLF: " + path);
 				const std::string feedback_pending = feedback_document.current().text();
 				bool wrong_type = false;
-				try { feedback_document.commit(feedback_document.edited(*feedback_document.find(path), "false"), path); }
+				try { feedback_document.commit(feedback_document.edited(require_leaf(feedback_document, path), "false"), path); }
 				catch (const std::invalid_argument&) { wrong_type = true; }
 				require(wrong_type && feedback_document.current().text() == feedback_pending && feedback_document.edits().size() == 1,
 					"A wrong-type feedback commit preserves the pending string edit: " + path);
 				for (const std::string& missing : { std::string("{}"),
-					baseline_document.replaced(*baseline_document.find(path), "null"),
-					baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}") })
+					baseline_document.replaced(require_leaf(baseline_document, path), "null"),
+					baseline_document.replaced(require_leaf(baseline_document, path), "{\"value\":\"RED\"}") })
 				{
 					const TuneSplice refused = feedback_document.splice(missing, true);
 					require(refused.written == 0 && refused.conflicts.size() == 1 && refused.text == missing,
@@ -127,22 +127,22 @@
 			require(drip_document.reverted(path) == drip_baseline,
 				"An idle-drip keyline reset restores its escaped token and every original CRLF byte");
 			const JsonSpanDocument baseline_document(drip_baseline, "idle-drip-colour-reference");
-			const std::string external_number = baseline_document.replaced(*baseline_document.find("number"), "25");
+			const std::string external_number = baseline_document.replaced(require_leaf(baseline_document, "number"), "25");
 			const JsonSpanDocument idle_external_document(external_number, "idle-drip-colour-reference");
 			const TuneSplice idle_splice = drip_document.splice(external_number, false);
 			require(idle_splice.conflicts.empty() && idle_splice.written == 1 && idle_splice.text ==
-				idle_external_document.replaced(*idle_external_document.find(path), "\"11223344\"") &&
+				idle_external_document.replaced(require_leaf(idle_external_document, path), "\"11223344\"") &&
 				count_of(idle_splice.text, "\r\n") == count_of(drip_baseline, "\r\n"),
 				"An idle-drip splice preserves unrelated fields, escaped bytes, an external number and every CRLF");
 			const std::string idle_pending = drip_document.current().text();
 			bool wrong_type = false;
-			try { drip_document.commit(drip_document.edited(*drip_document.find(path), "false"), path); }
+			try { drip_document.commit(drip_document.edited(require_leaf(drip_document, path), "false"), path); }
 			catch (const std::invalid_argument&) { wrong_type = true; }
 			require(wrong_type && drip_document.current().text() == idle_pending && drip_document.edits().size() == 1,
 				"A wrong-type idle-drip commit preserves the pending keyline edit");
 			for (const std::string& invalid : { std::string("{}"),
-				baseline_document.replaced(*baseline_document.find(path), "null"),
-				baseline_document.replaced(*baseline_document.find(path), "{\"value\":\"RED\"}"),
+				baseline_document.replaced(require_leaf(baseline_document, path), "null"),
+				baseline_document.replaced(require_leaf(baseline_document, path), "{\"value\":\"RED\"}"),
 				std::string("{\"idle_drip.keyline\":\"RED\"}"),
 				std::string("{\"idle_drip\":{\"keyline.r\":\"RED\"}}"),
 				std::string("{\"idle_drip\":{\"tools\":{\"sprayer\":{\"keyline\":\"RED\"}}}}") })
@@ -169,22 +169,22 @@
 			require(pen_document.reverted(path) == pen_baseline,
 				"A respawn pen reset restores its escaped token and every original CRLF byte");
 			const JsonSpanDocument pen_reference(pen_baseline, "respawn-pen-colour-reference");
-			const std::string pen_external_number = pen_reference.replaced(*pen_reference.find("number"), "25");
+			const std::string pen_external_number = pen_reference.replaced(require_leaf(pen_reference, "number"), "25");
 			const JsonSpanDocument pen_external_document(pen_external_number, "respawn-pen-colour-reference");
 			const TuneSplice pen_splice = pen_document.splice(pen_external_number, false);
 			require(pen_splice.conflicts.empty() && pen_splice.written == 1 && pen_splice.text ==
-				pen_external_document.replaced(*pen_external_document.find(path), "\"11223344\"") &&
+				pen_external_document.replaced(require_leaf(pen_external_document, path), "\"11223344\"") &&
 				count_of(pen_splice.text, "\r\n") == count_of(pen_baseline, "\r\n"),
 				"A respawn pen splice preserves unrelated fields, escape bytes, an external number and every CRLF");
 			const std::string pen_pending = pen_document.current().text();
 			bool wrong_type = false;
-			try { pen_document.commit(pen_document.edited(*pen_document.find(path), "false"), path); }
+			try { pen_document.commit(pen_document.edited(require_leaf(pen_document, path), "false"), path); }
 			catch (const std::invalid_argument&) { wrong_type = true; }
 			require(wrong_type && pen_document.current().text() == pen_pending && pen_document.edits().size() == 1,
 				"A wrong-type respawn pen commit preserves the pending colour edit");
 			for (const std::string& invalid : { std::string("{}"),
-				pen_reference.replaced(*pen_reference.find(path), "null"),
-				pen_reference.replaced(*pen_reference.find(path), "{\"value\":\"RED\"}"),
+				pen_reference.replaced(require_leaf(pen_reference, path), "null"),
+				pen_reference.replaced(require_leaf(pen_reference, path), "{\"value\":\"RED\"}"),
 				std::string("{\"respawn_redraw.pen_colour\":\"RED\"}"),
 				std::string("{\"respawn_redraw\":{\"pen_colour.r\":\"RED\"}}") })
 			{

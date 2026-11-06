@@ -264,7 +264,7 @@ namespace debug_console_acceptance
 			perf.at(0).updates == 2, "update sums each frame's updates");
 		perf.set_counts(182, 12);
 		const std::vector<std::string> lines = perf.lines();
-		require(lines.size() == 8 && lines[0] == "CPU wall ms min    avg    max  (240 frames)" &&
+		require(lines.size() == 8 && lines[0] == "CPU wall ms min    avg    max  (" + std::to_string(DebugPerf::capacity) + " frames)" &&
 			lines[1] == "frame   16.00  16.00  16.00" &&
 			lines[2] == "update   0.75   1.00   1.25  x2.00 a frame" &&
 			lines[3] == "draw     2.00   3.00   4.00" && lines[4] == "begin  n/a (0 engine frames)" &&
@@ -302,7 +302,7 @@ namespace debug_console_acceptance
 
 		// A capture keeps its whole chronological recording independently of
 		// the overlay ring. Starting one must not include the previous gap.
-		require(!perf.start_capture(0) && !perf.start_capture(36001) &&
+		require(!perf.start_capture(0) && !perf.start_capture(DebugPerf::max_capture_frames + 1) &&
 			!perf.capture_active() && !perf.capture_ready() && perf.size() == 2,
 			"Capture bounds reject zero and more than 36000 without disturbing the ring");
 		perf.add_update(99.0);
@@ -440,7 +440,7 @@ namespace debug_console_acceptance
 		require(!perf.capture_active() && !perf.capture_ready() && perf.capture_target() == 0 &&
 			perf.captured_frames().empty() && perf.capture_reason().empty() && perf.size() == 0,
 			"Reset clears interrupted captures and all overlay samples");
-		require(perf.start_capture(36000), "The documented upper capture bound is accepted");
+		require(perf.start_capture(DebugPerf::max_capture_frames), "The documented upper capture bound is accepted");
 		perf.reset();
 		require(!perf.capture_active() && !perf.capture_ready() && perf.capture_target() == 0 &&
 			perf.captured_frames().empty() && perf.size() == 0,

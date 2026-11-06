@@ -192,7 +192,7 @@
 				"External hud.paper.keyline_width 4.1 refuses the complete ordinary reader even with force, retaining exact source/staged/live/current/baseline and BOTH ledger keys plus every baseline/current token");
 			unchanged();
 		}
-		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"), "\"789ABC\"");
+		const std::string overlay_only = saved_document.replaced(require_leaf(saved_document, "debug_overlay.colour"), "\"789ABC\"");
 		auto restored_colours = pending_colours;
 		restored_colours[hud_health_colour_index] = labrador::Colour(32, 96, 192, 128);
 		require(impl.execute("tune.reset presentation.hud.health_colour").ok &&
@@ -409,7 +409,7 @@
 				"External hud.paper.keyline_width 4.1 refuses the complete ordinary reader even with force, retaining exact source/staged/live/current/baseline and BOTH ledger keys plus every baseline/current token");
 			unchanged();
 		}
-		const std::string overlay_only = saved_document.replaced(*saved_document.find("debug_overlay.colour"), "\"789ABC\"");
+		const std::string overlay_only = saved_document.replaced(require_leaf(saved_document, "debug_overlay.colour"), "\"789ABC\"");
 		auto restored_colours = pending_colours;
 		restored_colours[hud_track_colour_index] = labrador::Colour(32, 96, 192, 128);
 		require(impl.execute("tune.reset presentation.hud.meter_track_colour").ok &&
