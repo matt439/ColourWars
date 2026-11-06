@@ -30,8 +30,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     };
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary); require(stream.good(), "Value fixture lost its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     reset();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);

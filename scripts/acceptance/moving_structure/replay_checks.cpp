@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/moving_structure/fixtures.h"
+#include "scripts/acceptance/support/scratch.h"
 #include <iostream>
 
 #if COLOURWARS_DEV_TOOLS
@@ -13,18 +14,8 @@ namespace moving_structure_acceptance
 {
 namespace
 {
-    std::string read_text(const std::filesystem::path& path)
-    {
-        std::ifstream stream(path, std::ios::binary);
-        require(stream.good(), "Cannot read moving replay fixture");
-        return { std::istreambuf_iterator<char>(stream), {} };
-    }
-    void write_text(const std::filesystem::path& path, const std::string& text)
-    {
-        std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-        stream.write(text.data(), static_cast<std::streamsize>(text.size())); stream.close();
-        require(static_cast<bool>(stream), "Cannot write moving replay fixture");
-    }
+    using acceptance::read_text;
+    using acceptance::write_text;
     ReplayFile header()
     {
         ReplayFile file;

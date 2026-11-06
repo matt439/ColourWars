@@ -212,10 +212,8 @@ std::filesystem::path landmark_omission_copy(const std::filesystem::path& conten
     }
     restored["non_collision_objects"] = std::move(restored_objects);
     require(restored == original, "Landmark omission changed fields beyond the two scenery entries");
-    rapidjson::StringBuffer serialized; rapidjson::Writer<rapidjson::StringBuffer> writer(serialized); omitted.Accept(writer);
     const auto path = output / "landmark-omission" / (std::string(stage.name) + ".json"); std::filesystem::create_directories(path.parent_path());
-    std::ofstream file(path, std::ios::binary); file.write(serialized.GetString(), static_cast<std::streamsize>(serialized.GetSize()));
-    require(file.good(), "Cannot retain the private landmark omission proof"); return path;
+    acceptance::write_document(omitted, path); return path;
 }
 
 Frame landmark_frozen_level(Application& app, Level& level, size_t& rendered)

@@ -8,14 +8,6 @@ namespace turbulence_movers_acceptance
 {
     using namespace labrador;
 
-    std::string read_text(const fs::path& path)
-    {
-        std::ifstream input_file(path, std::ios::binary);
-        require(input_file.good(), "Cannot read mover trial input: " + path.string());
-        std::string text{ std::istreambuf_iterator<char>(input_file), {} };
-        require(!input_file.bad(), "Cannot finish reading mover trial input: " + path.string());
-        return text;
-    }
 
     MatchSetup settings(int count, PlayerTeam first_team)
     {

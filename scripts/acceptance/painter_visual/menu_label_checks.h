@@ -18,9 +18,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private menu-label profile");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(acceptance::save_path_in(output / "menu-label-profile"), std::ios::binary);
-        require(file.good(), "Cannot read the private menu-label save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     const std::string saved = saved_bytes();
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };

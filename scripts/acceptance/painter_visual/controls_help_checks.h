@@ -49,9 +49,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     };
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Static-help fixture lost its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return acceptance::read_text(save_path);
     };
     reset_preferences();
     const auto expected_help = [&](const std::wstring& authored)

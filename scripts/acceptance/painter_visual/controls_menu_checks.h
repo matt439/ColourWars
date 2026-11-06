@@ -8,9 +8,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const std::filesystem::path save_path = acceptance::save_path_in(output / "controls-profile");
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Controls/audio did not create its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     Save preferences; seed_play_settings(preferences, quiet_play);
     SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);

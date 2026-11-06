@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation.h"
 #include "game/objects/match_random.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -165,10 +166,7 @@ namespace
         ~Fixture() { std::error_code ignored; std::filesystem::remove(path_, ignored); }
         Presentation load(const rapidjson::Document& document) const
         {
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            document.Accept(writer);
-            { std::ofstream output(path_); output << buffer.GetString(); require(output.good(), "Could not write palette fixture"); }
+            acceptance::write_document(document, path_);
             return Presentation(path_.string().c_str());
         }
         void reject(const rapidjson::Document& document, const char* expected) const

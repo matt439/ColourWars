@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_runner/runner.h"
+#include "scripts/acceptance/support/scratch.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/input/input_slots.h"
 #include "game/match/paint_owners.h"
@@ -31,12 +32,6 @@ namespace balance_runner
             try { work(); }
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected, reason);
-        }
-        std::string read_bytes(const std::filesystem::path& path)
-        {
-            std::ifstream file(path, std::ios::binary);
-            require(file.good(), "Cannot read private CSV");
-            return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
         }
         std::vector<std::string> fields(const std::string& row)
         {
@@ -166,18 +161,18 @@ namespace balance_runner
             require(!std::filesystem::exists(collision_main) && !std::filesystem::exists(collision_paint),
                 "Private stage reservation exposed a requested final before simulation/publication");
             colliding.stage(rows); colliding.publish();
-            require(read_bytes(collision_main) == expected && read_bytes(collision_paint) == expected_paint,
+            require(acceptance::read_text(collision_main) == expected && acceptance::read_text(collision_paint) == expected_paint,
                 "Excluding both predicted final leaves prevented valid paired publication");
             refuses([&] { outputs.publish(); }, "Unstaged CSV pair was published");
             outputs.stage(rows);
-            require(read_bytes(outputs.main_stage_path()) == expected && read_bytes(outputs.paint_stage_path()) == expected_paint &&
+            require(acceptance::read_text(outputs.main_stage_path()) == expected && acceptance::read_text(outputs.paint_stage_path()) == expected_paint &&
                 !std::filesystem::exists(main) && !std::filesystem::exists(paint), "Both stages must be exact and closed before either final is visible");
             outputs.publish();
-            require(read_bytes(main) == expected && read_bytes(paint) == expected_paint && std::rand() == expected_random,
+            require(acceptance::read_text(main) == expected && acceptance::read_text(paint) == expected_paint && std::rand() == expected_random,
                 "Unicode paired publication changed row bytes or global RNG");
             refuses([&] { CsvOutputs duplicate(main, evidence / L"unused-paint.csv"); }, "Existing main CSV was accepted");
             refuses([&] { CsvOutputs duplicate(evidence / L"unused-main.csv", paint); }, "Existing paint CSV was accepted");
-            require(read_bytes(main) == expected && read_bytes(paint) == expected_paint, "No-overwrite refusal altered completed files");
+            require(acceptance::read_text(main) == expected && acceptance::read_text(paint) == expected_paint, "No-overwrite refusal altered completed files");
             refuses([&] { CsvOutputs alias(evidence / L"same.csv", evidence / L"SAME.CSV"); }, "Case aliases accepted as distinct CSV destinations");
             for (const wchar_t* leaf : { L"trim.csv.", L"trim.csv ", L"stream.csv:other", L"CON.csv", L"COM1.csv", L"LPT\u00b2.csv", L"CONIN$.csv", L"ROWS~1.CSV" })
             { refuses([&] { CsvOutputs invalid(evidence / leaf, evidence / L"invalid-paint.csv"); }, "Ambiguous Windows output leaf was accepted"); }
@@ -198,19 +193,19 @@ namespace balance_runner
             const auto blocked = evidence / L"blocking-parent";
             fresh_bytes(blocked, "parent-sentinel");
             refuses([&] { CsvOutputs invalid(evidence / L"invalid-main.csv", blocked / L"paint.csv"); }, "Invalid second parent was accepted");
-            require(!std::filesystem::exists(evidence / L"invalid-main.csv") && read_bytes(blocked) == "parent-sentinel", "Invalid second target touched the first output or parent sentinel");
+            require(!std::filesystem::exists(evidence / L"invalid-main.csv") && acceptance::read_text(blocked) == "parent-sentinel", "Invalid second target touched the first output or parent sentinel");
             const auto raced = evidence / L"raced-main.csv", untouched = evidence / L"raced-paint.csv";
             CsvOutputs late(raced, untouched); late.stage(rows); fresh_bytes(raced, "late-sentinel");
             refuses([&] { late.publish(); }, "A destination created after preflight was replaced");
-            require(read_bytes(raced) == "late-sentinel" && !std::filesystem::exists(untouched), "Late-race refusal changed a final destination");
+            require(acceptance::read_text(raced) == "late-sentinel" && !std::filesystem::exists(untouched), "Late-race refusal changed a final destination");
             const auto failed_main = evidence / L"partial-main.csv", orphan = evidence / L"orphan-paint.csv";
             CsvOutputs partial(failed_main, orphan); partial.stage(rows);
             StageReadLock locked(partial.main_stage_path());
             bool failed = false;
             try { partial.publish(); }
             catch (const std::runtime_error& error) { failed = std::string(error.what()).find("Partial pair:") != std::string::npos; }
-            require(failed && !std::filesystem::exists(failed_main) && read_bytes(orphan) == expected_paint &&
-                read_bytes(partial.main_stage_path()) == expected, "Actual sharing failure did not preserve explicit orphan companion and complete main stage");
+            require(failed && !std::filesystem::exists(failed_main) && acceptance::read_text(orphan) == expected_paint &&
+                acceptance::read_text(partial.main_stage_path()) == expected, "Actual sharing failure did not preserve explicit orphan companion and complete main stage");
         }
         void result_invariants(const Result& result)
         {

@@ -15,9 +15,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed the duration probe's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(acceptance::save_path_in(output / "duration-profile"), std::ios::binary);
-        require(stream.good(), "Duration probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const std::string saved = saved_bytes();
     GameData data;

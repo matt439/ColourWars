@@ -220,13 +220,9 @@ std::filesystem::path monitor_static_backdrop(const std::filesystem::path& conte
         restored_decorations[index].AddMember(rapidjson::StringRef("drift"), drift, restored.GetAllocator());
     }
     require(restored == original, "monitor isolation changed fields beyond decorative drift");
-    rapidjson::StringBuffer serialized; rapidjson::Writer<rapidjson::StringBuffer> writer(serialized);
-    stationary.Accept(writer);
     const std::filesystem::path fixture = output / "monitor-static-backdrop" / "movement_course.json";
     std::filesystem::create_directories(fixture.parent_path());
-    std::ofstream file(fixture, std::ios::binary);
-    file.write(serialized.GetString(), static_cast<std::streamsize>(serialized.GetSize()));
-    require(file.good(), "monitor static-backdrop fixture write failed");
+    acceptance::write_document(stationary, fixture);
     std::ofstream record(output / "monitor-static-backdrop.csv");
     record << "source,removed_decorative_drift,other_fields_unchanged\nmovement_course," << removed << ",true\n";
     require(record.good(), "monitor static-backdrop isolation record write failed");

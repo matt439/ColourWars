@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/moving_structure/loader_fixture.h"
 #include "editor/level_document.h"
@@ -146,14 +147,7 @@ namespace moving_structure_acceptance
         fractional_object["rectangle"]["x"].SetDouble(65535.99);
         fractional_object["motion"]["phase"].SetDouble(0);
         const auto fractional_source = directory / L"fractional-source.json";
-        {
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(fractional.Accept(writer), "Cannot encode fractional editor/runtime receipt");
-            std::ofstream output(fractional_source, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close(); require(output.good(), "Cannot retain fractional editor/runtime source");
-        }
+        acceptance::write_document(fractional, fractional_source);
         double anchor_area = 0.0;
         double editor_anchor_area = 0.0;
         for (const auto& [phase, stem] : { std::pair{ "0", "fractional-anchor" }, { "0.25", "fractional-quarter" } })

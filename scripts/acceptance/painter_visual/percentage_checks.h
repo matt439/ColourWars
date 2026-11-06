@@ -26,9 +26,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     Save preferences; SettingsSession preferences_session(preferences);
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Percentage fixture lost its private save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const auto same_play = [](const PlaySettings& first, const PlaySettings& second)
     {

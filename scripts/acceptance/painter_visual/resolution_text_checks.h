@@ -30,9 +30,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     std::string saved, saved_preset = "1920x1080";
     const auto saved_bytes = [&]
     {
-        std::ifstream file(acceptance::save_path_in(output / "resolution-profile"), std::ios::binary);
-        require(file.good(), "Resolution text probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const auto seed = [&](ScreenResolution resolution, bool fullscreen, const char* literal)
     {

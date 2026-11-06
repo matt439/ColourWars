@@ -10,6 +10,7 @@
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 #include "scripts/acceptance/support/isolated_save.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
@@ -287,8 +288,8 @@ namespace debug_console_acceptance
 
 	std::size_t row_index(const std::vector<DebugMenuRow>& rows, const std::string& label);
 	std::vector<std::string> labels(const std::vector<DebugMenuRow>& rows);
-	std::string read_text(const std::filesystem::path& path);
-	void write_text(const std::filesystem::path& path, const std::string& text);
+	using acceptance::read_text;
+	using acceptance::write_text;
 	std::string to_lf(std::string text);
 	std::size_t count_of(const std::string& text, const std::string& what);
 

@@ -3,6 +3,7 @@
 #include "game/states/menu_focus_motion.h"
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -281,34 +282,10 @@ namespace
         }
     }
 
-    struct Variants
+    struct Variants : acceptance::JsonVariants
     {
-        rapidjson::Document source;
-        std::filesystem::path scratch;
-        size_t next = 0;
-
-        Variants(const std::filesystem::path& content, const std::filesystem::path& output) : scratch(output)
-        {
-            std::ifstream file(content / "presentation.json", std::ios::binary);
-            require(file.good(), "Cannot read presentation for menu motion fixtures");
-            const std::string text{ std::istreambuf_iterator<char>(file), {} };
-            this->source.Parse(text.c_str());
-            require(!this->source.HasParseError(), "Cannot parse menu motion fixture source");
-            std::filesystem::create_directories(this->scratch);
-        }
-
-        template<class Edit>
-        std::filesystem::path write(Edit edit)
-        {
-            rapidjson::Document document; document.CopyFrom(this->source, document.GetAllocator()); edit(document);
-            rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(document.Accept(writer), "Cannot encode menu motion fixture");
-            const auto path = this->scratch / ("motion-" + std::to_string(this->next++) + ".json");
-            std::ofstream file(path, std::ios::binary | std::ios::trunc);
-            file.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize())); file.close();
-            require(file.good(), "Cannot write menu motion fixture");
-            return path;
-        }
+        Variants(const std::filesystem::path& content, const std::filesystem::path& output) :
+            acceptance::JsonVariants(content / "presentation.json", L"motion", output) {}
 
         template<class Edit>
         void rejects(const char* key, Edit edit)

@@ -5,6 +5,7 @@
 #include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -305,10 +306,7 @@ namespace
             json.Parse(source.c_str());
             require(!json.HasParseError(), "Cannot parse cursor presentation fixture");
             edit(json["hud"]["cursor_marker"], json.GetAllocator());
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            { std::ofstream variant(path); variant << buffer.GetString(); require(variant.good(), "Cannot write cursor variant"); }
+            acceptance::write_document(json, path);
             try { const Presentation loaded(path.string().c_str()); return true; }
             catch (const std::exception& error)
             {

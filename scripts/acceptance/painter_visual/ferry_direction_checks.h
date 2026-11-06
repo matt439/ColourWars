@@ -110,9 +110,8 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     for (auto& object : restored["collision_objects"].GetArray())
     { if (object.HasMember("motion")) { object["motion"]["team_a_heads"].SetString("right"); } }
     require(restored == original, "Ferry mirror changed more than authored headings");
-    rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer); mirrored.Accept(writer);
     const auto left_path = output / "ferry-direction-left-stage.json";
-    { std::ofstream file(left_path, std::ios::binary); file << buffer.GetString(); require(file.good(), "Cannot write isolated ferry stage"); }
+    acceptance::write_document(mirrored, left_path);
     LevelLoadedInfo left_info(path_to_utf8(left_path).c_str()); left_info.validate();
     const LevelLoadedInfo& right_info = *levels.get("turbulence_ferry_trial");
     const auto& stage_look = presentation.main_menu().stage_select;

@@ -6,6 +6,7 @@
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -348,10 +349,7 @@ namespace
             json.Parse(source.c_str());
             require(!json.HasParseError(), "Cannot parse marker presentation fixture");
             edit(json["weapon_feedback"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            { std::ofstream variant(path); variant << buffer.GetString(); require(variant.good(), "Cannot write marker variant"); }
+            acceptance::write_document(json, path);
             bool rejected = false;
             try { const Presentation invalid(path.string().c_str()); }
             catch (const std::exception& error)

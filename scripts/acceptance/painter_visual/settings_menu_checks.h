@@ -7,9 +7,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const std::filesystem::path save_path = acceptance::save_path_in(output / "settings-profile");
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Interactive settings did not create its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     Save preferences; SettingsSession preferences_session(preferences);
     // Since ROAD#21, play_settings() is the effective view over the stored

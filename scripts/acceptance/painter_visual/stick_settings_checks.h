@@ -7,9 +7,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     const std::filesystem::path save_path = acceptance::save_path_in(output / "stick-profile");
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Pad sticks did not create its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return isolated.save_bytes();
     };
     Save preferences; seed_play_settings(preferences, quiet_play);
     SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);

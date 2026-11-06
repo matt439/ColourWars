@@ -19,6 +19,7 @@
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <algorithm>
 #include <array>
@@ -139,22 +140,7 @@ namespace
 		return document;
 	}
 
-	void write_text(const std::filesystem::path& path, const std::string& text)
-	{
-		std::ofstream output(path, std::ios::binary | std::ios::trunc);
-		output << text;
-		output.close();
-		require(output.good(), "Cannot write fixture " + path_to_utf8(path));
-	}
 
-	std::string read_bytes(const std::filesystem::path& path)
-	{
-		std::ifstream input(path, std::ios::binary);
-		require(input.good(), "Cannot read source fixture " + path_to_utf8(path));
-		const std::string text{ std::istreambuf_iterator<char>(input), {} };
-		require(!input.bad(), "Cannot read complete source fixture " + path_to_utf8(path));
-		return text;
-	}
 
 	std::string with_source_metadata(const std::string& stage, const std::string& member)
 	{
@@ -166,19 +152,19 @@ namespace
 	void check_runtime_source(const std::filesystem::path& content, const std::filesystem::path& scratch)
 	{
 		const auto original = content / "levels/close_quarters.json";
-		const std::string stage = read_bytes(original);
+		const std::string stage = acceptance::read_text(original);
 		const auto path = scratch / "complete-source.json";
 		const std::string name = path_to_utf8(path);
-		write_text(path, stage);
+		acceptance::write_text(path, stage);
 		const LevelLoadedInfo pristine(name.c_str());
 		pristine.validate();
 		const auto refusal = [&](const std::string& bytes)
 		{
-			write_text(path, bytes);
+			acceptance::write_text(path, bytes);
 			std::string diagnostic;
 			try { const LevelLoadedInfo loaded(name.c_str()); }
 			catch (const std::runtime_error& error) { diagnostic = error.what(); }
-			require(read_bytes(path) == bytes, "Runtime admission changed its private source bytes");
+			require(acceptance::read_text(path) == bytes, "Runtime admission changed its private source bytes");
 			return diagnostic;
 		};
 		const auto named_offset = [&](const std::string& diagnostic, std::size_t offset)
@@ -257,10 +243,10 @@ namespace
 
 		const auto hash = [&](const std::string& bytes)
 		{
-			write_text(path, bytes);
+			acceptance::write_text(path, bytes);
 			const LevelLoadedInfo loaded(name.c_str());
 			loaded.validate();
-			require(read_bytes(path) == bytes, "Loading a valid snapshot changed its bytes");
+			require(acceptance::read_text(path) == bytes, "Loading a valid snapshot changed its bytes");
 			return loaded.semantic_hash();
 		};
 		const std::string metadata = with_source_metadata(stage,
@@ -275,12 +261,12 @@ namespace
 		require(hash(with_source_metadata(stage,
 			R"("unknown":{"text":"A\u0000B","utf8":"caf\u00e9","number":1,"order":{"second":null,"first":true}})")) != valid_hash,
 			"Runtime fingerprint lost authored unknown-member order");
-		write_text(path, metadata);
+		acceptance::write_text(path, metadata);
 		const LevelLoadedInfo cached(name.c_str());
-		write_text(path, hidden_suffix);
+		acceptance::write_text(path, hidden_suffix);
 		require(cached.semantic_hash() == valid_hash && !cached.display_name().empty(),
 			"An admitted runtime definition reread subsequently malformed disk bytes");
-		require(read_bytes(original) == stage, "Runtime source checks changed the staged input asset");
+		require(acceptance::read_text(original) == stage, "Runtime source checks changed the staged input asset");
 		std::cout << "PASS complete runtime source: raw NUL suffixes, " << malformed_cases <<
 			" malformed UTF-8 key/value/BOM cases, original offsets, syntax/format precedence, "
 			"valid decoded/hash equivalence and cached private snapshot\n";
@@ -295,7 +281,7 @@ namespace
 		rapidjson::StringBuffer buffer;
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 		require(document.Accept(writer), "Cannot encode fixture " + path_to_utf8(path));
-		write_text(path, std::string(buffer.GetString(), buffer.GetSize()));
+		acceptance::write_text(path, std::string(buffer.GetString(), buffer.GetSize()));
 	}
 
 	void set_string(rapidjson::Document& document, rapidjson::Value& owner, const char* key, const char* value)
@@ -344,11 +330,11 @@ namespace
 		const std::filesystem::path& scratch)
 	{
 		const auto folder = fresh(scratch / "complete-source-scan");
-		const std::string stage = read_bytes(content / "levels/close_quarters.json");
-		write_text(folder / "a-valid.json", stage);
-		write_text(folder / "b-nul.json", stage + '\0' + "unparsed suffix");
-		write_text(folder / "c-value.json", with_source_metadata(stage, "\"unknown\":\"\xc0\xaf\""));
-		write_text(folder / "d-key.json", with_source_metadata(stage, "\"unknown-\xed\xa0\x80\":true"));
+		const std::string stage = acceptance::read_text(content / "levels/close_quarters.json");
+		acceptance::write_text(folder / "a-valid.json", stage);
+		acceptance::write_text(folder / "b-nul.json", stage + '\0' + "unparsed suffix");
+		acceptance::write_text(folder / "c-value.json", with_source_metadata(stage, "\"unknown\":\"\xc0\xaf\""));
+		acceptance::write_text(folder / "d-key.json", with_source_metadata(stage, "\"unknown-\xed\xa0\x80\":true"));
 		Shipped shipped;
 		const UserStageScan result = scan(fixture, content, folder, shipped);
 		require(result.accepted == std::vector<std::string>{ "a-valid" } && result.refused.size() == 3 &&
@@ -399,7 +385,7 @@ namespace
 		{
 			const std::filesystem::path file = scratch / "not-a-folder";
 			std::filesystem::remove_all(file);
-			write_text(file, "x");
+			acceptance::write_text(file, "x");
 			Shipped shipped;
 			const UserStageScan result = scan(fixture, content, file, shipped);
 			require(result.accepted.empty() && result.refused.size() == 1 &&
@@ -427,7 +413,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "Second Of Mine");
 		});
-		write_text(folder / "broken.json", "{ \"display_name\": \"Broken\", ");
+		acceptance::write_text(folder / "broken.json", "{ \"display_name\": \"Broken\", ");
 		write_level(base, folder / "no_spawns.json", [](rapidjson::Document& d)
 		{
 			d.RemoveMember("spawn_locations");
@@ -452,7 +438,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "Paint \xF0\x9F\x8E\xA8");
 		});
-		write_text(folder / "notes.txt", "not a stage");
+		acceptance::write_text(folder / "notes.txt", "not a stage");
 		std::filesystem::create_directories(folder / "nested.json");
 
 		Shipped shipped;
@@ -553,7 +539,7 @@ namespace
 			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 			require(document.Accept(writer), "Cannot encode a stage-names fixture");
 			const std::filesystem::path path = scratch / (std::string("stage-names-") + name + ".json");
-			write_text(path, buffer.GetString());
+			acceptance::write_text(path, buffer.GetString());
 			return path.string();
 		};
 		const std::string missing = edited("missing",
@@ -662,7 +648,7 @@ namespace
 		{
 			set_string(d, d, "display_name", "B Arena Edited");
 		});
-		write_text(folder / "broken.json", "{");
+		acceptance::write_text(folder / "broken.json", "{");
 		const UserStageScan second = session.rescan();
 		require(session.latest_scan().accepted == second.accepted && session.latest_scan().refused == second.refused,
 			"The retained rescan outcome lost a refused file");

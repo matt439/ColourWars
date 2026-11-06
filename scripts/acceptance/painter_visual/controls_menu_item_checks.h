@@ -32,9 +32,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     reset_preferences();
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(save_path, std::ios::binary);
-        require(stream.good(), "Settings-label fixture lost its isolated save");
-        return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        return acceptance::read_text(save_path);
     };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);

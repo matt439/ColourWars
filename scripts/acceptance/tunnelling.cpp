@@ -7,6 +7,7 @@
 #include "game/objects/structure.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/collision/tunnelling.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
@@ -52,44 +53,17 @@ namespace
 	};
 
 	// Copies of the authored tuning with one edit, written beside this case.
-	struct Fixtures
+	struct Fixtures : acceptance::JsonVariants
 	{
-		rapidjson::Document source;
-		std::filesystem::path scratch;
-		size_t next = 0;
-
 		Fixtures(const std::filesystem::path& content, const std::filesystem::path& folder) :
-			scratch(folder)
-		{
-			std::ifstream input(content / "tuning.json", std::ios::binary);
-			require(input.good(), "Cannot read authored tuning");
-			const std::string text{ std::istreambuf_iterator<char>(input), {} };
-			source.Parse(text.c_str());
-			require(!source.HasParseError(), "Cannot parse authored tuning");
-			std::filesystem::create_directories(scratch);
-		}
+			acceptance::JsonVariants(content / "tuning.json", L"tunnelling-tuning", folder) {}
 
+		// A fixture file of its own, beside the tuning variants.
 		std::filesystem::path write_text(const std::string& name, const std::string& text) const
 		{
-			const auto path = scratch / name;
-			std::ofstream output(path, std::ios::binary | std::ios::trunc);
-			output << text;
-			output.close();
-			require(output.good(), "Cannot write an isolated tunnelling fixture");
+			const auto path = this->folder() / name;
+			acceptance::write_text(path, text);
 			return path;
-		}
-
-		template<class Edit>
-		std::filesystem::path write(Edit edit)
-		{
-			rapidjson::Document document;
-			document.CopyFrom(source, document.GetAllocator());
-			edit(document);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			require(document.Accept(writer), "Cannot encode isolated tuning");
-			return write_text("tunnelling-tuning-" + std::to_string(next++) + ".json",
-				std::string(buffer.GetString(), buffer.GetSize()));
 		}
 
 		template<class Edit>

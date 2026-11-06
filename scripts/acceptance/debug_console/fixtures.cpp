@@ -62,20 +62,7 @@ namespace debug_console_acceptance
 		return result;
 	}
 
-	std::string read_text(const std::filesystem::path& path)
-	{
-		std::ifstream stream(path, std::ios::binary);
-		require(stream.good(), "Could not read " + path.string());
-		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-	}
 
-	void write_text(const std::filesystem::path& path, const std::string& text)
-	{
-		std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-		stream.write(text.data(), static_cast<std::streamsize>(text.size()));
-		stream.close();
-		require(!stream.fail(), "Could not write " + path.string());
-	}
 
 	std::string to_lf(std::string text)
 	{

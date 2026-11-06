@@ -48,9 +48,7 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Series score's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(acceptance::save_path_in(output / "series-score-profile"), std::ios::binary);
-        require(file.good(), "Series score probe lost its private save");
-        return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        return profile.save_bytes();
     };
     const std::string saved = saved_bytes();
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);

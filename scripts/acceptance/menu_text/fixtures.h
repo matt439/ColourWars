@@ -411,34 +411,10 @@ namespace menu_text_acceptance
 
     using World = acceptance::ContentWorld;
 
-    struct Variants
+    struct Variants : acceptance::JsonVariants
     {
-        rapidjson::Document source;
-        std::filesystem::path scratch;
-        size_t next = 0;
-
         Variants(const std::filesystem::path& content, const std::filesystem::path& folder) :
-            source(read_document(content / "presentation.json")), scratch(folder)
-        {
-            std::filesystem::create_directories(scratch);
-        }
-
-        template<class Edit>
-        std::filesystem::path write(Edit edit)
-        {
-            rapidjson::Document document;
-            document.CopyFrom(source, document.GetAllocator());
-            edit(document);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(document.Accept(writer), "Cannot encode menu text fixture");
-            const auto path = scratch / ("menu-text-" + std::to_string(next++) + ".json");
-            std::ofstream output(path, std::ios::binary | std::ios::trunc);
-            output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            output.close();
-            require(output.good(), "Cannot write menu text fixture");
-            return path;
-        }
+            acceptance::JsonVariants(content / "presentation.json", L"menu-text", folder) {}
 
         template<class Edit>
         Presentation load(Edit edit)

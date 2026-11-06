@@ -29,21 +29,18 @@ namespace menu_text_acceptance
             levels.add(name, std::move(info));
         }
         const GameTuning authored((content / "tuning.json").string().c_str());
-        const rapidjson::Document tuning_source = read_document(content / "tuning.json");
+        const acceptance::JsonVariants tuning_variants(content / "tuning.json", L"duration-tuning", variants.folder());
         const auto tune = [&](float seconds, const std::vector<float>& choices)
         {
-            rapidjson::Document d; d.CopyFrom(tuning_source, d.GetAllocator());
-            d["match"]["duration"].SetFloat(seconds); auto& values = d["match"]["duration_choices"]; values.SetArray();
-            for (const float choice : choices)
+            const auto path = tuning_variants.write([&](rapidjson::Document& d)
             {
-                rapidjson::Value item(rapidjson::kObjectType);
-                item.AddMember("seconds", choice, d.GetAllocator()); values.PushBack(item, d.GetAllocator());
-            }
-            rapidjson::StringBuffer buffer; rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            require(d.Accept(writer), "Cannot encode isolated duration tuning fixture");
-            const auto path = variants.scratch / ("duration-tuning-" + std::to_string(variants.next++) + ".json");
-            std::ofstream file(path, std::ios::binary); file.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            file.close(); require(file.good(), "Cannot write isolated duration tuning fixture");
+                d["match"]["duration"].SetFloat(seconds); auto& values = d["match"]["duration_choices"]; values.SetArray();
+                for (const float choice : choices)
+                {
+                    rapidjson::Value item(rapidjson::kObjectType);
+                    item.AddMember("seconds", choice, d.GetAllocator()); values.PushBack(item, d.GetAllocator());
+                }
+            });
             return GameTuning(path.string().c_str());
         };
         const auto complete = [&](const GameTuning& balance, const Presentation& look)
