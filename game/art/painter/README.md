@@ -22,7 +22,8 @@ A builder cell is one canvas cell, one column and one row in: the builder's
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-painter-art.ps1`
 from the repository root. Windows System.Drawing and the retained texconv build
 `../sources/textures/painter.png`, `../../content/textures/painter.json` and
-`../../content/textures/painter.dds`, plus the authoring preview `lineup.png`.
+`../../content/textures/painter.dds`, plus the authoring previews `lineup.png`
+and `slips.png`.
 The DDS is premultiplied RGBA8 with one mip. PNG colour-space metadata is omitted
 to preserve authored UNORM channel values. Runtime stages only DDS and JSON.
 Before writing outputs, the build checks that `presentation.json`'s 4x4 respawn
@@ -34,8 +35,11 @@ The 1024x2048 atlas has exact 68x120 frames. Neutral strips start at (4,4),
 (4,132), (4,260), (4,388) for idle, eight-frame run, jump and fall. The paint
 strips have identical rectangles offset by 512 in y. Neutral and paint alpha
 are complementary: a `T` cell exists only in paint, all other opaque cells only
-in neutral. Run remains 0.2 seconds per frame by default; runtime can retain its
-existing 0.05-second override. Other locomotion strips use 0.05 seconds.
+in neutral. `locomotion_frame_times` in the source owns these timings: Run is
+0.2 seconds per frame by default; runtime can retain its existing 0.05-second override.
+Other locomotion strips use 0.05 seconds. Idle is a one-frame strip, with no
+duplicate standalone neutral `idle` frame; `idle_paint` remains the uniform
+mask frame referenced by tuning.
 
 Five dedicated actions follow the locomotion. Their neutral strips start at
 x=4 and paint strips at x=148, each with two contiguous frames. The eight-texel
@@ -110,40 +114,41 @@ the authoring preview: every person's idle in blue.
 These axis-aligned pen paths reproduce the black cells of idle with the rest
 arms over it exactly, with a 4x4 nib. Points are nib top-left positions in the
 68x120 canvas. The `eye` part is also where the story's eye acting finds the
-eyes. The runtime presentation owns drawing timing, colour and these data paths.
+eyes. The runtime presentation owns drawing timing, colour and these data paths;
+the table follows `presentation.json.respawn_redraw.strokes` in index order.
 
-| Part | Points in order |
-|---|---|
-| cap | (20,4), (44,4) |
-| cap | (4,16), (48,16), (48,8) |
-| cap | (16,8), (16,16) |
-| head | (12,28), (16,28) |
-| head | (48,28), (52,28) |
-| head | (12,32), (16,32) |
-| head | (48,32), (52,32) |
-| head | (16,44), (48,44), (48,20) |
-| head | (16,20), (16,44) |
-| eye | (24,24), (24,28) |
-| eye | (40,24), (40,28) |
-| mouth | (28,40), (36,40), (36,36) |
-| neck | (28,48), (28,44) |
-| neck | (36,48), (36,44) |
-| body | (16,52), (48,52) |
-| body | (16,84), (48,84), (48,64) |
-| body | (16,76), (16,84) |
-| body | (32,80), (32,84) |
-| arm | (12,72), (16,72) |
-| arm | (52,72), (56,72) |
-| arm | (8,56), (8,68) |
-| arm | (56,56), (56,60) |
-| arm | (60,64), (60,68) |
-| leg | (16,116), (28,116), (28,88) |
-| leg | (36,116), (48,116) |
-| leg | (20,88), (20,116) |
-| leg | (36,88), (36,116) |
-| leg | (44,88), (44,116) |
+| Stroke index | Part | Points in order |
+|---:|---|---|
+| 0 | cap | (20,4), (44,4) |
+| 1 | cap | (4,16), (48,16), (48,8) |
+| 2 | cap | (16,8), (16,16) |
+| 3 | head | (12,28), (16,28) |
+| 4 | head | (48,28), (52,28) |
+| 5 | head | (12,32), (16,32) |
+| 6 | head | (48,32), (52,32) |
+| 7 | head | (16,44), (48,44), (48,20) |
+| 8 | head | (16,20), (16,44) |
+| 9 | eye | (24,24), (24,28) |
+| 10 | eye | (40,24), (40,28) |
+| 11 | mouth | (28,40), (36,40), (36,36) |
+| 12 | neck | (28,48), (28,44) |
+| 13 | neck | (36,48), (36,44) |
+| 14 | body | (16,52), (48,52) |
+| 15 | body | (16,84), (48,84), (48,64) |
+| 16 | body | (16,76), (16,84) |
+| 17 | body | (32,80), (32,84) |
+| 18 | arm | (12,72), (16,72) |
+| 19 | arm | (52,72), (56,72) |
+| 20 | arm | (8,56), (8,68) |
+| 21 | arm | (56,56), (56,60) |
+| 22 | arm | (60,64), (60,68) |
+| 23 | leg | (16,116), (28,116), (28,88) |
+| 24 | leg | (36,116), (48,116) |
+| 25 | leg | (20,88), (20,116) |
+| 26 | leg | (36,88), (36,116) |
+| 27 | leg | (44,88), (44,116) |
 
-`lineup.png` is an authoring check for all 21 poses in all five supported team
-hues, each with the rest arms over it as the game draws them, plus 28-pixel
-samples of every action frame. Runtime captures and human acceptance at
-playing size remain separate evidence.
+`lineup.png` is an authoring check for all 21 poses in all eleven supported team
+hues from `presentation.json.team_palette.colours`, each with the rest arms
+over it as the game draws them, plus 28-pixel samples of every action frame.
+Runtime captures and human acceptance at playing size remain separate evidence.

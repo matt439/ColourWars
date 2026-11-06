@@ -2169,19 +2169,29 @@ Run each touched `check-*` script in both presets.
 
 ### Art build scripts and art docs (`HYG#90`)
 
-- Read the team colours from `presentation.json` in the painter lineup
-  (`build-painter-art.ps1:516`) and the icon (`icon.json:14`).
-- Name `slips.png` in the status line (`:593`), and fix the row-check comment
-  (`:176`).
-- Stop emitting the unread `idle` frame (`:431`), and move the locomotion timing
-  into `painter.json` (`:419`).
-- Make `build_icon.py --check` decode-based, or drop its CI claim
-  (`build_icon.py:6`).
-- Correct the art READMEs: the hue count (`painter/README.md:145`), the pen
-  table (`:107`), the owned directories (`game/art/README.md:276`), the source
-  rows (`:262`) and the terrain props (`:244`).
+**Done 2026-11-06.** The painter lineup reads all eleven team colours from
+`presentation.json` and sizes its review page to show them; the icon resolves
+its blue/orange palette from the same data. `painter.json` owns the positive,
+finite locomotion timings. The generator drops only the unread standalone
+neutral `idle` frame and retains `idle_paint`, which the uniform uses. Its
+status names `slips.png`, and the row guard describes the actual fixed/movable
+rows. The shared PNG writer and Windows PowerShell requirement are the art
+part of `HYG#89`.
 
-Regenerated art must be byte-identical, or the commit says why not.
+The icon's `--check` and CI compare decoded DIB/PNG pixels independently of
+zlib compression. Five icon tests pass, including equivalent compression and
+altered-pixel rejection. The art READMEs now list eleven hues, the
+presentation-indexed pen strokes, current PNG/TTF sources, five owned staging
+directories and the brush-pot/tape-roll props.
+
+All four Windows PowerShell art builds passed. Runtime PNG/DDS files, the
+painter working PNG, slips preview and executable icon/preview remain
+byte-identical. Runtime `painter.json` removes only the neutral idle metadata;
+the authoring lineup intentionally grows from 1032 by 1712 to 1032 by 3584 to
+show all eleven hues. Both presets build, and all 79 Debug and 78 Release
+default acceptance cases passed (Debug's console/balance cases were rerun
+after the `HYG#92` script fix). Evidence: `out/hyg90/`, `out/hyg91/art-*.log`
+and `out/hygiene-final/acceptance/`.
 
 ### Python audio and study tools (`HYG#91`)
 

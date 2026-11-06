@@ -1,12 +1,13 @@
 [CmdletBinding()]
 param()
 
+. (Join-Path $PSScriptRoot 'art-png.ps1')
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.Drawing
 
 if (-not ('ColourWars.PainterArt' -as [type])) {
-    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition (@'
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -15,22 +16,7 @@ using System.Text;
 namespace ColourWars {
     public static class PainterArt {
         public static void SavePng(Bitmap bitmap, string path) {
-            // texconv must preserve UNORM bytes, as in build-weapon-art.ps1.
-            using (var encoded = new MemoryStream()) {
-                bitmap.Save(encoded, ImageFormat.Png);
-                byte[] png = encoded.ToArray();
-                using (var output = File.Create(path)) {
-                    output.Write(png, 0, 8);
-                    for (int offset = 8; offset < png.Length;) {
-                        int length = (png[offset] << 24) | (png[offset + 1] << 16) |
-                            (png[offset + 2] << 8) | png[offset + 3];
-                        string kind = Encoding.ASCII.GetString(png, offset + 4, 4);
-                        if (kind != "sRGB" && kind != "gAMA" && kind != "iCCP" && kind != "cHRM")
-                            output.Write(png, offset, length + 12);
-                        offset += length + 12;
-                    }
-                }
-            }
+            PainterPng.SavePng(bitmap, path);
         }
 
         // The face rules a slip must keep (docs/drawing-mistakes-research.md,
@@ -108,7 +94,7 @@ namespace ColourWars {
         }
     }
 }
-'@
+'@ + (Get-ArtPngSource 'PainterPng'))
 }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -118,6 +104,12 @@ $textures = Join-Path $repo 'game/content/textures'
 $source = Get-Content -Raw (Join-Path $sourceDir 'painter.json') | ConvertFrom-Json
 if ($source.cell_size -ne 4 -or $source.width -ne 17 -or $source.height -ne 30) {
     throw 'Painter source must be a 17x30 grid with four source texels per cell.'
+}
+foreach ($name in @('idle', 'run', 'jump', 'fall')) {
+    $frameTime = [double] $source.locomotion_frame_times.$name
+    if ($frameTime -le 0 -or [double]::IsNaN($frameTime) -or [double]::IsInfinity($frameTime)) {
+        throw "$name must author a finite positive locomotion frame time."
+    }
 }
 # The 13-cell hitbox sits in the middle; two cells either side are overhang.
 $cells = 17
@@ -173,8 +165,8 @@ foreach ($name in $actions) {
         if (@($rows | Where-Object { $_[0] -ne '.' -or $_[$cells - 1] -ne '.' }).Count) {
             throw "$pose must keep four transparent texels at both horizontal edges."
         }
-        # The cap, ears and the sleeves over the live grip arms keep the same
-        # roots in every action. Expressions and the lower bib move freely.
+        # The cap, head's bottom edge, neck, body top and shoulder roots stay
+        # fixed. Expressions, ears and the lower bib can move within the band.
         foreach ($row in @(0, 1, 2, 3, 4, 11, 12, 13, 14, 15)) {
             if ($rows[$row] -ne $source.torso[$row]) {
                 throw "$pose must preserve the cap, head outline and shoulder roots."
@@ -426,9 +418,10 @@ try {
             }
             $strips.Add([ordered]@{ name = $name + $suffix;
                 first_frame = [ordered]@{ x = 4; y = $y; w = $canvasWidth; h = 120 };
-                frame_count = $count; frame_time = $(if ($name -eq 'run') { 0.2 } else { 0.05 });
+                frame_count = $count; frame_time = $source.locomotion_frame_times.$name;
                 looping = $true })
-            if ($name -eq 'idle') { Add-Frame ($name + $suffix) 4 $y $canvasWidth 120 }
+            # The uniform animation reads idle_paint as a standalone frame.
+            if ($name -eq 'idle' -and $paint) { Add-Frame ($name + $suffix) 4 $y $canvasWidth 120 }
             ++$row
         }
         # Arm layers share the idle row, their paint copies 512 lower too.
@@ -505,7 +498,9 @@ finally { $atlas.Dispose() }
 # Production source preview: every authored pose in each supported hue, with
 # the rest arms over it as the game draws them, and 28 px action silhouettes.
 $spacing = $canvasWidth + 16
-$preview = [Drawing.Bitmap]::new((108 + $spacing * 11), 1712, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$palettes = @($presentation.team_palette.colours)
+$silhouettesY = 64 + 312 * $palettes.Count
+$preview = [Drawing.Bitmap]::new((108 + $spacing * 11), (152 + 312 * $palettes.Count), [Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $graphics = [Drawing.Graphics]::FromImage($preview)
 $font = [Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace, 9)
 $brush = [Drawing.SolidBrush]::new([Drawing.Color]::Black)
@@ -513,10 +508,9 @@ $ground = [Drawing.SolidBrush]::new([Drawing.Color]::FromArgb(128, 128, 128))
 try {
     $graphics.Clear([Drawing.Color]::FromArgb(228, 228, 228))
     $graphics.DrawString("Painter / editable ${cells}x30 cells / native ${canvasWidth}x120 over a 52x120 hitbox", $font, $brush, 12, 8)
-    $palettes = [ordered]@{ blue = '0634CC'; orange = 'FF7F00'; pink = 'FF007F'; green = '00FF00'; yellow = 'FFFF00' }
     $row = 0
-    foreach ($entry in $palettes.GetEnumerator()) {
-        $colour = [Drawing.ColorTranslator]::FromHtml('#' + $entry.Value)
+    foreach ($entry in $palettes) {
+        $colour = [Drawing.ColorTranslator]::FromHtml('#' + $entry.colour)
         $column = 0
         foreach ($name in $poses.Keys) {
             # Eleven locomotion drawings followed by a row of ten action frames.
@@ -525,7 +519,7 @@ try {
             $y = 52 + 312 * $row + 156 * $poseRow
             $x = 92 + $spacing * $poseColumn
             if ($poseColumn -eq 0) {
-                $graphics.DrawString($entry.Key, $font, $brush, 8, $y + 50)
+                $graphics.DrawString($entry.name, $font, $brush, 8, $y + 50)
             }
             $label = $name.Replace('elimination', 'elim')
             $graphics.DrawString($label, $font, $brush, $x - 2, $y - 20)
@@ -544,13 +538,13 @@ try {
     # is involved in authoring the runtime atlas itself.
     $graphics.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
     $graphics.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::Half
-    $graphics.DrawString('Action silhouettes / 28 px bodies (nearest-neighbour preview)', $font, $brush, 12, 1624)
+    $graphics.DrawString('Action silhouettes / 28 px bodies (nearest-neighbour preview)', $font, $brush, 12, $silhouettesY)
     for ($column = 0; $column -lt 10; ++$column) {
         $x = 92 + $spacing * $column
-        $graphics.DrawImage($preview, [Drawing.Rectangle]::new($x, 1648, 16, 28),
+        $graphics.DrawImage($preview, [Drawing.Rectangle]::new($x, ($silhouettesY + 24), 16, 28),
             $x, 208, $canvasWidth, 120, [Drawing.GraphicsUnit]::Pixel)
         $name = @($poses.Keys)[$column + 11]
-        $graphics.DrawString($name.Replace('elimination', 'elim'), $font, $brush, $x - 2, 1684)
+        $graphics.DrawString($name.Replace('elimination', 'elim'), $font, $brush, $x - 2, ($silhouettesY + 60))
     }
     [ColourWars.PainterArt]::SavePng($preview, (Join-Path $sourceDir 'lineup.png'))
 }
@@ -569,7 +563,7 @@ $brush = [Drawing.SolidBrush]::new([Drawing.Color]::Black)
 try {
     $graphics.Clear([Drawing.Color]::FromArgb(228, 228, 228))
     $graphics.DrawString("Figure slips / $($personNames.Count) people from game/art/painter/slips.json", $font, $brush, 12, 8)
-    $blue = [Drawing.ColorTranslator]::FromHtml('#0634CC')
+    $blue = [Drawing.ColorTranslator]::FromHtml('#' + ($palettes | Where-Object name -eq 'blue').colour)
     for ($index = 0; $index -lt $personNames.Count; ++$index) {
         $who = $personNames[$index]
         $x = 12 + ($index % $columns) * ($canvasWidth + 48)
@@ -590,4 +584,4 @@ finally {
 & (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'painter.png') `
     -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
 if ($LASTEXITCODE -ne 0) { throw "texconv failed with exit code $LASTEXITCODE" }
-Write-Output 'Built painter.png, painter.json, premultiplied painter.dds and source lineup.png.'
+Write-Output 'Built painter.png, painter.json, premultiplied painter.dds and source lineup.png and slips.png.'

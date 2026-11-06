@@ -219,17 +219,6 @@
                          ],
     "sprite_frames":  [
                           {
-                              "name":  "idle",
-                              "position":  {
-                                               "x":  4,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  68,
-                                           "h":  120
-                                       }
-                          },
-                          {
                               "name":  "rest_arms",
                               "position":  {
                                                "x":  76,

@@ -242,7 +242,8 @@ palette names and save status fit their measured areas without changing copy.
 ## Terrain and backdrop artwork
 
 The [terrain source](terrain/README.md) holds the Muted Day palette, the backdrop
-drawings (hills, trees, a house, clouds, a sun, birds) and the four airbrush
+drawings (hills, trees, a house, clouds, a sun, birds, a brush pot and a tape
+roll) and the four airbrush
 speckle tiles, as editable cell shapes and grids. Rebuild it with
 `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`; only
 `game/content/textures/terrain.{json,dds}` is staged and packaged. The walkable
@@ -259,9 +260,9 @@ is retained here:
 
 | Location | Retained material |
 |---|---|
-| `sources/textures/` | Sprite-sheet PNG/XCF, menu PNG, generated weapon PNG and legacy texture conversion command |
+| `sources/textures/` | Sprite-sheet PNG/XCF, generated menu, painter, weapon, paint-effects and terrain PNGs, and the legacy texture conversion command |
 | `sources/levels/` | Publisher layouts and historical movement notes; playable JSONs remain runtime content |
-| `sources/fonts/` | The [font recipe](#sprite-font-recipe-gap87) `fonts.json`, and the historical font command example `cmd.txt` |
+| `sources/fonts/` | The [font recipe](#sprite-font-recipe-gap87) `fonts.json`, its three TTF faces and licences, and the historical font command example `cmd.txt` |
 | `tools/` | Existing texconv and MakeSpriteFont executables |
 | `archive/textures/` | Old texture kit and unused player-frame experiment |
 | `archive/levels/` | Unused historical level JSONs |
@@ -273,7 +274,7 @@ now use repository-root paths; neither adds a new build dependency.
 
 [`stage_runtime_assets.cmake`](../../cmake/stage_runtime_assets.cmake) runs on
 every build, copies only the shared list, and prunes stale files within the
-owned `fonts/`, `textures/`, `levels/` and `sounds/` directories. It validates
+owned `fonts/`, `textures/`, `levels/`, `sounds/` and `locales/` directories. It validates
 the source set and accepted bank before changing the mirror, rejects linked
 content entries, and checks that the destination stays within the build's game
 output. Other output-root files, including DLLs and developer captures, are

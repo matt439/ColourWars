@@ -1,5 +1,6 @@
 [CmdletBinding()]
 param()
+. (Join-Path $PSScriptRoot 'art-png.ps1')
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.Drawing
@@ -7,7 +8,7 @@ Add-Type -AssemblyName System.Drawing
 # The editable integer vector recipe replaces the retained historical generated
 # sheet. Rasterise first, then expand each world pixel to four source texels.
 if (-not ('ColourWars.ToolArt' -as [type])) {
-    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition (@'
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,21 +18,7 @@ using System.Text;
 namespace ColourWars {
     public static class ToolArt {
         public static void SavePng(Bitmap bitmap, string path) {
-            using (var encoded = new MemoryStream()) {
-                bitmap.Save(encoded, ImageFormat.Png);
-                byte[] png = encoded.ToArray();
-                using (var output = File.Create(path)) {
-                    output.Write(png, 0, 8);
-                    for (int offset = 8; offset < png.Length;) {
-                        int length = (png[offset] << 24) | (png[offset+1] << 16) |
-                            (png[offset+2] << 8) | png[offset+3];
-                        string kind = Encoding.ASCII.GetString(png, offset+4, 4);
-                        if (kind != "sRGB" && kind != "gAMA" && kind != "iCCP" && kind != "cHRM")
-                            output.Write(png, offset, length+12);
-                        offset += length+12;
-                    }
-                }
-            }
+            WeaponPng.SavePng(bitmap, path);
         }
         public static bool Paint(Color c) { return c.A != 0 && c.G == 0 && c.R == c.B && c.R != 0; }
         public static bool Supply(Color c) { return c.A != 0 && c.R == 0 && c.G == c.B && c.G != 0; }
@@ -116,7 +103,7 @@ namespace ColourWars {
         }
     }
 }
-'@
+'@ + (Get-ArtPngSource 'WeaponPng'))
 }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))

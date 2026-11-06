@@ -11,6 +11,12 @@
   "cell_size": 4,
   "width": 17,
   "height": 30,
+  "locomotion_frame_times": {
+    "idle": 0.05,
+    "run": 0.2,
+    "jump": 0.05,
+    "fall": 0.05
+  },
   "torso": [
     ".................",
     ".....KKKKKKK.....",
