@@ -380,8 +380,8 @@ void movement_debug_alpha_checks(Application& app, Registry<LevelLoadedInfo>& le
         "\"readbacks\":50,\"csv_rows\":12,\"movement_cases\":6,\"debug_text_cases\":6,\"negative_controls\":10,"
         "\"legacy_parity_controls\":4,\"crops\":8,\"captured_paint_variants\":3,\"crop_pixels\":1112640}\n";
     require(summary.good(), "Cannot retain movement/DebugText alpha summary");
-    std::cout << "PASS movement/DebugText alpha: fifty readbacks,twelve CSV rows,eight compact crops; independent contact/raw-puff masks "
-        "and nineteen DebugText lines,RGBA128/zero over two backgrounds,opaque legacy parity,straight/double-fade controls,"
-        "captured opaque/partial/zero paint and frozen state/bounds/RNG. Both-preset consumer-only scope; no saves,commands,"
-        "Player/Level/StateContext updates,global input,physical-device,listening,human or performance acceptance.\n";
+    std::cout << "PASS movement/DebugText alpha: fifty readbacks, twelve CSV rows, eight compact crops; independent contact/raw-puff masks "
+        "and nineteen DebugText lines, RGBA128/zero over two backgrounds, opaque legacy parity, straight/double-fade controls,"
+        "captured opaque/partial/zero paint and frozen state/bounds/RNG. Both-preset consumer-only scope; no saves, commands,"
+        "Player/Level/StateContext updates, global input, physical-device, listening, human or performance acceptance.\n";
 }

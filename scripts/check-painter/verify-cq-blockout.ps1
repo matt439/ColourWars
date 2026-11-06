@@ -15,7 +15,7 @@ $cqExpected = @{
     'runtime-overview-720p|whole-stage-and-spawns' = @('actual-Level-overview', '1', '3')
     'actual-stage-preview-720p|menu-miniature' = @('actual-StagePreview-isolated', '1', '-1')
 }
-if ($cqRows.Count -ne 8 -or (($cqRows[0].PSObject.Properties.Name) -join '|') -cne ($cqColumns -join '|')) {
+if ($cqRows.Count -ne 8 -or (-not (Test-PainterCsvColumns $cqRows $cqColumns))) {
     throw 'CQ native evidence needs its exact eight route/source rows and CSV schema.'
 }
 $cqSeen = @{}
@@ -43,18 +43,15 @@ foreach ($row in $cqRows) {
         throw "CQ native evidence changed its source, view/slot, 720p or frozen inspection contract: $key"
     }
     foreach ($metric in @('player_x', 'player_y', 'camera_x', 'camera_y', 'camera_scale')) {
-        $value = 0.0
-        if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-            [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-            [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
-            ($metric -ceq 'camera_scale' -and $value -le 0.0)) {
+        $value = ConvertTo-PainterFinite $row.$metric $metric
+        if (($metric -ceq 'camera_scale' -and $value -le 0.0)) {
             throw "CQ native evidence has an invalid $metric for $key"
         }
     }
     $crop = @()
     foreach ($metric in @('crop_x', 'crop_y', 'crop_width', 'crop_height')) {
-        $value = 0
-        if (-not [int]::TryParse($row.$metric, [ref]$value) -or $value -lt 0) {
+        $value = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if ($value -lt 0) {
             throw "CQ native evidence has an invalid $metric for $key"
         }
         $crop += $value
@@ -76,13 +73,7 @@ if ($cqDimensions.Count -ne 13 -or $cqFiles.Count -ne 13 -or
 $cqPpmBytes = 0L
 foreach ($file in $cqFiles) {
     $size = $cqDimensions[$file.Name]
-    $header = @(Get-Content -LiteralPath $file.FullName -TotalCount 3)
-    $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-    $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + [long]$size[0] * $size[1] * 3
-    if ($header.Count -ne 3 -or $header[0] -cne 'P6' -or $header[1] -cne "$($size[0]) $($size[1])" -or
-        $header[2] -cne '255' -or $file.Length -ne $expectedBytes) {
-        throw "CQ native file differs from its full-frame/CSV dimensions or exact RGB byte count: $($file.Name)"
-    }
+    Assert-PainterPpm -Path $file.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
     $cqPpmBytes += $file.Length
 }
 $cqScope = Get-Content -LiteralPath (Join-Path $captures 'cq-blockout-scope.txt') -Raw

@@ -104,7 +104,7 @@ foreach(asset IN LISTS expected_assets)
 endforeach()
 foreach(entry IN LISTS staged_entries)
     if(NOT entry IN_LIST expected_assets AND NOT entry IN_LIST expected_directories)
-        # Every removal is under one of the four roots checked above. Removing
+        # Every removal is under one of the owned roots checked above. Removing
         # an absent optional bank also clears a previously audible mirror.
         file(REMOVE_RECURSE "${stage_root}/${entry}")
         if(EXISTS "${stage_root}/${entry}")

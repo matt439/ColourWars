@@ -89,8 +89,8 @@ namespace
         void draw(DrawList&) const override {}
         RectangleF bounds() const override { return rectangle_; }
         const Shape* shape() const override { return &rectangle_; }
-        CollisionLayer layer() const override { return collision_layers::PROJECTILE_TEAM_B; }
-        CollisionMask mask() const override { return collision_layers::PLAYER_TEAM_A; }
+        CollisionLayer layer() const override { return collision_layers::projectile_team_b; }
+        CollisionMask mask() const override { return collision_layers::player_team_a; }
         CollisionTag tag() const override { return to_collision_tag(CollisionObjectType::projectile_spray_team_b); }
         void on_contact(const CollisionObject&, const Vector2F&, float) override {}
         bool for_deletion() const override { return false; }
@@ -123,7 +123,7 @@ namespace
         for (int read = 0; read < 8; ++read) { require(victim->lethal_projectiles() == snapshot, "Snapshot changed across reads"); }
         require(std::rand() == expected_random && victim->health() == health && victim->weapon_ammo() == ammo,
             "Read-only provenance snapshot changed RNG or gameplay state");
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         victim->update(dt);
         require(victim->state() == PlayerState::dead && victim->lethal_projectiles() == snapshot,
             "Entering the dead state changed already-recorded credit");
@@ -273,7 +273,7 @@ namespace
             RectangleF(victims[0]->center(), rolling.details.col_rect_size), Vector2F::zero,
             PlayerTeam::b, owner, Colour::white, &world.render,
             resolve_projectile_strip(rolling, world.render), &rolling));
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         fatal->update(dt); // Real first-step lifetime grace keeps the shared volume available.
         require(!fatal->for_deletion() &&
             fatal->shape()->bounding_box().intersects(victims[0]->shape()->bounding_box()) &&

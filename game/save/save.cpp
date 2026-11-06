@@ -15,8 +15,8 @@
 #include <cmath>
 #include <optional>
 // The engine reads JSON; the game uses RapidJSON to write player settings.
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 using namespace rapidjson;
 using namespace directory_consts;

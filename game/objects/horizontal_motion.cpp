@@ -28,7 +28,7 @@ int HorizontalMotion::paint_heading(const HorizontalMotionSpec& spec, float team
 
 void HorizontalMotion::validate_dt(float dt)
 {
-    if (!std::isfinite(dt) || dt < 0.0f || dt > SECONDS_PER_STEP)
+    if (!std::isfinite(dt) || dt < 0.0f || dt > simulation::seconds_per_step)
     {
         throw std::invalid_argument("Horizontal motion supports only zero or a finite positive simulation step <= SECONDS_PER_STEP.");
     }

@@ -1,4 +1,5 @@
 # Dot-sourced only after -ProgramTuneColourOnly native execution.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $programSummaryPath=Join-Path $captures 'program-colour-consumer-summary.json'
 $programRowsPath=Join-Path $captures 'program-colour-consumers.csv'
 $programSummary=Get-Content -LiteralPath $programSummaryPath -Raw|ConvertFrom-Json
@@ -19,7 +20,7 @@ if($programSummary.scope -cne 'consumer-only' -or $programSummary.readbacks -ne 
     ($programSummary.roi-join ',') -cne '135,58,1009,482' -or ($programSummary.inner-join ',') -cne '136,59,1007,480' -or $programSummary.viewport -cne '1280x720' -or
     $programSummary.event_fade -ne $false -or $programSummary.adoption_reference -cne 'production-consumer-only' -or
     $programSummary.alpha_reference -cne 'independent-ordered-raw-roi' -or
-    (($programRows[0].PSObject.Properties.Name)-join '|') -cne ($programColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $programRows $programColumns)) -or
     @($programRows|Where-Object {$_.roi_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or $_.glass_guards -cne 'true' -or
         $_.frozen_style_persona_rng -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){throw 'Program shared exact budget/oracle/schema mismatch'}
 $programControls=@{default='opaque-parity';rgb='opaque-parity';rgba128='straight-and-squared-rejected';alpha0='straight-rejected-glass-retained'}
@@ -31,14 +32,12 @@ if($programCrops.Count -ne 4 -or (($programCrops.Name|Sort-Object)-join '|') -cn
 $programHeader=[Text.Encoding]::ASCII.GetBytes("P6`n320 192`n255`n");$programBytes=0
 $programCropEvidence=@(foreach($crop in $programCrops){
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $programHeader.Length+320*192*3){throw 'Program compact corner montage size mismatch'}
-    for($i=0;$i -lt $programHeader.Length;$i++){if($bytes[$i] -ne $programHeader[$i]){throw 'Program PPM header mismatch'}}
+    Assert-PainterPpm -Bytes $bytes -Header $programHeader
     $programBytes+=$bytes.Length
     [ordered]@{name=$crop.Name;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
-$programLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$programSaves=@($programLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count
-$programSuccess=@($programLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$programSaves=$painterSaveCounts.calls
+$programSuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected program private Save failure'}
 $programArtifacts=[ordered]@{}
 foreach($path in @($programSummaryPath,$programRowsPath)){$programArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -55,15 +54,15 @@ if($debug){
     $columns=@('state','background','roi_raw_match','adoption_match','frozen_style_persona_rng','private_bytes','adoption')
     if($programTune.scope -cne 'debug-validated-commands' -or $programTune.commands -ne 9 -or $programTune.states -ne 9 -or
         $programTune.readbacks -ne 36 -or $programTune.csv_rows -ne 9 -or $programTune.crops -ne 0 -or $programTune.saved_tokens -ne 1 -or
-        (($programTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($columns-join '|') -or
+        (-not (Test-PainterCsvColumns $programTuneRows $columns)) -or
         @($programTuneRows|Where-Object {$_.roi_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or
             $_.frozen_style_persona_rng -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         (Get-Item -LiteralPath $programTranscript).Length -le 0 -or $programSaves -ne 2 -or $programSuccess -ne 2 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'program-colour-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'program-colour-tune-scratch/profile')) -PathType Leaf)){
         throw 'Program Debug budget/schema/private-save evidence mismatch'
     }
     foreach($path in @($programTuneSummaryPath,$programTuneRowsPath,$programTranscript)){$programArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
-    $programObserved.developer_commands=$programTune;$programObserved.readbacks=56;$programObserved.csv_rows=13
+    $programObserved.developer_commands=$programTune;$programObserved.readbacks += $programTune.readbacks;$programObserved.csv_rows += $programTune.csv_rows
 }elseif($programSaves -ne 0 -or $programSuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'program-colour-tune-*').Count){
     throw 'Release program proof must stay literal-consumer-only without developer artifacts or Save'
 }

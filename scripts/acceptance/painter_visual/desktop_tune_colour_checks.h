@@ -122,7 +122,7 @@ void desktop_colour_consumer_checks(Application& app, const Presentation& presen
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,"
         "\"rectangle\":[136,59,1007,529],\"viewport\":\"1280x720\",\"event_fade\":false,\"adoption_reference\":\"production-consumer-only\",\"alpha_reference\":\"independent-full-raw-rectangle\"}\n";
     require(summary.good(), "Cannot write desktop shared summary");
-    std::cout << "PASS desktop colour: 40 readbacks/8 rows/8 corner montage crops 320x192/6 controls; full independent snapped rectangle, opaque parity, "
+    std::cout << "PASS desktop colour: 40 readbacks / 8 rows / 8 corner montage crops 320x192 / 6 controls; full independent snapped rectangle, opaque parity, "
         "partial/zero alpha and exterior backdrop; retained Monitor adoption/style/persona/RNG. Zero local/Player/Level/State/input/time updates.\n";
 }
 
@@ -183,7 +183,7 @@ void desktop_tune_colour_checks(Application& app, GameTuning& tuning, Presentati
     std::ofstream summary(output / "desktop-colour-tune-summary.json"); summary << "{\"scope\":\"debug-validated-commands\",\"commands\":9,\"states\":9,"
         "\"readbacks\":72,\"csv_rows\":18,\"crops\":0,\"saved_tokens\":1,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0}\n";
     require(summary.good(), "Cannot write desktop Debug summary");
-    std::cout << "PASS desktop tune:9real statements/72readbacks/18rows; one-token private save/rebase/reset, exact saved raster, retained resources/style/persona/RNG "
-        "and unchanged real content/private PlaySettings+JumpJ/default display. Zero local/Player/Level/State/input/time updates.\n";
+    std::cout << "PASS desktop tune: 9 real statements / 72 readbacks / 18 rows; one-token private save/rebase/reset, exact saved raster, retained resources/style/persona/RNG "
+        "and unchanged real content/private PlaySettings+Jump J/default display. Zero local/Player/Level/State/input/time updates.\n";
 }
 #endif

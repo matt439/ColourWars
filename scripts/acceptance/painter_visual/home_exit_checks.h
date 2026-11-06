@@ -83,18 +83,18 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     const auto reference = [&](bool yes)
     {
         UiText heading("independent-exit-heading", L"Exit", style.heading_font, Vector2F(0.0f, look.heading_y), app.render_resources(), art.ink);
-        heading.set_position(Vector2F((menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y));
+        heading.set_position(Vector2F((menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y));
         UiText question("independent-exit-question", L"Exit ColourWars?", style.detail_font, Vector2F(0.0f, look.status_y), app.render_resources(), art.ink);
-        question.set_position(Vector2F((menu_consts::DESIGN_RESOLUTION.x - question.bounds().width) / 2.0f, look.status_y));
+        question.set_position(Vector2F((menu_consts::design_resolution.x - question.bounds().width) / 2.0f, look.status_y));
         UiText accept("independent-exit-yes", L"Yes", style.item_font, look.layout.position, app.render_resources(), yes ? art.focus_ink : art.ink);
         UiText cancel("independent-exit-no", L"No", style.item_font, look.layout.position + look.layout.spacing, app.render_resources(), yes ? art.ink : art.focus_ink);
-        const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF paper((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         require(paper.contains(heading.bounds()) && paper.contains(question.bounds()) &&
             heading.bounds().bottom() < question.bounds().y && question.bounds().bottom() < accept.bounds().y - art.focus_padding.y,
             "Independent Home Exit heading/question no longer fit the authored paper and action spacing");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto pixel = sheet->resolve_sprite_frame(style.fill_frame);
@@ -102,12 +102,12 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         // The child's opaque design background covers all underlying Home art.
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
-        sheet->draw(list, pixel, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), original.main_menu().home_background_colour);
+        sheet->draw(list, pixel, RectangleF(Vector2F::zero, menu_consts::design_resolution), original.main_menu().home_background_colour);
         setup_paper_reference(list, *app.render_resources(), style, art, paper, yes ? accept.bounds() : cancel.bounds());
-        sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
-            menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
+        sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x,
+            menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, pixel, RectangleF(style.brand_position.x, style.footer_y,
-            menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
+            menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); heading.draw(list); question.draw(list); accept.draw(list); cancel.draw(list);
         const auto& footer = original.prompt_bar();
         const colourwars::UiTextDropShadow prompt("independent-exit-prompt", L"A/Enter Select    B/Esc Back", footer.font,
@@ -134,8 +134,8 @@ void home_exit_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         if (capture)
         {
             save(actual, output / (stem + ".ppm"));
-            const RectangleF paper((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const RectangleF paper((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
             save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm"));
         }
         records << name << ',' << actual.width << ',' << actual.height << ',' << device << ',' << yes << ',' << context.music_exit_pending() << ",true\n";

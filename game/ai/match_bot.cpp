@@ -112,12 +112,12 @@ void MatchBot::open_finish(const MatchBotObservation& view, const MatchBotSuppor
 		// shortens the real refill, and the bot paints over any enemy paint on
 		// the top it holds, so the window stays a sufficient minimum.
 		const double per_step = static_cast<double>(this->tuning_->ammo_regen_rate()) *
-			view.paint_refill / this->tuning_->starting_ammo() / SIMULATION_HZ;
-		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * SIMULATION_HZ) + (per_step > 0.0 ?
+			view.paint_refill / this->tuning_->starting_ammo() / simulation::simulation_hz;
+		refill = std::ceil(static_cast<double>(this->tuning_->ammo_regen_delay()) * simulation::simulation_hz) + (per_step > 0.0 ?
 			std::ceil(std::max(0.0, static_cast<double>(policy.reserve_resume - view.ammo)) / per_step) : 0.0);
 	}
 	const double budget = refill + std::ceil(static_cast<double>(
-		this->tuning_->weapon(view.weapon).details.shoot_interval) * SIMULATION_HZ) + policy.finish_dwell_steps;
+		this->tuning_->weapon(view.weapon).details.shoot_interval) * simulation::simulation_hz) + policy.finish_dwell_steps;
 	this->finish_support_ = support;
 	this->finish_left_ = static_cast<int>(std::min(budget, 3600.0));
 	// A ride's hold is bounded, even while unpainted top remains in sight.
@@ -346,7 +346,7 @@ void MatchBot::decide(const MatchBotObservation& view)
 	{
 		closing = this->locomotion_.stopping_distance(view.velocity.x, view.grounded, view.footing) +
 			std::fabs(view.velocity.x) * static_cast<float>(this->tuning_->bot(this->difficulty_).reaction_steps) /
-			static_cast<float>(SIMULATION_HZ);
+			static_cast<float>(simulation::simulation_hz);
 	}
 	if (engaging && !this->refilling_ && !recovering && std::fabs(dx) <= view.engage_distance * 0.55f + closing)
 	{
@@ -491,7 +491,7 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		else if (!this->refilling_ && !view.shot_empty)
 		{
 			const int shots = static_cast<int>(std::ceil(2.0 * static_cast<double>(
-				this->tuning_->weapon(view.weapon).details.shoot_interval) * SIMULATION_HZ));
+				this->tuning_->weapon(view.weapon).details.shoot_interval) * simulation::simulation_hz));
 			if (++this->ride_stalled_ >= std::max(policy.progress_window_steps, shots))
 			{
 				this->ride_hold_left_ = 0;

@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($EndContinuationOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $endContinuationSummary = Get-Content -LiteralPath (Join-Path $captures 'end-continuation-summary.json') -Raw | ConvertFrom-Json
         $endContinuationRows = @(Import-Csv -LiteralPath (Join-Path $captures 'end-continuation.csv'))
         $endContinuationSessions = @('single-solo', 'single-two-team', 'series3-complete-a',
@@ -29,7 +30,7 @@
             $endContinuationSummary.restart_actions -ne 13 -or $endContinuationSummary.exit_actions -ne 1 -or
             $endContinuationSummary.deferred_actions -ne 4 -or $endContinuationSummary.music_starts -ne 4 -or
             $endContinuationRows.Count -ne 31 -or
-            (($endContinuationRows[0].PSObject.Properties.Name) -join '|') -ne ($endContinuationExpectedColumns -join '|') -or
+            (-not (Test-PainterCsvColumns $endContinuationRows $endContinuationExpectedColumns)) -or
             (($endContinuationRows | ForEach-Object { "$($_.case)|$($_.session)" } | Sort-Object) -join ';') -ne
                 (($endContinuationExpectedPairs | Sort-Object) -join ';')) {
             throw 'The End continuation leaf does not match its frozen summary, CSV schema, cases or action/update/readback budgets.'
@@ -77,10 +78,8 @@
                 throw "End continuation case $($row.case)/$($row.session) changed its literal copy, session ledger, capture or ornament contract."
             }
             foreach ($metric in @('raw_width', 'raw_height')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or $value -le 0.0) {
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if ($value -le 0.0) {
                     throw "End continuation case $($row.case)/$($row.session) contains an invalid $metric."
                 }
             }
@@ -96,16 +95,10 @@
             throw 'The End continuation leaf emitted unexpected or missing compact crops, CSV or summary files.'
         }
         foreach ($crop in $endContinuationCrops) {
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n540 96`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + 540 * 96 * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '540 96' -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "End continuation crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n540 96`n255`n"
         }
-        $endContinuationSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $endContinuationSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $endContinuationSaveCalls = $painterSaveCounts.calls
+        $endContinuationSaveSuccesses = $painterSaveCounts.successes
         if ($endContinuationSaveCalls -ne 1 -or $endContinuationSaveSuccesses -ne 1) {
             throw 'The End continuation leaf must perform exactly its one successful private Play-settings seed Save.'
         }

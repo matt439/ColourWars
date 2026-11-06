@@ -117,7 +117,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const RectangleF arrow(padded.x - pen * 7.0f, padded.center().y - pen * 3.0f, pen * 5.0f, pen * 6.0f);
         metrics.ornament = RectangleF::union_of(arrow, RectangleF::union_of(padded,
             RectangleF(padded.position() + Vector2F(shade), padded.size())));
-        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - main.setup_box_size) / 2.0f,
+        const RectangleF paper((Vector2F(menu_consts::design_resolution.x, style.footer_y) - main.setup_box_size) / 2.0f,
             main.setup_box_size);
         const RectangleF inside(paper.position() + Vector2F(pen * 3.0f),
             paper.size() - Vector2F(pen * 6.0f + shade));
@@ -126,7 +126,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
             "Independent unscaled duration row, invisible shadow, card, shade or arrow escaped its paper/column");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         Canvas(app.render_resources(), main.home_background_colour).draw(list, camera.visible_rectangle(viewport));
         // This independent paper helper redraws the complete resting bevel and
@@ -250,7 +250,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     std::cout << "PASS duration text leaf: actual Mode duration cycle/Left/Enter/wrap, independent default/explicit/fractional/scientific literals; "
         "live numeric tuning with captured old/new templates and numeric-bearing font through refresh/reopen/reversal; "
         "unscaled label/value/invisible-shadow/card/shade/arrow, zero-update resize and unchanged private save/roster/RNG; "
-        "86 updates,76 readbacks,25 rows,five compact crops. No global-input,physical-pad,foreground,gameplay,listening,human or performance acceptance.\n";
+        "86 updates, 76 readbacks, 25 rows, five compact crops. No global-input, physical-pad, foreground, gameplay, listening, human or performance acceptance.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS

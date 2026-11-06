@@ -1,4 +1,5 @@
 # Dot-sourced only after -DesktopTuneColourOnly native execution.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $desktopSummaryPath=Join-Path $captures 'desktop-colour-consumer-summary.json'
 $desktopRowsPath=Join-Path $captures 'desktop-colour-consumers.csv'
 $desktopSummary=Get-Content -LiteralPath $desktopSummaryPath -Raw|ConvertFrom-Json
@@ -19,7 +20,7 @@ if($desktopSummary.scope -cne 'consumer-only' -or $desktopSummary.readbacks -ne 
     ($desktopSummary.rectangle-join ',') -cne '136,59,1007,529' -or $desktopSummary.viewport -cne '1280x720' -or
     $desktopSummary.event_fade -ne $false -or $desktopSummary.adoption_reference -cne 'production-consumer-only' -or
     $desktopSummary.alpha_reference -cne 'independent-full-raw-rectangle' -or
-    (($desktopRows[0].PSObject.Properties.Name)-join '|') -cne ($desktopColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $desktopRows $desktopColumns)) -or
     @($desktopRows|Where-Object {$_.full_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or $_.edges_exterior -cne 'true' -or
         $_.frozen_style_persona_rng -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){throw 'Desktop shared exact budget/oracle/schema mismatch'}
 $desktopControls=@{default='opaque-default-parity';rgb='opaque-default-parity';rgba128='straight-and-squared-rejected';alpha0='straight-rejected-blank'}
@@ -31,14 +32,12 @@ if($desktopCrops.Count -ne 8 -or (($desktopCrops.Name|Sort-Object)-join '|') -cn
 $desktopHeader=[Text.Encoding]::ASCII.GetBytes("P6`n320 192`n255`n");$desktopBytes=0
 $desktopCropEvidence=@(foreach($crop in $desktopCrops){
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $desktopHeader.Length+320*192*3){throw 'Desktop compact corner montage size mismatch'}
-    for($i=0;$i -lt $desktopHeader.Length;$i++){if($bytes[$i] -ne $desktopHeader[$i]){throw 'Desktop PPM header mismatch'}}
+    Assert-PainterPpm -Bytes $bytes -Header $desktopHeader
     $desktopBytes+=$bytes.Length
     [ordered]@{name=$crop.Name;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
-$desktopLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$desktopSaves=@($desktopLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count
-$desktopSuccess=@($desktopLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$desktopSaves=$painterSaveCounts.calls
+$desktopSuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected desktop private Save failure'}
 $desktopArtifacts=[ordered]@{}
 foreach($path in @($desktopSummaryPath,$desktopRowsPath)){$desktopArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -55,15 +54,15 @@ if($debug){
     $columns=@('state','background','full_raw_match','adoption_match','frozen_style_persona_rng','private_bytes','adoption')
     if($desktopTune.scope -cne 'debug-validated-commands' -or $desktopTune.commands -ne 9 -or $desktopTune.states -ne 9 -or
         $desktopTune.readbacks -ne 72 -or $desktopTune.csv_rows -ne 18 -or $desktopTune.crops -ne 0 -or $desktopTune.saved_tokens -ne 1 -or
-        (($desktopTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($columns-join '|') -or
+        (-not (Test-PainterCsvColumns $desktopTuneRows $columns)) -or
         @($desktopTuneRows|Where-Object {$_.full_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or
             $_.frozen_style_persona_rng -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         (Get-Item -LiteralPath $desktopTranscript).Length -le 0 -or $desktopSaves -ne 2 -or $desktopSuccess -ne 2 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'desktop-colour-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'desktop-colour-tune-scratch/profile')) -PathType Leaf)){
         throw 'Desktop Debug budget/schema/private-save evidence mismatch'
     }
     foreach($path in @($desktopTuneSummaryPath,$desktopTuneRowsPath,$desktopTranscript)){$desktopArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
-    $desktopObserved.developer_commands=$desktopTune;$desktopObserved.readbacks=112;$desktopObserved.csv_rows=26
+    $desktopObserved.developer_commands=$desktopTune;$desktopObserved.readbacks=$desktopSummary.readbacks+$desktopTune.readbacks;$desktopObserved.csv_rows=$desktopSummary.csv_rows+$desktopTune.csv_rows
 }elseif($desktopSaves -ne 0 -or $desktopSuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'desktop-colour-tune-*').Count){
     throw 'Release desktop proof must stay literal-consumer-only without developer artifacts or Save'
 }

@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($CombatTuneColoursOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
 $combatConsumerSummaryPath = Join-Path $captures 'combat-colour-consumer-summary.json'
 $combatConsumerRowsPath = Join-Path $captures 'combat-colour-consumers.csv'
 $combatConsumerSummary = Get-Content -LiteralPath $combatConsumerSummaryPath -Raw | ConvertFrom-Json
@@ -20,7 +21,7 @@ if ($combatConsumerSummary.scope -cne 'consumer-only' -or $combatConsumerSummary
     $combatConsumerSummary.readbacks -ne 32 -or $combatConsumerSummary.csv_rows -ne 8 -or
     $combatConsumerSummary.crops -ne 8 -or $combatConsumerSummary.controls -ne 8 -or
     $combatConsumerRows.Count -ne 8 -or
-    (($combatConsumerRows[0].PSObject.Properties.Name) -join '|') -cne ($combatExpectedColumns -join '|') -or
+    (-not (Test-PainterCsvColumns $combatConsumerRows $combatExpectedColumns)) -or
     @($combatConsumerRows | Where-Object {
         $_.normal_match -cne 'true' -or $_.team_centres -cne 'true' -or
         $_.frozen_geometry_timers_rng -cne 'true' -or $_.scope -cne 'consumer-only' -or
@@ -40,14 +41,7 @@ $combatCropPixels = 0
 $combatCropBytes = 0
 $combatCropEvidence = @(foreach ($crop in $combatCrops) {
     $bytes = [IO.File]::ReadAllBytes($crop.FullName)
-    if ($bytes.Length -ne $combatPpmHeader.Length + (420 * 360 * 3)) {
-        throw "Combat crop $($crop.Name) does not have exactly its 420x360 RGB payload and canonical header."
-    }
-    for ($byte = 0; $byte -lt $combatPpmHeader.Length; ++$byte) {
-        if ($bytes[$byte] -ne $combatPpmHeader[$byte]) {
-            throw "Combat crop $($crop.Name) does not have its canonical P6/420x360/255 binary header."
-        }
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $combatPpmHeader
     $combatCropPixels += 420 * 360
     $combatCropBytes += $bytes.Length
     [ordered]@{
@@ -64,9 +58,8 @@ if ($combatCropPixels -ne 1209600) {
     throw 'The combat colour crops do not match their frozen total pixel budget.'
 }
 
-$combatRunLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$combatSaveCalls = @($combatRunLines | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-$combatSaveSuccesses = @($combatRunLines | Where-Object { $_ -ceq 'Save was successful.' }).Count
+$combatSaveCalls = $painterSaveCounts.calls
+$combatSaveSuccesses = $painterSaveCounts.successes
 $combatSaveFailures = @(Get-Content -LiteralPath (Join-Path $run 'run.err') |
     Where-Object { $_ -match '^save failure:' }).Count
 if ($combatSaveFailures -ne 0) {
@@ -122,7 +115,7 @@ if ($debug) {
         $combatTuneSummary.csv_rows -ne 20 -or $combatTuneSummary.crops -ne 0 -or
         $combatTuneRows.Count -ne 20 -or $combatTuneTranscript.Length -le 0 -or
         !(Test-Path -LiteralPath (Join-Path $captures 'combat-tune-scratch') -PathType Container) -or
-        (($combatTuneRows[0].PSObject.Properties.Name) -join '|') -cne ($combatExpectedTuneColumns -join '|') -or
+        (-not (Test-PainterCsvColumns $combatTuneRows $combatExpectedTuneColumns)) -or
         $combatSaveCalls -ne 2 -or $combatSaveSuccesses -ne 2 -or
         @($combatTuneRows | Where-Object {
             $_.normal_match -cne 'true' -or $_.team_centres -cne 'true' -or
@@ -148,8 +141,8 @@ if ($debug) {
     }
     $combatObserved['developer_commands'] = $combatTuneSummary
     $combatObserved.effect_preparation_updates = 4
-    $combatObserved.readbacks = 92
-    $combatObserved.csv_rows = 28
+    $combatObserved.readbacks += $combatTuneSummary.readbacks
+    $combatObserved.csv_rows += $combatTuneSummary.csv_rows
 }
 elseif ($combatSaveCalls -ne 0 -or $combatSaveSuccesses -ne 0 -or
     @(Get-ChildItem -LiteralPath $captures -Filter 'combat-tune-*').Count -ne 0) {

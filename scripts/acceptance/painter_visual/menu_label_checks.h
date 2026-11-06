@@ -101,7 +101,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         unchanged(); const Frame actual = frame(); const auto& style = snapshot.menu(); const auto& main = snapshot.main_menu();
         MenuPaperArtPresentation art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
         Vector2F size = role == 1 ? main.team_box_size : role == 2 ? main.weapon_box_size : main.setup_box_size;
-        RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - size) / 2.0f, size);
+        RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - size) / 2.0f, size);
         Vector2F position, shadow = Vector2F::zero; std::string font; Colour ink = art.ink; bool plain = false;
         if (role <= 2)
         {
@@ -113,20 +113,20 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         else if (role == 3)
         {
-            const auto& pause = snapshot.pause_menu(); art = pause.art; panel = RectangleF((menu_consts::DESIGN_RESOLUTION - pause.box_size) / 2.0f, pause.box_size);
+            const auto& pause = snapshot.pause_menu(); art = pause.art; panel = RectangleF((menu_consts::design_resolution - pause.box_size) / 2.0f, pause.box_size);
             font = style.detail_font; position.y = pause.status_y;
-            position.x = (menu_consts::DESIGN_RESOLUTION.x - app.render_resources()->measure_text(
+            position.x = (menu_consts::design_resolution.x - app.render_resources()->measure_text(
                 app.render_resources()->resolve_sprite_font(font), literal).x) / 2.0f; ink = art.ink; plain = true;
         }
         else if (role == 4)
         {
-            const auto& look = snapshot.results_menu(); art = look.art; panel = RectangleF((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+            const auto& look = snapshot.results_menu(); art = look.art; panel = RectangleF((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
             font = look.contribution_font; position = look.contribution_position + Vector2F(0.0f, look.contribution_spacing * static_cast<float>(seat + 1)); ink = art.ink;
         }
         else
         {
             const auto& look = snapshot.controls_settings(); art = look.art;
-            panel = RectangleF((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
+            panel = RectangleF((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
             font = role == 5 ? look.item_font : look.help_font;
             position = role == 5 ? look.layout.position + Vector2F(look.layout.spacing.x, 0.0f) : look.controls_position;
             ink = art.ink; plain = true;
@@ -155,7 +155,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             "Results label/unchanged percentage overlaps another row or prompt"); }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup focus;
         std::unique_ptr<UiTexture> focus_bounds;

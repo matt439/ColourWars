@@ -1,0 +1,14 @@
+#pragma once
+#include <string_view>
+
+// Generated from cmake/manifest_asset_kinds.json: do not copy the rule here.
+namespace colourwars_manifest
+{
+    struct KindExtension
+    {
+        std::string_view kind;
+        std::string_view extension;
+    };
+    inline constexpr KindExtension kind_extensions[] = {
+@COLOURWARS_MANIFEST_KIND_ROWS@    };
+}

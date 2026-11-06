@@ -17,7 +17,7 @@
 
 using namespace labrador;
 using namespace presentation_read;
-using menu_consts::DESIGN_RESOLUTION;
+using menu_consts::design_resolution;
 
 // Phase 2: the Random name, the briefing's status and summary rows and the
 // stage records. Leaves the briefing panel and its rows in the geometry.
@@ -50,7 +50,7 @@ void Presentation::Validation::validate_stage_select_briefing(StageGeometry& geo
 	const RectangleF fitted_random_name = RectangleF::union_of(RectangleF(stage.name_position, fitted_name_size),
 		RectangleF(stage.name_position + name_shadow * random_name_scale, fitted_name_size));
 	if (!std::isfinite(random_name_scale) || random_name_scale <= 0.0f || !finite_rectangle(fitted_random_name) ||
-		!RectangleF(0.0f, 0.0f, DESIGN_RESOLUTION.x, name_bottom).contains(fitted_random_name))
+		!RectangleF(0.0f, 0.0f, design_resolution.x, name_bottom).contains(fitted_random_name))
 	{
 		throw std::runtime_error(this->presentation.source_path_ + ": " + random_name_key +
 			" must fit its stage-name design area above the preview edge including its scaled shadow.");

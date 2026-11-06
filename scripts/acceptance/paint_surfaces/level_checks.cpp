@@ -57,7 +57,7 @@ namespace paint_surfaces_acceptance
 
     void check_levels(World& world)
     {
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         unsigned int seed = 0;
         for (const char* stage : { "crossfeed", "press_tower" })
         {

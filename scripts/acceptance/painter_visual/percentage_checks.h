@@ -120,7 +120,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto actual_frame = [&] { ++readbacks; return stack_frame(app); };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](RectangleF bounds)
@@ -225,7 +225,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         UiTexture focused("reference-percentage-focus", style.sprite_sheet, style.fill_frame,
             focused_bounds, app.render_resources());
         FocusGroup focus; focus.add(&focused);
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f,
             look.box_size);
         const MenuPaperArtwork artwork(panel, app.render_resources(), &style, &art, &focus);
         artwork.draw(list); list.set_filter(TextureFilter::linear);
@@ -273,7 +273,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto check_status = [&](const std::wstring& expected, bool warning, bool sticks)
     {
         const auto& look = original.controls_settings(); const auto& style = original.menu();
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f,
             look.box_size);
         const float available = panel.right() - look.art.shadow_offset - look.art.focus_padding.x - look.status_position.x;
         UiText text("reference-percentage-status", expected, look.help_font, look.status_position,
@@ -460,7 +460,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         "  \"inputs\": \"normal production keyboard reader; actual Controls parent and Sticks child\",\n" <<
         "  \"limits\": \"No global input, foreground/hardware/physical-pad, gameplay, listening or human acceptance\"\n}\n";
     require(summary.good(), "Percentage summary evidence write failed");
-    std::cout << "PASS preference percentage leaf: actual four rows, saved 17/0/100 and inherited 100/explicit 0/90; "
+    std::cout << "PASS preference percentage leaf: actual four rows, saved 17 / 0 / 100 and inherited 100/explicit 0/90; "
         "independent literals, long value fitting, distinct font aliases, retained/reopened/reversed snapshots; "
         "child return, Apply/reload/repeat, active-versus-disk save failure and discard; stable preview/frozen RNG; "
         "updates=" << updates << " readbacks=" << readbacks << " csv_rows=" << csv_rows << " crops=" << crops << '\n';

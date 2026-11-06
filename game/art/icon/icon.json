@@ -7,12 +7,13 @@
     "Each image is a grid drawn at its own size or a whole-number nearest-neighbour",
     "enlargement of one, so no size is filtered. Rebuild with python3 scripts/build_icon.py."
   ],
+  "team_pair": "blue_orange",
   "palette": {
     ".": null,
     "K": "000000",
     "W": "FFFFFF",
-    "B": "0634CC",
-    "O": "FF7F00"
+    "B": { "team": "team_a" },
+    "O": { "team": "team_b" }
   },
   "images": [
     {

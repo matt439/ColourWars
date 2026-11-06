@@ -5,7 +5,7 @@ name: build
 
 on:
   push:
-    branches: [master, 'review-*']
+    branches: [master]
     # A version tag builds in full and publishes its Release ZIP (job publish).
     tags: ['v*']
   pull_request:
@@ -37,10 +37,11 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Check CI change detection, the link checker and frame analysis
+      - name: Check CI selection, links, frame analysis and study paths
         run: |
           python3 -m unittest discover -s scripts/ci -p test_*.py
           python3 -m unittest discover -s scripts/perf -p test_*.py
+          python3 -m unittest discover -s scripts/studies -p test_*.py
 
       # A pull request runs the whole suite once, and the record job names the
       # tree it passed. A push of that same tree, such as the merge commit of a
@@ -87,40 +88,12 @@ jobs:
         with:
           submodules: recursive
 
-      # CMakePresets.json requires VCPKG_ROOT to locate the toolchain.
-      - name: Point at the runner's vcpkg
-        id: vcpkg
-        shell: pwsh
-        run: |
-          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
-          echo "image=$env:ImageOS-$env:ImageVersion" >> $env:GITHUB_OUTPUT
-          # Runners differ by up to 2x; this names the one a slow run drew.
-          Get-CimInstance Win32_Processor | ForEach-Object { "$($_.Name), $($_.NumberOfLogicalProcessors) logical" }
-
-      # Reuse dependency binaries across configure steps. vcpkg's package
-      # hashes include the compiler, which moves with the runner image, so a
-      # key without the image hits forever and restores nothing usable.
-      - name: Cache vcpkg binaries
-        uses: actions/cache@v6
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: vcpkg-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: vcpkg-${{ steps.vcpkg.outputs.image }}-
-
-      # CI#6: vcvars64 runs once per job; what it sets reaches every later
-      # step through GITHUB_ENV.
-      - name: Set up MSVC
-        shell: pwsh
-        run: ./scripts/ci/export-msvc-environment.ps1
+      # Shared with nightly: the same vcpkg cache, runner facts and MSVC environment.
+      - uses: ./.github/actions/windows-setup
 
       - name: Configure
         run: |
           cmake --preset ${{ matrix.preset }}
-
-      - name: Audio pipeline, publication and staging checks
-        if: matrix.checks
-        shell: pwsh
-        run: python -m unittest discover -s scripts/audio -p test_*.py
 
       # Building also runs Labrador's include-boundary check.
       - name: Build
@@ -131,11 +104,17 @@ jobs:
       # Once the build is good every check below runs, whatever an earlier one
       # did, so one failure does not hide the rest until a second run.
 
+      - name: Audio pipeline, publication and staging checks
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
+        shell: pwsh
+        run: python -m unittest discover -s scripts/audio -p test_*.py
+
       # CI#2: compile, but never run, the probes CI does not otherwise build:
       # the opt-in acceptance cases (-OptIn, the 'opt-in' group in
       # scripts/acceptance/cases.psd1), the painter with both pad readers,
-      # paint effects and, Debug-only like its harness, frame pacing. No probe,
-      # window or GPU is used. nightly.yml runs the painter and paint effects.
+      # paint effects and, Debug-only like its harness, frame pacing. The Debug
+      # console helper also builds and queries its CPU menu model; no window,
+      # input or GPU is used. nightly.yml runs the painter and paint effects.
       - name: Compile gate for opt-in probes
         if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         run: |
@@ -146,6 +125,9 @@ jobs:
           pwsh -NoProfile -File scripts/check-paint-fx.ps1 -Preset ${{ matrix.preset }} -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/paint-fx
           if errorlevel 1 exit /b 1
           if "${{ matrix.preset }}"=="x64-debug" pwsh -NoProfile -File scripts/check-frame-pacing.ps1 -Preset x64-debug -SkipBuild -CompileOnly -OutputDirectory out/validation/compile-gate/frame-pacing
+          if errorlevel 1 exit /b 1
+          if "${{ matrix.preset }}"=="x64-debug" pwsh -NoProfile -File scripts/check-debug-console.ps1 -Preset x64-debug -CompileOnly -OutputDirectory out/validation/compile-gate/console-menu
+          if errorlevel 1 exit /b 1
 
       - name: Upload compile gate evidence
         if: always() && matrix.checks
@@ -168,6 +150,14 @@ jobs:
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-painter-selection.ps1
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-painter-selection.ps1
+          if errorlevel 1 exit /b 1
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-painter-evidence.ps1
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-painter-evidence.ps1
+          if errorlevel 1 exit /b 1
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-probe-helpers.ps1
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-probe-helpers.ps1
           if errorlevel 1 exit /b 1
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-acceptance-process.ps1
           if errorlevel 1 exit /b 1
@@ -401,6 +391,7 @@ jobs:
           name: startup-${{ matrix.preset }}
           path: out/validation/startup
           if-no-files-found: ignore
+          retention-days: 7
 
   # A v* tag on master publishes the ZIP its own run built, inspected and
   # started. The tag must name the packaged version, so v0.1.0 needs

@@ -46,7 +46,7 @@ namespace
 	// An object keyed by projectile name, one member per kind.
 	std::vector<std::string_view> projectile_keys()
 	{
-		return { PROJECTILE_NAMES.begin(), PROJECTILE_NAMES.end() };
+		return { projectile_names.begin(), projectile_names.end() };
 	}
 
 	// Enum parsers use JsonValue's source context for unknown names.
@@ -61,7 +61,7 @@ namespace
 		}
 
 		std::string expected;
-		for (const char* known : PROJECTILE_NAMES)
+		for (const char* known : projectile_names)
 		{
 			expected += std::string(expected.empty() ? "" : ", ") + known;
 		}
@@ -1001,11 +1001,11 @@ const LowPaintTuning& GameTuning::low_paint() const
 const WeaponTuning& GameTuning::weapon(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
-	if (index >= WEAPON_COUNT || !this->weapon_tuned_[index])
+	if (index >= weapon_count_ || !this->weapon_tuned_[index])
 	{
 		throw std::out_of_range("weapon " + std::to_string(index) +
 			" has no tuning: " + this->source_path_ + " describes the " +
-			std::to_string(TUNED_WEAPON_COUNT) + " weapons a player can pick, "
+			std::to_string(tuned_weapon_count) + " weapons a player can pick, "
 			"and this is not one of them.");
 	}
 	return this->weapons_[index];
@@ -1014,7 +1014,7 @@ const WeaponTuning& GameTuning::weapon(WeaponType type) const
 const ProjectileTuning& GameTuning::projectile(ProjectileType type) const
 {
 	const size_t index = static_cast<size_t>(type);
-	if (index >= PROJECTILE_COUNT || !this->projectile_tuned_[index])
+	if (index >= projectile_count_ || !this->projectile_tuned_[index])
 	{
 		throw std::out_of_range("projectile " + std::to_string(index) +
 			" has no tuning in " + this->source_path_ + ".");

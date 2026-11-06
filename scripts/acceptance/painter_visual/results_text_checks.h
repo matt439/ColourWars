@@ -120,7 +120,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
         RectangleF(450.0f, 633.0f, 900.0f, 45.0f), RectangleF(360.0f, 870.0f, 1200.0f, 81.0f) };
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
@@ -135,18 +135,18 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
             std::array<std::string, 3>{ style.heading_font, look.contribution_font, style.detail_font };
         colourwars::UiTextDropShadow heading("independent-results-heading", words[0], fonts[0], Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
-        heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
+        heading.set_position({ (menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y });
         colourwars::UiTextDropShadow contribution("independent-results-contribution", words[1], fonts[1], look.contribution_position,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
         colourwars::UiTextDropShadow prompt("independent-results-proceed", words[2], fonts[2], Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !proceed_visible);
-        prompt.set_position({ (menu_consts::DESIGN_RESOLUTION.x - prompt.bounds().width) / 2.0f, look.proceed_y });
+        prompt.set_position({ (menu_consts::design_resolution.x - prompt.bounds().width) / 2.0f, look.proceed_y });
         colourwars::UiTextDropShadow record_line("independent-results-record", L"NEW BEST 68.4%", fonts[1], Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details_visible);
-        const float fill_right = (menu_consts::DESIGN_RESOLUTION.x + look.fill_box_size.x) / 2.0f;
+        const float fill_right = (menu_consts::design_resolution.x + look.fill_box_size.x) / 2.0f;
         record_line.set_position({ fill_right - record_line.bounds().width, look.record_y });
         metrics.bounds = { heading.bounds(), contribution.bounds(), prompt.bounds() };
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         for (size_t role = 0; role < regions.size(); ++role)
         {
             require(metrics.bounds[role].width > 0.0f && metrics.bounds[role].height > 0.0f &&
@@ -158,7 +158,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
             "Authored Results contribution heading lost strict clearance from the unchanged record or next roster row");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);
@@ -316,8 +316,8 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     require(summary.good(), "Cannot retain Results text summary");
     std::cout << "PASS Results text leaf: three independent plain literals with braces, actual unscaled zero-offset "
         "heading/contribution/proceed roles and unchanged record clearance; captured copy and three distinct fonts "
-        "through assignment/reopen/reversal, single/series Round2, unrevealed/revealed detail and prompt timing, "
+        "through assignment/reopen/reversal, single/series Round 2, unrevealed/revealed detail and prompt timing, "
         "premature Enter/Escape refusal and six fresh Enter pops; frozen Session/setup/private Save/RNG, "
-        "43 updates,52 readbacks,51 CSV rows,eight compact strips,three font controls,one private seed Save. "
+        "43 updates, 52 readbacks, 51 CSV rows, eight compact strips, three font controls, one private seed Save. "
         "Both presets use the same normal reader; no match/global-input/physical-pad/listening/human/performance acceptance.\n";
 }

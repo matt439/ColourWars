@@ -135,7 +135,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport);
         list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec()));
@@ -144,10 +144,10 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const auto fill = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
         const UiTexture background("reference-setup-background", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
+            RectangleF(Vector2F::zero, menu_consts::design_resolution), app.render_resources(),
             look.home_background_colour);
         background.draw(list);
-        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+        const RectangleF paper((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.setup_box_size) / 2.0f,
             look.setup_box_size);
         for (RectangleF bounds : actions)
         {
@@ -157,10 +157,10 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (const auto& widget : widgets)
             { require(paper.contains(widget->bounds()), "Independent setup text escapes its paper rectangle"); }
         setup_paper_reference(list, *app.render_resources(), style, art, paper, focused);
-        sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
-            menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
+        sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x,
+            menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y,
-            menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height),
+            menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height),
             style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); text_bounds.clear();
         for (const auto& widget : widgets) { widget->draw(list); text_bounds.push_back(widget->bounds()); }
@@ -184,7 +184,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                 delta.width << ',' << delta.height << ")\n";
             throw std::runtime_error("Actual Mode/Player Count differs from the independent setup text fixture");
         }
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         for (RectangleF bounds : text_bounds)
         {
@@ -203,7 +203,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                 "Actual setup text lost dark ink, pale paper or native raster contrast");
         }
         const auto& look = snapshot.main_menu();
-        const RectangleF crop((Vector2F(menu_consts::DESIGN_RESOLUTION.x, snapshot.menu().footer_y) -
+        const RectangleF crop((Vector2F(menu_consts::design_resolution.x, snapshot.menu().footer_y) -
             look.setup_box_size) / 2.0f, look.setup_box_size);
         save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(crop)), 0),
             output / (stem + "-detail.ppm"));

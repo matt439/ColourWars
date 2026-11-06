@@ -103,7 +103,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         require(budget > 0.0f && scale > 0.0f && (fit_kind != 1 || scale < 1.0f) &&
             (fit_kind != 2 || scale == 1.0f), "Stage cue fixture failed to exercise width-only hint fit/reset");
         expected_hint.set_scale(scale); expected_hint.set_shadow_scale(scale); expected_hint.set_shadow_offset(shadow * scale);
-        const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
+        const RectangleF design(Vector2F::zero, menu_consts::design_resolution);
         require(design.contains(expected_navigation.bounds()) && design.contains(expected_hint.bounds()) &&
             expected_navigation.bounds().bottom() <= style.footer_y && expected_hint.bounds().bottom() <= style.footer_y &&
             expected_hint.bounds().width <= budget + 0.01f,

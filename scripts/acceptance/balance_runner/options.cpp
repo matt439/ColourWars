@@ -61,7 +61,7 @@ namespace balance_runner
         WeaponType parse_tool(const std::string& name)
         {
             const std::optional<WeaponType> tool = weapon_from_name(name);
-            if (tool && static_cast<std::size_t>(*tool) < TUNED_WEAPON_COUNT) { return *tool; }
+            if (tool && static_cast<std::size_t>(*tool) < tuned_weapon_count) { return *tool; }
             throw std::invalid_argument("Unknown concrete primary tool: " + name);
         }
         std::vector<WeaponType> parse_tools(const std::string& value)
@@ -314,13 +314,13 @@ namespace balance_runner
 
     float fixed_dt()
     {
-        return SECONDS_PER_STEP;
+        return simulation::seconds_per_step;
     }
 
     std::string tool_name(WeaponType tool)
     {
         if (tool == WeaponType::none) { return "none"; }
-        if (static_cast<std::size_t>(tool) < TUNED_WEAPON_COUNT) { return weapon_name(tool); }
+        if (static_cast<std::size_t>(tool) < tuned_weapon_count) { return weapon_name(tool); }
         throw std::invalid_argument("Runner needs a concrete primary tool");
     }
 

@@ -303,7 +303,7 @@ namespace
         variant("bad-sting-volume", false, [](rapidjson::Document& d) { d["sound"]["end_sting_volume"].SetDouble(1.1); });
         variant("bad-music-volume", false, [](rapidjson::Document& d) { d["sound"]["music_volume"].SetDouble(1.5); });
         variant("reserved-station", false, [](rapidjson::Document& d) { d["stations"][0]["name"].SetString("spawn_a"); });
-        // The template's left wall is a ground STRUCTURE and its floor a ground STRUCTURE_PAINTABLE.
+        // The template's left wall is a ground structure and its floor a ground STRUCTURE_PAINTABLE.
         variant("ruler-jump-through", true, [](rapidjson::Document& d)
         {
             d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
@@ -574,7 +574,7 @@ namespace
                 [travel](rapidjson::Document& d) { d["collision_objects"][0]["motion"]["travel_x"].SetDouble(travel); });
         }
         check("motion-short-period", false, false, [](rapidjson::Document& d)
-        { d["collision_objects"][0]["motion"]["period"].SetDouble(SECONDS_PER_STEP); });
+        { d["collision_objects"][0]["motion"]["period"].SetDouble(simulation::seconds_per_step); });
         check("motion-overflow-period", true, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"]["period"].SetDouble(1.0e40); });
         check("motion-negative-phase", false, false, [](rapidjson::Document& d)

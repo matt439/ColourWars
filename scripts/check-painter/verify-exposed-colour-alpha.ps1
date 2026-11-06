@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($ExposedColourAlphaOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $alphaExpectedCsvNames = @('alpha-home.csv', 'alpha-movement.csv')
         $alphaExpectedSummaryNames = @('alpha-home-summary.json', 'alpha-movement-summary.json')
         $alphaHomeSummary = Get-Content -LiteralPath (Join-Path $captures 'alpha-home-summary.json') -Raw | ConvertFrom-Json
@@ -62,8 +63,8 @@
                 $alphaExpectedCrops["alpha-debug-text-$palette-$background.ppm"] = @(300, 108)
             }
         }
-        $alphaSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $alphaSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $alphaSaveCalls = $painterSaveCounts.calls
+        $alphaSaveSuccesses = $painterSaveCounts.successes
         $alphaObserved = [ordered]@{
             home = $alphaHomeSummary
             movement_debug_text = $alphaMovementSummary
@@ -111,8 +112,8 @@
             $alphaObserved['console'] = $alphaConsoleSummary
             $alphaExpectedCsvNames += 'alpha-console.csv'
             $alphaExpectedSummaryNames += 'alpha-console-summary.json'
-            $alphaObserved.readbacks = 389
-            $alphaObserved.csv_rows = 190
+            $alphaObserved.readbacks += $alphaConsoleSummary.readbacks
+            $alphaObserved.csv_rows += $alphaConsoleSummary.csv_rows
             $alphaObserved.crops = 16
         }
         elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'alpha-console-*').Count -ne 0) {
@@ -131,12 +132,6 @@
         }
         foreach ($crop in $alphaCrops) {
             $size = $alphaExpectedCrops[$crop.Name]
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Exposed-alpha crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
         }
         $result['observed_counts'] = $alphaObserved

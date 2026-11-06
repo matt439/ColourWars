@@ -91,7 +91,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         const auto project = [&](RectangleF bounds)
             { camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds); };
@@ -147,7 +147,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         UiTexture focus_widget("reference-settings-focus", style.sprite_sheet, style.fill_frame,
             row_bounds[focused], app.render_resources());
         FocusGroup focus; focus.add(&focus_widget);
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f,
             look.box_size);
         const MenuPaperArtwork artwork(panel, app.render_resources(), &style, &art, &focus);
         artwork.draw(list);

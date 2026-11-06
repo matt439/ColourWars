@@ -3,7 +3,7 @@ $moverSummary = Get-Content -LiteralPath (Join-Path $captures 'turbulence-mover-
 $moverRows = @(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-mover.csv'))
 $moverCounts = [ordered]@{ full_frames=33; native_crops=81; csv_rows=81; readbacks=67; level_builds=8 }
 $moverKeys = @($moverCounts.Keys)+@('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','trial_bytes_unchanged','human_acceptance')
-if ((($moverSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($moverKeys | Sort-Object) -join '|') -or
+if ((-not (Test-PainterKeys $moverSummary $moverKeys)) -or
     $moverSummary.outcome -cne 'passed' -or $moverSummary.scope -cne 'turbulence-mover-only' -or
     $moverSummary.trial_bytes_unchanged -isnot [bool] -or -not $moverSummary.trial_bytes_unchanged -or
     $moverSummary.human_acceptance -isnot [bool] -or $moverSummary.human_acceptance -or -not $result.trial_source.unchanged) {
@@ -14,12 +14,7 @@ foreach ($key in $moverCounts.Keys) {
         throw "Private mover bounded inventory differs: $key"
     }
 }
-function Mover-Number([object]$Value,[string]$Label) {
-    $number=0.0
-    if (-not [double]::TryParse([string]$Value,[Globalization.NumberStyles]::Float,[Globalization.CultureInfo]::InvariantCulture,[ref]$number) -or
-        [double]::IsNaN($number) -or [double]::IsInfinity($number)) { throw "Nonfinite/invalid private mover metric: $Label" }
-    return $number
-}
+
 $moverStage = Get-Content -LiteralPath $trialResolved -Raw | ConvertFrom-Json
 $moverPresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
 $moverTuning = Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json') -Raw | ConvertFrom-Json
@@ -54,15 +49,15 @@ for ($side=0; $side -lt 2; ++$side) {
         throw 'Private mover body/landing/first-safe escape patches differ from their actual authored supports.'
     }
 }
-$moverUpdates=Mover-Number $moverSummary.level_updates 'updates'
-$moverHeavy=Mover-Number $moverSummary.heavy_initial_fraction_min 'initial heavy fraction'
+$moverUpdates=ConvertTo-PainterFinite $moverSummary.level_updates 'updates'
+$moverHeavy=ConvertTo-PainterFinite $moverSummary.heavy_initial_fraction_min 'initial heavy fraction'
 $moverPaintables=@($moverStage.collision_objects | Where-Object { $_.type -ceq 'StructurePaintable' }).Count
 if ($moverUpdates -le 0 -or $moverUpdates -gt 6000 -or $moverUpdates -ne [Math]::Truncate($moverUpdates) -or
     $moverSummary.controlled_heavy_contacts -ne 4*$moverPaintables -or $moverHeavy -le 0.99 -or $moverHeavy -gt 1) {
     throw 'Private mover native update/controlled paint budget differs.'
 }
 $moverColumns='capture,kind,phase,condition,paint,players,view,input_slot,actor_role,scene_views,camera_source,player_x,player_y,velocity_x,velocity_y,carrier_id,mover_id,mover_phase,mover_direction,previous_offset,current_offset,mover_x,mover_y,mover_width,mover_height,shadow_x,shadow_y,shadow_width,shadow_height,local_owned_area,local_credited_area,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,landing_required,landing_x,landing_y,landing_width,landing_height,landing_visible,escape_x,escape_y,escape_width,escape_height,escape_visible,frozen_pixels,public_state,motion_paint_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
-if ($moverRows.Count -ne 81 -or ($moverRows[0].PSObject.Properties.Name -join ',') -cne $moverColumns) { throw 'Private mover CSV schema/count differs.' }
+if ($moverRows.Count -ne 81 -or (-not (Test-PainterCsvColumns $moverRows ($moverColumns.Split(','))))) { throw 'Private mover CSV schema/count differs.' }
 $moverConditions=@{ 'outer-wait'='wait-not-crossover-commit'; 'inner-commit'='qualified-inward-window'; 'inner-reversal'='carried-direction-reversal'; 'outward-ride'='continuous-carrier-ride' }
 $moverExpected=@{}; $moverSlots=@(3,1,2,0)
 foreach ($count in @(1,2,3,4)) {
@@ -105,11 +100,11 @@ foreach ($row in $moverRows) {
     foreach ($metric in @('player_x','player_y','velocity_x','velocity_y','mover_phase','previous_offset','current_offset',
         'mover_x','mover_y','mover_width','mover_height','shadow_x','shadow_y','shadow_width','shadow_height','local_owned_area','local_credited_area',
         'camera_x','camera_y','camera_scale','owned_fraction','landing_x','landing_y','landing_width','landing_height','escape_x','escape_y','escape_width','escape_height')) {
-        $n[$metric]=Mover-Number $row.$metric "$key/$metric"
+        $n[$metric]=ConvertTo-PainterFinite $row.$metric "$key/$metric"
     }
     foreach ($metric in @('carrier_id','mover_id','mover_direction','pane_x','pane_y','pane_width','pane_height','crop_x','crop_y','crop_width','crop_height')) {
-        $parsed=0
-        if (-not [int]::TryParse($row.$metric,[ref]$parsed) -or ($metric -cne 'mover_direction' -and $parsed -lt 0)) { throw "Invalid private mover integer $key/$metric" }
+        $parsed = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if (($metric -cne 'mover_direction' -and $parsed -lt 0)) { throw "Invalid private mover integer $key/$metric" }
         $n[$metric]=$parsed
     }
     if ($n.camera_scale -le 0 -or $n.pane_width -le 0 -or $n.pane_height -le 0 -or $n.crop_width -le 0 -or $n.crop_height -le 0 -or
@@ -219,10 +214,7 @@ if ($moverDimensions.Count -ne 114 -or $moverFiles.Count -ne 114 -or (($moverFil
 $moverHeaderLengths=@{}; $moverPpmBytes=0L
 foreach ($file in $moverFiles) {
     $size=$moverDimensions[$file.Name]; $header="P6`n$($size[0]) $($size[1])`n255`n"; $headerBytes=[Text.Encoding]::ASCII.GetByteCount($header)
-    $actual=@(Get-Content -LiteralPath $file.FullName -TotalCount 3)
-    if ($file.Length -ne $headerBytes+[long]$size[0]*$size[1]*3 -or $actual.Count -ne 3 -or $actual[0] -cne 'P6' -or $actual[1] -cne "$($size[0]) $($size[1])" -or $actual[2] -cne '255') {
-        throw "Private mover PPM dimensions/header/RGB payload differs: $($file.Name)"
-    }
+    Assert-PainterPpm -Path $file.FullName -Header $header
     $moverHeaderLengths[$file.Name]=$headerBytes; $moverPpmBytes += $file.Length
 }
 foreach ($group in $moverRows | Group-Object capture) {

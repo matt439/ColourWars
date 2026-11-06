@@ -109,7 +109,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             view.raw_movement.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y),
             view.movement_response.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y), view.aim_readout_position };
         constexpr std::array<const char*, 4> roles{ "connection", "raw-move", "response", "aim" };
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
         const RectangleF region(look.controls_position, look.controls_size);
         std::array<std::unique_ptr<UiText>, 4> literals;
         for (size_t role = 0; role < expected.size(); ++role)
@@ -119,7 +119,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup none;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &none); paper.draw(list);

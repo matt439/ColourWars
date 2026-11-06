@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($ContributionTeamOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $contributionTeamSummary = Get-Content -LiteralPath (Join-Path $captures 'contribution-team-summary.json') -Raw | ConvertFrom-Json
         $contributionTeamRows = @(Import-Csv -LiteralPath (Join-Path $captures 'contribution-team.csv'))
         $contributionTeamCases = @('legacy-initial', 'legacy-fill-crossed', 'legacy-details', 'legacy-prompt-crossed',
@@ -24,7 +25,7 @@
             $contributionTeamSummary.font_negative_controls -ne 4 -or $contributionTeamSummary.owner_negative_controls -ne 4 -or
             $contributionTeamSummary.resize_updates -ne 0 -or $contributionTeamSummary.save_calls -ne 1 -or
             $contributionTeamSummary.crop_pixels -ne 599508 -or $contributionTeamRows.Count -ne 72 -or
-            (($contributionTeamRows[0].PSObject.Properties.Name) -join '|') -ne ($contributionTeamExpectedColumns -join '|') -or
+            (-not (Test-PainterCsvColumns $contributionTeamRows $contributionTeamExpectedColumns)) -or
             (($contributionTeamRows | ForEach-Object { "$($_.case)|$($_.row)" } | Sort-Object) -join ';') -ne
                 (($contributionTeamExpectedPairs | Sort-Object) -join ';')) {
             throw 'The Contribution team leaf does not match its frozen summary, CSV schema, rows or update/readback/proceed budgets.'
@@ -83,11 +84,8 @@
                 throw "Contribution team case $($row.case)/row $($row.row) changed its literal row, owner credit, reveal, capture or geometry contract."
             }
             foreach ($metric in @('raw_width', 'raw_height', 'x', 'y', 'badge_x', 'badge_y', 'badge_width', 'badge_height')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
-                    ($metric -in @('raw_width', 'raw_height', 'badge_width', 'badge_height') -and $value -le 0.0) -or
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if (($metric -in @('raw_width', 'raw_height', 'badge_width', 'badge_height') -and $value -le 0.0) -or
                     ($metric -in @('x', 'y', 'badge_x', 'badge_y') -and $value -lt 0.0)) {
                     throw "Contribution team case $($row.case)/row $($row.row) contains an invalid $metric."
                 }
@@ -110,16 +108,10 @@
         }
         foreach ($crop in $contributionTeamCrops) {
             $size = $contributionTeamExpectedCrops[$crop.Name]
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Contribution team crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
         }
-        $contributionTeamSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $contributionTeamSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $contributionTeamSaveCalls = $painterSaveCounts.calls
+        $contributionTeamSaveSuccesses = $painterSaveCounts.successes
         if ($contributionTeamSaveCalls -ne 1 -or $contributionTeamSaveSuccesses -ne 1) {
             throw 'The Contribution team leaf must perform exactly its one successful private seed Save.'
         }

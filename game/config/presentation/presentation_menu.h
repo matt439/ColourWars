@@ -176,7 +176,7 @@ struct WeaponSelectArtworkPresentation
 {
 	std::string sheet;
 	std::string fill_frame;
-	std::array<WeaponChoicePresentation, SELECTABLE_WEAPON_COUNT> choices;
+	std::array<WeaponChoicePresentation, selectable_weapon_count> choices;
 	// Reject non-selection enum values rather than displaying an error picture.
 	const WeaponChoicePresentation& choice(WeaponType type) const;
 };
@@ -272,7 +272,7 @@ struct MainMenuPresentation
 
 	// Weapon descriptions converted from UTF-8 to normalized wide text at load.
 	// Indexed by WeaponType, including the random-primary choice.
-	std::array<std::wstring, SELECTABLE_WEAPON_COUNT> weapon_descriptions;
+	std::array<std::wstring, selectable_weapon_count> weapon_descriptions;
 };
 
 struct PauseMenuPresentation

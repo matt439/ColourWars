@@ -1,26 +1,10 @@
 # This leaf verifies its own exact schemas before contact export, then verifies
 # native PNG bytes afterward. It does not execute code from retained artifacts.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $timerUpdates = @('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
 $timerStates = @('default','rgb','rgba128','alpha0')
 function Get-TimerSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
-function Assert-TimerKeys($Object,[string[]]$Expected,[string]$Scope) {
-    if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($Expected | Sort-Object) -join '|')) { throw "Timer exact $Scope schema differs" }
-}
-function Assert-TimerInteger($Object,[string]$Key,[long]$Expected) {
-    $value=$Object.$Key
-    if (($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected) { throw "Timer exact integer differs: $Key" }
-}
-function Get-TimerCsvInteger($Row,[string]$Key) {
-    $text=[string]$Row.$Key; $value=0L
-    if ($text -cnotmatch '^(0|[1-9][0-9]*)$' -or ![long]::TryParse($text,[ref]$value)) { throw "Timer canonical CSV integer differs: $Key" }
-    return $value
-}
-function Assert-TimerCsvColumns($Rows,[string[]]$Expected,[int]$Count,[string]$Scope) {
-    if ($Rows.Count -ne $Count -or ($Rows[0].PSObject.Properties.Name -join '|') -cne ($Expected -join '|')) { throw "Timer exact $Scope CSV shape differs" }
-}
-function Assert-TimerFlags($Row,[string[]]$Flags) {
-    foreach ($flag in $Flags) { if ($Row.$flag -cne 'true') { throw "Timer native flag differs: $flag" } }
-}
+
 function Complete-HudTimerRoleEvidence {
     param([Parameter(Mandatory)][string]$Directory, [Parameter(Mandatory)]$Context)
     $context=$Context
@@ -90,25 +74,25 @@ function Read-HudTimerRoleEvidence {
     $timerSummary=Get-Content -LiteralPath $timerSummaryPath -Raw | ConvertFrom-Json
     $timerMain=@(Import-Csv -LiteralPath $timerMainPath); $timerBranches=@(Import-Csv -LiteralPath $timerBranchPath)
     $timerCounts=[ordered]@{readbacks=$sharedReads;csv_rows=18;main_rows=4;branch_rows=14;crops=4;crop_width=131;crop_height=52;crop_pixels=27248;ppm_bytes=81800;roi_pixels=6812;independent_roi_observations=12;roi_pixel_checks=81744;repeat_checks=18;copied_adoption_checks=4;closing_colour_invariance_checks=3;reduce_effects_checks=6;controls=$controlCount;calibration_pixel_checks=($sharedReads*32);private_game_saves=0}
-    Assert-TimerKeys $timerSummary (@($timerCounts.Keys)+$timerUpdates+@('scope','control_discriminating_pixels')) 'shared'
-    foreach ($key in $timerCounts.Keys) { Assert-TimerInteger $timerSummary $key $timerCounts[$key] }
-    foreach ($key in $timerUpdates) { Assert-TimerInteger $timerSummary $key 0 }
+    Assert-PainterKeys $timerSummary (@($timerCounts.Keys)+$timerUpdates+@('scope','control_discriminating_pixels')) 'shared'
+    foreach ($key in $timerCounts.Keys) { Assert-PainterInteger $timerSummary $key $timerCounts[$key] }
+    foreach ($key in $timerUpdates) { Assert-PainterInteger $timerSummary $key 0 }
     $timerControlPixels=$timerSummary.control_discriminating_pixels
     if (($timerControlPixels -isnot [int] -and $timerControlPixels -isnot [long]) -or $timerControlPixels -le 0 -or $timerControlPixels -gt ($controlCount*6812) -or $timerSummary.scope -cne $sharedScope) { throw 'Timer shared scope or observed control support differs' }
     $timerMainColumns=@('state','raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng','controls','discriminating_pixels','scope')
-    Assert-TimerCsvColumns $timerMain $timerMainColumns 4 'main'
+    Assert-PainterCsvColumns $timerMain $timerMainColumns 4 'main'
     if (($timerMain.state -join '|') -cne ($timerStates -join '|')) { throw 'Timer main state order differs' }
     $timerSumPixels=0L
     foreach ($row in $timerMain) {
-        Assert-TimerFlags $row @('raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng')
+        Assert-PainterFlags $row @('raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng')
         $controls=switch ($row.state) { rgba128 {if ($Shadow) {3} else {2}} alpha0 {1} default {0} }
-        $observed=Get-TimerCsvInteger $row 'discriminating_pixels'
-        if ((Get-TimerCsvInteger $row 'controls') -ne $controls -or $observed -gt $controls*6812 -or ($controls -gt 0 -and $observed -le 0) -or $row.scope -cne $mainScope) { throw 'Timer main observed tint-control accounting differs' }
+        $observed=Get-PainterCsvInteger $row 'discriminating_pixels'
+        if ((Get-PainterCsvInteger $row 'controls') -ne $controls -or $observed -gt $controls*6812 -or ($controls -gt 0 -and $observed -le 0) -or $row.scope -cne $mainScope) { throw 'Timer main observed tint-control accounting differs' }
         $timerSumPixels += $observed
     }
     if ($timerSumPixels -ne $timerControlPixels) { throw 'Timer main control pixels do not sum to the native summary' }
     $timerBranchColumns=@('state','context','normal_branch','raw_rgba_match','repeat_match','selection_guard','frozen_style_resources_rng','scope')
-    Assert-TimerCsvColumns $timerBranches $timerBranchColumns 14 'branch'
+    Assert-PainterCsvColumns $timerBranches $timerBranchColumns 14 'branch'
     $timerBranchNames=@('above-ten','exact-ten','fractional-closing','zero','stopped-short','reduced-normal','reduced-closing')
     $timerNormalContexts=@('above-ten','zero','stopped-short','reduced-normal')
     for ($i=0; $i -lt 14; ++$i) {
@@ -116,7 +100,7 @@ function Read-HudTimerRoleEvidence {
         $normal=$context -cin $timerNormalContexts; $normalText=if ($normal) {'true'} else {'false'}
         $raw=if ($normal) {'true'} else {'not-run-closing-invariance-only'}
         $guard=if ($state -ceq 'default') {'baseline'} elseif ($normal) {'normal-locality'} else {'closing-exact'}
-        Assert-TimerFlags $row @('repeat_match','frozen_style_resources_rng')
+        Assert-PainterFlags $row @('repeat_match','frozen_style_resources_rng')
         if ($row.state -cne $state -or $row.context -cne $context -or $row.normal_branch -cne $normalText -or $row.raw_rgba_match -cne $raw -or $row.selection_guard -cne $guard -or $row.scope -cne $branchScope) { throw 'Timer exact public branch observation differs' }
     }
     $timerPpms=@(Get-ChildItem -LiteralPath $captures -Filter "$prefix-colour-*.ppm" -File)
@@ -125,13 +109,11 @@ function Read-HudTimerRoleEvidence {
     $timerHeader=[Text.Encoding]::ASCII.GetBytes("P6`n131 52`n255`n")
     $timerPpmEvidence=@(foreach ($name in $timerExpectedNames) {
         $path=Join-Path $captures $name; $bytes=[IO.File]::ReadAllBytes($path)
-        if ($bytes.Length -ne 20450) { throw 'Timer canonical native P6 byte length differs' }
-        for ($i=0; $i -lt 14; ++$i) { if ($bytes[$i] -ne $timerHeader[$i]) { throw 'Timer canonical native P6 header differs' } }
+        Assert-PainterPpm -Bytes $bytes -Header $timerHeader
         $rgb=[byte[]]::new(20436); [Array]::Copy($bytes,14,$rgb,0,20436); $timerInputs.Add($path)
         [ordered]@{name=$name;bytes=20450;sha256=(Get-TimerSha $bytes);rgb_payload_sha256=(Get-TimerSha $rgb)}
     })
-    $timerLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-    if (@($timerLog | Where-Object { $_ -match 'Saving\.\.\.$' -or $_ -ceq 'Save was successful.' }).Count -or
+    if (($painterSaveCounts.calls + $painterSaveCounts.successes) -or
         @(Get-Content -LiteralPath (Join-Path $run 'run.err') | Where-Object { $_ -match '^save failure:' }).Count) { throw 'Timer scope unexpectedly called or failed a game Save' }
     $timerObserved=[ordered]@{consumer=$timerSummary;readbacks=$sharedReads;csv_rows=18;crops=4;crop_pixels=27248;ppm_bytes=81800;controls=$controlCount;control_discriminating_pixels=$timerControlPixels;calibration_pixel_checks=($sharedReads*32);private_game_saves=0;reference_scope='normal glyph/shadow/pure-paper ROI independent; copied full HUD adoption only; closing invariance only';png_count=0;png_crops=@();png_complete=$false}
     if ($debug) {
@@ -144,26 +126,26 @@ function Read-HudTimerRoleEvidence {
         $tune=Get-Content -LiteralPath $timerTunePath -Raw | ConvertFrom-Json
         $tuneRows=@(Import-Csv -LiteralPath $timerTuneCsv); $tuneBranchRows=@(Import-Csv -LiteralPath $timerTuneBranches)
         $tuneCounts=[ordered]@{commands=8;states=8;readbacks=34;csv_rows=10;normal_rows=8;branch_rows=2;crops=0;saved_tokens=1;presentation_save_commands=1;private_game_saves=0;roi_pixel_checks=54496;repeat_checks=8;copied_adoption_checks=8;closing_colour_invariance_checks=1;calibration_pixel_checks=1088}
-        Assert-TimerKeys $tune (@($tuneCounts.Keys)+$timerUpdates+@('scope')) 'Debug'
-        foreach ($key in $tuneCounts.Keys) { Assert-TimerInteger $tune $key $tuneCounts[$key] }
-        foreach ($key in $timerUpdates) { Assert-TimerInteger $tune $key 0 }
+        Assert-PainterKeys $tune (@($tuneCounts.Keys)+$timerUpdates+@('scope')) 'Debug'
+        foreach ($key in $tuneCounts.Keys) { Assert-PainterInteger $tune $key $tuneCounts[$key] }
+        foreach ($key in $timerUpdates) { Assert-PainterInteger $tune $key 0 }
         if ($tune.scope -cne $debugScope) { throw 'Timer Debug scope differs' }
         $tuneColumns=@('state','raw_rgba_match','adoption_match','repeat_match','private_bytes','frozen_style_resources_rng','token','scope')
-        Assert-TimerCsvColumns $tuneRows $tuneColumns 8 'Debug normal'
+        Assert-PainterCsvColumns $tuneRows $tuneColumns 8 'Debug normal'
         $states=@('baseline','named','reset-original','partial','zero','reset-saved','rgb','final-saved')
         $tokens=@($baselineToken,'RED',$baselineToken,'2060C080','A532D600','2060C080','35BCE1','2060C080')
         for ($i=0; $i -lt 8; ++$i) {
-            $row=$tuneRows[$i]; Assert-TimerFlags $row @('raw_rgba_match','adoption_match','repeat_match','private_bytes','frozen_style_resources_rng')
+            $row=$tuneRows[$i]; Assert-PainterFlags $row @('raw_rgba_match','adoption_match','repeat_match','private_bytes','frozen_style_resources_rng')
             if ($row.state -cne $states[$i] -or $row.token -cne $tokens[$i] -or $row.scope -cne $debugNormalScope) { throw 'Timer Debug exact normal state/token observation differs' }
         }
-        Assert-TimerCsvColumns $tuneBranchRows @('state','context','closing_unchanged','frozen_style_resources_rng','scope') 2 'Debug closing'
+        Assert-PainterCsvColumns $tuneBranchRows @('state','context','closing_unchanged','frozen_style_resources_rng','scope') 2 'Debug closing'
         for ($i=0; $i -lt 2; ++$i) {
             $row=$tuneBranchRows[$i]; $state=if ($i -eq 0) {'baseline'} else {'partial'}; $equal=if ($i -eq 0) {'baseline'} else {'true'}
             if ($row.state -cne $state -or $row.context -cne 'exact-ten' -or $row.closing_unchanged -cne $equal -or $row.frozen_style_resources_rng -cne 'true' -or $row.scope -cne $debugBranchScope) { throw 'Timer Debug exact closing observation differs' }
         }
-        if ((Get-Item -LiteralPath $timerTranscript).Length -le 0 -or (Test-Path -LiteralPath (Join-Path $captures ($prefix+'-tune-scratch/profile/ColourWars/save_data.json')))) { throw 'Timer transcript/private game Save invariant differs' }
+        if ((Get-Item -LiteralPath $timerTranscript).Length -le 0 -or (Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures ($prefix+'-tune-scratch/profile'))))) { throw 'Timer transcript/private game Save invariant differs' }
         foreach ($name in @('source/tuning.json','source/presentation.json','staged/tuning.json','staged/presentation.json')) { $timerInputs.Add((Join-Path $captures "$prefix-tune-scratch/$name")) }
-        $timerObserved.developer_commands=$tune; $timerObserved.readbacks=($sharedReads+34); $timerObserved.csv_rows=28; $timerObserved.calibration_pixel_checks=($sharedReads*32+1088)
+        $timerObserved.developer_commands=$tune; $timerObserved.readbacks += $tune.readbacks; $timerObserved.csv_rows += $tune.csv_rows; $timerObserved.calibration_pixel_checks=($sharedReads*32+1088)
     } elseif (@(Get-ChildItem -LiteralPath $captures -Filter "$prefix-tune-*").Count) { throw 'Release timer proof must have no Debug artifacts' }
     return [ordered]@{subject=$subject;prefix=$prefix;png_scope=$pngScope;directory=[IO.Path]::GetFullPath($captures);observed=$timerObserved;ppms=$timerPpmEvidence;inputs=@(foreach ($path in $timerInputs) {[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}
 }

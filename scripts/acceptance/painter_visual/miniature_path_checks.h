@@ -136,6 +136,6 @@ void miniature_path_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         ",\"restored_pixels\":true,\"state_ownership_rng_restored\":true}\n";
     require(summary.good(), "Cannot write miniature path accounting");
     std::cout << "PASS miniature path selection: 11 actual-Level state rows, 3 native 320x480 readbacks; "
-        "four-player sub0.25 gameplay stays ordinary, wrong miniature differs and zero-dt update restores it. "
+        "four-player below 0.25 gameplay stays ordinary, wrong miniature differs and zero-dt update restores it. "
         "No route or human readability acceptance.\n";
 }

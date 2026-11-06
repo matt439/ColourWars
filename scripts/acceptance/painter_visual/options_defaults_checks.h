@@ -134,7 +134,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     std::ofstream records(output / "options-defaults.csv"); records << "case,width,height,input_slot,row,staged,active_fullscreen,status,full_frame_matches\n";
     const auto compare = [&](const std::string& name, bool capture = false)
     {
-        preserved(preferences_session.play_settings()); const Frame actual = frame(); const RectangleF design(Vector2F::zero, menu_consts::DESIGN_RESOLUTION);
+        preserved(preferences_session.play_settings()); const Frame actual = frame(); const RectangleF design(Vector2F::zero, menu_consts::design_resolution);
         const RectangleF paper((Vector2F(1920.0f, style.footer_y) - look.options_box_size) / 2.0f, look.options_box_size);
         const std::array<std::wstring, 4> values{ saved_fullscreen ? std::to_wstring(actual.width) + L"x" + std::to_wstring(actual.height) : staged ? L"1920x1080" : L"1280x720",
             staged ? L"Off" : saved_fullscreen ? L"On" : L"Off", shown_vsync ? L"On" : L"Off", staged ? L"Random" : L"A: Blue / B: Yellow" };

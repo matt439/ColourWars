@@ -75,7 +75,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         { L"Mister", "mister", "mister_paint", "mister_supply" } }};
     std::array<RectangleF, 2> boxes, envelopes; std::array<RectangleI, 2> card_pixels, canvas_pixels;
     const auto viewport = app.viewport_manager()->fullscreen_viewport();
-    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
     for (size_t seat = 0; seat < boxes.size(); ++seat)
     {
         boxes[seat] = RectangleF(style.layout.position + Vector2F(look.weapon_select.spacing.x * 2.0f,
@@ -89,7 +89,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); auto art = look.art; art.shadow_offset = look.setup_shadow_offset;
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.weapon_box_size) / 2.0f, look.weapon_box_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.weapon_box_size) / 2.0f, look.weapon_box_size);
         setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         for (size_t seat = 0; seat < boxes.size(); ++seat)
         { weapon_paper_icon_reference(list, *app.render_resources(), style, look, look.weapon_select_art, choices[seat], boxes[seat],

@@ -242,8 +242,8 @@ void quiet_face_colour_consumer_checks(Application& app, const Presentation& pre
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,"
         "\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain Quiet face shared summary");
-    std::cout << "PASS quiet face consumer:38readbacks/10rows/10native176x24crops;128literalRGBA/case,"
-        "8controls512role inequalities,1216calibrationRGBA; zero updates/input polls/private game Saves.\n";
+    std::cout << "PASS quiet face consumer: 38 readbacks / 10 rows / 10 native 176x24 crops; 128 literal RGBA/case,"
+        "8 controls 512 role inequalities, 1216 calibration RGBA; zero updates/input polls/private game Saves.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
@@ -370,7 +370,7 @@ void quiet_face_tune_colour_checks(Application& app, GameTuning& tuning,
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,"
         "\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(), "Cannot retain Quiet face Debug summary");
-    std::cout << "PASS quiet face tune:9real commands/9states/54additional reads/18rows; two quoted face/arm tokens Save/rebase,"
+    std::cout << "PASS quiet face tune: 9 real commands / 9 states / 54 additional reads / 18 rows; two quoted face/arm tokens Save/rebase,"
         " sibling-retaining saved resets and unchanged private defaults; zero game Saves/updates/input polls.\n";
 }
 #endif

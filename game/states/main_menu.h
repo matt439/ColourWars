@@ -260,20 +260,20 @@ public:
 	// Rows of mode_select_spacing under the heading; Match length and Series
 	// stage are the two OptionRows. The practice hint sits on Single Match's
 	// row, one card padding after that row's complete focus card.
-	static constexpr int DURATION_ROW = 5;
-	static constexpr int STAGE_RULE_ROW = 6;
-	static constexpr int BACK_ROW = 7;
+	static constexpr int duration_row = 5;
+	static constexpr int stage_rule_row = 6;
+	static constexpr int back_row = 7;
 	static std::unique_ptr<OptionRow> make_duration_row(labrador::RenderResources* render,
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 		OptionRow::Adjust on_adjust = {});
-	static void check_duration_row(const OptionRow& duration_row,
+	static void check_duration_row(const OptionRow& row,
 		const labrador::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 	// The Series stage row (ROAD#20), checked like the duration row for
 	// every rule's value.
 	static std::unique_ptr<OptionRow> make_stage_rule_row(labrador::RenderResources* render,
 		const MenuStyle& style, const MainMenuPresentation& look, const MenuText& text,
 		OptionRow::Adjust on_adjust = {});
-	static void check_stage_rule_row(const OptionRow& stage_rule_row,
+	static void check_stage_rule_row(const OptionRow& row,
 		const labrador::RectangleF& panel, const MenuPaperArtPresentation& art, float row_spacing);
 protected:
 	bool shows_focus_backing() const override { return false; }
@@ -463,7 +463,7 @@ private:
 	std::vector<SelectState> select_states_;
 	// Keep names, frames and descriptions paired with the atlas captured on entry.
 	WeaponSelectArtworkPresentation weapon_select_art_;
-	std::array<std::wstring, SELECTABLE_WEAPON_COUNT> weapon_descriptions_;
+	std::array<std::wstring, selectable_weapon_count> weapon_descriptions_;
 	// Each row's weapon when its icon and text were last written; none until
 	// the first write, so that one always happens.
 	std::vector<WeaponType> displayed_weapons_;

@@ -2,6 +2,7 @@
 # Independent lossless HEALTH+PAINT ROI stack:192x16 native pixels each,
 # joined into192x32 without the source gap. Native owns full actual/rawRGBA,
 # negative controls, complete-HUD adoption/repeat/invariance and private Saves.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $hudTrackContexts=@('empty','half','full');$hudTrackStates=@('default','rgb','rgba128','alpha0')
 $hudTrackWidths=@{empty=0;half=96;full=192}
 $hudTrackModels=@('F_AF','Q_AF','F_AQ','Q_AQ')
@@ -44,20 +45,14 @@ function Get-HudTrackRGB([byte[]]$RGBA){
     for($pixel=0;$pixel -lt 6144;++$pixel){for($channel=0;$channel -lt 3;++$channel){$rgb[$pixel*3+$channel]=$RGBA[$pixel*4+$channel]}}
     return ,$rgb
 }
-function Assert-HudTrackInteger($Object,[string]$Key,[long]$Expected){
-    $value=$Object.$Key
-    if(($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected){throw "HUD Track exact integer differs: $Key"}
-}
-function Assert-HudTrackKeys($Object,[string[]]$Expected,[string]$Scope){
-    if((($Object.PSObject.Properties.Name|Sort-Object)-join '|') -cne (($Expected|Sort-Object)-join '|')){throw "HUD Track exact $Scope JSON schema differs"}
-}
+
 function Assert-HudTrackPairs($Rows,[string[]]$States,[string[]]$Contexts){
     $expected=@(foreach($state in $States){foreach($context in $Contexts){"$state/$context"}})
     if($Rows.Count -ne $expected.Count -or (($Rows|ForEach-Object{"$($_.state)/$($_.context)"}|Sort-Object)-join '|') -cne (($expected|Sort-Object)-join '|')){throw 'HUD Track exact state/context pairs differ'}
 }
 $hudTrackUpdates=@('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls')
 $hudTrackFlags=@('roi_rgba_match','adoption_match','repeat_match','literal_channels','delta_suffix','fill_roles_unchanged','frozen_inputs_resources_rng')
-function Assert-HudTrackUpdates($Object){foreach($key in $hudTrackUpdates){Assert-HudTrackInteger $Object $key 0}}
+function Assert-HudTrackUpdates($Object){foreach($key in $hudTrackUpdates){Assert-PainterInteger $Object $key 0}}
 function Assert-HudTrackFlags($Row){
     if($Row.background -cne 'canvas32-64-96'){throw 'HUD Track Canvas differs'}
     foreach($key in $hudTrackFlags){if($Row.$key -cne 'true'){throw "HUD Track native flag differs: $key"}}
@@ -78,8 +73,8 @@ $hudTrackCounts=[ordered]@{readbacks=54;csv_rows=12;crops=12;crop_width=192;crop
     contexts=3;palettes=4;roi_pixels=6144;source_rois=2;base_case_reads=48;blank_reads=0;selected_track_writes=2;maximum_selected_writes_per_pixel=1;
     controls=6;track_discriminations=12;partial_straight_reads=2;partial_squared_reads=2;alpha0_straight_reads=2;
     changed_control_pixels=27648;unchanged_control_pixels=9216;full_cover_invariant_cases=4;fill_role_guard_cases=12}
-Assert-HudTrackKeys $hudTrackSummary (@($hudTrackCounts.Keys)+$hudTrackUpdates+@('scope','viewport','background','event_fade','raw_reference','whole_frame_reference','health_roi_half_open','ammo_roi_half_open','capture_kind','paired_amounts_only')) 'shared'
-foreach($key in $hudTrackCounts.Keys){Assert-HudTrackInteger $hudTrackSummary $key $hudTrackCounts[$key]}
+Assert-PainterKeys $hudTrackSummary (@($hudTrackCounts.Keys)+$hudTrackUpdates+@('scope','viewport','background','event_fade','raw_reference','whole_frame_reference','health_roi_half_open','ammo_roi_half_open','capture_kind','paired_amounts_only')) 'shared'
+foreach($key in $hudTrackCounts.Keys){Assert-PainterInteger $hudTrackSummary $key $hudTrackCounts[$key]}
 Assert-HudTrackUpdates $hudTrackSummary
 foreach($roiField in @('health_roi_half_open','ammo_roi_half_open')){
     $roi=@($hudTrackSummary.$roiField);$integers=@($roi|Where-Object{$_ -is [int] -or $_ -is [long]})
@@ -95,7 +90,7 @@ if($hudTrackSummary.scope -cne 'consumer-only' -or $hudTrackSummary.viewport -cn
 Assert-HudTrackPairs $hudTrackRows $hudTrackStates $hudTrackContexts
 $hudTrackColumns=@('state','context','background','fill_width','roi_rgba_match','adoption_match','repeat_match','literal_channels','delta_suffix',
     'full_cover_invariant','fill_roles_unchanged','frozen_inputs_resources_rng','source_models','controls','track_discriminations','changed_control_pixels','unchanged_control_pixels','scope')
-if(($hudTrackRows[0].PSObject.Properties.Name-join '|') -cne ($hudTrackColumns-join '|')){throw 'HUD Track shared CSV columns differ'}
+if(-not (Test-PainterCsvColumns $hudTrackRows $hudTrackColumns)){throw 'HUD Track shared CSV columns differ'}
 $hudTrackControlReads=0;$hudTrackDiscriminations=0;$hudTrackChanged=0;$hudTrackUnchanged=0;$hudTrackCovered=0
 foreach($row in $hudTrackRows){
     Assert-HudTrackFlags $row;$width=$hudTrackWidths[$row.context]
@@ -118,8 +113,7 @@ $hudTrackStackEvidence=@(foreach($stack in $hudTrackStacks){
     $context=@($hudTrackContexts|Where-Object{$stack.Name.StartsWith("hud-track-colour-$_-",[StringComparison]::Ordinal)})
     if($context.Count -ne 1){throw 'HUD Track stack context differs'}
     $state=$stack.BaseName.Substring(("hud-track-colour-$($context[0])-").Length);$bytes=[IO.File]::ReadAllBytes($stack.FullName)
-    if($bytes.Length -ne 18446){throw 'HUD Track paired P6 byte length differs'}
-    for($i=0;$i -lt $hudTrackHeader.Length;++$i){if($bytes[$i] -ne $hudTrackHeader[$i]){throw 'HUD Track canonical paired P6 header differs'}}
+    Assert-PainterPpm -Bytes $bytes -Header $hudTrackHeader
     $payload=[byte[]]::new(18432);[Array]::Copy($bytes,14,$payload,0,18432)
     $actualPayloadHash=Get-PainterSha256 $payload
     $modelNames=[Collections.Generic.List[string]]::new();$classes=[ordered]@{}
@@ -163,8 +157,8 @@ $hudTrackStackEvidence=@(foreach($stack in $hudTrackStacks){
 })
 if($hudTrackP6Bytes -ne 221352 -or $hudTrackCheckedPixels -ne 73728 -or $hudTrackClassCount -ne 14 -or $hudTrackSplitCases -ne 2){throw 'HUD Track composite/class/pixel/P6 totals differ'}
 $hudTrackLog=@(Get-Content (Join-Path $run 'run.log'))
-$hudTrackSaves=@($hudTrackLog|Where-Object{$_ -match 'Saving\.\.\.$'}).Count
-$hudTrackSaveSuccess=@($hudTrackLog|Where-Object{$_ -ceq 'Save was successful.'}).Count
+$hudTrackSaves=$painterSaveCounts.calls
+$hudTrackSaveSuccess=$painterSaveCounts.successes
 if(@(Get-Content (Join-Path $run 'run.err')|Where-Object{$_ -match '^save failure:'}).Count){throw 'Unexpected HUD Track private Save failure'}
 $hudTrackArtifacts=[ordered]@{}
 foreach($path in @($hudTrackSummaryPath,$hudTrackCSVPath)){$hudTrackArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item $path).Length;sha256=(Get-FileHash $path).Hash}}
@@ -182,17 +176,17 @@ $hudTrackObserved=[ordered]@{consumer=$hudTrackSummary;readbacks=54;csv_rows=12;
 if($debug){
     $hudTrackTunePath=Join-Path $captures 'hud-track-colour-tune-summary.json';$hudTrackTuneCSV=Join-Path $captures 'hud-track-colour-tune.csv'
     $hudTrackTranscript=Join-Path $captures 'hud-track-colour-tune-commands.log'
-    $hudTrackPrefs=Join-Path $captures 'hud-track-colour-tune-scratch/profile/ColourWars/save_data.json'
+    $hudTrackPrefs=Get-PainterSavePath (Join-Path $captures 'hud-track-colour-tune-scratch/profile')
     $hudTrackTune=Get-Content $hudTrackTunePath -Raw|ConvertFrom-Json;$hudTrackTuneRows=@(Import-Csv $hudTrackTuneCSV)
     $hudTrackTuneCounts=[ordered]@{commands=9;states=9;contexts=1;readbacks=36;csv_rows=9;crops=0;saved_tokens=1;private_seed_saves=2;fill_role_guard_cases=9}
-    Assert-HudTrackKeys $hudTrackTune (@($hudTrackTuneCounts.Keys)+$hudTrackUpdates+@('scope','event_fade','paired_context')) 'Debug'
-    foreach($key in $hudTrackTuneCounts.Keys){Assert-HudTrackInteger $hudTrackTune $key $hudTrackTuneCounts[$key]}
+    Assert-PainterKeys $hudTrackTune (@($hudTrackTuneCounts.Keys)+$hudTrackUpdates+@('scope','event_fade','paired_context')) 'Debug'
+    foreach($key in $hudTrackTuneCounts.Keys){Assert-PainterInteger $hudTrackTune $key $hudTrackTuneCounts[$key]}
     Assert-HudTrackUpdates $hudTrackTune
     Assert-HudTrackPairs $hudTrackTuneRows @('baseline','named','reset-original','rgb','rgba128','alpha0','reset-saved','rgb-after-save','reset-all-saved') @('half')
     $hudTrackTuneColumns=@('state','context','background','fill_width','roi_rgba_match','adoption_match','repeat_match','literal_channels','delta_suffix',
         'full_cover_invariant','fill_roles_unchanged','frozen_inputs_resources_rng','source_models','private_bytes','adoption')
     if($hudTrackTune.scope -cne 'debug-validated-commands' -or $hudTrackTune.event_fade -isnot [bool] -or $hudTrackTune.event_fade -ne $false -or
-        $hudTrackTune.paired_context -cne 'half' -or ($hudTrackTuneRows[0].PSObject.Properties.Name-join '|') -cne ($hudTrackTuneColumns-join '|')){throw 'HUD Track Debug oracle/schema/paired-context differs'}
+        $hudTrackTune.paired_context -cne 'half' -or (-not (Test-PainterCsvColumns $hudTrackTuneRows $hudTrackTuneColumns))){throw 'HUD Track Debug oracle/schema/paired-context differs'}
     foreach($row in $hudTrackTuneRows){
         Assert-HudTrackFlags $row
         Assert-HudTrackSourceNames $row.source_models ($row.state -cin @('rgba128','reset-saved','reset-all-saved'))
@@ -203,6 +197,6 @@ if($debug){
     # Native owns actual one-token Save/rebase/full-HUD original/saved resets,
     # private source/staged bytes, default display/JumpJ and empty queues.
     foreach($path in @($hudTrackTunePath,$hudTrackTuneCSV,$hudTrackTranscript,$hudTrackPrefs)){$hudTrackArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item $path).Length;sha256=(Get-FileHash $path).Hash}}
-    $hudTrackObserved.developer_commands=$hudTrackTune;$hudTrackObserved.readbacks=90;$hudTrackObserved.csv_rows=21
+    $hudTrackObserved.developer_commands=$hudTrackTune;$hudTrackObserved.readbacks += $hudTrackTune.readbacks;$hudTrackObserved.csv_rows += $hudTrackTune.csv_rows
 }elseif($hudTrackSaves -ne 0 -or $hudTrackSaveSuccess -ne 0 -or @(Get-ChildItem $captures -Filter 'hud-track-colour-tune-*').Count){throw 'Release HUD Track proof must remain consumer-only without developer artifacts or private Saves'}
 $result.observed_counts=$hudTrackObserved

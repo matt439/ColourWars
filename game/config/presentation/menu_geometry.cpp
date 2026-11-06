@@ -4,11 +4,11 @@
 #include <algorithm>
 
 using namespace labrador;
-using menu_consts::DESIGN_RESOLUTION;
+using menu_consts::design_resolution;
 
 RectangleF menu_geometry::design_area()
 {
-	return RectangleF(Vector2F::zero, DESIGN_RESOLUTION);
+	return RectangleF(Vector2F::zero, design_resolution);
 }
 
 float menu_geometry::fit_scale(float size, float available)
@@ -28,17 +28,17 @@ float menu_geometry::centred(float size, float extent)
 
 float menu_geometry::centred_x(float width)
 {
-	return centred(width, DESIGN_RESOLUTION.x);
+	return centred(width, design_resolution.x);
 }
 
 RectangleF menu_geometry::footer_paper(const Vector2F& box, float footer_y)
 {
-	return RectangleF((Vector2F(DESIGN_RESOLUTION.x, footer_y) - box) / 2.0f, box);
+	return RectangleF((Vector2F(design_resolution.x, footer_y) - box) / 2.0f, box);
 }
 
 RectangleF menu_geometry::screen_paper(const Vector2F& box)
 {
-	return RectangleF((DESIGN_RESOLUTION - box) / 2.0f, box);
+	return RectangleF((design_resolution - box) / 2.0f, box);
 }
 
 RectangleF menu_geometry::paper_interior(const RectangleF& paper, const MenuPaperArtPresentation& art)
@@ -56,13 +56,13 @@ float menu_geometry::paper_text_right(const RectangleF& paper, const MenuPaperAr
 RectangleF menu_geometry::footer_band(const MenuStyle& style)
 {
 	return RectangleF(0.0f, style.footer_y,
-		DESIGN_RESOLUTION.x, DESIGN_RESOLUTION.y - style.footer_y);
+		design_resolution.x, design_resolution.y - style.footer_y);
 }
 
 RectangleF menu_geometry::footer_rule(const MenuStyle& style)
 {
 	return RectangleF(style.brand_position.x, style.footer_y,
-		DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height);
+		design_resolution.x - style.brand_position.x * 2.0f, style.rule_height);
 }
 
 MenuPaperArtPresentation menu_geometry::setup_art(const MainMenuPresentation& main)

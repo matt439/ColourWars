@@ -18,7 +18,7 @@ RectangleF stage_count_surface_reference(DrawList& list, RenderResources& resour
     { const colourwars::UiTextDropShadow text("count-paper-fixed-bound", row.text, row.font, info + geometry.briefing.spacing * row.line,
         &resources, art.ink, clear, style.detail_shadow_offset); include(text); }
     include(status); include(hint);
-    const RectangleF outer((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f, main.stage_box_size);
+    const RectangleF outer((Vector2F(menu_consts::design_resolution.x, style.footer_y) - main.stage_box_size) / 2.0f, main.stage_box_size);
     const float edge = art.keyline_width * 3.0f;
     const RectangleF inside(outer.position() + Vector2F(edge), outer.size() - Vector2F(edge * 2.0f + art.shadow_offset));
     const RectangleF preview(geometry.preview_position - Vector2F(style.rule_height), geometry.preview_size + Vector2F(style.rule_height * 2.0f));
@@ -26,7 +26,7 @@ RectangleF stage_count_surface_reference(DrawList& list, RenderResources& resour
         "Independent count hint expanded its complete paper beyond the outer panel or into the preview");
     list.set_filter(TextureFilter::point);
     const UiTexture surround("count-paper-surround", style.sprite_sheet, style.fill_frame,
-        RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), &resources, main.home_background_colour); surround.draw(list);
+        RectangleF(Vector2F::zero, menu_consts::design_resolution), &resources, main.home_background_colour); surround.draw(list);
     setup_paper_reference(list, resources, style, art, outer, RectangleF());
     auto briefing = art; briefing.paper = art.focus_fill; setup_paper_reference(list, resources, style, briefing, card, RectangleF());
     const UiTexture accent("count-paper-accent", style.sprite_sheet, style.fill_frame,
@@ -152,7 +152,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             record.bounds().y >= live.preview_position.y + live.preview_size.y + style.rule_height, "Independent record fit crossed the navigation gutter or preview");
         std::srand(9143); const int next_random = std::rand(); std::srand(9143); const Frame actual = stack_frame(app);
         require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random, "Frozen Stage count drawing changed pixels or match RNG");
-        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
+        const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0); list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); sheet->draw(list, sheet->resolve_sprite_frame(style.fill_frame), camera.visible_rectangle(pane), style.scrim_colour);
@@ -211,6 +211,6 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     }
     require(ticks == 104 && comparisons == 54 && rows == 216 && captures == 8, "Stage count matrix differs from its bounded source counts");
     require(records.good(), "Stage count evidence CSV write failed");
-    std::cout << "PASS Stage counts: literal actual navigation/hint/status/record rasters at 720/1080; all four mixed indices, eligible counts 0/1/3 and unchanged singular grammar, excluded-only refusal, positive record room and independent right-aligned record fit/absence. Captured templates/detail+brand font IDs/positions/ink/navigation shadows, cached fit versus live hint width/shadow on actual browse/first Random lock/unlock/concrete refresh, reopen/reversal, exact private save/records/keyboard claim/settings/frozen/provisional RNG. " <<
+    std::cout << "PASS Stage counts: literal actual navigation/hint/status/record rasters at 720/1080; all four mixed indices, eligible counts 0 / 1 / 3 and unchanged singular grammar, excluded-only refusal, positive record room and independent right-aligned record fit/absence. Captured templates/detail+brand font IDs/positions/ink/navigation shadows, cached fit versus live hint width/shadow on actual browse/first Random lock/unlock/concrete refresh, reopen/reversal, exact private save/records/keyboard claim/settings/frozen/provisional RNG. " <<
         ticks << " updates (hard 120), " << comparisons << " observed states, " << rows << " CSV role checks, " << captures << " compact crops; no final Random draw, match launch, broad matrix, foreground/global input or physical/human/performance acceptance\n";
 }

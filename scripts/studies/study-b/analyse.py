@@ -25,6 +25,10 @@ import re
 import statistics
 import sys
 
+# The study tools are also runnable directly from their own folders.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _paths import inside_repo_but_not_out as inside_repo_unignored
+
 BASELINE = "V0"
 FORMAT = "colourwars-study-b-results"
 
@@ -108,7 +112,7 @@ def load_results(paths):
         if pid in participants:
             old = participants[pid]
             # Keep the complete file, or the one with more trials.
-            if (data.get("complete"), len(data.get("trials", []))) > (old.get("complete"), len(old.get("trials", []))):
+            if (bool(data.get("complete")), len(data.get("trials", []))) > (bool(old.get("complete")), len(old.get("trials", []))):
                 participants[pid] = data
             warnings.append("Participant %s appears in more than one file; kept the most complete." % pid)
             continue
@@ -648,19 +652,6 @@ def write_report(path, participants, warnings, files, regions_path, regions, pri
         fh.write("\n".join(L))
 
 
-def inside_repo_unignored(path):
-    p = os.path.normcase(os.path.abspath(path))
-    root = os.path.normcase(REPO_ROOT)
-    try:
-        common = os.path.commonpath([p, root])
-    except ValueError:
-        # Another drive (D:, a USB stick) is never inside the repository.
-        return False
-    if common != root:
-        return False
-    rel = os.path.relpath(p, root).replace("\\", "/")
-    return not rel.startswith("out/")
-
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Apply the Study B pass rules to exported results.")
@@ -673,7 +664,7 @@ def main(argv=None):
 
     for target in [args.report] + ([args.json] if args.json else []):
         if inside_repo_unignored(target):
-            print("error: %s is inside the repository. Participant results stay out of it; "
+            print("error: %s is inside repository source or its location could not be resolved. Participant results stay out of source; "
                   "write under out/ or outside the repository." % target, file=sys.stderr)
             return 2
 

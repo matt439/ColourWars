@@ -11,7 +11,7 @@ import io
 import json
 import math
 from pathlib import Path
-import struct
+import sys
 import subprocess
 import warnings
 
@@ -22,6 +22,10 @@ from scipy.signal import butter, resample_poly, sosfiltfilt
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
 RATE = 44100
+
+# Shared authoring helpers; the game build does not import Python.
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts/audio"))
+from wave_writer import write_wave
 
 
 def digest(path):
@@ -99,22 +103,6 @@ def join_loop(samples, seconds):
     result[-n:] -= delta * np.linspace(0, 1, n) ** 2
     return result
 
-
-def write_wave(path, samples, loop, channels=1):
-    pcm = np.rint(samples * 32767).astype('<i2')
-    if channels == 2:
-        pcm = np.column_stack((pcm, pcm))
-    fmt = struct.pack('<HHIIHH', 1, channels, RATE, RATE * 2 * channels, 2 * channels, 16)
-    chunks = [(b'fmt ', fmt), (b'data', pcm.tobytes())]
-    if loop:
-        # WAV smpl uses an inclusive loop end. Forward loop, infinite repeat.
-        smpl = struct.pack('<9I', 0, 0, round(1e9 / RATE), 60, 0, 0, 0, 1, 0)
-        smpl += struct.pack('<6I', 0, 0, 0, len(pcm) - 1, 0, 0)
-        chunks.append((b'smpl', smpl))
-    payload = b'WAVE' + b''.join(tag + struct.pack('<I', len(data)) + data +
-        (b'\0' if len(data) % 2 else b'') for tag, data in chunks)
-    path.write_bytes(b'RIFF' + struct.pack('<I', len(payload)) + payload)
-    return pcm
 
 
 def main():

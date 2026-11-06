@@ -254,8 +254,8 @@ void crack_colour_consumer_checks(Application& app,const Presentation& presentat
     std::ofstream summary(output/"crack-colour-consumer-summary.json");
     summary<<"{\"scope\":\"consumer-only\",\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"actual_entry\":\"Monitor::draw_front_details-only-plus-calibration\",\"raw_reference\":\"ordered-segment-ink-then-thin-literal115x34-interior-only\",\"whole_frame_reference\":\"copied-complete-frontdetails-adoption-only\",\"left_roi_half_open\":[2,472,117,506],\"right_roi_half_open\":[1162,472,1277,506],\"capture_kind\":\"native-contiguous-ROI\",\"source_models\":\"F_AF|Q_AF|F_AQ|Q_AQ\",\"readbacks\":42,\"csv_rows\":8,\"crops\":8,\"crop_width\":115,\"crop_height\":34,\"crop_pixels\":31280,\"ppm_bytes\":93952,\"contexts\":2,\"palettes\":4,\"roi_pixels\":3910,\"base_case_reads\":32,\"actual_reads\":16,\"adoption_reads\":8,\"raw_positive_reads\":8,\"blank_reads\":0,\"calibration_only_reads\":0,\"calibration_pixels_per_read\":32,\"calibration_pixel_checks\":1344,\"controls\":10,\"partial_straight_reads\":2,\"partial_squared_reads\":2,\"collapsed_reads\":2,\"all_ink_first_reads\":2,\"alpha0_straight_reads\":2,\"changed_control_pixels\":1274,\"unchanged_control_pixels\":37826,\"ink_submissions_per_path\":77,\"selected_submissions_per_path\":165,\"left_effective_pixels\":179,\"right_effective_pixels\":178,\"ever_selected_pixels_per_path\":182,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Crack shared summary");
-    std::cout<<"PASS crack consumer:42readbacks/8rows/8native115x34 contiguous ROI crops;3910independentRGBA/case,10controls1274changed37826unchanged,"
-        "1344WHITE-BLACK calibration checks; exact coherent source representatives, copied front-details adoption only; zero all updates.\n";
+    std::cout<<"PASS crack consumer: 42 readbacks / 8 rows / 8 native 115x34 contiguous ROI crops; 3910 independent RGBA/case, 10 controls 1274 changed, 37826 unchanged,"
+        "1344 WHITE-BLACK calibration checks; exact coherent source representatives, copied front-details adoption only; zero all updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
@@ -348,7 +348,7 @@ void crack_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& 
     require(records.good()&&commands==9&&rows==9&&named_checks==1&&probe.readbacks()==36&&probe.calibration_checks()==1152,"Crack Debug exact command/row/named-token/calibration/read budget differs");
     std::ofstream summary(output/"crack-colour-tune-summary.json");summary<<"{\"scope\":\"debug-validated-commands\",\"event_fade\":false,\"context\":\"left\",\"source_models\":\"F_AF|Q_AF|F_AQ|Q_AQ\",\"commands\":9,\"states\":9,\"contexts\":1,\"readbacks\":36,\"csv_rows\":9,\"crops\":0,\"saved_tokens\":1,\"private_seed_saves\":2,\"named_token_checks\":1,\"calibration_pixels_per_read\":32,\"calibration_pixel_checks\":1152,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Crack Debug summary");
-    std::cout<<"PASS crack tune:9real commands/9left states/36additional readbacks/9rows; one exact quoted Crack token Save/rebase and original/saved complete-frontdetails resets,"
-        "1152WHITE-BLACK calibration checks/quotedRED preserved/2private preference seeds/JumpJ/defaultdisplay; zero all updates; no actualLevel/human/performance claim.\n";
+    std::cout<<"PASS crack tune: 9 real commands/9 left states / 36 additional readbacks / 9 rows; one exact quoted Crack token Save/rebase and original/saved complete front details resets,"
+        "1152 WHITE-BLACK calibration checks/quoted RED preserved/2 private preference seeds/Jump J/default display; zero all updates; no actual Level/human/performance claim.\n";
 }
 #endif

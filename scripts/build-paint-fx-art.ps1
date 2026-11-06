@@ -1,11 +1,12 @@
 [CmdletBinding()]
 param()
+. (Join-Path $PSScriptRoot 'art-png.ps1')
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.Drawing
 
 if (-not ('ColourWars.PaintFxArt' -as [type])) {
-    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition (@'
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -14,21 +15,7 @@ using System.Text;
 namespace ColourWars {
     public static class PaintFxArt {
         public static void SavePng(Bitmap bitmap, string path) {
-            using (var encoded = new MemoryStream()) {
-                bitmap.Save(encoded, ImageFormat.Png);
-                byte[] png = encoded.ToArray();
-                using (var output = File.Create(path)) {
-                    output.Write(png, 0, 8);
-                    for (int offset = 8; offset < png.Length;) {
-                        int length = (png[offset] << 24) | (png[offset+1] << 16) |
-                            (png[offset+2] << 8) | png[offset+3];
-                        string kind = Encoding.ASCII.GetString(png, offset+4, 4);
-                        if (kind != "sRGB" && kind != "gAMA" && kind != "iCCP" && kind != "cHRM")
-                            output.Write(png, offset, length+12);
-                        offset += length+12;
-                    }
-                }
-            }
+            PaintFxPng.SavePng(bitmap, path);
         }
         // Outline the union, not each constituent ellipse: joined lobes stay liquid.
         public static Bitmap Finish(Bitmap mask, Bitmap tones, int keyline) {
@@ -65,7 +52,7 @@ namespace ColourWars {
         }
     }
 }
-'@
+'@ + (Get-ArtPngSource 'PaintFxPng'))
 }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))

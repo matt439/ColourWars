@@ -46,7 +46,7 @@ namespace
         return close_to(first.x, second.x) && close_to(first.y, second.y);
     }
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     // Metadata only: no graphics/audio device, player save or window is opened.
     struct World

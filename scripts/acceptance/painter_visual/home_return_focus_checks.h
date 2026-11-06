@@ -91,13 +91,13 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto pixel = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, pixel, camera.visible_rectangle(viewport), style.scrim_colour);
-        sheet->draw(list, pixel, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), look.home_background_colour);
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
+        sheet->draw(list, pixel, RectangleF(Vector2F::zero, menu_consts::design_resolution), look.home_background_colour);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
         setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         // Only the focused action has a card; Play is not pinned (POL#37).
         auto card_art = art; card_art.paper = art.focus_fill;
@@ -114,10 +114,10 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             const float reach = static_cast<float>(step);
             ink(RectangleF(tip.x - reach * pen, tip.y - (reach + 1.0f) * pen, pen, (reach + 1.0f) * pen * 2.0f));
         }
-        sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
-            menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
+        sheet->draw(list, pixel, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x,
+            menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, pixel, RectangleF(style.brand_position.x, style.footer_y,
-            menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
+            menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); for (const auto& item : text) { item->draw(list); }
         const auto& footer = presentation.prompt_bar();
         const colourwars::UiTextDropShadow prompt("independent-home-return-prompt", L"A/Enter Select    B/Esc Back", footer.font,
@@ -145,8 +145,8 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         if (capture)
         {
             save(actual, output / (stem + ".ppm"));
-            const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.home_box_size) / 2.0f, look.home_box_size);
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
             save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(panel)), 0), output / (stem + "-detail.ppm"));
         }
         records << name << ',' << actual.width << ',' << actual.height << ',' << (pad ? 3 : input_slots::keyboard_and_mouse) << ',' << selected << ",true\n";

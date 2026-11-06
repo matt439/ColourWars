@@ -123,6 +123,7 @@ Set-StrictMode -Version Latest
 # Load this host's standard file-hashing command from its own installation.
 Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'probe-build.ps1')
 $trialResolved = $null
 $trialHashBefore = $null
 $trialHashAfterAttempted = $false
@@ -191,111 +192,14 @@ function Quote-Path {
 }
 
 $probeArguments = @()
-if ($IdentityOnly) { $probeArguments += 'identity' }
-elseif ($QuietOnly) { $probeArguments += 'quiet' }
-elseif ($DriftOnly) { $probeArguments += 'drift' }
-elseif ($MiniatureTerrainOnly) { $probeArguments += 'miniature-terrain' }
-elseif ($CqBlockoutOnly) { $probeArguments += 'cq-blockout' }
-elseif ($CrossfeedOnly) { $probeArguments += 'crossfeed' }
-elseif ($PressTowerOnly) { $probeArguments += 'press-tower' }
-elseif ($TurbulenceBlockoutOnly) { $probeArguments += 'turbulence-blockout' }
-elseif ($TurbulenceMoverOnly) { $probeArguments += @('turbulence-mover', (Quote-Path $trialResolved)) }
-elseif ($TurbulenceShoulderOnly) { $probeArguments += @('turbulence-shoulder', (Quote-Path $trialResolved)) }
-elseif ($TurbulenceSlabOnly) { $probeArguments += @('turbulence-slab', (Quote-Path $trialResolved)) }
-elseif ($GatePermissionOnly) { $probeArguments += 'gate-permission' }
-elseif ($FerryDirectionOnly) { $probeArguments += 'ferry-direction' }
-elseif ($SurfaceFinishOnly) { $probeArguments += 'surface-finish' }
-elseif ($RouteWarningOnly) { $probeArguments += 'route-warning' }
-elseif ($LandmarkOnly) { $probeArguments += 'landmark' }
-elseif ($ParallaxOnly) { $probeArguments += 'parallax' }
-elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
-elseif ($FeedbackTuneColoursOnly) { $probeArguments += 'feedback-tune-colours' }
-elseif ($CombatTuneColoursOnly) { $probeArguments += 'combat-tune-colours' }
-elseif ($BlockedShotTuneColoursOnly) { $probeArguments += 'blocked-shot-tune-colours' }
-elseif ($IdleDripTuneColoursOnly) { $probeArguments += 'idle-drip-tune-colours' }
-elseif ($RespawnPenTuneColoursOnly) { $probeArguments += 'respawn-pen-tune-colours' }
-elseif ($CursorTuneColoursOnly) { $probeArguments += 'cursor-tune-colours' }
-elseif ($SilhouetteTuneColoursOnly) { $probeArguments += 'silhouette-tune-colours' }
-elseif ($RevealTuneColoursOnly) { $probeArguments += 'reveal-tune-colours' }
-elseif ($CursorMaterialTuneColoursOnly) { $probeArguments += 'cursor-material-tune-colours' }
-elseif ($DesktopTuneColourOnly) { $probeArguments += 'desktop-tune-colour' }
-elseif ($PowerLightTuneColourOnly) { $probeArguments += 'power-light-tune-colour' }
-elseif ($ProgramTuneColourOnly) { $probeArguments += 'program-tune-colour' }
-elseif ($ProgramLevelVisibilityOnly) { $probeArguments += 'program-level-visibility' }
-elseif ($ActingTuneColoursOnly) { $probeArguments += 'acting-tune-colours' }
-elseif ($GlassTuneColourOnly) { $probeArguments += 'glass-tune-colour' }
-elseif ($SilhouetteBodyTuneColourOnly) { $probeArguments += 'silhouette-body-tune-colour' }
-elseif ($ScribbleTuneColourOnly) { $probeArguments += 'scribble-tune-colour' }
-elseif ($HudHealthTuneColourOnly) { $probeArguments += 'hud-health-tune-colour' }
-elseif ($HudTrackTuneColourOnly) { $probeArguments += 'hud-track-tune-colour' }
-elseif ($HudTimerTuneColourOnly) { $probeArguments += 'hud-timer-tune-colour' }
-elseif ($HudClosingMaterialsOnly) { $probeArguments += 'hud-closing-materials' }
-elseif ($HudClosingShadeOnly) { $probeArguments += 'hud-closing-shade' }
-elseif ($HudPaperTuneColoursOnly) { $probeArguments += 'hud-paper-tune-colours' }
-elseif ($HudLabelTuneColoursOnly) { $probeArguments += 'hud-label-tune-colours' }
-elseif ($StagePreviewBackgroundTuneColourOnly) { $probeArguments += 'stage-preview-background-tune-colour' }
-elseif ($CrackTuneColourOnly) { $probeArguments += 'crack-tune-colour' }
-elseif ($LimbTuneColoursOnly) { $probeArguments += 'limb-tune-colours' }
-elseif ($ExposedColourAlphaOnly) { $probeArguments += 'exposed-colour-alpha' }
-elseif ($DurationTextOnly) { $probeArguments += 'duration-text' }
-elseif ($ResolutionTextOnly) { $probeArguments += 'resolution-text' }
-elseif ($EndContinuationOnly) { $probeArguments += 'end-continuation' }
-elseif ($ResultsTextOnly) { $probeArguments += 'results-text' }
-elseif ($SessionResultOnly) { $probeArguments += 'session-result' }
-elseif ($SeriesScoreOnly) { $probeArguments += 'series-score' }
-elseif ($RoundHeadingOnly) { $probeArguments += 'round-heading' }
-elseif ($CompetitiveWinnerOnly) { $probeArguments += 'competitive-winner' }
-elseif ($ContributionTeamOnly) { $probeArguments += 'contribution-team' }
-elseif ($ResultPercentageOnly) { $probeArguments += 'result-percentage' }
-elseif ($MonitorOnly) { $probeArguments += 'monitor' }
-elseif ($CountdownOnly) { $probeArguments += 'countdown' }
-elseif ($ClosingOnly) { $probeArguments += 'closing' }
-elseif ($SupplyOnly) { $probeArguments += 'supply' }
-elseif ($HudOnly) { $probeArguments += 'hud' }
-elseif ($PracticeReplayOnly) { $probeArguments += 'practice-replay' }
-elseif ($ResumeOnly) { $probeArguments += 'resume' }
-elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
-elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
-elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
-elseif ($MainMenuOnly) { $probeArguments += 'main-menu' }
-elseif ($WeaponCatalogOnly) { $probeArguments += 'weapon-catalog' }
-elseif ($MenuTextOnly) { $probeArguments += 'menu-text' }
-elseif ($MenuMotionOnly) { $probeArguments += 'menu-motion' }
-elseif ($SetupMotionOnly) { $probeArguments += 'setup-motion' }
-elseif ($JoinStageMotionOnly) { $probeArguments += 'join-stage-motion' }
-elseif ($SetupPaperOnly) { $probeArguments += 'setup-paper' }
-elseif ($JoinPaperOnly) { $probeArguments += 'join-paper' }
-elseif ($TeamPaperOnly) { $probeArguments += 'team-paper' }
-elseif ($WeaponPaperOnly) { $probeArguments += 'weapon-paper' }
-elseif ($StagePaperOnly) { $probeArguments += 'stage-paper' }
-elseif ($HomeReturnFocusOnly) { $probeArguments += 'home-return-focus' }
-elseif ($HomeExitOnly) { $probeArguments += 'home-exit' }
-elseif ($OptionsDefaultsOnly) { $probeArguments += 'options-defaults' }
-elseif ($DisplayTrialOnly) { $probeArguments += 'display-trial' }
-elseif ($PausedOptionsOnly) { $probeArguments += 'paused-options' }
-elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
-elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
-elseif ($RumbleOnly) { $probeArguments += 'rumble' }
-elseif ($KeyboardJumpOnly) { $probeArguments += 'keyboard-jump' }
-elseif ($PercentageTextOnly) { $probeArguments += 'percentage-text' }
-elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
-elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
-elseif ($RememberedSetupOnly) { $probeArguments += 'remembered-setup' }
-elseif ($BotPlayersOnly) { $probeArguments += 'bot-players' }
-elseif ($ConnectionTextOnly) { $probeArguments += 'connection-text' }
-elseif ($StickReadoutsOnly) { $probeArguments += 'stick-readouts' }
-elseif ($TeamFocusOnly) { $probeArguments += 'team-focus' }
-elseif ($WeaponTuneColoursOnly) { $probeArguments += 'weapon-tune-colours' }
-elseif ($TeamTuneColoursOnly) { $probeArguments += 'team-tune-colours' }
-elseif ($MenuLabelsOnly) { $probeArguments += 'menu-labels' }
-elseif ($StageSummaryOnly) { $probeArguments += 'stage-summary' }
-elseif ($StageCountsOnly) { $probeArguments += 'stage-counts' }
-elseif ($StageScanOnly) { $probeArguments += 'stage-scan' }
-if ($focusedSelectors.Count -eq 1 -and $probeArguments.Count -eq 0) {
-    throw "Focused painter selector '$($focusedSelectors[0])' has no native scope argument."
+if ($focusedSelectors.Count -eq 1) {
+    $selector = $focusedSelectors[0] -creplace 'Only$', ''
+    $probeArguments += (($selector -creplace '([a-z0-9])([A-Z])', '$1-$2').ToLowerInvariant())
+    if ($trialMode) { $probeArguments += Quote-Path $trialResolved }
 }
 
 . (Join-Path $PSScriptRoot 'check-painter/hash.ps1')
+. (Join-Path $PSScriptRoot 'check-painter/evidence.ps1')
 . (Join-Path $PSScriptRoot 'check-painter/contact-sheet.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -304,9 +208,9 @@ $outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $captures = Join-Path $run 'captures'
 $working = Join-Path $run 'working-directory'
-$profile = Join-Path $run 'profile'
-$null = New-Item -ItemType Directory -Path $run, $captures, $working, $profile -Force
-$saveDirectory = Join-Path $profile 'ColourWars'
+$privateProfile = Join-Path $run 'profile'
+$null = New-Item -ItemType Directory -Path $run, $captures, $working, $privateProfile -Force
+$saveDirectory = Join-Path $privateProfile 'ColourWars'
 $null = New-Item -ItemType Directory -Path $saveDirectory -Force
 $saveFixture = Join-Path $saveDirectory 'save_data.json'
 [IO.File]::WriteAllText($saveFixture, '{"aim_marker":false}', [Text.UTF8Encoding]::new($false))
@@ -325,6 +229,7 @@ if (-not $env:INCLUDE -or -not $env:LIB -or
 # Loaded after the tool preflight: the selection checker's fault copy stops there
 # and mirrors only the helpers needed to reach it.
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
+. (Join-Path $PSScriptRoot 'check-diagnostics.ps1')
 Push-Location -LiteralPath $repo
 $previousPath = $env:PATH
 $previousLocalAppData = $env:LOCALAPPDATA
@@ -359,46 +264,13 @@ try {
         Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
-    $cachePath = Join-Path $build 'CMakeCache.txt'
-    if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) {
-        throw "No configured build at $build. Run without -SkipBuild first."
-    }
-    $cache = @{}
-    foreach ($line in Get-Content -LiteralPath $cachePath) {
-        if ($line -match '^([^/#][^:]*):[^=]*=(.*)$') { $cache[$Matches[1]] = $Matches[2] }
-    }
-    foreach ($key in 'CMAKE_BUILD_TYPE', 'CMAKE_CXX_COMPILER', 'CMAKE_HOME_DIRECTORY',
-        'LABRADOR_RENDER_BACKEND', 'LABRADOR_AUDIO_BACKEND', 'VCPKG_INSTALLED_DIR',
-        'VCPKG_TARGET_TRIPLET') {
-        if (-not $cache.ContainsKey($key)) { throw "Configured build is missing $key." }
-    }
-    $debug = $Preset -eq 'x64-debug'
-    $configuration = if ($debug) { 'Debug' } else { 'Release' }
-    if ([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY) -ne $repo -or
-        $cache.CMAKE_BUILD_TYPE -ne $configuration -or
-        $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or
-        $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or
-        $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows') {
-        throw 'The probe requires this checkout and the selected d3d11/xaudio2 x64-windows preset.'
-    }
-    $gameDirectory = Join-Path $build 'game'
-    $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
-    $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else { Join-Path $installed 'lib' }
-    # Every painter mode supplies a fake factory and never links the motor
-    # adapter, so no existing or future GameLevel probe can contact physical
-    # rumble motors.
-    $libraries = @(
-        (Join-Path $gameDirectory 'colourwars_game.lib'),
-        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
-        (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
-        (Join-Path $dependencyLibraries 'DirectXTK.lib'),
-        (Join-Path $dependencyLibraries 'xaudio2_9redist.lib')
-    )
-    foreach ($path in @($cache.CMAKE_CXX_COMPILER) + $libraries +
-        @((Join-Path $gameDirectory 'ColourWars.exe'), (Join-Path $gameDirectory 'presentation.json'))) {
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing build output: $path" }
-    }
+    # Every painter mode supplies a fake rumble factory; never link the motor adapter.
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -Adapters @('display_awake') -RequiredContent @('presentation.json')
+    $cache = $probeBuild.Cache
+    $debug = $probeBuild.Debug
+    $gameDirectory = $probeBuild.GameDirectory
+    $installed = $probeBuild.Installed
+    $libraries = $probeBuild.Libraries
     $source = Join-Path $PSScriptRoot 'acceptance/painter_visual.cpp'
     $compiledVariants = @()
     foreach ($scriptedPads in $painterCompileVariants) {
@@ -406,10 +278,7 @@ try {
         $variantSuffix = if (-not $CompileOnly) { '' } elseif ($scriptedPads) { '-scripted-pads' } else { '-normal-pads' }
         $executable = Join-Path $run "painter_visual$variantSuffix.exe"
         $responseFile = Join-Path $run "compile$variantSuffix.rsp"
-        $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8',
-            '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
-            '/DUNICODE', '/D_UNICODE', '/external:W0')
-        if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
+        $arguments = @($probeBuild.CompileArguments)
         if ($scriptedPads) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
         if ($StagePreviewBackgroundTuneColourOnly -and ($arguments -notcontains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
             throw 'StagePreviewBackgroundTuneColourOnly requires the scripted gamepad reader.'
@@ -426,20 +295,10 @@ try {
         if ($HudPaperTuneColoursOnly -and ($arguments -contains '/DCOLOURWARS_PAINTER_SCRIPTED_PADS')) {
             throw 'HudPaperTuneColoursOnly requires the normal gamepad reader.'
         }
-        foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
-            $arguments += '/I' + (Quote-Path $include)
-        }
-        foreach ($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),
-            (Join-Path $installed 'include/directxtk'),
-            (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
-            $arguments += '/external:I' + (Quote-Path $include)
-        }
         $arguments += @((Quote-Path $source), ('/Fe:' + (Quote-Path $executable)),
             ('/Fo:' + (Quote-Path (Join-Path $run "painter_visual$variantSuffix.obj"))))
         $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
-        $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
-            'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',
-            'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib')
+        $arguments += $probeBuild.WindowsLibraries
         $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
         $reader = if ($scriptedPads) { 'scripted pads' } else { 'normal pads' }
         Write-Host "Compile painter visual probe ($Preset, $reader)"
@@ -472,7 +331,7 @@ try {
         }
     )
     $env:PATH = "$gameDirectory;$previousPath"
-    $env:LOCALAPPDATA = $profile
+    $env:LOCALAPPDATA = $privateProfile
     $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures)) + $probeArguments
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
@@ -499,7 +358,7 @@ try {
         $process.Dispose()
         $process = $null
         $env:PATH = "$gameDirectory;$previousPath"
-        $env:LOCALAPPDATA = $profile
+        $env:LOCALAPPDATA = $privateProfile
         $readerArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures), 'remembered-setup-read')
         try {
             $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
@@ -522,11 +381,7 @@ try {
             Get-Content -LiteralPath (Join-Path $run 'reader.err') | ForEach-Object { Write-Host $_ }
             throw "Remembered setup reader exited with $($process.ExitCode)."
         }
-        foreach ($line in Get-Content -LiteralPath (Join-Path $run 'reader.err')) {
-            if ($line.Trim() -ne '' -and $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
-                throw "Unexpected remembered setup reader diagnostic: $line"
-            }
-        }
+        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) -Context 'remembered setup reader'
         $result['process_relaunch'] = [ordered]@{
             outcome = 'passed'; writer_pid = $writerProcessId; reader_pid = $process.Id; reader_exit_code = $process.ExitCode
             writer_log = Join-Path $run 'run.log'; reader_log = Join-Path $run 'reader.log'
@@ -535,49 +390,49 @@ try {
     }
     $expectedSaveFailures = @{}
     if ($RumbleOnly) {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'rumble-settings-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'rumble-settings-profile')) + '.'
         $expectedSaveFailures[$line] = 1
     }
     if ($KeyboardJumpOnly) {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'keyboard-jump-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'keyboard-jump-profile')) + '.'
         $expectedSaveFailures[$line] = 2
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'pad-jump-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'pad-jump-profile')) + '.'
         $expectedSaveFailures[$line] = 1
     }
     if ($PercentageTextOnly) {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'percentage-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'percentage-profile')) + '.'
         $expectedSaveFailures[$line] = 1
     }
     if ($PausedOptionsOnly) {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'paused-options-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'paused-options-profile')) + '.'
         $expectedSaveFailures[$line] = 1
     }
     if ($DisplayTrialOnly) {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'display-trial-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'display-trial-profile')) + '.'
         $expectedSaveFailures[$line] = 1
     }
     if ($OptionsDefaultsOnly) {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'options-defaults-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'options-defaults-profile')) + '.'
         $expectedSaveFailures[$line] = 6
     }
     if ($SettingsMenuOnly -or $result.scope -eq 'full-painter-matrix') {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'settings-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'settings-profile')) + '.'
         $expectedSaveFailures[$line] = 1
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'status-options-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'status-options-profile')) + '.'
         $expectedSaveFailures[$line] = 8
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'values-options-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'values-options-profile')) + '.'
         $expectedSaveFailures[$line] = 2
     }
     if ($ControlsMenuOnly -or $result.scope -eq 'full-painter-matrix') {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'controls-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'controls-profile')) + '.'
         $expectedSaveFailures[$line] = 1
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'status-controls-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'status-controls-profile')) + '.'
         $expectedSaveFailures[$line] = 16
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'values-controls-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'values-controls-profile')) + '.'
         $expectedSaveFailures[$line] = 2
     }
     if ($ControlsMenuOnly -or $StickSettingsOnly -or $result.scope -eq 'full-painter-matrix') {
-        $line = 'save failure: Could not write ' + (Join-Path $captures 'stick-profile/ColourWars/save_data.json') + '.'
+        $line = 'save failure: Could not write ' + (Get-PainterSavePath (Join-Path $captures 'stick-profile')) + '.'
         $expectedSaveFailures[$line] = 1
     }
     $expectedSaveTail = 'Your settings will not be remembered.'
@@ -590,7 +445,7 @@ try {
         }
         if ($line -eq $expectedSaveTail) { ++$saveTailCount; continue }
         if ($line.Trim() -ne '' -and
-            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
+            -not (Test-OptionalBankDiagnostic $line)) {
             throw "Unexpected probe diagnostic: $line"
         }
     }

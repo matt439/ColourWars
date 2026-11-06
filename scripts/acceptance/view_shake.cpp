@@ -32,7 +32,7 @@ namespace
 
     bool close_to(float a, float b) { return std::abs(a - b) < 0.0001f; }
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     float magnitude(const Vector2F& vector) { return std::hypot(vector.x, vector.y); }
 

@@ -54,7 +54,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         ~RestoreControlsLook() { this->art = this->original; this->preview = this->original_preview; }
     } restore{ art, art, preview_volume, preview_volume };
     preview_volume = 0.0f;
-    const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+    const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) -
         look.box_size) / 2.0f, look.box_size);
     const std::array<const wchar_t*, 11> labels{ L"Pad sticks", L"Keyboard Keys", L"Pad Buttons", L"Profiles", L"Music volume",
         L"SFX volume", L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
@@ -176,7 +176,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)

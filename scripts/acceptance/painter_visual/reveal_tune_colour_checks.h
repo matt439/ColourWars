@@ -261,8 +261,8 @@ void reveal_colour_consumer_checks(Application& app, const Presentation& present
         "\"viewport\":\"1280x720\",\"bounds\":[80,80,360,100],\"half_age\":0.09,\"quadratic_half_beat\":0.25,\"airbrush_scale\":0.12,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-ordered-raw-patches\"}\n";
     require(summary.good(), "Cannot retain reveal consumer summary");
-    std::cout << "PASS reveal colour consumers:228readbacks/264rows/10crops; actual-font ZERO-measure SPACE body,retained two-team labels,"
-        "ordered single/double material and one/three airbrush patches,base-alpha/quadratic-half-beat controls,three per-field alpha0 underlayers,"
+    std::cout << "PASS reveal colour consumers: 228 readbacks / 264 rows / 10 crops; actual-font ZERO-measure SPACE body, retained two-team labels,"
+        "ordered single/double material and one/three airbrush patches, base-alpha/quadratic-half-beat controls, three per-field alpha0 underlayers,"
         "Reduce Effects/expired settled parity. Full-card comparison is adoption only; zero local/Level/State/input updates.\n";
 }
 
@@ -376,7 +376,7 @@ void reveal_tune_colour_checks(Application& app, GameTuning& tuning,
         "\"half_age\":0.09,\"quadratic_half_beat\":0.25,\"airbrush_scale\":0.12,\"full_shape_reference_scope\":\"production-consumer-adoption-only\","
         "\"alpha_reference_scope\":\"independent-ordered-raw-patches\"}\n";
     require(summary.good(), "Cannot retain reveal Debug summary");
-    std::cout << "PASS reveal tune colours:21real statements/196readbacks/336rows; independent resets retain siblings,three-token private Save/rebase,"
-        "two private PlaySettings+JumpJ seed Saves/default display retained,full-card adoption and independent raw eleven-site channels. Zero local/Level/State/input updates.\n";
+    std::cout << "PASS reveal tune colours: 21 real statements / 196 readbacks / 336 rows; independent resets retain siblings, three-token private Save/rebase,"
+        "two private PlaySettings+Jump J seed Saves/default display retained, full-card adoption and independent raw eleven-site channels. Zero local/Level/State/input updates.\n";
 }
 #endif

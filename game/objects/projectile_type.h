@@ -20,16 +20,16 @@ enum class ProjectileType
 
 // The one spelling of each kind in tuning.json (a weapon's projectile and the
 // paint splash animations), indexed by ProjectileType.
-inline constexpr std::array<const char*, static_cast<size_t>(ProjectileType::count)> PROJECTILE_NAMES{
+inline constexpr std::array<const char*, static_cast<size_t>(ProjectileType::count)> projectile_names{
 	"spray", "jet", "rolling", "mist", "ball"
 };
 
 // The kind a name spells; empty for any other name.
 constexpr std::optional<ProjectileType> projectile_from_name(std::string_view name)
 {
-	for (size_t index = 0; index < PROJECTILE_NAMES.size(); ++index)
+	for (size_t index = 0; index < projectile_names.size(); ++index)
 	{
-		if (name == PROJECTILE_NAMES[index]) { return static_cast<ProjectileType>(index); }
+		if (name == projectile_names[index]) { return static_cast<ProjectileType>(index); }
 	}
 	return std::nullopt;
 }
@@ -38,9 +38,9 @@ constexpr std::optional<ProjectileType> projectile_from_name(std::string_view na
 template <typename Visit>
 constexpr void for_each_projectile(Visit&& visit)
 {
-	for (size_t index = 0; index < PROJECTILE_NAMES.size(); ++index)
+	for (size_t index = 0; index < projectile_names.size(); ++index)
 	{
-		visit(static_cast<ProjectileType>(index), PROJECTILE_NAMES[index]);
+		visit(static_cast<ProjectileType>(index), projectile_names[index]);
 	}
 }
 

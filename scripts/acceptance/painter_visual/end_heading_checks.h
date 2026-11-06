@@ -74,14 +74,14 @@ void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         const Vector2F raw = app.render_resources()->measure_text(
             app.render_resources()->resolve_sprite_font(style.heading_font), text);
         UiText expected("reference-end-heading", text, style.heading_font,
-            Vector2F((menu_consts::DESIGN_RESOLUTION.x - raw.x) / 2.0f, look.heading_y),
+            Vector2F((menu_consts::design_resolution.x - raw.x) / 2.0f, look.heading_y),
             app.render_resources(), art.ink);
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         require(expected.bounds().size() == raw && panel.contains(expected.bounds()) &&
             expected.bounds().bottom() <= look.layout.position.y - art.focus_padding.y,
             "End heading reference changed its unscaled paper containment or reached its primary action");
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

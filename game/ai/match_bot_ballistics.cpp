@@ -23,7 +23,7 @@ namespace
 	float miss_squared(float angle, const WeaponTuning& tool, const ProjectileTuning& projectile,
 		Vector2F inherited, Vector2F target, Vector2F target_velocity)
 	{
-		const float dt = SECONDS_PER_STEP;
+		const float dt = simulation::seconds_per_step;
 		const Vector2F direction(std::cos(angle), std::sin(angle));
 		Vector2F position = Vector2F::rotate_vector(tool.details.nozzle_offset +
 			Vector2F(tool.details.size.x, 0.0f), angle);
@@ -35,7 +35,7 @@ namespace
 		float elapsed = 0.0f;
 		// One second, including the first sweep of a shorter-lived projectile.
 		// Use relative swept distance so a fast shot need not land on a tick endpoint.
-		for (int step = 0; step < SIMULATION_HZ; ++step)
+		for (int step = 0; step < simulation::simulation_hz; ++step)
 		{
 			elapsed += dt;
 			if (step > 0 && elapsed > projectile.details.delete_timer) { break; }
@@ -62,12 +62,12 @@ namespace
 float match_bot_ballistics::horizontal_reach(const WeaponTuning& tool,
 	const ProjectileTuning& projectile)
 {
-	const float dt = SECONDS_PER_STEP;
+	const float dt = simulation::seconds_per_step;
 	float speed = tool.details.starting_vel_length;
 	float distance = 0.0f;
 	float elapsed = 0.0f;
 	// A conservative local engagement heuristic, not a projectile-hit promise.
-	for (int step = 0; step < SIMULATION_HZ; ++step)
+	for (int step = 0; step < simulation::simulation_hz; ++step)
 	{
 		elapsed += dt;
 		if (step > 0 && elapsed > projectile.details.delete_timer) { break; }

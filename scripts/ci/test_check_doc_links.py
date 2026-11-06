@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 from check_doc_links import Checker, slug, tracked_markdown
 
@@ -24,6 +25,19 @@ class LinkChecks(unittest.TestCase):
     def problems(self, name: str, content: str) -> list:
         self.write(name, content)
         return Checker(self.root).check([name])
+
+    def test_each_document_is_read_once_including_historical_status(self) -> None:
+        self.write("docs/source.md", "# Source\n[one](target.md#notes) [two](target.md#notes-1) [self](#source)\n")
+        reads = []
+        read_text = Path.read_text
+
+        def counted(path, *args, **kwargs):
+            reads.append(path)
+            return read_text(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "read_text", counted):
+            self.assertEqual(Checker(self.root).check(["docs/source.md", "docs/target.md"]), [])
+        self.assertCountEqual(reads, [self.root / "docs/source.md", self.root / "docs/target.md"])
 
     def test_slug_follows_github(self) -> None:
         self.assertEqual(slug("Shipping-bot routes and team trials (`POL#41`)"),

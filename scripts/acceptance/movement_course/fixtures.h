@@ -45,7 +45,7 @@ namespace movement_course_acceptance
     using acceptance::require;
     [[noreturn]] void fail(const std::string& message);
 
-    inline const float dt = SECONDS_PER_STEP;
+    inline const float dt = simulation::seconds_per_step;
 
     // Contact separation is exact; these allow only float noise.
     inline constexpr float overlap_tolerance = 0.01f;

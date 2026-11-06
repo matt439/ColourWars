@@ -9,9 +9,8 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import struct
+import sys
 import subprocess
-import wave
 
 import numpy as np
 from scipy.signal import butter, sosfilt, resample_poly
@@ -19,6 +18,10 @@ from scipy.signal import butter, sosfilt, resample_poly
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 RATE = 44100
+
+# Shared authoring helpers; the game build does not import Python.
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts/audio"))
+from wave_writer import write_wave
 
 
 def read_sample(path: str) -> np.ndarray:
@@ -54,21 +57,6 @@ def excerpt(raw: np.ndarray, layer: dict) -> np.ndarray:
     signal[-fade_out:] *= np.linspace(1, 0, fade_out)
     return signal * layer.get("gain", 1)
 
-
-def write_wave(path: Path, signal: np.ndarray, loop: bool) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    pcm = np.rint(np.clip(signal, -.99, .99) * 32767).astype("<i2")
-    with wave.open(str(path), "wb") as output:
-        output.setparams((1, 2, RATE, len(pcm), "NONE", "not compressed"))
-        output.writeframes(pcm.tobytes())
-    if loop:
-        # RIFF smpl end is inclusive. Full-length cycle, infinite forward loop.
-        payload = struct.pack("<15I", 0, 0, round(1e9 / RATE), 60, 0, 0, 0, 1, 0,
-                              0, 0, 0, len(pcm) - 1, 0, 0)
-        data = bytearray(path.read_bytes())
-        data += b"smpl" + struct.pack("<I", len(payload)) + payload
-        struct.pack_into("<I", data, 4, len(data) - 8)
-        path.write_bytes(data)
 
 
 def main() -> None:

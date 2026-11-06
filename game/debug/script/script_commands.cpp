@@ -355,7 +355,7 @@ DebugStatus DebugDirectorImpl::wait_command(const DebugArgs& args)
 		}
 		// The engine's step is fixed; before the first update, its length.
 		const float dt = this->last_dt_bits_ != 0 ?
-			std::bit_cast<float>(this->last_dt_bits_) : SECONDS_PER_STEP;
+			std::bit_cast<float>(this->last_dt_bits_) : simulation::seconds_per_step;
 		updates = std::max(1L, std::lround(seconds / dt));
 	}
 	else

@@ -49,10 +49,7 @@ if ($stageScanExpected.Count -ne 15 -or $stageScanFiles.Count -ne 15 -or
 foreach ($file in $stageScanFiles) {
     $size = $stageScanExpected[$file.Name]; $bytes = [IO.File]::ReadAllBytes($file.FullName)
     $header = "P6`n$($size[0]) $($size[1])`n255`n"
-    if ($bytes.Length -ne $header.Length + 3 * $size[0] * $size[1] -or
-        [Text.Encoding]::ASCII.GetString($bytes, 0, $header.Length) -cne $header) {
-        throw "Invalid stage-scan PPM dimensions: $($file.Name)"
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $header
 }
 $stageScanDiagnostics = @(Get-Content -LiteralPath (Join-Path $captures 'stage-scan-stderr.txt'))
 if ($stageScanDiagnostics.Count -ne 3 -or @($stageScanDiagnostics | Where-Object { $_ -notmatch '^user stage refused: .*broken_stage.json: ' }).Count -ne 0 -or

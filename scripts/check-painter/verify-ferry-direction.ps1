@@ -55,9 +55,6 @@ if ($ferryExpected.Count -ne 212 -or $ferryFiles.Count -ne 212 -or
 foreach ($file in $ferryFiles) {
     $size = $ferryExpected[$file.Name]; $bytes = [IO.File]::ReadAllBytes($file.FullName)
     $header = "P6`n$($size[0]) $($size[1])`n255`n"
-    if ($bytes.Length -ne $header.Length + 3 * $size[0] * $size[1] -or
-        [Text.Encoding]::ASCII.GetString($bytes, 0, $header.Length) -cne $header) {
-        throw "Invalid ferry direction native PPM dimensions: $($file.Name)"
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $header
 }
 $result.ferry_direction = $ferrySummary

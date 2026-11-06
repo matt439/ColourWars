@@ -6,9 +6,9 @@ param(
     [switch] $CompileOnly,
     [ValidateSet(1, 2, 4)]
     [int[]] $Players = @(1, 2, 4),
-    [ValidateRange(1, 36000)]
+    [ValidateRange(1, 2147483647)]
     [int] $Frames = 600,
-    [ValidateRange(1, 36000)]
+    [ValidateRange(1, 2147483647)]
     [int] $WarmupUpdates = 120,
     [ValidateSet('1280x720', '1920x1080', '2560x1440')]
     [string] $Resolution = '1280x720',
@@ -31,6 +31,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'probe-build.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/frame-pacing' }
 if ([string]::IsNullOrWhiteSpace($LoadNote)) {
@@ -97,6 +98,10 @@ function Get-MachineMetadata {
 }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$captureLimit = Get-ProbeCaptureLimit $repo
+if ($Frames -gt $captureLimit -or $WarmupUpdates -gt $captureLimit) {
+    throw "Frames and WarmupUpdates must be between 1 and $captureLimit (DebugPerf::max_capture_frames)."
+}
 $build = Join-Path $repo "out/build/$Preset"
 $run = Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) ([Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $run -Force
@@ -132,54 +137,20 @@ try {
         Invoke-Logged 'cmake' @('--preset', $Preset) (Join-Path $run 'configure.log')
         Invoke-Logged 'cmake' @('--build', '--preset', $Preset, '--parallel', '1') (Join-Path $run 'build.log')
     }
-    $cachePath = Join-Path $build 'CMakeCache.txt'
-    if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) { throw "No configured build: $build" }
-    $cache = @{}
-    foreach ($line in Get-Content -LiteralPath $cachePath) {
-        if ($line -match '^([^/#][^:]*):[^=]*=(.*)$') { $cache[$Matches[1]] = $Matches[2] }
-    }
-    foreach ($key in 'CMAKE_BUILD_TYPE', 'CMAKE_CXX_COMPILER', 'CMAKE_HOME_DIRECTORY',
-        'LABRADOR_RENDER_BACKEND', 'LABRADOR_AUDIO_BACKEND', 'VCPKG_INSTALLED_DIR', 'VCPKG_TARGET_TRIPLET') {
-        if (-not $cache.ContainsKey($key)) { throw "Configured build is missing $key." }
-    }
-    if ([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY) -ne $repo -or
-        $cache.CMAKE_BUILD_TYPE -ne 'Debug' -or $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or
-        $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows') {
-        throw 'The capture requires this checkout and its Debug d3d11/xaudio2 x64-windows build.'
-    }
-    $gameDirectory = Join-Path $build 'game'
-    $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
-    # GameMenu can construct GameLevel indirectly; the harness supplies its
-    # own rumble factory and never links the physical motor adapter.
-    $libraries = @(
-        (Join-Path $gameDirectory 'colourwars_game.lib'),
-        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
-        (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
-        (Join-Path $installed 'debug/lib/DirectXTK.lib'),
-        (Join-Path $installed 'debug/lib/xaudio2_9redist.lib')
-    )
-    foreach ($path in @($cache.CMAKE_CXX_COMPILER) + $libraries + @((Join-Path $gameDirectory 'ColourWars.exe'))) {
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing build output: $path" }
-    }
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -Adapters @('display_awake')
+    $cache = $probeBuild.Cache
+    $debug = $probeBuild.Debug
+    $gameDirectory = $probeBuild.GameDirectory
+    $installed = $probeBuild.Installed
+    $libraries = $probeBuild.Libraries
     $source = Join-Path $PSScriptRoot 'acceptance/frame_pacing.cpp'
     $executable = Join-Path $run 'frame_pacing.exe'
     $responseFile = Join-Path $run 'compile.rsp'
-    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8', '/MDd',
-        '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
-        '/DUNICODE', '/D_UNICODE', '/external:W0')
-    foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
-        $arguments += '/I' + (Quote-Path $include)
-    }
-    foreach ($include in @((Join-Path $repo 'external/rapidjson/include'), (Join-Path $installed 'include/directxtk'),
-        (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
-        $arguments += '/external:I' + (Quote-Path $include)
-    }
+    $arguments = @($probeBuild.CompileArguments)
     $arguments += @((Quote-Path $source), ('/Fe:' + (Quote-Path $executable)),
         ('/Fo:' + (Quote-Path (Join-Path $run 'frame_pacing.obj'))))
     $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
-    $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib', 'gdi32.lib',
-        'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib', 'Xinput.lib')
+    $arguments += $probeBuild.WindowsLibraries
     $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
     Invoke-Logged $cache.CMAKE_CXX_COMPILER @("@$responseFile") (Join-Path $run 'compile.log')
     $result.executable = $executable

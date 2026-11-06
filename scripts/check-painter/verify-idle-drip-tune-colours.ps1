@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($IdleDripTuneColoursOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
 $idleDripConsumerSummaryPath = Join-Path $captures 'idle-drip-colour-consumer-summary.json'
 $idleDripConsumerRowsPath = Join-Path $captures 'idle-drip-colour-consumers.csv'
 $idleDripGuardRowsPath = Join-Path $captures 'idle-drip-colour-guards.csv'
@@ -26,7 +27,7 @@ if ($idleDripConsumerSummary.scope -cne 'consumer-only' -or $idleDripConsumerSum
     $idleDripConsumerSummary.consumers -ne 6 -or
     $idleDripConsumerSummary.private_sequence_scope -cne 'source-constness-only' -or
     $idleDripConsumerRows.Count -ne 8 -or
-    (($idleDripConsumerRows[0].PSObject.Properties.Name) -join '|') -cne ($idleDripExpectedColumns -join '|') -or
+    (-not (Test-PainterCsvColumns $idleDripConsumerRows $idleDripExpectedColumns)) -or
     @($idleDripConsumerRows | Where-Object {
         $_.normal_match -cne 'true' -or $_.captured_paint -cne 'true' -or
         $_.all_profiles_public_state_rng -cne 'true' -or $_.scope -cne 'consumer-only' -or
@@ -41,7 +42,7 @@ if ($idleDripConsumerSummary.scope -cne 'consumer-only' -or $idleDripConsumerSum
 }
 $idleDripExpectedGuardColumns = @('background', 'disabled_blank', 'reduced_blank', 'restored_match', 'profiles_state_restored', 'scope')
 if ($idleDripGuardRows.Count -ne 2 -or
-    (($idleDripGuardRows[0].PSObject.Properties.Name) -join '|') -cne ($idleDripExpectedGuardColumns -join '|') -or
+    (-not (Test-PainterCsvColumns $idleDripGuardRows $idleDripExpectedGuardColumns)) -or
     (($idleDripGuardRows.background | Sort-Object) -join '|') -cne 'black|nonblack' -or
     @($idleDripGuardRows | Where-Object {
         $_.disabled_blank -cne 'true' -or $_.reduced_blank -cne 'true' -or $_.restored_match -cne 'true' -or
@@ -57,14 +58,7 @@ $idleDripCropPixels = 0
 $idleDripCropBytes = 0
 $idleDripCropEvidence = @(foreach ($crop in $idleDripCrops) {
     $bytes = [IO.File]::ReadAllBytes($crop.FullName)
-    if ($bytes.Length -ne $idleDripPpmHeader.Length + (380 * 260 * 3)) {
-        throw "Idle drip crop $($crop.Name) does not have exactly its 380x260 RGB payload and canonical header."
-    }
-    for ($byte = 0; $byte -lt $idleDripPpmHeader.Length; ++$byte) {
-        if ($bytes[$byte] -ne $idleDripPpmHeader[$byte]) {
-            throw "Idle drip crop $($crop.Name) does not have its canonical P6/380x260/255 binary header."
-        }
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $idleDripPpmHeader
     $idleDripCropPixels += 380 * 260
     $idleDripCropBytes += $bytes.Length
     [ordered]@{
@@ -81,9 +75,8 @@ if ($idleDripCropPixels -ne 790400) {
     throw 'The idle-drip colour crops do not match their frozen total pixel budget.'
 }
 
-$idleDripRunLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$idleDripSaveCalls = @($idleDripRunLines | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-$idleDripSaveSuccesses = @($idleDripRunLines | Where-Object { $_ -ceq 'Save was successful.' }).Count
+$idleDripSaveCalls = $painterSaveCounts.calls
+$idleDripSaveSuccesses = $painterSaveCounts.successes
 $idleDripSaveFailures = @(Get-Content -LiteralPath (Join-Path $run 'run.err') |
     Where-Object { $_ -match '^save failure:' }).Count
 if ($idleDripSaveFailures -ne 0) {
@@ -152,7 +145,7 @@ if ($debug) {
         $idleDripTuneSummary.private_sequence_scope -cne 'source-constness-only' -or
         $idleDripTuneRows.Count -ne 20 -or $idleDripTuneTranscript.Length -le 0 -or
         !(Test-Path -LiteralPath (Join-Path $captures 'idle-drip-tune-scratch') -PathType Container) -or
-        (($idleDripTuneRows[0].PSObject.Properties.Name) -join '|') -cne ($idleDripExpectedTuneColumns -join '|') -or
+        (-not (Test-PainterCsvColumns $idleDripTuneRows $idleDripExpectedTuneColumns)) -or
         $idleDripSaveCalls -ne 2 -or $idleDripSaveSuccesses -ne 2 -or
         @($idleDripTuneRows | Where-Object {
             $_.normal_match -cne 'true' -or $_.captured_paint -cne 'true' -or
@@ -178,8 +171,8 @@ if ($debug) {
     }
     $idleDripObserved['developer_commands'] = $idleDripTuneSummary
     $idleDripObserved.effect_preparation_updates = 30
-    $idleDripObserved.readbacks = 106
-    $idleDripObserved.csv_rows = 30
+    $idleDripObserved.readbacks += $idleDripTuneSummary.readbacks
+    $idleDripObserved.csv_rows += $idleDripTuneSummary.csv_rows
 }
 elseif ($idleDripSaveCalls -ne 0 -or $idleDripSaveSuccesses -ne 0 -or
     @(Get-ChildItem -LiteralPath $captures -Filter 'idle-drip-tune-*').Count -ne 0) {

@@ -7,7 +7,7 @@ using namespace labrador;
 
 FixedSlabShadow::FixedSlabShadow(const FixedSlabGeometry& geometry,
     std::span<const std::pair<float, float>> exposed_bottom, RenderResources* resources) :
-    TextureObject(TerrainMaterial::SHEET_NAME, AirbrushShadow::first_tile, resources),
+    TextureObject(TerrainMaterial::sheet_name, AirbrushShadow::first_tile, resources),
     geometry_(geometry), intervals_(exposed_bottom.begin(), exposed_bottom.end()),
     tiles_(AirbrushShadow::tiles(*this->sprite_sheet())), bounds_(geometry.bounds())
 {

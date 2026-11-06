@@ -19,7 +19,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     constexpr WeaponType tools[] = { WeaponType::sprayer, WeaponType::sniper,
         WeaponType::roller, WeaponType::mister, WeaponType::bucket };

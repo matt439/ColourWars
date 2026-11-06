@@ -121,7 +121,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     {
         const MenuStyle& style = snapshot.menu(); const auto& footer = snapshot.prompt_bar();
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         const colourwars::UiTextDropShadow heading_text("reference-heading", heading, style.heading_font,
             style.layout.position, app.render_resources(), stage ? snapshot.main_menu().art.ink : style.heading_colour,
             stage ? Colour(0.0f, 0.0f, 0.0f, 0.0f) : style.shadow_colour,
@@ -141,10 +141,10 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             stage_paper_surface_reference(list, *app.render_resources(), snapshot, snapshot, settings,
                 false, locked, 1, 0.0f);
         }
-        sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
-            menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
+        sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x,
+            menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y,
-            menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height),
+            menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height),
             style.panel_edge_colour);
         list.set_filter(TextureFilter::linear);
         heading_text.draw(list);
@@ -174,7 +174,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     {
         const Frame actual = frame();
         const TextReference expected = reference(snapshot, heading, prompt, stage, locked);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         for (size_t index = 0; index < expected.bounds.size(); ++index)
         {
@@ -247,7 +247,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         words.options_palette_timing = L"Next round.";
         const UiText caption("fixture-options-caption", words.options_palette_timing, style.detail_font,
             Vector2F(main.options_value_x, main.options_heading_position.y), app.render_resources(), main.art.ink);
-        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+        const RectangleF paper((Vector2F(menu_consts::design_resolution.x, style.footer_y) -
             main.options_box_size) / 2.0f, main.options_box_size);
         require(paper.contains(caption.bounds()) && caption.bounds().x >= heading.bounds().right() &&
             caption.bounds().bottom() <= main.options_position.y - main.setup_focus_padding.y,

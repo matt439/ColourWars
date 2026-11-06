@@ -157,7 +157,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
@@ -169,18 +169,18 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         const bool rows_visible = fixture.session.is_series() && details_visible;
         colourwars::UiTextDropShadow heading("independent-winner-heading", fixture.heading, style.heading_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
-        heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
+        heading.set_position({ (menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y });
         colourwars::UiTextDropShadow winner("independent-competitive-winner", literal,
             wrong_font ? original.menu().item_font : style.item_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !winner_visible);
-        winner.set_position({ (menu_consts::DESIGN_RESOLUTION.x - winner.bounds().width) / 2.0f, look.winner_y });
+        winner.set_position({ (menu_consts::design_resolution.x - winner.bounds().width) / 2.0f, look.winner_y });
         colourwars::UiTextDropShadow score("independent-winner-score", fixture.score, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !rows_visible);
-        score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
+        score.set_position({ (menu_consts::design_resolution.x - score.bounds().width) / 2.0f, look.session_score_y });
         colourwars::UiTextDropShadow outcome("independent-winner-outcome", fixture.outcome, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !rows_visible);
-        outcome.set_position({ (menu_consts::DESIGN_RESOLUTION.x - outcome.bounds().width) / 2.0f, look.session_result_y });
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        outcome.set_position({ (menu_consts::design_resolution.x - outcome.bounds().width) / 2.0f, look.session_result_y });
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         winner_bounds = winner.bounds();
         require(winner_bounds.width > 0.0f && winner_bounds.height > 0.0f && panel.contains(winner_bounds) &&
             winner_region.contains(winner_bounds) && heading_region.contains(heading.bounds()) &&
@@ -189,7 +189,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
             "Independent winner/unchanged neighbor bounds escaped their measured unscaled zero-offset comparison regions");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);
@@ -358,7 +358,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         "unchanged solo coverage under the new item font/copy, Round/score/outcome neighbors and single series-row absence; "
         "centered unscaled zero-offset text, captured copy/item font through assignment/reopen/reversal, three brace font controls; "
         "normal reveal/proceed gates and already-revealed A/B/solo hidden versus draw visible, 14 fresh pops, "
-        "frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, "
+        "frozen ledger/setup/private Save/RNG, zero-update 720 / 1080 / 720 resize, "
         "102 updates, 99 readbacks, 32 CSV rows and eight compact crops (312480 pixels / 937552 PPM bytes), "
         "one private seed Save. Both presets use the normal reader; "
         "no match/global-input/physical-pad/listening/human/performance acceptance.\n";

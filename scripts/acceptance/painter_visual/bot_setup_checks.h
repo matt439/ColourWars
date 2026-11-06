@@ -380,7 +380,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     open(1); tap(Key::right); tap(Key::down); tap(Key::left);
     require(settings.bot_count() == 0 && settings.human_count() == 1, "Solo practice gained a bot");
     tap(Key::enter); expect_page(2, "Bot-free solo practice did not retain its direct tool flow");
-    std::cout << "PASS playable bot setup: native 720/1080 Join Human/Normal/Easy/Hard, human layouts and host protection; "
+    std::cout << "PASS playable bot setup: native 720 / 1080 Join Human/Normal/Easy/Hard, human layouts and host protection; "
         "P1 and bot team/tool readiness, empty-team refusal, row Back/reconfirm, sparse independent human input, "
         "inactive/disconnected gating, metadata continuity and bot-free solo practice\n";
 }

@@ -31,22 +31,22 @@ enum class CollisionObjectType
 namespace collision_layers
 {
 	// Dead players keep their layer but use an empty mask.
-	constexpr labrador::CollisionLayer STRUCTURE = 1u << 0;
+	constexpr labrador::CollisionLayer structure = 1u << 0;
 
 	// Ramps have a separate layer because paint passes through them.
-	constexpr labrador::CollisionLayer STRUCTURE_RAMP = 1u << 1;
+	constexpr labrador::CollisionLayer structure_ramp = 1u << 1;
 
-	constexpr labrador::CollisionLayer PLAYER_TEAM_A = 1u << 2;
-	constexpr labrador::CollisionLayer PLAYER_TEAM_B = 1u << 3;
-	constexpr labrador::CollisionLayer PROJECTILE_TEAM_A = 1u << 4;
-	constexpr labrador::CollisionLayer PROJECTILE_TEAM_B = 1u << 5;
+	constexpr labrador::CollisionLayer player_team_a = 1u << 2;
+	constexpr labrador::CollisionLayer player_team_b = 1u << 3;
+	constexpr labrador::CollisionLayer projectile_team_a = 1u << 4;
+	constexpr labrador::CollisionLayer projectile_team_b = 1u << 5;
 
-	constexpr labrador::CollisionMask ALL_STRUCTURES =
-		STRUCTURE | STRUCTURE_RAMP;
-	constexpr labrador::CollisionMask ALL_PLAYERS =
-		PLAYER_TEAM_A | PLAYER_TEAM_B;
-	constexpr labrador::CollisionMask ALL_PROJECTILES =
-		PROJECTILE_TEAM_A | PROJECTILE_TEAM_B;
+	constexpr labrador::CollisionMask all_structures =
+		structure | structure_ramp;
+	constexpr labrador::CollisionMask all_players =
+		player_team_a | player_team_b;
+	constexpr labrador::CollisionMask all_projectiles =
+		projectile_team_a | projectile_team_b;
 }
 
 // The tag is the enum, unchanged and uninterpreted in between.

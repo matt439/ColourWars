@@ -3,6 +3,8 @@ param(
     [ValidateSet('x64-debug')]
     [string]$Preset = 'x64-debug',
     [string]$OutputDirectory,
+    # Build/query the CPU menu path; no game, window, input or device is started.
+    [switch]$CompileOnly,
     [ValidateRange(4, 120)]
     [int]$StartupSeconds = 12,
     # The lone-Alt probe is informational: a lone Alt is an ordinary key to the
@@ -20,9 +22,14 @@ param(
     [switch]$SaveToSource
 )
 
-# Opt-in, local: drives the real Debug executable and takes screenshots for a
-# person to look at. Not in CI: hosted runners give no reliable foreground
-# focus, and Release has no console (scripts/acceptance/debug_console.cpp
+if (([int]($CompileOnly.IsPresent) + [int]($Phase3Only.IsPresent) + [int]($Phase4Only.IsPresent)) -gt 1) {
+    throw 'Choose only one of -CompileOnly, -Phase3Only and -Phase4Only.'
+}
+
+# The full driver is opt-in and local: it drives the real Debug executable and
+# takes screenshots for a person to look at. Only -CompileOnly runs in CI:
+# hosted runners give no reliable foreground focus, and Release has no console
+# (scripts/acceptance/debug_console.cpp
 # covers both presets on the CPU side). The pad chord (Back+Start) needs a pad
 # and is covered there too.
 #
@@ -48,7 +55,8 @@ param(
 #       and the debug menu's header P1's HUD box (narrow-debug-menu.png)
 #
 # Phase 3 (one launch): bots, live tuning, record and play, the tuning menu.
-# Phase 4 (four launches): the shipped review scripts with +exec, autoexec,
+# It compiles a CPU menu-navigation probe first; use an x64 VS Developer shell.
+# Phase 4 (five launches): the shipped review scripts with +exec, autoexec,
 # binds and history across a restart, the live console, the perf overlay and
 # a tune edit that leaves nothing in an isolated %TEMP%.
 
@@ -97,6 +105,12 @@ $velocityToken = Get-PlayerToken '"max_velocity": \{ "x": ([0-9.]+), "y": [0-9.]
 $fastToken = Format-Token ([double]::Parse($velocityToken, $invariantCulture) * 2) $velocityToken
 $savedToken = Format-Token ([double]::Parse($velocityToken, $invariantCulture) + 100) $velocityToken
 $accelerationToken = Get-PlayerToken '"x_acceleration": ([0-9.]+)'
+
+if ($CompileOnly) {
+    $navigation = @(Get-TuningMenuNavigation)
+    Write-Host "PASS Debug menu navigation compiled and queried ($($navigation.Count) steps); no GUI, GPU or keyboard input. Evidence: $output/menu-navigation"
+    return
+}
 
 $process = $null
 if (-not $Phase3Only -and -not $Phase4Only) {
@@ -358,6 +372,7 @@ finally {
 #   p6. F10 tuning > tuning > player, Right on x_acceleration
 #   p7. ` quit
 if (-not $Phase4Only) {
+$tuningMenuNavigation = @(Get-TuningMenuNavigation)
 $process = $null
 $window = [IntPtr]::Zero
 $transcript = Join-Path $output 'phase3.log'
@@ -460,18 +475,18 @@ try {
     }
     Save-Shot 'p3-09-replay-done.png'
 
-    # p6: root rows match, player, view, time, tuning, replay, content,
-    # console; tuning opens on tuning, presentation, tune.diff, tune.reset,
-    # tune.save; the tuning file on input, match, paint, player, weapons,
-    # projectiles; player on size, max_velocity, x_initial_velocity,
-    # x_acceleration, ...
+    # p6: the CPU model supplies the complete path, including non-data rows,
+    # filtered leaves and pagination. The real menu still receives every key.
+    Confirm-Focus
     $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
-    foreach ($i in 1..4) { $driver::Tap($down, $true) }
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    foreach ($i in 1..3) { $driver::Tap($down, $true) }
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    foreach ($i in 1..3) { $driver::Tap($down, $true) }
+    $navigationStep = 0
+    foreach ($step in $tuningMenuNavigation) {
+        Confirm-Focus
+        for ($index = 0; $index -lt $step.downs; ++$index) { $driver::Tap($down, $true) }
+        if ($step.enter) { $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300 }
+        Save-Shot ("p3-menu-step-$navigationStep.png")
+        ++$navigationStep
+    }
     $driver::Tap($right, $true); Start-Sleep -Milliseconds 500
     Save-Shot 'p3-10-menu-tuning.png'
     $driver::Tap($f10, $false); Start-Sleep -Milliseconds 400
@@ -522,7 +537,7 @@ finally {
 #       autoexec runs before the launch statements; six PNGs, each -on pair
 #       differs from its -off (the strip is off, so only the world can);
 #       three checksums, each with bursts on screen at the expected spacing.
-#   q2. +exec station_tour +quit: ten PNGs.
+#   q2. +exec station_tour +quit: twelve PNGs.
 #   q3. +exec bots_4p +quit: one PNG.
 #   q4. one launch on an isolated profile and TEMP: bind shift+f5 at the
 #       console, Shift+F5, F5 still restarts; a tune edit writes no candidate
@@ -598,8 +613,8 @@ try {
     Remove-Item -LiteralPath $tourProfile -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -ItemType Directory -Path $tourProfile -Force
     $folder = Start-ScriptRun 'station_tour' $tourProfile 120
-    if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 10) { throw 'station_tour did not write 10 PNGs.' }
-    Assert-Transcript @('station_tour: done (10 stations)') 'station tour'
+    if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 12) { throw 'station_tour did not write 12 PNGs.' }
+    Assert-Transcript @('station_tour: done (12 stations, including both spawns)') 'station tour'
     $botsProfile = Join-Path $output 'p4-bots-profile'
     Remove-Item -LiteralPath $botsProfile -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -ItemType Directory -Path $botsProfile -Force
@@ -657,7 +672,7 @@ try {
 
     $log = Get-Transcript
     Assert-Transcript @('console.live = on', 'console: live (the match keeps running',
-        'console: live closed', 'overlay.perf = on', 'CPU ms    min    avg    max') 'live'
+        'console: live closed', 'overlay.perf = on', 'CPU wall ms min    avg    max') 'live'
     $states = @([regex]::Matches($log, 'P1 kbm team a \w+\s+at \((-?\d+), (-?\d+)\)'))
     $updates = @([regex]::Matches($log, 'updates (\d+) since the build'))
     $depths = @([regex]::Matches($log, 'stack depth (\d+), in a match'))
@@ -693,7 +708,7 @@ try {
     Wait-Exit $process 15 'The relaunched game (history Up, Enter: quit)'
     Assert-Transcript @('] quit') 'relaunch'
 
-    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (10), bots_4p (1); bind Shift+F5 and F5; tune writes nothing to TEMP; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
+    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (12), bots_4p (1); bind Shift+F5 and F5; tune writes nothing to TEMP; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
 }
 finally {
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }

@@ -232,7 +232,7 @@ namespace
 
 	RectangleF slab_shadow_bounds(World& world, const FixedSlabPaintable& slab, const JsonValue& json)
 	{
-		const auto* sheet = world.render.sprite_sheet(world.render.resolve_sprite_sheet(TerrainMaterial::SHEET_NAME));
+		const auto* sheet = world.render.sprite_sheet(world.render.resolve_sprite_sheet(TerrainMaterial::sheet_name));
 		const auto tile = sheet->sprite_frame(sheet->resolve_sprite_frame("shadow_0")).source_rectangle();
 		require(tile.height > 0, "Fixed slab shadow needs a positive source tile height");
 		const double length = 80.0 * std::sqrt(5.0);
@@ -393,7 +393,7 @@ namespace
 		for (size_t index = 0; index < decorations.size(); ++index)
 		{
 			const JsonValue json = decorations.at(index);
-			if (json.string("sheet_name") == TerrainMaterial::SHEET_NAME)
+			if (json.string("sheet_name") == TerrainMaterial::sheet_name)
 			{
 				require(json.string("colour") == "WHITE",
 					stage + ": a terrain backdrop is tinted; its colour belongs in the texels");

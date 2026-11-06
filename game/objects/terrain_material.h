@@ -53,9 +53,9 @@ struct TerrainFaces
 class TerrainMaterial : public labrador::TextureObject
 {
 public:
-	static constexpr const char* SHEET_NAME = "terrain";
+	static constexpr const char* sheet_name = "terrain";
 	// One Paint pixel at Zoom 400%: four world units, as the painter's cells.
-	static constexpr float CELL = 4.0f;
+	static constexpr float cell = 4.0f;
 
 	// Throws std::invalid_argument for an unknown name, or a name the
 	// collision type may not wear (the table is in docs/level-format.md).

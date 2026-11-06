@@ -4,21 +4,14 @@ $turbulenceSummary = Get-Content -LiteralPath (Join-Path $captures 'turbulence-b
 $turbulenceRows = @(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-blockout.csv'))
 $turbulenceCounts = [ordered]@{ full_frames=21; native_crops=51; csv_rows=51; readbacks=43; level_builds=10; scripted_input_steps=300 }
 $turbulenceKeys = @($turbulenceCounts.Keys) + @('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','human_acceptance')
-if ((($turbulenceSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($turbulenceKeys | Sort-Object) -join '|') -or
+if ((-not (Test-PainterKeys $turbulenceSummary $turbulenceKeys)) -or
     $turbulenceSummary.outcome -cne 'passed' -or $turbulenceSummary.scope -cne 'turbulence-blockout-only' -or
     $turbulenceSummary.human_acceptance -isnot [bool] -or $turbulenceSummary.human_acceptance) { throw 'Turbulence summary scope/schema differs.' }
 foreach ($key in $turbulenceCounts.Keys) {
     if (($turbulenceSummary.$key -isnot [int] -and $turbulenceSummary.$key -isnot [long]) -or
         $turbulenceSummary.$key -ne $turbulenceCounts[$key]) { throw "Turbulence bounded count differs: $key" }
 }
-function Turbulence-Number([object]$Value, [string]$Label) {
-    $parsed = 0.0
-    if (-not [double]::TryParse([string]$Value, [Globalization.NumberStyles]::Float,
-        [Globalization.CultureInfo]::InvariantCulture, [ref]$parsed) -or [double]::IsNaN($parsed) -or [double]::IsInfinity($parsed)) {
-        throw "Turbulence metric is not finite: $Label"
-    }
-    return $parsed
-}
+
 $turbulencePresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
 $turbulenceTuning = Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json') -Raw | ConvertFrom-Json
 $turbulenceStage = Get-Content -LiteralPath (Join-Path $gameDirectory 'levels/turbulence_blockout.json') -Raw | ConvertFrom-Json
@@ -29,13 +22,13 @@ foreach ($object in $turbulenceStage.collision_objects) {
     if ($object.PSObject.Properties.Name -contains 'rectangle') { $turbulenceRectangles[$object.name] = $object.rectangle }
 }
 $turbulencePaintables = @($turbulenceStage.collision_objects | Where-Object { $_.type -ceq 'StructurePaintable' }).Count
-$turbulenceHeavy = Turbulence-Number $turbulenceSummary.heavy_initial_fraction_min 'heavy initial fraction'
-$turbulenceUpdates = Turbulence-Number $turbulenceSummary.level_updates 'updates'
+$turbulenceHeavy = ConvertTo-PainterFinite $turbulenceSummary.heavy_initial_fraction_min 'heavy initial fraction'
+$turbulenceUpdates = ConvertTo-PainterFinite $turbulenceSummary.level_updates 'updates'
 if ($turbulenceSummary.controlled_heavy_contacts -ne 5*$turbulencePaintables -or $turbulenceHeavy -le 0.99 -or $turbulenceHeavy -gt 1.0 -or
     $turbulenceUpdates -le 0 -or $turbulenceUpdates -gt 8000 -or $turbulenceUpdates -ne [Math]::Truncate($turbulenceUpdates) -or
     -not $turbulenceTuning.player.paint_underfoot.enabled) { throw 'Turbulence ownership/contact/update/underfoot fixture differs.' }
 $turbulenceColumns = 'capture,kind,phase,paint,players,view,input_slot,scene_views,camera_source,player_x,player_y,velocity_x,velocity_y,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,landing,landing_x,landing_y,landing_width,landing_height,landing_visible,escape,escape_x,escape_y,escape_width,escape_height,escape_visible,frozen_pixels,public_state,debug_fingerprint,rng,evidence_scope'
-if ($turbulenceRows.Count -ne 51 -or ($turbulenceRows[0].PSObject.Properties.Name -join ',') -cne $turbulenceColumns) { throw 'Turbulence CSV schema/count differs.' }
+if ($turbulenceRows.Count -ne 51 -or (-not (Test-PainterCsvColumns $turbulenceRows ($turbulenceColumns.Split(','))))) { throw 'Turbulence CSV schema/count differs.' }
 
 # A patch names an authored support, left edge, width, cap depth and receipt name.
 # Reconstruct whole standing-body space plus the declared visible support cap.
@@ -107,11 +100,11 @@ foreach ($row in $turbulenceRows) {
     $n = @{}
     foreach ($metric in @('player_x','player_y','velocity_x','velocity_y','camera_x','camera_y','camera_scale','owned_fraction',
         'landing_x','landing_y','landing_width','landing_height','escape_x','escape_y','escape_width','escape_height')) {
-        $n[$metric] = Turbulence-Number $row.$metric "$key/$metric"
+        $n[$metric] = ConvertTo-PainterFinite $row.$metric "$key/$metric"
     }
     foreach ($metric in @('pane_x','pane_y','pane_width','pane_height','crop_x','crop_y','crop_width','crop_height')) {
-        $parsed = 0
-        if (-not [int]::TryParse($row.$metric,[ref]$parsed) -or $parsed -lt 0) { throw "Invalid Turbulence integer $key/$metric" }
+        $parsed = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if ($parsed -lt 0) { throw "Invalid Turbulence integer $key/$metric" }
         $n[$metric] = $parsed
     }
     if ($n.camera_scale -le 0 -or $n.pane_width -le 0 -or $n.pane_height -le 0 -or $n.crop_width -le 0 -or $n.crop_height -le 0 -or
@@ -190,10 +183,7 @@ foreach ($file in $turbulenceFiles) {
     $size = $turbulenceDimensions[$file.Name]; $header = "P6`n$($size[0]) $($size[1])`n255`n"
     $headerBytes = [Text.Encoding]::ASCII.GetByteCount($header)
     if ($file.Length -ne $headerBytes+[long]$size[0]*$size[1]*3) { throw "Turbulence RGB file length differs: $($file.Name)" }
-    $actualHeader = @(Get-Content -LiteralPath $file.FullName -TotalCount 3)
-    if ($actualHeader.Count -ne 3 -or $actualHeader[0] -cne 'P6' -or $actualHeader[1] -cne "$($size[0]) $($size[1])" -or $actualHeader[2] -cne '255') {
-        throw "Turbulence native file dimensions/header differ: $($file.Name)"
-    }
+    Assert-PainterPpm -Path $file.FullName -Header $header
     $turbulenceHeaderLengths[$file.Name] = $headerBytes; $turbulencePpmBytes += $file.Length
 }
 # Load one full frame at a time; compare every crop RGB byte without scaling.

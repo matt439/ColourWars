@@ -76,8 +76,10 @@ class Checker:
         self.cache = {}
 
     def document(self, path):
+        path = path.resolve()
         if path not in self.cache:
-            self.cache[path] = scan(path.read_text(encoding="utf-8", errors="replace"))
+            text = path.read_text(encoding="utf-8", errors="replace")
+            self.cache[path] = (*scan(text), historical(text))
         return self.cache[path]
 
     def relative(self, path):
@@ -107,7 +109,7 @@ class Checker:
                 return None if retired_files else f"no file {relative or path}"
         if not anchor or path.suffix.lower() != ".md" or not path.is_file():
             return None
-        anchors, _ = self.document(path)
+        anchors, _, _ = self.document(path)
         if anchor in anchors or anchor.lower() in anchors:
             return None
         return f"no heading #{anchor} in {self.relative(path) or path}"
@@ -116,8 +118,7 @@ class Checker:
         problems = []
         for name in paths:
             source = self.root / name
-            record = historical(source.read_text(encoding="utf-8", errors="replace"))
-            _, links = self.document(source)
+            _, links, record = self.document(source)
             for line, target in links:
                 reason = self.resolve(source, target, retired_files=record)
                 if reason:

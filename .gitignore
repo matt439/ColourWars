@@ -379,9 +379,6 @@ FodyWeavers.xsd
 !/game/audio/paint_exe/**/*.mp3
 !/game/audio/paint_exe/**/*.ogg
 !/game/audio/paint_exe/**/*.flac
-# CMake out-of-source build tree
-out/
-
 # Claude Code's scratch git worktrees. Scoped to worktrees/ rather than the
 # whole of .claude/, so project-level settings can still be committed.
 .claude/worktrees/

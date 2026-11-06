@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import zlib
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -281,6 +282,21 @@ def page_checks(summary, html, failures):
 
 
 def analysis_checks(tmp, results_dir, regions_path, failures):
+    # Duplicate exports can omit complete or explicitly set it to null. Both
+    # are incomplete, so comparing either with true/false must not raise.
+    duplicates = os.path.join(tmp, "duplicates")
+    os.makedirs(duplicates)
+    for index, complete in enumerate((None, False, True, None)):
+        result = {"format": analyse.FORMAT, "participant": "duplicate", "consent": True,
+                  "trials": [{}] * (index + 1)}
+        if index != 0:
+            result["complete"] = complete
+        with open(os.path.join(duplicates, "%d.json" % index), "w", encoding="utf-8") as fh:
+            json.dump(result, fh)
+    people, _, _ = analyse.load_results([duplicates])
+    check(people["duplicate"].get("complete") is True and len(people["duplicate"]["trials"]) == 3,
+          "duplicate exports normalise missing/null completion and prefer a completed result", failures)
+
     report = os.path.join(tmp, "report.md")
     rc, ev = run_json([results_dir, "--regions", regions_path, "--report", report,
                        "--json", os.path.join(tmp, "evaluation.json"), "--primary", "V1"])
@@ -320,7 +336,9 @@ def analysis_checks(tmp, results_dir, regions_path, failures):
     drive = os.path.splitdrive(analyse.REPO_ROOT)[0]
     other = ("Q:" if drive.upper() != "Q:" else "R:") + "\\study-b\\report.md"
     try:
-        outside = analyse.inside_repo_unignored(other) is False
+        # Do not query an unrelated volume (which may be locked or removable).
+        with mock.patch("_paths.os.path.realpath", side_effect=lambda path, **kwargs: str(path)):
+            outside = analyse.inside_repo_unignored(other) is False
     except ValueError:
         outside = False
     check(outside, "a report on another drive (%s) is accepted without a ValueError" % other, failures)

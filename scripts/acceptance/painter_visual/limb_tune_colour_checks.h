@@ -339,8 +339,8 @@ void limb_colour_consumer_checks(Application& app,const GameTuning& tuning,const
     std::ofstream summary(output/"limb-colour-consumer-summary.json");
     summary<<"{\"scope\":\"direct-consumer-only\",\"raw_reference\":\"12-literal-procedural-ROIs-engine-only\",\"whole_frame_reference\":\"copied-retained-fixture-adoption-only\",\"capture_kind\":\"native-contiguous-fixture-crop\",\"event_fade\":false,\"background\":\"canvas32-64-96\",\"viewport\":\"1280x720\",\"readbacks\":22,\"csv_rows\":4,\"crops\":4,\"crop_width\":1280,\"crop_height\":480,\"crop_pixels\":2457600,\"ppm_bytes\":7372864,\"palettes\":4,\"armed_contexts\":10,\"blink_contexts\":2,\"quiet_disabled_contexts\":2,\"captured_sprite_guards\":4,\"roi_pixels\":21142,\"literal_rectangles\":396,\"base_case_reads\":16,\"actual_reads\":8,\"adoption_reads\":4,\"raw_positive_reads\":4,\"controls\":6,\"partial_arm_straight_reads\":1,\"partial_arm_squared_reads\":1,\"partial_hand_straight_reads\":1,\"partial_hand_squared_reads\":1,\"alpha0_arm_straight_reads\":1,\"alpha0_hand_straight_reads\":1,\"control_witness_checks\":252,\"control_discriminating_witness_checks\":248,\"control_saturated_white_checks\":4,\"calibration_pixels_per_read\":32,\"calibration_pixel_checks\":704,\"preparation_weapon_updates\":10,\"preparation_weapon_dt\":0,\"preparation_projectiles\":0,\"arm_support_pixels\":7232,\"hand_support_pixels\":1280,\"arm_witnesses\":64,\"hand_witnesses\":20,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0,\"control_changed_pixels\":"<<changed<<",\"control_unchanged_pixels\":"<<unchanged_pixels<<"}\n";
     require(summary.good(),"Cannot retain Limb shared summary");
-    std::cout<<"PASS limb consumer:22readbacks/4rows/4native1280x480fixture crops;12procedural ROIs21142RGBA/case,6controls252role-checks(248discriminatory+4saturated-WHITE),"
-        "704calibrationRGBA;10explicit zero-delta Weapon preparations/zero observation updates; full copied fixture adoption only.\n";
+    std::cout<<"PASS limb consumer: 22 readbacks / 4 rows / 4 native 1280x480 fixture crops; 12 procedural ROIs 21142 RGBA/case, 6 controls 252 role-checks(248 discriminatory + 4 saturated-WHITE),"
+        "704 calibration RGBA; 10 explicit zero-delta Weapon preparations/zero observation updates; full copied fixture adoption only.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
@@ -437,7 +437,7 @@ void limb_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& p
     std::ofstream summary(output/"limb-colour-tune-summary.json");
     summary<<"{\"scope\":\"debug-validated-commands\",\"event_fade\":false,\"background\":\"canvas32-64-96\",\"adoption\":\"live\",\"commands\":9,\"states\":9,\"contexts\":12,\"readbacks\":36,\"csv_rows\":9,\"crops\":0,\"saved_tokens\":2,\"private_seed_saves\":2,\"named_arm_token_checks\":1,\"calibration_pixels_per_read\":32,\"calibration_pixel_checks\":1152,\"preparation_weapon_updates\":10,\"preparation_weapon_dt\":0,\"preparation_projectiles\":0,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0,\"observation_weapon_updates\":0}\n";
     require(summary.good(),"Cannot retain Limb Debug summary");
-    std::cout<<"PASS limb tune: 9 real commands/9 states/36 additional readbacks/9 rows; no-raster 2-quoted-token Save/rebase, sibling-retaining saved resets, "
-        "2 private preferences/JumpJ/default display; 10 zero-delta Weapon preps and 0 observation updates; direct attachments only.\n";
+    std::cout<<"PASS limb tune: 9 real commands / 9 states / 36 additional readbacks / 9 rows; no-raster 2-quoted-token Save/rebase, sibling-retaining saved resets, "
+        "2 private preferences/Jump J/default display; 10 zero-delta Weapon preps and 0 observation updates; direct attachments only.\n";
 }
 #endif

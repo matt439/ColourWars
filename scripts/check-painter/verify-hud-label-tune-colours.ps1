@@ -1,26 +1,10 @@
 # Exact native schemas precede contact export; decoded PNG parity follows it.
 # Source-derived regions retain the full multiline identity paper lower strip.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $labelUpdates=@('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls','observation_weapon_updates')
 $labelStates=@('default','rgb','partial','zero')
 function Get-LabelSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
-function Assert-LabelKeys($Object,[string[]]$Expected,[string]$Scope) {
-    if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name|Sort-Object)-join'|')-cne(($Expected|Sort-Object)-join'|')) { throw "HUD label exact $Scope schema differs" }
-}
-function Assert-LabelInteger($Object,[string]$Key,[long]$Expected) {
-    $value=$Object.$Key
-    if (($value-isnot[int] -and $value-isnot[long]) -or $value-ne$Expected) { throw "HUD label exact integer differs: $Key" }
-}
-function Get-LabelCsvInteger($Row,[string]$Key) {
-    $text=[string]$Row.$Key; $value=0L
-    if ($text-cnotmatch'^(0|[1-9][0-9]*)$' -or ![long]::TryParse($text,[ref]$value)) { throw "HUD label canonical CSV integer differs: $Key" }
-    return $value
-}
-function Assert-LabelColumns($Rows,[string[]]$Expected,[int]$Count,[string]$Scope) {
-    if ($Rows.Count-ne$Count -or ($Rows[0].PSObject.Properties.Name-join'|')-cne($Expected-join'|')) { throw "HUD label exact $Scope CSV shape differs" }
-}
-function Assert-LabelFlags($Row,[string[]]$Flags) {
-    foreach($flag in $Flags) { if($Row.$flag-cne'true') { throw "HUD label native flag differs: $flag" } }
-}
+
 $labelInputs=[Collections.Generic.List[string]]::new()
 $labelSummaryPath=Join-Path $captures 'hud-label-colour-consumer-summary.json'
 $labelMainPath=Join-Path $captures 'hud-label-colour-main.csv'
@@ -31,20 +15,20 @@ if(@(Get-ChildItem -LiteralPath $captures -Filter 'hud-label-failure-*').Count) 
 $labelSummary=Get-Content -LiteralPath $labelSummaryPath -Raw|ConvertFrom-Json
 $labelMain=@(Import-Csv -LiteralPath $labelMainPath)
 $labelCounts=[ordered]@{readbacks=39;csv_rows=8;foreground_readbacks=19;shadow_readbacks=20;crops=16;crop_pixels=362304;ppm_bytes=1087140;roi_pixels=48396;independent_observations=8;roi_pixel_checks=387168;repeat_checks=8;copied_adoption_checks=8;controls=7;roi_control_discriminations=13;shadow_meter_invariance_checks=6;calibration_pixel_checks=1248;private_game_saves=0}
-Assert-LabelKeys $labelSummary (@($labelCounts.Keys)+$labelUpdates+@('scope','context','control_discriminating_pixels')) 'shared'
-foreach($key in $labelCounts.Keys) { Assert-LabelInteger $labelSummary $key $labelCounts[$key] }
-foreach($key in $labelUpdates) { Assert-LabelInteger $labelSummary $key 0 }
+Assert-PainterKeys $labelSummary (@($labelCounts.Keys)+$labelUpdates+@('scope','context','control_discriminating_pixels')) 'shared'
+foreach($key in $labelCounts.Keys) { Assert-PainterInteger $labelSummary $key $labelCounts[$key] }
+foreach($key in $labelUpdates) { Assert-PainterInteger $labelSummary $key 0 }
 $labelControlPixels=$labelSummary.control_discriminating_pixels
 if(($labelControlPixels-isnot[int] -and $labelControlPixels-isnot[long]) -or $labelControlPixels-le0 -or $labelControlPixels-gt313908 -or $labelSummary.scope-cne'three-foreground-labels-and-identity-shadow' -or $labelSummary.context-cne'prepared-normal-123.25') { throw 'HUD label shared scope/context or observed control support differs' }
-Assert-LabelColumns $labelMain @('role','state','raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng','controls','roi_discriminations','identity_control_pixels','health_control_pixels','paint_control_pixels','scope') 8 'main'
+Assert-PainterCsvColumns $labelMain @('role','state','raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng','controls','roi_discriminations','identity_control_pixels','health_control_pixels','paint_control_pixels','scope') 8 'main'
 $labelSumPixels=0L; $labelSumControls=0L; $labelSumDiscriminations=0L
 for($i=0;$i-lt8;++$i) {
     $row=$labelMain[$i]; $role=if($i-lt4){'foreground'}else{'shadow'}; $state=$labelStates[$i%4]
-    Assert-LabelFlags $row @('raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng')
+    Assert-PainterFlags $row @('raw_rgba_match','adoption_match','repeat_match','locality_match','frozen_style_resources_rng')
     $controls=if($state-ceq'partial'){if($role-ceq'foreground'){2}else{3}}elseif($state-ceq'zero'){1}else{0}
     $discriminations=if($role-ceq'foreground'){$controls*3}else{$controls}
-    $identity=Get-LabelCsvInteger $row 'identity_control_pixels'; $health=Get-LabelCsvInteger $row 'health_control_pixels'; $paint=Get-LabelCsvInteger $row 'paint_control_pixels'
-    if($row.role-cne$role -or $row.state-cne$state -or $row.scope-cne'ordered-hud-label-glyph-paper-rois' -or (Get-LabelCsvInteger $row 'controls')-ne$controls -or (Get-LabelCsvInteger $row 'roi_discriminations')-ne$discriminations) { throw 'HUD label role/palette/control applicability differs' }
+    $identity=Get-PainterCsvInteger $row 'identity_control_pixels'; $health=Get-PainterCsvInteger $row 'health_control_pixels'; $paint=Get-PainterCsvInteger $row 'paint_control_pixels'
+    if($row.role-cne$role -or $row.state-cne$state -or $row.scope-cne'ordered-hud-label-glyph-paper-rois' -or (Get-PainterCsvInteger $row 'controls')-ne$controls -or (Get-PainterCsvInteger $row 'roi_discriminations')-ne$discriminations) { throw 'HUD label role/palette/control applicability differs' }
     if($identity-gt42180*$controls -or ($controls-gt0 -and $identity-le0)) { throw 'HUD identity tint/order did not separately discriminate' }
     if($role-ceq'foreground') {
         if($health-gt3500*$controls -or $paint-gt2716*$controls -or ($controls-gt0 -and ($health-le0 -or $paint-le0))) { throw 'Both HEALTH and PAINT must separately discriminate every applicable tint control' }
@@ -65,13 +49,12 @@ if($labelPpms.Count-ne16 -or (($labelPpms.Name|Sort-Object)-join'|')-cne(($label
 $labelPpmEvidence=@(foreach($crop in $labelCropPlan) {
     $path=Join-Path $captures $crop.name; $bytes=[IO.File]::ReadAllBytes($path)
     $header=[Text.Encoding]::ASCII.GetBytes("P6`n$($crop.width) $($crop.height)`n255`n"); $rgbBytes=$crop.width*$crop.height*3
-    if($bytes.Length-ne($header.Length+$rgbBytes)) { throw 'HUD label canonical native P6 length differs' }
-    for($i=0;$i-lt$header.Length;++$i) { if($bytes[$i]-ne$header[$i]) { throw 'HUD label canonical native P6 header differs' } }
+    Assert-PainterPpm -Bytes $bytes -Header $header
     $rgb=[byte[]]::new($rgbBytes); [Array]::Copy($bytes,$header.Length,$rgb,0,$rgbBytes); $labelInputs.Add($path)
     [ordered]@{name=$crop.name;role=$crop.role;region=$crop.region;scope=$crop.scope;width=$crop.width;height=$crop.height;header_bytes=$header.Length;bytes=$bytes.Length;sha256=(Get-LabelSha $bytes);rgb_payload_sha256=(Get-LabelSha $rgb)}
 })
 if(($labelPpmEvidence.bytes|Measure-Object -Sum).Sum-ne1087140) { throw 'HUD label native total P6 bytes differ' }
-if(@(Get-Content -LiteralPath (Join-Path $run 'run.log')|Where-Object{$_-match'Saving\.\.\.$' -or $_-ceq'Save was successful.'}).Count -or @(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_-match'^save failure:'}).Count) { throw 'HUD label scope unexpectedly called or failed a game Save' }
+if(($painterSaveCounts.calls + $painterSaveCounts.successes) -or @(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_-match'^save failure:'}).Count) { throw 'HUD label scope unexpectedly called or failed a game Save' }
 $script:hudLabelObserved=[ordered]@{consumer=$labelSummary;foreground49='identity, HEALTH, PAINT';shadow50='identity only';readbacks=39;csv_rows=8;crops=16;crop_pixels=362304;ppm_bytes=1087140;controls=7;roi_control_discriminations=13;control_discriminating_pixels=$labelControlPixels;calibration_pixel_checks=1248;private_game_saves=0;reference_scope='same-font explicit-channel glyphs; identity ordered shadow/foreground over paper plus source lower strip; flat meter paper and no meter shadow; copied HUD adoption only';png_count=0;png_crops=@();png_complete=$false}
 if($debug) {
     $labelTuneSummaryPath=Join-Path $captures 'hud-label-tune-summary.json'; $labelTuneCsvPath=Join-Path $captures 'hud-label-tune.csv'; $labelTranscript=Join-Path $captures 'hud-label-tune-commands.log'
@@ -80,20 +63,20 @@ if($debug) {
     }
     $tune=Get-Content -LiteralPath $labelTuneSummaryPath -Raw|ConvertFrom-Json; $rows=@(Import-Csv -LiteralPath $labelTuneCsvPath)
     $counts=[ordered]@{commands=15;states=15;readbacks=60;csv_rows=15;crops=0;saved_tokens=2;presentation_save_commands=1;roi_pixel_checks=725940;repeat_checks=15;copied_adoption_checks=15;sibling_checks=15;calibration_pixel_checks=1920;private_game_saves=0}
-    Assert-LabelKeys $tune (@($counts.Keys)+$labelUpdates+@('scope')) 'Debug'
-    foreach($key in $counts.Keys) { Assert-LabelInteger $tune $key $counts[$key] }; foreach($key in $labelUpdates) { Assert-LabelInteger $tune $key 0 }
+    Assert-PainterKeys $tune (@($counts.Keys)+$labelUpdates+@('scope')) 'Debug'
+    foreach($key in $counts.Keys) { Assert-PainterInteger $tune $key $counts[$key] }; foreach($key in $labelUpdates) { Assert-PainterInteger $tune $key 0 }
     if($tune.scope-cne'debug-paired-hud-label-live') { throw 'HUD label Debug paired scope differs' }
-    Assert-LabelColumns $rows @('state','foreground_token','shadow_token','raw_rgba_match','adoption_match','repeat_match','sibling_preserved','private_bytes','frozen_style_resources_rng','scope') 15 'Debug'
+    Assert-PainterCsvColumns $rows @('state','foreground_token','shadow_token','raw_rgba_match','adoption_match','repeat_match','sibling_preserved','private_bytes','frozen_style_resources_rng','scope') 15 'Debug'
     $states=@('baseline','named-foreground','reset-original-foreground','named-shadow','reset-original-shadow','zero-foreground','reset-zero-foreground','zero-shadow','reset-zero-shadow','foreground-pending','joint-pending','after-save-foreground','reset-saved-foreground','after-save-shadow','reset-saved-shadow')
     $foregroundTokens=@('141414','RED','141414','141414','141414','A532D600','141414','141414','141414','2060C080','2060C080','35BCE1','2060C080','2060C080','2060C080')
     $shadowTokens=@('00000022','00000022','00000022','RED','00000022','00000022','00000022','A532D600','00000022','00000022','E17C3580','E17C3580','E17C3580','35BCE1','E17C3580')
     for($i=0;$i-lt15;++$i) {
-        $row=$rows[$i]; Assert-LabelFlags $row @('raw_rgba_match','adoption_match','repeat_match','sibling_preserved','private_bytes','frozen_style_resources_rng')
+        $row=$rows[$i]; Assert-PainterFlags $row @('raw_rgba_match','adoption_match','repeat_match','sibling_preserved','private_bytes','frozen_style_resources_rng')
         if($row.state-cne$states[$i] -or $row.foreground_token-cne$foregroundTokens[$i] -or $row.shadow_token-cne$shadowTokens[$i] -or $row.scope-cne'debug-paired-hud-label-live') { throw 'HUD label actual paired token/sibling observation differs' }
     }
-    if((Get-Item -LiteralPath $labelTranscript).Length-le0 -or (Test-Path -LiteralPath (Join-Path $captures 'hud-label-tune-scratch/profile/ColourWars/save_data.json'))) { throw 'HUD label transcript/no-game-Save guard differs' }
+    if((Get-Item -LiteralPath $labelTranscript).Length-le0 -or (Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'hud-label-tune-scratch/profile')))) { throw 'HUD label transcript/no-game-Save guard differs' }
     foreach($name in @('source/tuning.json','source/presentation.json','staged/tuning.json','staged/presentation.json')) { $labelInputs.Add((Join-Path $captures "hud-label-tune-scratch/$name")) }
-    $script:hudLabelObserved.developer_commands=$tune; $script:hudLabelObserved.readbacks=99; $script:hudLabelObserved.csv_rows=23; $script:hudLabelObserved.calibration_pixel_checks=3168
+    $script:hudLabelObserved.developer_commands=$tune; $script:hudLabelObserved.readbacks += $tune.readbacks; $script:hudLabelObserved.csv_rows += $tune.csv_rows; $script:hudLabelObserved.calibration_pixel_checks=3168
 } elseif(@(Get-ChildItem -LiteralPath $captures -Filter 'hud-label-tune-*').Count) { throw 'Release HUD label leaf must contain no Debug artifacts' }
 $script:hudLabelVerified=[ordered]@{directory=[IO.Path]::GetFullPath($captures);ppms=$labelPpmEvidence;inputs=@(foreach($path in $labelInputs){[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}
 $result.observed_counts=$script:hudLabelObserved

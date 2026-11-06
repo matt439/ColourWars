@@ -3,7 +3,7 @@ $pressSummary = Get-Content -LiteralPath (Join-Path $captures 'press-tower-summa
 $pressRows = @(Import-Csv -LiteralPath (Join-Path $captures 'press-tower.csv'))
 $pressCounts = [ordered]@{ players=4; phases=2; paint_states=2; full_frames=4; native_crops=16; csv_rows=16; readbacks=8; level_builds=2 }
 $pressKeys = @($pressCounts.Keys) + @('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','human_acceptance')
-if ((($pressSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($pressKeys | Sort-Object) -join '|') -or
+if ((-not (Test-PainterKeys $pressSummary $pressKeys)) -or
     $pressSummary.outcome -cne 'passed' -or $pressSummary.scope -cne 'press-tower-only' -or
     $pressSummary.human_acceptance -isnot [bool] -or $pressSummary.human_acceptance) { throw 'Press Tower summary scope/schema differs.' }
 foreach ($key in $pressCounts.Keys) {
@@ -11,14 +11,7 @@ foreach ($key in $pressCounts.Keys) {
         throw "Press Tower bounded count differs: $key"
     }
 }
-function PressTower-Number([object]$Value, [string]$Label) {
-    $parsed = 0.0
-    if (-not [double]::TryParse([string]$Value, [Globalization.NumberStyles]::Float,
-        [Globalization.CultureInfo]::InvariantCulture, [ref]$parsed) -or [double]::IsNaN($parsed) -or [double]::IsInfinity($parsed)) {
-        throw "Press Tower metric is not finite: $Label"
-    }
-    return $parsed
-}
+
 $pressPresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
 $pressTuning = Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json') -Raw | ConvertFrom-Json
 $pressStage = Get-Content -LiteralPath (Join-Path $gameDirectory 'levels/press_tower.json') -Raw | ConvertFrom-Json
@@ -27,14 +20,14 @@ foreach ($object in $pressStage.collision_objects) {
     if ($object.PSObject.Properties.Name -contains 'rectangle') { $pressRectangles[$object.name] = $object.rectangle }
 }
 $pressPaintables = @($pressStage.collision_objects | Where-Object { $_.type -ceq 'StructurePaintable' }).Count
-$pressHeavy = PressTower-Number $pressSummary.heavy_initial_fraction_min 'heavy initial fraction'
-$pressUpdates = PressTower-Number $pressSummary.level_updates 'updates'
+$pressHeavy = ConvertTo-PainterFinite $pressSummary.heavy_initial_fraction_min 'heavy initial fraction'
+$pressUpdates = ConvertTo-PainterFinite $pressSummary.level_updates 'updates'
 if ($pressSummary.controlled_heavy_contacts -ne $pressPaintables -or $pressHeavy -le 0.99 -or $pressHeavy -gt 1.0 -or
     $pressUpdates -le 0 -or $pressUpdates -gt 1404 -or $pressUpdates -ne [Math]::Truncate($pressUpdates)) {
     throw 'Press Tower ownership/contact/update budget differs.'
 }
 $pressColumns = 'capture,phase,paint,view,input_slot,station,player_x,player_y,velocity_x,velocity_y,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,target,target_x,target_y,target_width,target_height,target_visible,frozen_pixels,public_state,debug_fingerprint,rng,evidence_scope'
-if ($pressRows.Count -ne 16 -or ($pressRows[0].PSObject.Properties.Name -join ',') -cne $pressColumns) { throw 'Press Tower CSV schema/count differs.' }
+if ($pressRows.Count -ne 16 -or (-not (Test-PainterCsvColumns $pressRows ($pressColumns.Split(','))))) { throw 'Press Tower CSV schema/count differs.' }
 $pressExpected = @{}; $pressFiles = @{}; $pressSeen = @{}
 $pressSlots = @(3,1,2,0)
 $pressStationNames = @(@('stair_1_a','stair_1_b','stair_3_a','stair_3_b'), @('shoulder_a','shoulder_b','press_head_a','press_head_b'))
@@ -66,7 +59,7 @@ foreach ($row in $pressRows) {
     $n = @{}
     foreach ($metric in @('player_x','player_y','velocity_x','velocity_y','camera_x','camera_y','camera_scale',
         'pane_x','pane_y','pane_width','pane_height','crop_x','crop_y','crop_width','crop_height','owned_fraction',
-        'target_x','target_y','target_width','target_height')) { $n[$metric] = PressTower-Number $row.$metric $metric }
+        'target_x','target_y','target_width','target_height')) { $n[$metric] = ConvertTo-PainterFinite $row.$metric $metric }
     $left = if ($view % 2 -eq 1) { 640 } else { 0 }; $top = if ($view -ge 2) { 360 } else { 0 }
     if ($n.pane_x -ne $left -or $n.pane_y -ne $top -or $n.pane_width -ne 640 -or $n.pane_height -ne 360 -or
         $n.crop_x -ne $left -or $n.crop_y -ne $top -or $n.crop_width -ne 640 -or $n.crop_height -ne 360 -or
@@ -102,9 +95,7 @@ $pressPayloads = @{}; $pressHeaderLengths = @{}
 foreach ($file in $pressNative) {
     $size = $pressFiles[$file.Name]; $bytes = [IO.File]::ReadAllBytes($file.FullName)
     $header = 'P6' + [char]10 + $size[0] + ' ' + $size[1] + [char]10 + '255' + [char]10
-    if ($bytes.Length -ne $header.Length + 3*$size[0]*$size[1] -or [Text.Encoding]::ASCII.GetString($bytes,0,$header.Length) -cne $header) {
-        throw 'Press Tower native PPM dimensions/payload differ.'
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $header
     $pressPayloads[$file.Name] = $bytes; $pressHeaderLengths[$file.Name] = $header.Length
 }
 foreach ($row in $pressRows) {

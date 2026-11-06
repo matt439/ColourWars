@@ -1,31 +1,15 @@
 # Dot-sourced only for RouteWarningOnly. These are observation integrity gates:
 # off-screen landings and censored/no-hit projectile trials are retained outcomes.
-function Get-RouteWarningNumber {
-    param([object] $Value, [string] $Name)
-    $number = 0.0
-    if (-not [double]::TryParse([string]$Value, [Globalization.NumberStyles]::Float,
-        [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or
-        [double]::IsNaN($number) -or [double]::IsInfinity($number)) {
-        throw "Route/warning evidence has invalid finite number $Name."
-    }
-    return $number
-}
 
 function Get-RouteWarningInteger {
     param([object] $Value, [string] $Name, [long] $Minimum = 0, [long] $Maximum = 25000)
-    $number = 0L
-    if (-not [long]::TryParse([string]$Value, [Globalization.NumberStyles]::Integer,
-        [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or
-        $number -lt $Minimum -or $number -gt $Maximum) {
-        throw "Route/warning evidence has invalid integer $Name."
-    }
-    return $number
+    return ConvertTo-PainterInteger $Value $Name $Minimum $Maximum
 }
 
 function Assert-RouteWarningColumns {
     param([object[]] $Rows, [string[]] $Columns, [string] $Name)
     if ($Rows.Count -eq 0 -or
-        (($Rows[0].PSObject.Properties.Name) -join '|') -cne ($Columns -join '|')) {
+        (-not (Test-PainterCsvColumns $Rows $Columns))) {
         throw "Route/warning $Name changed its nonempty CSV schema."
     }
 }
@@ -142,7 +126,7 @@ if ($routeCounts.tick_rows -ne $routeTicks.Count -or $routeCounts.trials -ne $ro
     $routeCounts.readbacks -ne 2 * $routeCounts.full_frames -or $routePanels.Count -ne 3 * $routeTrials.Count) {
     throw 'Route/warning summary differs from its bounded CSV counts or repeated-draw budget.'
 }
-$routeDt = Get-RouteWarningNumber $routeSummary.simulated_dt 'simulated_dt'
+$routeDt = ConvertTo-PainterFinite $routeSummary.simulated_dt 'simulated_dt'
 if ([Math]::Abs($routeDt - [single](166666.0 / 10000000.0)) -gt 0.000000001) {
     throw 'Route/warning evidence no longer uses the real quantized 60 Hz simulation step.'
 }
@@ -217,7 +201,7 @@ foreach ($trial in $routeTrials) {
     $null = Get-RouteWarningInteger $trial.live_projectiles_end 'live_projectiles_end' 0 20
     foreach ($field in @('target_x', 'target_y', 'target_width', 'target_height', 'strip_x', 'strip_y', 'strip_width',
         'strip_height', 'initial_owned_fraction', 'aim_x', 'aim_y', 'health_loss')) {
-        $null = Get-RouteWarningNumber $trial.$field $field
+        $null = ConvertTo-PainterFinite $trial.$field $field
     }
     $owned = [double]$trial.initial_owned_fraction
     if ($owned -lt 0.0 -or $owned -gt 1.0 -or ($trial.paint -ceq 'heavy' -and $owned -le 0.99) -or
@@ -254,15 +238,15 @@ foreach ($panel in $routePanels) {
     $byIndex = $routePanelByTrial[$panel.trial]
     if ($byIndex.ContainsKey([string]$index)) { throw 'Route/warning HUD envelope index is duplicated.' }
     $box = @()
-    foreach ($field in @('x', 'y', 'width', 'height')) { $box += Get-RouteWarningNumber $panel.$field "panel.$field" }
+    foreach ($field in @('x', 'y', 'width', 'height')) { $box += ConvertTo-PainterFinite $panel.$field "panel.$field" }
     if ($box[2] -le 0.0 -or $box[3] -le 0.0) { throw 'Route/warning HUD envelope is empty.' }
     $byIndex[[string]$index] = $box
 }
 $routePresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
-$routeReferenceHeight = Get-RouteWarningNumber $routePresentation.camera.reference_height 'camera.reference_height'
+$routeReferenceHeight = ConvertTo-PainterFinite $routePresentation.camera.reference_height 'camera.reference_height'
 $routeMinimumWidth = 0.0
 if ($routePresentation.camera.PSObject.Properties.Name -contains 'minimum_world_width') {
-    $routeMinimumWidth = Get-RouteWarningNumber $routePresentation.camera.minimum_world_width 'camera.minimum_world_width'
+    $routeMinimumWidth = ConvertTo-PainterFinite $routePresentation.camera.minimum_world_width 'camera.minimum_world_width'
 }
 if ($routeReferenceHeight -le 0.0 -or $routeMinimumWidth -lt 0.0) { throw 'Route/warning staged camera framing is invalid.' }
 $routeBaseScale = [single]([single]720.0 / [single]$routeReferenceHeight)
@@ -284,7 +268,7 @@ foreach ($row in $routeTicks) {
     foreach ($field in @('player_x', 'player_y', 'velocity_x', 'velocity_y', 'health', 'ammo', 'camera_x', 'camera_y',
         'camera_scale', 'world_x', 'world_y', 'world_width', 'world_height', 'projected_x', 'projected_y',
         'projected_width', 'projected_height', 'clip_width', 'clip_height', 'edge_x')) {
-        $null = Get-RouteWarningNumber $row.$field "$field/$key"
+        $null = ConvertTo-PainterFinite $row.$field "$field/$key"
     }
     $pane = @(Get-RouteWarningPane ([int]$row.players) ([int]$row.view))
     $routeScale = $routeBaseScale
@@ -475,11 +459,8 @@ if ($routeFullStems.Count -ne $routeCounts.full_frames -or $routePpms.Count -ne 
 $routePpmBytes = 0L; $routeHeaderBytes = @{}
 foreach ($file in $routePpms) {
     $size = $routeDimensions[$file.Name]
-    $header = @(Get-Content -LiteralPath $file.FullName -TotalCount 3)
     $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-    $bytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + [long]$size[0] * $size[1] * 3
-    if ($header.Count -ne 3 -or $header[0] -cne 'P6' -or $header[1] -cne "$($size[0]) $($size[1])" -or
-        $header[2] -cne '255' -or $file.Length -ne $bytes) { throw "Route/warning PPM has invalid dimensions/RGB payload: $($file.Name)" }
+    Assert-PainterPpm -Path $file.FullName -Header $expectedHeader
     $routePpmBytes += $file.Length
     $routeHeaderBytes[$file.Name] = [Text.Encoding]::ASCII.GetByteCount($expectedHeader)
 }

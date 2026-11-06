@@ -1,4 +1,5 @@
 #include "editor/stage_registration.h"
+#include "editor/manifest_asset_kinds.h"
 #include "editor/content_catalog.h"
 #include "editor/level_document.h"
 #include "editor/path_text.h"
@@ -542,20 +543,22 @@ namespace colourwars_editor
             if (directory.empty() || directory.back() != '/' ||
                 !asset_path(directory.substr(0, directory.size() - 1))) fail("Manifest directory is not canonical");
             std::vector<std::string> extensions;
-            if (kind == "font") extensions = { "spritefont" };
-            else if (kind == "sprite_sheet") extensions = { "json", "dds" };
-            else if (kind == "level")
+            for (const colourwars_manifest::KindExtension& rule : colourwars_manifest::kind_extensions)
             {
-                extensions = { "json" }; level_group = index; ++level_groups;
+                if (rule.kind == kind) extensions.emplace_back(rule.extension);
+            }
+            if (extensions.empty())
+                fail("Unknown manifest kind; review its runtime assets before registering a stage: " + kind);
+            if (kind == "level")
+            {
+                level_group = index; ++level_groups;
                 if (directory != "levels/") fail("Registration requires one level group for ./levels/");
             }
             else if (kind == "sound_bank")
             {
-                extensions = { "json", "xwb" };
                 const Json& optional = field(group, "optional");
                 if (!optional.IsBool() || !optional.GetBool()) fail("Sound banks must remain optional");
             }
-            else fail("Unknown manifest kind; review its runtime assets before registering a stage: " + kind);
             const Json& names = field(group, "names");
             if (!names.IsArray() || names.Empty()) fail("Manifest names must be nonempty arrays");
             for (const Json& value : names.GetArray())

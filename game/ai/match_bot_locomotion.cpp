@@ -15,8 +15,8 @@ namespace
 	{
 		float vy = movement.jump_launch_velocity, height = 0.0f;
 		float vx = launch_speed, travelled = 0.0f;
-		constexpr float dt = SECONDS_PER_STEP;
-		for (int step = 0; step < 2 * SIMULATION_HZ; ++step)
+		constexpr float dt = simulation::seconds_per_step;
+		for (int step = 0; step < 2 * simulation::simulation_hz; ++step)
 		{
 			// Player::start_jump overwrites gravity on the takeoff tick. Held
 			// extension begins on the following tick and includes only held outputs.
@@ -68,7 +68,7 @@ float MatchBotLocomotion::stopping_distance(float vx, bool grounded, MatchBotFoo
 
 int MatchBotLocomotion::held_jump_steps() const
 {
-	const double steps = std::ceil(static_cast<double>(this->tuning_.player().jump_max_time) * SIMULATION_HZ);
+	const double steps = std::ceil(static_cast<double>(this->tuning_.player().jump_max_time) * simulation::simulation_hz);
 	return std::max(1, static_cast<int>(std::min(steps, static_cast<double>((std::numeric_limits<int>::max)()))));
 }
 

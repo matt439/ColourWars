@@ -143,8 +143,8 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 {
 	// Only team paint marks a surface; a projectile's layer follows its team.
 	const CollisionLayer other_layer = projectile.layer();
-	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
-		other_layer != collision_layers::PROJECTILE_TEAM_B) { return; }
+	if (other_layer != collision_layers::projectile_team_a &&
+		other_layer != collision_layers::projectile_team_b) { return; }
 	this->paint_from_projectile(projectile, splash, projectile.team());
 }
 

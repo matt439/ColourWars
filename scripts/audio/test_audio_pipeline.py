@@ -163,7 +163,6 @@ class ProductionChecks(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=scratch_parent) as scratch:
             folder = Path(scratch)
             source = folder / "loop.wav"
-            write_wave(source, channels=2)
             # Distinct samples make skipped/duplicated windows observable at
             # the two lossless header frames of each independent ADPCM block.
             samples = array("h", [(index * 37 % 2000) - 1000 for index in range(2000)])

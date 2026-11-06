@@ -36,7 +36,7 @@ namespace
         return std::abs(first - second) < 0.001f;
     }
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     // Metadata only: no graphics/audio device, window or player's save.
     struct World

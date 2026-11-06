@@ -27,25 +27,11 @@ decision without the attended sessions:
   [labrador#122-#125](docs/review/engine-reports.md#live), and 28 is closed as declined.
 
 The next aim is the author's to set. Until then, rows are picked from the sections below.
-The 2026-11-05 [hygiene review](#hygiene-review) added `HYG#58`-`HYG#92` and `CI#8`; its defect rows (`HYG#58`-`HYG#60`) are done;
-two of its rows wait on the author: `HYG#81` (the `SCREAMING_SNAKE` rule) and `ENG#35` (file or not).
-`ROAD#22` (endless paint) is the one `OPEN` row. Art (`POL#16`) is unblocked but stays
+The remaining queued hygiene rows (`HYG#81`, `HYG#88`-`HYG#92` and `CI#8`) are
+complete (2026-11-07), recorded in [their owner](docs/code-hygiene.md#hygiene-review-2026-11-05).
+The review's engine draft, `ENG#35`, still waits on the author's filing decision.
+`ROAD#22` (endless paint) is the roadmap's one `OPEN` row. Art (`POL#16`) is unblocked but stays
 deferred. Bot lift routing, sponges and the controller rows remain unscoped.
-
-## Hygiene review
-
-**Owner:** [docs/code-hygiene.md, Hygiene review](docs/code-hygiene.md#hygiene-review-2026-11-05); findings in the frozen
-[2026-11-05 review](docs/review/2026-11-05-code-hygiene-review.md). Work the rows in the
-listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `HYG#81` | DECISION | LOW | L | AGENTS.md reserves `SCREAMING_SNAKE` for macros, but about 59 constants use it. The author amends the rule or approves the renames. [Scope](docs/code-hygiene.md#the-screaming_snake-constant-rule-hyg81). |
-| `HYG#88` | OPEN | MED | L | Shared painter verifier evidence helpers for about forty hand-rolled PPM, number and CSV checks; one lost its payload check. [Scope](docs/code-hygiene.md#painter-verifier-evidence-helpers-hyg88). |
-| `HYG#89` | OPEN | MED | L | Shared PowerShell probe-build pipeline (six drifted copies), diagnostic scans, window enumeration and art PNG writer. [Scope](docs/code-hygiene.md#shared-powershell-probe-pipeline-and-art-helpers-hyg89). |
-| `HYG#90` | OPEN | LOW | M | Art build scripts read team colours from presentation; art READMEs corrected against the data. [Scope](docs/code-hygiene.md#art-build-scripts-and-art-docs-hyg90). |
-| `HYG#91` | OPEN | LOW | M | Python audio and study tools: one WAV writer, named ADPCM constants, Study B's crashing tie-break and CLI checks. [Scope](docs/code-hygiene.md#python-audio-and-study-tools-hyg91). |
-| `HYG#92` | OPEN | LOW | M | Debug `.cfg` scripts: the two stations the tour skips, and shared setup instead of byte-identical copies. [Scope](docs/code-hygiene.md#debug-cfg-scripts-hyg92). |
 
 ## Art direction, characters and the UI
 
@@ -118,7 +104,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#8` | OPEN | LOW | M | Build and CI housekeeping: rename the `artattack` vcpkg manifest and drop doctest, run the audio tests after Build, one runtime-asset rule, workflow and ignore leftovers. [Hygiene](docs/code-hygiene.md#build-ci-and-repository-housekeeping-ci8). |
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
@@ -128,6 +113,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Hygiene review queue | [code-hygiene.md](docs/code-hygiene.md#hygiene-review-2026-11-05) | a new finding or regression in the completed slices; the last seven queued rows closed 2026-11-07 |
 | Feel and feedback | [polish-plan.md](docs/polish-plan.md) §2, §4, §8; [Movement Course](docs/polish-movement-course.md) | a feel or feedback regression, or a reopened call; `POL#3`, `POL#18`, `POL#19`, `POL#38`, `POL#39` and `POL#45` were accepted or waived 2026-11-05 |
 | Levels and the editor | [polish-plan.md](docs/polish-plan.md) §3, §8; [level-editor.md](docs/level-editor.md) | a new arena or editor slice; `POL#21`, `POL#27`, `POL#30`, `POL#31` and `ED#5` were settled 2026-11-05 |
 | Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |

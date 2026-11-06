@@ -153,7 +153,7 @@ void cursor_material_consumer_checks(Application& app, const Presentation& prese
         "\"crop_pixels\":46080,\"negative_reference_frames\":10,\"negative_sample_comparisons\":16,\"blank_readbacks\":2,\"draw_screen_height\":720,\"viewport\":\"1280x720\",\"tip\":[640,240],\"click_age\":0.09,\"event_fade\":false,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-ordered-raw-patches\"}\n";
     require(summary.good(), "Cannot retain cursor material summary");
-    std::cout << "PASS cursor material consumers:68 readbacks/24 rows/8 crops; ordered shadow-then-S and shadow-only raw channels,per-field alpha controls,retained ink/fill/ticks,Reduce Effects,zero updates.\n";
+    std::cout << "PASS cursor material consumers: 68 readbacks / 24 rows / 8 crops; ordered shadow-then-S and shadow-only raw channels, per-field alpha controls, retained ink/fill/ticks, Reduce Effects, zero updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
@@ -286,8 +286,8 @@ void cursor_material_tune_checks(Application& app, GameTuning& tuning, Presentat
         "\"csv_rows\":72,\"case_rows\":24,\"sample_rows\":48,\"crops\":0,\"saved_tokens\":2,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-ordered-raw-patches\",\"event_fade\":false}\n";
     require(summary.good(), "Cannot retain cursor Debug command summary");
-    std::cout << "PASS cursor tune colours:15 validated named/RGB/RGBA/separate-reset/save commands,144 readbacks,72 rows; "
-        "two-token private save/rebase,retained resting/clicking consumers,independent ordered shadow/S samples and preserved ink/fill/preferences/RNG. "
-        "Synthetic draw screen_height720,zero local/Level/State updates; no physical input or small-view/human acceptance.\n";
+    std::cout << "PASS cursor tune colours: 15 validated named/RGB/RGBA/separate-reset/save commands, 144 readbacks, 72 rows; "
+        "two-token private save/rebase, retained resting/clicking consumers, independent ordered shadow/S samples and preserved ink/fill/preferences/RNG. "
+        "Synthetic draw screen_height720, zero local/Level/State updates; no physical input or small-view/human acceptance.\n";
 }
 #endif

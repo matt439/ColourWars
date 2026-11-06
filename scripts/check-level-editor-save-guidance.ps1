@@ -1,3 +1,4 @@
+. (Join-Path $PSScriptRoot 'check-windows.ps1')
 # Dot-sourced by check-level-editor.ps1 after its ordinary hidden-window checks.
 # All commands go to the probe's owned hidden windows; no global keyboard,
 # mouse, foreground or focus operations are used.
@@ -7,7 +8,7 @@ function Test-EditorSaveGuidance {
         [Parameter(Mandatory)] [hashtable] $Commands)
 
     if (-not ('ColourWars.EditorSaveProbe' -as [type])) {
-        Add-Type -TypeDefinition @'
+        Add-Type -TypeDefinition (@'
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -20,11 +21,7 @@ namespace ColourWars
         private delegate bool EnumWindowProc(IntPtr window, IntPtr parameter);
         private static readonly HashSet<IntPtr> hiddenDialogs = new HashSet<IntPtr>();
         [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
         private static extern bool EnumChildWindows(IntPtr parent, EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int GetClassName(IntPtr window, StringBuilder text, int maximum);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -90,10 +87,8 @@ namespace ColourWars
         public static string Describe(int processId, IntPtr root)
         {
             var result = new StringBuilder("main-enabled=" + IsWindowEnabled(root));
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner != processId || ClassName(window) != "#32770") return true;
+            foreach (IntPtr window in SaveGuidanceOwnedWindows.ForProcess(processId)) {
+                if (ClassName(window) != "#32770") continue;
                 var title = new StringBuilder(1024);
                 GetWindowTextW(window, title, title.Capacity);
                 result.Append(";dialog=" + window.ToInt64().ToString("x") + ":" + title +
@@ -107,8 +102,7 @@ namespace ColourWars
                             ":visible=" + IsWindowVisible(child) + ":enabled=" + IsWindowEnabled(child));
                     return true;
                 }, IntPtr.Zero);
-                return true;
-            }, IntPtr.Zero);
+            }
             return result.ToString();
         }
         private static bool OwnedBy(IntPtr window, IntPtr root)
@@ -122,10 +116,8 @@ namespace ColourWars
         public static IntPtr Dialog(int processId, IntPtr root)
         {
             IntPtr found = IntPtr.Zero;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner != processId || ClassName(window) != "#32770" || !OwnedBy(window, root)) return true;
+            foreach (IntPtr window in SaveGuidanceOwnedWindows.ForProcess(processId)) {
+                if (ClassName(window) != "#32770" || !OwnedBy(window, root)) continue;
                 // The Shell keeps hidden dialog templates in this process.
                 // Only track a modal that became visible under our editor;
                 // keep recognizing it after this probe hides it.
@@ -135,8 +127,7 @@ namespace ColourWars
                 }
                 if (hiddenDialogs.Contains(window) &&
                     (found == IntPtr.Zero || (!IsWindowEnabled(found) && IsWindowEnabled(window)))) found = window;
-                return true;
-            }, IntPtr.Zero);
+            }
             return found;
         }
         public static bool Ready(IntPtr window)
@@ -235,7 +226,7 @@ namespace ColourWars
         }
     }
 }
-'@
+'@ + (Get-CheckWindowSource 'SaveGuidanceOwnedWindows'))
     }
 
     [IO.Directory]::CreateDirectory($RunDirectory) | Out-Null

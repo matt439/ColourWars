@@ -191,7 +191,7 @@ namespace
         auto level = world.build(settings, runtime_seed);
         std::vector<PlayerInputData> physical(input_slots::count);
         for (auto& input : physical) { input.connected = true; }
-        const float step = SECONDS_PER_STEP;
+        const float step = simulation::seconds_per_step;
         for (int tick = 0; tick < 900 && level->state() != LevelState::active; ++tick) { level->update(physical, step); }
         require(level->state() == LevelState::active, "Bot runtime did not finish countdown");
         Observe observer;

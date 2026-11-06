@@ -17,7 +17,7 @@
 namespace menu_consts
 {
 	// Menu geometry stays in these design units; ui_camera() maps it to the window.
-	inline const labrador::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
+	inline const labrador::Vector2F design_resolution = { 1920.0f, 1080.0f };
 }
 
 // The value rows of the two settings pages, named once for the pages that

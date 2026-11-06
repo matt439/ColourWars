@@ -126,7 +126,7 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 }
 
 TerrainMaterial::TerrainMaterial(const std::string& name, RenderResources* render_resources) :
-	TextureObject(SHEET_NAME, "swatch_keyline", render_resources),
+	TextureObject(sheet_name, "swatch_keyline", render_resources),
 	name_(name)
 {
 	for (size_t index = 0; index < this->swatches_.size(); ++index)
@@ -152,7 +152,7 @@ void TerrainMaterial::paint_miniature(DrawList& draw_list) const
 	// overwrites.
 	const Camera camera = draw_list.camera();
 	validate_miniature_camera(camera);
-	if (camera.scale >= 1.0f / CELL)
+	if (camera.scale >= 1.0f / cell)
 	{
 		this->paint(draw_list);
 		return;
@@ -179,7 +179,7 @@ void TerrainMaterial::paint_miniature(DrawList& draw_list) const
 std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera& camera) const
 {
 	validate_miniature_camera(camera);
-	const bool miniature = camera.scale < 1.0f / CELL;
+	const bool miniature = camera.scale < 1.0f / cell;
 	const RectangleF ruler = this->miniature_ruler_
 		? projected_pixels(this->ruler_rectangle_, camera) : RectangleF::zero;
 	const float ruler_thickness = this->ruler_vertical_ ? ruler.width : ruler.height;
@@ -322,7 +322,7 @@ void TerrainMaterial::outline(const RectangleF& rectangle, const TerrainFaces& f
 	const auto seal = [&](const std::vector<std::pair<float, float>>& spans,
 		bool along_x, bool leading, StrokeEdge edge)
 	{
-		const float thickness = std::min(3.0f * CELL,
+		const float thickness = std::min(3.0f * cell,
 			along_x ? rectangle.height : rectangle.width);
 		const auto band = [&](float low, float high, float offset, float depth)
 		{
@@ -338,17 +338,17 @@ void TerrainMaterial::outline(const RectangleF& rectangle, const TerrainFaces& f
 			this->add(limit, TerrainRole::metal_dark, rectangle);
 			// Sparse, world-aligned diagonal cuts. The smooth white scoring
 			// band masks these; disabled faces retain the same sealed finish.
-			constexpr float period = 8.0f * CELL;
+			constexpr float period = 8.0f * cell;
 			for (float at = std::floor(low / period) * period - thickness;
 				at < high; at += period)
 			{
-				for (float inset = CELL; inset < thickness; inset += CELL)
+				for (float inset = cell; inset < thickness; inset += cell)
 				{
-					this->add(band(at + inset, at + inset + CELL, inset,
-						std::min(CELL, thickness - inset)), TerrainRole::metal_light, limit);
+					this->add(band(at + inset, at + inset + cell, inset,
+						std::min(cell, thickness - inset)), TerrainRole::metal_light, limit);
 				}
 			}
-			this->add_stroke(band(low, high, 0.0f, std::min(CELL, thickness)),
+			this->add_stroke(band(low, high, 0.0f, std::min(cell, thickness)),
 				TerrainRole::keyline, rectangle, edge);
 		}
 	};

@@ -13,7 +13,7 @@
 using namespace labrador;
 using namespace presentation_read;
 using namespace presentation_validation;
-using menu_consts::DESIGN_RESOLUTION;
+using menu_consts::design_resolution;
 
 void Presentation::Validation::check_menu_line(const std::string& key, const std::wstring& text,
 	const std::string& font, const Vector2F& position, float bottom, const Vector2F& shadow) const
@@ -21,7 +21,7 @@ void Presentation::Validation::check_menu_line(const std::string& key, const std
 	const std::string where = this->presentation.source_path_ + ": " + key;
 	drawable_text::check_font_can_draw(&render, font, text, where);
 	const Vector2F size = render.measure_text(render.resolve_sprite_font(font), text);
-	const float width = DESIGN_RESOLUTION.x - position.x - this->presentation.menu_.brand_position.x;
+	const float width = design_resolution.x - position.x - this->presentation.menu_.brand_position.x;
 	const float height = bottom - position.y;
 	if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
 		position.x < 0.0f || position.y < 0.0f || !std::isfinite(width) || !std::isfinite(height) ||

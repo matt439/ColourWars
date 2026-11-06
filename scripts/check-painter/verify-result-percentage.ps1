@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($ResultPercentageOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $resultPercentageSummary = Get-Content -LiteralPath (Join-Path $captures 'result-percentage-summary.json') -Raw | ConvertFrom-Json
         $resultPercentageRows = @(Import-Csv -LiteralPath (Join-Path $captures 'result-percentage.csv'))
         $resultPercentageResultCases = @(
@@ -44,7 +45,7 @@
             $resultPercentageSummary.level_builds -ne 3 -or $resultPercentageSummary.crop_pixels -ne 681072 -or
             $resultPercentageRows.Count -ne 105 -or $resultPercentageResultRows.Count -ne 81 -or
             $resultPercentageMonitorRows.Count -ne 24 -or
-            (($resultPercentageRows[0].PSObject.Properties.Name) -join '|') -cne ($resultPercentageExpectedColumns -join '|') -or
+            (-not (Test-PainterCsvColumns $resultPercentageRows $resultPercentageExpectedColumns)) -or
             (($resultPercentageRows | ForEach-Object { "$($_.consumer)|$($_.case)|$($_.fixture)|$($_.role)" } | Sort-Object) -join ';') -cne
                 (($resultPercentageExpectedPairs | Sort-Object) -join ';')) {
             throw 'The Result percentage leaf does not match its frozen summary, CSV schema, case-role pairs, separate state/Level update counts or readback/proceed budgets.'
@@ -106,11 +107,8 @@
             }
             $metricValues = @{}
             foreach ($metric in @('raw_width', 'raw_height', 'x', 'y', 'scale')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
-                    ($metric -in @('raw_width', 'raw_height', 'scale') -and $value -le 0.0) -or
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if (($metric -in @('raw_width', 'raw_height', 'scale') -and $value -le 0.0) -or
                     ($metric -in @('x', 'y') -and $value -lt 0.0)) {
                     throw "Result percentage case $($row.consumer)/$($row.case)/$($row.fixture)/$($row.role) contains an invalid $metric."
                 }
@@ -145,16 +143,10 @@
         }
         foreach ($crop in $resultPercentageCrops) {
             $size = $resultPercentageExpectedCrops[$crop.Name]
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
-            if ($header.Count -ne 3 -or $header[0] -cne 'P6' -or $header[1] -cne "$($size[0]) $($size[1])" -or
-                $header[2] -cne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Result percentage crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
         }
-        $resultPercentageSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $resultPercentageSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -ceq 'Save was successful.' }).Count
+        $resultPercentageSaveCalls = $painterSaveCounts.calls
+        $resultPercentageSaveSuccesses = $painterSaveCounts.successes
         if ($resultPercentageSaveCalls -ne 1 -or $resultPercentageSaveSuccesses -ne 1) {
             throw 'The Result percentage leaf must perform exactly its one successful private seed Save.'
         }

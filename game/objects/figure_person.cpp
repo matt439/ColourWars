@@ -11,7 +11,7 @@ namespace
 {
     // Its own constant, so the face never moves the bricks' draws from the
     // same hand ("figslips").
-    constexpr std::uint64_t SLIP_SALT = 0x666967736C697073ULL;
+    constexpr std::uint64_t slip_salt = 0x666967736C697073ULL;
 }
 
 FigurePerson::FigurePerson(std::vector<std::size_t> slips) :
@@ -28,7 +28,7 @@ FigurePerson::FigurePerson(const FigureSlipsPresentation& slips, std::uint64_t h
     const std::vector<FigurePerson> people = everyone(slips);
     const std::size_t singles = slips.list.size();
     const std::size_t pairs = people.size() - singles;
-    BotRandom random(hand ^ SLIP_SALT);
+    BotRandom random(hand ^ slip_salt);
     const bool two = pairs > 0 && random.unit() < slips.two_slip_chance;
     const std::uint64_t pick = random.next();
     *this = two

@@ -35,7 +35,7 @@ namespace
 	bool valid_weapon(WeaponType weapon)
 	{
 		// A remembered weapon is a resolved one: never Random, never a sub.
-		return static_cast<size_t>(weapon) < TUNED_WEAPON_COUNT;
+		return static_cast<size_t>(weapon) < tuned_weapon_count;
 	}
 
 	bool valid_controller(PlayerController controller)

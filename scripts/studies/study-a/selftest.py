@@ -21,6 +21,10 @@ import os
 import shutil
 import subprocess
 import sys
+
+# The study tools are also runnable directly from their own folders.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _paths import inside_repo_but_not_out
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -88,18 +92,6 @@ def put(rows, x, y, c):
     return rows
 
 
-def inside_repo_but_not_out(path):
-    path, repo = os.path.normcase(os.path.abspath(path)), os.path.normcase(REPO)
-    if os.path.splitdrive(path)[0] != os.path.splitdrive(repo)[0]:
-        return False
-    try:
-        if os.path.commonpath([path, repo]) != repo:
-            return False
-        out = os.path.join(repo, "out")
-        return os.path.commonpath([path, out]) != out
-    except ValueError:
-        return False
-
 
 def prepare(keep):
     """The work folder. A --keep folder must be new, empty or marked as ours."""
@@ -107,7 +99,7 @@ def prepare(keep):
         return tempfile.mkdtemp(prefix="study-a-selftest-")
     work = os.path.abspath(keep)
     if inside_repo_but_not_out(work):
-        sys.exit(f"refusing --keep inside the repository outside out/: {work}")
+        sys.exit(f"refusing --keep inside repository source or at an unresolved path: {work}")
     if os.path.exists(work) and not os.path.isdir(work):
         sys.exit(f"refusing --keep: {work} is a file")
     if os.path.isdir(work) and os.listdir(work) and not os.path.isfile(os.path.join(work, MARKER)):

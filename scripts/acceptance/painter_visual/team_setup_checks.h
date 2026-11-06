@@ -95,7 +95,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             const PromptBar expected("expected-team-legend", prompts, original, app.render_resources());
             DrawList list = app.renderer()->view(app.renderer()->view_count() - 1);
             list.set_viewport(app.viewport_manager()->fullscreen_viewport());
-            list.set_camera(Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+            list.set_camera(Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
                 app.viewport_manager()->fullscreen_viewport()));
             list.set_filter(TextureFilter::linear); expected.draw(list);
         }
@@ -151,7 +151,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Vector2F legend = measure(prompt.font,
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams");
     require(prompt.position.y >= style.footer_y &&
-        RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION).contains(
+        RectangleF(Vector2F::zero, menu_consts::design_resolution).contains(
             RectangleF(prompt.position, legend + prompt.shadow_offset)),
         "Complete Random teams control legend escapes the shared footer");
     std::ofstream evidence(output / "team-setup.csv");
@@ -191,7 +191,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                     const std::string stem = "team-setup-" + std::to_string(count) + "p-" +
                         std::to_string(size.x) + "x" + std::to_string(size.y);
                     const Frame capture = frame(); save(capture, output / (stem + ".ppm"));
-                    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+                    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
                         app.viewport_manager()->fullscreen_viewport());
                     save(foreground_crop(capture, pixel_bounds(camera.calculate_view_rectangle(
                         RectangleF(100.0f, 350.0f, 1450.0f, 710.0f)))), output / (stem + "-detail.ppm"));
@@ -400,7 +400,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.renderer()->begin_frame(); end_stack.draw(*app.renderer());
         const Frame expected_end = read(*app.renderer());
         const auto& end = presentation.end_menu();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         const RectangleI primary = pixel_bounds(camera.calculate_view_rectangle(
             RectangleF(end.layout.position, measure(style.item_font, expected_session.continue_string(presentation.menu_text().end)))));

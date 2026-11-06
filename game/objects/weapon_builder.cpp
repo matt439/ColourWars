@@ -44,7 +44,7 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     default:
         throw std::runtime_error("Weapon type " +
             std::to_string(static_cast<int>(type)) +
-            " has no builder: only the " + std::to_string(TUNED_WEAPON_COUNT) +
+            " has no builder: only the " + std::to_string(tuned_weapon_count) +
             " tuned weapons a player can pick have one, and this is not one of them.");
     }
     weapon->set_motion_presentation(motion);

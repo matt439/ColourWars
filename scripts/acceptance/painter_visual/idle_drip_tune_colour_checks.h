@@ -292,7 +292,7 @@ void idle_drip_colour_consumer_checks(Application& app, const Presentation& pres
         "\"profiles\":5,\"consumers\":6,\"readbacks\":46,\"csv_rows\":10,\"colour_rows\":8,\"guard_rows\":2,\"crops\":8,"
         "\"controls\":8,\"guard_checks\":6,\"private_sequence_scope\":\"source-constness-only\"}\n";
     require(summary.good(), "Cannot retain idle consumer summary");
-    std::cout << "PASS idle-drip colour consumers:46 readbacks,ten rows,eight crops; six attached/falling consumers, "
+    std::cout << "PASS idle-drip colour consumers: 46 readbacks, ten rows, eight crops; six attached/falling consumers, "
         "five stable profiles, single base-alpha conversion/no event fade, captured paint and enabled/Reduce Effects guards. "
         "Fifteen local advance preparations, zero Level/StateContext updates; private stream source constness only.\n";
 }
@@ -406,8 +406,8 @@ void idle_drip_tune_colour_checks(Application& app, GameTuning& tuning, Presenta
     summary << "{\"scope\":\"debug-validated-commands\",\"state_updates\":0,\"level_updates\":0,\"effect_preparation_updates\":15,"
         "\"profiles\":5,\"consumers\":6,\"commands\":9,\"readbacks\":60,\"csv_rows\":20,\"crops\":0,\"private_sequence_scope\":\"source-constness-only\"}\n";
     require(summary.good(), "Cannot retain idle drip Debug command summary");
-    std::cout << "PASS idle drip tune colours: nine validated named/RGB/RGBA/reset/save commands,60 readbacks, "
-        "twenty rows; six retained consumers,five stable profiles,one-token private save/rebase,frozen public state/global RNG/preferences. "
-        "Fifteen local advance preparations,zero Level/StateContext updates; private stream source constness only.\n";
+    std::cout << "PASS idle drip tune colours: nine validated named/RGB/RGBA/reset/save commands, 60 readbacks, "
+        "twenty rows; six retained consumers, five stable profiles, one-token private save/rebase, frozen public state/global RNG/preferences. "
+        "Fifteen local advance preparations, zero Level/StateContext updates; private stream source constness only.\n";
 }
 #endif

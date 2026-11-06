@@ -60,12 +60,12 @@ foreach ($path in @($quietSummaryPath,$quietCsvPath)) {
 $quietSummary = Get-Content -LiteralPath $quietSummaryPath -Raw | ConvertFrom-Json
 $quietRows = @(Import-Csv -LiteralPath $quietCsvPath)
 $quietCounts = [ordered]@{readbacks=38;csv_rows=10;crops=10;crop_width=176;crop_height=24;crop_pixels=42240;ppm_bytes=126860;states=5;backgrounds=2;active_contexts=2;disabled_contexts=2;null_contexts=2;roi_pixels=128;face_pixels=64;lid_pixels=64;roi_pixel_checks=1280;repeat_checks=10;controls=8;discriminating_pixels=512;calibration_pixel_checks=1216;private_game_saves=0}
-Assert-LimbKeys $quietSummary (@($quietCounts.Keys)+$limbUpdates+@('scope')) 'quiet face shared'
-foreach ($key in $quietCounts.Keys) { Assert-LimbInteger $quietSummary $key $quietCounts[$key] }
+Assert-PainterKeys $quietSummary (@($quietCounts.Keys)+$limbUpdates+@('scope')) 'quiet face shared'
+foreach ($key in $quietCounts.Keys) { Assert-PainterInteger $quietSummary $key $quietCounts[$key] }
 Assert-LimbUpdates $quietSummary
 if ($quietSummary.scope -cne 'direct-consumer-only') { throw 'Quiet face shared scope differs' }
 $quietColumns = @('state','background','raw_rgba_match','repeat_match','disabled_null_blank','frozen_geometry_resources_rng','controls','discriminating_pixels','scope')
-if ($quietRows.Count -ne 10 -or ($quietRows[0].PSObject.Properties.Name -join '|') -cne ($quietColumns -join '|')) { throw 'Quiet face exact shared CSV shape differs' }
+if ($quietRows.Count -ne 10 -or (-not (Test-PainterCsvColumns $quietRows $quietColumns))) { throw 'Quiet face exact shared CSV shape differs' }
 $quietFlags = @('raw_rgba_match','repeat_match','disabled_null_blank','frozen_geometry_resources_rng')
 $quietNames = @('default','rgb','rgba128','alpha0','joint'); $quietBackgrounds = @('black','blue')
 $quietExpected = @(foreach ($state in $quietNames) { foreach ($background in $quietBackgrounds) { "$state|$background" } })
@@ -73,7 +73,7 @@ if ((@($quietRows | ForEach-Object { "$($_.state)|$($_.background)" }) -join ';'
 foreach ($row in $quietRows) {
     foreach ($flag in $quietFlags) { if ($row.$flag -cne 'true') { throw 'Quiet face raw/blank/frozen flag differs' } }
     $controls = switch ($row.state) { rgba128 {2} alpha0 {1} joint {1} default {0} }
-    if ((Get-LimbCsvCount $row 'controls') -ne $controls -or (Get-LimbCsvCount $row 'discriminating_pixels') -ne $controls*64 -or $row.scope -cne 'direct-consumer-only') { throw 'Quiet face exact role discrimination differs' }
+    if ((Get-PainterCsvInteger $row 'controls') -ne $controls -or (Get-PainterCsvInteger $row 'discriminating_pixels') -ne $controls*64 -or $row.scope -cne 'direct-consumer-only') { throw 'Quiet face exact role discrimination differs' }
 }
 $quietPpms = @(Get-ChildItem -LiteralPath $captures -Filter 'quiet-face-colour-*.ppm' -File)
 $quietExpectedNames = @($quietExpected | ForEach-Object { 'quiet-face-colour-'+$_.Replace('|','-')+'.ppm' })
@@ -81,8 +81,7 @@ if ($quietPpms.Count -ne 10 -or (($quietPpms.Name|Sort-Object)-join '|') -cne ((
 $quietHeader = [Text.Encoding]::ASCII.GetBytes("P6`n176 24`n255`n")
 $quietPpmEvidence = @(foreach ($name in $quietExpectedNames) {
     $path = Join-Path $captures $name; $bytes = [IO.File]::ReadAllBytes($path)
-    if ($bytes.Length -ne 12686) { throw 'Quiet face canonical native P6 length differs' }
-    for ($i=0; $i -lt 14; ++$i) { if ($bytes[$i] -ne $quietHeader[$i]) { throw 'Quiet face canonical P6 header differs' } }
+    Assert-PainterPpm -Bytes $bytes -Header $quietHeader
     $rgb = [byte[]]::new(12672); [Array]::Copy($bytes,14,$rgb,0,12672); $quietInputFiles.Add($path)
     [ordered]@{name=$name;bytes=12686;sha256=(Get-LimbSha $bytes);rgb_payload_sha256=(Get-LimbSha $rgb)}
 })
@@ -96,22 +95,22 @@ if ($debug) {
     $quietTune = Get-Content -LiteralPath $quietTunePath -Raw | ConvertFrom-Json
     $quietTuneRows = @(Import-Csv -LiteralPath $quietTuneCsv)
     $quietTuneCounts = [ordered]@{commands=9;states=9;backgrounds=2;readbacks=54;csv_rows=18;crops=0;saved_tokens=2;named_face_checks=1;roi_pixel_checks=2304;repeat_checks=18;calibration_pixel_checks=1728;private_game_saves=0}
-    Assert-LimbKeys $quietTune (@($quietTuneCounts.Keys)+$limbUpdates+@('scope','adoption')) 'quiet face Debug'
-    foreach ($key in $quietTuneCounts.Keys) { Assert-LimbInteger $quietTune $key $quietTuneCounts[$key] }
+    Assert-PainterKeys $quietTune (@($quietTuneCounts.Keys)+$limbUpdates+@('scope','adoption')) 'quiet face Debug'
+    foreach ($key in $quietTuneCounts.Keys) { Assert-PainterInteger $quietTune $key $quietTuneCounts[$key] }
     Assert-LimbUpdates $quietTune
     if ($quietTune.scope -cne 'debug-validated-commands' -or $quietTune.adoption -cne 'live') { throw 'Quiet face Debug scope differs' }
     $quietStates=@('baseline','named-face','reset-original','partial-arm','partial-both','zero-face','zero-both','reset-face-saved','reset-arm-saved')
     $quietFaceTokens=@('WHITE','RED','WHITE','WHITE','C0406080','A532D600','A532D600','C0406080','C0406080')
     $quietArmTokens=@('BLACK','BLACK','BLACK','2060C080','2060C080','2060C080','D65A3200','D65A3200','2060C080')
     $quietTuneColumns=@('state','background','raw_rgba_match','repeat_match','disabled_null_blank','frozen_geometry_resources_rng','private_bytes','adoption','face_token','arm_token')
-    if ($quietTuneRows.Count -ne 18 -or ($quietTuneRows[0].PSObject.Properties.Name -join '|') -cne ($quietTuneColumns -join '|')) { throw 'Quiet face exact Debug CSV shape differs' }
+    if ($quietTuneRows.Count -ne 18 -or (-not (Test-PainterCsvColumns $quietTuneRows $quietTuneColumns))) { throw 'Quiet face exact Debug CSV shape differs' }
     for ($index=0; $index -lt 18; ++$index) {
         $row=$quietTuneRows[$index]; $stateIndex=[int][Math]::Floor($index/2); $background=$quietBackgrounds[$index%2]
         foreach ($flag in $quietFlags) { if ($row.$flag -cne 'true') { throw 'Quiet face Debug pixel/frozen flag differs' } }
         if ($row.state -cne $quietStates[$stateIndex] -or $row.background -cne $background -or $row.private_bytes -cne 'true' -or $row.adoption -cne 'live' -or $row.face_token -cne $quietFaceTokens[$stateIndex] -or $row.arm_token -cne $quietArmTokens[$stateIndex]) { throw 'Quiet face exact Debug state/token/private-byte observation differs' }
     }
-    if ((Get-Item -LiteralPath $quietTranscript).Length -le 0 -or (Test-Path -LiteralPath (Join-Path $captures 'quiet-face-tune-scratch/profile/ColourWars/save_data.json'))) { throw 'Quiet face Debug transcript/game-Save invariant differs' }
-    $quietObserved.developer_commands=$quietTune; $quietObserved.readbacks=92; $quietObserved.csv_rows=28; $quietObserved.calibration_pixel_checks=2944
+    if ((Get-Item -LiteralPath $quietTranscript).Length -le 0 -or (Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'quiet-face-tune-scratch/profile')))) { throw 'Quiet face Debug transcript/game-Save invariant differs' }
+    $quietObserved.developer_commands=$quietTune; $quietObserved.readbacks += $quietTune.readbacks; $quietObserved.csv_rows += $quietTune.csv_rows; $quietObserved.calibration_pixel_checks=2944
 } elseif (@(Get-ChildItem -LiteralPath $captures -Filter 'quiet-face-tune-*').Count) { throw 'Release quiet face scope must have no Debug artifacts' }
 $limbObserved.limb43_44=[ordered]@{readbacks=$limbObserved.readbacks;csv_rows=$limbObserved.csv_rows;crops=4;controls=6;control_witness_checks=252;control_discriminating_witness_checks=248;control_saturated_white_checks=4;calibration_pixel_checks=$limbObserved.calibration_pixel_checks;png_count=0;png_crops=@()}
 $limbObserved.quiet_face=$quietObserved

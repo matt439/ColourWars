@@ -206,7 +206,8 @@ performed (decision 9).
   moves about one joint in five by one cell, left or right, keyed on the joint's
   world position with splitmix64 and the match's hand (below). A slip that would break the
   3-cell clearance keeps the joint in place. The 2-cell variant for Study B is
-  `BRICK_SLIP_CELLS = 2`, a rebuild.
+  `brick_slip_cells = 2`, a rebuild (`BRICK_SLIP_CELLS` in the historical
+  revisions the capture tool also supports).
 - **Mortar strokes** (added 2026-11-01, from the author's sketch below). Each
   course line is drawn as several strokes in 40-cell world bands, and about one
   band in three lands a row off, in a direction fixed for that line. Where two

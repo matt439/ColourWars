@@ -160,7 +160,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read_frame(*app.renderer()); };
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
@@ -209,7 +209,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         colourwars::UiTextDropShadow outcome("independent-result-percentage-outcome", fixture.outcome, style.detail_font,
             Vector2F::zero, app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !details || !fixture.session.is_series());
         outcome.set_position({ (1920.0f - outcome.bounds().width) / 2.0f, 405.0f });
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         const RectangleF fill_box(610.0f, 490.0f, 700.0f, 120.0f);
         std::array<RectangleF, 2> plates;
         for (size_t side = 0; side < plates.size(); ++side)
@@ -223,7 +223,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
             "Independent result percentage or unchanged neighbor escaped the measured zero-offset band");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus); paper.draw(list);
@@ -638,7 +638,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         "Three actual public-builder two-player roller Levels intentionally advance 80 updates each to clicked overview; "
         "only opaque monitor inner-card interiors compare independent literal font/outline/width-height fitting over unchanged paper. "
         "Frozen drawing preserves public state, draw RNG and Debug replay fingerprint when available; private preferences/bytes remain unchanged. "
-        "60 StateContext updates plus 240 separate Level updates, 120 readbacks,105 CSV rows,8 page openings/pops,6 font controls, "
-        "8 compact crops (681072 pixels /2043334 PPM bytes),one private seed Save. Both presets use the normal reader. "
+        "60 StateContext updates plus 240 separate Level updates, 120 readbacks, 105 CSV rows, 8 page openings/pops, 6 font controls, "
+        "8 compact crops (681072 pixels  / 2043334 PPM bytes), one private seed Save. Both presets use the normal reader. "
         "No whole-picture/foreground, global-input, physical-pad, listening, human readability or performance acceptance.\n";
 }

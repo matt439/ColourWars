@@ -501,7 +501,7 @@ void scribble_colour_consumer_checks(Application& app,const Presentation& presen
         "\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"complete67x67-ordered-five-plus74-literal-rectangles-only\","
         "\"whole_frame_reference\":\"copied-production-front-consumer-adoption-only\",\"roi_half_open\":[18,337,85,404]}\n";
     require(summary.good(),"Cannot retain Scribble shared summary");
-    std::cout<<"PASS scribble consumer: 40 readbacks/8 rows/8 native 67x67 crops of 35912 pixels; complete independent note ROI, 8 controls/24 row discriminations, "
+    std::cout<<"PASS scribble consumer: 40 readbacks / 8 rows / 8 native 67x67 crops of 35912 pixels; complete independent note ROI, 8 controls / 24 row discriminations, "
         "full copied-front adoption only; retained caller/resource/RNG and zero all updates. Actual Level/story/human/performance not exercised.\n";
 }
 
@@ -589,7 +589,7 @@ void scribble_tune_colour_checks(Application& app,GameTuning& tuning,Presentatio
         "\"readbacks\":36,\"csv_rows\":9,\"crops\":0,\"saved_tokens\":1,\"private_seed_saves\":2,\"event_fade\":false,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0}\n";
     require(summary.good(),"Cannot retain Scribble Debug summary");
-    std::cout<<"PASS scribble tune:9real commands/9states/ContextA/36additional reads/9rows; one exact Scribble token Save/rebase, original/saved full-RGBA reset,"
-        "2private preference seed Saves/JumpJ/defaultdisplay retained, zero all updates; no actualLevel/story/human/performance claim.\n";
+    std::cout<<"PASS scribble tune: 9 real commands / 9 states/ContextA / 36 additional reads / 9 rows; one exact Scribble token Save/rebase, original/saved full-RGBA reset,"
+        "2 private preference seed Saves/Jump J/default display retained, zero all updates; no actual Level/story/human/performance claim.\n";
 }
 #endif

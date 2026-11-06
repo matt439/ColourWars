@@ -81,7 +81,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         const auto& style = snapshot.menu(); const auto& look = snapshot.end_menu(); const auto& art = look.art;
         const bool ongoing = fixture.session.is_series() && !fixture.session.complete();
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> rows;
         rows.push_back(std::make_unique<UiText>("reference-continuation", fixture.continuation, style.item_font,
@@ -127,7 +127,7 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
                 fill(RectangleF(inside.right() - width, inside.y + step, width, inside.height - step * 2.0f), shade);
             }
         };
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         card(panel, art.paper);
         RectangleF primary = rows[0]->bounds(); primary.inflate(art.focus_padding); card(primary, art.focus_fill);
         if (focus != 0)
@@ -362,7 +362,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
         MenuPaperArtPresentation original;
         ~RestoreEndArt() { this->art = this->original; }
     } restore_art{ art, art };
-    const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f,
+    const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f,
         look.box_size);
     const auto font = app.render_resources()->resolve_sprite_font(style.item_font);
 
@@ -425,7 +425,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             std::ignore = app.renderer()->window_size_changed(size.x, size.y);
             open(fixture.session);
             const Camera camera = Camera::frame(RectangleF(Vector2F::zero,
-                menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+                menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
             RectangleF frame_bounds = panel;
             frame_bounds.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
             camera.calculate_view_rectangle(frame_bounds);
@@ -442,7 +442,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             const Vector2F heading_size = app.render_resources()->measure_text(heading_font,
                 fixture.session.is_series() ? (fixture.session.complete() ? L"Series Complete" : L"Round Complete") :
                     L"Match Complete");
-            const RectangleF heading((menu_consts::DESIGN_RESOLUTION.x - heading_size.x) / 2.0f,
+            const RectangleF heading((menu_consts::design_resolution.x - heading_size.x) / 2.0f,
                 look.heading_y, heading_size.x, heading_size.y);
             require(panel.contains(heading) && heading.bottom() < look.layout.position.y - art.focus_padding.y,
                 "End-menu heading overlaps the first card or escapes its panel");
@@ -594,7 +594,7 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
             {
                 save(moved, output / (std::string("end-menu-") + fixture.name + "-secondary-720p.ppm"));
                 const Camera camera = Camera::frame(RectangleF(Vector2F::zero,
-                    menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+                    menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
                 save(foreground_crop(moved, pixel_bounds(camera.calculate_view_rectangle(panel))),
                     output / (std::string("end-menu-") + fixture.name + "-secondary-720p-detail.ppm"));
             }

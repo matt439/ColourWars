@@ -32,6 +32,19 @@ SILENCE_THRESHOLD = 10 ** (-60 / 20)
 # the first 512 samples of each independently predicted block.
 # https://learn.microsoft.com/en-us/windows/win32/xaudio2/adpcm-overview
 ADPCM_FRAMES_PER_BLOCK = 512
+ADPCM_INITIAL_FRAMES = 2
+ADPCM_HEADER_BYTES_PER_CHANNEL = 7
+ADPCM_BYTES_PER_CHANNEL = (ADPCM_HEADER_BYTES_PER_CHANNEL +
+                           (ADPCM_FRAMES_PER_BLOCK - ADPCM_INITIAL_FRAMES) // 2)
+FFMPEG_ADPCM_BYTES_PER_CHANNEL = 512
+FFMPEG_ADPCM_WINDOW_FRAMES = (ADPCM_INITIAL_FRAMES +
+                              (FFMPEG_ADPCM_BYTES_PER_CHANNEL - ADPCM_HEADER_BYTES_PER_CHANNEL) * 2)
+ADPCM_COEFFICIENTS = ((256, 0), (512, -256), (0, 0), (192, 64),
+                     (240, 0), (460, -208), (392, -232))
+ADPCM_EXTENSION_BYTES = 4 + 4 * len(ADPCM_COEFFICIENTS)
+ADPCM_FORMAT_BYTES = 18 + ADPCM_EXTENSION_BYTES
+# XWB stores the per-channel block byte count minus its 22-byte bias.
+XWB_ADPCM_ALIGNMENT = ADPCM_BYTES_PER_CHANNEL - 22
 
 
 class InvalidAudio(ValueError):
@@ -228,15 +241,15 @@ def copy_loop(source: Path, target: Path) -> None:
 def inspect_adpcm(path: Path, source: dict, looping: bool) -> dict:
     chunks = riff_chunks(path.read_bytes())
     fmt = chunks[b"fmt "]
-    require(len(fmt) >= 50, "truncated ADPCM format")
+    require(len(fmt) >= ADPCM_FORMAT_BYTES, "truncated ADPCM format")
     tag, channels, rate, _, alignment, bits, extension, block_frames, coefficients = struct.unpack_from("<HHIIHHHHH", fmt)
     require((tag, channels, rate, bits, extension, block_frames, coefficients) ==
-            (2, source["channels"], 44100, 4, 32, ADPCM_FRAMES_PER_BLOCK, 7),
+            (2, source["channels"], 44100, 4, ADPCM_EXTENSION_BYTES,
+             ADPCM_FRAMES_PER_BLOCK, len(ADPCM_COEFFICIENTS)),
             "unexpected MS-ADPCM format; XAudio2 needs 512-frame blocks, never use FFmpeg's oversized default block")
-    require(alignment == 262 * channels and len(chunks[b"data"]) % alignment == 0,
+    require(alignment == ADPCM_BYTES_PER_CHANNEL * channels and len(chunks[b"data"]) % alignment == 0,
             "ADPCM must contain whole representable XWB blocks")
-    require(list(struct.iter_unpack("<hh", fmt[22:50])) ==
-            [(256, 0), (512, -256), (0, 0), (192, 64), (240, 0), (460, -208), (392, -232)],
+    require(tuple(struct.iter_unpack("<hh", fmt[22:ADPCM_FORMAT_BYTES])) == ADPCM_COEFFICIENTS,
             "non-standard ADPCM coefficient table")
     require(all(predictor < coefficients
                 for offset in range(0, len(chunks[b"data"]), alignment)
@@ -272,7 +285,7 @@ def encode_xaudio_adpcm(source: Path, target: Path, ffmpeg: str, measured: dict,
     block_count = (measured["frames"] + ADPCM_FRAMES_PER_BLOCK - 1) // ADPCM_FRAMES_PER_BLOCK
     raw = target.with_suffix(".encoder-input.pcm")
     oversized = target.with_suffix(".encoder-output.wav")
-    window_frames = 1012
+    window_frames = FFMPEG_ADPCM_WINDOW_FRAMES
     with raw.open("wb") as output:
         for block in range(block_count):
             start = block * ADPCM_FRAMES_PER_BLOCK * frame_bytes
@@ -282,11 +295,12 @@ def encode_xaudio_adpcm(source: Path, target: Path, ffmpeg: str, measured: dict,
             output.write(pad_frame * (window_frames - len(window) // frame_bytes))
     subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
                     "-f", "s16le", "-ar", "44100", "-ac", str(channels), "-i", str(raw),
-                    "-map_metadata", "-1", "-c:a", "adpcm_ms", "-block_size", str(512 * channels),
+                    "-map_metadata", "-1", "-c:a", "adpcm_ms", "-block_size",
+                    str(FFMPEG_ADPCM_BYTES_PER_CHANNEL * channels),
                     str(oversized)], check=True)
     chunks = riff_chunks(oversized.read_bytes())
-    encoded_bytes = 512 * channels
-    retained_bytes = 262 * channels
+    encoded_bytes = FFMPEG_ADPCM_BYTES_PER_CHANNEL * channels
+    retained_bytes = ADPCM_BYTES_PER_CHANNEL * channels
     require(len(chunks[b"data"]) == block_count * encoded_bytes, "unexpected FFmpeg block count")
     payload = b"".join(chunks[b"data"][offset:offset + retained_bytes]
                        for offset in range(0, len(chunks[b"data"]), encoded_bytes))
@@ -334,7 +348,7 @@ def inspect_bank(path: Path, exports: list[dict]) -> dict:
         require(offset % alignment == 0 and offset + size <= regions[4][1], f"{name}: bank samples outside data")
         expected_tag = 2 if exported["encoding"] == "ms-adpcm" else 0
         require(fmt & 3 == expected_tag, f"{name}: bank encoding differs")
-        expected_alignment = 240 if expected_tag == 2 else channels * 2
+        expected_alignment = XWB_ADPCM_ALIGNMENT if expected_tag == 2 else channels * 2
         require(((fmt >> 23) & 255) == expected_alignment, f"{name}: XWB truncated block alignment")
         wave_payload = riff_chunks(Path(exported["export_path"]).read_bytes())[b"data"]
         require(data[regions[4][0] + offset:regions[4][0] + offset + size] == wave_payload,

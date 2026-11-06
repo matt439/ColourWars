@@ -1,4 +1,5 @@
 # Dot-sourced only for -SilhouetteTuneColoursOnly after the actual native run.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $silhouetteSummaryPath=Join-Path $captures 'silhouette-colour-consumer-summary.json'
 $silhouetteRowsPath=Join-Path $captures 'silhouette-colour-consumers.csv'
 $silhouetteSummary=Get-Content -LiteralPath $silhouetteSummaryPath -Raw|ConvertFrom-Json
@@ -17,7 +18,7 @@ if($silhouetteSummary.scope -cne 'consumer-only' -or $silhouetteSummary.readback
     $silhouetteSummary.rim_sample_x -ne 932 -or $silhouetteSummary.rim_sample_y -ne 627 -or
     $silhouetteSummary.shade_sample_x -ne 959 -or $silhouetteSummary.shade_sample_y -ne 679 -or
     $silhouetteSummary.child_scope -cne 'aggregate-colour-adoption' -or $silhouetteRows.Count -ne 10 -or
-    (($silhouetteRows[0].PSObject.Properties.Name)-join '|') -cne ($silhouetteColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $silhouetteRows $silhouetteColumns)) -or
     (($silhouetteActualPairs|Sort-Object)-join '|') -cne (($silhouettePairs|Sort-Object)-join '|') -or
     @($silhouetteRows|Where-Object {$_.raw_patch_channels -cne 'true' -or $_.uniform_patch_interiors -cne 'true' -or
         $_.frozen_inputs_resources_rng -cne 'true' -or $_.body_outside_scope -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){
@@ -32,15 +33,13 @@ $silhouetteHeader=[Text.Encoding]::ASCII.GetBytes("P6`n440 240`n255`n")
 $silhouetteBytes=0
 $silhouetteCropEvidence=@(foreach($crop in $silhouetteCrops){
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $silhouetteHeader.Length+440*240*3){throw "Incorrect silhouette montage size: $($crop.Name)"}
-    for($i=0;$i -lt $silhouetteHeader.Length;$i++){if($bytes[$i] -ne $silhouetteHeader[$i]){throw 'Incorrect canonical silhouette PPM header.'}}
+    Assert-PainterPpm -Bytes $bytes -Header $silhouetteHeader
     $silhouetteBytes+=$bytes.Length
     [ordered]@{name=$crop.Name;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
 if(@(Get-ChildItem -LiteralPath $captures -Filter 'silhouette-patch-failure-*' -File).Count){throw 'Silhouette raw patch failure artifacts remain.'}
-$silhouetteLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$silhouetteSaveCalls=@($silhouetteLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count
-$silhouetteSaveSuccesses=@($silhouetteLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$silhouetteSaveCalls=$painterSaveCounts.calls
+$silhouetteSaveSuccesses=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){
     throw 'Unexpected failed private Save in the silhouette proof.'
 }
@@ -68,19 +67,19 @@ if($debug){
         $silhouetteTuneSummary.saved_tokens -ne 3 -or $silhouetteTuneSummary.event_fade -ne $false -or
         $silhouetteTuneSummary.player_updates -ne 0 -or $silhouetteTuneSummary.level_updates -ne 0 -or
         $silhouetteTuneSummary.state_updates -ne 0 -or $silhouetteTuneSummary.input_updates -ne 0 -or $silhouetteTuneSummary.time_updates -ne 0 -or
-        $silhouetteTuneRows.Count -ne 26 -or (($silhouetteTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($silhouetteTuneColumns-join '|') -or
+        $silhouetteTuneRows.Count -ne 26 -or (-not (Test-PainterCsvColumns $silhouetteTuneRows $silhouetteTuneColumns)) -or
         (($silhouetteTuneActual|Sort-Object)-join '|') -cne (($silhouetteTunePairs|Sort-Object)-join '|') -or
         @($silhouetteTuneRows|Where-Object {$_.raw_patch_channels -cne 'true' -or $_.uniform_patch_interiors -cne 'true' -or
             $_.frozen_inputs_resources_rng -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         (Get-Item -LiteralPath $silhouetteTranscriptPath).Length -le 0 -or $silhouetteSaveCalls -ne 2 -or $silhouetteSaveSuccesses -ne 2 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'silhouette-colour-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'silhouette-colour-tune-scratch/profile')) -PathType Leaf)){
         throw 'Silhouette Debug counters/schema/private-save evidence differs from the approved exact scope.'
     }
     foreach($path in @($silhouetteTuneSummaryPath,$silhouetteTuneRowsPath,$silhouetteTranscriptPath)){
         $silhouetteArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}
     }
     $silhouetteObserved.developer_commands=$silhouetteTuneSummary
-    $silhouetteObserved.readbacks=116;$silhouetteObserved.csv_rows=36
+    $silhouetteObserved.readbacks += $silhouetteTuneSummary.readbacks;$silhouetteObserved.csv_rows += $silhouetteTuneSummary.csv_rows
 }
 elseif($silhouetteSaveCalls -ne 0 -or $silhouetteSaveSuccesses -ne 0 -or
     @(Get-ChildItem -LiteralPath $captures -Filter 'silhouette-colour-tune-*').Count){

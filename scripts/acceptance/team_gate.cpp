@@ -90,13 +90,13 @@ namespace
         require(gate.paint_leader() == PlayerTeam::a && gate.open_for() == PlayerTeam::none,
             "Paint alone changed the gate before it was settled");
         gate.settle(nobody);
-        require(gate.open_for() == PlayerTeam::a && gate.mask() == (all & ~collision_layers::PLAYER_TEAM_A),
+        require(gate.open_for() == PlayerTeam::a && gate.mask() == (all & ~collision_layers::player_team_a),
             "A gate held by team A did not let team A through only");
-        require((gate.mask() & collision_layers::ALL_PROJECTILES) == collision_layers::ALL_PROJECTILES &&
-            (gate.mask() & collision_layers::PLAYER_TEAM_B) != 0u, "An open gate stopped taking shots or team B");
+        require((gate.mask() & collision_layers::all_projectiles) == collision_layers::all_projectiles &&
+            (gate.mask() & collision_layers::player_team_b) != 0u, "An open gate stopped taking shots or team B");
         assets.paint(gate, RectangleF(380.0f, 280.0f, 120.0f, 280.0f), PlayerTeam::b, 2);
         gate.settle(nobody);
-        require(gate.open_for() == PlayerTeam::b && gate.mask() == (all & ~collision_layers::PLAYER_TEAM_B),
+        require(gate.open_for() == PlayerTeam::b && gate.mask() == (all & ~collision_layers::player_team_b),
             "A gate retaken by team B did not open for team B only");
         std::cout << "PASS team gate object: opens only once settled, for the leader only, and keeps taking shots\n";
     }

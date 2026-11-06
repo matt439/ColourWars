@@ -40,9 +40,6 @@ foreach ($file in $surfaceFiles) {
     $size = $surfaceExpected[$file.Name]
     $bytes = [IO.File]::ReadAllBytes($file.FullName)
     $header = "P6`n$($size[0]) $($size[1])`n255`n"
-    if ($bytes.Length -ne $header.Length + 3 * $size[0] * $size[1] -or
-        [Text.Encoding]::ASCII.GetString($bytes, 0, $header.Length) -cne $header) {
-        throw "Invalid surface native PPM dimensions: $($file.Name)"
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $header
 }
 $result.surface_finish = $surfaceSummary

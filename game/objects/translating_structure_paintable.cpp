@@ -297,8 +297,8 @@ void TranslatingStructurePaintable::on_projectile_contact(const Projectile& sour
     const Vector2F& /*normal*/, float /*penetration*/)
 {
     const CollisionLayer layer = source.layer();
-    if (layer != collision_layers::PROJECTILE_TEAM_A &&
-        layer != collision_layers::PROJECTILE_TEAM_B) { return; }
+    if (layer != collision_layers::projectile_team_a &&
+        layer != collision_layers::projectile_team_b) { return; }
     // Only a roller completes moving paint ahead of its endpoint contact; any
     // other projectile answers false.
     if (this->motion_id_ != 0 && source.moving_paint_completed(this->motion_id_)) { return; }

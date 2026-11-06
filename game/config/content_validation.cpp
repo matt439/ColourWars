@@ -255,7 +255,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 		}
 	}
 	const ResourceValidation check("presentation.json: tool_motion", *render, *audio);
-	for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
+	for (size_t index = 0; index < tuned_weapon_count; ++index)
 	{
 		const WeaponDetails& details = tuning.weapon(static_cast<WeaponType>(index)).details;
 		const SpriteSheet* sheet = render->sprite_sheet(details.sheet_name);
@@ -265,7 +265,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 			const std::string name = details.frame_name + suffix;
 			for (const std::string& frame : { name, name + "_paint" })
 			{
-				const std::string key = std::string(WEAPON_NAMES[index]) + "." + frame;
+				const std::string key = std::string(weapon_names[index]) + "." + frame;
 				check.frame(key, details.sheet_name, frame);
 				const SpriteFrame& pose = sheet->sprite_frame(sheet->resolve_sprite_frame(frame));
 				if (pose.source_rectangle().size() != idle.source_rectangle().size() ||

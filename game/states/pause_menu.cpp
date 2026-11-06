@@ -149,7 +149,7 @@ PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool op
 
 WeaponType practice_tool_after(WeaponType tool, Direction direction)
 {
-	return step_tool(tool, direction, TUNED_WEAPON_COUNT);
+	return step_tool(tool, direction, tuned_weapon_count);
 }
 
 void PauseMenuInitial::cycle_tool(Direction direction)

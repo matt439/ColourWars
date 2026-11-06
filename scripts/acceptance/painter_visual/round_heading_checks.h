@@ -146,7 +146,7 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
     const RectangleF heading_region(360.0f, 117.0f, 1200.0f, 129.0f);
     const auto project = [&](RectangleF bounds)
     {
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
@@ -159,14 +159,14 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         colourwars::UiTextDropShadow heading("independent-round-heading", literal,
             wrong_font ? original.menu().heading_font : style.heading_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
-        heading.set_position({ (menu_consts::DESIGN_RESOLUTION.x - heading.bounds().width) / 2.0f, look.heading_y });
+        heading.set_position({ (menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y });
         colourwars::UiTextDropShadow score("independent-session-score", fixture.score, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !rows_visible);
-        score.set_position({ (menu_consts::DESIGN_RESOLUTION.x - score.bounds().width) / 2.0f, look.session_score_y });
+        score.set_position({ (menu_consts::design_resolution.x - score.bounds().width) / 2.0f, look.session_score_y });
         colourwars::UiTextDropShadow outcome("independent-session-outcome", fixture.outcome, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !rows_visible);
-        outcome.set_position({ (menu_consts::DESIGN_RESOLUTION.x - outcome.bounds().width) / 2.0f, look.session_result_y });
-        const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f, look.box_size);
+        outcome.set_position({ (menu_consts::design_resolution.x - outcome.bounds().width) / 2.0f, look.session_result_y });
+        const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         heading_bounds = heading.bounds();
         require(heading_bounds.width > 0.0f && heading_bounds.height > 0.0f && panel.contains(heading_bounds) &&
             row_region.contains(score.bounds()) && row_region.contains(outcome.bounds()) &&
@@ -174,7 +174,7 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
             "Independent round heading/unchanged neighbor bounds escaped their measured unscaled zero-offset comparison regions");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);
@@ -320,10 +320,10 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         "\"csv_rows\":26,\"compact_crops\":8,\"page_openings\":11,\"proceed_pops\":11,\"font_negative_controls\":3,"
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":722400}\n";
     require(summary.good(), "Cannot retain Round heading summary");
-    std::cout << "PASS Round heading leaf: actual drawn Session rounds 1/10/100 with independent literal headings; "
+    std::cout << "PASS Round heading leaf: actual drawn Session rounds 1 / 10 / 100 with independent literal headings; "
         "single Results under the new template/font with absent series rows, unchanged score/outcome neighbors, "
         "centered unscaled zero-offset text and captured templates/heading font through assignment/reopen/reversal; "
-        "actual reveal/proceed gates and 11 fresh pops, frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, "
+        "actual reveal/proceed gates and 11 fresh pops, frozen ledger/setup/private Save/RNG, zero-update 720 / 1080 / 720 resize, "
         "66 updates, 81 readbacks, 26 CSV rows, three font controls and eight compact crops "
         "(722400 pixels / 2167316 PPM bytes), one private seed Save. "
         "Both presets use the normal reader; no match/global-input/physical-pad/listening/human/performance acceptance.\n";

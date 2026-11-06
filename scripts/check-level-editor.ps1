@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'check-windows.ps1')
 
 # Load standard helpers from this host before nested native-probe setup.
 Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
@@ -138,7 +139,7 @@ function Test-EditorWindow {
         [Parameter(Mandatory)] [hashtable] $Commands)
 
     if (-not ('ColourWars.EditorWindowProbe' -as [type])) {
-        Add-Type -TypeDefinition @'
+        Add-Type -TypeDefinition (@'
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -148,10 +149,6 @@ namespace ColourWars
     public static class EditorWindowProbe
     {
         private delegate bool EnumWindowProc(IntPtr window, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -227,17 +224,7 @@ namespace ColourWars
 
         public static IntPtr Find(int processId)
         {
-            IntPtr result = IntPtr.Zero;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner != processId) return true;
-                var name = new StringBuilder(256);
-                GetClassName(window, name, name.Capacity);
-                if (name.ToString() == "ColourWarsLevelEditor") result = window;
-                return true;
-            }, IntPtr.Zero);
-            return result;
+            return EditorOwnedWindows.Find(processId, "ColourWarsLevelEditor");
         }
 
         public static string Title(IntPtr window)
@@ -256,16 +243,11 @@ namespace ColourWars
 
         public static void Close(int processId)
         {
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner == processId) PostMessage(window, 0x0010, IntPtr.Zero, IntPtr.Zero);
-                return true;
-            }, IntPtr.Zero);
+            EditorOwnedWindows.Close(processId);
         }
     }
 }
-'@
+'@ + (Get-CheckWindowSource 'EditorOwnedWindows'))
     }
 
     $working = Join-Path $RunDirectory 'unrelated-working-directory'

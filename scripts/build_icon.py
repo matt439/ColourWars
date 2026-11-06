@@ -3,9 +3,9 @@
 
 Reads game/art/icon/icon.json and writes game/colourwars.ico, which
 game/resource.rc embeds, and the review sheet game/art/icon/preview.png.
-Standard library only, and deterministic: the same drawing always gives the
-same bytes. --check rebuilds in memory and fails if either committed file
-differs, which scripts/ci/test_build_icon.py runs on every CI event.
+Standard library only. --check compares decoded image data so different zlib
+builds can encode the same drawing without making the committed files stale.
+scripts/ci/test_build_icon.py uses the same comparison on every CI event.
 """
 
 import argparse
@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "game" / "art" / "icon" / "icon.json"
 ICON = ROOT / "game" / "colourwars.ico"
 PREVIEW = ROOT / "game" / "art" / "icon" / "preview.png"
+PRESENTATION = ROOT / "game" / "content" / "presentation.json"
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 # Sizes at or below this are stored as 32-bit BMP, the form every icon reader
 # understands; larger ones as PNG, which Windows reads for 256 x 256.
@@ -29,13 +31,18 @@ PREVIEW_BACKGROUNDS = ((0xC9, 0xD3, 0xD9), (0x20, 0x20, 0x20))
 PREVIEW_GAP = 8
 
 
-def load(path=SOURCE):
+def load(path=SOURCE, presentation=PRESENTATION):
     """Return [(size, rows of RGBA tuples)] for every image the drawing names."""
     document = json.loads(path.read_text(encoding="utf-8"))
+    teams = json.loads(presentation.read_text(encoding="utf-8"))["team_palette"]
+    colours = {entry["name"]: entry["colour"] for entry in teams["colours"]}
+    pair = next(entry for entry in teams["pairs"] if entry["key"] == document["team_pair"])
     palette = {}
     for key, value in document["palette"].items():
         if len(key) != 1:
             raise ValueError(f"palette key {key!r} must be one character")
+        if isinstance(value, dict):
+            value = colours[pair[value["team"]]]
         palette[key] = None if value is None else (
             int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16), 255)
 
@@ -141,6 +148,46 @@ def outputs(source=SOURCE):
     return {ICON: ico(images), PREVIEW: preview(images)}
 
 
+def decoded_png(data):
+    """Compare PNG chunks and inflated scanlines, independent of compression."""
+    if not data.startswith(PNG_SIGNATURE):
+        raise ValueError("not a PNG")
+    chunks, image, at = [], bytearray(), len(PNG_SIGNATURE)
+    while at < len(data):
+        (length,) = struct.unpack_from(">I", data, at)
+        kind, body = data[at + 4:at + 8], data[at + 8:at + 8 + length]
+        if len(body) != length:
+            raise ValueError("truncated PNG chunk")
+        (crc,) = struct.unpack_from(">I", data, at + 8 + length)
+        if crc != zlib.crc32(kind + body) & 0xFFFFFFFF:
+            raise ValueError("invalid PNG chunk checksum")
+        if kind == b"IDAT":
+            image.extend(body)
+        else:
+            chunks.append((kind, body))
+        at += 12 + length
+    return chunks, zlib.decompress(image)
+
+
+def decoded(data):
+    """The generated PNG or ICO without its zlib-specific compressed bytes."""
+    if data.startswith(PNG_SIGNATURE):
+        return decoded_png(data)
+    reserved, kind, count = struct.unpack_from("<HHH", data, 0)
+    if (reserved, kind) != (0, 1):
+        raise ValueError("not an icon")
+    images = []
+    for index in range(count):
+        width, height, _, _, planes, bits, length, offset = struct.unpack_from(
+            "<BBBBHHII", data, 6 + 16 * index)
+        blob = data[offset:offset + length]
+        if len(blob) != length:
+            raise ValueError("truncated icon image")
+        images.append((width, height, planes, bits,
+                       decoded_png(blob) if blob.startswith(PNG_SIGNATURE) else blob))
+    return images
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true",
@@ -149,7 +196,11 @@ def main(argv=None):
     stale = []
     for path, data in outputs().items():
         if arguments.check:
-            if not path.is_file() or path.read_bytes() != data:
+            try:
+                current = path.is_file() and decoded(path.read_bytes()) == decoded(data)
+            except (ValueError, struct.error, zlib.error):
+                current = False
+            if not current:
                 stale.append(path.relative_to(ROOT).as_posix())
         else:
             path.write_bytes(data)

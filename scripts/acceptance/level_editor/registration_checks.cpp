@@ -2,6 +2,7 @@
 // helpers, and the four sub-checks check_stage_registration runs.
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include "editor/stage_registration.h"
+#include "editor/manifest_asset_kinds.h"
 #include <Windows.h>
 
 #include <algorithm>
@@ -48,9 +49,9 @@ namespace level_editor_acceptance
                 runtime_files.insert(fs::path("locales") / (std::string(locale["tag"].GetString()) + ".json"));
             }
             const rapidjson::Document source_manifest = parse(read_text(source_content / "manifest.json"));
-            const std::map<std::string, std::vector<std::string>> extensions{
-                { "font", { "spritefont" } }, { "sprite_sheet", { "json", "dds" } },
-                { "level", { "json" } }, { "sound_bank", { "json", "xwb" } } };
+            std::map<std::string, std::vector<std::string>> extensions;
+            for (const colourwars_manifest::KindExtension& rule : colourwars_manifest::kind_extensions)
+                extensions[std::string(rule.kind)].emplace_back(rule.extension);
             for (const rapidjson::Value& group : source_manifest["assets"].GetArray())
             {
                 const std::string kind = group["kind"].GetString();

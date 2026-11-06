@@ -18,7 +18,7 @@ namespace bot_navigation_acceptance
     // shipping bots' seed itself, so the trials' bots are unchanged.
     constexpr unsigned int trial_seed = 5242;
     constexpr float endpoint_tolerance = 0.05f;
-    inline const float dt = SECONDS_PER_STEP;
+    inline const float dt = simulation::seconds_per_step;
 
     class World
     {

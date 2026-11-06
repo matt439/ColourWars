@@ -96,7 +96,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const auto& live = (colours == nullptr ? presentation : *colours).main_menu().team_select;
         auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
         auto row_art = art; row_art.paper = art.focus_fill;
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(
             look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const SpriteSheet* atlas = app.render_resources()->sprite_sheet(look.team_select_sheet);
@@ -126,7 +126,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, camera.visible_rectangle(viewport)); setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         for (size_t seat = 0; seat < teams.size(); ++seat)
@@ -384,12 +384,12 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const auto& look = original.main_menu(); const auto& style = original.menu();
     auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
     auto row_art = art; row_art.paper = art.focus_fill;
-    const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
+    const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
     const auto position = [&](int column, int row) { return style.layout.position + Vector2F(
         look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
     RectangleF evidence(position(2, 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.spacing.y + look.team_select.size.y));
     evidence.inflate(Vector2F(2.0f)); const auto viewport = app.viewport_manager()->fullscreen_viewport();
-    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+    const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
     camera.calculate_view_rectangle(evidence); const RectangleI crop = pixel_bounds(evidence);
     // Fixed A/B choices and P1-only readiness are specified independently of
     // FocusGroup. Only the two literal tints vary in this oracle.

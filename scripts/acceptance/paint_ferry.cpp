@@ -21,7 +21,7 @@ namespace
     using namespace labrador;
     using namespace bot_navigation_acceptance;
 
-    constexpr float step = SECONDS_PER_STEP;
+    constexpr float step = simulation::seconds_per_step;
 
     HorizontalMotionSpec ferry(float phase, int team_a_heading = 1)
     {

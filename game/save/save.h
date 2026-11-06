@@ -15,7 +15,7 @@ struct SaveData
 	bool fullscreen = false;
 	TeamColourPair team_palette = TeamColourPair::random;
 	// Whether presenting waits for the display. Gameplay steps at
-	// SIMULATION_HZ either way; off trades tearing or extra frames for latency.
+	// simulation::simulation_hz either way; off trades tearing or extra frames for latency.
 	bool vsync = true;
 	PlaySettings play;
 	InputBindings input_bindings;

@@ -237,7 +237,7 @@ void silhouette_body_colour_consumer_checks(Application& app,const Presentation&
         "\"alpha0_straight_reads\":3,\"affected_rejections\":34,\"unaffected_guards\":8,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,"
         "\"viewport\":\"1280x720\",\"event_fade\":false,\"whole_frame_reference\":\"copied-production-consumer-adoption-only\",\"raw_reference\":\"nine-local-ordered-rgba-patches-only\",\"adult_crop\":[320,224],\"child_crop\":[208,224]}\n";
     require(summary.good(),"Cannot write Body shared summary");
-    std::cout<<"PASS silhouette-body: 61 readbacks/12 rows/12 crops of 759808 pixels; 9 local 3x3 RGBA patches, ordered 1/2/3 separate writes over BLACK, 13 controls/34 patch refusals/8 unchanged guards. "
+    std::cout<<"PASS silhouette-body: 61 readbacks / 12 rows / 12 crops of 759808 pixels; 9 local 3x3 RGBA patches, ordered 1 / 2 / 3 separate writes over BLACK, 13 controls / 34 patch refusals / 8 unchanged guards. "
         "Copied full frame adoption only; frozen caller/resource/RNG and zero all updates; no complete-mask or actual-Level claim.\n";
 }
 #if COLOURWARS_DEV_TOOLS
@@ -310,7 +310,7 @@ void silhouette_body_tune_colour_checks(Application& app,GameTuning& tuning,Pres
     std::ofstream summary(output/"silhouette-body-colour-tune-summary.json");summary<<"{\"scope\":\"debug-validated-commands\",\"commands\":9,\"states\":9,\"contexts\":3,\"readbacks\":108,\"csv_rows\":27,\"crops\":0,\"saved_tokens\":1,\"event_fade\":false,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0}\n";
     require(summary.good(),"Cannot write Body Debug summary");
-    std::cout<<"PASS silhouette-body tune:9real commands/9states/3contexts/108readbacks/27rows; one exact Body token Save/rebase, original+saved whole-RGBA resets, "
-        "private PlaySettings+JumpJ/default display and actual content retained; nine local ordered patches, zero all updates.\n";
+    std::cout<<"PASS silhouette-body tune: 9 real commands / 9 states/3 contexts / 108 readbacks / 27 rows; one exact Body token Save/rebase, original+saved whole-RGBA resets, "
+        "private PlaySettings+Jump J/default display and actual content retained; nine local ordered patches, zero all updates.\n";
 }
 #endif

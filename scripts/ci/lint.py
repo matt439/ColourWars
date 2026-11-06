@@ -1,8 +1,8 @@
-"""Lint changed lines and decide whether a GitHub event needs the Windows jobs."""
+"""Lint commit diffs and select Windows jobs from changed paths and passed trees."""
 
 import json
 import os
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import urllib.parse
@@ -12,8 +12,16 @@ import urllib.request
 ENGINE_PATH = "external/labrador"
 ENGINE_REPOSITORY = "matt439/Labrador"
 ENGINE_WORKFLOW = ".github/workflows/ci.yml"
-PACKAGED_DOCS = {"README.md", "game/audio/paint_exe/PROVENANCE.md"}
 DOC_MEDIA = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".mp4"}
+
+
+def packaged_markdown(cwd=None):
+    """Markdown installed by the Release rule must still exist when packaging."""
+    root = Path(cwd) if cwd is not None else Path(__file__).resolve().parents[2]
+    rule = (root / "cmake/release_package.cmake").read_text(encoding="utf-8")
+    installs = re.findall(r"\binstall\(\s*FILES\b(.*?)\)", rule, flags=re.DOTALL | re.IGNORECASE)
+    return {path for command in installs
+            for path in re.findall(r'"\$\{PROJECT_SOURCE_DIR\}/([^"\n]+\.md)"', command)}
 
 
 def git(*args, cwd=None):
@@ -52,6 +60,7 @@ def comparison(event_name, event, cwd):
 
 
 def check_changes(event_name, event, cwd=None):
+    """Lint the comparison; return whether every changed path is documentation."""
     commits = comparison(event_name, event, cwd)
     if commits is None:
         # Manual runs still lint the latest commit and always run full CI.
@@ -67,7 +76,9 @@ def check_changes(event_name, event, cwd=None):
     paths = [path.decode("utf-8", errors="surrogateescape") for path in paths if path]
     deleted = git(*diff, "--name-only", "--diff-filter=D", "-z", base, head,
                   "--", cwd=cwd).split(b"\0")
-    if any(path.encode("utf-8") in deleted for path in PACKAGED_DOCS):
+    deleted_docs = {path.decode("utf-8", errors="surrogateescape")
+                    for path in deleted if path.endswith(b".md")}
+    if deleted_docs and deleted_docs & packaged_markdown(cwd):
         return False
 
     def is_doc(path):

@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($ResultsTextOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $resultsTextSummary = Get-Content -LiteralPath (Join-Path $captures 'results-text-summary.json') -Raw | ConvertFrom-Json
         $resultsTextRows = @(Import-Csv -LiteralPath (Join-Path $captures 'results-text.csv'))
         $resultsTextCases = @('plain-initial', 'plain-fill-crossed', 'plain-details', 'plain-prompt-crossed',
@@ -23,7 +24,7 @@
             $resultsTextSummary.font_negative_controls -ne 3 -or $resultsTextSummary.resize_updates -ne 0 -or
             $resultsTextSummary.save_calls -ne 1 -or $resultsTextSummary.crop_pixels -ne 1428000 -or
             $resultsTextRows.Count -ne 51 -or
-            (($resultsTextRows[0].PSObject.Properties.Name) -join '|') -ne ($resultsTextExpectedColumns -join '|') -or
+            (-not (Test-PainterCsvColumns $resultsTextRows $resultsTextExpectedColumns)) -or
             (($resultsTextRows | ForEach-Object { "$($_.case)|$($_.role)" } | Sort-Object) -join ';') -ne
                 (($resultsTextExpectedPairs | Sort-Object) -join ';')) {
             throw 'The Results text leaf does not match its frozen summary, CSV schema, cases or update/readback/proceed budgets.'
@@ -74,11 +75,8 @@
                 throw "Results text case $($row.case)/$($row.role) changed its literal copy, session/reveal state, capture or geometry contract."
             }
             foreach ($metric in @('raw_width', 'raw_height', 'x', 'y')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
-                    ($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if (($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
                     ($metric -in @('x', 'y') -and $value -lt 0.0)) {
                     throw "Results text case $($row.case)/$($row.role) contains an invalid $metric."
                 }
@@ -103,16 +101,10 @@
         }
         foreach ($crop in $resultsTextCrops) {
             $size = $resultsTextExpectedCrops[$crop.Name]
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Results text crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
         }
-        $resultsTextSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $resultsTextSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $resultsTextSaveCalls = $painterSaveCounts.calls
+        $resultsTextSaveSuccesses = $painterSaveCounts.successes
         if ($resultsTextSaveCalls -ne 1 -or $resultsTextSaveSuccesses -ne 1) {
             throw 'The Results text leaf must perform exactly its one successful private seed Save.'
         }

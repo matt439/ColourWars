@@ -261,11 +261,11 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         Save saved; SettingsSession saved_session(saved); GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_shoulder_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation); const auto& look = presentation.main_menu().stage_select;
         const RectangleF box(look.preview_position, look.preview_size); StagePreview preview("explicit-shoulder-preview", box, &data); preview.set_stage("turbulence_shoulder_trial");
-        const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const auto fullscreen = app.viewport_manager()->fullscreen_viewport(); const auto menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), fullscreen);
         const auto draw_preview = [&](bool shown)
         {
             auto& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); auto list = renderer.view(0);
-            list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
+            list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point); canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::design_resolution));
             if (shown) { preview.draw(list); } ++reads; return read(renderer);
         };
         std::srand(2911); const int expected = std::rand(); std::srand(2911); const auto frame = draw_preview(true);
@@ -288,5 +288,5 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         "Every actual Scene pane retains whole player, standing-body ramp warning, whole-body upper-stop patch and complete shoe underside. The original mover pair's phase/credit/shadow invariants remain represented by two actual mover owners per Level; ramp walkers retain carrier0. Controlled projectile contacts provide measured>99percent paint, not weapon efficiency. Repeated Level draws preserve full pixels, public/structure state, every paint tile's world corners/face/team/raw owner/area and complete moving-owner/carrier/shadow/view state, RNG and Debug fingerprints. Native RGBA crops equal actual source panes.\n"
         "Actual isolated StagePreview checks only initial-pose pixels/widget bounds/RNG. No ending, full human trajectory, readability, reaction time, physical pad/motor, listening, performance, balance, arena acceptance or moving/rotated scored-slope capability is established.\n";
     summary.close(); scope.close(); require(summary.good() && scope.good(), "Cannot flush shoulder native summary/scope");
-    std::cout << "PASS shoulder native controlled descent:25 full frames/61 native crops/51 reads, all split layouts, actual ramp/flat stops and frozen full paint/owner state; human acceptance open\n";
+    std::cout << "PASS shoulder native controlled descent: 25 full frames / 61 native crops / 51 reads, all split layouts, actual ramp/flat stops and frozen full paint/owner state; scripted checks only; human checks not performed\n";
 }

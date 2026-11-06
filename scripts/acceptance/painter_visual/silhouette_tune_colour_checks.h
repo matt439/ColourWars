@@ -254,7 +254,7 @@ void silhouette_colour_consumer_checks(Application& app, const Presentation& pre
         "\"ink_sample_x\":963,\"ink_sample_y\":690,\"rim_sample_x\":932,\"rim_sample_y\":627,\"shade_sample_x\":959,\"shade_sample_y\":679,"
         "\"event_fade\":false,\"child_scope\":\"aggregate-colour-adoption\"}\n";
     require(summary.good(), "Cannot write silhouette shared summary");
-    std::cout << "PASS silhouette colours:38 readbacks/10 rows/8 compact 440x240 crops/10 controls; independent ordered mug patch channels, "
+    std::cout << "PASS silhouette colours: 38 readbacks / 10 rows / 8 compact 440x240 crops / 10 controls; independent ordered mug patch channels, "
         "actual uniform interiors, unchanged body fill, child aggregate adoption and exact default restoration; zero simulation/input/time updates.\n";
 }
 
@@ -354,7 +354,7 @@ void silhouette_tune_colour_checks(Application& app, GameTuning& tuning, Present
     summary << "{\"scope\":\"debug-validated-commands\",\"commands\":13,\"readbacks\":78,\"csv_rows\":26,\"crops\":0,\"saved_tokens\":3,"
         "\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"event_fade\":false}\n";
     require(summary.good(), "Cannot write silhouette Debug summary");
-    std::cout << "PASS silhouette tune:13 actual commands/78 readbacks/26 rows; three-token private save/rebase/reset, "
+    std::cout << "PASS silhouette tune: 13 actual commands / 78 readbacks / 26 rows; three-token private save/rebase/reset, "
         "sibling retention, fixed caller inputs/body/resources/RNG and unchanged private PlaySettings/Jump J/default display. Zero simulation/input/time updates.\n";
 }
 #endif

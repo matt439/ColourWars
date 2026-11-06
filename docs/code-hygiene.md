@@ -1484,13 +1484,31 @@ Also:
 
 ### The `SCREAMING_SNAKE` constant rule (`HYG#81`)
 
-AGENTS.md reserves `SCREAMING_SNAKE` for macros (`AGENTS.md:403`). About 59
-constants use it anyway, for example `SIMULATION_HZ`, `DESIGN_RESOLUTION`,
-`WEAPON_NAMES` and the `directory_consts.h` strings. The author decides first:
-amend the rule to admit constants, or rename. If renaming, do file-local
-constants first, then one header per commit, and make `directory_consts.h`'s
-per-translation-unit `const static std::string`s `inline constexpr` character
-arrays. That last change is worth doing whichever way the rule goes.
+**Done 2026-11-06; no runtime behaviour change.** The author chose renaming
+rather than amending AGENTS.md. All 58 remaining C++ constant declarations in
+`game/` now follow the rule: lowercase names, with trailing underscores on
+private members. File-local constants landed first, followed by one defining
+header per commit and its consumers. Simulation constants live in `simulation`
+to avoid colliding with the engine's descriptive parameter names.
+`directory_consts.h`'s per-translation-unit strings are now `inline constexpr`
+character arrays.
+
+The current architecture, extension guide, console, vsync and drawing-mistake
+docs name the new symbols; dated review/inspection records retain the spellings
+they reviewed. Study A's source-shape checks follow `cell`, and the Study B
+capture tool matches either spelling of `brick_slip_cells` while preserving the
+historical revision's case when it writes a variant. Its Visual Studio discovery
+uses the same query as the other build tools (`HYG#89`).
+
+Both presets build under `/W4 /WX`. All 79 Debug and 78 Release default cases
+passed (Debug's console and balance cases were rerun after the `HYG#92` script
+fix), as did all fourteen runnable opt-in cases in both presets. The two cases
+requiring private trial inputs compiled in each preset. Both complete synthetic
+study selftests passed, all four art scripts reproduced their runtime bytes,
+and movement/paint-effect rendering and startup passed in both presets. The
+source audit found no remaining uppercase constant declarations; Windows API
+types/macros and serialized strings retain their required spellings. Evidence:
+`out/hygiene-final/`, `out/hyg92/` and `out/hyg91/`.
 
 ### Names that mislead (`HYG#82`)
 
@@ -2112,128 +2130,206 @@ The row as filed:
 
 ### Painter verifier evidence helpers (`HYG#88`)
 
-Add `scripts/check-painter/evidence.ps1` with `Assert-PainterPpm`,
-`ConvertTo-PainterFinite`, `Get-PainterSaveCounts`, key-set and CSV asserts and
-one PPM-to-PNG conversion. Port the about forty verifiers
-(`verify-hud-closing-shade.ps1:4`, `verify-competitive-winner.ps1:119`,
-`verify-desktop-tune-colour.ps1:6`). That restores the payload-length check
-`verify-feedback-tune-colours.ps1:30` lost, and settles one case rule.
+**Done 2026-11-07; verifier behaviour changes.**
+`scripts/check-painter/evidence.ps1` owns canonical P6 headers, dimensions and
+complete RGB payload checks, invariant finite numbers and integers, ordinal
+key/CSV shape checks, save counts/path and one PPM-to-PNG conversion. Fifty-two
+verifiers use the shared PPM check. Feedback's lost payload-length check is
+restored; an actual retained feedback run passed, then its private copy with a
+one-byte-short PPM failed. Key/CSV comparisons also reject delimiter collisions
+and case drift, including later CSV rows.
 
-Also:
+The selector token is derived from its parameter name (all 100 old mappings
+were compared), `$privateProfile` replaces the automatic `$PROFILE` name, Git
+queries check their exit status, and selection requires `check-path.ps1`.
+Observed developer summaries replace hand-added totals. Painter save paths and
+save-log accounting share helpers; the contact sheet's rumble filter is fixed.
+The packed native receipts, diagnostics and evidence descriptions separate
+words/counts and record the existing human-check waivers truthfully. Private
+trial summaries make no claim about their arbitrary input's human acceptance.
+Independent AST review preserved all 645 categorical metadata arrays and all
+schema/selector values.
 
-- Drop the hand-added totals (`verify-desktop-tune-colour.ps1:66`).
-- Derive the selector token instead of the 100-branch chain
-  (`check-painter.ps1:194`).
-- Rename `$profile` (`:307`).
-- Check the git exit codes (`evidence-record.ps1:13`).
-- Treat `check-path.ps1` as required (`check-painter-selection.ps1:265`).
-- Fix the contact sheet's rumble filter (`contact-sheet.ps1:145`).
-- From `HYG#84`: the PowerShell side still spells the private save path out,
-  in `check-painter.ps1`'s expected save-failure lines and about thirty
-  `verify-*.ps1`. One helper beside `Get-PainterSaveCounts` can own it.
-- From `HYG#87`: `check-painter/diagnostics.ps1` and `evidence-record/*.ps1`
-  still say attended or human acceptance "remains open", which the 2026-11-05
-  decisions waived, and fuse words to numbers (`Debug adds15`, `full720p`,
-  `exceeds99percent`). The probes' own PASS lines were reworded in `HYG#87`,
-  except the packed receipts of about twenty painter leaves
-  (`acting_tune_colour_checks.h:220`, `crack_tune_colour_checks.h:257`,
-  `glass_tune_colour_checks.h:342`: `acting:90readbacks/16rows`,
-  `,45 updates`); split them with the `diagnostics.ps1` lines that mirror them.
+Both PowerShell hosts passed `check-painter-selection.ps1` and the new
+`check-painter-evidence.ps1`. The latter checks malformed/truncated/extra PPM
+payloads, decoded RGB, finite/integer parsing, exact keys/CSV and save counts.
+The converter caches immutable dimensions and bytes outside its pixel loop.
 
-Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
+On MattPC's NVIDIA GeForce RTX 5080, both complete plain matrices passed
+(Release 862.3 seconds, Debug 1900.2 seconds). Official four-shard sweeps
+covered all 94 runnable Release and 97 Debug selectors. Release's initial Limb
+leaf exposed a leftover companion helper call; it was fixed and the entire
+Limb/quiet-face leaf passed again. Debug passed all selectors with the fix.
+The coverage audits retain the original failed receipt and reference the
+successful repair instead of rewriting results. The official sweep excludes
+its three private `TrialPath` leaves by design. Evidence:
+`out/hyg88/x64-release-coverage-audit.json`,
+`out/hyg88/x64-debug-coverage-audit.json` and
+`out/hyg88/validation-summary.json`.
 
 ### Shared PowerShell probe-pipeline and art helpers (`HYG#89`)
 
-Add dot-sourced helpers:
+**Done 2026-11-07; tooling behaviour changes.** `scripts/probe-build.ps1`
+replaces the six copied cache/flags/include/library pipelines. It validates the
+checkout, configuration and d3d11/xaudio2/xinput triplet, uses the client's
+RapidJSON root and includes XInput consistently. Callers explicitly choose the
+real platform adapters or their recording replacements. The console's new CPU
+query uses the same builder.
 
-- `probe-build.ps1`, for the CMakeCache, compile-flag and library pipeline that
-  six scripts copy (`check-movement-feedback.ps1:33`; it has drifted on the
-  rapidjson root and Xinput);
-- `check-diagnostics.ps1`, for the stderr and optional-bank scans
-  (`check-startup.ps1:257`);
-- one window enumerator (`:77`);
-- one art PNG writer (`build-painter-art.ps1:17`, `build-terrain-art.ps1:17`).
+`check-diagnostics.ps1` owns the optional-bank diagnostic and unexpected-stderr
+scan, including the engine's complete README suffix; audible/fallback checks
+and the expected user-stage refusal remain distinct. `check-windows.ps1` owns
+one process-filtered window enumerator, embedded with distinct class names in
+startup, fatal-report, editor/guidance, console and sandbox checks. Sandbox
+staging copies the helper with its logon script. The four art scripts use one
+PNG writer and require Windows PowerShell (`HYG#90`). Build/Study B capture
+find Visual Studio with the CI query, the affected messages are spaced and
+current, and the script index describes the actual path/host requirements.
 
-Also:
+The foreground driver exposed two older assumptions: numeric menu offsets
+and the perf header. It now obtains Down/Enter steps from the actual
+`DebugMenuModel`/`TuneDocument` through
+`acceptance/debug_menu_navigation.cpp`, including filtering and pagination;
+the real keyboard interaction and exact x-acceleration transcript assertion
+remain. The CPU query uses UTF-8 paths and the real source/staged directory
+roles. `check-debug-console.ps1 -CompileOnly` builds/queries it without a
+window, input or device; the driver now needs an x64 Developer shell for that
+compile. Conflicting mode switches fail before imports/output creation.
 
-- Require Windows PowerShell in the `build-*-art` scripts
-  (`drawing-references.ps1:4`).
-- Use the CI query in `build.ps1:43`, and `vswhere` in
-  `capture-study-b.ps1:78`.
-- Fix the messages: `check-display-awake.ps1:80`,
-  `check-failure-reporting.ps1:307`, `check-debug-console.ps1:51` and
-  `driver.ps1:1`.
-- Correct `scripts/README.md:6`'s OutputDirectory claim.
+All affected runtime checks passed in both applicable presets: startup with
+the bank and isolated missing-bank/user-stage fixtures, movement feedback,
+paint effects, display lifecycle, failure reporting and the level editor.
+The sandbox generator checker passed 68 checks in each PowerShell host;
+`check-probe-helpers.ps1` passed 36 assertions in each, covering build guards,
+diagnostics and real hidden owned-window enumeration. Acceptance/painter
+selection checks passed in both hosts. Both plain-shell build wrappers and
+all four Windows PowerShell art builds passed.
 
-Run each touched `check-*` script in both presets.
+The Debug-only foreground console passed phases 1/2 in its initial run and
+phases 3/4 after the driver repairs: exact menu mutation, twelve tour images,
+review rasters/checksums, bots, live-console blanking, perf and persisted
+binds/history. Its CPU-only query passed both hosts and distinct staged/source
+Unicode/pagination fixtures; all conflicting mode combinations were refused
+without helpers/compiler/game/output. Debug frame pacing compiled and ran a
+short 1/2/4-player shared-load diagnostic; this is pipeline correctness, not a
+performance baseline. All validation game processes are closed. Evidence:
+`out/hyg91/`, `out/hygiene-final/` and their retained per-check receipts; final
+console transcripts are under `out/hyg91/debug-console-phase3-final/` and
+`out/hyg91/debug-console-phase4-final/`.
 
 ### Art build scripts and art docs (`HYG#90`)
 
-- Read the team colours from `presentation.json` in the painter lineup
-  (`build-painter-art.ps1:516`) and the icon (`icon.json:14`).
-- Name `slips.png` in the status line (`:593`), and fix the row-check comment
-  (`:176`).
-- Stop emitting the unread `idle` frame (`:431`), and move the locomotion timing
-  into `painter.json` (`:419`).
-- Make `build_icon.py --check` decode-based, or drop its CI claim
-  (`build_icon.py:6`).
-- Correct the art READMEs: the hue count (`painter/README.md:145`), the pen
-  table (`:107`), the owned directories (`game/art/README.md:276`), the source
-  rows (`:262`) and the terrain props (`:244`).
+**Done 2026-11-06.** The painter lineup reads all eleven team colours from
+`presentation.json` and sizes its review page to show them; the icon resolves
+its blue/orange palette from the same data. `painter.json` owns the positive,
+finite locomotion timings. The generator drops only the unread standalone
+neutral `idle` frame and retains `idle_paint`, which the uniform uses. Its
+status names `slips.png`, and the row guard describes the actual fixed/movable
+rows. The shared PNG writer and Windows PowerShell requirement are the art
+part of `HYG#89`.
 
-Regenerated art must be byte-identical, or the commit says why not.
+The icon's `--check` and CI compare decoded DIB/PNG pixels independently of
+zlib compression. Five icon tests pass, including equivalent compression and
+altered-pixel rejection. The art READMEs now list eleven hues, the
+presentation-indexed pen strokes, current PNG/TTF sources, five owned staging
+directories and the brush-pot/tape-roll props.
+
+All four Windows PowerShell art builds passed. Runtime PNG/DDS files, the
+painter working PNG, slips preview and executable icon/preview remain
+byte-identical. Runtime `painter.json` removes only the neutral idle metadata;
+the authoring lineup intentionally grows from 1032 by 1712 to 1032 by 3584 to
+show all eleven hues. Both presets build, and all 79 Debug and 78 Release
+default acceptance cases passed (Debug's console/balance cases were rerun
+after the `HYG#92` script fix). Evidence: `out/hyg90/`, `out/hyg91/art-*.log`
+and `out/hygiene-final/acceptance/`.
 
 ### Python audio and study tools (`HYG#91`)
 
-- Add one shared `write_wave` (`foley/build.py:104`; the three writers clip
-  differently).
-- Name the ADPCM geometry and the peak ceiling once in `audio_pipeline`
-  (`audio_pipeline.py:235`, `prepare_review.py:228`).
-- Fix the overwritten test fixture (`test_audio_pipeline.py:166`).
-- Make `--only` refuse unknown ids (`music/render.py:342`).
-- Report the publisher's failures on stderr (`publish_runtime_bank.py:69`).
-- Share the capture limit (`analyze_frame_pacing.py:71`).
-- Normalise Study B's tie-break (`study-b/analyse.py:111`).
-- Fix the pose error (`make-references.py:146`).
-- Add a `scripts/studies/_paths.py` for the four copies of the privacy guard.
+**Done 2026-11-06; tool behaviour changes.** The three authoring projects use
+`scripts/audio/wave_writer.py`: one finite PCM16 rounding/saturation rule, with
+explicit channel count and RIFF chunk order so accepted masters retain their
+bytes. `audio_pipeline.py` owns the ADPCM geometry and review peak ceiling;
+its overwritten test fixture is fixed. Music `--only` refuses unknown cue ids,
+and runtime-bank publication failures go to stderr.
 
-The tracked bank must be unchanged.
+The frame analyzer, native capture probe and PowerShell preflight read the
+capture bound from `DebugPerf`'s declaration. The upper bound passes, and both
+CLI paths refuse an oversized frame/warmup count before creating output or
+initializing a device.
+Study B normalizes the optional identity-cue value before participant tie-breaks,
+the reference builder names the actual pose in an error, and the four study
+entry points use `scripts/studies/_paths.py` for the output privacy guard. The
+guard resolves junctions across drives with missing-output support and refuses
+access/sharing errors instead of treating an unresolved path as safe. It uses
+`ALLOW_MISSING` where available and a checked-ancestor fallback on older Python. Synthetic tie-break and path/junction
+regressions cover the failures. Refusal messages cover unresolved targets, and
+Study A's source-shape checks follow the lowercase terrain constants from
+`HYG#81`.
+
+All 24 audio tests passed, including real FFmpeg/XWB encoding, clipping and loop
+checks, CLI failures, and exact rewrites of all 103 accepted master containers.
+All 14 frame-analysis and seven privacy-guard tests passed, as did both complete
+synthetic study selftests. The privacy tests passed on Python 3.14 and 3.13,
+including a low-level Windows access-denied regression. Production validation
+reported 103 waves, 71 sources
+and no flags. The tracked bank remains byte-identical (SHA-256
+`1d0f6a7bcde1542980df1cb873682c3ba6f781d27f5c9c11ae51abfb06d72ea5`);
+no accepted masters were rewritten. Evidence: `out/hyg91/`.
 
 ### Debug `.cfg` scripts (`HYG#92`)
 
-- Add the two stations `station_tour.cfg` skips. It claims every station.
-- Extract `station_tour_begin` and `station_tour_end`.
-- Collapse the seven `review_turbulence_*` copies into one family script with
-  wrappers.
-- Factor the movement and tools profiles the `jump_*` and `crossfeed_*`
-  scripts restate.
-- Fix `review_finish_details.cfg:38`'s scope comment.
+**Done 2026-11-06.** `station_tour` now visits workshop and refill as well as
+the other eight authored stations and both spawns. `station_tour_begin` and
+`station_tour_end` share setup/cleanup across Movement and the three
+Turbulence tours. Seven `review_turbulence_*` wrappers call one family with
+shared ten-station capture, parameterized extra stations where needed, and
+common cleanup. Eight jump/crossfeed wrappers share live-comparison setup and
+parameterized movement/tool profiles. `review_finish_details`' scope comment
+follows `tune_scope`: HUD, movement feedback, weapon feedback and figure quiet
+flags are live; its other flags apply to new screens/objects.
 
-The shipped-script lint (`debug_console`) must still pass.
+Recursive expansion proved that all eighteen existing review/profile and
+Turbulence-tour entry points preserve the exact effective commands, order and
+arguments. Movement's tour now uniquely covers all ten authored stations plus
+the two spawns; the foreground driver's expected transcript/count is twelve.
+`docs/debug-console.md` lists the shared scripts and corrected coverage.
+
+`debug_console` passed in both presets; its final Debug run followed all 46
+shipped scripts and 2,072 expanded statements. The script lint was preserved:
+extra-station helpers express inherited inputs as parameters, so the walk
+checks every actual station against its caller's stage. Debug `balance_runner`
+also passed after the earlier failed script run had skipped its UTF-8 phase.
+Evidence: `out/hyg92/expanded-comparison.txt`, `out/hyg92/final-debug/`,
+`out/hyg92/final-balance-debug/` and the full Release acceptance receipt.
 
 ### Build, CI and repository housekeeping (`CI#8`)
 
-- Rename the vcpkg manifest to `colourwars`, drop the hand-repeated version and
-  the unused `doctest` (`vcpkg.json:2`, `:11`). Keep the cache key in step.
-- Move the audio tests after Build, so their failure does not skip every check
-  (`ci.yml:120`).
-- Write the manifest-to-runtime-asset rule once (`cmake/release_assets.cmake:10`).
-  Fix the "four directories" and rapidjson comments (`game/CMakeLists.txt:344`,
-  `:245`).
-- Drop the retired kit from `.gitattributes`, and the duplicate `out/` ignore
-  (`.gitignore:383`).
-- Share the Windows job setup between `ci.yml` and `nightly.yml`
-  (`nightly.yml:67`), and keep a manual dispatch from cancelling the scheduled
-  run (`:24`).
-- Drop the dead `testPresets` (`CMakePresets.json:31`) and the `review-*` trigger
-  (`ci.yml:8`).
-- Add `retention-days` to the startup upload (`:397`).
-- Make the four rapidjson includes use angle brackets (`save.cpp:12`).
-- Fix `lint.py`'s docstring (`:57`), and derive `PACKAGED_DOCS` from the package
-  rule (`:15`).
-- Read each document once in `check_doc_links.py:119`.
+**Done 2026-11-07.** The vcpkg manifest is `colourwars`, with no repeated
+project version or unused doctest dependency. Both workflows use one composite
+Windows setup/cache action and the exported MSVC environment. Audio tests
+follow Build with an independent build-success guard, so their failure leaves
+later checks running. Manual/scheduled nightly runs use distinct concurrency
+groups. Startup artifacts retain seven days; obsolete triggers, test presets,
+kit attributes and the duplicate ignore are removed.
 
-This touches `gate`'s jobs, so the pull request says it weakens nothing (AGENTS.md).
+One manifest-kind extension JSON now generates the CMake rule and the
+editor/registration fixture header. The reviewed asset allowlist and
+missing/unknown-kind/optional-bank checks remain. Registration's isolated
+repository copies the shared CMake/JSON dependencies too. RapidJSON uses four
+angle includes; the related include and five-directory comments are current.
+Lint derives packaged Markdown from the install rule, with a new deletion
+regression, and the link checker caches each document's scan and historical
+status in one read.
+
+All 43 CI Python tests and Markdown links passed. Debug/Release builds,
+editor acceptance and stage-registration integration passed. The Release ZIP
+passed 34 checks across 70 files and started with an audible bank under a
+system-only PATH. The shared manifest rule was also checked for unknown-kind
+rejection. The required `gate` and five Windows legs are preserved, with no
+weakened guards or removed checks. Both-host painter/probe helper checks and
+study privacy tests strengthen coverage; the new Debug CPU menu query is in
+the compile gate with explicit error propagation. Foreground input remains
+local. Evidence: `out/hygci8/`, `out/hygiene-final/` and `out/hyg89/`.
 
 ## Architecture review (2026-10-30)
 

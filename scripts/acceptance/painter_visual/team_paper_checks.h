@@ -80,7 +80,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     {
         const Frame actual = frame(); const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu();
         auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset; auto row_art = art; row_art.paper = art.focus_fill;
-        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
+        const RectangleF paper((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.team_box_size) / 2.0f, look.team_box_size);
         const float edge = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(edge), paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const colourwars::UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
@@ -101,11 +101,11 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             "Independent Team title/rows/warning overlap or escape paper");
         for (size_t i = 1; i < rows.size(); ++i) { require(rows[i - 1].bottom() <= rows[i].y, "Independent Team cards overlap"); }
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport); DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* fill_sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto fill = fill_sheet->resolve_sprite_frame(style.fill_frame);
         fill_sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture surround("independent-team-surround", style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour); surround.draw(list);
+        const UiTexture surround("independent-team-surround", style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::zero, menu_consts::design_resolution), app.render_resources(), look.home_background_colour); surround.draw(list);
         setup_paper_reference(list, *app.render_resources(), style, art, paper, RectangleF());
         for (size_t i = 0; i < teams.size(); ++i)
         {
@@ -121,8 +121,8 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             }
             team_paper_badge(list, *app.render_resources(), snapshot.player_identity(), badges[i], static_cast<int>(i));
         }
-        fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x, menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
-        fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
+        fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x, menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
+        fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); title.draw(list); if (warning) { message.draw(list); } for (const auto& label : labels) { label->draw(list); }
         const auto& footer = snapshot.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : teams.size() < 2 ?
             L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" : L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams";

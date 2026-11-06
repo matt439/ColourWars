@@ -117,7 +117,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         MenuPaperArtPresentation original;
         ~RestoreMainArt() { this->art = this->original; }
     } restore_art{ art, art };
-    const Vector2F paper_area(menu_consts::DESIGN_RESOLUTION.x, style.footer_y);
+    const Vector2F paper_area(menu_consts::design_resolution.x, style.footer_y);
     const RectangleF title_panel((paper_area - look.title_box_size) / 2.0f,
         look.title_box_size);
     const RectangleF home_panel((paper_area - look.home_box_size) / 2.0f,
@@ -133,7 +133,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     const auto centered = [&](const std::string& font, const std::wstring& text, float y)
     {
         const Vector2F size = measure(font, text);
-        return RectangleF((menu_consts::DESIGN_RESOLUTION.x - size.x) / 2.0f, y, size.x, size.y);
+        return RectangleF((menu_consts::design_resolution.x - size.x) / 2.0f, y, size.x, size.y);
     };
     const auto card = [&](RectangleF text)
     {
@@ -232,7 +232,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& box) { return camera().calculate_view_rectangle(box); };

@@ -27,7 +27,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
     const TeamColour surface_colours{ Colour::orange, Colour::cyan };
 
     PlayerInputData input(float movement = 0.0f, bool jump = false, bool fire = false)

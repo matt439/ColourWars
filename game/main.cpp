@@ -29,9 +29,9 @@ using namespace directory_consts;
 using namespace labrador;
 
 // simulation.h restates the engine's tick rate; the step it derives must be
-// the one StepTimer hands every update at target_fps = SIMULATION_HZ.
-static_assert(StepTimer::TicksPerSecond == SIMULATION_TICKS_PER_SECOND &&
-	SECONDS_PER_STEP == static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / SIMULATION_HZ)),
+// the one StepTimer hands every update at target_fps = simulation::simulation_hz.
+static_assert(StepTimer::TicksPerSecond == simulation::simulation_ticks_per_second &&
+	simulation::seconds_per_step == static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / simulation::simulation_hz)),
 	"SECONDS_PER_STEP is not the engine's fixed step");
 
 // Indicates to hybrid graphics systems to prefer the discrete part by default.
@@ -61,7 +61,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		options.resolution = save.resolution();
 		options.fullscreen = save.fullscreen();
 		options.vsync = save.vsync();
-		options.target_fps = SIMULATION_HZ;
+		options.target_fps = simulation::simulation_hz;
 		options.max_threads = 16;
 
 		// Declare borrowed game resources before Application so they outlive its states.
@@ -81,17 +81,17 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// and `feedback`); GameData hands everything else const pointers.
 		phase = FailurePhase::definitions;
 		GameTuning tuning(
-			resolved_under(content_root, TUNING_PATH).c_str());
+			resolved_under(content_root, tuning_path).c_str());
 
 		// The shell's copy, in the language COLOURWARS_LOCALE asks for: its
 		// locale file and fallbacks laid over presentation.json, which every
 		// check below then judges as it judges the base (docs/localisation.md).
 		// Every listed locale must compose, chosen or not.
-		const std::string presentation_path = resolved_under(content_root, PRESENTATION_PATH);
-		const ActiveLocale locale(Locales::read(resolved_under(content_root, LOCALES_DIRECTORY)),
+		const std::string localized_presentation_path = resolved_under(content_root, directory_consts::presentation_path);
+		const ActiveLocale locale(Locales::read(resolved_under(content_root, locales_directory)),
 			locale_selection::requested_from_environment());
-		locale.locales().check_structure(presentation_path);
-		Presentation presentation(locale.presentation(presentation_path));
+		locale.locales().check_structure(localized_presentation_path);
+		Presentation presentation(locale.presentation(localized_presentation_path));
 
 		// Inert in Release. Declared before Application so it outlives every state.
 		DebugDirector debug(&tuning, &presentation);
@@ -117,7 +117,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		// Asset directories resolve relative to the manifest.
 		phase = FailurePhase::manifest;
-		app.load_manifest(MANIFEST_PATH);
+		app.load_manifest(manifest_path);
 
 		// The player's own stages join after the manifest's, each checked on its
 		// own: a broken one is refused with one stderr line and startup goes on.
@@ -133,7 +133,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// A shipped stage's title is presentation.json's menu_text.stage_names,
 		// whose English must stay its level file's display_name; judged on the
 		// base file, whatever the run's locale.
-		check_stage_names_agree(presentation_path, stage_catalog.stages());
+		check_stage_names_agree(localized_presentation_path, stage_catalog.stages());
 		validate_shell_content(tuning, presentation, app.render_resources(),
 			app.audio_resources(), stage_catalog.level_infos(), stage_catalog.stages(),
 			settings_session.play_settings());

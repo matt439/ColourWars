@@ -6,10 +6,17 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from analyze_frame_pacing import ENGINE_FIELDS, ENGINE_TIMING_SCOPE, FIELDS, FIELDS_V2, TIMING_SCOPE, analyze, summarize
+from analyze_frame_pacing import ENGINE_FIELDS, ENGINE_TIMING_SCOPE, FIELDS, FIELDS_V2, MAX_CAPTURE_FRAMES, TIMING_SCOPE, analyze, summarize
 
 
 class FramePacingChecks(unittest.TestCase):
+    def test_refuses_more_frames_than_the_recorder_can_capture(self):
+        capture = dict(self.capture, requested_frames=MAX_CAPTURE_FRAMES + 1,
+                       captured_frames=MAX_CAPTURE_FRAMES + 1)
+        rows = [self.rows[0]] * (MAX_CAPTURE_FRAMES + 1)
+        with self.assertRaisesRegex(ValueError, "Capture length"):
+            summarize(capture, rows, self.metadata)
+
     def setUp(self):
         self.capture = {
             "schema_version": 1, "requested_frames": 100, "captured_frames": 100,

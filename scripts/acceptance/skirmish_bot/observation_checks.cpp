@@ -151,7 +151,7 @@ namespace skirmish_acceptance
 		// Exhaust a real Sniper to a positive remainder below its full-shot cost.
 		// No physical device, debug ammo setter or guessed normalized threshold.
 		auto level = world.build(WeaponType::sniper);
-		const float dt = SECONDS_PER_STEP;
+		const float dt = simulation::seconds_per_step;
 		const std::vector<PlayerInputData> slots(input_slots::count);
 		for (int tick = 0; tick < 1800 && level->state() != LevelState::active; ++tick) { level->update(slots, dt); }
 		require(level->state() == LevelState::active, "Sniper observation fixture missed active state");

@@ -44,7 +44,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     MenuPaperArtPresentation options_art = art;
     options_art.focus_padding = look.setup_focus_padding;
     options_art.shadow_offset = look.setup_shadow_offset;
-    const Vector2F area(menu_consts::DESIGN_RESOLUTION.x, style.footer_y);
+    const Vector2F area(menu_consts::design_resolution.x, style.footer_y);
     const RectangleF options_panel((area - look.options_box_size) / 2.0f, look.options_box_size);
     const RectangleF credits_panel((area - look.credits_box_size) / 2.0f, look.credits_box_size);
     const auto measure = [&](const std::string& font, const std::wstring& text)
@@ -197,7 +197,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto camera = [&]
     {
-        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        return Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)

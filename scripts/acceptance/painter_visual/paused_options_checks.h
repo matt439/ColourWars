@@ -184,7 +184,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
             "Frozen paused Options changed pixels or consumed draw RNG");
         if (capture) { save(actual, output / (stem + ".ppm")); const auto& look = captured.main_menu();
             const RectangleF paper((Vector2F(1920.0f, captured.menu().footer_y) - look.options_box_size) / 2.0f, look.options_box_size);
-            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
             save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         records << name << ',' << actual.width << ',' << actual.height << ',' << players << ',' << owner << ',' << device << ',' << row << ',' << stack.depth() << ",true,true,true\n";
         return actual;
@@ -208,7 +208,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     tick(settled); const Frame resting = compare("motion-settled");
     require(moving.pixels != resting.pixels, "Paused Options focus had no authored motion response");
     const auto delta = foreground_delta_bounds(moving, resting);
-    const Camera motion_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+    const Camera motion_camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), app.viewport_manager()->fullscreen_viewport());
     const RectangleF motion_paper((Vector2F(1920.0f, original.menu().footer_y) - original.main_menu().options_box_size) / 2.0f, original.main_menu().options_box_size);
     require(pixel_bounds(motion_camera.calculate_view_rectangle(motion_paper)).contains(delta), "Paused Options motion escaped its paper");
     go(4); hold(device, GamepadButton::a, true); tick();
@@ -322,5 +322,5 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     bool invalid = false; try { MainMenuOptions rejected(&direct_context, keyboard); } catch (const std::invalid_argument&) { invalid = true; }
     require(invalid, "Paused Options accepted a spectator as its match owner");
     require(records.good() && worlds.good(), "Paused Options evidence write failed");
-    std::cout << "PASS actual paused Options1/2/4 players; complete six-aspect references, sparse owner/recovery, nested Controls/Sticks merge, retained painted match/HUD, next-build palette, private windowed trial rollback/Keep/failure/recovery and safe developer unwind\n";
+    std::cout << "PASS actual paused Options 1 / 2 / 4 players; complete six-aspect references, sparse owner/recovery, nested Controls/Sticks merge, retained painted match/HUD, next-build palette, private windowed trial rollback/Keep/failure/recovery and safe developer unwind\n";
 }

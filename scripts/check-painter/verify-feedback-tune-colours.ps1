@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($FeedbackTuneColoursOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $feedbackConsumerSummary = Get-Content -LiteralPath (Join-Path $captures 'feedback-colour-consumer-summary.json') -Raw | ConvertFrom-Json
         $feedbackConsumerRows = @(Import-Csv -LiteralPath (Join-Path $captures 'feedback-colour-consumers.csv'))
         $feedbackCrops = @(Get-ChildItem -LiteralPath $captures -Filter 'feedback-*.ppm' -File)
@@ -26,13 +27,10 @@
             throw 'The feedback consumer evidence does not match its frozen literal-oracle/readback/CSV/crop/control budgets.'
         }
         foreach ($crop in $feedbackCrops) {
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '360 280' -or $header[2] -ne '255') {
-                throw 'A feedback colour crop exceeds its frozen 360x280 pixel budget.'
-            }
+            Assert-PainterPpm -Path $crop.FullName -Width 360 -Height 280
         }
-        $feedbackSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $feedbackSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $feedbackSaveCalls = $painterSaveCounts.calls
+        $feedbackSaveSuccesses = $painterSaveCounts.successes
         $feedbackObserved = [ordered]@{
             consumer = $feedbackConsumerSummary
             state_updates = 0
@@ -67,8 +65,8 @@
                 throw 'The feedback Debug evidence does not match its frozen validated-command/private-save/readback/CSV budgets.'
             }
             $feedbackObserved['developer_commands'] = $feedbackTuneSummary
-            $feedbackObserved.readbacks = 122
-            $feedbackObserved.csv_rows = 28
+            $feedbackObserved.readbacks += $feedbackTuneSummary.readbacks
+            $feedbackObserved.csv_rows += $feedbackTuneSummary.csv_rows
         }
         elseif ($feedbackSaveCalls -ne 0 -or $feedbackSaveSuccesses -ne 0 -or
             (Test-Path -LiteralPath (Join-Path $captures 'feedback-tune-summary.json')) -or

@@ -39,7 +39,7 @@ namespace acceptance::route_run
     using namespace labrador;
     using acceptance::require;
 
-    inline const float dt = SECONDS_PER_STEP;
+    inline const float dt = simulation::seconds_per_step;
     inline constexpr float tolerance = 0.05f;
 
     std::string fixed(float value, int precision = 2);

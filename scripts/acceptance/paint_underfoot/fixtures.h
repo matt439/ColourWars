@@ -30,7 +30,7 @@ namespace paint_underfoot_acceptance
 {
     using acceptance::require;
     inline std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
-    inline const float dt = SECONDS_PER_STEP;
+    inline const float dt = simulation::seconds_per_step;
     inline PlayerInputData input(float movement = 0.0f, bool jump = false, bool fire = false, bool drop = false)
     {
         PlayerInputData value;

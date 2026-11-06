@@ -131,7 +131,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         add(ready ? L"Everyone joined. Player 1 can continue." :
             L"Press A / Enter on each device to join. Reconnect reserved pads.", style.detail_font, 7, art.ink, style.detail_shadow_offset);
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f, look.setup_box_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.setup_box_size) / 2.0f, look.setup_box_size);
         const float edge = art.keyline_width * 3.0f;
         const RectangleF inside(panel.position() + Vector2F(edge), panel.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         for (const auto& widget : text) { require(inside.contains(widget->bounds()), "Independent unscaled Join text/shadow escapes paper interior"); }
@@ -140,13 +140,13 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             "Independent Join heading, final roster row and status overlap");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
         DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet); const auto fill = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
         const UiTexture background("independent-join-surround", style.sprite_sheet, style.fill_frame,
-            RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), app.render_resources(), look.home_background_colour);
+            RectangleF(Vector2F::zero, menu_consts::design_resolution), app.render_resources(), look.home_background_colour);
         background.draw(list); setup_paper_reference(list, *app.render_resources(), style, art, panel, RectangleF());
         if (responding >= 0 && fraction > 0.0f)
         {
@@ -179,10 +179,10 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             require(inside.contains(cursor), "Independent host row underline escapes Join paper");
             sheet->draw(list, fill, cursor, art.focus_ink);
         }
-        sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
-            menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
+        sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x,
+            menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y,
-            menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
+            menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
         list.set_filter(TextureFilter::linear); for (const auto& widget : text) { widget->draw(list); }
         const auto& footer = snapshot.prompt_bar();
         const colourwars::UiTextDropShadow prompt("independent-join-prompt", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",

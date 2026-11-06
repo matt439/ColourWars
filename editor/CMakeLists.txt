@@ -1,3 +1,6 @@
+include("${PROJECT_SOURCE_DIR}/cmake/manifest_asset_kinds.cmake")
+colourwars_configure_manifest_kinds("${PROJECT_BINARY_DIR}/generated/editor/manifest_asset_kinds.h")
+
 add_library(colourwars_level_document STATIC level_document.cpp level_document_mirror.cpp level_json.cpp motion_authoring.cpp slab_authoring.cpp blockout_aids.cpp
     content_catalog.cpp prepared_file.cpp stage_registration.cpp user_stage_save.cpp save_guidance.cpp paint_mechanism_guide.cpp window_layout.cpp)
 target_include_directories(colourwars_level_document PUBLIC "${PROJECT_SOURCE_DIR}")
@@ -74,6 +77,8 @@ add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/registration_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/user_stage_checks.cpp")
 target_link_libraries(colourwars_editor_acceptance PRIVATE colourwars_level_document)
+target_include_directories(colourwars_editor_acceptance PRIVATE "${PROJECT_BINARY_DIR}/generated")
+
 target_include_directories(colourwars_editor_acceptance SYSTEM PRIVATE
     "${PROJECT_SOURCE_DIR}/external/rapidjson/include")
 

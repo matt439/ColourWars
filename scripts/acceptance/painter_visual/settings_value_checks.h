@@ -120,7 +120,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
             "Independent setting value escaped its available column or row");
         const RectangleF row_bounds = RectangleF::union_of(label_text.bounds(), text.bounds());
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

@@ -103,31 +103,10 @@ function Write-ContactSheet {
                 $_.Name -like 'display-trial-*-detail.ppm' -or
                 $_.Name -like 'paused-options-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
-            $bytes = [IO.File]::ReadAllBytes($file.FullName)
-            $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
-            if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
-            $width = [int] $Matches[1]
-            $height = [int] $Matches[2]
-            $source = $Matches[0].Length
-            $bitmap = [Drawing.Bitmap]::new($width, $height, [Drawing.Imaging.PixelFormat]::Format24bppRgb)
+            $bitmap = ConvertFrom-PainterPpm $file.FullName
+            $width = $bitmap.Width
+            $height = $bitmap.Height
             $images.Add([pscustomobject]@{ name = $file.BaseName; bitmap = $bitmap })
-            $data = $bitmap.LockBits([Drawing.Rectangle]::new(0, 0, $width, $height),
-                [Drawing.Imaging.ImageLockMode]::WriteOnly, [Drawing.Imaging.PixelFormat]::Format24bppRgb)
-            try {
-                $pixels = [byte[]]::new($data.Stride * $height)
-                for ($y = 0; $y -lt $height; ++$y) {
-                    for ($x = 0; $x -lt $width; ++$x) {
-                        $destination = $y * $data.Stride + $x * 3
-                        $pixels[$destination] = $bytes[$source + 2]
-                        $pixels[$destination + 1] = $bytes[$source + 1]
-                        $pixels[$destination + 2] = $bytes[$source]
-                        $source += 3
-                    }
-                }
-                [Runtime.InteropServices.Marshal]::Copy($pixels, 0, $data.Scan0, $pixels.Length)
-            }
-            finally { $bitmap.UnlockBits($data) }
-            $bitmap.Save([IO.Path]::ChangeExtension($file.FullName, '.png'), [Drawing.Imaging.ImageFormat]::Png)
             if ($file.BaseName -like 'monitor-*' -or $file.BaseName -like 'closing-story-*') {
                 $monitorCellWidth = [Math]::Max($monitorCellWidth, $width + 16)
                 $monitorCellHeight = [Math]::Max($monitorCellHeight, $height + 48)
@@ -142,7 +121,7 @@ function Write-ContactSheet {
             }
         }
         if ($images.Count -eq 0) { throw 'No painter or monitor captures were produced.' }
-        $painters = @($images | Where-Object { $_.name -notlike 'monitor-*' -and $_.name -notlike 'closing-story-*' -and $_.name -notlike 'pad-jump-*' })
+        $painters = @($images | Where-Object { $_.name -notlike 'monitor-*' -and $_.name -notlike 'closing-story-*' -and $_.name -notlike 'pad-jump-*' -and $_.name -notlike 'rumble-settings-*' })
         Write-ContactSheetPages -Images $painters -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-contact'
         $padJump = @($images | Where-Object { $_.name -like 'pad-jump-*' })

@@ -83,6 +83,7 @@ if ($HostTrial) {
     if ($longest -ge 240) { throw "The extracted package has $longest-character paths; use a shorter -OutputDirectory for -HostTrial." }
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'sandbox/logon.ps1') -Destination (Join-Path $results 'logon.ps1')
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-windows.ps1') -Destination (Join-Path $results 'check-windows.ps1')
 
 $desktop = 'C:\Users\WDAGUtilityAccount\Desktop'
 $escape = { param([string]$Text) [Security.SecurityElement]::Escape($Text) }

@@ -51,7 +51,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu(); const auto& art = look.art;
         const Frame actual = stack_frame(app);
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         std::vector<std::unique_ptr<UiText>> text;
         const auto add = [&](const std::wstring& copy, const std::string& font, const Vector2F& position,
@@ -59,7 +59,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         {
             auto widget = std::make_unique<UiText>("independent-title-home-text", copy, font, position,
                 app.render_resources(), colour, hidden);
-            if (centred) { widget->set_position(Vector2F((menu_consts::DESIGN_RESOLUTION.x -
+            if (centred) { widget->set_position(Vector2F((menu_consts::design_resolution.x -
                 widget->bounds().width) / 2.0f, position.y)); }
             text.push_back(std::move(widget));
         };
@@ -91,7 +91,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         }
         else { focus.add(text[2].get()); }
         const Vector2F panel_size = home ? look.home_box_size : look.title_box_size;
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - panel_size) / 2.0f, panel_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - panel_size) / 2.0f, panel_size);
         const MenuPaperArtwork artwork(panel, app.render_resources(), &style, &art, &focus, text[2].get());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());

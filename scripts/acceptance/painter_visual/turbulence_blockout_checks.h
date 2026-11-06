@@ -249,12 +249,12 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         const RectangleF box(look.preview_position, look.preview_size);
         StagePreview preview("turbulence-actual-stage-preview", box, &data); preview.set_stage("turbulence_blockout");
         const Viewport fullscreen = app.viewport_manager()->fullscreen_viewport();
-        const Camera menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), fullscreen);
+        const Camera menu = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), fullscreen);
         const auto draw = [&](bool shown)
         {
             Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
             DrawList list = renderer.view(0); list.set_viewport(fullscreen); list.set_camera(menu); list.set_filter(TextureFilter::point);
-            canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION));
+            canvas.draw(list, RectangleF(Vector2F::zero, menu_consts::design_resolution));
             if (shown) { preview.draw(list); } ++readbacks; return read(renderer);
         };
         std::srand(2611); const int expected = std::rand(); std::srand(2611); const Frame frame = draw(true);
@@ -288,6 +288,6 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         "No visible performance capture, human readability/warning-time, balance, physical-pad, listening or arena acceptance is established.\n";
     summary.close(); scope.close();
     require(summary.good() && scope.good(), "Cannot flush Turbulence native summary/scope");
-    std::cout << "PASS Turbulence native controlled composition: 21 full frames/51 native crops/43 reads, "
-        "1/2/3/4 clean-heavy landing/escape panes, home exits, runtime overviews and actual StagePreview; human acceptance open\n";
+    std::cout << "PASS Turbulence native controlled composition: 21 full frames / 51 native crops / 43 reads, "
+        "1/2 / 3 / 4 clean-heavy landing/escape panes, home exits, runtime overviews and actual StagePreview; scripted checks only; human checks not performed\n";
 }

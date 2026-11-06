@@ -100,7 +100,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         UiText help_text("independent-pad-help", help, look.help_font, look.controls_position, app.render_resources(), art.ink);
         const RectangleF raw_help = help_text.bounds();
         help_text.set_scale(std::min({ 1.0f, look.controls_size.x / raw_help.width, look.controls_size.y / raw_help.height }));
-        const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
+        const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.box_size) / 2.0f, look.box_size);
         UiText status_text("independent-pad-status", status, look.help_font, look.status_position, app.render_resources(),
             warning ? original.main_menu().options_warning_colour : art.focus_ink);
         const RectangleF raw_status = status_text.bounds();
@@ -113,7 +113,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::srand(7331); const int next = std::rand(); std::srand(7331);
         require(actual.pixels == stack_frame(app).pixels && std::rand() == next,
             "Frozen Pad Jump draw mutated pixels or consumed RNG");
-        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
+        const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
@@ -451,14 +451,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         MatchFingerprint::difference(decoded.final_print, MatchFingerprint::of(*playback, replay_length)).empty() &&
         static_cast<unsigned int>(std::rand()) == terminal_rng,
         "Mapped replay did not exercise changed live input, exact final state/checkpoints or terminal RNG");
-    std::cout << "PASS Pad Jump mapped replay:360 actual-reader post-mapping updates, six checkpoints, persisted alternate "
+    std::cout << "PASS Pad Jump mapped replay: 360 actual-reader post-mapping updates, six checkpoints, persisted alternate "
         "face choices differ on " << raw_differences << " live frames; decoded public rebuild preserves every seat/fingerprint/final/RNG\n";
 #else
     std::cout << "LIMIT Pad Jump post-mapping replay requires Debug developer tools; native page/reader scope runs in both presets\n";
 #endif
     require(copies == 66 && reloads == 34 && records.good(), "Pad Buttons native matrix missed its bounded page cases");
     require(paused_reminders == 2 && mixed_reminders == 2, "Pad Jump reminder matrix missed native size/roster cases");
-    std::cout << "PASS Pad Buttons native:32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
+    std::cout << "PASS Pad Buttons native: 32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
         "66 independently fitted help/status pairs; pending multi-slot merge, reset/discard, failed-write retry, Controls entry/parent audio, captured text and owner isolation; "
         "two actual owned paused countdown refresh/reversal routes and two mixed4-pad reminder captures; "
         "private snapshots/save at 720/1080, no physical-device or human acceptance\n";

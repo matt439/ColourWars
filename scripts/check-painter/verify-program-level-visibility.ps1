@@ -1,5 +1,6 @@
 # Dot-sourced only after -ProgramLevelVisibilityOnly native execution.
 # Six actual Level readbacks; this verifier performs no native drawing.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $plSummaryPath = Join-Path $captures 'program-level-summary.json'
 $plCasesPath = Join-Path $captures 'program-level-cases.csv'
 $plSamplesPath = Join-Path $captures 'program-level-samples.csv'
@@ -12,7 +13,7 @@ $plFields = @('scope','stage','player_count','input_slots','opening','state','vi
     'observation_scene_updates','observation_state_updates','observation_input_updates','observation_time_updates',
     'readbacks','case_rows','sample_rows','csv_rows','full_ppms','crops','commands','rng_brackets','repeat_pairs','whole_frame_reset',
     'frozen_public_style_resources','private_story_clocks_observed','program_mask','program_patch','paper_patch','glass_patch','event_fade')
-if ((($plSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($plFields | Sort-Object) -join '|')) {
+if ((-not (Test-PainterKeys $plSummary $plFields))) {
     throw 'Program Level summary schema differs'
 }
 $plNumbers = [ordered]@{player_count=2;builder_seed=9411;level_builds=1;setup_level_updates=1;setup_elapsed_seconds=0.4;
@@ -40,8 +41,8 @@ foreach ($plKey in @('private_story_clocks_observed','event_fade')) {
 $plCaseColumns = @('state','readbacks','repeat_equal','baseline_equal','delta_pixels','outside_mask_delta_pixels','frozen_public_style','rng_scope','scope')
 $plSampleColumns = @('state','site','x','y','width','height','expected_rgb','observed_rgb','all_pixels_equal','baseline_unchanged','scope')
 if ($plCases.Count -ne 3 -or $plSamples.Count -ne 9 -or
-    ($plCases[0].PSObject.Properties.Name -join '|') -cne ($plCaseColumns -join '|') -or
-    ($plSamples[0].PSObject.Properties.Name -join '|') -cne ($plSampleColumns -join '|')) {
+    (-not (Test-PainterCsvColumns $plCases $plCaseColumns)) -or
+    (-not (Test-PainterCsvColumns $plSamples $plSampleColumns))) {
     throw 'Program Level CSV count/schema differs'
 }
 $plStates = @('baseline','rgb','restored')
@@ -77,10 +78,7 @@ if ($plFiles.Count -ne 2 -or ($plFiles.Name -join '|') -cne 'program-level-basel
 $plHeader = [Text.Encoding]::ASCII.GetBytes("P6`n1280 720`n255`n")
 $plFrames = @(foreach ($plFile in $plFiles) {
     $plBytes = [IO.File]::ReadAllBytes($plFile.FullName)
-    if ($plBytes.Length -ne $plHeader.Length+1280*720*3) { throw 'Program Level full PPM size differs' }
-    for ($plAt=0; $plAt -lt $plHeader.Length; ++$plAt) {
-        if ($plBytes[$plAt] -ne $plHeader[$plAt]) { throw 'Program Level PPM header differs' }
-    }
+    Assert-PainterPpm -Bytes $plBytes -Header $plHeader
     ,$plBytes
 })
 function Assert-ProgramLevelPatch([byte[]]$Bytes,[int[]]$Area,[int]$Rgb) {
@@ -120,8 +118,7 @@ for ($plY=0; $plY -lt 720; ++$plY) {
     }
 }
 if ($plDelta -lt 256 -or $plDelta -ne [long]$plCases[1].delta_pixels) { throw 'Program Level native delta count differs from retained full frames' }
-$plLog = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-if (@($plLog | Where-Object {$_ -match 'Saving\.\.\.$' -or $_ -ceq 'Save was successful.'}).Count -or
+if (($painterSaveCounts.calls + $painterSaveCounts.successes) -or
     @(Get-Content -LiteralPath (Join-Path $run 'run.err') | Where-Object {$_ -match '^save failure:'}).Count) {
     throw 'Program Level literal consumer unexpectedly wrote Save'
 }

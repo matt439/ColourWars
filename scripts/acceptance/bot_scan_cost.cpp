@@ -22,7 +22,7 @@ namespace
     constexpr unsigned int trial_seed = 41731;
     constexpr unsigned int level_seed = 5242;
     constexpr double frame_budget_us = 1.0e6 / 60.0;
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
     const char* const stages[] = { "crossfeed", "close_quarters", "king_of_the_hill", "turbulence", "press_tower" };
 
     double micros(Clock::duration elapsed)

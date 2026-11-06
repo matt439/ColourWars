@@ -1,4 +1,5 @@
 # Dot-sourced only for -CursorMaterialTuneColoursOnly after the native process.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $cmSummaryPath=Join-Path $captures 'cursor-material-consumer-summary.json';$cmRowsPath=Join-Path $captures 'cursor-material-consumers.csv';$cmSamplesPath=Join-Path $captures 'cursor-material-samples.csv'
 $cmSummary=Get-Content -LiteralPath $cmSummaryPath -Raw|ConvertFrom-Json;$cmRows=@(Import-Csv -LiteralPath $cmRowsPath);$cmSamples=@(Import-Csv -LiteralPath $cmSamplesPath)
 $cmStates=@('default','rgb','rgba128','alpha0')
@@ -17,7 +18,7 @@ function Assert-CursorMaterialPairs($Rows,$States){
 function Assert-CursorMaterialSamples($Rows,$States,$Scope,$Controls){
     $expected=@(foreach($state in $States){foreach($bg in @('black','nonblack')){foreach($sample in @('shade-over-shadow','shadow-only')){"$state/$bg/$sample"}}})
     $actual=@($Rows|ForEach-Object {"$($_.state)/$($_.background)/$($_.sample)"})
-    if($Rows.Count -ne $States.Count*4 -or (($Rows[0].PSObject.Properties.Name)-join '|') -cne ($cmSampleColumns-join '|') -or
+    if($Rows.Count -ne $States.Count*4 -or (-not (Test-PainterCsvColumns $Rows $cmSampleColumns)) -or
         (($actual|Sort-Object)-join '|') -cne (($expected|Sort-Object)-join '|')){throw 'Cursor material sample schema/exact sites mismatch.'}
     $negative=0
     foreach($row in $Rows){
@@ -36,7 +37,7 @@ Assert-CursorMaterialScope $cmSummary;Assert-CursorMaterialPairs $cmRows $cmStat
 $cmColumns=@('state','background','rest_match','click_match','reduced_rest','ordered_samples','ink_fill_ticks_rng','control','scope')
 if($cmSummary.scope -cne 'consumer-only' -or $cmSummary.readbacks -ne 68 -or $cmSummary.csv_rows -ne 24 -or $cmSummary.case_rows -ne 8 -or $cmSummary.sample_rows -ne 16 -or
     $cmSummary.crops -ne 8 -or $cmSummary.crop_pixels -ne 46080 -or $cmSummary.negative_reference_frames -ne 10 -or $cmSummary.negative_sample_comparisons -ne 16 -or $cmSummary.blank_readbacks -ne 2 -or
-    (($cmRows[0].PSObject.Properties.Name)-join '|') -cne ($cmColumns-join '|') -or @($cmRows|Where-Object {$_.rest_match -cne 'true' -or $_.click_match -cne 'true' -or $_.reduced_rest -cne 'true' -or
+    (-not (Test-PainterCsvColumns $cmRows $cmColumns)) -or @($cmRows|Where-Object {$_.rest_match -cne 'true' -or $_.click_match -cne 'true' -or $_.reduced_rest -cne 'true' -or
         $_.ordered_samples -cne 'true' -or $_.ink_fill_ticks_rng -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){throw 'Cursor material shared counters/assertions/schema mismatch.'}
 $cmControls=@{default='unchanged-default-adoption';rgb='distinct-opaque-materials';rgba128='per-field-straight-squared-controls';alpha0='selected-zero-retains-ink-fill-ticks'}
 foreach($row in $cmRows){if($row.control -cne $cmControls[$row.state]){throw 'Cursor material control label mismatch.'}}
@@ -45,11 +46,10 @@ $cmNames=@(foreach($state in $cmStates){foreach($bg in @('black','nonblack')){"c
 if($cmCrops.Count -ne 8 -or (($cmCrops.Name|Sort-Object)-join '|') -cne (($cmNames|Sort-Object)-join '|')){throw 'Cursor material exact crop set mismatch.'}
 $cmHeader=[Text.Encoding]::ASCII.GetBytes("P6`n72 80`n255`n");$cmBytes=0
 $cmCropEvidence=@(foreach($crop in $cmCrops){$bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $cmHeader.Length+72*80*3){throw 'Cursor material compact PPM payload mismatch.'}
-    for($i=0;$i -lt $cmHeader.Length;$i++){if($bytes[$i] -ne $cmHeader[$i]){throw 'Cursor material canonical PPM header mismatch.'}}
+    Assert-PainterPpm -Bytes $bytes -Header $cmHeader
     $cmBytes+=$bytes.Length;[ordered]@{name=$crop.Name;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
-$cmLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'));$cmSaveCalls=@($cmLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count;$cmSaveSuccesses=@($cmLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$cmSaveCalls=$painterSaveCounts.calls;$cmSaveSuccesses=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected cursor material private Save failure.'}
 $cmArtifacts=[ordered]@{}
 foreach($path in @($cmSummaryPath,$cmRowsPath,$cmSamplesPath)){$cmArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -64,11 +64,11 @@ if($debug){
     $cmTuneColumns=@('state','background','rest_match','click_match','ordered_samples','ink_fill_ticks_rng','private_bytes','adoption')
     if($cmTuneSummary.scope -cne 'debug-validated-commands' -or $cmTuneSummary.commands -ne 15 -or $cmTuneSummary.readbacks -ne 144 -or $cmTuneSummary.csv_rows -ne 72 -or
         $cmTuneSummary.case_rows -ne 24 -or $cmTuneSummary.sample_rows -ne 48 -or $cmTuneSummary.crops -ne 0 -or $cmTuneSummary.saved_tokens -ne 2 -or
-        (($cmTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($cmTuneColumns-join '|') -or @($cmTuneRows|Where-Object {$_.rest_match -cne 'true' -or $_.click_match -cne 'true' -or
+        (-not (Test-PainterCsvColumns $cmTuneRows $cmTuneColumns)) -or @($cmTuneRows|Where-Object {$_.rest_match -cne 'true' -or $_.click_match -cne 'true' -or
             $_.ordered_samples -cne 'true' -or $_.ink_fill_ticks_rng -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         $cmSaveCalls -ne 2 -or $cmSaveSuccesses -ne 2 -or (Get-Item -LiteralPath $cmTranscriptPath).Length -le 0 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'cursor-material-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){throw 'Cursor material Debug/private Save counters/schema mismatch.'}
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'cursor-material-tune-scratch/profile')) -PathType Leaf)){throw 'Cursor material Debug/private Save counters/schema mismatch.'}
     foreach($path in @($cmTuneSummaryPath,$cmTuneRowsPath,$cmTuneSamplesPath,$cmTranscriptPath)){$cmArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
-    $cmObserved.developer_commands=$cmTuneSummary;$cmObserved.readbacks=212;$cmObserved.csv_rows=96;$cmObserved.case_rows=32;$cmObserved.sample_rows=64
+    $cmObserved.developer_commands=$cmTuneSummary;$cmObserved.readbacks += $cmTuneSummary.readbacks;$cmObserved.csv_rows += $cmTuneSummary.csv_rows;$cmObserved.case_rows += $cmTuneSummary.case_rows;$cmObserved.sample_rows += $cmTuneSummary.sample_rows
 }elseif($cmSaveCalls -ne 0 -or $cmSaveSuccesses -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'cursor-material-tune-*').Count){throw 'Release cursor material proof must remain consumer-only without developer artifacts/Saves.'}
 $result.observed_counts=$cmObserved

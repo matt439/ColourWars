@@ -260,7 +260,7 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
     {
         if (object->for_deletion() || !layers_collide(this->layer(), this->mask(),
             object->layer(), object->mask())) { continue; }
-        const bool structure = object->layer() == collision_layers::STRUCTURE;
+        const bool structure = object->layer() == collision_layers::structure;
         Structure* surface = Collider::of(*object).structure();
         TranslatingStructurePaintable* moving = surface != nullptr ? surface->mover() : nullptr;
         if (moving != nullptr)
@@ -281,7 +281,7 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
                 const double entry = segment.begin +
                     (segment.end - segment.begin) * interval->first;
                 if (entry < closest_entry || (entry == closest_entry && structure &&
-                    obstruction != nullptr && obstruction->layer() != collision_layers::STRUCTURE))
+                    obstruction != nullptr && obstruction->layer() != collision_layers::structure))
                 {
                     obstruction = object;
                     moving_obstruction = moving;
@@ -296,7 +296,7 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
             const auto hit = slab->sweep(start, finish);
             if (hit && hit->positive_overlap && (hit->entry < closest_entry ||
                 (hit->entry == closest_entry && obstruction != nullptr &&
-                    obstruction->layer() != collision_layers::STRUCTURE)))
+                    obstruction->layer() != collision_layers::structure)))
             {
                 obstruction = object;
                 moving_obstruction = nullptr;
@@ -307,7 +307,7 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
         const auto interval = sweep_interval(start, finish, object->shape()->bounding_box());
         if (interval && (interval->first < closest_entry ||
             (interval->first == closest_entry && structure && obstruction != nullptr &&
-                obstruction->layer() != collision_layers::STRUCTURE)))
+                obstruction->layer() != collision_layers::structure)))
         {
             obstruction = object;
             moving_obstruction = nullptr;
@@ -401,7 +401,7 @@ void Projectile::resolve_sweep(const RectangleF& start,
         // enemy contacts belong to its ordinary multi-contact sweep, not an
         // extra launch hit. Masks retain ramp pass-through, friendly-fire
         // exclusion and dead players' empty collision mask.
-        const bool structure = object->layer() == collision_layers::STRUCTURE;
+        const bool structure = object->layer() == collision_layers::structure;
         if ((launch && !this->launch_hits_players() && !structure) ||
             object->for_deletion() ||
             !layers_collide(this->layer(), this->mask(),
@@ -421,7 +421,7 @@ void Projectile::resolve_sweep(const RectangleF& start,
         if (interval && (interval->first < closest.first ||
             (interval->first == closest.first && structure &&
                 obstruction != nullptr &&
-                obstruction->layer() != collision_layers::STRUCTURE)))
+                obstruction->layer() != collision_layers::structure)))
         {
             obstruction = object;
             closest = *interval;
@@ -465,7 +465,7 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
     double closest = 1.0;
     for (CollisionObject* object : objects)
     {
-        const bool structure = object->layer() == collision_layers::STRUCTURE;
+        const bool structure = object->layer() == collision_layers::structure;
         if ((launch && !this->launch_hits_players() && !structure) ||
             object->for_deletion() || !layers_collide(this->layer(), this->mask(), object->layer(), object->mask()))
         { continue; }
@@ -486,7 +486,7 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
             if (const auto interval = sweep_interval(start, finish, obstacle)) { entry = interval->first; }
         }
         if (entry && (*entry < closest || (*entry == closest && structure && obstruction != nullptr &&
-            obstruction->layer() != collision_layers::STRUCTURE)))
+            obstruction->layer() != collision_layers::structure)))
         {
             closest = *entry;
             obstruction = object;
@@ -530,8 +530,8 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
 void Projectile::on_structure_contact(const Structure& other,
     const Vector2F& normal, float /*penetration*/)
 {
-    this->geometry_contact_ |= other.layer() == collision_layers::STRUCTURE;
-    if (!this->for_deletion_ && other.layer() == collision_layers::STRUCTURE)
+    this->geometry_contact_ |= other.layer() == collision_layers::structure;
+    if (!this->for_deletion_ && other.layer() == collision_layers::structure)
     {
         // The cover says where on its face the shot stopped.
         const Vector2F center = this->shape()->bounding_box().center();

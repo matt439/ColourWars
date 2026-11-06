@@ -126,7 +126,7 @@ namespace
         throw std::runtime_error("a debug layer broke");
     }
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     struct Frame
     {

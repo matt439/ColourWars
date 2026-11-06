@@ -440,9 +440,9 @@ private:
         labrador::RenderResources::SheetStrip body;
         labrador::RenderResources::SheetStrip paint;
     };
-    static constexpr size_t ANIMATION_STATE_COUNT =
+    static constexpr size_t animation_state_count_ =
         static_cast<size_t>(PlayerAnimationState::elimination) + 1;
-    std::array<FigureClip, ANIMATION_STATE_COUNT> figure_clips_;
+    std::array<FigureClip, animation_state_count_> figure_clips_;
     labrador::RenderResources::SpriteSheetHandle idle_sheet_;
     labrador::RectangleI idle_body_;
     labrador::RectangleI idle_paint_;
@@ -451,7 +451,7 @@ private:
     // locomotion state draws the idle band, as it shares idle's torso.
     FigurePerson person_;
     const RespawnRedrawPresentation* respawn_look_ = nullptr;
-    std::array<std::vector<labrador::RectangleI>, ANIMATION_STATE_COUNT> face_bands_;
+    std::array<std::vector<labrador::RectangleI>, animation_state_count_> face_bands_;
     // The canvas texels the bands replace, taken with the bands: they are
     // baked art, so a tuned band waits for the next build like they do.
     labrador::RectangleF face_band_texels_;

@@ -49,7 +49,7 @@ namespace match_bot_territory
 		// Weapon::nozzle_pos from the post-move centre; ProjectileJet centres
 		// its collision box on that point.
 		const bool left = aim_faces_left(angle);
-		const labrador::Vector2F tip = view.center + view.velocity / static_cast<float>(SIMULATION_HZ) +
+		const labrador::Vector2F tip = view.center + view.velocity / static_cast<float>(simulation::simulation_hz) +
 			labrador::Vector2F(left ? -tool.details.offset.x : tool.details.offset.x, tool.details.offset.y) +
 			labrador::Vector2F::rotate_vector(tool.details.nozzle_offset +
 				labrador::Vector2F(tool.details.size.x, 0.0f), angle);

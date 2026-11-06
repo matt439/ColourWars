@@ -10,7 +10,7 @@ import hashlib
 import json
 import math
 import re
-import struct
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -20,6 +20,11 @@ from scipy.signal import resample_poly
 
 ROOT = Path(__file__).resolve().parent
 RATE = 44100
+
+# Shared authoring helpers; the game build does not import Python.
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts/audio"))
+from wave_writer import write_wave
+from audio_pipeline import MAX_PEAK
 PITCHES = {"C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5,
            "F#": 6, "G": 7, "G#": 8, "A": 9, "A#": 10, "B": 11}
 
@@ -229,19 +234,6 @@ def accompaniment(session: Session, chord: dict, bar: int, style: str, intensity
                         (0.065 + fill * 0.015) * intensity, -0.18)
 
 
-def wave(path: Path, audio: np.ndarray, loop: bool):
-    data = np.clip(np.rint(audio * 32767), -32768, 32767).astype("<i2")
-    pcm = data.tobytes()
-    fmt = struct.pack("<HHIIHH", 1, 2, RATE, RATE * 4, 4, 16)
-    chunks = b"fmt " + struct.pack("<I", len(fmt)) + fmt
-    if loop:
-        # MIDI unity note 60; inclusive loop end per RIFF smpl specification.
-        smpl = struct.pack("<9I", 0, 0, round(1e9 / RATE), 60, 0, 0, 0, 1, 0)
-        smpl += struct.pack("<6I", 0, 0, 0, len(data) - 1, 0, 0)
-        chunks += b"smpl" + struct.pack("<I", len(smpl)) + smpl
-    chunks += b"data" + struct.pack("<I", len(pcm)) + pcm
-    path.write_bytes(b"RIFF" + struct.pack("<I", len(chunks) + 4) + b"WAVE" + chunks)
-
 
 def finish(session: Session, stem: str, target_rms_db: float) -> dict:
     audio = session.audio.astype(np.float64)
@@ -276,10 +268,10 @@ def finish(session: Session, stem: str, target_rms_db: float) -> dict:
         audio = audio[:min(len(audio), int(audible[-1]) + 45)]
         audio[-44:] *= np.linspace(1, 0, 44)[:, None]
     peak = float(np.max(np.abs(audio)))
-    if peak > 10 ** (-1 / 20):
+    if peak > MAX_PEAK:
         raise ValueError(f"Peak exceeds -1 dBFS: {stem}")
     path = ROOT / "waves" / f"{stem}.wav"
-    wave(path, audio, session.loop)
+    write_wave(path, audio, session.loop, channels=2, loop_before_data=True)
     event_path = ROOT / "scores" / f"{stem}.events.json"
     event_path.write_text(json.dumps({"sample_rate": RATE, "events": session.events}, indent=2) + "\n")
     return {"frames": len(audio), "seconds": round(len(audio) / RATE, 6),
@@ -341,11 +333,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", help="Render exactly one cue id; registry still requires a full render")
     args = parser.parse_args()
+    score = json.loads((ROOT / "score.json").read_text(encoding="utf-8"))
+    known_ids = {cue["id"] for cue in score["tracks"] + score["stings"]}
+    if args.only is not None and args.only not in known_ids:
+        parser.error(f"unknown cue id for --only: {args.only}")
     global BANK
     BANK = bank()
     (ROOT / "scores").mkdir(exist_ok=True)
     (ROOT / "waves").mkdir(exist_ok=True)
-    score = json.loads((ROOT / "score.json").read_text(encoding="utf-8"))
     cues, measurements = [], {}
     for track in score["tracks"]:
         if args.only and args.only != track["id"]:

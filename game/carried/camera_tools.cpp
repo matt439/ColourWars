@@ -18,15 +18,15 @@ namespace colourwars
 		// pixels. Private to the one function that reads them: these tune how the
 		// camera chases a player and configure nothing else (CONVENTIONS,
 		// Constants and enumerators).
-		constexpr float DEFAULT_BORDER_RATIO_LEFT = 0.4f;
-		constexpr float DEFAULT_BORDER_RATIO_TOP = 0.2f;
-		constexpr float DEFAULT_BORDER_RATIO_RIGHT = 0.4f;
-		constexpr float DEFAULT_BORDER_RATIO_BOTTOM = 0.4f;
+		constexpr float default_border_ratio_left = 0.4f;
+		constexpr float default_border_ratio_top = 0.2f;
+		constexpr float default_border_ratio_right = 0.4f;
+		constexpr float default_border_ratio_bottom = 0.4f;
 
-		constexpr float MIN_BORDER_LEFT = 400.0f;
-		constexpr float MIN_BORDER_TOP = 250.0f;
-		constexpr float MIN_BORDER_RIGHT = 400.0f;
-		constexpr float MIN_BORDER_BOTTOM = 250.0f;
+		constexpr float min_border_left = 400.0f;
+		constexpr float min_border_top = 250.0f;
+		constexpr float min_border_right = 400.0f;
+		constexpr float min_border_bottom = 250.0f;
 	}
 
 	Camera CameraTools::calculate_camera(
@@ -100,10 +100,10 @@ namespace colourwars
 	{
 		BorderThickness result =
 		{
-			viewport_size.x * DEFAULT_BORDER_RATIO_LEFT,
-			viewport_size.y * DEFAULT_BORDER_RATIO_TOP,
-			viewport_size.x * DEFAULT_BORDER_RATIO_RIGHT,
-			viewport_size.y * DEFAULT_BORDER_RATIO_BOTTOM
+			viewport_size.x * default_border_ratio_left,
+			viewport_size.y * default_border_ratio_top,
+			viewport_size.x * default_border_ratio_right,
+			viewport_size.y * default_border_ratio_bottom
 		};
 
 		// Half the viewport is a hard geometric limit and the pixel floor is a
@@ -122,13 +122,13 @@ namespace colourwars
 		// 250 against a ceiling of 180, so a floor that won would put top_edge
 		// 140 px *below* bottom_edge, and a motionless player would satisfy
 		// both branches in turn, every frame.
-		result.left = std::min(std::max(result.left, MIN_BORDER_LEFT),
+		result.left = std::min(std::max(result.left, min_border_left),
 			viewport_size.x / 2.0f);
-		result.right = std::min(std::max(result.right, MIN_BORDER_RIGHT),
+		result.right = std::min(std::max(result.right, min_border_right),
 			viewport_size.x / 2.0f);
-		result.top = std::min(std::max(result.top, MIN_BORDER_TOP),
+		result.top = std::min(std::max(result.top, min_border_top),
 			viewport_size.y / 2.0f);
-		result.bottom = std::min(std::max(result.bottom, MIN_BORDER_BOTTOM),
+		result.bottom = std::min(std::max(result.bottom, min_border_bottom),
 			viewport_size.y / 2.0f);
 
 		return result;

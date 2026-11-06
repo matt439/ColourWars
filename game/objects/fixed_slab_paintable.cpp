@@ -48,7 +48,7 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
         render_resources, CollisionObjectType::structure_fixed_slab),
     geometry_(spec), paint_(checked_paint(paint)), team_colours_(team_colours),
     splash_clips_(PaintSplashClips::resolve(*this->paint_, *render_resources)),
-    terrain_sheet_(render_resources->resolve_sprite_sheet(TerrainMaterial::SHEET_NAME))
+    terrain_sheet_(render_resources->resolve_sprite_sheet(TerrainMaterial::sheet_name))
 {
     // Sound batching remains Level-owned, exactly as for the flat structures.
     // This fixed slice has no separate gravity runoff policy for sloped faces.
@@ -182,8 +182,8 @@ RectangleF FixedSlabPaintable::cull_bounds(float units_per_pixel) const
 void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
-    if (projectile.layer() != collision_layers::PROJECTILE_TEAM_A &&
-        projectile.layer() != collision_layers::PROJECTILE_TEAM_B) { return; }
+    if (projectile.layer() != collision_layers::projectile_team_a &&
+        projectile.layer() != collision_layers::projectile_team_b) { return; }
     if (projectile.shape()->shape_type() != ShapeType::rectangle)
     { throw std::invalid_argument("Fixed slab paint currently requires rectangular projectile footprints"); }
     const PlayerTeam team = projectile.team();

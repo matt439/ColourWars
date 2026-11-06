@@ -3,7 +3,7 @@ $shoulderSummary=Get-Content -LiteralPath (Join-Path $captures 'turbulence-shoul
 $shoulderRows=@(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-shoulder.csv'))
 $shoulderCounts=[ordered]@{full_frames=25;native_crops=61;csv_rows=61;readbacks=51;level_builds=8;initial_placements=20}
 $shoulderKeys=@($shoulderCounts.Keys)+@('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','trial_bytes_unchanged','human_acceptance')
-if ((($shoulderSummary.PSObject.Properties.Name|Sort-Object)-join '|') -cne (($shoulderKeys|Sort-Object)-join '|') -or
+if ((-not (Test-PainterKeys $shoulderSummary $shoulderKeys)) -or
     $shoulderSummary.outcome -cne 'passed' -or $shoulderSummary.scope -cne 'turbulence-shoulder-only' -or
     $shoulderSummary.trial_bytes_unchanged -isnot [bool] -or -not $shoulderSummary.trial_bytes_unchanged -or
     $shoulderSummary.human_acceptance -isnot [bool] -or $shoulderSummary.human_acceptance -or -not $result.trial_source.unchanged) {
@@ -11,12 +11,7 @@ if ((($shoulderSummary.PSObject.Properties.Name|Sort-Object)-join '|') -cne (($s
 }
 foreach($key in $shoulderCounts.Keys){if(($shoulderSummary.$key -isnot [int] -and $shoulderSummary.$key -isnot [long]) -or
     $shoulderSummary.$key -ne $shoulderCounts[$key]){throw "Shoulder native bounded count differs: $key"}}
-function Shoulder-Number([object]$Value,[string]$Label){
-    $number=0.0
-    if(-not [double]::TryParse([string]$Value,[Globalization.NumberStyles]::Float,[Globalization.CultureInfo]::InvariantCulture,[ref]$number) -or
-        [double]::IsNaN($number) -or [double]::IsInfinity($number)){throw "Nonfinite/invalid shoulder metric: $Label"}
-    return $number
-}
+
 $shoulderStage=Get-Content -LiteralPath $trialResolved -Raw|ConvertFrom-Json
 $shoulderPresentation=Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw|ConvertFrom-Json
 $shoulderTuning=Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json') -Raw|ConvertFrom-Json
@@ -43,12 +38,12 @@ for($side=0;$side -lt 2;++$side){
         ($side -eq 1 -and ($cross.x+$cross.width -ne $left -or $upper.x -ne $left+160))){throw 'Shoulder triangle does not join its original flat supports.'}
     $shoulderTriangles+=,$triangle;$shoulderShoes+=,$shoe.rectangle
 }
-$shoulderUpdates=Shoulder-Number $shoulderSummary.level_updates 'updates';$shoulderHeavy=Shoulder-Number $shoulderSummary.heavy_initial_fraction_min 'heavy fraction'
+$shoulderUpdates=ConvertTo-PainterFinite $shoulderSummary.level_updates 'updates';$shoulderHeavy=ConvertTo-PainterFinite $shoulderSummary.heavy_initial_fraction_min 'heavy fraction'
 $shoulderPaintables=@($shoulderStage.collision_objects|Where-Object{$_.type -ceq 'StructurePaintable'}).Count
 if($shoulderUpdates -le 0 -or $shoulderUpdates -gt 6000 -or $shoulderUpdates -ne [Math]::Truncate($shoulderUpdates) -or
     $shoulderSummary.controlled_heavy_contacts -ne 4*$shoulderPaintables -or $shoulderHeavy -le 0.99 -or $shoulderHeavy -gt 1){throw 'Shoulder update/controlled-paint budget differs.'}
 $shoulderColumns='capture,kind,phase,paint,players,view,input_slot,actor_role,scene_views,scene_objects,moving_owners,moving_shadows,camera_source,player_x,player_y,player_width,player_height,centre_x,feet_y,velocity_x,velocity_y,move_state,supported,carrier_id,expected_feet,triangle_x1,triangle_y1,triangle_x2,triangle_y2,triangle_x3,triangle_y3,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,ramp_x,ramp_y,ramp_width,ramp_height,ramp_visible,flat_x,flat_y,flat_width,flat_height,flat_visible,shoe_x,shoe_y,shoe_width,shoe_height,shoe_visible,frozen_pixels,public_state,full_paint_owner_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
-if($shoulderRows.Count -ne 61 -or ($shoulderRows[0].PSObject.Properties.Name -join ',') -cne $shoulderColumns){throw 'Shoulder CSV schema/count differs.'}
+if($shoulderRows.Count -ne 61 -or (-not (Test-PainterCsvColumns $shoulderRows ($shoulderColumns.Split(','))))){throw 'Shoulder CSV schema/count differs.'}
 $shoulderExpected=@{};$shoulderSlots=@(3,1,2,0)
 foreach($count in 1..4){foreach($paint in @('clean','heavy')){foreach($phase in @('before-descent','mid-ramp-stop','upper-flat-stop')){
     $stem="hidden-inspection-turbulence-shoulder-$($count)p-$paint-$phase-720p"
@@ -78,9 +73,10 @@ foreach($row in $shoulderRows){
     $n=@{}
     foreach($metric in @('player_x','player_y','player_width','player_height','centre_x','feet_y','velocity_x','velocity_y','expected_feet',
         'triangle_x1','triangle_y1','triangle_x2','triangle_y2','triangle_x3','triangle_y3','camera_x','camera_y','camera_scale','owned_fraction',
-        'ramp_x','ramp_y','ramp_width','ramp_height','flat_x','flat_y','flat_width','flat_height','shoe_x','shoe_y','shoe_width','shoe_height')){$n[$metric]=Shoulder-Number $row.$metric "$key/$metric"}
+        'ramp_x','ramp_y','ramp_width','ramp_height','flat_x','flat_y','flat_width','flat_height','shoe_x','shoe_y','shoe_width','shoe_height')){$n[$metric]=ConvertTo-PainterFinite $row.$metric "$key/$metric"}
     foreach($metric in @('move_state','supported','pane_x','pane_y','pane_width','pane_height','crop_x','crop_y','crop_width','crop_height')){
-        $parsed=0;if(-not [int]::TryParse($row.$metric,[ref]$parsed) -or ($metric -cne 'move_state' -and $parsed -lt 0)){throw "Invalid shoulder integer $key/$metric"};$n[$metric]=$parsed
+        $parsed = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if (($metric -cne 'move_state' -and $parsed -lt 0)) {throw "Invalid shoulder integer $key/$metric"};$n[$metric]=$parsed
     }
     if($n.camera_scale -le 0 -or $n.pane_width -le 0 -or $n.pane_height -le 0 -or $n.crop_width -le 0 -or $n.crop_height -le 0 -or
         ($row.paint -ceq 'clean' -and $n.owned_fraction -ne 0) -or ($row.paint -ceq 'heavy' -and ($n.owned_fraction -le 0.99 -or $n.owned_fraction -gt 1))){throw "Shoulder camera/held-paint bounds differ: $key"}
@@ -149,10 +145,7 @@ if ($shoulderDimensions.Count -ne 86 -or $shoulderFiles.Count -ne 86 -or (($shou
 $shoulderHeaderLengths=@{}; $shoulderPpmBytes=0L
 foreach ($file in $shoulderFiles) {
     $size=$shoulderDimensions[$file.Name]; $header="P6`n$($size[0]) $($size[1])`n255`n"; $headerBytes=[Text.Encoding]::ASCII.GetByteCount($header)
-    $actual=@(Get-Content -LiteralPath $file.FullName -TotalCount 3)
-    if ($file.Length -ne $headerBytes+[long]$size[0]*$size[1]*3 -or $actual.Count -ne 3 -or $actual[0] -cne 'P6' -or $actual[1] -cne "$($size[0]) $($size[1])" -or $actual[2] -cne '255') {
-        throw "Shoulder PPM dimensions/header/RGB payload differs: $($file.Name)"
-    }
+    Assert-PainterPpm -Path $file.FullName -Header $header
     $shoulderHeaderLengths[$file.Name]=$headerBytes; $shoulderPpmBytes += $file.Length
 }
 foreach ($group in $shoulderRows | Group-Object capture) {

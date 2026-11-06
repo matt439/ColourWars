@@ -245,7 +245,7 @@ target_include_directories(colourwars_game PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
 
-# save.cpp uses RapidJSON to write saves; Labrador does not expose it.
+# Save serialization and Debug JSON spans use the vendored RapidJSON headers.
 # SYSTEM keeps third-party headers outside the game's /W4 /WX checks.
 target_include_directories(colourwars_game SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../external/rapidjson/include"
@@ -344,7 +344,7 @@ file(CONFIGURE OUTPUT "${PROJECT_BINARY_DIR}/generated/game/version.rc.h"
 target_include_directories(colourwars_game PUBLIC "${PROJECT_BINARY_DIR}/generated")
 
 # Stage the same reviewed assets as Release, pruning stale files only inside
-# the build's four owned content directories. Root DLLs and other outputs stay.
+# the build's five owned content directories. Root DLLs and other outputs stay.
 # Run every build so asset-only edits/removals need no executable relink.
 add_custom_target(colourwars_content ALL
     COMMAND "${CMAKE_COMMAND}"
