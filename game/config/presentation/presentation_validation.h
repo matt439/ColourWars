@@ -112,7 +112,7 @@ struct Presentation::Validation
 	void validate_end_actions() const;
 	void validate_end_headings() const;
 	void validate_end_session_labels() const;
-	// presentation_validation_settings.cpp: Controls, Sticks, Keyboard Jump,
+	// presentation_validation_settings.cpp: Controls, Sticks, Keyboard Keys,
 	// Pad Buttons and Profiles.
 	void validate_controls_actions() const;
 	void validate_sticks_actions() const;

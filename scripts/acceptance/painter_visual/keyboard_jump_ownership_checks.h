@@ -46,7 +46,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
             this->app.keyboard()->poll(); this->app.keyboard()->poll();
         }
     } restore{ stack, app };
-    int updates = 0, cases = 0; KeyboardJumpMenu* page = nullptr;
+    int updates = 0, cases = 0; KeyboardKeysMenu* page = nullptr;
     std::ofstream records(output / "keyboard-jump-ownership.csv");
     records << "case,capture_active,pending,active,stack_depth,updates,save_unchanged\n";
     const auto tick = [&](float elapsed = 0.0f)
@@ -80,7 +80,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
             { app.keyboard()->on_key_up(static_cast<Key>(key)); }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
-        auto owned = std::make_unique<KeyboardJumpMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
+        auto owned = std::make_unique<KeyboardKeysMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
         tick();
         // Jump is the Keyboard Keys page's third row, after Move left and Move right.
         for (int row = 0; row < 2; ++row)

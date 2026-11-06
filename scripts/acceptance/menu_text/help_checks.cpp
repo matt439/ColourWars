@@ -121,7 +121,7 @@ namespace menu_text_acceptance
             catch (const std::invalid_argument&) { rejected = true; }
             require(rejected, "Public controls-help formatter accepted a missing, duplicate or malformed jump token");
         }
-        const auto keys = controls_text::jump_keys();
+        const auto keys = controls_text::keyboard_keys();
         require(keys.size() == std::size(jump_labels), "Controls formatting label domain changed from A-Z and Space");
         const auto& controls = single_line_blocks.controls_settings();
         const auto font = world.render.resolve_sprite_font(controls.help_font);

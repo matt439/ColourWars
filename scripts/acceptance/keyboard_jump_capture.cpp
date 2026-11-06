@@ -1,5 +1,5 @@
 #include "game/pch.h"
-#include "game/states/keyboard_jump_capture.h"
+#include "game/states/keyboard_key_capture.h"
 #include "game/states/menu_input.h"
 #include "game/input/input_bindings.h"
 #include "game/input/input_slots.h"
@@ -40,8 +40,8 @@ using namespace labrador;
 
 namespace
 {
-    using Phase = KeyboardJumpCapture::Phase;
-    using Rejection = KeyboardJumpCapture::Rejection;
+    using Phase = KeyboardKeyCapture::Phase;
+    using Rejection = KeyboardKeyCapture::Rejection;
 
     using acceptance::require;
 
@@ -59,7 +59,7 @@ namespace
     struct CaptureHarness
     {
         Keyboard keyboard;
-        KeyboardJumpCapture capture;
+        KeyboardKeyCapture capture;
 
         CaptureHarness()
         {
@@ -116,7 +116,7 @@ namespace
 
     void domain_and_rejection()
     {
-        const auto domain = keyboard_jump_keys();
+        const auto domain = keyboard_keys();
         require(domain == binding_keys, "Public capture domain no longer names exactly A-Z and Space");
         size_t accepted = 0;
         for (const Key key : domain)
@@ -452,7 +452,7 @@ namespace
     {
         Keyboard keyboard;
         Mouse mouse;
-        KeyboardJumpCapture capture;
+        KeyboardKeyCapture capture;
 
         DesktopHarness(const InputBindings& pending, KeyboardAction action)
         {

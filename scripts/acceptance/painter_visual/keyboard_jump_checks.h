@@ -94,7 +94,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     // The page's rows show each pending control, so its help is the static
     // authored block plus the developer-bind warning.
-    const auto help_copy = [&](const KeyboardJumpMenuText& copy, Key, Key, bool warning = false)
+    const auto help_copy = [&](const KeyboardKeysMenuText& copy, Key, Key, bool warning = false)
     {
         std::wstring result = copy.help;
         if (warning) { result += L'\n' + copy.debug_collision; }

@@ -107,32 +107,32 @@ namespace menu_text_acceptance
         { "aim_cutoff", L"Right stick: radial cutoff", &MenuHelpText::aim_cutoff, false }
     };
     struct KeyboardJumpText {
-        const char* key; const wchar_t* text; std::wstring KeyboardJumpMenuText::* field;
+        const char* key; const wchar_t* text; std::wstring KeyboardKeysMenuText::* field;
         bool multiline = false; bool key_template = false;
     };
     constexpr KeyboardJumpText keyboard_jump_text[]{
-        { "heading", L"Keyboard Keys", &KeyboardJumpMenuText::heading },
-        { "move_left", L"Move left", &KeyboardJumpMenuText::move_left },
-        { "move_right", L"Move right", &KeyboardJumpMenuText::move_right },
-        { "jump", L"Jump", &KeyboardJumpMenuText::jump },
-        { "drop", L"Drop", &KeyboardJumpMenuText::drop },
-        { "shoot", L"Shoot", &KeyboardJumpMenuText::shoot },
-        { "pause", L"Pause (also)", &KeyboardJumpMenuText::pause },
-        { "reset", L"Reset all keys", &KeyboardJumpMenuText::reset },
+        { "heading", L"Keyboard Keys", &KeyboardKeysMenuText::heading },
+        { "move_left", L"Move left", &KeyboardKeysMenuText::move_left },
+        { "move_right", L"Move right", &KeyboardKeysMenuText::move_right },
+        { "jump", L"Jump", &KeyboardKeysMenuText::jump },
+        { "drop", L"Drop", &KeyboardKeysMenuText::drop },
+        { "shoot", L"Shoot", &KeyboardKeysMenuText::shoot },
+        { "pause", L"Pause (also)", &KeyboardKeysMenuText::pause },
+        { "reset", L"Reset all keys", &KeyboardKeysMenuText::reset },
         { "help", L"Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot may also take a mouse button.\n"
             L"One key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\n"
             L"Apply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
-            &KeyboardJumpMenuText::help, true },
-        { "pending_status", L"Apply to activate these keys.", &KeyboardJumpMenuText::pending_status },
-        { "saved_status", L"Keyboard keys applied and saved.", &KeyboardJumpMenuText::saved_status },
-        { "capture_wait_neutral", L"Release all keys before choosing.", &KeyboardJumpMenuText::capture_wait_neutral },
-        { "capture_ready", L"Press one key. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready },
-        { "capture_ready_mouse", L"Press a key or click. Esc / pad Back cancels.", &KeyboardJumpMenuText::capture_ready_mouse },
-        { "capture_release", L"Release {key} to keep this choice.", &KeyboardJumpMenuText::capture_release, false, true },
-        { "capture_rejected", L"Use one A-Z key or Space. Try again.", &KeyboardJumpMenuText::capture_rejected },
-        { "capture_conflict", L"That key already does another action.", &KeyboardJumpMenuText::capture_conflict },
-        { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardJumpMenuText::capture_cancelled },
-        { "debug_collision", L"A chosen key also has a developer bind.", &KeyboardJumpMenuText::debug_collision }
+            &KeyboardKeysMenuText::help, true },
+        { "pending_status", L"Apply to activate these keys.", &KeyboardKeysMenuText::pending_status },
+        { "saved_status", L"Keyboard keys applied and saved.", &KeyboardKeysMenuText::saved_status },
+        { "capture_wait_neutral", L"Release all keys before choosing.", &KeyboardKeysMenuText::capture_wait_neutral },
+        { "capture_ready", L"Press one key. Esc / pad Back cancels.", &KeyboardKeysMenuText::capture_ready },
+        { "capture_ready_mouse", L"Press a key or click. Esc / pad Back cancels.", &KeyboardKeysMenuText::capture_ready_mouse },
+        { "capture_release", L"Release {key} to keep this choice.", &KeyboardKeysMenuText::capture_release, false, true },
+        { "capture_rejected", L"Use one A-Z key or Space. Try again.", &KeyboardKeysMenuText::capture_rejected },
+        { "capture_conflict", L"That key already does another action.", &KeyboardKeysMenuText::capture_conflict },
+        { "capture_cancelled", L"Gesture cancelled; pending key unchanged.", &KeyboardKeysMenuText::capture_cancelled },
+        { "debug_collision", L"A chosen key also has a developer bind.", &KeyboardKeysMenuText::debug_collision }
     };
     struct PadButtonsText {
         const char* key; const wchar_t* text; std::wstring PadButtonsMenuText::* field;

@@ -162,7 +162,7 @@ void validate_controls_reminders(const Presentation& presentation, const RenderR
 		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
 		{ throw std::runtime_error(where + " requires finite positive reminder bounds."); }
 	};
-	for (const Key key : controls_text::jump_keys())
+	for (const Key key : controls_text::keyboard_keys())
 	{
 		check("keyboard_reminder", controls_text::keyboard_controls_reminder(copy, key));
 	}
@@ -173,7 +173,7 @@ void validate_controls_reminders(const Presentation& presentation, const RenderR
 		const KeyboardAction action = static_cast<KeyboardAction>(index);
 		std::vector<DesktopControl> choices;
 		if (action == KeyboardAction::pause) { choices.push_back({}); }
-		for (const Key key : controls_text::jump_keys()) { choices.push_back({ key, MouseButton::none }); }
+		for (const Key key : controls_text::keyboard_keys()) { choices.push_back({ key, MouseButton::none }); }
 		if (action == KeyboardAction::shoot)
 		{
 			for (const MouseButton button : shoot_mouse_buttons()) { choices.push_back({ Key::none, button }); }

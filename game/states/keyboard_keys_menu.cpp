@@ -1,22 +1,22 @@
 #include "game/pch.h"
-#include "game/states/keyboard_jump_menu.h"
+#include "game/states/keyboard_keys_menu.h"
 #include "game/input/controls_text.h"
 #include <algorithm>
 
 using namespace labrador;
 
-KeyboardJumpMenu::KeyboardJumpMenu(MenuContext* context, int player) :
+KeyboardKeysMenu::KeyboardKeysMenu(MenuContext* context, int player) :
 	SettingsPanelPage(context, player),
 	capture_input_(context->data()->gamepads(), context->data()->keyboard(), context->data()->tuning())
 {
 }
 
-KeyboardJumpMenu::~KeyboardJumpMenu()
+KeyboardKeysMenu::~KeyboardKeysMenu()
 {
 	if (this->capture_active_) { this->data()->debug().end_keyboard_capture(); }
 }
 
-void KeyboardJumpMenu::init()
+void KeyboardKeysMenu::init()
 {
 	this->input()->reset_actions();
 	this->selection_ = this->settings_session()->input_bindings();
@@ -71,14 +71,14 @@ void KeyboardJumpMenu::init()
 	this->set_status(copy.pending_status);
 }
 
-void KeyboardJumpMenu::set_status(const std::wstring& value, bool warning)
+void KeyboardKeysMenu::set_status(const std::wstring& value, bool warning)
 {
 	this->status_->set_text(value);
 	this->status_->set_colour(warning ? this->warning_ink_ : this->status_ink_);
 	fit_text(*this->status_, this->status_limit_);
 }
 
-bool KeyboardJumpMenu::debug_collision() const
+bool KeyboardKeysMenu::debug_collision() const
 {
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
@@ -88,7 +88,7 @@ bool KeyboardJumpMenu::debug_collision() const
 	return false;
 }
 
-void KeyboardJumpMenu::refresh_values()
+void KeyboardKeysMenu::refresh_values()
 {
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
@@ -108,12 +108,12 @@ void KeyboardJumpMenu::refresh_values()
 	this->shown_collision_ = collision;
 }
 
-void KeyboardJumpMenu::set_actions_enabled(bool enabled)
+void KeyboardKeysMenu::set_actions_enabled(bool enabled)
 {
 	for (UiWidget* widget : this->actions_) { this->focus_.set_enabled(widget, enabled); }
 }
 
-void KeyboardJumpMenu::begin_capture(KeyboardAction action)
+void KeyboardKeysMenu::begin_capture(KeyboardAction action)
 {
 	this->input()->reset_actions();
 	this->capture_input_.reset_actions();
@@ -127,7 +127,7 @@ void KeyboardJumpMenu::begin_capture(KeyboardAction action)
 	this->refresh_capture_status();
 }
 
-bool KeyboardJumpMenu::capture_pad_back()
+bool KeyboardKeysMenu::capture_pad_back()
 {
 	std::vector<ProcessedMenuInput> inputs = this->capture_input_.menu_inputs();
 	for (size_t slot = 0; slot < inputs.size(); ++slot)
@@ -149,31 +149,31 @@ bool KeyboardJumpMenu::capture_pad_back()
 	});
 }
 
-void KeyboardJumpMenu::refresh_capture_status()
+void KeyboardKeysMenu::refresh_capture_status()
 {
 	const auto& copy = this->text().keyboard_jump;
-	if (this->capture_.phase() == KeyboardJumpCapture::Phase::holding)
+	if (this->capture_.phase() == KeyboardKeyCapture::Phase::holding)
 	{
 		this->set_status(copy.release_key(controls_text::desktop_label(copy.labels, this->capture_.candidate_control())));
 	}
-	else if (this->capture_.phase() == KeyboardJumpCapture::Phase::cancelling)
+	else if (this->capture_.phase() == KeyboardKeyCapture::Phase::cancelling)
 	{
 		this->set_status(copy.capture_wait_neutral);
 	}
-	else if (this->capture_.rejection() != KeyboardJumpCapture::Rejection::none)
+	else if (this->capture_.rejection() != KeyboardKeyCapture::Rejection::none)
 	{
-		this->set_status(this->capture_.rejection() == KeyboardJumpCapture::Rejection::conflict ?
+		this->set_status(this->capture_.rejection() == KeyboardKeyCapture::Rejection::conflict ?
 			copy.capture_conflict : copy.capture_rejected, true);
 	}
 	else if (this->capture_.focus_cancelled()) { this->set_status(copy.capture_cancelled, true); }
-	else if (this->capture_.phase() == KeyboardJumpCapture::Phase::ready)
+	else if (this->capture_.phase() == KeyboardKeyCapture::Phase::ready)
 	{
 		this->set_status(this->capture_.accepts_mouse() ? copy.capture_ready_mouse : copy.capture_ready);
 	}
 	else { this->set_status(copy.capture_wait_neutral); }
 }
 
-void KeyboardJumpMenu::finish_capture(bool accepted)
+void KeyboardKeysMenu::finish_capture(bool accepted)
 {
 	if (accepted)
 	{
@@ -192,18 +192,18 @@ void KeyboardJumpMenu::finish_capture(bool accepted)
 		this->text().keyboard_jump.capture_cancelled);
 }
 
-void KeyboardJumpMenu::update_capture()
+void KeyboardKeysMenu::update_capture()
 {
 	const Keyboard& keyboard = *this->data()->keyboard();
 	const Mouse& mouse = *this->data()->mouse();
 	this->capture_.update(keyboard.state(), keyboard.previous_state(), mouse.state(), mouse.previous_state(),
 		this->capture_pad_back());
-	if (this->capture_.phase() == KeyboardJumpCapture::Phase::complete) { this->finish_capture(true); }
-	else if (this->capture_.phase() == KeyboardJumpCapture::Phase::cancelled) { this->finish_capture(false); }
+	if (this->capture_.phase() == KeyboardKeyCapture::Phase::complete) { this->finish_capture(true); }
+	else if (this->capture_.phase() == KeyboardKeyCapture::Phase::cancelled) { this->finish_capture(false); }
 	else { this->refresh_capture_status(); }
 }
 
-void KeyboardJumpMenu::apply()
+void KeyboardKeysMenu::apply()
 {
 	// Merge only the keyboard choices, so newer pad profiles survive.
 	InputBindings current = this->settings_session()->input_bindings();
@@ -219,7 +219,7 @@ void KeyboardJumpMenu::apply()
 		this->text().status.active_save_failed, !saved);
 }
 
-void KeyboardJumpMenu::reset_pending()
+void KeyboardKeysMenu::reset_pending()
 {
 	this->selection_ = InputBindings{};
 	this->refresh_values();
@@ -227,13 +227,13 @@ void KeyboardJumpMenu::reset_pending()
 	this->set_status(this->text().keyboard_jump.pending_status);
 }
 
-bool KeyboardJumpMenu::debug_dismiss(bool leaving_match)
+bool KeyboardKeysMenu::debug_dismiss(bool leaving_match)
 {
 	if (this->capture_active_) { return false; }
 	return SettingsPanelPage::debug_dismiss(leaving_match);
 }
 
-void KeyboardJumpMenu::on_suspend()
+void KeyboardKeysMenu::on_suspend()
 {
 	SettingsPanelPage::on_suspend();
 	this->input()->reset_actions();
@@ -245,14 +245,14 @@ void KeyboardJumpMenu::on_suspend()
 	}
 }
 
-void KeyboardJumpMenu::on_resume()
+void KeyboardKeysMenu::on_resume()
 {
 	SettingsPanelPage::on_resume();
 	this->input()->reset_actions();
 	this->refresh_values();
 }
 
-void KeyboardJumpMenu::on_deactivated()
+void KeyboardKeysMenu::on_deactivated()
 {
 	SettingsPanelPage::on_deactivated();
 	this->input()->reset_actions();
@@ -264,7 +264,7 @@ void KeyboardJumpMenu::on_deactivated()
 	}
 }
 
-void KeyboardJumpMenu::update_page(float /*dt*/)
+void KeyboardKeysMenu::update_page(float /*dt*/)
 {
 	if (!this->context()->active()) { return; }
 	if (this->capture_active_) { this->update_capture(); return; }

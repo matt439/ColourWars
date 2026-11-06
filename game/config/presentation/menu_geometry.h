@@ -22,7 +22,7 @@ namespace menu_consts
 
 // The value rows of the two settings pages, named once for the pages that
 // place them and the validator that fit-checks them. Controls opens Sticks,
-// Keyboard Jump, Pad Buttons and Profiles from rows 0-3; Apply and Back follow
+// Keyboard Keys, Pad Buttons and Profiles from rows 0-3; Apply and Back follow
 // the value rows on both pages.
 namespace settings_rows
 {

@@ -153,9 +153,9 @@ namespace
     }
 }
 
-std::array<labrador::Key, 27> controls_text::jump_keys()
+std::array<labrador::Key, 27> controls_text::keyboard_keys()
 {
-    return keyboard_jump_keys();
+    return ::keyboard_keys();
 }
 
 std::wstring controls_text::key_label(const ControlLabels& labels, labrador::Key key)
@@ -251,7 +251,7 @@ std::wstring controls_text::pad_controls_reminder(const ControlsCopy& copy, cons
 
 std::wstring controls_text::key_line(const ControlLabels& labels, std::wstring_view authored, std::wstring_view label)
 {
-    const auto keys = jump_keys();
+    const auto keys = keyboard_keys();
     const auto buttons = shoot_mouse_buttons();
     if (std::none_of(keys.begin(), keys.end(), [&](labrador::Key key) { return key_label(labels, key) == label; }) &&
         std::none_of(buttons.begin(), buttons.end(), [&](labrador::MouseButton button)
@@ -264,7 +264,7 @@ std::vector<std::wstring> controls_text::keyboard_control_labels(const ControlLa
 {
     std::vector<std::wstring> result;
     if (action == KeyboardAction::pause) { result.push_back(labels.none); }
-    for (const labrador::Key key : jump_keys()) { result.push_back(key_label(labels, key)); }
+    for (const labrador::Key key : keyboard_keys()) { result.push_back(key_label(labels, key)); }
     if (action == KeyboardAction::shoot)
     {
         for (const labrador::MouseButton button : shoot_mouse_buttons())

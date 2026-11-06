@@ -250,7 +250,7 @@ as one graph. The shapes that occur:
 [GameMenu, MainMenuOptions, MainMenuDisplayConfirmation]
 [GameMenu, MainMenuOptions, ControlsSettingsMenu]
 [GameMenu, MainMenuOptions, ControlsSettingsMenu,
-    StickSettingsMenu | KeyboardJumpMenu | PadButtonsMenu | ProfilesMenu]
+    StickSettingsMenu | KeyboardKeysMenu | PadButtonsMenu | ProfilesMenu]
 [GameMenu, GameLevel]
 [GameMenu, GameLevel, PauseMenuInitial | PauseMenuConfirmation]
 [GameMenu, GameLevel, PauseMenuInitial, MainMenuOptions, ...]   the Options shapes above

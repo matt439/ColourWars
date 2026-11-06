@@ -154,7 +154,7 @@ namespace input_bindings_acceptance
         InputBindings{}.validate(); require_mapping(default_action_bindings(), Key::space);
         for (const auto& expected : expected_keys)
         {
-            require(keyboard_jump_key_supported(expected.key) && input_key_name(expected.key) == expected.name &&
+            require(keyboard_key_supported(expected.key) && input_key_name(expected.key) == expected.name &&
                 input_key_legend(expected.key) == expected.legend && input_key_from_name(expected.name) == expected.key,
                 "Physical Jump key name/legend/domain differs from its explicit 27-entry contract");
             require(input_key_name(expected.key) == labrador::key_name(expected.key) &&
@@ -202,7 +202,7 @@ namespace input_bindings_acceptance
             const Key key = static_cast<Key>(value);
             const bool supported = std::any_of(expected_keys.begin(), expected_keys.end(),
                 [key](const ExpectedKey& expected) { return expected.key == key; });
-            require(keyboard_jump_key_supported(key) == supported, "An unlisted engine key entered the bounded Jump domain");
+            require(keyboard_key_supported(key) == supported, "An unlisted engine key entered the bounded keyboard key domain");
             if (!supported)
             {
                 rejects([&] { input_key_name(key); }, "Out-of-domain key acquired a save name");

@@ -10,7 +10,7 @@ using namespace labrador;
 
 namespace
 {
-	// The save token is labrador::key_name; which keys Jump may take, and the
+	// The save token is labrador::key_name; which keys an action may take, and the
 	// letter printed on each, are this game's. Space has no legend: its word is
 	// the locale's (menu_text.controls.labels.space).
 	struct KeyName
@@ -121,12 +121,12 @@ namespace
 	}
 }
 
-bool keyboard_jump_key_supported(Key key)
+bool keyboard_key_supported(Key key)
 {
 	return std::any_of(key_names.begin(), key_names.end(), [key](const KeyName& value) { return value.key == key; });
 }
 
-std::array<Key, 27> keyboard_jump_keys()
+std::array<Key, 27> keyboard_keys()
 {
 	std::array<Key, 27> result{};
 	for (size_t index = 0; index < key_names.size(); ++index) { result[index] = key_names[index].key; }
@@ -157,7 +157,7 @@ bool keyboard_control_supported(KeyboardAction action, const DesktopControl& con
 	{
 		return action == KeyboardAction::shoot && mouse_entry(control.button) != nullptr;
 	}
-	return keyboard_jump_key_supported(control.key);
+	return keyboard_key_supported(control.key);
 }
 
 std::string_view desktop_control_name(const DesktopControl& control)
@@ -256,20 +256,20 @@ bool same_keyboard(const InputBindings& left, const InputBindings& right)
 
 std::string_view input_key_name(Key key)
 {
-	if (!keyboard_jump_key_supported(key)) { throw std::invalid_argument("Keyboard Jump key must be A-Z or Space"); }
+	if (!keyboard_key_supported(key)) { throw std::invalid_argument("Keyboard key must be A-Z or Space"); }
 	return labrador::key_name(key);
 }
 
 std::wstring_view input_key_legend(Key key)
 {
 	for (const auto& value : key_names) { if (value.key == key) { return value.legend; } }
-	throw std::invalid_argument("Keyboard Jump key must be A-Z or Space");
+	throw std::invalid_argument("Keyboard key must be A-Z or Space");
 }
 
 Key input_key_from_name(std::string_view name)
 {
 	const std::optional<Key> key = labrador::key_from_name(name);
-	if (!key || !keyboard_jump_key_supported(*key)) { throw std::invalid_argument("Unknown keyboard Jump key name"); }
+	if (!key || !keyboard_key_supported(*key)) { throw std::invalid_argument("Unknown keyboard key name"); }
 	return *key;
 }
 
@@ -342,7 +342,7 @@ void PadProfile::validate() const
 
 void InputBindings::validate_keyboard() const
 {
-	if (!keyboard_jump_key_supported(this->keyboard_jump))
+	if (!keyboard_key_supported(this->keyboard_jump))
 	{
 		throw std::invalid_argument("Keyboard Jump key must be A-Z or Space");
 	}

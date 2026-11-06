@@ -230,7 +230,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     }
     // A real Controls Apply may update shared preferences while display defaults
     // remain pending. Parent Apply must preserve that independently saved edit.
-    // Controls rows: Pad sticks, Keyboard Jump, Pad buttons, Profiles, Music,
+    // Controls rows: Pad sticks, Keyboard Keys, Pad buttons, Profiles, Music,
     // SFX, View shake, Aim marker, Reduce effects, Apply, Back - so View shake
     // is six down and Apply three more.
     device = keyboard; seed(); open(); restore(); go(4); tap(GamepadButton::a); tick();

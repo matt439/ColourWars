@@ -176,7 +176,7 @@ RectangleF Presentation::Validation::padded_back(const Vector2F& position, const
 }
 
 // Phase 3: the Back cards of Options, Controls, Pad Buttons and Sticks, measured
-// together before any status line. Keyboard Jump and Profiles measure theirs
+// together before any status line. Keyboard Keys and Profiles measure theirs
 // with their own status lines.
 Presentation::Validation::StatusBacks Presentation::Validation::status_back_cards(const SetupGeometry& setup) const
 {

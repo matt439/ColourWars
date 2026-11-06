@@ -139,7 +139,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 		controls_help = first_help ? fitted : RectangleF::union_of(controls_help, fitted);
 		first_help = false;
 	};
-	for (const Key key : controls_text::jump_keys())
+	for (const Key key : controls_text::keyboard_keys())
 	{
 		controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, key));
 	}
@@ -151,7 +151,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 		const std::array<MouseButton, 5> buttons = shoot_mouse_buttons();
 		std::vector<DesktopControl> choices;
 		if (action == KeyboardAction::pause) { choices.push_back({}); }
-		for (const Key key : controls_text::jump_keys()) { choices.push_back({ key, MouseButton::none }); }
+		for (const Key key : controls_text::keyboard_keys()) { choices.push_back({ key, MouseButton::none }); }
 		if (action == KeyboardAction::shoot) { for (const MouseButton button : buttons) { choices.push_back({ Key::none, button }); } }
 		for (const DesktopControl& choice : choices)
 		{
@@ -187,7 +187,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 	return controls_help;
 }
 
-// A heading, label, value or action on Keyboard Jump, Pad Buttons or
+// A heading, label, value or action on Keyboard Keys, Pad Buttons or
 // Profiles. A row is fitted uniformly in both axes, to the label column for an
 // OptionRow label or to the width before the help column otherwise, and keeps
 // its focus card on the paper and before the help column.
@@ -213,11 +213,11 @@ RectangleF Presentation::Validation::check_settings_row(const std::string& key, 
 	return RectangleF(position, size);
 }
 
-// Phase 3: Keyboard Jump's heading, rows, values, Reset and help.
+// Phase 3: Keyboard Keys's heading, rows, values, Reset and help.
 void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& help_area) const
 {
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const KeyboardJumpMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
+	const KeyboardKeysMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
 	const auto jump_text = [&](const char* key, const std::wstring& words, const std::string& font, const Vector2F& position, bool row)
 	{
 		return check_settings_row(std::string("menu_text.keyboard_jump.") + key, words, font, position, row);
@@ -367,11 +367,11 @@ void Presentation::Validation::validate_controls_statuses(const RectangleF& cont
 	}
 }
 
-// Phase 3: Keyboard Jump's status lines, clear of its Back card.
+// Phase 3: Keyboard Keys's status lines, clear of its Back card.
 void Presentation::Validation::validate_keyboard_jump_statuses(const RectangleF& help_area) const
 {
 	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const KeyboardJumpMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
+	const KeyboardKeysMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
 	const RectangleF jump_back = padded_back(controls.layout.position + Vector2F(0.0f,
 		controls.layout.spacing.y * static_cast<float>(keyboard_action_count + 2)), controls.item_font, controls.art);
 	const StatusMessage jump_statuses[]{ { "keyboard_jump.pending_status", jump.pending_status }, { "keyboard_jump.saved_status", jump.saved_status },

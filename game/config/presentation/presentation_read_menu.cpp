@@ -671,7 +671,7 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": controls_position and controls_size must fit inside box_size.");
 		}
 
-		// Five settings, Pad Sticks/Keyboard Jump/Pad Buttons/Profiles and Apply/Back share the left
+		// Five settings, Pad Sticks/Keyboard Keys/Pad Buttons/Profiles and Apply/Back share the left
 		// column. Reserve their authored size, focus card and shadow before the help and status text.
 		const Vector2F last_row_bottom = menu.layout.position + menu.layout.size +
 			Vector2F(menu.layout.spacing.x, menu.layout.spacing.y * 10.0f);

@@ -42,7 +42,7 @@
 #include "game/states/display_confirmation.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/stick_settings_menu.h"
-#include "game/states/keyboard_jump_menu.h"
+#include "game/states/keyboard_keys_menu.h"
 #include "game/states/pad_buttons_menu.h"
 #include "game/input/controls_text.h"
 #include "game/objects/stick_response.h"

@@ -1,5 +1,5 @@
 // Actual binding-page navigation uses private snapshots and its own save.
-// Included by the focused scripted-pad painter alongside Keyboard Jump.
+// Included by the focused scripted-pad painter alongside Keyboard Keys.
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
