@@ -209,18 +209,9 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             next_words.*members[index] = L"Saved " + std::to_wstring(index) + L'.';
         }
     }
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(
-        controls_pages ? original.controls_settings().help_font : original.prompt_bar().font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character); require(glyph != nullptr, "Status font lacks printable baseline glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string replacement = controls_pages ? "acceptance_controls_status_no_tilde" : "acceptance_options_status_no_tilde";
-    app.render_resources()->add_font(replacement, std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(replacement), L"~"),
-        "Replacement status font still renders the retained page's old glyph");
+    add_probe_font(*app.render_resources(),
+        controls_pages ? original.controls_settings().help_font : original.prompt_bar().font, replacement);
     Presentation old = original; const_cast<MenuText&>(old.menu_text()).status = old_words;
     Presentation next = original; const_cast<MenuText&>(next.menu_text()).status = next_words;
     // Full-width fitted status messages can occupy the bottom of the help

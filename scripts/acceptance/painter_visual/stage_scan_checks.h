@@ -43,7 +43,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
 {
     const acceptance::IsolatedSave isolated(output / "stage-scan-profile");
     Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = true; });
-    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
+    SettingsSession preferences_session(preferences); const PlaySettings& play = preferences_session.play_settings();
     StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
     catalog.add(read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course"));
     const auto folder_path = output / "stage-scan-profile/ColourWars/stages";

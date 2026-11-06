@@ -271,20 +271,10 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     // original glyphs everywhere except '~'. No existing font or device changes.
     RenderResources& resources = *app.render_resources();
     const FontHandle old_font_handle = resources.resolve_sprite_font(old_footer.font);
-    const Font* source = resources.font(old_font_handle);
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character <= U'~'; ++character)
-    {
-        if (character == U'~') { continue; }
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Menu text font fixture lacks a baseline printable glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string narrow_name = "acceptance_menu_text_without_tilde";
-    resources.add_font(narrow_name, std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    const FontHandle narrow = resources.resolve_sprite_font(narrow_name);
-    require(resources.can_render(old_font_handle, L"OLD~ PROMPT") && !resources.can_render(narrow, L"~"),
-        "Menu text font-rebase fixture did not exclude the old text's glyph");
+    add_probe_font(resources, old_footer.font, narrow_name);
+    require(resources.can_render(old_font_handle, L"OLD~ PROMPT"),
+        "Menu text font-rebase fixture's old font cannot draw the old prompt");
     Presentation next = original;
     auto& next_text = const_cast<MenuText&>(next.menu_text());
     next_text.brand = L"NEW BRAND";

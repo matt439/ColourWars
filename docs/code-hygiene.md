@@ -1875,7 +1875,8 @@ counts are unchanged; one seeding change is noted below.
   `tune_colour_checks.h`.
 - `add_probe_font` builds the probe font that drops '~' and can shift chosen
   glyphs, with `is_digit` and `is_brace`. It replaces the nine shifted copies
-  and the thirteen unshifted copies of the same loop.
+  and the fifteen unshifted copies of the same loop (`menu_text` and
+  `save_status` were ported after review).
 - `CanvasProbeRoot` and `stack_frame` replace the End, Pause and Results
   probe roots and five copies of the stack read-back (`ResumeProbeRoot`, which
   draws nothing, stays). `pixel_bounds`, `pixel_offset` and `srgb_luminance`
@@ -1895,7 +1896,8 @@ counts are unchanged; one seeding change is noted below.
   seeded volumes and comfort switches. Before, the session's next refresh
   undid them. `live_play_settings` is the one named `const_cast` left. It is for
   leaves that flip Reduce effects or a volume under an open page, which the
-  session has no setter for.
+  session has no setter for; `stage_scan`, which only reads them, takes the
+  session's `play_settings()` (fixed after review).
 - `options_reference.h` holds the independent Options page reference that the
   defaults and paused Options leaves had each written. `controls_help_copy`
   and `with_default_keys` hold the Controls help copy that the help,
@@ -1910,8 +1912,9 @@ Left as they are:
 
 - Probe fonts of other shapes: `duration_text`'s font without '+',
   `resolution_text`'s tall '~', the 1-pixel digit shifts in `percentage`,
-  `stage_count` and `stage_summary`, and the copies in `menu_text`,
-  `result_percentage`, `save_status`, `settings_value` and `title_home_text`.
+  `stage_count` and `stage_summary`, `result_percentage`'s 4/2 shift,
+  `title_home_text`'s font that skips missing glyphs and `settings_value`'s
+  tall '~'.
 - `live_play_settings` users, and `stage_preview_background`'s fixture class,
   which seeds through it in its constructor after its session exists. The same
   seeding in `display_awake_lifecycle.cpp`, outside the painter, goes to
@@ -1924,7 +1927,10 @@ passed in both, with both pad readers. On MattPC every focused leaf passed in
 Debug (99, the slab and mover leaves with the shipped trial files) and in
 Release (96, all but the three Debug-only tune leaves), with the pins as they
 were. The plain matrix also passed in both presets. Only
-`-TurbulenceShoulderOnly`, which no change touched, was not run.
+`-TurbulenceShoulderOnly`, which no change touched, was not run. The review fixes
+(`stage_scan`'s read-only play settings, the `menu_text` and `save_status`
+fonts) passed `-StageScanOnly`, `-MenuTextOnly`, `-SettingsMenuOnly` and
+`-ControlsMenuOnly` in both presets.
 
 The row as filed. Add the following to `painter_fixtures.h`:
 
