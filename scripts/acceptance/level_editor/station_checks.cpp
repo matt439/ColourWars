@@ -2,6 +2,7 @@
 // game's own rules (game/contracts/station_contract.h), on every edit and at load, in
 // the game's words, before save rather than at game load.
 #include "scripts/acceptance/level_editor/fixtures.h"
+#include "editor/content_catalog.h"
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -106,20 +107,28 @@ namespace level_editor_acceptance
             { entry["lesson"]["title"].SetString(" \n"); }),
             ".lesson.title is empty; a lesson needs a title and a line to read.", "A blank lesson opened");
 
-        // Every shipped stage with stations still opens and saves clean.
-        for (const char* stage : { "crossfeed", "close_quarters", "press_tower", "movement_course" })
+        // Every manifest stage with stations still opens and saves clean. This
+        // target has no engine, so it walks the editor's own manifest read.
+        const ContentCatalog catalog = load_content_catalog(repo / "game/content");
+        require(catalog.manifest_read && !catalog.stages.empty(), "Station check read no manifest stage");
+        int with_stations = 0;
+        for (const std::string& stage : catalog.stages)
         {
+            const auto path = repo / "game/content/levels" / (stage + ".json");
+            if (!parse(contents(path)).HasMember("stations")) { continue; }
+            ++with_stations;
             LevelDocument shipped(tuning);
-            shipped.load(repo / "game/content/levels" / (std::string(stage) + ".json"));
-            require(shipped.validate().empty(), std::string(stage) + " has a station the editor refuses");
-            const auto copy = scratch / (std::string("station-saved-") + stage + ".json");
+            shipped.load(path);
+            require(shipped.validate().empty(), stage + " has a station the editor refuses");
+            const auto copy = scratch / ("station-saved-" + stage + ".json");
             shipped.save(copy);
             LevelDocument reopened(tuning);
             reopened.load(copy);
             require(parse(reopened.serialize()) == parse(shipped.serialize()),
-                std::string(stage) + " lost its stations across save and reopen");
+                stage + " lost its stations across save and reopen");
         }
+        require(with_stations > 0, "No manifest stage has stations to check");
         std::cout << "PASS stations: bounds edit past a station refused with history intact, eight station "
-            "refusals in the game's words, shipped stations save and reopen\n";
+            "refusals in the game's words, " << with_stations << " manifest stages' stations save and reopen\n";
     }
 }

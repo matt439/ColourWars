@@ -105,7 +105,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
     StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
-        { "crossfeed", "Crossfeed", "stage_turbulence", true } };
+        acceptance::shipped_stage(levels, "crossfeed") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "crossfeed", "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     // The inert director leaves the shipping path intact in both presets.

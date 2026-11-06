@@ -862,7 +862,6 @@ int main(int argc, char** argv)
         const auto staged_levels = manifest_levels(content);
         const auto source_levels = manifest_levels(repo / "game/content");
         require(staged_levels == source_levels, "Source and staged manifests differ in level inventory or order");
-        require(staged_levels.size() == 13, "Current format acceptance needs all thirteen registered stages");
         for (const auto& file : staged_levels)
         {
             check_compatible(content / file);

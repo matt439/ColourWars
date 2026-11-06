@@ -1582,18 +1582,24 @@ cover more than they did.
   say so. The editor's shipped-level check walks the catalog's manifest
   stages. That target has no engine, so it cannot use the support header. Its
   wider coverage needed the source `tuning.json` as authoring context for the
-  motion trials, which is how the editor opens them.
+  motion trials, which is how the editor opens them. Its station check
+  (`station_checks.cpp`) walks the same catalog and saves and reopens every
+  stage with stations (eleven), not four hand-picked ones.
 - The `terrain` and `tunnelling` guards ("four shipped stages", and
   terrain's 13-stage pin and named list) are gone. Both walk
   `manifest_level_paths`. `locales` uses `manifest_catalog`, and
   `user_stages` counts the manifest instead of pinning 13, 14 and 15.
+  `level_format` drops its 13-stage pin, and `turbulence_slab_stage`'s
+  qualification its 13-stage and four-Random pins; both still require the
+  slab, Turbulence and every stage they name.
   `instant_replay` registers every manifest stage and names the nine it
   plays once. The miniature matrices name their six arenas once
   (`miniature_stages`). `stage_selection` keeps the exact pins, now one table
   of each stage and its Random eligibility, not twelve flags beside a list.
 - The painter's 30 hand-written `movement_course` descriptors, and the nine
   `close_quarters` ones beside them, are `acceptance::shipped_stage(levels,
-  ...)`. The arena-music flow reads Close Quarters' cue from its level file.
+  ...)`, as is `practice_replay`'s `crossfeed`, whose copy had the wrong icon.
+  The arena-music flow reads Close Quarters' cue from its level file.
 - [support/paint_samples.h](../scripts/acceptance/support/paint_samples.h)
   holds `bits`, `snapshot`, `sample_state` and `same_total`. `paint_surfaces`
   and `moving_structure` (whose `sample_bits` forwards to it) share it.
@@ -1607,15 +1613,22 @@ Left as they are:
   `quiet_character`, `results_awards`, `terrain`, `tool_motion`,
   `tunnelling`, `view_shake`, `weapon_feedback`, `fixed_slab`,
   `paint_underfoot` and the `crossfeed`/`cq_blockout`/`press_tower`/
-  `turbulence_blockout` fixtures. They do not copy the manifest. `HYG#85`'s
-  route-run fixture can adopt `load_cpu_assets` for the last four.
+  `turbulence_blockout` fixtures. They do not copy the manifest's sheets and
+  fonts. `HYG#85`'s route-run fixture can adopt `load_cpu_assets` for the
+  last four.
 - `debug_console`'s `tune_*_colour_checks.h`, which reload a sheet subset
   per check, and the `painter_visual` Worlds (`HYG#86`).
-- `turbulence_blockout/public_load_checks.cpp`'s own manifest walk, which
-  also checks how the candidate stage is registered.
-- The synthetic `{ "movement_course", ..., "icon", false }` descriptors in
-  `debug_console` and `remembered_setup`'s blank-icon one. These are fixtures,
-  not copies of the file.
+- Three private manifest walks that check more than the list:
+  `turbulence_blockout/public_load_checks.cpp` (how the candidate stage is
+  registered), `level_format`'s `manifest_levels` (the level directories, and
+  source against staged inventory) and `turbulence_slab_stage/qualification.cpp`
+  (source against staged bytes, under its file guard).
+- Fixtures, not copies of the file: the synthetic `{ "movement_course", ...,
+  "icon", false }` descriptors in `debug_console`, `remembered_setup`'s
+  blank-icon one, the eligible King of the Hill and Turbulence copies in the
+  painter's `stage_paper` and `stage_count` lists (both left Random on
+  2026-11-05), and `stage_paper`'s four literals, which are the independent
+  pin its drift check holds each level file to.
 - Selections that do not claim "every": the painter's drift and
   surface-finish lists, and `story_audio`'s accepted cue-binding table.
   `instant_replay`'s played list is a selection too.
@@ -1628,7 +1641,10 @@ passed in both presets. `check-level-editor.ps1` passed in both presets.
 `check-painter.ps1 -CompileOnly` passed in both presets. In Release,
 `check-painter.ps1` passed with `-CountdownOnly` (all 13 stage entries),
 `-ResumeOnly` (arena music), `-MiniatureTerrainOnly`, `-StageCountsOnly` and
-`-TeamSetupOnly`.
+`-TeamSetupOnly`. After review, the station walk, the dropped pins and the
+painter fixture fixes passed `level_format`, `turbulence_slab_stage` and
+`check-level-editor.ps1` in both presets, and `check-painter.ps1`
+`-StagePaperOnly`, `-StageCountsOnly` and `-PracticeReplayOnly` in both.
 
 The row as filed. In `support/stage_catalog.h`, add `manifest_level_paths` and `shipped_stage`. In
 a new `support/content_world.h`, add `load_cpu_assets(content, render, audio)`,

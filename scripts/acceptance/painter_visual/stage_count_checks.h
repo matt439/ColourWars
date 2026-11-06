@@ -64,6 +64,8 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     auto& new_geometry = const_cast<MainMenuPresentation&>(next.main_menu()).stage_select;
     new_geometry.navigation_position.x += 8.0f; new_geometry.briefing_padding.x += 8.0f;
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
+    // King of the Hill and Turbulence left Random on 2026-11-05; these copies
+    // stay eligible on purpose, as the 0/1/3 eligible counts below need.
     const StageList mixed{ acceptance::shipped_stage(levels, "movement_course"),
         acceptance::shipped_stage(levels, "close_quarters"),
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },

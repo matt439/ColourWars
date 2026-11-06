@@ -7,11 +7,13 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     // King of the Hill and Turbulence left Random on 2026-11-05 (Press Tower and
     // the slab trial replaced them). This fixture still holds its copies
     // eligible, so its three-candidate pages are the ones it always read.
+    // The names and icons are literals, not acceptance::shipped_stage: they
+    // are the independent pin the drift check below holds each level file to.
     const StageList shipped{
         { "king_of_the_hill", "King of the Hill", "stage_king_of_the_hill", true },
         { "turbulence", "Turbulence", "stage_turbulence", true },
-        acceptance::shipped_stage(levels, "close_quarters"),
-        acceptance::shipped_stage(levels, "movement_course") };
+        { "close_quarters", "Close Quarters", "stage_close_quarters", true },
+        { "movement_course", "Movement Course", "stage_turbulence", false } };
     for (const auto& stage : shipped)
     {
         const auto* info = levels.get(stage.name);
