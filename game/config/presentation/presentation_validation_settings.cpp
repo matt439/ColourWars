@@ -29,7 +29,7 @@ using namespace presentation_validation;
 // A Controls or Sticks action row, clear of the help column and status line.
 void Presentation::Validation::check_controls_item(MenuItem item, int row, bool fitted_label) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const Vector2F position = controls.layout.position +
 		Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row));
 	const bool fitted_action = item == MenuItem::keyboard_jump || item == MenuItem::pad_buttons ||
@@ -38,15 +38,15 @@ void Presentation::Validation::check_controls_item(MenuItem item, int row, bool 
 		std::optional<float>(menu_geometry::settings_action_width(controls, position.x)) :
 		(fitted_label ? std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt);
 	const Vector2F size = check_menu_item(item, controls.item_font, position,
-		menu_geometry::footer_paper(controls.box_size, this->presentation_.menu_.footer_y), controls.layout.spacing.y, label_width, controls.art, fitted_action);
+		menu_geometry::footer_paper(controls.box_size, this->presentation.menu_.footer_y), controls.layout.spacing.y, label_width, controls.art, fitted_action);
 	if (position.x + size.x + controls.art.focus_padding.x > controls.controls_position.x)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.items." +
+		throw std::runtime_error(this->presentation.source_path_ + ": menu_text.items." +
 			menu_item_keys[static_cast<size_t>(item)] + " must fit before the controls help column including focus padding.");
 	}
 	if (position.y + size.y + controls.art.focus_padding.y > controls.status_position.y)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.items." +
+		throw std::runtime_error(this->presentation.source_path_ + ": menu_text.items." +
 			menu_item_keys[static_cast<size_t>(item)] + " must fit above the controls status line including focus padding.");
 	}
 }
@@ -79,8 +79,8 @@ void Presentation::Validation::validate_sticks_actions() const
 // whose value limit later settings checks use.
 Vector2F Presentation::Validation::validate_settings_toggles() const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const MenuValueText& values = this->presentation_.menu_text_.values;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const MenuValueText& values = this->presentation.menu_text_.values;
 	const Vector2F controls_value_limit(
 		menu_geometry::settings_action_width(controls, controls.layout.position.x + controls.layout.spacing.x),
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
@@ -103,13 +103,13 @@ Vector2F Presentation::Validation::validate_settings_toggles() const
 RectangleF Presentation::Validation::check_help_fit(const std::string& key, const std::wstring& text,
 	const Vector2F& position, const Vector2F& available, const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const Vector2F raw = fixed_menu_size(key, text, controls.help_font);
 	if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
 		!std::isfinite(available.x) || !std::isfinite(available.y) || available.x <= 0.0f || available.y <= 0.0f ||
 		!help_area.contains(RectangleF(position, available)))
 	{
-		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+		throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 			" must have a finite positive fitting area inside the controls help region.");
 	}
 	// Preserve the two pages' existing uniform fit. The available region
@@ -119,7 +119,7 @@ RectangleF Presentation::Validation::check_help_fit(const std::string& key, cons
 	if (!std::isfinite(scale) || scale <= 0.0f || !std::isfinite(fitted.x) || !std::isfinite(fitted.y) ||
 		fitted.x <= 0.0f || fitted.y <= 0.0f)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+		throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 			" must retain finite positive text bounds after fitting.");
 	}
 	return RectangleF(position, fitted);
@@ -128,7 +128,7 @@ RectangleF Presentation::Validation::check_help_fit(const std::string& key, cons
 // Phase 3: Controls' help for every jump key and keyboard binding.
 RectangleF Presentation::Validation::validate_controls_help(const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	check_fixed_paper("menu_text.help.controls", help_area, controls.box_size, Vector2F::zero);
 	RectangleF controls_help;
 	bool first_help = true;
@@ -141,7 +141,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 	};
 	for (const Key key : controls_text::keyboard_keys())
 	{
-		controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, key));
+		controls_variant(controls_text::controls_help(this->presentation.menu_text_.controls, this->presentation.menu_text_.help.controls, key));
 	}
 	// Each keyboard action's every label, the others at their defaults where
 	// valid, so every glyph the Controls help can show is measured.
@@ -159,7 +159,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 			set_keyboard_control(bindings, action, choice);
 			try { bindings.validate_keyboard(); }
 			catch (const std::invalid_argument&) { continue; }
-			controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, bindings));
+			controls_variant(controls_text::controls_help(this->presentation.menu_text_.controls, this->presentation.menu_text_.help.controls, bindings));
 		}
 	}
 	// Each pad action's every primary, with and without the widest
@@ -177,13 +177,13 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 				for (PadProfile& pad : bindings.pads) { pad[action] = { primary, alternate }; }
 				try { bindings.validate(); }
 				catch (const std::invalid_argument&) { continue; }
-				controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, bindings));
+				controls_variant(controls_text::controls_help(this->presentation.menu_text_.controls, this->presentation.menu_text_.help.controls, bindings));
 			}
 		}
 	}
 	InputBindings mixed;
 	mixed.pads.back()[PadAction::pause] = { PadControl::y, PadControl::none };
-	controls_variant(controls_text::controls_help(this->presentation_.menu_text_.controls, this->presentation_.menu_text_.help.controls, mixed));
+	controls_variant(controls_text::controls_help(this->presentation.menu_text_.controls, this->presentation.menu_text_.help.controls, mixed));
 	return controls_help;
 }
 
@@ -194,7 +194,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 RectangleF Presentation::Validation::check_settings_row(const std::string& key, const std::wstring& words,
 	const std::string& font, const Vector2F& position, bool row, bool option_label) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	Vector2F size = fixed_menu_size(key, words, font);
 	if (row)
 	{
@@ -203,28 +203,28 @@ RectangleF Presentation::Validation::check_settings_row(const std::string& key, 
 			controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
 		const float scale = std::min({ 1.0f, available.x / size.x, available.y / size.y });
 		if (!std::isfinite(scale) || scale <= 0.0f)
-		{ throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must retain finite positive fitted bounds."); }
+		{ throw std::runtime_error(this->presentation.source_path_ + ": " + key + " must retain finite positive fitted bounds."); }
 		size *= scale;
 	}
 	check_fixed_paper(key, RectangleF(position, size), controls.box_size, row ? controls.art.focus_padding : Vector2F::zero);
 	if (position.x + size.x + (row ? controls.art.focus_padding.x : 0.0f) > controls.controls_position.x ||
 		(row && size.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y))
-	{ throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must fit its controls column and row."); }
+	{ throw std::runtime_error(this->presentation.source_path_ + ": " + key + " must fit its controls column and row."); }
 	return RectangleF(position, size);
 }
 
 // Phase 3: Keyboard Keys's heading, rows, values, Reset and help.
 void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const KeyboardKeysMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const KeyboardKeysMenuText& jump = this->presentation.menu_text_.keyboard_jump;
 	const auto jump_text = [&](const char* key, const std::wstring& words, const std::string& font, const Vector2F& position, bool row)
 	{
 		return check_settings_row(std::string("menu_text.keyboard_jump.") + key, words, font, position, row);
 	};
-	const RectangleF jump_heading = jump_text("heading", jump.heading, this->presentation_.menu_.heading_font, controls.heading_position, false);
+	const RectangleF jump_heading = jump_text("heading", jump.heading, this->presentation.menu_.heading_font, controls.heading_position, false);
 	if (jump_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
-	{ throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.keyboard_jump.heading must end before its first focus card."); }
+	{ throw std::runtime_error(this->presentation.source_path_ + ": menu_text.keyboard_jump.heading must end before its first focus card."); }
 	// Rows: six capture rows (an OptionRow label and its control value), then
 	// Reset, Apply and Back.
 	const char* keyboard_rows[]{ "move_left", "move_right", "jump", "drop", "shoot", "pause" };
@@ -237,7 +237,7 @@ void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& hel
 		label *= std::min({ 1.0f, label_available.x / label.x, label_available.y / label.y });
 		check_fixed_paper(std::string("menu_text.keyboard_jump.") + keyboard_rows[index], RectangleF(position, label),
 			controls.box_size, controls.art.focus_padding);
-		for (const std::wstring& value : controls_text::keyboard_control_labels(this->presentation_.menu_text_.controls.labels, static_cast<KeyboardAction>(index)))
+		for (const std::wstring& value : controls_text::keyboard_control_labels(this->presentation.menu_text_.controls.labels, static_cast<KeyboardAction>(index)))
 		{
 			jump_text(keyboard_rows[index], value, controls.item_font, position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 		}
@@ -256,17 +256,17 @@ void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& hel
 // Phase 3: Pad Buttons' heading, rows, values, Reset and help.
 RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const PadButtonsMenuText& pad_buttons = this->presentation_.menu_text_.pad_buttons;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const PadButtonsMenuText& pad_buttons = this->presentation.menu_text_.pad_buttons;
 	const auto pad_buttons_text = [&](const char* key, const std::wstring& words, const std::string& font,
 		const Vector2F& position, bool row, bool option_label = false)
 	{
 		return check_settings_row(std::string("menu_text.pad_buttons.") + key, words, font, position, row, option_label);
 	};
-	const RectangleF pad_buttons_heading = pad_buttons_text("heading", pad_buttons.heading, this->presentation_.menu_.heading_font,
+	const RectangleF pad_buttons_heading = pad_buttons_text("heading", pad_buttons.heading, this->presentation.menu_.heading_font,
 		controls.heading_position, false);
 	if (pad_buttons_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
-	{ throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.pad_buttons.heading must end before its first focus card."); }
+	{ throw std::runtime_error(this->presentation.source_path_ + ": menu_text.pad_buttons.heading must end before its first focus card."); }
 	// Rows: Pad, six action entries, Reset, Apply, Back.
 	const char* pad_button_rows[]{ "jump", "jump_alternate", "shoot", "shoot_alternate", "pause", "pause_alternate" };
 	for (size_t index = 0; index < std::size(pad_button_rows); ++index)
@@ -275,10 +275,10 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 		pad_buttons_text(pad_button_rows[index], pad_buttons.row(index), controls.item_font, position, true, true);
 		for (const PadControl control : pad_controls())
 		{
-			pad_buttons_text(pad_button_rows[index], controls_text::pad_label(this->presentation_.menu_text_.controls.labels, control), controls.item_font,
+			pad_buttons_text(pad_button_rows[index], controls_text::pad_label(this->presentation.menu_text_.controls.labels, control), controls.item_font,
 				position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 		}
-		pad_buttons_text(pad_button_rows[index], controls_text::pad_label(this->presentation_.menu_text_.controls.labels, PadControl::none), controls.item_font,
+		pad_buttons_text(pad_button_rows[index], controls_text::pad_label(this->presentation.menu_text_.controls.labels, PadControl::none), controls.item_font,
 			position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 	}
 	pad_buttons_text("reset", pad_buttons.reset, controls.item_font,
@@ -291,18 +291,18 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 // Phase 3: Profiles' heading, rows, values and help.
 RectangleF Presentation::Validation::validate_profiles_text(const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	// Profiles (ROAD#21): four option rows, then New, Delete and Back.
-	const ProfilesMenuText& profiles = this->presentation_.menu_text_.profiles;
+	const ProfilesMenuText& profiles = this->presentation.menu_text_.profiles;
 	const auto profiles_text = [&](const char* key, const std::wstring& words, const std::string& font,
 		const Vector2F& position, bool row, bool option_label = false)
 	{
 		return check_settings_row(std::string("menu_text.profiles.") + key, words, font, position, row, option_label);
 	};
-	const RectangleF profiles_heading = profiles_text("heading", profiles.heading, this->presentation_.menu_.heading_font,
+	const RectangleF profiles_heading = profiles_text("heading", profiles.heading, this->presentation.menu_.heading_font,
 		controls.heading_position, false);
 	if (profiles_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
-	{ throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.profiles.heading must end before its first focus card."); }
+	{ throw std::runtime_error(this->presentation.source_path_ + ": menu_text.profiles.heading must end before its first focus card."); }
 	const auto profile_row = [&](int row) { return controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row)); };
 	const auto profile_value = [&](const char* key, const std::wstring& words, int row)
 	{ std::ignore = profiles_text(key, words, controls.item_font, profile_row(row) + Vector2F(controls.layout.spacing.x, 0.0f), true); };
@@ -329,24 +329,24 @@ RectangleF Presentation::Validation::validate_profiles_text(const RectangleF& he
 // Phase 3: Sticks' pad association help and aim cutoff caption.
 Presentation::Validation::SticksHelp Presentation::Validation::validate_sticks_help(const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const StickPreviewPresentation& preview = controls.stick_preview;
-	const RectangleF pad_association = check_help_fit("menu_text.help.pad_association", this->presentation_.menu_text_.help.pad_association,
+	const RectangleF pad_association = check_help_fit("menu_text.help.pad_association", this->presentation.menu_text_.help.pad_association,
 		preview.association_position, help_area.bottom_right() - preview.association_position, help_area);
 	if (preview.association_position.y < preview.aim.bottom())
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": menu_text.help.pad_association must begin below the aim preview.");
 	}
 	const Vector2F caption_size = fixed_menu_size("menu_text.help.aim_cutoff",
-		this->presentation_.menu_text_.help.aim_cutoff, controls.help_font);
+		this->presentation.menu_text_.help.aim_cutoff, controls.help_font);
 	const float probe_height = caption_size.y;
 	const RectangleF caption(preview.aim.position() -
 		Vector2F(0.0f, probe_height + controls.art.focus_padding.y), caption_size);
 	if (!std::isfinite(probe_height) || probe_height <= 0.0f || !help_area.contains(caption) ||
 		caption.y < preview.movement_response.bottom() || caption.bottom() > preview.aim.y)
 	{
-		throw std::runtime_error(this->presentation_.source_path_ +
+		throw std::runtime_error(this->presentation.source_path_ +
 			": menu_text.help.aim_cutoff must fit unscaled inside the controls help region between the movement and aim previews.");
 	}
 	return { pad_association, caption, probe_height };
@@ -356,8 +356,8 @@ Presentation::Validation::SticksHelp Presentation::Validation::validate_sticks_h
 void Presentation::Validation::validate_controls_statuses(const RectangleF& controls_back,
 	const RectangleF& controls_help) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const MenuStatusText& status_text = this->presentation_.menu_text_.status;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const MenuStatusText& status_text = this->presentation.menu_text_.status;
 	const StatusMessage controls_statuses[]{ { "controls_pending", status_text.controls_pending },
 		{ "controls_saved", status_text.controls_saved }, { "active_save_failed", status_text.active_save_failed } };
 	for (const StatusMessage& message : controls_statuses)
@@ -370,8 +370,8 @@ void Presentation::Validation::validate_controls_statuses(const RectangleF& cont
 // Phase 3: Keyboard Keys's status lines, clear of its Back card.
 void Presentation::Validation::validate_keyboard_jump_statuses(const RectangleF& help_area) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const KeyboardKeysMenuText& jump = this->presentation_.menu_text_.keyboard_jump;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const KeyboardKeysMenuText& jump = this->presentation.menu_text_.keyboard_jump;
 	const RectangleF jump_back = padded_back(controls.layout.position + Vector2F(0.0f,
 		controls.layout.spacing.y * static_cast<float>(keyboard_action_count + 2)), controls.item_font, controls.art);
 	const StatusMessage jump_statuses[]{ { "keyboard_jump.pending_status", jump.pending_status }, { "keyboard_jump.saved_status", jump.saved_status },
@@ -381,7 +381,7 @@ void Presentation::Validation::validate_keyboard_jump_statuses(const RectangleF&
 		{ "keyboard_jump.capture_cancelled", jump.capture_cancelled }, { "keyboard_jump.debug_collision", jump.debug_collision } };
 	for (const StatusMessage& message : jump_statuses)
 	{ check_status(message, controls.help_font, controls.status_position, controls.box_size, controls.art, { jump_back, help_area }); }
-	for (const std::wstring& label : controls_text::keyboard_control_labels(this->presentation_.menu_text_.controls.labels, KeyboardAction::shoot))
+	for (const std::wstring& label : controls_text::keyboard_control_labels(this->presentation.menu_text_.controls.labels, KeyboardAction::shoot))
 	{
 		const std::wstring words = jump.release_key(label);
 		check_status({ "keyboard_jump.capture_release", words }, controls.help_font, controls.status_position,
@@ -393,9 +393,9 @@ void Presentation::Validation::validate_keyboard_jump_statuses(const RectangleF&
 void Presentation::Validation::validate_pad_buttons_statuses(const RectangleF& pad_buttons_back,
 	const RectangleF& pad_buttons_help) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const MenuStatusText& status_text = this->presentation_.menu_text_.status;
-	const PadButtonsMenuText& pad_buttons = this->presentation_.menu_text_.pad_buttons;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const MenuStatusText& status_text = this->presentation.menu_text_.status;
+	const PadButtonsMenuText& pad_buttons = this->presentation.menu_text_.pad_buttons;
 	const StatusMessage pad_buttons_statuses[]{ { "pad_buttons.pending_status", pad_buttons.pending_status },
 		{ "pad_buttons.saved_status", pad_buttons.saved_status }, { "pad_buttons.conflict_status", pad_buttons.conflict_status },
 		{ "active_save_failed", status_text.active_save_failed } };
@@ -409,9 +409,9 @@ void Presentation::Validation::validate_pad_buttons_statuses(const RectangleF& p
 // Phase 3: Profiles' status lines, clear of its Back card.
 void Presentation::Validation::validate_profiles_statuses(const RectangleF& profiles_help) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const MenuStatusText& status_text = this->presentation_.menu_text_.status;
-	const ProfilesMenuText& profiles = this->presentation_.menu_text_.profiles;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const MenuStatusText& status_text = this->presentation.menu_text_.status;
+	const ProfilesMenuText& profiles = this->presentation.menu_text_.profiles;
 	const auto profile_row = [&](int row) { return controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row)); };
 	const RectangleF profiles_back = padded_back(profile_row(6), controls.item_font, controls.art);
 	const StatusMessage profiles_statuses[]{ { "profiles.idle_status", profiles.idle_status },
@@ -430,8 +430,8 @@ void Presentation::Validation::validate_profiles_statuses(const RectangleF& prof
 void Presentation::Validation::validate_sticks_statuses(const RectangleF& sticks_back,
 	const SticksHelp& sticks_help) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
-	const MenuStatusText& status_text = this->presentation_.menu_text_.status;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
+	const MenuStatusText& status_text = this->presentation.menu_text_.status;
 	const StickPreviewPresentation& preview = controls.stick_preview;
 	const RectangleF& pad_association = sticks_help.pad_association;
 	const RectangleF& caption = sticks_help.aim_cutoff;
@@ -447,14 +447,14 @@ void Presentation::Validation::validate_sticks_statuses(const RectangleF& sticks
 // Phase 6: Sticks' connection lines and numeric readouts beside the previews.
 void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& control_geometry) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const StickPreviewPresentation& preview = controls.stick_preview;
 	const auto& help_area = control_geometry.help_area;
 	const auto& probe_height = control_geometry.probe_height;
 	const Font& stick_font = *render.font(render.resolve_sprite_font(controls.help_font));
 	const auto stick_numeric_size = [&](const char* role, const std::wstring& text)
 	{
-		const std::string where = this->presentation_.source_path_ + ": menu_text.stick_readouts." + role;
+		const std::string where = this->presentation.source_path_ + ": menu_text.stick_readouts." + role;
 		drawable_text::check_font_can_draw(&render, controls.help_font, L"-0123456789", where);
 		// The labels' pen walk matches Font's order, including accumulated
 		// bearings, the clamp at zero, whitespace suppression and overhang.
@@ -506,7 +506,7 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 			!std::isfinite(top) || !std::isfinite(bottom) || !help_area.contains(bounds) ||
 			bounds.y < top || bounds.bottom() > bottom)
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 				" must fit unscaled inside its controls preview/readout region without overlapping the adjacent preview or help text.");
 		}
 		return bounds;
@@ -515,7 +515,7 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 		Vector2F(0.0f, probe_height + controls.art.focus_padding.y);
 	const Vector2F response_caption_position = preview.movement_response.position() -
 		Vector2F(0.0f, probe_height + controls.art.focus_padding.y);
-	const MenuText& stick_text = this->presentation_.menu_text_;
+	const MenuText& stick_text = this->presentation.menu_text_;
 	for (const bool connected : { true, false })
 	{
 		const char* role = connected ? "connected" : "disconnected";
@@ -537,7 +537,7 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 			preview.aim_readout_position, preview.aim.y, preview.association_position.y);
 		if (preview.aim_readout_position.x < preview.aim.right())
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": menu_text.stick_readouts." + readout.first +
+			throw std::runtime_error(this->presentation.source_path_ + ": menu_text.stick_readouts." + readout.first +
 				" must remain beside the aim preview.");
 		}
 	}
@@ -546,16 +546,16 @@ void Presentation::Validation::validate_stick_readouts(const ControlsGeometry& c
 // Phase 7: every pad label in Sticks' Pad value.
 void Presentation::Validation::validate_sticks_pad_values(const ControlsGeometry& control_geometry) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const auto& controls_value_limit = control_geometry.controls_value_limit;
 	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		const std::string key = "menu_text.labels.pad at Pad Sticks value";
-		const Vector2F raw = label_size(key, this->presentation_.menu_text_.device_label(slot), controls.item_font);
+		const Vector2F raw = label_size(key, this->presentation.menu_text_.device_label(slot), controls.item_font);
 		if (!std::isfinite(controls_value_limit.x) || !std::isfinite(controls_value_limit.y) ||
 			controls_value_limit.x <= 0.0f || controls_value_limit.y <= 0.0f)
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " requires finite positive value limits.");
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key + " requires finite positive value limits.");
 		}
 		float scale = 1.0f;
 		if (raw.x > controls_value_limit.x) { scale = controls_value_limit.x / raw.x; }
@@ -564,14 +564,14 @@ void Presentation::Validation::validate_sticks_pad_values(const ControlsGeometry
 		const RectangleF bounds(controls.layout.position + Vector2F(controls.layout.spacing.x, 0.0f), fitted);
 		if (!std::isfinite(scale) || scale <= 0.0f || !finite_rectangle(bounds))
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must retain finite positive fitted bounds.");
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key + " must retain finite positive fitted bounds.");
 		}
 		check_fixed_paper(key, bounds, controls.box_size, controls.art.focus_padding);
 		if (fitted.y + controls.art.focus_padding.y * 2.0f > controls.layout.spacing.y ||
 			bounds.right() + controls.art.focus_padding.x > controls.controls_position.x ||
 			bounds.bottom() + controls.art.focus_padding.y > controls.status_position.y)
 		{
-			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
 				" must fit its row before the controls help and status including focus padding.");
 		}
 	}
@@ -580,14 +580,14 @@ void Presentation::Validation::validate_sticks_pad_values(const ControlsGeometry
 // Phase 8: every percentage in the Controls volumes and Sticks deadzones.
 void Presentation::Validation::validate_settings_percentages(const ControlsGeometry& control_geometry) const
 {
-	const ControlsSettingsPresentation& controls = this->presentation_.controls_settings_;
+	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const auto& controls_value_limit = control_geometry.controls_value_limit;
 	// The Controls Music and SFX rows and the Sticks effective-deadzone rows, in
 	// the same captured font/value column. Validate every integer output,
 	// including saved non-step volumes and inherited 100%.
 	for (int value = 0; value <= 100; ++value)
 	{
-		const std::wstring text = this->presentation_.menu_text_.setting_percentage(value);
+		const std::wstring text = this->presentation.menu_text_.setting_percentage(value);
 		for (const int row : { settings_rows::sticks_movement, settings_rows::sticks_aim,
 			settings_rows::controls_music, settings_rows::controls_sfx })
 		{
@@ -602,16 +602,16 @@ void Presentation::Validation::validate_settings_percentages(const ControlsGeome
 // Phase 8: the Sticks seat switch's value template.
 void Presentation::Validation::validate_sticks_shared_template() const
 {
-	const MenuValueText& values = this->presentation_.menu_text_.values;
+	const MenuValueText& values = this->presentation.menu_text_.values;
 	// The Sticks seat switch's template and its literal glyphs; Sticks fills
 	// it with on or off, checked with the toggles.
 	for (const auto& field : { std::pair("shared", &values.shared) })
 	{
-		const std::string where = this->presentation_.source_path_ + ": menu_text.values." + field.first;
+		const std::string where = this->presentation.source_path_ + ": menu_text.values." + field.first;
 		try
 		{
 			const std::wstring literal = format_label_template(*field.second, { { L"{value}", L"" } });
-			drawable_text::check_font_can_draw(&render, this->presentation_.menu_.item_font, literal, where);
+			drawable_text::check_font_can_draw(&render, this->presentation.menu_.item_font, literal, where);
 		}
 		catch (const std::invalid_argument& error)
 		{
