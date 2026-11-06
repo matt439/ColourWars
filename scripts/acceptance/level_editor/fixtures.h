@@ -1,18 +1,22 @@
 #pragma once
 
 // What the level_editor acceptance pieces share: the file and JSON helpers,
-// the reject-without-change template, and the checks wmain calls. This folder
+// the entry and property lookups, the refusal checks, the
+// reject-without-change template, and the checks wmain calls. This folder
 // is compiled by colourwars_editor_acceptance in editor/CMakeLists.txt, not by
 // run-acceptance.ps1's same-named-folder rule; do not add level_editor to that
 // script's case list.
 #include "editor/level_document.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 #include <rapidjson/document.h>
 
 #include <cstddef>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <string>
+#include <vector>
 
 namespace level_editor_acceptance
 {
@@ -20,12 +24,22 @@ namespace level_editor_acceptance
     namespace fs = std::filesystem;
 
     using acceptance::require;
-    std::string contents(const fs::path& path);
-    void write(const fs::path& path, const std::string& text);
+    using acceptance::read_text;
+    using acceptance::write_text;
     rapidjson::Document parse(const std::string& text);
     std::string encode(const rapidjson::Document& document);
     bool equal(const Rect& actual, const Rect& expected);
     Entry entry(const LevelDocument& document, EntryKind kind, std::size_t index = 0);
+    // The entry of this kind with this label; throws when there is none.
+    Entry named(const LevelDocument& document, EntryKind kind, const std::string& name);
+    // The inspector row at this path, or nullptr.
+    const Property* property(const std::vector<Property>& properties, const std::string& path);
+    // The action must throw, and its message must contain expected.
+    void refuses(const std::function<void()>& action, const std::string& expected, const char* message);
+    // A file the game would refuse at load is refused by the editor at load
+    // too, naming the shared rule's own words, and the open document is kept.
+    void refuses_file(LevelDocument& document, const fs::path& path, const std::string& expected,
+        const char* message);
     // File > New is editor/template.json, which walls in its arena. A fixture
     // that works near the world's edges erases the two walls and the ceiling.
     void erase_template_walls(LevelDocument& document);

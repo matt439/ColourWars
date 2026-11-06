@@ -62,7 +62,9 @@ namespace colourwars_editor
             throw std::runtime_error("Could not open the clipboard to write it");
         }
 
-        // Puts the caller's clipboard text and thread key state back on every exit.
+        // Puts the caller's clipboard text and thread key state back. restore()
+        // does it on success and checks the text came back; the destructor
+        // only tries, for an exit by failure.
         class ClipboardProbeState
         {
         public:
@@ -73,8 +75,15 @@ namespace colourwars_editor
             ~ClipboardProbeState()
             {
                 SetKeyboardState(keys_.data());
+                if (this->restored_) { return; }
                 try { set_clipboard_text(text_); }
                 catch (const std::exception&) {}
+            }
+            void restore()
+            {
+                set_clipboard_text(this->text_);
+                require(clipboard_text() == this->text_, "The clipboard probe did not put the caller's clipboard text back");
+                this->restored_ = true;
             }
             ClipboardProbeState(const ClipboardProbeState&) = delete;
             ClipboardProbeState& operator=(const ClipboardProbeState&) = delete;
@@ -90,6 +99,7 @@ namespace colourwars_editor
         private:
             std::optional<std::wstring> text_;
             std::array<BYTE, 256> keys_{};
+            bool restored_ = false;
         };
 
         void pump_messages()
@@ -235,6 +245,7 @@ namespace colourwars_editor
         editor.document_.load(original_path); editor.selection_ = original_selection; editor.refresh();
         if (!original_selection) editor.selection_.reset();
         SetFocus(original_focus);
+        state.restore();
         require(editor.document_.serialize() == original_document && editor.document_.path() == original_path &&
             !editor.document_.dirty() && !editor.pending() && !IsWindowVisible(editor.window_),
             "Clipboard qualification did not restore the private caller shell");

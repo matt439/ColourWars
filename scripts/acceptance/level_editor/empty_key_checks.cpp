@@ -63,7 +63,7 @@ namespace level_editor_acceptance
             "", rapidjson::Value("ED16 object empty scalar", allocator), allocator);
         const fs::path source = scratch / "empty-key-source.json";
         const std::string source_bytes = " \n" + encode(fixture) + "\n ";
-        write(source, source_bytes);
+        write_text(source, source_bytes);
 
         LevelDocument document;
         document.load(source);
@@ -127,7 +127,7 @@ namespace level_editor_acceptance
             require(property.value != "ED16 array key",
                 "ED16 path repair unexpectedly enabled array element editing");
         }
-        require(document.path() == source && contents(source) == source_bytes &&
+        require(document.path() == source && read_text(source) == source_bytes &&
             document.dirty() && document.can_undo() && !document.can_redo(),
             "ED16 model edits changed the source file/path or failed to enter history");
 
@@ -137,13 +137,13 @@ namespace level_editor_acceptance
         {
             require(document.undo() && document.serialize() == snapshots[index - 1] &&
                 document.dirty() == (index > 1) && document.path() == source &&
-                contents(source) == source_bytes, "ED16 undo changed metadata/history/source state");
+                read_text(source) == source_bytes, "ED16 undo changed metadata/history/source state");
         }
         require(!document.can_undo() && document.can_redo(), "ED16 undo did not reach the load state");
         for (std::size_t index = 1; index < snapshots.size(); ++index)
         {
             require(document.redo() && document.serialize() == snapshots[index] &&
-                document.dirty() && document.path() == source && contents(source) == source_bytes,
+                document.dirty() && document.path() == source && read_text(source) == source_bytes,
                 "ED16 redo changed metadata/history/source state");
         }
         require(!document.can_redo(), "ED16 redo retained an unexpected extra edit");
@@ -154,7 +154,7 @@ namespace level_editor_acceptance
         require(document.path() == output && !document.dirty() &&
             document.serialize() == snapshots.back() && reopened.serialize() == snapshots.back() &&
             !reopened.dirty() && !reopened.can_undo() && !reopened.can_redo() &&
-            contents(source) == source_bytes && parse(contents(output)) == edited,
+            read_text(source) == source_bytes && parse(read_text(output)) == edited,
             "ED16 save/reopen changed complete metadata, source bytes, path or clean state");
         require(document.undo() && document.serialize() == snapshots[snapshots.size() - 2] &&
             document.dirty() && document.redo() && document.serialize() == snapshots.back() &&
@@ -166,7 +166,7 @@ namespace level_editor_acceptance
         fixture.AddMember("", rapidjson::Value("ED16 root empty scalar", allocator), allocator);
         const fs::path scalar_source = scratch / "empty-key-scalar-source.json";
         const std::string scalar_bytes = encode(fixture);
-        write(scalar_source, scalar_bytes);
+        write_text(scalar_source, scalar_bytes);
         LevelDocument scalar_document;
         scalar_document.load(scalar_source);
         const Entry scalar_level = entry(scalar_document, EntryKind::level);
@@ -175,7 +175,7 @@ namespace level_editor_acceptance
         scalar_document.set_property(scalar_level, scalar_row.path, "ED16 edited root scalar");
         const auto scalar_edited = parse(scalar_document.serialize());
         require(text(scalar_edited[""]) == "ED16 edited root scalar" &&
-            text(scalar_edited["display_name"]) == original_name && contents(scalar_source) == scalar_bytes,
+            text(scalar_edited["display_name"]) == original_name && read_text(scalar_source) == scalar_bytes,
             "ED16 empty root scalar edit changed another field or private source");
         scalar_document.save(scratch / "empty-key-scalar-roundtrip.json");
         LevelDocument scalar_reopened;

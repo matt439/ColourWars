@@ -7,7 +7,7 @@ namespace level_editor_acceptance
     void check_motion(const fs::path& repo, const fs::path& scratch)
     {
         const auto tuning = repo / "game/content/tuning.json";
-        const std::string tuning_source = contents(tuning);
+        const std::string tuning_source = read_text(tuning);
         const auto size_json = parse(tuning_source);
         const double body_width = size_json["player"]["size"]["x"].GetDouble();
         const double body_height = size_json["player"]["size"]["y"].GetDouble();
@@ -57,7 +57,7 @@ namespace level_editor_acceptance
         value["motion"].AddMember("future_motion", metadata, extended.GetAllocator());
         value.AddMember("rectangle_tlbr", "ignored", extended.GetAllocator());
         const auto extended_path = scratch / "motion-metadata.json";
-        write(extended_path, encode(extended));
+        write_text(extended_path, encode(extended));
         document.load(extended_path);
         document.set_property(moving, "motion/period", "8");
         document.set_rectangle(moving, { 675, 625, 360, 24 });
@@ -74,7 +74,7 @@ namespace level_editor_acceptance
         auto& alternate = after["collision_objects"][static_cast<rapidjson::SizeType>(moving.index)];
         alternate.RemoveMember("rectangle"); alternate["rectangle_tlbr"].Swap(tlbr);
         const auto tlbr_path = scratch / "motion-tlbr.json";
-        write(tlbr_path, encode(after)); document.load(tlbr_path);
+        write_text(tlbr_path, encode(after)); document.load(tlbr_path);
         document.set_rectangle(moving, { 700, 650, 360, 24 });
         require(!parse(document.serialize())["collision_objects"][static_cast<rapidjson::SizeType>(moving.index)].HasMember("rectangle") &&
             equal(document.motion_guide(moving)->anchor, { 700, 650, 360, 24 }), "TLBR anchor editing changed encoding or runtime float geometry");
@@ -121,7 +121,7 @@ namespace level_editor_acceptance
         document.save(saved_path);
         LevelDocument reopened(tuning); reopened.load(saved_path);
         require(parse(reopened.serialize()) == parse(document.serialize()) && !reopened.dirty() &&
-            contents(tuning) == tuning_source, "Authored motion lost saved fields or touched source tuning");
+            read_text(tuning) == tuning_source, "Authored motion lost saved fields or touched source tuning");
 
         // A different source size changes the guide; it is never a guessed
         // constant or the measurements file's stale baseline.
@@ -129,7 +129,7 @@ namespace level_editor_acceptance
         changed_tuning["player"]["size"]["x"].SetDouble(body_width + 18);
         changed_tuning["player"]["size"]["y"].SetDouble(body_height + 15);
         const auto changed_path = scratch / "motion-source-size.json";
-        write(changed_path, encode(changed_tuning));
+        write_text(changed_path, encode(changed_tuning));
         LevelDocument changed(changed_path);
         changed.load(extended_path);
         const auto changed_guide = *changed.motion_guide(moving);
@@ -153,7 +153,7 @@ namespace level_editor_acceptance
         fractional["motion"]["phase"].SetDouble(0);
         binade_json["collision_objects"].PushBack(fractional, binade_json.GetAllocator());
         const auto binade_path = scratch / "motion-binade.json";
-        write(binade_path, encode(binade_json));
+        write_text(binade_path, encode(binade_json));
         LevelDocument binade(tuning); binade.load(binade_path);
         const Entry fractional_entry{ EntryKind::collision, binade_json["collision_objects"].Size() - 1, "" };
         const auto local_faces = scoring_faces(binade, scoring);
@@ -184,7 +184,7 @@ namespace level_editor_acceptance
     void check_lift_motion(const fs::path& repo, const fs::path& scratch)
     {
         const auto tuning = repo / "game/content/tuning.json";
-        const auto size_json = parse(contents(tuning));
+        const auto size_json = parse(read_text(tuning));
         const double body_width = size_json["player"]["size"]["x"].GetDouble();
         const double body_height = size_json["player"]["size"]["y"].GetDouble();
         LevelDocument document(tuning);

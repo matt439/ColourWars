@@ -35,13 +35,6 @@ namespace level_editor_acceptance
             return result;
         }
 
-        Entry named(const LevelDocument& document, EntryKind kind, const std::string& name)
-        {
-            for (const Entry& candidate : document.entries())
-                if (candidate.kind == kind && candidate.label == name) return candidate;
-            throw std::runtime_error("Expected object '" + name + "' is absent");
-        }
-
         // Mirror one entry and require exactly one undo step that undo and
         // redo move across unchanged.
         Entry mirror_once(LevelDocument& document, const Entry& source, const std::string& what)
@@ -73,7 +66,7 @@ namespace level_editor_acceptance
         {
             if (file.path().extension() != ".json") continue;
             const std::string stage = file.path().stem().string();
-            const auto source = parse(contents(file.path()));
+            const auto source = parse(read_text(file.path()));
             for (const auto& [kind, list] : { std::pair{ EntryKind::collision, "collision_objects" },
                 std::pair{ EntryKind::decoration, "non_collision_objects" } })
             {

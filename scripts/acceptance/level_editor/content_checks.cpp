@@ -17,12 +17,12 @@ namespace level_editor_acceptance
         const BlockoutTuning tuning = load_blockout_tuning(repo / "game/content/tuning.json", repo / "editor/movement-baseline.json");
         require(tuning.player_width == 52.0 && tuning.player_height == 120.0 &&
             tuning.measured_movement_matches, "Source tuning no longer matches recorded movement baseline; remeasure guide");
-        std::string changed = contents(repo / "game/content/tuning.json");
+        std::string changed = read_text(repo / "game/content/tuning.json");
         const std::size_t size = changed.find("\"size\": { \"x\": 52.0, \"y\": 120.0 }");
         require(size != std::string::npos, "Missing player size fixture");
         changed.replace(size, std::string("\"size\": { \"x\": 52.0, \"y\": 120.0 }").size(),
             "\"size\": { \"x\": 70.0, \"y\": 135.0 }");
-        write(scratch / "different-tuning.json", changed);
+        write_text(scratch / "different-tuning.json", changed);
         const BlockoutTuning different = load_blockout_tuning(scratch / "different-tuning.json", repo / "editor/movement-baseline.json");
         require(different.player_width == 70.0 && different.player_height == 135.0 &&
             !different.measured_movement_matches, "Changed tuning must resize spawns and invalidate measured guide");
@@ -86,7 +86,7 @@ namespace level_editor_acceptance
             "Catalog did not read one menu_text.stage_names entry per manifest stage");
         for (const std::string& stage : catalog.stages)
         {
-            const rapidjson::Document level = parse(contents(content / "levels" / (stage + ".json")));
+            const rapidjson::Document level = parse(read_text(content / "levels" / (stage + ".json")));
             require(catalog.stage_names.contains(stage) &&
                 catalog.stage_names.at(stage) == level["display_name"].GetString(),
                 "menu_text.stage_names disagrees with the display_name of " + stage);
@@ -120,7 +120,7 @@ namespace level_editor_acceptance
         LevelDocument created;
         require(created.unresolved_resources(catalog).empty(), "New-level defaults have an unresolved name");
         // File > New is the template, less the note about the template file.
-        rapidjson::Document from_template = parse(contents(repo / "editor/template.json"));
+        rapidjson::Document from_template = parse(read_text(repo / "editor/template.json"));
         from_template.RemoveMember("_comment");
         require(parse(created.serialize()) == from_template, "File > New does not start from editor/template.json");
         LevelDocument templated;
@@ -191,8 +191,8 @@ namespace level_editor_acceptance
         fs::copy_file(content / "manifest.json", partial / "manifest.json");
         fs::copy_file(content / "presentation.json", partial / "presentation.json");
         fs::copy_file(content / "textures/sprite_sheet_1.json", partial / "textures/sprite_sheet_1.json");
-        write(partial / "textures/painter.json", "{ \"sprite_frames\": [");
-        write(partial / "sounds/paint_exe.json",
+        write_text(partial / "textures/painter.json", "{ \"sprite_frames\": [");
+        write_text(partial / "sounds/paint_exe.json",
             "{ \"waves\": [\"a\", \"b\"], \"create_effect_instance_for_each_wave\": false,"
             " \"sound_effect_instances\": [{ \"name\": \"c\", \"wave\": \"a\" }] }");
         const ContentCatalog partial_catalog = load_content_catalog(partial);
@@ -216,7 +216,7 @@ namespace level_editor_acceptance
                 found[1].find("end_sting_name") != std::string::npos,
                 "Partial content checked an unreadable sheet or skipped a readable bank");
         }
-        write(partial / "sounds/paint_exe.json",
+        write_text(partial / "sounds/paint_exe.json",
             "{ \"waves\": [\"a\", \"b\"], \"create_effect_instance_for_each_wave\": true,"
             " \"sound_effect_instances\": [{ \"name\": \"c\", \"wave\": \"a\" }] }");
         require(*load_content_catalog(partial).sound_effects.at("paint_exe") ==
@@ -227,7 +227,7 @@ namespace level_editor_acceptance
         const fs::path untitled = scratch / "untitled-content";
         fs::create_directories(untitled);
         fs::copy_file(content / "manifest.json", untitled / "manifest.json");
-        write(untitled / "presentation.json", "{ \"menu_text\": {} }");
+        write_text(untitled / "presentation.json", "{ \"menu_text\": {} }");
         const ContentCatalog untitled_catalog = load_content_catalog(untitled);
         require(untitled_catalog.manifest_read && !untitled_catalog.stage_names_read &&
             untitled_catalog.stage_names.empty() &&

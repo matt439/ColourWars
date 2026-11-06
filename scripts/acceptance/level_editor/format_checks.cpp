@@ -21,7 +21,7 @@ namespace level_editor_acceptance
             "movement_course", "crossfeed", "press_tower", "turbulence_blockout" })
         {
             const fs::path source = repo / "game/content/levels" / (std::string(name) + ".json");
-            const std::string original = contents(source);
+            const std::string original = read_text(source);
             LevelDocument document;
             document.load(source);
             require(!document.dirty() && !document.can_undo() && !document.can_redo(),
@@ -49,7 +49,7 @@ namespace level_editor_acceptance
             reopened.load(copy);
             require(parse(original) == parse(reopened.serialize()),
                 "Saving and reopening changed source level data");
-            require(contents(source) == original, "Round trip changed the shipped source");
+            require(read_text(source) == original, "Round trip changed the shipped source");
             require(reopened.entries().size() == document.entries().size(),
                 "Round trip changed selectable entries");
             for (const Entry& item : reopened.entries())
@@ -62,7 +62,7 @@ namespace level_editor_acceptance
             }
         }
         const fs::path template_path = repo / "editor/template.json";
-        const std::string template_bytes = contents(template_path);
+        const std::string template_bytes = read_text(template_path);
         const rapidjson::Document template_json = parse(template_bytes);
         require(template_json.HasMember("format") && template_json["format"].IsInt() &&
             template_json["format"].GetInt() == level_format::current,
@@ -74,7 +74,7 @@ namespace level_editor_acceptance
         LevelDocument template_reopened;
         template_reopened.load(example.path());
         require(parse(template_reopened.serialize()) == template_json && !template_reopened.dirty() &&
-            contents(template_path) == template_bytes,
+            read_text(template_path) == template_bytes,
             "Canonical template editor round trip changed level fields or the source");
         std::cout << "PASS shipped levels and canonical editor template round trip and source preservation\n";
     }
@@ -93,7 +93,7 @@ namespace level_editor_acceptance
         legacy.RemoveMember("format");
         const fs::path legacy_path = scratch / "legacy-format.json";
         const std::string legacy_bytes = encode(legacy);
-        write(legacy_path, legacy_bytes);
+        write_text(legacy_path, legacy_bytes);
         document.load(legacy_path);
         require(parse(document.serialize()) == legacy && !document.dirty() &&
             !document.can_undo() && !document.can_redo(),
@@ -102,7 +102,7 @@ namespace level_editor_acceptance
         // Reach the filesystem failure after preparing the upgrade candidate.
         // Neither an omitted format nor unknown data may leak into live state.
         const fs::path blocked = scratch / "format-read-only.json";
-        write(blocked, "retain existing destination");
+        write_text(blocked, "retain existing destination");
         const DWORD attributes = GetFileAttributesW(blocked.c_str());
         require(attributes != INVALID_FILE_ATTRIBUTES &&
             SetFileAttributesW(blocked.c_str(), attributes | FILE_ATTRIBUTE_READONLY) != 0,
@@ -111,7 +111,7 @@ namespace level_editor_acceptance
         {
             reject_without_change(document, [&] { document.save(blocked); },
                 "Legacy upgrade saved over a read-only destination");
-            require(contents(blocked) == "retain existing destination" && contents(legacy_path) == legacy_bytes,
+            require(read_text(blocked) == "retain existing destination" && read_text(legacy_path) == legacy_bytes,
                 "Failed legacy upgrade changed existing filesystem data");
         }
         catch (...)
@@ -124,14 +124,14 @@ namespace level_editor_acceptance
         const fs::path upgraded_path = scratch / "upgraded-format.json";
         document.save(upgraded_path);
         legacy.AddMember("format", level_format::current, legacy.GetAllocator());
-        require(parse(contents(upgraded_path)) == legacy && parse(document.serialize()) == legacy &&
+        require(parse(read_text(upgraded_path)) == legacy && parse(document.serialize()) == legacy &&
             !document.dirty() && !document.can_undo() && !document.can_redo(),
             "Successful legacy save did not upgrade just format and retain a clean history");
-        require(contents(legacy_path) == legacy_bytes, "Save As upgrade changed the legacy source");
+        require(read_text(legacy_path) == legacy_bytes, "Save As upgrade changed the legacy source");
         LevelDocument reopened;
         reopened.load(upgraded_path);
         reopened.save(scratch / "current-format-roundtrip.json");
-        require(parse(reopened.serialize()) == legacy && parse(contents(reopened.path())) == legacy &&
+        require(parse(reopened.serialize()) == legacy && parse(read_text(reopened.path())) == legacy &&
             !reopened.dirty(), "Explicit current format lost unknown fields on round trip");
 
         // Retain both undo and redo branches while failed loads try malformed
@@ -150,7 +150,7 @@ namespace level_editor_acceptance
             "true", "false", "\"1\"", "null", "[]", "{}" })
         {
             const fs::path invalid = scratch / ("invalid-format-" + std::to_string(index++) + ".json");
-            write(invalid, std::string("{\"format\":") + version + ",\"display_name\":null}");
+            write_text(invalid, std::string("{\"format\":") + version + ",\"display_name\":null}");
             std::string diagnostic;
             reject_without_change(reopened, [&]
             {
@@ -198,7 +198,7 @@ namespace level_editor_acceptance
         std::string escaped_source = raw_nul.serialize();
         escaped_source.insert(escaped_source.find('{') + 1, R"("nul_positive":"keep\u0000tail",)");
         const fs::path raw_baseline = scratch / "raw-nul-live.json";
-        write(raw_baseline, escaped_source);
+        write_text(raw_baseline, escaped_source);
         raw_nul.load(raw_baseline);
         const std::string initial_raw = raw_nul.serialize();
         const Entry raw_level = entry(raw_nul, EntryKind::level);
@@ -240,7 +240,7 @@ namespace level_editor_acceptance
             {
                 const fs::path invalid = scratch / (std::string(bom ? "raw-nul-bom-" : "raw-nul-") + name + ".json");
                 const std::string bytes = prefix + initial_raw + suffix;
-                write(invalid, bytes);
+                write_text(invalid, bytes);
                 std::string diagnostic;
                 reject_without_change(raw_nul, [&]
                 {
@@ -251,14 +251,14 @@ namespace level_editor_acceptance
                 require(diagnostic.find(invalid.filename().string()) != std::string::npos &&
                     diagnostic.find("Invalid JSON at byte " + std::to_string(bytes.find('\0') - prefix.size()) + ":") != std::string::npos,
                     "Raw-NUL load refusal must identify its file and BOM-stripped zero-byte offset");
-                require(contents(invalid) == bytes && contents(raw_baseline) == escaped_source,
+                require(read_text(invalid) == bytes && read_text(raw_baseline) == escaped_source,
                     "A refused raw-NUL load changed either the invalid source or the open saved file");
                 full_raw_history();
             }
             const fs::path malformed_nul = scratch /
                 (bom ? "raw-nul-bom-malformed-first.json" : "raw-nul-malformed-first.json");
             const std::string malformed_bytes = prefix + "{broken" + zero + "later suffix";
-            write(malformed_nul, malformed_bytes);
+            write_text(malformed_nul, malformed_bytes);
             std::string malformed_diagnostic;
             reject_without_change(raw_nul, [&]
             {
@@ -268,12 +268,12 @@ namespace level_editor_acceptance
             require(malformed_diagnostic.find(malformed_nul.filename().string()) != std::string::npos &&
                 malformed_diagnostic.find("Invalid JSON at byte 1: Missing a name for object member.") != std::string::npos,
                 "A later raw NUL replaced the existing malformed-JSON first diagnostic");
-            require(contents(malformed_nul) == malformed_bytes && contents(raw_baseline) == escaped_source,
+            require(read_text(malformed_nul) == malformed_bytes && read_text(raw_baseline) == escaped_source,
                 "Malformed-JSON refusal changed source bytes");
             full_raw_history();
         }
         raw_nul.save(raw_baseline);
-        require(contents(raw_baseline) == raw_first && !raw_nul.dirty() &&
+        require(read_text(raw_baseline) == raw_first && !raw_nul.dirty() &&
             raw_nul.can_undo() && raw_nul.can_redo(),
             "Refused raw-NUL loads damaged the original save baseline or retained history");
         LevelDocument raw_reopened;
@@ -282,12 +282,12 @@ namespace level_editor_acceptance
             "Saving after raw-NUL refusals lost escaped metadata or the live document");
         const fs::path whitespace_path = scratch / "raw-nul-valid-whitespace.json";
         const std::string whitespace_bytes = initial_raw + " \t\r\n";
-        write(whitespace_path, whitespace_bytes);
+        write_text(whitespace_path, whitespace_bytes);
         LevelDocument whitespace_document;
         whitespace_document.load(whitespace_path);
         require(whitespace_document.serialize() == initial_raw && !whitespace_document.dirty() &&
             !whitespace_document.can_undo() && !whitespace_document.can_redo() &&
-            contents(whitespace_path) == whitespace_bytes,
+            read_text(whitespace_path) == whitespace_bytes,
             "Ordinary trailing JSON whitespace or escaped NUL metadata was refused or changed");
         std::cout << "PASS raw-NUL source refusal: complete suffix admission, byte offsets, first parser errors, "
             "source bytes and full history; escaped NUL and ordinary trailing whitespace preserved\n";
@@ -305,7 +305,7 @@ namespace level_editor_acceptance
         require(geometry != std::string::npos, "Template collision geometry absent");
         text.insert(geometry, "\"triangle\": {\"editor_hint\": true},\n");
         const fs::path input = scratch / "unknown-fields.json";
-        write(input, text);
+        write_text(input, text);
         LevelDocument document;
         document.load(input);
         const Entry target = entry(document, EntryKind::collision, added.index);
@@ -334,7 +334,7 @@ namespace level_editor_acceptance
             "\"rectangle_tlbr\": {\"left\": 12, \"top\": 34, \"right\": 112, \"bottom\": 94,"
             " \"author_geometry\": {\"preserve\": true}}");
         const fs::path alternate_path = scratch / "alternate-rectangle.json";
-        write(alternate_path, alternate);
+        write_text(alternate_path, alternate);
         document.load(alternate_path);
         const Entry first = entry(document, EntryKind::collision);
         require(equal(document.rectangle(first), { 12, 34, 100, 60 }),
@@ -370,7 +370,7 @@ namespace level_editor_acceptance
             nul_name.data(), static_cast<rapidjson::SizeType>(nul_name.size()), nul_metadata.GetAllocator());
         const fs::path nul_path = scratch / "unknown-nul-metadata.json";
         const std::string nul_bytes = encode(nul_metadata);
-        write(nul_path, nul_bytes);
+        write_text(nul_path, nul_bytes);
         LevelDocument nul_document;
         nul_document.load(nul_path);
         const Entry nul_level = entry(nul_document, EntryKind::level);
@@ -400,7 +400,7 @@ namespace level_editor_acceptance
         LevelDocument nul_reopened;
         nul_reopened.load(nul_roundtrip);
         require(parse(nul_reopened.serialize()) == changed_nul && !nul_reopened.dirty() &&
-            contents(nul_path) == nul_bytes && nul_document.path() == nul_roundtrip &&
+            read_text(nul_path) == nul_bytes && nul_document.path() == nul_roundtrip &&
             nul_document.undo() && parse(nul_document.serialize()) == nul_metadata &&
             nul_document.redo() && nul_document.serialize() == changed_nul_bytes,
             "NUL-bearing unknown keys/values lost bytes through save/reopen or undo/redo");
@@ -451,7 +451,7 @@ namespace level_editor_acceptance
             "Refused NUL-bearing material changed undo/redo snapshots");
 
         const fs::path nul_tuning = scratch / "nul-motion-tuning.json";
-        write(nul_tuning, R"({"player":{"size":{"x":62,"y":100}}})");
+        write_text(nul_tuning, R"({"player":{"size":{"x":62,"y":100}}})");
         LevelDocument missing_drive(nul_tuning);
         const Entry moving = missing_drive.add_object("MovingPaintable", { 600, 600, 320, 20 });
         missing_drive.save(scratch / "nul-missing-drive.json");

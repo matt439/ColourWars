@@ -53,7 +53,7 @@ namespace level_editor_acceptance
         {
             rapidjson::Document omitted = parse(LevelDocument().serialize());
             omitted.RemoveMember("include_in_random");
-            write(path, encode(omitted));
+            write_text(path, encode(omitted));
         }
         LevelDocument document;
         document.load(path);
@@ -101,7 +101,7 @@ namespace level_editor_acceptance
         std::string malformed = original;
         malformed.insert(malformed.find('{') + 1, "\n\"include_in_random\": \"false\",");
         const fs::path invalid = scratch / "invalid-random-setting.json";
-        write(invalid, malformed);
+        write_text(invalid, malformed);
         reject_without_change(reopened, [&] { reopened.load(invalid); }, "Non-boolean Random setting loaded");
         // Numeric edits must consume all source bytes, including a raw NUL
         // after an otherwise valid number. Keep both history branches live.
@@ -110,7 +110,7 @@ namespace level_editor_acceptance
         numeric_document.save(numeric_path);
         const Entry numeric_level = entry(numeric_document, EntryKind::level);
         const std::string numeric_saved = numeric_document.serialize();
-        const std::string numeric_source = contents(numeric_path);
+        const std::string numeric_source = read_text(numeric_path);
         numeric_document.set_property(numeric_level, "/display_name", "Numeric first");
         const std::string numeric_first = numeric_document.serialize();
         numeric_document.set_property(numeric_level, "/display_name", "Numeric second");
@@ -131,7 +131,7 @@ namespace level_editor_acceptance
                 "Rejected raw NUL numeric text changed the saved undo snapshot");
             require(numeric_document.redo() && numeric_document.serialize() == numeric_first &&
                 numeric_document.dirty() && numeric_document.can_undo() && numeric_document.can_redo() &&
-                numeric_document.path() == numeric_path && contents(numeric_path) == numeric_source,
+                numeric_document.path() == numeric_path && read_text(numeric_path) == numeric_source,
                 "Rejected raw NUL numeric text changed the source or restored history state");
         };
         const std::string raw_nul(1, '\0');
@@ -147,7 +147,7 @@ namespace level_editor_acceptance
             {
                 numeric_document.set_property(numeric_level, "/sound/music_volume", value);
             }, message.c_str());
-            require(contents(numeric_path) == numeric_source,
+            require(read_text(numeric_path) == numeric_source,
                 "Rejected raw NUL numeric text changed the saved source bytes");
             check_numeric_history();
         }
@@ -161,7 +161,7 @@ namespace level_editor_acceptance
             "Numeric trailing whitespace did not preserve the prior undo snapshot");
         require(numeric_document.redo() && numeric_document.serialize() == numeric_whitespace &&
             numeric_document.dirty() && numeric_document.path() == numeric_path &&
-            contents(numeric_path) == numeric_source,
+            read_text(numeric_path) == numeric_source,
             "Numeric trailing whitespace did not preserve redo or the saved source");
         std::cout << "PASS raw NUL numeric refusal, exact history/source preservation and trailing whitespace\n";
         std::cout << "PASS optional Random setting, validation, history and persistence\n";
@@ -236,7 +236,7 @@ namespace level_editor_acceptance
         LevelDocument reopened;
         reopened.load(path);
         require(parse(reopened.serialize()) == parse(document.serialize()), "Materials did not survive saving");
-        const std::string saved = contents(path);
+        const std::string saved = read_text(path);
         const std::string ground = "\"material\": \"ground\"";
         const std::size_t at = saved.find(ground);
         require(at != std::string::npos, "Saved fixture lacks a ground material");
@@ -245,7 +245,7 @@ namespace level_editor_acceptance
             std::string changed = saved;
             changed.replace(at, ground.size(), bad);
             const fs::path invalid = scratch / "invalid-material.json";
-            write(invalid, changed);
+            write_text(invalid, changed);
             reject_without_change(reopened, [&] { reopened.load(invalid); }, "Invalid material loaded");
         }
         // Paintability does not require solid player collision. Preserve the
@@ -260,7 +260,7 @@ namespace level_editor_acceptance
         { ruler["paintable_faces"][face].SetBool(false); }
         ruler["paintable_faces"]["top"].SetBool(true);
         const fs::path scored_path = scratch / "paintable-jump-through.json";
-        write(scored_path, encode(scored));
+        write_text(scored_path, encode(scored));
         LevelDocument scored_document;
         scored_document.load(scored_path);
         require(scored_document.validate().empty(), "Editor rejected a paintable jump-through ruler");
@@ -290,7 +290,7 @@ namespace level_editor_acceptance
         LevelDocument base;
         // Runtime motion is separate from decorative drift. A default document
         // without source player-size context cannot qualify standing corridors.
-        rapidjson::Document moving = parse(contents(repo / "editor/template.json"));
+        rapidjson::Document moving = parse(read_text(repo / "editor/template.json"));
         rapidjson::Document motion;
         motion.Parse("{\"type\":\"horizontal\",\"travel_x\":120,\"period\":6.4,\"phase\":0.25}");
         rapidjson::Value motion_value;
@@ -298,7 +298,7 @@ namespace level_editor_acceptance
         moving["collision_objects"][3].AddMember("motion", motion_value, moving.GetAllocator());
         const fs::path moving_path = scratch / "unsupported-runtime-motion.json";
         const std::string moving_source = encode(moving);
-        write(moving_path, moving_source);
+        write_text(moving_path, moving_source);
         std::string motion_diagnostic;
         reject_without_change(base, [&]
         {
@@ -307,7 +307,7 @@ namespace level_editor_acceptance
         }, "Editor accepted motion without explicit source tuning context");
         require(motion_diagnostic.find("motion") != std::string::npos &&
             motion_diagnostic.find("source tuning.json authoring context") != std::string::npos &&
-            contents(moving_path) == moving_source,
+            read_text(moving_path) == moving_source,
             "Editor motion refusal lost its explanation or changed the source");
         rapidjson::Document valid = parse(base.serialize());
         rapidjson::Document drift;
@@ -315,7 +315,7 @@ namespace level_editor_acceptance
         rapidjson::Value authored;
         authored.CopyFrom(drift, valid.GetAllocator());
         valid["non_collision_objects"][0].AddMember("drift", authored, valid.GetAllocator());
-        const rapidjson::Document schema_json = parse(contents(repo / "game" / "contracts" / "level.schema.json"));
+        const rapidjson::Document schema_json = parse(read_text(repo / "game" / "contracts" / "level.schema.json"));
         const rapidjson::SchemaDocument schema(schema_json);
         const auto schema_accepts = [&](const rapidjson::Document& value)
         {
@@ -325,7 +325,7 @@ namespace level_editor_acceptance
         require(schema_accepts(valid), "The schema refused valid decorative drift");
 
         const fs::path path = scratch / "drift.json";
-        write(path, encode(valid));
+        write_text(path, encode(valid));
         LevelDocument document;
         document.load(path);
         const Entry visual = entry(document, EntryKind::decoration);
@@ -366,7 +366,7 @@ namespace level_editor_acceptance
             require(schema_accepts(changed) == expected,
                 std::string("The schema disagreed about drift fixture ") + name);
             const fs::path fixture = scratch / (std::string("drift-") + name + ".json");
-            write(fixture, encode(changed));
+            write_text(fixture, encode(changed));
             if (expected)
             {
                 LevelDocument accepted;
@@ -420,7 +420,7 @@ namespace level_editor_acceptance
             changed["non_collision_objects"][0]["drift"][field.c_str()].SetDouble(value);
             require(schema_accepts(changed), "A float-conversion fixture failed structurally");
             const fs::path fixture = scratch / "drift-float-conversion.json";
-            write(fixture, encode(changed));
+            write_text(fixture, encode(changed));
             reject_without_change(reopened, [&] { reopened.load(fixture); },
                 "The editor accepted drift that leaves its range after float conversion");
         }

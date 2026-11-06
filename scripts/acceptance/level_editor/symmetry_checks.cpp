@@ -19,13 +19,6 @@ namespace level_editor_acceptance
     {
         bool close(double a, double b) { return std::abs(a - b) <= 1e-6 * std::max(1.0, std::abs(a) + std::abs(b)); }
 
-        Entry named(const LevelDocument& document, EntryKind kind, const std::string& name)
-        {
-            for (const Entry& candidate : document.entries())
-                if (candidate.kind == kind && candidate.label == name) return candidate;
-            throw std::runtime_error("Expected object '" + name + "' is absent");
-        }
-
         std::string labels(const std::vector<Entry>& entries)
         {
             std::string text;

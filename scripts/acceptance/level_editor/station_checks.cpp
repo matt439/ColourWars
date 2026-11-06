@@ -21,18 +21,6 @@ namespace level_editor_acceptance
             throw std::runtime_error("Out of bounds entry is absent");
         }
 
-        void refuses(const std::function<void()>& action, const std::string& expected, const char* message)
-        {
-            bool rejected = false;
-            try { action(); }
-            catch (const std::exception& error)
-            {
-                rejected = true;
-                require(std::string(error.what()).find(expected) != std::string::npos,
-                    std::string(message) + ": diagnostic was '" + error.what() + "'");
-            }
-            require(rejected, message);
-        }
     }
 
     void check_stations(const fs::path& repo, const fs::path& scratch)
@@ -42,7 +30,7 @@ namespace level_editor_acceptance
         // Shrinking Press Tower's out_of_bounds past `crown` (1774, 620) is
         // refused like the game's startup check, with history intact.
         const auto press_tower = repo / "game/content/levels/press_tower.json";
-        const std::string original = contents(press_tower);
+        const std::string original = read_text(press_tower);
         LevelDocument document(tuning);
         document.load(press_tower);
         require(document.validate().empty() && !document.dirty(), "Press Tower did not open clean");
@@ -60,7 +48,7 @@ namespace level_editor_acceptance
         // Every invalid station shape, as a file: refused at load with the
         // shared rules' words, leaving the open document as it was.
         const auto course = repo / "game/content/levels/movement_course.json";
-        const std::string course_text = contents(course);
+        const std::string course_text = read_text(course);
         const auto variant = [&](const char* name, const std::function<void(rapidjson::Value&, rapidjson::Document&)>& edit)
         {
             auto document_json = parse(course_text);
@@ -69,7 +57,7 @@ namespace level_editor_acceptance
                 if (std::string(entry["name"].GetString()) == "drop_through") { edit(entry, document_json); }
             }
             const auto path = scratch / (std::string("station-") + name + ".json");
-            write(path, encode(document_json));
+            write_text(path, encode(document_json));
             return path;
         };
         LevelDocument checker(tuning);
@@ -115,7 +103,7 @@ namespace level_editor_acceptance
         for (const std::string& stage : catalog.stages)
         {
             const auto path = repo / "game/content/levels" / (stage + ".json");
-            if (!parse(contents(path)).HasMember("stations")) { continue; }
+            if (!parse(read_text(path)).HasMember("stations")) { continue; }
             ++with_stations;
             LevelDocument shipped(tuning);
             shipped.load(path);

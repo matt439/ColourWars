@@ -16,7 +16,7 @@ namespace level_editor_acceptance
 
         void load_alignment(LevelDocument& document, const fs::path& path, const rapidjson::Document& source)
         {
-            write(path, encode(source));
+            write_text(path, encode(source));
             document.load(path);
             require(!document.dirty() && !document.can_undo() && !document.can_redo(),
                 "Alignment fixture did not load at a clean private saved point");
@@ -27,11 +27,11 @@ namespace level_editor_acceptance
         {
             const std::string before = document.serialize();
             const fs::path path = document.path();
-            const std::string disk = contents(path);
+            const std::string disk = read_text(path);
             document.align_origin(selected, grid);
             const std::string after = document.serialize();
             require(encode(parse(after)) == encode(expected) && document.dirty() && document.can_undo() &&
-                !document.can_redo() && document.path() == path && contents(path) == disk,
+                !document.can_redo() && document.path() == path && read_text(path) == disk,
                 "Alignment changed more than its literal authored coordinates or lost its one-edit saved boundary");
             require(document.undo() && document.serialize() == before && !document.dirty() &&
                 !document.can_undo() && document.can_redo() && document.redo() &&
@@ -39,7 +39,7 @@ namespace level_editor_acceptance
                 "Alignment did not retain exactly one complete undo/redo transaction");
             document.align_origin(selected, grid);
             require(document.serialize() == after && document.dirty() && document.can_undo() &&
-                !document.can_redo() && document.path() == path && contents(path) == disk,
+                !document.can_redo() && document.path() == path && read_text(path) == disk,
                 "Repeating alignment changed an already aligned origin, numeric types or history");
             require(document.undo() && document.serialize() == before && !document.can_undo() &&
                 document.redo() && document.serialize() == after && !document.can_redo(),
@@ -52,7 +52,7 @@ namespace level_editor_acceptance
             const Entry level = entry(document, EntryKind::level);
             const std::string saved = document.serialize();
             const fs::path path = document.path();
-            const std::string disk = contents(path);
+            const std::string disk = read_text(path);
             document.set_property(level, "display_name", "Alignment refusal first");
             const std::string first = document.serialize();
             document.set_property(level, "display_name", "Alignment refusal second");
@@ -64,7 +64,7 @@ namespace level_editor_acceptance
                 document.undo() && document.serialize() == first && document.undo() &&
                 document.serialize() == saved && !document.dirty() && !document.can_undo() &&
                 document.redo() && document.serialize() == first && document.can_undo() && document.can_redo() &&
-                document.path() == path && contents(path) == disk,
+                document.path() == path && read_text(path) == disk,
                 "Rejected alignment changed a complete undo/redo snapshot, saved path or private source bytes");
         }
     }
@@ -209,7 +209,7 @@ namespace level_editor_acceptance
         check_alignment_refusal(noop_document, [&] { noop_document.align_origin(noop, 0); }, "Alignment accepted a zero grid");
         // Restore the private saved point before preparing the no-op branch.
         const fs::path noop_path = noop_document.path();
-        const std::string noop_disk = contents(noop_path);
+        const std::string noop_disk = read_text(noop_path);
         noop_document.load(noop_path);
         const std::string noop_saved = noop_document.serialize();
         const Entry level = entry(noop_document, EntryKind::level);
@@ -238,7 +238,7 @@ namespace level_editor_acceptance
             noop_document.serialize() == first && noop_document.undo() && noop_document.serialize() == noop_saved &&
             !noop_document.dirty() && !noop_document.can_undo() && noop_document.redo() &&
             noop_document.serialize() == first && noop_document.can_redo() &&
-            noop_document.path() == noop_path && contents(noop_path) == noop_disk,
+            noop_document.path() == noop_path && read_text(noop_path) == noop_disk,
             "No-op/refused alignment changed complete prepared undo/redo snapshots");
 
         LevelDocument spawn_seed;

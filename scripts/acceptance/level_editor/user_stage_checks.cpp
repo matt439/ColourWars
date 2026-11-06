@@ -44,7 +44,7 @@ namespace level_editor_acceptance
             LevelDocument document;
             document.save(source);
             const std::string saved = document.serialize();
-            const std::string source_bytes = contents(source);
+            const std::string source_bytes = read_text(source);
             const Entry level = entry(document, EntryKind::level);
             document.set_property(level, "display_name", "First pending stage name");
             const std::string first = document.serialize();
@@ -86,7 +86,7 @@ namespace level_editor_acceptance
                         diagnostic.find(rule) != std::string::npos,
                         "Reserved destination was accepted or lost its filename/shared refusal reason");
                     require(!fs::exists(root) && document.serialize() == first && document.path() == source &&
-                        document.dirty() && document.can_undo() && document.can_redo() && contents(source) == source_bytes,
+                        document.dirty() && document.can_undo() && document.can_redo() && read_text(source) == source_bytes,
                         "Reserved target preflight created a folder or changed the document/source/history");
                 }
             }
@@ -101,7 +101,7 @@ namespace level_editor_acceptance
             LevelDocument reopened;
             reopened.load(safe.file);
             require(document.path() == safe.file && !document.dirty() && reopened.serialize() == first &&
-                reopened.serialize() == document.serialize() && contents(source) == source_bytes &&
+                reopened.serialize() == document.serialize() && read_text(source) == source_bytes &&
                 !fs::exists(acceptance::save_path_in(root)),
                 "A safe neighboring stage did not save/reopen without changing the source or player save");
             std::cout << "PASS reserved stage destinations: 22 stems in three cases, lexical refusal before folder creation, "
@@ -125,7 +125,7 @@ namespace level_editor_acceptance
         // Read the manifest's level names independently, so a new shipped
         // stage does not need a count updated here.
         std::vector<std::string> manifest_stages;
-        const rapidjson::Document manifest = parse(contents(repo / "game/content/manifest.json"));
+        const rapidjson::Document manifest = parse(read_text(repo / "game/content/manifest.json"));
         for (const auto& kind : manifest["assets"].GetArray())
         {
             if (std::string(kind["kind"].GetString()) != "level") { continue; }

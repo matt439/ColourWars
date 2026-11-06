@@ -124,14 +124,14 @@ namespace level_editor_acceptance
             "Unknown palette type was accepted");
         reject_without_change(document, [&] { document.load(scratch / "does-not-exist.json"); },
             "Loading absent file succeeded");
-        write(scratch / "malformed.json", "{broken");
+        write_text(scratch / "malformed.json", "{broken");
         reject_without_change(document, [&] { document.load(scratch / "malformed.json"); },
             "Malformed JSON was accepted");
-        write(scratch / "invalid-schema.json", "{}");
+        write_text(scratch / "invalid-schema.json", "{}");
         reject_without_change(document, [&] { document.load(scratch / "invalid-schema.json"); },
             "Missing required fields were accepted");
 
-        const std::string saved_bytes = contents(path);
+        const std::string saved_bytes = read_text(path);
         const HANDLE locked_file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ,
             nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         require(locked_file != INVALID_HANDLE_VALUE, "Could not lock destination for write-failure check");
@@ -139,7 +139,7 @@ namespace level_editor_acceptance
         {
             reject_without_change(document, [&] { document.save(path); },
                 "Saving over a file without delete sharing succeeded");
-            require(contents(path) == saved_bytes, "Failed replacement changed the existing saved file");
+            require(read_text(path) == saved_bytes, "Failed replacement changed the existing saved file");
         }
         catch (...)
         {
@@ -155,7 +155,7 @@ namespace level_editor_acceptance
         {
             reject_without_change(document, [&] { document.save(path); },
                 "Saving over a read-only file succeeded");
-            require(contents(path) == saved_bytes, "Rejected read-only save changed the original bytes");
+            require(read_text(path) == saved_bytes, "Rejected read-only save changed the original bytes");
         }
         catch (...)
         {
@@ -166,11 +166,11 @@ namespace level_editor_acceptance
             "Could not restore destination attributes after save-failure check");
         const fs::path blocked = scratch / "blocked.json";
         fs::create_directory(blocked);
-        write(blocked / "sentinel.txt", "retain existing directory");
+        write_text(blocked / "sentinel.txt", "retain existing directory");
         reject_without_change(document, [&] { document.save(blocked); },
             "Saving over an existing directory succeeded");
-        require(contents(blocked / "sentinel.txt") == "retain existing directory" &&
-            contents(path) == saved_bytes, "Failed save damaged existing filesystem data");
+        require(read_text(blocked / "sentinel.txt") == "retain existing directory" &&
+            read_text(path) == saved_bytes, "Failed save damaged existing filesystem data");
         for (const fs::directory_entry& item : fs::directory_iterator(scratch))
             require(item.path().filename().wstring().find(L".editor-") == std::wstring::npos,
                 "A rejected save left a temporary or backup behind");
