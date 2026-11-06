@@ -1794,7 +1794,9 @@ measurements and receipts are unchanged.
   `Level`'s order (`begin_step`, `finish_step`, `step`). The `Course`
   fixtures in `tool_motion`, `combat_feedback`, `movement_contact`,
   `quiet_character`, `results_awards`, `view_shake`, `weapon_feedback`,
-  `movement`, `paint_underfoot` and `fixed_slab` derive from it. Those that
+  `movement`, `paint_underfoot` and `fixed_slab` derive from it, and so does
+  `movement`'s `LegacyRun` (`movement/legacy_map_checks.cpp`), ported after
+  review, which steps with the weapon moved and requires no shot. Those that
   own their preferences hold them in a base declared first, so the
   preferences outlive the Player.
 - [support/route_run.h](../scripts/acceptance/support/route_run.h) and its
@@ -1832,8 +1834,12 @@ and Debug: the thirteen bot cases (`bot_team_trials` and the other opt-in
 trials included), `team_gate`, `crossfeed`, `cq_blockout`, `press_tower`,
 `turbulence_blockout`, the ten `Course` cases and `fixed_slab`.
 Release run logs and CSVs were compared with a run of the parent commit: all 44
-match, trial fingerprints, counts and the crossfeed, CQ and Turbulence blockout
-receipts included, apart from `fixed_slab`'s process-id folder name.
+match, trial counts, `MEASURE` lines and the crossfeed, CQ and Turbulence
+blockout receipts included, apart from `fixed_slab`'s process-id folder name.
+No fingerprint was compared before and after: the bot cases print none, and no
+Debug baseline was run. Fingerprints were checked only within each run, where
+every replay must reproduce its recording's state (and, in Debug, its complete
+`MatchFingerprint`) in both presets.
 `check-movement-feedback.ps1` passed in both presets, and
 `check-acceptance-selection.ps1` passed.
 
