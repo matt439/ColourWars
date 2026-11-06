@@ -41,7 +41,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `HYG#81` | DECISION | LOW | L | AGENTS.md reserves `SCREAMING_SNAKE` for macros, but about 59 constants use it. The author amends the rule or approves the renames. [Scope](docs/code-hygiene.md#the-screaming_snake-constant-rule-hyg81). |
-| `HYG#87` | OPEN | LOW | M | Probe tidy-ups: stale `srand`, dead code, the `debug_console` and `level_editor` cases, idioms, typos and `#`-less row ids. [Scope](docs/code-hygiene.md#probe-tidy-ups-hyg87). |
 | `HYG#88` | OPEN | MED | L | Shared painter verifier evidence helpers for about forty hand-rolled PPM, number and CSV checks; one lost its payload check. [Scope](docs/code-hygiene.md#painter-verifier-evidence-helpers-hyg88). |
 | `HYG#89` | OPEN | MED | L | Shared PowerShell probe-build pipeline (six drifted copies), diagnostic scans, window enumeration and art PNG writer. [Scope](docs/code-hygiene.md#shared-powershell-probe-pipeline-and-art-helpers-hyg89). |
 | `HYG#90` | OPEN | LOW | M | Art build scripts read team colours from presentation; art READMEs corrected against the data. [Scope](docs/code-hygiene.md#art-build-scripts-and-art-docs-hyg90). |

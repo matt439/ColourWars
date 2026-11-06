@@ -1958,6 +1958,116 @@ pins.
 
 ### Probe tidy-ups (`HYG#87`)
 
+**Done 2026-11-06; probes only, no game behaviour change.** Every probe takes the
+same steps, seeds and pins. Besides failure wording and PASS summaries, a few
+checks are stricter: `require_leaf`, `motion_of`, the clipboard restore,
+`DeleteFileW` and `display_awake_lifecycle`'s seeded settings.
+
+- **Stale `srand`.** A level build and `Level::update` have read no `rand()`
+  since `HYG#39`, so the `srand` calls before builds and updates went: the six
+  named (Press Tower's painter leaf, `aim_marker`, `player_identity`,
+  `debug_console`'s `level_checks.cpp`, crossfeed's `home_loop_checks.cpp`,
+  `paint_surfaces/fixtures.h`) and their siblings in `blocked_shot`, three more
+  crossfeed checks, `idle_drip`, `turbulence_blockout` and ten more painter
+  leaves. Those before a `rand()` the probe compares, a terminal-RNG witness
+  or a `shuffle_teams` call stay.
+- **Dead code.** 24 unused `Mouse` members and their `mouse.h` includes,
+  `remembered_setup`'s nine unused `SettingsSession` locals, `team_gate`'s
+  write-only `bot_passes`, `instant_replay`'s claim of the slot
+  `begin_input_claims` already gave seat 0, the painter's three `#else` throws
+  its startup requires already refuse, the `content` and `canvas` parameters
+  three painter checks only silenced, five unused standard includes and the
+  unbuilt `turbulence_slab_stage/tools/register.cpp`. Crossfeed's
+  `swept_surface` is not dead any more: since `HYG#85` it is the shared
+  route-run fixture's, and CQ sets it.
+- **`debug_console`.** One `{path, accessor}` table, `tuned_colours`, lists the
+  58 audited colours, with a named index for every row (the first thirteen were
+  bare numbers); `colour_paths` and `colour_values` derive from it, and the
+  sweep's hand-written list is a loop. `require_leaf` replaces 200 dereferenced
+  JSON `find()` results. `reserved_windows_stems` replaces three copies of the
+  device-name list. `DebugPerf::capacity` and `max_capture_frames` and
+  `ReplayFile::format_version` and `checkpoint_interval` replace their literal
+  values. `fixtures.h` is the one index of the checks `main` calls, and its
+  colour comment names all its users.
+- **`level_editor`.** `named`, `property`, `refuses` and `refuses_file` live in
+  the folder's fixtures (seven copies gone), and its `contents`/`write` pair
+  gave way to `read_text` and `write_text`. `motion_of` returns a copy of the
+  motion block and checks it exists. The registration check requires its
+  `DeleteFileW`, and `level_editor_dpi`'s clipboard check requires the caller's
+  text back before its PASS line says so.
+- **Idioms.** [support/stderr_capture.h](../scripts/acceptance/support/stderr_capture.h)
+  holds the painter's descriptor capture as `acceptance::StderrCapture`;
+  `match_records`' and `debug_console`'s `captured_stderr` use it, so a
+  throwing body no longer leaves stderr redirected. `story_audio`'s last five
+  pieces are included inside the fixture's namespace like the rest. File-local
+  helpers in `input_bindings` and the perf checks have internal linkage.
+  `team_palette.cpp` lost its BOM (the runner compiles with `/utf-8`).
+  `fatal_report` takes a `ScratchDirectory` instead of leaving
+  `fatal-report-fixtures-*` beside its executable. `scratch.h`, `json_fixture.h`
+  and `stderr_capture.h` name paths in messages as UTF-8 (`utf8_path`):
+  `path.string()` threw on `fatal_report`'s Unicode profile before the check
+  could report.
+- **Wording.** Row ids in probe messages and comments take their `#`
+  (`ROAD#34`, `ROAD#35`, `ED#16`, `DBG#2`-`DBG#17`, `HYG#17`, `CI#1`), three
+  `.ps1` messages included. About forty words fused to numbers are split
+  (`exceeded 500`, `requires 1280x720`); evidence stems and CSV keys are not
+  touched. The two painter headers that called themselves drafts don't. The
+  ten named PASS summaries say attended, human or pad checks are outside the
+  probe instead of "remain open".
+- **From `HYG#62`.** 35 probe files spelled the shipping step through
+  `StepTimer`; they use `SECONDS_PER_STEP`, the same value.
+- **From `HYG#84`.** The listed private readers and writers use `read_text`,
+  `write_text`, `read_document` and `write_document`. 19 painter leaves read
+  their save through `IsolatedSave::save_bytes`, and two through `read_text` of
+  the path they are handed. `menu_text`'s and `menu_focus_motion`'s `Variants`
+  and `gameplay_tuning`'s and `tunnelling`'s `Fixtures` derive from
+  `JsonVariants`. The edit-a-copy writers in `aim_marker`, `blocked_shot`,
+  `cursor_marker`, `player_identity`, `teammate_markers`, `team_palette`,
+  `user_stages`, `moving_structure` (loader, editor-save and replay checks) and
+  the ferry, landmark and monitor painter leaves write with `write_document`.
+- **From `HYG#86`.** `display_awake_lifecycle` seeds its play settings in the
+  Save before the session reads them, and checks the session took them.
+
+Left as they are:
+
+- `srand` before a compared `rand()`, a terminal-RNG witness or a shuffle (see
+  above). The comments that name an old seed (`srand(41731)` and the like)
+  record what `HYG#39` replaced.
+- Writers that only encode to a string and parse it back (`bot_driver`,
+  `crossfeed`, `fixed_slab`, `handicap`, `level_editor`'s `encode`,
+  `moving_structure/fixtures.h`, `paint_underfoot`, `painter_visual.cpp`,
+  `pad_buttons`, `remembered_setup`'s section, `debug_console`'s
+  `stage_replay_checks.cpp`), `frame_pacing`'s streaming metadata writer and
+  `movement`'s text-editing `ContentVariant` (as `HYG#84` left it).
+- The "tick and `command()` helpers": no copy of either was found in
+  `debug_console` at this tree. The `command` and `unchanged` lambdas are the
+  painter tune leaves', which `HYG#86` left as they differ.
+- Unused includes beyond those the removed code served and five standard
+  headers a scan found; there is no include checker to sweep the rest.
+- The PowerShell side: `check-painter/diagnostics.ps1` and
+  `evidence-record/*.ps1` still say acceptance "remains open" and fuse words to
+  numbers (`Debug adds15`, `full720p`); handed to
+  [`HYG#88`](#painter-verifier-evidence-helpers-hyg88).
+  `check-display-awake.ps1`'s `exceeded180` is `HYG#89`'s `:80` message.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Debug (79 cases) and Release (78), the runnable
+opt-in cases (`-OptIn`, 14) passed in both, and the `Quick` opt-in cases passed
+in both. `user_stages` and `moving_structure`, touched again after the Release
+run had compiled, passed again in Release. On MattPC `check-painter-sweep.ps1`
+passed every focused leaf it runs in Debug (97) and Release (94); the three
+Turbulence trial leaves need a private file and were not run, though their
+only changes were dropped `srand` calls and wording. `check-level-editor.ps1`,
+`check-display-awake.ps1`, `check-movement-feedback.ps1` and
+`check-paint-fx.ps1 -CompileOnly` passed in both presets, and both selection
+checkers passed in pwsh and Windows PowerShell 5.1. One Debug
+`check-level-editor.ps1` run, made while other probes loaded the machine,
+failed `level_editor_dpi`'s "MK_CONTROL canvas messages changed the probe
+thread's keyboard state" with and without this row's clipboard change; it
+passed when rerun alone.
+
+The row as filed:
+
 - Delete the `srand` calls that have seeded nothing since `HYG#39`
   (`press_tower_checks.h:49`, `aim_marker.cpp:320`, `player_identity.cpp:328`,
   `level_checks.cpp:207`, `home_loop_checks.cpp:82`, `paint_surfaces/fixtures.h:94`).
@@ -1984,33 +2094,8 @@ pins.
   `CI1`) and the stale "draft" headers. `HYG#61` already wrote `POL#36` in
   `moving_structure/replay_checks.cpp`.
 - Reword the PASS summaries that still say attended or human acceptance
-  "remains open" (from `HYG#61`): `cq_blockout.cpp`, `crossfeed.cpp`,
-  `crossfeed/pressure_checks.cpp`, `press_tower.cpp`, `fixed_slab.cpp`,
-  `turbulence_blockout.cpp`, `turbulence_slopes.cpp`,
-  `balance_runner/self_checks.cpp` and the painter's `cq_blockout_checks.h`
-  and `crossfeed_checks.h`.
-- From `HYG#84`: move the remaining private whole-file readers and writers onto
-  `support/scratch.h`'s checked `read_text` and `write_text` (`debug_console`'s
-  fixtures, `moving_structure`, `turbulence_movers`, `turbulence_slab_tools`,
-  `level_editor`'s `contents`, `user_stages`, `balance_runner`,
-  `fatal_report`, `level_format`, `handicap_metadata`), and the painter's
-  hand-read save lambdas onto `IsolatedSave::save_bytes`. `menu_text`'s and
-  `menu_focus_motion`'s `Variants` can derive from `acceptance::JsonVariants`
-  as `menu_presentation`'s and `weapon_catalog`'s do. These still serialise
-  JSON with their own `rapidjson::Writer` and were not sorted in `HYG#84`:
-  `aim_marker`, `blocked_shot`, `bot_driver`, `crossfeed`, `cursor_marker`,
-  `frame_pacing`, `gameplay_tuning`, `handicap`, `level_format`,
-  `player_identity`, `teammate_markers`, `team_palette`, `tunnelling`,
-  `user_stages`, `debug_console/stage_replay_checks.cpp`,
-  `fixed_slab/support_checks.cpp`, `level_editor/fixtures.cpp`,
-  `moving_structure` (fixtures, loader, editor-save and replay checks),
-  `paint_underfoot/fixtures.h`, `painter_visual.cpp` and five
-  `painter_visual` headers. Move the edit-a-copy ones onto `JsonVariants` and
-  `rejects_variant` (or `write_document`), and leave the ones that only encode
-  to a string.
-- From `HYG#86`: `display_awake_lifecycle.cpp` still seeds its play
-  preferences with a `const_cast` through the session; seed the Save first, as
-  the painter's `seed_play_settings` does.
+  "remains open" (from `HYG#61`), and the hand-offs from `HYG#62`, `HYG#84` and
+  `HYG#86` recorded above.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 
@@ -2033,6 +2118,10 @@ Also:
 - From `HYG#84`: the PowerShell side still spells the private save path out,
   in `check-painter.ps1`'s expected save-failure lines and about thirty
   `verify-*.ps1`. One helper beside `Get-PainterSaveCounts` can own it.
+- From `HYG#87`: `check-painter/diagnostics.ps1` and `evidence-record/*.ps1`
+  still say attended or human acceptance "remains open", which the 2026-11-05
+  decisions waived, and fuse words to numbers (`Debug adds15`, `full720p`,
+  `exceeds99percent`). The probes' own PASS lines were reworded in `HYG#87`.
 
 Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
 

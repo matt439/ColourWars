@@ -40,7 +40,10 @@ own. A probe that touches the save points `LOCALAPPDATA` at a private root with
 [support/isolated_save.h](acceptance/support/isolated_save.h), and one that
 checks a reader refuses bad JSON writes edited copies with
 [support/json_fixture.h](acceptance/support/json_fixture.h); both keep their
-scratch by [support/scratch.h](acceptance/support/scratch.h). A probe that
+scratch by [support/scratch.h](acceptance/support/scratch.h), whose checked
+`read_text` and `write_text` the probes use for whole files. A probe that reads what
+the game prints to stderr captures it with
+[support/stderr_capture.h](acceptance/support/stderr_capture.h). A probe that
 steps one real Player in a bare Scene derives its course from
 `acceptance::PlayerCourse` in
 [support/player_course.h](acceptance/support/player_course.h), which keeps
