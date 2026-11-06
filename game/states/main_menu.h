@@ -318,10 +318,10 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _1_player = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _2_players = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _3_players = nullptr;
-	std::unique_ptr<colourwars::UiTextDropShadow> _4_players = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> one_player_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> two_players_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> three_players_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> four_players_ = nullptr;
 	std::unique_ptr<colourwars::UiTextDropShadow> back_ = nullptr;
 
 	int activating_slot_ = -1;
