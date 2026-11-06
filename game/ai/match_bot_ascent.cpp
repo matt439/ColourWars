@@ -131,7 +131,7 @@ void MatchBot::choose_ascent(const MatchBotObservation& view)
 			// Allow the supported approach at ordinary minimum moving speed,
 			// then retain the existing finite jump/recovery allowance.
 			const double travel = std::ceil(static_cast<double>(approach) /
-				this->tuning_->player().x_initial_velocity * SIMULATION_HZ);
+				this->tuning_->player().x_initial_velocity * simulation::simulation_hz);
 			const double budget = travel + this->tuning_->bots().progress_window_steps +
 				this->tuning_->bots().recovery_steps;
 			this->ascent_steps_left_ = static_cast<int>(std::min(budget,
@@ -237,7 +237,7 @@ void MatchBot::steer_ascent(const MatchBotObservation& view, PlayerInputData& in
 	if (crossing && !this->ascent_airborne_)
 	{ input.x_movement = landing.x > view.center.x ? 1.0f : -1.0f; }
 	input.left_analog_stick = Vector2F(input.x_movement, 0.0f);
-	const float launch_margin = crossing ? std::max(3.0f, std::fabs(view.velocity.x) / static_cast<float>(SIMULATION_HZ) + 2.0f) : 3.0f;
+	const float launch_margin = crossing ? std::max(3.0f, std::fabs(view.velocity.x) / static_cast<float>(simulation::simulation_hz) + 2.0f) : 3.0f;
 	if (!this->ascent_airborne_ && std::fabs(view.center.x - destination) <= launch_margin &&
 		(crossing || std::fabs(view.velocity.x) <= this->locomotion_.ground(view.footing).initial) && !this->jump_was_held_)
 	{ this->jump_left_ = this->locomotion_.held_jump_steps(); }

@@ -29,9 +29,9 @@ using namespace directory_consts;
 using namespace labrador;
 
 // simulation.h restates the engine's tick rate; the step it derives must be
-// the one StepTimer hands every update at target_fps = SIMULATION_HZ.
-static_assert(StepTimer::TicksPerSecond == SIMULATION_TICKS_PER_SECOND &&
-	SECONDS_PER_STEP == static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / SIMULATION_HZ)),
+// the one StepTimer hands every update at target_fps = simulation::simulation_hz.
+static_assert(StepTimer::TicksPerSecond == simulation::simulation_ticks_per_second &&
+	simulation::seconds_per_step == static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / simulation::simulation_hz)),
 	"SECONDS_PER_STEP is not the engine's fixed step");
 
 // Indicates to hybrid graphics systems to prefer the discrete part by default.
@@ -61,7 +61,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		options.resolution = save.resolution();
 		options.fullscreen = save.fullscreen();
 		options.vsync = save.vsync();
-		options.target_fps = SIMULATION_HZ;
+		options.target_fps = simulation::simulation_hz;
 		options.max_threads = 16;
 
 		// Declare borrowed game resources before Application so they outlive its states.

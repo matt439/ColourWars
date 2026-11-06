@@ -79,7 +79,7 @@ namespace
                     .end_sting_volume = info.end_sting_volume() },
                 .stations = info.stations() },
             LevelMatch{ .team_colours = colours, .opening = OpeningMode::off, .duration = 300.0f });
-        const float step = SECONDS_PER_STEP;
+        const float step = simulation::seconds_per_step;
         std::vector<PlayerInputData> inputs(input_slots::count);
         inputs[3].connected = true;
         const auto tick = [&] { level.update(acceptance::slot_seats(level, inputs), step); };

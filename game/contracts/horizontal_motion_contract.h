@@ -131,7 +131,7 @@ namespace horizontal_motion_contract
         const float travel = vertical ? spec.travel_y : spec.travel_x;
         if (!std::isfinite(travel) || !(travel > 0.0f) ||
             !std::isfinite(spec.period_seconds) ||
-            static_cast<double>(spec.period_seconds) < 2.0 * static_cast<double>(SECONDS_PER_STEP) ||
+            static_cast<double>(spec.period_seconds) < 2.0 * static_cast<double>(simulation::seconds_per_step) ||
             !std::isfinite(spec.initial_phase) ||
             !(spec.initial_phase >= 0.0f && spec.initial_phase < 1.0f))
         {

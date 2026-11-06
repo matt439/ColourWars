@@ -75,7 +75,7 @@ namespace
 
 	// The message from check_stage_tunnelling, or empty when it passes.
 	std::string rejection(const GameTuning& tuning, const LevelObjectBuilder& builder,
-		const JsonValue& objects, float seconds_per_step = SECONDS_PER_STEP)
+		const JsonValue& objects, float seconds_per_step = simulation::seconds_per_step)
 	{
 		try
 		{
@@ -106,7 +106,7 @@ namespace
 		const float boost = player.paint_underfoot.enabled ? player.paint_underfoot.own_speed_multiplier : 1.0f;
 		const Vector2F travel = Vector2F(
 			std::max(player.max_velocity.x, std::abs(player.x_initial_velocity)) * boost,
-			player.max_velocity.y + std::abs(player.drop_down_velocity)) * SECONDS_PER_STEP;
+			player.max_velocity.y + std::abs(player.drop_down_velocity)) * simulation::seconds_per_step;
 		for (const acceptance::ManifestEntry& level : acceptance::manifest_level_paths(content))
 		{
 			const LevelLoadedInfo info(labrador::path_to_utf8(level.path).c_str());
@@ -221,7 +221,7 @@ namespace
 		const RectangleF slab(0.0f, 0.0f, 10.0f, 100.0f);
 		require(is_swept(ProjectileType::jet) && !is_swept(ProjectileType::rolling),
 			"The swept exemption no longer matches the kinds the sweep serves");
-		require(can_tunnel(speed * SECONDS_PER_STEP, jet.details.col_rect_size.x, slab.width),
+		require(can_tunnel(speed * simulation::seconds_per_step, jet.details.col_rect_size.x, slab.width),
 			"The demonstration needs a jet the endpoint test alone could lose");
 
 		auto cover = std::make_unique<Structure>("sprite_sheet_1", "square_white_4", slab,
@@ -230,7 +230,7 @@ namespace
 		auto shots = ProjectileBuilder(&tuning, &world.render).build_projectiles({ -40.0f, 50.0f },
 			{ speed, 0.0f }, PlayerTeam::a, 0, Colour::blue, ProjectileType::jet, &world.render);
 		Projectile& shot = *shots.at(0);
-		shot.update(SECONDS_PER_STEP);
+		shot.update(simulation::seconds_per_step);
 		require(shot.shape()->bounding_box().left() > slab.right(),
 			"The jet's endpoint should already be past the slab, as the bound predicts");
 		shot.resolve_movement_contacts(targets);
@@ -238,7 +238,7 @@ namespace
 		require(shot.for_deletion() && contact.has_value() &&
 			std::abs(contact->position.x) < 0.001f,
 			"The swept jet passed through a slab the engine's bound calls unsafe");
-		std::cout << "Swept: a jet at " << speed << " u/s travels " << speed * SECONDS_PER_STEP
+		std::cout << "Swept: a jet at " << speed << " u/s travels " << speed * simulation::seconds_per_step
 			<< " per step past a 10-unit slab (bound " << max_safe_displacement(
 				jet.details.col_rect_size.x, slab.width) << ") and still stops on its face.\n";
 	}

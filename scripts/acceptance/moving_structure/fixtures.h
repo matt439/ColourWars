@@ -51,7 +51,7 @@ namespace moving_structure_acceptance
     inline std::uint64_t double_bits(double value) { return std::bit_cast<std::uint64_t>(value); }
     inline void require_near(float actual, float expected, float tolerance = 0.002f)
     { require(std::isfinite(actual) && std::fabs(actual - expected) <= tolerance, "Unexpected actual moving-structure value"); }
-    inline const float dt = SECONDS_PER_STEP;
+    inline const float dt = simulation::seconds_per_step;
     inline PlayerInputData input(float movement = 0.0f, bool jump = false,
         bool fire = false, bool drop = false)
     {

@@ -21,7 +21,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
     constexpr std::array<ProjectileType, 4> flying = {
         ProjectileType::spray, ProjectileType::jet, ProjectileType::mist, ProjectileType::ball };
     constexpr std::array<WeaponType, 4> flying_tools = {

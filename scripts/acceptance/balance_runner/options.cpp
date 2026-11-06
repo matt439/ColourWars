@@ -314,7 +314,7 @@ namespace balance_runner
 
     float fixed_dt()
     {
-        return SECONDS_PER_STEP;
+        return simulation::seconds_per_step;
     }
 
     std::string tool_name(WeaponType tool)

@@ -123,7 +123,7 @@ namespace
         for (int read = 0; read < 8; ++read) { require(victim->lethal_projectiles() == snapshot, "Snapshot changed across reads"); }
         require(std::rand() == expected_random && victim->health() == health && victim->weapon_ammo() == ammo,
             "Read-only provenance snapshot changed RNG or gameplay state");
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         victim->update(dt);
         require(victim->state() == PlayerState::dead && victim->lethal_projectiles() == snapshot,
             "Entering the dead state changed already-recorded credit");
@@ -273,7 +273,7 @@ namespace
             RectangleF(victims[0]->center(), rolling.details.col_rect_size), Vector2F::zero,
             PlayerTeam::b, owner, Colour::white, &world.render,
             resolve_projectile_strip(rolling, world.render), &rolling));
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         fatal->update(dt); // Real first-step lifetime grace keeps the shared volume available.
         require(!fatal->for_deletion() &&
             fatal->shape()->bounding_box().intersects(victims[0]->shape()->bounding_box()) &&

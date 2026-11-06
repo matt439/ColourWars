@@ -22,7 +22,7 @@ namespace acceptance
     class PlayerCourse
     {
     public:
-        static inline const float step_seconds = SECONDS_PER_STEP;
+        static inline const float step_seconds = simulation::seconds_per_step;
 
         labrador::Scene scene{ nullptr, nullptr };
         Player* player = nullptr;

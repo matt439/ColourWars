@@ -101,7 +101,7 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning(tuning_path.c_str());
         const PlaySettings preferences;
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         WeaponBuilder builder;
 
         for (const auto& item : cases)

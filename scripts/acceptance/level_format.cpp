@@ -574,7 +574,7 @@ namespace
                 [travel](rapidjson::Document& d) { d["collision_objects"][0]["motion"]["travel_x"].SetDouble(travel); });
         }
         check("motion-short-period", false, false, [](rapidjson::Document& d)
-        { d["collision_objects"][0]["motion"]["period"].SetDouble(SECONDS_PER_STEP); });
+        { d["collision_objects"][0]["motion"]["period"].SetDouble(simulation::seconds_per_step); });
         check("motion-overflow-period", true, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"]["period"].SetDouble(1.0e40); });
         check("motion-negative-phase", false, false, [](rapidjson::Document& d)

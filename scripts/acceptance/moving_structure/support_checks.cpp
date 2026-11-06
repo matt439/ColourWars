@@ -82,7 +82,7 @@ namespace moving_structure_acceptance
                 return fixture;
             };
             {
-                auto spec = ferry(); spec.period_seconds = 2.0f * SECONDS_PER_STEP;
+                auto spec = ferry(); spec.period_seconds = 2.0f * simulation::seconds_per_step;
                 auto fixture = make(spec);
                 throws_with([&] { fixture->build(); }, "Horizontal motion relative horizontal displacement is unsafe");
             }
@@ -166,7 +166,7 @@ namespace moving_structure_acceptance
                 fixture.build(kind == 2 ? OpeningMode::full : OpeningMode::off);
                 require(fixture.level->has_horizontal_motion(), "Opening admission failed to discover actual mover");
                 for (float bad : { -dt, std::numeric_limits<float>::quiet_NaN(),
-                    std::numeric_limits<float>::infinity(), std::nextafter(SECONDS_PER_STEP,
+                    std::numeric_limits<float>::infinity(), std::nextafter(simulation::seconds_per_step,
                         std::numeric_limits<float>::infinity()), 6.4f })
                 { unchanged_refusal(fixture, bad, "Horizontal motion"); }
                 if (kind != 2)
@@ -302,11 +302,11 @@ namespace moving_structure_acceptance
                     document["player"]["x_deacceleration"].SetFloat(1.0f);
                 });
             };
-            for (float seconds : { std::nextafter(SECONDS_PER_STEP, 0.0f), SECONDS_PER_STEP })
+            for (float seconds : { std::nextafter(simulation::seconds_per_step, 0.0f), simulation::seconds_per_step })
             {
                 Fixture f(world); f.tuning = slow();
                 auto& deck = f.mover({ { 0.0f, 800.0f, 320.0f, 10.0f },
-                    8.0f, 2.0f * SECONDS_PER_STEP, 0.0f }, PaintableFaces{});
+                    8.0f, 2.0f * simulation::seconds_per_step, 0.0f }, PaintableFaces{});
                 f.add_player({ 144.0f, 680.0f, 32.0f, 120.0f }); f.build();
                 const float before = deck.bounds().x; CountingFilter filter;
                 f.tick(input(), seconds, &filter);
@@ -323,8 +323,8 @@ namespace moving_structure_acceptance
             {
                 Fixture f(world); f.tuning = slow();
                 const HorizontalMotionSpec spec{ { 0.0f, 800.0f, 320.0f, 10.0f },
-                    travel, 2.0f * SECONDS_PER_STEP, 0.0f };
-                const auto prepared = HorizontalMotion(spec).prepare(SECONDS_PER_STEP);
+                    travel, 2.0f * simulation::seconds_per_step, 0.0f };
+                const auto prepared = HorizontalMotion(spec).prepare(simulation::seconds_per_step);
                 require(bits(prepared.collision.after.x) == bits(travel),
                     "Boundary control did not describe a represented whole-width motion step");
                 auto& deck = f.mover(spec, PaintableFaces{});

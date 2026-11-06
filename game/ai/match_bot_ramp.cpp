@@ -87,7 +87,7 @@ void MatchBot::choose_ramp(const MatchBotObservation& view)
 		// Walking a long slope is different from a stalled jump alignment.
 		// Derive a finite generous budget from ordinary minimum moving speed.
 		const double travel = (static_cast<double>(approach) + bounds.width + view.size.x) /
-			this->tuning_->player().x_initial_velocity * SIMULATION_HZ;
+			this->tuning_->player().x_initial_velocity * simulation::simulation_hz;
 		const double budget = std::ceil(travel) + this->tuning_->bots().progress_window_steps +
 			this->tuning_->bots().recovery_steps;
 		this->ramp_steps_left_ = static_cast<int>(std::min(budget,

@@ -31,7 +31,7 @@ namespace
         return std::abs(actual - expected) < 0.00001f;
     }
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     PlayerInputData input(bool jump = false, float movement = 0.0f, bool fire = false)
     {

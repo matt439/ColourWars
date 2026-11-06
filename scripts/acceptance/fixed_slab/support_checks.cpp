@@ -24,7 +24,7 @@ namespace fixed_slab_acceptance
     namespace
     {
         using namespace labrador;
-        const float dt = SECONDS_PER_STEP;
+        const float dt = simulation::seconds_per_step;
         const TeamColour colours{ Colour::orange, Colour::cyan };
 
         using acceptance::require;

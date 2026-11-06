@@ -35,7 +35,7 @@ namespace movement_acceptance
 
     using acceptance::require;
 
-    inline const float dt = SECONDS_PER_STEP;
+    inline const float dt = simulation::seconds_per_step;
 
     inline PlayerInputData input(bool pressed = false, bool held = false,
         float movement = 0.0f, bool drop = false)

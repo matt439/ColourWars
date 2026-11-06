@@ -147,7 +147,7 @@ namespace
     void check_stage(World& world, const char* stage, unsigned int seed)
     {
         const MatchSetup settings = roster(stage);
-        const float step = SECONDS_PER_STEP;
+        const float step = simulation::seconds_per_step;
 
         // The round, as GameLevel plays it.
         RoundTape tape;

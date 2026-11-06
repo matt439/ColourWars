@@ -22,13 +22,13 @@ namespace moving_structure_acceptance
                 require(motion_bits(zero.after_state) == unchanged && motion_bits(motion.state()) == unchanged,
                     "Preparation changed persisted motion state");
             }
-            const HorizontalMotion normal({ anchor, 40.0f, 2.0f * SECONDS_PER_STEP, 0.0f });
-            const auto endpoint = normal.prepare(SECONDS_PER_STEP);
+            const HorizontalMotion normal({ anchor, 40.0f, 2.0f * simulation::seconds_per_step, 0.0f });
+            const auto endpoint = normal.prepare(simulation::seconds_per_step);
             require(endpoint.collision.segment_count == 1 && endpoint.after_state.phase == 0.5 &&
                 endpoint.after_state.direction == -1 && endpoint.after_state.current_offset.x == 40.0f,
                 "Endpoint must retain one interval and choose its outgoing direction");
-            const HorizontalMotion reverse({ anchor, 40.0f, 2.0f * SECONDS_PER_STEP, 0.25f });
-            const auto turn = reverse.prepare(SECONDS_PER_STEP);
+            const HorizontalMotion reverse({ anchor, 40.0f, 2.0f * simulation::seconds_per_step, 0.25f });
+            const auto turn = reverse.prepare(simulation::seconds_per_step);
             require(turn.after_state.phase == 0.75 && turn.after_state.direction == -1 &&
                 turn.collision.before == turn.collision.after && turn.collision.segment_count == 2,
                 "An equal-net interior reversal was collapsed to an endpoint chord");
@@ -36,8 +36,8 @@ namespace moving_structure_acceptance
                 turn.collision.segments[1].begin == 0.5 && turn.collision.segments[1].end == 1.0 &&
                 turn.collision.segments[0].to == 40.0f && turn.collision.segments[1].from == 40.0f,
                 "Interior reversal does not retain both chronological paths");
-            const HorizontalMotion wrapped({ anchor, 40.0f, 2.0f * SECONDS_PER_STEP, 0.5f });
-            const auto wrap = wrapped.prepare(SECONDS_PER_STEP);
+            const HorizontalMotion wrapped({ anchor, 40.0f, 2.0f * simulation::seconds_per_step, 0.5f });
+            const auto wrap = wrapped.prepare(simulation::seconds_per_step);
             require(wrap.after_state.phase == 0.0 && wrap.after_state.direction == 1 &&
                 wrap.collision.segment_count == 1, "Phase wrap selected stale direction or duplicate interval");
             const HorizontalMotion rounded({ anchor, 4.0f, (std::numeric_limits<float>::max)(), 0.25f });
@@ -48,11 +48,11 @@ namespace moving_structure_acceptance
                 "A positive-duration rounded-stationary step lost flying-projectile coverage");
             const float nan = std::numeric_limits<float>::quiet_NaN();
             const float infinity = std::numeric_limits<float>::infinity();
-            for (float bad : { -dt, nan, infinity, std::nextafter(SECONDS_PER_STEP, infinity), 1.0f })
+            for (float bad : { -dt, nan, infinity, std::nextafter(simulation::seconds_per_step, infinity), 1.0f })
             { throws_with([&] { std::ignore = normal.prepare(bad); }, "Horizontal motion"); }
             for (float bad : { 0.0f, -1.0f, nan, infinity })
             { throws_with([&] { std::ignore = HorizontalMotion({ anchor, bad, 1.0f, 0.0f }); }, "Motion needs positive finite travel"); }
-            for (float bad : { 0.0f, std::nextafter(2.0f * SECONDS_PER_STEP, 0.0f), nan, infinity })
+            for (float bad : { 0.0f, std::nextafter(2.0f * simulation::seconds_per_step, 0.0f), nan, infinity })
             { throws_with([&] { std::ignore = HorizontalMotion({ anchor, 40.0f, bad, 0.0f }); }, "Motion needs positive finite travel"); }
             for (float bad : { -0.1f, 1.0f, nan, infinity })
             { throws_with([&] { std::ignore = HorizontalMotion({ anchor, 40.0f, 1.0f, bad }); }, "Motion needs positive finite travel"); }

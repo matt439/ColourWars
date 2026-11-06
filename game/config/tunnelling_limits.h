@@ -28,4 +28,4 @@ class LevelObjectBuilder;
 void check_stage_tunnelling(const GameTuning& tuning,
 	const LevelObjectBuilder& builder,
 	const labrador::JsonValue& collision_objects,
-	float seconds_per_step = SECONDS_PER_STEP);
+	float seconds_per_step = simulation::seconds_per_step);

@@ -34,7 +34,7 @@ namespace
         return std::abs(first - second) < 0.0001f;
     }
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     auto observation(const IdleDrip& drip)
     {

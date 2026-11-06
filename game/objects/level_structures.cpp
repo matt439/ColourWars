@@ -100,7 +100,7 @@ namespace
         const double braking = horizontal_up(std::abs(static_cast<double>(values.x_deacceleration)) * factor);
         // These float intermediates exist before any clamp/stop-time branch.
         horizontal_up(acceleration + braking);
-        const double step = static_cast<double>(SECONDS_PER_STEP);
+        const double step = static_cast<double>(simulation::seconds_per_step);
         double reachable_x = std::max({ std::abs(static_cast<double>(velocity.x)), initial, cap });
         double acceleration_step = 0.0;
         double least_braking = (std::numeric_limits<double>::max)();
@@ -298,7 +298,7 @@ void LevelStructures::validate_budget(const Frame* prepared, const Scene& scene,
     if (!this->has_horizontal_motion()) { return; }
     if (prepared != nullptr && prepared->motions.size() != this->horizontal_structures_.size())
     { throw std::invalid_argument("Horizontal motion preparation cardinality differs from admission."); }
-    const double step = static_cast<double>(SECONDS_PER_STEP);
+    const double step = static_cast<double>(simulation::seconds_per_step);
     double maximum_path = 0.0;
     double maximum_lift = 0.0;
     for (const TranslatingStructurePaintable* mover : this->horizontal_structures_)
@@ -332,7 +332,7 @@ void LevelStructures::validate_budget(const Frame* prepared, const Scene& scene,
         {
             const TranslatingStructurePaintable& mover = *this->horizontal_structures_[index];
             const HorizontalMotionSpec spec = mover.motion_state().spec;
-            const HorizontalPreparedStep probe = prepared == nullptr ? mover.prepare_motion(SECONDS_PER_STEP) :
+            const HorizontalPreparedStep probe = prepared == nullptr ? mover.prepare_motion(simulation::seconds_per_step) :
                 prepared->motions[index];
             const HorizontalMotionStep& collision = probe.collision;
             horizontal_box(collision.before); horizontal_box(collision.after);

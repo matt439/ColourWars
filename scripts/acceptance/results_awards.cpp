@@ -28,7 +28,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = SECONDS_PER_STEP;
+    const float dt = simulation::seconds_per_step;
 
     using Awards = std::vector<std::optional<MatchAward>>;
 
