@@ -1001,7 +1001,7 @@ const LowPaintTuning& GameTuning::low_paint() const
 const WeaponTuning& GameTuning::weapon(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
-	if (index >= WEAPON_COUNT || !this->weapon_tuned_[index])
+	if (index >= weapon_count_ || !this->weapon_tuned_[index])
 	{
 		throw std::out_of_range("weapon " + std::to_string(index) +
 			" has no tuning: " + this->source_path_ + " describes the " +
@@ -1014,7 +1014,7 @@ const WeaponTuning& GameTuning::weapon(WeaponType type) const
 const ProjectileTuning& GameTuning::projectile(ProjectileType type) const
 {
 	const size_t index = static_cast<size_t>(type);
-	if (index >= PROJECTILE_COUNT || !this->projectile_tuned_[index])
+	if (index >= projectile_count_ || !this->projectile_tuned_[index])
 	{
 		throw std::out_of_range("projectile " + std::to_string(index) +
 			" has no tuning in " + this->source_path_ + ".");

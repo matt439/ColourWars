@@ -420,8 +420,8 @@ private:
 
 	// Store only concrete primary weapons; random choices and unsupported types
 	// must not resolve to empty tuning records.
-	static constexpr size_t WEAPON_COUNT = TUNED_WEAPON_COUNT;
-	static constexpr size_t PROJECTILE_COUNT =
+	static constexpr size_t weapon_count_ = TUNED_WEAPON_COUNT;
+	static constexpr size_t projectile_count_ =
 		static_cast<size_t>(ProjectileType::count);
 
 	InputTuning input_;
@@ -437,10 +437,10 @@ private:
 	float starting_ammo_ = 1.0f;
 	LowPaintTuning low_paint_{};
 
-	std::array<WeaponTuning, WEAPON_COUNT> weapons_{};
-	std::array<ProjectileTuning, PROJECTILE_COUNT> projectiles_{};
+	std::array<WeaponTuning, weapon_count_> weapons_{};
+	std::array<ProjectileTuning, projectile_count_> projectiles_{};
 
 	// Distinguish absent records from valid records containing zero values.
-	std::array<bool, WEAPON_COUNT> weapon_tuned_{};
-	std::array<bool, PROJECTILE_COUNT> projectile_tuned_{};
+	std::array<bool, weapon_count_> weapon_tuned_{};
+	std::array<bool, projectile_count_> projectile_tuned_{};
 };
