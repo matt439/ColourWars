@@ -2198,7 +2198,9 @@ the reference builder names the actual pose in an error, and the four study
 entry points use `scripts/studies/_paths.py` for the output privacy guard. The
 guard resolves junctions across drives and refuses inaccessible targets instead
 of treating an unresolved path as safe. Synthetic tie-break and path/junction
-regressions cover the failures.
+regressions cover the failures. Refusal messages cover unresolved targets, and
+Study A's source-shape checks follow the lowercase terrain constants from
+`HYG#81`.
 
 All 24 audio tests passed, including real FFmpeg/XWB encoding, clipping and loop
 checks, CLI failures, and exact rewrites of all 103 accepted master containers.

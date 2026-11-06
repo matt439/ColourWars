@@ -664,7 +664,7 @@ def main(argv=None):
 
     for target in [args.report] + ([args.json] if args.json else []):
         if inside_repo_unignored(target):
-            print("error: %s is inside the repository. Participant results stay out of it; "
+            print("error: %s is inside repository source or its location could not be resolved. Participant results stay out of source; "
                   "write under out/ or outside the repository." % target, file=sys.stderr)
             return 2
 

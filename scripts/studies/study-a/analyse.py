@@ -687,7 +687,7 @@ def main(argv):
     coding_dir = os.path.abspath(args.coding or drawings_dir)
     out = os.path.abspath(args.out or drawings_dir.rstrip("\\/") + "-analysis")
     if inside_repo_but_not_out(out):
-        sys.exit(f"refusing to write inside the repository outside out/: {out}")
+        sys.exit(f"refusing output inside repository source or at an unresolved path: {out}; use out/ or an accessible path outside the repository")
     manifest = json.load(open(os.path.join(args.references, "items.json"), encoding="utf-8"))
     if manifest.get("version") != MANIFEST_VERSION:
         sys.exit(f"{args.references}: items.json is version {manifest.get('version')}, this script reads "

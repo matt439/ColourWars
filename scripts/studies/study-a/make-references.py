@@ -198,8 +198,8 @@ BRICK_CELLS = 32        # terrain_material_drawings.cpp: brick = 32 cells
 def check_brick_constants():
     path = os.path.join(REPO, "game/objects/terrain_material_drawings.cpp")
     text = open(path, encoding="utf-8").read()
-    for needle in ("constexpr float course = %d.0f * CELL;" % COURSE_CELLS,
-                   "constexpr float brick = %d.0f * CELL;" % BRICK_CELLS,
+    for needle in ("constexpr float course = %d.0f * cell;" % COURSE_CELLS,
+                   "constexpr float brick = %d.0f * cell;" % BRICK_CELLS,
                    "(index % 2 == 0) ? 0.0f : brick / 2.0f"):
         if needle not in text:
             raise ValueError(f"{path}: expected `{needle}`; update make-references.py to match the bricks")
@@ -335,7 +335,7 @@ def main(argv):
     args = parser.parse_args(argv)
     out = os.path.abspath(args.out)
     if inside_repo_but_not_out(out):
-        sys.exit(f"refusing to write inside the repository outside out/: {out}")
+        sys.exit(f"refusing output inside repository source or at an unresolved path: {out}; use out/ or an accessible path outside the repository")
     os.makedirs(out, exist_ok=True)
 
     builders = {"figure": figure_grid, "bricks": bricks_grid, "brushpot": brushpot_grid}

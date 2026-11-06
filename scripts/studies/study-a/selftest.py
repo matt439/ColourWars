@@ -99,7 +99,7 @@ def prepare(keep):
         return tempfile.mkdtemp(prefix="study-a-selftest-")
     work = os.path.abspath(keep)
     if inside_repo_but_not_out(work):
-        sys.exit(f"refusing --keep inside the repository outside out/: {work}")
+        sys.exit(f"refusing --keep inside repository source or at an unresolved path: {work}")
     if os.path.exists(work) and not os.path.isdir(work):
         sys.exit(f"refusing --keep: {work} is a file")
     if os.path.isdir(work) and os.listdir(work) and not os.path.isfile(os.path.join(work, MARKER)):
