@@ -65,9 +65,9 @@ UiText* SettingsPanelPage::add_text(const char* name, const std::wstring& value,
 UiText* SettingsPanelPage::add_text(const char* name, const std::wstring& value,
 	const std::string& font, const Vector2F& position, const Colour& colour)
 {
-	this->text_.push_back(std::make_unique<UiText>(name, value, font, position,
+	this->text_widgets_.push_back(std::make_unique<UiText>(name, value, font, position,
 		this->render_resources(), colour));
-	UiText* widget = this->text_.back().get();
+	UiText* widget = this->text_widgets_.back().get();
 	this->text_container_->add_child(widget);
 	return widget;
 }

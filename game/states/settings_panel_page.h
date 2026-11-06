@@ -58,7 +58,7 @@ protected:
 
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
-	std::vector<std::unique_ptr<labrador::UiText>> text_;
+	std::vector<std::unique_ptr<labrador::UiText>> text_widgets_;
 	labrador::UiText* status_ = nullptr;
 private:
 	int opening_slot_ = -1;
