@@ -133,6 +133,7 @@ function Quote-ResponsePath {
 }
 
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'probe-build.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
 $repo = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
@@ -218,75 +219,14 @@ try {
             -LogPath (Join-Path $evidence 'build.log')
     }
 
-    $cachePath = Join-Path $build 'CMakeCache.txt'
-    if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) {
-        throw "No configured build at $build. Run without -SkipBuild first."
-    }
-    $cache = @{}
-    foreach ($line in Get-Content -LiteralPath $cachePath) {
-        if ($line -match '^([^/#][^:]*):[^=]*=(.*)$') {
-            $cache[$Matches[1]] = $Matches[2]
-        }
-    }
-    foreach ($key in 'CMAKE_BUILD_TYPE', 'CMAKE_CXX_COMPILER', 'CMAKE_HOME_DIRECTORY',
-        'LABRADOR_RENDER_BACKEND', 'LABRADOR_AUDIO_BACKEND', 'VCPKG_INSTALLED_DIR',
-        'VCPKG_TARGET_TRIPLET') {
-        if (-not $cache.ContainsKey($key)) {
-            throw "The configured build is missing $key. Configure it again."
-        }
-    }
-    if ([System.IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY) -ne $repo) {
-        throw 'The configured build belongs to another checkout.'
-    }
-    if ($cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or
-        $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or
-        $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows') {
-        throw 'These consumer acceptance cases use the d3d11/xaudio2 x64-windows game build.'
-    }
-    $debug = $Preset -eq 'x64-debug'
-    $configuration = if ($debug) { 'Debug' } else { 'Release' }
-    if ($cache.CMAKE_BUILD_TYPE -ne $configuration) {
-        throw "$Preset must contain a $configuration build."
-    }
-
-    $gameDirectory = Join-Path $build 'game'
-    $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
-    $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else {
-        Join-Path $installed 'lib'
-    }
-    # The game library is every game source but main.cpp; the cases also link
-    # both platform adapters, as the executable does (game/CMakeLists.txt).
-    $libraries = @(
-        (Join-Path $gameDirectory 'colourwars_game.lib'),
-        (Join-Path $gameDirectory 'colourwars_rumble_gamepads.lib'),
-        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
-        (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
-        (Join-Path $dependencyLibraries 'DirectXTK.lib'),
-        (Join-Path $dependencyLibraries 'xaudio2_9redist.lib')
-    )
-    foreach ($path in @($cache.CMAKE_CXX_COMPILER) + $libraries +
-        @((Join-Path $gameDirectory 'ColourWars.exe'), (Join-Path $gameDirectory 'tuning.json'))) {
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-            throw "A required build output is missing: $path"
-        }
-    }
-    $windowsLibraries = @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib',
-        'user32.lib', 'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib',
-        'oleaut32.lib', 'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib', 'Xinput.lib')
-    $common = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8',
-        '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
-        '/DUNICODE', '/D_UNICODE', '/external:W0')
-    if ($debug) { $common += '/MDd' } else { $common += @('/MD', '/DNDEBUG') }
-    foreach ($include in @($repo, (Join-Path $repo 'external/labrador'),
-        (Join-Path $build 'generated'))) {
-        $common += '/I' + (Quote-ResponsePath $include)
-    }
-    foreach ($include in @((Join-Path $repo 'external/rapidjson/include'),
-        (Join-Path $installed 'include/directxtk'),
-        (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
-        $common += '/external:I' + (Quote-ResponsePath $include)
-    }
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -RequiredContent @('tuning.json')
+    $cache = $probeBuild.Cache
+    $debug = $probeBuild.Debug
+    $gameDirectory = $probeBuild.GameDirectory
+    $installed = $probeBuild.Installed
+    $libraries = $probeBuild.Libraries
+    $windowsLibraries = $probeBuild.WindowsLibraries
+    $common = @($probeBuild.CompileArguments)
 
     # The probes use CPU-side game data and do not create a window or hardware device.
     # DLL imports still resolve from the same staged folder as the game.

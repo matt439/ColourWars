@@ -56,6 +56,8 @@ function Assert-Prepared([string]$Run, [string]$ZipPath, [string]$VGpu, [int]$Se
     Assert-True (@(Get-ChildItem -LiteralPath $package -Filter '*.zip' -File).Count -eq 1) 'the package folder must hold one ZIP'
     $copied = Get-Content -LiteralPath (Join-Path $results 'logon.ps1') -Raw
     Assert-True ($copied -ceq (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'sandbox/logon.ps1') -Raw)) 'the logon script copy differs'
+    $helper = Get-Content -LiteralPath (Join-Path $results 'check-windows.ps1') -Raw
+    Assert-True ($helper -ceq (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'check-windows.ps1') -Raw)) 'the window helper copy differs'
     $tokens = $null; $errors = $null
     $null = [Management.Automation.Language.Parser]::ParseInput($copied, [ref]$tokens, [ref]$errors)
     Assert-True ($errors.Count -eq 0) "the logon script does not parse: $($errors | Out-String)"

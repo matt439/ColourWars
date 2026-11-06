@@ -160,6 +160,7 @@ file(WRITE "${OPTIONAL_FILE}" "${optional}\n")
     # Existing validators keep their normal relative metadata paths in this
     # small source tree. These are support metadata, not extra runtime assets.
     $support = @('cmake/runtime_assets.cmake', 'cmake/release_assets.cmake',
+        'cmake/manifest_asset_kinds.cmake', 'cmake/manifest_asset_kinds.json',
         'cmake/stage_runtime_assets.cmake', 'cmake/check_wave_bank.cmake',
         'cmake/check_sprite_fonts.cmake', 'scripts/audio/runtime-bank.json',
         'game/art/sources/fonts/fonts.json')

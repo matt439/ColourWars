@@ -15,6 +15,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/nightly.yml
+      - .github/actions/windows-setup/**
       - scripts/check-painter-sweep.ps1
       - scripts/check-painter/hosted-known-failures.txt
 
@@ -22,7 +23,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -57,24 +58,8 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Point at the runner's vcpkg
-        id: vcpkg
-        shell: pwsh
-        run: |
-          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
-          echo "image=$env:ImageOS-$env:ImageVersion" >> $env:GITHUB_OUTPUT
-
-      # The same key as ci.yml: this is the save its pull requests restore.
-      - name: Cache vcpkg binaries
-        uses: actions/cache@v6
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: vcpkg-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: vcpkg-${{ steps.vcpkg.outputs.image }}-
-
-      - name: Set up MSVC
-        shell: pwsh
-        run: ./scripts/ci/export-msvc-environment.ps1
+      # This save warms the cache the pull request workflow restores.
+      - uses: ./.github/actions/windows-setup
 
       - name: Configure
         run: |

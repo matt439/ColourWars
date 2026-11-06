@@ -19,6 +19,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'check-diagnostics.ps1')
+. (Join-Path $PSScriptRoot 'probe-build.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
 
 if ($AllowSoftwareAdapter -and $Preset -eq 'x64-release') {
@@ -111,65 +113,21 @@ try {
         Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
-    $cachePath = Join-Path $build 'CMakeCache.txt'
-    if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) {
-        throw "No configured build at $build. Run without -SkipBuild first."
-    }
-    $cache = @{}
-    foreach ($line in Get-Content -LiteralPath $cachePath) {
-        if ($line -match '^([^/#][^:]*):[^=]*=(.*)$') { $cache[$Matches[1]] = $Matches[2] }
-    }
-    foreach ($key in 'CMAKE_BUILD_TYPE', 'CMAKE_CXX_COMPILER', 'CMAKE_HOME_DIRECTORY',
-        'LABRADOR_RENDER_BACKEND', 'LABRADOR_AUDIO_BACKEND', 'VCPKG_INSTALLED_DIR',
-        'VCPKG_TARGET_TRIPLET') {
-        if (-not $cache.ContainsKey($key)) { throw "Configured build is missing $key." }
-    }
-    $debug = $Preset -eq 'x64-debug'
-    $configuration = if ($debug) { 'Debug' } else { 'Release' }
-    if ([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY) -ne $repo -or
-        $cache.CMAKE_BUILD_TYPE -ne $configuration -or
-        $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or
-        $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or
-        $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows') {
-        throw 'The probe requires this checkout and the selected d3d11/xaudio2 x64-windows preset.'
-    }
-    $gameDirectory = Join-Path $build 'game'
-    $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
-    $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else { Join-Path $installed 'lib' }
-    # The game library and both platform adapters, as the executable links them.
-    $libraries = @(
-        (Join-Path $gameDirectory 'colourwars_game.lib'),
-        (Join-Path $gameDirectory 'colourwars_rumble_gamepads.lib'),
-        (Join-Path $gameDirectory 'colourwars_display_awake.lib'),
-        (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
-        (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
-        (Join-Path $dependencyLibraries 'DirectXTK.lib'),
-        (Join-Path $dependencyLibraries 'xaudio2_9redist.lib')
-    )
-    foreach ($path in @($cache.CMAKE_CXX_COMPILER) + $libraries +
-        @((Join-Path $gameDirectory 'ColourWars.exe'), (Join-Path $gameDirectory 'presentation.json'))) {
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing build output: $path" }
-    }
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -RequiredContent @('presentation.json')
+    $cache = $probeBuild.Cache
+    $debug = $probeBuild.Debug
+    $gameDirectory = $probeBuild.GameDirectory
+    $installed = $probeBuild.Installed
+    $libraries = $probeBuild.Libraries
     $source = Join-Path $PSScriptRoot 'acceptance/movement_feedback_visual.cpp'
     $executable = Join-Path $run 'movement_feedback_visual.exe'
     $responseFile = Join-Path $run 'compile.rsp'
-    $arguments = @('/nologo', '/EHsc', '/std:c++20', '/W4', '/WX', '/permissive-', '/utf-8',
-        '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
-        '/DUNICODE', '/D_UNICODE', '/external:W0')
-    if ($debug) { $arguments += @('/MDd', '/Zi') } else { $arguments += @('/MD', '/DNDEBUG') }
-    foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
-        $arguments += '/I' + (Quote-Path $include)
-    }
-    foreach ($include in @((Join-Path $installed 'include/directxtk'),
-        (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
-        $arguments += '/external:I' + (Quote-Path $include)
-    }
+    $arguments = @($probeBuild.CompileArguments)
+    if ($debug) { $arguments += '/Zi' }
     $arguments += @((Quote-Path $source), ('/Fe:' + (Quote-Path $executable)),
         ('/Fo:' + (Quote-Path (Join-Path $run 'movement_feedback_visual.obj'))))
     $arguments += @($libraries | ForEach-Object { Quote-Path $_ })
-    $arguments += @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',
-        'gdi32.lib', 'winspool.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib',
-        'uuid.lib', 'comdlg32.lib', 'advapi32.lib', 'comctl32.lib', 'Xinput.lib')
+    $arguments += $probeBuild.WindowsLibraries
     $arguments | Out-File -LiteralPath $responseFile -Encoding unicode
     Write-Host "Compile movement feedback visual probe ($Preset)"
     Invoke-Logged -Command $cache.CMAKE_CXX_COMPILER -Arguments @("@$responseFile") `
@@ -216,12 +174,7 @@ try {
         ($result.adapter_kind -eq 'software' -and -not $AllowSoftwareAdapter)) {
         throw 'The probe did not report one adapter matching the requested policy.'
     }
-    foreach ($line in Get-Content -LiteralPath (Join-Path $run 'run.err')) {
-        if ($line.Trim() -ne '' -and
-            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
-            throw "Unexpected probe diagnostic: $line"
-        }
-    }
+    Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err'))
     if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
         throw 'The visual probe unexpectedly created a save.'
     }

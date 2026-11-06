@@ -1,17 +1,18 @@
+. (Join-Path $PSScriptRoot '../check-windows.ps1')
+. (Join-Path $PSScriptRoot '../probe-build.ps1')
 # The Win32 input driver and the launch, focus and transcript helpers of
 # scripts/check-debug-console.ps1, which dot-sources this file. They read that
-# script's $output, $executable, $StartupSeconds, $window and $transcript at
+# script's output, executable, startup deadline, window, transcript and profile at
 # call time.
 
 . (Join-Path $PSScriptRoot '..\drawing-references.ps1')
 . (Join-Path $PSScriptRoot '..\quiet-game.ps1')
 if (-not ('ColourWars.ConsoleDriver4' -as [type])) {
-    Add-Type -ReferencedAssemblies $DrawingReferences -TypeDefinition @'
+    Add-Type -ReferencedAssemblies $DrawingReferences -TypeDefinition (@'
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 
 namespace ColourWars
@@ -21,10 +22,7 @@ namespace ColourWars
         [StructLayout(LayoutKind.Sequential)]
         public struct Rect { public int Left, Top, Right, Bottom; }
 
-        private delegate bool EnumWindowProc(IntPtr window, IntPtr parameter);
-        [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
         [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
         [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll")] private static extern bool AttachThreadInput(uint attach, uint to, bool doAttach);
         [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
@@ -38,18 +36,7 @@ namespace ColourWars
 
         public static IntPtr FindGame(int processId)
         {
-            IntPtr result = IntPtr.Zero;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner != processId) return true;
-                var name = new StringBuilder(256);
-                GetClassName(window, name, name.Capacity);
-                if (name.ToString() != "ColourWarsWindowClass") return true;
-                result = window;
-                return false;
-            }, IntPtr.Zero);
-            return result;
+            return ConsoleOwnedWindows.Find(processId, "ColourWarsWindowClass");
         }
 
         public static bool IsForeground(IntPtr window)
@@ -131,7 +118,7 @@ namespace ColourWars
         }
     }
 }
-'@
+'@ + (Get-CheckWindowSource 'ConsoleOwnedWindows'))
 }
 
 $grave = 0xC0; $enter = 0x0D; $escape = 0x1B; $alt = 0x12; $shift = 0x10
@@ -269,4 +256,40 @@ function Assert-Transcript([string[]]$expected, [string]$what) {
     foreach ($line in $expected) {
         if (-not $log.Contains($line)) { throw "The $what transcript lacks: $line" }
     }
+}
+
+function Get-TuningMenuNavigation {
+    $build = Get-ProbeBuild -Repo $repo -Preset 'x64-debug'
+    $scratch = Join-Path $output 'menu-navigation'
+    $null = New-Item -ItemType Directory -Path $scratch -Force
+    $probe = Join-Path $scratch 'debug_menu_navigation.exe'
+    $response = Join-Path $scratch 'compile.rsp'
+    $arguments = @($build.CompileArguments) + @(
+        (ConvertTo-ProbeResponsePath (Join-Path $repo 'scripts/acceptance/debug_menu_navigation.cpp')),
+        ('/Fe:' + (ConvertTo-ProbeResponsePath $probe)),
+        ('/Fo:' + (ConvertTo-ProbeResponsePath (Join-Path $scratch 'debug_menu_navigation.obj'))))
+    $arguments += @($build.Libraries | ForEach-Object { ConvertTo-ProbeResponsePath $_ })
+    $arguments += $build.WindowsLibraries
+    $arguments | Out-File -LiteralPath $response -Encoding unicode
+    $savedPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $compile = & $build.Cache.CMAKE_CXX_COMPILER "@$response" 2>&1
+        $code = $LASTEXITCODE
+        $compile | Out-File -LiteralPath (Join-Path $scratch 'compile.log') -Encoding utf8
+    }
+    finally { $ErrorActionPreference = $savedPreference }
+    if ($code -ne 0) { throw "Menu navigation probe compilation failed; see $scratch/compile.log" }
+    $savedPath = $env:PATH
+    try {
+        $env:PATH = $build.GameDirectory + ';' + $savedPath
+        $plan = & $probe (Join-Path $repo 'game/content') $build.GameDirectory 2> (Join-Path $scratch 'probe.err')
+        if ($LASTEXITCODE -ne 0) { throw "Menu navigation probe failed; see $scratch/probe.err" }
+        $plan | Set-Content -LiteralPath (Join-Path $scratch 'navigation.json') -Encoding utf8
+        # Windows PowerShell emits a JSON array as one pipeline object. Emit
+        # its elements explicitly so both hosts receive the same sequence.
+        $parsed = $plan | ConvertFrom-Json
+        foreach ($step in $parsed) { $step }
+    }
+    finally { $env:PATH = $savedPath }
 }

@@ -44,10 +44,10 @@ if (-not (Test-Path -LiteralPath (Join-Path $root 'external/labrador/CMakeLists.
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
 $vs = $null
 if (Test-Path -LiteralPath $vswhere) {
-    # 2022 (17) is the oldest whose CMake reads these presets.
-    $vs = & $vswhere -latest -products * -version '[17.0,' `
+    $vs = & $vswhere -latest -products * `
         -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
         -property installationPath | Select-Object -First 1
+    if ($LASTEXITCODE -ne 0) { $vs = $null }
 }
 if (-not $vs) {
     Stop-Build ("No Visual Studio with C++ tools was found. Install Visual Studio 2022 or " +

@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'check-windows.ps1')
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/failure-reporting'
 }
@@ -26,7 +27,7 @@ function Invoke-Logged {
 }
 
 if (-not ('ColourWars.FatalWindowProbe' -as [type])) {
-    Add-Type -TypeDefinition @'
+    Add-Type -TypeDefinition (@'
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -38,15 +39,9 @@ namespace ColourWars
     {
         private delegate bool EnumWindowProc(IntPtr window, IntPtr parameter);
         [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
         private static extern bool EnumChildWindows(IntPtr parent, EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
         private static extern IntPtr SendLength(IntPtr window, uint message, IntPtr wParam,
             IntPtr lParam, uint flags, uint timeout, out IntPtr result);
@@ -63,32 +58,12 @@ namespace ColourWars
 
         public static IntPtr FindDialog(int processId)
         {
-            IntPtr result = IntPtr.Zero;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner == processId && ClassName(window) == "#32770") {
-                    result = window;
-                    return false;
-                }
-                return true;
-            }, IntPtr.Zero);
-            return result;
+            return FatalOwnedWindows.Find(processId, "#32770");
         }
 
         public static bool HasGameWindow(int processId)
         {
-            bool found = false;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner == processId && ClassName(window) == "ColourWarsWindowClass") {
-                    found = true;
-                    return false;
-                }
-                return true;
-            }, IntPtr.Zero);
-            return found;
+            return FatalOwnedWindows.Find(processId, "ColourWarsWindowClass") != IntPtr.Zero;
         }
 
         public static string Text(IntPtr window)
@@ -124,16 +99,11 @@ namespace ColourWars
 
         public static void CloseOwnedWindows(int processId)
         {
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner == processId) PostMessage(window, 0x0010, IntPtr.Zero, IntPtr.Zero);
-                return true;
-            }, IntPtr.Zero);
+            FatalOwnedWindows.Close(processId);
         }
     }
 }
-'@
+'@ + (Get-CheckWindowSource 'FatalOwnedWindows'))
 }
 
 function Test-FailureCase {
@@ -304,7 +274,7 @@ function Test-FailureCase {
         $CaseResult.metadata_saved = -not $BlockedLog.IsPresent
         $CaseResult.metadata_privacy = if ($BlockedLog) { 'not-written' } else { 'allowlisted-fields-only' }
         $CaseResult.outcome = 'passed'
-        Write-Host "PASS actual wWinMain content failure ($($CaseResult.name)): full cause/dialog/stderr, exit1, metadata outcome/privacy"
+        Write-Host "PASS actual wWinMain content failure ($($CaseResult.name)): full cause/dialog/stderr, exit 1, metadata outcome/privacy"
     }
     catch {
         $CaseResult.diagnostic = $_.Exception.Message
@@ -410,7 +380,7 @@ try {
             -Libraries $libraries -ExpectedMetadata $expectedMetadata -CaseResult $caseResult -BlockedLog:($name -eq 'blocked-log')
     }
     $result.outcome = 'passed'
-    $result.diagnostic = 'Both actual-entry content failures retained the complete original dialog/stderr cause and exit1; allowlisted per-user metadata and blocked-write recovery passed without reaching graphics/audio initialization.'
+    $result.diagnostic = 'Both actual-entry content failures retained the complete original dialog/stderr cause and exit 1; allowlisted per-user metadata and blocked-write recovery passed without reaching graphics/audio initialization.'
 }
 catch {
     $result.diagnostic = $_.Exception.Message

@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from lint import (already_tested, check_changes, engine_pin_problem,
-                  moved_engine_pin, tree_passed)
+                  moved_engine_pin, packaged_markdown, tree_passed)
 
 
 class ChangeChecks(unittest.TestCase):
@@ -26,6 +26,8 @@ class ChangeChecks(unittest.TestCase):
         }.items():
             self.git("config", key, value)
         self.write("seed", "Initial repository.\n")
+        self.write("cmake/release_package.cmake",
+                   (Path(__file__).resolve().parents[2] / "cmake/release_package.cmake").read_text(encoding="utf-8"))
         self.initial = self.commit()
 
     def git(self, *args: str) -> str:
@@ -127,6 +129,17 @@ class ChangeChecks(unittest.TestCase):
                 before = self.commit()
                 self.git("rm", path)
                 self.assertFalse(self.push(before, self.commit()))
+
+    def test_new_packaged_markdown_is_derived_from_install_rule(self) -> None:
+        rule = self.repo / "cmake/release_package.cmake"
+        rule.write_text(rule.read_text(encoding="utf-8") +
+                        '\ninstall(FILES "${PROJECT_SOURCE_DIR}/docs/new-license.md" DESTINATION licenses)\n',
+                        encoding="utf-8")
+        self.assertIn("docs/new-license.md", packaged_markdown(self.repo))
+        self.write("docs/new-license.md")
+        before = self.commit()
+        self.git("rm", "docs/new-license.md")
+        self.assertFalse(self.push(before, self.commit()))
 
     def test_deleting_ordinary_markdown_remains_docs_only(self) -> None:
         self.write("docs/obsolete.md")

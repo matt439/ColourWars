@@ -3,8 +3,8 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/tune/json_spans.h"
-#include "rapidjson/error/en.h"
-#include "rapidjson/reader.h"
+#include <rapidjson/error/en.h>
+#include <rapidjson/reader.h>
 #include <set>
 #include <stdexcept>
 

@@ -21,6 +21,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'check-windows.ps1')
+. (Join-Path $PSScriptRoot 'check-diagnostics.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
@@ -63,24 +65,14 @@ if ($UserStageFixture) {
 $stdoutPath = Join-Path $runDirectory 'startup.out'
 
 if (-not ('ColourWars.StartupWindow' -as [type])) {
-    Add-Type -TypeDefinition @'
+    Add-Type -TypeDefinition (@'
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ColourWars
 {
     public static class StartupWindow
     {
-        private delegate bool EnumWindowProc(IntPtr window, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SendMessageTimeout(IntPtr window, uint message,
             IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
@@ -110,18 +102,7 @@ namespace ColourWars
 
         public static IntPtr FindGame(int processId)
         {
-            IntPtr result = IntPtr.Zero;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner != processId) return true;
-                var name = new StringBuilder(256);
-                GetClassName(window, name, name.Capacity);
-                if (name.ToString() != "ColourWarsWindowClass") return true;
-                result = window;
-                return false;
-            }, IntPtr.Zero);
-            return result;
+            return StartupOwnedWindows.Find(processId, "ColourWarsWindowClass");
         }
 
         public static bool Responds(IntPtr window)
@@ -133,18 +114,11 @@ namespace ColourWars
 
         public static void CloseOwnedWindows(int processId)
         {
-            // Also dismiss an exception dialog, without touching another process.
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner == processId)
-                    PostMessage(window, 0x0010, IntPtr.Zero, IntPtr.Zero);
-                return true;
-            }, IntPtr.Zero);
+            StartupOwnedWindows.Close(processId);
         }
     }
 }
-'@
+'@ + (Get-CheckWindowSource 'StartupOwnedWindows'))
 }
 
 # game/settings.manifest declares per-monitor DPI awareness; a manifest that
@@ -251,19 +225,7 @@ try {
         throw 'The game did not create its save in the isolated profile.'
     }
     [string]$stderr = Read-StartupError
-    if ($RequireNoAudio -and $stderr -notmatch '(?m)^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
-        throw 'The expected optional-wave-bank fallback was not reported.'
-    }
-    foreach ($line in ($stderr -split '\r?\n')) {
-        if ($RequireAudio -and $line -match '^no audio: ') {
-            throw 'The audible startup check unexpectedly used a silent bank.'
-        }
-        if ($line.Trim() -ne '' -and
-            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
-            -not ($userStageRefusal -and $line -match $userStageRefusal)) {
-            throw "Unexpected startup diagnostic: $line"
-        }
-    }
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
         throw 'The broken user stage was not refused with exactly one line.'
     }
@@ -277,16 +239,7 @@ try {
     }
     # Destruction can report errors too, after the last running-process read.
     [string]$stderr = Read-StartupError
-    foreach ($line in ($stderr -split '\r?\n')) {
-        if ($RequireAudio -and $line -match '^no audio: ') {
-            throw 'The audible startup check unexpectedly used a silent bank.'
-        }
-        if ($line.Trim() -ne '' -and
-            $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.' -and
-            -not ($userStageRefusal -and $line -match $userStageRefusal)) {
-            throw "Unexpected shutdown diagnostic: $line"
-        }
-    }
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio -AllowedPattern $userStageRefusal
     $result.outcome = 'passed'
     $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save and graceful shutdown passed.'
     Write-Output $result.diagnostic

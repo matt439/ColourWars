@@ -2169,28 +2169,53 @@ its three private `TrialPath` leaves by design. Evidence:
 
 ### Shared PowerShell probe-pipeline and art helpers (`HYG#89`)
 
-Add dot-sourced helpers:
+**Done 2026-11-07; tooling behaviour changes.** `scripts/probe-build.ps1`
+replaces the six copied cache/flags/include/library pipelines. It validates the
+checkout, configuration and d3d11/xaudio2/xinput triplet, uses the client's
+RapidJSON root and includes XInput consistently. Callers explicitly choose the
+real platform adapters or their recording replacements. The console's new CPU
+query uses the same builder.
 
-- `probe-build.ps1`, for the CMakeCache, compile-flag and library pipeline that
-  six scripts copy (`check-movement-feedback.ps1:33`; it has drifted on the
-  rapidjson root and Xinput);
-- `check-diagnostics.ps1`, for the stderr and optional-bank scans
-  (`check-startup.ps1:257`);
-- one window enumerator (`:77`);
-- one art PNG writer (`build-painter-art.ps1:17`, `build-terrain-art.ps1:17`).
+`check-diagnostics.ps1` owns the optional-bank diagnostic and unexpected-stderr
+scan, including the engine's complete README suffix; audible/fallback checks
+and the expected user-stage refusal remain distinct. `check-windows.ps1` owns
+one process-filtered window enumerator, embedded with distinct class names in
+startup, fatal-report, editor/guidance, console and sandbox checks. Sandbox
+staging copies the helper with its logon script. The four art scripts use one
+PNG writer and require Windows PowerShell (`HYG#90`). Build/Study B capture
+find Visual Studio with the CI query, the affected messages are spaced and
+current, and the script index describes the actual path/host requirements.
 
-Also:
+The foreground driver exposed two older assumptions: numeric menu offsets
+and the perf header. It now obtains Down/Enter steps from the actual
+`DebugMenuModel`/`TuneDocument` through
+`acceptance/debug_menu_navigation.cpp`, including filtering and pagination;
+the real keyboard interaction and exact x-acceleration transcript assertion
+remain. The CPU query uses UTF-8 paths and the real source/staged directory
+roles. `check-debug-console.ps1 -CompileOnly` builds/queries it without a
+window, input or device; the driver now needs an x64 Developer shell for that
+compile. Conflicting mode switches fail before imports/output creation.
 
-- Require Windows PowerShell in the `build-*-art` scripts
-  (`drawing-references.ps1:4`).
-- Use the CI query in `build.ps1:43`, and `vswhere` in
-  `capture-study-b.ps1:78`.
-- Fix the messages: `check-display-awake.ps1:80`,
-  `check-failure-reporting.ps1:307`, `check-debug-console.ps1:51` and
-  `driver.ps1:1`.
-- Correct `scripts/README.md:6`'s OutputDirectory claim.
+All affected runtime checks passed in both applicable presets: startup with
+the bank and isolated missing-bank/user-stage fixtures, movement feedback,
+paint effects, display lifecycle, failure reporting and the level editor.
+The sandbox generator checker passed 68 checks in each PowerShell host;
+`check-probe-helpers.ps1` passed 36 assertions in each, covering build guards,
+diagnostics and real hidden owned-window enumeration. Acceptance/painter
+selection checks passed in both hosts. Both plain-shell build wrappers and
+all four Windows PowerShell art builds passed.
 
-Run each touched `check-*` script in both presets.
+The Debug-only foreground console passed phases 1/2 in its initial run and
+phases 3/4 after the driver repairs: exact menu mutation, twelve tour images,
+review rasters/checksums, bots, live-console blanking, perf and persisted
+binds/history. Its CPU-only query passed both hosts and distinct staged/source
+Unicode/pagination fixtures; all conflicting mode combinations were refused
+without helpers/compiler/game/output. Debug frame pacing compiled and ran a
+short 1/2/4-player shared-load diagnostic; this is pipeline correctness, not a
+performance baseline. All validation game processes are closed. Evidence:
+`out/hyg91/`, `out/hygiene-final/` and their retained per-check receipts; final
+console transcripts are under `out/hyg91/debug-console-phase3-final/` and
+`out/hyg91/debug-console-phase4-final/`.
 
 ### Art build scripts and art docs (`HYG#90`)
 
@@ -2227,7 +2252,10 @@ bytes. `audio_pipeline.py` owns the ADPCM geometry and review peak ceiling;
 its overwritten test fixture is fixed. Music `--only` refuses unknown cue ids,
 and runtime-bank publication failures go to stderr.
 
-The frame analyzer reads the capture bound from `DebugPerf`'s declaration.
+The frame analyzer, native capture probe and PowerShell preflight read the
+capture bound from `DebugPerf`'s declaration. The upper bound passes, and both
+CLI paths refuse an oversized frame/warmup count before creating output or
+initializing a device.
 Study B normalizes the optional identity-cue value before participant tie-breaks,
 the reference builder names the actual pose in an error, and the four study
 entry points use `scripts/studies/_paths.py` for the output privacy guard. The
@@ -2276,27 +2304,32 @@ Evidence: `out/hyg92/expanded-comparison.txt`, `out/hyg92/final-debug/`,
 
 ### Build, CI and repository housekeeping (`CI#8`)
 
-- Rename the vcpkg manifest to `colourwars`, drop the hand-repeated version and
-  the unused `doctest` (`vcpkg.json:2`, `:11`). Keep the cache key in step.
-- Move the audio tests after Build, so their failure does not skip every check
-  (`ci.yml:120`).
-- Write the manifest-to-runtime-asset rule once (`cmake/release_assets.cmake:10`).
-  Fix the "four directories" and rapidjson comments (`game/CMakeLists.txt:344`,
-  `:245`).
-- Drop the retired kit from `.gitattributes`, and the duplicate `out/` ignore
-  (`.gitignore:383`).
-- Share the Windows job setup between `ci.yml` and `nightly.yml`
-  (`nightly.yml:67`), and keep a manual dispatch from cancelling the scheduled
-  run (`:24`).
-- Drop the dead `testPresets` (`CMakePresets.json:31`) and the `review-*` trigger
-  (`ci.yml:8`).
-- Add `retention-days` to the startup upload (`:397`).
-- Make the four rapidjson includes use angle brackets (`save.cpp:12`).
-- Fix `lint.py`'s docstring (`:57`), and derive `PACKAGED_DOCS` from the package
-  rule (`:15`).
-- Read each document once in `check_doc_links.py:119`.
+**Done 2026-11-07.** The vcpkg manifest is `colourwars`, with no repeated
+project version or unused doctest dependency. Both workflows use one composite
+Windows setup/cache action and the exported MSVC environment. Audio tests
+follow Build with an independent build-success guard, so their failure leaves
+later checks running. Manual/scheduled nightly runs use distinct concurrency
+groups. Startup artifacts retain seven days; obsolete triggers, test presets,
+kit attributes and the duplicate ignore are removed.
 
-This touches `gate`'s jobs, so the pull request says it weakens nothing (AGENTS.md).
+One manifest-kind extension JSON now generates the CMake rule and the
+editor/registration fixture header. The reviewed asset allowlist and
+missing/unknown-kind/optional-bank checks remain. Registration's isolated
+repository copies the shared CMake/JSON dependencies too. RapidJSON uses four
+angle includes; the related include and five-directory comments are current.
+Lint derives packaged Markdown from the install rule, with a new deletion
+regression, and the link checker caches each document's scan and historical
+status in one read.
+
+All 43 CI Python tests and Markdown links passed. Debug/Release builds,
+editor acceptance and stage-registration integration passed. The Release ZIP
+passed 34 checks across 70 files and started with an audible bank under a
+system-only PATH. The shared manifest rule was also checked for unknown-kind
+rejection. The required `gate` and five Windows legs are preserved, with no
+weakened guards or removed checks. Both-host painter/probe helper checks and
+study privacy tests strengthen coverage; the new Debug CPU menu query is in
+the compile gate with explicit error propagation. Foreground input remains
+local. Evidence: `out/hygci8/`, `out/hygiene-final/` and `out/hyg89/`.
 
 ## Architecture review (2026-10-30)
 

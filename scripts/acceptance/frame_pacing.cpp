@@ -4,6 +4,7 @@
 #include "engine/app/application.h"
 #include "game/states/menu_content_validation.h"
 #include "game/debug/debug_director_impl.h"
+#include "game/debug/capture/debug_perf.h"
 #include "game/config/drawable_text.h"
 #include "game/game_data.h"
 #include "game/config/stage_catalog.h"
@@ -172,8 +173,8 @@ int wmain(int argc, wchar_t** argv)
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         const int players = integer(argv[3], 1, 4);
         require(players == 1 || players == 2 || players == 4, "Capture supports 1/2/4 players");
-        const int frames = integer(argv[4], 1, 36000);
-        const int warmup = integer(argv[5], 1, 36000);
+        const int frames = integer(argv[4], 1, static_cast<int>(DebugPerf::max_capture_frames));
+        const int warmup = integer(argv[5], 1, static_cast<int>(DebugPerf::max_capture_frames));
         const int max_threads = integer(argv[7], 0, 64);
         const bool visible = integer(argv[8], 0, 1) != 0;
         std::filesystem::create_directories(output / "debug");

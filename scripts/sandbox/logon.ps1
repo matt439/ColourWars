@@ -7,7 +7,7 @@
 # the driver's -HostTrial runs the same file with -NoShutdown against the same
 # folders, so its logic is exercised without starting a sandbox.
 #
-# It is self-contained: nothing from the checkout exists inside the sandbox.
+# The driver copies its window helper too; no checkout is needed in the sandbox.
 # It starts ColourWars.exe muted (COLOURWARS_MUTE=1 unless the caller set it)
 # with LOCALAPPDATA in the results folder, waits for the window, closes it
 # with WM_CLOSE as check-startup.ps1 does and records the ZIP's SHA-256, the
@@ -24,6 +24,7 @@ param(
     [switch]$NoShutdown
 )
 
+. (Join-Path $PSScriptRoot 'check-windows.ps1')
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 # Windows PowerShell 5.1 leaves PSScriptRoot empty in parameter defaults.
@@ -119,55 +120,26 @@ try {
     $receipt.build_info = Read-Text (Join-Path $release 'build-info.txt')
 
     if (-not ('ColourWarsSandbox.GameWindow' -as [type])) {
-        Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms -TypeDefinition @'
+        Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms -TypeDefinition (@'
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 
 namespace ColourWarsSandbox
 {
     public static class GameWindow
     {
-        private delegate bool EnumWindowProc(IntPtr window, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
-
         public static bool Find(int processId)
         {
-            bool found = false;
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner != processId) return true;
-                var name = new StringBuilder(256);
-                GetClassName(window, name, name.Capacity);
-                if (name.ToString() != "ColourWarsWindowClass") return true;
-                found = true;
-                return false;
-            }, IntPtr.Zero);
-            return found;
+            return ColourWars.SandboxOwnedWindows.Find(processId, "ColourWarsWindowClass") != IntPtr.Zero;
         }
 
         // WM_CLOSE to every window the game owns, as check-startup.ps1 does;
         // that also dismisses the missing-adapter dialog.
         public static void CloseOwnedWindows(int processId)
         {
-            EnumWindows((window, parameter) => {
-                uint owner;
-                GetWindowThreadProcessId(window, out owner);
-                if (owner == processId)
-                    PostMessage(window, 0x0010, IntPtr.Zero, IntPtr.Zero);
-                return true;
-            }, IntPtr.Zero);
+            ColourWars.SandboxOwnedWindows.Close(processId);
         }
 
         public static void CaptureScreen(string path)
@@ -182,7 +154,7 @@ namespace ColourWarsSandbox
         }
     }
 }
-'@
+'@ + (Get-CheckWindowSource 'SandboxOwnedWindows'))
     }
 
     $profileDirectory = Join-Path $Results 'profile'

@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'probe-build.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (!$OutputDirectory) { $OutputDirectory=Join-Path $repo 'out/validation/display-awake' }
@@ -40,12 +41,9 @@ try {
     Push-Location -LiteralPath $repo
     try {
         if(!$SkipBuild){Invoke-NativeLogged 'cmake' @('--preset',$Preset) (Join-Path $run 'configure.log');Invoke-NativeLogged 'cmake' @('--build','--preset',$Preset,'--parallel','1') (Join-Path $run 'build.log')}
-        $build=Join-Path $repo "out/build/$Preset";$cache=@{}
-        foreach($line in Get-Content -LiteralPath (Join-Path $build 'CMakeCache.txt')){if($line -match '^([^/#][^:]*):[^=]*=(.*)$'){$cache[$Matches[1]]=$Matches[2]}}
-        $debug=$Preset -eq 'x64-debug';$configuration=if($debug){'Debug'}else{'Release'}
-        foreach($key in @('CMAKE_HOME_DIRECTORY','CMAKE_BUILD_TYPE','CMAKE_CXX_COMPILER','LABRADOR_RENDER_BACKEND','LABRADOR_AUDIO_BACKEND','VCPKG_INSTALLED_DIR','VCPKG_TARGET_TRIPLET')){if(!$cache.ContainsKey($key)){throw "Missing configured $key"}}
-        if(![StringComparer]::OrdinalIgnoreCase.Equals([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY),$repo) -or $cache.CMAKE_BUILD_TYPE -ne $configuration -or $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows'){throw 'Wrong checkout/configuration/backend/triplet'}
-        $game=Join-Path $build 'game'
+        $build=Join-Path $repo "out/build/$Preset"
+        $probeBuild=Get-ProbeBuild -Repo $repo -Preset $Preset -Adapters @()
+        $cache=$probeBuild.Cache;$debug=$probeBuild.Debug;$game=$probeBuild.GameDirectory
         # The probe links the game library alone. Neither platform adapter library is linked: the probe defines DisplayAwake's default constructor and the recording rumble factory itself.
         $gameLibrary=Join-Path $game 'colourwars_game.lib';$platform=Join-Path $game 'colourwars_display_awake.lib';$motors=Join-Path $game 'colourwars_rumble_gamepads.lib'
         foreach($path in @($gameLibrary,$platform,$motors)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "Missing game library: $path"}}
@@ -53,21 +51,17 @@ try {
         if(@($members|Where-Object{$_ -match '(^|[\\/])states[\\/]game_states\.cpp\.obj$'}).Count -ne 1){throw 'Actual GameLevel object is absent from the game library'}
         if(@($members|Where-Object{$_ -match '(^|[\\/])(main|display_awake|rumble_gamepads)\.cpp\.obj$'}).Count -ne 0){throw 'The game library carries the entrypoint or a platform adapter'}
         $result.library_partition=[ordered]@{linked_game_library=[ordered]@{path=$gameLibrary;sha256=(Get-FileHash $gameLibrary).Hash;member_count=$members.Count};entrypoint='game/main.cpp is built only into ColourWars.exe';display_request_adapter_omission=[ordered]@{path=$platform;sha256=(Get-FileHash $platform).Hash;source='game/display_awake.cpp';source_sha256=(Get-FileHash (Join-Path $repo 'game/display_awake.cpp')).Hash};motor_adapter_omission=[ordered]@{path=$motors;sha256=(Get-FileHash $motors).Hash;source='game/input/rumble_gamepads.cpp';replacement='recording default factory; no native motor call'}}
-        $installed=Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET;$dep=if($debug){Join-Path $installed 'debug/lib'}else{Join-Path $installed 'lib'}
-        $libraries=@((Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),(Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),(Join-Path $dep 'DirectXTK.lib'),(Join-Path $dep 'xaudio2_9redist.lib'))
+        $libraries=@($probeBuild.Libraries | Where-Object { $_ -ne $gameLibrary })
         $source=Join-Path $PSScriptRoot 'acceptance/display_awake_lifecycle.cpp';$exe=Join-Path $run 'display_awake_lifecycle.exe';$rsp=Join-Path $run 'compile.rsp'
         $sourcePaths=@('game/display_awake.h','game/display_awake.cpp','game/input/rumble_sink.h','game/input/rumble_gamepads.cpp','game/states/game_states.h','game/states/game_states.cpp','scripts/acceptance/display_awake_lifecycle.cpp','scripts/acceptance/painter_visual/rumble_sink_fixture.h','scripts/check-display-awake.ps1')
         $result.source_hashes=@(foreach($path in $sourcePaths){[ordered]@{path=$path;sha256=(Get-FileHash (Join-Path $repo $path)).Hash}})
         $result.library_hashes=@(foreach($path in $libraries){[ordered]@{path=$path;sha256=(Get-FileHash $path).Hash}})
         $contentPaths=@('manifest.json','tuning.json','presentation.json','levels/movement_course.json')
         $result.content_hashes=@(foreach($path in $contentPaths){[ordered]@{path=$path;sha256=(Get-FileHash (Join-Path $game $path)).Hash}})
-        $arguments=@('/nologo','/EHsc','/std:c++20','/W4','/WX','/permissive-','/utf-8','/DDIRECTX_TOOLKIT_IMPORT','/DUSING_XAUDIO2_REDIST','/DUSING_XINPUT','/DUNICODE','/D_UNICODE','/external:W0')
-        if($debug){$arguments+='/MDd'}else{$arguments+=@('/MD','/DNDEBUG')}
-        foreach($include in @($repo,(Join-Path $repo 'external/labrador'),(Join-Path $build 'generated'))){$arguments+='/I'+(Quote-LiteralPath $include)}
-        foreach($include in @((Join-Path $repo 'external/labrador/external/rapidjson/include'),(Join-Path $installed 'include/directxtk'),(Join-Path $installed 'include/xaudio2redist'),(Join-Path $installed 'include'))){$arguments+='/external:I'+(Quote-LiteralPath $include)}
+        $arguments=@($probeBuild.CompileArguments)
         $arguments+=@((Quote-LiteralPath $source),('/Fe:'+(Quote-LiteralPath $exe)),('/Fo:'+(Quote-LiteralPath (Join-Path $run 'display_awake_lifecycle.obj'))))
         $arguments+=Quote-LiteralPath $gameLibrary;$arguments+=@($libraries|ForEach-Object{Quote-LiteralPath $_})
-        $arguments+=@('d3d11.lib','dxgi.lib','dxguid.lib','kernel32.lib','user32.lib','gdi32.lib','winspool.lib','shell32.lib','ole32.lib','oleaut32.lib','uuid.lib','comdlg32.lib','advapi32.lib', 'comctl32.lib')
+        $arguments+=$probeBuild.WindowsLibraries
         $arguments|Out-File -LiteralPath $rsp -Encoding unicode
         Invoke-NativeLogged $cache.CMAKE_CXX_COMPILER @("@$rsp") (Join-Path $run 'compile.log')
         Invoke-NativeLogged 'dumpbin' @('/nologo','/imports',$exe) (Join-Path $run 'imports.log')
@@ -77,7 +71,7 @@ try {
         try {$process=Start-Process -FilePath $exe -WindowStyle Hidden -PassThru -WorkingDirectory $working -ArgumentList @((Quote-LiteralPath $game),(Quote-LiteralPath $evidence)) -RedirectStandardOutput (Join-Path $run 'run.log') -RedirectStandardError (Join-Path $run 'run.err');$null=$process.Handle;$result.process_id=$process.Id;$result.probe_executable=$exe;$result.process_started_utc=[DateTime]::UtcNow.ToString('o');Save-LifecycleResult}
         finally {$env:PATH=$previousPath;$env:LOCALAPPDATA=$previousProfile;Exit-QuietGame $previousQuietGame}
         $timer=[Diagnostics.Stopwatch]::StartNew()
-        while(!$process.WaitForExit(1000)){if($timer.Elapsed.TotalSeconds -gt 180){throw 'Owned lifecycle probe exceeded180 seconds'}}
+        while(!$process.WaitForExit(1000)){if($timer.Elapsed.TotalSeconds -gt 180){throw 'Owned lifecycle probe exceeded 180 seconds'}}
         $process.WaitForExit();$result.process_id=$process.Id;$result.exit_code=$process.ExitCode
         if($process.ExitCode -ne 0){throw "Lifecycle probe exited $($process.ExitCode); inspect preserved trace and run.err"}
         $summary=Get-Content -LiteralPath (Join-Path $evidence 'display-awake-summary.json') -Raw|ConvertFrom-Json
