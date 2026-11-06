@@ -156,8 +156,8 @@ public:
 	void begin_keyboard_capture();
 	void capture_input_frame(DebugPageTarget& page);
 	void end_keyboard_capture();
-	// A bare developer bind on a capturable Jump key is a warning, not a conflict.
-	bool keyboard_jump_collision(labrador::Key key) const;
+	// A bare developer bind on a capturable keyboard key is a warning, not a conflict.
+	bool keyboard_key_collision(labrador::Key key) const;
 
 	// GameLevel::draw, last: the paint coverage overlay, and a small strip
 	// naming non-default debug state (timescale, pause, feedback,
@@ -206,7 +206,7 @@ inline bool DebugDirector::before_page_update(DebugPageTarget&, float, bool) { r
 inline void DebugDirector::begin_keyboard_capture() {}
 inline void DebugDirector::capture_input_frame(DebugPageTarget&) {}
 inline void DebugDirector::end_keyboard_capture() {}
-inline bool DebugDirector::keyboard_jump_collision(labrador::Key) const { return false; }
+inline bool DebugDirector::keyboard_key_collision(labrador::Key) const { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 inline void DebugDirector::begin_match_draw() const {}
 inline double DebugDirector::frame_time_ms() const { return 0.0; }

@@ -186,9 +186,9 @@ void DebugDirector::end_keyboard_capture()
 	if (this->impl_ != nullptr) { this->impl_->end_keyboard_capture(); }
 }
 
-bool DebugDirector::keyboard_jump_collision(Key key) const
+bool DebugDirector::keyboard_key_collision(Key key) const
 {
-	return this->impl_ != nullptr && this->impl_->keyboard_jump_collision(key);
+	return this->impl_ != nullptr && this->impl_->keyboard_key_collision(key);
 }
 
 void DebugDirector::draw_status(Renderer& renderer) const

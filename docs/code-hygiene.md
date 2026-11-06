@@ -1501,7 +1501,10 @@ arrays. That last change is worth doing whichever way the rule goes.
   "Jump". The page and its gesture are `KeyboardKeysMenu` and
   `KeyboardKeyCapture` (`game/states/keyboard_keys_menu.*`,
   `keyboard_key_capture.*`), the page text `KeyboardKeysMenuText`, and the
-  presentation comments name the page Keyboard Keys.
+  presentation comments name the page Keyboard Keys. The developer-bind
+  warning the page checks for each of its keys is
+  `DebugDirector::keyboard_key_collision` (a follow-up commit; it was missed
+  in the first pass).
 - The five settings panels take `opening_slot`, as `SettingsPanelPage` does.
 - `match_owns_input_slot`.
 - `MainMenuPlayerCount`'s rows are `one_player_` ... `four_players_`; their

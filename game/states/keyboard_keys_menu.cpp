@@ -83,7 +83,7 @@ bool KeyboardKeysMenu::debug_collision() const
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
 		const DesktopControl control = keyboard_control(this->selection_, static_cast<KeyboardAction>(index));
-		if (control.key != Key::none && this->data()->debug().keyboard_jump_collision(control.key)) { return true; }
+		if (control.key != Key::none && this->data()->debug().keyboard_key_collision(control.key)) { return true; }
 	}
 	return false;
 }

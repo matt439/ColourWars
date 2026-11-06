@@ -182,13 +182,13 @@ namespace debug_console_acceptance
 		presentation.set_movement_feedback_enabled(before);
 
 		require(impl.execute("bind ctrl+j feedback toggle").ok &&
-			!director.keyboard_jump_collision(labrador::Key::j),
+			!director.keyboard_key_collision(labrador::Key::j),
 			"A modified developer bind does not collide with a bare Jump key");
 		require(impl.execute("bind j feedback toggle").ok &&
-			director.keyboard_jump_collision(labrador::Key::j) &&
-			!director.keyboard_jump_collision(labrador::Key::f10),
+			director.keyboard_key_collision(labrador::Key::j) &&
+			!director.keyboard_key_collision(labrador::Key::f10),
 			"A bare canonical Jump candidate reports its developer collision without admitting reserved keys");
-		require(impl.execute("unbind j").ok && !director.keyboard_jump_collision(labrador::Key::j),
+		require(impl.execute("unbind j").ok && !director.keyboard_key_collision(labrador::Key::j),
 			"Removing the bare bind clears the Jump collision while its modified bind remains");
 
 		DebugChord consumed;

@@ -329,11 +329,11 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             false, Key::j, Key::j);
 #if COLOURWARS_DEV_TOOLS
         require(director.impl()->execute("bind j \"overlay collision\"").ok &&
-            director.keyboard_jump_collision(Key::j), "Cannot seed a private bare J developer-bind collision");
+            director.keyboard_key_collision(Key::j), "Cannot seed a private bare J developer-bind collision");
         tick();
         copy_check("debug-bind-warning-j", original, help_copy(copy, Key::j, Key::j, true), copy.saved_status,
             false, Key::j, Key::j);
-        require(director.impl()->execute("unbind j").ok && !director.keyboard_jump_collision(Key::j),
+        require(director.impl()->execute("unbind j").ok && !director.keyboard_key_collision(Key::j),
             "Removing a bare developer bind left the visible Jump collision active");
         tick();
 #endif

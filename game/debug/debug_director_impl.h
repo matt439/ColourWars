@@ -98,7 +98,7 @@ public:
 	void begin_keyboard_capture();
 	void capture_input_frame(DebugPageTarget& page);
 	void end_keyboard_capture();
-	bool keyboard_jump_collision(labrador::Key key) const;
+	bool keyboard_key_collision(labrador::Key key) const;
 
 	// The console and the debug menu report their own lifetimes, so only one
 	// of each is ever open.

@@ -110,7 +110,7 @@ void DebugDirectorImpl::save_binds()
 // ---------------------------------------------------------------------------
 // Commands
 
-bool DebugDirectorImpl::keyboard_jump_collision(labrador::Key key) const
+bool DebugDirectorImpl::keyboard_key_collision(labrador::Key key) const
 {
 	if (!keyboard_key_supported(key)) { return false; }
 	return this->binds_.find(KeyChord{ key }) != nullptr;
