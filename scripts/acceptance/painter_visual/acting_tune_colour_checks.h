@@ -217,7 +217,7 @@ void acting_colour_consumer_checks(Application& app, const Presentation& present
         "\"figure\":[100,100,340,600],\"eye_masks\":[[220,220,20,40],[300,220,20,40]],\"sweat_strips_per_facing\":8,\"facings\":2,\"canvas_backgrounds\":2,"
         "\"viewport\":\"1280x720\",\"event_fade\":false,\"adoption_reference\":\"production-consumer-only\",\"alpha_reference\":\"independent-ordered-full-raw\"}\n";
     require(summary.good(), "Cannot write acting shared summary");
-    std::cout << "PASS acting:90readbacks/16rows/16native320x128eye+sweat crops/24per-field controls; full independent ordered raw, both facings/two Canvas, "
+    std::cout << "PASS acting: 90 readbacks / 16 rows / 16 native 320x128 eye+sweat crops / 24 per-field controls; full independent ordered raw, both facings/two Canvas, "
         "opaque parity/calibration, all mask guards and alpha0 pupils. Retained FigureActing adoption; zero all updates.\n";
 }
 
@@ -295,7 +295,7 @@ void acting_tune_colour_checks(Application& app, GameTuning& tuning, Presentatio
         "\"readbacks\":56,\"csv_rows\":14,\"crops\":0,\"saved_tokens\":1,\"facings\":1,\"canvas_backgrounds\":1,"
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0}\n";
     require(summary.good(), "Cannot write acting Debug summary");
-    std::cout << "PASS acting tune:14real statements/14states/56reads/14rows, right-facing black Canvas only; real both-path named/RGB/RGBA/alpha0 commands, "
-        "sibling-retaining resets, exact one-Face-token save/rebase/saved-eye and pair reversal. Frozen records/strokes/resources/RNG and private PlaySettings+JumpJ/default display; zero all updates.\n";
+    std::cout << "PASS acting tune: 14 real statements / 14 states / 56 reads / 14 rows, right-facing black Canvas only; real both-path named/RGB/RGBA/alpha0 commands, "
+        "sibling-retaining resets, exact one-Face-token save/rebase/saved-eye and pair reversal. Frozen records/strokes/resources/RNG and private PlaySettings+Jump J/default display; zero all updates.\n";
 }
 #endif

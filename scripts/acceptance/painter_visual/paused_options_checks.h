@@ -322,5 +322,5 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     bool invalid = false; try { MainMenuOptions rejected(&direct_context, keyboard); } catch (const std::invalid_argument&) { invalid = true; }
     require(invalid, "Paused Options accepted a spectator as its match owner");
     require(records.good() && worlds.good(), "Paused Options evidence write failed");
-    std::cout << "PASS actual paused Options1/2/4 players; complete six-aspect references, sparse owner/recovery, nested Controls/Sticks merge, retained painted match/HUD, next-build palette, private windowed trial rollback/Keep/failure/recovery and safe developer unwind\n";
+    std::cout << "PASS actual paused Options 1 / 2 / 4 players; complete six-aspect references, sparse owner/recovery, nested Controls/Sticks merge, retained painted match/HUD, next-build palette, private windowed trial rollback/Keep/failure/recovery and safe developer unwind\n";
 }

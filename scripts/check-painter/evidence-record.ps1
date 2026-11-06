@@ -4,14 +4,19 @@
 # Runs before the native-run try, so an override error still skips result.json.
 
 $worktreeStatus = $null
-if (-not $OmitWorktreeStatus) { $worktreeStatus = @(& git status --short) }
+function Invoke-PainterGit([string[]] $Arguments) {
+    $output = @(& git @Arguments)
+    if ($LASTEXITCODE -ne 0) { throw "Painter git query failed ($LASTEXITCODE): $($Arguments -join ' ')" }
+    return $output
+}
+if (-not $OmitWorktreeStatus) { $worktreeStatus = @(Invoke-PainterGit @('status', '--short')) }
 
 $result = [ordered]@{
     outcome = 'failed'
     scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($WeaponCatalogOnly) { 'weapon-catalog-only' } elseif ($MenuTextOnly) { 'menu-text-only' } elseif ($MenuMotionOnly) { 'menu-motion-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } elseif ($TeamSetupOnly) { 'team-setup-only' } else { 'full-painter-matrix' }
     preset = $Preset
-    game_revision = (& git rev-parse HEAD)
-    engine_revision = (& git -C external/labrador rev-parse HEAD)
+    game_revision = (Invoke-PainterGit @('rev-parse', 'HEAD'))
+    engine_revision = (Invoke-PainterGit @('-C', 'external/labrador', 'rev-parse', 'HEAD'))
     worktree_status = $worktreeStatus
     worktree_status_omitted = [bool]$OmitWorktreeStatus
     stage = 'movement_course'
@@ -34,7 +39,7 @@ $result = [ordered]@{
     closing_checks = 'Actual HUD last-ten-second clock at 1P/2P/4P720 and 4P1080/QHD: initial/early beat, settled, pre-closing and zero states, local normal/reduced-effects raster comparisons and frozen redraw. Same-state paper suppression checks the entire settled card gate in every pane; short ten/one-second clocks show neither card nor ticks until live play. Native settled/click A/B coverage cards in all three palettes at 720p, representative 1080p/QHD, negative/expired/reduced-effects equivalence, supplied bounds and draw RNG. Actual sparse-pad 2P A/B winners, 4P no-paint draw and solo finish, before/at/after click card gating, repeated frozen pixels, public state and Debug replay fingerprint. Native card/clock detail PNGs and full story contexts are preserved. Muted rendering establishes no listening, physical-device or human readability acceptance.'
     supply_checks = 'Sprayer and mister full/half/empty reservoirs at actual builder-owned camera scales and layouts: all three 1P/4P720 palettes, four aim quadrants, both facing inputs, all four poses, representative 4P1080/QHD and motion-disabled tools. Independent authored full/half-layer composition must match actual Weapon pixels exactly; half pixels stay within full supply and filling introduces no new silhouette pixels or changes to permanent hardware/nozzle paint. Negative/oversized ammo clamps, unchanged reduced-effects information, frozen pixels/weapon state/draw RNG, paid full-shot depletion, natural regeneration/reset and unchanged match observation/Debug fingerprint. Menu previews retain full supply and switching tools clears it. Native detail PNGs and full-context PPMs are preserved; human readability and physical-device acceptance remain separate.'
     checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; four same-team figures in both facings. Five body action clips on actual events, both frames and distinct pinned body rasters. All five tools at 1P720 in both facings: paid fire/hold/release/recovery, hose/bucket travel and roller travel/lift. Three 4P palettes: right-facing mixed aimed tools and left-facing roller, plus 1080p/QHD extent captures. Sampled non-idle pinned tools differ from idle at gameplay zoom, including released roller travel/lift. Frozen draws byte-equal, public simulation/action/tool motion state and Debug replay fingerprint unchanged. Isolated player/tool raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster. Combat on/off comparisons at identical simulation state: hurt and elimination across all three 4P palettes at 720p; controlled 4P hurt initial/recovery/expiry and elimination initial/middle/late/expiry at 720p/1080p/QHD. Combat timers/death snapshot stay unchanged during drawing; whole-dead story figures suppress the burst.'
-    profile = $profile
+    profile = $privateProfile
     diagnostic = ''
 }
 if ($TurbulenceSlabOnly) {

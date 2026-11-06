@@ -353,6 +353,6 @@ void route_warning_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         "No attended play, physical-pad, listening, human readability, balance, continuous raster visibility or performance acceptance.\n";
     require(records.ticks.good() && records.trials.good() && records.captures.good() && records.panels.good() && summary.good() && scope.good(),
         "Route/warning evidence write failed");
-    std::cout << "PASS RouteWarningOnly observations: 66 trials/38 Levels; " << records.frames << " full frames/" << records.crops <<
+    std::cout << "PASS RouteWarningOnly observations: 66 trials / 38 Levels; " << records.frames << " full frames/" << records.crops <<
         " native crops; geometric visibility and censored warning evidence retain objective camera limitations\n";
 }

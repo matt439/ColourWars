@@ -451,14 +451,14 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         MatchFingerprint::difference(decoded.final_print, MatchFingerprint::of(*playback, replay_length)).empty() &&
         static_cast<unsigned int>(std::rand()) == terminal_rng,
         "Mapped replay did not exercise changed live input, exact final state/checkpoints or terminal RNG");
-    std::cout << "PASS Pad Jump mapped replay:360 actual-reader post-mapping updates, six checkpoints, persisted alternate "
+    std::cout << "PASS Pad Jump mapped replay: 360 actual-reader post-mapping updates, six checkpoints, persisted alternate "
         "face choices differ on " << raw_differences << " live frames; decoded public rebuild preserves every seat/fingerprint/final/RNG\n";
 #else
     std::cout << "LIMIT Pad Jump post-mapping replay requires Debug developer tools; native page/reader scope runs in both presets\n";
 #endif
     require(copies == 66 && reloads == 34 && records.good(), "Pad Buttons native matrix missed its bounded page cases");
     require(paused_reminders == 2 && mixed_reminders == 2, "Pad Jump reminder matrix missed native size/roster cases");
-    std::cout << "PASS Pad Buttons native:32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
+    std::cout << "PASS Pad Buttons native: 32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
         "66 independently fitted help/status pairs; pending multi-slot merge, reset/discard, failed-write retry, Controls entry/parent audio, captured text and owner isolation; "
         "two actual owned paused countdown refresh/reversal routes and two mixed4-pad reminder captures; "
         "private snapshots/save at 720/1080, no physical-device or human acceptance\n";

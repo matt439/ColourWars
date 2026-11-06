@@ -34,7 +34,6 @@ $selectionObserved = @{}
 $missingCmake = 'Run this script from an x64 Visual Studio Developer shell (cmake is missing).'
 $focusConflict = 'Choose only one focused painter matrix.'
 $trialUnsupported = 'TrialPath is supported only with TurbulenceMoverOnly, TurbulenceShoulderOnly or TurbulenceSlabOnly.'
-$unmapped = "Focused painter selector 'FutureUnmappedOnly' has no native scope argument."
 $compileOnlySelector = 'CompileOnly compiles both pad readers and takes no focused painter selector.'
 $trialSelectors = @('TurbulenceMoverOnly','TurbulenceShoulderOnly','TurbulenceSlabOnly')
 $debugSelectors = @('TuneColoursOnly','TeamTuneColoursOnly','WeaponTuneColoursOnly')
@@ -268,9 +267,11 @@ Write-Host "Painter-selection evidence: $selectionRun"
 try {
     $sourcePaths=@($PSCommandPath,$painterRunner,
         (Join-Path $PSScriptRoot 'check-painter/hash.ps1'),
-        (Join-Path $PSScriptRoot 'check-painter/contact-sheet.ps1'))
+        (Join-Path $PSScriptRoot 'check-painter/contact-sheet.ps1'),
+        (Join-Path $PSScriptRoot 'check-painter/evidence.ps1'),
+        (Join-Path $PSScriptRoot 'probe-build.ps1'))
     $pathHelper=Join-Path $PSScriptRoot 'check-path.ps1'
-    if (Test-Path -LiteralPath $pathHelper -PathType Leaf) { $sourcePaths += $pathHelper }
+    $sourcePaths += $pathHelper
     $selectionResult.source_hashes=@(foreach ($sourcePath in $sourcePaths) {
         [ordered]@{path=$sourcePath;sha256=(Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash}
     })
@@ -301,12 +302,11 @@ try {
     $sourceBytes=[IO.File]::ReadAllBytes($painterRunner)
     $sourceHasBom=$sourceBytes.Length -ge 3 -and $sourceBytes[0] -eq 239 -and $sourceBytes[1] -eq 187 -and $sourceBytes[2] -eq 191
     [IO.File]::WriteAllText($faultRunner,$faultText,[Text.UTF8Encoding]::new($sourceHasBom))
-    foreach ($helper in @('hash.ps1','contact-sheet.ps1')) {
+    foreach ($helper in @('hash.ps1','contact-sheet.ps1','evidence.ps1')) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('check-painter/' + $helper)) -Destination (Join-Path $mirrorHelpers $helper)
     }
-    if (Test-Path -LiteralPath $pathHelper -PathType Leaf) {
-        Copy-Item -LiteralPath $pathHelper -Destination (Join-Path $mirrorScripts 'check-path.ps1')
-    }
+    Copy-Item -LiteralPath $pathHelper -Destination (Join-Path $mirrorScripts 'check-path.ps1')
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'probe-build.ps1') -Destination (Join-Path $mirrorScripts 'probe-build.ps1')
     $faultAst=Read-PainterAst $faultRunner
     $faultSwitches=@(Get-OnlySwitches $faultAst)
     Require-Selection ($faultSwitches.Count -eq $onlySwitches.Count+1 -and
@@ -320,11 +320,14 @@ try {
     # location does not consistently update across supported hosts.
     [Environment]::CurrentDirectory=$selectionWorking
 
-    # First baseline assertion: old source reaches missing-cmake and creates
-    # output. It must refuse the injected bound selector before that boundary.
-    Check-PainterSelection 'synthetic-unmapped-true' @{FutureUnmappedOnly=$true} $unmapped $true $null $faultRunner
+    # A newly declared switch derives its native token without another mapping.
+    Check-PainterSelection 'synthetic-derived-true' @{FutureUnmappedOnly=$true} $missingCmake $false {
+        param($actual)
+        Require-Selection ($actual.arguments.Count -eq 1 -and $actual.arguments[0] -ceq 'future-unmapped') `
+            'A new focused switch did not derive its native scope token.'
+    } $faultRunner
     Require-Selection ($selectionChecks[0].outcome -ceq 'passed') `
-        'The actual synthetic unmapped selector was not refused before tool/output preflight.'
+        'The synthetic focused selector did not derive its native token before tool preflight.'
 
     $trialPath=Join-Path $selectionWorking ('private trial ' + [char]0x03A9 + '.json')
     [IO.File]::WriteAllText($trialPath,'{"qualification":"selection preflight only"}',$selectionUtf8)

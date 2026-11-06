@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($BlockedShotTuneColoursOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
 $blockedConsumerSummaryPath = Join-Path $captures 'blocked-colour-consumer-summary.json'
 $blockedConsumerRowsPath = Join-Path $captures 'blocked-colour-consumers.csv'
 $blockedConsumerSummary = Get-Content -LiteralPath $blockedConsumerSummaryPath -Raw | ConvertFrom-Json
@@ -20,7 +21,7 @@ if ($blockedConsumerSummary.scope -cne 'consumer-only' -or $blockedConsumerSumma
     $blockedConsumerSummary.owner_budgets_per_instance -ne 10 -or $blockedConsumerSummary.readbacks -ne 32 -or $blockedConsumerSummary.csv_rows -ne 8 -or
     $blockedConsumerSummary.crops -ne 8 -or $blockedConsumerSummary.controls -ne 8 -or
     $blockedConsumerRows.Count -ne 8 -or
-    (($blockedConsumerRows[0].PSObject.Properties.Name) -join '|') -cne ($blockedExpectedColumns -join '|') -or
+    (-not (Test-PainterCsvColumns $blockedConsumerRows $blockedExpectedColumns)) -or
     @($blockedConsumerRows | Where-Object {
         $_.normal_match -cne 'true' -or $_.stored_team_beads -cne 'true' -or
         $_.complete_owner_cue_bounds_rng -cne 'true' -or $_.scope -cne 'consumer-only' -or
@@ -40,14 +41,7 @@ $blockedCropPixels = 0
 $blockedCropBytes = 0
 $blockedCropEvidence = @(foreach ($crop in $blockedCrops) {
     $bytes = [IO.File]::ReadAllBytes($crop.FullName)
-    if ($bytes.Length -ne $blockedPpmHeader.Length + (440 * 240 * 3)) {
-        throw "Blocked crop $($crop.Name) does not have exactly its 440x240 RGB payload and canonical header."
-    }
-    for ($byte = 0; $byte -lt $blockedPpmHeader.Length; ++$byte) {
-        if ($bytes[$byte] -ne $blockedPpmHeader[$byte]) {
-            throw "Blocked crop $($crop.Name) does not have its canonical P6/440x240/255 binary header."
-        }
-    }
+    Assert-PainterPpm -Bytes $bytes -Header $blockedPpmHeader
     $blockedCropPixels += 440 * 240
     $blockedCropBytes += $bytes.Length
     [ordered]@{
@@ -64,9 +58,8 @@ if ($blockedCropPixels -ne 844800) {
     throw 'The blocked colour crops do not match their frozen total pixel budget.'
 }
 
-$blockedRunLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$blockedSaveCalls = @($blockedRunLines | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-$blockedSaveSuccesses = @($blockedRunLines | Where-Object { $_ -ceq 'Save was successful.' }).Count
+$blockedSaveCalls = $painterSaveCounts.calls
+$blockedSaveSuccesses = $painterSaveCounts.successes
 $blockedSaveFailures = @(Get-Content -LiteralPath (Join-Path $run 'run.err') |
     Where-Object { $_ -match '^save failure:' }).Count
 if ($blockedSaveFailures -ne 0) {
@@ -123,7 +116,7 @@ if ($debug) {
         $blockedTuneSummary.csv_rows -ne 20 -or $blockedTuneSummary.crops -ne 0 -or
         $blockedTuneRows.Count -ne 20 -or $blockedTuneTranscript.Length -le 0 -or
         !(Test-Path -LiteralPath (Join-Path $captures 'blocked-tune-scratch') -PathType Container) -or
-        (($blockedTuneRows[0].PSObject.Properties.Name) -join '|') -cne ($blockedExpectedTuneColumns -join '|') -or
+        (-not (Test-PainterCsvColumns $blockedTuneRows $blockedExpectedTuneColumns)) -or
         $blockedSaveCalls -ne 2 -or $blockedSaveSuccesses -ne 2 -or
         @($blockedTuneRows | Where-Object {
             $_.normal_match -cne 'true' -or $_.stored_team_beads -cne 'true' -or
@@ -149,8 +142,8 @@ if ($debug) {
     }
     $blockedObserved['developer_commands'] = $blockedTuneSummary
     $blockedObserved.effect_preparation_updates = 2
-    $blockedObserved.readbacks = 92
-    $blockedObserved.csv_rows = 28
+    $blockedObserved.readbacks += $blockedTuneSummary.readbacks
+    $blockedObserved.csv_rows += $blockedTuneSummary.csv_rows
 }
 elseif ($blockedSaveCalls -ne 0 -or $blockedSaveSuccesses -ne 0 -or
     @(Get-ChildItem -LiteralPath $captures -Filter 'blocked-tune-*').Count -ne 0) {

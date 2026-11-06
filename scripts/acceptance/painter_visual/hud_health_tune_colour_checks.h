@@ -259,7 +259,7 @@ void hud_health_colour_consumer_checks(Application& app,const Presentation& pres
         "\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"192x16-opaqueB8-track-then-literal-prefix-only\","
         "\"whole_frame_reference\":\"copied-complete-HUD-consumer-adoption-only\",\"roi_half_open\":[1036,64,1228,80]}\n";
     require(summary.good(),"Cannot retain Health shared summary");
-    std::cout<<"PASS health consumer: 54 readbacks/12 rows/12 native 192x16 crops of 36864 pixels; complete independent track RGBA, 6 controls with 13824 changed and 4608 unchanged pixels, "
+    std::cout<<"PASS health consumer: 54 readbacks / 12 rows / 12 native 192x16 crops of 36864 pixels; complete independent track RGBA, 6 controls with 13824 changed and 4608 unchanged pixels, "
         "four zero-health whole-frame invariants and retained ammunition bytes. Full copied HUD adoption only; frozen resources/RNG, zero all updates.\n";
 }
 
@@ -347,7 +347,7 @@ void hud_health_tune_colour_checks(Application& app,GameTuning& tuning,Presentat
         "\"csv_rows\":9,\"crops\":0,\"saved_tokens\":1,\"private_seed_saves\":2,\"ammo_guard_cases\":9,\"event_fade\":false,\"health_context\":\"full\","
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Health Debug summary");
-    std::cout<<"PASS health tune:9real commands/9full-only states/36additional readbacks/9rows; one exact Health token Save/rebase and original/saved whole-HUD resets,"
-        "2private preference seeds/JumpJ/defaultdisplay/unselected ammo retained; zero all updates; no actualLevel/human/performance claim.\n";
+    std::cout<<"PASS health tune: 9 real commands / 9 full-only states / 36 additional readbacks / 9 rows; one exact Health token Save/rebase and original/saved whole-HUD resets,"
+        "2 private preference seeds/Jump J/default display/unselected ammo retained; zero all updates; no actual Level/human/performance claim.\n";
 }
 #endif

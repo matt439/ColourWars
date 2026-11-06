@@ -304,9 +304,9 @@ void cursor_colour_consumer_checks(Application& app, const Presentation& present
         "\"csv_rows\":112,\"case_rows\":14,\"sample_rows\":98,\"crops\":12,\"negative_reference_frames\":10,\"blank_readbacks\":2,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-raw-sample-patches\",\"event_fade\":false}\n";
     require(summary.good(), "Cannot retain cursor consumer summary");
-    std::cout << "PASS cursor colour consumers:124 readbacks,112 rows,twelve 72x80 crops; preconstructed resting/clicking consumers, "
-        "copied-baseline full-shape adoption parity,independent raw contour/interior/click alpha samples and negative controls, "
-        "shade/shadow residuals and Reduce Effects arrow preservation. Synthetic draw screen_height720,zero local/Level/State updates.\n";
+    std::cout << "PASS cursor colour consumers: 124 readbacks, 112 rows, twelve 72x80 crops; preconstructed resting/clicking consumers, "
+        "copied-baseline full-shape adoption parity, independent raw contour/interior/click alpha samples and negative controls, "
+        "shade/shadow residuals and Reduce Effects arrow preservation. Synthetic draw screen_height720, zero local/Level/State updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
@@ -439,8 +439,8 @@ void cursor_tune_colour_checks(Application& app, GameTuning& tuning, Presentatio
         "\"csv_rows\":192,\"case_rows\":24,\"sample_rows\":168,\"crops\":0,\"saved_tokens\":2,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-raw-sample-patches\",\"event_fade\":false}\n";
     require(summary.good(), "Cannot retain cursor Debug command summary");
-    std::cout << "PASS cursor tune colours:15 validated named/RGB/RGBA/separate-reset/save commands,168 readbacks,192 rows; "
-        "two-token private save/rebase,retained resting/clicking consumers,independent raw samples and preserved shade/shadow/preferences/RNG. "
-        "Synthetic draw screen_height720,zero local/Level/State updates; no physical input or small-view/human acceptance.\n";
+    std::cout << "PASS cursor tune colours: 15 validated named/RGB/RGBA/separate-reset/save commands, 168 readbacks, 192 rows; "
+        "two-token private save/rebase, retained resting/clicking consumers, independent raw samples and preserved shade/shadow/preferences/RNG. "
+        "Synthetic draw screen_height720, zero local/Level/State updates; no physical input or small-view/human acceptance.\n";
 }
 #endif

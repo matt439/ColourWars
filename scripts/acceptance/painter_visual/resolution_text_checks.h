@@ -330,6 +330,6 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         "width-then-height fit, short reset, numeric-bearing font, retained/reopened/reversed sources; "
         "saved fullscreen metadata/live arbitrary client dimensions, disabled focus skip and unchanged pending-toggle policy; "
         "existing Defaults/reopen refresh timing, zero-update resize, private save/plan/RNG; "
-        "43 updates,76 readbacks,25 rows,six compact crops,three successful private metadata seeds. "
+        "43 updates, 76 readbacks, 25 rows, six compact crops, three successful private metadata seeds. "
         "No Apply/display-trial/fullscreen activation/global-input/physical-pad/foreground/commands/human/performance acceptance.\n";
 }

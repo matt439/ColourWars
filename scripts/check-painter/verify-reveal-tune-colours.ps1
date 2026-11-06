@@ -1,4 +1,5 @@
 # Dot-sourced only for -RevealTuneColoursOnly after the native process.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $revealSummaryPath=Join-Path $captures 'reveal-colour-consumer-summary.json'
 $revealRowsPath=Join-Path $captures 'reveal-colour-consumers.csv'
 $revealSamplesPath=Join-Path $captures 'reveal-colour-samples.csv'
@@ -24,7 +25,7 @@ function Assert-RevealPairs($Rows,$States){
 function Assert-RevealSamples($Rows,$States,$Scope,$Controls){
     $expected=@(foreach($state in $States){foreach($background in @('black','nonblack')){foreach($site in $revealSites){"$state/$background/$site"}}})
     $actual=@($Rows|ForEach-Object {"$($_.state)/$($_.background)/$($_.sample)"})
-    if($Rows.Count -ne $States.Count*22 -or (($Rows[0].PSObject.Properties.Name)-join '|') -cne ($revealSampleColumns-join '|') -or
+    if($Rows.Count -ne $States.Count*22 -or (-not (Test-PainterCsvColumns $Rows $revealSampleColumns)) -or
         (($actual|Sort-Object)-join '|') -cne (($expected|Sort-Object)-join '|')){throw 'Reveal eleven-site row/schema scope mismatch.'}
     $rejections=0
     foreach($row in $Rows){
@@ -52,7 +53,7 @@ $revealCaseColumns=@('state','background','rest_match','half_match','reduced_res
 if($revealSummary.scope -cne 'consumer-only' -or $revealSummary.readbacks -ne 228 -or $revealSummary.csv_rows -ne 264 -or
     $revealSummary.case_rows -ne 22 -or $revealSummary.sample_rows -ne 242 -or $revealSummary.crops -ne 10 -or $revealSummary.crop_pixels -ne 672000 -or
     $revealSummary.negative_reference_frames -ne 28 -or $revealSummary.blank_readbacks -ne 2 -or
-    (($revealRows[0].PSObject.Properties.Name)-join '|') -cne ($revealCaseColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $revealRows $revealCaseColumns)) -or
     @($revealRows|Where-Object {$_.rest_match -cne 'true' -or $_.half_match -cne 'true' -or $_.reduced_rest -cne 'true' -or
         $_.expired_rest -cne 'true' -or $_.raw_samples -cne 'true' -or $_.dependencies_rng -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){throw 'Reveal shared counters/assertions/schema mismatch.'}
 $revealControls=@{default='default-adoption-parity';'ink-rgb'='independent-ink-rgb';'paper-rgb'='independent-paper-rgb';'shade-rgb'='independent-shade-rgb';
@@ -67,14 +68,12 @@ $revealBytes=0;$revealPixels=0
 $revealCropEvidence=@(foreach($crop in $revealCrops){
     $width=if($crop.Name -like '*-materials.ppm'){400}else{800};$height=120
     $header=[Text.Encoding]::ASCII.GetBytes("P6`n$width $height`n255`n");$bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $header.Length+$width*$height*3){throw 'Reveal compact crop payload size mismatch.'}
-    for($index=0;$index -lt $header.Length;$index++){if($bytes[$index] -ne $header[$index]){throw 'Reveal canonical PPM header mismatch.'}}
+    Assert-PainterPpm -Bytes $bytes -Header $header
     $revealBytes+=$bytes.Length;$revealPixels+=$width*$height
     [ordered]@{name=$crop.Name;width=$width;height=$height;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
 if($revealPixels -ne 672000){throw 'Reveal retained pixel budget mismatch.'}
-$revealLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$revealSaveCalls=@($revealLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count;$revealSaveSuccesses=@($revealLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$revealSaveCalls=$painterSaveCounts.calls;$revealSaveSuccesses=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected reveal private Save failure.'}
 $revealArtifacts=[ordered]@{}
 foreach($path in @($revealSummaryPath,$revealRowsPath,$revealSamplesPath)){$revealArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -92,11 +91,11 @@ if($debug){
     $revealTuneColumns=@('state','background','rest_match','half_match','raw_samples','dependencies_rng','private_bytes','adoption')
     if($revealTuneSummary.scope -cne 'debug-validated-commands' -or $revealTuneSummary.commands -ne 21 -or $revealTuneSummary.states -ne 14 -or
         $revealTuneSummary.readbacks -ne 196 -or $revealTuneSummary.csv_rows -ne 336 -or $revealTuneSummary.case_rows -ne 28 -or $revealTuneSummary.sample_rows -ne 308 -or
-        $revealTuneSummary.crops -ne 0 -or $revealTuneSummary.saved_tokens -ne 3 -or (($revealTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($revealTuneColumns-join '|') -or
+        $revealTuneSummary.crops -ne 0 -or $revealTuneSummary.saved_tokens -ne 3 -or (-not (Test-PainterCsvColumns $revealTuneRows $revealTuneColumns)) -or
         @($revealTuneRows|Where-Object {$_.rest_match -cne 'true' -or $_.half_match -cne 'true' -or $_.raw_samples -cne 'true' -or $_.dependencies_rng -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         $revealSaveCalls -ne 2 -or $revealSaveSuccesses -ne 2 -or (Get-Item -LiteralPath $revealTranscriptPath).Length -le 0 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'reveal-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){throw 'Reveal Debug counters/three-token private Save/case evidence mismatch.'}
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'reveal-tune-scratch/profile')) -PathType Leaf)){throw 'Reveal Debug counters/three-token private Save/case evidence mismatch.'}
     foreach($path in @($revealTuneSummaryPath,$revealTuneRowsPath,$revealTuneSamplesPath,$revealTranscriptPath)){$revealArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
-    $revealObserved.developer_commands=$revealTuneSummary;$revealObserved.readbacks=424;$revealObserved.csv_rows=600;$revealObserved.case_rows=50;$revealObserved.sample_rows=550
+    $revealObserved.developer_commands=$revealTuneSummary;$revealObserved.readbacks += $revealTuneSummary.readbacks;$revealObserved.csv_rows += $revealTuneSummary.csv_rows;$revealObserved.case_rows += $revealTuneSummary.case_rows;$revealObserved.sample_rows += $revealTuneSummary.sample_rows
 }elseif($revealSaveCalls -ne 0 -or $revealSaveSuccesses -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'reveal-tune-*').Count){throw 'Release reveal proof must remain consumer-only without developer artifacts or Saves.'}
 $result.observed_counts=$revealObserved

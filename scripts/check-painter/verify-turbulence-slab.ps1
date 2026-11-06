@@ -5,7 +5,7 @@ $slabCounts = [ordered]@{ full_frames=33; native_crops=75; csv_rows=75; readback
     wet_frames=4; wet_slab_contacts=8; interior_pixel_candidates=7; interior_pixel_checks=6
     ending_full_frames=4; ending_csv_rows=4; gameplay_csv_rows=71; ending_levels=2 }
 $slabKeys = @($slabCounts.Keys) + @('outcome','scope','level_updates','controlled_heavy_contacts','heavy_initial_fraction_min','trial_bytes_unchanged','human_acceptance','friendly_repaint_owner_state','ending_level_updates')
-if ((($slabSummary.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($slabKeys | Sort-Object) -join '|') -or
+if ((-not (Test-PainterKeys $slabSummary $slabKeys)) -or
     $slabSummary.outcome -cne 'passed' -or $slabSummary.scope -cne 'turbulence-slab-only' -or
     $slabSummary.trial_bytes_unchanged -isnot [bool] -or -not $slabSummary.trial_bytes_unchanged -or
     $slabSummary.human_acceptance -isnot [bool] -or $slabSummary.human_acceptance -or -not $result.trial_source.unchanged -or
@@ -17,12 +17,7 @@ foreach ($key in $slabCounts.Keys) {
         throw "Fixed slab bounded count differs: $key"
     }
 }
-function Slab-Number([object]$Value, [string]$Label) {
-    $number = 0.0
-    if (-not [double]::TryParse([string]$Value, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or
-        [double]::IsNaN($number) -or [double]::IsInfinity($number)) { throw "Invalid fixed slab metric: $Label" }
-    return $number
-}
+
 $slabStage = Get-Content -LiteralPath $trialResolved -Raw | ConvertFrom-Json
 $slabPresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
 $slabTuning = Get-Content -LiteralPath (Join-Path $gameDirectory 'tuning.json') -Raw | ConvertFrom-Json
@@ -73,9 +68,9 @@ for ($side = 0; $side -lt 2; ++$side) {
         throw 'Fixed slab top does not join the original flat supports.'
     }
 }
-$slabUpdates = Slab-Number $slabSummary.level_updates 'updates'
-$slabEndingUpdates = Slab-Number $slabSummary.ending_level_updates 'ending updates'
-$slabHeavy = Slab-Number $slabSummary.heavy_initial_fraction_min 'heavy fraction'
+$slabUpdates = ConvertTo-PainterFinite $slabSummary.level_updates 'updates'
+$slabEndingUpdates = ConvertTo-PainterFinite $slabSummary.ending_level_updates 'ending updates'
+$slabHeavy = ConvertTo-PainterFinite $slabSummary.heavy_initial_fraction_min 'heavy fraction'
 $slabPaintables = @($slabStage.collision_objects | Where-Object { $_.type -cin @('StructurePaintable','FixedSlabPaintable') }).Count
 if ($slabUpdates -le 0 -or $slabUpdates -gt 8000 -or $slabUpdates -ne [Math]::Truncate($slabUpdates) -or
     $slabEndingUpdates -le 0 -or $slabEndingUpdates -gt 2400 -or $slabEndingUpdates -ne [Math]::Truncate($slabEndingUpdates) -or
@@ -83,7 +78,7 @@ if ($slabUpdates -le 0 -or $slabUpdates -gt 8000 -or $slabUpdates -ne [Math]::Tr
     throw 'Fixed slab update/controlled paint budget differs.'
 }
 $slabColumns = 'capture,kind,phase,paint,players,view,input_slot,actor_role,scene_views,scene_objects,moving_owners,moving_shadows,fixed_slabs,fixed_shadows,camera_source,player_x,player_y,player_width,player_height,centre_x,feet_y,velocity_x,velocity_y,move_state,supported,carrier_id,expected_feet,top_start_x,top_start_y,top_end_x,top_end_y,normal_thickness,slab_p0_x,slab_p0_y,slab_p1_x,slab_p1_y,slab_p2_x,slab_p2_y,slab_p3_x,slab_p3_y,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,slope_x,slope_y,slope_width,slope_height,slope_visible,flat_x,flat_y,flat_width,flat_height,flat_visible,slab_x,slab_y,slab_width,slab_height,slab_visible,frozen_pixels,public_state,full_paint_owner_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
-if ($slabRows.Count -ne 71 -or ($slabRows[0].PSObject.Properties.Name -join ',') -cne $slabColumns) { throw 'Fixed slab CSV schema/count differs.' }
+if ($slabRows.Count -ne 71 -or (-not (Test-PainterCsvColumns $slabRows ($slabColumns.Split(','))))) { throw 'Fixed slab CSV schema/count differs.' }
 $slabExpected = @{}; $slabSlots = @(3,1,2,0)
 foreach ($count in 1..4) { foreach ($paint in @('clean','heavy')) { foreach ($phase in @('before-descent','mid-slab-stop','upper-flat-stop')) {
     $stem = "hidden-inspection-turbulence-slab-$($count)p-$paint-$phase-720p"
@@ -129,10 +124,10 @@ foreach ($row in $slabRows) {
         'top_start_x','top_start_y','top_end_x','top_end_y','normal_thickness',
         'slab_p0_x','slab_p0_y','slab_p1_x','slab_p1_y','slab_p2_x','slab_p2_y','slab_p3_x','slab_p3_y',
         'camera_x','camera_y','camera_scale','owned_fraction','slope_x','slope_y','slope_width','slope_height',
-        'flat_x','flat_y','flat_width','flat_height','slab_x','slab_y','slab_width','slab_height')) { $n[$metric] = Slab-Number $row.$metric "$key/$metric" }
+        'flat_x','flat_y','flat_width','flat_height','slab_x','slab_y','slab_width','slab_height')) { $n[$metric] = ConvertTo-PainterFinite $row.$metric "$key/$metric" }
     foreach ($metric in @('move_state','supported','pane_x','pane_y','pane_width','pane_height','crop_x','crop_y','crop_width','crop_height')) {
-        $parsed = 0
-        if (-not [int]::TryParse($row.$metric,[ref]$parsed) -or ($metric -cne 'move_state' -and $parsed -lt 0)) { throw "Invalid fixed slab integer $key/$metric" }
+        $parsed = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if (($metric -cne 'move_state' -and $parsed -lt 0)) { throw "Invalid fixed slab integer $key/$metric" }
         $n[$metric] = $parsed
     }
     if ($n.camera_scale -le 0 -or $n.pane_width -le 0 -or $n.pane_height -le 0 -or $n.crop_width -le 0 -or $n.crop_height -le 0 -or
@@ -228,7 +223,7 @@ foreach ($row in $slabRows | Where-Object { $_.phase -ceq 'mid-slab-wet' }) {
 }
 $slabEndingRows = @(Import-Csv -LiteralPath (Join-Path $captures 'turbulence-slab-ending.csv'))
 $slabEndingColumns = 'capture,kind,paint,players,level_state,scene_views,scene_objects,moving_owners,moving_shadows,fixed_slabs,fixed_shadows,initial_placements,level_updates,duration_seconds,menu_overlay,menu_result_source,team_a_played,team_b_played,total_area,team_a_area,team_b_area,coverage_ratio,winning_team,session_round,session_a_wins,session_b_wins,session_complete,camera_source,camera_x,camera_y,camera_scale,pane_x,pane_y,pane_width,pane_height,crop_x,crop_y,crop_width,crop_height,owned_fraction,frozen_pixels,public_state,full_paint_owner_shadow_state,debug_fingerprint,rng,crop_rgba,evidence_scope'
-if ($slabEndingRows.Count -ne 4 -or ($slabEndingRows[0].PSObject.Properties.Name -join ',') -cne $slabEndingColumns) {
+if ($slabEndingRows.Count -ne 4 -or (-not (Test-PainterCsvColumns $slabEndingRows ($slabEndingColumns.Split(','))))) {
     throw 'Fixed slab ending CSV schema/count differs.'
 }
 $slabEndingExpected = @{}
@@ -264,12 +259,12 @@ foreach ($row in $slabEndingRows) {
     }
     $n = @{}
     foreach ($metric in @('duration_seconds','total_area','team_a_area','team_b_area','coverage_ratio',
-        'camera_x','camera_y','camera_scale','owned_fraction')) { $n[$metric] = Slab-Number $row.$metric ('ending/'+$metric) }
+        'camera_x','camera_y','camera_scale','owned_fraction')) { $n[$metric] = ConvertTo-PainterFinite $row.$metric ('ending/'+$metric) }
     foreach ($metric in @('level_updates','team_a_played','team_b_played','winning_team','session_round',
         'session_a_wins','session_b_wins','session_complete','pane_x','pane_y','pane_width','pane_height',
         'crop_x','crop_y','crop_width','crop_height')) {
-        $value = 0
-        if (-not [int]::TryParse($row.$metric,[ref]$value) -or $value -lt 0) { throw 'Invalid fixed slab ending integer.' }
+        $value = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if ($value -lt 0) { throw 'Invalid fixed slab ending integer.' }
         $n[$metric] = $value
     }
     if ($n.level_updates -le 0 -or $n.level_updates -gt 1200 -or $n.duration_seconds -ne 0.75 -or
@@ -337,9 +332,7 @@ foreach ($file in $slabFiles) {
     $size = $slabDimensions[$file.Name]
     $header = "P6" + [char]10 + "$($size[0]) $($size[1])" + [char]10 + "255" + [char]10
     $headerBytes = [Text.Encoding]::ASCII.GetByteCount($header)
-    $actual = @(Get-Content -LiteralPath $file.FullName -TotalCount 3)
-    if ($file.Length -ne $headerBytes+[long]$size[0]*$size[1]*3 -or $actual.Count -ne 3 -or
-        $actual[0] -cne 'P6' -or $actual[1] -cne "$($size[0]) $($size[1])" -or $actual[2] -cne '255') { throw "Fixed slab PPM header/payload differs: $($file.Name)" }
+    Assert-PainterPpm -Path $file.FullName -Header $header
     $slabHeaderLengths[$file.Name] = $headerBytes; $slabPpmBytes += $file.Length
 }
 # Retained v1 pinhole candidates are classified from independent world-space
@@ -368,7 +361,7 @@ for ($index = 0; $index -lt $slabCandidatePoints.Count; ++$index) {
     $localX = ($dx*160.0-$dy*80.0)/$slabInteriorLength
     $localY = ($dx*80.0+$dy*160.0)/$slabInteriorLength
     foreach ($metric in @(@('world_x',$worldX),@('world_y',$worldY),@('local_x',$localX),@('local_y',$localY))) {
-        if ([Math]::Abs((Slab-Number $row.($metric[0]) ('interior/'+$metric[0]))-$metric[1]) -gt 0.002) {
+        if ([Math]::Abs((ConvertTo-PainterFinite $row.($metric[0]) ('interior/'+$metric[0]))-$metric[1]) -gt 0.002) {
             throw 'Fixed slab interior candidate world/local reconstruction differs.'
         }
     }
@@ -380,8 +373,8 @@ for ($index = 0; $index -lt $slabCandidatePoints.Count; ++$index) {
     $rgb = @([int]$slabInteriorFull[$offset],[int]$slabInteriorFull[$offset+1],[int]$slabInteriorFull[$offset+2])
     $rowRgb = @()
     foreach ($channel in @('red','green','blue')) {
-        $value = 0
-        if (-not [int]::TryParse($row.$channel,[ref]$value) -or $value -lt 0 -or $value -gt 255) { throw 'Invalid fixed slab candidate RGB channel.' }
+        $value = ConvertTo-PainterInteger $row.$channel $channel ([int]::MinValue) ([int]::MaxValue)
+        if ($value -lt 0 -or $value -gt 255) { throw 'Invalid fixed slab candidate RGB channel.' }
         $rowRgb += $value
     }
     if (($rgb -join ',') -cne ($rowRgb -join ',')) { throw 'Fixed slab candidate RGB differs from retained PPM.' }

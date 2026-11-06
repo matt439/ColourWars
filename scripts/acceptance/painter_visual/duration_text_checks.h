@@ -250,7 +250,7 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     std::cout << "PASS duration text leaf: actual Mode duration cycle/Left/Enter/wrap, independent default/explicit/fractional/scientific literals; "
         "live numeric tuning with captured old/new templates and numeric-bearing font through refresh/reopen/reversal; "
         "unscaled label/value/invisible-shadow/card/shade/arrow, zero-update resize and unchanged private save/roster/RNG; "
-        "86 updates,76 readbacks,25 rows,five compact crops. No global-input,physical-pad,foreground,gameplay,listening,human or performance acceptance.\n";
+        "86 updates, 76 readbacks, 25 rows, five compact crops. No global-input, physical-pad, foreground, gameplay, listening, human or performance acceptance.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS

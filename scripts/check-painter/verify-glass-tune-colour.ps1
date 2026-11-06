@@ -1,5 +1,6 @@
 # Dot-sourced only after -GlassTuneColourOnly native execution.
 # Main raw proof is five ordered ROIs, never a full raw Monitor reference.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $glassSummaryPath=Join-Path $captures 'glass-colour-consumer-summary.json'
 $glassRowsPath=Join-Path $captures 'glass-colour-consumers.csv'
 $glassSummary=Get-Content -LiteralPath $glassSummaryPath -Raw|ConvertFrom-Json
@@ -24,7 +25,7 @@ foreach($key in $glassCounts.Keys){if($glassSummary.$key -is [string] -or $glass
 if($glassSummary.scope -cne 'consumer-only' -or $glassSummary.viewport -cne '1280x720' -or $glassSummary.event_fade -isnot [bool] -or $glassSummary.event_fade -ne $false -or
     $glassSummary.adoption_reference -cne 'production-consumer-only' -or $glassSummary.alpha_reference -cne 'independent-ordered-main-five-rois-and-standalone-rois' -or
     ($glassSummary.main_crop-join ',') -cne '80,24' -or ($glassSummary.picker_crop-join ',') -cne '99,53' -or ($glassSummary.close_crop-join ',') -cne '27,26' -or
-    ($glassRows[0].PSObject.Properties.Name-join '|') -cne ($glassColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $glassRows $glassColumns)) -or
     @($glassRows|Where-Object {$_.roi_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or $_.guards -cne 'true' -or
         $_.frozen_style_persona_rng -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){throw 'Glass shared exact oracle/schema/scope mismatch'}
 $glassPartial=0;$glassZero=0
@@ -47,15 +48,13 @@ $glassCropEvidence=@(foreach($crop in $glassCrops){
     $size=if($crop.Name -like 'glass-colour-main-*'){@(80,24)}elseif($crop.Name -like 'glass-colour-picker-*'){@(99,53)}else{@(27,26)}
     $header=[Text.Encoding]::ASCII.GetBytes("P6`n$($size[0]) $($size[1])`n255`n")
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $header.Length+$size[0]*$size[1]*3){throw 'Glass lossless native crop size differs'}
-    for($i=0;$i -lt $header.Length;++$i){if($bytes[$i] -ne $header[$i]){throw 'Glass PPM header differs'}}
+    Assert-PainterPpm -Bytes $bytes -Header $header
     $glassBytes+=$bytes.Length;$glassPixels+=$size[0]*$size[1]
     [ordered]@{name=$crop.Name;width=$size[0];height=$size[1];bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
 if($glassBytes -ne 166076 -or $glassPixels -ne 55272){throw 'Glass compact crop total byte/pixel count differs'}
-$glassLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$glassSaves=@($glassLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count
-$glassSuccess=@($glassLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$glassSaves=$painterSaveCounts.calls
+$glassSuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected Glass private Save failure'}
 $glassArtifacts=[ordered]@{}
 foreach($path in @($glassSummaryPath,$glassRowsPath)){$glassArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -72,15 +71,15 @@ if($debug){
     $columns=@('state','method','background','roi_raw_match','adoption_match','frozen_style_persona_rng','private_bytes','adoption')
     if($glassTune.scope -cne 'debug-validated-commands' -or $glassTune.commands -ne 9 -or $glassTune.states -ne 9 -or $glassTune.methods -ne 3 -or
         $glassTune.readbacks -ne 108 -or $glassTune.csv_rows -ne 27 -or $glassTune.crops -ne 0 -or $glassTune.saved_tokens -ne 1 -or $glassTune.standalone_backdrops -ne 1 -or
-        ($glassTuneRows[0].PSObject.Properties.Name-join '|') -cne ($columns-join '|') -or
+        (-not (Test-PainterCsvColumns $glassTuneRows $columns)) -or
         @($glassTuneRows|Where-Object {$_.roi_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or
             $_.frozen_style_persona_rng -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         (Get-Item -LiteralPath $glassTranscript).Length -le 0 -or $glassSaves -ne 2 -or $glassSuccess -ne 2 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'glass-colour-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'glass-colour-tune-scratch/profile')) -PathType Leaf)){
         throw 'Glass Debug exact budget/schema/private-save evidence mismatch'
     }
     foreach($path in @($glassTuneSummaryPath,$glassTuneRowsPath,$glassTranscript)){$glassArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
-    $glassObserved.developer_commands=$glassTune;$glassObserved.readbacks=208;$glassObserved.csv_rows=47
+    $glassObserved.developer_commands=$glassTune;$glassObserved.readbacks += $glassTune.readbacks;$glassObserved.csv_rows += $glassTune.csv_rows
 }elseif($glassSaves -ne 0 -or $glassSuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'glass-colour-tune-*').Count){
     throw 'Release Glass proof must stay literal-consumer-only without developer artifacts or Save'
 }

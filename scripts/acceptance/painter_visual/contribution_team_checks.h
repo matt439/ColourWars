@@ -374,11 +374,11 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         "\"owner_negative_controls\":4,\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":599508}\n";
     require(summary.good(), "Cannot retain contribution team summary");
     std::cout << "PASS Contribution team leaf: four independent complete sparse-roster rows and raw P1-P4 badge cells; "
-        "device/view/paint-owner indices 4/2/-1/0,0/1/2/3,4/2/7/0 retain 18.7/25.0/31.2/25.0 credit; "
+        "device/view/paint-owner indices 4/2/-1/0, 0/1/2/3, 4/2 / 7 / 0 retain 18.7/25.0/31.2/25.0 credit; "
         "literal default/custom separators and captured contribution font through assignment/reopen/reversal, "
         "four per-row brace font and wrong-view credit controls, unchanged title/legend/score/outcome neighbors; "
         "normal/already-revealed input gates, five fresh pops, frozen Session/setup/private Save/RNG, "
-        "zero-update 720/1080/720 resizing,45 updates,56 readbacks,72 CSV rows and six useful compact crops "
-        "(599508 pixels /1798614 PPM bytes), one private seed Save. Both presets use the normal reader; "
+        "zero-update 720 / 1080 / 720 resizing, 45 updates, 56 readbacks, 72 CSV rows and six useful compact crops "
+        "(599508 pixels  / 1798614 PPM bytes), one private seed Save. Both presets use the normal reader; "
         "no match/global-input/physical-pad/listening/human/performance acceptance.\n";
 }

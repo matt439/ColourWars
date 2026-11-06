@@ -1,4 +1,5 @@
 # Dot-sourced only for -CursorTuneColoursOnly after the native process.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $cursorSummaryPath=Join-Path $captures 'cursor-colour-consumer-summary.json'
 $cursorRowsPath=Join-Path $captures 'cursor-colour-consumers.csv'
 $cursorSamplesPath=Join-Path $captures 'cursor-colour-samples.csv'
@@ -19,7 +20,7 @@ function Assert-CursorPairs($Rows,$States,$ExpectedCount) {
 function Assert-CursorSamples($Rows,$States,$Scope,$Controls) {
     $expected=@(foreach($state in $States){foreach($background in @('black','nonblack')){foreach($sample in $cursorSampleNames){"$state/$background/$sample"}}})
     $actual=@($Rows|ForEach-Object {"$($_.state)/$($_.background)/$($_.sample)"})
-    if($Rows.Count -ne $States.Count*2*7 -or (($Rows[0].PSObject.Properties.Name)-join '|') -cne ($cursorSampleColumns-join '|') -or
+    if($Rows.Count -ne $States.Count*2*7 -or (-not (Test-PainterCsvColumns $Rows $cursorSampleColumns)) -or
         (($actual|Sort-Object)-join '|') -cne (($expected|Sort-Object)-join '|')){throw 'Cursor sample rows/schema differ from the exact seven-site scope.'}
     foreach($row in $Rows){
         $pose=if($row.sample -like 'click-*'){'click'}else{'rest'}
@@ -57,7 +58,7 @@ Assert-CursorSamples $cursorSamples $cursorStates 'consumer-only' $true
 if($cursorSummary.scope -cne 'consumer-only' -or $cursorSummary.readbacks -ne 124 -or $cursorSummary.csv_rows -ne 112 -or
     $cursorSummary.case_rows -ne 14 -or $cursorSummary.sample_rows -ne 98 -or $cursorSummary.crops -ne 12 -or
     $cursorSummary.negative_reference_frames -ne 10 -or $cursorSummary.blank_readbacks -ne 2 -or
-    (($cursorRows[0].PSObject.Properties.Name)-join '|') -cne ($cursorCaseColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $cursorRows $cursorCaseColumns)) -or
     @($cursorRows|Where-Object {$_.rest_match -cne 'true' -or $_.click_match -cne 'true' -or $_.reduced_rest -cne 'true' -or
         $_.raw_samples -cne 'true' -or $_.shade_shadow_fixed -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){
     throw 'Cursor shared counters/schema/assertions exceed the approved frozen scope.'
@@ -75,14 +76,12 @@ $cursorHeader=[Text.Encoding]::ASCII.GetBytes("P6`n72 80`n255`n")
 $cursorBytes=0
 $cursorCropEvidence=@(foreach($crop in $cursorCrops){
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $cursorHeader.Length+72*80*3){throw "Incorrect compact cursor crop size:$($crop.Name)"}
-    for($i=0;$i -lt $cursorHeader.Length;$i++){if($bytes[$i] -ne $cursorHeader[$i]){throw 'Incorrect canonical cursor PPM header.'}}
+    Assert-PainterPpm -Bytes $bytes -Header $cursorHeader
     $cursorBytes+=$bytes.Length
     [ordered]@{name=$crop.Name;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
-$cursorLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$cursorSaveCalls=@($cursorLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count
-$cursorSaveSuccesses=@($cursorLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$cursorSaveCalls=$painterSaveCounts.calls
+$cursorSaveSuccesses=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected failed private Save in the cursor proof.'}
 $cursorArtifacts=[ordered]@{}
 foreach($path in @($cursorSummaryPath,$cursorRowsPath,$cursorSamplesPath)){
@@ -109,18 +108,18 @@ if($debug){
     if($cursorTuneSummary.scope -cne 'debug-validated-commands' -or $cursorTuneSummary.commands -ne 15 -or
         $cursorTuneSummary.readbacks -ne 168 -or $cursorTuneSummary.csv_rows -ne 192 -or $cursorTuneSummary.case_rows -ne 24 -or
         $cursorTuneSummary.sample_rows -ne 168 -or $cursorTuneSummary.crops -ne 0 -or $cursorTuneSummary.saved_tokens -ne 2 -or
-        (($cursorTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($cursorTuneColumns-join '|') -or
+        (-not (Test-PainterCsvColumns $cursorTuneRows $cursorTuneColumns)) -or
         @($cursorTuneRows|Where-Object {$_.rest_match -cne 'true' -or $_.click_match -cne 'true' -or $_.raw_samples -cne 'true' -or
             $_.shade_shadow_fixed -cne 'true' -or $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or
         (Get-Item -LiteralPath $cursorTranscriptPath).Length -le 0 -or $cursorSaveCalls -ne 2 -or $cursorSaveSuccesses -ne 2 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'cursor-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'cursor-tune-scratch/profile')) -PathType Leaf)){
         throw 'Cursor Debug counters/private-save/case evidence exceeds the approved scope.'
     }
     foreach($path in @($cursorTuneSummaryPath,$cursorTuneRowsPath,$cursorTuneSamplesPath,$cursorTranscriptPath)){
         $cursorArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}
     }
     $cursorObserved.developer_commands=$cursorTuneSummary
-    $cursorObserved.readbacks=292;$cursorObserved.csv_rows=304;$cursorObserved.case_rows=38;$cursorObserved.sample_rows=266
+    $cursorObserved.readbacks += $cursorTuneSummary.readbacks;$cursorObserved.csv_rows += $cursorTuneSummary.csv_rows;$cursorObserved.case_rows += $cursorTuneSummary.case_rows;$cursorObserved.sample_rows += $cursorTuneSummary.sample_rows
 }
 elseif($cursorSaveCalls -ne 0 -or $cursorSaveSuccesses -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'cursor-tune-*').Count){
     throw 'Release cursor proof must stay literal-consumer-only without developer artifacts or private Saves.'

@@ -323,10 +323,10 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
         "\"csv_rows\":31,\"compact_crops\":8,\"page_openings\":14,\"proceed_pops\":14,\"font_negative_controls\":4,"
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":710640}\n";
     require(summary.good(), "Cannot retain Series score summary");
-    std::cout << "PASS Series score leaf: four actual best-of 3/5 scores with independent literal numbers and reordered tokens; "
+    std::cout << "PASS Series score leaf: four actual best-of 3 / 5 scores with independent literal numbers and reordered tokens; "
         "single-match score/outcome absence, unchanged outcome and Round headings, centered unscaled zero-offset text; "
         "captured templates/detail font through assignment/reopen/reversal, actual reveal/proceed gates and 14 fresh pops; "
-        "frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, 81 updates, 97 readbacks, 31 CSV rows, "
+        "frozen ledger/setup/private Save/RNG, zero-update 720 / 1080 / 720 resize, 81 updates, 97 readbacks, 31 CSV rows, "
         "four font controls and eight compact crops (710640 pixels / 2132036 PPM bytes), one private seed Save. "
         "Both presets use the normal reader; no match/global-input/physical-pad/listening/human/performance acceptance.\n";
 }

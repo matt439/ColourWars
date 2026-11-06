@@ -155,7 +155,7 @@ void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>
         "\"program_patch\":[632,92,16,16],\"paper_patch\":[392,242,16,16],\"glass_patch\":[132,100,1,1],\"event_fade\":false}\n";
     require(summary.good(), "Cannot write Program Level summary");
     std::cout << "PASS program-level-visibility: one actual 2P Crossfeed full opening, one positive .4f setup update; "
-        "6readbacks/3cases+9samples/2fullPPMs/0crops, zero observation updates, one RNG bracket. "
+        "6 readbacks / 3 cases + 9 samples / 2 full PPMs / 0 crops, zero observation updates, one RNG bracket. "
         "Literal exposed program and covered paper/glass guards, whole-frame repeats/restoration, mask-only delta. "
         "One declared composed checkpoint only; private story clocks are source-derived, no human/performance/all-phase claim.\n";
 }

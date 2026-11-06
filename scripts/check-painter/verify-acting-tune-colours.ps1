@@ -1,4 +1,5 @@
 # Dot-sourced only after -ActingTuneColoursOnly native execution.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $actingSummaryPath=Join-Path $captures 'acting-colour-consumer-summary.json'
 $actingRowsPath=Join-Path $captures 'acting-colour-consumers.csv'
 $actingSummary=Get-Content -LiteralPath $actingSummaryPath -Raw|ConvertFrom-Json
@@ -23,7 +24,7 @@ if($actingSummary.scope -cne 'consumer-only' -or $actingSummary.readbacks -ne 90
     $actingSummary.sweat_strips_per_facing -ne 8 -or $actingSummary.facings -ne 2 -or $actingSummary.canvas_backgrounds -ne 2 -or
     $actingSummary.viewport -cne '1280x720' -or $actingSummary.event_fade -ne $false -or $actingSummary.adoption_reference -cne 'production-consumer-only' -or
     $actingSummary.alpha_reference -cne 'independent-ordered-full-raw' -or
-    (($actingRows[0].PSObject.Properties.Name)-join '|') -cne ($actingColumns-join '|') -or
+    (-not (Test-PainterCsvColumns $actingRows $actingColumns)) -or
     @($actingRows|Where-Object {$_.full_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or $_.mask_guards -cne 'true' -or $_.pupils_retained -cne 'true' -or
         $_.frozen_records_strokes_rng -cne 'true' -or $_.scope -cne 'consumer-only'}).Count){throw 'Acting shared exact budget/oracle/schema mismatch'}
 $actingControlLabels=@{default='opaque-parity';rgb='opaque-parity';rgba='each-field-straight-and-squared-rejected';alpha0='each-field-straight-rejected-pupils-retained'}
@@ -35,14 +36,12 @@ if($actingCrops.Count -ne 16 -or (($actingCrops.Name|Sort-Object)-join '|') -cne
 $actingHeader=[Text.Encoding]::ASCII.GetBytes("P6`n320 128`n255`n");$actingBytes=0
 $actingCropEvidence=@(foreach($crop in $actingCrops){
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $actingHeader.Length+320*128*3){throw 'Acting compact eye+sweat crop size mismatch'}
-    for($i=0;$i -lt $actingHeader.Length;$i++){if($bytes[$i] -ne $actingHeader[$i]){throw 'Acting PPM header mismatch'}}
+    Assert-PainterPpm -Bytes $bytes -Header $actingHeader
     $actingBytes+=$bytes.Length
     [ordered]@{name=$crop.Name;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
-$actingLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$actingSaves=@($actingLog|Where-Object {$_ -match 'Saving\.\.\.$'}).Count
-$actingSuccess=@($actingLog|Where-Object {$_ -ceq 'Save was successful.'}).Count
+$actingSaves=$painterSaveCounts.calls
+$actingSuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object {$_ -match '^save failure:'}).Count){throw 'Unexpected acting private Save failure'}
 $actingArtifacts=[ordered]@{}
 foreach($path in @($actingSummaryPath,$actingRowsPath)){$actingArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -59,15 +58,15 @@ if($debug){
     $columns=@('state','facing','background','full_raw_match','adoption_match','frozen_records_strokes_rng','private_bytes','adoption')
     if($actingTune.scope -cne 'debug-validated-commands' -or $actingTune.commands -ne 14 -or $actingTune.states -ne 14 -or $actingTune.readbacks -ne 56 -or
         $actingTune.csv_rows -ne 14 -or $actingTune.crops -ne 0 -or $actingTune.saved_tokens -ne 1 -or $actingTune.facings -ne 1 -or $actingTune.canvas_backgrounds -ne 1 -or
-        (($actingTuneRows[0].PSObject.Properties.Name)-join '|') -cne ($columns-join '|') -or
+        (-not (Test-PainterCsvColumns $actingTuneRows $columns)) -or
         @($actingTuneRows|Where-Object {$_.full_raw_match -cne 'true' -or $_.adoption_match -cne 'true' -or $_.frozen_records_strokes_rng -cne 'true' -or
             $_.private_bytes -cne 'true' -or $_.adoption -cne 'live'}).Count -or (Get-Item -LiteralPath $actingTranscript).Length -le 0 -or
         $actingSaves -ne 2 -or $actingSuccess -ne 2 -or
-        !(Test-Path -LiteralPath (Join-Path $captures 'acting-colour-tune-scratch/profile/ColourWars/save_data.json') -PathType Leaf)){
+        !(Test-Path -LiteralPath (Get-PainterSavePath (Join-Path $captures 'acting-colour-tune-scratch/profile')) -PathType Leaf)){
         throw 'Acting Debug exact budget/schema/private-save evidence mismatch'
     }
     foreach($path in @($actingTuneSummaryPath,$actingTuneRowsPath,$actingTranscript)){$actingArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
-    $actingObserved.developer_commands=$actingTune;$actingObserved.readbacks=146;$actingObserved.csv_rows=30
+    $actingObserved.developer_commands=$actingTune;$actingObserved.readbacks += $actingTune.readbacks;$actingObserved.csv_rows += $actingTune.csv_rows
 }elseif($actingSaves -ne 0 -or $actingSuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'acting-colour-tune-*').Count){
     throw 'Release acting proof must remain literal-consumer-only without developer artifacts or Save'
 }

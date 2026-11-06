@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($DurationTextOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $durationSummary = Get-Content -LiteralPath (Join-Path $captures 'duration-summary.json') -Raw | ConvertFrom-Json
         $durationRows = @(Import-Csv -LiteralPath (Join-Path $captures 'duration-values.csv'))
         $durationExpectedCases = @('default-240', 'cycle-60', 'cycle-120', 'explicit-240', 'left-120',
@@ -26,10 +27,8 @@
         }
         foreach ($row in $durationRows) {
             foreach ($metric in @('value_width', 'value_height', 'row_width', 'row_height')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or $value -le 0.0) {
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if ($value -le 0.0) {
                     throw "Duration case $($row.case) contains an invalid $metric."
                 }
             }
@@ -65,15 +64,10 @@
             throw 'The duration leaf emitted unexpected or missing compact crops, CSV or summary files.'
         }
         foreach ($crop in $durationCrops) {
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount("P6`n1168 72`n255`n") + 1168 * 72 * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne '1168 72' -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Duration crop $($crop.Name) differs from its exact 1168x72 RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Width 1168 -Height 72
         }
-        $durationSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $durationSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $durationSaveCalls = $painterSaveCounts.calls
+        $durationSaveSuccesses = $painterSaveCounts.successes
         if ($durationSaveCalls -ne 1 -or $durationSaveSuccesses -ne 1) {
             throw 'The duration leaf must perform exactly its one successful private Play-settings seed Save.'
         }

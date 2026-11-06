@@ -1,6 +1,7 @@
 # Dot-sourced only after -SilhouetteBodyTuneColourOnly native execution.
 # Retained PPMs independently qualify RGB at nine literal 3x3 overlap patches.
 # Native C++ owns RGBA/raw/uniformity/repeat/reset proof; no full-mask claim.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $bodySummaryPath=Join-Path $captures 'silhouette-body-colour-consumer-summary.json'
 $bodyRowsPath=Join-Path $captures 'silhouette-body-colour-consumers.csv'
 $bodySummary=Get-Content -LiteralPath $bodySummaryPath -Raw|ConvertFrom-Json
@@ -8,14 +9,8 @@ $bodyRows=@(Import-Csv -LiteralPath $bodyRowsPath)
 $bodyContexts=@('adult-rest-mug','adult-half-stand','child-rest')
 $bodyStates=@('default','rgb','rgba128','alpha0')
 $bodyUpdates=@('local_updates','player_updates','level_updates','state_updates','input_updates','time_updates')
-function Assert-BodyInteger($Object,[string]$Key,[int]$Expected){
-    $value=$Object.$Key
-    if(($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected){throw "Body exact integer differs: $Key"}
-}
-function Assert-BodyKeys($Object,$Keys,[string]$Label){
-    if((@($Object.PSObject.Properties.Name|Sort-Object)-join '|') -cne (@($Keys|Sort-Object)-join '|')){throw "Body exact JSON schema differs: $Label"}
-}
-function Assert-BodyUpdates($Summary){foreach($key in $bodyUpdates){Assert-BodyInteger $Summary $key 0}}
+
+function Assert-BodyUpdates($Summary){foreach($key in $bodyUpdates){Assert-PainterInteger $Summary $key 0}}
 function Assert-BodyPairs($Rows,$States){
     $wanted=@(foreach($state in $States){foreach($context in $bodyContexts){"$state/$context/canvas32-64-96"}})
     $actual=@($Rows|ForEach-Object{"$($_.state)/$($_.context)/$($_.background)"})
@@ -34,8 +29,8 @@ $bodyCounts=[ordered]@{readbacks=61;csv_rows=12;crops=12;crop_pixels=759808;ppm_
     partial_straight_reads=3;partial_squared_reads=3;collapsed_one_reads=3;collapsed_two_reads=1;
     alpha0_straight_reads=3;affected_rejections=34;unaffected_guards=8}
 $bodySummaryKeys=@($bodyCounts.Keys)+$bodyUpdates+@('scope','viewport','event_fade','whole_frame_reference','raw_reference','adult_crop','child_crop')
-Assert-BodyKeys $bodySummary $bodySummaryKeys 'shared'
-foreach($key in $bodyCounts.Keys){Assert-BodyInteger $bodySummary $key $bodyCounts[$key]}
+Assert-PainterKeys $bodySummary $bodySummaryKeys 'shared'
+foreach($key in $bodyCounts.Keys){Assert-PainterInteger $bodySummary $key $bodyCounts[$key]}
 Assert-BodyUpdates $bodySummary
 if($bodySummary.scope -cne 'consumer-only' -or $bodySummary.viewport -cne '1280x720' -or
     $bodySummary.event_fade -isnot [bool] -or $bodySummary.event_fade -ne $false -or
@@ -51,7 +46,7 @@ foreach($key in @('adult_crop','child_crop')){
 Assert-BodyPairs $bodyRows $bodyStates
 $bodyColumns=@('state','context','background','patch_count','write_counts','raw_patch_channels','uniform_rgba','adoption_match',
     'exterior_and_delta','frozen_inputs_resources_rng','controls','affected_rejections','unaffected_guards','scope')
-if(($bodyRows[0].PSObject.Properties.Name-join '|') -cne ($bodyColumns-join '|')){throw 'Body shared CSV columns differ'}
+if(-not (Test-PainterCsvColumns $bodyRows $bodyColumns)){throw 'Body shared CSV columns differ'}
 $bodyControlTotal=0;$bodyAffectedTotal=0;$bodyUnaffectedTotal=0
 foreach($row in $bodyRows){
     Assert-BodyRowGeometry $row
@@ -78,8 +73,7 @@ $bodyCropEvidence=@(foreach($crop in $bodyCrops){
     $width=if($context[0] -ceq 'child-rest'){208}else{320};$height=224
     $header=[Text.Encoding]::ASCII.GetBytes("P6`n$width $height`n255`n")
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne $header.Length+$width*$height*3){throw "Body native crop byte length differs: $($crop.Name)"}
-    for($i=0;$i -lt $header.Length;++$i){if($bytes[$i] -ne $header[$i]){throw 'Body canonical P6 header differs'}}
+    Assert-PainterPpm -Bytes $bytes -Header $header
     # Literal crop-local centres/counts, independent of native CSV or drawing helpers.
     $patches=@(if($context[0] -ceq 'adult-rest-mug'){@(@(80,96,1),@(80,174,2),@(80,216,2),@(236,144,1),@(249,163,2),@(249,156,3))}
         elseif($context[0] -ceq 'adult-half-stand'){,@(240,92,2)}else{@(@(104,61,1),@(77,56,2))})
@@ -110,9 +104,8 @@ $bodyCropEvidence=@(foreach($crop in $bodyCrops){
     [ordered]@{name=$crop.Name;width=$width;height=$height;bytes=$bytes.Length;sha256=(Get-FileHash -LiteralPath $crop.FullName).Hash}
 })
 if($bodyBytes -ne 2279604 -or $bodyPixels -ne 759808 -or $bodyCheckedPixels -ne 324){throw 'Body exact crop byte/pixel/patch totals differ'}
-$bodyLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$bodySaves=@($bodyLog|Where-Object{$_ -match 'Saving\.\.\.$'}).Count
-$bodySuccess=@($bodyLog|Where-Object{$_ -ceq 'Save was successful.'}).Count
+$bodySaves=$painterSaveCounts.calls
+$bodySuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_ -match '^save failure:'}).Count){throw 'Unexpected Body private Save failure'}
 $bodyArtifacts=[ordered]@{}
 foreach($path in @($bodySummaryPath,$bodyRowsPath)){$bodyArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -126,18 +119,18 @@ if($debug){
     $bodyTuneSummaryPath=Join-Path $captures 'silhouette-body-colour-tune-summary.json'
     $bodyTuneRowsPath=Join-Path $captures 'silhouette-body-colour-tune.csv'
     $bodyTranscript=Join-Path $captures 'silhouette-body-colour-tune-commands.log'
-    $bodyPreferencePath=Join-Path $captures 'silhouette-body-colour-tune-scratch/profile/ColourWars/save_data.json'
+    $bodyPreferencePath=Get-PainterSavePath (Join-Path $captures 'silhouette-body-colour-tune-scratch/profile')
     $bodyTune=Get-Content -LiteralPath $bodyTuneSummaryPath -Raw|ConvertFrom-Json
     $bodyTuneRows=@(Import-Csv -LiteralPath $bodyTuneRowsPath)
     $bodyTuneCounts=[ordered]@{commands=9;states=9;contexts=3;readbacks=108;csv_rows=27;crops=0;saved_tokens=1}
-    Assert-BodyKeys $bodyTune (@($bodyTuneCounts.Keys)+$bodyUpdates+@('scope','event_fade')) 'Debug'
-    foreach($key in $bodyTuneCounts.Keys){Assert-BodyInteger $bodyTune $key $bodyTuneCounts[$key]}
+    Assert-PainterKeys $bodyTune (@($bodyTuneCounts.Keys)+$bodyUpdates+@('scope','event_fade')) 'Debug'
+    foreach($key in $bodyTuneCounts.Keys){Assert-PainterInteger $bodyTune $key $bodyTuneCounts[$key]}
     Assert-BodyUpdates $bodyTune
     Assert-BodyPairs $bodyTuneRows @('baseline','named','reset-original','rgb','rgba128','alpha0','reset-saved','rgb-after-save','reset-all-saved')
     $bodyTuneColumns=@('state','context','background','patch_count','write_counts','raw_patch_channels','uniform_rgba','adoption_match',
         'exterior_and_delta','frozen_inputs_resources_rng','private_bytes','adoption')
     if($bodyTune.scope -cne 'debug-validated-commands' -or $bodyTune.event_fade -isnot [bool] -or $bodyTune.event_fade -ne $false -or
-        ($bodyTuneRows[0].PSObject.Properties.Name-join '|') -cne ($bodyTuneColumns-join '|')){throw 'Body Debug oracle/schema/scope differs'}
+        (-not (Test-PainterCsvColumns $bodyTuneRows $bodyTuneColumns))){throw 'Body Debug oracle/schema/scope differs'}
     foreach($row in $bodyTuneRows){
         Assert-BodyRowGeometry $row
         if($row.private_bytes -cne 'true' -or $row.adoption -cne 'live'){throw 'Body Debug private-content/preference or live/reset proof flag differs'}
@@ -153,7 +146,7 @@ if($debug){
     foreach($path in @($bodyTuneSummaryPath,$bodyTuneRowsPath,$bodyTranscript,$bodyPreferencePath)){
         $bodyArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}
     }
-    $bodyObserved.developer_commands=$bodyTune;$bodyObserved.readbacks=169;$bodyObserved.csv_rows=39
+    $bodyObserved.developer_commands=$bodyTune;$bodyObserved.readbacks += $bodyTune.readbacks;$bodyObserved.csv_rows += $bodyTune.csv_rows
 }elseif($bodySaves -ne 0 -or $bodySuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'silhouette-body-colour-tune-*').Count){
     throw 'Release Body proof must stay literal-consumer-only without developer artifacts or private Saves'
 }

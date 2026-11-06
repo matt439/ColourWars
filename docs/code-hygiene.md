@@ -2130,35 +2130,42 @@ The row as filed:
 
 ### Painter verifier evidence helpers (`HYG#88`)
 
-Add `scripts/check-painter/evidence.ps1` with `Assert-PainterPpm`,
-`ConvertTo-PainterFinite`, `Get-PainterSaveCounts`, key-set and CSV asserts and
-one PPM-to-PNG conversion. Port the about forty verifiers
-(`verify-hud-closing-shade.ps1:4`, `verify-competitive-winner.ps1:119`,
-`verify-desktop-tune-colour.ps1:6`). That restores the payload-length check
-`verify-feedback-tune-colours.ps1:30` lost, and settles one case rule.
+**Done 2026-11-07; verifier behaviour changes.**
+`scripts/check-painter/evidence.ps1` owns canonical P6 headers, dimensions and
+complete RGB payload checks, invariant finite numbers and integers, ordinal
+key/CSV shape checks, save counts/path and one PPM-to-PNG conversion. Fifty-two
+verifiers use the shared PPM check. Feedback's lost payload-length check is
+restored; an actual retained feedback run passed, then its private copy with a
+one-byte-short PPM failed. Key/CSV comparisons also reject delimiter collisions
+and case drift, including later CSV rows.
 
-Also:
+The selector token is derived from its parameter name (all 100 old mappings
+were compared), `$privateProfile` replaces the automatic `$PROFILE` name, Git
+queries check their exit status, and selection requires `check-path.ps1`.
+Observed developer summaries replace hand-added totals. Painter save paths and
+save-log accounting share helpers; the contact sheet's rumble filter is fixed.
+The packed native receipts, diagnostics and evidence descriptions separate
+words/counts and record the existing human-check waivers truthfully. Private
+trial summaries make no claim about their arbitrary input's human acceptance.
+Independent AST review preserved all 645 categorical metadata arrays and all
+schema/selector values.
 
-- Drop the hand-added totals (`verify-desktop-tune-colour.ps1:66`).
-- Derive the selector token instead of the 100-branch chain
-  (`check-painter.ps1:194`).
-- Rename `$profile` (`:307`).
-- Check the git exit codes (`evidence-record.ps1:13`).
-- Treat `check-path.ps1` as required (`check-painter-selection.ps1:265`).
-- Fix the contact sheet's rumble filter (`contact-sheet.ps1:145`).
-- From `HYG#84`: the PowerShell side still spells the private save path out,
-  in `check-painter.ps1`'s expected save-failure lines and about thirty
-  `verify-*.ps1`. One helper beside `Get-PainterSaveCounts` can own it.
-- From `HYG#87`: `check-painter/diagnostics.ps1` and `evidence-record/*.ps1`
-  still say attended or human acceptance "remains open", which the 2026-11-05
-  decisions waived, and fuse words to numbers (`Debug adds15`, `full720p`,
-  `exceeds99percent`). The probes' own PASS lines were reworded in `HYG#87`,
-  except the packed receipts of about twenty painter leaves
-  (`acting_tune_colour_checks.h:220`, `crack_tune_colour_checks.h:257`,
-  `glass_tune_colour_checks.h:342`: `acting:90readbacks/16rows`,
-  `,45 updates`); split them with the `diagnostics.ps1` lines that mirror them.
+Both PowerShell hosts passed `check-painter-selection.ps1` and the new
+`check-painter-evidence.ps1`. The latter checks malformed/truncated/extra PPM
+payloads, decoded RGB, finite/integer parsing, exact keys/CSV and save counts.
+The converter caches immutable dimensions and bytes outside its pixel loop.
 
-Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
+On MattPC's NVIDIA GeForce RTX 5080, both complete plain matrices passed
+(Release 862.3 seconds, Debug 1900.2 seconds). Official four-shard sweeps
+covered all 94 runnable Release and 97 Debug selectors. Release's initial Limb
+leaf exposed a leftover companion helper call; it was fixed and the entire
+Limb/quiet-face leaf passed again. Debug passed all selectors with the fix.
+The coverage audits retain the original failed receipt and reference the
+successful repair instead of rewriting results. The official sweep excludes
+its three private `TrialPath` leaves by design. Evidence:
+`out/hyg88/x64-release-coverage-audit.json`,
+`out/hyg88/x64-debug-coverage-audit.json` and
+`out/hyg88/validation-summary.json`.
 
 ### Shared PowerShell probe-pipeline and art helpers (`HYG#89`)
 

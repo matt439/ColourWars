@@ -40,7 +40,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#88` | OPEN | MED | L | Shared painter verifier evidence helpers for about forty hand-rolled PPM, number and CSV checks; one lost its payload check. [Scope](docs/code-hygiene.md#painter-verifier-evidence-helpers-hyg88). |
 | `HYG#89` | OPEN | MED | L | Shared PowerShell probe-build pipeline (six drifted copies), diagnostic scans, window enumeration and art PNG writer. [Scope](docs/code-hygiene.md#shared-powershell-probe-pipeline-and-art-helpers-hyg89). |
 
 ## Art direction, characters and the UI

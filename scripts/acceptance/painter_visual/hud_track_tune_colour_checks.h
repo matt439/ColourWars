@@ -300,8 +300,8 @@ void hud_track_colour_consumer_checks(Application& app,const Presentation& prese
     std::ofstream summary(output/"hud-track-colour-consumer-summary.json");
     summary<<"{\"scope\":\"consumer-only\",\"viewport\":\"1280x720\",\"background\":\"canvas32-64-96\",\"event_fade\":false,\"raw_reference\":\"two-independent192x16-ink-track-prefix-interiors-only\",\"whole_frame_reference\":\"copied-complete-HUD-consumer-adoption-only\",\"health_roi_half_open\":[1036,64,1228,80],\"ammo_roi_half_open\":[1036,122,1228,138],\"capture_kind\":\"lossless-paired-ROI-stack\",\"paired_amounts_only\":true,\"readbacks\":54,\"csv_rows\":12,\"crops\":12,\"crop_width\":192,\"crop_height\":32,\"crop_pixels\":73728,\"ppm_bytes\":221352,\"contexts\":3,\"palettes\":4,\"roi_pixels\":6144,\"source_rois\":2,\"base_case_reads\":48,\"blank_reads\":0,\"selected_track_writes\":2,\"maximum_selected_writes_per_pixel\":1,\"controls\":6,\"track_discriminations\":12,\"partial_straight_reads\":2,\"partial_squared_reads\":2,\"alpha0_straight_reads\":2,\"changed_control_pixels\":27648,\"unchanged_control_pixels\":9216,\"full_cover_invariant_cases\":4,\"fill_role_guard_cases\":12,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Track shared summary");
-    std::cout<<"PASS track consumer: 54 readbacks/12 rows/12 lossless paired 192x32 ROI stacks of 73728 native pixels; 6144 independent RGBA per case, "
-        "6 controls/12 track discriminations with 27648 changed and 9216 unchanged pixels; coherent whole-composite source representatives. Full copied HUD adoption only; zero all updates.\n";
+    std::cout<<"PASS track consumer: 54 readbacks / 12 rows / 12 lossless paired 192x32 ROI stacks of 73728 native pixels; 6144 independent RGBA per case, "
+        "6 controls / 12 track discriminations with 27648 changed and 9216 unchanged pixels; coherent whole-composite source representatives. Full copied HUD adoption only; zero all updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
@@ -386,7 +386,7 @@ void hud_track_tune_colour_checks(Application& app,GameTuning& tuning,Presentati
     require(records.good()&&commands==9&&rows==9&&role_cases==9&&probe.readbacks()==36,"Track Debug exact command/row/role/read budget differs");
     std::ofstream summary(output/"hud-track-colour-tune-summary.json");summary<<"{\"scope\":\"debug-validated-commands\",\"event_fade\":false,\"paired_context\":\"half\",\"commands\":9,\"states\":9,\"contexts\":1,\"readbacks\":36,\"csv_rows\":9,\"crops\":0,\"saved_tokens\":1,\"private_seed_saves\":2,\"fill_role_guard_cases\":9,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"scene_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"input_polls\":0}\n";
     require(summary.good(),"Cannot retain Track Debug summary");
-    std::cout<<"PASS track tune:9real commands/9half-pair states/36additional readbacks/9rows; one exact Track token Save/rebase and original/saved whole-HUD resets,"
-        "2private preference seeds/JumpJ/defaultdisplay/fixed health and team-ammo roles retained; zero all updates; no actualLevel/human/performance claim.\n";
+    std::cout<<"PASS track tune: 9 real commands/9 half-pair states / 36 additional readbacks / 9 rows; one exact Track token Save/rebase and original/saved whole-HUD resets,"
+        "2 private preference seeds/Jump J/default display/fixed health and team-ammo roles retained; zero all updates; no actual Level/human/performance claim.\n";
 }
 #endif

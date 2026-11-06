@@ -320,10 +320,10 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         "\"csv_rows\":26,\"compact_crops\":8,\"page_openings\":11,\"proceed_pops\":11,\"font_negative_controls\":3,"
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":722400}\n";
     require(summary.good(), "Cannot retain Round heading summary");
-    std::cout << "PASS Round heading leaf: actual drawn Session rounds 1/10/100 with independent literal headings; "
+    std::cout << "PASS Round heading leaf: actual drawn Session rounds 1 / 10 / 100 with independent literal headings; "
         "single Results under the new template/font with absent series rows, unchanged score/outcome neighbors, "
         "centered unscaled zero-offset text and captured templates/heading font through assignment/reopen/reversal; "
-        "actual reveal/proceed gates and 11 fresh pops, frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, "
+        "actual reveal/proceed gates and 11 fresh pops, frozen ledger/setup/private Save/RNG, zero-update 720 / 1080 / 720 resize, "
         "66 updates, 81 readbacks, 26 CSV rows, three font controls and eight compact crops "
         "(722400 pixels / 2167316 PPM bytes), one private seed Save. "
         "Both presets use the normal reader; no match/global-input/physical-pad/listening/human/performance acceptance.\n";

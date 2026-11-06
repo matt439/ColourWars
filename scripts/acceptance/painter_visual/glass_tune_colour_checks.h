@@ -261,7 +261,7 @@ void glass_colour_consumer_checks(Application& app,const Presentation& presentat
         "\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0,\"viewport\":\"1280x720\",\"event_fade\":false,"
         "\"adoption_reference\":\"production-consumer-only\",\"alpha_reference\":\"independent-ordered-main-five-rois-and-standalone-rois\",\"main_crop\":[80,24],\"picker_crop\":[99,53],\"close_crop\":[27,26]}\n";
     require(summary.good(),"Cannot write Glass shared summary");
-    std::cout<<"PASS glass: 100 readbacks/20 rows/20 crops of 55272 pixels; all 4 writes, four separate quarter-shadow passes plus lip, five main ROIs and guarded picker/close ROIs. "
+    std::cout<<"PASS glass: 100 readbacks / 20 rows / 20 crops of 55272 pixels; all 4 writes, four separate quarter-shadow passes plus lip, five main ROIs and guarded picker/close ROIs. "
         "Main one effective beige backdrop; standalone two Canvas backdrops; 12 partial and 6 alpha-0 per-write controls. Copied Monitor adoption only; zero all updates/RNG-neutral draws.\n";
 }
 #if COLOURWARS_DEV_TOOLS
@@ -339,7 +339,7 @@ void glass_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& 
     std::ofstream summary(output/"glass-colour-tune-summary.json");summary<<"{\"scope\":\"debug-validated-commands\",\"commands\":9,\"states\":9,\"methods\":3,\"readbacks\":108,\"csv_rows\":27,\"crops\":0,\"saved_tokens\":1,"
         "\"standalone_backdrops\":1,\"local_updates\":0,\"player_updates\":0,\"level_updates\":0,\"state_updates\":0,\"input_updates\":0,\"time_updates\":0}\n";
     require(summary.good(),"Cannot write Glass Debug summary");
-    std::cout<<"PASS glass tune:9real commands/9states/3methods/108readbacks/27rows; one exact glass token Save/rebase, original+saved whole-raster resets, "
-        "private PlaySettings+JumpJ/default display and actual content retained; one standalone black backdrop (shared owns two), zero all updates.\n";
+    std::cout<<"PASS glass tune: 9 real commands / 9 states / 3 methods / 108 readbacks / 27 rows; one exact glass token Save/rebase, original+saved whole-raster resets, "
+        "private PlaySettings+Jump J/default display and actual content retained; one standalone black backdrop (shared owns two), zero all updates.\n";
 }
 #endif

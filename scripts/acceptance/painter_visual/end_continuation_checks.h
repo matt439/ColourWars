@@ -340,8 +340,8 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     require(summary.good(), "Cannot retain End continuation summary");
     std::cout << "PASS End continuation leaf: six actual Session states/four independent plain literals, complete primary card/arrow "
         "and persistent primary off focus; literal-brace custom copy and numeric/letter font through assignment/reopen/reversal, "
-        "point sampler and zero-update 720/1080/720 resize; frozen Session/setup/private Save/RNG; "
+        "point sampler and zero-update 720 / 1080 / 720 resize; frozen Session/setup/private Save/RNG; "
         "14 actual typed callbacks (13 restart/one exit), four owner-controlled music deferrals/repeated completions; "
-        "72 updates,94 readbacks,31 CSV rows,six compact crops,one private Play seed Save. "
+        "72 updates, 94 readbacks, 31 CSV rows, six compact crops, one private Play seed Save. "
         "No match launch/global-input/physical-pad/display/hardware/listening/human/performance acceptance.\n";
 }

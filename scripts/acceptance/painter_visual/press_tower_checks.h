@@ -103,5 +103,5 @@ void press_tower_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         ",\"human_acceptance\":false}\n";
     require(summary.good(), "Press Tower native summary write failed");
     std::cout << "PASS Press Tower: actual four-pane stair landings and hoist exits, clean/controlled-heavy, "
-        "4 native frames/16 pane crops, frozen public state/RNG and Debug fingerprint; no human balance/readability acceptance\n";
+        "4 native frames / 16 pane crops, frozen public state/RNG and Debug fingerprint; no human balance/readability acceptance\n";
 }

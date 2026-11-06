@@ -349,6 +349,6 @@ void turbulence_mover_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         "Controlled ProjectileSpray contacts establish >99percent held paint without claiming weapon efficiency. Local face/team/raw-owner/area, actual carrier/local standing position, collider and real shadow/cull translation are checked while stepping. Repeated Level draws freeze full pixels, public observations, exact motion/local-credit/carrier/shadow/view scalars, RNG and Debug fingerprints. Every native crop has exact source RGBA parity.\n"
         "Isolated actual local-registry StagePreview checks repeated pixels, widget bounds and RNG at authored initial poses only; it owns no match or clock. Native crops are unscaled. No human/readability/reaction-time, physical-pad/motor, listening, performance, balance, slope or arena acceptance.\n";
     summary.close(); scope.close(); require(summary.good() && scope.good(), "Cannot flush mover native summary/scope");
-    std::cout << "PASS Turbulence mover native inspection: 33 full frames/81 native crops/67 reads across 1P/2P/3P/4P, actual carry/reversal/shadows, "
-        "qualified inward landing visibility, source crop parity and frozen state; human acceptance open\n";
+    std::cout << "PASS Turbulence mover native inspection: 33 full frames / 81 native crops / 67 reads across 1P/2P/3P/4P, actual carry/reversal/shadows, "
+        "qualified inward landing visibility, source crop parity and frozen state; scripted checks only; human checks not performed\n";
 }

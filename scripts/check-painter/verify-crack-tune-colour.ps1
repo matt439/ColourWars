@@ -4,6 +4,7 @@
 # All4 hypotheses coincide in each declared complete ROI. Hash admission checks
 # every retained byte; it cannot distinguish mixtures of identical hypotheses.
 # C++ owns actual/raw3910RGBA first, ordered masks, calibration and private Save.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $crackContexts = @('left', 'right')
 $crackStates = @('default', 'rgb', 'rgba128', 'alpha0')
 $crackModels = @('F_AF', 'Q_AF', 'F_AQ', 'Q_AQ')
@@ -19,13 +20,7 @@ $crackSourcePins = @{
     'right/alpha0' = @('1F78A117CFAF0204B221C0E2A2EA9C9804024F19BCB0B6A2BB8695D6064BE20F', '79157A1C43865724C2C804AA7763B16A1424F50F4FDD891450FB617A7EA811E9')
 }
 function Get-CrackSha([byte[]]$Bytes) { Get-PainterSha256 $Bytes }
-function Assert-CrackKeys($Object, [string[]]$Keys, [string]$Scope) {
-    if ($Object -isnot [pscustomobject] -or (($Object.PSObject.Properties.Name | Sort-Object) -join '|') -cne (($Keys | Sort-Object) -join '|')) { throw "Crack exact $Scope JSON schema differs" }
-}
-function Assert-CrackInteger($Object, [string]$Key, [long]$Expected) {
-    $value = $Object.$Key
-    if (($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected) { throw "Crack exact integer differs: $Key" }
-}
+
 function Assert-CrackRoi($Object, [string]$Key, [int[]]$Expected) {
     $value = @($Object.$Key)
     if ($value.Count -ne 4 -or @($value | Where-Object { $_ -isnot [int] -and $_ -isnot [long] }).Count -or ($value -join ',') -cne ($Expected -join ',')) { throw "Crack literal integer ROI differs: $Key" }
@@ -85,7 +80,7 @@ function Complete-CrackTuneColourEvidence {
 
 $crackUpdates = @('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls')
 $crackFlags = @('roi_rgba_match','adoption_match','repeat_match','literal_channels','effective_delta','frozen_inputs_resources_rng','calibration_rgba')
-function Assert-CrackUpdates($Object) { foreach ($field in $crackUpdates) { Assert-CrackInteger $Object $field 0 } }
+function Assert-CrackUpdates($Object) { foreach ($field in $crackUpdates) { Assert-PainterInteger $Object $field 0 } }
 function Assert-CrackFlags($Row) {
     if ($Row.background -cne 'canvas32-64-96' -or $Row.source_models -cne 'F_AF|Q_AF|F_AQ|Q_AQ') { throw 'Crack native Canvas/all4 source aliases differ' }
     foreach ($field in $crackFlags) { if ($Row.$field -cne 'true') { throw "Crack native flag differs: $field" } }
@@ -104,8 +99,8 @@ $crackCounts = [ordered]@{readbacks=42;csv_rows=8;crops=8;crop_width=115;crop_he
     base_case_reads=32;actual_reads=16;adoption_reads=8;raw_positive_reads=8;blank_reads=0;calibration_only_reads=0;calibration_pixels_per_read=32;calibration_pixel_checks=1344;
     controls=10;partial_straight_reads=2;partial_squared_reads=2;collapsed_reads=2;all_ink_first_reads=2;alpha0_straight_reads=2;changed_control_pixels=1274;unchanged_control_pixels=37826;
     ink_submissions_per_path=77;selected_submissions_per_path=165;left_effective_pixels=179;right_effective_pixels=178;ever_selected_pixels_per_path=182}
-Assert-CrackKeys $crackSummary (@($crackCounts.Keys)+$crackUpdates+@('scope','viewport','background','event_fade','actual_entry','raw_reference','whole_frame_reference','left_roi_half_open','right_roi_half_open','capture_kind','source_models')) 'shared'
-foreach ($field in $crackCounts.Keys) { Assert-CrackInteger $crackSummary $field $crackCounts[$field] }
+Assert-PainterKeys $crackSummary (@($crackCounts.Keys)+$crackUpdates+@('scope','viewport','background','event_fade','actual_entry','raw_reference','whole_frame_reference','left_roi_half_open','right_roi_half_open','capture_kind','source_models')) 'shared'
+foreach ($field in $crackCounts.Keys) { Assert-PainterInteger $crackSummary $field $crackCounts[$field] }
 Assert-CrackUpdates $crackSummary
 Assert-CrackRoi $crackSummary 'left_roi_half_open' @(2,472,117,506)
 Assert-CrackRoi $crackSummary 'right_roi_half_open' @(1162,472,1277,506)
@@ -115,7 +110,7 @@ if ($crackSummary.scope -cne 'consumer-only' -or $crackSummary.viewport -cne '12
     $crackSummary.whole_frame_reference -cne 'copied-complete-frontdetails-adoption-only' -or $crackSummary.capture_kind -cne 'native-contiguous-ROI') { throw 'Crack oracle/calibration/source scope differs' }
 Assert-CrackPairs $crackRows $crackStates $crackContexts
 $crackColumns = @('state','context','background','roi_rgba_match','adoption_match','repeat_match','literal_channels','effective_delta','frozen_inputs_resources_rng','calibration_rgba','source_models','controls','changed_control_pixels','unchanged_control_pixels','scope')
-if (($crackRows[0].PSObject.Properties.Name -join '|') -cne ($crackColumns -join '|')) { throw 'Crack shared CSV columns differ' }
+if (-not (Test-PainterCsvColumns $crackRows $crackColumns)) { throw 'Crack shared CSV columns differ' }
 $crackControlTotal=0; $crackChangedTotal=0; $crackUnchangedTotal=0
 foreach ($row in $crackRows) {
     Assert-CrackFlags $row
@@ -133,17 +128,15 @@ if ($crackPpms.Count -ne 8 -or (($crackPpms.Name | Sort-Object) -join '|') -cne 
 $crackHeader = [Text.Encoding]::ASCII.GetBytes("P6`n115 34`n255`n")
 $crackPpmEvidence = @(foreach ($context in $crackContexts) { foreach ($state in $crackStates) {
     $name="crack-colour-$context-$state.ppm"; $path=Join-Path $captures $name; $bytes=[IO.File]::ReadAllBytes($path)
-    if ($bytes.Length -ne 11744) { throw 'Crack native P6 byte length differs' }
-    for ($index=0; $index -lt 14; ++$index) { if ($bytes[$index] -ne $crackHeader[$index]) { throw 'Crack canonical P6 header differs' } }
+    Assert-PainterPpm -Bytes $bytes -Header $crackHeader
     $payload=[byte[]]::new(11730); [Array]::Copy($bytes,14,$payload,0,11730)
     $payloadHash=Get-CrackSha $payload; $p6Hash=Get-CrackSha $bytes; $pin=$crackSourcePins["$context/$state"]
     if ($payloadHash -cne $pin[0] -or $p6Hash -cne $pin[1]) { throw "Crack complete retained RGB/P6 differs from frozen source: $context/$state" }
     [ordered]@{name=$name;width=115;height=34;pixels=3910;bytes=11744;sha256=$p6Hash;context=$context;state=$state;source_payload_sha256=$payloadHash;
         matching_source_models='F_AF|Q_AF|F_AQ|Q_AQ';source_model_equivalence_class=$payloadHash+':F_AF|Q_AF|F_AQ|Q_AQ';admission='exact whole3910RGB source ROI; no tolerance or fitting'}
 } })
-$crackLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$crackSaving=@($crackLog | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-$crackSaved=@($crackLog | Where-Object { $_ -ceq 'Save was successful.' }).Count
+$crackSaving=$painterSaveCounts.calls
+$crackSaved=$painterSaveCounts.successes
 if (@(Get-Content -LiteralPath (Join-Path $run 'run.err') | Where-Object { $_ -match '^save failure:' }).Count) { throw 'Crack unexpected private Save failure' }
 $crackArtifacts=[ordered]@{}
 foreach ($path in @($crackSummaryPath,$crackCsvPath)) { $crackArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash} }
@@ -155,16 +148,16 @@ $crackObserved=[ordered]@{consumer=$crackSummary;readbacks=42;csv_rows=8;crops=8
     private_save_calls=$crackSaving;successful_private_saves=$crackSaved;failed_private_saves=0;artifacts=$crackArtifacts;png_crops=@();png_count=0;png_pixels=0;png_rgb_bytes=0;png_complete=$false}
 if ($debug) {
     $tunePath=Join-Path $captures 'crack-colour-tune-summary.json'; $tuneCsv=Join-Path $captures 'crack-colour-tune.csv'
-    $transcript=Join-Path $captures 'crack-colour-tune-commands.log'; $prefs=Join-Path $captures 'crack-colour-tune-scratch/profile/ColourWars/save_data.json'
+    $transcript=Join-Path $captures 'crack-colour-tune-commands.log'; $prefs=Get-PainterSavePath (Join-Path $captures 'crack-colour-tune-scratch/profile')
     foreach ($path in @($tunePath,$tuneCsv,$transcript,$prefs)) { if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw 'Crack Debug evidence file missing' }; $crackInputs.Add($path) }
     $tune=Get-Content -LiteralPath $tunePath -Raw | ConvertFrom-Json; $tuneRows=@(Import-Csv -LiteralPath $tuneCsv)
     $tuneCounts=[ordered]@{commands=9;states=9;contexts=1;readbacks=36;csv_rows=9;crops=0;saved_tokens=1;private_seed_saves=2;named_token_checks=1;calibration_pixels_per_read=32;calibration_pixel_checks=1152}
-    Assert-CrackKeys $tune (@($tuneCounts.Keys)+$crackUpdates+@('scope','event_fade','context','source_models')) 'Debug'
-    foreach ($field in $tuneCounts.Keys) { Assert-CrackInteger $tune $field $tuneCounts[$field] }
+    Assert-PainterKeys $tune (@($tuneCounts.Keys)+$crackUpdates+@('scope','event_fade','context','source_models')) 'Debug'
+    foreach ($field in $tuneCounts.Keys) { Assert-PainterInteger $tune $field $tuneCounts[$field] }
     Assert-CrackUpdates $tune
     Assert-CrackPairs $tuneRows @('baseline','named','reset-original','rgb','rgba128','alpha0','reset-saved','rgb-after-save','reset-all-saved') @('left')
     $tuneColumns=@('state','context','background','roi_rgba_match','adoption_match','repeat_match','literal_channels','effective_delta','frozen_inputs_resources_rng','calibration_rgba','source_models','private_bytes','adoption','named_token_preserved')
-    if (($tuneRows[0].PSObject.Properties.Name -join '|') -cne ($tuneColumns -join '|') -or $tune.scope -cne 'debug-validated-commands' -or $tune.event_fade -isnot [bool] -or $tune.event_fade -ne $false -or $tune.context -cne 'left' -or $tune.source_models -cne $crackModelNames) { throw 'Crack Debug schema/scope differs' }
+    if ((-not (Test-PainterCsvColumns $tuneRows $tuneColumns)) -or $tune.scope -cne 'debug-validated-commands' -or $tune.event_fade -isnot [bool] -or $tune.event_fade -ne $false -or $tune.context -cne 'left' -or $tune.source_models -cne $crackModelNames) { throw 'Crack Debug schema/scope differs' }
     foreach ($row in $tuneRows) {
         Assert-CrackFlags $row
         $named=if ($row.state -ceq 'named') {'true'} else {'not-applicable'}
@@ -174,7 +167,7 @@ if ($debug) {
     # C++ owns exact one-token source/staged Save/rebase, RED token retention,
     # default preferences/JumpJ, empty queues and full-frame original/saved resets.
     foreach ($path in @($tunePath,$tuneCsv,$transcript,$prefs)) { $crackArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash} }
-    $crackObserved.developer_commands=$tune; $crackObserved.readbacks=78; $crackObserved.csv_rows=17; $crackObserved.calibration_pixel_checks=2496
+    $crackObserved.developer_commands=$tune; $crackObserved.readbacks += $tune.readbacks; $crackObserved.csv_rows += $tune.csv_rows; $crackObserved.calibration_pixel_checks=2496
 } elseif ($crackSaving -ne 0 -or $crackSaved -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'crack-colour-tune-*').Count) { throw 'Release Crack proof must remain consumer-only without Debug artifacts or private Saves' }
 $result.observed_counts=$crackObserved
 $script:crackVerifiedContext=[ordered]@{directory=[IO.Path]::GetFullPath($captures);observed=$crackObserved;ppms=$crackPpmEvidence;

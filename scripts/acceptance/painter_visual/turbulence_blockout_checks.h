@@ -288,6 +288,6 @@ void turbulence_blockout_matrix(Application& app, Registry<LevelLoadedInfo>& lev
         "No visible performance capture, human readability/warning-time, balance, physical-pad, listening or arena acceptance is established.\n";
     summary.close(); scope.close();
     require(summary.good() && scope.good(), "Cannot flush Turbulence native summary/scope");
-    std::cout << "PASS Turbulence native controlled composition: 21 full frames/51 native crops/43 reads, "
-        "1/2/3/4 clean-heavy landing/escape panes, home exits, runtime overviews and actual StagePreview; human acceptance open\n";
+    std::cout << "PASS Turbulence native controlled composition: 21 full frames / 51 native crops / 43 reads, "
+        "1/2 / 3 / 4 clean-heavy landing/escape panes, home exits, runtime overviews and actual StagePreview; scripted checks only; human checks not performed\n";
 }

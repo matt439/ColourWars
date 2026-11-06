@@ -358,7 +358,7 @@ void competitive_winner_checks(Application& app, const Canvas& canvas, GameTunin
         "unchanged solo coverage under the new item font/copy, Round/score/outcome neighbors and single series-row absence; "
         "centered unscaled zero-offset text, captured copy/item font through assignment/reopen/reversal, three brace font controls; "
         "normal reveal/proceed gates and already-revealed A/B/solo hidden versus draw visible, 14 fresh pops, "
-        "frozen ledger/setup/private Save/RNG, zero-update 720/1080/720 resize, "
+        "frozen ledger/setup/private Save/RNG, zero-update 720 / 1080 / 720 resize, "
         "102 updates, 99 readbacks, 32 CSV rows and eight compact crops (312480 pixels / 937552 PPM bytes), "
         "one private seed Save. Both presets use the normal reader; "
         "no match/global-input/physical-pad/listening/human/performance acceptance.\n";

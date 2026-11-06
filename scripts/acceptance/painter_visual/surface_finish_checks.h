@@ -173,5 +173,5 @@ void surface_finish_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         ",\"heavy_contacts\":" << contacts << "}\n";
     require(summary.good(), "Surface finish native summary write failed");
     std::cout << "PASS surface finish: independent ruler/face/burial/corner pixels, all six selected real arenas clean/heavy 1P/4P, "
-        "24 native frames/60 pane crops, frozen state/RNG/fingerprint; controlled stations and paint contacts, no attended readability acceptance\n";
+        "24 native frames / 60 pane crops, frozen state/RNG/fingerprint; controlled stations and paint contacts, no attended readability acceptance\n";
 }

@@ -256,5 +256,5 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
     }
     presentation = original;
     require(records.good(), "Weapon paper evidence write failed"); require(IsWindowVisible(static_cast<HWND>(app.window())) == FALSE && GetForegroundWindow() != static_cast<HWND>(app.window()), "Weapon paper probe exposed or activated its hidden window");
-    std::cout << "PASS Weapon paper independent full paper/text/tool/masks/badges at six sizes; solo and sparse 2/3/4 choices/readiness, palettes, ordered Random RNG/commit, recovery/routes, captured art/font/catalog, local motion/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";
+    std::cout << "PASS Weapon paper independent full paper/text/tool/masks/badges at six sizes; solo and sparse 2 / 3 / 4 choices/readiness, palettes, ordered Random RNG/commit, recovery/routes, captured art/font/catalog, local motion/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";
 }

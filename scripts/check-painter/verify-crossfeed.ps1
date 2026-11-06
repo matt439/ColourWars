@@ -8,10 +8,9 @@ $crossfeedRows = @(Import-Csv -LiteralPath (Join-Path $captures 'crossfeed.csv')
 $crossfeedPresentation = Get-Content -LiteralPath (Join-Path $gameDirectory 'presentation.json') -Raw | ConvertFrom-Json
 $crossfeedMinimumWidth = 0.0
 if ($crossfeedPresentation.camera.PSObject.Properties.Name -contains 'minimum_world_width') {
-    $crossfeedMinimumWidth = [double]$crossfeedPresentation.camera.minimum_world_width
+    $crossfeedMinimumWidth = ConvertTo-PainterFinite $crossfeedPresentation.camera.minimum_world_width 'camera.minimum_world_width'
 }
-if ([double]::IsNaN($crossfeedMinimumWidth) -or [double]::IsInfinity($crossfeedMinimumWidth) -or
-    $crossfeedMinimumWidth -lt 0.0) { throw 'Crossfeed staged minimum camera width is invalid.' }
+if ($crossfeedMinimumWidth -lt 0.0) { throw 'Crossfeed staged minimum camera width is invalid.' }
 $crossfeedStage = Get-Content -LiteralPath (Join-Path $gameDirectory 'levels/crossfeed.json') -Raw | ConvertFrom-Json
 $crossfeedWorld = $crossfeedStage.level_bounds.zoom_out_finish_bounds
 $crossfeedLook = $crossfeedPresentation.main_menu.stage_select
@@ -41,7 +40,7 @@ if ($crossfeedSummary.outcome -cne 'passed' -or $crossfeedSummary.scope -cne 'cr
     $crossfeedSummary.level_updates -gt 8000 -or $crossfeedSummary.controlled_heavy_contacts -le 0 -or
     $crossfeedSummary.scripted_input_steps -le 0 -or $crossfeedSummary.heavy_initial_fraction_min -le 0.99 -or
     $crossfeedSummary.heavy_initial_fraction_min -gt 1.0 -or $crossfeedRows.Count -ne 51 -or
-    (($crossfeedRows[0].PSObject.Properties.Name) -join '|') -cne ($crossfeedColumns -join '|')) {
+    (-not (Test-PainterCsvColumns $crossfeedRows $crossfeedColumns))) {
     throw 'Crossfeed native evidence changed its bounded summary, row count or CSV schema.'
 }
 $crossfeedExpected = @{}
@@ -91,11 +90,8 @@ foreach ($row in $crossfeedRows) {
     $metrics = @{}
     foreach ($metric in @('player_x', 'player_y', 'velocity_x', 'velocity_y', 'camera_x', 'camera_y',
         'camera_scale', 'owned_fraction', 'target_x', 'target_y', 'target_width', 'target_height')) {
-        $value = 0.0
-        if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-            [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-            [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
-            ($metric -in @('camera_scale', 'target_width', 'target_height') -and $value -le 0.0)) {
+        $value = ConvertTo-PainterFinite $row.$metric $metric
+        if (($metric -in @('camera_scale', 'target_width', 'target_height') -and $value -le 0.0)) {
             throw "Crossfeed native evidence has an invalid $metric for $key"
         }
         $metrics[$metric] = $value
@@ -107,8 +103,8 @@ foreach ($row in $crossfeedRows) {
     }
     $rects = @{}
     foreach ($metric in @('pane_x', 'pane_y', 'pane_width', 'pane_height', 'crop_x', 'crop_y', 'crop_width', 'crop_height')) {
-        $value = 0
-        if (-not [int]::TryParse($row.$metric, [ref]$value) -or $value -lt 0) {
+        $value = ConvertTo-PainterInteger $row.$metric $metric ([int]::MinValue) ([int]::MaxValue)
+        if ($value -lt 0) {
             throw "Crossfeed native evidence has an invalid $metric for $key"
         }
         $rects[$metric] = $value
@@ -167,13 +163,8 @@ if ($crossfeedDimensions.Count -ne 72 -or $crossfeedFiles.Count -ne 72 -or
 $crossfeedPpmBytes = 0L
 foreach ($file in $crossfeedFiles) {
     $size = $crossfeedDimensions[$file.Name]
-    $header = @(Get-Content -LiteralPath $file.FullName -TotalCount 3)
     $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-    $bytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + [long]$size[0] * $size[1] * 3
-    if ($header.Count -ne 3 -or $header[0] -cne 'P6' -or $header[1] -cne "$($size[0]) $($size[1])" -or
-        $header[2] -cne '255' -or $file.Length -ne $bytes) {
-        throw "Crossfeed native file changed its full-frame/CSV dimensions or exact RGB payload: $($file.Name)"
-    }
+    Assert-PainterPpm -Path $file.FullName -Header $expectedHeader
     $crossfeedPpmBytes += $file.Length
 }
 $result['observed_counts'] = [ordered]@{

@@ -316,8 +316,8 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     require(summary.good(), "Cannot retain Results text summary");
     std::cout << "PASS Results text leaf: three independent plain literals with braces, actual unscaled zero-offset "
         "heading/contribution/proceed roles and unchanged record clearance; captured copy and three distinct fonts "
-        "through assignment/reopen/reversal, single/series Round2, unrevealed/revealed detail and prompt timing, "
+        "through assignment/reopen/reversal, single/series Round 2, unrevealed/revealed detail and prompt timing, "
         "premature Enter/Escape refusal and six fresh Enter pops; frozen Session/setup/private Save/RNG, "
-        "43 updates,52 readbacks,51 CSV rows,eight compact strips,three font controls,one private seed Save. "
+        "43 updates, 52 readbacks, 51 CSV rows, eight compact strips, three font controls, one private seed Save. "
         "Both presets use the same normal reader; no match/global-input/physical-pad/listening/human/performance acceptance.\n";
 }

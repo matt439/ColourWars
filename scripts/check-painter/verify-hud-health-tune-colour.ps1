@@ -3,6 +3,7 @@
 # wrong-reference/full-frame adoption/empty-health/ammunition invariants.
 # Four approved representative arithmetic models are equal for these12 cases;
 # this is no universal D3D11, full-HUD, Player/Level or human acceptance claim.
+$painterSaveCounts = Get-PainterSaveCounts $run
 $hudHealthContexts=@('empty','half','full')
 $hudHealthStates=@('default','rgb','rgba128','alpha0')
 $hudHealthWidths=@{empty=0;half=96;full=192}
@@ -22,13 +23,7 @@ function New-HudHealthExpectedRGB([string]$Context,[string]$State){
     }}
     return ,$expected
 }
-function Assert-HudHealthInteger($Object,[string]$Key,[long]$Expected){
-    $value=$Object.$Key
-    if(($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected){throw "HUD Health exact integer differs: $Key"}
-}
-function Assert-HudHealthKeys($Object,[string[]]$Expected,[string]$Scope){
-    if((($Object.PSObject.Properties.Name|Sort-Object)-join '|') -cne (($Expected|Sort-Object)-join '|')){throw "HUD Health exact $Scope JSON schema differs"}
-}
+
 function Assert-HudHealthPairs($Rows,[string[]]$States,[string[]]$Contexts){
     $expectedPairs=@(foreach($state in $States){foreach($context in $Contexts){"$state/$context"}})
     $pairs=@($Rows|ForEach-Object{"$($_.state)/$($_.context)"})
@@ -36,7 +31,7 @@ function Assert-HudHealthPairs($Rows,[string[]]$States,[string[]]$Contexts){
 }
 $hudHealthUpdates=@('local_updates','player_updates','level_updates','scene_updates','state_updates','input_updates','time_updates','input_polls')
 $hudHealthTrueFlags=@('roi_rgba_match','adoption_match','repeat_match','literal_channels','delta_prefix','ammo_unchanged','frozen_inputs_resources_rng')
-function Assert-HudHealthUpdates($Object){foreach($key in $hudHealthUpdates){Assert-HudHealthInteger $Object $key 0}}
+function Assert-HudHealthUpdates($Object){foreach($key in $hudHealthUpdates){Assert-PainterInteger $Object $key 0}}
 function Assert-HudHealthRowFlags($Row){
     if($Row.background -cne 'canvas32-64-96'){throw 'HUD Health Canvas differs'}
     foreach($key in $hudHealthTrueFlags){if($Row.$key -cne 'true'){throw "HUD Health native proof flag differs: $key"}}
@@ -53,8 +48,8 @@ $hudHealthCounts=[ordered]@{readbacks=54;csv_rows=12;crops=12;crop_width=192;cro
     contexts=3;palettes=4;roi_pixels=3072;base_case_reads=48;blank_reads=0;maximum_selected_writes=1;controls=6;
     partial_straight_reads=2;partial_squared_reads=2;alpha0_straight_reads=2;changed_control_pixels=13824;unchanged_control_pixels=4608;
     zero_health_invariant_cases=4;ammo_guard_cases=12}
-Assert-HudHealthKeys $hudHealthSummary (@($hudHealthCounts.Keys)+$hudHealthUpdates+@('scope','viewport','background','event_fade','raw_reference','whole_frame_reference','roi_half_open')) 'shared'
-foreach($key in $hudHealthCounts.Keys){Assert-HudHealthInteger $hudHealthSummary $key $hudHealthCounts[$key]}
+Assert-PainterKeys $hudHealthSummary (@($hudHealthCounts.Keys)+$hudHealthUpdates+@('scope','viewport','background','event_fade','raw_reference','whole_frame_reference','roi_half_open')) 'shared'
+foreach($key in $hudHealthCounts.Keys){Assert-PainterInteger $hudHealthSummary $key $hudHealthCounts[$key]}
 Assert-HudHealthUpdates $hudHealthSummary
 $hudHealthROI=@($hudHealthSummary.roi_half_open)
 $hudHealthIntegerROI=@($hudHealthROI|Where-Object{$_ -is [int] -or $_ -is [long]})
@@ -66,7 +61,7 @@ if($hudHealthSummary.scope -cne 'consumer-only' -or $hudHealthSummary.viewport -
 $hudHealthColumns=@('state','context','background','fill_width','roi_rgba_match','adoption_match','repeat_match','literal_channels','delta_prefix',
     'zero_health_invariant','ammo_unchanged','frozen_inputs_resources_rng','controls','changed_control_pixels','unchanged_control_pixels','scope')
 Assert-HudHealthPairs $hudHealthRows $hudHealthStates $hudHealthContexts
-if(($hudHealthRows[0].PSObject.Properties.Name-join '|') -cne ($hudHealthColumns-join '|')){throw 'HUD Health shared CSV columns differ'}
+if(-not (Test-PainterCsvColumns $hudHealthRows $hudHealthColumns)){throw 'HUD Health shared CSV columns differ'}
 $hudHealthControls=0;$hudHealthChanged=0;$hudHealthUnchanged=0;$hudHealthEmptyInvariants=0
 foreach($row in $hudHealthRows){
     Assert-HudHealthRowFlags $row
@@ -96,8 +91,7 @@ $hudHealthCropEvidence=@(foreach($crop in $hudHealthCrops){
     if($context.Count -ne 1){throw 'HUD Health crop context differs'}
     $state=$crop.BaseName.Substring(("hud-health-colour-$($context[0])-").Length)
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne 9230){throw 'HUD Health crop byte length differs'}
-    for($i=0;$i -lt $hudHealthHeader.Length;++$i){if($bytes[$i] -ne $hudHealthHeader[$i]){throw 'HUD Health canonical P6 header differs'}}
+    Assert-PainterPpm -Bytes $bytes -Header $hudHealthHeader
     $expected=New-HudHealthExpectedRGB $context[0] $state
     for($pixel=0;$pixel -lt 3072;++$pixel){for($channel=0;$channel -lt 3;++$channel){
         $offset=$pixel*3+$channel
@@ -127,9 +121,8 @@ $hudHealthCropEvidence=@(foreach($crop in $hudHealthCrops){
         admission='one exact literal prefix payload; all four scoped source representatives are equivalent'}
 })
 if($hudHealthBytes -ne 110760 -or $hudHealthCheckedPixels -ne 36864){throw 'HUD Health retained RGB pixel/PPM totals differ'}
-$hudHealthLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$hudHealthSaves=@($hudHealthLog|Where-Object{$_ -match 'Saving\.\.\.$'}).Count
-$hudHealthSuccess=@($hudHealthLog|Where-Object{$_ -ceq 'Save was successful.'}).Count
+$hudHealthSaves=$painterSaveCounts.calls
+$hudHealthSuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_ -match '^save failure:'}).Count){throw 'Unexpected HUD Health private Save failure'}
 $hudHealthArtifacts=[ordered]@{}
 foreach($path in @($hudHealthSummaryPath,$hudHealthCSVPath)){$hudHealthArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -147,18 +140,18 @@ if($debug){
     $hudHealthTunePath=Join-Path $captures 'hud-health-colour-tune-summary.json'
     $hudHealthTuneCSV=Join-Path $captures 'hud-health-colour-tune.csv'
     $hudHealthTranscript=Join-Path $captures 'hud-health-colour-tune-commands.log'
-    $hudHealthPreferencePath=Join-Path $captures 'hud-health-colour-tune-scratch/profile/ColourWars/save_data.json'
+    $hudHealthPreferencePath=Get-PainterSavePath (Join-Path $captures 'hud-health-colour-tune-scratch/profile')
     $hudHealthTune=Get-Content -LiteralPath $hudHealthTunePath -Raw|ConvertFrom-Json
     $hudHealthTuneRows=@(Import-Csv -LiteralPath $hudHealthTuneCSV)
     $hudHealthTuneCounts=[ordered]@{commands=9;states=9;contexts=1;readbacks=36;csv_rows=9;crops=0;saved_tokens=1;private_seed_saves=2;ammo_guard_cases=9}
-    Assert-HudHealthKeys $hudHealthTune (@($hudHealthTuneCounts.Keys)+$hudHealthUpdates+@('scope','event_fade','health_context')) 'Debug'
-    foreach($key in $hudHealthTuneCounts.Keys){Assert-HudHealthInteger $hudHealthTune $key $hudHealthTuneCounts[$key]}
+    Assert-PainterKeys $hudHealthTune (@($hudHealthTuneCounts.Keys)+$hudHealthUpdates+@('scope','event_fade','health_context')) 'Debug'
+    foreach($key in $hudHealthTuneCounts.Keys){Assert-PainterInteger $hudHealthTune $key $hudHealthTuneCounts[$key]}
     Assert-HudHealthUpdates $hudHealthTune
     Assert-HudHealthPairs $hudHealthTuneRows @('baseline','named','reset-original','rgb','rgba128','alpha0','reset-saved','rgb-after-save','reset-all-saved') @('full')
     $hudHealthTuneColumns=@('state','context','background','fill_width','roi_rgba_match','adoption_match','repeat_match','literal_channels','delta_prefix',
         'zero_health_invariant','ammo_unchanged','frozen_inputs_resources_rng','private_bytes','adoption')
     if($hudHealthTune.scope -cne 'debug-validated-commands' -or $hudHealthTune.event_fade -isnot [bool] -or $hudHealthTune.event_fade -ne $false -or
-        $hudHealthTune.health_context -cne 'full' -or ($hudHealthTuneRows[0].PSObject.Properties.Name-join '|') -cne ($hudHealthTuneColumns-join '|')){
+        $hudHealthTune.health_context -cne 'full' -or (-not (Test-PainterCsvColumns $hudHealthTuneRows $hudHealthTuneColumns))){
         throw 'HUD Health Debug oracle/schema/context differs'
     }
     foreach($row in $hudHealthTuneRows){
@@ -176,7 +169,7 @@ if($debug){
     foreach($path in @($hudHealthTunePath,$hudHealthTuneCSV,$hudHealthTranscript,$hudHealthPreferencePath)){
         $hudHealthArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}
     }
-    $hudHealthObserved.developer_commands=$hudHealthTune;$hudHealthObserved.readbacks=90;$hudHealthObserved.csv_rows=21
+    $hudHealthObserved.developer_commands=$hudHealthTune;$hudHealthObserved.readbacks += $hudHealthTune.readbacks;$hudHealthObserved.csv_rows += $hudHealthTune.csv_rows
 }elseif($hudHealthSaves -ne 0 -or $hudHealthSuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'hud-health-colour-tune-*').Count){
     throw 'Release HUD Health proof must stay consumer-only without developer artifacts or private Saves'
 }

@@ -314,13 +314,13 @@ void respawn_pen_consumer_checks(Application& app, Registry<LevelLoadedInfo>& le
         "\"player_preparation_updates\":3,\"readbacks\":62,\"csv_rows\":18,\"crops\":8,\"controls\":10,"
         "\"direct_outlines\":4,\"actual_players\":1,\"event_fade\":false}\n";
     require(summary.good(), "Cannot write respawn pen consumer summary");
-    std::cout << "PASS respawn pen consumers:62readbacks/18rows/8compact440x160crops; ordered raw nib/channel oracle, "
+    std::cout << "PASS respawn pen consumers: 62 readbacks / 18 rows/8compact440x160 crops; ordered raw nib/channel oracle, "
         "two facings/two path budgets and actual frozen dead Player; boundaries, Reduce Effects and whole/filled bypass. "
         "Three local Player preparations, zero Level/StateContext/input updates; no event fade, hardware or route claim.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
-// Nine real commands;54 readbacks/18rows;two local Player preparations only.
+// Nine real commands; 54 readbacks / 18 rows; two local Player preparations only.
 void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
@@ -409,8 +409,8 @@ void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels
         "\"player_preparation_updates\":2,\"commands\":9,\"readbacks\":54,\"csv_rows\":18,\"crops\":0,"
         "\"saved_tokens\":1,\"event_fade\":false}\n";
     require(summary.good(), "Cannot write respawn pen Debug summary");
-    std::cout << "PASS respawn pen tune:9real commands/54readbacks/18rows; single-token private save/rebase/reset, "
-        "private PlaySettings/JumpJ/default display, frozen actual Player/nib geometry/RNG and no queued match work. "
+    std::cout << "PASS respawn pen tune: 9 real commands / 54 readbacks / 18 rows; single-token private save/rebase/reset, "
+        "private PlaySettings/Jump J/default display, frozen actual Player/nib geometry/RNG and no queued match work. "
         "Two local Player preparations; zero Level/StateContext/input updates.\n";
 }
 #endif

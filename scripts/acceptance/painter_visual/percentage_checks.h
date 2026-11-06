@@ -460,7 +460,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         "  \"inputs\": \"normal production keyboard reader; actual Controls parent and Sticks child\",\n" <<
         "  \"limits\": \"No global input, foreground/hardware/physical-pad, gameplay, listening or human acceptance\"\n}\n";
     require(summary.good(), "Percentage summary evidence write failed");
-    std::cout << "PASS preference percentage leaf: actual four rows, saved 17/0/100 and inherited 100/explicit 0/90; "
+    std::cout << "PASS preference percentage leaf: actual four rows, saved 17 / 0 / 100 and inherited 100/explicit 0/90; "
         "independent literals, long value fitting, distinct font aliases, retained/reopened/reversed snapshots; "
         "child return, Apply/reload/repeat, active-versus-disk save failure and discard; stable preview/frozen RNG; "
         "updates=" << updates << " readbacks=" << readbacks << " csv_rows=" << csv_rows << " crops=" << crops << '\n';

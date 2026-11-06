@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($ResolutionTextOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $resolutionSummary = Get-Content -LiteralPath (Join-Path $captures 'resolution-summary.json') -Raw | ConvertFrom-Json
         $resolutionRows = @(Import-Csv -LiteralPath (Join-Path $captures 'resolution-values.csv'))
         $resolutionExpectedCases = @('saved-windowed-preset', 'left-1280', 'left-wrap-3840', 'right-wrap-1280',
@@ -26,7 +27,7 @@
             $resolutionSummary.resize_updates -ne 0 -or $resolutionSummary.save_calls -ne 3 -or
             $resolutionSummary.crop_pixels -ne 1167600 -or $resolutionSummary.metadata_only -ne $true -or
             $resolutionSummary.windowed_application -ne $true -or $resolutionRows.Count -ne 25 -or
-            (($resolutionRows[0].PSObject.Properties.Name) -join '|') -ne ($resolutionExpectedColumns -join '|') -or
+            (-not (Test-PainterCsvColumns $resolutionRows $resolutionExpectedColumns)) -or
             (($resolutionRows.case | Sort-Object) -join '|') -ne (($resolutionExpectedCases | Sort-Object) -join '|')) {
             throw 'The resolution leaf does not match its frozen summary, CSV schema, cases or update/readback budgets.'
         }
@@ -59,10 +60,8 @@
                 throw "Resolution case $($row.case) changed its fixed viewport/focus, capture, fullscreen-metadata or oracle contract."
             }
             foreach ($metric in @('raw_width', 'raw_height', 'width_scale', 'height_scale', 'scale', 'row_width', 'row_height')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or $value -le 0.0 -or
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if ($value -le 0.0 -or
                     ($metric -eq 'scale' -and $value -gt 1.0)) {
                     throw "Resolution case $($row.case) contains an invalid $metric."
                 }
@@ -85,16 +84,10 @@
         }
         foreach ($crop in $resolutionCrops) {
             $size = $resolutionExpectedCrops[$crop.Name]
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Resolution crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
         }
-        $resolutionSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $resolutionSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $resolutionSaveCalls = $painterSaveCounts.calls
+        $resolutionSaveSuccesses = $painterSaveCounts.successes
         if ($resolutionSaveCalls -ne 3 -or $resolutionSaveSuccesses -ne 3) {
             throw 'The resolution leaf must perform exactly its three successful private metadata seed Saves.'
         }

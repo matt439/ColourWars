@@ -1,6 +1,7 @@
 # Dot-sourced into the scope of scripts/check-painter.ps1. The guard
 # if ($RoundHeadingOnly) stays there; this is the leaf's post-run evidence check.
 
+$painterSaveCounts = Get-PainterSaveCounts $run
         $roundHeadingSummary = Get-Content -LiteralPath (Join-Path $captures 'round-heading-summary.json') -Raw | ConvertFrom-Json
         $roundHeadingRows = @(Import-Csv -LiteralPath (Join-Path $captures 'round-heading.csv'))
         $roundHeadingSessions = @('series-round1', 'series-round10', 'series-round100')
@@ -29,7 +30,7 @@
             $roundHeadingSummary.font_negative_controls -ne 3 -or $roundHeadingSummary.resize_updates -ne 0 -or
             $roundHeadingSummary.save_calls -ne 1 -or $roundHeadingSummary.crop_pixels -ne 722400 -or
             $roundHeadingRows.Count -ne 26 -or
-            (($roundHeadingRows[0].PSObject.Properties.Name) -join '|') -ne ($roundHeadingExpectedColumns -join '|') -or
+            (-not (Test-PainterCsvColumns $roundHeadingRows $roundHeadingExpectedColumns)) -or
             (($roundHeadingRows | ForEach-Object { "$($_.case)|$($_.session)" } | Sort-Object) -join ';') -ne
                 (($roundHeadingExpectedPairs | Sort-Object) -join ';')) {
             throw 'The Round heading leaf does not match its frozen summary, CSV schema, cases or update/readback/proceed budgets.'
@@ -82,11 +83,8 @@
                 throw "Round heading case $($row.case)/$($row.session) changed its literal heading, ledger, reveal, capture or geometry contract."
             }
             foreach ($metric in @('raw_width', 'raw_height', 'x', 'y')) {
-                $value = 0.0
-                if (-not [double]::TryParse($row.$metric, [Globalization.NumberStyles]::Float,
-                    [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or
-                    [double]::IsNaN($value) -or [double]::IsInfinity($value) -or
-                    ($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
+                $value = ConvertTo-PainterFinite $row.$metric $metric
+                if (($metric -in @('raw_width', 'raw_height') -and $value -le 0.0) -or
                     ($metric -in @('x', 'y') -and $value -lt 0.0)) {
                     throw "Round heading case $($row.case)/$($row.session) contains an invalid $metric."
                 }
@@ -111,16 +109,10 @@
         }
         foreach ($crop in $roundHeadingCrops) {
             $size = $roundHeadingExpectedCrops[$crop.Name]
-            $header = @(Get-Content -LiteralPath $crop.FullName -TotalCount 3)
-            $expectedHeader = "P6`n$($size[0]) $($size[1])`n255`n"
-            $expectedBytes = [Text.Encoding]::ASCII.GetByteCount($expectedHeader) + $size[0] * $size[1] * 3
-            if ($header.Count -ne 3 -or $header[0] -ne 'P6' -or $header[1] -ne "$($size[0]) $($size[1])" -or
-                $header[2] -ne '255' -or $crop.Length -ne $expectedBytes) {
-                throw "Round heading crop $($crop.Name) differs from its exact dimensions or RGB payload budget."
-            }
+            Assert-PainterPpm -Path $crop.FullName -Header "P6`n$($size[0]) $($size[1])`n255`n"
         }
-        $roundHeadingSaveCalls = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -match 'Saving\.\.\.$' }).Count
-        $roundHeadingSaveSuccesses = @(Get-Content -LiteralPath (Join-Path $run 'run.log') | Where-Object { $_ -eq 'Save was successful.' }).Count
+        $roundHeadingSaveCalls = $painterSaveCounts.calls
+        $roundHeadingSaveSuccesses = $painterSaveCounts.successes
         if ($roundHeadingSaveCalls -ne 1 -or $roundHeadingSaveSuccesses -ne 1) {
             throw 'The Round heading leaf must perform exactly its one successful private seed Save.'
         }

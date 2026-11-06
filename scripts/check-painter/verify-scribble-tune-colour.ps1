@@ -2,6 +2,7 @@
 # Independent literal whole-crop source precision models check retained PPM RGB
 # pixel. Native C++ owns RGBA, actual wrong references, repeat and saved resets.
 # This is not an independent full Monitor, actual-Level or human art proof.
+$painterSaveCounts = Get-PainterSaveCounts $run
 function Convert-ScribbleLiteralRow([string]$Literal){
     foreach($word in ($Literal.Trim() -split '\s+')){
         $values=@($word.Split(',')|ForEach-Object{[int]$_})
@@ -98,15 +99,9 @@ function New-ScribbleExpectedRGB([string]$Context,[string]$State,[string]$Model)
     foreach($box in $scribbleDabs[$Context]){Blend-ScribbleRectangle $buffer $box $rgba $shaderAlpha $Model}
     return ,$buffer
 }
-function Assert-ScribbleInteger($Object,[string]$Key,[int]$Expected){
-    $value=$Object.$Key
-    if(($value -isnot [int] -and $value -isnot [long]) -or $value -ne $Expected){throw "Scribble exact integer differs: $Key"}
-}
-function Assert-ScribbleKeys($Object,$Keys,[string]$Label){
-    if((@($Object.PSObject.Properties.Name|Sort-Object)-join '|') -cne (@($Keys|Sort-Object)-join '|')){throw "Scribble exact JSON schema differs: $Label"}
-}
+
 $scribbleUpdates=@('local_updates','player_updates','level_updates','state_updates','input_updates','time_updates')
-function Assert-ScribbleUpdates($Summary){foreach($key in $scribbleUpdates){Assert-ScribbleInteger $Summary $key 0}}
+function Assert-ScribbleUpdates($Summary){foreach($key in $scribbleUpdates){Assert-PainterInteger $Summary $key 0}}
 function Assert-ScribblePairs($Rows,$States,$Contexts){
     $wanted=@(foreach($state in $States){foreach($context in $Contexts){"$state/$context/canvas32-64-96"}})
     $actual=@($Rows|ForEach-Object{"$($_.state)/$($_.context)/$($_.background)"})
@@ -152,8 +147,8 @@ $scribbleCounts=[ordered]@{readbacks=40;csv_rows=8;crops=8;crop_width=67;crop_he
     contexts=2;palettes=4;roi_pixels=4489;ordered_fixed_rectangles=5;selected_dabs_per_context=74;rows_per_note=3;blank_reads=0;
     controls=8;partial_straight_reads=2;partial_squared_reads=2;partial_collapsed_union_reads=2;alpha0_straight_reads=2;
     control_row_discriminations=24;changed_control_pixels=2533;unchanged_control_pixels=33379}
-Assert-ScribbleKeys $scribbleSummary (@($scribbleCounts.Keys)+$scribbleUpdates+@('scope','viewport','background','event_fade','raw_reference','whole_frame_reference','roi_half_open')) 'shared'
-foreach($key in $scribbleCounts.Keys){Assert-ScribbleInteger $scribbleSummary $key $scribbleCounts[$key]}
+Assert-PainterKeys $scribbleSummary (@($scribbleCounts.Keys)+$scribbleUpdates+@('scope','viewport','background','event_fade','raw_reference','whole_frame_reference','roi_half_open')) 'shared'
+foreach($key in $scribbleCounts.Keys){Assert-PainterInteger $scribbleSummary $key $scribbleCounts[$key]}
 Assert-ScribbleUpdates $scribbleSummary
 if($scribbleSummary.scope -cne 'consumer-only' -or $scribbleSummary.viewport -cne '1280x720' -or
     $scribbleSummary.background -cne 'canvas32-64-96' -or $scribbleSummary.event_fade -isnot [bool] -or $scribbleSummary.event_fade -ne $false -or
@@ -165,7 +160,7 @@ if($scribbleSummary.scope -cne 'consumer-only' -or $scribbleSummary.viewport -cn
 Assert-ScribblePairs $scribbleRows $scribbleStates $scribbleContexts
 $scribbleColumns=@('state','context','background','paper','roi_rgba_match','adoption_match','repeat_match','guard_channels','delta_union',
     'frozen_inputs_resources_rng','controls','control_row_discriminations','changed_control_pixels','unchanged_control_pixels','scope')
-if(($scribbleRows[0].PSObject.Properties.Name-join '|') -cne ($scribbleColumns-join '|')){throw 'Scribble shared CSV columns differ'}
+if(-not (Test-PainterCsvColumns $scribbleRows $scribbleColumns)){throw 'Scribble shared CSV columns differ'}
 $scribbleControlTotal=0;$scribbleRowTotal=0;$scribbleChangedTotal=0;$scribbleUnchangedTotal=0
 $scribbleControlMembership=[ordered]@{}
 foreach($context in $scribbleContexts){
@@ -204,8 +199,7 @@ $scribbleCropEvidence=@(foreach($crop in $scribbleCrops){
     if($context.Count -ne 1){throw 'Scribble crop context differs'}
     $state=$crop.BaseName.Substring(("scribble-colour-$($context[0])-").Length)
     $bytes=[IO.File]::ReadAllBytes($crop.FullName)
-    if($bytes.Length -ne 13480){throw 'Scribble native crop byte length differs'}
-    for($i=0;$i -lt $scribblePPMHeader.Length;++$i){if($bytes[$i] -ne $scribblePPMHeader[$i]){throw 'Scribble canonical P6 header differs'}}
+    Assert-PainterPpm -Bytes $bytes -Header $scribblePPMHeader
     $matchingModels=[Collections.Generic.List[string]]::new()
     $modelEvidence=@();$firstDifferences=@()
     foreach($modelName in $scribblePrecisionModels){
@@ -248,9 +242,8 @@ $scribbleCropEvidence=@(foreach($crop in $scribbleCrops){
         admission='one exact whole-crop representative model; never per-pixel mixing'}
 })
 if($scribbleBytes -ne 107840 -or $scribbleCheckedRGBPixels -ne 35912){throw 'Scribble retained RGB pixel/PPM byte totals differ'}
-$scribbleLog=@(Get-Content -LiteralPath (Join-Path $run 'run.log'))
-$scribbleSaves=@($scribbleLog|Where-Object{$_ -match 'Saving\.\.\.$'}).Count
-$scribbleSuccess=@($scribbleLog|Where-Object{$_ -ceq 'Save was successful.'}).Count
+$scribbleSaves=$painterSaveCounts.calls
+$scribbleSuccess=$painterSaveCounts.successes
 if(@(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_ -match '^save failure:'}).Count){throw 'Unexpected Scribble private Save failure'}
 $scribbleArtifacts=[ordered]@{}
 foreach($path in @($scribbleSummaryPath,$scribbleRowsPath)){$scribbleArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}}
@@ -270,18 +263,18 @@ if($debug){
     $scribbleTuneSummaryPath=Join-Path $captures 'scribble-colour-tune-summary.json'
     $scribbleTuneRowsPath=Join-Path $captures 'scribble-colour-tune.csv'
     $scribbleTranscript=Join-Path $captures 'scribble-colour-tune-commands.log'
-    $scribblePreferencePath=Join-Path $captures 'scribble-colour-tune-scratch/profile/ColourWars/save_data.json'
+    $scribblePreferencePath=Get-PainterSavePath (Join-Path $captures 'scribble-colour-tune-scratch/profile')
     $scribbleTune=Get-Content -LiteralPath $scribbleTuneSummaryPath -Raw|ConvertFrom-Json
     $scribbleTuneRows=@(Import-Csv -LiteralPath $scribbleTuneRowsPath)
     $scribbleTuneCounts=[ordered]@{commands=9;states=9;contexts=1;readbacks=36;csv_rows=9;crops=0;saved_tokens=1;private_seed_saves=2}
-    Assert-ScribbleKeys $scribbleTune (@($scribbleTuneCounts.Keys)+$scribbleUpdates+@('scope','event_fade')) 'Debug'
-    foreach($key in $scribbleTuneCounts.Keys){Assert-ScribbleInteger $scribbleTune $key $scribbleTuneCounts[$key]}
+    Assert-PainterKeys $scribbleTune (@($scribbleTuneCounts.Keys)+$scribbleUpdates+@('scope','event_fade')) 'Debug'
+    foreach($key in $scribbleTuneCounts.Keys){Assert-PainterInteger $scribbleTune $key $scribbleTuneCounts[$key]}
     Assert-ScribbleUpdates $scribbleTune
     Assert-ScribblePairs $scribbleTuneRows @('baseline','named','reset-original','rgb','rgba128','alpha0','reset-saved','rgb-after-save','reset-all-saved') @('yellow-flat')
     $scribbleTuneColumns=@('state','context','background','paper','roi_rgba_match','adoption_match','repeat_match','guard_channels','delta_union',
         'frozen_inputs_resources_rng','private_bytes','adoption')
     if($scribbleTune.scope -cne 'debug-validated-commands' -or $scribbleTune.event_fade -isnot [bool] -or $scribbleTune.event_fade -ne $false -or
-        ($scribbleTuneRows[0].PSObject.Properties.Name-join '|') -cne ($scribbleTuneColumns-join '|')){throw 'Scribble Debug oracle/schema/scope differs'}
+        (-not (Test-PainterCsvColumns $scribbleTuneRows $scribbleTuneColumns))){throw 'Scribble Debug oracle/schema/scope differs'}
     foreach($row in $scribbleTuneRows){
         Assert-ScribbleRowFlags $row
         if($row.private_bytes -cne 'true' -or $row.adoption -cne 'live'){throw 'Scribble Debug private-content/preference or live/reset proof flag differs'}
@@ -295,7 +288,7 @@ if($debug){
     foreach($path in @($scribbleTuneSummaryPath,$scribbleTuneRowsPath,$scribbleTranscript,$scribblePreferencePath)){
         $scribbleArtifacts[(Split-Path $path -Leaf)]=[ordered]@{bytes=(Get-Item -LiteralPath $path).Length;sha256=(Get-FileHash -LiteralPath $path).Hash}
     }
-    $scribbleObserved.developer_commands=$scribbleTune;$scribbleObserved.readbacks=76;$scribbleObserved.csv_rows=17
+    $scribbleObserved.developer_commands=$scribbleTune;$scribbleObserved.readbacks += $scribbleTune.readbacks;$scribbleObserved.csv_rows += $scribbleTune.csv_rows
 }elseif($scribbleSaves -ne 0 -or $scribbleSuccess -ne 0 -or @(Get-ChildItem -LiteralPath $captures -Filter 'scribble-colour-tune-*').Count){
     throw 'Release Scribble proof must stay literal-consumer-only without developer artifacts or private Saves'
 }
