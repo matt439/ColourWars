@@ -89,8 +89,8 @@ namespace
         void draw(DrawList&) const override {}
         RectangleF bounds() const override { return rectangle_; }
         const Shape* shape() const override { return &rectangle_; }
-        CollisionLayer layer() const override { return collision_layers::PROJECTILE_TEAM_B; }
-        CollisionMask mask() const override { return collision_layers::PLAYER_TEAM_A; }
+        CollisionLayer layer() const override { return collision_layers::projectile_team_b; }
+        CollisionMask mask() const override { return collision_layers::player_team_a; }
         CollisionTag tag() const override { return to_collision_tag(CollisionObjectType::projectile_spray_team_b); }
         void on_contact(const CollisionObject&, const Vector2F&, float) override {}
         bool for_deletion() const override { return false; }

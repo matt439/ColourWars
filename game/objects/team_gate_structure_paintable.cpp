@@ -190,8 +190,8 @@ CollisionMask TeamGateStructurePaintable::mask() const
     const CollisionMask all = this->StructurePaintable::mask();
     switch (this->open_for_)
     {
-    case PlayerTeam::a: return all & ~collision_layers::PLAYER_TEAM_A;
-    case PlayerTeam::b: return all & ~collision_layers::PLAYER_TEAM_B;
+    case PlayerTeam::a: return all & ~collision_layers::player_team_a;
+    case PlayerTeam::b: return all & ~collision_layers::player_team_b;
     case PlayerTeam::none:
     default: return all;
     }

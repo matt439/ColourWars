@@ -995,8 +995,8 @@ void Player::on_projectile_contact(const Projectile& source,
         // Later hits cannot replace credit. This metadata changes no damage,
         // contact, feedback, timer, or random-number decision.
         const CollisionLayer enemy_layer = this->team_ == PlayerTeam::a ?
-            collision_layers::PROJECTILE_TEAM_B : this->team_ == PlayerTeam::b ?
-            collision_layers::PROJECTILE_TEAM_A : CollisionLayer{ 0 };
+            collision_layers::projectile_team_b : this->team_ == PlayerTeam::b ?
+            collision_layers::projectile_team_a : CollisionLayer{ 0 };
         const int owner = source.player_num();
         if (enemy_layer != 0 && source.layer() == enemy_layer &&
             owner >= 0 && owner < paint_owners::count)
