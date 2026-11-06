@@ -11,15 +11,15 @@ namespace
 {
 	// Keep this directory name stable so existing per-user saves remain
 	// reachable. The level editor's Save to My Stages shares it.
-	constexpr const char* GAME_FOLDER_NAME = user_stage_contract::game_folder_name;
+	constexpr const char* game_folder_name = user_stage_contract::game_folder_name;
 
-	constexpr char SAVE_FILE_NAME[] = "save_data.json";
+	constexpr char save_file_name[] = "save_data.json";
 
-	constexpr char SCREENSHOT_FOLDER_NAME[] = "screens";
+	constexpr char screenshot_folder_name[] = "screens";
 
-	constexpr char REPLAY_FOLDER_NAME[] = "replays";
+	constexpr char replay_folder_name[] = "replays";
 
-	constexpr char DEBUG_FOLDER_NAME[] = "debug";
+	constexpr char debug_folder_name[] = "debug";
 
 	// %LOCALAPPDATA%, read wide and without MAX_PATH; empty when unset.
 	std::filesystem::path local_app_data()
@@ -49,7 +49,7 @@ namespace directory_consts
 			return legacy_save_file_path();
 		}
 
-		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / SAVE_FILE_NAME);
+		return labrador::path_to_utf8(root / game_folder_name / save_file_name);
 	}
 
 	std::string screenshot_directory()
@@ -58,9 +58,9 @@ namespace directory_consts
 		if (root.empty())
 		{
 			return labrador::resolved_under(labrador::executable_directory(),
-				std::string("./save/") + SCREENSHOT_FOLDER_NAME);
+				std::string("./save/") + screenshot_folder_name);
 		}
-		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / SCREENSHOT_FOLDER_NAME);
+		return labrador::path_to_utf8(root / game_folder_name / screenshot_folder_name);
 	}
 
 	std::string replay_directory()
@@ -69,9 +69,9 @@ namespace directory_consts
 		if (root.empty())
 		{
 			return labrador::resolved_under(labrador::executable_directory(),
-				std::string("./save/") + REPLAY_FOLDER_NAME);
+				std::string("./save/") + replay_folder_name);
 		}
-		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / REPLAY_FOLDER_NAME);
+		return labrador::path_to_utf8(root / game_folder_name / replay_folder_name);
 	}
 
 	std::string debug_directory()
@@ -80,9 +80,9 @@ namespace directory_consts
 		if (root.empty())
 		{
 			return labrador::resolved_under(labrador::executable_directory(),
-				std::string("./save/") + DEBUG_FOLDER_NAME);
+				std::string("./save/") + debug_folder_name);
 		}
-		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / DEBUG_FOLDER_NAME);
+		return labrador::path_to_utf8(root / game_folder_name / debug_folder_name);
 	}
 
 	std::string user_stage_directory()
@@ -100,13 +100,13 @@ namespace directory_consts
 	{
 		// Resolve independently of the working directory for migration and fallback.
 		return labrador::resolved_under(labrador::executable_directory(),
-			std::string("./save/") + SAVE_FILE_NAME);
+			std::string("./save/") + save_file_name);
 	}
 
 	std::string fatal_report_path()
 	{
 		const std::filesystem::path root = local_app_data();
 		return root.empty() ? std::string() :
-			labrador::path_to_utf8(root / GAME_FOLDER_NAME / "last-error.log");
+			labrador::path_to_utf8(root / game_folder_name / "last-error.log");
 	}
 }

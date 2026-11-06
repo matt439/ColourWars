@@ -79,14 +79,14 @@ std::vector<std::unique_ptr<Projectile>>
 	RenderResources::SheetStrip strip)
 {
 	// Five pellets and their centre-out order are mechanics; their angle is tuning.
-	constexpr float SPREAD[] = { 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
+	constexpr float spread[] = { 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
 
 	const RectangleF rectangle(position, mist->details.col_rect_size);
 
 	std::vector<std::unique_ptr<Projectile>> projectiles;
-	projectiles.reserve(std::size(SPREAD));
+	projectiles.reserve(std::size(spread));
 
-	for (const float step : SPREAD)
+	for (const float step : spread)
 	{
 		projectiles.push_back(
 			std::make_unique<ProjectileMist>(

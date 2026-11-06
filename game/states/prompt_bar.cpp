@@ -7,8 +7,8 @@ using namespace labrador;
 namespace
 {
 	// Spacing within a prompt and between prompts in the single text object.
-	const std::wstring BUTTON_GAP = L" ";
-	const std::wstring PROMPT_GAP = L"    ";
+	const std::wstring button_gap = L" ";
+	const std::wstring prompt_gap = L"    ";
 
 	std::wstring join(const std::vector<PromptBar::Prompt>& prompts)
 	{
@@ -17,9 +17,9 @@ namespace
 		{
 			if (!text.empty())
 			{
-				text += PROMPT_GAP;
+				text += prompt_gap;
 			}
-			text += prompt.button + BUTTON_GAP + prompt.action;
+			text += prompt.button + button_gap + prompt.action;
 		}
 		return text;
 	}

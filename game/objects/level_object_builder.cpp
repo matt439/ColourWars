@@ -27,7 +27,7 @@ namespace object_type = level_format::object_type;
 namespace
 {
 	// The viewport manager's divider rectangles are the primitive texel in black.
-	const Colour DIVIDER_COLOUR = Colour::black;
+	const Colour divider_colour = Colour::black;
 
 	class ViewportDivider final : public GameObject, public TextureObject
 	{
@@ -35,7 +35,7 @@ namespace
 		ViewportDivider(const ViewportManager* viewport_manager, size_t index,
 			RenderResources* render_resources) :
 			TextureObject(primitive_frame::sheet, primitive_frame::pixel,
-				render_resources, DIVIDER_COLOUR),
+				render_resources, divider_colour),
 			viewport_manager_(viewport_manager), index_(index)
 		{
 		}
