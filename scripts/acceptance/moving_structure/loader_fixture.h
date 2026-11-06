@@ -23,7 +23,6 @@ namespace moving_structure_acceptance
         GameTuning tuning;
         labrador::ResolutionManager resolution;
         labrador::ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         labrador::Partitioner partitioner;
         labrador::Registry<LevelLoadedInfo> levels{ "moving loader fixture Level" };
         std::unique_ptr<Level> level;

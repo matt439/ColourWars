@@ -13,7 +13,6 @@
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/paint_samples.h"
 #include "scripts/acceptance/support/probe.h"
-#include "engine/input/mouse.h"
 #include <bit>
 #include <cmath>
 #include <cstdlib>
@@ -96,7 +95,6 @@ namespace paint_surfaces_acceptance
         labrador::Registry<LevelLoadedInfo> levels_{ "Level" };
         labrador::ResolutionManager resolution_;
         labrador::ViewportManager viewports_{ &resolution_ };
-        labrador::Mouse mouse_;
         labrador::Partitioner partitioner_;
         std::unique_ptr<LevelBuilder> builder_;
     };

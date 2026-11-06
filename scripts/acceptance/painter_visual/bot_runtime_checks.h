@@ -1,9 +1,8 @@
 // Actual GameLevel lifecycle with a bot between two sparse human seats.
 void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& levels,
-    GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
+    GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& output)
 {
-    std::ignore = content;
     const acceptance::IsolatedSave profile(output / "bot-players-runtime-profile");
     Save preferences; SettingsSession preferences_session(preferences); preferences_session.load_save_file();
     PlaySettings silent = preferences_session.play_settings(); silent.music_volume = silent.sfx_volume = 0;

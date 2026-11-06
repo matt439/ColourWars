@@ -51,7 +51,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "bot-scan-cost" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     };
 

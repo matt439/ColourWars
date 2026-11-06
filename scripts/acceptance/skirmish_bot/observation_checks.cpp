@@ -10,7 +10,6 @@
 #include "game/objects/weapon.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/json.h"
-#include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
@@ -67,7 +66,6 @@ namespace skirmish_acceptance
 			Registry<LevelLoadedInfo> levels{ "Level" };
 			ResolutionManager resolution;
 			ViewportManager viewports{ &resolution };
-			Mouse mouse;
 			Partitioner partitioner;
 			std::unique_ptr<LevelBuilder> builder;
 		};

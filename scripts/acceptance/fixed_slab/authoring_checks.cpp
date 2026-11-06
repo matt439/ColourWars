@@ -191,7 +191,6 @@ namespace fixed_slab_acceptance
             infos.add("turbulence_slab_trial", std::move(info));
             ResolutionManager resolution;
             ViewportManager viewports{ &resolution };
-            Mouse mouse;
             Partitioner partitioner;
             auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,

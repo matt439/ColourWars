@@ -2,10 +2,9 @@
 // recording default factory replace every physical pad and motor operation.
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
-    const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
+    GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    static_cast<void>(canvas);
     const acceptance::IsolatedSave profile(output / "rumble-owner-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;

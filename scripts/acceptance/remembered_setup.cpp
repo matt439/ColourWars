@@ -160,7 +160,7 @@ namespace
         {
             for (size_t variant = 0; variant < weapons.size(); ++variant)
             {
-                Save save = load(directory, ""); SettingsSession save_session(save);
+                Save save = load(directory, "");
                 const auto original = settings(count, variant);
                 const LastMatchSetup captured = LastMatchSetup::capture(original);
                 require_choices(captured, original);
@@ -250,7 +250,7 @@ namespace
             "{\"players\":null}", "{\"players\":{}}", "{\"players\":[]}",
             "{\"players\":[{},{},{},{},{}]}"})
         {
-            Save save = load(directory, broken); SettingsSession save_session(save);
+            Save save = load(directory, broken);
             require(!save.last_match_setup(), "Malformed whole remembered section produced a roster");
             require_other_sections(save);
         }
@@ -269,7 +269,7 @@ namespace
         for (const char* team : {"\"b\"", "\"a\"", "\"missing\"", "null", "4"})
         {
             Save save = load(directory, std::string("{\"players\":[{\"team\":") + team +
-                ",\"weapon\":\"sniper\"}],\"stage\":\"retired\",\"layout\":\"four_player\",\"best_of\":5}"); SettingsSession save_session(save);
+                ",\"weapon\":\"sniper\"}],\"stage\":\"retired\",\"layout\":\"four_player\",\"best_of\":5}");
             require(save.last_match_setup().has_value(), "A bad individual field discarded a valid-size roster");
             const auto restored = save.last_match_setup()->restore(stages);
             require(restored.player_team(0) == (std::string(team) == "\"b\"" ? PlayerTeam::b : PlayerTeam::a) &&
@@ -283,7 +283,7 @@ namespace
             "{\"team\":\"a\",\"weapon\":\"none\"},{\"team\":\"a\",\"weapon\":999}"})
         {
             Save save = load(directory, std::string("{\"players\":[") + entries +
-                "],\"stage\":\"movement_course\",\"layout\":\"bogus\",\"best_of\":2,\"duration\":-1}"); SettingsSession save_session(save);
+                "],\"stage\":\"movement_course\",\"layout\":\"bogus\",\"best_of\":2,\"duration\":-1}");
             require(save.last_match_setup().has_value(), "Invalid seat fields discarded a recoverable roster");
             const auto restored = save.last_match_setup()->restore(stages);
             require(restored.player_count() == 4 && restored.screen_layout() == labrador::ScreenLayout::four_player &&
@@ -299,20 +299,20 @@ namespace
         }
         for (const char* duration : {"0", "-0.5", "1e100", "null", "\"45\"", "true", "[]"})
         {
-            Save save = load(directory, std::string("{\"players\":[{}],\"duration\":") + duration + "}"); SettingsSession save_session(save);
+            Save save = load(directory, std::string("{\"players\":[{}],\"duration\":") + duration + "}");
             require(save.last_match_setup() && !save.last_match_setup()->restore(stages).duration(),
                 "Invalid duration survived recovery or discarded the roster");
         }
         for (const char* best_of : {"0", "-1", "2", "7", "1.5", "null", "\"3\""})
         {
             Save save = load(directory, std::string("{\"players\":[{\"team\":\"a\"},{\"team\":\"b\"}],\"best_of\":") +
-                best_of + "}"); SettingsSession save_session(save);
+                best_of + "}");
             require(save.last_match_setup() && save.last_match_setup()->restore(stages).best_of() == 1,
                 "Invalid multiplayer series length survived recovery");
         }
         for (const char* stage : {"null", "7", "\"\"", "\"removed\""})
         {
-            Save save = load(directory, std::string("{\"players\":[{}],\"stage\":") + stage + "}"); SettingsSession save_session(save);
+            Save save = load(directory, std::string("{\"players\":[{}],\"stage\":") + stage + "}");
             require(save.last_match_setup() && save.last_match_setup()->restore(stages).stage() == "arena",
                 "Invalid stage did not select the manifest's first entry");
         }
@@ -352,7 +352,7 @@ namespace
 
     void check_validation(const acceptance::IsolatedSave& directory)
     {
-        Save save = load(directory, valid_section); SettingsSession save_session(save);
+        Save save = load(directory, valid_section);
         const LastMatchSetup before = *save.last_match_setup();
         const std::string bytes = directory.save_bytes();
         const auto invalid = [&](LastMatchSetup candidate)
@@ -401,7 +401,7 @@ namespace
     void check_failures_and_independence(const acceptance::IsolatedSave& directory)
     {
         {
-            Save save = load(directory, valid_section); SettingsSession save_session(save);
+            Save save = load(directory, valid_section);
             const auto old = *save.last_match_setup();
             const std::string bytes = directory.save_bytes();
             const auto active = settings(4, 4);

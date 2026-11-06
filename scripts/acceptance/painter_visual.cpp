@@ -595,8 +595,6 @@ int wmain(int argc, wchar_t** argv)
 #else
             (void)backing;
 #endif
-#else
-            throw std::runtime_error("StagePreviewBackgroundTuneColourOnly requires the scripted gamepad reader");
 #endif
             return 0;
         }
@@ -814,13 +812,11 @@ int wmain(int argc, wchar_t** argv)
         if (rumble_only)
         {
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-            rumble_owner_checks(app, levels, canvas, tuning, presentation, content, output);
+            rumble_owner_checks(app, levels, tuning, presentation, content, output);
             rumble_settings_checks(app, canvas, tuning, presentation, output);
 #if COLOURWARS_DEV_TOOLS
             debug_background_checks(app, levels, tuning, presentation, content, output);
 #endif
-#else
-            throw std::runtime_error("RumbleOnly requires the scripted gamepad reader seam");
 #endif
             return 0;
         }
@@ -830,8 +826,6 @@ int wmain(int argc, wchar_t** argv)
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
             keyboard_jump_ownership_matrix(app, levels, canvas, tuning, presentation, content, output);
             pad_buttons_matrix(app, levels, canvas, tuning, presentation, content, output);
-#else
-            throw std::runtime_error("KeyboardJumpOnly requires the scripted gamepad reader seam");
 #endif
             return 0;
         }
@@ -1002,14 +996,14 @@ int wmain(int argc, wchar_t** argv)
         }
         if (remembered_setup_only)
         {
-            remembered_setup_matrix(app, levels, canvas, tuning, presentation, content, output,
+            remembered_setup_matrix(app, levels, tuning, presentation, content, output,
                 std::wstring(argv[3]) == L"remembered-setup-read");
             return 0;
         }
         if (bot_players_only)
         {
             check_playable_bot_setup(app, levels, tuning, presentation, output);
-            check_playable_bot_runtime(app, levels, tuning, presentation, content, output);
+            check_playable_bot_runtime(app, levels, tuning, presentation, output);
             return 0;
         }
         if (argc == 4 && std::wstring(argv[3]) == L"paused-options")

@@ -425,7 +425,6 @@ namespace
     struct Totals
     {
         int open_steps = 0;
-        int bot_passes = 0;
     };
 
     void check_stage(World& world, const Roster& variant, Totals& totals)
@@ -512,7 +511,6 @@ namespace
             " bot_entries=" << passes << " longest_still=" << std::max({ longest_still[1], longest_still[2],
                 longest_still[3] }) << '\n';
         totals.open_steps += open_steps;
-        totals.bot_passes += passes;
     }
 }
 

@@ -64,7 +64,6 @@ namespace bot_navigation_acceptance
         Registry<LevelLoadedInfo> levels;
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     private:
         const char* support_error_;

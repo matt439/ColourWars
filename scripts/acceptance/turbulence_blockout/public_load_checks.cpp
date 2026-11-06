@@ -66,7 +66,6 @@ namespace turbulence_blockout_acceptance
             levels.add("turbulence_blockout", std::move(loaded));
             ResolutionManager resolution;
             ViewportManager viewports(&resolution);
-            Mouse mouse;
             Partitioner partitioner;
             const InputBindings bindings;
             MatchSetup settings;

@@ -51,7 +51,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "Level" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         Partitioner partitioner;
         std::unique_ptr<LevelBuilder> builder;
 

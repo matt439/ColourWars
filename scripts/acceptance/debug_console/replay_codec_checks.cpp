@@ -14,10 +14,7 @@
 #include <bit>
 #include <cstdint>
 #include <cstdlib>
-#include <map>
-#include <optional>
 #include <process.h>
-#include <tuple>
 
 // Replay: the codec and the file, written and read back in a temp folder.
 namespace debug_console_acceptance

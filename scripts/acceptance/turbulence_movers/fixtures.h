@@ -51,7 +51,6 @@ namespace turbulence_movers_acceptance
         labrador::Registry<LevelLoadedInfo> infos{ "Turbulence mover trial Level" };
         labrador::ResolutionManager resolution;
         labrador::ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         labrador::Partitioner partitioner;
         std::unique_ptr<Level> level;
         int updates = 0;

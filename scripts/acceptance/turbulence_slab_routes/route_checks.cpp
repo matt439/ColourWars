@@ -195,7 +195,6 @@ namespace turbulence_slab_routes_acceptance
             Registry<LevelLoadedInfo> infos{ "Public driven slab Roller route" };
             ResolutionManager resolution;
             ViewportManager viewports{ &resolution };
-            Mouse mouse;
             Partitioner partitioner;
             std::unique_ptr<Level> level;
             RectangleF bounds;

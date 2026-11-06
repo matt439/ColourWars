@@ -33,7 +33,7 @@ bool remembered_setup_matches(const LastMatchSetup& actual, const MatchSetup& ex
     return true;
 }
 
-void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
+void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output, bool reader)
 {
@@ -354,6 +354,5 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         "A fresh Save object did not reload the final user choices after all exclusions");
     { std::ofstream done(completed); done << committed << '\n'; require(done.good(), "Cannot retain writer completion evidence"); }
     require(evidence.good(), "Remembered setup writer evidence write failed");
-    std::ignore = canvas;
     std::cout << "PASS remembered setup actual normal GameMenu start/save, editable/cancelled choices, sparse explicit joining, Pause Restart and two drawn series rounds; Debug script/bot/replay exclusions where compiled; separate reader required for process relaunch\n";
 }

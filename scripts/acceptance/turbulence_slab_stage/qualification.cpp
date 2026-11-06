@@ -164,7 +164,7 @@ namespace turbulence_slab_stage_acceptance
 
         int short_match(World& world, const Registry<LevelLoadedInfo>& infos, int count, std::ofstream& csv)
         {
-            ResolutionManager resolution; ViewportManager viewports{ &resolution }; Mouse mouse; Partitioner partitioner;
+            ResolutionManager resolution; ViewportManager viewports{ &resolution }; Partitioner partitioner;
             const auto settings = setup(count); viewports.set_layout(settings.screen_layout());
             LevelBuilder builder(&viewports, &world.render, &world.audio, &world.preferences, &infos,
                 &world.tuning, &world.presentation, &resolution, nullptr, &partitioner);

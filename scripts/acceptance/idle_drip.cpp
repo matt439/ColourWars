@@ -11,7 +11,6 @@
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
-#include "engine/input/mouse.h"
 
 #include <array>
 #include <cstdlib>
@@ -84,7 +83,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "Level" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        labrador::Mouse mouse;
         Partitioner partitioner;
         std::unique_ptr<LevelBuilder> builder;
 

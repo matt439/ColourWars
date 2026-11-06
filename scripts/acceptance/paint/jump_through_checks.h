@@ -8,7 +8,6 @@
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/slot_seats.h"
-#include "engine/input/mouse.h"
 
 namespace
 {
@@ -22,7 +21,6 @@ namespace
         const Presentation presentation((content / "presentation.json").string().c_str());
         ResolutionManager resolution;
         ViewportManager viewports(&resolution);
-        Mouse mouse;
         Partitioner partitioner;
         const LevelLoadedInfo info((content / "levels/crossfeed.json").string().c_str());
         const TeamColour colours;

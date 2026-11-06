@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/match/round_tape.h"
-#include "engine/input/mouse.h"
 #include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
@@ -41,7 +40,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "instant-replay" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     };
 
@@ -50,7 +48,6 @@ namespace
     {
         MatchSetup settings; settings.set_player_count(4);
         settings.begin_input_claims(0);
-        std::ignore = settings.claim_input_slot(0);
         for (int seat = 1; seat < 4; ++seat)
         {
             settings.set_player_bot(seat, static_cast<BotDifficulty>(seat % 3));

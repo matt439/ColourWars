@@ -199,7 +199,6 @@ namespace turbulence_slab_tools_acceptance
             labrador::Registry<LevelLoadedInfo> infos_{ "Lower-approach tool Level" };
             labrador::ResolutionManager resolution_;
             labrador::ViewportManager viewports_{ &resolution_ };
-            labrador::Mouse mouse_;
             labrador::Partitioner partitioner_;
             RectangleF bounds_;
             std::ofstream& trace_;

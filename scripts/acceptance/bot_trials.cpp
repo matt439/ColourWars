@@ -45,7 +45,6 @@ namespace
         Registry<LevelLoadedInfo> levels{ "bot-trials" };
         ResolutionManager resolution;
         ViewportManager viewports{ &resolution };
-        Mouse mouse;
         Partitioner partitioner;
     };
 

@@ -19,7 +19,6 @@
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/paint_samples.h"
 #include "scripts/acceptance/support/probe.h"
-#include "engine/input/mouse.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -312,7 +311,6 @@ namespace moving_structure_acceptance
         GameTuning tuning;
         labrador::ResolutionManager resolution;
         labrador::ViewportManager viewports;
-        labrador::Mouse mouse;
         labrador::Scene* scene = nullptr; // Borrowed actual owner; no terrain mutation after build.
         std::vector<Player*> players;
         std::vector<TranslatingStructurePaintable*> movers;

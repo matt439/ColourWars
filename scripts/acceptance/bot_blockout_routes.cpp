@@ -3,7 +3,6 @@
 #include "scripts/acceptance/support/probe.h"
 #include <iostream>
 #include <map>
-#include <sstream>
 
 // POL#42's shipping-bot route case on the Turbulence Yard blockout, built on
 // the bot_turbulence_routes pattern. Three starts - the ordinary home spawn,
