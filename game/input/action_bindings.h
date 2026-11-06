@@ -4,7 +4,7 @@
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
 #include "engine/ui/navigation.h"
-#include "game/states/menu_input_action.h"
+#include "game/input/menu_input_action.h"
 #include <array>
 #include <cstddef>
 #include <vector>

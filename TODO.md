@@ -41,7 +41,6 @@ listed order. `CI#8` is under [Tooling, CI and docs](#tooling-ci-and-docs).
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `HYG#81` | DECISION | LOW | L | AGENTS.md reserves `SCREAMING_SNAKE` for macros, but about 59 constants use it. The author amends the rule or approves the renames. [Scope](docs/code-hygiene.md#the-screaming_snake-constant-rule-hyg81). |
-| `HYG#82` | OPEN | LOW | M | Mechanical renames for names that now mislead (`KeyboardJumpMenu`, `match_owns_pad_slot`, ...), and `MenuInputAction` moves to `game/input`. [Scope](docs/code-hygiene.md#names-that-mislead-hyg82). |
 | `HYG#83` | OPEN | MED | M | Probe stage lists and CPU assets read from the manifest instead of hand-picked lists behind "every stage" claims. [Scope](docs/code-hygiene.md#probe-stages-and-assets-from-the-manifest-hyg83). |
 | `HYG#84` | OPEN | MED | M | One shared save-isolation fixture for the about twenty probe copies, and one JSON variant and file-I/O fixture. [Scope](docs/code-hygiene.md#probe-save-isolation-and-json-fixtures-hyg84). |
 | `HYG#85` | BLOCKED | MED | L | Shared bot-route, course and route-run fixtures for the copies across bot, crossfeed, CQ and Press Tower probes. After `HYG#83`. [Scope](docs/code-hygiene.md#level-driving-and-route-fixtures-hyg85). |

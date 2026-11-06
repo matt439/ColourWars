@@ -1494,7 +1494,46 @@ arrays. That last change is worth doing whichever way the rule goes.
 
 ### Names that mislead (`HYG#82`)
 
-Mechanical renames, one per commit:
+**Done 2026-11-06; no behaviour change.** One commit per rename:
+
+- The A-Z/Space helpers are `keyboard_key_supported`, `keyboard_keys` and
+  `controls_text::keyboard_keys`, and their three exception messages drop
+  "Jump". The page and its gesture are `KeyboardKeysMenu` and
+  `KeyboardKeyCapture` (`game/states/keyboard_keys_menu.*`,
+  `keyboard_key_capture.*`), the page text `KeyboardKeysMenuText`, and the
+  presentation comments name the page Keyboard Keys.
+- The five settings panels take `opening_slot`, as `SettingsPanelPage` does.
+- `match_owns_input_slot`.
+- `MainMenuPlayerCount`'s rows are `one_player_` ... `four_players_`; their
+  widget names stay.
+- `MainMenuModeSelect::value_font_` (and `value_font_name_`): the item font
+  both value rows measure with. The Duration error now says "captured item
+  font", as the stage-rule one did.
+- `SettingsPanelPage::text_widgets_`, which no longer shadows `MenuPage::text_`.
+- `Validation::presentation`, a public field like `render` and `check`.
+- [editor/motion_authoring.h](../editor/motion_authoring.h), with
+  `decode_motion` and `object_motion_guide`.
+- `MenuInputAction` is
+  [game/input/menu_input_action.h](../game/input/menu_input_action.h), and
+  docs/architecture.md drops the exception.
+
+Left as they are: the save key `keyboard_jump`, the presentation key
+`menu_text.keyboard_jump` and its `MenuText::keyboard_jump` field (content
+formats); `keyboard_jump_conflict` and the Jump-only validation message, which
+are about Jump; the `keyboard_jump_capture` acceptance case, the painter's
+`-KeyboardJumpOnly` switch and the `keyboard_jump_*_checks.h` probe files,
+whose names CI, the nightly and the evidence records use; the game's
+`horizontal_motion_contract` and `HorizontalMotionSpec`, whose contract comment
+already says it keeps the name it began as; `MainMenuModeSelect`'s
+`duration_row_spacing_`, which the stage-rule row also uses (not filed); and
+the historical slice records in feature-roadmap.md and engine-reports.md.
+
+Both presets build under `/W4 /WX`. Every default acceptance case passed in
+Debug and Release (78 each), as did `check-level-editor.ps1`, `check-startup.ps1`
+and `check-painter.ps1 -CompileOnly` in both presets, and
+`check-painter.ps1 -KeyboardJumpOnly` in Release.
+
+The row as filed. Mechanical renames, one per commit:
 
 - the key-domain helpers' "Jump" (`input_bindings.cpp:285`) and
   `KeyboardJumpMenu`/`KeyboardJumpCapture` (the save key `keyboard_jump` stays);
