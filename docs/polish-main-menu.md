@@ -472,7 +472,7 @@ two pages and ships as `(1760, 920)`, centered in
 colours, keyline and shade colour, with its card padding and shadow offset
 replaced by the required `main_menu.setup_focus_padding` (`28, 7`) and
 `main_menu.setup_shadow_offset` (`2`). The surround reuses
-`main_menu.home_background_colour`.
+`main_menu.backgrounds.home`.
 The existing shared widget origin, `mode_select_spacing` and
 `player_count_spacing` continue to place every row. Normal builds reproduce
 the drawing from the existing solid texel without a new atlas or asset recipe.

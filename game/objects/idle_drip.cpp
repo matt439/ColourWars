@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/idle_drip.h"
+#include "game/objects/aim_facing.h"
 #include "game/objects/collision_object_type.h"
+#include "game/objects/cosmetic_seed.h"
 #include "game/objects/crude_drawing.h"
 #include "game/config/play_settings.h"
 #include "engine/collision/narrow_phase.h"
@@ -14,7 +16,7 @@ IdleDrip::IdleDrip(const IdleDripPresentation* presentation,
     const PlaySettings* preferences) :
     TextureObject(presentation->sprite_sheet, presentation->fill_frame, resources),
     presentation_(presentation), preferences_(preferences), paint_(colour),
-    sequence_(0x9e3779b9u ^ ((identity + 1u) * 0x85ebca6bu))
+    sequence_(cosmetic_seed(identity))
 {
     if (this->sequence_ == 0) { this->sequence_ = 1; }
     this->interval_ = this->next_interval();
@@ -69,9 +71,7 @@ void IdleDrip::advance(bool settled, const Vector2F& nozzle, float rotation,
     const IdleDripPresentation& look = *this->presentation_;
     if (!look.enabled)
     {
-        this->count_ = 0;
-        this->bead_age_ = -1.0f;
-        this->was_settled_ = false;
+        this->clear();
         this->interval_ = this->next_interval();
         return;
     }
@@ -104,7 +104,7 @@ void IdleDrip::advance(bool settled, const Vector2F& nozzle, float rotation,
 
     // Match the tool's vertical flip when facing left. Gravity stretches the
     // bead downwards even while its attachment follows continuous aiming.
-    const float side = rotation > pi * 0.5f || rotation < -pi * 0.5f ? -1.0f : 1.0f;
+    const float side = aim_faces_left(rotation) ? -1.0f : 1.0f;
     this->attachment_ = nozzle + Vector2F::rotate_vector(
         Vector2F(-look.nozzle_inset, side * look.nozzle_underside), rotation);
     if (!this->attached())

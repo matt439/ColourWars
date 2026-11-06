@@ -13,6 +13,11 @@ public:
 	void init() override;
 	void update_page(float dt) override;
 	void on_resume() override;
+	// What Apply saves: the settings in effect now with this page's own
+	// fields (both volumes and the three shared comfort switches) taken from
+	// `page`. Child pages commit the rest while this one is open, so nothing
+	// else comes from the page's older copy.
+	static PlaySettings applied_settings(PlaySettings current, const PlaySettings& page);
 private:
 	void refresh_values();
 	void refresh_help();

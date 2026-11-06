@@ -218,8 +218,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (int player = 1; player < count; ++player)
             { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Setup-motion input claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(120.0f);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         for (int player = 0; player < count; ++player)
         {
             settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);

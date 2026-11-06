@@ -13,7 +13,7 @@ namespace
         bool along_x, bool leading, std::span<const RectangleF> obstacles)
     {
         const auto& spec = geometry.spec();
-        const auto end = spec.top_left + Vector2F(160.0f, spec.rise == FixedSlabRise::right ? -80.0f : 80.0f);
+        const auto end = spec.top_left + Vector2F(slab_span, spec.rise == FixedSlabRise::right ? -slab_rise : slab_rise);
         const auto& points = geometry.shape().points();
         const PaintPolygon represented{ PaintPoint{ points[0].x, points[0].y }, PaintPoint{ points[1].x, points[1].y },
             PaintPoint{ points[2].x, points[2].y }, PaintPoint{ points[3].x, points[3].y } };
@@ -24,7 +24,7 @@ namespace
         flat.reserve(obstacles.size());
         for (const auto& obstacle : obstacles)
         { flat.push_back({ obstacle.left(), obstacle.top(), obstacle.right(), obstacle.bottom() }); }
-        return exposed_slab_paint_edge(polygon, along_x ? geometry.length() : 24.0f, along_x, leading, flat);
+        return exposed_slab_paint_edge(polygon, along_x ? geometry.length() : slab_thickness, along_x, leading, flat);
     }
     const PaintTuning* checked_paint(const PaintTuning* paint)
     {
@@ -39,8 +39,7 @@ namespace
 }
 
 FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
-    RenderResources* render_resources, const AudioResources* audio_resources,
-    const PlaySettings* preferences, const PaintTuning* paint,
+    RenderResources* render_resources, const PaintTuning* paint,
     const TeamColour& team_colours, const PaintableFaces& faces,
     std::span<const RectangleF> flat_obstacles) :
     Structure(checked_paint(paint)->sheet, checked_paint(paint)->frame,
@@ -53,7 +52,6 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
 {
     // Sound batching remains Level-owned, exactly as for the flat structures.
     // This fixed slice has no separate gravity runoff policy for sloped faces.
-    (void)audio_resources; (void)preferences;
     TerrainFaces exposed;
     exposed.top = exposed_edge(this->geometry_, true, true, flat_obstacles);
     exposed.bottom = exposed_edge(this->geometry_, true, false, flat_obstacles);
@@ -62,12 +60,6 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
     this->exposed_bottom_ = exposed.bottom;
     this->local_material_ = std::make_unique<EraserMaterial>(
         this->geometry_.local_rectangle(), exposed, render_resources);
-    const SpriteSheet* terrain = render_resources->sprite_sheet(this->terrain_sheet_);
-    for (std::size_t index = 0; index < this->terrain_swatches_.size(); ++index)
-    {
-        this->terrain_swatches_[index] = terrain->resolve_sprite_frame(
-            std::string("swatch_") + terrain_role_name(static_cast<TerrainRole>(index)));
-    }
     const RectangleF local = this->geometry_.local_rectangle();
     const auto append_face = [&](bool enabled, PaintSurfaceFace face, bool along_x, bool leading,
         const std::vector<std::pair<float, float>>& intervals)
@@ -131,8 +123,8 @@ void FixedSlabPaintable::draw(DrawList& draw_list) const
     const SpriteSheet* terrain = this->render_resources()->sprite_sheet(this->terrain_sheet_);
     for (const TerrainQuad& quad : this->local_material_->quads())
     {
-        terrain->draw(draw_list, terrain->sprite_frame(this->terrain_swatches_[
-            static_cast<std::size_t>(quad.role)]).source_rectangle(),
+        terrain->draw(draw_list, terrain->sprite_frame(
+            this->local_material_->swatch(quad.role)).source_rectangle(),
             RectangleF(this->geometry_.to_world(quad.rectangle.top_left()), quad.rectangle.size()),
             Colour::white, this->geometry_.tangent().angle(), Vector2F::zero);
     }
@@ -194,7 +186,7 @@ void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
         projectile.layer() != collision_layers::PROJECTILE_TEAM_B) { return; }
     if (projectile.shape()->shape_type() != ShapeType::rectangle)
     { throw std::invalid_argument("Fixed slab paint currently requires rectangular projectile footprints"); }
-    const PlayerTeam team = projectile.layer() == collision_layers::PROJECTILE_TEAM_A ? PlayerTeam::a : PlayerTeam::b;
+    const PlayerTeam team = projectile.team();
     const Quad footprint = this->geometry_.local_quad(projectile.shape()->bounding_box());
     bool painted = false, captured = false;
     for (Tile& tile : this->tiles_)

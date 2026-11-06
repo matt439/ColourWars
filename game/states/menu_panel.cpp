@@ -12,40 +12,17 @@ namespace
 		SpriteSheet::frame_handle frame, const MenuPaperArtPresentation& art,
 		const RectangleF& bounds, const Colour& colour, float press_fraction)
 	{
-		const auto fill = [&](const RectangleF& rectangle, const Colour& tint)
-		{
-			sheet->draw(list, frame, rectangle, CrudeDrawing::premultiplied(tint));
-		};
-		const float pen = art.keyline_width;
-		const float step = pen * 2.0f;
 		const float shadow = art.shadow_offset;
 		const RectangleF rest(bounds.x, bounds.y,
 			bounds.width - shadow, bounds.height - shadow);
 		// Depress only the paper face into its existing shadow. The complete
 		// artwork envelope, labels and navigation bounds stay fixed.
 		const RectangleF face(rest.position() + Vector2F(shadow * press_fraction), rest.size());
-		const auto paper = [&](const RectangleF& box, const Colour& tint)
+		CrudeDrawing::paper_card([&](const RectangleF& rectangle, const Colour& tint)
 		{
-			fill(RectangleF(box.x + step, box.y,
-				box.width - step * 2.0f, box.height), tint);
-			fill(RectangleF(box.x, box.y + step,
-				box.width, box.height - step * 2.0f), tint);
-		};
-		paper(RectangleF(rest.position() + Vector2F(shadow), rest.size()), art.shade);
-		paper(face, art.ink);
-		const RectangleF inside(face.x + pen, face.y + pen,
-			face.width - pen * 2.0f, face.height - pen * 2.0f);
-		paper(inside, colour);
-		for (int pass = 3; pass > 0; --pass)
-		{
-			Colour shade = art.shade;
-			shade.a *= 0.12f;
-			const float width = pen * static_cast<float>(pass);
-			fill(RectangleF(inside.x + step, inside.bottom() - width,
-				inside.width - step * 2.0f, width), shade);
-			fill(RectangleF(inside.right() - width, inside.y + step,
-				width, inside.height - step * 2.0f), shade);
-		}
+			sheet->draw(list, frame, rectangle, CrudeDrawing::premultiplied(tint));
+		}, RectangleF(rest.position() + Vector2F(shadow), rest.size()), face,
+			art.keyline_width, art.shade, art.ink, colour);
 	}
 }
 

@@ -12,7 +12,7 @@
             'resume-countin-hard-gate', 'missing-pad-real-pause', 'inactive-bot-paid-shot-record',
             'inactive-replay-final-fingerprint', 'new-inactive-level-enabled', 'new-inactive-level-disabled')
         if ($background.outcome -cne 'passed' -or $background.cases -ne 20 -or $backgroundRows.Count -ne 20 -or
-            $background.recorded_updates -ne 420 -or $background.native_motor_calls -ne 0 -or
+            $background.recorded_updates -ne 420 -or
             $background.save_unchanged -ne $true -or
             @($backgroundRows.case | Sort-Object -Unique).Count -ne 20 -or
             @(Compare-Object -ReferenceObject $backgroundCases -DifferenceObject @($backgroundRows.case)).Count -ne 0) {

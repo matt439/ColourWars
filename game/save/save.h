@@ -1,9 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <chrono>
-#include "game/directory_consts.h"
-#include "engine/math/vector2i.h"
 #include "engine/render/screen_resolution.h"
 #include "game/objects/team_colour.h"
 #include "game/config/play_settings.h"
@@ -11,7 +7,6 @@
 #include "game/save/last_match_setup.h"
 #include "game/input/input_bindings.h"
 #include "game/save/player_profiles.h"
-#include <array>
 
 struct SaveData
 {

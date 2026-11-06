@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/ai/match_bot.h"
+#include "game/objects/aim_facing.h"
 #include "game/objects/paintable_object.h"
 #include "game/contracts/simulation.h"
 #include <algorithm>
@@ -47,7 +48,7 @@ namespace match_bot_territory
 		if (projectile.details.gravity != 0.0f) { return true; }
 		// Weapon::nozzle_pos from the post-move centre; ProjectileJet centres
 		// its collision box on that point.
-		const bool left = angle > labrador::pi * 0.5f || angle < -labrador::pi * 0.5f;
+		const bool left = aim_faces_left(angle);
 		const labrador::Vector2F tip = view.center + view.velocity / static_cast<float>(SIMULATION_HZ) +
 			labrador::Vector2F(left ? -tool.details.offset.x : tool.details.offset.x, tool.details.offset.y) +
 			labrador::Vector2F::rotate_vector(tool.details.nozzle_offset +

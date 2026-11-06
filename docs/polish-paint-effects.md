@@ -97,8 +97,11 @@ Retained captures show [native shot crops](images/polish-paint-effects/shots-720
 [four-player match](images/polish-paint-effects/four-player-720p.png).
 
 These checks and image inspection do not establish human composition,
-movement-feel, controller, listening or frame-pacing acceptance. The reference
-arena and its review remain in their existing TODO rows.
+movement-feel, controller, listening or frame-pacing acceptance. On 2026-11-05
+the author accepted the arenas and movement at their current values and waived
+the attended finish review, pad, listening and performance checks (`POL#24`,
+the pad sessions, `ROAD#3`, `POL#25`), which were not performed
+([polish plan](polish-plan.md)).
 [Idle nozzle drips](polish-plan.md#tool-personality-and-quiet-detail) and
 [player hit/elimination feedback](polish-combat-feedback.md) are implemented.
 

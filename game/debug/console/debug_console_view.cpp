@@ -10,6 +10,7 @@
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/capture/debug_perf.h"
 #include "game/game_data.h"
+#include "game/objects/primitive_frame.h"
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
@@ -74,14 +75,12 @@ DebugConsoleView::DebugConsoleView(bool live) : live_(live)
 void DebugConsoleView::init(const GameData& data)
 {
 	RenderResources* resources = data.render_resources();
-	this->sheet_ = resources->resolve_sprite_sheet("sprite_sheet_1");
-	this->pixel_ = resources->sprite_sheet(this->sheet_)->resolve_sprite_frame("pixel");
-	this->font_ = resources->resolve_sprite_font(data.presentation()->debug_overlay().font);
+	this->handles_ = OverlayHandles::resolve(data);
 	// The overlay font is monospaced; one glyph's pen advance places the caret
 	// and wraps every line. measure_text reports ink extent (x_offset + width
 	// of the last glyph), so the advance is the difference of two runs.
-	const float advance = resources->measure_text(this->font_, L"MM").x -
-		resources->measure_text(this->font_, L"M").x;
+	const float advance = resources->measure_text(this->handles_.font, L"MM").x -
+		resources->measure_text(this->handles_.font, L"M").x;
 	this->char_width_ = std::max(1.0f, advance * data.presentation()->debug_overlay().font_scale);
 }
 
@@ -175,16 +174,16 @@ void DebugConsoleView::draw(Renderer& renderer, const GameData& data,
 	Viewport viewport;
 	DrawList list = screen_list(renderer, data, viewport);
 
-	const SpriteSheet* sheet = data.render_resources()->sprite_sheet(this->sheet_);
+	const SpriteSheet* sheet = data.render_resources()->sprite_sheet(this->handles_.sheet);
 	const DebugOverlayPresentation& look = data.presentation()->debug_overlay();
 	const float line_height = std::max(look.line_spacing, 1.0f);
 	const float panel_height = std::floor(viewport.height *
 		(this->live_ ? live_panel_fraction : panel_fraction));
 
 	list.set_filter(TextureFilter::point);
-	sheet->draw(list, this->pixel_, RectangleF(0.0f, 0.0f, viewport.width, panel_height),
+	sheet->draw(list, this->handles_.pixel, RectangleF(0.0f, 0.0f, viewport.width, panel_height),
 		this->live_ ? live_panel_colour : panel_colour);
-	sheet->draw(list, this->pixel_, RectangleF(0.0f, panel_height - accent_height,
+	sheet->draw(list, this->handles_.pixel, RectangleF(0.0f, panel_height - accent_height,
 		viewport.width, accent_height), data.presentation()->menu().highlight);
 
 	list.set_filter(TextureFilter::linear);
@@ -192,9 +191,9 @@ void DebugConsoleView::draw(Renderer& renderer, const GameData& data,
 		const Colour& colour)
 		{
 			const std::wstring wide = widen(line);
-			list.draw_text(this->font_, wide, Vector2F(x, y) + look.shadow_offset,
+			list.draw_text(this->handles_.font, wide, Vector2F(x, y) + look.shadow_offset,
 				CrudeDrawing::premultiplied(look.shadow_colour), look.shadow_scale, 0.0f, Vector2F::zero, 0.0f);
-			list.draw_text(this->font_, wide, Vector2F(x, y), CrudeDrawing::premultiplied(colour),
+			list.draw_text(this->handles_.font, wide, Vector2F(x, y), CrudeDrawing::premultiplied(colour),
 				look.font_scale, 0.0f, Vector2F::zero, 0.0f);
 		};
 
@@ -223,7 +222,7 @@ void DebugConsoleView::draw(Renderer& renderer, const GameData& data,
 	const float top = strip.empty() ? margin : margin + line_height;
 	if (!strip.empty())
 	{
-		const float width = data.render_resources()->measure_text(this->font_,
+		const float width = data.render_resources()->measure_text(this->handles_.font,
 			widen(strip)).x * look.font_scale;
 		text(strip, std::max(margin, viewport.width - margin - width), margin, strip_colour);
 	}
@@ -236,9 +235,7 @@ void DebugConsoleView::draw(Renderer& renderer, const GameData& data,
 		const Colour colour = it->severity == DebugSeverity::error ? error_colour :
 			it->severity == DebugSeverity::warning ? warning_colour :
 			it->severity == DebugSeverity::echo ? echo_colour : look.colour;
-		const std::string prefix = it->severity == DebugSeverity::error ? "error: " :
-			it->severity == DebugSeverity::warning ? "warning: " : "";
-		const std::string full = prefix + it->text;
+		const std::string full = severity_prefix(it->severity) + it->text;
 		std::vector<std::string> wrapped;
 		for (std::size_t start = 0; start < full.size() || wrapped.empty(); start += columns)
 		{
@@ -294,8 +291,8 @@ DebugConsoleView::OverlayHandles DebugConsoleView::OverlayHandles::resolve(const
 {
 	RenderResources* resources = data.render_resources();
 	OverlayHandles handles;
-	handles.sheet = resources->resolve_sprite_sheet("sprite_sheet_1");
-	handles.pixel = resources->sprite_sheet(handles.sheet)->resolve_sprite_frame("pixel");
+	handles.sheet = resources->resolve_sprite_sheet(primitive_frame::sheet);
+	handles.pixel = resources->sprite_sheet(handles.sheet)->resolve_sprite_frame(primitive_frame::pixel);
 	handles.font = resources->resolve_sprite_font(data.presentation()->debug_overlay().font);
 	return handles;
 }

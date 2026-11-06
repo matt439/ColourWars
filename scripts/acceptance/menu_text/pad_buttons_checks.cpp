@@ -70,7 +70,7 @@ namespace menu_text_acceptance
                 style, look.art.ink, &world.render, {}, &look.art, value_limit);
             for (PadControl control : values)
             {
-                const std::wstring label(pad_control_label(control));
+                const std::wstring label = controls_text::pad_label(shipped.menu_text().controls.labels, control);
                 row.set_value(label);
                 const UiText* value = row_text(row, "pad_buttons_value");
                 require(value && value->text() == label && value->bounds().width <= value_limit.x &&

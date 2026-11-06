@@ -40,21 +40,52 @@ def save_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def acceptance_status(cues: list[dict]) -> str:
+# What became of the accepted set in the game. It holds only while the
+# masters match acceptance.json; a changed set is a candidate again.
+IN_GAME = ("On 2026-11-05 the author accepted its in-game hooks and mix as they stand (POL#23)"
+           " and waived the listening and release checks (ROAD#3), which were not performed.")
+CANDIDATE = "These files do not change the game's live audio."
+
+
+def accepted(cues: list[dict]) -> dict | None:
     path = PRODUCTION / "acceptance.json"
     if path.is_file():
         record = json.loads(path.read_text(encoding="utf-8"))
         masters = {cue["id"]: cue["sha256"] for cue in cues}
         if (record.get("status") == "accepted" and len(masters) == len(cues)
                 and record.get("master_sha256") == masters):
-            return f"Author accepted this set on {record['date']} for POL#23 integration."
+            return record
+    return None
+
+
+def acceptance_status(cues: list[dict]) -> str:
+    record = accepted(cues)
+    if record is not None:
+        return f"Author accepted this set on {record['date']}; the game ships it."
     return "Production candidates; listening acceptance pending."
+
+
+def in_game_status(cues: list[dict]) -> str:
+    return IN_GAME if accepted(cues) is not None else CANDIDATE
+
+
+def recorded_hashes(name: str, part: Path) -> dict[str, str]:
+    """Each project's own record of its masters' hashes, written by its renderer."""
+    if name == "music":
+        return {cue_id: row["sha256"] for cue_id, row in
+            json.loads((part / "measurements.json").read_text(encoding="utf-8")).items()}
+    if name == "foley":
+        return {row["id"]: row["sha256"] for row in
+            json.loads((part / "PROVENANCE.json").read_text(encoding="utf-8"))["assets"]}
+    return {cue["id"]: cue["sha256"] for cue in
+        json.loads((part / "cues.json").read_text(encoding="utf-8"))["cues"]}
 
 
 def collect() -> tuple[list[dict], dict[str, dict]]:
     cues, sources = [], {}
     for name in ("music", "foley", "interface"):
         part = PRODUCTION / name
+        recorded = recorded_hashes(name, part)
         for source in json.loads((part / "sources.json").read_text(encoding="utf-8"))["sources"]:
             if source["id"] in sources:
                 raise ValueError(f"Duplicate source id: {source['id']}")
@@ -64,8 +95,10 @@ def collect() -> tuple[list[dict], dict[str, dict]]:
             cue.setdefault("cue_id", cue["id"])
             path = ROOT / cue["path"]
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            if cue.get("sha256", digest) != digest:
-                raise ValueError(f"Master hash differs from its project registry: {cue['id']}")
+            if cue["id"] not in recorded:
+                raise ValueError(f"Master has no hash in its project's record: {cue['id']}")
+            if recorded[cue["id"]] != digest:
+                raise ValueError(f"Master hash differs from its project's record: {cue['id']}")
             cue["sha256"] = digest
             # Browser audio.loop and the offline mix repeat the whole file.
             # Refuse a partial smpl region rather than review a different join.
@@ -92,7 +125,7 @@ def provenance(cues: list[dict], sources: dict[str, dict]) -> None:
     status = acceptance_status(cues)
     lines = ["# Paint.exe audio provenance", "",
         "Produced 2026-10-14 for POL#22. Masters stay outside live content; the runtime bank uses accepted exports.",
-        status + " Runtime mix acceptance remains ROAD#3.",
+        status + " " + in_game_status(cues),
         "[acceptance.json](acceptance.json) records the author's response and the exact accepted master hashes.",
         "Every source is retained and hashed in [sources.json](sources.json). Every exported wave",
         "has the record below and a hash in [cues.json](cues.json). No legacy audio was used.", "",
@@ -261,7 +294,7 @@ input,select{font:inherit;padding:10px;border:2px solid #25282d;background:white
 [hidden]{display:none!important}.status{background:#ffe6a5;border-left:5px solid #b06a00;padding:12px 16px}.small{font-size:14px}label{display:flex;gap:8px;align-items:center}
 </style><main><header><p>COLOURWARS / POL#22 / 14 OCTOBER 2026</p><h1>Paint.exe audio review</h1>
 <p>Recorded paint, paper and mechanisms. Original arrangements for ukulele, upright piano and hand percussion.</p>
-<p class="status">ACCEPTANCE_STATUS In-game mix acceptance remains pending. These files do not change the game's live audio.</p>
+<p class="status">ACCEPTANCE_STATUS IN_GAME_STATUS</p>
 <p><a href="README.md">Production notes</a> · <a href="PROVENANCE.md">Every source and licence</a> · <a href="auditions/timeline.json">Exact audition timeline</a></p></header>
 <h2>Hear the set together</h2><p>Same 49-second scripted scene at 1, 2 and 4 players, using the same output gain. Intro room → countdown → movement and weapons → time-up → reveal. These are offline arrangements, not gameplay recordings. Useful cues should stay readable as players are added.</p>
 <div class="grid">MIX_CARDS</div><p class="small">Check the sprayer, roller, mister, sniper and bucket by ear; compare movement and paint repetition; listen to the music joins. Tier 3 detail is optional and should default to silent or nearly silent. The Movement Course keeps no music or ambience.</p>
@@ -271,7 +304,7 @@ const search=document.querySelector('#search'),tier=document.querySelector('#tie
 function filter(){let shown=0;for(const card of cards){card.hidden=!(card.dataset.search.includes(search.value.toLowerCase())&&(!tier.value||card.dataset.tier===tier.value));if(!card.hidden)shown++;}document.querySelector('#count').textContent=shown+' cues';}
 search.addEventListener('input',filter);tier.addEventListener('change',filter);filter();
 document.addEventListener('play',event=>{if(event.target.tagName==='AUDIO')for(const audio of document.querySelectorAll('audio'))if(audio!==event.target)audio.pause();},true);
-</script></html>'''.replace('MIX_CARDS', mix_cards).replace('CUE_CARDS', '\n'.join(cards)).replace('ACCEPTANCE_STATUS', html.escape(acceptance_status(cues)))
+</script></html>'''.replace('MIX_CARDS', mix_cards).replace('CUE_CARDS', '\n'.join(cards)).replace('ACCEPTANCE_STATUS', html.escape(acceptance_status(cues))).replace('IN_GAME_STATUS', html.escape(in_game_status(cues)))
     (PRODUCTION / "index.html").write_text(page, encoding="utf-8")
 
 

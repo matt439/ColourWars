@@ -1,9 +1,11 @@
 #include "game/pch.h"
 #include "game/input/rumble.h"
+#include "game/config/content_value.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <string>
 
 namespace
 {
@@ -30,7 +32,8 @@ void Rumble::validate_profile(const RumbleProfile& profile)
             !std::isfinite(pulse.duration_seconds) || pulse.duration_seconds < 0.0f ||
             pulse.duration_seconds > maximum_rumble_pulse_seconds)
         {
-            throw std::invalid_argument("Rumble needs finite motor amplitudes in [0,1] and pulse durations in [0,1] seconds.");
+            throw std::invalid_argument("Rumble needs finite motor amplitudes in [0,1] and pulse durations in [0," +
+                content_value::number_text(maximum_rumble_pulse_seconds) + "] seconds.");
         }
     }
 }
@@ -48,7 +51,8 @@ std::size_t Rumble::event_index(RumbleEvent event)
     const std::size_t index = static_cast<std::size_t>(event);
     if (index >= rumble_event_count)
     {
-        throw std::out_of_range("Rumble event is outside the four supported cues.");
+        throw std::out_of_range("Rumble event is outside the " + std::to_string(rumble_event_count) +
+            " supported cues.");
     }
     return index;
 }

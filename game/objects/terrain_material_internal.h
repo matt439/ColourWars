@@ -6,6 +6,12 @@
 // per TU, as before); do not make it inline or extern.
 namespace
 {
+	// A ruler's marks in world units: a short mark every minor period, a long
+	// one where the world position is a whole major period. RulerMaterial
+	// lays them; the miniature drops them when they would crowd.
+	constexpr float ruler_minor_period = 16.0f;
+	constexpr float ruler_major_period = 80.0f;
+
 	RectangleF intersection(const RectangleF& a, const RectangleF& b)
 	{
 		const float left = std::max(a.left(), b.left());

@@ -21,7 +21,7 @@ namespace
         settings.set_stage(variant % 2 == 0 ? "close_quarters" : "movement_course");
         settings.set_duration(variant % 2 == 0 ? std::optional<float>(123.5f) : std::nullopt);
         settings.set_best_of(std::array{ 1, 3, 5 }[variant % 3]);
-        settings.set_screen_layout(static_cast<labrador::ScreenLayout>(count - 1));
+        settings.set_screen_layout(layout_for_humans(count));
         // Rotate a sparse device order: keyboard-first, pad-first and unused
         // device gaps must not turn seat identity into a shuffled property.
         constexpr std::array slots{ input_slots::keyboard_and_mouse, 2, 0, 3, 1 };

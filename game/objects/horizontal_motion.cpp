@@ -54,29 +54,10 @@ float HorizontalMotion::offset_at(const HorizontalMotionSpec& spec, double phase
     return horizontal_motion_contract::offset_at(contract_spec(spec), phase);
 }
 
-RectangleF HorizontalMotion::at_offset(const HorizontalMotionSpec& spec, float offset)
-{
-    RectangleF result = spec.anchor;
-    if (offset != 0.0f)
-    {
-        if (spec.vertical()) { result.y += offset; }
-        else { result.x += offset; }
-    }
-    return result;
-}
-
-namespace
-{
-    // The scalar offset along the mover's own axis.
-    float axis_part(const HorizontalMotionSpec& spec, const Vector2F& offset)
-    {
-        return spec.vertical() ? offset.y : offset.x;
-    }
-}
-
 RectangleF HorizontalMotion::bounds() const
 {
-    return at_offset(this->state_.spec, axis_part(this->state_.spec, this->state_.current_offset));
+    const HorizontalMotionSpec& spec = this->state_.spec;
+    return spec.pose_at(spec.axis_part(this->state_.current_offset));
 }
 
 HorizontalPreparedStep HorizontalMotion::prepare(float dt, int heading) const
@@ -98,7 +79,7 @@ HorizontalPreparedStep HorizontalMotion::prepare(float dt, int heading) const
     const double turn = before < 0.5 ? 0.5 : 1.0;
     const double after = unwrapped >= 1.0 ? unwrapped - 1.0 : unwrapped;
     const float after_offset = offset_at(this->state_.spec, after);
-    const float current = axis_part(this->state_.spec, this->state_.current_offset);
+    const float current = this->state_.spec.axis_part(this->state_.current_offset);
     if (unwrapped > turn)
     {
         // The spec/step bound admits at most one interior turn. Keep both
@@ -119,7 +100,7 @@ HorizontalPreparedStep HorizontalMotion::prepare(float dt, int heading) const
     prepared.after_state.direction = after < 0.5 ? 1 : -1;
     prepared.after_state.previous_offset = this->state_.current_offset;
     prepared.after_state.current_offset = this->state_.spec.axis_offset(after_offset);
-    step.after = at_offset(this->state_.spec, after_offset);
+    step.after = this->state_.spec.pose_at(after_offset);
     return prepared;
 }
 
@@ -140,7 +121,7 @@ HorizontalPreparedStep HorizontalMotion::prepare_driven(float dt, int heading) c
     const double before = this->state_.phase;
     const double target = heading > 0 ? 0.5 : heading < 0 ? 0.0 : before;
     const double remaining = std::abs(target - before);
-    const float current = axis_part(this->state_.spec, this->state_.current_offset);
+    const float current = this->state_.spec.axis_part(this->state_.current_offset);
     double after = before;
     if (remaining > 0.0)
     {
@@ -165,7 +146,7 @@ HorizontalPreparedStep HorizontalMotion::prepare_driven(float dt, int heading) c
     prepared.after_state.direction = after < 0.5 ? 1 : -1;
     prepared.after_state.previous_offset = this->state_.current_offset;
     prepared.after_state.current_offset = this->state_.spec.axis_offset(after_offset);
-    step.after = at_offset(this->state_.spec, after_offset);
+    step.after = this->state_.spec.pose_at(after_offset);
     return prepared;
 }
 
@@ -181,7 +162,7 @@ HorizontalPreparedStep HorizontalMotion::hold(float dt) const
     step.before = this->bounds();
     step.after = step.before;
     if (dt == 0.0f) { return prepared; }
-    const float current = axis_part(this->state_.spec, this->state_.current_offset);
+    const float current = this->state_.spec.axis_part(this->state_.current_offset);
     step.segments[0] = { 0.0, 1.0, current, current };
     step.segment_count = 1;
     prepared.after_state.previous_offset = this->state_.current_offset;

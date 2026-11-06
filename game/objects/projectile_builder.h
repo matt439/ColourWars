@@ -27,11 +27,7 @@ public:
 		int player_num,
 		const labrador::Colour& team_colour,
 		ProjectileType type,
-		labrador::RenderResources* render_resources,
-		float rotation = 0.0f,
-		const labrador::Vector2F& origin = labrador::Vector2F::zero,
-		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
-		float layer_depth = 0.0f) const;
+		labrador::RenderResources* render_resources) const;
 
 private:
 	const GameTuning* tuning_ = nullptr;
@@ -48,9 +44,5 @@ private:
 			const labrador::Colour& team_colour,
 			const ProjectileTuning* mist,
 			labrador::RenderResources* render_resources,
-			labrador::RenderResources::SheetStrip strip,
-			float rotation = 0.0f,
-			const labrador::Vector2F& origin = labrador::Vector2F::zero,
-			labrador::SpriteFlip flip = labrador::SpriteFlip::none,
-			float layer_depth = 0.0f);
+			labrador::RenderResources::SheetStrip strip);
 };

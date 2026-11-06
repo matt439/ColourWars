@@ -167,7 +167,7 @@ std::unique_ptr<Level> monitor_story(Application& app, LevelBuilder& builder, in
     settings.set_player_count(count);
     settings.set_stage("movement_course");
     settings.set_duration(1.25f);
-    settings.set_screen_layout(count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+    settings.set_screen_layout(players_layout(count));
     settings.begin_input_claims(3);
     constexpr int slots[] = { 3, 1, 2, 0 };
     for (int view = 1; view < count; ++view)

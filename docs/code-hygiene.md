@@ -32,272 +32,901 @@ the rows that depend on another say so.
 
 ### Controls percentages on the real rows (`HYG#58`)
 
-`Presentation::Validation::validate_settings_percentages`
-(`game/config/presentation/presentation_validation_settings.cpp:651`) fit-checks
-Controls rows `{1, 2, 3, 4}`. Music and SFX are rows 4 and 5
-(`controls_settings_menu.cpp:91-94`), so the SFX value is never checked. Name the
-Controls and Sticks value rows once, as constants the two pages and the validator
-share, check those rows and correct the comment. Correct
-`scripts/check-painter/verify-percentage-text.ps1:26`, which checks rows 4/5 but
-names rows 3/4 and 2/3, by building its messages from the same table. Done when a
-too-wide SFX percentage fails startup validation (one added rejection variant in
-the probe that covers percentages).
+**Done 2026-11-05; behaviour change.** `settings_rows` in
+[menu_geometry.h](../game/config/presentation/menu_geometry.h) names the value
+rows of Controls (Music 4, SFX 5, the three toggles 6-8) and Sticks (Pad 0,
+Move 1, Aim 2, Rumble 3, the three comfort rows 4-6). Both pages place their
+rows from it, and `validate_settings_percentages` now fit-checks Sticks Move/Aim
+and Controls Music/SFX instead of rows 1-4, so the SFX value is checked;
+`validate_settings_toggles` takes its rows from the same names, and both stale
+comments are gone. The `menu_text` percentage fixture places its Music and SFX
+`OptionRow`s on the named rows (it used rows 3 and 4), and the painter's
+percentage leaf takes its first value row from them.
+[verify-percentage-text.ps1](../scripts/check-painter/verify-percentage-text.ps1)
+builds both its expectation and its message ("Controls rows 4/5 and Sticks rows
+1/2") from one table.
+
+No rejection variant was added. A percentage that fails only on the SFX row
+cannot be authored: values in one column share the font, width limit and help
+column, so only the row's y differs, and a fitted value is at most a row high.
+Anything that pushes the SFX value past the paper or the status line also
+pushes the labels on rows 6-10 past it, which the reader (eleven rows above
+`status_position`) and phase 1 reject first. Tried locally: a status line
+through the SFX value is refused by the reader before validation runs. The
+missing check was a latent gap, not a reachable failure.
+
+Both presets build under `/W4 /WX`. `menu_text`, `menu_presentation`,
+`stick_settings`, `settings`, `locales` and `menu_navigation` passed in Debug
+and Release, `check-startup.ps1` passed on both executables, and
+`check-painter.ps1 -PercentageTextOnly` passed in both presets. The verifier was
+also run by hand against that run's evidence with one Controls row changed, and
+threw the new message.
+
+A follow-up commit cleared the sibling sites review found. The
+[Controls row-label table](menu-presentation.md#controls--audio-and-pad-sticks-row-labels)
+gave the pre-Profiles rows (Music 1, Apply/Back 6/7 and 3/4) and left out the
+three Controls page actions, Rumble and the Sticks comfort rows; it now lists
+all thirteen roles on their real rows, names `settings_rows`, and says which
+actions are fitted. In `menu_text`'s `controls_checks.cpp` the fitted-label
+fixture placed Controls' settings on rows 3-7 and now takes every row from
+`settings_rows`, and the fitted-action fixture's Apply rows (8 and 4) are now
+Pad Buttons 8, Controls 9 and Sticks 7. `menu_text` passed in Debug and Release
+after it.
 
 ### Save and settings correctness (`HYG#59`)
 
-Four behaviour fixes, one commit each:
+**Done 2026-11-05; behaviour change.** Four commits:
 
-- `Save::file_exists` (`save.cpp:422`) treats any open failure as missing, so a
-  locked or unreadable save is overwritten with defaults. Decide "missing" with
-  `std::filesystem::exists` (an error counts as present), so an existing file that
-  fails to open reaches `keep_unreadable_save`.
-- The legacy-save `catch` (`save.cpp:447`) drops the file silently. Report it on
-  stderr like the other read failures and leave the file in place.
-- `ControlsSettingsMenu::apply_settings` (`controls_settings_menu.cpp:189`) saves
-  the `PlaySettings` snapshot taken at `init()`. Merge the page's own fields onto
-  the current `settings_session()->play_settings()`, as
-  `StickSettingsMenu::apply_settings` does, and delete the back-fill list.
-- Default `operator==` on `StickSettings` and `PlayerProfile`
-  (`player_profiles.h:25`) instead of comparing a hand-kept field list.
+- `Save::file_exists` ([save.cpp](../game/save/save.cpp)) asks
+  `std::filesystem::exists`, and a failed query counts as present. A save that is
+  there but will not open (locked, denied) now fails in the reader and goes to
+  `keep_unreadable_save`, which copies it to `save_data.unreadable-<n>.json`,
+  instead of being treated as missing and replaced with the defaults.
+- An unloadable legacy save (`./save/save_data.json` beside the executable, read
+  only when there is no per-user save) prints one stderr line naming it and the
+  reader's error. It is still left in place, and the defaults are still written
+  to the per-user path.
+- `ControlsSettingsMenu::apply_settings` lays its five fields (both volumes and
+  the three shared comfort switches) over the session's current settings through
+  the new static `ControlsSettingsMenu::applied_settings`, as Pad sticks does. The
+  back-fill list of child fields is gone.
+- `StickSettings` gained a defaulted `operator==`, and `PlayerProfile`'s is now
+  defaulted. Equality is unchanged today; a new field is compared automatically.
 
-Done when the save probes cover a present-but-unopenable save (kept aside, not
-overwritten) and a child-page change that survives Controls Apply.
+`match_records` gained two checks. `check_unopenable_save` holds the save open
+for delete from another handle, which the CRT's open refuses and a file copy
+does not, so the save is present, unopenable and still copyable. It requires the
+defaults, one stderr line naming the save and the copy, a byte-identical copy and
+an unchanged save. `check_legacy_save` runs a copy of the probe in a private
+directory, because every probe shares the executable's `./save/`, against a
+corrupt legacy save and the same file held open. It requires the stderr line, an
+untouched legacy file and a per-user save of this version. `settings` gained
+`check_controls_apply`. It commits child-page changes to sticks, rumble, comfort
+and `aim_sensitivity` (a field no page edits, standing in for one a back-fill list
+would miss) under an older Controls copy. After Apply it requires both sets of
+changes, in the session and after a reload. Each check failed against the code it
+replaced.
+
+Both presets build under `/W4 /WX`. `settings`, `match_records`,
+`player_profiles`, `remembered_setup`, `display_trial`, `input_bindings`,
+`stick_settings` and `menu_navigation` passed in Debug and Release, and
+`debug_console` and `menu_text` in Release. `check-startup.ps1` passed on both
+executables. On MattPC, `check-painter.ps1 -ControlsMenuOnly` and `-RumbleOnly`
+passed in both presets and `-StickSettingsOnly` in Debug and Release; those leaves
+drive the real Controls and Pad sticks pages, including a Pad sticks change kept
+by Controls Apply. The probe's `same_input` is `HYG#60`'s; the probes that
+compare stick settings field by field were left as they are.
 
 ### Checks that can fail (`HYG#60`)
 
-Make each listed check able to fail, or delete it:
+**Done 2026-11-05**, except three fixture items that no check notices (see
+below). The game's behaviour is unchanged; the checks changed, and
+the Session checks now run in Release too. Three commits:
 
-- `bot_driver.cpp:260`: swap the two mover-hold requires, so each reports its
-  own failure.
-- `menu_navigation.cpp:313`: do the substitution outside the `try`, so a fixture
-  failure is not counted as a rejection.
-- `debug_background_checks.h:479`: count real motor calls, or drop
-  `native_motor_calls` from the summary and `verify-rumble.ps1`.
-- `countdown_checks.h:86`: use the three-player layout for three players.
-- `input_bindings/reader_checks.cpp:9`: compare `SlotInput` with a defaulted
-  `operator==`.
-- `crossfeed_checks.h:78`: pass the gate and ferry cues and the production stage
-  title. Do the same in `route_warning_fixtures.h:51`.
-- `script_checks.cpp:433`: lint `tune` paths and weapon names in shipped `.cfg`
-  scripts.
-- `session_checks.cpp:215`: move the shipping Session checks to a case that runs
-  in both presets.
-- `align_origin_checks.h:9` and `clipboard_checks.h:190`: use the command id, and
-  check the dereferenced `find_if`.
-- `check-level-editor-save-guidance.ps1:76`: address menu items by command id and
-  name the steps for what they do.
-- `check-acceptance-selection.ps1:116`: measure the receipt flags instead of
-  setting constants.
-- `prepare_review.py:67`: compare each master with its project's own recorded
-  hash.
+- `bot_driver`'s mover hold requires a drop before it requires one after the
+  hold, so a bot that never drops reports that, not an early drop.
+- `menu_navigation`'s `InputVariant::write` makes the substitution, and refuses
+  a missing key or unreadable `tuning.json`, outside the rejection `try`
+  (`rejects`).
+- The background supplement and rumble-owner summaries drop the constant
+  `native_motor_calls` (the fixtures have recording motors only), and
+  `recorded_updates` is the tape's own count; `verify-rumble.ps1` no longer
+  reads the dropped field.
+- Painter fixtures take their layout from one `players_layout` in
+  `painter_fixtures.h`. Three players now get `three_player` in `countdown`,
+  `setup_motion` and `team_setup`; the other sixteen fixtures give the same
+  layouts as before.
+- `PlayerInputData` and `SlotInput` have defaulted `operator==`, which
+  `input_bindings` uses in place of its field list (`same_input`).
+- The crossfeed fixture builds its objects with the gate and ferry cues and
+  names its stage through `stage_title`, as `LevelBuilder` does. The route
+  warning HUD bounds measure the level's own identity text and the locale's
+  `health` label instead of literals.
+- `debug_console`'s shipped-script lint resolves every `tune`, `tune.reset`,
+  `tune.diff` and `tune.save` target against `tuning.json` and
+  `presentation.json` as `TuneDocument` reads them, and checks `weapon`'s seat
+  and weapon name. Each tune command keeps its own grammar from
+  `tune_commands.cpp`: `tune` takes a file-prefixed leaf, `tune.reset` a leaf,
+  a file or `all`, `tune.diff` a file or `all`, and `tune.save` a file, `all`
+  or `force`, then only `force`.
+- The shipping Session checks (end-page continuation, result and score text,
+  `next_session`) moved from `debug_console`'s Debug-only `session_checks.cpp`
+  to a new default case, `session`, which runs in both presets.
+- `level_editor_dpi` addresses Align origin by `edit_align_origin`, and the
+  clipboard check requires its collision entry before dereferencing it.
+- `check-level-editor.ps1` reads the command ids from `editor/editor.h`
+  (`Get-EditorCommandIds`); it and the save-guidance check send menu commands
+  by id and refuse an id the menu lacks. The steps that toggle Blockout aids are
+  named `*-blockout-toggle-ready`.
+- [process-births.ps1](../scripts/process-births.ps1) counts the processes a
+  check starts through a Job Object. `check-acceptance-selection.ps1` and its
+  sibling `check-painter-selection.ps1` record and require that count, and the
+  helper-loaded flag, from measurement; the comma-binding child may start only
+  its host and that host's conhost.
+- `prepare_review.py` compares each master with its own project's record
+  (music `measurements.json`, foley `PROVENANCE.json`, interface `cues.json`);
+  only interface cues carried a hash before, so music and foley compared with
+  themselves.
 
-Done when each check fails against a deliberately broken input. Show it once
-locally, and do not commit the broken input.
+Each check failed once against a broken input that was then reverted:
+a mover hold multiplied by 1000 in `match_bot.cpp` ("A bot held on a moving
+support past its bounded hold"); a renamed key in the rejection list ("Input
+tuning field must exist"); a flipped `skip_intro` in the repeated sample
+("Repeated reader access consumed or changed a sampled action edge"); a renamed
+`tune` path and a misspelt weapon in shipped scripts ("no tunable
+tuning.player.gravity_renamed", "weapon 4 sprayr in a 4-player script"), then,
+after the per-command grammar, a bare `tune tuning` and a
+`tune.save tuning.player.gravity` ("tune cannot take tuning", "tune.save cannot
+take tuning.player.gravity") while `tune.diff all`, `tune.save force` and
+`tune.save tuning force` passed; a
+staged "Rematch!" in Release ("A finished single round or solo practice offers
+Rematch"); an entry search that finds nothing ("Clipboard fixture lacks a
+collision entry"); the Align menu item removed ("Align origin menu availability
+does not follow the selected entry"); an id the menu lacks ("Editor menu has no
+command 116"); a process started in each runner's preflight ("started 1
+process(es)"); and a changed foley record hash ("Master hash differs from its
+project's record: player.step.01").
+Against background-supplement evidence copied from a passing run,
+`verify-rumble.ps1` threw once `recorded_updates` read 419.
+
+Three items do not meet the row's done criterion: no check notices them. The
+layout, crossfeed and route-warning changes make the fixtures match production,
+but putting each old input back still passes. With `four_player` for three
+players, `-CountdownOnly` passed in both presets, and `-SetupMotionOnly` and
+`-TeamSetupOnly` passed in Release. With the gate and ferry cues left out and the
+old literal identity label, `-CrossfeedOnly`, `-RouteWarningOnly`,
+`-GatePermissionOnly` and `-FerryDirectionOnly` passed in Release. The fixtures
+are now right, but a later drift in them would still go unnoticed.
+
+Both presets build under `/W4 /WX`. `bot_driver`, `menu_navigation`,
+`input_bindings`, `session`, `instant_replay` and `debug_console` passed in
+Debug and Release. On MattPC, `check-painter.ps1` passed `-CountdownOnly`,
+`-SetupMotionOnly`, `-TeamSetupOnly`, `-CrossfeedOnly`, `-RouteWarningOnly`,
+`-RumbleOnly`, `-GatePermissionOnly` and `-FerryDirectionOnly` in both presets.
+`check-level-editor.ps1` passed in both presets, and both selection checkers
+passed in pwsh and Windows PowerShell 5.1. `prepare_review.py`'s `collect`
+passed and rewrote its outputs unchanged.
 
 ### Status text after the 2026-11-05 decisions (`HYG#61`)
 
-Reword every comment, `_comment` and doc line that still describes a row settled
-on 2026-11-05 as an open trial or pending review. The sites are
-`tuning.h:261`, `tuning.json:29` and `:187`, `audio_pipeline.py:1`, `README.md:456`
-and the matching AGENTS.md audio paragraph, `architecture.md:182` (report 28 was
-declined), `game/art/README.md:300`, `gameplay-tuning.md:536`,
-`level-editor.md:1082`, `design-process.md:358`, `game/art/painter/README.md:58`,
-the `scripts/debug/*.cfg` headers and the "prototype" diagnostics in
-`replay_checks.cpp:604`. Fix `prepare_review.py:50`'s status text and regenerate
-`PROVENANCE.md`, `cues.json` and the review page from it. Write row ids with `#`.
-Frozen reviews are not touched.
+**Done 2026-11-05.** Text only; the game's behaviour is unchanged. Every named
+site now says what was decided on 2026-11-05: the bot policy and Boost values
+in `tuning.h` and `tuning.json` were accepted (`ROAD#10`, `ROAD#5`), paint
+underfoot ships on (`POL#30`, at the amounts `POL#36` built), report 28 was
+declined, `ED#5` was accepted without its session, and the listening,
+clean-PC, pad and finish checks (`ROAD#1`-`ROAD#3`, `POL#24`) were waived, not
+performed. Sibling sites done with them: the bot comments in `tuning.h` and
+`tuning.json`, `audio_pipeline.py`'s build refusal, the Paint.exe production
+READMEs (`paint_exe/README.md`, `foley/README.md`, `music/PRODUCTION.md`),
+foley's `review_status` in `build.py` and in the `PROVENANCE.json` it wrote
+(edited in place, not re-rendered), `check-finish-details.ps1`'s header, the
+`crossfeed_coupled`, `review_bots_boost` and `review_finish_details` headers,
+and the "prototype" and "trial amounts" wording in `match_fingerprint`, the
+`debug_console`, `paint_underfoot`, `handicap` and `moving_structure` probes.
+
+A review of that commit found sites it missed, fixed in a follow-up: the opening
+paragraph of `paint_exe/README.md` and `interface/README.md`, the third
+production README; the `POL#23` and `ROAD#3` lines in `polish-movement-course.md`
+and `backstory.md`; the "remain in their existing TODO rows" lines in
+`polish-hud.md`, `polish-countdown.md`, `polish-match-accents.md` and
+`polish-paint-effects.md`, which now say what was accepted and what was waived;
+and the `stage_scan` `_comment` in `presentation.json`, whose action/help wording
+the author accepted with `ROAD#32`.
+
+`prepare_review.py` now says the accepted set ships and, only while the masters
+match `acceptance.json`, what became of `POL#23` and `ROAD#3`; a changed set
+still reads as candidates. Running it rewrote `cues.json`'s status, the
+provenance header and its 103 per-wave status lines, and the review page's
+status paragraph, and nothing else. It also re-encoded the three audition Oggs
+with this machine's FFmpeg; those bytes are not reproducible, so they were put
+back and are not part of the change.
+
+Left as found: `acceptance.json`'s `remaining` field, the author's 2026-10-14
+record as given; dated increment logs whose owner already carries a 2026-11-05
+status note (audio inventory §9, `ROAD#10` and the `ED#5` checkpoints in
+feature-roadmap.md and level-editor.md, and the polish plan's dated
+increment notes under its 2026-11-05 calls); and the probes' PASS summaries that
+say attended acceptance "remains open", which are output rather than comments
+and go to `HYG#87`.
+
+Both presets build under `/W4 /WX`, and the build's wave-bank check passed in
+both. `paint_underfoot`, `handicap`, `moving_structure`, `debug_console`,
+`menu_navigation`, `gameplay_tuning`, `settings`, `bot_driver` and
+`instant_replay` passed in Debug and Release. The audio unit tests and
+`audio_pipeline.py validate` passed, the Release ZIP passed
+`check-release-package.ps1`, and `check-startup.ps1` passed on both executables
+and the extracted ZIP. `check-finish-details.ps1` needs a foreground desktop and
+was not run; only its comment changed.
+
+The follow-up changed text and one JSON `_comment` only. Both presets rebuilt,
+and `user_stages`, `menu_presentation` and `menu_text`, which read
+`presentation.json`, passed in Debug and Release; the Markdown links resolve.
 
 ### Comments and reference docs that drifted (`HYG#62`)
 
-Correct each comment and doc line against the code. First the `GameData` class
-comment (`game_data.h:15`), which says objects share it, the opposite of the
-architecture rule. Then `level.h:127`, `main.cpp:73`, `level_inputs.h:14` and
-`save.cpp:453`. Then `debug-console.md:1585` (the RTTI list has 16 names) and
-`:1615` (`SkirmishBot`), `README.md:206` and `:216`, `level-format.md:35`, `:197`
-and `:596`, `docs/README.md:25` and `:48`, `menu-presentation.md:191`,
-`oop-guide.md:311` (the `low` cue), and `architecture.md:105` (the SHA stamp).
+**Done 2026-11-05.** Comments and docs only; the game's behaviour is unchanged.
+Each named site now says what the code does:
+
+- `GameData`'s class comment names its holders (states, menu pages,
+  `MenuContext`, `StagePreview`, the developer tools) and says nothing in
+  `objects/`, `ai/` or `carried/` names it.
+- `Level::update` says the shipping bots drive first unless the seat filter
+  replaces bot inputs, and the filter sees every input last; `main.cpp` adds
+  `tune` to what mutates tuning and presentation; `level_inputs.h` says the
+  four records are the constructor's (with `StageAudio` inside `LevelStage`);
+  `save.cpp` says the first save fails before any page could report it, which
+  is why it gets a dialog.
+- `debug-console.md` lists all sixteen RTTI names (`DebugBackgroundInput` was
+  missing) and `SkirmishBot` in the bot hierarchy, and says Release passes
+  `Level::update` only the round tape as `seats` (not "always null").
+  `README.md`'s tree has today's line counts (~78k, ~17k, ~7k), what RapidJSON
+  reads and what `cmake/` holds (no wave-bank recipe; staging and checks).
+  `level-format.md` says three of the four archived levels had their bank and music renamed and all use `level_name`,
+  names the two drives (they are described below the line, not above), and
+  counts thirteen registered stages. `docs/README.md` says what
+  `gameplay-tuning.md` covers and that Press Tower and Turbulence's slab trial
+  were accepted. `menu-presentation.md` names the real key,
+  `main_menu.backgrounds.home`, at all three sites, and so does its sibling in
+  `polish-main-menu.md`. `oop-guide.md` lists the optional `low` cue, and
+  `architecture.md`'s invariants, re-checked, carry a date instead of a SHA.
+
+Left as found: the dated `b96bad6`/`8e91aab` stamps in `feature-roadmap.md`,
+which record what one past check covered rather than claim a present state.
+
+Both presets build under `/W4 /WX`. `settings`, `level_format`, `bot_driver` and
+`menu_presentation` passed in Debug and Release, and the Markdown links resolve.
 
 ### One atomic file writer and one debug file-stem rule (`HYG#63`)
 
-Add one game-side `replace_file_atomically(path, bytes)`. It uses a unique
-sibling temporary, flushes, renames with write-through and removes the temporary
-on failure. Route the six writers through it: `save.cpp`, `fatal_report.cpp`,
-`debug_files.cpp:25`, `tune_commands.cpp:52`, `ReplayFile::write`
-(`replay.cpp:1027`, which truncates in place and ignores the
-`create_directories` error) and the screenshot writer (`debug_screenshot.cpp:73`,
-which leaves partial PNGs). Give the editor one shared copy
-(`stage_registration.cpp:516`) inside its own library. Add
-`debug_file_name::valid_stem` and use it in the five stem checks
-(`script_commands.cpp:74`), which gives `perf.capture` (`:416`) the reserved-name
-refusal. Make `replay_names` (`replay_commands.cpp:66`) use the non-throwing
-iterator increment.
+**Done 2026-11-05; behaviour change.** A replay is no longer truncated in place,
+a failed screenshot no longer leaves a partial PNG, and `exec` and
+`perf.capture` refuse reserved Windows names.
+
+- `replace_file_atomically(path, bytes)`
+  ([atomic_file.h](../game/save/atomic_file.h)) creates the parent, writes a
+  `CREATE_NEW` sibling named `<file>.<process>-<n>.tmp`, flushes it, moves it
+  over the file with replace and write-through, and deletes it on any failure.
+  The save (now serialised to a string first), the fatal-error record,
+  `debug_files::write_file`, `tune.save` (including its `.bak` fallback),
+  `ReplayFile::write` (which no longer ignores a `create_directories` failure)
+  and the screenshot writer (which now encodes the PNG into memory) all go
+  through it.
+- The editor's one copy is `PreparedFile` and `replace_prepared_file`
+  ([prepared_file.h](../editor/prepared_file.h)) in `colourwars_level_document`.
+  It is split into prepare and replace because document Save and stage
+  registration both recheck the destination in between. Six editor-linked probe
+  cases gained an `editor_prepared_file_adapter.cpp`, as they already compile
+  `level_document.cpp`.
+- `debug_file_name` ([debug_file_name.h](../game/debug/script/debug_file_name.h))
+  has `stem_character`, `valid_stem` and `max_stem` beside `reserved_stem`. The
+  two refusing checks (`exec`'s `debug_script::file_name` and `perf.capture`)
+  use `valid_stem`; the three repairing ones (`replay_name`, the screenshot name
+  and `screenshot.dir`) use `stem_character`.
+- `replay_names` lists with `increment(error)`.
+
+The unique temporary changed how probes fail a save on purpose. Sixteen sites
+made a directory at the fixed `save_data.json.tmp`, which no longer blocks
+anything. They now hold the old save open, sharing read and write but not
+delete, through `acceptance::ReplacementLock` ([replacement_lock.h](../scripts/acceptance/support/replacement_lock.h)):
+`display_trial`, `input_bindings` (twice), `remembered_setup` and twelve painter
+leaves. The three probes that ran a write both ways (blocked temporary, then
+locked save) now run only the locked one, because the writer's temporary can no
+longer be named from outside. The 50-odd checks that a fixed `*.tmp` was absent
+would now pass vacuously; they ask `acceptance::temporary_beside`, which finds
+any `<file>.*.tmp`. New checks: a locked replay and a locked PNG refuse a
+write of different bytes, keep the earlier file whole and leave no temporary;
+`exec CON`, `nul.cfg` and `Com1` and `perf.capture` with `CON`, `nul`, `Com1`
+and `lpt9` are refused. The lock shares writing on purpose: the old in-place
+writers (a truncating `ofstream`, WIC's `InitializeFromFilename`) open through
+it and change the bytes, while the replacing move is refused, so the two
+locked-write checks fail against the old code. The first cut of the lock denied
+write sharing, which refused the old writers too and made those checks
+vacuous. A replay whose folder cannot be created was refused before as well
+(its stream failed to open), so its check guards the same outcome; only the
+ignored `create_directories` error is new, and the commit message's claim of a
+new refusal was wrong.
+
+Handed to [`HYG#84`](#probe-save-isolation-and-json-fixtures-hyg84):
+`settings.cpp`'s hand-made lock and the dead `save_data.json.tmp` removals in
+three fixture destructors. `ReplacementLock` is the lock that row names, and it
+moves into its `isolated_save.h`.
+
+Both presets build under `/W4 /WX`. `settings`, `player_profiles`,
+`match_records`, `remembered_setup`, `input_bindings`, `display_trial`,
+`fatal_report`, `debug_console`, `moving_structure`, `fixed_slab` and `session`
+passed in Debug and Release, as did the opt-in `turbulence_movers` and
+`turbulence_slopes`; `turbulence_slab_routes` and `turbulence_slab_tools`, which
+need the private trial, compiled in both. `check-level-editor.ps1` (with its
+save-guidance check) and `check-startup.ps1` passed in both presets. On MattPC,
+`check-painter.ps1` passed `-ControlsMenuOnly`, `-SettingsMenuOnly`,
+`-DisplayTrialOnly`, `-KeyboardJumpOnly`, `-OptionsDefaultsOnly`,
+`-PausedOptionsOnly`, `-PercentageTextOnly`, `-RumbleOnly` and
+`-StickSettingsOnly` in both presets: the twelve ported save-failure leaves.
+After the lock gained write sharing, a scratch program confirmed that under it
+a truncating `ofstream` and WIC's `GENERIC_WRITE` stream both rewrite the file
+while the replacing move is refused (and that under read-only sharing all three
+are refused). Both presets rebuilt; `debug_console`, `display_trial`,
+`input_bindings`, `remembered_setup`, `match_records` and `settings` and the
+same nine painter switches passed again in Debug and Release.
 
 ### Diagnostics and impossible states (`HYG#64`)
 
-- `FatalReport::capture` classifies the game's own "Player out of bounds" throw by
-  `strcmp` (`fatal_report.cpp:113`). Throw a `PlayerOutOfBounds` type and classify
-  it by type. This is not report 30, which is about the engine's message.
-- Print the real `fatal_report_path` in the dialog (`:153`).
-- Reword the spawn diagnostic (`level_loaded_info.cpp:251`): players are not
-  "retired". Reword the paintable-role error (`level.cpp:820`), which names a
-  removed enum spelling.
-- Replace the seven MSVC-only `std::exception("...")` throws (`player.cpp:1116`,
-  `projectile.cpp:151`, `player_figure.cpp:430`, `team_colour.cpp:23` and
-  siblings) with `std::logic_error` or `std::invalid_argument` naming the value.
-- Make Stage Select's out-of-range slot (`main_menu_stage_select.cpp:313`) and
-  Pause's unknown confirmation (`pause_menu.cpp:551`) throw instead of drawing
-  `ERROR` or `Error`.
+**Done 2026-11-05; behaviour change.** The failure dialog names the real record
+path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
+
+- `Level::update` throws `PlayerOutOfBounds`
+  ([player_out_of_bounds.h](../game/objects/player_out_of_bounds.h)), a
+  `std::runtime_error` with the same message, and `FatalReport::capture`
+  records `player_out_of_bounds` by type. A plain `runtime_error` with those
+  words no longer gets the reason. The engine's device-failure `strcmp` stays
+  at `fatal_report.cpp:117`, where report 30 cites it.
+- `FatalReport::dialog_text` takes the path written (empty when nothing was
+  saved), and the dialog says `Diagnostic metadata saved to <path>.` instead of
+  the fixed `%LOCALAPPDATA%` spelling.
+- The spawn diagnostic says a player built outside `out_of_bounds` stops the
+  match with a player-out-of-bounds failure; its sibling in
+  `station_contract.h` (the editor's words) and its comment say the same. The
+  paintable-role error says a `structure_paintable` collision object has no
+  paintable role.
+- The seven `std::exception("...")` throws (`level_end_info.cpp`,
+  `player_figure.cpp`, `player.cpp`, three in `projectile.cpp`,
+  `team_colour.cpp`) are `std::logic_error`, or `std::invalid_argument` for
+  `TeamColour::team_colour`'s parameter, each naming the enum's value.
+- Stage Select's out-of-range slot throws `std::out_of_range` and Pause's unknown
+  confirmation `std::logic_error`; neither is reachable (the slot's preview
+  already calls `stages->at` first).
+
+`fatal_report` now checks the type, that a look-alike `runtime_error` is not
+classified, that a nested one is classified at its own cause, and that the
+dialog ends with the given (Unicode) path or the could-not-save line.
+`check-failure-reporting.ps1` expects the isolated profile's real path.
+`failure-reporting.md` says both.
+
+Both presets build under `/W4 /WX`. `fatal_report`, `level_format`,
+`menu_navigation`, `stage_selection`, `session`, `gameplay_tuning`,
+`user_stages`, `bot_driver`, `movement`, `paint`, `results_awards` and
+`team_palette` passed in Debug and Release, as did `check-failure-reporting.ps1`
+(its dialog body names the isolated `last-error.log`) and
+`check-level-editor.ps1`.
 
 ### Fixed arrays and lifetime hazards (`HYG#65`)
 
-- Size or fill arrays from their declared size instead of literal lists:
-  `was_dead` from `players_.size()` (`level.cpp:368`), `pad_devices_`
-  (`player_identity_hud.h:101`), the boosts (`game_states.cpp:210`), the per-pad
-  arrays in `settings_session.h:72`, `MenuDirectionRepeat` with
-  `menu_direction_count` (`menu_input.h:19`) and the crossing arrivals
-  (`bot_team_trials.cpp:200`).
-- Add a `static_assert` that `terrain_role_name` covers every role
-  (`terrain_material.cpp:71`).
-- Give `DisplaySettingsChoice` default member initialisers
-  (`display_settings_trial.h:10`).
-- Delete copies on `Editor`, `ScreenMusic` and `ResumeAudio`.
-- Guard the pointer that is dereferenced, `settings_session()`, in
-  `bind_commands.cpp:230`.
-- Range-check `editor/win32_text.h:15`'s `size_t`-to-`int` conversion.
+**Done 2026-11-06.** No behaviour change for any input the game can produce;
+the editor's text conversion now refuses a string longer than `INT_MAX`
+instead of truncating its length.
+
+- `input_slots::per_pad(value)` ([input_slots.h](../game/input/input_slots.h))
+  fills an array of `pad_count`. It replaces the four-element literals in
+  `PlayerIdentityHud::pad_devices_`, the entry boosts in `game_states.cpp`,
+  `SettingsSession::worn_`, and the siblings the grep found:
+  `MatchSetup::devices_` and `PlaySettings::pad_rumble`. Review found one more,
+  `MatchPlanner::ConnectedPads`, now an array of `pad_count` too. The
+  acceptance fakes that stand in for the engine's four-slot reader
+  (`rumble_adapter.cpp`) and the frozen legacy menu mapping in
+  `action_bindings.cpp` keep their literal four on purpose. `shuffle_teams`' seat
+  order is `std::iota` instead of `{ 0, 1, 2, 3 }`.
+- `Level::update_level_logic`'s `was_dead` is a `std::vector<bool>` of
+  `players_.size()`, not a fixed four.
+- `MenuDirectionRepeat`'s held, stick and stick-value arrays are sized by
+  `menu_direction_count`.
+- `bot_team_trials`' crossing arrivals are filled with -1 to the contact
+  list's size instead of nine literals.
+- `terrain_role_name`'s table has a `static_assert` that its last entry is
+  set, which a missing name would leave null.
+- `DisplaySettingsChoice` defaults to the save's own defaults (`s_1920_1080`,
+  windowed, random palette).
+- `Editor`, `ScreenMusic` and `ResumeAudio` delete their copy constructor and
+  copy assignment.
+- `bind_commands.cpp` checks `settings_session()`, the pointer it
+  dereferences, instead of `save()`. The same mismatch in `tune_target.cpp`'s
+  `can_check_levels` and `DebugDirectorImpl::sync_background_audio` is fixed
+  the same way.
+- `editor/win32_text.h`'s `wide` and `narrow` take their length through a
+  checked `win32_length`. `stage_scan_diagnostics.cpp` already range-checks;
+  `debug_tokenizer.cpp`'s unchecked copy is the local `narrow` that
+  [`HYG#79`](#use-the-engines-text-path-and-environment-helpers-hyg79) replaces.
+
+Left alone: probe expectations written as four-element literals
+(`menu_navigation`, `roster_checks`, `settings`) state the expected value
+rather than fill a size, so they stay.
+
+Both presets build under `/W4 /WX`. `menu_navigation`, `player_identity`,
+`settings`, `stick_settings`, `display_trial`, `terrain`, `input_bindings`,
+`action_bindings`, `bot_roster`, `team_selection`, `handicap`,
+`player_profiles`, `camera_framing`, `moving_structure`, `story_audio`,
+`session` and `debug_console` passed in Debug and Release; the opt-in
+`bot_team_trials` compiled in both and passed in Release.
+`check-level-editor.ps1` passed in both presets.
 
 ### Match-domain rules and settings bounds in one place (`HYG#66`)
 
-In `game/match`, add `layout_for_humans(int)`, `bot_difficulty_key` and
-`bot_difficulty_from_key`, `valid_best_of`, `session_rounds`, a
-`series_stage_rules` array and `max_players`. Use them in place of these copies:
+**Done 2026-11-06; behaviour change.** A saved deadzone above 90 now loads as
+90 instead of falling back to the inherited value.
 
-- the human-count-to-layout copies (`main_menu_players.cpp:194`,
-  `match_plan.cpp:8`, `last_match_setup`, `team_selection.cpp:24`);
-- the five difficulty tables (`replay.cpp:92`, `player_control.h:11`,
-  `tuning.cpp:221`);
-- best-of (`last_match_setup.cpp:45`) and the round count
-  (`game_states.cpp:135`);
-- the stage-rule list (`main_menu_mode_select.cpp:141`);
-- the literal 4 and 2 in `match_setup.cpp:29` and the replay validators
-  (`replay.cpp:519`).
+- [match_rules.h](../game/match/match_rules.h) holds `max_players` (4),
+  `min_versus_players` (2), `valid_player_count`, `player_count_range`,
+  `layout_for_humans` (which throws outside 1-4), `best_of_choices` and
+  `valid_best_of`; `session_rounds(const MatchSetup&)` in `match_setup.h` is
+  the solo-is-a-single-match rule. `bot_difficulties`, `valid_bot_difficulty`,
+  `bot_difficulty_key` and `bot_difficulty_from_key` sit beside the enum in
+  `player_control.h`, and `series_stage_rules` and `valid_series_stage_rule`
+  beside theirs in `series_stage_rule.h`.
+- They replace the layout copies in `main_menu_players.cpp` (both arrays, and
+  `start_join` no longer takes a layout per button), `game_states.cpp`,
+  `level_builder.cpp`, `last_match_setup.cpp` and `MatchPlanner::layout_for`,
+  which is gone (the three `debug_console` checks that called it now call
+  `layout_for_humans`), and the human-count copies in the `team_selection`,
+  `bot_runtime`, `cursor_marker`, `instant_replay` and `teammate_markers`
+  probes; the difficulty tables in `last_match_setup.cpp`,
+  `replay.cpp`, `match_plan.cpp` (completion list, check and conversion),
+  `tuning.cpp` (the `bots` entry names and `GameTuning::bot`), `match_setup.cpp`,
+  `debug_status_text.cpp` and `Presentation::Validation`; best-of in
+  `match_setup.cpp`, `session.cpp`, `last_match_setup.cpp`,
+  `MenuText::stage_best_of_mode` and the stage summary validator; the four
+  round-count copies (`game_states.cpp` twice, `game_level_dev_tools.cpp`
+  twice); the stage-rule lists in the Mode page, `menu_content_validation.cpp`
+  and `last_match_setup.cpp`; and the 4 and 2 in `match_setup.cpp`,
+  `last_match_setup.cpp`, the three replay validators, `match_plan.cpp`'s
+  `players` check, `MenuText`'s pause title and roster line, and the Players
+  page's series focus. Messages that named "1-4" now format it.
+- [play_settings.h](../game/config/play_settings.h) names
+  `StickSettings::inherit`, `max_deadzone` and `deadzone_step`, and
+  `PlaySettings::min_aim_sensitivity`, `max_aim_sensitivity`, `max_volume` and
+  `volume_step`. The save's play reader, `Save::checked_play_settings`,
+  `PlayerProfiles::validate`, the Sticks and Controls pages and the gains read
+  them. [play_settings_json.h](../game/save/play_settings_json.h) has the one
+  reader and writer for a `StickSettings` and a `SeatComfort`, which the play
+  section's `pad_sticks` and `pad_comfort` and each `profiles` entry share; the
+  deadzone reader goes through `normalized_deadzone`. `settings` now expects 91
+  and 500 to load as 90, and `player_profiles` a saved 95 as 90.
 
-In the same row, name the stick and play-setting bounds once (the 90% deadzone
-cap, the 5% step, sensitivity and volume ranges; `stick_settings_menu.cpp:146`,
-`play_settings.h:18`). Share the `StickSettings` and `SeatComfort` JSON readers
-between `save.cpp:191` and the profiles, so the readers and `normalized_deadzone`
-agree. Out-of-range saved values may now clamp instead of dropping; say so in
-the commit.
+Left as found: the Debug console's `players`, `seat`, `weapon`, `goto`,
+`respawn`, `kill` and `bot` parsers, whose help text and completions spell
+1-4 with the check; the presentation validators' per-player loops over
+four-row geometry tables (`presentation_validation_setup.cpp`, `_results`,
+`_pause`), which belong with
+[`HYG#70`](#presentation-reader-and-validator-helpers-hyg70); the
+Join page's difficulty stepping and the Mode page's two series buttons, which
+are page behaviour rather than tables; probes' own difficulty names and the
+`balance_runner` option parser, which state expectations or a tool's command
+line; and the layouts `bot_roster` and `balance_runner`'s `build` set from the
+whole seat count, bots included, which are fixture choices rather than the
+one-pane-per-human rule.
+
+Both presets build under `/W4 /WX`. The full default acceptance list (78
+cases, `-Parallel 4`) passed in Debug and Release, `check-startup.ps1` passed
+in both, and `check-painter.ps1`'s `ControlsMenuOnly`, `StickSettingsOnly`,
+`RememberedSetupOnly`, `StageSummaryOnly`, `MenuTextOnly` and
+`StickReadoutsOnly` passed in both.
 
 ### The level-format contract owns its numbers and names (`HYG#67`)
 
-- Add `slab_span`, `slab_rise` and `slab_thickness` to the contract
-  (`fixed_slab_paint_geometry.h:27`). Alias them from `FixedSlabGeometry`, and use
-  them in `fixed_slab_paintable.cpp:16`, `level_object_builder.cpp:557`,
-  `editor/slab_authoring.cpp:44`, the mirror and `blockout_aids`.
-- Tidy the contract headers. Make one initialised `Rectangle` instead of three,
-  and initialise `horizontal_motion_contract::Spec`. Make `standing()` use
-  `corridor_pad()` or document why not. Word the lift diagnostics neutrally.
-- Have the editor read the rules the contract owns since `HYG#46`. That means
-  scenery-colour, drawable-text and paintable-face tables in `game/contracts`,
-  `key::*` and `collision_named` instead of literals
-  (`horizontal_authoring.cpp:96`, `level_json.cpp:140-493`), `heading_name`, and
-  `user_stage_contract::usable_name` in `valid_basename`
-  (`stage_registration.cpp:106`).
+**Done 2026-11-06; behaviour change.** Stage registration now refuses a
+manifest or stage basename longer than 64 characters (it took up to 250), and
+the motion contract's refusals say "Motion" rather than "Horizontal motion",
+since lifts reach them too.
+
+- [fixed_slab_paint_geometry.h](../game/contracts/fixed_slab_paint_geometry.h)
+  names `slab_span`, `slab_rise` and `slab_thickness`, and
+  `canonical_slab_paint_polygon` checks against them. `FixedSlabGeometry`'s
+  three constants alias them; `fixed_slab_paintable.cpp`,
+  `LevelObjectBuilder::stage_context`, the editor's `slab_authoring.cpp`, the
+  mirror's slab reflection and `blockout_aids` (its slab edge and paint-depth
+  bound) use them. Each value folds to the same float or double as the literal
+  it replaces.
+- The station, gate and motion contracts share one initialised `Rectangle`,
+  the new [rectangle_contract.h](../game/contracts/rectangle_contract.h), and
+  `horizontal_motion_contract::Spec` initialises every member. `standing()`
+  keeps its own pad, and its comment says why: its scale leaves out
+  `path.bottom`, which `corridor_pad()` includes, so using it could widen the
+  corridor and refuse a level admitted today. The contract's seven motion
+  refusals are worded "Motion ..."; `moving_structure`'s three constructor
+  checks look for the travel refusal by its new words.
+- [level_format.h](../game/contracts/level_format.h) holds the paintable-face
+  names (`face::*`, `paintable_face_names`) and the scenery greys
+  (`scenery_grey_names`, `is_scenery_grey`), and the new
+  [drawable_text_contract.h](../game/contracts/drawable_text_contract.h) holds
+  the drawable range, the layout controls and the punctuation table (its code
+  points written as `\u` escapes, as the switch had them, so the dashes and
+  the three invisible spaces stay distinct in source). The game's
+  `drawable_text` reads that table in place of its switch, and
+  `LevelObjectBuilder` reads the face names. The editor's `level_json` reads all
+  three tables (its grey-name string, UTF-8 punctuation list and face lists are
+  gone) and builds the unknown-material message from the material table;
+  `horizontal_authoring`, `slab_authoring`, `blockout_aids` and the mirror use
+  `key::*` and `collision_named` for the format's words; the paint-mechanism
+  guide and the paint-drive default read `heading_name`; and registration's
+  `valid_basename` is `user_stage_contract::usable_name`, its refusal quoting
+  `name_rule()`. The game still checks a scenery colour by resolving it, so
+  `level_format` now holds `scenery_grey_names` to the engine's colour table.
+
+Left as found: `level_document.cpp`'s own key literals (about 140, most in the
+File > New template string and the `AddMember` calls) and the canvas's
+`paintable_faces/...` and station `name` property paths. The template string
+went when File > New began reading `template.json` in
+[`HYG#78`](#editor-shell-and-document-hyg78); the `AddMember` literals and the
+property paths moved on to [`HYG#79`](#use-the-engines-text-path-and-environment-helpers-hyg79),
+the next editor row. Also left: `level_structures.cpp`'s
+"Horizontal motion ..." admission refusals, which name the game's
+`HorizontalMotion` type rather than the contract and which the
+`moving_structure` probe matches by those words.
+
+Both presets build under `/W4 /WX`, editor included. The full default
+acceptance list passed with `-Parallel 4` (78 cases in Release, 79 in Debug);
+`level_format` reports the new scenery-grey check. `check-level-editor.ps1`,
+`check-stage-registration.ps1` and `check-startup.ps1` passed in Debug and
+Release.
 
 ### `Player` move-state and contact predicates (`HYG#68`)
 
-Add a public `grounded()` and a free `supported(PlayerMoveState)` beside the
-enum (`player.h:557`), and private `on_flat_ground()` and `can_act()`. Use them at
-the twenty or so sites in `Player`, `Level`, `LevelBotWorld`, the Debug bot driver
-and probes. Share the contact-orientation loop between `end_contacts` and
-`choose_carrier` (`player.cpp:319`). Use one comparison rule in the velocity
-chain (`:1246`), and one identity fallback for the three sound indices in the
-constructor (`:71`). Floating-point results must not change: the probes'
-movement fingerprints must match before and after.
+**Done 2026-11-06; no behaviour change.**
+
+- [player.h](../game/objects/player.h) has a free `supported(PlayerMoveState)`
+  beside the enum, a public `Player::grounded()` in place of the private
+  `is_on_ground()`, and private `on_flat_ground()` and `can_act()` (alive with
+  health left). `Player` and its figure use them at about twenty sites, and `Level`'s
+  idle drip, `LevelBotWorld::body`, the Debug bot driver (its `on_ground`
+  switch is gone) and thirteen probe helpers use `grounded()` or `supported()`.
+- `end_contacts` and `choose_carrier` share `seen_from` (a contact from the
+  player's side) and `top_normal`.
+- The velocity chain tests rest once, with `are_equal`, and the stick's
+  direction by its exact sign. The old chain's `are_equal(x_input, 0)` could
+  only be reached with an exact zero, so the branches are the same.
+- The constructor's three sound indices share `sound_identity` (the roster
+  participant, else the input slot, at least 0). The redraw cue takes it modulo
+  the four-entry table, which is what the old `% 4` did for the keyboard
+  slot, and still refuses a participant past the table.
+
+Verified by running the full default acceptance list in Release
+before and after on the same machine: all 78 run logs, with their movement
+measurements, timing pins and fingerprints, match once temporary paths, dates
+and process ids are masked. Both presets build under `/W4 /WX`. The full
+Debug list (79 cases, the slow four included) passed, as did
+`check-movement-feedback.ps1` in both presets, `check-painter.ps1 -CompileOnly`
+in Release (it compiles the three edited painter headers) and
+`-RouteWarningOnly` in Debug.
+
+Left as found: `alive && health > 0` written through the public accessors in
+`Level` (idle drip, camera follow), `level_structures` and `player_identity_hud`,
+because `can_act()` is private; the alive-only checks in `player_figure.cpp`,
+which ignore health; `movement_course`'s flat-only probe helper and
+`ramp_support_checks`' helper, which leaves out drop-through platforms; and
+the single-state `== on_ground` checks, which test exactly that state.
 
 ### Player-facing copy out of C++ (`HYG#69`)
 
-- Move the stage record line's word order and separators to `menu_text`
-  templates (`main_menu_stage_select.cpp:275`). Move the random mark `?` too.
-- Start `OptionRow` empty instead of `L"null"` (`option_row.cpp:39`).
-- Measure the localised label, not an English word, on the Sticks page
-  (`stick_settings_menu.cpp:200`).
-- Move the prompt-rewrite table that only the Debug menu reaches out of
-  `MenuPage` (`menu_page.cpp:155`).
-- Drop the English control words the game never shows
-  (`input_bindings.cpp:96`).
-- Add the `P1`-`P4` labels and the window title to localisation.md's "Not yet
-  localisable" list, or move the label pattern to `presentation.json`.
+**Done 2026-11-06; no change to any English line.** A locale can now reorder
+the record lines and replace the Random mark; `qps-ploc` brackets both.
+
+- `menu_text.records` are templates: `new_best` and `stage_best` take
+  `{percentage}`, `played` takes `{count}`, and `best_win` and `best_coverage`
+  take `{percentage}` and `{played}` (the formatted played line). Startup
+  formats each once and refuses a missing or repeated token.
+  `MenuRecordText::new_best_line`, `stage_best_line`, `played_line` and
+  `best_line` build them for Stage Select's `record_line`, the sibling the grep
+  found in Results' `record_text`, and both validators. The Random mark is
+  `menu_text.stage.random_mark`, checked at startup for its glyphs in the
+  announcement font and for its unscaled title-shadow union fitting
+  `preview_size`, so overlong copy fails at load under its own key; the page
+  still repeats the containment check. The `menu_text` OptionRow fixture that
+  shrank the preview to 2 pixels for the Random arena name now uses a 200-pixel
+  preview and a taller name area instead.
+- `OptionRow` starts its value empty.
+- The Sticks page, its validator and the four probe copies of its layout
+  measure the help-font line on `menu_text.help.aim_cutoff` instead of `"Move"`.
+  In the shipped `lato_black_24` both measure 38, the line spacing, in English
+  and `qps-ploc`, so nothing moves. Only a font whose caption glyphs are taller
+  than its line spacing differs: the caption then clears the aim box by its own
+  height, so `menu_text`'s 29-high `G` overflow case is gone and its
+  track-touching fixture moved from 447 to 455.
+- `MenuPage::set_prompts` builds a vector of prompts as given; the Debug menu
+  writes `A/Enter` and `B/Esc` itself. Shipped pages already passed copy.
+- `input_bindings.cpp` keeps only legends: `input_key_legend` and
+  `pad_control_legend` (empty for Space, None and Start) replace
+  `input_key_label` and `pad_control_label`, the mouse names lost their labels,
+  and `desktop_control_label` is gone (`controls_text::desktop_label` checks the
+  control through `desktop_control_name`). The `menu_text` case now checks that
+  every word comes from the copy instead of matching English twins.
+- [localisation.md](localisation.md#not-yet-localisable) lists `P1`-`P4`, which
+  name the pencil-cell badge and stay with it, and the window title, set
+  before the locale is chosen.
+
+Left as found: the Debug menu's `"Queued"` measure and its English, which are
+developer text; the HUD identity separator and the results `A`/`B` marks,
+recorded choices (frozen review). The painter's Stage paper check now expects
+literal English record lines rather than gluing the copy itself, and its Results
+record check builds its lines through `new_best_line` and `stage_best_line`
+(review follow-up: it had appended the number to the template, so its boxes
+were measured on a wider string than the game draws).
+[menu-presentation.md](menu-presentation.md) describes the Sticks captions
+measuring `aim_cutoff`, not `Move`. The follow-up passed the full default
+Release list, Debug `menu_text`, `menu_presentation`, `locales`,
+`stage_selection`, `settings`, `user_stages`, `stick_settings` and
+`debug_console`, and in both presets `check-startup.ps1` (plain and
+`qps-ploc`) and `check-painter.ps1 -ResultsMenuOnly` and `-StagePaperOnly`.
+
+Both presets build under `/W4 /WX`. The full default acceptance list (78
+cases, `-Parallel 4`) passed in Release; in Debug, `input_bindings`,
+`keyboard_jump_capture`, `action_bindings`, `menu_text`, `locales`,
+`match_records`, `stage_selection`, `stick_settings`, `series_stage_rule`,
+`handicap`, `menu_presentation`, `settings`, `user_stages`, `results_awards`,
+`player_identity` and `debug_console` passed. `check-startup.ps1` passed in
+both presets, plain and with `-Locale qps-ploc`. `check-painter.ps1`'s
+`StickSettingsOnly`, `StickReadoutsOnly`, `ControlsMenuOnly`, `MenuTextOnly`,
+`StagePaperOnly`, `ResultsMenuOnly` and `KeyboardJumpOnly` passed in both
+presets.
 
 ### Presentation reader and validator helpers (`HYG#70`)
 
-Move the duplicated helpers into shared ones:
+**Done 2026-11-06; no layout change, and no accepted content is rejected.**
+`pause_menu.practice_row_spacing` (96, what `0.8` times the 120 spacing
+gave) is a new optional key: a `presentation.json` without it gets
+`0.8 * layout.spacing.y` from the reader, so it loads as before. The first
+commit made the key required, which broke the row's criterion; the review
+follow-up made it optional. Some diagnostics are worded differently.
 
-- `finite_rectangle` and `overlaps` (`presentation_validation_text.cpp:235`);
-- the `LabelPen` walk (`presentation_validation_settings.cpp:479`);
-- one `check_settings_row` (`:193`);
-- `check_plaque` (`presentation_read_match.cpp:347`);
-- `read_disabled_ink` (`presentation_read_menu.cpp:282`);
-- `read_pen_points` (`presentation_read_match.cpp:669`);
-- one block template formatter (`presentation_menu_text.cpp:62`, `:208`).
+- [presentation_read.h](../game/config/presentation/presentation_read.h) has
+  `finite_rectangle` (finite edges, positive size) and `overlaps` (touching
+  edges allowed). They replace `Validation::finite_stage_rectangle`, the
+  lambdas in `check_briefing_card`, `validate_stage_counts` and the Random
+  navigation check, `check_status`'s and the opening glass's spelled-out
+  overlaps, and eleven spelled-out finite-and-positive checks in the text,
+  stage, setup and stick-readout validators.
+- The stick readouts measure through `append_label_text`, so their pen walk
+  is the labels' one; `Validation::check_settings_row` is the one row check
+  Keyboard Jump, Pad Buttons and Profiles share.
+- `presentation_read_match.cpp` has `check_plaque` (gate permission, ferry
+  direction) and one `read_pen_points`, which takes the respawn canvas's last
+  nib position when it has one; `presentation_read_menu.cpp` has
+  `read_disabled_ink` for the main and Pause art.
+- `format_label_template` takes a `multiline` flag and is the one template
+  formatter: the stick readouts, the Random hint, the Display countdown and the
+  Pause player title (whose reader and formatter each spelled their token check
+  out) use it, and `read_menu_block` shares its blank-line rule.
+- Practice Pause reads `pause_menu.practice_row_spacing` in the page and the
+  validator; the `menu_text` probe's paper-edge and full-height fixtures use it,
+  and one paper-edge fixture sets it to 100, not 96, so a validator spacing the
+  rows at `0.8` of the layout spacing fails it. `menu_presentation` checks the
+  fallback for a missing key, an exact custom value, and refusals for zero,
+  negative, too-large and non-number values. No CPU probe can see the page's
+  row spacing: the painter's Pause checks draw plain Pause only.
+- The menu reader formats its size limits from `DESIGN_RESOLUTION` and the
+  `menu_geometry` constants; the focus-motion bounds are
+  `MenuFocusMotionPresentation::max_duration`, `max_arrow_travel` and
+  `max_selection_inset_fraction`, which the reader and `MenuFocusMotion` both
+  use and format.
+- Stage-scan copy errors say `menu_text.stage_scan`; the font, layout and fit
+  errors keep `main_menu.stage_scan`. The respawn canvas and figure-slip
+  cross-checks name their position in the file. `user_stages` checks a blank
+  heading's prefix next to its font, layout and fit refusals, and
+  `menu_presentation` checks the canvas, slip-stroke and shared-stroke
+  refusals' positions.
+- `read_music_mix`, `read_camera`, `read_movement_feedback`,
+  `read_combat_feedback` and `read_match` replace the constructor's inline
+  reads.
+- `SELECTABLE_WEAPON_COUNT` in `weapon_type.h` sizes `WEAPON_NAMES`, the
+  Weapon Select choices and the descriptions; `CHOICES` and `DESCRIBED_WEAPONS`
+  are gone.
+- The HUD comment sits on `HudPresentation`, `menu_geometry.h` says where
+  its users are, and `check_status`'s comment no longer counts three pages.
+- The roster-row tables and the per-player loops in the setup, Results and
+  Pause validators take `max_players`.
 
-Also:
+Left as found: the Stage Select page's own overlap test
+(`main_menu_stage_select.cpp`), which goes with the page helpers in
+[`HYG#74`](#menu-page-helpers-hyg74); Mode's `card.intersects` for the
+practice hint, the engine's predicate, whose edge rule may differ from
+`overlaps`; `validate_stage_counts`' `size_of`, a `Presentation` copy of
+`fixed_menu_size`; Keyboard Jump's action labels, which fit their column
+without the row checks `check_settings_row` would add; `controls_text`'s
+`replace_tokens`, whose optional tokens differ from the formatter's; the slip
+nib check in the constructor, which runs once both sections are read; and the
+Results ledger's `target <= 3`.
 
-- Read the practice Pause spacing from data instead of `0.8` in both the page
-  and the validator (`pause_menu.cpp:292`, `presentation_validation_pause.cpp:38`).
-- Format limits in messages from the `menu_geometry` constants
-  (`presentation_read_menu.cpp:601`).
-- Prefix stage-scan copy errors with `menu_text.stage_scan`
-  (`presentation_validation_stage_scan.cpp:66`), and give cross-section errors a
-  position (`presentation.cpp:230`).
-- Move the five inline section reads out of the constructor (`presentation.cpp:114`).
-- Use one selectable-weapon count (`presentation_menu.h:171`), and name the focus
-  motion bounds once (`menu_focus_motion.cpp:10`).
-- Fix the misplaced doc comments (`presentation_match.h:207`, `menu_geometry.h:8`,
-  `presentation_validation_menu.cpp:215`).
-
-Diagnostics text may change; no accepted content may become rejected.
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Debug (79 cases, the slow four included) and in
+Release (78), where `menu_text` first failed on its full-height fixture, whose
+practice rows had followed its 3-pixel spacing; it passed once the fixture set
+`practice_row_spacing` to the same 2.4. `check-startup.ps1` passed in both
+presets and with `-Locale qps-ploc` in Release, and `check-painter.ps1`'s
+`PauseMenuOnly`, `StickReadoutsOnly`, `MenuTextOnly`, `WeaponCatalogOnly` and
+`StageScanOnly` passed in both presets. After the review follow-up, both
+presets built again and `menu_presentation`, `menu_text`, `user_stages`,
+`figure_slips` and `practice_workshop` passed in both, as did
+`check-startup.ps1`; with the validator put back to `0.8` of the spacing (not
+committed), `menu_text` failed on the 100-pixel fixture.
 
 ### Presentation and content keys that mislead (`HYG#71`)
 
-- Call `require_known_keys` on the presentation objects with optional members
-  (`camera`, both `stage_scan` blocks) and correct the root comment
-  (`presentation.json:6`).
-- Delete the unused `menu_style.box_size` (`presentation_menu.h:84`).
-- Rename or move `main_menu.options_value_colour`, which only the Debug menu
-  uses (`presentation_read_menu.cpp:321`).
-- Move `hud.player_identity.background_colour`, which only Stage Select uses, to
-  that page (`presentation.json:809`).
-- Remove the about 25 unreferenced `sprite_sheet_1` strips and frames
-  (`sprite_sheet_1.json:5`).
-- Move the countdown controls-reminder look from `tuning.json` to presentation
-  (`countdown_cards.cpp:37`).
-- Rewrite the `_comment`s at `presentation.json:44` and `:698` and
-  `tuning.json:117` to describe the block.
+**Done 2026-11-06; a content-format change, with nothing drawn differently.**
+Three keys moved and two Debug `tune` paths changed with them; a
+`presentation.json` or `tuning.json` written for the old layout no longer loads,
+and a user stage whose objects or `icon_frame` name a deleted `sprite_sheet_1`
+frame is refused at load.
 
-A renamed key is a content-format change; update every probe and tune path that
-names it.
+- `require_known_keys` now runs on each presentation object with an optional
+  member: `camera`, `main_menu`, `menu_text` and `pause_menu` (whose optional
+  members are the framing keys, the two `stage_scan` blocks and
+  `practice_row_spacing`), both `stage_scan` blocks themselves, and a figure
+  slip stroke's edit, where `after` or `remove` chooses the edit. A misspelt
+  optional key now stops startup. The root comment says which keys are optional,
+  and `content_value.h` says where the check runs.
+- `menu_style.box_size` is gone from the file, the reader and `MenuStyle`.
+- `main_menu.options_value_colour` is `debug_overlay.menu_value_colour`
+  (`DebugOverlayPresentation`), which the Debug menu reads. It is a string
+  outside `tune`'s colour allowlist, so it was not a `tune` path before the
+  move and is not one now; `debug_console`'s allowlist check keeps it so.
+- `hud.player_identity.background_colour` is
+  `main_menu.stage_select.preview_background` (`StageSelectPresentation`). Its
+  `tune` path, scope (next screen) and every `debug_console` and
+  `painter_visual` probe that named it moved with it, including the Debug menu
+  walk and the synthetic span documents; the painter evidence text names the new
+  path.
+- `sprite_sheet_1.json` keeps the twelve frames something names (`pixel`,
+  `square_white_4`, the six team-select frames, the three stage icons and
+  `ramp_right_200_100`); its nine strips and 29 other frames are gone. The
+  `level_editor` probe's "a strip is not a frame" checks use `painter`'s `run`
+  strip instead of `player_right_walk`.
+- The controls reminder's look is `match.controls_text` in presentation
+  (`ControlsTextPresentation`), not tuning: `CountdownCards`, `PracticeLessons`
+  (which no longer takes `GameTuning`), `validate_controls_reminders` and
+  `validate_stage_text` (neither takes `GameTuning` now) read it, and its font
+  is checked with the other presentation fonts. Its `tune` path is
+  `presentation.match.controls_text.*`, still rebuilt with the level.
+- The `_comment`s on `menu_style`, `results_menu.team_mark` (now inside the
+  block) and `tuning.json`'s `paint` describe the block.
+
+Left as found: `_prompt_bar_comment`, which sits beside its block rather than in
+it but describes it; and `require_known_keys` on the presentation objects whose
+members are all required, where a misspelling already fails as a missing key
+(the level files are still unchecked, as `content_value.h` says).
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases). In Debug, 77 passed on the first
+run and `debug_console` failed, its Debug menu walk still looking for the
+preview backing under `hud`; after that fix `debug_console` and the one case the
+failure left unrun, `balance_runner`, passed. `check-startup.ps1` passed in both
+presets and with `-Locale qps-ploc` in Release, and `check-level-editor.ps1`
+passed in both. `check-painter.ps1`'s `HudHealthTuneColourOnly`,
+`HudTrackTuneColourOnly`, `HudTimerTuneColourOnly`, `HudLabelTuneColoursOnly`,
+`StagePreviewBackgroundTuneColourOnly`, `StagePaperOnly`, `MenuTextOnly`,
+`CountdownOnly` and `PracticeReplayOnly` passed in both presets. Seven of them
+first failed with capture or save writes refused under a long evidence path;
+they passed rerun with a short `-OutputDirectory`.
+
+After review, `menu_presentation` checks each new `require_known_keys` site
+(`camera`, `main_menu`, `menu_text`, `pause_menu`, both `stage_scan` blocks,
+both kinds of slip stroke edit, `match.controls_text` and its `shadow_offset`):
+a misspelt key is refused with the file and object named, a `_` key still
+loads, and a misspelt `remove` is refused. It, `user_stages` and
+`debug_console` passed in both presets; with the `camera` check disabled (not
+committed), it failed.
 
 ### Tuning and content-validation readers (`HYG#72`)
 
-- Fix the diagnostics that hard-code `./tuning.json` and "five weapons"
-  (`tuning.cpp:1024`), and the rumble messages that repeat constants
-  (`rumble.cpp:33`).
-- Correct the stale header comments (`tuning.h:27`, `:96`,
-  `tunnelling_limits.h:15`).
-- Use `content_value::number_text` instead of the local formatter
-  (`tunnelling_limits.cpp:50`), and drop the vacuous roller entry (`:90`).
-- Merge the duplicated stage-name throw (`content_validation.cpp:77`), and hoist
-  the supply-strip check out of its loop (`:289`).
-- Use `drawable_text`'s range constants (`stage_scan_diagnostics.cpp:75`).
-- Gather paint-underfoot validation in one place (`tuning.cpp:901`), and drop the
-  copied `splash_animation` field (`tuning.h:221`).
-- Move the run-animation threshold `600` into player tuning
-  (`player_figure.cpp:399`). Keep its value; this row moves it, it does not tune
-  it.
-- Use one base-locale spelling (`locale.cpp:423`).
+**Done 2026-11-06; a content-format change, with nothing played differently.**
+`tuning.json` has a new required key, `player.animations.run_speed` (600, the
+literal it replaces), so a file written without it no longer loads. A file with
+two faults may name a different one first, because the paint-underfoot checks
+now run together after the weapons block is read. Some diagnostics are worded
+differently.
+
+- `GameTuning::weapon` and `projectile` name the file they were read from and
+  `TUNED_WEAPON_COUNT`, not `./tuning.json` and "five"; the sibling
+  `WeaponBuilder` refusal counts the same way. `Rumble`'s profile and event
+  refusals format `maximum_rumble_pulse_seconds` and `rumble_event_count`.
+- `tuning.h`'s file comment names the Debug `tune` and `reload` commands, and
+  "Match phase durations" sits on `MatchTuning`, not the opening, without the
+  countdown presentation that `HYG#71` moved out. `tunnelling_limits.h` says
+  that paint underfoot multiplies the player's horizontal speeds and that no
+  projectile is a mover.
+- `tunnelling_limits.cpp` formats through `content_value::number_text` and has
+  no roller entry, which could never refuse (zero travel against a positive
+  `collision_size`); the `static_assert` comment says why it needs none.
+- `content_validation.cpp`'s two stage-name refusals are one
+  `shipped_stage_name`, and the supply strip checks the idle origin once,
+  outside its loop.
+- `stage_scan_diagnostics::alphabet()` builds the printable range from
+  `drawable_text::first_drawable` and `last_drawable`, for the layout and the
+  stage-scan validator, and `display_text` tests the same constants. The grep's
+  two other content checks, `controls_text`'s `replace_tokens` and
+  `format_label_template`, use them too.
+- `validate_paint_underfoot` holds every rule that compares the block with
+  another (the player's horizontal rates, `weapons.ammo_regen_rate`, each
+  handicap's refill), in place of `validate_underfoot_rates` and two blocks in
+  the constructor; `read_paint_underfoot` keeps the block's own checks.
+  `PaintTuning::splash_animation` is gone: `PaintSplashClips::initial` is the
+  spray entry of `by_type`.
+- `Player::calculate_animation_state` reads `PlayerTuning::run_speed`; its Debug
+  `tune` path is `tuning.player.animations.run_speed`, live.
+  [gameplay-tuning.md](gameplay-tuning.md#accepted-ranges) lists it with the
+  positive fields, and `gameplay_tuning` refuses a zero.
+- `locale.cpp` builds the index-less base in one named place,
+  `base_without_index`, and the fallback default and `compose` reach the base
+  through `Locales::base()`. The tag and name still also appear in
+  `locales.json`, which a build without the index cannot read.
+
+Left as found: the printable-ASCII checks on console input
+(`debug_text_field.cpp`, `script_commands.cpp`), which bound what a person may
+type rather than what content may draw; and docs that say "five weapons" about
+the game.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and in Debug (79, the slow four
+included); it covers `gameplay_tuning`, `paint`, `paint_underfoot`,
+`tunnelling`, `handicap`, `locales`, `user_stages`, `menu_text` and
+`debug_console`. `check-startup.ps1` passed in both presets.
 
 ### Dead code in the game (`HYG#73`)
+
+**Done 2026-11-06; a content-format change, with nothing played differently.**
+`rotation_origin` is gone from the five projectiles in `tuning.json`, from
+`read_projectile` and `ProjectileDetails`, so a tuning file that still names it
+is now refused as an unknown key. `game/carried/rotation_origin.h` went with it:
+its only other user, `Weapon::calculate_sprite_origin`, had no callers, and
+[architecture.md](architecture.md#gamecarried) now counts six carried types.
+Everything else listed below is deleted as written, with these notes:
+
+- `Weapon` also lost `offset()`, `nozzle_offset()` and `projectile_builder()`,
+  `check_if_shooting_and_ammo_update` lost its player centre and velocity, and
+  `update_movement_and_rotation` (and `WeaponRoller`'s override) its velocity.
+- `relative_impact` lost the motion segment it only read for `global_entry`.
+- `build_projectiles` and `build_mist_projectiles` lost rotation, origin, flip
+  and layer depth; no caller passed them, so every shot keeps the defaults.
+- Dropping `audio_resources` from `StructurePaintable` reached its two
+  subclasses and the sibling `FixedSlabPaintable`, which also dropped its unused
+  `preferences`. That left `LevelObjectBuilder`'s audio unread, so its
+  constructor lost it too, at its four game callers and the probes.
+- `level.h` had seventeen stale includes, not ten. Probes that reached
+  `labrador::Mouse`, `Monitor` or `Silhouette` through it now include them.
+- `game_commands.cpp` also lost `content_root.h`, `text_encoding.h`,
+  `directory_consts.h`, `replay.h` and `tune_document.h`, and
+  `debug_director_hooks.cpp` lost `application.h`. `main_menu.cpp` lost
+  `drawable_text.h`; `pause_menu.h` and `end_menu.h` lost `state_context.h` and
+  `colour.h`; `save.h` lost `<iostream>`, `<chrono>`, `<array>`, `vector2i.h`
+  and `directory_consts.h`, which `save.cpp` now includes itself. The CMake
+  comment on `source_paths.h` names its real users.
+- The validate-only calls are written `std::ignore = ...`, the game's usual
+  form: the palette check in `save.cpp`, the `(void)` siblings in
+  `match_bot.cpp` and `locale.cpp`, and the three in `level_object_builder.cpp`
+  (slab geometry, collision type, record gate). The `(void)` in
+  `display_awake.h` and `rumble_gamepads.cpp` discard a best-effort platform
+  call's result rather than validate, and the probes under `scripts/acceptance/`
+  are not the game, so both are left.
+
+Left: `Player`'s constructor still takes the `primary` and `secondary` weapon
+types and reads neither. Removing them touches about thirty probe constructions
+and was not in the row.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and in Debug (79, the slow four
+included; `skirmish_bot` and `balance_runner` passed on a rerun after their
+missing `mouse.h`). The opt-in cases, `check-painter.ps1 -CompileOnly` and
+`check-paint-fx.ps1 -CompileOnly` compiled in both presets, and
+`check-frame-pacing.ps1 -CompileOnly` in Debug. `check-startup.ps1`,
+`check-movement-feedback.ps1` and `check-display-awake.ps1` passed in both.
+
+The row as filed:
 
 Remove these, updating builders and probe fixtures:
 
@@ -326,6 +955,63 @@ Write the validate-only calls one way (`save.cpp:577`), and merge
 
 ### Menu-page helpers (`HYG#74`)
 
+**Done 2026-11-06; nothing drawn or played differently.**
+
+- `menu_geometry::fit_scale` (one axis or both; a size or limit that is not
+  positive does not constrain) fits the two `OptionRow` labels and values,
+  Credits, `SettingsPanelPage::fit_text`, the Controls and Sticks action rows,
+  Sticks' association line, the Options status, Stage Select's name, record,
+  hint and scan status, and the refusals page's progress line. Controls'
+  help reuses `fit_text`.
+- `finite_rectangle` and `overlaps` moved from `presentation_read` to
+  `menu_geometry`, which `presentation_read` re-exports, and `fits` (finite,
+  non-empty and inside) replaced the Join, Team, Weapon and Stage Select paper
+  checks; Stage Select's briefing/preview test is `overlaps`.
+- `released_action` in `menu_input.cpp` arms and releases both the pad and
+  the keyboard actions.
+- `menu_cycle.h` has `wrap_step` and `step_tool`: Options' resolution and team
+  palette, Mode's duration and series stage, Stage Select, Weapon Select (with
+  Random), the practice Tool row (`practice_tool_after`, kept for its probe),
+  the refusals file list and a profile name's letters.
+- `MenuPage::pop_page` replaces `SettingsPanelPage::close`,
+  `UserStageRefusalsMenu::close` and `MainMenuExitConfirmation::cancel`, and
+  `PauseMenuPage::debug_dismiss` replaces the two pause pages' copies.
+- Controls and Sticks fit their status through `fit_text` and
+  `status_limit`, like Keyboard Jump, Pad Buttons and Profiles. The added
+  height limit cannot bind, since the validator keeps a status line inside
+  the paper.
+- The End menu's re-pick is one call; Results has one `fill_width`, both bars
+  updated in `update_fill_box`, `continue_pressed` returns a `bool`, and
+  `level_end_info()` returns a reference. The title page reads its inputs
+  once. The read-only roster copies in `game_states.cpp` (two),
+  `player_commands.cpp`, `replay_commands.cpp`, the replay writer, the
+  director's seat labels and the status page's two (match lines and paint
+  line) are references.
+
+Left as found: the presentation validators' own fit formulas and
+`!finite_rectangle(b) || !inside.contains(b)` pairs, where a non-positive
+limit gives a non-positive scale that their later checks refuse;
+`fit_scale` would give 1 there. `MainMenuOptions::close`, which resets the
+focus motion and may return Home instead of popping; and the replay reader's
+`claimed` roster, a copy taken before the loop changes the teams.
+Where `fit_text` or a fit had no limit check, a non-positive limit now leaves
+the text at full size instead of a zero or negative scale; the validators
+refuse such content first.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and in Debug (79, the slow four
+included); it covers `menu_navigation`, `menu_text`, `menu_presentation`,
+`practice_workshop`, `user_stages` and `debug_console`. `check-painter.ps1`'s
+`MenuTextOnly`, `PauseMenuOnly`, `ResultsMenuOnly`, `EndMenuOnly`,
+`MainMenuOnly`, `JoinPaperOnly`, `TeamPaperOnly`, `WeaponPaperOnly`, `StagePaperOnly`,
+`ControlsMenuOnly`, `StickSettingsOnly`, `KeyboardJumpOnly`, `StageScanOnly`,
+`ResolutionTextOnly`, `DurationTextOnly` and `PercentageTextOnly` passed in
+both presets; in Release `MenuTextOnly` and `ControlsMenuOnly` first failed
+with capture and save writes refused under a long evidence path, and passed
+rerun with a short `-OutputDirectory`.
+
+The row as filed:
+
 Add `menu_geometry::fit_scale` and `fits`, `wrap_step` and `step_tool`,
 `MenuPage::pop_page` and one action-arming helper. Then convert:
 
@@ -340,9 +1026,55 @@ Add `menu_geometry::fit_scale` and `fits`, `wrap_step` and `step_tool`,
 - `end_menu.cpp:169`, the two results fills (`results_menu.cpp:410`) and its
   unread index (`:454`);
 - the `LevelEndInfo` copy (`results_menu.h:23`), `main_menu.cpp:204` and the
-  copied roster vectors (`game_states.cpp:204`).
+  copied roster vectors (`game_states.cpp:204`);
+- handed on by `HYG#70`: Stage Select's spelled-out briefing/preview overlap
+  (`main_menu_stage_select.cpp:525`), which the presentation validators now
+  test with `presentation_read::overlaps`.
 
 ### Shared drawing helpers (`HYG#75`)
+
+**Done 2026-11-06; nothing drawn differently.**
+
+- `CrudeDrawing::paper_card` (a static template over any fill, and a
+  protected overload through `fill`) draws the countdown, reveal, HUD paper
+  and closing-clock cards and, found while converting, a fifth copy: the
+  menu paper in `menu_panel.cpp`. `keyed_block` replaces both `draw_block`
+  bodies; `WeaponFeedback` and `BlockedShotFeedback` now derive from
+  `CrudeDrawing` and keep `draw_block` as one-line wrappers, so their call
+  sites did not move.
+- `AirbrushShadow::tiles`, `lay` and `first_tile` serve `AirbrushShadow`,
+  `FixedSlabShadow` and `TranslatedAirbrushShadow`'s pitch; `PaintTile::wet_band`
+  serves the plain and rigid wet bands.
+- `game/objects/primitive_frame.h` names the built-in `sprite_sheet_1`/`pixel`
+  texel for the badge, teammate marker, gate and ferry cues, viewport
+  dividers, the debug console, debug menu and the presentation validator.
+  `level_loaded_info.cpp:368` still names `sprite_sheet_1` for a stage icon,
+  a different frame, and is left as found.
+- `TerrainMaterial::swatch` replaces `FixedSlabPaintable`'s second resolve;
+  `StructurePaintable::team_colours()` replaces the copies in the ferry and,
+  also found, the team gate. `RevealArt` uses `render_resources()`.
+- `ruler_minor_period`/`ruler_major_period` name the ruler's 16 and 80;
+  `cell_key` draws from `BotRandom` (the same splitmix64) instead of a second
+  copy; `CursorMarkerPresentation::reference_lines` names the `1080`;
+  `cosmetic_seed.h` holds the seed mix `QuietCharacter` and `IdleDrip` share.
+  The pencil-cap comment describes `at_start`.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and Debug (79); it covers
+`weapon_feedback`, `blocked_shot`, `terrain`, `menu_presentation`, `menu_text`
+and `debug_console`. 32 `check-painter.ps1` leaves passed in both presets:
+`Countdown`, `RevealTuneColours`, `Monitor`, `Hud`, `HudPaperTuneColours`,
+`HudClosingMaterials`, `HudClosingShade`, `Closing`, `HudTimerTuneColour`,
+`MainMenu`, `SetupPaper`, `JoinPaper`, `TeamPaper`, `WeaponPaper`,
+`StagePaper`, `PauseMenu`, `MenuMotion`, `FeedbackTuneColours`,
+`BlockedShotTuneColours`, `SurfaceFinish`, `TurbulenceSlab` and
+`TurbulenceMover` (with the tracked trial files as `-TrialPath`),
+`MiniatureTerrain`, `CqBlockout`, `Crossfeed`, `PressTower`,
+`GatePermission`, `FerryDirection`, `Identity`, `Quiet`,
+`IdleDripTuneColours` and `CursorTuneColours` (each `...Only`).
+`check-startup.ps1` passed in both presets.
+
+The row as filed:
 
 Add `CrudeDrawing::paper_card` and `keyed_block`, the `AirbrushShadow` tile
 helpers, named primitive-frame constants (or presentation's sheet and fill), and
@@ -368,6 +1100,62 @@ unchanged on MattPC.
 
 ### Weapon, projectile and opening logic (`HYG#76`)
 
+**Done 2026-11-06.** One behaviour change, for a build fault only:
+`TerrainMaterial::make` now throws for a material the level format's table
+names but no look draws, where it used to draw a paint tin. Names outside the
+table were already refused.
+
+- `Weapon::play_one_shot` is the Bucket and Sniper overrides' one body.
+  `handle_shoot_sound` now takes `(fired_this_update, shooting_this_update)`,
+  the order its caller passes them in.
+- `game/objects/aim_facing.h`'s `aim_faces_left` replaces `Weapon::facing_left`
+  and the idle drip's copy; the roller and the base weapon set their flip from
+  it in one line each. The idle drip's disabled branch calls `clear()`.
+  Found in review, the bot's predicted nozzle (`match_bot_territory.h`'s
+  `top_launch_lands`) and the figure's hands (`figure_attachments.h`) call it
+  too, so neither can disagree with the weapon's flip. The two probes that
+  restate the test as an oracle (`bot_territory.cpp`,
+  `idle_drip/level_checks.h`) are left for the probe rows.
+- `paint_owners::slot_or_fallback` serves `PaintAudio` and, also found,
+  `BlockedShotFeedback`, whose `owner_index` is gone. `Projectile::team()` is
+  now public and replaces the layer-to-team mapping in `StructurePaintable`
+  and, also found, `FixedSlabPaintable`; the layer guard stays.
+- `HorizontalMotionSpec::pose_at` and `axis_part` replace
+  `HorizontalMotion::at_offset`, both local `axis_part`s, the pose in
+  `level_structures.cpp` (which still checks the box) and the replay
+  reader's copy.
+- `opening_times` and `reveal_times` in `match_opening.cpp` give the beat, the
+  sounds, the click age and both lengths one set of edges, each the last plus
+  its span. The sound edges used to add `preview * 2` and `hover * 2`; at the
+  shipped tuning every edge is bit-identical either way. The figures' `alone`
+  test (`reveal_length() - react`) is left as found: for a draw it is not the
+  same edge.
+- `level_format::material_name` names the six materials for the table, the
+  fixed-slab rule, `TerrainMaterial::make`, the drawings' constructors and,
+  also found, the editor's new-object defaults. Refusals spell the tag with
+  `level_format::collision_name`, so a fixed slab now says
+  `STRUCTURE_FIXED_SLAB` instead of "this collision type".
+
+Left as found: the probes that restate the reveal timeline by hand
+(`story_checks.h`, `reveal_checks.h`, `monitor_checks.h`,
+`result_percentage_checks.h`, `level_checks.cpp`), for the probe rows; and
+`level_document.cpp`'s File > New template, which still spelt `"ground"`;
+[`HYG#78`](#editor-shell-and-document-hyg78) replaced it with `template.json`.
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Release (78 cases) and Debug (79); it covers
+`weapon_feedback`, `blocked_shot`, `idle_drip`, `story_audio`, `terrain`,
+`moving_structure` and `instant_replay`. `check-level-editor.ps1` and 11
+`check-painter.ps1` leaves passed in both presets: `Monitor`, `Countdown`,
+`Closing`, `RevealTuneColours`, `SurfaceFinish`, `MiniatureTerrain`,
+`IdleDripTuneColours`, `FerryDirection`, `WeaponCatalog`, `Crossfeed` and
+`BlockedShotTuneColours` (each `...Only`). The review follow-up rebuilt both
+presets and passed `bot_territory`, `bot_ballistics`, `skirmish_bot`,
+`idle_drip`, `weapon_feedback`, `figure_slips` and the painter's
+`WeaponCatalogOnly` in each.
+
+The row as filed:
+
 - Add `Weapon::play_one_shot` for the identical Bucket and Sniper overrides
   (`weapon_bucket.cpp:27`, `weapon_sniper.cpp:28`), and fix the inverted
   parameter name (`weapon.cpp:357`).
@@ -383,6 +1171,64 @@ unchanged on MattPC.
   is a behaviour change for malformed content only; say so in the commit.
 
 ### Bot geometry, replay and Debug bots (`HYG#77`)
+
+**Done 2026-11-06; behaviour change.** Two changes, both small:
+`SECONDS_PER_STEP` is now the step the game actually takes, so the shipping
+bots' jump model steps at 0.0166666 s instead of 0.016666668 s; and a Debug
+replay whose seat names a team other than `a`, `b` or `none` is refused instead
+of read as `none`.
+
+- [simulation.h](../game/contracts/simulation.h) derives `SECONDS_PER_STEP` the
+  way the engine's `StepTimer` does (10,000,000 ticks a second, 1/60 truncated
+  to 166666 ticks), and `main.cpp` `static_assert`s that it equals
+  `StepTimer`'s step. The three spellings are now one: `match_bot_ballistics`'s
+  two `StepTimer` expressions (already this value) and the Debug `wait`'s
+  `1.0f / 60.0f` fallback read it. `MatchBotLocomotion::jump`, the
+  anti-tunnelling check's default, the motion contract's two-step period floor,
+  `HorizontalMotion::validate_dt` and `LevelStructures`' budget move from 1/60
+  to it; the shipped content passes each at either value.
+- `MatchBot::crosses_interior` is the navigation and ramp code's one sweep, and
+  `MatchBotLocomotion::held_jump_steps` the one hold count that `decide` and
+  `steer_ascent`'s takeoff set and `jump()` models. The death branch calls `replan_traversal`, then clears
+  what a replan keeps. Bounds compare with `RectangleF::operator==` in the ramp
+  code and, also found, in `clear_route` and `same_support`. `height_across`
+  is gone.
+- [replay.cpp](../game/debug/replay/replay.cpp) writes and reads a seat's team
+  through one `team_words` table and refuses an unknown word, naming the seat.
+  The finished player fills seats with `Bot::neutral()`. `match_plan.cpp`'s two
+  comments now say what the code does. `fnv1a` and `hex64` moved to
+  [game/debug/replay/hash.h](../game/debug/replay/hash.h), and `replay.cpp`'s
+  identical `motion_hex64` is gone.
+- `Bot::observes_tool` (true for `SkirmishBot`) replaces `BotDriver`'s name
+  comparison. `BotSeatView::step` is gone, with `view_of`'s `step` parameter and
+  `BotDriver::step_`. The Debug bots' numbers are named in `bot.cpp`; values and
+  RNG order are unchanged.
+
+Probes: `debug_console`'s codec check refuses a team `c`, `skirmish_bot` checks
+that only the skirmish bot observes the tool, and the probes that set
+`view.step` no longer do. The probes that step a match at `1.0f / 60.0f`, the
+other value, stay pinned to it: `debug_console` (most of its checks),
+`display_awake_lifecycle`, `instant_replay`, `keyboard_jump_capture`,
+`quiet_character`, `resume_countdown`, `story_audio`, `terrain` and
+`painter_visual`'s result-percentage fixture. None of them runs a mover, the
+only code that refuses a longer step (`validate_dt`). About forty more spell
+the shipping step through `StepTimer`; moving them to `SECONDS_PER_STEP` is
+probe tidying for [`HYG#87`](#probe-tidy-ups-hyg87). Left as found:
+`level_loaded_info.cpp`'s `StageSemanticHash`, shipping code with its own FNV
+framing, and the probes' private FNV loops (`practice_replay_checks.h`,
+`turbulence_slab_routes`).
+
+Both presets build under `/W4 /WX`. The full default acceptance list
+(`-Parallel 4`) passed in Debug (79 cases) and Release (78). After a last,
+value-identical edit, the eight bot cases, `skirmish_bot`, `crossfeed`,
+`press_tower`, `cq_blockout`, `paint_ferry` and `debug_console` passed again in
+Release. The twelve `Quick` opt-in cases (the bot route and trial probes and
+`turbulence_movers` among them) passed in both presets, and every opt-in case
+compiled in both (`-OptIn -CompileOnly`). `check-painter.ps1 -CompileOnly` and
+the `PracticeReplayOnly`, `BotPlayersOnly` and `CrossfeedOnly` leaves passed in
+both presets, and `check-startup.ps1` passed on both executables.
+
+The row as filed:
 
 Bot geometry:
 
@@ -406,6 +1252,70 @@ Replay and the Debug bots:
 
 ### Editor shell and document (`HYG#78`)
 
+**Done 2026-11-06; behaviour change.** File > New opens a different level, a
+combo selection no longer applies pending property text, a spawn or station
+box follows source tuning's player size, and a failed registration says
+"Registration failed:" once.
+
+- [editor/CMakeLists.txt](../editor/CMakeLists.txt) compiles
+  [template.json](../editor/template.json) into a generated
+  `new_level_template.h` (editing it reconfigures; the build refuses a template
+  the raw string cannot hold), and `LevelDocument::create` parses it, dropping
+  only its `_comment`. New therefore has the template's two walls, ceiling,
+  `centre` station, spawns at y 1075 and `"include_in_random": false`, where
+  the inline string had a floor alone, spawns at y 1000 and no Random setting.
+  `level_editor`'s resource check now requires New to equal the template.
+- [editor_window.cpp](../editor/editor_window.cpp) has one `{label, type}`
+  palette table and one `{label, size}` snap table; the snap list selects the
+  entry equal to `snap_`. `WM_COMMAND` reaches `command()` only for a menu or
+  accelerator (no control) or `BN_CLICKED`; before, `HIWORD` 1 also matched
+  `CBN_SELCHANGE`, so choosing a palette entry applied pending text. The DPI
+  probe's empty-key check sends a palette `CBN_SELCHANGE` with text pending
+  and requires it still pending.
+- `labelled` is the three add/duplicate/paste loops' and the mirror's one way
+  to return the added entry with its label; `same_entry` moved beside `Entry`.
+  `LevelDocument::Impl::player_size` (tuning's size, or 52 by 120 without
+  tuning) replaces the mirror's and the symmetry report's two copies of that
+  fallback, and still throws on unreadable tuning there. A spawn or station
+  rectangle reads `marker_size`, which never throws: it gives 52 by 120 when
+  tuning is unreadable and parses tuning again only when the file's write time
+  changes, so the editor's refresh and paint neither fail on a bad tuning file
+  nor reread it per entry. `level_editor`'s station checks load New with a
+  70 by 140 player and with an unparseable tuning file and require those
+  sizes and the fallback. `bounds_labels` is held to `bounds_keys`' length.
+- `apply_stage_registration`'s two rollback errors start with the cause;
+  `ColourWarsRegisterStage` adds the prefix. `level_editor`'s registration
+  checks refuse a message that repeats it.
+- The shell sources build once, as `colourwars_editor_shell`, which the editor
+  and `colourwars_editor_dpi_acceptance` link.
+
+Probes that took New's old layout as a blank: the Random-setting check writes
+New without `include_in_random`, the station palette check deletes `centre`
+first, the mover float-binade check finds its object by position instead of
+index 1, the slab seam check erases the walls and ceiling (a new
+`erase_template_walls` fixture), and the DPI metadata fixture names
+`left_wall`, New's first object, instead of `floor`.
+
+Handed on: `level_document.cpp`'s `AddMember` key literals for new palette
+objects and the canvas's `paintable_faces/...` and station `name` property
+paths, which the `HYG#67` note handed here with File > New. They are not in
+this row's sites, so they go to
+[`HYG#79`](#use-the-engines-text-path-and-environment-helpers-hyg79), the next
+row in the editor's sources. The inline template's literals, and the `"ground"`
+the `HYG#76` note handed here, went with it.
+
+Both presets build under `/W4 /WX`. `check-level-editor.ps1` (document,
+DPI, gesture, pending and hidden GUI checks) and `check-stage-registration.ps1`
+passed in Debug and Release, as did the acceptance cases that compile the
+editor document: `level_format`, `moving_structure`, `fixed_slab` and
+`turbulence_blockout`, and the `Quick` opt-in `turbulence_movers`,
+`turbulence_slopes` and `turbulence_slab_stage`. The review follow-up
+(`marker_size`) rebuilt both presets and passed `check-level-editor.ps1` and
+`level_format`, `moving_structure`, `fixed_slab` and `turbulence_blockout` in
+each.
+
+The row as filed:
+
 - Make File > New read `template.json` (`level_document.cpp:285`).
 - Use one `{label, type}` palette table (`editor_window.cpp:189`) and one snap
   table (`:719`).
@@ -419,7 +1329,58 @@ Replay and the Debug bots:
 
 ### Use the engine's text, path and environment helpers (`HYG#79`)
 
-Replace the local copies with the engine's helpers:
+**Done 2026-11-06; behaviour change, for non-ANSI paths only.** Two editor
+messages, a bad aid-data file and an unreadable motion `tuning.json`, used
+`path.string()`, which throws a conversion error on a name the ANSI code page
+cannot spell; they now name the path in UTF-8. Everything else reads and
+writes as before.
+
+- `labrador::narrow` replaces `debug_tokenizer.cpp`'s `WideCharToMultiByte`
+  copy (both turn a lone surrogate into U+FFFD), `replay_commands.cpp`'s
+  `narrow_build_label`, its copy building the console banner in
+  `debug_director_impl.cpp` (found in review), and a sibling in
+  `text_wrap.cpp`; the last three wrote `?` for a non-ASCII unit, and all
+  read ASCII (the build label, drawable text). `labrador::widen` replaces `ProfilesMenu`'s byte copy; profile names
+  are A-Z, 0-9 and spaces.
+- `labrador::path_to_utf8` replaces the screenshot line's `u8string` copy in
+  `debug_director_hooks.cpp` and its two generic-form siblings, `reload`'s
+  `utf8` (`game_commands.cpp`) and tune's `shown`, which pass
+  `generic_wstring()` so they keep their forward slashes.
+- [editor/path_text.h](../editor/path_text.h) holds `path_text` (UTF-8 for
+  messages) and `utf8_path` (its inverse). It replaces the `shown` copies in
+  `user_stage_save.cpp`, `register_stage_main.cpp`, `stage_registration.cpp`
+  and `prepared_file.cpp`, `LevelDocument::load`'s inline copy,
+  `save_guidance.cpp`'s `stage_name`, the `utf8_path` in
+  `stage_registration.cpp`, the conversions in `content_catalog.cpp` and
+  `save_guidance.cpp`'s `widen`, the two `path.string()` messages and
+  `editor_window.cpp`'s `narrow(folder.wstring())`. The editor has no engine,
+  so it keeps its own header.
+- `DebugArgs::parse_double` replaces tune's copy; it and `parse_float` share
+  one template.
+- [game/config/environment.h](../game/config/environment.h)'s
+  `environment_variable()` replaces the two `_dupenv_s` readers
+  (`COLOURWARS_MUTE`, `COLOURWARS_LOCALE`).
+- `level_document.cpp` spells every level-format key with `level_format::key::*`
+  (114 literals, the new palette objects' `AddMember` keys among them) and its
+  face loops with `paintable_face_names` and `face::bottom`; the canvas's
+  station `name` and `paintable_faces/...` paths use `key::` and `face::`.
+
+Left as they are: the two wide `LOCALAPPDATA` readers
+(`directory_consts.cpp`, `user_stage_save.cpp`), which return paths, not text;
+`user_stage_save.cpp`'s `stem_of`, whose `?` for a non-ASCII unit is how such a
+name fails the name rule; a motion record's `"type"`, and the coordinate and
+small fields `level_format.h` says are written where they are read; and
+`stage_registration.cpp`'s `"name"` and `"display_name"` literals, which are
+outside the document and canvas. Tune's unchecked `parse_double` call stays
+with [`HYG#80`](#debug-console-commands-hyg80).
+
+Both presets build under `/W4 /WX`. `debug_console`, `locales`, `text_wrap`,
+`menu_text`, `player_profiles`, `menu_navigation`, `settings`, `level_format`,
+`moving_structure`, `fixed_slab` and `turbulence_blockout` passed in Debug and
+Release, as did `check-level-editor.ps1`, `check-stage-registration.ps1` and
+`check-startup.ps1` (plain and `-Locale qps-ploc`).
+
+The row as filed:
 
 - `labrador::narrow` for the local `narrow` (`debug_tokenizer.cpp:25`) and
   `narrow_build_label` (`replay_commands.cpp:37`);
@@ -432,7 +1393,64 @@ Replace the local copies with the engine's helpers:
 - an `environment_variable()` helper for the two `_dupenv_s` readers
   (`sound_groups.cpp:149`).
 
+Handed here by [`HYG#78`](#editor-shell-and-document-hyg78) (first from
+`HYG#67`), as the next row in the editor's sources: spell `level_document.cpp`'s
+`AddMember` key literals for new palette objects with `level_format`'s `key::*`
+names, and the canvas's `paintable_faces/...` and station `name` property paths
+likewise.
+
 ### Debug console commands (`HYG#80`)
+
+**Done 2026-11-06; behaviour change, Debug only.** Four console messages say
+something different, and `reload` validates the bytes it applies.
+
+- `screenshot` names its file when it runs, so `screenshot <file> queued` is
+  the file the capture writes; before, a default name carried the capture's
+  time and the message the request's. The pending screenshot holds that name.
+- `help` ends with the binds in force (a registry hook the bind commands set)
+  instead of a fixed F-key list, and the startup banner says its F-keys are
+  the defaults.
+- A stray `binds.cfg` line warns "only bind, unbind and binds.reset lines are
+  read". `moved` is `rename_error`, and a `binds.cfg` that cannot be set aside
+  says so (the next bind replaces it) instead of nothing.
+- `reload` reads each file once (`debug_files::read_file(path, ok)`, which also
+  replaces tune's `read_bytes`), parses that text for the readers and the
+  stage-name check, and keeps it as live tuning's baseline. A file it cannot
+  read now fails with "cannot read '<path>'".
+- `tune` fails on a current token `parse_double` refuses instead of stepping
+  from 0. The tune file indices are `DebugDirectorImpl::tuning_file`,
+  `presentation_file` and `tune_file_count`, which also size `tune_docs_` and
+  `tune_targets_`.
+- The `status_strip`, `tune_scope_note` and `user_directory` comments match
+  the code.
+
+Shared: `DebugRegistry::add(entry, menu)` and `add_command(...)` with
+`DebugMenuTraits::of(...)` replace the five `add` lambdas, the four `traits`
+helpers, `place` and the `set_menu`/`add` pairs (the built-ins too); one
+`accepts` arity check serves `check` and `execute`; `screenshot_waits` is
+`can_apply`; `MatchRequest::without_restart` serves the menu model's two
+checks, the menu build's adopt and `drop_request`; `join_words` builds the bot
+behaviour and overlay word lists and messages; one lambda runs `respawn` and
+`kill`; `severity_prefix` serves the log, the transcript, the console and the
+debug menu page (a sibling); `debug_keys::display_name` replaces both
+`upper` copies; `NumberVariable::format` replaces `format_number`; the console
+view keeps an `OverlayHandles`; `perf.capture` prints
+`DebugPerf::max_capture_frames`. `DebugStatus` and `DebugEntry` are defined in
+a new `debug_entry.cpp` beside their header.
+
+Left: the `stage` command's own "one of:" loop, whose wording an empty list
+would change.
+
+Both presets build under `/W4 /WX`. `debug_console` passed in Debug and
+Release, with new checks: the screenshot name in its queued message, `help`
+naming rebound and unbound keys, and the stray-line warning. `check-startup.ps1`
+passed in both presets, `check-painter.ps1 -CompileOnly` in both and
+`check-frame-pacing.ps1 -CompileOnly` in Debug. A hand launch of the Debug game
+on an isolated profile ran `reload` in the menus and, under `qps-ploc`, in a
+match (validated, applied), `help` and a default `screenshot` whose queued
+name was the file written.
+
+The row as filed.
 
 Fix the messages and help text:
 
@@ -529,6 +1547,12 @@ fixtures and read/write helpers (`combat_feedback.cpp:342`, `view_shake.cpp:553`
 `series_stage_rule.cpp:361`, `story_audio.cpp:59`, `locales.cpp:59`,
 `practice_workshop.cpp:337`, `menu_presentation.cpp:233`).
 
+From `HYG#63`: `acceptance::ReplacementLock` and `temporary_beside` already
+exist in `support/replacement_lock.h`; fold them into `isolated_save.h`. Port
+`settings.cpp`'s hand-made `locked` handle to it, and drop the
+`save_data.json.tmp` removals in the `settings`, `match_records` and
+`player_profiles` destructors, which no writer creates any more.
+
 ### Level-driving and route fixtures (`HYG#85`)
 
 After `HYG#83`. Move `one_bot_roster`, `owned_top_paint`,
@@ -595,7 +1619,14 @@ pins.
   `story_audio` include convention, internal linkage for file-local helpers, the
   BOM in `team_palette.cpp` and the fixture folders `fatal_report` leaves.
 - Fix the fused words (`exceeded500`), the `#`-less row ids (`ROAD34`, `POL36`,
-  `CI1`) and the stale "draft" headers.
+  `CI1`) and the stale "draft" headers. `HYG#61` already wrote `POL#36` in
+  `moving_structure/replay_checks.cpp`.
+- Reword the PASS summaries that still say attended or human acceptance
+  "remains open" (from `HYG#61`): `cq_blockout.cpp`, `crossfeed.cpp`,
+  `crossfeed/pressure_checks.cpp`, `press_tower.cpp`, `fixed_slab.cpp`,
+  `turbulence_blockout.cpp`, `turbulence_slopes.cpp`,
+  `balance_runner/self_checks.cpp` and the painter's `cq_blockout_checks.h`
+  and `crossfeed_checks.h`.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 

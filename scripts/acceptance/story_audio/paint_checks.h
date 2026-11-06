@@ -163,7 +163,7 @@
 		const PaintableFaces& faces = { false, true, false, false })
 	{
 		return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4", rectangle,
-			std::make_unique<labrador::RectangleF>(rectangle), &world.render, &world.audio,
+			std::make_unique<labrador::RectangleF>(rectangle), &world.render,
 			&world.preferences, &world.tuning.paint(), CollisionObjectType::structure_paintable, TeamColour{}, faces);
 	}
 

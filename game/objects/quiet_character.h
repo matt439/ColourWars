@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/config/presentation/presentation_match.h"
+#include "game/objects/cosmetic_seed.h"
 #include "engine/math/scalar.h"
 
 #include <algorithm>
@@ -21,7 +22,7 @@ public:
     };
 
     QuietCharacter(const FigurePresentation* figure, int identity) :
-        figure_(figure), random_(0x9e3779b9u ^ (static_cast<uint32_t>(identity) + 1u) * 0x85ebca6bu)
+        figure_(figure), random_(cosmetic_seed(static_cast<uint32_t>(identity)))
     {
         phase_ = this->next_fraction();
         shift_phase_ = this->next_fraction();

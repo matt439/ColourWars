@@ -3,7 +3,10 @@
 #include "game/save/match_records.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/results_menu.h"
+#include "game/directory_consts.h"
+#include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 
 #include <algorithm>
 #include <cmath>
@@ -217,7 +220,8 @@ namespace
 
 	void check_results_line()
 	{
-		MenuRecordText text{ L"NEW BEST", L"STAGE BEST", L"BEST WIN", L"BEST COVER", L"PLAYED" };
+		MenuRecordText text{ L"NEW BEST {percentage}", L"STAGE BEST {percentage}",
+			L"BEST WIN {percentage} / {played}", L"BEST COVER {percentage} / {played}", L"{count} PLAYED" };
 		require(ResultsMenuInitial::record_text(RecordOutcome(), text).empty(),
 			"An unrecorded result showed a record line");
 		RecordOutcome outcome;
@@ -459,10 +463,142 @@ namespace
 		require(read_bytes(directory.side_copy(1)) == corrupt[0] && read_bytes(directory.side_copy(2)) == corrupt[1] &&
 			!std::filesystem::exists(directory.side_copy(3)), "Writing the save disturbed its side copies");
 	}
+
+	// Another process holding the save open for delete, sharing everything, is
+	// enough to make the CRT's open fail: it does not share delete. A file copy
+	// does, so this is a save that is present, will not open, and can still be
+	// kept aside.
+	class OpenForDelete
+	{
+	public:
+		explicit OpenForDelete(const std::filesystem::path& path) : file_(CreateFileW(path.c_str(), DELETE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, nullptr))
+		{
+			require(this->file_ != INVALID_HANDLE_VALUE, "Could not hold the save open for delete");
+		}
+		~OpenForDelete() { CloseHandle(this->file_); }
+		OpenForDelete(const OpenForDelete&) = delete;
+		OpenForDelete& operator=(const OpenForDelete&) = delete;
+	private:
+		HANDLE file_;
+	};
+
+	// A save that is there but will not open is not a missing save: loading
+	// keeps the defaults, copies it aside and leaves it as it was, where it
+	// used to write the defaults over it.
+	void check_unopenable_save(const IsolatedSaveDirectory& directory)
+	{
+		std::error_code ignored;
+		for (int copy = 1; copy <= 3; ++copy) { std::filesystem::remove(directory.side_copy(copy), ignored); }
+		const std::string bytes = "{" + flat_preferences + "}";
+		directory.write(bytes);
+		Save save;
+		std::string errors;
+		{
+			const OpenForDelete held(directory.save_path());
+			FILE* probe = nullptr;
+			const bool opened = _wfopen_s(&probe, directory.save_path().c_str(), L"rb") == 0 && probe != nullptr;
+			if (probe != nullptr) { std::fclose(probe); }
+			require(!opened, "The held save still opened, so this fixture tests nothing");
+			errors = captured_stderr(directory, [&] { save.load_save_file(); });
+		}
+		require(save.saved_play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity &&
+			save.resolution() == SaveData{}.resolution, "An unopenable save did not leave the defaults");
+		require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+			errors.find("save_data.json") != std::string::npos &&
+			errors.find("save_data.unreadable-1.json") != std::string::npos,
+			"An unopenable save did not print one stderr line naming both paths");
+		require(std::filesystem::exists(directory.side_copy(1)) && read_bytes(directory.side_copy(1)) == bytes,
+			"An unopenable save was not copied aside byte for byte");
+		require(directory.contents() == bytes, "Loading an unopenable save wrote over it");
+		require(!acceptance::temporary_beside(directory.save_path()),
+			"Loading an unopenable save left a temporary file");
+	}
+
+	constexpr char legacy_child_argument[] = "--legacy-save-child";
+	const std::string corrupt_legacy = "{\"save_version\":1,\"resolution\":";
+
+	// Runs in a copy of this probe, whose executable-relative legacy save is
+	// its own, against its own empty per-user save. A legacy save that will
+	// not load, whether corrupt or held open, is reported on stderr and left
+	// in place; the defaults are kept and written to the per-user path.
+	int check_legacy_save_child()
+	{
+		const IsolatedSaveDirectory directory;
+		const std::filesystem::path legacy = labrador::path_from_utf8(directory_consts::legacy_save_file_path());
+		require(read_bytes(legacy) == corrupt_legacy, "The legacy fixture is not the parent's");
+		// The stderr capture goes beside the per-user save, which is not there yet.
+		std::filesystem::create_directories(directory.save_path().parent_path());
+		for (const bool held : { false, true })
+		{
+			std::error_code ignored;
+			std::filesystem::remove(directory.save_path(), ignored);
+			Save save;
+			std::string errors;
+			{
+				std::unique_ptr<OpenForDelete> hold;
+				if (held) { hold = std::make_unique<OpenForDelete>(legacy); }
+				errors = captured_stderr(directory, [&] { save.load_save_file(); });
+			}
+			const char* which = held ? "A held-open legacy save" : "A corrupt legacy save";
+			require(save.saved_play_settings().aim_sensitivity == PlaySettings{}.aim_sensitivity,
+				std::string(which) + " did not leave the defaults");
+			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+				errors.find("legacy save " + labrador::path_to_utf8(legacy) + " could not be read (") != std::string::npos &&
+				errors.find("it was left in place") != std::string::npos,
+				std::string(which) + " was not reported in one stderr line naming it");
+			require(read_bytes(legacy) == corrupt_legacy, std::string(which) + " was changed");
+			require(directory.contents().find("\"save_version\":" + std::to_string(Save::version)) != std::string::npos,
+				std::string(which) + " did not leave the defaults written to the per-user save");
+		}
+		return 0;
+	}
+
+	// The legacy save sits beside the executable, which every acceptance
+	// probe shares, so the check runs in a private copy of this probe.
+	void check_legacy_save()
+	{
+		wchar_t own[32768] = {};
+		const DWORD length = GetModuleFileNameW(nullptr, own, static_cast<DWORD>(std::size(own)));
+		require(length > 0 && length < std::size(own), "Could not find this probe's executable");
+		const std::filesystem::path scratch = std::filesystem::temp_directory_path() /
+			(L"cwr-legacy-" + std::to_wstring(GetCurrentProcessId()));
+		std::error_code ignored;
+		std::filesystem::remove_all(scratch, ignored);
+		std::filesystem::create_directories(scratch / L"save");
+		const std::filesystem::path child = scratch / L"match_records.exe";
+		std::filesystem::copy_file(own, child);
+		{
+			std::ofstream output(scratch / L"save" / L"save_data.json", std::ios::binary);
+			output << corrupt_legacy;
+			require(output.good(), "Could not write the legacy save fixture");
+		}
+
+		std::wstring command = L"\"" + child.wstring() + L"\" --legacy-save-child";
+		STARTUPINFOW startup{};
+		startup.cb = sizeof(startup);
+		PROCESS_INFORMATION process{};
+		require(CreateProcessW(child.c_str(), command.data(), nullptr, nullptr, TRUE, 0, nullptr,
+			scratch.c_str(), &startup, &process) != 0, "Could not start the legacy-save child");
+		WaitForSingleObject(process.hProcess, INFINITE);
+		DWORD exit_code = 1;
+		GetExitCodeProcess(process.hProcess, &exit_code);
+		CloseHandle(process.hThread);
+		CloseHandle(process.hProcess);
+		const bool kept = read_bytes(scratch / L"save" / L"save_data.json") == corrupt_legacy;
+		std::filesystem::remove_all(scratch, ignored);
+		require(exit_code == 0, "The legacy-save child failed; its FAIL line is above");
+		require(kept, "Loading changed the legacy save");
+	}
 }
 
-int main()
+int main(int argc, char** argv)
 {
+	if (argc == 2 && std::string(argv[1]) == legacy_child_argument)
+	{
+		return acceptance::run_probe("match records legacy save", [] { return check_legacy_save_child(); });
+	}
 	return acceptance::run_probe("match records", [&]
 	{
 		const IsolatedSaveDirectory directory;
@@ -474,9 +610,12 @@ int main()
 		check_round_trip(directory);
 		check_section_reset_report(directory);
 		check_unreadable_save(directory);
+		check_unopenable_save(directory);
+		check_legacy_save();
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
 			"results line, version 0/1/newer saves, per-section and per-entry recovery, "
-			"bounded values, retired-stage retention, exact round trip and unreadable saves kept aside\n";
+			"bounded values, retired-stage retention, exact round trip, unreadable and "
+			"unopenable saves kept aside, and unloadable legacy saves reported and left\n";
 		return 0;
 	});
 }

@@ -26,6 +26,9 @@ namespace level_editor_acceptance
     std::string encode(const rapidjson::Document& document);
     bool equal(const Rect& actual, const Rect& expected);
     Entry entry(const LevelDocument& document, EntryKind kind, std::size_t index = 0);
+    // File > New is editor/template.json, which walls in its arena. A fixture
+    // that works near the world's edges erases the two walls and the ceiling.
+    void erase_template_walls(LevelDocument& document);
 
     template<typename Action>
     void reject_without_change(LevelDocument& document, Action action, const char* message)

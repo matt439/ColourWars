@@ -46,7 +46,7 @@ int main(int argc, char** argv)
             "buttons, optional extra Pause), reserved keys, defaults equal to the old literals, per-profile conflicts, "
             "effective mapping with fixed Escape/Down/F1/intro/menu aliases, actual reader remap/held adoption/focus, "
             "save schema/round trip, missing/damaged/conflicting keyboard-object recovery and pad independence\n";
-        std::cout << "PASS input bindings: independent 27-key names/labels/domain, A/D/S conflicts and W/R aliases, "
+        std::cout << "PASS input bindings: independent 27-key names/legends/domain, A/D/S conflicts and W/R aliases, "
             "isolated effective Jump with fixed menu/intro/pad controls; real readers, repeated snapshots/focus/remapping, "
             "held-J ResumeCountdown release gating, version-0/1/2 migration/version-3/future known sections, malformed-section isolation, "
             "validation before mutation, real staged-write/replacement failures with active-before-write preference and retry, "

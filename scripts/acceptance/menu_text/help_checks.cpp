@@ -492,7 +492,7 @@ namespace menu_text_acceptance
         require(caption_size.x > controls.stick_preview.aim.width && caption_size.x <= controls.controls_size.x,
             "Aim caption fixture does not distinguish the full help column from the square aim preview");
         const auto caption_position = controls.stick_preview.aim.position() - labrador::Vector2F(0.0f,
-            world.render.measure_text(font, L"Move").y + controls.art.focus_padding.y);
+            caption_size.y + controls.art.focus_padding.y);
         UiText caption("caption", fits_caption.menu_text().help.aim_cutoff, controls.help_font,
             caption_position, &world.render, controls.art.ink);
         require(caption.text() == fits_caption.menu_text().help.aim_cutoff &&
@@ -528,11 +528,13 @@ namespace menu_text_acceptance
             // out of this unrelated child status so the caption owns the case.
             d["menu_text"]["keyboard_jump"]["capture_cancelled"].SetString("Cancelled.");
         };
-        const auto touches_right_and_aim = variants.load(exact_caption);
-        touches_right_and_aim.validate_resources(world.render, world.audio);
+        const auto touches_right = variants.load(exact_caption);
+        touches_right.validate_resources(world.render, world.audio);
         require(world.render.measure_text(world.render.resolve_sprite_font("menu_help_caption_exact"), L"F") ==
             labrador::Vector2F(620.0f, 28.0f), "Caption boundary glyph has unexpected metrics");
-        for (const char* overflow : { "Fi", "G" })
+        // Only width can overflow: the caption sits its own measured height plus
+        // the focus padding above the aim box, so the 29-high G cannot reach it.
+        for (const char* overflow : { "Fi" })
         {
             variants.rejects("help.aim_cutoff", [&](rapidjson::Document& d)
             {
@@ -543,16 +545,16 @@ namespace menu_text_acceptance
         const auto touches_track = [&](rapidjson::Document& d)
         {
             exact_caption(d);
-            // Move is20 high plus8 focus padding. The28-high F starts at
-            // 447-28=419, exactly the response track's395+24 bottom.
-            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(447.0f);
+            // The caption is its own 28-high F plus 8 focus padding above the aim
+            // box, so it starts at 455-36=419, exactly the response track's 395+24 bottom.
+            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(455.0f);
         };
         const auto fits_track = variants.load(touches_track);
         fits_track.validate_resources(world.render, world.audio);
         variants.rejects("help.aim_cutoff", [&](rapidjson::Document& d)
         {
             touches_track(d);
-            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(446.75f);
+            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(454.75f);
         }, &world);
     }
 }

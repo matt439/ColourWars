@@ -38,13 +38,8 @@ namespace
 		{
 			return device_label(player.num);
 		}
-		switch (player.difficulty)
-		{
-		case BotDifficulty::easy: return "bot easy";
-		case BotDifficulty::normal: return "bot normal";
-		case BotDifficulty::hard: return "bot hard";
-		default: return "bot unknown";
-		}
+		return valid_bot_difficulty(player.difficulty) ?
+			std::string("bot ") + bot_difficulty_key(player.difficulty) : std::string("bot unknown");
 	}
 }
 
@@ -61,7 +56,7 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 		lines.push_back("match: stage " + settings.stage() + ", " +
 			std::to_string(settings.player_count()) + " player(s)" +
 			", best of " + std::to_string(settings.best_of()));
-		const std::vector<SeatSetup> players = settings.player_settings();
+		const std::vector<SeatSetup>& players = settings.player_settings();
 		const std::vector<std::string> views = this->match_->debug_status();
 		for (std::size_t i = 0; i < players.size(); ++i)
 		{
@@ -246,7 +241,7 @@ std::vector<std::string> DebugDirectorImpl::paint_lines() const
 	std::vector<std::string> lines;
 	lines.push_back("paint  A " + percent(paint.team_a) + "  B " + percent(paint.team_b) +
 		"  free " + percent(std::max(0.0f, paint.total - paint.team_a - paint.team_b)));
-	const std::vector<SeatSetup> players = this->match_->debug_settings().player_settings();
+	const std::vector<SeatSetup>& players = this->match_->debug_settings().player_settings();
 	std::string seats;
 	for (std::size_t i = 0; i < players.size() && i < paint.seats.size(); ++i)
 	{

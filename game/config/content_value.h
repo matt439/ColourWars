@@ -55,7 +55,8 @@ namespace content_value
 	// starting with '_' is a comment and is allowed with any value. `known`
 	// is the reader's own list, written beside its reads: which keys an
 	// object has is code, not data. tuning.json calls it on every object;
-	// presentation.json and the level files do not yet.
+	// presentation.json on each object with an optional member, where a
+	// misspelling would otherwise go unnoticed; the level files do not yet.
 	void require_known_keys(const labrador::JsonValue& object,
 		const std::vector<std::string_view>& known);
 }

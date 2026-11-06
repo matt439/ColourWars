@@ -35,9 +35,7 @@ void PaintAudio::update(float dt)
 void PaintAudio::contact(ProjectileType type, int owner, bool painted, bool captured)
 {
     if (!this->emitting_) { return; }
-    const size_t index = owner >= 0 && owner < paint_owners::count ?
-        static_cast<size_t>(owner) : static_cast<size_t>(paint_owners::count);
-    Owner& state = this->owners_[index];
+    Owner& state = this->owners_[paint_owners::slot_or_fallback(owner)];
     if (state.impact_remaining <= 0.0f)
     {
         if (painted)

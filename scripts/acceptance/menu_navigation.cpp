@@ -34,16 +34,36 @@ namespace
             std::error_code ignored;
             std::filesystem::remove(path, ignored);
         }
-        GameTuning load(const char* key, const char* value) const
+        // Writes the variant and returns its path. Every failure here is the
+        // fixture's own and throws outside any caller's rejection `try`.
+        std::filesystem::path write(const char* key, const char* value) const
         {
+            require(!source.empty(), "Input tuning fixture must read tuning.json");
             std::string text = source;
             const size_t field = text.find(std::string("\"") + key + "\"");
             require(field != std::string::npos, "Input tuning field must exist");
-            const size_t begin = text.find(':', field) + 1;
-            const size_t end = text.find_first_of(",}", begin);
-            text.replace(begin, end - begin, value);
-            { std::ofstream file(path); file << text; }
-            return GameTuning(path.string().c_str());
+            const size_t colon = text.find(':', field);
+            const size_t end = text.find_first_of(",}", colon);
+            require(colon != std::string::npos && end != std::string::npos, "Input tuning field must have a value");
+            text.replace(colon + 1, end - colon - 1, value);
+            std::ofstream file(path);
+            file << text;
+            file.close();
+            require(!file.fail(), "Input tuning variant must be written");
+            return path;
+        }
+        GameTuning load(const char* key, const char* value) const
+        {
+            return GameTuning(write(key, value).string().c_str());
+        }
+        // True when GameTuning refuses the variant. The substitution runs
+        // first, so a fixture failure escapes instead of counting as a refusal.
+        bool rejects(const char* key, const char* value) const
+        {
+            const std::string file = write(key, value).string();
+            try { GameTuning tuning(file.c_str()); }
+            catch (const std::exception&) { return true; }
+            return false;
         }
     };
 
@@ -309,10 +329,7 @@ int main(int argc, char** argv)
         {
             for (const char* value : { "-0.01", "1.01", "1e40" })
             {
-                bool rejected = false;
-                try { variant.load(field, value); }
-                catch (const std::exception&) { rejected = true; }
-                require(rejected, "Out-of-range input threshold must be rejected");
+                require(variant.rejects(field, value), "Out-of-range input threshold must be rejected");
             }
         }
         for (const auto& invalid : { std::pair{ "movement_deadzone", "1" },
@@ -320,10 +337,7 @@ int main(int argc, char** argv)
             std::pair{ "menu_release_threshold", "0.8" },
             std::pair{ "menu_engage_threshold", "0.5" } })
         {
-            bool rejected = false;
-            try { variant.load(invalid.first, invalid.second); }
-            catch (const std::exception&) { rejected = true; }
-            require(rejected, "Unusable input ranges must be rejected");
+            require(variant.rejects(invalid.first, invalid.second), "Unusable input ranges must be rejected");
         }
 
         GamepadReader reader;

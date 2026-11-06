@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation_validation.h"
 #include "game/config/drawable_text.h"
+#include "game/objects/primitive_frame.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -16,6 +17,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 {
 	check.font("hud.meter_label_font", this->presentation_.hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->presentation_.hud_.player_identity_font);
+	check.font("match.controls_text.font", this->presentation_.match_.controls_text.font);
 	check.frame("hud.fill_frame", this->presentation_.hud_.sprite_sheet, this->presentation_.hud_.fill_frame);
 	check.frame("movement_feedback.fill_frame", this->presentation_.movement_feedback_.sprite_sheet,
 		this->presentation_.movement_feedback_.fill_frame);
@@ -87,7 +89,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 	// The controls reminders' headings. Each card is as wide as its widest
 	// line and the cards scale together to fit the window (CountdownCards::
 	// centre_controls_text), so only the glyphs and bounds are checked here;
-	// the reminders themselves are measured in tuning's controls font by
+	// the reminders themselves are measured in match.controls_text.font by
 	// validate_controls_reminders (game/config/content_validation.h).
 	const ControlsCopy& controls = this->presentation_.menu_text_.controls;
 	std::ignore = fixed_menu_size("menu_text.controls.keyboard_heading", controls.keyboard_heading,
@@ -119,7 +121,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 	}
 
 	// Non-menu primitive drawing and developer overlays still use this texel.
-	check.frame("built-in primitive frame 'pixel'", "sprite_sheet_1", "pixel");
+	check.frame("built-in primitive frame 'pixel'", primitive_frame::sheet, primitive_frame::pixel);
 	const WeaponSelectArtworkPresentation& artwork = this->presentation_.main_menu_.weapon_select_art;
 	check.frame("main_menu.weapon_select.fill_frame", artwork.sheet, artwork.fill_frame);
 	const SpriteSheet* weapon_sheet = render.sprite_sheet(artwork.sheet);

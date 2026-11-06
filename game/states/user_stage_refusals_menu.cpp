@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/user_stage_refusals_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/config/stage_scan_diagnostics.h"
 #include "game/objects/crude_drawing.h"
 #include "engine/core/state_context.h"
@@ -81,23 +82,13 @@ void UserStageRefusalsMenu::refresh_text()
 		this->refusals_.size(), this->page_index_ + 1, this->pages_.size()));
 	const float scale = this->presentation().main_menu().stage_scan.text_scale;
 	this->progress_->set_scale(scale);
-	const float width = this->progress_->bounds().width;
-	if (width > this->progress_bounds_.width)
-	{
-		this->progress_->set_scale(scale * this->progress_bounds_.width / width);
-	}
-}
-
-void UserStageRefusalsMenu::close()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
+	this->progress_->set_scale(scale * menu_geometry::fit_scale(this->progress_->bounds().width,
+		this->progress_bounds_.width));
 }
 
 bool UserStageRefusalsMenu::debug_dismiss(bool /*leaving_match*/)
 {
-	this->close();
+	this->pop_page();
 	return true;
 }
 
@@ -110,7 +101,7 @@ void UserStageRefusalsMenu::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::proceed || input.action == MenuInputAction::back ||
 			input.action == MenuInputAction::pause)
 		{
-			this->close();
+			this->pop_page();
 			return;
 		}
 	}
@@ -121,9 +112,7 @@ void UserStageRefusalsMenu::update_page(float /*dt*/)
 		{
 			if (this->refusals_.size() > 1)
 			{
-				this->file_index_ = input.direction == Direction::left ?
-					(this->file_index_ == 0 ? this->refusals_.size() - 1 : this->file_index_ - 1) :
-					(this->file_index_ + 1 == this->refusals_.size() ? 0 : this->file_index_ + 1);
+				this->file_index_ = wrap_step(this->file_index_, this->refusals_.size(), input.direction);
 				this->refresh_file();
 				this->play_wave(this->direction_sound_);
 			}

@@ -97,13 +97,13 @@ namespace
         const StageCatalog& stages)
     {
         presentation.validate_resources(world.render, world.audio);
-        validate_controls_reminders(tuning, presentation, world.render);
+        validate_controls_reminders(presentation, world.render);
         validate_mode_durations(&world.render, tuning, presentation);
         validate_mode_stage_rules(&world.render, presentation);
         validate_stage_names(presentation, stages.stages());
         for (const Stage& stage : stages.stages())
         {
-            validate_stage_text(tuning, presentation, &world.render, *stages.level_infos().get(stage.name), stage);
+            validate_stage_text(presentation, &world.render, *stages.level_infos().get(stage.name), stage);
         }
     }
 

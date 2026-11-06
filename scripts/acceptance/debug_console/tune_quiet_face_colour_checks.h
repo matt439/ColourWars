@@ -143,8 +143,8 @@ void check_quiet_face_colour_tunes(const std::filesystem::path& game_directory)
     require(impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && document->baseline().text() == saved &&
         document->current().text() == saved && document->edits().empty() &&
-        !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
-        !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+        !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
+        !acceptance::temporary_beside(scratch.staged / L"presentation.json"),
         "A face-only save changes exactly one token, preserves external whitespace and rebases both copies atomically");unchanged();
 
     const std::array<std::pair<std::size_t, const char*>, 4> edits{ {

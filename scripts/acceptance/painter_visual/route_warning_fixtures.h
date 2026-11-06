@@ -39,7 +39,7 @@ RouteGeometry route_geometry(const RectangleF& world, const Camera& camera, cons
 // The ordinary clock is conservatively the union of ALL labels in 0:00..4:00;
 // it is not an opaque-pixel mask, and world badges/tool effects are not included.
 std::array<RectangleF, 3> route_hud_bounds(Application& app, const Presentation& presentation,
-    const Player& player, int view, const Viewport& viewport)
+    std::wstring_view identity_text, const Viewport& viewport)
 {
     const HudPresentation& look = presentation.hud();
     const auto& identity = presentation.player_identity();
@@ -48,9 +48,8 @@ std::array<RectangleF, 3> route_hud_bounds(Application& app, const Presentation&
     const Vector2F padding = look.player_identity_padding * scale;
     const auto measure = [&](const std::string& font, const std::wstring& text)
     { return app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(font), text) * scale; };
-    const std::wstring label = PlayerBadge::label(view) +
-        (player.team() == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
-        input_slots::device_name(player.player_num());
+    // The pane's own HUD text (Level::player_identity_text), not a copy of it.
+    const std::wstring label(identity_text);
     const Vector2F label_size = measure(look.player_identity_font, label);
     const float badge = identity.enabled ? (identity.ui_size.x + identity.ui_gap) * scale : 0.0f;
     const Vector2F identity_pos(size.x * look.player_identity_offset.x, size.y * look.player_identity_offset.y);
@@ -58,7 +57,7 @@ std::array<RectangleF, 3> route_hud_bounds(Application& app, const Presentation&
         std::max(label_size.y, identity.enabled ? identity.ui_size.y * scale : 0.0f)) + padding * 2.0f);
     const float x = size.x * (1.0f - look.right_margin);
     const float top = size.y * std::min(look.ammo_top_margin, look.health_top_margin) -
-        measure(look.meter_label_font, L"HEALTH").y - look.meter_label_gap * scale;
+        measure(look.meter_label_font, look.labels.health).y - look.meter_label_gap * scale;
     const float bottom = size.y * (std::max(look.ammo_top_margin, look.health_top_margin) + look.box_size.y);
     RectangleF meters(Vector2F(x, top) - padding,
         Vector2F(size.x * look.box_size.x, bottom - top) + padding * 2.0f);
@@ -81,9 +80,7 @@ std::array<RectangleF, 3> route_hud_bounds(Application& app, const Presentation&
 
 bool route_supported(const Player& player)
 {
-    return player.move_state() == PlayerMoveState::on_ground ||
-        player.move_state() == PlayerMoveState::on_drop_down_ground ||
-        player.move_state() == PlayerMoveState::on_ramp_left || player.move_state() == PlayerMoveState::on_ramp_right;
+    return player.grounded();
 }
 
 bool route_on_target(const Player& player, const RectangleF& target)
@@ -151,7 +148,7 @@ struct RouteWarningRecords
     }
 
     std::array<RectangleF, 3> hud(CrossfeedFixture& fixture, const RouteTrial& trial)
-    { return route_hud_bounds(app, presentation, fixture.level->player(trial.view), trial.view, fixture.scene->view(trial.view).viewport); }
+    { return route_hud_bounds(app, presentation, fixture.level->player_identity_text(trial.view), fixture.scene->view(trial.view).viewport); }
 
     void begin(CrossfeedFixture& fixture, RouteTrial& trial)
     {

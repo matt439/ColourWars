@@ -35,7 +35,6 @@ public:
         const std::string& frame_name,
         const HorizontalMotionSpec& motion,
         labrador::RenderResources* render_resources,
-        const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
         const PaintTuning* paint,
         CollisionObjectType collision_type,
@@ -102,7 +101,6 @@ private:
     HorizontalMotionStep collision_step_;
     HorizontalMotionId motion_id_ = 0;
     const FerryDirectionPresentation* cue_ = nullptr;
-    TeamColour team_colours_;
     labrador::RenderResources::SheetFrame cue_frame_;
     float cue_column_ = 0.0f; // Zero until admission: no column limit yet.
     int committed_heading_ = 0;

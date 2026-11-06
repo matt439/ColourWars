@@ -9,6 +9,7 @@
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
+#include "engine/input/mouse.h"
 
 #include <array>
 #include <cstdlib>

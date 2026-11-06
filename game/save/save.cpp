@@ -1,15 +1,21 @@
 #include "game/pch.h"
 #include "game/save/save.h"
+#include "game/save/atomic_file.h"
+#include "game/save/play_settings_json.h"
 #include "engine/assets/json.h"
 #include "engine/core/file_path.h"
+#include "engine/math/vector2i.h"
+#include "game/directory_consts.h"
+#include <chrono>
 #include <cstdio>
 #include <filesystem>
+#include <iostream>
 #include <system_error>
 #include <array>
 #include <cmath>
 #include <optional>
 // The engine reads JSON; the game uses RapidJSON to write player settings.
-#include "rapidjson/filewritestream.h"
+#include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
 using namespace rapidjson;
@@ -174,9 +180,10 @@ namespace
                 {
                 }
             };
-            read_preference("aim_sensitivity", 1, 5, data.play.aim_sensitivity);
-            read_preference("music_volume", 0, 100, data.play.music_volume);
-            read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
+            read_preference("aim_sensitivity", PlaySettings::min_aim_sensitivity,
+                PlaySettings::max_aim_sensitivity, data.play.aim_sensitivity);
+            read_preference("music_volume", 0, PlaySettings::max_volume, data.play.music_volume);
+            read_preference("sfx_volume", 0, PlaySettings::max_volume, data.play.sfx_volume);
 
             // Each saved profile belongs to its XInput slot. Missing legacy profiles
             // inherit the authored movement and the existing shared aim preference.
@@ -187,20 +194,7 @@ namespace
                 const size_t count = std::min(profiles.size(), data.play.sticks.size());
                 for (size_t slot = 0; slot < count; ++slot)
                 {
-                    const JsonValue profile = profiles.at(slot);
-                    const auto read_deadzone = [&profile](const char* key, int& destination)
-                    {
-                        try
-                        {
-                            const int value = profile.integer(key);
-                            if (value >= -1 && value <= 90) { destination = value; }
-                        }
-                        catch (const std::runtime_error&)
-                        {
-                        }
-                    };
-                    read_deadzone("movement_deadzone", data.play.sticks[slot].movement_deadzone);
-                    read_deadzone("aim_deadzone", data.play.sticks[slot].aim_deadzone);
+                    read_stick_settings(profiles.at(slot), data.play.sticks[slot]);
                 }
             }
             catch (const std::runtime_error&)
@@ -229,20 +223,7 @@ namespace
                 const size_t count = std::min(slots.size(), data.play.pad_comfort.size());
                 for (size_t slot = 0; slot < count; ++slot)
                 {
-                    const JsonValue entry = slots.at(slot);
-                    const auto read_seat_switch = [&entry](const char* key, SeatSwitch& destination)
-                    {
-                        try
-                        {
-                            const std::optional<SeatSwitch> value = seat_switch_from_key(entry.string(key));
-                            if (value) { destination = *value; }
-                        }
-                        catch (const std::runtime_error&) {}
-                    };
-                    SeatComfort& comfort = data.play.pad_comfort[slot];
-                    read_seat_switch("view_shake", comfort.view_shake);
-                    read_seat_switch("aim_marker", comfort.aim_marker);
-                    read_seat_switch("reduce_effects", comfort.reduce_effects);
+                    read_seat_comfort(slots.at(slot), data.play.pad_comfort[slot]);
                 }
             }
             catch (const std::runtime_error&) {}
@@ -271,10 +252,7 @@ namespace
             for (const StickSettings& settings : data.play.sticks)
             {
                 writer.begin_object();
-                writer.key("movement_deadzone");
-                writer.integer(settings.movement_deadzone);
-                writer.key("aim_deadzone");
-                writer.integer(settings.aim_deadzone);
+                write_stick_settings(writer, settings);
                 writer.end_object();
             }
             writer.end_array();
@@ -293,12 +271,7 @@ namespace
             for (const SeatComfort& comfort : data.play.pad_comfort)
             {
                 writer.begin_object();
-                writer.key("view_shake");
-                writer.string(seat_switch_key(comfort.view_shake));
-                writer.key("aim_marker");
-                writer.string(seat_switch_key(comfort.aim_marker));
-                writer.key("reduce_effects");
-                writer.string(seat_switch_key(comfort.reduce_effects));
+                write_seat_comfort(writer, comfort);
                 writer.end_object();
             }
             writer.end_array();
@@ -333,7 +306,7 @@ namespace
     class FileSaveWriter final : public SaveWriter
     {
     public:
-        explicit FileSaveWriter(Writer<FileWriteStream>& writer) : writer_(writer) {}
+        explicit FileSaveWriter(Writer<StringBuffer>& writer) : writer_(writer) {}
         void key(const char* name) override { this->writer_.Key(name); }
         void integer(int value) override { this->writer_.Int(value); }
         void number(float value) override
@@ -352,7 +325,7 @@ namespace
         void begin_array() override { this->writer_.StartArray(); }
         void end_array() override { this->writer_.EndArray(); }
     private:
-        Writer<FileWriteStream>& writer_;
+        Writer<StringBuffer>& writer_;
     };
 
     // Copies a save that will not load to save_data.unreadable-<n>.json beside
@@ -419,15 +392,14 @@ SaveData Save::load_from_json(const char* json_path) const
     }
     return data;
 }
+// Only a file that is not there is missing. One that is there but will not
+// open (locked, denied) must reach the reader and be kept aside, not be
+// replaced with defaults, so a failed query counts as present too.
 bool Save::file_exists(const std::string& path)
 {
-    FILE* fp = nullptr;
-    if (_wfopen_s(&fp, path_from_utf8(path).c_str(), L"rb") != 0 || fp == nullptr)
-    {
-		return false;
-	}
-	fclose(fp);
-	return true;
+    std::error_code ec;
+    const bool present = std::filesystem::exists(path_from_utf8(path), ec);
+    return present || ec;
 }
 void Save::load_save_file()
 {
@@ -435,7 +407,7 @@ void Save::load_save_file()
 
     if (!file_exists(path))
     {
-        // If the per-user save cannot be opened, try the executable-relative legacy
+        // If there is no per-user save, try the executable-relative legacy
         // save before writing defaults. The legacy file is left intact.
         const std::string legacy = legacy_save_file_path();
         if (file_exists(legacy))
@@ -444,13 +416,19 @@ void Save::load_save_file()
             {
                 this->save_data_ = this->load_from_json(legacy.c_str());
             }
-            catch (const std::exception&)
+            catch (const std::exception& error)
             {
+                // Nothing writes to the legacy path, so it needs no copy;
+                // say so like every other read failure.
+                fprintf(stderr, "save: legacy save %s could not be read (%s); it was left in "
+                    "place and the settings start from defaults.\n", legacy.c_str(), error.what());
                 this->save_data_ = SaveData();
             }
         }
 
-        // There is no settings screen yet to report a failed first save.
+        // The first save runs at startup, before any page could show a status
+        // line (Options and Controls report their own failed saves), so a
+        // dialog reports it.
         if (!this->save_to_file())
         {
             const std::wstring message = L"Could not write " +
@@ -477,31 +455,8 @@ void Save::load_save_file()
 
 bool Save::write_save_file(const SaveData& data) const
 {
-    const std::string path = save_file_path();
-
-    // Create the per-user directory on first save.
-    const std::filesystem::path save_path = path_from_utf8(path);
-    if (save_path.has_parent_path())
-    {
-        std::error_code ec;
-        std::filesystem::create_directories(save_path.parent_path(), ec);
-    }
-
-    // Write a sibling temporary file before replacing the save, so a failed
-    // write does not truncate the existing settings.
-    std::filesystem::path temp_file_path = save_path;
-    temp_file_path += L".tmp";
-
-    FILE* fp = nullptr;
-    if (_wfopen_s(&fp, temp_file_path.c_str(), L"wb") != 0 || fp == nullptr)
-    {
-        return false;
-    }
-    auto write_buffer = std::make_unique<char[]>(65536);
-    FileWriteStream os(fp, write_buffer.get(), 65536);
-
-    // Writer flushes when the root object ends, before fclose below.
-    Writer<FileWriteStream> json(os);
+    StringBuffer buffer;
+    Writer<StringBuffer> json(buffer);
     FileSaveWriter writer(json);
     json.StartObject();
     writer.key("save_version");
@@ -510,29 +465,14 @@ bool Save::write_save_file(const SaveData& data) const
     {
         section->write(writer, data);
     }
-    const bool serialized = json.EndObject();
-
-    // Ending the root flushes RapidJSON's buffer, but FileWriteStream ignores
-    // short fwrite results. Flush stdio and inspect its sticky error before
-    // always closing the file. Serialization, stream output and close must all
-    // succeed before the temporary file may replace the existing save.
-    const bool flushed = (fflush(fp) == 0);
-    const bool stream_good = (ferror(fp) == 0);
-    const bool closed = (fclose(fp) == 0);
-
-    std::error_code rename_ec;
-    if (serialized && flushed && stream_good && closed)
+    if (!json.EndObject())
     {
-        std::filesystem::rename(temp_file_path, save_path, rename_ec);
-        if (!rename_ec)
-        {
-            return true;
-        }
+        return false;
     }
 
-    std::error_code remove_ec;
-    std::filesystem::remove(temp_file_path, remove_ec);
-    return false;
+    // A failed write leaves the existing settings as they were.
+    return replace_file_atomically(path_from_utf8(save_file_path()),
+        std::string_view(buffer.GetString(), buffer.GetSize()));
 }
 
 bool Save::save_to_file() const
@@ -574,7 +514,7 @@ bool Save::set_display_settings_and_save(ScreenResolution resolution,
     {
         throw std::invalid_argument("Invalid display resolution");
     }
-    TeamColourTools::palette_key(palette);
+    std::ignore = TeamColourTools::palette_key(palette); // Throws for no palette.
     this->save_data_.resolution = resolution;
     this->save_data_.fullscreen = fullscreen;
     this->save_data_.team_palette = palette;

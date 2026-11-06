@@ -24,7 +24,6 @@ StructurePaintable::StructurePaintable(
 	const RectangleF& sprite_rectangle,
 	std::unique_ptr<Shape> collision_shape,
 	RenderResources* render_resources,
-	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
 	const PaintTuning* paint,
 	CollisionObjectType collision_type,
@@ -51,9 +50,6 @@ StructurePaintable::StructurePaintable(
 		runoff_frame_(render_resources->sprite_sheet(this->runoff_sheet_)->resolve_sprite_frame(paint->frame))
 {
 	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles, paint_polygons);
-	// Preview construction shares this path. Cue names are validated at startup;
-	// match playback is owned by Level's PaintAudio across every surface.
-	(void)audio_resources;
 }
 
 void StructurePaintable::update(float dt)
@@ -139,30 +135,17 @@ RectangleF StructurePaintable::cull_bounds(float units_per_pixel) const
 void StructurePaintable::on_projectile_contact(const Projectile& other,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	// The mask also accepts players, but only projectiles paint the surface.
-	const CollisionLayer other_layer = other.layer();
-	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
-		other_layer != collision_layers::PROJECTILE_TEAM_B)
-	{
-		return;
-	}
-
-	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
-		PlayerTeam::a : PlayerTeam::b;
-
-	const RectangleF splash = other.shape()->bounding_box();
-	this->paint_from_projectile(other, splash, team);
+	this->paint_from_projectile(other, other.shape()->bounding_box());
 }
 
 void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 	const RectangleF& splash)
 {
+	// Only team paint marks a surface; a projectile's layer follows its team.
 	const CollisionLayer other_layer = projectile.layer();
 	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
 		other_layer != collision_layers::PROJECTILE_TEAM_B) { return; }
-	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
-		PlayerTeam::a : PlayerTeam::b;
-	this->paint_from_projectile(projectile, splash, team);
+	this->paint_from_projectile(projectile, splash, projectile.team());
 }
 
 void StructurePaintable::paint_from_projectile(const Projectile& projectile,

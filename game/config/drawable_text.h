@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/contracts/drawable_text_contract.h"
 #include <string>
 #include <string_view>
 
@@ -14,14 +15,15 @@ namespace labrador
 // against the font that will draw it.
 namespace drawable_text
 {
-	// Character range accepted by the content parser.
-	constexpr wchar_t first_drawable = L' ';
-	constexpr wchar_t last_drawable = L'~';
+	// Character range accepted by the content parser, from the contract the
+	// level editor also reads.
+	constexpr wchar_t first_drawable = static_cast<wchar_t>(drawable_text_contract::first_drawable);
+	constexpr wchar_t last_drawable = static_cast<wchar_t>(drawable_text_contract::last_drawable);
 
 	// The renderer consumes CR/LF as layout controls; tabs still require glyphs.
 	constexpr bool is_layout_control(wchar_t character)
 	{
-		return character == L'\n' || character == L'\r';
+		return drawable_text_contract::is_layout_control(static_cast<char32_t>(character));
 	}
 
 	// Normalize UTF-8 punctuation and reject characters outside the content range.

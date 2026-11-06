@@ -281,7 +281,7 @@ namespace
         for (size_t view = 0; view < result.size(); ++view)
         {
             result[view] = std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
-                block, std::make_unique<RectangleF>(block), app.render_resources(), app.audio_resources(),
+                block, std::make_unique<RectangleF>(block), app.render_resources(),
                 &preferences, &tuning.paint(), CollisionObjectType::structure_paintable,
                 colours, enabled[view], std::span<const RectangleF>{}, Colour(0.30f, 0.33f, 0.36f));
         }
@@ -458,7 +458,7 @@ namespace
             const PaintableFaces enabled = view == 1 ? PaintableFaces{false, false, true, false} :
                 PaintableFaces{true, view == 2, false, false};
             objects[index] = std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
-                wall, std::make_unique<RectangleF>(wall), app.render_resources(), app.audio_resources(),
+                wall, std::make_unique<RectangleF>(wall), app.render_resources(),
                 &preferences, &look, CollisionObjectType::structure_paintable, colours, enabled,
                 obstacles[index], Colour(0.30f, 0.33f, 0.36f));
             const PlayerTeam team = view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;

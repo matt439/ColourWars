@@ -2,6 +2,7 @@
 #include "game/fatal_report.h"
 #include "game/build_info.h"
 #include "game/directory_consts.h"
+#include "game/objects/player_out_of_bounds.h"
 #include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -99,10 +100,14 @@ namespace
             const Record record = parse_record(report.record_text());
             require(record.at("phase") == phase.name && record.at("category") == report.stderr_prefix(),
                 "Failure phase is missing from controlled metadata");
-            require(report.dialog_text(false).find(L"exact original cause") != std::wstring::npos &&
-                report.dialog_text(false).find(L"could not be saved") != std::wstring::npos &&
-                report.dialog_text(true).find(L"%LOCALAPPDATA%\\ColourWars\\last-error.log") != std::wstring::npos,
-                "Dialog omitted the original cause or gave the wrong persistence result");
+            const std::wstring unsaved = report.dialog_text(std::string());
+            const std::wstring saved = report.dialog_text("D:\\Caf\xC3\xA9 profile\\ColourWars\\last-error.log");
+            const std::wstring saved_line = L"\n\nDiagnostic metadata saved to D:\\Caf\u00e9 profile\\ColourWars\\last-error.log.";
+            require(unsaved.find(L"exact original cause") != std::wstring::npos &&
+                unsaved.ends_with(L"\n\nDiagnostic metadata could not be saved.") &&
+                saved.find(L"exact original cause") != std::wstring::npos && saved.ends_with(saved_line) &&
+                saved.find(L"could not be saved") == std::wstring::npos,
+                "Dialog omitted the original cause or did not name the path it saved to");
         }
         const FatalReport no_hardware(FailurePhase::initialization,
             std::make_exception_ptr(std::runtime_error("No Direct3D hardware device found")));
@@ -111,10 +116,22 @@ namespace
             "The exact missing-hardware diagnostic used by startup qualification changed");
         require(parse_record(no_hardware.record_text()).at("cause_0_reason") == "no_hardware_device",
             "Controlled missing-hardware reason was not classified");
-        const FatalReport bounds(FailurePhase::running,
+        const FatalReport bounds(FailurePhase::running, std::make_exception_ptr(PlayerOutOfBounds()));
+        const Record bounds_record = parse_record(bounds.record_text());
+        require(bounds_record.at("cause_0_reason") == "player_out_of_bounds" &&
+            bounds_record.at("cause_0") == "runtime_error" && bounds.message() == "Player out of bounds",
+            "Controlled player-bounds reason was not classified by its type");
+        // The reason follows the type, not the words: another exception with the
+        // same message is not a player out of bounds.
+        const FatalReport lookalike(FailurePhase::running,
             std::make_exception_ptr(std::runtime_error("Player out of bounds")));
-        require(parse_record(bounds.record_text()).at("cause_0_reason") == "player_out_of_bounds",
-            "Controlled player-bounds reason was not classified");
+        require(!parse_record(lookalike.record_text()).contains("cause_0_reason"),
+            "A plain runtime_error was classified as a player out of bounds by its message");
+        const FatalReport nested_bounds(FailurePhase::running,
+            nested(std::make_exception_ptr(PlayerOutOfBounds()), "level update failed"));
+        const Record nested_record = parse_record(nested_bounds.record_text());
+        require(!nested_record.contains("cause_0_reason") && nested_record.at("cause_1_reason") == "player_out_of_bounds",
+            "A nested player out of bounds was not classified at its own cause");
     }
 
     class PrivateException final : public std::exception
@@ -238,14 +255,14 @@ namespace
             std::make_exception_ptr(std::runtime_error(exact + "SECRET_TAIL")));
         require(too_long.message() == exact && too_long.message().size() == FatalReport::max_message_bytes &&
             parse_record(too_long.record_text()).at("message_truncated") == "true" &&
-            too_long.dialog_text(false).find(L"[Exception text truncated]") != std::wstring::npos &&
+            too_long.dialog_text(std::string()).find(L"[Exception text truncated]") != std::wstring::npos &&
             too_long.record_text().find("SECRET_TAIL") == std::string::npos,
             "Oversized exception text was not bounded and clearly marked");
 
         const std::string utf8 = "caf\xC3\xA9 \xE6\x9D\xB1\xE4\xBA\xAC \xF0\x9F\x8E\xA8";
         const FatalReport unicode(FailurePhase::definitions, std::make_exception_ptr(std::runtime_error(utf8)));
         require(unicode.message() == utf8 &&
-            unicode.dialog_text(false).find(L"caf\u00e9 \u6771\u4eac \U0001f3a8") != std::wstring::npos &&
+            unicode.dialog_text(std::string()).find(L"caf\u00e9 \u6771\u4eac \U0001f3a8") != std::wstring::npos &&
             unicode.record_text().find(utf8) == std::string::npos,
             "UTF-8 exception text failed to reach the local Unicode dialog or leaked into metadata");
     }

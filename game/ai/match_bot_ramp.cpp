@@ -8,34 +8,11 @@ using namespace labrador;
 
 namespace
 {
-	bool same_bounds(const RectangleF& a, const RectangleF& b)
-	{
-		return a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height;
-	}
-
 	float surface_y(const MatchBotRamp& ramp, float x)
 	{
 		const float along = std::clamp((x - ramp.bounds.left()) / ramp.bounds.width, 0.0f, 1.0f);
 		return ramp.rises_right ? ramp.bounds.bottom() - along * ramp.bounds.height :
 			ramp.bounds.top() + along * ramp.bounds.height;
-	}
-
-	bool crosses_interior(Vector2F from, Vector2F to, const RectangleF& bounds, Vector2F half)
-	{
-		double enter = 0.0, leave = 1.0;
-		const auto axis = [&](double start, double finish, double low, double high)
-		{
-			const double delta = finish - start;
-			if (delta == 0.0) { return start > low && start < high; }
-			double first = (low - start) / delta, last = (high - start) / delta;
-			if (first > last) { std::swap(first, last); }
-			enter = std::max(enter, first); leave = std::min(leave, last);
-			return enter < leave;
-		};
-		return axis(from.x, to.x, static_cast<double>(bounds.left()) - half.x,
-			static_cast<double>(bounds.right()) + half.x) &&
-			axis(from.y, to.y, static_cast<double>(bounds.top()) - half.y,
-				static_cast<double>(bounds.bottom()) + half.y);
 	}
 }
 
@@ -47,10 +24,10 @@ bool MatchBot::clear_ramp_path(const MatchBotObservation& view, Vector2F from,
 	{
 		// Only a path constructed along this known hypotenuse can disregard
 		// its AABB. All other ramp/slab bounds remain conservative barriers.
-		if (!skipped_ramp && same_bounds(obstacle, ramp.bounds)) { skipped_ramp = true; continue; }
+		if (!skipped_ramp && obstacle == ramp.bounds) { skipped_ramp = true; continue; }
 		bool one_way = false;
 		for (const MatchBotSupport& support : view.supports)
-		{ one_way = one_way || (support.one_way && same_bounds(obstacle, support.bounds)); }
+		{ one_way = one_way || (support.one_way && obstacle == support.bounds); }
 		if (!one_way && crosses_interior(from, to, obstacle, view.size * 0.5f)) { return false; }
 	}
 	return true;
@@ -66,7 +43,7 @@ void MatchBot::choose_ramp(const MatchBotObservation& view)
 		if (!(bounds.width > 0.0f) || !(bounds.height > 0.0f)) { continue; }
 		bool visited = false;
 		for (const MatchBotSupport& previous : this->visited_supports_)
-		{ visited = visited || same_bounds(previous.bounds, bounds); }
+		{ visited = visited || previous.bounds == bounds; }
 		if (visited) { continue; }
 		const float direction = ramp.rises_right ? 1.0f : -1.0f;
 		const float toe = ramp.rises_right ? bounds.left() : bounds.right();
@@ -123,7 +100,7 @@ void MatchBot::steer_ramp(const MatchBotObservation& view, PlayerInputData& inpu
 {
 	bool present = false;
 	for (const MatchBotRamp& ramp : view.ramps)
-	{ present = present || (same_bounds(ramp.bounds, this->ramp_.bounds) && ramp.rises_right == this->ramp_.rises_right); }
+	{ present = present || (ramp.bounds == this->ramp_.bounds && ramp.rises_right == this->ramp_.rises_right); }
 	const float direction = this->ramp_.rises_right ? 1.0f : -1.0f;
 	const float feet = view.center.y + view.size.y * 0.5f;
 	const Vector2F half = view.size * 0.5f;

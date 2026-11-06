@@ -44,7 +44,8 @@ game/                  the game executable and the colourwars_game library
                        presentation, levels, fonts, textures, the sound bank
   art/, audio/         sources, recipes and provenance for that content; never staged
 editor/                ColourWarsEditor.exe, the desktop level editor, and the
-                       colourwars_level_document library it shares with its checks
+                       colourwars_level_document library it shares with its checks;
+                       colourwars_editor_shell is the window the DPI probe also links
 scripts/               acceptance probes, check and build scripts; see scripts/README.md
 docs/                  guides, owners of open work and frozen reviews; see docs/README.md
 cmake/                 runtime staging, the build stamp, wave-bank and font checks,
@@ -65,10 +66,10 @@ The role folders date from `HYG#51`:
 |---|---|
 | the `game/` root | the shell: `main.cpp`, `game_data`, `fatal_report`, `directory_consts`, `display_awake`, `pch.h`, `resource.rc` and the `colourwars.ico` it embeds |
 | `contracts/` | the nine engine-free headers [below](#the-engine-free-contract-headers) and `level.schema.json` |
-| `match/` | `match_setup`, `seat_setup.h`, `player_control.h`, `session`, `series_stage_rule`, `round_tape`, `match_award.h`, `paint_owners.h` |
+| `match/` | `match_setup`, `match_rules.h`, `seat_setup.h`, `player_control.h`, `session`, `series_stage_rule`, `round_tape`, `match_award.h`, `paint_owners.h` |
 | `config/` | `tuning*`, `tunnelling_limits`, `content_value`, `content_validation`, `resource_validation.h`, `stage_catalog`, `stage_loading`, `stage_scan_diagnostics`, `play_settings.h`, `settings_session`, `drawable_text`, `text_wrap`, `sound_groups`, `sound_reference.h` |
-| `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size and every page rectangle, shared by the pages, the reader and the validators) |
-| `save/` | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles` |
+| `config/presentation/` | `presentation*` and `menu_geometry` (the menu design size, every page rectangle, the fit-to-box scale and rectangle predicates, and the settings pages' value rows, shared by the pages, the reader and the validators) |
+| `save/` | `save*`, `save_section.h`, `match_records`, `last_match_setup`, `player_profiles`, `play_settings_json` (the one `StickSettings` and `SeatComfort` reader and writer), and `atomic_file` (`replace_file_atomically`, the one whole-file writer the save, the fatal-error record and the developer tools share) |
 | `input/` | `action_bindings`, `input_bindings`, `input_slots.h`, `controls_text`, `controls_copy.h`, `rumble*`, `rumble_gamepads.cpp` |
 
 `play_settings.h` and `settings_session` are in `config/` rather than `save/`:
@@ -102,7 +103,7 @@ everything -> external/labrador (never the other way)
 debug/ -> everything above; the rest reaches debug/ through three headers
 ```
 
-What holds at `272ecb75`:
+What holds (checked 2026-11-05):
 
 - **No file-level include cycles**, and nothing in `objects/`, `ai/` or
   `carried/` includes a `states/` header.
@@ -145,19 +146,21 @@ Where it does not hold yet:
 
 ## The engine-free contract headers
 
-Nine headers in `game/contracts/` hold rules the game and the editor must apply
+Eleven headers in `game/contracts/` hold rules the game and the editor must apply
 in the same words, with no engine include:
 
 | Header | Holds |
 |---|---|
-| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/contracts/level.schema.json) sits beside it |
-| `simulation.h` | `SIMULATION_HZ`, the fixed step written once |
-| `horizontal_motion_contract.h` | authored horizontal motion and its envelope arithmetic (uses `simulation.h`) |
+| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, the paintable-face names, the scenery greys, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/contracts/level.schema.json) sits beside it |
+| `simulation.h` | `SIMULATION_HZ` and `SECONDS_PER_STEP`, the fixed rate and the step length the engine's timer derives from it (0.0166666 s), written once |
+| `rectangle_contract.h` | the one rectangle the station, gate and motion contracts take |
+| `horizontal_motion_contract.h` | authored horizontal and vertical motion, its heading names and its envelope arithmetic (uses `simulation.h`) |
 | `station_contract.h` | a level's review stations and their lessons |
 | `team_gate_contract.h` | a team gate's authored rules |
-| `user_stage_contract.h` | the names a player's own stage file may take |
+| `user_stage_contract.h` | the names a player's own stage file may take, which stage registration also applies |
+| `drawable_text_contract.h` | the characters the fonts draw and the punctuation folded to ASCII, for `drawable_text` and the editor's display-name check |
 | `paint_face_geometry.h`, `paint_polygon_geometry.h` | how paint tiles a face and a polygon, for the runtime tiles and the editor's scoring diagnostics |
-| `fixed_slab_paint_geometry.h` | the fixed slab's paint polygon (uses the two above) |
+| `fixed_slab_paint_geometry.h` | the fixed slab's footprint (`slab_span`, `slab_rise`, `slab_thickness`) and paint polygon (uses the two above) |
 
 They are header-only and include only the standard library and one another.
 The game's builders and startup validation read them; so do the editor's level
@@ -169,11 +172,12 @@ editor's `colourwars_level_document` depend on it. The engine's
 
 ## `game/carried`
 
-Seven engine types that Labrador v0.2.0 had and v0.3.0 removes
+Six engine types that Labrador v0.2.0 had and v0.3.0 removes
 (`AnimationObject`, `MovingObject`, `SoundBankObject`, `TextDropShadow`,
-`UiTextDropShadow`, the camera tools and `RotationOrigin`), copied with their
-shape unchanged into `namespace colourwars` so they can never be ambiguous with
-an engine type. `removed_members.h` does the same for two members v0.3.0 also
+`UiTextDropShadow` and the camera tools), copied with their shape unchanged
+into `namespace colourwars` so they can never be ambiguous with an engine type.
+A seventh, `RotationOrigin`, was carried too; `HYG#73` deleted it with the
+`rotation_origin` tuning key it served, which nothing read. `removed_members.h` does the same for two members v0.3.0 also
 removed, `RectangleF::from_top_left_bottom_right` and
 `Camera::calculate_intermediate_camera`, as free functions. The folder is named
 for where the code came from, not for what it does; the removal with an
@@ -181,7 +185,7 @@ engine-only caller count is report `ENG#28` in the
 [engine-report ledger](review/engine-reports.md). `HYG#51` kept the name: the
 folder is that report's exhibit. The author's 2026-11-03 answer was to amend the
 engine's changelog before the tag, but `v0.3.0` shipped both entries unamended,
-so the report is open again for the author's call. Either way the folder is the
+so on 2026-11-05 the author closed the report as declined. The folder is the
 migration in use; its contents are deleted, not renamed, only if the engine
 brings the types back.
 

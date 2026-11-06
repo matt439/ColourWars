@@ -4,22 +4,19 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_plan.h"
 #include "game/input/input_slots.h"
-
-labrador::ScreenLayout MatchPlanner::layout_for(int players)
-{
-	switch (players)
-	{
-	case 2: return labrador::ScreenLayout::two_player;
-	case 3: return labrador::ScreenLayout::three_player;
-	case 4: return labrador::ScreenLayout::four_player;
-	default: return labrador::ScreenLayout::one_player;
-	}
-}
+#include "game/match/match_rules.h"
 
 bool MatchRequest::empty() const
 {
 	return !this->stage && !this->players && this->weapons.empty() &&
 		this->seats.empty() && !this->restart && !this->exact;
+}
+
+MatchRequest MatchRequest::without_restart() const
+{
+	MatchRequest request = *this;
+	request.restart = false;
+	return request;
 }
 
 std::string MatchRequest::describe() const
@@ -95,7 +92,9 @@ bool MatchPlanner::weapon_from_name(const std::string& name, WeaponType& weapon)
 
 const char* MatchPlanner::weapon_name(WeaponType weapon)
 {
-	// As before the table: anything but a tuned weapon, Random included, is "other".
+	// Only the five tuned tools have a name here. Random and any value outside
+	// the table read "other", which the replay reader refuses as an unknown
+	// weapon.
 	const char* const name = ::weapon_name(weapon);
 	return name != nullptr && weapon != WeaponType::random_primary ? name : "other";
 }
@@ -107,7 +106,10 @@ std::vector<std::string> MatchPlanner::seat_fields()
 
 std::vector<std::string> MatchPlanner::seat_values()
 {
-	return { "a", "b", "easy", "normal", "hard", "0", "1", "2" };
+	std::vector<std::string> values{ "a", "b" };
+	for (const BotDifficulty difficulty : bot_difficulties) { values.push_back(bot_difficulty_key(difficulty)); }
+	values.insert(values.end(), { "0", "1", "2" });
+	return values;
 }
 
 const char* MatchPlanner::seat_field_name(MatchRequest::SeatChoice::Field field)
@@ -137,7 +139,7 @@ std::string MatchPlanner::parse_seat_choice(const std::string& field, const std:
 	else if (field == "bot")
 	{
 		choice.field = Field::bot;
-		if (value != "easy" && value != "normal" && value != "hard")
+		if (!bot_difficulty_from_key(value))
 		{
 			return "bot difficulty must be easy, normal or hard, got '" + value + "'";
 		}
@@ -196,8 +198,8 @@ void MatchPlanner::claim_devices(MatchSetup& settings, const ConnectedPads& pads
 		settings.claim_input_slot(devices[device]);
 	}
 
-	// Bots have no pane; with none, this is layout_for(players).
-	settings.set_screen_layout(layout_for(settings.human_count()));
+	// Bots have no pane; with none, this is the layout for every seat.
+	settings.set_screen_layout(layout_for_humans(settings.human_count()));
 }
 
 MatchPlan MatchPlanner::resolve(const MatchSetup* current,
@@ -286,9 +288,9 @@ MatchPlan MatchPlanner::resolve(const MatchSetup* current,
 	if (roster)
 	{
 		const int players = request.players.value_or(1);
-		if (players < 1 || players > input_slots::pad_count)
+		if (!valid_player_count(players))
 		{
-			plan.error = "players must be 1-4";
+			plan.error = "players must be " + player_count_range();
 			return plan;
 		}
 		settings.set_player_count(players);
@@ -317,8 +319,7 @@ MatchPlan MatchPlanner::resolve(const MatchSetup* current,
 				plan.error = "seat 1 stays human: it is the setup host";
 				return plan;
 			}
-			settings.set_player_bot(choice.seat, choice.value == "easy" ? BotDifficulty::easy :
-				choice.value == "hard" ? BotDifficulty::hard : BotDifficulty::normal);
+			settings.set_player_bot(choice.seat, bot_difficulty_from_key(choice.value).value_or(BotDifficulty::normal));
 			controllers = true;
 		}
 		else if (choice.field == Field::human)
@@ -354,7 +355,8 @@ MatchPlan MatchPlanner::resolve(const MatchSetup* current,
 	{
 		plan.reset_session = true;
 	}
-	// The rules a format-4 replay enforces, so a planned match always records.
+	// The seat rules every replay enforces (validate_roster in replay.cpp), so
+	// a planned match always records.
 	const std::vector<SeatSetup>& seats = settings.player_settings();
 	for (std::size_t seat = 0; seat < seats.size(); ++seat)
 	{

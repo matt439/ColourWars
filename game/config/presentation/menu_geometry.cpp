@@ -1,12 +1,24 @@
 #include "game/pch.h"
 #include "game/config/presentation/menu_geometry.h"
 
+#include <algorithm>
+
 using namespace labrador;
 using menu_consts::DESIGN_RESOLUTION;
 
 RectangleF menu_geometry::design_area()
 {
 	return RectangleF(Vector2F::zero, DESIGN_RESOLUTION);
+}
+
+float menu_geometry::fit_scale(float size, float available)
+{
+	return size > 0.0f && available > 0.0f && size > available ? available / size : 1.0f;
+}
+
+float menu_geometry::fit_scale(const Vector2F& size, const Vector2F& available)
+{
+	return std::min(fit_scale(size.x, available.x), fit_scale(size.y, available.y));
 }
 
 float menu_geometry::centred(float size, float extent)

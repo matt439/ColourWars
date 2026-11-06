@@ -261,7 +261,8 @@ namespace
 		require(profiles.list[0].name == "ALEX" && profiles.list[1].name == "SAM" &&
 			profiles.list[7].name == "P8", "Recovery kept the wrong entries");
 		const PlayerProfile& alex = profiles.list[0];
-		require(alex.sticks.movement_deadzone == 30 && alex.sticks.aim_deadzone == -1 && alex.rumble &&
+		// 95 clamps to the 90 cap; "no" is not a boolean, so rumble stays on.
+		require(alex.sticks.movement_deadzone == 30 && alex.sticks.aim_deadzone == 90 && alex.rumble &&
 			alex.comfort.view_shake == SeatSwitch::on && alex.comfort.aim_marker == SeatSwitch::shared &&
 			alex.comfort.reduce_effects == SeatSwitch::off && alex.buttons[PadAction::jump].primary == PadControl::x &&
 			alex.boost == 2, "A profile's fields did not recover independently");

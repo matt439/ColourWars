@@ -97,7 +97,7 @@ namespace level_editor_acceptance
         const std::set<std::string>& sheet_1 = *catalog.sprite_frames.at("sprite_sheet_1");
         require(sheet_1.contains("square_white_4") && sheet_1.contains("stage_close_quarters"),
             "Catalog lacks sprite_sheet_1 frames");
-        require(!sheet_1.contains("player_right_walk"), "Catalog took an animation strip for a frame");
+        require(!catalog.sprite_frames.at("painter")->contains("run"), "Catalog took an animation strip for a frame");
         require(catalog.sound_effects.contains("paint_exe") && catalog.sound_effects.at("paint_exe") &&
             catalog.sound_effects.at("paint_exe")->contains("music.close_quarters") &&
             catalog.sound_effects.at("paint_exe")->contains("music.end_sting.close_quarters"),
@@ -113,6 +113,10 @@ namespace level_editor_acceptance
         }
         LevelDocument created;
         require(created.unresolved_resources(catalog).empty(), "New-level defaults have an unresolved name");
+        // File > New is the template, less the note about the template file.
+        rapidjson::Document from_template = parse(contents(repo / "editor/template.json"));
+        from_template.RemoveMember("_comment");
+        require(parse(created.serialize()) == from_template, "File > New does not start from editor/template.json");
         LevelDocument templated;
         templated.load(repo / "editor/template.json");
         require(templated.unresolved_resources(catalog).empty(), "The template has an unresolved name");
@@ -132,7 +136,6 @@ namespace level_editor_acceptance
             { EntryKind::level, "/sound/music_name", "music.not_here", "music_name" },
             { EntryKind::level, "/sound/end_sting_name", "music.end_sting.not_here", "end_sting_name" },
             { EntryKind::collision, "/frame_name", "not_a_frame", "frame_name" },
-            { EntryKind::collision, "/frame_name", "player_right_walk", "frame_name" },
             { EntryKind::collision, "/frame_name", painter_frame, "frame_name" },
             { EntryKind::collision, "/sheet_name", "not_a_sheet", "sheet_name" },
             { EntryKind::decoration, "/frame_name", "not_a_frame", "frame_name" },
@@ -158,6 +161,10 @@ namespace level_editor_acceptance
             document.set_property(object, "/sheet_name", "painter");
             document.set_property(object, "/frame_name", painter_frame);
             require(document.unresolved_resources(catalog).empty(), "A frame did not resolve in its own sheet");
+            // painter's run is an animation strip, not a frame.
+            document.set_property(object, "/frame_name", "run");
+            require(document.unresolved_resources(catalog).size() == 1, "An animation strip resolved as a frame");
+            document.set_property(object, "/frame_name", painter_frame);
             document.set_property(entry(document, EntryKind::level), "/sound/music_name", "music.not_here");
             document.set_property(entry(document, EntryKind::level), "/icon_frame", "not_an_icon");
             require(document.unresolved_resources(catalog).size() == 2, "Each unresolved name needs its own line");

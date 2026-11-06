@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace level_editor_acceptance
 {
@@ -146,9 +147,12 @@ namespace level_editor_acceptance
         require(document.redo() && station_count(document) == 10, "Redo did not delete the station again");
 
         // Add from the palette, to a stage with none: station_1, then
-        // station_2; deleting both leaves no stations array.
+        // station_2; deleting both leaves no stations array. File > New has
+        // the template's one station, centre; delete it first.
         LevelDocument fresh(tuning);
-        require(!parse(fresh.serialize()).HasMember("stations"), "The template already has stations");
+        require(station_count(fresh) == 1, "File > New lost the template's station");
+        fresh.erase(station_named(fresh, "centre"));
+        require(!parse(fresh.serialize()).HasMember("stations"), "Deleting the template's station left an empty array");
         const Entry added = fresh.add_object("Station", { 1000.0, 600.0, 200.0, 100.0 });
         require(added.kind == EntryKind::station && added.label == "Station station_1" &&
             equal(fresh.rectangle(added), { 1000.0, 600.0, 52.0, 120.0 }),
@@ -168,7 +172,35 @@ namespace level_editor_acceptance
         fresh.erase(station_named(fresh, "station_1"));
         require(!parse(fresh.serialize()).HasMember("stations"), "Deleting the last station left an empty array");
         require(fresh.undo() && station_count(fresh) == 1, "Undo did not restore the last station");
+
+        // A spawn or station box is source tuning's player size; reading it
+        // never throws, and unreadable tuning gives the shipped 52 by 120.
+        const auto marker_sizes = [](const LevelDocument& level) {
+            Rect spawn{}, station{};
+            for (const Entry& candidate : level.entries())
+            {
+                if (candidate.kind == EntryKind::spawn_a) { spawn = level.rectangle(candidate); }
+                if (candidate.kind == EntryKind::station) { station = level.rectangle(candidate); }
+            }
+            return std::pair<Rect, Rect>{ spawn, station };
+        };
+        auto resized = parse(contents(tuning));
+        resized["player"]["size"]["x"].SetDouble(70.0);
+        resized["player"]["size"]["y"].SetDouble(140.0);
+        const auto resized_path = scratch / "station-player-size.json";
+        write(resized_path, encode(resized));
+        const auto [sized_spawn, sized_station] = marker_sizes(LevelDocument(resized_path));
+        require(sized_spawn.width == 70.0 && sized_spawn.height == 140.0 &&
+            sized_station.width == 70.0 && sized_station.height == 140.0,
+            "A spawn or station box does not follow source tuning's player size");
+        const auto broken_path = scratch / "station-broken-tuning.json";
+        write(broken_path, "{");
+        const auto [broken_spawn, broken_station] = marker_sizes(LevelDocument(broken_path));
+        require(broken_spawn.width == 52.0 && broken_spawn.height == 120.0 &&
+            broken_station.width == 52.0 && broken_station.height == 120.0,
+            "Unreadable tuning did not give spawn and station boxes the shipped size");
         std::cout << "PASS station editing: list, add, rename, move, align, duplicate and delete with undo; reserved, "
-            "repeated, misspelt, off-lesson and out-of-bounds refusals; Movement Course lessons survive edit and save\n";
+            "repeated, misspelt, off-lesson and out-of-bounds refusals; Movement Course lessons survive edit and save; "
+            "marker boxes follow tuning's player size and fall back on unreadable tuning\n";
     }
 }

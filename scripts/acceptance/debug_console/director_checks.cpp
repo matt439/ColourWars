@@ -647,6 +647,23 @@ namespace debug_console_acceptance
 			std::ifstream stream(path, std::ios::binary);
 			bytes.assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 		}
+		// Encoded in memory and replaced whole: a refused write keeps the
+		// earlier PNG and leaves no partial file or temporary beside it. The
+		// lock shares writing, so the old in-place writer would get through
+		// it; the refused image differs so a change to the file would show.
+		{
+			acceptance::ReplacementLock lock(path);
+			require(lock.hold(), "Cannot lock the screenshot fixture");
+			ScreenCapture other = image;
+			other.rgba[0] = static_cast<unsigned char>(other.rgba[0] ^ 0xff);
+			error.clear();
+			require(!write_png(path, other, error) && !error.empty(), "A refused PNG write is reported");
+			require(lock.release(), "Cannot release the screenshot fixture");
+			std::ifstream stream(path, std::ios::binary);
+			const std::string kept((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+			require(kept == bytes && !acceptance::temporary_beside(path),
+				"A refused PNG write kept the earlier file whole and left no temporary");
+		}
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
 		const auto byte = [&bytes](std::size_t i) { return static_cast<unsigned char>(bytes.at(i)); };
@@ -666,8 +683,16 @@ namespace debug_console_acceptance
 		TestDirector test(tuning, presentation);
 		DebugDirectorImpl& impl = test.impl;
 		const DebugStatus queued = impl.execute("screenshot drive");
-		require(queued.ok && queued.close_console && impl.pending_screenshot() == "drive",
+		require(queued.ok && queued.close_console && impl.pending_screenshot() == "drive.png" &&
+			log_contains(impl.log(), "screenshot drive.png queued", DebugSeverity::info),
 			"screenshot queues and closes the console so the shot is clean");
+		// The timestamped default is named when it is queued, so the message
+		// names the file the capture writes.
+		const DebugStatus stamped = impl.execute("screenshot");
+		require(stamped.ok && impl.pending_screenshot().has_value() &&
+			impl.pending_screenshot()->starts_with("colourwars-") &&
+			impl.log().lines().back().text == "screenshot " + *impl.pending_screenshot() + " queued",
+			"A default screenshot queues the name its message gives");
 
 		// The shot waits only for something that will apply next frame.
 		require(!impl.screenshot_waits(), "Nothing queued: the shot is taken");

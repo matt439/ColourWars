@@ -13,6 +13,14 @@ namespace
 	{
 		return DebugArgs::parse_int(text, seat) && seat >= 1 && seat <= 4;
 	}
+
+	// What `bot` takes as a behaviour: each Debug bot, then off.
+	std::vector<std::string> bot_words()
+	{
+		std::vector<std::string> words = Bot::behaviours();
+		words.push_back("off");
+		return words;
+	}
 }
 
 // goto, respawn, kill, god and ammo: edits of the live players, made from the
@@ -20,17 +28,11 @@ namespace
 void DebugDirectorImpl::register_player_commands()
 {
 	DebugRegistry& registry = this->registry_;
-	const auto menu = [](DebugMenuTraits::Form form)
-		{
-			DebugMenuTraits traits;
-			traits.category = "player";
-			traits.form = form;
-			return traits;
-		};
+	using Form = DebugMenuTraits::Form;
 
-	auto go = std::make_unique<LambdaCommand>("goto",
+	registry.add_command("goto",
 		"put a seat (1-4, default 1) at a named station of the current stage, at rest",
-		std::vector<DebugArgSpec>{
+		{
 			{ "station", false, [this] { return this->station_names(); } },
 			{ "seat", true, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } } },
 		[this](const DebugArgs& args, DebugLog&)
@@ -61,102 +63,80 @@ void DebugDirectorImpl::register_player_commands()
 					"queued " + this->queued_rebuild_description());
 			}
 			return this->apply_goto(*this->match_, args.text(0), seat);
-		});
-	go->set_menu(menu(DebugMenuTraits::Form::pick));
-	registry.add(std::move(go));
+		}, DebugMenuTraits::of("player", Form::pick));
 
-	auto respawn = std::make_unique<LambdaCommand>("respawn",
+	// respawn and kill: one seat (1-4) or every seat of the running match,
+	// refused while a recording or replay runs or a rebuild is queued. The
+	// rebuild note says what the queued rebuild does instead; the result is
+	// "<verb>: P1 P2" or the failure.
+	const auto each_seat = [this](const std::string& verb, const DebugArgs& args,
+		const std::string& rebuild_note, bool (DebugMatchTarget::* edit)(int))
+		{
+			if (this->match_ == nullptr)
+			{
+				return DebugStatus::failure(verb + ": no match");
+			}
+			if (const auto refused = this->refuse_while_replaying(verb))
+			{
+				return *refused;
+			}
+			if (this->rebuild_queued())
+			{
+				return DebugStatus::failure(verb + ": the queued " +
+					this->queued_rebuild_description() + " " + rebuild_note);
+			}
+			const int players = this->match_->debug_settings().player_count();
+			int first = 1;
+			int last = players;
+			if (args.has(0) && args.text(0) != "all")
+			{
+				if (!parse_seat(args.text(0), first))
+				{
+					return DebugStatus::failure(verb + ": seat must be 1-4 or all");
+				}
+				last = first;
+			}
+			std::string done;
+			for (int seat = first; seat <= last; ++seat)
+			{
+				if (!(this->match_->*edit)(seat - 1))
+				{
+					return DebugStatus::failure(verb + ": seat " + std::to_string(seat) +
+						" is not in this match (" + std::to_string(players) + " players)");
+				}
+				done += " P" + std::to_string(seat);
+			}
+			return DebugStatus::success(verb + ":" + done);
+		};
+
+	registry.add_command("respawn",
 		"respawn a seat (1-4) or every seat at its spawn, health and ammo full",
-		std::vector<DebugArgSpec>{ { "seat|all", true, []
-			{ return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } } },
-		[this](const DebugArgs& args, DebugLog&)
+		{ { "seat|all", true, [] { return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } } },
+		[each_seat](const DebugArgs& args, DebugLog&)
 		{
-			if (this->match_ == nullptr)
-			{
-				return DebugStatus::failure("respawn: no match");
-			}
-			if (const auto refused = this->refuse_while_replaying("respawn"))
-			{
-				return *refused;
-			}
-			if (this->rebuild_queued())
-			{
-				return DebugStatus::failure("respawn: the queued " +
-					this->queued_rebuild_description() + " respawns every seat anyway");
-			}
-			const int players = this->match_->debug_settings().player_count();
-			int first = 1;
-			int last = players;
-			if (args.has(0) && args.text(0) != "all")
-			{
-				if (!parse_seat(args.text(0), first))
-				{
-					return DebugStatus::failure("respawn: seat must be 1-4 or all");
-				}
-				last = first;
-			}
-			std::string done;
-			for (int seat = first; seat <= last; ++seat)
-			{
-				if (!this->match_->debug_respawn(seat - 1))
-				{
-					return DebugStatus::failure("respawn: seat " + std::to_string(seat) +
-						" is not in this match (" + std::to_string(players) + " players)");
-				}
-				done += " P" + std::to_string(seat);
-			}
-			return DebugStatus::success("respawn:" + done, true);
-		});
-	respawn->set_menu(menu(DebugMenuTraits::Form::run));
-	registry.add(std::move(respawn));
+			DebugStatus status = each_seat("respawn", args, "respawns every seat anyway",
+				&DebugMatchTarget::debug_respawn);
+			status.close_console = status.ok;
+			return status;
+		}, DebugMenuTraits::of("player", Form::run));
 
-	auto kill = std::make_unique<LambdaCommand>("kill",
+	registry.add_command("kill",
 		"splat a seat (1-4) or every seat, god or not, to watch the respawn redraw",
-		std::vector<DebugArgSpec>{ { "seat|all", true, []
-			{ return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } } },
-		[this](const DebugArgs& args, DebugLog&)
+		{ { "seat|all", true, [] { return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } } },
+		[each_seat](const DebugArgs& args, DebugLog&)
 		{
-			if (this->match_ == nullptr)
+			DebugStatus status = each_seat("kill", args, "rebuilds every seat",
+				&DebugMatchTarget::debug_kill);
+			if (status.ok)
 			{
-				return DebugStatus::failure("kill: no match");
+				// Death is noticed by the player's own update, so a countdown holds it.
+				status.message += " (on the next world update)";
+				status.close_console = true;
 			}
-			if (const auto refused = this->refuse_while_replaying("kill"))
-			{
-				return *refused;
-			}
-			if (this->rebuild_queued())
-			{
-				return DebugStatus::failure("kill: the queued " +
-					this->queued_rebuild_description() + " rebuilds every seat");
-			}
-			const int players = this->match_->debug_settings().player_count();
-			int first = 1;
-			int last = players;
-			if (args.has(0) && args.text(0) != "all")
-			{
-				if (!parse_seat(args.text(0), first))
-				{
-					return DebugStatus::failure("kill: seat must be 1-4 or all");
-				}
-				last = first;
-			}
-			std::string done;
-			for (int seat = first; seat <= last; ++seat)
-			{
-				if (!this->match_->debug_kill(seat - 1))
-				{
-					return DebugStatus::failure("kill: seat " + std::to_string(seat) +
-						" is not in this match (" + std::to_string(players) + " players)");
-				}
-				done += " P" + std::to_string(seat);
-			}
-			// Death is noticed by the player's own update, so a countdown holds it.
-			return DebugStatus::success("kill:" + done + " (on the next world update)", true);
-		});
-	kill->set_menu(menu(DebugMenuTraits::Form::run));
-	registry.add(std::move(kill));
+			return status;
+		}, DebugMenuTraits::of("player", Form::run));
 
-	auto god = std::make_unique<BoolVariable>("god",
+	registry.add(std::make_unique<BoolVariable>("god",
 		"no player takes paint damage (paint still lands)", false,
 		[this] { return this->god_; },
 		[this](bool on)
@@ -173,11 +153,9 @@ void DebugDirectorImpl::register_player_commands()
 			}
 			this->apply_cheats();
 			return DebugStatus::success(std::string("god = ") + (on ? "on" : "off"));
-		});
-	god->set_menu(menu(DebugMenuTraits::Form::variable));
-	registry.add(std::move(god));
+		}), DebugMenuTraits::of("player", Form::variable));
 
-	auto ammo = std::make_unique<ChoiceVariable>("ammo",
+	registry.add(std::make_unique<ChoiceVariable>("ammo",
 		"inf keeps every tank full", "normal", std::vector<std::string>{ "normal", "inf" },
 		std::vector<std::pair<std::string, std::string>>{ { "infinite", "inf" } },
 		[this] { return std::string(this->infinite_ammo_ ? "inf" : "normal"); },
@@ -194,9 +172,7 @@ void DebugDirectorImpl::register_player_commands()
 			}
 			this->apply_cheats();
 			return DebugStatus::success("ammo = " + choice);
-		});
-	ammo->set_menu(menu(DebugMenuTraits::Form::variable));
-	registry.add(std::move(ammo));
+		}), DebugMenuTraits::of("player", Form::variable));
 }
 
 void DebugDirectorImpl::apply_cheats()
@@ -289,7 +265,7 @@ std::string DebugDirectorImpl::bot_for_seat(int seat, int slot, bool shipping_bo
 void DebugDirectorImpl::rebuild_bots(const DebugMatchView& match)
 {
 	this->bot_driver_.reset();
-	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup>& seats = match.debug_settings().player_settings();
 	// The same seed gives the same bots on every build; without one each
 	// build draws a new one.
 	const std::uint64_t seed = this->seed_ ? static_cast<std::uint64_t>(*this->seed_) :
@@ -329,17 +305,12 @@ std::string DebugDirectorImpl::bot_summary() const
 void DebugDirectorImpl::register_bot_commands()
 {
 	std::vector<std::string> seats_and_all = { "all", "off", "1", "2", "3", "4" };
-	auto bot = std::make_unique<LambdaCommand>("bot",
-		"drive seats with scripted input: bot <seat|all> <idle|walk|jump|chase|paint|skirmish|off>; "
+	this->registry_.add_command("bot",
+		"drive seats with scripted input: bot <seat|all> <" + join_words(bot_words(), "|") + ">; "
 		"all = every idle dummy; bot off clears; bot alone lists",
-		std::vector<DebugArgSpec>{
+		{
 			{ "seat|all|off", true, [seats_and_all] { return seats_and_all; } },
-			{ "behaviour", true, []
-				{
-					std::vector<std::string> words = Bot::behaviours();
-					words.push_back("off");
-					return words;
-				} } },
+			{ "behaviour", true, [] { return bot_words(); } } },
 		[this](const DebugArgs& args, DebugLog& log)
 		{
 			if (!args.has(0))
@@ -368,13 +339,13 @@ void DebugDirectorImpl::register_bot_commands()
 			{
 				if (behaviour.empty())
 				{
-					return DebugStatus::failure("bot: name a behaviour: idle, walk, jump, chase, "
-						"paint, skirmish or off");
+					return DebugStatus::failure("bot: name a behaviour: " +
+						join_words(bot_words(), ", ", " or "));
 				}
 				if (behaviour != "off" && !Bot::is_behaviour(behaviour))
 				{
 					return DebugStatus::failure("bot: unknown behaviour '" + behaviour +
-						"'; one of idle, walk, jump, chase, paint, skirmish, off");
+						"'; one of " + join_words(bot_words(), ", "));
 				}
 				if (target == "all")
 				{
@@ -408,13 +379,6 @@ void DebugDirectorImpl::register_bot_commands()
 			}
 			return DebugStatus::success("bot " + target + (behaviour.empty() ? "" : " " + behaviour) +
 				": applies to the next match");
-		});
-	DebugMenuTraits menu;
-	menu.category = "player";
-	menu.form = DebugMenuTraits::Form::pick;
-	menu.pick_argument = 1;
-	menu.prefix = "all";
-	bot->set_menu(std::move(menu));
-	this->registry_.add(std::move(bot));
+		}, DebugMenuTraits::of("player", DebugMenuTraits::Form::pick, false, 1, "all"));
 }
 #endif

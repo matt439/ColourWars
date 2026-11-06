@@ -2,6 +2,7 @@
 #include "game/states/menu_panel.h"
 #include "game/states/main_menu.h"
 #include "game/states/pause_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/debug/debug_director.h"
 #include "game/states/player_label.h"
 
@@ -127,13 +128,7 @@ void PauseMenuPage::finish(PauseMenuAction action) const
 	this->context()->pop(action);
 }
 
-bool PauseMenuInitial::debug_dismiss(bool leaving_match)
-{
-	this->finish(leaving_match ? PauseMenuAction::quit : PauseMenuAction::resume);
-	return true;
-}
-
-bool PauseMenuConfirmation::debug_dismiss(bool leaving_match)
+bool PauseMenuPage::debug_dismiss(bool leaving_match)
 {
 	this->finish(leaving_match ? PauseMenuAction::quit : PauseMenuAction::resume);
 	return true;
@@ -154,9 +149,7 @@ PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool op
 
 WeaponType practice_tool_after(WeaponType tool, Direction direction)
 {
-	const int count = static_cast<int>(WeaponType::max_prim_wep);
-	const int step = direction == Direction::left ? count - 1 : 1;
-	return static_cast<WeaponType>((static_cast<int>(tool) + step) % count);
+	return step_tool(tool, direction, TUNED_WEAPON_COUNT);
 }
 
 void PauseMenuInitial::cycle_tool(Direction direction)
@@ -289,7 +282,7 @@ void PauseMenuInitial::init()
 	// Practice fits a fifth row, Tool, into the same paper.
 	const bool practice = this->practice();
 	this->set_widget_spacing(practice ?
-		Vector2F(look.layout.spacing.x, look.layout.spacing.y * 0.8f) : look.layout.spacing);
+		Vector2F(look.layout.spacing.x, look.practice_row_spacing) : look.layout.spacing);
 	const int first_row = practice ? 1 : 0;
 
 	this->player_num_ = std::make_unique<UiText>(
@@ -548,6 +541,7 @@ std::wstring PauseMenuConfirmation::question_text(
 	case ConfirmationType::quit:
 		return this->text().confirmations.quit;
 	default:
-		return L"Error";
+		throw std::logic_error("Pause has no question for confirmation type " +
+			std::to_string(static_cast<int>(type)));
 	}
 }

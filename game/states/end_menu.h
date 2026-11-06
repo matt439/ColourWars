@@ -4,8 +4,6 @@
 #include "game/match/session.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_page.h"
-#include "engine/core/state_context.h"
-#include "engine/render/colour.h"
 
 class EndMenuPage : public MenuPage
 {

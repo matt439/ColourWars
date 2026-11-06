@@ -7,6 +7,7 @@
 #include "engine/collision/partitioner.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/slot_seats.h"
+#include "engine/input/mouse.h"
 
 namespace
 {
@@ -39,7 +40,7 @@ namespace
         Partitioner partitioner;
         const LevelLoadedInfo info((content / "levels/crossfeed.json").string().c_str());
         const TeamColour colours;
-        const LevelObjectBuilder objects(&render, &audio, &preferences, &tuning.paint());
+        const LevelObjectBuilder objects(&render, &preferences, &tuning.paint());
         auto scene = std::make_unique<Scene>(nullptr, &partitioner);
         scene->set_bounds(info.out_of_bounds_rectangle());
         Scene* observed_scene = scene.get();

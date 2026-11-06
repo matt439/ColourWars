@@ -77,6 +77,14 @@ enum class PlayerMoveState
     in_air,
 };
 
+// Standing on something: flat ground, a drop-through platform or a ramp. A
+// ceiling contact is not support.
+constexpr bool supported(PlayerMoveState state)
+{
+    return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
+        state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+}
+
 enum class PlayerAnimationState
 {
 	idle,
@@ -223,6 +231,8 @@ public:
 	bool input_jump_pressed() const;
 	bool input_jump_held() const;
 	PlayerMoveState move_state() const;
+    // supported(move_state()): the move state says the feet are on something.
+    bool grounded() const;
     // Stable human input slot, or -1 for a device-less player; not a roster
     // participant or human-pane index. Pad reassignment leaves it unchanged.
     int player_num() const;
@@ -453,7 +463,6 @@ private:
 
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
-    WeaponType primary_type_ = WeaponType::none;
     labrador::Colour team_colour_ = labrador::Colour::gray;
     labrador::Viewport viewport_ = labrador::Viewport();
 
@@ -554,8 +563,11 @@ private:
 
     void set_move_state(PlayerMoveState move_state);
 
-	bool is_on_ground() const;
+    // On flat ground or a drop-through platform, not a ramp.
+    bool on_flat_ground() const;
     bool is_on_ramp() const;
+    // Alive with health left: the body still moves, paints and takes contacts.
+    bool can_act() const;
     PlayerLethalProjectiles lethal_projectiles_{};
     float flight_time_ = 0.0f;
     float longest_flight_ = 0.0f;

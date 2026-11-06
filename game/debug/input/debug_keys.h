@@ -34,6 +34,8 @@ namespace debug_keys
 
 	// "shift+f5": the form parse reads back.
 	std::string chord_name(const KeyChord& chord);
+	// "SHIFT+F5": chord_name upper-cased, as the console shows a key.
+	std::string display_name(const KeyChord& chord);
 
 	// grave (the console), f10 and f11 (the debug menu), with any modifier.
 	bool reserved(const KeyChord& chord);

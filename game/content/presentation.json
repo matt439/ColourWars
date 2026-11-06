@@ -3,8 +3,12 @@
     "What the shell looks like. game/config/presentation/presentation.h says what each key means",
     "and why this is a second file beside tuning.json rather than a section of",
     "it. Colours are either a name the engine knows or RRGGBB / RRGGBBAA.",
-    "Every key here is read at startup; a missing one stops the game with this",
-    "file and the position in it named."
+    "It is read at startup. Most keys are required: a missing one stops the game",
+    "with this file and the position in it named. A few are optional (camera's",
+    "framing keys, both stage_scan blocks, pause_menu.practice_row_spacing and a",
+    "figure slip stroke's after or remove); an object that holds one also refuses",
+    "any key it does not read, so a misspelt optional key stops the game instead",
+    "of being ignored."
   ],
 
   "team_palette": {
@@ -42,9 +46,10 @@
 
   "menu_style": {
     "_comment": [
-      "The four menu families all drew themselves from an identical copy of",
-      "this block. They still agreed, which is the only reason nobody had",
-      "noticed; a fifth menu would have made it four places to keep in step."
+      "What every menu page shares: the first widget's layout, the solid fill",
+      "frame, held-direction repeat, focus motion, fonts and their shadows, the",
+      "text colours, the arcade chrome around each page and the menu sounds.",
+      "A page's own section overrides only what it names."
     ],
     "layout": {
       "position": { "x": 150.0, "y": 150.0 },
@@ -92,7 +97,6 @@
       "rule_height": 2.0,
       "icon_padding": { "x": 6.0, "y": 6.0 }
     },
-    "box_size": { "x": 900.0, "y": 600.0 },
     "sound_bank": "paint_exe",
     "sounds": {
       "direction": { "name": "ui.move", "volume": 1.0 },
@@ -238,7 +242,7 @@
       "team_b_percentage": "B {percentage}"
     },
     "stage_scan": {
-      "_comment": "Provisional diagnostic action/help wording; external refusal text is retained verbatim with non-ASCII escapes.",
+      "_comment": "Diagnostic action/help wording accepted by the author on 2026-11-05 (ROAD#32); external refusal text is retained verbatim with non-ASCII escapes.",
       "heading": "User-stage scan",
       "status": "User-stage scan: {count} issue(s).",
       "browse_prompt": "Left/Right Arena   Down Scan details   A/Enter Lock   B/Esc Back",
@@ -266,7 +270,8 @@
       "numbered_navigation": "<   ARENA {index} / {total}   >",
       "random_hint": "Random: {count} available arenas.\nConfirm to lock your choice.",
       "team_a_picks": "Team A picks the arena",
-      "team_b_picks": "Team B picks the arena"
+      "team_b_picks": "Team B picks the arena",
+      "random_mark": "?"
     },
     "stage_names": {
       "_comment": "Shipped stages by manifest id. Each must equal its level file's display_name; user stages keep their own name (docs/localisation.md).",
@@ -285,11 +290,11 @@
       "turbulence_paint_lift_trial": "Turbulence Yard - Paint Lift Trial"
     },
     "records": {
-      "new_best": "NEW BEST",
-      "stage_best": "STAGE BEST",
-      "best_win": "BEST WIN",
-      "best_coverage": "BEST COVER",
-      "played": "PLAYED"
+      "new_best": "NEW BEST {percentage}",
+      "stage_best": "STAGE BEST {percentage}",
+      "best_win": "BEST WIN {percentage} / {played}",
+      "best_coverage": "BEST COVER {percentage} / {played}",
+      "played": "{count} PLAYED"
     },
     "labels": {
       "pad": "Pad {pad}",
@@ -491,7 +496,6 @@
       "title": "B0B0A8",
       "home": "B0B0A8"
     },
-    "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",
     "options_spacing": { "x": 540.0, "y": 82.0 },
     "display_trial_seconds": 15.0,
@@ -557,7 +561,8 @@
       "briefing_padding": { "x": 32.0, "y": 28.0 },
       "selected": "75EDD7",
       "unselected": "1B1C20",
-      "selected_ink": "111216"
+      "selected_ink": "111216",
+      "preview_background": "121827EE"
     },
     "music": { "name": "music.menu", "volume": 0.65 },
     "sounds": {
@@ -633,6 +638,7 @@
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 0.0, "y": 120.0 }
     },
+    "practice_row_spacing": 96.0,
     "window_open_sound": { "name": "ui.pause_open", "volume": 1.0 },
     "sounds": {
       "pad_lost": { "name": "ui.pad_lost", "volume": 0.65 },
@@ -695,13 +701,8 @@
       "time": 2.0
     },
     "show_results_delay": 1.0,
-    "_team_mark_comment": [
-      "The A and B letters, outside each end of the fill box rather than on",
-      "it: the percentages already sit at the top-left of their own bars.",
-      "The gap is measured from the fill box edge outwards; the results",
-      "panel leaves room on each side for the labels."
-    ],
     "team_mark": {
+      "_comment": "The box each team's A or B letter is fitted into, one outside each end of the fill box. gap is from the fill box edge outward; the results panel leaves room on each side for it.",
       "size": { "x": 56.0, "y": 56.0 },
       "gap": 20.0
     },
@@ -806,7 +807,6 @@
       "shadow_offset": { "x": 2.0, "y": 2.0 },
       "colour": "141414",
       "shadow_colour": "00000022",
-      "background_colour": "121827EE",
       "padding": { "x": 16.0, "y": 10.0 },
       "reference_width": 1920.0
     }
@@ -1256,6 +1256,14 @@
     "controls_margin": { "x": 72.0, "y": 48.0 },
     "controls_padding": { "x": 28.0, "y": 20.0 },
     "controls_gap": 32.0,
+    "controls_text": {
+      "_comment": "The countdown's controls reminder and the practice lesson cards. What they say is menu_text.controls, filled in with the player's own controls, or the lesson; this is how it looks. y is a fraction of the screen height, under the countdown.",
+      "font": "lato_black_24",
+      "colour": "WHITE_SMOKE",
+      "shadow_colour": "BLACK",
+      "shadow_offset": { "x": 2.0, "y": 2.0 },
+      "y": 0.78
+    },
     "countdown_art": {
       "_comment": "Coarse start signal. Card widths/offsets use reference pixels; beat_duration is seconds; pulse is a fraction. Reduce effects suppresses pulse and detached ticks.",
       "ink": "151515",
@@ -1279,6 +1287,7 @@
     "shadow_colour": "BLACK",
     "shadow_offset": { "x": 1.0, "y": 1.0 },
     "shadow_scale": 1.0,
+    "menu_value_colour": "FFB77A",
     "station_label": {
       "font": "courier_prime_bold_16",
       "scale": 1.0,

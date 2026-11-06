@@ -382,8 +382,8 @@ namespace menu_text_acceptance
             d["results_menu"]["contribution_font"].SetString("menu_labels_results_extrema");
             d["results_menu"]["contribution_position"]["x"].SetFloat(x + (outside ? 0.25f : 0.0f));
             d["results_menu"]["fill"]["box_size"]["x"].SetFloat(1264.0f);
-            d["menu_text"]["records"]["new_best"].SetString("R");
-            d["menu_text"]["records"]["stage_best"].SetString("R");
+            d["menu_text"]["records"]["new_best"].SetString("R {percentage}");
+            d["menu_text"]["records"]["stage_best"].SetString("R {percentage}");
         };
         const auto fits = variants.load([&](rapidjson::Document& d) { edit(d, false); });
         fits.validate_resources(world.render, world.audio);

@@ -102,8 +102,6 @@ private:
 		repeat_up, repeat_down, repeat_count };
 	std::array<DebugKeyRepeat, repeat_count> repeats_{};
 
-	labrador::RenderResources::SpriteSheetHandle sheet_;
-	labrador::SpriteSheet::frame_handle pixel_;
-	labrador::FontHandle font_;
+	OverlayHandles handles_;
 	float char_width_ = 8.0f;
 };

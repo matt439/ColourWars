@@ -31,7 +31,8 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             "\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"},") +
             (shared_paper ? "\"paper\":{\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"shade\":\"\\u00300000055\"}," : "") +
             "\"closing_clock\":{\"text\":\"\\u003141414\",\"ink\":\"\\u003141414\",\"paper\":\"\\u0046FF5DF\",\"accent\":\"\\u0046FD34D\",\"shade\":\"\\u00300000055\"},"
-            "\"player_identity\":{\"colour\":\"\\u003141414\",\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\",\"background_colour\":\"FFFFFF\"}},"
+            "\"player_identity\":{\"colour\":\"\\u003141414\",\"shadow_colour\":\"\\u00300000022\",\"font\":\"captured\"}},"
+            "\"main_menu\":{\"stage_select\":{\"preview_background\":\"FFFFFF\"}},"
             "\r\n\"number\":1\r\n}\r\n";
         const std::string authored_token = positive_alpha ? "\"\\u00300000055\"" : shadow ? "\"\\u00300000022\"" :
             (index == closing_clock_paper_colour_index || index == hud_paper_paper_colour_index) ? "\"\\u0046FF5DF\"" :
@@ -42,7 +43,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
         require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string &&
             document.current().token(*leaf) == authored_token &&
             document.find("hud.timer.font") == nullptr && document.find("hud.player_identity.font") == nullptr &&
-            document.find("hud.player_identity.background_colour") != nullptr && document.find(sibling_local) != nullptr,
+            document.find("main_menu.stage_select.preview_background") != nullptr && document.find(sibling_local) != nullptr,
             "Each exact HUD clock/label colour is editable with its independently supported sibling; fonts stay unavailable and the separately captured preview backing is eligible");
         document.commit(document.edited(*leaf, saved_token), local);
         const std::string pending = document.current().text();const auto edit = document.edits().at(local);
@@ -163,7 +164,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     const auto unselected = [&]
     {
         std::vector<labrador::Colour> values{ look->health_colour, look->meter_track_colour,
-            look->player_identity_background_colour, identity->ink_colour, identity->background_colour };
+            presentation.main_menu().stage_select.preview_background, identity->ink_colour, identity->background_colour };
         if (!shared_paper)
             { values.insert(values.begin(), { look->paper.ink, look->paper.paper, look->paper.shade }); }
         return values;
@@ -293,7 +294,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
     require(impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
         read_text(scratch.staged / L"presentation.json") == saved && document->baseline().text() == saved &&
         document->current().text() == saved && document->edits().empty() &&
-        !std::filesystem::exists(scratch.source / L"presentation.json.tmp") && !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+        !acceptance::temporary_beside(scratch.source / L"presentation.json") && !acceptance::temporary_beside(scratch.staged / L"presentation.json"),
         "A timer-only Save changes one token, preserves external whitespace/sibling/font bytes and rebases both copies atomically");unchanged();
 
     expected[index] = labrador::Colour(pending_word);
@@ -328,9 +329,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == invalid_source &&
                 read_text(scratch.staged / L"presentation.json") == saved && document->current().text() == current &&
                 document->baseline().text() == saved && ledger() == held_ledger && document->edits().size() == 3 &&
-                !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+                !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
                 !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-                !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+                !acceptance::temporary_beside(scratch.staged / L"presentation.json"),
                 "Ordinary/forced full-reader saves reject invalid external HUD geometry or partial/zero unedited opaque closing-neighbour alpha, restoring exact source and preserving staging/live/documents/three token pairs");unchanged();
         }
     }
@@ -355,9 +356,9 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
                 require(!impl.execute(command).ok && read_text(scratch.source / L"presentation.json") == invalid &&
                     read_text(scratch.staged / L"presentation.json") == saved && document->current().text() == reset_current &&
                     document->baseline().text() == saved && ledger() == reset_ledger && document->edits().size() == 2 &&
-                    !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+                    !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
                     !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-                    !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+                    !acceptance::temporary_beside(scratch.staged / L"presentation.json"),
                     "Saving only sibling/overlay edits cannot adopt reader-invalid external selected closing colour, even with force; exact source/staging/documents/remaining token pairs survive");unchanged();
             }
         }
@@ -388,8 +389,8 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             read_text(scratch.source / L"presentation.json") == paired_saved &&
             read_text(scratch.staged / L"presentation.json") == paired_saved &&
             colour_values(Presentation((scratch.source / L"presentation.json").string().c_str())) == expected &&
-            !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
-            !std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+            !acceptance::temporary_beside(scratch.source / L"presentation.json") &&
+            !acceptance::temporary_beside(scratch.staged / L"presentation.json"),
             "One HUD label/material pair Save splices exactly two tokens, preserves external bytes and all unrelated values, loads and rebases both copies");unchanged();
         expected[index] = labrador::Colour::red;
         require(impl.execute("tune " + path + " RED").ok && document->edits().size() == 1,

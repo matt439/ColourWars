@@ -1,4 +1,5 @@
 #include "editor/content_catalog.h"
+#include "editor/path_text.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -115,7 +116,7 @@ namespace colourwars_editor
                     try
                     {
                         const rapidjson::Document json = read(content_directory /
-                            std::filesystem::path(std::u8string(file.begin(), file.end())), file);
+                            utf8_path(file), file);
                         entry = sheet ? sprite_frames(json, file) : sound_effects(json, file);
                     }
                     catch (const std::exception& error) { catalog.problems.push_back(error.what()); }

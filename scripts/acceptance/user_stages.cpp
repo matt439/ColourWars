@@ -874,6 +874,10 @@ namespace
 			d["menu_text"]["stage_scan"]["counter"].SetString("File {file} of {files} {page}"); }, "stage_scan");
 		check("duplicate-summary-token", [](auto& d) {
 			d["menu_text"]["stage_scan"]["status"].SetString("{count} {count}"); }, "stage_scan");
+		// Copy errors name the copy's section; font, layout and fit errors,
+		// before and after the copy checks, name the page's look.
+		check("blank-heading", [](auto& d) {
+			d["menu_text"]["stage_scan"]["heading"].SetString(" "); }, "menu_text.stage_scan");
 		check("unknown-font", [](auto& d) {
 			d["main_menu"]["stage_scan"]["font"].SetString("absent_diagnostic_font"); }, "main_menu.stage_scan");
 		check("thin-paper", [](auto& d) {

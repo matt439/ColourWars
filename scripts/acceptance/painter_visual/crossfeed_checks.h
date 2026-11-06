@@ -75,7 +75,9 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     }
     app.viewport_manager()->set_layout(settings.screen_layout());
     const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
-    const LevelObjectBuilder objects(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    // LevelBuilder's own arguments: the gate and ferry cues come from presentation.
+    const LevelObjectBuilder objects(app.render_resources(), &preferences, &tuning.paint(),
+        &presentation.gate_permission(), &presentation.ferry_direction());
     auto scene = std::make_unique<Scene>(app.thread_pool(), app.partitioner());
     scene->set_bounds(info.out_of_bounds_rectangle());
     for (auto& object : objects.build_non_collision_objects(info.non_collision_objects_json()))
@@ -108,7 +110,6 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
     for (auto& player : players.build_players(settings, &info, colours, app.render_resources(),
         app.audio_resources(), &preferences, app.viewport_manager()))
     { roster.push_back(scene->add(std::move(player))); }
-    const std::string display = info.display_name();
     fixture.level = std::make_unique<Level>(
         LevelWorld{ .scene = std::move(scene), .players = std::move(roster),
             .viewport_dividers = objects.build_viewport_dividers(app.viewport_manager()) },
@@ -116,7 +117,8 @@ CrossfeedFixture crossfeed_fixture(Application& app, const LevelLoadedInfo& info
             .render_resources = app.render_resources(), .audio_resources = app.audio_resources(),
             .resolution_manager = app.resolution_manager(), .viewport_manager = app.viewport_manager(),
             .preferences = &preferences },
-        LevelStage{ .name = std::wstring(display.begin(), display.end()),
+        LevelStage{ .name = presentation.menu_text().stage_title(stage, info.display_name(),
+                "the display_name of stage '" + std::string(stage) + "'"),
             .camera_bounds = info.camera_bounds_rectangle(),
             .zoom_out_start_bounds = info.zoom_out_start_bounds_rectangle(),
             .zoom_out_finish_bounds = info.zoom_out_finish_bounds_rectangle(),

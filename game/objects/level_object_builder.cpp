@@ -11,6 +11,7 @@
 #include "game/contracts/level_format.h"
 #include "game/objects/fixed_slab_paintable.h"
 #include "game/objects/fixed_slab_shadow.h"
+#include "game/objects/primitive_frame.h"
 #include "game/objects/translated_airbrush_shadow.h"
 #include "game/contracts/paint_face_geometry.h"
 #include "game/contracts/fixed_slab_paint_geometry.h"
@@ -25,9 +26,7 @@ namespace object_type = level_format::object_type;
 
 namespace
 {
-	// Game assets used to draw the viewport manager's divider rectangles.
-	const std::string DIVIDER_SHEET_NAME = "sprite_sheet_1";
-	const std::string DIVIDER_FRAME_NAME = "pixel";
+	// The viewport manager's divider rectangles are the primitive texel in black.
 	const Colour DIVIDER_COLOUR = Colour::black;
 
 	class ViewportDivider final : public GameObject, public TextureObject
@@ -35,7 +34,7 @@ namespace
 	public:
 		ViewportDivider(const ViewportManager* viewport_manager, size_t index,
 			RenderResources* render_resources) :
-			TextureObject(DIVIDER_SHEET_NAME, DIVIDER_FRAME_NAME,
+			TextureObject(primitive_frame::sheet, primitive_frame::pixel,
 				render_resources, DIVIDER_COLOUR),
 			viewport_manager_(viewport_manager), index_(index)
 		{
@@ -204,7 +203,7 @@ namespace
 		{ throw std::runtime_error(slab.where() + ": rise must be 'left' or 'right'"); }
 		const FixedSlabSpec spec{ { slab.number("x"), slab.number("y") },
 			rise == "right" ? FixedSlabRise::right : FixedSlabRise::left };
-		try { (void)FixedSlabGeometry(spec); }
+		try { std::ignore = FixedSlabGeometry(spec); }
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(slab.where() + ": " + error.what()); }
 		return spec;
@@ -312,8 +311,10 @@ namespace
 				record.solid = level_format::collision_named(json.string(key::collision_type)) ==
 					level_format::Collision::structure_paintable;
 				const JsonValue face = json.object(key::paintable_faces);
-				record.any_paintable_face = face.boolean("left") || face.boolean("top") ||
-					face.boolean("right") || face.boolean("bottom");
+				for (const char* name : level_format::paintable_face_names)
+				{
+					record.any_paintable_face = record.any_paintable_face || face.boolean(name);
+				}
 			}
 			try { gate = team_gate_contract::decode(record); }
 			catch (const std::invalid_argument& error)
@@ -326,13 +327,11 @@ namespace
 }
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
-	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
 	const PaintTuning* paint, const GatePermissionPresentation* gate_cue,
 	const FerryDirectionPresentation* ferry_cue) :
 	paint_(paint), gate_cue_(gate_cue), ferry_cue_(ferry_cue),
-	render_resources_(render_resources),
-	audio_resources_(audio_resources)
+	render_resources_(render_resources)
 {
 	this->preferences_ = preferences;
 
@@ -378,10 +377,10 @@ std::unique_ptr<CollisionObject>
 
 		const JsonValue faces_json = json.object(key::paintable_faces);
 		PaintableFaces faces;
-		faces.left = faces_json.boolean("left");
-		faces.top = faces_json.boolean("top");
-		faces.right = faces_json.boolean("right");
-		faces.bottom = faces_json.boolean("bottom");
+		faces.left = faces_json.boolean(level_format::face::left);
+		faces.top = faces_json.boolean(level_format::face::top);
+		faces.right = faces_json.boolean(level_format::face::right);
+		faces.bottom = faces_json.boolean(level_format::face::bottom);
 
 		if (json.has(key::motion))
 		{
@@ -389,7 +388,7 @@ std::unique_ptr<CollisionObject>
 				collision_type == CollisionObjectType::structure_jump_through);
 			return std::make_unique<TranslatingStructurePaintable>(
 				json.string(key::sheet_name), json.string(key::frame_name), motion,
-				this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+				this->render_resources_, this->preferences_, this->paint_,
 				collision_type, team_colours, faces, colour_of(json), Vector2F::zero,
 				SpriteFlip::none, 0.0f,
 				material_of(json, collision_type, rectangle, {}, context.mirror_x, context.hand,
@@ -402,7 +401,7 @@ std::unique_ptr<CollisionObject>
 			{
 				return std::make_unique<TeamGateStructurePaintable>(
 					json.string(key::sheet_name), json.string(key::frame_name), rectangle,
-					this->render_resources_, this->audio_resources_, this->preferences_, this->paint_,
+					this->render_resources_, this->preferences_, this->paint_,
 					team_colours, faces, context.flat, colour_of(json),
 					material_of(json, collision_type, rectangle, context.solid, context.mirror_x, context.hand,
 						this->render_resources_, context.slabs), context.slabs, this->gate_cue_);
@@ -419,7 +418,6 @@ std::unique_ptr<CollisionObject>
 			rectangle,
 			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
-			this->audio_resources_,
 			this->preferences_,
 			this->paint_,
 			collision_type,
@@ -554,10 +552,10 @@ LevelObjectBuilder::StageContext
 				polygon[corner] = { point.x, point.y };
 			}
 			const FixedSlabSpec& spec = geometry.spec();
-			const float dy = spec.rise == FixedSlabRise::right ? -80.0f : 80.0f;
+			const float dy = spec.rise == FixedSlabRise::right ? -slab_rise : slab_rise;
 			const Vector2F inward = geometry.inward_normal();
 			context.slabs.push_back(canonical_slab_paint_polygon(polygon,
-				{ spec.top_left.x, spec.top_left.y }, { spec.top_left.x + 160.0f, spec.top_left.y + dy },
+				{ spec.top_left.x, spec.top_left.y }, { spec.top_left.x + slab_span, spec.top_left.y + dy },
 				{ inward.x, inward.y }));
 		}
 	}
@@ -570,13 +568,13 @@ std::unique_ptr<FixedSlabPaintable>
 		const TeamColour& team_colours, const StageContext& context) const
 {
 	const std::string type = json.string(key::type);
-	(void)collision_type_of(json, type);
+	std::ignore = collision_type_of(json, type);
 	const FixedSlabSpec spec = decode_slab(json);
 	const JsonValue face = json.object(key::paintable_faces);
-	const PaintableFaces faces{ face.boolean("left"), face.boolean("top"),
-		face.boolean("right"), face.boolean("bottom") };
-	return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_, this->audio_resources_,
-		this->preferences_, this->paint_, team_colours, faces, context.flat);
+	const PaintableFaces faces{ face.boolean(level_format::face::left), face.boolean(level_format::face::top),
+		face.boolean(level_format::face::right), face.boolean(level_format::face::bottom) };
+	return std::make_unique<FixedSlabPaintable>(spec, this->render_resources_,
+		this->paint_, team_colours, faces, context.flat);
 }
 
 std::vector<std::unique_ptr<CollisionObject>>
@@ -625,7 +623,7 @@ std::vector<std::unique_ptr<GameObject>>
 		if (object.has(key::motion)) { continue; }
 		if (type == object_type::fixed_slab_paintable)
 		{
-			(void)checked_record_gate(object);
+			std::ignore = checked_record_gate(object);
 			const auto slab = this->build_fixed_slab(object, TeamColour{}, context);
 			shadows.push_back(std::make_unique<FixedSlabShadow>(slab->geometry(), slab->exposed_bottom(), this->render_resources_));
 			continue;

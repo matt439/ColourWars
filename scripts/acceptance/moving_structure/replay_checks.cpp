@@ -6,7 +6,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
 #include "game/debug/replay/replay.h"
-#include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include <process.h>
 
 namespace moving_structure_acceptance
@@ -105,11 +105,11 @@ namespace
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL36-only version-8 replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL#36-only version-8 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
-            "POL36-only static replay changed meaning");
+            "POL#36-only static replay changed meaning");
         write_text(path, current);
         const ReplayFile static_read = ReplayFile::read(path);
         require(!static_read.final_print.horizontal_motion && static_read.tape.settings().human_count() == 1 &&
@@ -176,8 +176,8 @@ namespace
             {
                 fixture.tick(); const auto print = MatchFingerprint::of(*fixture.level, step);
                 require(!print.horizontal_motion && print.hash == legacy_hash(*fixture.level, step),
-                    "Static/POL36-only fingerprint appended new hash work");
-                require(print.seats[0].paint_underfoot == active, "Static prototype oracle did not exercise requested state");
+                    "Static/POL#36-only fingerprint appended new hash work");
+                require(print.seats[0].paint_underfoot == active, "Static paint-underfoot oracle did not exercise requested state");
             }
         }
     }

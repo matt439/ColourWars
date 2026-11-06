@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/input/controls_text.h"
+#include "game/config/drawable_text.h"
 #include <algorithm>
 #include <stdexcept>
 #include <string>
@@ -24,7 +25,7 @@ namespace
         {
             if (at < authored.size() && authored[at] != L'\n')
             {
-                if (authored[at] < L' ' || authored[at] > L'~')
+                if (authored[at] < drawable_text::first_drawable || authored[at] > drawable_text::last_drawable)
                 { throw std::invalid_argument("Controls text requires printable ASCII and allowed LF breaks."); }
                 continue;
             }
@@ -132,7 +133,7 @@ namespace
     // would otherwise read as the unbound control.
     InputBindings with_jump(labrador::Key jump)
     {
-        std::ignore = input_key_label(jump);
+        std::ignore = input_key_legend(jump);
         InputBindings bindings;
         bindings.keyboard_jump = jump;
         return bindings;
@@ -159,15 +160,16 @@ std::array<labrador::Key, 27> controls_text::jump_keys()
 
 std::wstring controls_text::key_label(const ControlLabels& labels, labrador::Key key)
 {
-    // input_key_label refuses a key outside A-Z and Space.
-    const std::wstring_view legend = input_key_label(key);
+    // input_key_legend refuses a key outside A-Z and Space.
+    const std::wstring_view legend = input_key_legend(key);
     return key == labrador::Key::space ? labels.space : std::wstring(legend);
 }
 
 std::wstring controls_text::desktop_label(const ControlLabels& labels, const DesktopControl& control)
 {
-    // desktop_control_label refuses a control that is both or an unsupported button.
-    std::ignore = desktop_control_label(control);
+    // desktop_control_name refuses a control that is both, an unsupported button
+    // or a key outside A-Z and Space.
+    std::ignore = desktop_control_name(control);
     if (control.key == labrador::Key::none && control.button == labrador::MouseButton::none) { return labels.none; }
     if (control.button != labrador::MouseButton::none) { return mouse_label(labels, control.button); }
     return key_label(labels, control.key);
@@ -175,8 +177,8 @@ std::wstring controls_text::desktop_label(const ControlLabels& labels, const Des
 
 std::wstring controls_text::pad_label(const ControlLabels& labels, PadControl control)
 {
-    // pad_control_label refuses an unknown control.
-    const std::wstring_view legend = pad_control_label(control);
+    // pad_control_legend refuses an unknown control.
+    const std::wstring_view legend = pad_control_legend(control);
     if (control == PadControl::none) { return labels.none; }
     if (control == PadControl::start) { return labels.start; }
     return std::wstring(legend);

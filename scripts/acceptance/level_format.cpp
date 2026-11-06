@@ -746,6 +746,27 @@ namespace
         std::cout << "PASS vertical lift schema/runtime fields, cycle and up/down paint drives, solid-only refusals, initial construction\n";
     }
 
+    // The editor has no engine, so it reads the scenery greys from the format's
+    // table. Hold that table to the engine's colour names: each is one of them
+    // and has three equal channels.
+    void check_scenery_greys()
+    {
+        for (const char* name : level_format::scenery_grey_names)
+        {
+            const std::optional<Colour> colour = colour_from_name(name);
+            require(colour.has_value(), std::string("Scenery grey ") + name + " is not an engine colour name");
+            require(colour->r == colour->g && colour->g == colour->b,
+                std::string("Scenery grey ") + name + " is not a grey in the engine");
+            require(level_format::is_scenery_grey(name), std::string("The format refuses its own grey ") + name);
+        }
+        for (const char* hue : { "SLATE_GRAY", "RED", "gainsboro", "", "GAINSBORO ", "808081" })
+        {
+            require(!level_format::is_scenery_grey(hue), std::string("The format takes a non-grey colour '") + hue + "'");
+        }
+        require(level_format::is_scenery_grey("7f7F7f"), "The format refuses an RRGGBB grey");
+        std::cout << "PASS scenery grey names are the engine's equal-channel colours\n";
+    }
+
     // The editor's warning-only resource check reads the sheet and bank formats
     // itself. Hold its catalog to the engine's loaders on the staged content.
     void check_editor_catalog(const std::filesystem::path& content)
@@ -815,7 +836,7 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const PlaySettings preferences;
-        const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
+        const LevelObjectBuilder builder(&render, &preferences, &tuning.paint());
 
         size_t checked = 0;
         const auto check_compatible = [&](const std::filesystem::path& path)
@@ -860,6 +881,7 @@ int main(int argc, char** argv)
         check_lift_fixtures(schema, source, scratch, builder, render, audio);
         check_gate_fixtures(schema, source, scratch, builder, render, audio, tuning);
         check_editor_catalog(content);
+        check_scenery_greys();
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "
             "early version rejection, schema fixtures and runtime resource/geometry authority.\n";
         return 0;

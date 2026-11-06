@@ -14,6 +14,9 @@ public:
 		const PlaySettings* preferences, const PresentationSound& music,
 		const MusicMixPresentation& mix, bool loop);
 	~ScreenMusic();
+	// Owns a playing effect: both copies would stop the same voice.
+	ScreenMusic(const ScreenMusic&) = delete;
+	ScreenMusic& operator=(const ScreenMusic&) = delete;
 	void update(float dt);
 	void suspend();
 	void resume();

@@ -188,7 +188,7 @@ namespace debug_console_acceptance
 			MatchFingerprint::difference(file.final_print, read.final_print).empty() &&
 			read.final_print.hash == 99, "A replay file round-trips");
         // The optional active state round-trips; disabled files retain exactly
-        // the legacy encoding and contain no prototype-only fields.
+        // the legacy encoding and contain no paint-underfoot fields.
         const std::string legacy_encoding = read_text(path);
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = static_cast<int>(PlayerTeam::a);
@@ -203,6 +203,30 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = false;
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
+		// A replay is replaced whole (replace_file_atomically): a refused write
+		// throws, keeps the earlier replay and leaves no temporary beside it.
+		// The lock shares writing, so an in-place truncating writer would get
+		// through it; the write carries different bytes so that would show.
+		{
+			acceptance::ReplacementLock lock(path);
+			require(lock.hold(), "Cannot lock the replay fixture");
+			file.final_print.seats[0].paint_underfoot = true;
+			std::string refused;
+			try { file.write(path); } catch (const std::exception& error) { refused = error.what(); }
+			file.final_print.seats[0].paint_underfoot = false;
+			require(refused.find("could not be written") != std::string::npos,
+				"A replay that cannot replace its file is reported: " + refused);
+			require(lock.release() && read_text(path) == legacy_encoding && !acceptance::temporary_beside(path),
+				"A refused replay write kept the earlier replay whole and left no temporary");
+			// Refused before HYG#63 too (the stream failed to open); the
+			// create_directories error is no longer ignored on the way there.
+			const std::filesystem::path not_a_folder = directory / L"not-a-folder";
+			write_text(not_a_folder, "a file where the replay folder should be");
+			refused.clear();
+			try { file.write(not_a_folder / L"x.json"); } catch (const std::exception& error) { refused = error.what(); }
+			require(refused.find("could not be written") != std::string::npos,
+				"A replay whose folder cannot be created is refused: " + refused);
+		}
 		const std::vector<SeatSetup> seats = read.tape.settings().player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
@@ -276,6 +300,15 @@ namespace debug_console_acceptance
 			require(message.find("is not the 3-player layout") != std::string::npos,
 				std::string("A replay with ") + layout + " for three seats is refused: " + message);
 		}
+		// A seat's team is a, b or none; any other word is refused, not read as none.
+		file.write(path);
+		text = read_text(path);
+		text.replace(text.find("\"team\": \"b\""), 11, "\"team\": \"c\"");
+		write_text(path, text);
+		message.clear();
+		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+		require(message.find("has an unknown team 'c'") != std::string::npos,
+			"A replay with an unknown team word is refused: " + message);
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 	}

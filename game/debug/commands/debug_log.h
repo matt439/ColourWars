@@ -14,6 +14,10 @@ enum class DebugSeverity
 	error,
 };
 
+// "error: ", "warning: " or nothing: what starts a line wherever it is
+// shown (the console, the debug menu, the debugger mirror, the transcript).
+const char* severity_prefix(DebugSeverity severity);
+
 struct DebugLogLine
 {
 	DebugSeverity severity = DebugSeverity::info;

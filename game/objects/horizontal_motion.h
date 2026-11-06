@@ -38,6 +38,21 @@ struct HorizontalMotionSpec
     // A scalar axis offset as a world translation.
     labrador::Vector2F axis_offset(float offset) const
     { return this->vertical() ? labrador::Vector2F(0.0f, offset) : labrador::Vector2F(offset, 0.0f); }
+    // A world translation's part along the mover's own axis.
+    float axis_part(const labrador::Vector2F& offset) const
+    { return this->vertical() ? offset.y : offset.x; }
+    // The anchor moved a scalar offset along the mover's own axis. A zero
+    // offset returns the anchor exactly.
+    labrador::RectangleF pose_at(float offset) const
+    {
+        labrador::RectangleF result = this->anchor;
+        if (offset != 0.0f)
+        {
+            if (this->vertical()) { result.y += offset; }
+            else { result.x += offset; }
+        }
+        return result;
+    }
 };
 
 // Offsets along the mover's own axis: x for a horizontal mover, y for a lift.
@@ -82,7 +97,6 @@ struct HorizontalCarryStep
 {
     HorizontalMotionId id = 0;
     labrador::RectangleF previous_top = labrador::RectangleF::zero;
-    labrador::RectangleF current_top = labrador::RectangleF::zero;
     float displacement_x = 0.0f;
     // A lift's rider moves with its top (E2), before its own integration.
     float displacement_y = 0.0f;
@@ -100,7 +114,6 @@ struct HorizontalPaintImpact
     labrador::RectangleF anchor_rectangle = labrador::RectangleF::zero;
     labrador::Vector2F normal_to_projectile = labrador::Vector2F::zero;
     float penetration = 0.0f;
-    double global_entry = 0.0;
 };
 
 struct HorizontalStructureState
@@ -138,7 +151,6 @@ private:
     friend class TranslatingStructurePaintable;
     void apply(const HorizontalPreparedStep& prepared) noexcept;
     static float offset_at(const HorizontalMotionSpec& spec, double phase);
-    static labrador::RectangleF at_offset(const HorizontalMotionSpec& spec, float offset);
     HorizontalPreparedStep prepare_driven(float dt, int heading) const;
     HorizontalMotionState state_;
 };

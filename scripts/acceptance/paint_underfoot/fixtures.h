@@ -132,7 +132,7 @@ namespace paint_underfoot_acceptance
             CollisionObjectType type = CollisionObjectType::structure_paintable)
         {
             auto* result = scene.add(std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
-                bounds, std::make_unique<labrador::RectangleF>(bounds), &world.render, &world.audio,
+                bounds, std::make_unique<labrador::RectangleF>(bounds), &world.render,
                 &world.preferences, &world.tuning.paint(), type,
                 TeamColour{ labrador::Colour::white, labrador::Colour::white }, faces, obstacles));
             scene.end_tick(); return *result;

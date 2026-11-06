@@ -1,6 +1,5 @@
 #include "game/pch.h"
 #include "game/objects/weapon_feedback.h"
-#include "game/objects/crude_drawing.h"
 
 #include <cmath>
 
@@ -8,7 +7,7 @@ using namespace labrador;
 
 WeaponFeedback::WeaponFeedback(const WeaponFeedbackPresentation* presentation,
     RenderResources* render_resources) :
-    TextureObject(presentation->sprite_sheet, presentation->fill_frame, render_resources),
+    CrudeDrawing(presentation->sprite_sheet, presentation->fill_frame, render_resources),
     presentation_(presentation)
 {
 }
@@ -59,14 +58,8 @@ const WeaponFeedbackState& WeaponFeedback::state() const { return this->state_; 
 void WeaponFeedback::draw_block(DrawList& draw_list, const Vector2F& center,
     const Vector2F& size, float angle, const Colour& colour, float alpha) const
 {
-    const RectangleI& source = this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle();
-    const Vector2F origin(static_cast<float>(source.width) * 0.5f,
-        static_cast<float>(source.height) * 0.5f);
-    const float border = this->presentation_->keyline_width * 2.0f;
-    this->draw_with(draw_list, RectangleF(center, size + Vector2F(border, border)),
-        this->frame(), CrudeDrawing::premultiplied(this->presentation_->keyline) * alpha, origin, SpriteFlip::none, angle);
-    this->draw_with(draw_list, RectangleF(center, size), this->frame(), CrudeDrawing::premultiplied(colour) * alpha,
-        origin, SpriteFlip::none, angle);
+    this->keyed_block(draw_list, center, size, angle, colour,
+        this->presentation_->keyline, this->presentation_->keyline_width, alpha);
 }
 
 void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,

@@ -87,7 +87,7 @@ namespace debug_console_acceptance
 				request.stage = "movement_course";
 				request.players = players;
 				const MatchPlan plan = planner.resolve(nullptr, request, pads, random);
-				require(plan.ok && plan.settings.screen_layout() == MatchPlanner::layout_for(players) &&
+				require(plan.ok && plan.settings.screen_layout() == layout_for_humans(players) &&
 					plan.settings.human_count() == players, "A players plan changed its layout or humans");
 				for (int seat = 0; seat < players; ++seat)
 				{
@@ -216,7 +216,7 @@ namespace debug_console_acceptance
 					require(seat.controller == PlayerController::human || seat.num == -1,
 						"A planned bot seat holds a device");
 				}
-				require(result.settings.screen_layout() == MatchPlanner::layout_for(result.settings.human_count()),
+				require(result.settings.screen_layout() == layout_for_humans(result.settings.human_count()),
 					"A planned layout is not the human layout");
 			}
 		}

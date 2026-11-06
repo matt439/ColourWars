@@ -2,7 +2,7 @@
 #include "game/debug/dev_tools.h"
 
 #if COLOURWARS_DEV_TOOLS
-#include "engine/app/application.h"
+#include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/console/debug_console_view.h"
@@ -16,7 +16,6 @@
 #include "game/objects/level.h"
 #include "game/match/match_setup.h"
 #include <bit>
-#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -24,18 +23,6 @@
 #include <utility>
 
 using namespace labrador;
-
-namespace
-{
-	std::string upper(std::string text)
-	{
-		for (char& c : text)
-		{
-			c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-		}
-		return text;
-	}
-}
 
 bool DebugDirectorImpl::has_pending_content() const
 {
@@ -180,9 +167,7 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	// queued here reached the match through a menu's own restart (pause menu
 	// Restart, or the end menu after unwinding): this build is the one that
 	// applies it.
-	MatchRequest queued = this->request_;
-	queued.restart = false;
-	if (!queued.empty())
+	if (!this->request_.without_restart().empty())
 	{
 		const MatchPlan plan = this->planner().resolve(&match.debug_settings(),
 			this->request_, this->connected_pads(), this->planner_random());
@@ -324,7 +309,7 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 
 std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchView& match) const
 {
-	const std::vector<SeatSetup> seats = match.debug_settings().player_settings();
+	const std::vector<SeatSetup>& seats = match.debug_settings().player_settings();
 	std::vector<std::wstring> labels(seats.size());
 	bool any = false;
 	for (std::size_t i = 0; i < seats.size(); ++i)
@@ -382,8 +367,7 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<SlotInput>& inputs)
 
 void DebugDirectorImpl::drop_request(const std::string& reason)
 {
-	MatchRequest dropped = this->request_;
-	dropped.restart = false;
+	const MatchRequest dropped = this->request_.without_restart();
 	if (!dropped.empty())
 	{
 		this->log_.warning("dropped queued " + dropped.describe() + ": " + reason);
@@ -415,9 +399,8 @@ bool DebugDirectorImpl::screenshot_waits() const
 	// Something that applies at this update would change the picture first:
 	// in a match a rebuild or leave, in the menus only a queued stage (players
 	// or weapon without one, or reloaded content, wait for a match that may
-	// never come).
-	return this->match_ != nullptr ? !this->request_.empty() || this->leave_requested_ :
-		this->request_.stage.has_value();
+	// never come). That is what Apply applies.
+	return this->can_apply();
 }
 
 bool DebugDirectorImpl::can_apply() const
@@ -439,7 +422,7 @@ void DebugDirectorImpl::run_binds(DebugMatchTarget& match)
 		[&keyboard](Key key) { return keyboard.held(key); });
 	for (const auto& [chord, line] : fired)
 	{
-		this->log_.write(DebugSeverity::echo, "[" + upper(debug_keys::chord_name(chord)) + "] " + line);
+		this->log_.write(DebugSeverity::echo, "[" + debug_keys::display_name(chord) + "] " + line);
 		const bool paused = this->clock_.paused();
 		const int steps = this->clock_.pending_steps();
 		this->execute(line);
@@ -461,12 +444,10 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 	{
 		return;
 	}
-	const std::string requested = *this->pending_screenshot_;
+	const std::string name = *this->pending_screenshot_;
 	this->pending_screenshot_.reset();
 	try
 	{
-		const std::string name = screenshot_file_name(requested,
-			std::chrono::system_clock::now());
 		std::filesystem::path directory(widen(directory_consts::screenshot_directory()));
 		if (!this->screenshot_dir_.empty())
 		{
@@ -496,8 +477,7 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 			this->log_.error("screenshot failed: " + error);
 			return;
 		}
-		const std::u8string text = path.u8string();
-		this->log_.info("screenshot: " + std::string(text.begin(), text.end()) + " (" +
+		this->log_.info("screenshot: " + labrador::path_to_utf8(path) + " (" +
 			std::to_string(image.width) + "x" + std::to_string(image.height) + ")");
 	}
 	catch (const std::exception& e)
@@ -510,7 +490,6 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt, b
 {
 	this->match_hook_active_ = active;
 	if (!active) { this->clock_.discard_input_edges(); }
-	++this->hook_frames_;
 	if (active && (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested(true)))
 	{
 		return true;
@@ -686,7 +665,6 @@ void DebugDirectorImpl::begin_keyboard_capture()
 
 void DebugDirectorImpl::capture_input_frame(DebugPageTarget& page)
 {
-	++this->hook_frames_;
 	this->keyboard_capture_ = true;
 	this->close_live_console("raw keyboard capture");
 	this->break_perf_interval();
@@ -717,7 +695,6 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt, bool
 		this->capture_input_frame(page);
 		return false;
 	}
-	++this->hook_frames_;
 	// A page is on top: the live console exists only over a running match,
 	// and perf times only frames with the match on top (a page may cover it).
 	this->close_live_console("a menu opened");

@@ -6,6 +6,7 @@
 #include "game/debug/script/debug_script.h"
 #include "game/debug/commands/debug_tokenizer.h"
 #include "game/debug/script/debug_wait.h"
+#include "game/debug/tune/tune_document.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/source_paths.h"
 #include "engine/render/text_encoding.h"
@@ -239,6 +240,12 @@ namespace debug_console_acceptance
 			"exec of a missing script fails and says where it looked");
 		require(!impl.execute("exec ../x").ok && any_line(log, "is not a script name"),
 			"exec takes a name, never a path");
+		for (const std::string device : { "CON", "nul.cfg", "Com1" })
+		{
+			require(!impl.execute("exec " + device).ok &&
+				any_line(log, "exec: '" + device + "' is not a script name"),
+				"exec refuses a reserved Windows name: " + device);
+		}
 		require(!impl.execute("wait 10").ok &&
 			any_line(log, "wait: only in a script (exec, autoexec.cfg or launch arguments)"),
 			"wait outside a script fails");
@@ -414,6 +421,40 @@ namespace debug_console_acceptance
 			};
 		std::string stage = "movement_course";
 		int players = 1;
+		// The shipped files as tune sees them: a renamed key is a missing leaf.
+		const TuneDocument tune_files[] = {
+			TuneDocument("tuning", to_lf(read_text(game_directory / L"tuning.json"))),
+			TuneDocument("presentation", to_lf(read_text(game_directory / L"presentation.json"))) };
+		const auto tune_file = [&](std::string_view name) -> const TuneDocument*
+			{
+				for (const TuneDocument& document : tune_files)
+				{
+					if (document.name() == name) { return &document; }
+				}
+				return nullptr;
+			};
+		// Each tune command's own grammar (tune_commands.cpp): tune takes a
+		// file-prefixed leaf; tune.reset a leaf, a file or all; tune.diff a file
+		// or all; tune.save a file, all or force, then only force.
+		const auto tune_leaf = [&](const std::string& target)
+			{
+				const std::size_t dot = target.find('.');
+				const TuneDocument* document = dot == std::string::npos ? nullptr :
+					tune_file(std::string_view(target).substr(0, dot));
+				return document != nullptr && document->find(std::string_view(target).substr(dot + 1)) != nullptr;
+			};
+		const auto tune_whole = [&](const std::string& target)
+			{ return target == "all" || tune_file(target) != nullptr; };
+		const auto tune_words = [&](const std::vector<std::string>& w)
+			{
+				const std::string first = w.size() > 1 ? w[1] : std::string();
+				const std::string second = w.size() > 2 ? w[2] : std::string();
+				if (w[0] == "tune") { return tune_leaf(first); }
+				if (w[0] == "tune.reset") { return first.empty() || tune_whole(first) || tune_leaf(first); }
+				if (w[0] == "tune.diff") { return first.empty() || tune_whole(first); }
+				return (first.empty() || first == "force" || tune_whole(first)) &&
+					(second.empty() || (second == "force" && first != "force"));
+			};
 
 		std::vector<std::string> names;
 		for (const auto& entry : std::filesystem::directory_iterator(folder))
@@ -464,6 +505,21 @@ namespace debug_console_acceptance
 					else if (w[0] == "players" && w.size() == 3)
 					{
 						require(Bot::is_behaviour(word(2)), statement.where() + ": no bot " + word(2));
+					}
+					else if (w[0] == "tune" || w[0] == "tune.reset" || w[0] == "tune.diff" || w[0] == "tune.save")
+					{
+						require(tune_words(w), statement.where() + ": " + w[0] + " cannot take " +
+							(w.size() > 1 ? word(1) : std::string("no target")) +
+							(w.size() > 2 ? " " + word(2) : std::string()));
+					}
+					else if (w[0] == "weapon")
+					{
+						int seat = 0;
+						WeaponType weapon = WeaponType::sprayer;
+						require((word(1) == "all" || (DebugArgs::parse_int(word(1), seat) && seat >= 1 && seat <= players)) &&
+							MatchPlanner::weapon_from_name(word(2), weapon),
+							statement.where() + ": weapon " + word(1) + " " + word(2) + " in a " +
+							std::to_string(players) + "-player script");
 					}
 					if (w[0] == "players")
 					{

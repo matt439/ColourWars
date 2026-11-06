@@ -7,6 +7,7 @@
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include "game/objects/primitive_frame.h"
 
 using namespace labrador;
 
@@ -52,7 +53,7 @@ void DebugMenuPage::init()
 	const std::string& small_font = this->presentation().controls_settings().help_font;
 	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
 	this->set_prompts({ { L"Up/Down", L"Move" }, { L"Left/Right", L"Change" },
-		{ L"A", L"Select" }, { L"B", L"Back" }, { L"F10/Back+Start", L"Close" } });
+		{ L"A/Enter", L"Select" }, { L"B/Esc", L"Back" }, { L"F10/Back+Start", L"Close" } });
 
 	this->title_ = std::make_unique<colourwars::UiTextDropShadow>("debug_title", L"DEBUG",
 		style.heading_font, Vector2F(left, title_y), this->render_resources(),
@@ -79,7 +80,7 @@ void DebugMenuPage::init()
 			this->render_resources(), style.unhighlight, style.shadow_colour,
 			style.detail_shadow_offset);
 	}
-	this->panel_ = std::make_unique<UiTexture>("debug_panel", "sprite_sheet_1", "pixel",
+	this->panel_ = std::make_unique<UiTexture>("debug_panel", primitive_frame::sheet, primitive_frame::pixel,
 		panel, this->render_resources(), panel_colour);
 	this->texture_container_ = std::make_unique<UiContainer>("debug_textures");
 	this->texture_container_->add_child(this->panel_.get());
@@ -137,7 +138,7 @@ void DebugMenuPage::rebuild(const std::vector<DebugMenuRow>& rows, std::size_t f
 		const float y = this->first_row_y_ + this->row_pitch_ * static_cast<float>(i);
 		built.push_back(std::make_unique<OptionRow>("debug_row_" + std::to_string(i),
 			widen(rows[i].label), Vector2F(left, y), Vector2F(value_x, y), style,
-			this->presentation().main_menu().options_value_colour, this->render_resources(),
+			this->presentation().debug_overlay().menu_value_colour, this->render_resources(),
 			nullptr));
 		built.back()->set_value(widen(rows[i].value));
 		this->shown_labels_.push_back(rows[i].label);
@@ -216,8 +217,7 @@ void DebugMenuPage::refresh()
 			continue;
 		}
 		const DebugLogLine& line = lines[lines.size() - back];
-		std::string text = (line.severity == DebugSeverity::error ? "error: " :
-			line.severity == DebugSeverity::warning ? "warning: " : "") + line.text;
+		std::string text = severity_prefix(line.severity) + line.text;
 		if (text.size() > footer_columns)
 		{
 			text = text.substr(0, footer_columns - 3) + "...";

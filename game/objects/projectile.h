@@ -69,6 +69,8 @@ public:
 	float delete_timer() const;
 	// Paint-owner index; device-less players have a separate owner by view.
 	int player_num() const;
+	// The painting team; layer() follows it.
+	PlayerTeam team() const;
 	ProjectileType projectile_type() const { return this->type_; }
 
 	// A muzzle can extend through cover even when its owner cannot. Check
@@ -126,12 +128,9 @@ protected:
 	// Integrator velocity limit shared by all projectile kinds.
 	const labrador::Vector2F& max_velocity() const;
 
-	PlayerTeam team() const;
-
 	CollisionObjectType collision_type() const;
 
 	const labrador::Colour& team_colour() const;
-	ProjectileType type() const;
 
 	float timer() const;
 	void alter_timer(float time);

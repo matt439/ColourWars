@@ -6,6 +6,7 @@
 #include "game/states/profiles_menu.h"
 #include "game/input/controls_text.h"
 #include "game/config/sound_groups.h"
+#include "game/config/presentation/menu_geometry.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -32,9 +33,9 @@ void ControlsSettingsMenu::init()
 	const auto fit_action = [&look](UiText* widget)
 	{
 		const RectangleF bounds = widget->bounds();
-		widget->set_scale(std::min({ 1.0f,
-			menu_geometry::settings_action_width(look, bounds.x) / bounds.width,
-			(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / bounds.height }));
+		widget->set_scale(menu_geometry::fit_scale(bounds.size(), Vector2F(
+			menu_geometry::settings_action_width(look, bounds.x),
+			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 	};
 	this->add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
 		look.heading_position, look.art.ink);
@@ -89,11 +90,12 @@ void ControlsSettingsMenu::init()
 		this->context()->push(std::make_unique<ProfilesMenu>(this->menu_context(), this->opening_slot()));
 	});
 	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
-		4, this->selection_.music_volume, 0, 100, 10);
+		settings_rows::controls_music, this->selection_.music_volume, 0, PlaySettings::max_volume, PlaySettings::volume_step);
 	this->sfx_ = make_row("sfx", this->text().item(MenuItem::sfx_volume),
-		5, this->selection_.sfx_volume, 0, 100, 10);
+		settings_rows::controls_sfx, this->selection_.sfx_volume, 0, PlaySettings::max_volume, PlaySettings::volume_step);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", this->text().item(MenuItem::view_shake),
-		this->calculate_widget_position(0, 6), this->calculate_widget_position(1, 6),
+		this->calculate_widget_position(0, settings_rows::controls_view_shake),
+		this->calculate_widget_position(1, settings_rows::controls_view_shake),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -103,7 +105,8 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", this->text().item(MenuItem::aim_marker),
-		this->calculate_widget_position(0, 7), this->calculate_widget_position(1, 7),
+		this->calculate_widget_position(0, settings_rows::controls_aim_marker),
+		this->calculate_widget_position(1, settings_rows::controls_aim_marker),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -113,7 +116,8 @@ void ControlsSettingsMenu::init()
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", this->text().item(MenuItem::reduce_effects),
-		this->calculate_widget_position(0, 8), this->calculate_widget_position(1, 8),
+		this->calculate_widget_position(0, settings_rows::controls_reduce_effects),
+		this->calculate_widget_position(1, settings_rows::controls_reduce_effects),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
@@ -137,7 +141,7 @@ void ControlsSettingsMenu::init()
 	this->status_ = this->add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
 	this->set_status(this->text().status.controls_pending, look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
-	this->focus_.add(back, [this] { this->close(); });
+	this->focus_.add(back, [this] { this->pop_page(); });
 	this->controls_ = this->add_text("controls", L"",
 		look.help_font, look.controls_position, look.art.ink);
 	this->controls_limit_ = RectangleF(look.controls_position, look.controls_size);
@@ -150,10 +154,7 @@ void ControlsSettingsMenu::refresh_help()
 	// effective keys, retaining the page's authored template, font and geometry.
 	this->controls_->set_text(controls_text::controls_help(this->text().controls, this->text().help.controls,
 		this->settings_session()->input_bindings()));
-	this->controls_->set_scale(1.0f);
-	const RectangleF bounds = this->controls_->bounds();
-	this->controls_->set_scale(std::min({ 1.0f, this->controls_limit_.width / bounds.width,
-		this->controls_limit_.height / bounds.height }));
+	fit_text(*this->controls_, this->controls_limit_);
 }
 
 void ControlsSettingsMenu::on_resume()
@@ -167,14 +168,7 @@ void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& co
 {
 	this->status_->set_text(text);
 	this->status_->set_colour(colour);
-	this->status_->set_scale(1.0f);
-	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
-	const float available = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
-		look.status_position.x;
-	if (this->status_->bounds().width > available)
-	{
-		this->status_->set_scale(available / this->status_->bounds().width);
-	}
+	fit_text(*this->status_, this->status_limit(this->panel_style()));
 }
 
 void ControlsSettingsMenu::refresh_values()
@@ -186,13 +180,22 @@ void ControlsSettingsMenu::refresh_values()
 	this->reduce_effects_->set_value(this->selection_.reduce_effects ? this->text().values.on : this->text().values.off);
 }
 
+PlaySettings ControlsSettingsMenu::applied_settings(PlaySettings current, const PlaySettings& page)
+{
+	current.music_volume = page.music_volume;
+	current.sfx_volume = page.sfx_volume;
+	current.view_shake = page.view_shake;
+	current.aim_marker = page.aim_marker;
+	current.reduce_effects = page.reduce_effects;
+	return current;
+}
+
 void ControlsSettingsMenu::apply_settings()
 {
-	// The child commits pad profiles independently of these shared preferences.
-	this->selection_.sticks = this->settings_session()->play_settings().sticks;
-	this->selection_.pad_rumble = this->settings_session()->play_settings().pad_rumble;
-	this->selection_.pad_comfort = this->settings_session()->play_settings().pad_comfort;
-	const bool saved = this->settings_session()->set_play_settings_and_save(this->selection_);
+	// Merged onto what is in effect now, as Pad sticks does, so a child
+	// page's commits survive this page's older selection.
+	const bool saved = this->settings_session()->set_play_settings_and_save(
+		applied_settings(this->settings_session()->play_settings(), this->selection_));
 	// The settings in memory changed whether or not the file did. The groups
 	// reach every playing and paused voice, so a music fade carries on.
 	sound_groups::apply(*this->data()->audio_resources(), this->settings_session()->play_settings());
@@ -218,7 +221,7 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 	{
 		if (input.action == MenuInputAction::back)
 		{
-			this->close();
+			this->pop_page();
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)

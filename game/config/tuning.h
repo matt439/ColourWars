@@ -25,8 +25,9 @@ namespace labrador
 }
 
 // Gameplay balance and asset choices loaded from tuning.json at startup.
-// Mechanics and animation states remain in C++; changing these values needs
-// staging the updated content and restarting.
+// Mechanics and animation states remain in C++. A Debug build's tune and
+// reload commands change these values while the game runs
+// (docs/debug-console.md#live-tuning); otherwise a change takes a restart.
 
 // A named sound and how loud it is played.
 struct SoundTuning
@@ -45,8 +46,9 @@ struct InputTuning
 	float menu_release_threshold = 0.0f;
 };
 
-// Provisional shipped-opponent policy. Every difficulty uses the same world
-// observations, movement and resource rules; these only govern decisions.
+// Shipped-opponent policy, accepted as it stands on 2026-11-05 (ROAD#10).
+// Every difficulty uses the same world observations, movement and resource
+// rules; these only govern decisions.
 struct BotDifficultyTuning
 {
 	int reaction_steps = 1;
@@ -93,7 +95,6 @@ struct HandicapTuning
 	float paint_refill = 1.0f;
 };
 
-// Match phase durations and countdown presentation.
 // The opening's beats before the countdown (docs/backstory.md, "Opening"), in
 // seconds. They move the match's state machine, so they are tuning.
 struct OpeningTuning
@@ -130,6 +131,7 @@ struct RevealTuning
 	float react = 0.0f;
 };
 
+// Match phase durations and the match's sounds.
 struct MatchTuning
 {
 	float duration = 0.0f;
@@ -140,18 +142,8 @@ struct MatchTuning
 	// How much of the round's end the End menu's Watch Replay plays (ROAD#19).
 	float replay = 0.0f;
 
-	// The controls reminder's look during the countdown. Its words are
-	// presentation.json's menu_text.controls, measured in this font by
-	// validate_controls_reminders (content_validation.h); the drawn start
-	// signal lives in MatchPresentation.
-	std::string controls_font;
-	labrador::Colour controls_colour = labrador::Colour::white;
-	labrador::Colour controls_shadow_colour = labrador::Colour::black;
-	labrador::Vector2F controls_shadow_offset = { 0.0f, 0.0f };
-
-	// Down the screen, as a fraction of its height, so the legend clears the
-	// countdown at any resolution.
-	float controls_y = 0.8f;
+	// The controls reminder's look is presentation's, in
+	// MatchPresentation::controls_text.
 
 	SoundTuning countdown_sound;
 	SoundTuning go_sound;
@@ -218,7 +210,6 @@ struct PaintTuning
 	std::string frame;
 
 	std::string splash_sheet;
-	std::string splash_animation;
 	std::array<std::string, static_cast<size_t>(ProjectileType::count)> splash_animations;
 
 	// Surface decoration stays inside the scored tile; only the short airborne
@@ -258,8 +249,8 @@ struct PlayerMovementSounds
 	float skid_repeat_delay = 0.0f;
 };
 
-// Experimental POL36 mechanics. Missing old content stays disabled/neutral.
-// Trial amounts require attended POL30/POL27 acceptance.
+// Paint underfoot (POL#36). These defaults are the off state a missing old
+// block reads as; tuning.json ships it on since POL#30 was accepted on 2026-11-05.
 struct PaintUnderfootTuning
 {
     bool enabled = false;
@@ -268,7 +259,7 @@ struct PaintUnderfootTuning
     float enemy_speed_multiplier = 1.0f;
     float enemy_ammo_regen_multiplier = 1.0f;
     // Health does not regenerate while standing on enemy paint. Optional;
-    // missing reads as false, and nothing changes while the trial is off.
+    // missing reads as false, and nothing changes while the mechanic is off.
     bool enemy_blocks_health_regen = false;
 };
 struct PlayerTuning
@@ -309,6 +300,8 @@ struct PlayerTuning
 	std::array<SoundTuning, 4> redraw_sounds;
 	PlayerMovementSounds movement_sounds;
 
+	// Above this horizontal ground speed the running clip plays, not walk.
+	float run_speed = 0.0f;
 	PlayerAnimationTuning idle;
 	PlayerAnimationTuning walk;
 	PlayerAnimationTuning running;

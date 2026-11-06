@@ -43,7 +43,6 @@ private:
 
 	void update_movement_and_rotation(PlayerInputData input,
 		const labrador::Vector2F& player_center,
-		const labrador::Vector2F& player_velocity,
 		bool player_facing_right) override;
 
 	// The sleeve takes the team colour only while it is laying paint.

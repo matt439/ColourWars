@@ -101,9 +101,7 @@ namespace turbulence_movers_acceptance
 
     bool supported(const Player& player)
     {
-        const auto state = player.move_state();
-        return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-            state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+        return player.grounded();
     }
 
     float mirrored(bool side_b, float x) { return side_b ? 4000.0f - x : x; }
@@ -112,7 +110,7 @@ namespace turbulence_movers_acceptance
     {
         auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str());
         info->validate();
-        const LevelObjectBuilder object_builder(&with.world.render, &with.world.audio, &with.world.preferences, &with.world.tuning.paint());
+        const LevelObjectBuilder object_builder(&with.world.render, &with.world.preferences, &with.world.tuning.paint());
         info->validate_content(object_builder, with.world.render, with.world.audio);
         bounds_ = info->out_of_bounds_rectangle();
         const auto entries = info->collision_objects_json();

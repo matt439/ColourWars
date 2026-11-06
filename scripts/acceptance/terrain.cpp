@@ -305,7 +305,7 @@ namespace
 		const std::string stage = path.stem().string();
 		const JsonDocument document = read_json_file(path.string().c_str());
 		const JsonValue collision_json = document.root().array("collision_objects");
-		const LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences,
+		const LevelObjectBuilder builder(&world.render, &world.preferences,
 			&tuning.paint());
 		const auto first = builder.build_collision_objects(collision_json, TeamColour{});
 		const auto second = builder.build_collision_objects(collision_json, TeamColour{});

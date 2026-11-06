@@ -18,7 +18,6 @@ void GameTuning::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const
 {
 	const ResourceValidation check(this->source_path_, render, audio);
-	check.font("match.controls_text.font", this->match_.controls_font);
 	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
 	const auto splash = [&](ProjectileType type, const char* key)
 	{

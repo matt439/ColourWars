@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/stage.h"
+#include "game/input/input_slots.h"
 #include "game/match/match_setup.h"
 #include <array>
 #include <functional>
@@ -42,9 +43,11 @@ struct MatchRequest
 	std::optional<MatchSetup> exact;
 	std::string exact_label;
 
-
 	bool empty() const;
 	std::string describe() const;
+	// The request with `restart` cleared: what the debug menu shows as queued,
+	// what a drop reports and what a menu's own restart still has to apply.
+	MatchRequest without_restart() const;
 };
 
 struct MatchPlan
@@ -63,7 +66,7 @@ struct MatchPlan
 class MatchPlanner
 {
 public:
-	using ConnectedPads = std::array<bool, 4>;
+	using ConnectedPads = std::array<bool, input_slots::pad_count>;
 	using Random = std::function<unsigned int()>;
 
 	explicit MatchPlanner(const StageList* stages);
@@ -83,9 +86,6 @@ public:
 	// assign_devices without the count or the teams: claims devices for the
 	// roster's humans and sets the layout.
 	static void claim_devices(MatchSetup& settings, const ConnectedPads& pads);
-
-	// The split-screen layout a plan gives `players` (1-4) seats.
-	static labrador::ScreenLayout layout_for(int players);
 
 	// Weapon names accepted by "weapon": the five primaries and random.
 	static std::vector<std::string> weapon_names();

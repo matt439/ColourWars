@@ -172,7 +172,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         RectangleF edge = preview; edge.inflate(style.rule_height);
         UiTexture preview_edge("reference-preview-edge", style.sprite_sheet, style.fill_frame, edge,
             app.render_resources(), locked ? live.selected : style.panel_edge_colour);
-        const auto& backing_colour = snapshot.hud().player_identity_background_colour;
+        const auto& backing_colour = snapshot.main_menu().stage_select.preview_background;
         const Colour backing_tint(backing_colour.r * backing_colour.a, backing_colour.g * backing_colour.a,
             backing_colour.b * backing_colour.a, backing_colour.a);
         UiTexture preview_background("reference-preview-background", style.sprite_sheet, style.fill_frame, preview,

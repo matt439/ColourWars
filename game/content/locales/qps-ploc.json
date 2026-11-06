@@ -171,7 +171,8 @@
         "numbered_navigation": "[<   ARENA {index} / {total}   >]",
         "random_hint": "[Random: {count} available arenas.]\n[Confirm to lock your choice.]",
         "team_a_picks": "[Team A picks the arena]",
-        "team_b_picks": "[Team B picks the arena]"
+        "team_b_picks": "[Team B picks the arena]",
+        "random_mark": "[?]"
       },
       "stage_names": {
         "king_of_the_hill": "[King of the Hill]",
@@ -189,11 +190,11 @@
         "turbulence_paint_lift_trial": "[Turbulence Yard - Paint Lift Trial]"
       },
       "records": {
-        "new_best": "[NEW BEST]",
-        "stage_best": "[STAGE BEST]",
-        "best_win": "[BEST WIN]",
-        "best_coverage": "[BEST COVER]",
-        "played": "[PLAYED]"
+        "new_best": "[NEW BEST {percentage}]",
+        "stage_best": "[STAGE BEST {percentage}]",
+        "best_win": "[BEST WIN {percentage} / {played}]",
+        "best_coverage": "[BEST COVER {percentage} / {played}]",
+        "played": "[{count} PLAYED]"
       },
       "labels": {
         "pad": "[Pad {pad}]",

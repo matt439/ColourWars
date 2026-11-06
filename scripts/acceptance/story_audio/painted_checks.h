@@ -23,7 +23,7 @@ StructurePaintable& painted_course_surface(MovementCourse& course,
     auto* surface = course.scene.add(std::make_unique<StructurePaintable>(
         "sprite_sheet_1", "square_white_4", rectangle,
         std::make_unique<labrador::RectangleF>(rectangle), &course.world.render,
-        &course.world.audio, &course.world.preferences, &course.tuning.paint(),
+        &course.world.preferences, &course.tuning.paint(),
         CollisionObjectType::structure_paintable, TeamColour{}, faces, obstacles));
     course.scene.end_tick();
     return *surface;

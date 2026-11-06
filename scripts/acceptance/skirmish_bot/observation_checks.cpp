@@ -10,6 +10,7 @@
 #include "game/objects/weapon.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/json.h"
+#include "engine/input/mouse.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
@@ -136,9 +137,9 @@ namespace skirmish_acceptance
 			std::srand(1947); const int expected_random = std::rand(); std::srand(1947);
 			for (int view = 0; view < level->player_count(); ++view)
 			{
-				const BotSeatView old = BotDriver::view_of(*level, view, 17, world.tuning);
-				const BotSeatView observed = BotDriver::view_of(*level, view, 17, world.tuning, true);
-				require(old.step == observed.step && old.player_height == observed.player_height &&
+				const BotSeatView old = BotDriver::view_of(*level, view, world.tuning);
+				const BotSeatView observed = BotDriver::view_of(*level, view, world.tuning, true);
+				require(old.player_height == observed.player_height &&
 					same_seat(old.self, observed.self) && old.others.size() == observed.others.size() &&
 					old.others.size() == 1 && same_seat(old.others.front(), observed.others.front()),
 					"Opt-in tool observations changed the established public seat view");
@@ -161,12 +162,14 @@ namespace skirmish_acceptance
 				BotDriver driver(&world.tuning, 7);
 				driver.assign(0, word);
 				auto direct = Bot::make(word, 7, 0);
+				require(direct->observes_tool() == (std::string_view(word) == "skirmish"),
+					"Only the skirmish bot reads the tool observations");
 				std::vector<PlayerInputData> inputs(2);
 				inputs[1].connected = true; inputs[1].x_movement = 0.375f;
 				const PlayerInputData untouched = inputs[1];
 				driver.filter_seats(inputs, *level);
 				const PlayerInputData expected = direct->think(
-					BotDriver::view_of(*level, 0, 0, world.tuning, std::string_view(word) == "skirmish"));
+					BotDriver::view_of(*level, 0, world.tuning, direct->observes_tool()));
 				require(replay_codec::same(inputs[0], expected) && replay_codec::same(inputs[1], untouched),
 					"BotDriver failed its behavior-specific observation/seat isolation seam");
 			}
@@ -189,7 +192,7 @@ namespace skirmish_acceptance
 			const Player& player = level->player(0);
 			if (player.weapon_ammo() > 0.0f && player.primary_weapon().readiness() == WeaponReadiness::empty)
 			{
-				const BotSeatView observed = BotDriver::view_of(*level, 0, tick, world.tuning, true);
+				const BotSeatView observed = BotDriver::view_of(*level, 0, world.tuning, true);
 				require(observed.self.ammo > 0.0f && observed.shot_empty,
 					"A real positive-but-unaffordable Sniper remainder was hidden");
 				auto bot = Bot::make("skirmish", 13, 0);

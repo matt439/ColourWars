@@ -124,6 +124,13 @@ Activation MenuPage::activate_focus()
 	return result;
 }
 
+void MenuPage::pop_page()
+{
+	this->play_wave(this->cancel_sound_);
+	this->input()->reset_actions();
+	this->context()->pop();
+}
+
 void MenuPage::press_focus()
 {
 	if (!this->context()->active() || this->settings_session()->play_settings().reduce_effects)
@@ -152,39 +159,13 @@ void MenuPage::debug_reset_input(int pad_slot)
 	this->reset_menu_motion();
 }
 
-// Add keyboard equivalents to the shared pad labels. Keep these mappings
-// in sync with MenuInput; Left/Right already describes keyboard navigation.
+// The prompts as given: shipped pages pass a MenuPrompt, whose legend is
+// presentation.json's copy; this form is the Debug menu's and an empty bar's.
 void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
 {
-	std::vector<PromptBar::Prompt> with_keys;
-	with_keys.reserve(prompts.size());
-
-	for (const PromptBar::Prompt& prompt : prompts)
-	{
-		std::wstring button = prompt.button;
-		if (button == L"A")
-		{
-			button = L"A/Enter";
-		}
-		else if (button == L"B")
-		{
-			button = L"B/Esc";
-		}
-		else if (button == L"X")
-		{
-			button = L"X/R";
-		}
-		else if (button == L"B/Start")
-		{
-			button = L"B/Start/Esc";
-		}
-
-		with_keys.push_back({ button, prompt.action });
-	}
-
 	this->prompt_bar_ = std::make_unique<PromptBar>(
 		"prompt_bar",
-		with_keys,
+		prompts,
 		this->prompt_look_,
 		this->render_resources());
 }
@@ -250,22 +231,6 @@ Vector2F MenuPage::calculate_widget_position(int h_index, int v_index) const
 	result.x += h_index * this->widget_spacing_.x;
 	result.y += v_index * this->widget_spacing_.y;
 	return result;
-}
-
-Vector2F MenuPage::calculate_center_position(
-	const Vector2F& widget_size,
-	const Vector2F& resolution)
-{
-	return {
-		menu_geometry::centred(widget_size.x, resolution.x),
-		menu_geometry::centred(widget_size.y, resolution.y)
-	};
-}
-
-float MenuPage::calculate_center_position(
-	float widget_size, float resolution)
-{
-	return menu_geometry::centred(widget_size, resolution);
 }
 
 MenuContext* MenuPage::menu_context() const
@@ -385,11 +350,6 @@ void MenuPage::draw_chrome(DrawList& list) const
 std::vector<ProcessedMenuInput> MenuPage::menu_inputs() const
 {
 	return this->input()->menu_inputs();
-}
-
-Vector2F MenuPage::float_resolution() const
-{
-	return this->resolution_manager()->resolution_vec();
 }
 
 // Fit the whole design into the actual window, including arbitrary drag sizes

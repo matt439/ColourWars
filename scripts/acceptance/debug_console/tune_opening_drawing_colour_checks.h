@@ -177,9 +177,9 @@
 			pending->edits().size() == 1 && pending->edits().contains("debug_overlay.colour") &&
 			pending->current().text() == overlay_only && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Silhouette body resets to its saved partial-alpha token while retaining unrelated pending colour, invalid external source and exact staging without recovery files");
 		unchanged();
 		restored_colours[3] = initial_colours[3];
@@ -394,9 +394,9 @@
 			pending->edits().size() == 1 && pending->edits().contains("debug_overlay.colour") &&
 			pending->current().text() == overlay_only && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Scribble resets to its saved partial-alpha token while retaining unrelated pending colour, invalid external source and exact staging without recovery files");
 		unchanged();
 		restored_colours[3] = initial_colours[3];

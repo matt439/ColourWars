@@ -1,6 +1,7 @@
 #include "editor/level_json.h"
 #include "editor/horizontal_authoring.h"
 #include "editor/slab_authoring.h"
+#include "game/contracts/drawable_text_contract.h"
 #include "game/contracts/station_contract.h"
 #include "game/contracts/team_gate_contract.h"
 
@@ -131,39 +132,47 @@ namespace colourwars_editor
     {
         using namespace level_json;
 
-        bool known_colour(const std::string& colour)
+        // UTF-8 for the code points below U+10000 the drawable-text contract names.
+        std::string utf8(char32_t code_point)
         {
-            // These are the CSS names the game's content loader accepts, including
-            // its uppercase/underscore spelling, and only the grey ones: the game
-            // refuses a hue in the scenery. RRGGBB greys are accepted below.
-            constexpr std::string_view names =
-                " BLACK DARK_GRAY DARK_GREY DIM_GRAY DIM_GREY GAINSBORO GRAY GREY LIGHT_GRAY LIGHT_GREY SILVER WHITE WHITE_SMOKE ";
-            if (colour.length() == 6 &&
-                colour.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos)
+            std::string result;
+            if (code_point < 0x80) { result += static_cast<char>(code_point); }
+            else if (code_point < 0x800)
             {
-                const auto pair = [&](size_t at) { return std::stoi(colour.substr(at, 2), nullptr, 16); };
-                return pair(0) == pair(2) && pair(2) == pair(4);
+                result += static_cast<char>(0xC0 | (code_point >> 6));
+                result += static_cast<char>(0x80 | (code_point & 0x3F));
             }
-            return !colour.empty() && colour.find(' ') == std::string::npos &&
-                names.find(" " + colour + " ") != std::string_view::npos;
+            else
+            {
+                result += static_cast<char>(0xE0 | (code_point >> 12));
+                result += static_cast<char>(0x80 | ((code_point >> 6) & 0x3F));
+                result += static_cast<char>(0x80 | (code_point & 0x3F));
+            }
+            return result;
         }
 
         void validate_display_name(std::string_view name)
         {
-            // The shipped fonts cover printable ASCII. The game normalizes these
-            // specific punctuation/space characters before requesting font glyphs.
-            constexpr std::array<std::string_view, 18> punctuation = {
-                "\xE2\x80\x98", "\xE2\x80\x99", "\xCA\xBC", "\xE2\x80\xB2",
-                "\xE2\x80\x9C", "\xE2\x80\x9D", "\xE2\x80\xB3", "\xE2\x80\x90",
-                "\xE2\x80\x91", "\xE2\x80\x93", "\xE2\x80\x94", "\xE2\x88\x92",
-                "\xE2\x80\xA6", "\xC2\xA0", "\xE2\x80\x87", "\xE2\x80\xAF",
-                "\n", "\r" };
+            // The game's drawable-text rule: its fonts cover printable ASCII,
+            // line breaks are layout, and it normalizes the contract's
+            // punctuation and spaces before requesting font glyphs.
+            static const std::vector<std::string> punctuation = []
+            {
+                std::vector<std::string> result;
+                for (const drawable_text_contract::Transliteration& entry : drawable_text_contract::transliterations)
+                { result.push_back(utf8(entry.code_point)); }
+                result.push_back(utf8(U'\n'));
+                result.push_back(utf8(U'\r'));
+                return result;
+            }();
             if (name.empty()) { fail("The level needs a display name."); }
             while (!name.empty())
             {
-                if (name.front() >= ' ' && name.front() <= '~') { name.remove_prefix(1); continue; }
+                const char32_t first = static_cast<unsigned char>(name.front());
+                if (first >= drawable_text_contract::first_drawable && first <= drawable_text_contract::last_drawable)
+                { name.remove_prefix(1); continue; }
                 const auto match = std::find_if(punctuation.begin(), punctuation.end(),
-                    [name](std::string_view candidate) { return name.starts_with(candidate); });
+                    [name](const std::string& candidate) { return name.starts_with(candidate); });
                 if (match == punctuation.end())
                 {
                     fail("The stage name contains a character the game's fonts cannot draw; use printable ASCII letters.");
@@ -180,8 +189,13 @@ namespace colourwars_editor
             const level_format::Material* match = level_format::material_named(name);
             if (match == nullptr)
             {
-                fail("Unknown material '" + name +
-                    "': use ground, pencil, eraser, paint_tin, ruler or set_square.");
+                std::string names;
+                for (std::size_t index = 0; index < level_format::materials.size(); ++index)
+                {
+                    if (index > 0) { names += index + 1 == level_format::materials.size() ? " or " : ", "; }
+                    names += level_format::materials[index].name;
+                }
+                fail("Unknown material '" + name + "': use " + names + ".");
             }
             const std::optional<level_format::Collision> collision = level_format::collision_named(collision_type);
             if (!collision || !level_format::sits_on(*match, *collision))
@@ -338,7 +352,7 @@ namespace colourwars_editor
                     record.solid = level_format::collision_named(string(object, key::collision_type)) ==
                         level_format::Collision::structure_paintable;
                     const Json& faces = member(object, key::paintable_faces);
-                    for (const char* face : { "left", "top", "right", "bottom" })
+                    for (const char* face : level_format::paintable_face_names)
                     {
                         const Json& value = member(faces, face);
                         record.any_paintable_face = record.any_paintable_face || (value.IsBool() && value.GetBool());
@@ -362,7 +376,7 @@ namespace colourwars_editor
             {
                 fail("Sprite sheet and frame names must not be empty.");
             }
-            if (!known_colour(string(object, key::colour)))
+            if (!level_format::is_scenery_grey(string(object, key::colour)))
             {
                 fail("Scenery is grey: use a grey colour name such as GAINSBORO, or RRGGBB with three equal pairs.");
             }
@@ -419,7 +433,7 @@ namespace colourwars_editor
                     fail("A paintable structure needs STRUCTURE_PAINTABLE or STRUCTURE_JUMP_THROUGH collision.");
                 }
                 const Json& faces = member(object, key::paintable_faces);
-                for (const char* face : { "left", "top", "right", "bottom" })
+                for (const char* face : level_format::paintable_face_names)
                 {
                     if (!member(faces, face).IsBool())
                     {

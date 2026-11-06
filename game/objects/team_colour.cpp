@@ -20,7 +20,8 @@ const Colour& TeamColour::team_colour(PlayerTeam team) const
 	case PlayerTeam::b:
 		return this->team_b;
 	default:
-		throw std::exception("Invalid team.");
+		throw std::invalid_argument("TeamColour has no colour for team " +
+			std::to_string(static_cast<int>(team)));
 	}
 }
 

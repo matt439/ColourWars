@@ -23,6 +23,7 @@ full.
 | [check-acceptance-selection.ps1](check-acceptance-selection.ps1) | checks the runner's case selection rules without CMake, a compiler or the helper |
 | [check-acceptance-process.ps1](check-acceptance-process.ps1) | qualifies the helper's ownership, deadlines, logging and cancellation with isolated processes |
 | [check-path.ps1](check-path.ps1) | dot-sourced helper that resolves explicit output paths against the caller's location |
+| [process-births.ps1](process-births.ps1) | dot-sourced helper that counts the processes a check starts, through a Job Object, so the two selection checkers measure that their preflights started none |
 | [quiet-game.ps1](quiet-game.ps1) | dot-sourced helper that sets `COLOURWARS_MUTE` for the game and real-audio probes a check starts, and restores the caller's value; set `COLOURWARS_MUTE=0` first to hear a run |
 | [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
 

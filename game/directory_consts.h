@@ -18,8 +18,10 @@ namespace directory_consts
 	// environment variable is unavailable.
 	std::string save_file_path();
 
-	// Executable-relative save/save_data.json, checked for migration when the
-	// per-user save cannot be opened. Also used as the fallback save location.
+	// Executable-relative save/save_data.json, read once for migration when no
+	// per-user save is there (one that is there but will not open is copied
+	// aside instead; Save::load_save_file). Also used as the fallback save
+	// location.
 	std::string legacy_save_file_path();
 
 	// Where the Debug `screenshot` command writes: %LOCALAPPDATA%\ColourWars\screens,

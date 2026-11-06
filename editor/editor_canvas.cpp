@@ -142,6 +142,9 @@ namespace colourwars_editor
             const std::map<std::string, std::string>::const_iterator found = item.values.find(key);
             return found == item.values.end() ? "" : found->second;
         };
+        const auto face_painted = [&value](const char* face) {
+            return value(std::string(level_format::key::paintable_faces) + "/" + face) == "true";
+        };
         auto slab = item.slab;
         if (slab && selected && dragging_)
         {
@@ -171,7 +174,7 @@ namespace colourwars_editor
             outline(dc, screen, colour, station ? 1 : 2, station ? PS_DASH : PS_SOLID);
             line(dc, screen.left - pixels(5), screen.top, screen.left + pixels(5), screen.top, colour, 2);
             line(dc, screen.left, screen.top - pixels(5), screen.left, screen.top + pixels(5), colour, 2);
-            const std::wstring label = station ? wide(value("name")) :
+            const std::wstring label = station ? wide(value(level_format::key::name)) :
                 (item.entry.kind == EntryKind::spawn_a ? L"A" : L"B") + std::to_wstring(item.entry.index + 1);
             SetTextColor(dc, colour); TextOutW(dc, screen.left + pixels(3), screen.top - pixels(21), label.c_str(), static_cast<int>(label.size()));
         }
@@ -204,9 +207,10 @@ namespace colourwars_editor
                 line(dc, points[0].x, points[0].y, points[1].x, points[1].y, RGB(240, 197, 95), 2);
                 if (!show_blockout_)
                 {
-                    const char* faces[] = { "top", "right", "bottom", "left" };
+                    namespace face = level_format::face;
+                    const char* faces[] = { face::top, face::right, face::bottom, face::left };
                     for (int index = 0; index < 4; ++index)
-                        if (value(std::string("paintable_faces/") + faces[index]) == "true")
+                        if (face_painted(faces[index]))
                             line(dc, points[index].x, points[index].y, points[(index + 1) % 4].x,
                                 points[(index + 1) % 4].y, RGB(87, 230, 204), 2);
                 }
@@ -228,10 +232,10 @@ namespace colourwars_editor
                 if (paintable && !show_blockout_)
                 {
                     const COLORREF edge = RGB(87, 230, 204);
-                    if (value("paintable_faces/left") == "true") line(dc, screen.left, screen.top, screen.left, screen.bottom, edge, 2);
-                    if (value("paintable_faces/top") == "true") line(dc, screen.left, screen.top, screen.right, screen.top, edge, 2);
-                    if (value("paintable_faces/right") == "true") line(dc, screen.right, screen.top, screen.right, screen.bottom, edge, 2);
-                    if (value("paintable_faces/bottom") == "true") line(dc, screen.left, screen.bottom, screen.right, screen.bottom, edge, 2);
+                    if (face_painted(level_format::face::left)) line(dc, screen.left, screen.top, screen.left, screen.bottom, edge, 2);
+                    if (face_painted(level_format::face::top)) line(dc, screen.left, screen.top, screen.right, screen.top, edge, 2);
+                    if (face_painted(level_format::face::right)) line(dc, screen.right, screen.top, screen.right, screen.bottom, edge, 2);
+                    if (face_painted(level_format::face::bottom)) line(dc, screen.left, screen.bottom, screen.right, screen.bottom, edge, 2);
                 }
             }
         }

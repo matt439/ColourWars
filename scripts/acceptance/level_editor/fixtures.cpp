@@ -56,4 +56,13 @@ namespace level_editor_acceptance
             if (candidate.kind == kind && candidate.index == index) return candidate;
         throw std::runtime_error("Expected entry is absent");
     }
+
+    void erase_template_walls(LevelDocument& document)
+    {
+        const std::vector<Entry> all = document.entries();
+        for (auto item = all.rbegin(); item != all.rend(); ++item)
+            if (item->kind == EntryKind::collision &&
+                (item->label == "left_wall" || item->label == "right_wall" || item->label == "ceiling"))
+                document.erase(*item);
+    }
 }

@@ -1,4 +1,5 @@
 #include "editor/paint_mechanism_guide.h"
+#include "game/contracts/horizontal_motion_contract.h"
 #include "game/contracts/level_format.h"
 
 #include <algorithm>
@@ -15,20 +16,28 @@ namespace colourwars_editor
             return found == properties.end() ? std::string() : found->second;
         };
         if (value(level_format::key::type) != level_format::object_type::structure_paintable) { return std::nullopt; }
-        if (value("gate") == "paint")
+        if (value(level_format::key::gate) == "paint")
         { return PaintMechanismGuide{ PaintMechanismKind::gate }; }
+        // The heading's sign by the shared drive rule's own names: +1 is right,
+        // or down for a paint lift (ROAD#28).
+        const auto heading = [&value](bool vertical) -> std::optional<int>
+        {
+            const std::string text = value("motion/team_a_heads");
+            for (const int sign : { 1, -1 })
+            {
+                if (text == horizontal_motion_contract::heading_name(vertical, sign)) { return sign; }
+            }
+            return std::nullopt;
+        };
         if (value("motion/type") == "horizontal" && value("motion/drive") == "paint")
         {
-            const std::string heading = value("motion/team_a_heads");
-            if (heading == "left" || heading == "right")
-            { return PaintMechanismGuide{ PaintMechanismKind::ferry, heading == "right" ? 1 : -1 }; }
+            if (const std::optional<int> sign = heading(false))
+            { return PaintMechanismGuide{ PaintMechanismKind::ferry, *sign }; }
         }
-        // A paint lift (ROAD#28): +1 is down, as in the shared drive rule.
         if (value("motion/type") == "vertical" && value("motion/drive") == "paint")
         {
-            const std::string heading = value("motion/team_a_heads");
-            if (heading == "up" || heading == "down")
-            { return PaintMechanismGuide{ PaintMechanismKind::lift, heading == "down" ? 1 : -1 }; }
+            if (const std::optional<int> sign = heading(true))
+            { return PaintMechanismGuide{ PaintMechanismKind::lift, *sign }; }
         }
         return std::nullopt;
     }

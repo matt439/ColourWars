@@ -10,7 +10,7 @@
 #include <set>
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/replay.h"
-#include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include <rapidjson/prettywriter.h>
 #endif
 
@@ -103,9 +103,7 @@ namespace turbulence_slab_routes_acceptance
         float mirror(bool side_b, float x) { return side_b ? 4000.0f - x : x; }
         bool supported(const Player& player)
         {
-            const auto state = player.move_state();
-            return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-                state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+            return player.grounded();
         }
 
         struct Geometry
@@ -211,7 +209,7 @@ namespace turbulence_slab_routes_acceptance
                 world(with), map(groups)
             {
                 auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str()); info->validate();
-                const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+                const LevelObjectBuilder objects(&world.render, &world.preferences, &world.tuning.paint());
                 info->validate_content(objects, world.render, world.audio); bounds = info->out_of_bounds_rectangle();
                 infos.add(decoded_settings ? decoded_settings->stage() : "turbulence_roller_route", std::move(info));
                 MatchSetup settings;

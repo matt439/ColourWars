@@ -20,6 +20,8 @@ namespace stage_scan_diagnostics
 	};
 	Layout layout(const StageScanPresentation& look, const MenuPaperArtPresentation& art,
 		float content_height, const labrador::Font& font, const StageScanMenuText& copy);
+	// Every character display_text can produce: drawable_text's range, in order.
+	std::wstring alphabet();
 	// Printable ASCII stays verbatim. Other UTF-16 units are shown as \uXXXX;
 	// malformed UTF-8 bytes use \xXX, so a refused filename is not lost to '?'.
 	std::wstring display_text(std::string_view diagnostic);

@@ -10,6 +10,9 @@ class ResumeAudio : public colourwars::SoundBankObject
 public:
 	ResumeAudio(const labrador::AudioResources* resources, const Presentation& presentation);
 	~ResumeAudio();
+	// Owns a playing effect: a copy would stop the same voice twice.
+	ResumeAudio(const ResumeAudio&) = delete;
+	ResumeAudio& operator=(const ResumeAudio&) = delete;
 	void update(float remaining);
 	void stop();
 private:

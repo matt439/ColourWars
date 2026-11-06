@@ -22,14 +22,14 @@ public:
 	void filter_seats(std::vector<PlayerInputData>& seats, const Level& level) override;
 
 	// What a bot on `seat` sees: the level's public player state.
-	// Tool observations are opt-in: legacy bots keep their original seam.
-	static BotSeatView view_of(const Level& level, int seat, int step, const GameTuning& tuning,
+	// Tool observations are opt-in (Bot::observes_tool): legacy bots keep
+	// their original seam.
+	static BotSeatView view_of(const Level& level, int seat, const GameTuning& tuning,
 		bool observe_tool = false);
 
 private:
 	const GameTuning* tuning_ = nullptr;
 	std::uint64_t seed_ = 0;
-	int step_ = 0;
 	std::map<int, std::string> behaviours_;
 	std::map<int, std::unique_ptr<Bot>> bots_;
 };

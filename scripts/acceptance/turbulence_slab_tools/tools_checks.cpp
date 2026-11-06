@@ -73,9 +73,7 @@ namespace turbulence_slab_tools_acceptance
 
         bool supported(const Player& player)
         {
-            const auto state = player.move_state();
-            return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-                state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+            return player.grounded();
         }
 
         RectangleF station(const Vector2F& size, bool side_b, bool upper)
@@ -211,7 +209,7 @@ namespace turbulence_slab_tools_acceptance
                 trace_(trace), label_(label)
             {
                 auto info = std::make_unique<LevelLoadedInfo>(labrador::path_to_utf8(stage).c_str()); info->validate();
-                const LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+                const LevelObjectBuilder objects(&world.render, &world.preferences, &world.tuning.paint());
                 info->validate_content(objects, world.render, world.audio); bounds_ = info->out_of_bounds_rectangle();
                 const auto setup = settings(side_b); infos_.add(setup.stage(), std::move(info));
                 viewports_.set_layout(setup.screen_layout());

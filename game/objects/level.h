@@ -3,10 +3,7 @@
 #include "game/config/play_settings.h"
 #include "game/config/presentation/presentation_match.h"
 
-#include "engine/collision/collision_object.h"
-#include "game/objects/collision_object_type.h"
 #include "game/objects/team_colour.h"
-#include "game/objects/player_input.h"
 #include "game/objects/player.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
@@ -14,11 +11,8 @@
 #include "game/objects/player_camera.h"
 #include "game/objects/interface_gameplay.h"
 #include "game/objects/level_end_info.h"
-#include "game/carried/text_drop_shadow.h"
-#include "engine/audio/sound_bank.h"
 #include "game/objects/paintable_object.h"
 #include "engine/render/render_resources.h"
-#include "engine/audio/audio_resources.h"
 #include "engine/scene/scene.h"
 #include "engine/render/colour.h"
 #include "engine/render/camera.h"
@@ -32,22 +26,11 @@
 #include "engine/ui/widget.h"
 #include "game/config/tuning.h"
 #include "game/objects/seat_input_filter.h"
-#include "game/objects/monitor.h"
-#include "game/objects/match_random.h"
-#include "game/objects/opening_mode.h"
-#include "game/objects/silhouette.h"
-#include "game/objects/screen_cursor.h"
-#include "game/objects/figure_acting.h"
 #include "game/objects/paint_audio.h"
-#include "game/objects/match_voices.h"
 #include "game/carried/sound_bank_object.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/blocked_shot_feedback.h"
-#include "game/objects/player_badge.h"
 #include "game/objects/teammate_marker.h"
-#include "game/objects/countdown_art.h"
-#include "game/objects/reveal_art.h"
-#include "game/objects/music_envelope.h"
 #include "game/match/match_setup.h"
 #include "game/objects/level_state.h"
 #include <cstdint>
@@ -124,11 +107,11 @@ public:
 
 	// `commands` holds one command per participant, in roster order: device
 	// slots already mapped and keyboard/mouse aim resolved (SeatCommandBuilder).
-	// A participant past its end gets neutral input. `seats`, when given, sees
-	// and may replace every participant's final input after the shipping bots,
-	// unless it replaces their inputs. GameLevel passes the shipping recorder
-	// in both builds, optionally wrapping a Debug filter; instant replay
-	// supplies a tape player instead.
+	// A participant past its end gets neutral input. The shipping bots then
+	// drive their seats unless `seats` replaces bot inputs; `seats`, when given,
+	// sees and may replace every participant's input last. GameLevel passes
+	// the shipping recorder in both builds, optionally wrapping a Debug filter;
+	// instant replay supplies a tape player instead.
 	void update(const std::vector<PlayerInputData>& commands, float dt,
 		SeatInputFilter* seats = nullptr);
 	// Skip the intro on the next update, as A, B or Start does: honoured only

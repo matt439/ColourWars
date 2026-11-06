@@ -3,7 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
-#include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/objects/level.h"
 #include "game/objects/horizontal_motion.h"
 #include <bit>
@@ -200,7 +200,7 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
 		hash = mix(hash, bits_from_float(area));
 	}
 	hash = mix(hash, static_cast<std::uint32_t>(print.level_state));
-    // All static/POL36 hash operations above retain their original order. The
+    // All static/POL#36 hash operations above retain their original order. The
     // Level owns completed-boundary scratch overwrite/consume invariants.
     append_motion(print, level, hash);
 	print.hash = hash;

@@ -45,31 +45,11 @@ CountdownArt::CountdownArt(const MatchPresentation* look, const OpeningPresentat
 void CountdownArt::draw_card(DrawList& list, const RectangleF& bounds, float scale) const
 {
     const CountdownArtPresentation& art = this->look_->countdown_art;
-    const float pen = art.keyline_width * scale;
-    const float step = pen * 2.0f;
-    const auto paper = [&](const RectangleF& box, const Colour& colour)
-    {
-        this->fill(list, RectangleF(box.x + step, box.y, box.width - step * 2.0f, box.height), colour);
-        this->fill(list, RectangleF(box.x, box.y + step, box.width, box.height - step * 2.0f), colour);
-    };
     const float shadow = art.shadow_offset * scale;
     // Reserve the lower/right edge inside the card's reported occupied bounds.
     const RectangleF face(bounds.x, bounds.y, bounds.width - shadow, bounds.height - shadow);
-    paper(RectangleF(face.position() + Vector2F(shadow), face.size()), premultiplied(art.shade));
-    paper(face, premultiplied(art.ink));
-    const RectangleF inside(face.x + pen, face.y + pen, face.width - pen * 2.0f, face.height - pen * 2.0f);
-    paper(inside, premultiplied(art.paper));
-    // Quiet airbrush passes inside the lower/right paper edge.
-    for (int pass = 3; pass > 0; --pass)
-    {
-        Colour shade = art.shade;
-        shade.a *= 0.12f;
-        const float width = pen * static_cast<float>(pass);
-        this->fill(list, RectangleF(inside.x + step, inside.bottom() - width,
-            inside.width - step * 2.0f, width), premultiplied(shade));
-        this->fill(list, RectangleF(inside.right() - width, inside.y + step,
-            width, inside.height - step * 2.0f), premultiplied(shade));
-    }
+    this->paper_card(list, RectangleF(face.position() + Vector2F(shadow), face.size()), face,
+        art.keyline_width * scale, art.shade, art.ink, art.paper);
 }
 
 void CountdownArt::draw(DrawList& list, const RectangleF& bounds,

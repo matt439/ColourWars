@@ -15,6 +15,7 @@
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
 #include "game/contracts/simulation.h"
+#include "engine/core/step_timer.h"
 #include "game/config/sound_groups.h"
 #include "game/config/stage_catalog.h"
 #include "game/config/stage_loading.h"
@@ -26,6 +27,12 @@
 
 using namespace directory_consts;
 using namespace labrador;
+
+// simulation.h restates the engine's tick rate; the step it derives must be
+// the one StepTimer hands every update at target_fps = SIMULATION_HZ.
+static_assert(StepTimer::TicksPerSecond == SIMULATION_TICKS_PER_SECOND &&
+	SECONDS_PER_STEP == static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / SIMULATION_HZ)),
+	"SECONDS_PER_STEP is not the engine's fixed step");
 
 // Indicates to hybrid graphics systems to prefer the discrete part by default.
 extern "C"
@@ -70,8 +77,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		// Parse tuning and presentation before creating states. Their asset names
 		// are validated after the manifest loads; both objects outlive Application.
-		// Mutable only through the developer director (Debug `reload` and
-		// `feedback`); GameData hands everything else const pointers.
+		// Mutable only through the developer director (Debug `reload`, `tune`
+		// and `feedback`); GameData hands everything else const pointers.
 		phase = FailurePhase::definitions;
 		GameTuning tuning(
 			resolved_under(content_root, TUNING_PATH).c_str());

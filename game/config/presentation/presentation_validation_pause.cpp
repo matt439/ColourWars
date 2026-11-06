@@ -31,11 +31,11 @@ void Presentation::Validation::validate_pause_actions() const
 			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
 			menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
 	}
-	// Practice fits a fifth row, Tool, into the same paper at 0.8 spacing:
+	// Practice fits a fifth row, Tool, into the same paper at its own spacing:
 	// Resume, Tool, Restart, Options and Quit. Only the paper is checked: the
 	// shipped rows are closer than a focus card is tall (HYG#37), so the row
 	// rule would refuse them.
-	const float practice_spacing = pause.layout.spacing.y * 0.8f;
+	const float practice_spacing = pause.practice_row_spacing;
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
 		const int row = index == 0 ? 0 : static_cast<int>(index) + 1;
@@ -240,7 +240,7 @@ void Presentation::Validation::validate_pause_connection(const SetupGeometry& se
 		}
 	};
 	check_pause_connection("pause_title", connection.pause_title, true);
-	for (int number = 1; number <= 4; ++number)
+	for (int number = 1; number <= max_players; ++number)
 	{
 		check_pause_connection("pause_player_title", this->presentation_.menu_text_.pause_title_for_player(number), true);
 	}
@@ -260,7 +260,7 @@ void Presentation::Validation::validate_pause_missing_lists(const SetupGeometry&
 	const auto missing_lists = [&](const auto& self, int player, unsigned int used,
 		int count, const std::wstring& words) -> void
 	{
-		if (player == 4)
+		if (player == max_players)
 		{
 			if (count == 0) { return; }
 			const Vector2F size = label_size(missing_key, words, this->presentation_.menu_.detail_font);

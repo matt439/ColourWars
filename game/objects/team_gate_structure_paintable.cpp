@@ -2,6 +2,7 @@
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/objects/player.h"
 #include "game/contracts/team_gate_contract.h"
+#include "game/objects/primitive_frame.h"
 #include "game/config/presentation/presentation_match.h"
 #include <array>
 
@@ -24,24 +25,23 @@ namespace
 
 TeamGateStructurePaintable::TeamGateStructurePaintable(const std::string& sheet_name,
     const std::string& frame_name, const RectangleF& rectangle,
-    RenderResources* render_resources, const AudioResources* audio_resources,
-    const PlaySettings* preferences, const PaintTuning* paint,
+    RenderResources* render_resources, const PlaySettings* preferences, const PaintTuning* paint,
     const TeamColour& team_colours, const PaintableFaces& faces,
     std::span<const RectangleF> paint_obstacles, const Colour& colour,
     std::unique_ptr<const TerrainMaterial> material,
     std::span<const PaintPolygon> paint_polygons,
     const GatePermissionPresentation* cue) :
     StructurePaintable(sheet_name, frame_name, rectangle, std::make_unique<RectangleF>(rectangle),
-        render_resources, audio_resources, preferences, paint,
+        render_resources, preferences, paint,
         CollisionObjectType::structure_paintable, team_colours, faces, paint_obstacles,
         colour, 0.0f, Vector2F::zero, SpriteFlip::none, 0.0f, std::move(material), paint_polygons),
     open_share_(checked_share(paint)), paint_thickness_(paint->thickness),
-    cue_(cue), team_colours_(team_colours)
+    cue_(cue)
 {
     if (!faces.left && !faces.top && !faces.right && !faces.bottom)
     { throw std::invalid_argument("A team gate needs a paintable face."); }
     if (cue != nullptr)
-    { this->cue_frame_ = render_resources->resolve_sheet_frame("sprite_sheet_1", "pixel"); }
+    { this->cue_frame_ = render_resources->resolve_sheet_frame(primitive_frame::sheet, primitive_frame::pixel); }
 }
 
 PlayerTeam TeamGateStructurePaintable::open_for() const
@@ -159,7 +159,7 @@ void TeamGateStructurePaintable::draw_permission(DrawList& draw_list) const
     // Keep permission and hold together above an occupant's body/badge. The
     // team accent is a separate header, leaving all glyphs on plain paper.
     fill(RectangleF(plaque.x + border, plaque.y + border,
-        plaque.width - border * 2.0f, border), this->team_colours_.team_colour(this->open_for_));
+        plaque.width - border * 2.0f, border), this->team_colours().team_colour(this->open_for_));
     constexpr std::array<unsigned int, 5> a{ 2u, 5u, 7u, 5u, 5u };
     constexpr std::array<unsigned int, 5> b{ 6u, 5u, 6u, 5u, 6u };
     const auto& glyph = this->open_for_ == PlayerTeam::a ? a : b;

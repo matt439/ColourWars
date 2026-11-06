@@ -181,34 +181,13 @@ void InterfaceGameplay::draw_paper_panel(DrawList& draw_list,
 {
 	const HudPaperPresentation& art = this->look_->paper;
 	const SpriteSheet* sheet = this->render_resources()->sprite_sheet(this->sheet_);
-	const float pen = this->paper_pen(scale);
-	const float step = pen * 2.0f;
 	const float shadow = art.shadow_offset * scale;
-	const auto fill = [&](const RectangleF& box, const Colour& colour)
+	draw_list.set_filter(TextureFilter::point);
+	CrudeDrawing::paper_card([&](const RectangleF& box, const Colour& colour)
 	{
 		sheet->draw(draw_list, this->fill_frame_, box, CrudeDrawing::premultiplied(colour));
-	};
-	const auto paper = [&](const RectangleF& box, const Colour& colour)
-	{
-		fill(RectangleF(box.x + step, box.y, box.width - step * 2.0f, box.height), colour);
-		fill(RectangleF(box.x, box.y + step, box.width, box.height - step * 2.0f), colour);
-	};
-	draw_list.set_filter(TextureFilter::point);
-	paper(RectangleF(face.position() + Vector2F(shadow), face.size()), art.shade);
-	paper(face, art.ink);
-	const RectangleF inside(face.x + pen, face.y + pen,
-		face.width - pen * 2.0f, face.height - pen * 2.0f);
-	paper(inside, art.paper);
-	for (int pass = 3; pass > 0; --pass)
-	{
-		Colour shade = art.shade;
-		shade.a *= 0.12f;
-		const float width = pen * static_cast<float>(pass);
-		fill(RectangleF(inside.x + step, inside.bottom() - width,
-			inside.width - step * 2.0f, width), shade);
-		fill(RectangleF(inside.right() - width, inside.y + step,
-			width, inside.height - step * 2.0f), shade);
-	}
+	}, RectangleF(face.position() + Vector2F(shadow), face.size()), face,
+		this->paper_pen(scale), art.shade, art.ink, art.paper);
 }
 
 void InterfaceGameplay::draw_meter(DrawList& draw_list,
@@ -301,7 +280,6 @@ void InterfaceGameplay::draw_closing_clock_panel(DrawList& draw_list,
 	const ClosingClockPresentation& art = this->look_->closing_clock;
 	const SpriteSheet* sheet = this->render_resources()->sprite_sheet(this->sheet_);
 	const float pen = art.keyline_width * scale;
-	const float step = pen * 2.0f;
 	const float shadow = art.shadow_offset * scale;
 	const Vector2F padding(std::max(this->look_->player_identity_padding.x * scale, pen * 3.0f),
 		std::max(this->look_->player_identity_padding.y * scale, pen * 3.0f));
@@ -310,28 +288,10 @@ void InterfaceGameplay::draw_closing_clock_panel(DrawList& draw_list,
 	{
 		sheet->draw(draw_list, this->fill_frame_, box, CrudeDrawing::premultiplied(colour));
 	};
-	const auto paper = [&](const RectangleF& box, const Colour& colour)
-	{
-		fill(RectangleF(box.x + step, box.y, box.width - step * 2.0f, box.height), colour);
-		fill(RectangleF(box.x, box.y + step, box.width, box.height - step * 2.0f), colour);
-	};
 
 	draw_list.set_filter(TextureFilter::point);
-	paper(RectangleF(face.position() + Vector2F(shadow), face.size()), art.shade);
-	paper(face, art.ink);
-	const RectangleF inside(face.x + pen, face.y + pen, face.width - pen * 2.0f,
-		face.height - pen * 2.0f);
-	paper(inside, art.paper);
-	for (int pass = 3; pass > 0; --pass)
-	{
-		Colour shade = art.shade;
-		shade.a *= 0.12f;
-		const float width = pen * static_cast<float>(pass);
-		fill(RectangleF(inside.x + step, inside.bottom() - width,
-			inside.width - step * 2.0f, width), shade);
-		fill(RectangleF(inside.right() - width, inside.y + step,
-			width, inside.height - step * 2.0f), shade);
-	}
+	CrudeDrawing::paper_card(fill, RectangleF(face.position() + Vector2F(shadow), face.size()), face,
+		pen, art.shade, art.ink, art.paper);
 
 	if (reduced_effects || beat_age < 0.0f || beat_age >= art.beat_duration) { return; }
 	const float remaining = 1.0f - beat_age / art.beat_duration;

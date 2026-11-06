@@ -3,7 +3,6 @@
 #include "game/objects/paper_card.h"
 #include "game/objects/player.h"
 #include "game/config/presentation/presentation.h"
-#include "game/config/tuning.h"
 #include "game/config/drawable_text.h"
 #include "engine/math/intersects.h"
 #include "engine/render/renderer.h"
@@ -12,16 +11,15 @@
 
 using namespace labrador;
 
-PracticeLessons::PracticeLessons(std::vector<LevelLesson> lessons, const GameTuning* tuning,
+PracticeLessons::PracticeLessons(std::vector<LevelLesson> lessons,
 	const Presentation* presentation, RenderResources* render_resources) :
-	tuning_(tuning),
 	presentation_(presentation),
 	lessons_(std::move(lessons))
 {
 	// The card is the controls reminder's: the menu's detail heading over the
 	// match's controls text, so a lesson reads like the reminder it extends.
 	const MenuStyle& menu = this->presentation_->menu();
-	const MatchTuning& match = this->tuning_->match();
+	const ControlsTextPresentation& look = this->presentation_->match().controls_text;
 	for (const LevelLesson& lesson : this->lessons_)
 	{
 		const std::string where = "the lesson at station '" + lesson.station + "'";
@@ -32,8 +30,8 @@ PracticeLessons::PracticeLessons(std::vector<LevelLesson> lessons, const GameTun
 			menu.highlight, menu.shadow_colour, menu.detail_shadow_offset);
 		card.text = std::make_unique<colourwars::TextDropShadow>(
 			drawable_text::widen_drawable(lesson.text, where + ": text"),
-			match.controls_font, Vector2F::zero, render_resources,
-			match.controls_colour, match.controls_shadow_colour, match.controls_shadow_offset);
+			look.font, Vector2F::zero, render_resources,
+			look.colour, look.shadow_colour, look.shadow_offset);
 		this->cards_.push_back(std::move(card));
 	}
 }
@@ -57,7 +55,7 @@ void PracticeLessons::centre(const PaperCard& paper)
 	}
 	const MatchPresentation& look = this->presentation_->match();
 	const Vector2F heading_shadow = this->presentation_->menu().detail_shadow_offset;
-	const Vector2F text_shadow = this->tuning_->match().controls_shadow_offset;
+	const Vector2F text_shadow = look.controls_text.shadow_offset;
 	const float scale = paper.scale();
 	const Vector2F margin = look.controls_margin * scale;
 	const Vector2F padding = look.controls_padding * scale;

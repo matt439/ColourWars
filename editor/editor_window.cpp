@@ -1,4 +1,5 @@
 #include "editor/editor.h"
+#include "editor/path_text.h"
 #include "editor/win32_text.h"
 #include "editor/user_stage_save.h"
 #include "editor/save_guidance.h"
@@ -36,6 +37,22 @@ namespace colourwars_editor
             return (warning.empty() ? std::wstring() : warning + L"  |  ") +
                 save_guidance(path, source_levels, catalog, my_stages, saved);
         }
+
+        // The Add palette: each label and the document type it adds, in list order.
+        struct PaletteEntry { const wchar_t* label; const char* type; };
+        constexpr PaletteEntry palette_entries[] = {
+            {L"Paintable block", "StructurePaintable"}, {L"Solid block", "Structure"},
+            {L"Jump-through platform", "StructureJumpThrough"}, {L"Ramp rising right", "StructureRampRight"},
+            {L"Ramp rising left", "StructureRampLeft"}, {L"Decoration", "Visual"},
+            {L"Team A spawn", "SpawnA"}, {L"Team B spawn", "SpawnB"},
+            {L"Moving paintable block", "MovingPaintable"}, {L"Moving paintable platform", "MovingJumpThrough"},
+            {L"Scored slab rising right", "FixedSlabRight"}, {L"Scored slab rising left", "FixedSlabLeft"},
+            {L"Team gate", "TeamGate"}, {L"Station (goto target)", "Station"}, {L"Vertical lift", "VerticalLift"}};
+
+        // The grid choices: each label and its world spacing, in list order.
+        struct SnapEntry { const wchar_t* label; int size; };
+        constexpr SnapEntry snap_entries[] = {
+            {L"Snap 1", 1}, {L"Snap 10", 10}, {L"Snap 25", 25}, {L"Snap 50", 50}, {L"Snap 100", 100}};
 
         bool contains_nul(const std::string& text) { return text.find('\0') != std::string::npos; }
 
@@ -186,19 +203,18 @@ namespace colourwars_editor
         toolbar_.push_back(control(L"BUTTON", L"Undo", WS_TABSTOP, edit_undo));
         toolbar_.push_back(control(L"BUTTON", L"Redo", WS_TABSTOP, edit_redo));
         palette_ = control(WC_COMBOBOXW, L"Object to add", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, palette);
-        const wchar_t* names[] = {L"Paintable block", L"Solid block", L"Jump-through platform",
-            L"Ramp rising right", L"Ramp rising left", L"Decoration", L"Team A spawn", L"Team B spawn",
-            L"Moving paintable block", L"Moving paintable platform", L"Scored slab rising right", L"Scored slab rising left",
-            L"Team gate", L"Station (goto target)", L"Vertical lift"};
-        for (const wchar_t* name : names) SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
+        for (const PaletteEntry& entry : palette_entries)
+            SendMessageW(palette_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(entry.label));
         SendMessageW(palette_, CB_SETCURSEL, 0, 0);
         toolbar_.push_back(control(L"BUTTON", L"+ Add", WS_TABSTOP, add_object));
         toolbar_.push_back(control(L"BUTTON", L"Match view", WS_TABSTOP, view_match));
         toolbar_.push_back(control(L"BUTTON", L"Fit arena", WS_TABSTOP, view_fit));
         grid_ = control(WC_COMBOBOXW, L"Grid snap", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, grid_size);
-        for (const wchar_t* name : {L"Snap 1", L"Snap 10", L"Snap 25", L"Snap 50", L"Snap 100"})
-            SendMessageW(grid_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(name));
-        SendMessageW(grid_, CB_SETCURSEL, 2, 0);
+        for (const SnapEntry& entry : snap_entries)
+        {
+            const LRESULT index = SendMessageW(grid_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(entry.label));
+            if (entry.size == snap_) SendMessageW(grid_, CB_SETCURSEL, static_cast<WPARAM>(index), 0);
+        }
         object_heading_ = control(L"STATIC", L"LEVEL CONTENTS", SS_LEFT, 0);
         inspector_heading_ = control(L"STATIC", L"PROPERTIES", SS_LEFT, 0);
         object_list_ = control(WC_LISTBOXW, L"Level contents", LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | WS_BORDER, objects_list);
@@ -531,7 +547,7 @@ namespace colourwars_editor
         // away only what this command made, and only while it is empty.
         const bool parent_existed = std::filesystem::exists(folder.parent_path(), error);
         const bool created = std::filesystem::create_directories(folder, error);
-        if (error) throw std::runtime_error("Cannot create " + narrow(folder.wstring()) + ": " + error.message());
+        if (error) throw std::runtime_error("Cannot create " + path_text(folder) + ": " + error.message());
         const auto tidy = [&folder, parent_existed]
         {
             std::error_code ignored;
@@ -673,15 +689,12 @@ namespace colourwars_editor
             InvalidateRect(canvas_, nullptr, FALSE); break;
         case add_object:
         {
-            const char* types[] = {"StructurePaintable", "Structure", "StructureJumpThrough", "StructureRampRight",
-                "StructureRampLeft", "Visual", "SpawnA", "SpawnB", "MovingPaintable", "MovingJumpThrough", "FixedSlabRight", "FixedSlabLeft",
-                "TeamGate", "Station", "VerticalLift"};
             const LRESULT index = SendMessageW(palette_, CB_GETCURSEL, 0, 0);
-            if (index < 0 || index >= static_cast<LRESULT>(std::size(types))) break;
+            if (index < 0 || index >= static_cast<LRESULT>(std::size(palette_entries))) break;
             RECT client{}; GetClientRect(canvas_, &client);
             const Rect rectangle{snapped(view_x_ + client.right / (2.0 * zoom_) - 100.0),
                 snapped(view_y_ + client.bottom / (2.0 * zoom_) - 50.0), 200.0, 100.0};
-            selection_ = document_.add_object(types[index], rectangle); refresh(); SetFocus(canvas_); break;
+            selection_ = document_.add_object(palette_entries[index].type, rectangle); refresh(); SetFocus(canvas_); break;
         }
         default: break;
         }
@@ -716,12 +729,14 @@ namespace colourwars_editor
             }
             if (LOWORD(wparam) == grid_size && HIWORD(wparam) == CBN_SELCHANGE)
             {
-                const int sizes[] = {1, 10, 25, 50, 100};
                 const LRESULT index = SendMessageW(grid_, CB_GETCURSEL, 0, 0);
-                if (index >= 0 && index < 5) snap_ = sizes[index];
+                if (index >= 0 && index < static_cast<LRESULT>(std::size(snap_entries))) snap_ = snap_entries[index].size;
                 InvalidateRect(canvas_, nullptr, FALSE); return 0;
             }
-            if (HIWORD(wparam) == 0 || HIWORD(wparam) == 1) command(LOWORD(wparam));
+            // Menus and accelerators carry no control; of the controls, only a
+            // button click is a command. A combo or list selection or an edit
+            // change must not apply pending property text.
+            if (lparam == 0 || HIWORD(wparam) == BN_CLICKED) command(LOWORD(wparam));
             return 0;
         case WM_NOTIFY:
         {

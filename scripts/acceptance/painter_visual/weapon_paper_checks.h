@@ -65,7 +65,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         require(preferences.set_display_settings_and_save(preferences.resolution(), false, palette), "Isolated Weapon paper palette fixture could not save"); opened_palette = palette;
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Weapon paper fixture claim failed"); }
         choices.clear(); ready.assign(static_cast<size_t>(count), false); missing = false;
         for (int player = 0; player < count; ++player) { choices.push_back((first + player) % 6); settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, static_cast<WeaponType>(choices.back())); }

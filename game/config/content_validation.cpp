@@ -54,6 +54,18 @@ namespace
 			}
 		}
 	}
+
+	// What Stage Select and the countdown card draw for a shipped stage.
+	const std::wstring& shipped_stage_name(const Presentation& presentation, const std::string& stage)
+	{
+		const std::wstring* name = presentation.menu_text().stage_name(stage);
+		if (name == nullptr)
+		{
+			throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage +
+				"', a stage the manifest lists. Add it with the level's display_name.");
+		}
+		return *name;
+	}
 }
 
 void validate_stage_objects(const GameTuning& tuning, const LevelObjectBuilder& builder,
@@ -65,7 +77,7 @@ void validate_stage_objects(const GameTuning& tuning, const LevelObjectBuilder& 
 	tuning.validate_match_sounds(render, audio, info.sound_bank_name());
 }
 
-void validate_stage_text(const GameTuning& tuning, const Presentation& presentation,
+void validate_stage_text(const Presentation& presentation,
 	RenderResources* render, const LevelLoadedInfo& info, const Stage& stage)
 {
 	const MenuStyle& menu = presentation.menu();
@@ -73,12 +85,7 @@ void validate_stage_text(const GameTuning& tuning, const Presentation& presentat
 	const std::wstring authored = drawable_text::widen_drawable(stage.display_name, authored_where);
 	// What Stage Select and the countdown card draw: a shipped stage's
 	// menu_text.stage_names entry, a user stage's own display_name.
-	const std::wstring* shipped = stage.user ? nullptr : presentation.menu_text().stage_name(stage.name);
-	if (!stage.user && shipped == nullptr)
-	{
-		throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage.name +
-			"', a stage the manifest lists. Add it with the level's display_name.");
-	}
+	const std::wstring* shipped = stage.user ? nullptr : &shipped_stage_name(presentation, stage.name);
 	const std::wstring& name = shipped != nullptr ? *shipped : authored;
 	const std::string where = shipped != nullptr ?
 		"presentation.json: menu_text.stage_names." + stage.name : authored_where;
@@ -91,7 +98,7 @@ void validate_stage_text(const GameTuning& tuning, const Presentation& presentat
 			"' of stage '" + stage.name + "'";
 		drawable_text::check_font_can_draw(render, menu.detail_font,
 			drawable_text::widen_drawable(lesson.title, lesson_where), lesson_where + ": title");
-		drawable_text::check_font_can_draw(render, tuning.match().controls_font,
+		drawable_text::check_font_can_draw(render, presentation.match().controls_text.font,
 			drawable_text::widen_drawable(lesson.text, lesson_where), lesson_where + ": text");
 	}
 }
@@ -106,11 +113,7 @@ void validate_stage_names(const Presentation& presentation, const StageList& sta
 			throw std::runtime_error("stage '" + stage.name + "': a shipped stage's name must not "
 				"start with '_', which presentation.json's menu_text.stage_names reads as a comment.");
 		}
-		if (presentation.menu_text().stage_name(stage.name) == nullptr)
-		{
-			throw std::runtime_error("presentation.json: menu_text.stage_names has no '" + stage.name +
-				"', a stage the manifest lists. Add it with the level's display_name.");
-		}
+		std::ignore = shipped_stage_name(presentation, stage.name);
 	}
 	for (const auto& entry : presentation.menu_text().stage_names)
 	{
@@ -146,15 +149,14 @@ void check_stage_names_agree(const std::string& presentation_path, const StageLi
 	check_stage_names_agree(base.root(), stages);
 }
 
-void validate_controls_reminders(const GameTuning& tuning, const Presentation& presentation,
-	const RenderResources& render)
+void validate_controls_reminders(const Presentation& presentation, const RenderResources& render)
 {
 	const ControlsCopy& copy = presentation.menu_text().controls;
-	const std::string& font = tuning.match().controls_font;
+	const std::string& font = presentation.match().controls_text.font;
 	const auto check = [&](const char* key, const std::wstring& words)
 	{
 		const std::string where = std::string("presentation.json: menu_text.controls.") + key +
-			" in tuning.json's match.controls_text.font";
+			" in match.controls_text.font";
 		drawable_text::check_font_can_draw(&render, font, words, where);
 		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), words);
 		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
@@ -220,7 +222,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	// Optional silent banks remain valid; these checks do not play audio.
 	tuning.validate_resources(*render, *audio);
 	presentation.validate_resources(*render, *audio);
-	validate_controls_reminders(tuning, presentation, *render);
+	validate_controls_reminders(presentation, *render);
 	// Every person the figure slips allow has a face band over every body
 	// frame (presentation.json figure.slips, built by build-painter-art.ps1),
 	// so no match can draw a person the atlas lacks.
@@ -284,14 +286,15 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 			{
 				throw std::runtime_error("weapon supply " + name + ": needs empty and full levels.");
 			}
-			for (int level = 0; level < supply.frame_count(); ++level)
+			bool canvas = idle.origin() == labrador::Vector2F::zero;
+			for (int level = 0; canvas && level < supply.frame_count(); ++level)
 			{
-				if (supply.frame_rect(level).size() != idle.source_rectangle().size() ||
-					idle.origin() != labrador::Vector2F::zero)
-				{
-					throw std::runtime_error("weapon supply " + name +
-						": levels must retain the body canvas and zero authored origin.");
-				}
+				canvas = supply.frame_rect(level).size() == idle.source_rectangle().size();
+			}
+			if (!canvas)
+			{
+				throw std::runtime_error("weapon supply " + name +
+					": levels must retain the body canvas and zero authored origin.");
 			}
 		}
 	}
@@ -311,7 +314,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	// All asset kinds are available now. Check every stage's actual object
 	// construction and resource references before opening the first menu,
 	// then that a player at its speed cap cannot step through what was built.
-	const LevelObjectBuilder content_validator(render, audio, &play_settings,
+	const LevelObjectBuilder content_validator(render, &play_settings,
 		&tuning.paint());
 	for (const Stage& stage : stages)
 	{
@@ -344,7 +347,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	validate_stage_names(presentation, stages);
 	for (const Stage& stage : stages)
 	{
-		validate_stage_text(tuning, presentation, render, *level_infos.get(stage.name), stage);
+		validate_stage_text(presentation, render, *level_infos.get(stage.name), stage);
 	}
 	// Practice's pause row names each real tool.
 	for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)

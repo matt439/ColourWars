@@ -35,16 +35,45 @@ bool DebugArgs::parse_int(std::string_view text, int& value)
 	return !text.empty() && result.ec == std::errc() && result.ptr == end;
 }
 
+namespace
+{
+	template <typename Real>
+	bool parse_finite(std::string_view text, Real& value)
+	{
+		if (!text.empty() && text.front() == '+')
+		{
+			text.remove_prefix(1);
+		}
+		const char* end = text.data() + text.size();
+		const auto result = std::from_chars(text.data(), end, value);
+		return !text.empty() && result.ec == std::errc() && result.ptr == end &&
+			std::isfinite(value);
+	}
+}
+
 bool DebugArgs::parse_float(std::string_view text, float& value)
 {
-	if (!text.empty() && text.front() == '+')
+	return parse_finite(text, value);
+}
+
+bool DebugArgs::parse_double(std::string_view text, double& value)
+{
+	return parse_finite(text, value);
+}
+
+std::string join_words(const std::vector<std::string>& words, std::string_view separator,
+	std::string_view last)
+{
+	std::string text;
+	for (std::size_t i = 0; i < words.size(); ++i)
 	{
-		text.remove_prefix(1);
+		if (i > 0)
+		{
+			text += i + 1 == words.size() && !last.empty() ? last : separator;
+		}
+		text += words[i];
 	}
-	const char* end = text.data() + text.size();
-	const auto result = std::from_chars(text.data(), end, value);
-	return !text.empty() && result.ec == std::errc() && result.ptr == end &&
-		std::isfinite(value);
+	return text;
 }
 
 DebugCommand::DebugCommand(std::string name, std::string help,

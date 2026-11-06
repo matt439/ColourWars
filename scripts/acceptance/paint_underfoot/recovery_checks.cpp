@@ -128,7 +128,7 @@ namespace paint_underfoot_acceptance
                 player.tick(input(0, false, true));
                 paid_action |= player.player->animation_state() == PlayerAnimationState::firing;
                 require(bits(player.player->weapon_ammo()) == bits(world.tuning.starting_ammo()),
-                    "Prototype recovery context changed explicit infinite-ammo behavior");
+                    "Paint-underfoot recovery context changed explicit infinite-ammo behavior");
             }
             require(paid_action, "Infinite-ammo control reached no actual paid firing action");
             require(bits(player.player->health()) == bits(world.tuning.player().starting_health),

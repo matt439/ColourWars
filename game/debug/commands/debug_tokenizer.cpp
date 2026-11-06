@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/debug/dev_tools.h"
 #include "game/debug/commands/debug_tokenizer.h"
+#include "engine/render/text_encoding.h"
 
 namespace
 {
@@ -19,26 +20,6 @@ bool has_launch_statements(const std::vector<std::wstring>& arguments)
 }
 
 #if COLOURWARS_DEV_TOOLS
-namespace
-{
-	// UTF-16 to UTF-8; the tokenizer then rejects anything outside ASCII.
-	std::string narrow(const std::wstring& text)
-	{
-		if (text.empty())
-		{
-			return {};
-		}
-		const int size = WideCharToMultiByte(CP_UTF8, 0, text.data(),
-			static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
-		std::string result(static_cast<std::size_t>(std::max(size, 0)), ' ');
-		if (size > 0)
-		{
-			WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()),
-				result.data(), size, nullptr, nullptr);
-		}
-		return result;
-	}
-}
 
 DebugTokens tokenize(std::string_view statement)
 {
@@ -188,13 +169,13 @@ std::vector<std::string> parse_launch_arguments(
 	{
 		if (starts_statement(argument))
 		{
-			statements.push_back(narrow(argument.substr(1)));
+			statements.push_back(labrador::narrow(std::wstring_view(argument).substr(1)));
 			in_statement = true;
 		}
 		else if (in_statement)
 		{
 			statements.back() += ' ';
-			statements.back() += quote_word(narrow(argument));
+			statements.back() += quote_word(labrador::narrow(argument));
 		}
 	}
 	return statements;

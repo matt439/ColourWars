@@ -51,7 +51,6 @@ public:
 		const labrador::RectangleF& sprite_rectangle,
 		std::unique_ptr<labrador::Shape> collision_shape,
 		labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const PaintTuning* paint,
 		CollisionObjectType collision_type,
@@ -91,6 +90,8 @@ public:
 	virtual std::vector<PaintRunoffVisual> runoff_visuals() const;
 
 protected:
+	// The palette the tiles were built with, for a subclass's own cues.
+	const TeamColour& team_colours() const { return this->team_colours_; }
 	// Compare published translated tile edges directly: float translation is
 	// not generally invertible at binade boundaries.
 	PlayerTeam top_paint_team_translated(float world_x, float offset_x) const;

@@ -83,8 +83,7 @@ std::unique_ptr<Level> countdown_level(Application& app, LevelBuilder& builder,
     settings.set_player_count(count);
     settings.set_stage(stage);
     settings.set_duration(10.0f);
-    settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-        (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
+    settings.set_screen_layout(players_layout(count));
     constexpr int slots[] = { input_slots::keyboard_and_mouse, 3, 1, 0 };
     settings.begin_input_claims(slots[0]);
     for (int view = 1; view < count; ++view)
@@ -226,7 +225,7 @@ void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
     const auto inputs = neutral_inputs();
     for (const NamedStage& stage : stages)
     {
-        // Three players use the same four-pane layout, but a distinct roster.
+        // Close Quarters takes three players and their own three-pane layout.
         const int count = std::string_view(stage.stage) == "close_quarters" ? 3 : 4;
         auto level = countdown_level(app, builder, count, OpeningMode::off, stage.stage);
         resize(app, *level, native);

@@ -54,7 +54,7 @@ ProcessedMenuInput menu_input_for_owner(
 	return ProcessedMenuInput();
 }
 
-Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
+Direction MenuDirectionRepeat::update(const std::array<bool, menu_direction_count>& held,
 	float dt, float delay, float interval)
 {
 	Direction wanted = Direction::none;
@@ -90,10 +90,11 @@ Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
 Direction MenuDirectionRepeat::update_pad(const GamepadState& pad,
 	float dt, float delay, float interval, const InputTuning& tuning, bool use_stick)
 {
-	const float values[] = { -pad.left_stick.y, pad.left_stick.y,
+	// In the order of default_action_bindings().directions.
+	const std::array<float, menu_direction_count> values{ -pad.left_stick.y, pad.left_stick.y,
 		-pad.left_stick.x, pad.left_stick.x };
 	const auto dpad = dpad_direction_held(default_action_bindings(), pad);
-	std::array<bool, 4> held = {};
+	std::array<bool, menu_direction_count> held = {};
 	for (int i = 0; i < menu_direction_count; ++i)
 	{
 		this->stick_[i] = use_stick && values[i] >= (this->stick_[i] ?
@@ -142,93 +143,65 @@ MenuInput::MenuInput(const Gamepads* gamepads, const Keyboard* keyboard,
 {
 }
 
-ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
+namespace
 {
-	const GamepadState& now = gamepads.state(slot);
-	const GamepadState& before = gamepads.previous_state(slot);
-
-	// Keep arming through the release frame and clear it on the next frame.
-	// Repeated reads of the same frame then produce the same action.
-	// Do not arm on reconnect: a held button has a zeroed previous state.
-	bool* armed = this->armed_[slot];
-	const bool pad_just_connected = gamepads.just_connected(slot);
-	const ActionBindings& bindings = default_action_bindings();
-	std::array<ActionSample, menu_action_count> actions{};
-	bool anything_down = false;
-	int was_down_count = 0;
-	for (int i = 0; i < menu_action_count; ++i)
+	// Arms each action on an observed press, keeps it armed through the release
+	// frame and clears it on the next, so repeated reads of one frame produce the
+	// same action; `disarm` clears every action instead. A release is accepted
+	// only when exactly one action was down last frame, so releasing conflicting
+	// actions together does not choose between them.
+	template <typename State>
+	MenuInputAction released_action(bool (&armed)[menu_action_count],
+		const State& now, const State& before, bool disarm)
 	{
-		const ActionSample sample = menu_action(bindings, static_cast<MenuInputAction>(i), now, before);
-		actions[i] = sample;
-		armed[i] = !pad_just_connected &&
-			(sample.pressed || (armed[i] && sample.was_held));
-		anything_down = anything_down || sample.held;
-		if (sample.was_held) { ++was_down_count; }
-	}
-
-	ProcessedMenuInput result;
-	result.connected = true;
-
-	// Accept a release only when exactly one action was down last frame,
-	// so releasing conflicting actions together does not choose between them.
-	if (!anything_down && was_down_count == 1)
-	{
+		const ActionBindings& bindings = default_action_bindings();
+		std::array<ActionSample, menu_action_count> actions{};
+		bool anything_down = false;
+		int was_down_count = 0;
 		for (int i = 0; i < menu_action_count; ++i)
 		{
-			if (armed[i] && actions[i].was_held)
+			const ActionSample sample = menu_action(bindings, static_cast<MenuInputAction>(i), now, before);
+			actions[i] = sample;
+			armed[i] = !disarm && (sample.pressed || (armed[i] && sample.was_held));
+			anything_down = anything_down || sample.held;
+			if (sample.was_held) { ++was_down_count; }
+		}
+		if (!anything_down && was_down_count == 1)
+		{
+			for (int i = 0; i < menu_action_count; ++i)
 			{
-				result.action = static_cast<MenuInputAction>(i);
-				break;
+				if (armed[i] && actions[i].was_held)
+				{
+					return static_cast<MenuInputAction>(i);
+				}
 			}
 		}
+		return MenuInputAction::none;
 	}
+}
 
+ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
+{
+	// Do not arm on reconnect: a held button has a zeroed previous state.
+	ProcessedMenuInput result;
+	result.connected = true;
+	result.action = released_action(this->armed_[slot], gamepads.state(slot),
+		gamepads.previous_state(slot), gamepads.just_connected(slot));
 	result.direction = this->directions_[slot];
-
 	return result;
 }
 
 ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard)
 {
-	// Keep arming through the release frame, as for pads, for repeatable reads.
-	// Clear it on focus return: suppressed press edges would otherwise preserve
-	// ownership of a key held while the window was unfocused.
-	const bool just_focused = keyboard.just_focused();
-	const ActionBindings& bindings = default_action_bindings();
-	std::array<ActionSample, menu_action_count> actions{};
-	bool anything_down = false;
-	int was_down_count = 0;
-	for (int i = 0; i < menu_action_count; ++i)
-	{
-		// The evaluator reconstructs previous-held per physical key before
-		// combining aliases: (held && !pressed) || released.
-		const ActionSample sample = menu_action(bindings, static_cast<MenuInputAction>(i),
-			keyboard.state(), keyboard.previous_state());
-		actions[i] = sample;
-		this->key_armed_[i] = !just_focused &&
-			(sample.pressed || (this->key_armed_[i] && sample.was_held));
-		anything_down = anything_down || sample.held;
-		if (sample.was_held) { ++was_down_count; }
-	}
-
+	// Disarm on focus return: suppressed press edges would otherwise preserve
+	// ownership of a key held while the window was unfocused. The evaluator
+	// reconstructs previous-held per physical key before combining aliases:
+	// (held && !pressed) || released.
 	ProcessedMenuInput result;
 	result.connected = true;
-
-	// Reject simultaneous releases of different actions.
-	if (!anything_down && was_down_count == 1)
-	{
-		for (int i = 0; i < menu_action_count; ++i)
-		{
-			if (this->key_armed_[i] && actions[i].was_held)
-			{
-				result.action = static_cast<MenuInputAction>(i);
-				break;
-			}
-		}
-	}
-
+	result.action = released_action(this->key_armed_, keyboard.state(),
+		keyboard.previous_state(), keyboard.just_focused());
 	result.direction = this->directions_[input_slots::keyboard_and_mouse];
-
 	return result;
 }
 

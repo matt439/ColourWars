@@ -20,6 +20,6 @@ public:
 private:
     FixedSlabGeometry geometry_;
     std::vector<std::pair<float, float>> intervals_;
-    std::array<labrador::RectangleI, AirbrushShadow::VARIANTS> tiles_{};
+    AirbrushShadow::Tiles tiles_{};
     labrador::RectangleF bounds_;
 };

@@ -72,7 +72,7 @@
 				look->paper.shade, look->meter_track_colour, look->timer_colour, look->timer_shadow_colour,
 				look->closing_clock.ink, look->closing_clock.paper, look->closing_clock.shade,
 				look->closing_clock.text, look->closing_clock.accent, look->player_identity_colour,
-				look->player_identity_shadow_colour, look->player_identity_background_colour,
+				look->player_identity_shadow_colour, presentation.main_menu().stage_select.preview_background,
 				identity->ink_colour, identity->background_colour };
 		};
 		const auto resource_names = [&]
@@ -200,9 +200,9 @@
 			pending->edits().contains("debug_overlay.colour") && pending->current().text() == overlay_only &&
 			pending->baseline().text() == saved && read_text(scratch.source / L"presentation.json") == external &&
 			read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Health resets to its saved partial-alpha token while retaining the unrelated pending edit and exact invalid external source/staging without recovery files");
 		unchanged();
 		restored_colours[3] = initial_colours[3];
@@ -289,7 +289,7 @@
 				look->paper.shade, look->health_colour, look->timer_colour, look->timer_shadow_colour,
 				look->closing_clock.ink, look->closing_clock.paper, look->closing_clock.shade,
 				look->closing_clock.text, look->closing_clock.accent, look->player_identity_colour,
-				look->player_identity_shadow_colour, look->player_identity_background_colour,
+				look->player_identity_shadow_colour, presentation.main_menu().stage_select.preview_background,
 				identity->ink_colour, identity->background_colour };
 		};
 		const auto resource_names = [&]
@@ -417,9 +417,9 @@
 			pending->edits().contains("debug_overlay.colour") && pending->current().text() == overlay_only &&
 			pending->baseline().text() == saved && read_text(scratch.source / L"presentation.json") == external &&
 			read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Track resets to its saved partial-alpha token while retaining the unrelated pending edit and exact invalid external source/staging without recovery files");
 		unchanged();
 		restored_colours[3] = initial_colours[3];

@@ -20,14 +20,14 @@ class PaperCard;
 // carry, one prepared card per lesson so a draw only chooses among them, and
 // which lesson the player is standing in. Empty, it is a level that is not
 // practice. The look and the controls text are read through the borrowed
-// tuning and presentation each layout, never copied.
+// presentation each layout, never copied.
 class PracticeLessons
 {
 public:
 	PracticeLessons() = default;
 	// Builds a card per lesson; a title or text that cannot be drawn throws
 	// from drawable_text::widen_drawable, naming the lesson's station.
-	PracticeLessons(std::vector<LevelLesson> lessons, const GameTuning* tuning,
+	PracticeLessons(std::vector<LevelLesson> lessons,
 		const Presentation* presentation, labrador::RenderResources* render_resources);
 
 	bool empty() const { return this->lessons_.empty(); }
@@ -54,7 +54,6 @@ private:
 		std::unique_ptr<colourwars::TextDropShadow> text;
 		labrador::RectangleF card;
 	};
-	const GameTuning* tuning_ = nullptr;
 	const Presentation* presentation_ = nullptr;
 	std::vector<LevelLesson> lessons_;
 	std::vector<LessonCard> cards_;

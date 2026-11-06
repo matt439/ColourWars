@@ -1,11 +1,13 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation_menu_text.h"
 #include "game/config/presentation/presentation_read.h"
+#include "game/config/content_value.h"
 #include "game/input/controls_text.h"
 
 #include "engine/assets/json.h"
 #include "game/config/drawable_text.h"
 #include "game/input/input_slots.h"
+#include "game/match/match_rules.h"
 #include "game/objects/player_badge.h"
 
 #include <array>
@@ -37,6 +39,24 @@ namespace
 		return text;
 	}
 
+	// Whether every LF-separated line, the only line included, has a
+	// nonblank character.
+	bool every_line_nonblank(std::wstring_view text)
+	{
+		size_t begin = 0;
+		for (;;)
+		{
+			const size_t end = text.find(L'\n', begin);
+			if (text.substr(begin, end == std::wstring_view::npos ? end : end - begin).find_first_not_of(L' ') ==
+				std::wstring_view::npos)
+			{
+				return false;
+			}
+			if (end == std::wstring_view::npos) { return true; }
+			begin = end + 1;
+		}
+	}
+
 	std::wstring read_menu_block(const JsonValue& json, const char* key)
 	{
 		std::wstring text = drawable_text::widen_drawable(json.string(key), json.where() + ": " + key);
@@ -44,94 +64,12 @@ namespace
 		{
 			throw std::runtime_error(json.where() + ": '" + key + "' must use LF for authored line breaks.");
 		}
-		size_t begin = 0;
-		do
+		if (!every_line_nonblank(text))
 		{
-			const size_t end = text.find(L'\n', begin);
-			if (text.substr(begin, end == std::wstring::npos ? end : end - begin).find_first_not_of(L' ') ==
-				std::wstring::npos)
-			{
-				throw std::runtime_error(json.where() + ": '" + key + "' must have a nonblank line between each authored LF break.");
-			}
-			if (end == std::wstring::npos) { break; }
-			begin = end + 1;
-		} while (begin <= text.size());
+			throw std::runtime_error(json.where() + ": '" + key + "' must have a nonblank line between each authored LF break.");
+		}
 		return text;
 	}
-
-	struct StickReadoutToken
-	{
-		std::wstring_view name;
-		std::wstring value;
-	};
-
-	void validate_stick_template(const std::wstring& text,
-		std::initializer_list<StickReadoutToken> tokens, bool multiline)
-	{
-		for (const wchar_t character : text)
-		{
-			if ((character < L' ' || character > L'~') && !(multiline && character == L'\n'))
-			{
-				throw std::invalid_argument("Stick readout text must use drawable characters and its allowed LF line breaks.");
-			}
-		}
-		size_t begin = 0;
-		do
-		{
-			const size_t end = text.find(L'\n', begin);
-			if (text.substr(begin, end == std::wstring::npos ? end : end - begin).find_first_not_of(L' ') ==
-				std::wstring::npos)
-			{
-				throw std::invalid_argument("Stick readout text must have a nonblank line between each authored LF break.");
-			}
-			if (end == std::wstring::npos) { break; }
-			begin = end + 1;
-		} while (begin <= text.size());
-		// Count in the original template: erasing one token must never create
-		// a different required token from nested fragments around it.
-		for (const StickReadoutToken& token : tokens)
-		{
-			const size_t at = text.find(token.name);
-			if (at == std::wstring::npos || text.find(token.name, at + token.name.size()) != std::wstring::npos)
-			{
-				throw std::invalid_argument("Stick readout text requires each declared token exactly once.");
-			}
-		}
-		begin = 0;
-		for (;;)
-		{
-			const size_t at = text.find_first_of(L"{}", begin);
-			if (at == std::wstring::npos) { break; }
-			const size_t end = text.find(L'}', at);
-			bool known = false;
-			if (text[at] == L'{' && end != std::wstring::npos)
-			{
-				const std::wstring_view name = std::wstring_view(text).substr(at, end - at + 1);
-				for (const StickReadoutToken& token : tokens)
-				{
-					known = known || name == token.name;
-				}
-			}
-			if (!known)
-			{
-				throw std::invalid_argument("Stick readout text requires each declared token exactly once and no other braces.");
-			}
-			begin = end + 1;
-		}
-	}
-
-	std::wstring format_stick_template(const std::wstring& text,
-		std::initializer_list<StickReadoutToken> tokens, bool multiline)
-	{
-		validate_stick_template(text, tokens, multiline);
-		std::wstring result = text;
-		for (const StickReadoutToken& token : tokens)
-		{
-			result.replace(result.find(token.name), token.name.size(), token.value);
-		}
-		return result;
-	}
-
 	std::wstring stick_percent_value(int value)
 	{
 		if (value < -100 || value > 100)
@@ -145,18 +83,23 @@ namespace
 namespace presentation_read
 {
 	std::wstring format_label_template(const std::wstring& text,
-		std::initializer_list<LabelToken> tokens)
+		std::initializer_list<LabelToken> tokens, bool multiline)
 	{
-		if (text.find_first_not_of(L' ') == std::wstring::npos)
-		{
-			throw std::invalid_argument("Menu label text must be nonblank and single-line.");
-		}
 		for (const wchar_t character : text)
 		{
-			if (character < L' ' || character > L'~')
+			if ((character < drawable_text::first_drawable || character > drawable_text::last_drawable) &&
+				!(multiline && character == L'\n'))
 			{
-				throw std::invalid_argument("Menu label text must use drawable single-line characters.");
+				throw std::invalid_argument(multiline ?
+					"Menu text must use drawable characters and its allowed LF line breaks." :
+					"Menu label text must use drawable single-line characters.");
 			}
+		}
+		if (!every_line_nonblank(text))
+		{
+			throw std::invalid_argument(multiline ?
+				"Menu text must have a nonblank line between each authored LF break." :
+				"Menu label text must be nonblank and single-line.");
 		}
 		std::wstring result;
 		std::vector<std::wstring_view> used;
@@ -166,7 +109,7 @@ namespace presentation_read
 			{
 				if (text[at] == L'}')
 				{
-					throw std::invalid_argument("Menu label text contains an unknown brace.");
+					throw std::invalid_argument("Menu text contains an unknown brace.");
 				}
 				result += text[at++];
 				continue;
@@ -178,7 +121,7 @@ namespace presentation_read
 				[&name](const LabelToken& candidate) { return candidate.name == name; });
 			if (token == tokens.end() || std::find(used.begin(), used.end(), name) != used.end())
 			{
-				throw std::invalid_argument("Menu label text requires each declared token exactly once and no other braces.");
+				throw std::invalid_argument("Menu text requires each declared token exactly once and no other braces.");
 			}
 			used.push_back(name);
 			// Scan only the original template. Inserted words cannot become
@@ -188,14 +131,19 @@ namespace presentation_read
 		}
 		if (used.size() != tokens.size())
 		{
-			throw std::invalid_argument("Menu label text requires each declared token exactly once.");
+			throw std::invalid_argument("Menu text requires each declared token exactly once.");
 		}
 		return result;
 	}
-
 	MenuText read_menu_text(const JsonValue& root)
 	{
 		const JsonValue json = root.object("menu_text");
+		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
+		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool",
+			"options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
+			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
+			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
+			"stick_readouts", "hud", "countdown", "controls", "headings", "prompts", "items" });
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
@@ -205,15 +153,9 @@ namespace presentation_read
 		{ throw std::runtime_error(json.where() + ": practice_tool: " + error.what()); }
 		text.options_palette_timing = read_menu_line(json, "options_palette_timing");
 		text.display_trial_countdown = read_menu_line(json, "display_trial_countdown");
-		const std::wstring countdown_token = L"{seconds}";
-		const size_t countdown_at = text.display_trial_countdown.find(countdown_token);
-		std::wstring countdown_literals = text.display_trial_countdown;
-		if (countdown_at != std::wstring::npos) { countdown_literals.erase(countdown_at, countdown_token.size()); }
-		if (countdown_at == std::wstring::npos || countdown_literals.find_first_of(L"{}") != std::wstring::npos)
-		{
-			throw std::runtime_error(json.where() +
-				": display_trial_countdown must contain exactly one {seconds} token and no other braces.");
-		}
+		try { std::ignore = format_label_template(text.display_trial_countdown, { { L"{seconds}", L"1" } }); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(json.where() + ": display_trial_countdown: " + error.what()); }
 		const JsonValue title = json.object("title");
 		text.title.wordmark = read_menu_block(title, "wordmark");
 		text.title.subtitle = read_menu_line(title, "subtitle");
@@ -467,7 +409,7 @@ namespace presentation_read
 		text.stage.random_hint = read_menu_block(stage, "random_hint");
 		try
 		{
-			std::ignore = format_stick_template(text.stage.random_hint, { { L"{count}", L"1" } }, true);
+			std::ignore = format_label_template(text.stage.random_hint, { { L"{count}", L"1" } }, true);
 		}
 		catch (const std::invalid_argument& error)
 		{
@@ -475,6 +417,7 @@ namespace presentation_read
 		}
 		text.stage.team_a_picks = read_menu_line(stage, "team_a_picks");
 		text.stage.team_b_picks = read_menu_line(stage, "team_b_picks");
+		text.stage.random_mark = read_menu_line(stage, "random_mark");
 		// Keyed by data, not by a C++ list: which ids are shipped is the
 		// manifest's, so validate_stage_names judges the key set once it loads.
 		const JsonValue stage_names = json.object("stage_names");
@@ -489,11 +432,19 @@ namespace presentation_read
 			text.stage_names.emplace(id, read_menu_line(stage_names, id.c_str()));
 		}
 		const JsonValue records = json.object("records");
-		text.records.new_best = read_menu_line(records, "new_best");
-		text.records.stage_best = read_menu_line(records, "stage_best");
-		text.records.best_win = read_menu_line(records, "best_win");
-		text.records.best_coverage = read_menu_line(records, "best_coverage");
-		text.records.played = read_menu_line(records, "played");
+		const auto read_record = [&](const char* key, std::initializer_list<LabelToken> tokens)
+		{
+			const std::wstring value = read_menu_line(records, key);
+			try { std::ignore = format_label_template(value, tokens); }
+			catch (const std::invalid_argument& error)
+			{ throw std::runtime_error(records.where() + ": " + key + ": " + error.what()); }
+			return value;
+		};
+		text.records.new_best = read_record("new_best", { { L"{percentage}", L"0.0%" } });
+		text.records.stage_best = read_record("stage_best", { { L"{percentage}", L"0.0%" } });
+		text.records.best_win = read_record("best_win", { { L"{percentage}", L"0.0%" }, { L"{played}", L"1" } });
+		text.records.best_coverage = read_record("best_coverage", { { L"{percentage}", L"0.0%" }, { L"{played}", L"1" } });
+		text.records.played = read_record("played", { { L"{count}", L"1" } });
 		const JsonValue hud = json.object("hud");
 		text.hud.team_a = read_menu_line(hud, "team_a");
 		text.hud.team_b = read_menu_line(hud, "team_b");
@@ -554,23 +505,17 @@ namespace presentation_read
 		text.connection.controller_lost = read_menu_line(connection, "controller_lost");
 		text.connection.all_connected = read_menu_line(connection, "all_connected");
 		text.connection.teams_required = read_menu_line(connection, "teams_required");
-		const std::wstring player_token = L"{player}";
-		const size_t player_at = text.connection.pause_player_title.find(player_token);
-		std::wstring player_literals = text.connection.pause_player_title;
-		if (player_at != std::wstring::npos) { player_literals.erase(player_at, player_token.size()); }
-		if (player_at == std::wstring::npos || player_literals.find_first_of(L"{}") != std::wstring::npos)
-		{
-			throw std::runtime_error(connection.where() +
-				": pause_player_title must contain exactly one {player} token and no other braces.");
-		}
+		try { std::ignore = format_label_template(text.connection.pause_player_title, { { L"{player}", L"1" } }); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(connection.where() + ": pause_player_title: " + error.what()); }
 		const JsonValue stick_readouts = json.object("stick_readouts");
 		const auto read_stick = [&](const char* key, bool multiline,
-			std::initializer_list<StickReadoutToken> tokens)
+			std::initializer_list<LabelToken> tokens)
 		{
 			const std::wstring value = multiline ? read_menu_block(stick_readouts, key) : read_menu_line(stick_readouts, key);
 			try
 			{
-				validate_stick_template(value, tokens, multiline);
+				std::ignore = format_label_template(value, tokens, multiline);
 			}
 			catch (const std::invalid_argument& error)
 			{
@@ -589,6 +534,8 @@ namespace presentation_read
 		if (json.has("stage_scan"))
 		{
 			const JsonValue scan = json.object("stage_scan");
+			content_value::require_known_keys(scan, { "heading", "status", "browse_prompt",
+				"details_prompt", "counter", "no_refusals", "unicode_hint" });
 			text.stage_scan.heading = read_menu_line(scan, "heading");
 			text.stage_scan.status = read_menu_line(scan, "status");
 			text.stage_scan.browse_prompt = read_menu_line(scan, "browse_prompt");
@@ -658,12 +605,7 @@ const std::wstring& MenuText::item(MenuItem item) const
 std::wstring MenuText::display_countdown(int seconds) const
 {
 	if (seconds < 0) { throw std::out_of_range("Display countdown seconds must be nonnegative."); }
-	std::wstring result = this->display_trial_countdown;
-	const std::wstring token = L"{seconds}";
-	const size_t at = result.find(token);
-	if (at == std::wstring::npos) { throw std::invalid_argument("display_trial_countdown requires {seconds}."); }
-	result.replace(at, token.size(), std::to_wstring(seconds));
-	return result;
+	return format_label_template(this->display_trial_countdown, { { L"{seconds}", std::to_wstring(seconds) } });
 }
 
 std::wstring MenuText::practice_tool_label(std::wstring_view tool) const
@@ -673,23 +615,11 @@ std::wstring MenuText::practice_tool_label(std::wstring_view tool) const
 
 std::wstring MenuText::pause_title_for_player(int number) const
 {
-	if (number < 1 || number > 4)
+	if (!valid_player_count(number))
 	{
-		throw std::invalid_argument("Pause title requires a player number from 1 to 4.");
+		throw std::invalid_argument("Pause title requires a player number from " + player_count_range() + ".");
 	}
-	std::wstring result = this->connection.pause_player_title;
-	const std::wstring token = L"{player}";
-	const size_t at = result.find(token);
-	if (at == std::wstring::npos)
-	{
-		throw std::invalid_argument("pause_player_title requires exactly one {player} token.");
-	}
-	result.replace(at, token.size(), std::to_wstring(number));
-	if (result.find_first_of(L"{}") != std::wstring::npos)
-	{
-		throw std::invalid_argument("pause_player_title requires exactly one {player} token and no other braces.");
-	}
-	return result;
+	return format_label_template(this->connection.pause_player_title, { { L"{player}", std::to_wstring(number) } });
 }
 
 std::wstring MenuText::device_label(int slot) const
@@ -722,6 +652,27 @@ std::wstring MenuResultsText::team_a_percentage_line(const std::wstring& percent
 std::wstring MenuResultsText::team_b_percentage_line(const std::wstring& percentage) const
 {
 	return format_label_template(this->team_b_percentage, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuRecordText::new_best_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->new_best, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuRecordText::stage_best_line(const std::wstring& percentage) const
+{
+	return format_label_template(this->stage_best, { { L"{percentage}", percentage } });
+}
+
+std::wstring MenuRecordText::played_line(int count) const
+{
+	return format_label_template(this->played, { { L"{count}", std::to_wstring(count) } });
+}
+
+std::wstring MenuRecordText::best_line(bool solo, const std::wstring& percentage, int count) const
+{
+	return format_label_template(solo ? this->best_coverage : this->best_win,
+		{ { L"{percentage}", percentage }, { L"{played}", this->played_line(count) } });
 }
 
 const std::wstring& MenuResultsText::award_line(MatchAward award) const
@@ -815,18 +766,19 @@ const std::wstring& MenuText::series_stage_value(SeriesStageRule rule) const
 
 std::wstring MenuText::stage_best_of_mode(int best_of) const
 {
-	if (best_of != 3 && best_of != 5)
+	// A single match has its own words (stage.single_match_mode).
+	if (!valid_best_of(best_of) || best_of == 1)
 	{
-		throw std::invalid_argument("Stage best-of mode requires 3 or 5.");
+		throw std::invalid_argument("Stage best-of mode requires a series length.");
 	}
 	return format_label_template(this->stage.best_of_mode, { { L"{best_of}", std::to_wstring(best_of) } });
 }
 
 std::wstring MenuText::stage_roster(int players) const
 {
-	if (players < 1 || players > 4)
+	if (!valid_player_count(players))
 	{
-		throw std::invalid_argument("Stage roster requires a player count from 1 to 4.");
+		throw std::invalid_argument("Stage roster requires a player count from " + player_count_range() + ".");
 	}
 	return format_label_template(players == 1 ? this->stage.solo_roster : this->stage.versus_roster,
 		{ { L"{players}", std::to_wstring(players) } });
@@ -848,7 +800,7 @@ std::wstring MenuText::stage_random_hint(size_t count) const
 	{
 		throw std::invalid_argument("Stage Random hint requires a positive eligible stage count.");
 	}
-	return format_stick_template(this->stage.random_hint, { { L"{count}", std::to_wstring(count) } }, true);
+	return format_label_template(this->stage.random_hint, { { L"{count}", std::to_wstring(count) } }, true);
 }
 
 const std::wstring* MenuText::stage_name(std::string_view id) const
@@ -917,29 +869,29 @@ std::wstring MenuText::stick_connection(int pad_slot, bool connected) const
 	{
 		throw std::invalid_argument("Stick readout requires a pad slot from 0 to 3.");
 	}
-	return format_stick_template(connected ? this->stick_readouts.connected : this->stick_readouts.disconnected,
+	return format_label_template(connected ? this->stick_readouts.connected : this->stick_readouts.disconnected,
 		{ { L"{device}", this->device_label(pad_slot) } }, false);
 }
 
 std::wstring MenuText::stick_raw_movement(int value) const
 {
-	return format_stick_template(this->stick_readouts.raw_movement, { { L"{value}", stick_percent_value(value) } }, false);
+	return format_label_template(this->stick_readouts.raw_movement, { { L"{value}", stick_percent_value(value) } }, false);
 }
 
 std::wstring MenuText::stick_movement_response(int value) const
 {
-	return format_stick_template(this->stick_readouts.movement_response, { { L"{value}", stick_percent_value(value) } }, false);
+	return format_label_template(this->stick_readouts.movement_response, { { L"{value}", stick_percent_value(value) } }, false);
 }
 
 std::wstring MenuText::stick_aim_inactive(int raw_x, int raw_y) const
 {
-	return format_stick_template(this->stick_readouts.aim_inactive,
+	return format_label_template(this->stick_readouts.aim_inactive,
 		{ { L"{raw_x}", stick_percent_value(raw_x) }, { L"{raw_y}", stick_percent_value(raw_y) } }, true);
 }
 
 std::wstring MenuText::stick_aim_active(int raw_x, int raw_y, int aim_x, int aim_y) const
 {
-	return format_stick_template(this->stick_readouts.aim_active,
+	return format_label_template(this->stick_readouts.aim_active,
 		{ { L"{raw_x}", stick_percent_value(raw_x) }, { L"{raw_y}", stick_percent_value(raw_y) },
 		{ L"{aim_x}", stick_percent_value(aim_x) }, { L"{aim_y}", stick_percent_value(aim_y) } }, true);
 }

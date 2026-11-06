@@ -10,6 +10,7 @@
 // tuned share of its paintable area. Everyone else, including both teams on a
 // tie or an unpainted gate, collides with it. Shots of both teams always hit
 // and paint it.
+#include "game/contracts/rectangle_contract.h"
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -18,10 +19,7 @@
 
 namespace team_gate_contract
 {
-    struct Rectangle
-    {
-        float x, y, width, height;
-    };
+    using Rectangle = rectangle_contract::Rectangle;
 
     // What an authored record says about itself, read before it is built.
     struct Record

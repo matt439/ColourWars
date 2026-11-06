@@ -16,7 +16,8 @@ legacy metadata that no screen draws; Stage Select uses the live arena preview
 ([`ED#6` retired](level-editor.md#movement-course-icon-ed6-retired)). The stage
 deliberately has no music: its `sound` block names the replacement bank only.
 Action cues, including footsteps and landings, use the accepted replacement set;
-optional detail and in-game mix listening remain in `POL#23`.
+the author accepted the mix as it stands on 2026-11-05 (`POL#23`), and the
+in-game listening check (`ROAD#3`) was waived and not performed.
 
 ## Practice workshop
 
@@ -60,8 +61,9 @@ tools. Select rebuilds the course clean with that tool and puts a living player
 back where they stood. It skips the countdown and goes straight to GO.
 Selecting the tool already held is therefore a clean course in place.
 **Restart** keeps the chosen tool and starts again at the spawn, after the
-countdown and controls reminder. The rows use 0.8 of the authored pause
-spacing so five fit the same paper.
+countdown and controls reminder. The rows use the authored
+`pause_menu.practice_row_spacing` (96, 0.8 of the pause spacing, which is
+also what a file without the key gets) so five fit the same paper.
 
 **Evidence.** The `practice_workshop` acceptance case builds the real level
 through `LevelBuilder` and checks the following:

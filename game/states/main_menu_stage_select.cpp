@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_cycle.h"
 #include "game/states/match_start.h"
 #include "game/states/end_menu_action.h"
 #include "game/states/user_stage_refusals_menu.h"
@@ -194,7 +195,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	const RectangleF name_bounds = RectangleF::union_of(
 		this->stage_name_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->stage_name_->text_bounds_at(this->menu_style().item_shadow_offset, 1.0f));
-	const float name_scale = std::min(1.0f, look.preview_size.x / name_bounds.width);
+	const float name_scale = menu_geometry::fit_scale(name_bounds.width, look.preview_size.x);
 	this->stage_name_->set_scale(name_scale);
 	this->stage_name_->set_shadow_scale(name_scale);
 	this->stage_name_->set_shadow_offset(this->menu_style().item_shadow_offset * name_scale);
@@ -216,7 +217,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		const RectangleF record_bounds = RectangleF::union_of(
 			this->stage_record_->text_bounds_at(Vector2F::zero, 1.0f),
 			this->stage_record_->text_bounds_at(this->menu_style().detail_shadow_offset, 1.0f));
-		const float record_scale = std::min(1.0f, room / record_bounds.width);
+		const float record_scale = menu_geometry::fit_scale(record_bounds.width, room);
 		this->stage_record_->set_scale(record_scale);
 		this->stage_record_->set_shadow_scale(record_scale);
 		this->stage_record_->set_shadow_offset(this->menu_style().detail_shadow_offset * record_scale);
@@ -236,8 +237,8 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	const RectangleF hint_bounds = RectangleF::union_of(
 		this->selection_hint_->text_bounds_at(Vector2F::zero, 1.0f),
 		this->selection_hint_->text_bounds_at(this->menu_style().detail_shadow_offset, 1.0f));
-	const float hint_scale = std::min(1.0f,
-		(look.briefing.size.x - 2.0f * look.briefing_padding.x) / hint_bounds.width);
+	const float hint_scale = menu_geometry::fit_scale(hint_bounds.width,
+		look.briefing.size.x - 2.0f * look.briefing_padding.x);
 	this->selection_hint_->set_scale(hint_scale);
 	this->selection_hint_->set_shadow_scale(hint_scale);
 	this->selection_hint_->set_shadow_offset(this->menu_style().detail_shadow_offset * hint_scale);
@@ -272,13 +273,11 @@ std::wstring MainMenuStageSelect::record_line(int slot) const
 	{
 		return std::wstring();
 	}
-	const std::wstring count = std::to_wstring(played) + L" " + text.played;
 	if (!best)
 	{
-		return count;
+		return text.played_line(played);
 	}
-	return (solo ? text.best_coverage : text.best_win) + L" " +
-		percentage_text(*best) + L" / " + count;
+	return text.best_line(solo, percentage_text(*best), played);
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
@@ -310,7 +309,7 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 		const Stage& stage = stages->at(static_cast<size_t>(slot));
 		return this->text().stage_title(stage.name, stage.display_name, "the stage list");
 	}
-	return L"ERROR";
+	throw std::out_of_range("Stage Select has no slot " + std::to_string(slot));
 }
 bool MainMenuStageSelect::is_user_stage(int slot) const
 {
@@ -367,7 +366,7 @@ void MainMenuStageSelect::init()
 		style.sprite_sheet, style.fill_frame, edge, resources, style.panel_edge_colour);
 	this->preview_background_ = std::make_unique<UiTexture>("preview_background",
 		style.sprite_sheet, style.fill_frame, preview, resources,
-		CrudeDrawing::premultiplied(this->presentation().hud().player_identity_background_colour));
+		CrudeDrawing::premultiplied(look.preview_background));
 	this->stage_preview_ = std::make_unique<StagePreview>("stage_preview",
 		preview, this->data());
 	this->stage_name_ = std::make_unique<colourwars::UiTextDropShadow>("stage_name",
@@ -380,7 +379,7 @@ void MainMenuStageSelect::init()
 		L"", look.record_font, Vector2F(0.0f, look.record_y), resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset, true);
 	this->random_mark_ = std::make_unique<colourwars::UiTextDropShadow>("random_mark",
-		L"?", this->look().announcement_font, Vector2F::zero, resources,
+		this->text().stage.random_mark, this->look().announcement_font, Vector2F::zero, resources,
 		style.highlight, style.shadow_colour, style.title_shadow_offset);
 	this->random_mark_->set_position(preview.center() -
 		this->random_mark_->bounds().center());
@@ -458,10 +457,8 @@ void MainMenuStageSelect::init()
 	this->stage_scan_status_->set_scale(main.stage_scan.status_scale);
 	if (refused)
 	{
-		const RectangleF bounds = this->stage_scan_status_->bounds();
-		const float fit = std::min({ 1.0f, main.stage_scan.status.size.x / bounds.width,
-			main.stage_scan.status.size.y / bounds.height });
-		this->stage_scan_status_->set_scale(main.stage_scan.status_scale * fit);
+		this->stage_scan_status_->set_scale(main.stage_scan.status_scale * menu_geometry::fit_scale(
+			this->stage_scan_status_->bounds().size(), main.stage_scan.status.size));
 	}
 	this->stage_scan_status_->set_hidden(!refused);
 	this->text_container_->add_child(this->stage_scan_status_.get());
@@ -492,10 +489,7 @@ void MainMenuStageSelect::check_paper_geometry() const
 	const auto check = [](const RectangleF& bounds, const RectangleF& container,
 		const char* role, const char* key)
 	{
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-			!std::isfinite(bounds.right()) || !std::isfinite(bounds.bottom()) ||
-			bounds.width <= 0.0f || bounds.height <= 0.0f || !container.contains(bounds))
+		if (!menu_geometry::fits(bounds, container))
 		{
 			throw std::runtime_error(std::string(key) + ": Stage Select " + role +
 				" must fit its paper including the retained text, shadow and artwork bounds.");
@@ -523,9 +517,7 @@ void MainMenuStageSelect::check_paper_geometry() const
 	check_outer(this->stage_preview_->bounds(), "arena preview");
 	const RectangleF briefing = this->briefing_background_->rectangle();
 	check_outer(briefing, "briefing card");
-	const RectangleF preview = this->preview_edge_->bounds();
-	if (briefing.x < preview.right() && briefing.right() > preview.x &&
-		briefing.y < preview.bottom() && briefing.bottom() > preview.y)
+	if (menu_geometry::overlaps(briefing, this->preview_edge_->bounds()))
 	{
 		throw std::runtime_error("main_menu.stage_select.briefing: Stage Select paper must remain separate from the preview edge.");
 	}
@@ -558,15 +550,7 @@ void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 	// Slots run 0..n-1 for the stages and n for Random, and the cursor wraps.
 	const int last = random_stage_indices(*this->data()->stages()).empty() ?
 		this->random_slot() - 1 : this->random_slot();
-	int slot = this->select_state_.slot;
-	if (direction == labrador::Direction::left)
-	{
-		slot = (slot == 0) ? last : slot - 1;
-	}
-	else if (direction == labrador::Direction::right)
-	{
-		slot = (slot == last) ? 0 : slot + 1;
-	}
+	const int slot = wrap_step(this->select_state_.slot, last + 1, direction);
 	if (slot != this->select_state_.slot)
 	{
 		this->select_state_.slot = slot;

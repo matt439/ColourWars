@@ -54,7 +54,6 @@ namespace skirmish_acceptance
 			for (int step = 0; step < 1800; ++step)
 			{
 				BotSeatView view = base_view();
-				view.step = step;
 				view.self.center = { static_cast<float>(step % 300), 700.0f };
 				view.self.velocity.x = step % 80 < 20 ? 0.0f : 300.0f;
 				view.self.on_ground = step % 47 < 30;
@@ -192,7 +191,7 @@ namespace skirmish_acceptance
 			for (int step = 0; step < 600; ++step)
 			{
 				BotSeatView view = base_view();
-				view.step = step; view.self.ammo = static_cast<float>(100 - step % 100) / 100.0f;
+				view.self.ammo = static_cast<float>(100 - step % 100) / 100.0f;
 				view.self.velocity.x = step % 70 < 20 ? 0.0f : 300.0f;
 				view.others = { enemy(450, step % 80 < 40 ? -240.0f : 0.0f) };
 				BotSeatView extra = view;

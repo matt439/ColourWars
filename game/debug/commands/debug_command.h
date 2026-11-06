@@ -28,10 +28,16 @@ public:
 	// Whole numbers and decimals only; trailing junk is not a number.
 	static bool parse_int(std::string_view text, int& value);
 	static bool parse_float(std::string_view text, float& value);
+	static bool parse_double(std::string_view text, double& value);
 
 private:
 	std::vector<std::string> words_;
 };
+
+// The words of a usage or a message, joined: ("a", "b", "c") with ", " and
+// " or " is "a, b or c"; an empty `last` uses `separator` throughout.
+std::string join_words(const std::vector<std::string>& words, std::string_view separator,
+	std::string_view last = {});
 
 // A console verb with typed argument specs. The registry checks the argument
 // count against args() before run() is called.

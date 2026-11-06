@@ -6,6 +6,12 @@
 #include "engine/render/text_encoding.h"
 #include <filesystem>
 
+const char* severity_prefix(DebugSeverity severity)
+{
+	return severity == DebugSeverity::error ? "error: " :
+		severity == DebugSeverity::warning ? "warning: " : "";
+}
+
 void DebugLog::write(DebugSeverity severity, std::string_view text)
 {
 	std::size_t start = 0;
@@ -21,10 +27,8 @@ void DebugLog::write(DebugSeverity severity, std::string_view text)
 			this->lines_.pop_front();
 		}
 
-		const char* prefix = severity == DebugSeverity::error ? "error: " :
-			severity == DebugSeverity::warning ? "warning: " : "";
 		std::string mirrored = "[console] ";
-		mirrored += prefix;
+		mirrored += severity_prefix(severity);
 		mirrored += line;
 		mirrored += '\n';
 		if (this->mirror_to_debugger_)
@@ -89,8 +93,7 @@ bool DebugLog::set_transcript(const std::string& path)
 	// launch statements before +logfile) heads it, so a transcript is whole.
 	for (const DebugLogLine& line : this->lines_)
 	{
-		this->transcript_ << (line.severity == DebugSeverity::error ? "error: " :
-			line.severity == DebugSeverity::warning ? "warning: " : "") << line.text << '\n';
+		this->transcript_ << severity_prefix(line.severity) << line.text << '\n';
 	}
 	this->transcript_.flush();
 	return true;

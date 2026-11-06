@@ -297,8 +297,10 @@ editable scores/recipes and per-wave provenance live under
 [game/audio/paint_exe/](game/audio/paint_exe/README.md), which documents bank
 reproduction with `scripts/audio/tools/XWBTool.exe`.
 
-The existing game bindings use the replacement set; remaining new cue hooks and
-gameplay mix are `POL#23`, and actual listening/hardware acceptance is `ROAD#3`.
+The existing game bindings use the replacement set. On 2026-11-05 the author
+accepted its hooks and gameplay mix as they stand (`POL#23`) and waived the
+listening and hardware checks (`ROAD#3`), which were not performed; a further
+cue hook is new work.
 The normal Release ZIP includes the validated bank, provenance and CC0 terms.
 Private legacy audio must never be staged or packaged.
 

@@ -12,7 +12,7 @@ SettingsPanelPage::SettingsPanelPage(MenuContext* context, int opening_slot) :
 
 bool SettingsPanelPage::debug_dismiss(bool /*leaving_match*/)
 {
-	this->close();
+	this->pop_page();
 	return true;
 }
 
@@ -75,12 +75,7 @@ UiText* SettingsPanelPage::add_text(const char* name, const std::wstring& value,
 void SettingsPanelPage::fit_text(UiText& widget, const RectangleF& available)
 {
 	widget.set_scale(1.0f);
-	const RectangleF bounds = widget.bounds();
-	if (bounds.width > 0.0f && bounds.height > 0.0f)
-	{
-		widget.set_scale(std::min({ 1.0f, available.width / bounds.width,
-			available.height / bounds.height }));
-	}
+	widget.set_scale(menu_geometry::fit_scale(widget.bounds().size(), available.size()));
 }
 
 RectangleF SettingsPanelPage::status_limit(const MenuStyle& style) const
@@ -89,11 +84,4 @@ RectangleF SettingsPanelPage::status_limit(const MenuStyle& style) const
 	return RectangleF(look.status_position, Vector2F(
 		menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) - look.status_position.x,
 		style.footer_y - look.status_position.y));
-}
-
-void SettingsPanelPage::close()
-{
-	this->play_wave(this->cancel_sound_);
-	this->input()->reset_actions();
-	this->context()->pop();
 }

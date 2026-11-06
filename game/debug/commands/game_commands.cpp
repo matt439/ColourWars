@@ -3,35 +3,25 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
-#include "engine/app/content_root.h"
-#include "engine/render/text_encoding.h"
+#include "engine/assets/json.h"
+#include "engine/core/file_path.h"
 #include "game/config/content_validation.h"
+#include "game/debug/script/debug_files.h"
 #include "game/states/menu_content_validation.h"
 #include "game/debug/replay/bot.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/capture/debug_screenshot.h"
-#include "game/directory_consts.h"
 #include "game/game_data.h"
-#include "game/source_paths.h"
 #include "game/config/sound_groups.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include "game/debug/replay/bot_driver.h"
-#include "game/debug/replay/replay.h"
-#include "game/debug/tune/tune_document.h"
 
 using namespace labrador;
 
 namespace
 {
-	std::string format_number(float value)
-	{
-		char buffer[32] = {};
-		std::snprintf(buffer, sizeof(buffer), "%g", static_cast<double>(value));
-		return buffer;
-	}
-
 	// The directory reload reads: the source tree in a Debug build made from
 	// one, so edits apply without a rebuild; otherwise the staged copy.
 	std::filesystem::path reload_directory(const std::filesystem::path& source,
@@ -45,52 +35,19 @@ namespace
 
 	std::string utf8(const std::filesystem::path& path)
 	{
-		const std::u8string text = path.generic_u8string();
-		return std::string(text.begin(), text.end());
+		return labrador::path_to_utf8(path.generic_wstring());
 	}
 
 	using Form = DebugMenuTraits::Form;
-
-	DebugMenuTraits traits(const char* category, Form form, bool staged = false,
-		std::size_t pick_argument = 0, const char* prefix = "")
-	{
-		DebugMenuTraits result;
-		result.category = category;
-		result.form = form;
-		result.staged = staged;
-		result.pick_argument = pick_argument;
-		result.prefix = prefix;
-		return result;
-	}
-
-	// A variable keeps its variable form; only its category and staging change.
-	void place(DebugRegistry& registry, const char* name, const char* category,
-		bool staged = false)
-	{
-		DebugEntry* entry = registry.find(name);
-		DebugMenuTraits menu = entry->menu();
-		menu.category = category;
-		menu.staged = staged;
-		entry->set_menu(std::move(menu));
-	}
 }
 
 void DebugDirectorImpl::register_commands()
 {
 	using Args = const DebugArgs&;
 	DebugRegistry& registry = this->registry_;
-	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu)
-		{
-			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body));
-			command->set_menu(std::move(menu));
-			registry.add(std::move(command));
-		};
-
 	// Match plan ------------------------------------------------------------
 
-	add("stage", "start or switch to a stage (in a match: rebuilds it)",
+	registry.add_command("stage", "start or switch to a stage (in a match: rebuilds it)",
 		{ { "name|next|prev|random", false, [this] { return this->planner().stage_words(); } } },
 		[this](Args args, DebugLog&)
 		{
@@ -107,9 +64,9 @@ void DebugDirectorImpl::register_commands()
 			this->request_.stage = word;
 			return DebugStatus::success("stage " + word +
 				(this->match_ != nullptr ? this->rebuild_note() : ": starting a match"), true);
-		}, traits("match", Form::pick, true));
+		}, DebugMenuTraits::of("match", Form::pick, true));
 
-	add("players", "seats 1-4: pads in slot order, then keyboard/mouse, then idle dummies; "
+	registry.add_command("players", "seats 1-4: pads in slot order, then keyboard/mouse, then idle dummies; "
 		"a second word puts that bot on every idle dummy (players 4 paint)",
 		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } },
 			{ "bot", true, [] { return Bot::behaviours(); } } },
@@ -123,7 +80,7 @@ void DebugDirectorImpl::register_commands()
 			if (args.has(1) && !Bot::is_behaviour(args.text(1)))
 			{
 				return DebugStatus::failure("players: unknown bot '" + args.text(1) +
-					"'; one of idle, walk, jump, chase, paint, skirmish");
+					"'; one of " + join_words(Bot::behaviours(), ", "));
 			}
 			if (args.has(1))
 			{
@@ -148,9 +105,9 @@ void DebugDirectorImpl::register_commands()
 			}
 			return DebugStatus::success("players " + std::to_string(players) +
 				": stored for 'stage <name>'; a match started from the menus drops it");
-		}, traits("match", Form::pick, true));
+		}, DebugMenuTraits::of("match", Form::pick, true));
 
-	add("weapon", "choose a seat's weapon (seat 1-4 or all)",
+	registry.add_command("weapon", "choose a seat's weapon (seat 1-4 or all)",
 		{ { "seat|all", false, [] { return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } },
 			{ "sprayer|sniper|roller|mister|bucket|random", false, [] { return MatchPlanner::weapon_names(); } } },
 		[this](Args args, DebugLog&)
@@ -177,10 +134,10 @@ void DebugDirectorImpl::register_commands()
 				(this->match_ != nullptr ? this->rebuild_note() :
 					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
 				applies);
-		}, traits("match", Form::pick, true, 1, "all"));
+		}, DebugMenuTraits::of("match", Form::pick, true, 1, "all"));
 
 	// Console only: three words per seat do not fit one picker.
-	add("seat", "set a seat's team, shipping bot or Boost: seat <1-4> team a|b, "
+	registry.add_command("seat", "set a seat's team, shipping bot or Boost: seat <1-4> team a|b, "
 		"seat <2-4> bot easy|normal|hard, seat <2-4> human, seat <1-4> boost 0|1|2 "
 		"(bot <seat> <behaviour> only drives a seat's input)",
 		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } },
@@ -212,7 +169,7 @@ void DebugDirectorImpl::register_commands()
 				(this->match_ != nullptr ? this->rebuild_note() :
 					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
 				applies);
-		}, traits("match", Form::hidden, true));
+		}, DebugMenuTraits::of("match", Form::hidden, true));
 
 	registry.add(std::make_unique<ChoiceVariable>("intro",
 		"how the next match begins: auto (the game's choice), full, quick (from the "
@@ -224,10 +181,9 @@ void DebugDirectorImpl::register_commands()
 		{
 			this->intro_ = choice == "auto" ? std::string() : choice;
 			return DebugStatus::success("intro = " + choice + " (from the next build)");
-		}));
-	place(registry, "intro", "match");
+		}), DebugMenuTraits::of("match", Form::variable));
 
-	add("restart", "rebuild the match with its current settings (keeps the session)", {},
+	registry.add_command("restart", "rebuild the match with its current settings (keeps the session)", {},
 		[this](Args, DebugLog&)
 		{
 			if (this->match_ == nullptr)
@@ -236,9 +192,9 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->request_.restart = true;
 			return DebugStatus::success("restart", true);
-		}, traits("match", Form::run));
+		}, DebugMenuTraits::of("match", Form::run));
 
-	add("menu", "leave the match for the main menu", {},
+	registry.add_command("menu", "leave the match for the main menu", {},
 		[this](Args, DebugLog&)
 		{
 			if (this->match_ == nullptr)
@@ -247,7 +203,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->leave_requested_ = true;
 			return DebugStatus::success("menu: leaving the match", true);
-		}, traits("match", Form::run));
+		}, DebugMenuTraits::of("match", Form::run));
 
 	// Time ------------------------------------------------------------------
 
@@ -259,11 +215,11 @@ void DebugDirectorImpl::register_commands()
 		[this](float scale)
 		{
 			this->clock_.set_timescale(scale);
-			return DebugStatus::success("timescale = " + format_number(this->clock_.timescale()));
-		}));
-	place(registry, "timescale", "time");
+			return DebugStatus::success("timescale = " +
+				NumberVariable::format(this->clock_.timescale()));
+		}), DebugMenuTraits::of("time", Form::variable));
 
-	add("pause", "pause or resume the match clock (F6)",
+	registry.add_command("pause", "pause or resume the match clock (F6)",
 		{ { "on|off|toggle", true, [] { return std::vector<std::string>{ "on", "off", "toggle" }; } } },
 		[this](Args args, DebugLog&)
 		{
@@ -282,9 +238,9 @@ void DebugDirectorImpl::register_commands()
 				this->match_->debug_sync_audio();
 			}
 			return DebugStatus::success(paused ? "paused" : "running");
-		}, traits("time", Form::run));
+		}, DebugMenuTraits::of("time", Form::run));
 
-	add("step", "pause, then run n single updates (F7)",
+	registry.add_command("step", "pause, then run n single updates (F7)",
 		{ { "n", true, {} } },
 		[this](Args args, DebugLog&)
 		{
@@ -302,7 +258,7 @@ void DebugDirectorImpl::register_commands()
 			this->replay_hold_ = false;
 			return DebugStatus::success("step " + std::to_string(count) +
 				" (paused; " + std::to_string(this->clock_.pending_steps()) + " pending)", true);
-		}, traits("time", Form::run));
+		}, DebugMenuTraits::of("time", Form::run));
 
 	// View ------------------------------------------------------------------
 
@@ -314,31 +270,31 @@ void DebugDirectorImpl::register_commands()
 		{
 			this->presentation_->set_movement_feedback_enabled(enabled);
 			return DebugStatus::success(std::string("feedback = ") + (enabled ? "on" : "off"));
-		}));
-	place(registry, "feedback", "view");
+		}), DebugMenuTraits::of("view", Form::variable));
 
 	// Content ---------------------------------------------------------------
 
-	add("reload", "re-read tuning.json and presentation.json (source tree first); "
+	registry.add_command("reload", "re-read tuning.json and presentation.json (source tree first); "
 		"in a match it restarts", {},
 		[this](Args, DebugLog&) { return this->reload_content(); },
-		traits("content", Form::run));
+		DebugMenuTraits::of("content", Form::run));
 
-	add("screenshot", "save the window as a PNG in %LOCALAPPDATA%/ColourWars/screens "
+	registry.add_command("screenshot", "save the window as a PNG in %LOCALAPPDATA%/ColourWars/screens "
 		"(timestamped name by default)",
 		{ { "name", true, {} } },
 		[this](Args args, DebugLog&)
 		{
-			const std::string requested = args.has(0) ? args.text(0) : std::string();
-			this->pending_screenshot_ = requested;
-			const std::string name = screenshot_file_name(requested,
-				std::chrono::system_clock::now());
+			// Named now, so the message names the file the capture writes (a
+			// timestamped default is the time of the request, not the capture).
+			const std::string name = screenshot_file_name(args.has(0) ? args.text(0) :
+				std::string(), std::chrono::system_clock::now());
+			this->pending_screenshot_ = name;
 			return DebugStatus::success("screenshot " + name + " queued", true);
-		}, traits("content", Form::run));
+		}, DebugMenuTraits::of("content", Form::run));
 
 	// Console ---------------------------------------------------------------
 
-	add("status", "what is running: stack, match, seats, clock", {},
+	registry.add_command("status", "what is running: stack, match, seats, clock", {},
 		[this](Args, DebugLog& log)
 		{
 			for (const std::string& line : this->status_lines())
@@ -346,9 +302,9 @@ void DebugDirectorImpl::register_commands()
 				log.info(line);
 			}
 			return DebugStatus::success();
-		}, traits("console", Form::run));
+		}, DebugMenuTraits::of("console", Form::run));
 
-	add("logfile", "mirror the console to a UTF-8 file, or off",
+	registry.add_command("logfile", "mirror the console to a UTF-8 file, or off",
 		{ { "path|off", false, {} } },
 		[this](Args args, DebugLog& log)
 		{
@@ -358,16 +314,16 @@ void DebugDirectorImpl::register_commands()
 				return DebugStatus::failure("logfile: cannot open '" + path + "'");
 			}
 			return DebugStatus::success(path.empty() ? "logfile off" : "logfile " + path);
-		}, traits("console", Form::hidden));
+		}, DebugMenuTraits::of("console", Form::hidden));
 
-	add("clear", "clear the console output", {},
+	registry.add_command("clear", "clear the console output", {},
 		[](Args, DebugLog& log)
 		{
 			log.clear();
 			return DebugStatus::success();
-		}, traits("console", Form::hidden));
+		}, DebugMenuTraits::of("console", Form::hidden));
 
-	add("quit", "close the game", {},
+	registry.add_command("quit", "close the game", {},
 		[this](Args, DebugLog&)
 		{
 			if (this->application_ == nullptr)
@@ -376,7 +332,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->application_->quit();
 			return DebugStatus::success("quit", true);
-		}, traits("console", Form::run));
+		}, DebugMenuTraits::of("console", Form::run));
 }
 
 DebugStatus DebugDirectorImpl::reload_content()
@@ -401,31 +357,38 @@ DebugStatus DebugDirectorImpl::reload_content()
 
 	try
 	{
-		auto tuning = std::make_unique<GameTuning>(tuning_path.c_str());
+		// Each file is read once: the text the readers accept is the text that
+		// becomes live tuning's baseline, even if the file changes meanwhile.
+		const auto read = [](const std::filesystem::path& path, const std::string& shown)
+			{
+				bool ok = false;
+				std::string text = debug_files::read_file(path, ok);
+				if (!ok)
+				{
+					throw std::runtime_error("cannot read '" + shown + "'");
+				}
+				return text;
+			};
+		std::string tuning_text = read(directory / L"tuning.json", tuning_path);
+		std::string presentation_text = read(directory / L"presentation.json", presentation_path);
+		auto tuning = std::make_unique<GameTuning>(parse_json(tuning_text, tuning_path));
 		// In the run's language, as at startup.
 		const ActiveLocale* locale = this->data_->locale();
-		auto presentation = locale != nullptr ?
-			std::make_unique<Presentation>(locale->presentation(presentation_path)) :
-			std::make_unique<Presentation>(presentation_path.c_str());
-		check_stage_names_agree(presentation_path, *this->data_->stages());
+		auto presentation = std::make_unique<Presentation>(locale != nullptr ?
+			locale->presentation(presentation_text, presentation_path) :
+			parse_json(presentation_text, presentation_path));
+		check_stage_names_agree(parse_json(presentation_text, presentation_path).root(),
+			*this->data_->stages());
 		validate_shell_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
 			*this->data_->stages(), this->data_->settings_session()->play_settings());
 		// A sound the candidate names for the first time joins its group now.
 		sound_groups::assign(*this->data_->audio_resources(), *tuning, *presentation,
 			*this->data_->level_infos(), *this->data_->stages());
-		// What the reader just accepted becomes live tuning's baseline.
-		std::string texts[2];
-		for (int file = 0; file < 2; ++file)
-		{
-			std::ifstream stream(directory / (file == 0 ? L"tuning.json" : L"presentation.json"),
-				std::ios::binary);
-			texts[file].assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
-		}
 		this->pending_tuning_ = std::move(tuning);
 		this->pending_presentation_ = std::move(presentation);
-		this->pending_tuning_text_ = std::move(texts[0]);
-		this->pending_presentation_text_ = std::move(texts[1]);
+		this->pending_tuning_text_ = std::move(tuning_text);
+		this->pending_presentation_text_ = std::move(presentation_text);
 	}
 	catch (const std::exception& e)
 	{

@@ -28,7 +28,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     const std::string source = read_source();
     Registry<LevelLoadedInfo> trial_levels("Explicit shoulder inspection Level");
     auto loaded = std::make_unique<LevelLoadedInfo>(path_to_utf8(trial_json).c_str()); loaded->validate();
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
     require(loaded->collision_objects_json().size() == 26 && !loaded->include_in_random() &&
         loaded->display_name() == "Turbulence Yard - Shoulder Trial" &&
@@ -75,9 +75,7 @@ void turbulence_shoulder_matrix(Application& app, Registry<LevelLoadedInfo>& lev
     float heavy_min = 1;
     const auto supported = [](const Player& player)
     {
-        const auto state = player.move_state();
-        return state == PlayerMoveState::on_ground || state == PlayerMoveState::on_drop_down_ground ||
-            state == PlayerMoveState::on_ramp_left || state == PlayerMoveState::on_ramp_right;
+        return player.grounded();
     };
     const auto save_crop = [&](const Frame& frame, const RectangleI& box, const std::string& name)
     {

@@ -11,9 +11,9 @@ to the explicit request to accept it for POL#23 integration or name revisions.
 POL#22 is closed; [acceptance.json](acceptance.json) records the exact 103 accepted
 master hashes. No revisions were requested.
 The 2026-10-15 runtime migration uses this set for the existing game bindings and
-includes all 103 masters in the live bank. POL#23 retains new cue hooks and the
-gameplay mix. ROAD#3 still owns actual multiplayer, pause/resume, volume and
-release acceptance.
+includes all 103 masters in the live bank. On 2026-11-05 the author accepted
+the cue hooks and gameplay mix as they stand (POL#23) and waived ROAD#3's
+multiplayer, pause/resume, volume and release checks, which were not performed.
 
 ## What is here
 
@@ -133,12 +133,12 @@ provenance and listening page read its acceptance record; changing any master,
 adding or removing a cue makes regenerated output pending review again.
 The existing game bindings, story pop/sigh/chair cues, per-beat countdown/GO,
 arena ending stings, results coda, bank validation and release distribution are
-integrated. See
-[audio inventory §9](../../../docs/audio-inventory.md#9-runtime-migration-and-remaining-integration)
-for the remaining POL#23 hooks and mix work. ROAD#3 then qualifies actual
-gains/mute, pause/focus/resume, multiplayer mix and both release paths. Tier 3
-detail stays optional and defaults off or nearly off. The Movement Course has
-no arena music or ending sting. Movement and painted-support cues are integrated.
+integrated. On 2026-11-05 the author accepted the hooks and mix as they stand,
+closing POL#23, and waived ROAD#3, the check of gains/mute, pause/focus/resume,
+multiplayer mix and both release paths, which was not performed; see
+[audio inventory §9](../../../docs/audio-inventory.md#9-runtime-migration-and-remaining-integration).
+Tier 3 detail stays optional and defaults off or nearly off. The Movement Course
+has no arena music or ending sting. Movement and painted-support cues are integrated.
 
 The intro/reveal audition keeps picture sound silent while the person is
 present. The winner/loser reactions follow the person's departure, as the

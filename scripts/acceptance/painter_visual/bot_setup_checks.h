@@ -289,8 +289,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
         if (claimed) { require(settings.claim_input_slot(3), "Cannot claim bot setup's sparse human seat"); }
         settings.set_stage("movement_course"); settings.set_duration(73.0f);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
-            count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         for (int seat = 0; seat < count; ++seat)
         {
             settings.set_player_team(seat, PlayerTeam::a);

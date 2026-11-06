@@ -80,10 +80,10 @@ struct InputBindings
 
 // This first domain is explicitly A-Z and Space, independent of Key ordinals.
 // Names are labrador::key_name's tokens ("a", "space"), restricted to that
-// domain: the spelling is the engine's file format. Labels are this game's,
-// and here are the base locale's twins of them, for probes and diagnostics:
-// player-facing text uses controls_text's labels, whose words (Space, None,
-// Start, the mouse buttons) a locale reaches through menu_text.controls.
+// domain: the spelling is the engine's file format. A legend is the letter
+// printed on the key, the same in every language; Space has none (an empty
+// view). Player-facing labels are controls_text's, which take the words (Space,
+// None, Start, the mouse buttons) from menu_text.controls.labels.
 // Conversion outside this domain throws invalid_argument. Conflict checks use
 // other default gameplay keyboard sources, excluding Jump and intro skip.
 bool keyboard_jump_key_supported(labrador::Key key);
@@ -91,18 +91,18 @@ std::array<labrador::Key, 27> keyboard_jump_keys();
 // Against the default keyboard choices, as the Keyboard Jump slice defined it.
 std::optional<GameAction> keyboard_jump_conflict(labrador::Key key);
 std::string_view input_key_name(labrador::Key key);
-std::wstring_view input_key_label(labrador::Key key);
+std::wstring_view input_key_legend(labrador::Key key);
 labrador::Key input_key_from_name(std::string_view name);
 
 // The keyboard actions slice (GAP#4.2). Every action's keys are the A-Z/Space
 // domain above; Shoot also takes the five mouse buttons below, and Pause may be
 // none. Save tokens are the key names, "mouse_left" ... "mouse_x2" and "none";
-// labels are "A", "Space", "Left click", "Mouse 4", "None". Other values and
-// spellings throw invalid_argument.
+// what a player is shown is controls_text::desktop_label's. Other values and
+// spellings throw invalid_argument; desktop_control_name also refuses a control
+// that is both a key and a button.
 std::array<labrador::MouseButton, 5> shoot_mouse_buttons();
 bool keyboard_control_supported(KeyboardAction action, const DesktopControl& control);
 std::string_view desktop_control_name(const DesktopControl& control);
-std::wstring_view desktop_control_label(const DesktopControl& control);
 DesktopControl desktop_control_from_name(std::string_view name);
 // "move_left", "move_right", "jump", "drop", "shoot", "pause".
 std::string_view keyboard_action_name(KeyboardAction action);
@@ -117,12 +117,14 @@ std::optional<KeyboardAction> keyboard_control_conflict(const InputBindings& bin
 bool same_keyboard(const InputBindings& left, const InputBindings& right);
 
 // The eleven bindable controls in page order (none excluded). Canonical save
-// tokens are "none", "a", "lb", "lt", "ls", "start" and so on; labels are what
-// a player is shown. Other values and spellings throw invalid_argument.
+// tokens are "none", "a", "lb", "lt", "ls", "start" and so on; legends are what
+// is printed on the button ("A", "LB"), empty for none and Start, whose words
+// controls_text::pad_label takes from the locale. Other values and spellings
+// throw invalid_argument.
 std::array<PadControl, 11> pad_controls();
 bool pad_control_supported(PadControl control);
 std::string_view pad_control_name(PadControl control);
-std::wstring_view pad_control_label(PadControl control);
+std::wstring_view pad_control_legend(PadControl control);
 PadControl pad_control_from_name(std::string_view name);
 // "jump", "shoot", "pause": the save keys.
 std::string_view pad_action_name(PadAction action);

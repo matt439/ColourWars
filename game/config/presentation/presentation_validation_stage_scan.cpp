@@ -11,18 +11,20 @@
 
 void Presentation::validate_stage_scan_resources(const labrador::RenderResources& render) const
 {
+	// Copy errors name menu_text.stage_scan; every other error is the page's look.
+	const char* section = "main_menu.stage_scan";
 	try
 	{
 		const StageScanPresentation& look = this->main_menu_.stage_scan;
 		const StageScanMenuText& copy = this->menu_text_.stage_scan;
 		const labrador::Font& font = *render.font(render.resolve_sprite_font(look.font));
 		// External filenames/reasons can need every printable ASCII glyph after escaping.
-		std::wstring alphabet;
-		for (wchar_t character = L' '; character <= L'~'; ++character) { alphabet.push_back(character); }
+		const std::wstring alphabet = stage_scan_diagnostics::alphabet();
 		if (font.first_unrenderable(alphabet) != std::wstring::npos)
 		{ throw std::invalid_argument("font must contain every printable ASCII diagnostic character."); }
 		const auto layout = stage_scan_diagnostics::layout(look, this->main_menu_.art,
 			this->menu_.footer_y, font, copy);
+		section = "menu_text.stage_scan";
 		for (const std::wstring* text : { &copy.heading, &copy.unicode_hint, &copy.browse_prompt,
 			&copy.details_prompt, &copy.no_refusals, &copy.status, &copy.counter })
 		{
@@ -33,6 +35,7 @@ void Presentation::validate_stage_scan_resources(const labrador::RenderResources
 		}
 		std::ignore = copy.summary(1);
 		std::ignore = copy.progress(1, 1, 1, 1);
+		section = "main_menu.stage_scan";
 		const labrador::Vector2F empty_size = font.measure(copy.no_refusals) * look.text_scale;
 		if (empty_size.x > layout.body.width || empty_size.y > layout.body.height)
 		{ throw std::invalid_argument("no_refusals must fit the diagnostic body."); }
@@ -63,5 +66,5 @@ void Presentation::validate_stage_scan_resources(const labrador::RenderResources
 		{ throw std::invalid_argument("status and input legends must fit below the chrome without overlapping."); }
 	}
 	catch (const std::exception& error)
-	{ throw std::runtime_error(this->source_path_ + ": main_menu.stage_scan: " + error.what()); }
+	{ throw std::runtime_error(this->source_path_ + ": " + section + ": " + error.what()); }
 }

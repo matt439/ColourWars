@@ -3,14 +3,14 @@
 #include "game/objects/blocked_shot_contact.h"
 #include "game/match/paint_owners.h"
 #include "game/config/presentation/presentation_match.h"
-#include "engine/render/texture_object.h"
+#include "game/objects/crude_drawing.h"
 
 #include <array>
 #include <span>
 
 // One match's bounded, detached cover contacts. Level advances these once per
 // active tick, then every world view draws the same immutable snapshot.
-class BlockedShotFeedback final : public labrador::TextureObject
+class BlockedShotFeedback final : public CrudeDrawing
 {
 public:
     struct Cue
@@ -40,7 +40,6 @@ private:
     size_t count_ = 0;
     std::array<float, paint_owners::count + 1> repeat_remaining_{};
 
-    static size_t owner_index(int owner);
     void draw_block(labrador::DrawList& draw_list,
         const labrador::Vector2F& center, const labrador::Vector2F& size,
         float angle, const labrador::Colour& colour, float alpha) const;

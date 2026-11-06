@@ -43,6 +43,20 @@ struct CountdownArtPresentation
 };
 
 // Screen-space layout for the start signal and device-specific reminders.
+// The countdown's controls reminder and the practice lesson cards. Their
+// words are menu_text.controls or the lesson's, measured in this font by
+// validate_controls_reminders and validate_stage_text (content_validation.h).
+struct ControlsTextPresentation
+{
+	std::string font;
+	labrador::Colour colour = labrador::Colour::white;
+	labrador::Colour shadow_colour = labrador::Colour::black;
+	labrador::Vector2F shadow_offset = { 0.0f, 0.0f };
+	// Down the screen, as a fraction of its height, so the legend clears the
+	// countdown at any resolution.
+	float y = 0.8f;
+};
+
 struct MatchPresentation
 {
 	labrador::Vector2F reference_size;
@@ -53,6 +67,7 @@ struct MatchPresentation
 	labrador::Vector2F controls_margin;
 	labrador::Vector2F controls_padding;
 	float controls_gap = 0.0f;
+	ControlsTextPresentation controls_text;
 	CountdownArtPresentation countdown_art;
 };
 
@@ -168,6 +183,8 @@ struct HudLowPaintPresentation
 // reference pixels at 1080 lines; steady, so Reduce effects keeps it as is.
 struct CursorMarkerPresentation
 {
+	// The window height the sizes are authored at.
+	static constexpr float reference_lines = 1080.0f;
 	bool enabled = true;
 	labrador::Colour ink;
 	labrador::Colour paper;
@@ -204,10 +221,6 @@ struct HudPaperPresentation
 	float shadow_offset = 0.0f;
 };
 
-// Gameplay HUD: health, ammo, match timer and player identity. The respawn
-// wait has no number: the figure being redrawn at its spawn is the timer.
-// Margins, bar dimensions and text positions use viewport fractions. Shadow
-// offsets and identity padding use pixel distances scaled with the text.
 // menu_text.hud: the HUD's copy. It is read with the rest of menu_text, so a
 // locale reaches it, and Presentation copies it into HudPresentation::labels.
 // The identity box's "  /  " separator and line break stay in code.
@@ -219,6 +232,10 @@ struct HudLabels
 	std::wstring paint;
 };
 
+// Gameplay HUD: health, ammo, match timer and player identity. The respawn
+// wait has no number: the figure being redrawn at its spawn is the timer.
+// Margins, bar dimensions and text positions use viewport fractions. Shadow
+// offsets and identity padding use pixel distances scaled with the text.
 struct HudPresentation
 {
 	HudPaperPresentation paper;
@@ -254,7 +271,6 @@ struct HudPresentation
 	labrador::Vector2F player_identity_shadow_offset = { 0.0f, 0.0f };
 	labrador::Colour player_identity_colour = labrador::Colour::white;
 	labrador::Colour player_identity_shadow_colour = labrador::Colour::black;
-	labrador::Colour player_identity_background_colour = labrador::Colour::black;
 	labrador::Vector2F player_identity_padding = { 0.0f, 0.0f };
 	float player_identity_reference_width = 1920.0f;
 
@@ -283,6 +299,8 @@ struct DebugOverlayPresentation
 	labrador::Colour shadow_colour = labrador::Colour::black;
 	labrador::Vector2F shadow_offset = { 0.0f, 0.0f };
 	float shadow_scale = 1.0f;
+	// The values beside the Debug menu's rows.
+	labrador::Colour menu_value_colour = labrador::Colour::white;
 	StationLabelPresentation station_label;
 };
 

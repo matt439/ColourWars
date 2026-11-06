@@ -22,5 +22,5 @@ public:
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 protected:
-	void handle_shoot_sound(bool shooting_this_update, bool holding_shoot) override;
+	void handle_shoot_sound(bool fired_this_update, bool shooting_this_update) override;
 };

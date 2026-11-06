@@ -66,18 +66,6 @@ void Presentation::validate_stage_counts(const RenderResources& render, size_t t
 		}
 		return size;
 	};
-	const auto finite_rectangle = [](const RectangleF& bounds)
-	{
-		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
-			std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
-			std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
-			bounds.width > 0.0f && bounds.height > 0.0f;
-	};
-	const auto overlaps = [](const RectangleF& first, const RectangleF& second)
-	{
-		return first.x < second.right() && first.right() > second.x &&
-			first.y < second.bottom() && first.bottom() > second.y;
-	};
 	const MainMenuPresentation& main = this->main_menu_;
 	const StageSelectPresentation& stage = main.stage_select;
 	const Vector2F shadow = this->menu_.detail_shadow_offset;

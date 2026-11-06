@@ -243,6 +243,8 @@ namespace menu_text_acceptance
             d["pause_menu"]["status_y"].SetFloat(900.0f);
             d["pause_menu"]["layout"]["position"]["y"].SetFloat(940.5f);
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(3.0f);
+            // Practice's five rows keep their 0.8 share of the tight spacing.
+            d["pause_menu"]["practice_row_spacing"].SetFloat(3.0f * 0.8f);
             d["pause_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
             d["pause_menu"]["art"]["keyline_width"].SetFloat(0.125f);
             d["pause_menu"]["art"]["shadow_offset"].SetFloat(0.125f);

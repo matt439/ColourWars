@@ -9,6 +9,7 @@
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/replay/replay.h"
 #include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level.h"
@@ -26,24 +27,6 @@
 
 namespace
 {
-	DebugMenuTraits replay_traits(DebugMenuTraits::Form form)
-	{
-		DebugMenuTraits traits;
-		traits.category = "replay";
-		traits.form = form;
-		return traits;
-	}
-
-	std::string narrow_build_label()
-	{
-		std::string label;
-		for (const wchar_t* c = build_info::label; *c != 0; ++c)
-		{
-			label += *c < 0x80 ? static_cast<char>(*c) : '?';
-		}
-		return label;
-	}
-
 	std::filesystem::path replay_path(const std::string& name)
 	{
 		return std::filesystem::path(labrador::widen(directory_consts::replay_directory())) /
@@ -63,12 +46,15 @@ namespace
 		std::vector<std::string> names;
 		std::error_code error;
 		const std::filesystem::path directory(labrador::widen(directory_consts::replay_directory()));
-		for (const auto& entry : std::filesystem::directory_iterator(directory, error))
+		// increment(error), not ++: a listing that fails partway stops there
+		// instead of throwing out of replay.list or completion.
+		for (std::filesystem::directory_iterator it(directory, error), end;
+			!error && it != end; it.increment(error))
 		{
-			if (entry.is_regular_file(error) && entry.path().extension() == L".json")
+			std::error_code kind_error;
+			if (it->is_regular_file(kind_error) && it->path().extension() == L".json")
 			{
-				const std::string file_name = labrador::path_to_utf8(entry.path().filename());
-				names.push_back(file_name);
+				names.push_back(labrador::path_to_utf8(it->path().filename()));
 			}
 		}
 		std::sort(names.begin(), names.end());
@@ -149,7 +135,7 @@ bool DebugDirectorImpl::drives_slot(int slot) const
 	}
 	if (this->match_ != nullptr)
 	{
-		const std::vector<SeatSetup> seats = this->match_->debug_settings().player_settings();
+		const std::vector<SeatSetup>& seats = this->match_->debug_settings().player_settings();
 		for (std::size_t i = 0; i < seats.size(); ++i)
 		{
 			if (seats[i].num == slot && !this->bot_for_seat(static_cast<int>(i), slot).empty())
@@ -219,7 +205,7 @@ std::uint64_t DebugDirectorImpl::content_hash(std::string_view file)
 ReplayFile DebugDirectorImpl::replay_header(const DebugMatchView& match)
 {
 	ReplayFile file;
-	file.build = narrow_build_label();
+	file.build = labrador::narrow(build_info::label);
 	file.dt_bits = this->last_dt_bits_;
 	file.seed = this->round_seed_;
 	file.tuning_hash = this->content_hash("tuning");
@@ -570,16 +556,7 @@ void DebugDirectorImpl::register_replay_commands()
 {
 	using Args = const DebugArgs&;
 	DebugRegistry& registry = this->registry_;
-	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu)
-		{
-			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body));
-			command->set_menu(std::move(menu));
-			registry.add(std::move(command));
-		};
-
-	add("seed", "fix the round seed of every build (palette, intro, bots), the menus' rand() and the planner, or off",
+	registry.add_command("seed", "fix the round seed of every build (palette, intro, bots), the menus' rand() and the planner, or off",
 		{ { "n|off", true, [] { return std::vector<std::string>{ "off" }; } } },
 		[this](Args args, DebugLog&)
 		{
@@ -606,9 +583,9 @@ void DebugDirectorImpl::register_replay_commands()
 			this->planner_random_.seed(seed);
 			return DebugStatus::success("seed " + text + (this->match_ != nullptr ?
 				": applies when the match is next built (restart)" : ""));
-		}, replay_traits(DebugMenuTraits::Form::hidden));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::hidden));
 
-	add("record", "record every seat's input from a fresh build: record [name] [updates], "
+	registry.add_command("record", "record every seat's input from a fresh build: record [name] [updates], "
 		"record stop (bare record while recording stops)",
 		{ { "name|stop", true, [] { return std::vector<std::string>{ "stop" }; } },
 			{ "updates", true, {} } },
@@ -660,9 +637,9 @@ void DebugDirectorImpl::register_replay_commands()
 					"from its first update", true);
 			}
 			return DebugStatus::success("record " + name + ": starts with the next match");
-		}, replay_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::run));
 
-	add("play", "rebuild a recorded match and feed it its recorded input; play stop",
+	registry.add_command("play", "rebuild a recorded match and feed it its recorded input; play stop",
 		{ { "name|stop", false, [] {
 				std::vector<std::string> names = replay_names();
 				names.insert(names.begin(), "stop");
@@ -787,7 +764,7 @@ void DebugDirectorImpl::register_replay_commands()
 				log.warning("play: presentation.json differs from the recording (camera and "
 					"layout only; the simulation does not read it)");
 			}
-			if (file.build != narrow_build_label())
+			if (file.build != labrador::narrow(build_info::label))
 			{
 				log.warning("play: recorded by " + file.build + "; a replay is exact only on the "
 					"build that made it");
@@ -813,9 +790,9 @@ void DebugDirectorImpl::register_replay_commands()
 				std::to_string(this->play_armed_->file().updates) + " updates" +
 				(rounds > 1 ? " in round 1 of " + std::to_string(rounds) : std::string()) +
 				(this->match_ != nullptr ? ": rebuilding the match" : ": starting a match"), true);
-		}, replay_traits(DebugMenuTraits::Form::pick));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::pick));
 
-	add("replays", "list the recorded matches", {},
+	registry.add_command("replays", "list the recorded matches", {},
 		[](Args, DebugLog& log)
 		{
 			const std::vector<std::string> names = replay_names();
@@ -825,9 +802,9 @@ void DebugDirectorImpl::register_replay_commands()
 			}
 			return DebugStatus::success(std::to_string(names.size()) + " replay(s) in " +
 				directory_consts::replay_directory());
-		}, replay_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::run));
 
-	add("checksum", "the running match's state hash and paint (what a replay compares)", {},
+	registry.add_command("checksum", "the running match's state hash and paint (what a replay compares)", {},
 		[this](Args, DebugLog&)
 		{
 			const std::optional<MatchFingerprint> print = this->fingerprint();
@@ -848,6 +825,6 @@ void DebugDirectorImpl::register_replay_commands()
 			return DebugStatus::success("checksum " + hex64(print->hash) + " at update " +
 				std::to_string(print->updates) + ", paint " + print->paint_text() + ", bursts " +
 				std::to_string(bursts));
-		}, replay_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("replay", DebugMenuTraits::Form::run));
 }
 #endif

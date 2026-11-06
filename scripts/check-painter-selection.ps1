@@ -5,6 +5,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'process-births.ps1')
 $painterRepo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $painterRunner = Join-Path $PSScriptRoot 'check-painter.ps1'
 $selectionOutput = if ($OutputDirectory) { Resolve-CheckFileSystemPath $OutputDirectory } else {
@@ -41,7 +42,8 @@ $selectionResult = [ordered]@{
     schema_version=1; scope='actual-painter-focused-preflight'; outcome='running'; run=$selectionRun
     shell_version=$PSVersionTable.PSVersion.ToString(); shell_edition=$PSVersionTable.PSEdition
     started_utc=[DateTime]::UtcNow.ToString('o'); checks=$selectionChecks
-    cmake_or_compiler_started=$false; native_probe_started=$false
+    # Measured (process-births.ps1): processes the preflights started.
+    processes_started=$null
     source_hashes=@(); focused_switches=@()
 }
 
@@ -95,8 +97,12 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
             Require-Selection (-not (Get-Command $selectionTool -ErrorAction SilentlyContinue)) `
                 "Run qualification in a fresh -NoProfile host without a preexisting $selectionTool command."
         }
+        $selectionBirthsBefore=Get-ProcessBirthCount
         try { . $RunnerPath @selectionOptions } catch { $selectionCaught=$_ }
+        $selectionBirths=(Get-ProcessBirthCount) - $selectionBirthsBefore
         Require-Selection ($null -ne $selectionCaught) 'The actual painter runner did not stop during preflight.'
+        Require-Selection ($selectionBirths -eq 0) `
+            "Painter preflight started $selectionBirths process(es): CMake, a compiler or a native probe."
         $selectionActualOutput=if ($null -ne $outputRoot) { [string]$outputRoot } else { $selectionPrivateOutput }
         $selectionScratchPrefix=$selectionRun + [IO.Path]::DirectorySeparatorChar
         Require-Selection ($selectionActualOutput.StartsWith($selectionScratchPrefix,
@@ -128,6 +134,7 @@ function Invoke-PainterSelection([string] $CaseName, [hashtable] $Options, [stri
             actual_output_directory=$outputRoot
             actual_output_created=[IO.Directory]::Exists($selectionActualOutput)
             artifact_files=$selectionFiles.Count
+            processes_started=$selectionBirths
         }
     } finally {
         $env:PATH=$selectionBeforePath
@@ -255,6 +262,7 @@ function Check-PainterPaths([string] $CaseName, [bool] $AbsoluteOutput, [string]
     }
 }
 
+Start-ProcessBirthCount
 Save-SelectionResult
 Write-Host "Painter-selection evidence: $selectionRun"
 try {
@@ -496,6 +504,7 @@ try {
     $env:LOCALAPPDATA=$selectionInitialProfile
     Set-Location -LiteralPath $selectionInitialLocation
     [Environment]::CurrentDirectory=$selectionInitialProcessDirectory
+    $selectionResult.processes_started=Get-ProcessBirthCount
     $selectionResult.caller_path_restored=[string]::Equals($env:PATH,$selectionInitialPath,[StringComparison]::Ordinal)
     $selectionResult.caller_profile_restored=[string]::Equals($env:LOCALAPPDATA,$selectionInitialProfile,[StringComparison]::Ordinal)
     $selectionResult.caller_location_restored=(Get-Location).Path -ceq $selectionInitialLocation

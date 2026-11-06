@@ -1,10 +1,11 @@
 # Paint.exe acoustic music production
 
 Produced for `POL#22` on 2026-10-14 and accepted by the author the same day; the
-exact masters and response are in [acceptance.json](../acceptance.json). `ROAD#3` in-game mix
-acceptance remains pending. The 2026-10-15 runtime migration uses these masters
-for existing menu/arena bindings; results music, ending stings and the gameplay
-mix remain in `POL#23`.
+exact masters and response are in [acceptance.json](../acceptance.json). The 2026-10-15
+runtime migration uses these masters for existing menu/arena bindings, and later
+increments added the results music and ending stings. On 2026-11-05 the author
+accepted the gameplay mix as it stands (`POL#23`) and waived the `ROAD#3`
+in-game mix check, which was not performed.
 
 The arrangements and melodies were authored by Codex specifically for ColourWars.
 They use recorded acoustic instruments: a tenor ukulele, an upright piano,
@@ -93,7 +94,8 @@ mapping once. The FreePats ukulele already uses scientific pitch names.
   using the boundary sample, records the padding and decoded seam measurements,
   and checks the XWB metadata separately. No accepted PCM master is changed by
   this derived-format correction. The author accepted those masters with the
-  complete cue set; actual one-, two- and four-player gameplay checks remain ROAD#3.
+  complete cue set; the one-, two- and four-player gameplay checks (ROAD#3) were
+  waived on 2026-11-05 and not performed.
 
 ## Source provenance
 

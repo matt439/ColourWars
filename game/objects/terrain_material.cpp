@@ -37,19 +37,6 @@ namespace
 			std::trunc(projected.bottom()) - top);
 	}
 
-	const char* collision_type_label(CollisionObjectType type)
-	{
-		switch (type)
-		{
-		case CollisionObjectType::structure: return "STRUCTURE";
-		case CollisionObjectType::structure_jump_through: return "STRUCTURE_JUMP_THROUGH";
-		case CollisionObjectType::structure_paintable: return "STRUCTURE_PAINTABLE";
-		case CollisionObjectType::structure_ramp_left: return "STRUCTURE_RAMP_LEFT";
-		case CollisionObjectType::structure_ramp_right: return "STRUCTURE_RAMP_RIGHT";
-		default: return "this collision type";
-		}
-	}
-
 	// The terrain tags a level record can carry; anything else carries no material.
 	std::optional<level_format::Collision> format_collision(CollisionObjectType type)
 	{
@@ -64,6 +51,13 @@ namespace
 		default: return std::nullopt;
 		}
 	}
+
+	// The level format's own spelling of a terrain tag, for refusals.
+	const char* collision_type_label(CollisionObjectType type)
+	{
+		const std::optional<level_format::Collision> collision = format_collision(type);
+		return collision ? level_format::collision_name(*collision) : "this collision type";
+	}
 }
 
 const char* terrain_role_name(TerrainRole role)
@@ -75,6 +69,8 @@ const char* terrain_role_name(TerrainRole role)
 		"ruler_fill", "ruler_marks", "eraser_fill", "eraser_shade",
 		"metal_light", "metal_dark", "shadow", "shadow_deep",
 		"face", "hud_paper", "hud_ink", "highlight", "prop_accent" };
+	// A missing name leaves the last entries null; every role must have one.
+	static_assert(names.back() != nullptr, "terrain_role_name lacks a TerrainRole");
 	return names.at(static_cast<size_t>(role));
 }
 
@@ -99,28 +95,34 @@ std::unique_ptr<const TerrainMaterial> TerrainMaterial::make(const std::string& 
 	}
 	const std::optional<level_format::Collision> collision = format_collision(type);
 	if (!collision || !level_format::sits_on(*material, *collision)) { return refuse(); }
-	if (name == "set_square")
+	namespace material_name = level_format::material_name;
+	if (name == material_name::set_square)
 	{
 		return std::make_unique<SetSquareMaterial>(shape, faces, render_resources);
 	}
 	const RectangleF rectangle = shape.bounding_box();
-	if (name == "ground")
+	if (name == material_name::ground)
 	{
 		return std::make_unique<GroundMaterial>(rectangle, faces, render_resources, hand);
 	}
-	if (name == "ruler")
+	if (name == material_name::ruler)
 	{
 		return std::make_unique<RulerMaterial>(rectangle, faces, render_resources);
 	}
-	if (name == "pencil")
+	if (name == material_name::pencil)
 	{
 		return std::make_unique<PencilMaterial>(rectangle, faces, mirror_x, render_resources);
 	}
-	if (name == "eraser")
+	if (name == material_name::eraser)
 	{
 		return std::make_unique<EraserMaterial>(rectangle, faces, render_resources);
 	}
-	return std::make_unique<PaintTinMaterial>(rectangle, faces, render_resources);
+	if (name == material_name::paint_tin)
+	{
+		return std::make_unique<PaintTinMaterial>(rectangle, faces, render_resources);
+	}
+	// A table entry with no look is a build fault, not a fallback to paint.
+	throw std::invalid_argument("material '" + name + "' has no look to draw");
 }
 
 TerrainMaterial::TerrainMaterial(const std::string& name, RenderResources* render_resources) :
@@ -223,7 +225,8 @@ std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera
 		else if (miniature && (detail.kind == MiniatureDetail::Kind::minor_mark ||
 			detail.kind == MiniatureDetail::Kind::major_mark))
 		{
-			const float period = detail.kind == MiniatureDetail::Kind::major_mark ? 80.0f : 16.0f;
+			const float period = detail.kind == MiniatureDetail::Kind::major_mark ?
+				ruler_major_period : ruler_minor_period;
 			if (ruler_thickness < 3.0f || period * camera.scale < 3.0f) { continue; }
 			// Marks keep a light gap between neighbours and stay between the
 			// two physical outlines. Major marks survive after minors cease
@@ -255,6 +258,11 @@ std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera
 const std::string& TerrainMaterial::name() const
 {
 	return this->name_;
+}
+
+SpriteSheet::frame_handle TerrainMaterial::swatch(TerrainRole role) const
+{
+	return this->swatches_[static_cast<size_t>(role)];
 }
 
 const std::vector<TerrainQuad>& TerrainMaterial::quads() const

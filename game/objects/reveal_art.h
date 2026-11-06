@@ -16,6 +16,5 @@ public:
 
 private:
     const OpeningPresentation* look_;
-    labrador::RenderResources* resources_;
     labrador::FontHandle font_;
 };

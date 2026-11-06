@@ -100,8 +100,7 @@ void gate_permission_matrix(Application& app, LevelBuilder& builder,
         {
             if (palette_index != 0 && count != 4) { continue; }
             MatchSetup settings; settings.set_stage("turbulence_gate_trial"); settings.set_player_count(count);
-            settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-                (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
+            settings.set_screen_layout(players_layout(count));
             settings.begin_input_claims(3); constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
             for (int seat = 0; seat < count; ++seat)
             {

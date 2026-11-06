@@ -2,6 +2,7 @@
 #include "game/objects/translating_structure_paintable.h"
 #include "game/objects/projectile.h"
 #include "game/objects/translated_draw_scope.h"
+#include "game/objects/primitive_frame.h"
 #include "game/config/presentation/presentation_match.h"
 #include <array>
 #include <limits>
@@ -26,22 +27,22 @@ const RectangleF& TranslatingStructurePaintable::checked_anchor(
 TranslatingStructurePaintable::TranslatingStructurePaintable(
     const std::string& sheet_name, const std::string& frame_name,
     const HorizontalMotionSpec& motion, RenderResources* render_resources,
-    const AudioResources* audio_resources, const PlaySettings* preferences,
+    const PlaySettings* preferences,
     const PaintTuning* paint, CollisionObjectType collision_type,
     const TeamColour& team_colours, const PaintableFaces& faces,
     const Colour& colour, const Vector2F& origin, SpriteFlip flip,
     float layer_depth, std::unique_ptr<const TerrainMaterial> material,
     const FerryDirectionPresentation* cue) :
     StructurePaintable(sheet_name, frame_name, checked_anchor(motion, collision_type),
-        std::make_unique<RectangleF>(motion.anchor), render_resources, audio_resources,
+        std::make_unique<RectangleF>(motion.anchor), render_resources,
         preferences, paint, collision_type, team_colours, faces, {}, colour,
         0.0f, origin, flip, layer_depth, std::move(material)),
     motion_(motion), world_rectangle_(this->motion_.bounds()),
-    cue_(motion.drive == HorizontalDrive::paint ? cue : nullptr), team_colours_(team_colours)
+    cue_(motion.drive == HorizontalDrive::paint ? cue : nullptr)
 {
     this->publish_zero_step();
     if (this->cue_ != nullptr)
-    { this->cue_frame_ = render_resources->resolve_sheet_frame("sprite_sheet_1", "pixel"); }
+    { this->cue_frame_ = render_resources->resolve_sheet_frame(primitive_frame::sheet, primitive_frame::pixel); }
 }
 
 HorizontalMotionId TranslatingStructurePaintable::motion_id() const
@@ -196,7 +197,7 @@ void TranslatingStructurePaintable::draw_direction(DrawList& list) const
         const int heading = this->motion_.state_.spec.team_a_heading * (team == PlayerTeam::a ? 1 : -1);
         arrow(x + 4, 0, heading, ink);
         // Hue reinforces the letter; it is never the only team distinction.
-        mark(static_cast<float>(x), -0.5f, 7, 0.5f, this->team_colours_.team_colour(team));
+        mark(static_cast<float>(x), -0.5f, 7, 0.5f, this->team_colours().team_colour(team));
     }
     switch (state.motion)
     {

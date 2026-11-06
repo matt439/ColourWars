@@ -18,7 +18,7 @@ std::vector<float> hud_track_fixed_style(const HudPresentation& p)
     {v.insert(v.end(),{point.x,point.y});}
     for(const auto& c:{p.paper.ink,p.paper.paper,p.paper.shade,p.health_colour,p.timer_colour,p.timer_shadow_colour,
         p.closing_clock.ink,p.closing_clock.paper,p.closing_clock.shade,p.closing_clock.text,p.closing_clock.accent,
-        p.player_identity_colour,p.player_identity_shadow_colour,p.player_identity_background_colour})
+        p.player_identity_colour,p.player_identity_shadow_colour})
     {v.insert(v.end(),{c.r,c.g,c.b,c.a});}
     return v; // The sole omitted field is selected meter_track_colour; health_colour is frozen.
 }

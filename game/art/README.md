@@ -296,8 +296,8 @@ Validation on 2026-10-15:
   missing-bank run reports the expected single optional-audio diagnostic.
 
 Evidence is in `out/validation/content-separation/` and `out/acceptance/`.
-These checks close `GAP#8.6`; clean-PC, physical-pad and listening acceptance
-remain in their existing TODO rows. To rerun the staging regression alone:
+These checks close `GAP#8.6`. The clean-PC, physical-pad and listening checks
+(`ROAD#1`-`ROAD#3`) were waived by the author on 2026-11-05 and not performed. To rerun the staging regression alone:
 
 ```powershell
 cmake -DTEST_DIR=out/validation/content-separation -P cmake/check_runtime_staging.cmake

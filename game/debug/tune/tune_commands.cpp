@@ -3,14 +3,16 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/content_root.h"
+#include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_director_impl.h"
+#include "game/debug/script/debug_files.h"
 #include "game/debug/tune/tune_document.h"
 #include "game/debug/tune/tune_scope.h"
 #include "game/debug/tune/tune_target.h"
 #include "game/config/presentation/presentation.h"
+#include "game/save/atomic_file.h"
 #include "game/source_paths.h"
-#include <charconv>
 #include <cmath>
 #include <fstream>
 
@@ -20,71 +22,14 @@
 
 namespace
 {
-	constexpr const char* file_names[2] = { "tuning", "presentation" };
-
-	DebugMenuTraits tune_traits(DebugMenuTraits::Form form)
-	{
-		DebugMenuTraits traits;
-		traits.category = "tuning";
-		traits.form = form;
-		return traits;
-	}
-
-	std::string read_bytes(const std::filesystem::path& path, bool& ok)
-	{
-		std::ifstream stream(path, std::ios::binary);
-		ok = stream.good();
-		return ok ? std::string(std::istreambuf_iterator<char>(stream),
-			std::istreambuf_iterator<char>()) : std::string();
-	}
-
-	bool write_bytes(const std::filesystem::path& path, const std::string& bytes)
-	{
-		std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-		stream.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-		stream.close();
-		return !stream.fail();
-	}
-
-	// Writes beside the target and renames over it, so a crash mid-write never
-	// leaves half a content file. On failure the target is untouched and no
-	// temporary is left in the content directory for the build to stage.
-	bool replace_file(const std::filesystem::path& path, const std::string& bytes)
-	{
-		std::filesystem::path temporary = path;
-		temporary += L".tmp";
-		std::error_code ignored;
-		if (!write_bytes(temporary, bytes))
-		{
-			std::filesystem::remove(temporary, ignored);
-			return false;
-		}
-		if (MoveFileExW(temporary.c_str(), path.c_str(),
-			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) == 0)
-		{
-			std::filesystem::remove(temporary, ignored);
-			return false;
-		}
-		return true;
-	}
+	// By DebugDirectorImpl::tuning_file and presentation_file.
+	constexpr int file_count = DebugDirectorImpl::tune_file_count;
+	constexpr const char* file_names[file_count] = { "tuning", "presentation" };
 
 	// Forward slashes throughout, as reload prints its directory.
 	std::string shown(const std::filesystem::path& path)
 	{
-		const std::u8string text = path.lexically_normal().generic_u8string();
-		return std::string(text.begin(), text.end());
-	}
-
-	bool parse_double(std::string_view text, double& value)
-	{
-		if (!text.empty() && text.front() == '+')
-		{
-			text.remove_prefix(1);
-		}
-		const char* end = text.data() + text.size();
-		const auto result = std::from_chars(text.data(), end, value);
-		return !text.empty() && result.ec == std::errc() && result.ptr == end &&
-			std::isfinite(value);
+		return labrador::path_to_utf8(path.lexically_normal().generic_wstring());
 	}
 
 	// Console quoting and JSON quoting have different escape rules. Encode the
@@ -199,12 +144,12 @@ void DebugDirectorImpl::load_tune_documents()
 {
 	this->tune_load_tried_ = true;
 	++this->tune_generation_;
-	for (int file = 0; file < 2; ++file)
+	for (int file = 0; file < file_count; ++file)
 	{
 		const std::filesystem::path path = this->staged_content_directory() /
 			labrador::widen(std::string(file_names[file]) + ".json");
 		bool ok = false;
-		std::string text = read_bytes(path, ok);
+		std::string text = debug_files::read_file(path, ok);
 		if (!ok)
 		{
 			this->log_.warning("tune: cannot read " + shown(path));
@@ -224,7 +169,7 @@ void DebugDirectorImpl::load_tune_documents()
 
 int DebugDirectorImpl::tune_file_index(std::string_view file) const
 {
-	for (int index = 0; index < 2; ++index)
+	for (int index = 0; index < file_count; ++index)
 	{
 		if (file == file_names[index])
 		{
@@ -261,7 +206,8 @@ std::vector<std::string> DebugDirectorImpl::tune_paths()
 std::array<int, 3> DebugDirectorImpl::tune_revision()
 {
 	std::array<int, 3> revision{ 0, -1, -1 };
-	for (std::size_t file = 0; file < 2; ++file)
+	static_assert(std::tuple_size_v<decltype(revision)> == 1 + file_count);
+	for (std::size_t file = 0; file < static_cast<std::size_t>(file_count); ++file)
 	{
 		if (const TuneDocument* document = this->tune_document(file_names[file]))
 		{
@@ -393,7 +339,10 @@ DebugStatus DebugDirectorImpl::tune_value(const std::string& path, const std::st
 	else
 	{
 		double current = 0.0;
-		parse_double(token, current);
+		if (!DebugArgs::parse_double(token, current))
+		{
+			return DebugStatus::failure("tune: " + path + " holds '" + token + "', not a number");
+		}
 		const bool integer = tune_integer_token(token);
 		double value = 0.0;
 		if (word == "next" || word == "prev")
@@ -404,13 +353,13 @@ DebugStatus DebugDirectorImpl::tune_value(const std::string& path, const std::st
 		else if (word.size() > 2 && (word.compare(0, 2, "+=") == 0 || word.compare(0, 2, "-=") == 0))
 		{
 			double delta = 0.0;
-			if (!parse_double(std::string_view(word).substr(2), delta))
+			if (!DebugArgs::parse_double(std::string_view(word).substr(2), delta))
 			{
 				return DebugStatus::failure("tune: '" + word + "' is not +=number or -=number");
 			}
 			value = word[0] == '+' ? current + delta : current - delta;
 		}
-		else if (!parse_double(word, value))
+		else if (!DebugArgs::parse_double(word, value))
 		{
 			return DebugStatus::failure("tune: '" + word + "' is not a number, next, prev, "
 				"+=x or -=x");
@@ -457,7 +406,7 @@ DebugStatus DebugDirectorImpl::tune_reset(const std::string& what)
 	std::string path;
 	if (what.empty() || what == "all")
 	{
-		files = { 0, 1 };
+		files = { tuning_file, presentation_file };
 	}
 	else if (this->tune_file_index(what) >= 0)
 	{
@@ -516,7 +465,7 @@ DebugStatus DebugDirectorImpl::tune_reset(const std::string& what)
 std::vector<std::string> DebugDirectorImpl::tune_diff_lines(const std::string& which)
 {
 	std::vector<std::string> lines;
-	for (int file = 0; file < 2; ++file)
+	for (int file = 0; file < file_count; ++file)
 	{
 		if (!which.empty() && which != "all" && which != file_names[file])
 		{
@@ -533,7 +482,7 @@ std::vector<std::string> DebugDirectorImpl::tune_diff_lines(const std::string& w
 			lines.push_back(full + "  " + edit.baseline_token + " -> " + edit.current_token +
 				"  [" + tune_scope_name(tune_scope_of(full)) + "]");
 		}
-		if (file == 1)
+		if (file == presentation_file)
 		{
 			const JsonLeaf* flag = document->current().find("movement_feedback.enabled");
 			if (flag != nullptr)
@@ -566,7 +515,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 	std::vector<int> files;
 	if (which.empty() || which == "all")
 	{
-		files = { 0, 1 };
+		files = { tuning_file, presentation_file };
 	}
 	else if (this->tune_file_index(which) >= 0)
 	{
@@ -598,7 +547,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 			continue;
 		}
 		bool ok = false;
-		const std::string before = read_bytes(source, ok);
+		const std::string before = debug_files::read_file(source, ok);
 		if (!ok)
 		{
 			this->log_.error("tune.save: cannot read " + shown(source));
@@ -627,7 +576,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 			failed = true;
 			continue;
 		}
-		if (!replace_file(source, splice.text))
+		if (!replace_file_atomically(source, splice.text))
 		{
 			this->log_.error("tune.save: cannot write " + shown(source));
 			failed = true;
@@ -639,7 +588,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 		try
 		{
 			bool read = false;
-			const std::string written = read_bytes(source, read);
+			const std::string written = debug_files::read_file(source, read);
 			if (!read)
 			{
 				throw std::runtime_error("cannot read " + shown(source) + " back");
@@ -652,7 +601,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 		{
 			const std::string why = std::string("tune.save: the written file did not load (") +
 				e.what() + ")";
-			if (replace_file(source, before))
+			if (replace_file_atomically(source, before))
 			{
 				this->log_.error(why + "; the old bytes are back");
 			}
@@ -661,7 +610,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 				// Keep the old bytes somewhere a person can find them.
 				std::filesystem::path backup = source;
 				backup += L".bak";
-				const bool kept = write_bytes(backup, before);
+				const bool kept = replace_file_atomically(backup, before);
 				this->log_.error(why + "; putting the old bytes back FAILED, so " + shown(source) +
 					" holds the rejected text" + (kept ? "; the old file is in " + shown(backup) :
 						std::string("; and they could not be kept beside it either")));
@@ -672,7 +621,7 @@ DebugStatus DebugDirectorImpl::tune_save(const std::string& which, bool force)
 		// A relaunch without a rebuild reads the staged copy: keep it equal,
 		// and whole if the write fails.
 		const std::filesystem::path staged = this->staged_content_directory() / labrador::widen(name);
-		if (!replace_file(staged, splice.text))
+		if (!replace_file_atomically(staged, splice.text))
 		{
 			this->log_.warning("tune.save: could not refresh the staged " +
 				shown(staged) + "; the next build copies it");
@@ -715,20 +664,11 @@ void DebugDirectorImpl::register_tune_commands()
 			return this->tune_value(args.text(0), args.has(1) ? args.text(1) : std::string(),
 				restart);
 		});
-	tune->set_menu(tune_traits(DebugMenuTraits::Form::hidden));
-	registry.add(std::move(tune));
+	registry.add(std::move(tune), DebugMenuTraits::of("tuning", DebugMenuTraits::Form::hidden));
 
-	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu)
-		{
-			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body));
-			command->set_menu(std::move(menu));
-			registry.add(std::move(command));
-		};
 	const auto files = [] { return std::vector<std::string>{ "all", "tuning", "presentation" }; };
 
-	add("tune.diff", "list the live tune edits (and the F9 toggle when it differs)",
+	registry.add_command("tune.diff", "list the live tune edits (and the F9 toggle when it differs)",
 		{ { "tuning|presentation", true, files } },
 		[this](Args args, DebugLog& log)
 		{
@@ -740,9 +680,9 @@ void DebugDirectorImpl::register_tune_commands()
 			}
 			return DebugStatus::success(lines.empty() ? std::string("tune.diff: no edits") :
 				"tune.diff: " + std::to_string(lines.size()) + " line(s)");
-		}, tune_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("tuning", DebugMenuTraits::Form::run));
 
-	add("tune.reset", "put live edits back to the file's values: a path, a file, or all",
+	registry.add_command("tune.reset", "put live edits back to the file's values: a path, a file, or all",
 		{ { "path|tuning|presentation|all", true, [this]
 			{
 				std::vector<std::string> words = { "all", "tuning", "presentation" };
@@ -761,9 +701,9 @@ void DebugDirectorImpl::register_tune_commands()
 		[this](Args args, DebugLog&)
 		{
 			return this->tune_reset(args.has(0) ? args.text(0) : std::string());
-		}, tune_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("tuning", DebugMenuTraits::Form::run));
 
-	add("tune.save", "write the live edits into the SOURCE content files (only those tokens), "
+	registry.add_command("tune.save", "write the live edits into the SOURCE content files (only those tokens), "
 		"then reload them; force overwrites values changed on disk",
 		{ { "tuning|presentation|all", true, files },
 			{ "force", true, [] { return std::vector<std::string>{ "force" }; } } },
@@ -773,9 +713,9 @@ void DebugDirectorImpl::register_tune_commands()
 				(args.has(1) && args.text(1) == "force");
 			const std::string which = args.has(0) && args.text(0) != "force" ? args.text(0) : "all";
 			return this->tune_save(which, force);
-		}, tune_traits(DebugMenuTraits::Form::run));
+		}, DebugMenuTraits::of("tuning", DebugMenuTraits::Form::run));
 
-	add("tune.find", "list tunable paths containing a word",
+	registry.add_command("tune.find", "list tunable paths containing a word",
 		{ { "word", false, {} } },
 		[this](Args args, DebugLog& log)
 		{
@@ -790,6 +730,6 @@ void DebugDirectorImpl::register_tune_commands()
 			}
 			return shown == 0 ? DebugStatus::failure("tune.find: nothing contains '" +
 				args.text(0) + "'") : DebugStatus::success(std::to_string(shown) + " path(s)");
-		}, tune_traits(DebugMenuTraits::Form::hidden));
+		}, DebugMenuTraits::of("tuning", DebugMenuTraits::Form::hidden));
 }
 #endif

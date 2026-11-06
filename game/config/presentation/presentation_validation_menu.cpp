@@ -212,7 +212,8 @@ void Presentation::Validation::check_status(const StatusMessage& message, const 
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key + " must leave finite positive status width.");
 	}
-	// All three pages reset to the authored font size, then fit width only.
+	// Every page that draws a status line resets it to the authored font
+	// size, then fits its width only.
 	const float scale = std::min(1.0f, available / raw.x);
 	const Vector2F fitted = raw * scale;
 	if (!std::isfinite(scale) || scale <= 0.0f || !std::isfinite(fitted.x) || !std::isfinite(fitted.y) ||
@@ -226,8 +227,7 @@ void Presentation::Validation::check_status(const StatusMessage& message, const 
 	{
 		// Touching edges are allowed. Options' status and Back deliberately
 		// share vertical space while remaining horizontally separate.
-		if (bounds.x < obstacle.right() && bounds.right() > obstacle.x &&
-			bounds.y < obstacle.bottom() && bounds.bottom() > obstacle.y)
+		if (overlaps(bounds, obstacle))
 		{
 			throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 				" must not overlap the Back card, help text or stick previews.");

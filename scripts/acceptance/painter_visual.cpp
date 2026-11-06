@@ -11,6 +11,8 @@
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/screen_cursor.h"
+#include "game/objects/monitor.h"
+#include "game/objects/silhouette.h"
 #include "game/objects/player_badge.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
@@ -53,6 +55,7 @@
 #include "game/debug/console/debug_console_view.h"
 #include "game/debug/capture/debug_perf.h"
 #include "game/debug/tune/tune_document.h"
+#include "game/debug/replay/hash.h"
 #include "game/debug/tune/tune_target.h"
 #include "game/debug/replay/replay.h"
 #endif
@@ -72,6 +75,7 @@
 #include <rapidjson/writer.h>
 #include "scripts/acceptance/painter_visual/rumble_sink_fixture.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/replacement_lock.h"
 #include "scripts/acceptance/support/slot_seats.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 

@@ -10,13 +10,22 @@
 // -1 keeps the existing authored movement or shared aiming preference.
 struct StickSettings
 {
-	int movement_deadzone = -1;
-	int aim_deadzone = -1;
+	// The value that keeps the inherited deadzone, and the range a chosen one
+	// keeps to: the Sticks page steps by deadzone_step and stops at
+	// max_deadzone, and the save readers clamp what they read the same way.
+	static constexpr int inherit = -1;
+	static constexpr int max_deadzone = 90;
+	static constexpr int deadzone_step = 5;
+
+	int movement_deadzone = inherit;
+	int aim_deadzone = inherit;
 
 	static int normalized_deadzone(int value)
 	{
-		return value < 0 ? -1 : std::min(value, 90);
+		return value < 0 ? inherit : std::min(value, max_deadzone);
 	}
+
+	bool operator==(const StickSettings&) const = default;
 };
 
 // A per-slot comfort override: shared follows the Options switch of the same
@@ -72,6 +81,12 @@ inline std::optional<SeatSwitch> seat_switch_from_key(const std::string& key)
 // groups' over that balance (game/config/sound_groups.h).
 struct PlaySettings
 {
+	// The ranges Save accepts and the Controls page offers.
+	static constexpr int min_aim_sensitivity = 1;
+	static constexpr int max_aim_sensitivity = 5;
+	static constexpr int max_volume = 100;
+	static constexpr int volume_step = 10;
+
 	int aim_sensitivity = 3;
 	int music_volume = 100;
 	int sfx_volume = 100;
@@ -79,11 +94,11 @@ struct PlaySettings
 	bool aim_marker = true;
 	bool reduce_effects = false;
 	std::array<StickSettings, input_slots::pad_count> sticks{};
-	std::array<bool, input_slots::pad_count> pad_rumble{ true, true, true, true };
+	std::array<bool, input_slots::pad_count> pad_rumble = input_slots::per_pad(true);
 	std::array<SeatComfort, input_slots::pad_count> pad_comfort{};
 
-	float music_gain() const { return static_cast<float>(music_volume) / 100.0f; }
-	float sfx_gain() const { return static_cast<float>(sfx_volume) / 100.0f; }
+	float music_gain() const { return static_cast<float>(music_volume) / static_cast<float>(max_volume); }
+	float sfx_gain() const { return static_cast<float>(sfx_volume) / static_cast<float>(max_volume); }
 	bool view_shake_enabled() const { return this->view_shake && !this->reduce_effects; }
 
 	// The keyboard seat, bots and unknown slots follow the shared switches.
@@ -114,8 +129,10 @@ struct PlaySettings
 	// deadzone; the default setting uses half the stick's travel.
 	float aim_deadzone() const
 	{
-		constexpr float deadzones[] = { 0.70f, 0.60f, 0.50f, 0.35f, 0.20f };
-		return deadzones[std::clamp(this->aim_sensitivity, 1, 5) - 1];
+		constexpr std::array<float, max_aim_sensitivity - min_aim_sensitivity + 1> deadzones{
+			0.70f, 0.60f, 0.50f, 0.35f, 0.20f };
+		return deadzones[static_cast<std::size_t>(
+			std::clamp(this->aim_sensitivity, min_aim_sensitivity, max_aim_sensitivity) - min_aim_sensitivity)];
 	}
 
 	const StickSettings& stick_settings(int slot) const

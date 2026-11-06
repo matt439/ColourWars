@@ -17,7 +17,7 @@ void GameLevel::debug_rebuild(const MatchSetup& plan, bool reset_session)
 	this->settings_ = plan;
 	if (reset_session)
 	{
-		this->session_ = Session(plan.player_count() == 1 ? 1 : plan.best_of());
+		this->session_ = Session(session_rounds(plan));
 	}
 	this->build_and_enter_level();
 }
@@ -28,7 +28,7 @@ void GameLevel::debug_adopt(const MatchSetup& plan, bool reset_session)
 	this->settings_ = plan;
 	if (reset_session)
 	{
-		this->session_ = Session(plan.player_count() == 1 ? 1 : plan.best_of());
+		this->session_ = Session(session_rounds(plan));
 	}
 }
 

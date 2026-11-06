@@ -15,8 +15,10 @@ class LevelObjectBuilder;
 // Which movers that is: the player, whose velocity Player clamps per axis to
 // player.max_velocity except on the first step of input (x_initial_velocity,
 // so x takes the larger of the two) and on a drop-through (drop_down_velocity,
-// added to y after the clamp, so y takes the sum), and any unswept projectile kind (is_swept), of which
-// the only one is the roller, which never moves. Every other projectile kind
+// added to y after the clamp, so y takes the sum). With paint underfoot on,
+// both horizontal speeds are multiplied by own_speed_multiplier first, since a
+// boost can carry into the next step. No projectile is a mover here. The only
+// unswept kind (is_swept) is the roller, which never moves; every other kind
 // is exempt, not forgotten: Projectile::resolve_sweep tests its trajectory,
 // which is what tunnelling.h tells a discrete client to do.
 //

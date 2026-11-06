@@ -7,6 +7,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/probe.h"
+#include "engine/input/mouse.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -108,7 +109,7 @@ namespace
                 }
             }
             require(settings.input_roster_complete(), "Marker roster is incomplete");
-            settings.set_screen_layout(static_cast<ScreenLayout>(settings.human_count() - 1));
+            settings.set_screen_layout(layout_for_humans(settings.human_count()));
             for (std::size_t seat = 0; seat < plan.size(); ++seat)
             {
                 settings.set_player_team(static_cast<int>(seat), plan[seat].team);

@@ -147,19 +147,6 @@ namespace input_bindings_acceptance
             "An unrelated malformed save section reset valid input bindings");
     }
 
-    class ReplacementLock
-    {
-    public:
-        explicit ReplacementLock(const std::filesystem::path& path)
-        {
-            handle_ = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            require(handle_ != INVALID_HANDLE_VALUE, "Cannot lock private binding save replacement");
-        }
-        ~ReplacementLock() { CloseHandle(handle_); }
-    private:
-        HANDLE handle_ = INVALID_HANDLE_VALUE;
-    };
-
     void check_save_validation_failures_and_independence(const IsolatedSaveDirectory& directory, const char* content)
     {
         Save save = load(directory, "{\"keyboard_jump\":\"j\"}"); SettingsSession save_session(save);
@@ -169,27 +156,22 @@ namespace input_bindings_acceptance
         {
             rejects([&] { save_session.set_input_bindings_and_save(InputBindings{ key }); }, "Invalid binding setter did not validate before assignment/write");
             require(&save_session.input_bindings() == borrowed && borrowed->keyboard_jump == Key::j && directory.contents() == original &&
-                !std::filesystem::exists(directory.temporary_path()), "Rejected binding setter changed active memory, disk bytes or staging state");
+                !directory.temporary_left(), "Rejected binding setter changed active memory, disk bytes or staging state");
             require_independent(save);
         }
-        for (bool replacement_failure : { false, true })
+        // The save's temporary is uniquely named (replace_file_atomically), so
+        // the failure is the replacing move, refused by a lock on the old save.
         {
             save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file(); const std::string bytes = directory.contents();
             ReaderHarness h(content);
             PlayerInput saved_reader(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, borrowed);
-            if (replacement_failure)
             {
-                const ReplacementLock lock(directory.save_path());
+                acceptance::ReplacementLock lock(directory.save_path());
+                require(lock.hold(), "Cannot lock private binding save replacement");
                 require(!save_session.set_input_bindings_and_save(InputBindings{ Key::k }), "Locked binding save replacement unexpectedly succeeded");
             }
-            else
-            {
-                require(std::filesystem::create_directory(directory.temporary_path()), "Cannot block own binding staging path");
-                require(!save_session.set_input_bindings_and_save(InputBindings{ Key::k }), "Blocked binding staging write unexpectedly succeeded");
-                require(std::filesystem::remove(directory.temporary_path()), "Cannot remove own binding staging blocker");
-            }
             require(&save_session.input_bindings() == borrowed && borrowed->keyboard_jump == Key::k && directory.contents() == bytes &&
-                !std::filesystem::exists(directory.temporary_path()), "Failed binding persistence rolled back active choice, damaged old bytes or left a temporary file");
+                !directory.temporary_left(), "Failed binding persistence rolled back active choice, damaged old bytes or left a temporary file");
             // This reader cached J before the failed write. It borrows the
             // Save member that GameLevel borrows, rather than a copied test preference.
             h.keyboard.on_key_down(Key::j); std::ignore = h.sample();
@@ -199,7 +181,7 @@ namespace input_bindings_acceptance
             h.keyboard.on_key_down(Key::k); std::ignore = h.sample();
             actual = saved_reader.player_inputs()[input_slots::keyboard_and_mouse];
             require(actual.jump_held && actual.jump_pressed &&
-                same_input(actual, saved_reader.player_inputs()[input_slots::keyboard_and_mouse]),
+                actual == saved_reader.player_inputs()[input_slots::keyboard_and_mouse],
                 "Actual Save-borrowing reader did not follow active K after persistence failed");
             h.keyboard.on_key_up(Key::k); std::ignore = h.sample();
             require_independent(save); Save old_disk; SettingsSession old_disk_session(old_disk); old_disk_session.load_save_file();
@@ -327,24 +309,17 @@ namespace input_bindings_acceptance
         InputBindings invalid = *borrowed; invalid.pads[2][PadAction::jump].primary = PadControl::start;
         rejects([&] { save_session.set_input_bindings_and_save(invalid); }, "Invalid pad setter did not validate before mutation");
         require(&save_session.input_bindings() == borrowed && borrowed->pads == custom && directory.contents() == bytes &&
-            !std::filesystem::exists(directory.temporary_path()), "Rejected pad setter mutated active choices, disk or staging state");
-        for (bool replacement_failure : { false, true })
+            !directory.temporary_left(), "Rejected pad setter mutated active choices, disk or staging state");
         {
             save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file(); const std::string previous = directory.contents();
             InputBindings candidate = save_session.input_bindings(); candidate.pads = custom;
-            if (replacement_failure)
             {
-                const ReplacementLock lock(directory.save_path());
+                acceptance::ReplacementLock lock(directory.save_path());
+                require(lock.hold(), "Cannot lock private pad preference replacement");
                 require(!save_session.set_input_bindings_and_save(candidate), "Locked pad preference replacement unexpectedly succeeded");
             }
-            else
-            {
-                require(std::filesystem::create_directory(directory.temporary_path()), "Cannot block own pad save staging path");
-                require(!save_session.set_input_bindings_and_save(candidate), "Blocked pad preference staging unexpectedly succeeded");
-                require(std::filesystem::remove(directory.temporary_path()), "Cannot remove own pad save staging blocker");
-            }
             require(save_session.input_bindings() == candidate && directory.contents() == previous &&
-                !std::filesystem::exists(directory.temporary_path()), "Failed pad write rolled back active preferences or damaged disk bytes");
+                !directory.temporary_left(), "Failed pad write rolled back active preferences or damaged disk bytes");
             ReaderHarness h(content);
             PlayerInput actual(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, &save_session.input_bindings());
             auto& pad = binding_test_pads::states[2]; pad.connected = true; std::ignore = h.sample();

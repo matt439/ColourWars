@@ -4,6 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
 #include "engine/core/file_path.h"
+#include "engine/render/text_encoding.h"
 #include "game/build_info.h"
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/console/debug_console_state.h"
@@ -31,15 +32,10 @@ using namespace labrador;
 DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentation) :
 	tuning_(tuning), presentation_(presentation), planner_random_(std::random_device{}())
 {
-	std::string label;
-	for (const wchar_t* c = build_info::label; *c != 0; ++c)
-	{
-		label += *c < 0x80 ? static_cast<char>(*c) : '?';
-	}
-	this->log_.info("ColourWars developer console - " + label);
+	this->log_.info("ColourWars developer console - " + labrador::narrow(build_info::label));
 	this->log_.info("` toggles this console; type help. F10/F11 (or hold pad Back+Start) "
 		"opens the debug menu. F2-F4 overlays, F5 restart, F6 pause, F7 step, "
-		"F9 feedback; 'binds' lists the key table, 'exec.list' the scripts.");
+		"F9 feedback by default; 'binds' lists the key table, 'exec.list' the scripts.");
 	this->binds_.reset();
 	this->register_commands();
 	this->register_view_commands();
@@ -48,8 +44,8 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->register_replay_commands();
 	this->register_tune_commands();
 	this->register_script_commands();
-	this->tune_targets_[0] = std::make_unique<TuningTarget>(tuning, presentation);
-	this->tune_targets_[1] = std::make_unique<PresentationTarget>(presentation, tuning);
+	this->tune_targets_[tuning_file] = std::make_unique<TuningTarget>(tuning, presentation);
+	this->tune_targets_[presentation_file] = std::make_unique<PresentationTarget>(presentation, tuning);
 }
 
 DebugDirectorImpl::~DebugDirectorImpl() = default;
@@ -98,7 +94,7 @@ void DebugDirectorImpl::background_changed()
 void DebugDirectorImpl::sync_background_audio(bool active)
 {
 	if (this->application_ == nullptr || this->data_ == nullptr || this->data_->audio_resources() == nullptr ||
-		this->data_->save() == nullptr) { return; }
+		this->data_->settings_session() == nullptr) { return; }
 	AudioResources& audio = *this->data_->audio_resources();
 	if (!active && (this->background_scripts_ || this->background_audio_muted_))
 	{

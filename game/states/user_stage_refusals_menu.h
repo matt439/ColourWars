@@ -34,5 +34,4 @@ private:
 	std::unique_ptr<labrador::UiText> progress_;
 	void refresh_file();
 	void refresh_text();
-	void close();
 };

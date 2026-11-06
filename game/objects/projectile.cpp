@@ -131,7 +131,7 @@ void Projectile::touch(Collider& receiver, const Vector2F& normal, float penetra
 }
 CollisionObjectType Projectile::collision_type() const
 {
-    ProjectileType type = this->type();
+    ProjectileType type = this->projectile_type();
     switch (this->team())
     {
     case PlayerTeam::a:
@@ -148,7 +148,8 @@ CollisionObjectType Projectile::collision_type() const
         case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_a;
         default:
-            throw std::exception("Invalid ProjectileType value.");
+            throw std::logic_error("Projectile has no collision type for projectile type " +
+                std::to_string(static_cast<int>(type)));
         }
     case PlayerTeam::b:
         switch (type)
@@ -164,10 +165,12 @@ CollisionObjectType Projectile::collision_type() const
         case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_b;
         default:
-            throw std::exception("Invalid ProjectileType value.");
+            throw std::logic_error("Projectile has no collision type for projectile type " +
+                std::to_string(static_cast<int>(type)));
         }
     default:
-        throw std::exception("Invalid PlayerTeam value.");
+        throw std::logic_error("Projectile has no collision type for team " +
+            std::to_string(static_cast<int>(this->team())));
     }
 }
 PlayerTeam Projectile::team() const
@@ -189,10 +192,6 @@ int Projectile::player_num() const
 const Colour& Projectile::team_colour() const
 {
     return this->team_colour_;
-}
-ProjectileType Projectile::type() const
-{
-    return this->type_;
 }
 float Projectile::timer() const
 {

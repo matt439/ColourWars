@@ -1,9 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/collision_object_type.h"
 
-#include <stdexcept>
-#include <string>
-
 using labrador::CollisionLayer;
 using labrador::CollisionMask;
 
@@ -85,30 +82,5 @@ CollisionMask collision_mask(CollisionObjectType type)
 	case CollisionObjectType::none:
 	default:
 		return 0;
-	}
-}
-
-ProjectileType to_projectile_type(CollisionObjectType type)
-{
-	switch (type)
-	{
-	case CollisionObjectType::projectile_spray_team_a:
-	case CollisionObjectType::projectile_spray_team_b:
-		return ProjectileType::spray;
-	case CollisionObjectType::projectile_jet_team_a:
-	case CollisionObjectType::projectile_jet_team_b:
-		return ProjectileType::jet;
-	case CollisionObjectType::projectile_rolling_team_a:
-	case CollisionObjectType::projectile_rolling_team_b:
-		return ProjectileType::rolling;
-	case CollisionObjectType::projectile_mist_team_a:
-	case CollisionObjectType::projectile_mist_team_b:
-		return ProjectileType::mist;
-	case CollisionObjectType::projectile_ball_team_a:
-	case CollisionObjectType::projectile_ball_team_b:
-		return ProjectileType::ball;
-	default:
-		throw std::runtime_error("Collision type " +
-			std::to_string(static_cast<int>(type)) + " is not paint.");
 	}
 }

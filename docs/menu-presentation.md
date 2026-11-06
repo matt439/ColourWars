@@ -188,7 +188,7 @@ and Player Count. Its shipped value is `(1760, 920)`, centered in
 ink, shade colour and pen width, replacing its card padding and shadow offset
 with the required `main_menu.setup_focus_padding` (`28, 7`) and
 `main_menu.setup_shadow_offset` (`2`). The solid surround uses
-`main_menu.home_background_colour`. `MenuPaperArtwork` draws only the enabled
+`main_menu.backgrounds.home`. `MenuPaperArtwork` draws only the enabled
 focused row's card and detached arrow; neither page has a persistent
 primary-action card.
 The legacy brand and focus stripe are suppressed on these two pages. The
@@ -229,7 +229,7 @@ opens; reopening adopts edited values.
 
 Join reuses `main_menu.setup_box_size` and the captured setup-art copy described
 above, including the focus-padding and shadow-offset overrides. Its solid
-surround uses `main_menu.home_background_colour`. There are no new data fields
+surround uses `main_menu.backgrounds.home`. There are no new data fields
 or artwork assets. `MenuPaperArtwork` draws the outer panel without a
 focused-row card or detached arrow. A static underline identifies the row P1
 can edit: Up/Down selects an unclaimed non-host human or an existing bot, and
@@ -381,7 +381,7 @@ badges and card padding at their existing positions. Dimensions must be finite
 and positive, at most 1840 wide and at most `footer_y - 40` high. The page
 captures `main_menu.art` with the existing `setup_focus_padding` and
 `setup_shadow_offset` overrides; row cards copy this art with their paper fill
-set to `focus_fill`. The solid surround uses `home_background_colour`. There
+set to `focus_fill`. The solid surround uses `main_menu.backgrounds.home`. There
 is no shared focus cursor, focused-row card or detached arrow. The controls
 footer remains visible and the legacy brand is suppressed.
 
@@ -572,7 +572,9 @@ preserve diagnostic priority.
 The required `main_menu.stage_select.selected_ink`, shipped as `111216`, supplies
 the live confirmed stage-name/status colour. Their unconfirmed colour remains
 the live `unselected`, now shipped as `1B1C20`. The preview edge retains the live
-mint `selected` colour. The briefing label and goal use captured focus ink;
+mint `selected` colour, and the required `main_menu.stage_select.preview_background`,
+shipped as `121827EE`, is the backing behind the preview, captured when the page
+is built. The briefing label and goal use captured focus ink;
 the remaining static paper labels use captured art ink. Paper shadows have zero
 alpha, retaining the authored shadow offsets and text extents. The Random
 question mark retains its existing light colour and visible shadow on the
@@ -602,7 +604,7 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string, still checked; no page draws a brand line |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits`, `bot_team`, `bot_weapon` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `vsync`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert`, `keyboard_jump`, `pad_buttons`, `rumble`, `watch_replay`, `profiles`, `series_stage` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
@@ -850,7 +852,10 @@ bounds expanded by `pause_menu.art.focus_padding` must fit the outer Pause
 paper rectangle: `pause_menu.box_size`, centered in the full 1920 by 1080 design
 area. The row-height rule is
 `measured_height + 2 * pause_menu.art.focus_padding.y <= pause_menu.layout.spacing.y`.
-Rows begin at `pause_menu.layout.position` and use its authored spacing.
+Rows begin at `pause_menu.layout.position` and use its authored spacing;
+practice Pause's five rows use `pause_menu.practice_row_spacing` instead
+(optional; without it, 0.8 of `layout.spacing.y`), and are checked against
+the paper only.
 Equality is accepted; no item-text shadow or fitting scale is added.
 
 Each Pause page uses its captured `MenuText` and resolves the item font when it
@@ -967,29 +972,37 @@ available actions, navigation, focus, music timing or interrupted transitions.
 
 ### Controls / audio and Pad Sticks row labels
 
-Nine required `menu_text.items` roles supply the existing settings labels:
+Thirteen required `menu_text.items` roles supply the existing settings labels.
+Controls has eleven rows: four page actions, five settings, then Apply and
+Back. Pad Sticks has seven settings, then Apply and Back. The settings rows are
+named once in `settings_rows` (`game/config/presentation/menu_geometry.h`),
+which the pages and the startup validator share.
 
 | Key | Shipped text | Use |
 |---|---|---|
 | `pad_sticks` | `Pad sticks` | Controls / audio action, row 0 |
-| `music_volume` | `Music volume` | Controls / audio fitted label, row 1 |
-| `sfx_volume` | `SFX volume` | Controls / audio fitted label, row 2 |
-| `view_shake` | `View shake` | Controls / audio fitted label, row 3 |
-| `aim_marker` | `Aim marker` | Controls / audio fitted label, row 4 |
-| `reduce_effects` | `Reduce effects` | Controls / audio fitted label, row 5 |
+| `keyboard_jump` | `Keyboard Keys` | Controls / audio fitted action, row 1 |
+| `pad_buttons` | `Pad Buttons` | Controls / audio fitted action, row 2 |
+| `profiles` | `Profiles` | Controls / audio fitted action, row 3 |
+| `music_volume` | `Music volume` | Controls / audio fitted label, row 4 |
+| `sfx_volume` | `SFX volume` | Controls / audio fitted label, row 5 |
+| `view_shake` | `View shake` | Controls / audio fitted label, row 6; Pad Sticks, row 4 |
+| `aim_marker` | `Aim marker` | Controls / audio fitted label, row 7; Pad Sticks, row 5 |
+| `reduce_effects` | `Reduce effects` | Controls / audio fitted label, row 8; Pad Sticks, row 6 |
 | `pad` | `Pad` | Pad Sticks fitted label, row 0 |
 | `move_deadzone` | `Move deadzone` | Pad Sticks fitted label, row 1 |
 | `aim_deadzone` | `Aim deadzone` | Pad Sticks fitted label, row 2 |
+| `rumble` | `Rumble` | Pad Sticks fitted label, row 3 |
 
 Both pages reuse `menu_text.items.apply` and `menu_text.items.back`, at Controls
-rows 6/7 and Pad Sticks rows 3/4. All thirteen uses draw plain text with
+rows 9/10 and Pad Sticks rows 7/8. All twenty uses draw plain text with
 `controls_settings.item_font`, shipped as `lato_black_36`. This is a
 separate context from `menu_style.fonts.item` (`lato_black_48`) and from
-the shared heading font (`lato_black_72`). Shared Apply/Back labels are
-checked in each font and page where they appear.
+the shared heading font (`lato_black_72`). Shared labels are checked in each
+font and page where they appear.
 
 The normalized, nonblank, single-line rules apply. Startup checks actual font
-glyphs and finite, positive measured text bounds. All eight setting labels keep
+glyphs and finite, positive measured text bounds. All twelve setting rows keep
 the existing `OptionRow` fit: starting at scale one, shrink to the label-column
 width if needed, then shrink further to the available row height. The width is
 `controls_settings.layout.spacing.x - controls_settings.art.focus_padding.x`;
@@ -998,8 +1011,11 @@ the height is
 The fitted scale must remain finite and positive. Long supported labels remain
 valid when their fitted bounds fit, without a character-count limit.
 
-The Pad sticks action and both pages' Apply/Back actions retain their measured
-font size. Text bounds expanded by `controls_settings.art.focus_padding` must
+The Pad sticks action and both pages' Back actions retain their measured font
+size. Keyboard Keys, Pad Buttons, Profiles and Apply shrink uniformly, never
+upscaling, to the width left before the help column
+(`menu_geometry::settings_action_width`) and the row height less focus
+padding. Text bounds expanded by `controls_settings.art.focus_padding` must
 fit the Controls paper, centered in
 `(1920, menu_style.chrome.footer_y)` using `controls_settings.box_size`, and
 their row height. For each use, the padded right edge must be at most
@@ -1115,10 +1131,10 @@ help's `per_pad`, and `labels`: the words among the control labels (`space`,
 `escape`, `none`, `start` and the five mouse buttons). Each token is required
 exactly once, and each template is formatted with the default controls when
 read. Startup measures the reminders for every keyboard and pad choice in
-tuning's `match.controls_text.font` and the headings in the detail font; the
+presentation's `match.controls_text.font` and the headings in the detail font; the
 cards scale to fit, so only glyphs and bounds are checked. The letters, the pad
-legends and the " / " between a primary and its alternate stay in code, and
-`input_bindings.cpp`'s labels are the base locale's twins of these words.
+legends and the " / " between a primary and its alternate stay in code;
+`input_bindings.cpp` holds only those legends, none of these words.
 
 Startup checks actual help-font glyphs and finite, positive measured bounds.
 The help region begins at `controls_settings.controls_position`, has size
@@ -1137,9 +1153,9 @@ backing or text shadow.
 
 The aim caption retains its measured size. Its x position is
 `controls_settings.stick_preview.aim.x`; its y position remains the preview's
-top minus the help font's measured `Move` height and
-`controls_settings.art.focus_padding.y`. `Move` is a geometry probe, not another
-display string. The caption must fit the right-hand help region, begin at or
+top minus the help font's measured height of the caption itself
+(`menu_text.help.aim_cutoff`) and `controls_settings.art.focus_padding.y`. The
+caption must fit the right-hand help region, begin at or
 below the movement-response preview's bottom, and end at or above the aim
 preview's top. Its width can extend beyond the aim square within that region;
 the square is not a text-width cap. Boundary equality is accepted.
@@ -1818,8 +1834,8 @@ assume the physically reachable stick vectors or that `100%` is widest.
 All six readouts remain plain, unscaled text in their original positions. The
 connection line ends before the raw caption, raw and response captions stay
 above their tracks, and the full aim block fits beside the aim box and before
-association help. Caption positions retain the existing measured `Move` probe
-and focus-padding offset. Pages capture their copy and font, refresh values from
+association help. Caption positions keep the measured height of
+`menu_text.help.aim_cutoff` and the focus-padding offset. Pages capture their copy and font, refresh values from
 the existing input snapshots, and adopt edits only when reopened. The Pad row
 and connection readout share the authored device label below. Both deadzone
 setting percentage values remain for later text slices.

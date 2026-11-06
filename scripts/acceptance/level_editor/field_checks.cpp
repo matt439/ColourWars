@@ -47,9 +47,16 @@ namespace level_editor_acceptance
 
     void check_random_setting(const fs::path& scratch)
     {
-        LevelDocument document;
+        // File > New sets include_in_random (editor/template.json); this
+        // fixture is a new level without it.
         const fs::path path = scratch / "random-setting.json";
-        document.save(path);
+        {
+            rapidjson::Document omitted = parse(LevelDocument().serialize());
+            omitted.RemoveMember("include_in_random");
+            write(path, encode(omitted));
+        }
+        LevelDocument document;
+        document.load(path);
         const Entry level = entry(document, EntryKind::level);
         const std::string original = document.serialize();
         require(!parse(original).HasMember("include_in_random"), "Fixture must omit Random setting");

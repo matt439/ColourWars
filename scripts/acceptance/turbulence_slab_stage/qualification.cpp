@@ -95,7 +95,7 @@ namespace turbulence_slab_stage_acceptance
             const auto document = parse(manifest);
             StageList result;
             std::set<std::string> unique;
-            LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+            LevelObjectBuilder builder(&world.render, &world.preferences, &world.tuning.paint());
             for (const auto& group : document["assets"].GetArray())
             {
                 if (std::string(group["kind"].GetString()) != "level") { continue; }

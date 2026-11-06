@@ -146,8 +146,8 @@
 			pending->current().text() == overlay_only && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved,
 			"Crack saved reset retains unrelated edit and the invalid external source plus exact staged bytes");unchanged();
-		require(!std::filesystem::exists(scratch.source / L"presentation.json.tmp") && !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp") && std::rand() == next_random,
+		require(!acceptance::temporary_beside(scratch.source / L"presentation.json") && !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json") && std::rand() == next_random,
 			"Crack commands/refused saves retain RNG and leave no recovery files");
 	}
 
@@ -325,8 +325,8 @@
 		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && pending->edits().empty() &&
 			pending->current().text() == saved && pending->baseline().text() == saved,
 			"Final unrelated reset retains both independently saved limb baselines");unchanged();
-		require(!std::filesystem::exists(scratch.source / L"presentation.json.tmp") && !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp") && std::rand() == next_random,
+		require(!acceptance::temporary_beside(scratch.source / L"presentation.json") && !std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json") && std::rand() == next_random,
 			"Limb command/save/reset/refusal sequence leaves no recovery files or gameplay RNG consumption");
 	}
 
@@ -539,9 +539,9 @@
 		require(impl.execute("tune.reset presentation.debug_overlay.colour").ok && colour_values(presentation) == expected_colours &&
 			pending->edits().empty() && pending->current().text() == saved && pending->baseline().text() == saved &&
 			read_text(scratch.source / L"presentation.json") == external && read_text(scratch.staged / L"presentation.json") == saved &&
-			!std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!acceptance::temporary_beside(scratch.source / L"presentation.json") &&
 			!std::filesystem::exists(scratch.source / L"presentation.json.bak") &&
-			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			!acceptance::temporary_beside(scratch.staged / L"presentation.json"),
 			"Saved acting resets retain the invalid external source and exact staging without losing the unrelated reset or leaving recovery files");
 		unchanged();
 		write_text(scratch.source / L"presentation.json", saved);

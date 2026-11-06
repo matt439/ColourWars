@@ -2,8 +2,8 @@
 
 The author accepted these `POL#22` cues for players, paint, tools and the outside
 room on 2026-10-14; [the acceptance record](../acceptance.json) names the exact
-masters. They are not a live bank; one-, two- and four-player game acceptance
-remains ROAD#3. The frozen room/picture rule
+masters, and the game's bank is exported from them. The one-, two- and
+four-player game check (ROAD#3) was waived on 2026-11-05, not performed. The frozen room/picture rule
 still belongs to the runtime integration: room cues play outside the monitor;
 the picture stays silent while the person is present.
 

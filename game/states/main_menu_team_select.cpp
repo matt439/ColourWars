@@ -467,9 +467,7 @@ void MainMenuTeamSelect::check_paper_geometry() const
 	const RectangleF inside = menu_geometry::paper_interior(panel, this->setup_art_);
 	const auto check = [&](const RectangleF& bounds, const char* role)
 	{
-		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-			bounds.width <= 0.0f || bounds.height <= 0.0f || !inside.contains(bounds))
+		if (!menu_geometry::fits(bounds, inside))
 		{
 			throw std::runtime_error(std::string("main_menu.team_box_size: Team Select ") + role +
 				" must fit the paper including its retained text, badge and card bounds.");

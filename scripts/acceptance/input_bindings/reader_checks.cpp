@@ -6,15 +6,6 @@
 namespace input_bindings_acceptance
 {
     constexpr std::array<PadControl, 4> faces{ PadControl::a, PadControl::b, PadControl::x, PadControl::y };
-    bool same_input(const SlotInput& a, const SlotInput& b)
-    {
-        return a.connected == b.connected && a.x_movement == b.x_movement && a.jump_pressed == b.jump_pressed &&
-            a.jump_held == b.jump_held && a.shoot_angle == b.shoot_angle && a.shoot_direction == b.shoot_direction &&
-            a.shoot_direction_requested == b.shoot_direction_requested && a.primary_shoot == b.primary_shoot &&
-            a.drop_through == b.drop_through && a.toggle_debug == b.toggle_debug &&
-            a.toggle_pause_menu == b.toggle_pause_menu && a.pause_held == b.pause_held && a.skip_intro == b.skip_intro &&
-            a.left_analog_stick == b.left_analog_stick && a.right_analog_stick == b.right_analog_stick;
-    }
 
     void check_actual_reader(const char* content)
     {

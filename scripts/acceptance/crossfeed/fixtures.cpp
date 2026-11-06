@@ -19,10 +19,7 @@ namespace crossfeed_acceptance
 
     bool supported(const Player& player)
     {
-        return player.move_state() == PlayerMoveState::on_ground ||
-            player.move_state() == PlayerMoveState::on_drop_down_ground ||
-            player.move_state() == PlayerMoveState::on_ramp_left ||
-            player.move_state() == PlayerMoveState::on_ramp_right;
+        return player.grounded();
     }
 
     PlayerInputData input(float movement, bool pressed, bool held, bool drop)
@@ -108,7 +105,7 @@ namespace crossfeed_acceptance
         tuning((content / "tuning.json").string().c_str()),
         presentation((content / "presentation.json").string().c_str()),
         map(content / "levels/crossfeed.json"),
-        builder(&this->render, &this->audio, &this->preferences, &this->tuning.paint())
+        builder(&this->render, &this->preferences, &this->tuning.paint())
     {
         for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
         {

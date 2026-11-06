@@ -85,7 +85,7 @@ in today's numbers, so a balance pass never needs a rebuild to leave them.
 |---|---|---|
 | Signed rate | finite | player `gravity`, `jump_launch_velocity`, `jump_acceleration` and `drop_down_velocity` (y is down, so the sign is the direction); projectile `gravity`; `player_velocity_amount`; offsets and other plain vectors |
 | Delay or amount | finite, `>= 0` | `match.countdown` and `overview`; player `x_acceleration` (zero is a constant run), `ramp_gravity_multiplier`, `jump_max_time`, health regeneration, `respawn_delay`, `damage_sound_delay`; `weapons.ammo_regen_delay` and `ammo_regen_rate`; weapon `shoot_interval` (zero fires every update), `starting_vel_length`, `ammo_usage`; projectile `player_damage` and diffusion `start_time`/`end_time` |
-| Extent, cap or divisor | finite, `> 0` | player `x_initial_velocity` (zero never leaves rest) and `x_deacceleration` (the braking divisor, and what stops a released stick); projectile `delete_timer`, `size`, `collision_size` and diffusion `end_scale`; `projectiles.max_velocity`; and the fields that were already positive |
+| Extent, cap or divisor | finite, `> 0` | player `x_initial_velocity` (zero never leaves rest) and `x_deacceleration` (the braking divisor, and what stops a released stick) and `animations.run_speed` (the ground speed above which the running clip plays); projectile `delete_timer`, `size`, `collision_size` and diffusion `end_scale`; `projectiles.max_velocity`; and the fields that were already positive |
 | Gain, fraction or threshold | `0..1` | every sound `volume`, the `input` thresholds, `player.drop_down_analog_threshold` |
 
 Rules that compare two fields sit at the end of the reader that reads both.
@@ -533,8 +533,8 @@ SHA256 `5C89F9A5C460EAAB0E03E04C14925520F675DF4ED04B8D14EC67F6B66FFD61E1`.
 
 This completes the finite `TOOL#1` scope. `POL#27` and `POL#31` were attended
 decisions, accepted by the author on 2026-11-05 at current values; the report neither authorizes retuning nor accepts a new bot opponent.
-`POL#36` remains its separately selected paint-underfoot prototype, using a future
-explicit switch-off comparison; no such mechanic was enabled in this baseline.
+`POL#36`, paint underfoot, was off in this baseline. It has shipped on since the
+author accepted `POL#30` on 2026-11-05, without the switch-off comparison planned here.
 
 ## Shipping bots in the headless runner (`TOOL#2`, 2026-10-29)
 

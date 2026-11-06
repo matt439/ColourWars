@@ -73,10 +73,7 @@ namespace bot_navigation_acceptance
 
     inline bool grounded(const Player& player)
     {
-        return player.move_state() == PlayerMoveState::on_ground ||
-            player.move_state() == PlayerMoveState::on_drop_down_ground ||
-            player.move_state() == PlayerMoveState::on_ramp_left ||
-            player.move_state() == PlayerMoveState::on_ramp_right;
+        return player.grounded();
     }
 
     inline bool on_support(const Player& player, const RectangleF& support)

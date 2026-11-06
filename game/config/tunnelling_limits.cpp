@@ -1,22 +1,24 @@
 #include "game/pch.h"
 #include "game/config/tunnelling_limits.h"
+#include "game/config/content_value.h"
 #include "engine/collision/collision_layer.h"
 #include "engine/collision/tunnelling.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/level_object_builder.h"
 #include <algorithm>
 #include <cmath>
-#include <sstream>
 #include <string>
 #include <vector>
 
 using namespace labrador;
+using content_value::number_text;
 
 namespace
 {
 	// The exemption in projectile_type.h, held to the code that relies on it:
-	// a kind that is neither swept nor the stationary roller has no bound
-	// below, so it must not compile until it is given one.
+	// the roller paints one sweep from where it spawned and never moves, so
+	// no step carries it anywhere and it has no mover below. Any other
+	// unswept kind would need one, so it must not compile until it has one.
 	constexpr bool every_unswept_kind_is_bounded()
 	{
 		for (int index = 0; index < static_cast<int>(ProjectileType::count); ++index)
@@ -47,21 +49,12 @@ namespace
 		CollisionMask mask = 0u;
 	};
 
-	std::string number(float value)
-	{
-		std::ostringstream text;
-		text << value;
-		return text.str();
-	}
-
 	std::vector<DiscreteMover> discrete_movers(const GameTuning& tuning,
 		float seconds_per_step)
 	{
 		const PlayerTuning& player = tuning.player();
 		// Team B's mask differs from team A's only in which paint it meets.
 		const CollisionObjectType player_type = CollisionObjectType::player_team_a;
-		// The roller paints one sweep from where it spawned and never moves.
-		const CollisionObjectType roller_type = CollisionObjectType::projectile_rolling_team_a;
 		// Player::update clamps to max_velocity on each axis, with two ways
 		// past it: the first step of input sets x to x_initial_velocity
 		// unclamped, and a drop-through adds drop_down_velocity to y after
@@ -87,9 +80,6 @@ namespace
 					"adds to it)",
 				player.size, player_speed * seconds_per_step,
 				collision_layer(player_type), collision_mask(player_type) },
-			{ "a rolling projectile", "projectiles.max_velocity.x", "projectiles.max_velocity.y",
-				tuning.projectile(ProjectileType::rolling).details.col_rect_size, Vector2F::zero,
-				collision_layer(roller_type), collision_mask(roller_type) },
 		};
 	}
 
@@ -102,11 +92,11 @@ namespace
 			return;
 		}
 		throw std::runtime_error(entry.where() + ": " + mover.name +
-			" at its speed cap travels " + number(travel) + " units " + axis +
-			" in one " + number(seconds_per_step) + " s step, and against this object's " +
-			dimension + " of " + number(object_extent) + " the engine's discrete bound "
+			" at its speed cap travels " + number_text(travel) + " units " + axis +
+			" in one " + number_text(seconds_per_step) + " s step, and against this object's " +
+			dimension + " of " + number_text(object_extent) + " the engine's discrete bound "
 			"(labrador::max_safe_displacement) is " +
-			number(max_safe_displacement(mover_extent, object_extent)) +
+			number_text(max_safe_displacement(mover_extent, object_extent)) +
 			", so it could pass through between two steps. Lower " + speed_keys +
 			" or thicken the object.");
 	}

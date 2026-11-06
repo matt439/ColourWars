@@ -102,9 +102,9 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         unchanged(); const Frame actual = frame(); const auto& look = snapshot.controls_settings();
         const auto& style = snapshot.menu(); const auto& view = look.stick_preview;
         const auto font = app.render_resources()->resolve_sprite_font(look.help_font);
-        // This existing literal anchor is intentionally independent of the new
-        // readout templates; changing their words must not move the tracks.
-        const float label_height = app.render_resources()->measure_text(font, L"Move").y;
+        // The page's anchor is one help-font line measured on the aim caption,
+        // not on the readout templates; changing their words must not move the tracks.
+        const float label_height = app.render_resources()->measure_text(font, snapshot.menu_text().help.aim_cutoff).y;
         const std::array<Vector2F, 4> positions{ look.controls_position,
             view.raw_movement.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y),
             view.movement_response.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y), view.aim_readout_position };

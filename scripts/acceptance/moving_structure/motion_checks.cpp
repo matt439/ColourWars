@@ -51,11 +51,11 @@ namespace moving_structure_acceptance
             for (float bad : { -dt, nan, infinity, std::nextafter(SECONDS_PER_STEP, infinity), 1.0f })
             { throws_with([&] { std::ignore = normal.prepare(bad); }, "Horizontal motion"); }
             for (float bad : { 0.0f, -1.0f, nan, infinity })
-            { throws_with([&] { std::ignore = HorizontalMotion({ anchor, bad, 1.0f, 0.0f }); }, "Horizontal motion"); }
+            { throws_with([&] { std::ignore = HorizontalMotion({ anchor, bad, 1.0f, 0.0f }); }, "Motion needs positive finite travel"); }
             for (float bad : { 0.0f, std::nextafter(2.0f * SECONDS_PER_STEP, 0.0f), nan, infinity })
-            { throws_with([&] { std::ignore = HorizontalMotion({ anchor, 40.0f, bad, 0.0f }); }, "Horizontal motion"); }
+            { throws_with([&] { std::ignore = HorizontalMotion({ anchor, 40.0f, bad, 0.0f }); }, "Motion needs positive finite travel"); }
             for (float bad : { -0.1f, 1.0f, nan, infinity })
-            { throws_with([&] { std::ignore = HorizontalMotion({ anchor, 40.0f, 1.0f, bad }); }, "Horizontal motion"); }
+            { throws_with([&] { std::ignore = HorizontalMotion({ anchor, 40.0f, 1.0f, bad }); }, "Motion needs positive finite travel"); }
             throws_with([&] { std::ignore = HorizontalMotion({ { nan, 500.0f, 200.0f, 10.0f }, 40.0f, 1.0f, 0.0f }); }, "representable");
             throws_with([&] { std::ignore = HorizontalMotion({ { 1.0e20f, 500.0f, 1.0f, 10.0f }, 40.0f, 1.0f, 0.0f }); }, "representable");
         }

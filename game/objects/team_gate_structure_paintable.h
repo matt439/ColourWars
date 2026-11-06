@@ -23,7 +23,6 @@ public:
         const std::string& frame_name,
         const labrador::RectangleF& rectangle,
         labrador::RenderResources* render_resources,
-        const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
         const PaintTuning* paint,
         const TeamColour& team_colours,
@@ -62,7 +61,6 @@ private:
     float open_share_ = 0.0f;
     float paint_thickness_ = 0.0f;
     const GatePermissionPresentation* cue_ = nullptr;
-    TeamColour team_colours_;
     labrador::RenderResources::SheetFrame cue_frame_;
     void draw_permission(labrador::DrawList& draw_list) const;
 };

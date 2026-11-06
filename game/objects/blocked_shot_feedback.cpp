@@ -1,6 +1,5 @@
 #include "game/pch.h"
 #include "game/objects/blocked_shot_feedback.h"
-#include "game/objects/crude_drawing.h"
 
 #include <algorithm>
 #include <cmath>
@@ -9,15 +8,9 @@ using namespace labrador;
 
 BlockedShotFeedback::BlockedShotFeedback(const BlockedShotPresentation* presentation,
     RenderResources* render_resources) :
-    TextureObject(presentation->sprite_sheet, presentation->fill_frame, render_resources),
+    CrudeDrawing(presentation->sprite_sheet, presentation->fill_frame, render_resources),
     presentation_(presentation)
 {
-}
-
-size_t BlockedShotFeedback::owner_index(int owner)
-{
-    return owner >= 0 && owner < paint_owners::count ?
-        static_cast<size_t>(owner) : static_cast<size_t>(paint_owners::count);
 }
 
 void BlockedShotFeedback::update(float dt)
@@ -59,7 +52,7 @@ void BlockedShotFeedback::emit(const BlockedShotContact& contact)
     }
     const float length = std::hypot(contact.normal.x, contact.normal.y);
     if (length <= 0.0f || !std::isfinite(length)) { return; }
-    float& repeat = this->repeat_remaining_[owner_index(contact.player_num)];
+    float& repeat = this->repeat_remaining_[paint_owners::slot_or_fallback(contact.player_num)];
     if (repeat > 0.0f) { return; }
     if (this->count_ == this->cues_.size())
     {
@@ -86,22 +79,14 @@ std::span<const BlockedShotFeedback::Cue> BlockedShotFeedback::cues() const
 
 float BlockedShotFeedback::repeat_remaining(int owner) const
 {
-    return this->repeat_remaining_[owner_index(owner)];
+    return this->repeat_remaining_[paint_owners::slot_or_fallback(owner)];
 }
 
 void BlockedShotFeedback::draw_block(DrawList& draw_list, const Vector2F& center,
     const Vector2F& size, float angle, const Colour& colour, float alpha) const
 {
-    const RectangleI& source = this->sprite_sheet()->sprite_frame(this->frame()).source_rectangle();
-    const Vector2F origin(static_cast<float>(source.width) * 0.5f,
-        static_cast<float>(source.height) * 0.5f);
-    const float edge = this->presentation_->keyline_width * 2.0f;
-    // Authored RGBA is straight; premultiply once before the lifetime fade.
-    this->draw_with(draw_list, RectangleF(center, size + Vector2F(edge, edge)),
-        this->frame(), CrudeDrawing::premultiplied(this->presentation_->keyline) * alpha,
-        origin, SpriteFlip::none, angle);
-    this->draw_with(draw_list, RectangleF(center, size), this->frame(),
-        CrudeDrawing::premultiplied(colour) * alpha, origin, SpriteFlip::none, angle);
+    this->keyed_block(draw_list, center, size, angle, colour,
+        this->presentation_->keyline, this->presentation_->keyline_width, alpha);
 }
 
 void BlockedShotFeedback::draw(DrawList& draw_list) const

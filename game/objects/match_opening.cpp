@@ -59,6 +59,51 @@ namespace
 	{
 		return before < edge && after >= edge;
 	}
+
+	// The opening's edges in seconds, each the one before plus its span, so the
+	// beat, its sounds and its length agree to the bit.
+	struct OpeningTimes
+	{
+		float first = 0.0f;  // the cursor sets off for colour A
+		float second = 0.0f; // and for colour B
+		float undo = 0.0f;
+		float leave = 0.0f;  // the sigh; then out of the chair and the room
+		float end = 0.0f;    // the countdown starts
+	};
+
+	OpeningTimes opening_times(const OpeningTuning& timing)
+	{
+		OpeningTimes times;
+		times.first = timing.settle;
+		times.second = times.first + timing.preview;
+		times.undo = times.second + timing.preview;
+		times.leave = times.undo + timing.undo;
+		times.end = times.leave + timing.leave;
+		return times;
+	}
+
+	// The reveal's edges in seconds, built the same way.
+	struct RevealTimes
+	{
+		float first = 0.0f;  // seated; the cursor sets off for colour A
+		float second = 0.0f; // and for colour B
+		float decide = 0.0f; // wavering between the two
+		float click = 0.0f;
+		float leave = 0.0f;  // the coverage has shown; the person goes
+		float gone = 0.0f;   // out of the room; the teams react
+	};
+
+	RevealTimes reveal_times(const RevealTuning& timing)
+	{
+		RevealTimes times;
+		times.first = timing.walk_in;
+		times.second = times.first + timing.hover;
+		times.decide = times.second + timing.hover;
+		times.click = times.decide + timing.decide;
+		times.leave = times.click + timing.show;
+		times.gone = times.leave + timing.leave;
+		return times;
+	}
 }
 
 MatchOpening::MatchOpening(const LevelServices& services, const std::string& sound_bank_name,
@@ -104,10 +149,11 @@ MatchOpening::OpeningBeat MatchOpening::opening_beat() const
 {
 	const OpeningTuning& timing = this->match_->opening;
 	const float time = this->opening_time_;
-	const float first = timing.settle;
-	const float second = first + timing.preview;
-	const float undo = second + timing.preview;
-	const float leave = undo + timing.undo;
+	const OpeningTimes times = opening_times(timing);
+	const float first = times.first;
+	const float second = times.second;
+	const float undo = times.undo;
+	const float leave = times.leave;
 
 	OpeningBeat beat;
 	const float a = through(time, first, timing.preview);
@@ -129,8 +175,7 @@ MatchOpening::OpeningBeat MatchOpening::opening_beat() const
 
 float MatchOpening::opening_length() const
 {
-	const OpeningTuning& timing = this->match_->opening;
-	return timing.settle + timing.preview * 2.0f + timing.undo + timing.leave;
+	return opening_times(this->match_->opening).end;
 }
 
 bool MatchOpening::intro_showing(const OpeningClock& clock)
@@ -206,12 +251,13 @@ MatchOpening::Step MatchOpening::update_opening(float dt, bool skip_requested,
 	this->opening_time_ += dt;
 	const MatchTuning& match = *this->match_;
 	const OpeningTuning& timing = match.opening;
-	const float undo = timing.settle + timing.preview * 2.0f;
-	const float leave = undo + timing.undo;
+	const OpeningTimes times = opening_times(timing);
+	const float undo = times.undo;
+	const float leave = times.leave;
 	// The cursor reaches each swatch before that half receives its colour.
 	// Test the actual timeline edges so a long update does not lose either.
-	for (const float edge : { timing.settle + reach * timing.preview,
-		timing.settle + timing.preview + reach * timing.preview })
+	for (const float edge : { times.first + reach * timing.preview,
+		times.second + reach * timing.preview })
 	{
 		if (crossed(before, this->opening_time_, edge))
 		{
@@ -371,8 +417,7 @@ float MatchOpening::reveal_length() const
 	const RevealTuning& timing = this->match_->reveal;
 	// Once the program is closed nobody is left to celebrate.
 	const float react = this->winner_ == PlayerTeam::none ? 0.0f : timing.react;
-	return timing.walk_in + timing.hover * 2.0f + timing.decide + timing.show + timing.leave +
-		react;
+	return reveal_times(timing).gone + react;
 }
 
 void MatchOpening::start_reveal(const LevelEndInfo& end_info)
@@ -387,11 +432,12 @@ MatchOpening::RevealBeat MatchOpening::reveal_beat() const
 {
 	const RevealTuning& timing = this->match_->reveal;
 	const float time = this->reveal_time_;
-	const float first = timing.walk_in;
-	const float second = first + timing.hover;
-	const float decide = second + timing.hover;
-	const float click = decide + timing.decide;
-	const float leave = click + timing.show;
+	const RevealTimes times = reveal_times(timing);
+	const float first = times.first;
+	const float second = times.second;
+	const float decide = times.decide;
+	const float click = times.click;
+	const float leave = times.leave;
 
 	RevealBeat beat;
 	const float walking = through(time, 0.0f, timing.walk_in);
@@ -426,8 +472,9 @@ bool MatchOpening::update_reveal(float dt, const std::vector<Player*>& players)
 	this->reveal_time_ += dt;
 	const MatchTuning& match = *this->match_;
 	const RevealTuning& timing = match.reveal;
-	const float click = timing.walk_in + timing.hover * 2.0f + timing.decide;
-	const float leave = click + timing.show;
+	const RevealTimes times = reveal_times(timing);
+	const float click = times.click;
+	const float leave = times.leave;
 	const bool closing = this->winner_ == PlayerTeam::none;
 	if (crossed(before_time, this->reveal_time_, reveal_sit * timing.walk_in))
 	{
@@ -436,8 +483,8 @@ bool MatchOpening::update_reveal(float dt, const std::vector<Player*>& players)
 	// A draw moves to the close button and shows no colour swatches.
 	if (!closing)
 	{
-		for (const float edge : { timing.walk_in + reach * timing.hover,
-			timing.walk_in + timing.hover + reach * timing.hover })
+		for (const float edge : { times.first + reach * timing.hover,
+			times.second + reach * timing.hover })
 		{
 			if (crossed(before_time, this->reveal_time_, edge))
 			{
@@ -456,7 +503,7 @@ bool MatchOpening::update_reveal(float dt, const std::vector<Player*>& players)
 	}
 	// The picture stays silent while the person is in the room. Each team
 	// gets one reaction after they leave, however many figures it contains.
-	if (!closing && crossed(before_time, this->reveal_time_, leave + timing.leave))
+	if (!closing && crossed(before_time, this->reveal_time_, times.gone))
 	{
 		const bool winners = std::any_of(players.begin(), players.end(),
 			[this](const Player* player) { return player->team() == this->winner_; });
@@ -495,9 +542,8 @@ void MatchOpening::draw_reveal(DrawList& front, const RectangleF& screen,
 	const RectangleF window(Vector2F::zero, this->resolution_manager_->resolution_vec());
 	const Viewport fullscreen = this->viewport_manager_->fullscreen_viewport();
 	const RevealBeat beat = this->reveal_beat();
-	const RevealTuning& timing = this->match_->reveal;
-	const float click_at = timing.walk_in + timing.hover + timing.hover + timing.decide;
-	const float click_age = beat.clicked ? this->reveal_time_ - click_at : -1.0f;
+	const float click_age = beat.clicked ?
+		this->reveal_time_ - reveal_times(this->match_->reveal).click : -1.0f;
 	const Colour colour_a = this->team_colours_->team_colour(PlayerTeam::a);
 	const Colour colour_b = this->team_colours_->team_colour(PlayerTeam::b);
 	const RectangleF picture = this->monitor_->picture(screen);

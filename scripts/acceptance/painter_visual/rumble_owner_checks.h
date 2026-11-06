@@ -212,7 +212,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     std::ofstream summary(output / "rumble-owner-summary.json");
     summary << "{\"outcome\":\"passed\",\"cases\":" << case_count << ",\"requests\":" << motors.count <<
         ",\"factories\":" << motors.factories << ",\"destroyed\":" << motors.destructions <<
-        ",\"native_motor_calls\":0,\"limits\":\"actual hidden-shell GameLevel with scripted readers and recording factory; "
+        ",\"limits\":\"actual hidden-shell GameLevel with scripted readers and recording factory; "
 #if COLOURWARS_DEV_TOOLS
         "the replay gate witness injects damage then stops before its next checkpoint; "
 #else

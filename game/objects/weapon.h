@@ -173,7 +173,11 @@ protected:
 
 	bool shooting_this_update_ = false;
 
-	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
+	// fired_this_update: a shot was paid this tick. shooting_this_update: the
+	// held-fire presentation is on (shooting_this_update_).
+	virtual void handle_shoot_sound(bool fired_this_update, bool shooting_this_update);
+	// The one-shot tools' answer: the fire wave once per paid shot, no loop.
+	void play_one_shot(bool fired_this_update);
 	void play_feedback_sound(labrador::SoundBank::WaveHandle sound,
 		const SoundTuning& tuning);
 
@@ -204,8 +208,6 @@ protected:
 
 
 	const WeaponDetails& details() const;
-	const labrador::Vector2F& offset() const;
-	const labrador::Vector2F& nozzle_offset() const;
 	float shoot_interval() const;
 	float starting_vel_length() const;
 	float ammo_usage() const;
@@ -225,9 +227,6 @@ protected:
 	void alter_ammo_timer(float dt);
 
 
-	static labrador::Vector2F nozzle_size();
-	static bool facing_left(float rotation);
-
 	virtual std::vector<std::unique_ptr<Projectile>> shoot(
 		const labrador::Vector2F& shoot_direction,
 		const labrador::Vector2F& player_velocity) const;
@@ -237,20 +236,13 @@ protected:
 		float starting_velocity,
 		const labrador::Vector2F& player_velocity) const;
 
-	static labrador::Vector2F calculate_sprite_origin(
-		const labrador::Vector2F& size, colourwars::RotationOrigin origin);
-
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
-		const labrador::Vector2F& player_center,
-		const labrador::Vector2F& player_velocity,
 		float dt, float ammo_regen_multiplier);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
 		const labrador::Vector2F& player_center,
-		const labrador::Vector2F& player_velocity,
 		bool player_facing_right);
 
-	ProjectileBuilder* projectile_builder() const;
 	labrador::RenderResources* render_resources() const override;
 
 private:

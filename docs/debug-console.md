@@ -453,7 +453,7 @@ The latest validation is recorded under
 | `presentation.hud.closing_clock.text` | live, opaque | Final-ten-positive-seconds clock text on applicable running draws; opaque named/RGB/RGBA-FF values retain the existing reader contract. |
 | `presentation.hud.player_identity.colour` | live | Shared foreground of the existing identity label and HEALTH/PAINT meter labels, on each applicable HUD draw; fonts remain captured. |
 | `presentation.hud.player_identity.shadow_colour` | live | Offset identity-label shadow drawn before its independent foreground; the meter labels have no shadow call. |
-| `presentation.hud.player_identity.background_colour` | next screen | Captured backing behind the Stage Select preview; a newly constructed page adopts it, while the gameplay HUD paper remains separate. |
+| `presentation.main_menu.stage_select.preview_background` | next screen | Captured backing behind the Stage Select preview; a newly constructed page adopts it, while the gameplay HUD paper remains separate. |
 | `presentation.hud.closing_clock.ink` | live, opaque | Closing-panel ink cross fills and detached beat tick under-strokes on applicable running draws. |
 | `presentation.hud.closing_clock.paper` | live, opaque | Inner closing-panel paper cross fills on applicable running draws. |
 | `presentation.hud.closing_clock.accent` | live, opaque | Four detached tick stripes while the existing closing beat geometry is active; settled/reduced draws omit them. |
@@ -729,10 +729,10 @@ their existing policy. Foreground alpha0 leaves the paper and current identity
 shadow, while the two meter labels contribute no selected ink. Shadow alpha0
 leaves paper and the later identity foreground. The distinct root badge ink/
 background remain opaque and independently supported. The separate
-`hud.player_identity.background_colour` preview backing is described below; it
+`main_menu.stage_select.preview_background` preview backing is described below; it
 does not colour the HUD identity paper and is outside this pair.
 
-Stage Select captures `hud.player_identity.background_colour` into its preview
+Stage Select captures `main_menu.stage_select.preview_background` into its preview
 backing UiTexture when the page is initialized. A new page adopts an edit;
 stable updates, stage cycling, ready/unready and resizing do not recapture the
 tint. Ready state can change the underlying filled preview-edge colour, so
@@ -1153,7 +1153,8 @@ neither the mouse nor the camera is read on replay. The limits:
 
 - **Same build, same machine.** Floats are compared bit for bit.
 - **Same step size.** The executable steps 0.0166666 s (the engine's 10 MHz
-  timer rounds 1/60 down); the CPU acceptance case uses 1.0f/60. A recording
+  timer rounds 1/60 down, `SECONDS_PER_STEP` in `simulation.h`); the CPU
+  acceptance case uses 1.0f/60. A recording
   from one never replays in the other, and `play` says so.
 - **Suspends.** Covering the match (the console, the debug menu, the pause
   menu) and losing window focus suspend the level, and suspending clears every
@@ -1185,11 +1186,15 @@ neither the mouse nor the camera is read on replay. The limits:
 `%LOCALAPPDATA%\ColourWars\screens\` (beside the save; without `LOCALAPPDATA`,
 `save\screens` beside the executable). The default name is
 `colourwars-YYYYMMDD-HHMMSS-mmm.png`; a given name keeps `A-Z a-z 0-9 _ -` and
-replaces anything else with `_`. The console (or the debug menu) closes first,
+replaces anything else with `_`. The name is chosen when the command runs, so
+`screenshot <file> queued` names the file the capture writes (a default name
+carries the time it was typed). The console (or the debug menu) closes first,
 and the shot is taken at the top of the next update once nothing queued would
 change the picture, so `+stage movement_course +screenshot start` captures the
 match, not the title. The status strip and overlays are included; the log says
-`screenshot: <path> (WxH)`.
+`screenshot: <path> (WxH)`. The PNG is encoded in memory and replaces any file
+of that name whole, so a failed shot leaves no partial PNG; replays, scripts'
+own files and `tune.save` are written the same way.
 
 - `screenshot.dir <folder>` puts the next shots in `screens\<folder>\` (up to
   three `/`-separated levels, each kept to `A-Z a-z 0-9 _ -`; `{time}` becomes
@@ -1215,8 +1220,9 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 
 - **Where.** `exec` looks in the source tree's `scripts/debug/` (a Debug build
   knows its checkout, as `reload` does), then in
-  `%LOCALAPPDATA%\ColourWars\debug\`. A name is `A-Z a-z 0-9 _ -`, with or
-  without `.cfg` - never a path. `exec.list` lists both folders with each
+  `%LOCALAPPDATA%\ColourWars\debug\`. A name is 1-64 of `A-Z a-z 0-9 _ -`,
+  with or without `.cfg` - never a path or a reserved Windows name (`CON`,
+  `NUL`, `COM1`...). `exec.list` lists both folders with each
   script's first `//` line; Tab completes the names.
 - **Grammar.** One console line per text line, `;` between statements as at the
   prompt, `//` to the end of the line outside quotes, blank lines ignored, CRLF
@@ -1484,7 +1490,8 @@ Release has no developer timing service, so its legacy F1/Back text also shows
 
 `perf.capture <1-36000> <label>` records chronological raw intervals independently
 of the ring, then writes CSV and completion JSON under `debug/perf/` in the user
-profile. Labels use 1–64 letters, digits, `_` or `-`. Sampling starts with a fresh
+profile. Labels use 1–64 letters, digits, `_` or `-` and are not a reserved
+Windows name, the same rule as script names. Sampling starts with a fresh
 interval in a live match at 1x; focus/coverage, count-ins, clock changes, resizing,
 rebuilds and screenshots invalidate continuity. Export happens after sampling,
 and a script's next statement waits for it. `perf.reset` refuses while a capture
@@ -1575,8 +1582,8 @@ as the game. In Release:
   `debug_screen_obstacles` with their `GameLevel` adapters, and
   `DebugDirector::begin_match_draw`, an inline no-op; the
   `SeatInputFilter` interface, also used by the shipping round tape, and
-  the developer `seats` parameter of `Level::update`, always null in Release
-  (shipping bots are owned by Level); `DebugMatchView::debug_level`;
+  the `seats` parameter of `Level::update`, which in Release only ever
+  carries that tape (shipping bots are owned by Level); `DebugMatchView::debug_level`;
   `pad_seat_missing`, whose "driven by a bot or replay" half is always false;
   `DebugDirector` itself, one null pointer with inline no-op hooks
   (`match_suspended`, `drives_slot` among them) and four inline step hooks
@@ -1586,8 +1593,9 @@ as the game. In Release:
   `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
   `.?AVBot@@`, `.?AVPaintBot@@`, `.?AVBotDriver@@`, `.?AVReplayRecorder@@`,
   `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@`,
-  `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
-  `.?AVMatchWait@@`, and the Release executable must contain none of them;
+  `.?AVDebugBackgroundInput@@`, `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
+  `.?AVMatchWait@@` (sixteen in all), and the Release executable must contain
+  none of them;
   in Release it also checks that the director supplies no developer filter or
   driven physical slot. `SeatInputFilter` remains present for the round tape.
   CI also checks the packaged
@@ -1598,8 +1606,9 @@ as the game. In Release:
 - Code: `game/debug/`. The director and its Debug-only implementation
   (`debug_director.*`, the facade; `debug_director_impl.*`, its core;
   `debug_director_hooks.cpp`, the match and page hooks and the queued
-  requests); the registry, variables and
-  commands (`debug_registry.*`, `debug_variable.*`, `debug_command.*`); the
+  requests); the registry, entries, variables and
+  commands (`debug_registry.*`, `debug_entry.*`, `debug_variable.*`,
+  `debug_command.*`); the
   commands themselves (`game_commands.cpp` for match, time, content and
   console, `debug_status_text.cpp` for the `status` lines, the status strip
   and the paint readout, `view_commands.cpp` for the overlays, `player_commands.cpp` for
@@ -1613,7 +1622,7 @@ as the game. In Release:
   builds the real reader's object and copies it over the live one;
   `tune_scope.*`, the scope table, steps and path tree; `tune_commands.cpp`);
   bots (`bot.*`, the deliberately OOP `Bot -> WalkBot -> JumpBot -> ChaseBot /
-  PaintBot` hierarchy; `bot_driver.*`, the seat filter that runs them);
+  PaintBot / SkirmishBot` hierarchy; `bot_driver.*`, the seat filter that runs them);
   record and play (`replay.*`: the file, the input codec, `ReplayRecorder` and
   `ReplayPlayer`; `match_fingerprint.*`; `replay_commands.cpp`, which also holds
   the update hooks that count updates, repeat recorded suspends and resumes and
@@ -1632,7 +1641,10 @@ as the game. In Release:
   in `scripts/debug/`.
 - Menu metadata is declared where each entry is registered
   (`DebugMenuTraits`: category, form - hidden, run, pick or variable - the
-  picked argument and its prefix, and whether it is staged).
+  picked argument and its prefix, and whether it is staged). A command whose
+  body is a lambda is registered with
+  `DebugRegistry::add_command(..., DebugMenuTraits::of(...))`, any other entry
+  with `add(entry, DebugMenuTraits::of(...))`.
 - Hooks:
   - `GameLevel::update` calls `before_match_update` (debug menu toggle,
     console key, pending screenshot, the live console or the binds, a script

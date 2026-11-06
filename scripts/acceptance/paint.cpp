@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         const TeamColour colours;
         const float thickness = tuning.paint().thickness;
         check_runoff_content(content);
-        check_runoff_surfaces(render, audio, tuning, colours);
+        check_runoff_surfaces(render, tuning, colours);
         const RectangleF rectangle(0, 0, 100, 50);
         const PaintableFaces all{ true, true, true, true };
         const PaintableFaces top{ false, true, false, false };
@@ -66,7 +66,8 @@ int main(int argc, char** argv)
         const float tile_area = tile.area();
         const SpriteSheet* effects = render.sprite_sheet(tuning.paint().splash_sheet);
         const AnimationStrip& impact = effects->animation_strip(
-            effects->resolve_animation_strip(tuning.paint().splash_animation));
+            effects->resolve_animation_strip(
+                tuning.paint().splash_animations[static_cast<size_t>(ProjectileType::spray)]));
         const float impact_duration = impact.frame_time() * static_cast<float>(impact.frame_count());
         PaintTileSplash splash(tile_rectangle, clips.initial, &render);
         require(!splash.active(), "Splash animation plays before a paint contact");
@@ -107,7 +108,7 @@ int main(int argc, char** argv)
             std::span<const RectangleF> obstacles)
         {
             return std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
-                rectangle, std::make_unique<RectangleF>(rectangle), &render, &audio,
+                rectangle, std::make_unique<RectangleF>(rectangle), &render,
                 &preferences, &tuning.paint(), CollisionObjectType::structure_paintable,
                 colours, faces, obstacles);
         };
@@ -192,7 +193,7 @@ int main(int argc, char** argv)
         // Use the real authored stage and builder. The lower ledge has two
         // exposed 200-unit top segments and two 50-unit sides, independent of
         // the 1,800-unit band buried beneath the next mountain block.
-        const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
+        const LevelObjectBuilder builder(&render, &preferences, &tuning.paint());
         for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course", "crossfeed", "press_tower" })
         {
             const JsonDocument level = read_json_file(

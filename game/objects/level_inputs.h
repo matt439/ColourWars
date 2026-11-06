@@ -11,8 +11,9 @@
 #include <vector>
 
 // What a Level is built from (HYG#40), grouped by where it comes from.
-// LevelBuilder fills the four records; a probe may fill them by hand. None
-// names GameData: each is borrows and values a builder unpacks.
+// LevelBuilder fills the four records Level's constructor takes (StageAudio is
+// part of LevelStage); a probe may fill them by hand. None names GameData: each
+// holds borrows and values a builder unpacks.
 
 namespace labrador
 {

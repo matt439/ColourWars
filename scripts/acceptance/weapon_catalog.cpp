@@ -142,7 +142,7 @@ namespace
     void check_defaults(const Presentation& look)
     {
         const auto& art = look.main_menu().weapon_select_art;
-        require(WeaponSelectArtworkPresentation::CHOICES == std::size(keys) && art.sheet == "weapon_paint" &&
+        require(SELECTABLE_WEAPON_COUNT == std::size(keys) && art.sheet == "weapon_paint" &&
             art.fill_frame == "pixel", "Weapon catalog changed the six existing choices or atlas defaults");
         for (size_t index = 0; index < std::size(keys); ++index)
         {

@@ -5,6 +5,7 @@
 // stations the game refuses, in the game's words. Each caller adds its own
 // location to the message. Lesson words are checked by the game alone: it owns
 // the fonts that decide what can be drawn.
+#include "game/contracts/rectangle_contract.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -18,10 +19,7 @@ namespace station_contract
         float x, y;
     };
 
-    struct Rectangle
-    {
-        float x, y, width, height;
-    };
+    using Rectangle = rectangle_contract::Rectangle;
 
     // Inclusive on every edge, as the engine's rectangle_point_intersect.
     inline bool contains(const Rectangle& rectangle, const Point& point)
@@ -53,15 +51,15 @@ namespace station_contract
         seen.push_back(name);
     }
 
-    // A player built outside out_of_bounds is retired on its first tick.
+    // A player built outside out_of_bounds stops the match on its first tick.
     inline void validate_position(const std::string& name, const Point& station,
         const Rectangle& out_of_bounds)
     {
         if (contains(out_of_bounds, station)) { return; }
         throw std::invalid_argument("puts a station '" + name + "' at (" +
             std::to_string(station.x) + ", " + std::to_string(station.y) + "), outside its own "
-            "out_of_bounds rectangle - a player built there is retired on the "
-            "first tick of the match.");
+            "out_of_bounds rectangle - a player built there stops the match with "
+            "a player-out-of-bounds failure on its first tick.");
     }
 
     // The lesson area's own geometry; the message follows the area's location.

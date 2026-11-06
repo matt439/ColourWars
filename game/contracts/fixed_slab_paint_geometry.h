@@ -6,6 +6,14 @@
 #include <limits>
 #include <stdexcept>
 
+// The fixed slab's one footprint: its top runs slab_span to the right and
+// slab_rise up or down, and the slab is slab_thickness deep along its inward
+// normal. The game's FixedSlabGeometry and the editor's slab helpers read
+// these; canonical_slab_paint_polygon accepts no other footprint.
+inline constexpr float slab_span = 160.0f;
+inline constexpr float slab_rise = 80.0f;
+inline constexpr float slab_thickness = 24.0f;
+
 // The authored top endpoints own static face adjacency. Reconstructing an OBB
 // from its centre/normalized axes can move these joins by a few float ULPs and
 // invent a paintable sliver. Correct only that known reconstruction here: no
@@ -24,17 +32,17 @@ inline PaintPolygon canonical_slab_paint_polygon(const PaintPolygon& represented
     const float x0 = as_float(authored_start.x), y0 = as_float(authored_start.y);
     const float x1 = as_float(authored_end.x), y1 = as_float(authored_end.y);
     const float nx = as_float(inward.x), ny = as_float(inward.y);
-    if (x1 - x0 != 160.0f || std::abs(y1 - y0) != 80.0f || !(ny > 0.0f))
+    if (x1 - x0 != slab_span || std::abs(y1 - y0) != slab_rise || !(ny > 0.0f))
     { throw std::invalid_argument("Fixed slab paint requires the selected authored footprint and inward axis"); }
     const PaintPolygon result{ PaintPoint{ x0, y0 }, PaintPoint{ x1, y1 },
-        PaintPoint{ x1 + nx * 24.0f, y1 + ny * 24.0f },
-        PaintPoint{ x0 + nx * 24.0f, y0 + ny * 24.0f } };
+        PaintPoint{ x1 + nx * slab_thickness, y1 + ny * slab_thickness },
+        PaintPoint{ x0 + nx * slab_thickness, y0 + ny * slab_thickness } };
     for (std::size_t index = 0; index < result.size(); ++index)
     {
         const auto checked = [&](double actual, double canonical)
         {
             const float old_value = as_float(actual), new_value = as_float(canonical);
-            const float scale = std::max({ 160.0f, std::abs(old_value), std::abs(new_value) });
+            const float scale = std::max({ slab_span, std::abs(old_value), std::abs(new_value) });
             const float ulp = std::nextafter(scale, std::numeric_limits<float>::infinity()) - scale;
             if (std::abs(actual - canonical) > 4.0 * ulp)
             { throw std::invalid_argument("Fixed slab paint reconstruction exceeds four coordinate ULPs"); }

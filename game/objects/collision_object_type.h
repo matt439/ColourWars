@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/collision/collision_layer.h"
-#include "game/objects/projectile_type.h"
 
 // Game-specific collision tags. The engine carries these opaquely and filters
 // contacts using layers and masks.
@@ -78,10 +77,6 @@ inline bool is_projectile(CollisionObjectType type)
 		type == CollisionObjectType::projectile_mist_team_a ||
 		type == CollisionObjectType::projectile_mist_team_b;
 }
-
-// Projectile kind without its firing team, used to look up damage tuning.
-// Throws if the tag is not a projectile.
-ProjectileType to_projectile_type(CollisionObjectType type);
 
 inline bool is_structure(CollisionObjectType type)
 {

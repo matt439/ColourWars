@@ -14,7 +14,7 @@ void validate_mode_stage_rules(RenderResources* render, const Presentation& pres
 	const MenuText& text = presentation.menu_text();
 	const RectangleF panel = menu_geometry::footer_paper(look.setup_box_size, style.footer_y);
 	const MenuPaperArtPresentation art = menu_geometry::setup_art(look);
-	for (const SeriesStageRule rule : { SeriesStageRule::same, SeriesStageRule::rotate, SeriesStageRule::losers_pick })
+	for (const SeriesStageRule rule : series_stage_rules)
 	{
 		const std::wstring& value = text.series_stage_value(rule);
 		drawable_text::check_font_can_draw(render, style.item_font, value,

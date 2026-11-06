@@ -3,6 +3,7 @@
 #include "game/match/match_setup.h"
 #include "game/objects/stick_response.h"
 #include "game/objects/crude_drawing.h"
+#include "game/config/presentation/menu_geometry.h"
 #include <algorithm>
 #include <cmath>
 
@@ -131,7 +132,7 @@ void StickSettingsMenu::init()
 			this->calculate_widget_position(1, index), style, look.art.ink, this->render_resources(),
 			std::move(adjust), &look.art, value_limit);
 	};
-	this->pad_ = row("pad", this->text().item(MenuItem::pad), 0, [this](Direction direction)
+	this->pad_ = row("pad", this->text().item(MenuItem::pad), settings_rows::sticks_pad, [this](Direction direction)
 	{
 		this->slot_ = std::clamp(this->slot_ + (direction == Direction::right ? 1 : -1),
 			0, input_slots::pad_count - 1);
@@ -144,15 +145,16 @@ void StickSettingsMenu::init()
 		const float effective = movement ? this->selection_.movement_deadzone(this->slot_,
 			this->data()->tuning()->input().movement_deadzone) : this->selection_.aim_deadzone(this->slot_);
 		value = std::clamp(static_cast<int>(std::lround(effective * 100.0f)) +
-			(direction == Direction::right ? 5 : -5), 0, 90);
+			(direction == Direction::right ? StickSettings::deadzone_step : -StickSettings::deadzone_step),
+			0, StickSettings::max_deadzone);
 		this->refresh_values();
 		this->set_status(this->text().status.sticks_pending);
 	};
-	this->movement_ = row("movement", this->text().item(MenuItem::move_deadzone), 1,
+	this->movement_ = row("movement", this->text().item(MenuItem::move_deadzone), settings_rows::sticks_movement,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(true, direction); });
-	this->aim_ = row("aim", this->text().item(MenuItem::aim_deadzone), 2,
+	this->aim_ = row("aim", this->text().item(MenuItem::aim_deadzone), settings_rows::sticks_aim,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(false, direction); });
-	this->rumble_ = row("rumble", this->text().item(MenuItem::rumble), 3,
+	this->rumble_ = row("rumble", this->text().item(MenuItem::rumble), settings_rows::sticks_rumble,
 		[this](Direction direction)
 		{
 			const size_t slot = static_cast<size_t>(this->slot_);
@@ -177,9 +179,9 @@ void StickSettingsMenu::init()
 			this->set_status(this->text().status.sticks_pending);
 		});
 	};
-	this->view_shake_ = comfort_row("view_shake", MenuItem::view_shake, 4, &SeatComfort::view_shake);
-	this->aim_marker_ = comfort_row("aim_marker", MenuItem::aim_marker, 5, &SeatComfort::aim_marker);
-	this->reduce_effects_ = comfort_row("reduce_effects", MenuItem::reduce_effects, 6, &SeatComfort::reduce_effects);
+	this->view_shake_ = comfort_row("view_shake", MenuItem::view_shake, settings_rows::sticks_view_shake, &SeatComfort::view_shake);
+	this->aim_marker_ = comfort_row("aim_marker", MenuItem::aim_marker, settings_rows::sticks_aim_marker, &SeatComfort::aim_marker);
+	this->reduce_effects_ = comfort_row("reduce_effects", MenuItem::reduce_effects, settings_rows::sticks_reduce_effects, &SeatComfort::reduce_effects);
 	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get(), this->rumble_.get(),
 		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
 	{
@@ -189,16 +191,17 @@ void StickSettingsMenu::init()
 	UiText* apply = this->add_text("apply", this->text().item(MenuItem::apply), style.item_font,
 		this->calculate_widget_position(0, 7));
 	const RectangleF apply_bounds = apply->bounds();
-	apply->set_scale(std::min({ 1.0f,
-		menu_geometry::settings_action_width(look, apply_bounds.x) / apply_bounds.width,
-		(look.layout.spacing.y - look.art.focus_padding.y * 2.0f) / apply_bounds.height }));
+	apply->set_scale(menu_geometry::fit_scale(apply_bounds.size(), Vector2F(
+		menu_geometry::settings_action_width(look, apply_bounds.x),
+		look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(this->add_text("back", this->text().item(MenuItem::back), style.item_font,
-		this->calculate_widget_position(0, 8)), [this] { this->close(); });
+		this->calculate_widget_position(0, 8)), [this] { this->pop_page(); });
 	this->status_ = this->add_text("status", L"", look.help_font, look.status_position);
 	this->connection_ = this->add_text("connection", L"", look.help_font, look.controls_position);
+	// One help-font line, measured on the locale's own preview label.
 	const float label_height = this->render_resources()->measure_text(
-		this->render_resources()->resolve_sprite_font(look.help_font), L"Move").y;
+		this->render_resources()->resolve_sprite_font(look.help_font), this->text().help.aim_cutoff).y;
 	this->raw_movement_ = this->add_text("raw_movement", L"", look.help_font,
 		look.stick_preview.raw_movement.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
 	this->movement_response_ = this->add_text("movement_response", L"", look.help_font,
@@ -210,8 +213,7 @@ void StickSettingsMenu::init()
 		this->text().help.pad_association,
 		look.help_font, look.stick_preview.association_position);
 	const Vector2F available = look.controls_position + look.controls_size - look.stick_preview.association_position;
-	association->set_scale(std::min({ 1.0f, available.x / association->bounds().width,
-		available.y / association->bounds().height }));
+	association->set_scale(menu_geometry::fit_scale(association->bounds().size(), available));
 	this->set_status(this->text().status.sticks_pending);
 	this->refresh_values();
 }
@@ -221,10 +223,7 @@ void StickSettingsMenu::set_status(const std::wstring& text, bool warning)
 	this->status_->set_text(text);
 	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
 	this->status_->set_colour(warning ? this->presentation().main_menu().options_warning_colour : look.art.focus_ink);
-	const float available = menu_geometry::paper_text_right(this->paper_->rectangle(), look.art) -
-		look.status_position.x;
-	this->status_->set_scale(1.0f);
-	this->status_->set_scale(std::min(1.0f, available / this->status_->bounds().width));
+	fit_text(*this->status_, this->status_limit(this->panel_style()));
 }
 
 void StickSettingsMenu::refresh_values()
@@ -327,7 +326,7 @@ void StickSettingsMenu::update_page(float /*dt*/)
 	if (this->opening_slot() >= 0) { inputs = { this->opening_slot_input(inputs) }; }
 	for (const ProcessedMenuInput& input : inputs)
 	{
-		if (input.action == MenuInputAction::back) { this->close(); return; }
+		if (input.action == MenuInputAction::back) { this->pop_page(); return; }
 		if (input.action == MenuInputAction::proceed)
 		{
 			if (this->activate_focus() == Activation::ran) { return; }

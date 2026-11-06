@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/config/sound_groups.h"
+#include "game/config/environment.h"
 
-#include <cstdlib>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -29,10 +29,7 @@ namespace
 			return audio.add_sound_group(name);
 		}
 	}
-}
 
-namespace
-{
 	void append_stage_sounds(std::vector<SoundReference>& sounds, const GameTuning& tuning,
 		const LevelLoadedInfo& info, const Stage& stage)
 	{
@@ -148,10 +145,6 @@ bool sound_groups::muted()
 
 bool sound_groups::muted_by_environment()
 {
-	char* value = nullptr;
-	size_t length = 0;
-	if (_dupenv_s(&value, &length, "COLOURWARS_MUTE") != 0 || value == nullptr) { return false; }
-	const std::string text(value);
-	std::free(value);
+	const std::string text = environment_variable("COLOURWARS_MUTE");
 	return !text.empty() && text != "0";
 }

@@ -227,7 +227,7 @@ namespace
 
     // ROAD#39. The refill a weapon receives is the underfoot multiplier times
     // the level's paint_refill. Built from the shipped tuning, which enables
-    // the mechanic at the accepted trial amounts, and from a disabled copy,
+    // the mechanic at the accepted amounts, and from a disabled copy,
     // through actual floor paint and contacts.
     namespace underfoot = paint_underfoot_acceptance;
 

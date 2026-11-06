@@ -10,6 +10,7 @@
 #include "game/config/tuning.h"
 
 #include <array>
+#include <optional>
 
 class FixedSlabGeometry;
 
@@ -95,8 +96,6 @@ public:
 	void draw_surface(labrador::DrawList& draw_list) const;
 	void draw_splash_rigid(labrador::DrawList& draw_list,
 		const FixedSlabGeometry& geometry) const;
-	void draw_surface_rigid(labrador::DrawList& draw_list,
-		const FixedSlabGeometry& geometry) const;
 	// A rigid structure may join same-team tiles into one opaque visual base.
 	// Wet highlights stay per tile; scoring rectangles and credit never join.
 	void draw_surface_base_rigid(labrador::DrawList& draw_list,
@@ -130,6 +129,14 @@ private:
 	bool leading_ = true;
 	PaintTileSplash splash_;
 	labrador::RectangleF face_band(float offset, float depth) const;
+	// Fresh paint's light band, settling from the face toward the inner edge
+	// and fading as it dries; none once dry or when the edge fills the tile.
+	struct WetBand
+	{
+		labrador::RectangleF band;
+		labrador::Colour shine;
+	};
+	std::optional<WetBand> wet_band(const labrador::Colour& tint) const;
 	void draw_rectangle_rigid(labrador::DrawList& draw_list,
 		const FixedSlabGeometry& geometry, const labrador::RectangleF& local,
 		const labrador::Colour& tint) const;

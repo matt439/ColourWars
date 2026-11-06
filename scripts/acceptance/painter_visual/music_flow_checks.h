@@ -229,8 +229,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
         settings.set_duration(0.25f);
         settings.set_player_count(count);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         for (int view = 0; view < count; ++view)
         {
             settings.set_player_team(view, view == 0 ? PlayerTeam::a : PlayerTeam::b);
@@ -484,8 +483,7 @@ void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning&
         settings.set_duration(60.0f);
         settings.set_player_count(count);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         for (int view = 0; view < count; ++view)
         {
             settings.set_player_team(view, view == 0 ? PlayerTeam::a : PlayerTeam::b);

@@ -1,6 +1,7 @@
 #include "editor/level_document_impl.h"
 
 #include "editor/horizontal_authoring.h"
+#include "game/contracts/fixed_slab_paint_geometry.h"
 #include "game/contracts/level_format.h"
 
 #include <algorithm>
@@ -41,19 +42,19 @@ namespace colourwars_editor
             const std::string type = string(object, key::type);
             if (type == object_type::fixed_slab_paintable)
             {
-                Json& slab = member(object, "slab");
+                Json& slab = member(object, key::slab);
                 const std::string rise = string(slab, "rise");
                 if (rise != "left" && rise != "right") { fail("slab.rise must be left or right."); }
                 // The stored endpoint is the left one; the far end becomes it.
-                set_number(slab, "x", sum - number(slab, "x") - 160.0);
-                set_number(slab, "y", number(slab, "y") + (rise == "right" ? -80.0 : 80.0));
+                set_number(slab, "x", sum - number(slab, "x") - double{ slab_span });
+                set_number(slab, "y", number(slab, "y") + (rise == "right" ? -double{ slab_rise } : double{ slab_rise }));
                 set_text(slab, "rise", rise == "right" ? "left" : "right", allocator);
             }
             else if (type == object_type::structure_ramp)
             {
-                Json& triangle = member(object, "triangle");
+                Json& triangle = member(object, key::triangle);
                 for (const char* x : { "x1", "x2", "x3" }) { set_number(triangle, x, sum - number(triangle, x)); }
-                const std::string collision = string(object, "collision_type");
+                const std::string collision = string(object, key::collision_type);
                 const std::optional<level_format::Collision> tag = level_format::collision_named(collision);
                 if (tag == level_format::Collision::structure_ramp_right)
                 {
@@ -70,9 +71,9 @@ namespace colourwars_editor
             {
                 Rect rectangle = object_rectangle(object);
                 double reach = rectangle.width;
-                if (object.HasMember("motion"))
+                if (object.HasMember(key::motion))
                 {
-                    Json& motion = member(object, "motion");
+                    Json& motion = member(object, key::motion);
                     if (motion.IsObject() && motion.HasMember("drive") && motion["drive"].IsString() &&
                         string(motion, "drive") == "paint")
                     {
@@ -89,29 +90,30 @@ namespace colourwars_editor
                         advance_half_cycle(motion);
                     }
                 }
-                if (object.HasMember("drift") && object["drift"].IsObject()) { advance_half_cycle(object["drift"]); }
+                if (object.HasMember(key::drift) && object[key::drift].IsObject()) { advance_half_cycle(object[key::drift]); }
                 rectangle.x = sum - rectangle.x - reach;
                 move_shape(object, rectangle);
             }
-            if (object.HasMember("paintable_faces") && object["paintable_faces"].IsObject())
+            if (object.HasMember(key::paintable_faces) && object[key::paintable_faces].IsObject())
             {
-                Json& faces = object["paintable_faces"];
-                const bool left = faces.HasMember("left"), right = faces.HasMember("right");
-                if (left && right) { faces["left"].Swap(faces["right"]); }
+                namespace side = level_format::face;
+                Json& faces = object[key::paintable_faces];
+                const bool left = faces.HasMember(side::left), right = faces.HasMember(side::right);
+                if (left && right) { faces[side::left].Swap(faces[side::right]); }
                 else if (left || right)
                 {
-                    Json value; value.CopyFrom(faces[left ? "left" : "right"], allocator);
-                    faces.RemoveMember(left ? "left" : "right");
-                    faces.AddMember(Json(left ? "right" : "left", allocator), value, allocator);
+                    Json value; value.CopyFrom(faces[left ? side::left : side::right], allocator);
+                    faces.RemoveMember(left ? side::left : side::right);
+                    faces.AddMember(Json(left ? side::right : side::left, allocator), value, allocator);
                 }
             }
-            if (object.HasMember("name") && object["name"].IsString())
+            if (object.HasMember(key::name) && object[key::name].IsString())
             {
-                std::string name = string(object, "name");
+                std::string name = string(object, key::name);
                 if (name.ends_with("_a")) { name.back() = 'b'; }
                 else if (name.ends_with("_b")) { name.back() = 'a'; }
                 else { name += " mirror"; }
-                set_text(object, "name", name, allocator);
+                set_text(object, key::name, name, allocator);
             }
         }
     }
@@ -126,16 +128,14 @@ namespace colourwars_editor
         impl_->mutate([&](Document& document)
         {
             Allocator& allocator = document.GetAllocator();
-            const Rect world = plain_rectangle(member(member(document, "level_bounds"), "out_of_bounds"));
+            const Rect world = plain_rectangle(member(member(document, key::level_bounds), key::out_of_bounds));
             const double sum = world.x + (world.x + world.width);
             Json value;
             value.CopyFrom(entry_json(document, entry), allocator);
             if (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b)
             {
-                // A spawn point is the body's top-left, so reflect the whole
-                // character from source tuning (the editor's 52-unit box without it).
-                const double width = impl_->motion_tuning.empty() ? this->rectangle(entry).width :
-                    static_cast<double>(load_motion_player_size(impl_->motion_tuning).width);
+                // A spawn point is the body's top-left, so reflect the whole character.
+                const double width = static_cast<double>(impl_->player_size().width);
                 set_number(value, "x", sum - number(value, "x") - width);
                 added.kind = entry.kind == EntryKind::spawn_a ? EntryKind::spawn_b : EntryKind::spawn_a;
             }
@@ -144,19 +144,15 @@ namespace colourwars_editor
             added.index = objects.Size();
             objects.PushBack(value, allocator);
         });
-        for (const Entry& candidate : entries())
-        {
-            if (candidate.kind == added.kind && candidate.index == added.index) { return candidate; }
-        }
-        return added;
+        return labelled(entries(), added);
     }
 
     namespace
     {
         bool paint_ferry(const Json& object)
         {
-            if (!object.IsObject() || !object.HasMember("motion") || !object["motion"].IsObject()) { return false; }
-            const Json& motion = object["motion"];
+            if (!object.IsObject() || !object.HasMember(key::motion) || !object[key::motion].IsObject()) { return false; }
+            const Json& motion = object[key::motion];
             return motion.HasMember("drive") && motion["drive"].IsString() &&
                 std::string_view(motion["drive"].GetString()) == "paint";
         }
@@ -165,10 +161,10 @@ namespace colourwars_editor
         // under another name. A ferry's heading and phase have no mirror rule.
         void strip_unmirrored(Json& object, bool ferry)
         {
-            if (object.IsObject()) { object.RemoveMember("name"); }
+            if (object.IsObject()) { object.RemoveMember(key::name); }
             if (ferry)
             {
-                Json& motion = object["motion"];
+                Json& motion = object[key::motion];
                 for (const char* field : { "drive", "team_a_heads", "phase" }) { motion.RemoveMember(field); }
             }
         }
@@ -210,10 +206,9 @@ namespace colourwars_editor
         Document work;
         work.CopyFrom(impl_->document, work.GetAllocator());
         Allocator& allocator = work.GetAllocator();
-        const Rect world = plain_rectangle(member(member(work, "level_bounds"), "out_of_bounds"));
+        const Rect world = plain_rectangle(member(member(work, key::level_bounds), key::out_of_bounds));
         const double sum = world.x + (world.x + world.width);
-        const double spawn_width = impl_->motion_tuning.empty() ? 52.0 :
-            static_cast<double>(load_motion_player_size(impl_->motion_tuning).width);
+        const double spawn_width = static_cast<double>(impl_->player_size().width);
         const std::vector<Entry> all = entries();
         const auto listed = [&](EntryKind kind)
         {
@@ -263,15 +258,15 @@ namespace colourwars_editor
                 reflections[i].CopyFrom(source, allocator);
                 if (ferry[i])
                 {
-                    for (const char* field : { "drive", "team_a_heads" }) { reflections[i]["motion"].RemoveMember(field); }
+                    for (const char* field : { "drive", "team_a_heads" }) { reflections[i][key::motion].RemoveMember(field); }
                 }
                 // A malformed record has no reflection; it simply stays unmatched.
                 try { mirror_object(reflections[i], sum, allocator); mirrored[i] = true; }
                 catch (const std::exception&) {}
                 if (mirrored[i])
                 {
-                    if (ferry[i]) { reflections[i]["motion"].RemoveMember("phase"); }
-                    reflections[i].RemoveMember("name");
+                    if (ferry[i]) { reflections[i][key::motion].RemoveMember("phase"); }
+                    reflections[i].RemoveMember(key::name);
                 }
             }
             std::vector<bool> used(objects.size(), false);

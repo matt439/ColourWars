@@ -11,6 +11,7 @@
 #include "game/objects/match_audio.h"
 #include "game/objects/countdown_cards.h"
 #include "game/objects/match_opening.h"
+#include "game/objects/player_out_of_bounds.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -124,8 +125,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		this->state_ = LevelState::opening;
 	}
 
-	this->lessons_ = PracticeLessons(std::move(stage.lessons), tuning, presentation,
-		render_resources);
+	this->lessons_ = PracticeLessons(std::move(stage.lessons), presentation, render_resources);
 	this->build_opening_frame();
 }
 
@@ -365,7 +365,7 @@ float Level::zoom_out_camera_ratio() const
 void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	float dt, SeatInputFilter* seats, const HorizontalFrame* horizontal)
 {
-	std::array<bool, 4> was_dead{};
+	std::vector<bool> was_dead(this->players_.size());
 	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
 		was_dead[participant] = this->players_[participant]->state() == PlayerState::dead;
@@ -427,7 +427,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	{
 		if (!this->scene_->in_bounds(*player))
 		{
-			throw std::runtime_error("Player out of bounds");
+			throw PlayerOutOfBounds();
 		}
 	}
 }
@@ -469,12 +469,8 @@ void Level::update_idle_drips(float dt)
 		{
 			const Player& player = *this->players_[index];
 			const Weapon& weapon = player.primary_weapon();
-			const PlayerMoveState move = player.move_state();
-			const bool supported = move == PlayerMoveState::on_ground ||
-				move == PlayerMoveState::on_drop_down_ground ||
-				move == PlayerMoveState::on_ramp_left || move == PlayerMoveState::on_ramp_right;
 			const bool settled = player.state() == PlayerState::alive && player.health() > 0.0f &&
-				supported && player.velocity().x == 0.0f && player.velocity().y == 0.0f &&
+				player.grounded() && player.velocity().x == 0.0f && player.velocity().y == 0.0f &&
 				player.input().x_movement == 0.0f && !player.input().primary_shoot &&
 				!player.input().jump_held && !player.input().jump_pressed &&
 				player.animation_state() == PlayerAnimationState::idle;
@@ -817,7 +813,7 @@ LevelEndInfo Level::level_end_info() const
 			if (to_collision_type(object->tag()) == CollisionObjectType::structure_paintable)
 			{
 				throw std::runtime_error(
-					"Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
+					"A structure_paintable collision object has no paintable role");
 			}
 			continue;
 		}

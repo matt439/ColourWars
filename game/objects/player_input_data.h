@@ -30,4 +30,7 @@ struct PlayerInputData
 
 	labrador::Vector2F left_analog_stick = { 0.0f, 0.0f };
 	labrador::Vector2F right_analog_stick = { 0.0f, 0.0f };
+
+	// Every field, so a new one is compared without a list to update.
+	bool operator==(const PlayerInputData&) const = default;
 };

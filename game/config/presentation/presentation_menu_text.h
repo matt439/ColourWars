@@ -200,10 +200,14 @@ struct MenuStageText
 	// Stage Select's heading when a losing team picks the next round's stage.
 	std::wstring team_a_picks;
 	std::wstring team_b_picks;
+	// Drawn over the preview while Random is shown, in main_menu.fonts.announcement.
+	std::wstring random_mark;
 };
 
-// Labels for the per-stage records. The numbers and the joins between the
-// labels stay in code, as the other composed lines do.
+// Templates for the per-stage records. The caller renders the percentage
+// (percentage_text); the templates own the words, their order and the joins.
+// new_best and stage_best take {percentage}; played takes {count}; best_win and
+// best_coverage take {percentage} and {played}, the formatted played line.
 struct MenuRecordText
 {
 	std::wstring new_best;
@@ -211,6 +215,11 @@ struct MenuRecordText
 	std::wstring best_win;
 	std::wstring best_coverage;
 	std::wstring played;
+	std::wstring new_best_line(const std::wstring& percentage) const;
+	std::wstring stage_best_line(const std::wstring& percentage) const;
+	std::wstring played_line(int count) const;
+	// Stage Select's line: solo practice's coverage or a versus roster's win share.
+	std::wstring best_line(bool solo, const std::wstring& percentage, int count) const;
 };
 
 // Menu-only device names and roster rows. The player token retains the

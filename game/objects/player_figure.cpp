@@ -173,7 +173,7 @@ RectangleF Player::posed_rectangle() const
     const float squash = base.height * this->pose_.squash;
     const RectangleF posed(base.x + this->pose_.offset.x, base.y + this->pose_.offset.y + squash,
         base.width, base.height - squash);
-    return this->state_ == PlayerState::alive && this->health_ > 0.0f &&
+    return this->can_act() &&
         this->pose_.tool && !this->pose_.whole && !this->preferences_->reduce_effects ?
         this->quiet_character_.rectangle(posed) : posed;
 }
@@ -190,7 +190,7 @@ bool Player::drawn_whole() const
 
 bool Player::aim_marker_allowed() const
 {
-    return this->state_ == PlayerState::alive && this->health_ > 0.0f &&
+    return this->can_act() &&
         this->pose_.tool && !this->pose_.whole && !this->grey_.has_value();
 }
 
@@ -389,14 +389,14 @@ const PlayerAnimationTuning& Player::animation_info(
 PlayerAnimationState Player::calculate_animation_state() const
 {
     PlayerMoveState move_state = this->move_state();
-    if (this->is_on_ground())
+    if (this->grounded())
     {
         float velocity_x = this->velocity_x();
         if (velocity_x == 0.0f)
         {
 			return PlayerAnimationState::idle;
 		}
-        else if (std::fabs(velocity_x) > 600.0f)
+        else if (std::fabs(velocity_x) > this->player_tuning().run_speed)
         {
 			return PlayerAnimationState::running;
 		}
@@ -427,6 +427,7 @@ PlayerAnimationState Player::calculate_animation_state() const
 	}
     else
     {
-		throw std::exception("Invalid player move state.");
+		throw std::logic_error("Player has no animation for move state " +
+			std::to_string(static_cast<int>(move_state)));
 	}
 }

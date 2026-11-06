@@ -66,7 +66,7 @@ void PadButtonsMenu::init()
 	};
 	action("reset", copy.reset, 7, [this] { this->reset_pending(); });
 	action("apply", this->text().item(MenuItem::apply), 8, [this] { this->apply_settings(); });
-	action("back", this->text().item(MenuItem::back), 9, [this] { this->close(); });
+	action("back", this->text().item(MenuItem::back), 9, [this] { this->pop_page(); });
 	this->status_limit_ = this->status_limit(style);
 	this->help_ = this->add_text("help", copy.help, look.help_font, look.controls_position);
 	fit_text(*this->help_, RectangleF(look.controls_position, look.controls_size));
@@ -160,7 +160,7 @@ void PadButtonsMenu::update_page(float /*dt*/)
 	if (this->opening_slot() >= 0) { inputs = { this->opening_slot_input(inputs) }; }
 	for (const ProcessedMenuInput& input : inputs)
 	{
-		if (input.action == MenuInputAction::back) { this->close(); return; }
+		if (input.action == MenuInputAction::back) { this->pop_page(); return; }
 		if (input.action == MenuInputAction::proceed)
 		{
 			if (this->activate_focus() == Activation::ran) { return; }

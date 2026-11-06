@@ -6,16 +6,39 @@
 // width has one formula. It owns the design size the menus are authored in.
 //
 // It includes only labrador and the menu records, so the reader and the
-// validators reach it from the game/ root without including states/.
+// validators in game/config/presentation/ use it without including states/.
 
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 #include "game/config/presentation/presentation_menu.h"
 
+#include <cmath>
+
 namespace menu_consts
 {
 	// Menu geometry stays in these design units; ui_camera() maps it to the window.
 	inline const labrador::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
+}
+
+// The value rows of the two settings pages, named once for the pages that
+// place them and the validator that fit-checks them. Controls opens Sticks,
+// Keyboard Jump, Pad Buttons and Profiles from rows 0-3; Apply and Back follow
+// the value rows on both pages.
+namespace settings_rows
+{
+	inline constexpr int controls_music = 4;
+	inline constexpr int controls_sfx = 5;
+	inline constexpr int controls_view_shake = 6;
+	inline constexpr int controls_aim_marker = 7;
+	inline constexpr int controls_reduce_effects = 8;
+
+	inline constexpr int sticks_pad = 0;
+	inline constexpr int sticks_movement = 1;
+	inline constexpr int sticks_aim = 2;
+	inline constexpr int sticks_rumble = 3;
+	inline constexpr int sticks_view_shake = 4;
+	inline constexpr int sticks_aim_marker = 5;
+	inline constexpr int sticks_reduce_effects = 6;
 }
 
 namespace menu_geometry
@@ -34,6 +57,33 @@ namespace menu_geometry
 
 	// The whole design: backgrounds fill it and the UI camera frames it.
 	labrador::RectangleF design_area();
+
+	// The scale, never above 1, that fits size within available, per axis
+	// or on both at once. A size or limit that is not positive does not
+	// constrain its axis.
+	float fit_scale(float size, float available);
+	float fit_scale(const labrador::Vector2F& size, const labrador::Vector2F& available);
+
+	// A rectangle whose edges are all finite and whose size is positive.
+	inline bool finite_rectangle(const labrador::RectangleF& bounds)
+	{
+		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
+			std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
+			std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
+			bounds.width > 0.0f && bounds.height > 0.0f;
+	}
+	// A finite, non-empty rectangle that lies within container: what a page
+	// checks its retained widgets against before it draws them on a paper.
+	inline bool fits(const labrador::RectangleF& bounds, const labrador::RectangleF& container)
+	{
+		return finite_rectangle(bounds) && container.contains(bounds);
+	}
+	// Whether two rectangles share area; touching edges do not overlap.
+	inline bool overlaps(const labrador::RectangleF& first, const labrador::RectangleF& second)
+	{
+		return first.x < second.right() && first.right() > second.x &&
+			first.y < second.bottom() && first.bottom() > second.y;
+	}
 
 	// The x that centres a span of `size` in `extent`, and in the design width.
 	float centred(float size, float extent);

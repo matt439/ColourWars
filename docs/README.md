@@ -22,7 +22,7 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |
 | [level-format.md](level-format.md), [level.schema.json](../game/contracts/level.schema.json) | the level file format and its schema |
-| [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: what each block controls |
+| [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: its key rules, tool angles and accepted ranges, and the headless balance runner (`TOOL#1`-`TOOL#3`) |
 | [menu-presentation.md](menu-presentation.md) | `presentation.json`'s menu geometry, artwork and text |
 | [localisation.md](localisation.md) | locales: the overlay files, what they may change, fallback, font coverage and numbers |
 
@@ -44,8 +44,8 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 | Doc | What |
 |---|---|
 | [polish-crossfeed.md](polish-crossfeed.md) | Crossfeed, the accepted reference arena |
-| [polish-press-tower.md](polish-press-tower.md) | Press Tower, the King of the Hill blockout |
-| [polish-turbulence.md](polish-turbulence.md) | Turbulence and its mover, slab, ferry and gate trials |
+| [polish-press-tower.md](polish-press-tower.md) | Press Tower, the accepted King of the Hill arena |
+| [polish-turbulence.md](polish-turbulence.md) | Turbulence, its accepted slab trial and the mover, gate, ferry and lift comparisons |
 | [polish-close-quarters.md](polish-close-quarters.md) | Close Quarters, the first playable blockout |
 | [polish-movement-course.md](polish-movement-course.md) | the Movement Course and its stations |
 

@@ -113,8 +113,7 @@ void closing_clock_matrix(Application& app, const Canvas& canvas,
     const InterfaceGameplay hud(app.render_resources(), &presentation.hud(), &presentation.player_identity());
     for (const int count : { 1, 2, 4 })
     {
-        app.viewport_manager()->set_layout(count == 1 ? ScreenLayout::one_player :
-            (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
+        app.viewport_manager()->set_layout(players_layout(count));
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
         {
             if (count != 4 && size.x != 1280) { continue; }

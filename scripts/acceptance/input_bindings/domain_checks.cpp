@@ -155,8 +155,8 @@ namespace input_bindings_acceptance
         for (const auto& expected : expected_keys)
         {
             require(keyboard_jump_key_supported(expected.key) && input_key_name(expected.key) == expected.name &&
-                input_key_label(expected.key) == expected.label && input_key_from_name(expected.name) == expected.key,
-                "Physical Jump key name/label/domain differs from its explicit 27-entry contract");
+                input_key_legend(expected.key) == expected.legend && input_key_from_name(expected.name) == expected.key,
+                "Physical Jump key name/legend/domain differs from its explicit 27-entry contract");
             require(input_key_name(expected.key) == labrador::key_name(expected.key) &&
                 labrador::key_from_name(expected.name) == expected.key,
                 "A saved Jump token no longer matches the engine's key_name spelling");
@@ -206,7 +206,7 @@ namespace input_bindings_acceptance
             if (!supported)
             {
                 rejects([&] { input_key_name(key); }, "Out-of-domain key acquired a save name");
-                rejects([&] { input_key_label(key); }, "Out-of-domain key acquired a help label");
+                rejects([&] { input_key_legend(key); }, "Out-of-domain key acquired a legend");
                 rejects([&] { InputBindings{ key }.validate(); }, "Out-of-domain Jump preference validated");
             }
         }
@@ -234,9 +234,9 @@ namespace input_bindings_acceptance
         for (const auto& expected : expected_controls)
         {
             require(pad_control_supported(expected.control) == (expected.control != PadControl::none) &&
-                pad_control_name(expected.control) == expected.name && pad_control_label(expected.control) == expected.label &&
+                pad_control_name(expected.control) == expected.name && pad_control_legend(expected.control) == expected.legend &&
                 pad_control_from_name(expected.name) == expected.control,
-                "Pad control domain, canonical token or label differs from its explicit contract");
+                "Pad control domain, canonical token or legend differs from its explicit contract");
         }
         require(pad_action_name(PadAction::jump) == "jump" && pad_action_name(PadAction::shoot) == "shoot" &&
             pad_action_name(PadAction::pause) == "pause", "Pad action save keys changed");
@@ -248,7 +248,7 @@ namespace input_bindings_acceptance
             !pad_control_conflict(defaults, PadAction::shoot, false, PadControl::right_shoulder),
             "Pad conflict query named the wrong owner or flagged an entry's own control");
         rejects([] { pad_control_name(static_cast<PadControl>(200)); }, "Unknown pad control acquired a token");
-        rejects([] { pad_control_label(static_cast<PadControl>(200)); }, "Unknown pad control acquired a label");
+        rejects([] { pad_control_legend(static_cast<PadControl>(200)); }, "Unknown pad control acquired a legend");
 
         // Every control on every action and entry, in every physical slot.
         for (int slot = 0; slot < input_slots::pad_count; ++slot)

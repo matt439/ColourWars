@@ -1,6 +1,9 @@
 #include "editor/stage_registration.h"
 #include "editor/content_catalog.h"
 #include "editor/level_document.h"
+#include "editor/path_text.h"
+#include "editor/prepared_file.h"
+#include "game/contracts/user_stage_contract.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -16,7 +19,6 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cctype>
 #include <exception>
 #include <fstream>
@@ -37,24 +39,13 @@ namespace colourwars_editor
 
         [[noreturn]] void fail(const std::string& text) { throw StageRegistrationError(text); }
 
-        std::string shown(const fs::path& path)
-        {
-            const std::u8string bytes = path.u8string();
-            return { reinterpret_cast<const char*>(bytes.data()), bytes.size() };
-        }
-
-        fs::path utf8_path(const std::string& text)
-        {
-            return fs::path(std::u8string(text.begin(), text.end()));
-        }
-
         std::string read(const fs::path& path)
         {
             std::ifstream input(path, std::ios::binary);
-            if (!input) fail("Cannot read " + shown(path));
+            if (!input) fail("Cannot read " + path_text(path));
             std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-            if (input.bad()) fail("Cannot read all of " + shown(path));
-            if (text.find('\0') != std::string::npos) fail("NUL byte in " + shown(path));
+            if (input.bad()) fail("Cannot read all of " + path_text(path));
+            if (text.find('\0') != std::string::npos) fail("NUL byte in " + path_text(path));
             return text;
         }
 
@@ -78,14 +69,14 @@ namespace colourwars_editor
                 const DWORD attributes = GetFileAttributesW(at.c_str());
                 if (attributes == INVALID_FILE_ATTRIBUTES)
                     throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                        "Cannot inspect " + shown(at));
+                        "Cannot inspect " + path_text(at));
                 if ((attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
-                    fail("Registration refuses a linked/reparse path: " + shown(at));
+                    fail("Registration refuses a linked/reparse path: " + path_text(at));
             }
             const fs::path canonical = fs::canonical(absolute);
-            if (!same_path(absolute, canonical)) fail("Registration path is not canonical: " + shown(absolute));
+            if (!same_path(absolute, canonical)) fail("Registration path is not canonical: " + path_text(absolute));
             if (directory ? !fs::is_directory(canonical) : !fs::is_regular_file(canonical))
-                fail("Registration needs an existing " + std::string(directory ? "directory: " : "file: ") + shown(canonical));
+                fail("Registration needs an existing " + std::string(directory ? "directory: " : "file: ") + path_text(canonical));
             return canonical;
         }
 
@@ -95,18 +86,11 @@ namespace colourwars_editor
             return text;
         }
 
+        // The one stage-name rule, shared with the game's scan of a player's
+        // own stages, so a saved user stage can be registered unchanged.
         bool valid_basename(const std::string& name)
         {
-            if (name.empty() || name.size() > 250) return false;
-            for (const char c : name)
-                if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                    (c >= '0' && c <= '9') || c == '_' || c == '-')) return false;
-            if (name.front() == '-') return false;
-            const std::string lower = folded(name);
-            if (lower == "con" || lower == "prn" || lower == "aux" || lower == "nul" ||
-                lower == "clock$" || lower == "conin$" || lower == "conout$") return false;
-            return !(lower.size() == 4 && (lower.starts_with("com") || lower.starts_with("lpt")) &&
-                lower[3] >= '0' && lower[3] <= '9');
+            return user_stage_contract::usable_name(name);
         }
 
         bool asset_path(const std::string& value)
@@ -507,64 +491,7 @@ namespace colourwars_editor
         void recheck(const fs::path& path, const std::string& expected)
         {
             safe_existing(path, false);
-            if (read(path) != expected) fail("Changed since registration preview; preview again: " + shown(path));
-        }
-
-        class Prepared
-        {
-        public:
-            Prepared(const fs::path& destination, std::string_view label, const std::string& bytes)
-            {
-                path = destination;
-                path += ".registration-" + std::to_string(GetCurrentProcessId()) + "-" +
-                    std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" +
-                    std::string(label);
-                HANDLE output = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
-                    FILE_ATTRIBUTE_NORMAL, nullptr);
-                if (output == INVALID_HANDLE_VALUE) throw std::system_error(static_cast<int>(GetLastError()),
-                    std::system_category(), "Cannot create registration sibling");
-                try
-                {
-                    std::size_t offset = 0;
-                    while (offset < bytes.size())
-                    {
-                        const DWORD size = static_cast<DWORD>(std::min(bytes.size() - offset,
-                            static_cast<std::size_t>(std::numeric_limits<DWORD>::max())));
-                        DWORD written = 0;
-                        if (!WriteFile(output, bytes.data() + offset, size, &written, nullptr))
-                            throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                                "Cannot write registration sibling");
-                        if (written == 0) fail("The registration sibling stopped accepting data");
-                        offset += written;
-                    }
-                    if (!FlushFileBuffers(output)) throw std::system_error(static_cast<int>(GetLastError()),
-                        std::system_category(), "Cannot flush registration sibling");
-                    const BOOL closed = CloseHandle(output);
-                    output = INVALID_HANDLE_VALUE;
-                    if (!closed) throw std::system_error(static_cast<int>(GetLastError()),
-                        std::system_category(), "Cannot close registration sibling");
-                }
-                catch (...)
-                {
-                    if (output != INVALID_HANDLE_VALUE) CloseHandle(output);
-                    DeleteFileW(path.c_str());
-                    throw;
-                }
-            }
-            ~Prepared() { if (!keep_) DeleteFileW(path.c_str()); }
-            Prepared(const Prepared&) = delete;
-            Prepared& operator=(const Prepared&) = delete;
-            void retain() { keep_ = true; }
-            fs::path path;
-        private:
-            bool keep_ = false;
-        };
-
-        void replace_file(const fs::path& from, const fs::path& to)
-        {
-            if (!MoveFileExW(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-                throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
-                    "Cannot replace " + shown(to));
+            if (read(path) != expected) fail("Changed since registration preview; preview again: " + path_text(path));
         }
 
         std::string failure_text(const std::exception_ptr& error)
@@ -587,9 +514,8 @@ namespace colourwars_editor
         result.stage = safe_existing(stage.is_absolute() ? stage : result.repository / stage, false);
         if (!same_path(result.stage.parent_path(), levels) || result.stage.extension() != ".json")
             fail("Choose an existing .json file directly inside this source tree's game/content/levels");
-        result.name = shown(result.stage.stem());
-        if (!valid_basename(result.name)) fail("Invalid stage basename: use ASCII letters/digits/_/-, "
-            "no leading hyphen or Windows device name");
+        result.name = path_text(result.stage.stem());
+        if (!valid_basename(result.name)) fail("Invalid stage basename: " + user_stage_contract::name_rule());
         if (result.name.front() == '_') fail("A shipped stage's basename must not start with '_': "
             "presentation.json's menu_text.stage_names would read its entry as a comment");
         result.stage_original = read(result.stage);
@@ -718,7 +644,7 @@ namespace colourwars_editor
         if (!unresolved.empty()) fail("Stage resource validation failed: " + unresolved.front());
         // The game draws a shipped stage by its stage_names entry, whose base
         // English must be the level's display_name byte for byte, on one line.
-        const rapidjson::Document level = json_document(result.stage_original, shown(result.stage.filename()));
+        const rapidjson::Document level = json_document(result.stage_original, path_text(result.stage.filename()));
         const std::string display_name = text(field(level, "display_name"), "display_name");
         if (display_name.find_first_not_of(' ') == std::string::npos ||
             display_name.find_first_of("\r\n") != std::string::npos)
@@ -761,13 +687,15 @@ namespace colourwars_editor
                 files[index]->original == previewed[index]->original && files[index]->proposed == previewed[index]->proposed;
         if (!same) fail("Registration inputs or proposal changed; preview again");
         if (fresh.already_registered) return false;
-        std::vector<std::unique_ptr<Prepared>> candidates, originals;
+        std::vector<std::unique_ptr<PreparedFile>> candidates, originals;
         for (const StageRegistrationFile* file : files)
-            candidates.push_back(std::make_unique<Prepared>(file->path, "candidate", file->proposed));
+            candidates.push_back(std::make_unique<PreparedFile>(file->path, "registration", "-candidate",
+                file->proposed));
         for (const StageRegistrationFile* file : files)
-            originals.push_back(std::make_unique<Prepared>(file->path, "original", file->original));
+            originals.push_back(std::make_unique<PreparedFile>(file->path, "registration", "-original",
+                file->original));
         const auto perform = [&](const fs::path& source, const fs::path& target)
-        { if (replace) replace(source, target); else replace_file(source, target); };
+        { if (replace) replace(source, target); else replace_prepared_file(source, target); };
         // Before each replacement, every file is what the order says it should
         // be by then: the ones done are proposed, the rest still original.
         const auto recheck_all = [&](std::size_t done)
@@ -782,7 +710,7 @@ namespace colourwars_editor
             for (; done < files.size(); ++done)
             {
                 recheck_all(done);
-                perform(candidates[done]->path, files[done]->path);
+                perform(candidates[done]->path(), files[done]->path);
             }
         }
         catch (...)
@@ -799,12 +727,12 @@ namespace colourwars_editor
                 try
                 {
                     recheck(files[index]->path, files[index]->proposed);
-                    perform(originals[index]->path, files[index]->path);
+                    perform(originals[index]->path(), files[index]->path);
                     restored[index] = true;
                 }
                 catch (...)
                 {
-                    rollback_failures += (rollback_failures.empty() ? "" : "; ") + shown(files[index]->path) + ": " +
+                    rollback_failures += (rollback_failures.empty() ? "" : "; ") + path_text(files[index]->path) + ": " +
                         failure_text(std::current_exception());
                 }
             }
@@ -815,14 +743,14 @@ namespace colourwars_editor
                 {
                     if (restored[index]) continue;
                     originals[index]->retain();
-                    retained.push_back(originals[index]->path);
+                    retained.push_back(originals[index]->path());
                 }
-                throw StageRegistrationError(std::string("Registration failed: ") + failure_text(failure) +
+                // The caller says "Registration failed:"; the message is the cause.
+                throw StageRegistrationError(failure_text(failure) +
                     "; rollback could not complete: " + rollback_failures +
                     ". Original backups retained; inspect all three content files before retrying.", retained);
             }
-            throw StageRegistrationError(std::string("Registration failed; the replaced files were restored: ") +
-                failure_text(failure));
+            throw StageRegistrationError(failure_text(failure) + "; the replaced files were restored.");
         }
         return true;
     }

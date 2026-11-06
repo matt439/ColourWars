@@ -1,13 +1,17 @@
 #pragma once
 
 // Private to the presentation_*.cpp files: the key tables, label templates,
-// colour readers and section readers they share. Nothing else includes it.
+// colour readers, rectangle predicates and section readers they share.
+// Nothing else includes it.
 
 #include "game/config/presentation/presentation.h"
+#include "game/config/presentation/menu_geometry.h"
 #include "engine/assets/json.h"
+#include "engine/math/rectanglef.h"
 #include "engine/render/colour.h"
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <initializer_list>
 #include <string>
@@ -40,8 +44,15 @@ namespace presentation_read
 		std::wstring value;
 	};
 
+	// Fills each declared token, which the template must use exactly once, and
+	// refuses any other brace. The text must be nonblank and drawable; a
+	// multiline template may break lines with LF, each line nonblank.
 	std::wstring format_label_template(const std::wstring& text,
-		std::initializer_list<LabelToken> tokens);
+		std::initializer_list<LabelToken> tokens, bool multiline = false);
+
+	// The rectangle predicates the pages use too (menu_geometry.h).
+	using menu_geometry::finite_rectangle;
+	using menu_geometry::overlaps;
 
 	labrador::Colour read_colour(const labrador::JsonValue& parent, const char* key);
 	labrador::Colour colour_from_text(const labrador::JsonValue& where, const std::string& text);
@@ -66,5 +77,10 @@ namespace presentation_read
 	FigurePresentation read_figure(const labrador::JsonValue& root);
 	RespawnRedrawPresentation read_respawn_redraw(const labrador::JsonValue& root);
 	OpeningPresentation read_opening(const labrador::JsonValue& root);
+	MusicMixPresentation read_music_mix(const labrador::JsonValue& root);
+	CameraPresentation read_camera(const labrador::JsonValue& root);
+	MovementFeedbackPresentation read_movement_feedback(const labrador::JsonValue& root);
+	CombatFeedbackPresentation read_combat_feedback(const labrador::JsonValue& root);
+	MatchPresentation read_match(const labrador::JsonValue& root);
 	DebugOverlayPresentation read_debug_overlay(const labrador::JsonValue& root);
 }

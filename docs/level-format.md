@@ -33,9 +33,11 @@ rotate, move, position or reorder a level object. Unsupported `type` and
 `collision_type` values are errors.
 
 The old JSON examples in [game/art/archive/levels](../game/art/archive/levels)
-are historical sources, retained unchanged. Some use `level_name` instead of the
-current metadata or unsupported object tags; `base.json` there is not a template
-for the current loader. The Publisher documents in
+are historical sources, retained as authored except that the switch to the
+Paint.exe audio renamed the sound bank and music of three of them
+(`level_0.json` names neither). All use `level_name` instead of the current
+metadata and some carry unsupported object tags; `base.json` there is not a
+template for the current loader. The Publisher documents in
 [game/art/sources/levels](../game/art/sources/levels) are layout source material,
 not runtime assets.
 
@@ -194,7 +196,7 @@ conversion. The anchor and endpoint must have finite, positive represented
 edges. Both solid and jump-through paintables are supported. Motion on plain
 structures, ramps or visuals, a motion `type` other than `horizontal` or
 [`vertical`](#vertical-lift-motion), and `axis`, `travel_y` or `rotation` in a
-horizontal record are errors, as are a `drive` other than the two above
+horizontal record are errors, as are a `drive` other than `cycle` or `paint`
 and the paint-drive rules below. Other unknown keys remain ignored metadata,
 as elsewhere in format 1; they do not add motion capabilities.
 
@@ -418,6 +420,8 @@ engine's exact uppercase spelling:
 `BLACK`, `DARK_GRAY`, `DARK_GREY`, `DIM_GRAY`, `DIM_GREY`, `GAINSBORO`, `GRAY`,
 `GREY`, `LIGHT_GRAY`, `LIGHT_GREY`, `SILVER`, `WHITE`, `WHITE_SMOKE`.
 
+The list is `level_format::scenery_grey_names`, which the editor reads and the
+`level_format` acceptance case holds to the engine's colour table.
 The schema recognizes these names and six-digit hex syntax. Equality of the
 three hex channels is checked by the game/editor, so a coloured hex value can
 pass the schema and still fail content validation. Tinting art grey does not
@@ -466,7 +470,8 @@ bank. See the [audio inventory](audio-inventory.md).
 ## Fixed scored slabs
 
 `FixedSlabPaintable` is a bounded static solid: a 160-unit horizontal span,
-80-unit rise and **24-unit normal thickness**. It accepts the two mirrored
+80-unit rise and **24-unit normal thickness** (`slab_span`, `slab_rise` and
+`slab_thickness` in `game/contracts/fixed_slab_paint_geometry.h`). It accepts the two mirrored
 orientations below, rather than arbitrary angles, sizes or moving rotation.
 
 ```json
@@ -593,7 +598,7 @@ Repeat with `x64-release`. The `level_format` consumer case uses bundled
 RapidJSON Draft-04 validation and the actual `LevelLoadedInfo`/`LevelObjectBuilder`
 paths with CPU resource metadata; it checks source and staged copies of every
 level the manifest registers plus the template, with an untagged legacy clone of
-each. The case requires the exact registered count (eleven at 2026-10-29,
+each. The case requires the exact registered count (thirteen at 2026-11-05,
 [level_format.cpp](../scripts/acceptance/level_format.cpp)), so registering or
 retiring a stage updates that number.
 Its fixtures also exercise invalid

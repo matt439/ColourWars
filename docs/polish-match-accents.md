@@ -69,7 +69,10 @@ The retained [four-player 720p clock crop](images/polish-match-accents/clock-4p-
 and [720p reveal](images/polish-match-accents/reveal-720p.png) are native-size
 review examples. This drawing and raster verification does not establish human
 readability, movement, reference-arena composition, pad or listening acceptance.
-Those remain in their existing TODO rows. The clock highlight closes that half
+Of those, on 2026-11-05 the author accepted the arenas and movement at their current
+values and waived the attended human-readability, physical-pad and listening
+checks (`POL#24`, the pad sessions, `ROAD#3`), which were not performed
+([polish plan](polish-plan.md)). The clock highlight closes that half
 of `GAP#5.4`; its fixed-step FPS display remains open.
 
 The 53-file Release ZIP byte-matches all 26 reviewed runtime assets, including

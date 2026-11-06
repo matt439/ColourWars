@@ -3703,8 +3703,9 @@ count when only draws were played. It is hidden for Random and for a stage
 not yet played in that kind of match, and shrinks rather than reach the arena
 counter. Both reuse the existing fonts and ink (`results_menu.contribution_font`,
 the 24 pt menu face via `stage_select.record_font`); the positions are
-`results_menu.record_y` and `stage_select.record_y`, and the labels are
-`menu_text.records`. No artwork was added; the later UI art pass may move both.
+`results_menu.record_y` and `stage_select.record_y`, and the lines are
+`menu_text.records`' templates (`{percentage}`, `{count}`, `{played}`; words,
+order and joins since `HYG#69`). No artwork was added; the later UI art pass may move both.
 
 Validation: the CPU case `match_records` covers display-precision bests, side,
 draw and practice tallies, the results-line text, version 0/1/newer saves,

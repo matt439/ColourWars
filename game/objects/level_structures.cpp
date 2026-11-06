@@ -43,22 +43,13 @@ namespace
         return horizontal_motion_contract::box({ value.x, value.y, value.width, value.height });
     }
 
-    // A scalar offset along the mover's own axis: x, or y for a lift.
+    // A scalar offset along the mover's own axis: x, or y for a lift. The
+    // pose must have finite, positive represented edges.
     RectangleF horizontal_pose(const HorizontalMotionSpec& spec, float offset)
     {
-        RectangleF result = spec.anchor;
-        if (offset != 0.0f)
-        {
-            if (spec.vertical()) { result.y += offset; }
-            else { result.x += offset; }
-        }
+        const RectangleF result = spec.pose_at(offset);
         horizontal_box(result);
         return result;
-    }
-
-    float axis_part(const HorizontalMotionSpec& spec, const Vector2F& offset)
-    {
-        return spec.vertical() ? offset.y : offset.x;
     }
 
     HorizontalBox horizontal_path(const TranslatingStructurePaintable& mover)
@@ -401,7 +392,7 @@ LevelStructures::Frame LevelStructures::prepare(float dt, const Scene& scene,
         {
             if (this->horizontal_structures_[index]->motion_id() != selected) { continue; }
             const HorizontalMotionStep& step = frame.motions[index].collision;
-            frame.carriers[player] = HorizontalCarryStep{ selected, step.before, step.after,
+            frame.carriers[player] = HorizontalCarryStep{ selected, step.before,
                 step.after.x - step.before.x, step.after.y - step.before.y };
             break;
         }
@@ -476,7 +467,7 @@ void LevelStructures::publish_zero(std::span<Player* const> players) noexcept
             if (mover->motion_id() == player->carrier_id())
             {
                 const RectangleF current = mover->bounds();
-                zero = HorizontalCarryStep{ mover->motion_id(), current, current, 0.0f, 0.0f };
+                zero = HorizontalCarryStep{ mover->motion_id(), current, 0.0f, 0.0f };
                 break;
             }
         }
@@ -494,10 +485,9 @@ std::vector<HorizontalStructureState> LevelStructures::horizontal_structure_stat
         state.id = mover->motion_id();
         state.motion = mover->motion_state();
         // History is persisted pose state, never the transient zero collision step.
-        state.previous_bounds = horizontal_pose(state.motion.spec,
-            axis_part(state.motion.spec, state.motion.previous_offset));
-        state.current_bounds = horizontal_pose(state.motion.spec,
-            axis_part(state.motion.spec, state.motion.current_offset));
+        const HorizontalMotionSpec& spec = state.motion.spec;
+        state.previous_bounds = horizontal_pose(spec, spec.axis_part(state.motion.previous_offset));
+        state.current_bounds = horizontal_pose(spec, spec.axis_part(state.motion.current_offset));
         mover->append_anchor_paint_surfaces(state.local_paint);
         result.push_back(std::move(state));
     }

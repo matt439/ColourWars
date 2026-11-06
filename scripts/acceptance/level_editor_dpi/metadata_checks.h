@@ -43,9 +43,9 @@ namespace colourwars_editor
             "flag\u0000tail":true,
             "nested\u0000scope":{"child":"nested value"},
         )");
-        const std::size_t floor_name = source.find("\"floor\"");
-        require(floor_name != std::string::npos, "Native metadata fixture has no floor name");
-        source.replace(floor_name, std::string("\"floor\"").size(), R"("floor\u0000tail")");
+        const std::size_t first_name = source.find("\"left_wall\"");
+        require(first_name != std::string::npos, "Native metadata fixture has no first-object name (File > New's left_wall)");
+        source.replace(first_name, std::string("\"left_wall\"").size(), R"("left_wall\u0000tail")");
         write_metadata(stage, source);
         editor.document_.load(stage);
         editor.selection_.reset();
@@ -120,18 +120,18 @@ namespace colourwars_editor
         readonly(std::string("nested") + '\0' + "scope/child",
             L"\"nested\\u0000scope/child\"", L"\"nested value\"");
 
-        bool found_floor = false;
+        bool found_first = false;
         for (std::size_t index = 0; index < editor.entries_.size(); ++index)
         {
             if (editor.entries_[index].kind != EntryKind::collision || editor.entries_[index].index != 0) { continue; }
             std::array<wchar_t, 1024> label{};
             require(SendMessageW(editor.object_list_, LB_GETTEXT, index,
                 reinterpret_cast<LPARAM>(label.data())) != LB_ERR, "Could not read the native object's metadata label");
-            require(std::wstring(label.data()) == L"\"floor\\u0000tail\"",
+            require(std::wstring(label.data()) == L"\"left_wall\\u0000tail\"",
                 "The native object list truncated its NUL-bearing name");
-            found_floor = true;
+            found_first = true;
         }
-        require(found_floor, "Native metadata fixture floor disappeared");
+        require(found_first, "Native metadata fixture's first object disappeared");
 
         // Even a programmatic WM_SETTEXT must not turn a read-only preview into
         // model data via Apply/Enter; Revert simply restores its escaped text.

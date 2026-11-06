@@ -75,6 +75,43 @@ namespace level_format
 		inline constexpr const char* slab = "slab";
 	}
 
+	// The four keys under "paintable_faces", each true or false.
+	namespace face
+	{
+		inline constexpr const char* left = "left";
+		inline constexpr const char* top = "top";
+		inline constexpr const char* right = "right";
+		inline constexpr const char* bottom = "bottom";
+	}
+
+	inline constexpr std::array<const char*, 4> paintable_face_names = {
+		face::left, face::top, face::right, face::bottom };
+
+	// Scenery is grey: nothing in the picture has been coloured yet, so team
+	// hues never appear in it. A "colour" is RRGGBB with three equal pairs or
+	// one of these names, the engine's colour names (labrador::colour_from_name)
+	// whose channels are equal. The game resolves the name and checks the
+	// colour; the editor, which has no engine, reads this list, and the
+	// level_format acceptance case holds it to the engine's table.
+	inline constexpr std::array<const char*, 13> scenery_grey_names = {
+		"BLACK", "DARK_GRAY", "DARK_GREY", "DIM_GRAY", "DIM_GREY", "GAINSBORO", "GRAY",
+		"GREY", "LIGHT_GRAY", "LIGHT_GREY", "SILVER", "WHITE", "WHITE_SMOKE" };
+
+	inline bool is_scenery_grey(std::string_view colour)
+	{
+		if (colour.size() == 6 && colour.find_first_not_of("0123456789abcdefABCDEF") == std::string_view::npos)
+		{
+			const auto digit = [](char c) { return c <= '9' ? c - '0' : (c | 0x20) - 'a' + 10; };
+			const auto pair = [&](std::size_t at) { return digit(colour[at]) * 16 + digit(colour[at + 1]); };
+			return pair(0) == pair(2) && pair(2) == pair(4);
+		}
+		for (const char* name : scenery_grey_names)
+		{
+			if (colour == name) { return true; }
+		}
+		return false;
+	}
+
 	// The four rectangles under level_bounds, in the order the editor lists them.
 	inline constexpr std::array<const char*, 4> bounds_keys = {
 		key::out_of_bounds, key::camera_bounds, key::zoom_out_start_bounds, key::zoom_out_finish_bounds };
@@ -179,15 +216,25 @@ namespace level_format
 		std::array<std::optional<Collision>, 2> sits_on;
 	};
 
-	inline constexpr std::array<Material, 6> materials = { {
-		{ "ground", { Collision::structure, Collision::structure_paintable } },
-		{ "pencil", { Collision::structure_paintable, std::nullopt } },
-		{ "eraser", { Collision::structure_paintable, std::nullopt } },
-		{ "paint_tin", { Collision::structure_paintable, std::nullopt } },
-		{ "ruler", { Collision::structure_jump_through, std::nullopt } },
-		{ "set_square", { Collision::structure_ramp_left, Collision::structure_ramp_right } } } };
+	namespace material_name
+	{
+		inline constexpr const char* ground = "ground";
+		inline constexpr const char* pencil = "pencil";
+		inline constexpr const char* eraser = "eraser";
+		inline constexpr const char* paint_tin = "paint_tin";
+		inline constexpr const char* ruler = "ruler";
+		inline constexpr const char* set_square = "set_square";
+	}
 
-	inline constexpr const char* fixed_slab_material = "eraser";
+	inline constexpr std::array<Material, 6> materials = { {
+		{ material_name::ground, { Collision::structure, Collision::structure_paintable } },
+		{ material_name::pencil, { Collision::structure_paintable, std::nullopt } },
+		{ material_name::eraser, { Collision::structure_paintable, std::nullopt } },
+		{ material_name::paint_tin, { Collision::structure_paintable, std::nullopt } },
+		{ material_name::ruler, { Collision::structure_jump_through, std::nullopt } },
+		{ material_name::set_square, { Collision::structure_ramp_left, Collision::structure_ramp_right } } } };
+
+	inline constexpr const char* fixed_slab_material = material_name::eraser;
 
 	inline const Material* material_named(std::string_view name)
 	{

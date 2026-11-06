@@ -134,7 +134,8 @@ function Invoke-EditorPendingProbe {
 }
 
 function Test-EditorWindow {
-    param([string] $Executable, [string] $Level, [string] $RunDirectory, [string] $ExpectStatus = '')
+    param([string] $Executable, [string] $Level, [string] $RunDirectory, [string] $ExpectStatus = '',
+        [Parameter(Mandatory)] [hashtable] $Commands)
 
     if (-not ('ColourWars.EditorWindowProbe' -as [type])) {
         Add-Type -TypeDefinition @'
@@ -172,9 +173,7 @@ namespace ColourWars
         [DllImport("user32.dll")]
         private static extern IntPtr GetMenu(IntPtr window);
         [DllImport("user32.dll")]
-        private static extern IntPtr GetSubMenu(IntPtr menu, int position);
-        [DllImport("user32.dll")]
-        private static extern uint GetMenuItemID(IntPtr menu, int position);
+        private static extern uint GetMenuState(IntPtr menu, uint item, uint flags);
         private static void Send(IntPtr window, uint message, IntPtr wparam, IntPtr lparam)
         {
             IntPtr result;
@@ -182,7 +181,15 @@ namespace ColourWars
                 throw new InvalidOperationException("Editor UI command timed out");
         }
 
-        public static void CheckBlockoutControls(IntPtr window)
+        // A menu item by its command id; GetMenuState searches the submenus.
+        private static void MenuCommand(IntPtr window, uint command)
+        {
+            if (GetMenuState(GetMenu(window), command, 0) == 0xffffffff)
+                throw new InvalidOperationException("Editor menu has no command " + command);
+            Send(window, 0x0111, new IntPtr(command), IntPtr.Zero);
+        }
+
+        public static void CheckBlockoutControls(IntPtr window, uint blockout, uint frameSelection)
         {
             IntPtr list = FindWindowEx(window, IntPtr.Zero, "ListBox", null);
             IntPtr canvas = FindWindowEx(window, IntPtr.Zero, "ColourWarsEditorCanvas", null);
@@ -192,12 +199,10 @@ namespace ColourWars
             // the first spawn through the same notification as a list click.
             Send(list, 0x0186, new IntPtr(5), IntPtr.Zero); // LB_SETCURSEL
             Send(window, 0x0111, new IntPtr(GetDlgCtrlID(list) | (1 << 16)), list);
-            IntPtr view = GetSubMenu(GetMenu(window), 2);
-            // Toggle off/on (the latter reloads source tuning), then frame it.
-            uint aids = GetMenuItemID(view, 4);
-            Send(window, 0x0111, new IntPtr(aids), IntPtr.Zero);
-            Send(window, 0x0111, new IntPtr(aids), IntPtr.Zero);
-            Send(window, 0x0111, new IntPtr(GetMenuItemID(view, 1)), IntPtr.Zero);
+            // Toggle Blockout aids off/on (the latter reloads source tuning), then frame it.
+            MenuCommand(window, blockout);
+            MenuCommand(window, blockout);
+            MenuCommand(window, frameSelection);
         }
 
         // The status line is the Static control that starts with Ready or Needs
@@ -294,7 +299,7 @@ namespace ColourWars
         if (-not $result.window_title.Contains([System.IO.Path]::GetFileName($Level))) {
             throw "The editor title does not identify the requested file: $($result.window_title)"
         }
-        [ColourWars.EditorWindowProbe]::CheckBlockoutControls($window)
+        [ColourWars.EditorWindowProbe]::CheckBlockoutControls($window, $Commands.view_blockout, $Commands.view_selection)
         $result.status = [ColourWars.EditorWindowProbe]::Status($window)
         if (-not $result.status.StartsWith('Ready')) {
             throw "The editor status line is not ready: $($result.status)"
@@ -333,6 +338,28 @@ namespace ColourWars
 }
 
 $repo = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+
+# The editor's menu command ids, read from its Command enum (editor/editor.h),
+# so the window checks address a menu item by what it does, not its position.
+function Get-EditorCommandIds([string] $Header) {
+    $declaration = [regex]::Match([IO.File]::ReadAllText($Header), 'enum\s+Command\s*:\s*int\s*\{([^}]*)\}')
+    if (-not $declaration.Success) { throw "No Command enum in $Header" }
+    $ids = @{}
+    $next = 0
+    foreach ($entry in $declaration.Groups[1].Value -split ',') {
+        $name = $entry.Trim()
+        if ($name -eq '') { continue }
+        if ($name -match '^(\w+)\s*=\s*(\d+)$') { $name = $Matches[1]; $next = [int]$Matches[2] }
+        elseif ($name -notmatch '^\w+$') { throw "Unreadable editor command '$name' in $Header" }
+        $ids[$name] = $next
+        ++$next
+    }
+    foreach ($needed in 'file_save', 'file_save_as', 'file_save_user_stage', 'view_selection', 'view_blockout') {
+        if (-not $ids.ContainsKey($needed)) { throw "Editor Command enum lacks $needed" }
+    }
+    return $ids
+}
+$editorCommands = Get-EditorCommandIds (Join-Path $repo 'editor/editor.h')
 $build = Join-Path $repo "out/build/$Preset"
 $evidence = Join-Path $repo "out/acceptance/$Preset/level-editor"
 $run = Join-Path $evidence ([Guid]::NewGuid().ToString('N'))
@@ -408,15 +435,15 @@ try {
     if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) {
         throw "Missing editor executable: $editor. Run without -SkipBuild first."
     }
-    Test-EditorWindow -Executable $editor -Level (Join-Path $run 'king_of_the_hill.json') -RunDirectory $run
+    Test-EditorWindow -Executable $editor -Level (Join-Path $run 'king_of_the_hill.json') -RunDirectory $run -Commands $editorCommands
     $courseRun = Join-Path $run 'movement-course'
     [System.IO.Directory]::CreateDirectory($courseRun) | Out-Null
-    Test-EditorWindow -Executable $editor -Level (Join-Path $run 'movement_course.json') -RunDirectory $courseRun
+    Test-EditorWindow -Executable $editor -Level (Join-Path $run 'movement_course.json') -RunDirectory $courseRun -Commands $editorCommands
     # A stage the game would refuse opens normally and names the bad field in the status line.
     $unresolvedRun = Join-Path $run 'unresolved-icon'
     [System.IO.Directory]::CreateDirectory($unresolvedRun) | Out-Null
     Test-EditorWindow -Executable $editor -Level (Join-Path $run 'unresolved_icon.json') -RunDirectory $unresolvedRun `
-        -ExpectStatus "1 name the game will refuse: icon_frame 'not_an_icon'"
+        -ExpectStatus "1 name the game will refuse: icon_frame 'not_an_icon'" -Commands $editorCommands
     if (Test-Path -LiteralPath (Join-Path $isolatedProfile 'ColourWars/save_data.json')) {
         throw 'The editor wrote a player save into the isolated profile.'
     }
@@ -426,7 +453,7 @@ try {
     . (Join-Path $PSScriptRoot 'check-level-editor-save-guidance.ps1')
     # The model check owns save-guidance/; dialog cancellation needs fresh targets.
     Test-EditorSaveGuidance -Executable $editor -Level (Join-Path $run 'king_of_the_hill.json') `
-        -RunDirectory (Join-Path $run 'save-guidance-window') -SourceLevel (Join-Path $repo 'game/content/levels/king_of_the_hill.json')
+        -RunDirectory (Join-Path $run 'save-guidance-window') -SourceLevel (Join-Path $repo 'game/content/levels/king_of_the_hill.json') -Commands $editorCommands
     Write-Host "PASS level editor acceptance ($Preset). Evidence: $run"
 }
 finally {

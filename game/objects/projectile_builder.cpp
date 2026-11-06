@@ -22,11 +22,7 @@ std::vector<std::unique_ptr<Projectile>>
 		int player_num,
 		const Colour& team_colour,
 		ProjectileType type,
-		RenderResources* render_resources,
-		float rotation,
-		const Vector2F& origin,
-		SpriteFlip flip,
-		float layer_depth) const
+		RenderResources* render_resources) const
 {
 	// Require a tuning record before constructing any projectile of this kind.
 	const ProjectileTuning& tuning = this->tuning_->projectile(type);
@@ -41,33 +37,29 @@ std::vector<std::unique_ptr<Projectile>>
 		projectiles.push_back(
 			std::make_unique<ProjectileSpray>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, strip, &tuning, rotation, origin, flip,
-				layer_depth));
+				render_resources, strip, &tuning));
 		return projectiles;
     case ProjectileType::jet:
 		projectiles.push_back(
 			std::make_unique<ProjectileJet>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, strip, &tuning, rotation, origin, flip,
-				layer_depth));
+				render_resources, strip, &tuning));
 		return projectiles;
 	case ProjectileType::rolling:
 		projectiles.push_back(
 			std::make_unique<ProjectileRolling>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, strip, &tuning, rotation, origin, flip,
-				layer_depth));
+				render_resources, strip, &tuning));
 		return projectiles;
 	case ProjectileType::mist:
 		return build_mist_projectiles(
 			position, velocity, team, player_num, team_colour, &tuning,
-			render_resources, strip, rotation, origin, flip, layer_depth);
+			render_resources, strip);
 	case ProjectileType::ball:
 		projectiles.push_back(
 			std::make_unique<ProjectileBall>(
 				rectangle, velocity, team, player_num, team_colour,
-				render_resources, strip, &tuning, rotation, origin, flip,
-				layer_depth));
+				render_resources, strip, &tuning));
 		return projectiles;
 	}
 
@@ -84,11 +76,7 @@ std::vector<std::unique_ptr<Projectile>>
 	const Colour& team_colour,
 	const ProjectileTuning* mist,
 	RenderResources* render_resources,
-	RenderResources::SheetStrip strip,
-	float rotation,
-	const Vector2F& origin,
-	SpriteFlip flip,
-	float layer_depth)
+	RenderResources::SheetStrip strip)
 {
 	// Five pellets and their centre-out order are mechanics; their angle is tuning.
 	constexpr float SPREAD[] = { 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
@@ -109,11 +97,7 @@ std::vector<std::unique_ptr<Projectile>>
 				team_colour,
 				render_resources,
 				strip,
-				mist,
-				rotation,
-				origin,
-				flip,
-				layer_depth));
+				mist));
 	}
 
 	return projectiles;

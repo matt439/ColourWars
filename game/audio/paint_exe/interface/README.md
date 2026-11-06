@@ -23,4 +23,6 @@ UI focus is deliberately quieter than confirmation; refusal and countdown lead
 the mix; cursor waver and cheating figures are nearly silent. Those values are
 accepted production mastering choices, not final game settings. The author
 accepted this set on 2026-10-14; [acceptance.json](../acceptance.json) records the
-exact masters. Runtime integration and in-game mix acceptance remain pending.
+exact masters. The game binds them, and on 2026-11-05 the author accepted the
+in-game mix as it stands (`POL#23`) without the listening check (`ROAD#3`,
+waived, not performed).

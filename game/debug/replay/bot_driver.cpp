@@ -10,20 +10,6 @@
 
 namespace
 {
-	bool on_ground(PlayerMoveState state)
-	{
-		switch (state)
-		{
-		case PlayerMoveState::on_ground:
-		case PlayerMoveState::on_drop_down_ground:
-		case PlayerMoveState::on_ramp_left:
-		case PlayerMoveState::on_ramp_right:
-			return true;
-		default:
-			return false;
-		}
-	}
-
 	// Policy for developer measurements only: the shipping driver's local
 	// reach (match_bot_ballistics::horizontal_reach, gravity-capped) plus the
 	// muzzle and both bodies. Inherited velocity, terrain, diffusion and target
@@ -45,7 +31,7 @@ namespace
 		seat.velocity = player.velocity();
 		seat.team = player.team();
 		seat.alive = player.state() == PlayerState::alive;
-		seat.on_ground = on_ground(player.move_state());
+		seat.on_ground = player.grounded();
 		seat.facing_right = player.facing_right();
 		const float health = tuning.player().starting_health;
 		const float ammo = tuning.starting_ammo();
@@ -71,11 +57,10 @@ bool BotDriver::drives(int seat) const
 	return this->behaviours_.find(seat) != this->behaviours_.end();
 }
 
-BotSeatView BotDriver::view_of(const Level& level, int seat, int step, const GameTuning& tuning,
+BotSeatView BotDriver::view_of(const Level& level, int seat, const GameTuning& tuning,
 	bool observe_tool)
 {
 	BotSeatView view;
-	view.step = step;
 	view.player_height = tuning.player().size.y;
 	for (int other = 0; other < level.player_count(); ++other)
 	{
@@ -107,8 +92,7 @@ void BotDriver::filter_seats(std::vector<PlayerInputData>& seats, const Level& l
 			continue;
 		}
 		seats[static_cast<std::size_t>(seat)] = bot != nullptr ?
-			bot->think(view_of(level, seat, this->step_, *this->tuning_, bot->name() == "skirmish")) : Bot::neutral();
+			bot->think(view_of(level, seat, *this->tuning_, bot->observes_tool())) : Bot::neutral();
 	}
-	++this->step_;
 }
 #endif

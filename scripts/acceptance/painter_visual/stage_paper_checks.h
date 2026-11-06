@@ -71,7 +71,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(best_of); settings.set_duration(73.0f); settings.set_stage(stages[static_cast<size_t>(selected)].name);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Stage paper fixture claim failed"); }
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, tools[static_cast<size_t>(player)]); }
         initial = settings; captured = refreshed = presentation; slot = selected; locked = missing = false; committed.clear();
@@ -151,7 +151,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const RectangleF card = stage_paper_surface_reference(list, *app.render_resources(), captured, refreshed, settings, random, locked, candidate_count, offset);
         require(card == expected_card, "Shared independent Stage surface differs from the full expected-text card union");
         const UiTexture preview_edge("independent-stage-edge", style.sprite_sheet, style.fill_frame, edge, app.render_resources(), locked ? live.selected : style.panel_edge_colour);
-        const auto& backing_colour = captured.hud().player_identity_background_colour;
+        const auto& backing_colour = captured.main_menu().stage_select.preview_background;
         const Colour backing_tint(backing_colour.r * backing_colour.a, backing_colour.g * backing_colour.a,
             backing_colour.b * backing_colour.a, backing_colour.a);
         const UiTexture preview_back("independent-stage-pane", style.sprite_sheet, style.fill_frame, preview, app.render_resources(), backing_tint);
@@ -260,7 +260,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     {
         auto& board = const_cast<MatchRecords&>(preferences.records());
         struct ClearRecords { MatchRecords& board; ~ClearRecords() { this->board = MatchRecords(); } } clear_records{ board };
-        const auto& geometry = original.main_menu().stage_select; const auto& style = original.menu(); const auto& record_words = original.menu_text().records;
+        const auto& geometry = original.main_menu().stage_select; const auto& style = original.menu();
         const RectangleF preview(geometry.preview_position, geometry.preview_size);
         const auto record_font = app.render_resources()->resolve_sprite_font(geometry.record_font);
         const auto detail_font = app.render_resources()->resolve_sprite_font(style.detail_font);
@@ -296,10 +296,10 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
                 save(with, output / ("stage-record-" + std::string(name) + '-' + std::to_string(size.x) + 'x' + std::to_string(size.y) + ".ppm"));
                 return scale;
             };
-            require(expect("versus", 2, 0, record_words.best_win + L" 68.4% / 12 " + record_words.played) == 1.0f, "A typical versus stage record was shrunk");
-            require(expect("solo", 1, 0, record_words.best_coverage + L" 37.0% / 2 " + record_words.played) == 1.0f, "A typical practice stage record was shrunk");
-            expect("draws-only", 4, 1, L"3 " + record_words.played);
-            require(expect("crowded", 2, 2, record_words.best_win + L" 100.0% / 123456789 " + record_words.played) < 1.0f, "A record too long for its row was not shrunk");
+            require(expect("versus", 2, 0, L"BEST WIN 68.4% / 12 PLAYED") == 1.0f, "A typical versus stage record was shrunk");
+            require(expect("solo", 1, 0, L"BEST COVER 37.0% / 2 PLAYED") == 1.0f, "A typical practice stage record was shrunk");
+            expect("draws-only", 4, 1, L"3 PLAYED");
+            require(expect("crowded", 2, 2, L"BEST WIN 100.0% / 123456789 PLAYED") < 1.0f, "A record too long for its row was not shrunk");
             require(shown(2, 0, true, {}).pixels == shown(2, 0, true, { versus_record }).pixels, "Random showed a stage record");
             require(shown(1, 1, false, {}).pixels == shown(1, 1, false, { draws_only }).pixels, "A stage unplayed in this kind of match showed a record");
         }

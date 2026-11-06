@@ -11,8 +11,7 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
     bool left_heading)
 {
     MatchSetup settings; settings.set_stage("turbulence_ferry_trial"); settings.set_player_count(count);
-    settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
-        (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
+    settings.set_screen_layout(players_layout(count));
     settings.begin_input_claims(3); constexpr std::array<int, 4> slots{ 3, 1, 2, 0 };
     for (int seat = 0; seat < count; ++seat)
     {
@@ -22,7 +21,7 @@ FerryDirectionFixture ferry_direction_level(Application& app, const LevelLoadedI
     }
     settings.set_duration(120.0f); app.viewport_manager()->set_layout(settings.screen_layout());
     const TeamColour colours = TeamColourTools::team_colours(TeamColourPair::blue_orange, presentation.team_palette());
-    LevelObjectBuilder objects(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint(),
+    LevelObjectBuilder objects(app.render_resources(), &preferences, &tuning.paint(),
         &presentation.gate_permission(), &presentation.ferry_direction());
     auto scene = std::make_unique<Scene>(app.thread_pool(), app.partitioner()); scene->set_bounds(info.out_of_bounds_rectangle());
     for (auto& object : objects.build_non_collision_objects(info.non_collision_objects_json())) { scene->add(std::move(object)); }
@@ -226,7 +225,7 @@ void ferry_direction_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     Save preview_save; SettingsSession preview_save_session(preview_save); GameData data; data.set_application(&app); data.set_save(&preview_save); data.set_settings_session(&preview_save_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, {}, { "turbulence_ferry_trial" }); data.set_stage_catalog(&stage_catalog);
     data.set_tuning(&tuning); data.set_presentation(&presentation); StagePreview preview("ferry-preview", preview_box, &data);
     preview.set_stage("turbulence_ferry_trial");
-    const LevelObjectBuilder preview_builder(app.render_resources(), app.audio_resources(), &preferences,
+    const LevelObjectBuilder preview_builder(app.render_resources(), &preferences,
         &tuning.paint(), &presentation.gate_permission(), &presentation.ferry_direction());
     auto preview_objects = preview_builder.build_collision_objects(right_info.collision_objects_json(), TeamColour{});
     const TranslatingStructurePaintable* preview_ferry = nullptr;

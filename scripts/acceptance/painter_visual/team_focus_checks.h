@@ -72,8 +72,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         settings = MatchSetup(); settings.set_player_count(count); settings.begin_input_claims(slots[0]);
         for (int seat = 1; seat < count; ++seat) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Team focus claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3);
-        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : count == 2 ? ScreenLayout::two_player :
-            count == 3 ? ScreenLayout::three_player : ScreenLayout::four_player);
+        settings.set_screen_layout(players_layout(count));
         teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = closed = false;
         for (int seat = 0; seat < count; ++seat)
         {

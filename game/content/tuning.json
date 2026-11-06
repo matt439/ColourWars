@@ -7,7 +7,7 @@
         "menu_release_threshold": 0.6
     },
     "bots": {
-        "_comment": "Initial policy only; attended play must establish distinct and useful difficulty.",
+        "_comment": "Shipped-opponent policy; the author accepted these values as they stand on 2026-11-05 (ROAD#10) without the attended difficulty comparison.",
         "sight_distance": 1600.0,
         "reserve_low": 0.15,
         "reserve_resume": 0.80,
@@ -26,7 +26,7 @@
         "hard": { "reaction_steps": 4, "replan_steps": 15, "territory_candidates": 32, "aim_error_radians": 0.05 }
     },
     "handicaps": {
-        "_comment": "Per-seat Boost chosen on the Tools page. Provisional until couch play (ROAD#2) says whether +1 and +2 are worth it.",
+        "_comment": "Per-seat Boost chosen on the Tools page. The author accepted +1 and +2 at these values on 2026-11-05 (ROAD#5) without the couch sessions.",
         "none": { "damage_taken": 1.0, "paint_refill": 1.0 },
         "plus_one": { "damage_taken": 0.8, "paint_refill": 1.25 },
         "plus_two": { "damage_taken": 0.65, "paint_refill": 1.5 }
@@ -51,18 +51,6 @@
         "zoom_out": 2.0,
         "overview": 2.0,
         "replay": 8.0,
-        "controls_text": {
-            "_comment": [
-                "What it says is presentation.json's menu_text.controls, filled",
-                "in with the player's own controls; this is only how it looks.",
-                "y is a fraction of the screen height, under the countdown."
-            ],
-            "font": "lato_black_24",
-            "colour": "WHITE_SMOKE",
-            "shadow_colour": "BLACK",
-            "shadow_offset": { "x": 2.0, "y": 2.0 },
-            "y": 0.78
-        },
         "sounds": {
             "countdown": { "name": "match.count_beat", "volume": 1.0 },
             "go": { "name": "match.go", "volume": 1.0 },
@@ -113,8 +101,9 @@
 
     "paint": {
     "_comment": [
-      "The granularity coverage is scored at, and how deep paint sits on a",
-      "face. These were paint_tile_consts and structure_paintable_consts."
+      "Painted surface: the tile size coverage is scored at, how deep paint",
+      "sits on a face, the frame tiles draw with, splash animations, the look",
+      "of wet paint, the share a paint gate opens at, and the paint sounds."
     ],
     "size": { "x": 4.0, "y": 4.0 },
     "thickness": 12.0,
@@ -184,7 +173,7 @@
         "x_acceleration": 900.0,
         "x_deacceleration": 2500.0,
         "paint_underfoot": {
-          "_comment": "POL30 accepted 2026-11-05: on, at the POL36 trial amounts; the health lockout stays off.",
+          "_comment": "POL#30 accepted 2026-11-05: on, at the amounts POL#36 built; the health lockout stays off.",
           "enabled": true,
           "own_speed_multiplier": 1.10,
           "own_ammo_regen_multiplier": 1.25,
@@ -251,6 +240,7 @@
         "animations": {
             "sheet": "painter",
             "uniform": "idle_paint",
+            "run_speed": 600.0,
             "idle": { "strip": "idle", "paint_strip": "idle_paint" },
             "walk": { "strip": "run", "paint_strip": "run_paint" },
             "running": { "strip": "run", "paint_strip": "run_paint", "frame_time": 0.05 },
@@ -408,7 +398,6 @@
         "spray": {
             "gravity": 2500.0,
             "wind_resistance": 20.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 5.0,
             "player_damage": 0.01,
             "size": { "x": 15.0, "y": 15.0 },
@@ -426,7 +415,6 @@
         "jet": {
             "gravity": 0.0,
             "wind_resistance": 0.0,
-            "rotation_origin": "center",
             "delete_timer": 5.0,
             "player_damage": 0.334,
             "size": { "x": 20.0, "y": 20.0 },
@@ -438,7 +426,6 @@
         "rolling": {
             "gravity": 0.0,
             "wind_resistance": 0.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 0.000001,
             "player_damage": 0.015,
             "size": { "x": 50.0, "y": 50.0 },
@@ -451,7 +438,6 @@
             "spread_step": 0.2617994,
             "gravity": 0.0,
             "wind_resistance": 0.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 2.0,
             "player_damage": 0.01,
             "size": { "x": 5.0, "y": 5.0 },
@@ -469,7 +455,6 @@
         "ball": {
             "gravity": 2500.0,
             "wind_resistance": 20.0,
-            "rotation_origin": "no_rotation",
             "delete_timer": 5.0,
             "player_damage": 0.201,
             "size": { "x": 100.0, "y": 100.0 },

@@ -186,7 +186,7 @@ namespace fixed_slab_acceptance
             Registry<LevelLoadedInfo> infos{ "Fixed slab public acceptance" };
             auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(stage).c_str());
             info->validate();
-            LevelObjectBuilder objects(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+            LevelObjectBuilder objects(&world.render, &world.preferences, &world.tuning.paint());
             info->validate_content(objects, world.render, world.audio);
             infos.add("turbulence_slab_trial", std::move(info));
             ResolutionManager resolution;
@@ -240,7 +240,7 @@ namespace fixed_slab_acceptance
             try
             {
                 LevelLoadedInfo info(path_to_utf8(path).c_str()); info.validate();
-                LevelObjectBuilder builder(&world.render, &world.audio, &world.preferences, &world.tuning.paint());
+                LevelObjectBuilder builder(&world.render, &world.preferences, &world.tuning.paint());
                 info.validate_content(builder, world.render, world.audio);
             }
             catch (const std::exception&) { runtime_refused = true; }

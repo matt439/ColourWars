@@ -41,8 +41,7 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
     const auto inputs = neutral_inputs();
     for (const int count : { 1, 2, 4 })
     {
-        app.viewport_manager()->set_layout(count == 1 ? ScreenLayout::one_player :
-            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        app.viewport_manager()->set_layout(players_layout(count));
         MatchSetup settings;
         settings.set_stage("movement_course");
         settings.set_duration(60.0f);

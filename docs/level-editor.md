@@ -29,7 +29,10 @@ the next build. **File > Save to My Stages** instead saves into the
 player's own stage folder, which the game reads without a rebuild ([Play the
 level](#play-the-level)). The editor does not read or write the player's save.
 
-Open a level with **File > Open** or start with **File > New**. Save As lets
+Open a level with **File > Open** or start with **File > New**, which opens a
+copy of [editor/template.json](../editor/template.json) (compiled in, less its
+`_comment`): a walled floor, eight spawns, one station and `include_in_random`
+`false`. Save As lets
 you keep an existing arena while experimenting with a copy. The title marks
 unsaved changes, and opening another level, creating one or closing the editor
 asks what to do with those changes.
@@ -1079,7 +1082,8 @@ checker pass in both presets. Evidence is under
 
 Builds used the installed-dependency offline workflow above, restoring both
 manifest-install cache settings to `ON` before runtime checks. No engine or
-vendored RapidJSON source changed. The attended `ED#5` gate remains open.
+vendored RapidJSON source changed. The attended `ED#5` session was never held;
+the author accepted the editor without it on 2026-11-05.
 
 ## Station and copy backlog (2026-10-29)
 
@@ -1262,7 +1266,7 @@ accepted, a move out of it is refused; saved and reopened, its lesson block
 equals the authored one and the other nine stations are unchanged as
 JSON values. Undo returns to the file as loaded and redo replays it. Duplicates are
 `high_step_copy` and `high_step_copy_2` without lessons; deleting them is undone
-and redone. On the template, the palette adds `station_1` and `station_2`,
+and redone. On File > New, with the template's `centre` station deleted, the palette adds `station_1` and `station_2`,
 refuses one outside `out_of_bounds` and a drag out of bounds, saves and
 reopens both, and deleting both leaves no `stations` member. Debug and Release passed on 2026-10-30
 (evidence `42cfbc10714d409d8d25981d6b1fc9a8` and `caa4b072e75d4ab987d302a50bb9ff6e` under
@@ -1602,8 +1606,10 @@ against a complete content catalog, verifies that the complete manifest/runtime
 asset lists already agree and that `presentation.json`'s `menu_text.stage_names`
 names exactly the manifest's levels, then shows the exact added name, runtime
 path and stage-name entry, whose English is the level's `display_name`.
-The basename uses ASCII letters, digits, `_` or `-`, with no leading hyphen or
-`_` (which `stage_names` would read as a comment) or Windows device name. The
+The basename follows the user-stage rule (`user_stage_contract::usable_name`):
+1 to 64 ASCII letters, digits, `_` or `-`, with no leading hyphen and no
+Windows device name. It also may not start with `_`, which `stage_names` would
+read as a comment. Every name in the manifest is held to the same rule. The
 file must have a `.json` extension and be directly in this source tree's levels
 directory; linked/reparse paths are refused. Its `display_name` must be one
 nonblank line, since a stage title is. Duplicate or case-alias names, a stage in

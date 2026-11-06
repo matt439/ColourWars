@@ -75,7 +75,7 @@ namespace
     {
         paint_surfaces_acceptance::World& assets = world.assets;
         const RectangleF bounds(400.0f, 300.0f, 80.0f, 240.0f);
-        TeamGateStructurePaintable gate("sprite_sheet_1", "square_white_4", bounds, &assets.render, &assets.audio,
+        TeamGateStructurePaintable gate("sprite_sheet_1", "square_white_4", bounds, &assets.render,
             &assets.preferences, &assets.tuning.paint(), TeamColour{}, { true, true, true, false });
         const CollisionMask all = collision_mask(CollisionObjectType::structure_paintable);
         require(gate.open_for() == PlayerTeam::none && gate.mask() == all && gate.tag() ==
@@ -114,7 +114,7 @@ namespace
         const auto build = [&](const RectangleF& body, const GatePermissionPresentation* cue)
         {
             return std::make_unique<TeamGateStructurePaintable>("sprite_sheet_1", "square_white_4", body,
-                &assets.render, &assets.audio, &assets.preferences, &paint, TeamColour{},
+                &assets.render, &assets.preferences, &paint, TeamColour{},
                 PaintableFaces{ true, true, true, true }, std::span<const RectangleF>{},
                 Colour::white, nullptr, std::span<const PaintPolygon>{}, cue);
         };
@@ -235,7 +235,7 @@ namespace
             require(level->state() == LevelState::active, "Hold-reason fixture did not reach play");
             const RectangleF bounds(1960.0f, 1040.0f, 80.0f, 240.0f);
             TeamGateStructurePaintable gate("sprite_sheet_1", "square_white_4", bounds,
-                &assets.render, &assets.audio, &assets.preferences, &assets.tuning.paint(),
+                &assets.render, &assets.preferences, &assets.tuning.paint(),
                 TeamColour{}, { true, false, true, false });
             const std::vector<Player*> nobody;
             const int seat = permitted == PlayerTeam::a ? 0 : 1;

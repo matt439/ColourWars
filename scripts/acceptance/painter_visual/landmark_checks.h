@@ -45,7 +45,7 @@ std::vector<float> landmark_world_state(const LandmarkWorld& world)
 LandmarkWorld landmark_world(Application& app, const LevelLoadedInfo& info, const LandmarkStage& stage,
     const GameTuning& tuning, PlaySettings& preferences, const TeamColour& colours, bool heavy)
 {
-    const LevelObjectBuilder builder(app.render_resources(), app.audio_resources(), &preferences, &tuning.paint());
+    const LevelObjectBuilder builder(app.render_resources(), &preferences, &tuning.paint());
     LandmarkWorld world; world.scene = std::make_unique<Scene>(app.thread_pool(), app.partitioner());
     auto objects = builder.build_non_collision_objects(info.non_collision_objects_json());
     for (size_t index = 0; index < objects.size(); ++index)

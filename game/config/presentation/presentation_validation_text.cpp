@@ -108,9 +108,7 @@ RectangleF Presentation::Validation::check_setup_paper(const RectangleF& setup_i
 		bounds = RectangleF::union_of(arrow, RectangleF::union_of(bounds,
 			RectangleF(bounds.position() + Vector2F(main.setup_shadow_offset), bounds.size())));
 	}
-	if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-		!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-		bounds.width <= 0.0f || bounds.height <= 0.0f || !setup_inside.contains(bounds))
+	if (!finite_rectangle(bounds) || !setup_inside.contains(bounds))
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 			" must fit main_menu.setup_box_size including its retained shadow bounds and paper ornaments.");
@@ -196,9 +194,7 @@ RectangleF Presentation::Validation::check_stage_briefing(const RectangleF& stag
 	// Their text is not clipped to the panel's width, including the shipped
 	// solo objective, which extends beyond its right edge.
 	if (!std::isfinite(next_top) || !std::isfinite(shadow.x) || !std::isfinite(shadow.y) ||
-		!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
-		!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
-		bounds.width <= 0.0f || bounds.height <= 0.0f || bounds.y < stage_briefing.y ||
+		!finite_rectangle(bounds) || bounds.y < stage_briefing.y ||
 		bounds.bottom() > stage_briefing.bottom() ||
 		!menu_geometry::design_area().contains(bounds) || bounds.bottom() > next_top)
 	{
@@ -232,29 +228,13 @@ void Presentation::Validation::check_briefing_card(const RectangleF& stage_brief
 		menu_geometry::setup_art(main));
 	RectangleF preview(stage.preview_position, stage.preview_size);
 	preview.inflate(this->presentation_.menu_.rule_height);
-	const auto finite_rectangle = [](const RectangleF& rectangle)
-	{
-		return std::isfinite(rectangle.x) && std::isfinite(rectangle.y) &&
-			std::isfinite(rectangle.width) && std::isfinite(rectangle.height) &&
-			std::isfinite(rectangle.right()) && std::isfinite(rectangle.bottom()) &&
-			rectangle.width > 0.0f && rectangle.height > 0.0f;
-	};
 	if (!std::isfinite(edge) || !std::isfinite(inset) || !finite_rectangle(card) ||
 		!finite_rectangle(inside) || !finite_rectangle(preview) || !inside.contains(card) ||
-		(card.x < preview.right() && card.right() > preview.x &&
-			card.y < preview.bottom() && card.bottom() > preview.y))
+		overlaps(card, preview))
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 			" must keep the expanded briefing card inside the Stage paper and separate from the preview edge, including its retained artwork and shadow.");
 	}
-}
-
-bool Presentation::Validation::finite_stage_rectangle(const RectangleF& bounds)
-{
-	return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
-		std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
-		std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
-		bounds.width > 0.0f && bounds.height > 0.0f;
 }
 
 Vector2F Presentation::Validation::options_value_position(int row) const
@@ -297,7 +277,7 @@ Vector2F Presentation::Validation::label_size(const std::string& key, const std:
 
 void Presentation::Validation::check_label_bounds(const std::string& key, const RectangleF& bounds, const RectangleF& inside) const
 {
-	if (!finite_stage_rectangle(bounds) || !inside.contains(bounds))
+	if (!finite_rectangle(bounds) || !inside.contains(bounds))
 	{
 		throw std::runtime_error(this->presentation_.source_path_ + ": " + key +
 			" must fit its paper including its actual text, shadow, badge and row bounds.");
@@ -327,7 +307,7 @@ void Presentation::Validation::check_roster_rows(const LabelRows& rows, float he
 				throw std::runtime_error(this->presentation_.source_path_ + ": " + label_key(slot) + " at " + site +
 					" must follow the heading and complete preceding rows without overlap, before the following content.");
 			}
-			if (player < 3) { self(self, player + 1, used | bit, bounds.bottom()); }
+			if (player + 1 < max_players) { self(self, player + 1, used | bit, bounds.bottom()); }
 		}
 	};
 	visit(visit, 0, 0u, heading_bottom);

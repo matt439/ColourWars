@@ -114,8 +114,9 @@ namespace menu_text_acceptance
                 controls.layout.spacing.y - art.focus_padding.y * 2.0f);
             require(limit == labrador::Vector2F(332.0f, 48.0f), "Percentage rows lost the actual Controls/Sticks value limits");
             struct Use { int row; MenuItem label; };
-            constexpr Use uses[]{{3, MenuItem::music_volume}, {4, MenuItem::sfx_volume},
-                {1, MenuItem::move_deadzone}, {2, MenuItem::aim_deadzone}};
+            constexpr Use uses[]{{settings_rows::controls_music, MenuItem::music_volume},
+                {settings_rows::controls_sfx, MenuItem::sfx_volume},
+                {settings_rows::sticks_movement, MenuItem::move_deadzone}, {settings_rows::sticks_aim, MenuItem::aim_deadzone}};
             for (const auto& use : uses)
             {
                 const auto position = controls.layout.position + labrador::Vector2F(0.0f,
@@ -414,10 +415,12 @@ namespace menu_text_acceptance
                 d["controls_settings"]["item_font"].SetString(font_name, d.GetAllocator());
                 for (const auto& entry : value_text) { d["menu_text"]["values"][entry.key].SetString("~"); }
                 // Random also supplies the arena name, whose existing fit
-                // shrinks only to preview width. A narrow synthetic preview
-                // keeps that separate consumer valid while every real
+                // shrinks only to preview width. A narrower preview and a
+                // taller name area keep that separate consumer valid (the
+                // Random mark must still fit the preview) while every real
                 // OptionRow uses still exercise their width/height limits.
-                d["main_menu"]["stage_select"]["preview_size"]["x"].SetFloat(2.0f);
+                d["main_menu"]["stage_select"]["preview_size"]["x"].SetFloat(200.0f);
+                d["main_menu"]["stage_select"]["name_position"]["y"].SetFloat(100.0f);
             });
             tall.validate_resources(world.render, world.audio);
             check_rows(tall, wide_glyph, true);

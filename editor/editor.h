@@ -26,11 +26,6 @@ namespace colourwars_editor
         edit_copy, edit_paste
     };
 
-    inline bool same_entry(const Entry& a, const Entry& b)
-    {
-        return a.kind == b.kind && a.index == b.index;
-    }
-
     struct DrawItem
     {
         Entry entry;
@@ -45,6 +40,9 @@ namespace colourwars_editor
     public:
         explicit Editor(HINSTANCE instance);
         ~Editor();
+        // Owns its window, font, menu and accelerators.
+        Editor(const Editor&) = delete;
+        Editor& operator=(const Editor&) = delete;
         int run(int show, const std::filesystem::path& initial_path);
 
     private:

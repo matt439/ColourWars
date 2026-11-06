@@ -21,10 +21,7 @@ public:
 	static std::wstring frame_rate_text(double frame_ms);
 
 private:
-	labrador::RenderResources* render_resources() const;
-
 	// Borrowed services; they outlive this overlay.
-	labrador::RenderResources* render_resources_ = nullptr;
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const DebugOverlayPresentation* look_ = nullptr;
 

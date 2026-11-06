@@ -170,7 +170,7 @@ std::array<CursorMarkerFrame, 3> Level::cursor_marker_frames(
 	const CursorMarkerPresentation& look, const Vector2F& at, float window_height)
 {
 	// Whole pixels keep the marquee's edges crisp while the pointer moves.
-	const float scale = window_height / 1080.0f;
+	const float scale = window_height / CursorMarkerPresentation::reference_lines;
 	const float ink = std::max(1.0f, std::round(look.ink_width * scale));
 	const float paper = std::max(1.0f, std::round(look.paper_width * scale));
 	const float half = std::round(look.size * scale * 0.5f);

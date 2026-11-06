@@ -74,10 +74,6 @@ protected:
 	void set_widget_spacing(const labrador::Vector2F& widget_spacing);
 
 	labrador::Vector2F calculate_widget_position(int h_index, int v_index) const;
-	static labrador::Vector2F calculate_center_position(
-		const labrador::Vector2F& widget_size,
-		const labrador::Vector2F& resolution);
-	static float calculate_center_position(float widget_size, float resolution);
 	MenuContext* menu_context() const;
 
 	GameData* data() const;
@@ -111,6 +107,9 @@ protected:
 	MenuFocusMotion focus_motion_;
 	labrador::Activation activate_focus();
 	void press_focus();
+	// Leaves a page pushed with no result, like Back: plays the cancel sound,
+	// forgets armed presses and pops this page.
+	void pop_page();
 	// Per-player clocks are owned by the derived page's stable widget rows.
 	void register_selection_motion(MenuFocusMotion* motion);
 	void reset_menu_motion();
@@ -135,8 +134,6 @@ protected:
 	void set_prompts(const std::vector<PromptBar::Prompt>& prompts);
 	void set_prompts(MenuPrompt prompt);
 	void set_prompts(const std::wstring& legend, const PromptBarPresentation& look, float scale);
-
-	labrador::Vector2F float_resolution() const;
 
 	// Maps unchanged design-space geometry into the current window.
 	labrador::Camera ui_camera() const;

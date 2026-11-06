@@ -2,6 +2,7 @@
 #include "game/save/player_profiles.h"
 #include "game/match/player_control.h"
 #include "game/save/save.h"
+#include "game/save/play_settings_json.h"
 #include "engine/assets/json.h"
 #include <algorithm>
 #include <stdexcept>
@@ -54,7 +55,8 @@ void PlayerProfiles::validate() const
 		if (StickSettings::normalized_deadzone(profile.sticks.movement_deadzone) != profile.sticks.movement_deadzone ||
 			StickSettings::normalized_deadzone(profile.sticks.aim_deadzone) != profile.sticks.aim_deadzone)
 		{
-			throw std::invalid_argument("Profile \"" + profile.name + "\" has a deadzone outside -1 to 90");
+			throw std::invalid_argument("Profile \"" + profile.name + "\" has a deadzone outside " +
+				std::to_string(StickSettings::inherit) + " to " + std::to_string(StickSettings::max_deadzone));
 		}
 		profile.buttons.validate();
 		if (!handicaps::valid(profile.boost))
@@ -106,31 +108,10 @@ void PlayerProfilesSection::read(const JsonValue& root, SaveData& data) const
 		catch (const std::runtime_error&) { continue; }
 		catch (const std::invalid_argument&) { continue; }
 		if (data.profiles.find(profile.name) >= 0) { continue; }
-		const auto read_deadzone = [&entry](const char* key, int& destination)
-		{
-			try
-			{
-				const int value = entry->integer(key);
-				if (value >= -1 && value <= 90) { destination = value; }
-			}
-			catch (const std::runtime_error&) {}
-		};
-		read_deadzone("movement_deadzone", profile.sticks.movement_deadzone);
-		read_deadzone("aim_deadzone", profile.sticks.aim_deadzone);
+		read_stick_settings(*entry, profile.sticks);
 		try { profile.rumble = entry->boolean("rumble"); }
 		catch (const std::runtime_error&) {}
-		const auto read_seat_switch = [&entry](const char* key, SeatSwitch& destination)
-		{
-			try
-			{
-				const std::optional<SeatSwitch> value = seat_switch_from_key(entry->string(key));
-				if (value) { destination = *value; }
-			}
-			catch (const std::runtime_error&) {}
-		};
-		read_seat_switch("view_shake", profile.comfort.view_shake);
-		read_seat_switch("aim_marker", profile.comfort.aim_marker);
-		read_seat_switch("reduce_effects", profile.comfort.reduce_effects);
+		read_seat_comfort(*entry, profile.comfort);
 		try { profile.buttons = read_pad_profile(entry->object("buttons")); }
 		catch (const std::runtime_error&) {}
 		catch (const std::invalid_argument&) {}
@@ -153,18 +134,10 @@ void PlayerProfilesSection::write(SaveWriter& writer, const SaveData& data) cons
 		writer.begin_object();
 		writer.key("name");
 		writer.string(profile.name);
-		writer.key("movement_deadzone");
-		writer.integer(profile.sticks.movement_deadzone);
-		writer.key("aim_deadzone");
-		writer.integer(profile.sticks.aim_deadzone);
+		write_stick_settings(writer, profile.sticks);
 		writer.key("rumble");
 		writer.boolean(profile.rumble);
-		writer.key("view_shake");
-		writer.string(seat_switch_key(profile.comfort.view_shake));
-		writer.key("aim_marker");
-		writer.string(seat_switch_key(profile.comfort.aim_marker));
-		writer.key("reduce_effects");
-		writer.string(seat_switch_key(profile.comfort.reduce_effects));
+		write_seat_comfort(writer, profile.comfort);
 		writer.key("buttons");
 		write_pad_profile(writer, profile.buttons);
 		writer.key("boost");

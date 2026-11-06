@@ -6,11 +6,10 @@
 namespace input_bindings_acceptance
 {
     // ---- Keyboard actions slice (GAP#4.2): move, drop, shoot and pause keys.
-    struct ExpectedMouse { MouseButton button; const char* name; const wchar_t* label; };
+    struct ExpectedMouse { MouseButton button; const char* name; };
     constexpr std::array<ExpectedMouse, 5> expected_mouse{{
-        { MouseButton::left, "mouse_left", L"Left click" }, { MouseButton::right, "mouse_right", L"Right click" },
-        { MouseButton::middle, "mouse_middle", L"Middle click" }, { MouseButton::x1, "mouse_x1", L"Mouse 4" },
-        { MouseButton::x2, "mouse_x2", L"Mouse 5" }
+        { MouseButton::left, "mouse_left" }, { MouseButton::right, "mouse_right" },
+        { MouseButton::middle, "mouse_middle" }, { MouseButton::x1, "mouse_x1" }, { MouseButton::x2, "mouse_x2" }
     }};
     constexpr std::array<KeyboardAction, 6> keyboard_actions{ KeyboardAction::move_left, KeyboardAction::move_right,
         KeyboardAction::jump, KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause };
@@ -63,17 +62,16 @@ namespace input_bindings_acceptance
         {
             const DesktopControl control = mouse_control(expected_mouse[index].button);
             require(mouse[index] == expected_mouse[index].button && desktop_control_name(control) == expected_mouse[index].name &&
-                desktop_control_label(control) == expected_mouse[index].label &&
                 desktop_control_from_name(expected_mouse[index].name) == control,
-                "A Shoot mouse button's token, label or order differs from its explicit contract");
+                "A Shoot mouse button's token or order differs from its explicit contract");
             for (KeyboardAction action : keyboard_actions)
             {
                 require(keyboard_control_supported(action, control) == (action == KeyboardAction::shoot),
                     "A mouse button became bindable outside Shoot");
             }
         }
-        require(desktop_control_name({}) == "none" && desktop_control_label({}) == L"None" &&
-            desktop_control_from_name("none") == DesktopControl{}, "The unbound control's token or label changed");
+        require(desktop_control_name({}) == "none" &&
+            desktop_control_from_name("none") == DesktopControl{}, "The unbound control's token changed");
         for (KeyboardAction action : keyboard_actions)
         {
             require(keyboard_control_supported(action, {}) == (action == KeyboardAction::pause), "Only the extra Pause may be unbound");
@@ -82,9 +80,8 @@ namespace input_bindings_acceptance
             {
                 require(keyboard_control_supported(action, key_control(expected.key)) &&
                     desktop_control_name(key_control(expected.key)) == expected.name &&
-                    desktop_control_label(key_control(expected.key)) == expected.label &&
                     desktop_control_from_name(expected.name) == key_control(expected.key),
-                    "A domain key was refused by an action or changed its token/label");
+                    "A domain key was refused by an action or changed its token");
             }
             // Reserved, menu-only and developer keys stay outside every domain.
             for (Key reserved : { Key::escape, Key::enter, Key::backspace, Key::grave, Key::f1, Key::f2, Key::f5, Key::f9,

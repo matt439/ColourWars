@@ -50,6 +50,22 @@ namespace
 		}
 		return names;
 	}
+
+	// Whether `entry` takes `given` words after its name: a variable none
+	// (read) or one (assign); a command its required arguments, and no more
+	// than it names unless it is variadic.
+	bool accepts(const DebugEntry& entry, std::size_t given)
+	{
+		if (entry.is_variable())
+		{
+			return given <= 1;
+		}
+		const DebugCommand& command = static_cast<const DebugCommand&>(entry);
+		const std::vector<DebugArgSpec>& specs = command.args();
+		const std::size_t required = static_cast<std::size_t>(std::count_if(
+			specs.begin(), specs.end(), [](const DebugArgSpec& spec) { return !spec.optional; }));
+		return given >= required && (command.variadic() || given <= specs.size());
+	}
 }
 
 DebugRegistry::DebugRegistry()
@@ -64,6 +80,24 @@ void DebugRegistry::add(std::unique_ptr<DebugEntry> entry)
 	{
 		throw std::logic_error("debug registry: duplicate name '" + name + "'");
 	}
+}
+
+void DebugRegistry::add(std::unique_ptr<DebugEntry> entry, DebugMenuTraits menu)
+{
+	entry->set_menu(std::move(menu));
+	this->add(std::move(entry));
+}
+
+void DebugRegistry::add_command(std::string name, std::string help,
+	std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu, bool variadic)
+{
+	this->add(std::make_unique<LambdaCommand>(std::move(name), std::move(help),
+		std::move(args), std::move(body), variadic), std::move(menu));
+}
+
+void DebugRegistry::set_help_keys(std::function<std::string()> keys)
+{
+	this->help_keys_ = std::move(keys);
 }
 
 DebugEntry* DebugRegistry::find(std::string_view name) const
@@ -283,21 +317,8 @@ DebugStatus DebugRegistry::check(std::string_view statement) const
 	{
 		return DebugStatus::failure("unknown command '" + tokens.words.front() + "'");
 	}
-	const std::size_t given = tokens.words.size() - 1;
-	if (entry->is_variable())
-	{
-		return given <= 1 ? DebugStatus::success() :
-			DebugStatus::failure("usage: " + entry->usage());
-	}
-	const DebugCommand* command = static_cast<const DebugCommand*>(entry);
-	const std::vector<DebugArgSpec>& specs = command->args();
-	const std::size_t required = static_cast<std::size_t>(std::count_if(
-		specs.begin(), specs.end(), [](const DebugArgSpec& spec) { return !spec.optional; }));
-	if (given < required || (!command->variadic() && given > specs.size()))
-	{
-		return DebugStatus::failure("usage: " + command->usage());
-	}
-	return DebugStatus::success();
+	return accepts(*entry, tokens.words.size() - 1) ? DebugStatus::success() :
+		DebugStatus::failure("usage: " + entry->usage());
 }
 
 DebugStatus DebugRegistry::execute_statement(const std::string& statement, DebugLog& log)
@@ -320,6 +341,10 @@ DebugStatus DebugRegistry::execute_statement(const std::string& statement, Debug
 	}
 
 	std::vector<std::string> rest(tokens.words.begin() + 1, tokens.words.end());
+	if (!accepts(*entry, rest.size()))
+	{
+		return DebugStatus::failure("usage: " + entry->usage());
+	}
 
 	// Quake shorthand: "feedback" reads, "feedback off" assigns.
 	if (entry->is_variable())
@@ -329,27 +354,14 @@ DebugStatus DebugRegistry::execute_statement(const std::string& statement, Debug
 		{
 			return DebugStatus::success(variable->name() + " = " + variable->value_text());
 		}
-		if (rest.size() > 1)
-		{
-			return DebugStatus::failure("usage: " + variable->usage());
-		}
 		return variable->assign(rest.front());
 	}
-
-	DebugCommand* command = static_cast<DebugCommand*>(entry);
-	const std::vector<DebugArgSpec>& specs = command->args();
-	const std::size_t required = static_cast<std::size_t>(std::count_if(
-		specs.begin(), specs.end(), [](const DebugArgSpec& spec) { return !spec.optional; }));
-	if (rest.size() < required || (!command->variadic() && rest.size() > specs.size()))
-	{
-		return DebugStatus::failure("usage: " + command->usage());
-	}
-	return command->run(DebugArgs(std::move(rest)), log);
+	return static_cast<DebugCommand*>(entry)->run(DebugArgs(std::move(rest)), log);
 }
 
 void DebugRegistry::add_builtins()
 {
-	this->add(std::make_unique<LambdaCommand>("set", "assign a variable",
+	this->add_command("set", "assign a variable",
 		std::vector<DebugArgSpec>{ { "variable", false, {} }, { "value", false, {} } },
 		[this](const DebugArgs& args, DebugLog&)
 		{
@@ -364,9 +376,9 @@ void DebugRegistry::add_builtins()
 				status.message = variable->name() + " = " + variable->value_text();
 			}
 			return status;
-		}));
+		}, DebugMenuTraits());
 
-	this->add(std::make_unique<LambdaCommand>("get", "print a variable",
+	this->add_command("get", "print a variable",
 		std::vector<DebugArgSpec>{ { "variable", false, {} } },
 		[this](const DebugArgs& args, DebugLog&)
 		{
@@ -378,9 +390,9 @@ void DebugRegistry::add_builtins()
 			return DebugStatus::success(variable->name() + " = " + variable->value_text() +
 				"  (" + std::string(variable->type_name()) + ", default " +
 				variable->default_text() + ")");
-		}));
+		}, DebugMenuTraits());
 
-	this->add(std::make_unique<LambdaCommand>("list", "list variables with their values",
+	this->add_command("list", "list variables with their values",
 		std::vector<DebugArgSpec>{ { "prefix", true, {} } },
 		[this](const DebugArgs& args, DebugLog& log)
 		{
@@ -399,9 +411,9 @@ void DebugRegistry::add_builtins()
 			}
 			return shown == 0 ? DebugStatus::failure("no variables match '" + prefix + "'") :
 				DebugStatus::success();
-		}));
+		}, DebugMenuTraits());
 
-	this->add(std::make_unique<LambdaCommand>("help", "list commands, or describe one",
+	this->add_command("help", "list commands, or describe one",
 		std::vector<DebugArgSpec>{ { "name", true, [this] { return entry_names(*this); } } },
 		[this](const DebugArgs& args, DebugLog& log)
 		{
@@ -419,9 +431,11 @@ void DebugRegistry::add_builtins()
 			{
 				log.info("  " + entry->usage() + "  - " + entry->help());
 			}
-			return DebugStatus::success("keys: ` console, F10/F11 or pad Back+Start debug menu, "
-				"F2 collision, F3 camera, F4 paint, F5 restart, F6 pause, F7 step, "
-				"F9 feedback (default binds: 'binds' lists them, 'bind' changes them)");
-		}));
+			// The binds as they are now, not as they were by default.
+			const std::string binds = this->help_keys_ ? this->help_keys_() : std::string();
+			return DebugStatus::success("keys: ` console, F10/F11 or pad Back+Start debug menu" +
+				(binds.empty() ? std::string("; no key is bound") : ", " + binds) +
+				" ('binds' lists the binds, 'bind' changes them)");
+		}, DebugMenuTraits());
 }
 #endif

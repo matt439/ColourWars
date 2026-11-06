@@ -4,6 +4,7 @@ param([string] $OutputDirectory)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'process-births.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $runner = Join-Path $PSScriptRoot 'run-acceptance.ps1'
@@ -39,9 +40,12 @@ $result = [ordered]@{
     shell_edition = $PSVersionTable.PSEdition
     started_utc = [DateTime]::UtcNow.ToString('o')
     checks = $checks
-    cmake_or_compiler_started = $false
-    native_helper_loaded = $false
+    # Measured: processes started by the checks other than the one deliberate
+    # CLI child host (process-births.ps1), and the helper type after the run.
+    processes_started = $null
+    native_helper_loaded = $null
 }
+$unexpectedBirths = 0
 
 function Save-Result {
     [IO.File]::WriteAllText((Join-Path $run 'result.json'), ($result | ConvertTo-Json -Depth 12), $utf8)
@@ -95,9 +99,14 @@ function Invoke-Selection([string] $Name, [hashtable] $Options,
             Require (-not (Get-Command $tool -ErrorAction SilentlyContinue)) `
                 "Run qualification in a fresh -NoProfile host without a preexisting $tool command."
         }
+        $selectionBirthsBefore = Get-ProcessBirthCount
         try { . $runner @Options } catch { $caught = $_ }
+        $selectionBirths = (Get-ProcessBirthCount) - $selectionBirthsBefore
+        $script:unexpectedBirths += $selectionBirths
+        $helperLoaded = Helper-Loaded
         Require ($null -ne $caught) 'The actual runner did not stop during selection/tool preflight.'
-        Require (-not (Helper-Loaded)) 'Selection preflight loaded the native-process helper.'
+        Require ($selectionBirths -eq 0) "Selection preflight started $selectionBirths process(es): CMake, a compiler or a probe."
+        Require (-not $helperLoaded) 'Selection preflight loaded the native-process helper.'
         $actualOutput = if ($null -ne $evidence) { [string]$evidence } else { $privateOutput }
         Require ($actualOutput.StartsWith($run + [IO.Path]::DirectorySeparatorChar,
             [StringComparison]::OrdinalIgnoreCase)) 'Acceptance preflight output escaped its private checker scratch.'
@@ -113,7 +122,8 @@ function Invoke-Selection([string] $Name, [hashtable] $Options,
             actual_evidence_directory = $evidence
             actual_output_created = [IO.Directory]::Exists($actualOutput)
             artifact_files = $files.Count
-            helper_loaded = $false
+            processes_started = $selectionBirths
+            helper_loaded = $helperLoaded
         }
     } finally {
         $env:PATH = $beforePath
@@ -211,6 +221,7 @@ function Quote-ChildArgument([string] $Value) {
     return '"' + $Value + ('\' * $slashes) + '"'
 }
 
+Start-ProcessBirthCount
 Save-Result
 Write-Host "Acceptance-selection evidence: $run"
 try {
@@ -339,16 +350,34 @@ try {
         $start.EnvironmentVariables['PATH'] = ''
         $child = [Diagnostics.Process]::new()
         $child.StartInfo = $start
+        $childBirthsBefore = Get-ProcessBirthCount
         $childStarted = $child.Start()
         Require $childStarted 'The owned current-host CLI process did not start.'
         $null = $child.Handle
         $stdout = $child.StandardOutput.ReadToEndAsync()
         $stderr = $child.StandardError.ReadToEndAsync()
         $watch = [Diagnostics.Stopwatch]::StartNew()
-        while (-not $child.WaitForExit(100)) {
+        # A console child gets a conhost.exe in this job too. Name each live
+        # process the child brings; only the host and its conhost are expected.
+        $childFamily = @{}
+        do {
+            foreach ($id in Get-ProcessBirthLiving) {
+                if ($id -eq $PID -or $childFamily.ContainsKey($id)) { continue }
+                $living = Get-Process -Id $id -ErrorAction SilentlyContinue
+                if ($null -ne $living) { $childFamily[$id] = $living.ProcessName }
+            }
             Require ($watch.ElapsedMilliseconds -lt 15000) 'The owned CLI preflight exceeded its wait budget.'
-        }
+        } while (-not $child.WaitForExit(50))
         Require ($stdout.Wait(2000) -and $stderr.Wait(2000)) 'Owned CLI output did not finish.'
+        # The host and its conhost are the expected births; its preflight starts none.
+        $expectedNames = @([IO.Path]::GetFileNameWithoutExtension($hostName), 'conhost')
+        $expectedBirths = @($childFamily.Values | Where-Object { $expectedNames -contains $_ }).Count
+        $childRecord.child_processes = @($childFamily.Values | Sort-Object)
+        Require ($childFamily.ContainsKey([long]$child.Id)) 'The CLI child host was not seen in the birth count.'
+        $childBirths = (Get-ProcessBirthCount) - $childBirthsBefore - $expectedBirths
+        $script:unexpectedBirths += $childBirths
+        $childRecord.processes_started = $childBirths
+        Require ($childBirths -eq 0) "The CLI child's preflight started $childBirths process(es)."
         $text = $stdout.Result + "`n" + $stderr.Result
         $childLog = Join-Path $run 'file-child.log'
         [IO.File]::WriteAllText($childLog, $text, $utf8)
@@ -390,6 +419,8 @@ try {
     $env:LOCALAPPDATA = $initialProfile
     Set-Location -LiteralPath $initialLocation
     [Environment]::CurrentDirectory = $initialProcessDirectory
+    $result.processes_started = $unexpectedBirths
+    $result.native_helper_loaded = Helper-Loaded
     $result.caller_path_restored = [string]::Equals($env:PATH, $initialPath, [StringComparison]::Ordinal)
     $result.caller_profile_restored = [string]::Equals($env:LOCALAPPDATA, $initialProfile, [StringComparison]::Ordinal)
     $result.caller_location_restored = (Get-Location).Path -ceq $initialLocation

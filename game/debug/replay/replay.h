@@ -102,7 +102,8 @@ public:
 	// Throws std::runtime_error naming the path on any I/O failure, when the
 	// tape's steps were not all taken at `dt_bits`, or when `gap_updates` does
 	// not give each gap a Level update, in order; for a later round, also when
-	// its dt or cheats are not this round's.
+	// its dt or cheats are not this round's. The file is replaced whole
+	// (replace_file_atomically): a failed write leaves an earlier one intact.
 	void write(const std::filesystem::path& path) const;
 
 	// Throws std::runtime_error naming the path and what is wrong: not JSON,

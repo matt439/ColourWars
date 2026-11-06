@@ -1,5 +1,6 @@
 #include "editor/blockout_aids.h"
 #include "editor/level_json.h"
+#include "editor/path_text.h"
 #include "game/contracts/paint_face_geometry.h"
 #include "game/contracts/fixed_slab_paint_geometry.h"
 #include "editor/horizontal_authoring.h"
@@ -19,7 +20,7 @@ namespace colourwars_editor
         level_json::Document read_json(const std::filesystem::path& path)
         {
             std::ifstream stream(path, std::ios::binary);
-            if (!stream) throw std::runtime_error("Cannot read editor aid data: " + path.string());
+            if (!stream) throw std::runtime_error("Cannot read editor aid data: " + path_text(path));
             const std::string text{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
             return level_json::parse(text);
         }
@@ -29,13 +30,13 @@ namespace colourwars_editor
             // Decode each number to float at the same point as the game,
             // including subtraction in the alternate TLBR encoding.
             using level_json::number;
-            if (object.HasMember("rectangle"))
+            if (object.HasMember(level_json::key::rectangle))
             {
-                const level_json::Json& rect = level_json::member(object, "rectangle");
+                const level_json::Json& rect = level_json::member(object, level_json::key::rectangle);
                 const float x = static_cast<float>(number(rect, "x")), y = static_cast<float>(number(rect, "y"));
                 return {x, y, x + static_cast<float>(number(rect, "width")), y + static_cast<float>(number(rect, "height"))};
             }
-            const level_json::Json& rect = level_json::member(object, "rectangle_tlbr");
+            const level_json::Json& rect = level_json::member(object, level_json::key::rectangle_tlbr);
             const float x = static_cast<float>(number(rect, "left")), y = static_cast<float>(number(rect, "top"));
             const float width = static_cast<float>(number(rect, "right")) - x;
             const float height = static_cast<float>(number(rect, "bottom")) - y;
@@ -45,7 +46,7 @@ namespace colourwars_editor
         std::vector<std::pair<float, float>> slab_intervals(const SlabGeometry& slab,
             bool along_x, bool leading, std::span<const PaintFaceRectangle> obstacles)
         {
-            return exposed_slab_paint_edge(slab.paint_corners, along_x ? slab.length : 24.0f,
+            return exposed_slab_paint_edge(slab.paint_corners, along_x ? slab.length : slab_thickness,
                 along_x, leading, obstacles);
         }
 
@@ -131,7 +132,7 @@ namespace colourwars_editor
     std::vector<ScoringFace> scoring_faces(const LevelDocument& document, const BlockoutTuning& tuning)
     {
         const level_json::Document json = level_json::parse(document.serialize());
-        const level_json::Json& objects = level_json::array(json, "collision_objects");
+        const level_json::Json& objects = level_json::array(json, level_json::key::collision_objects);
         std::vector<PaintFaceRectangle> obstacles;
         std::vector<PaintPolygon> slabs;
         for (const level_json::Json& object : objects.GetArray())
@@ -139,7 +140,7 @@ namespace colourwars_editor
             const std::string type = level_json::string(object, level_json::key::type);
             if (type == level_json::object_type::fixed_slab_paintable) { slabs.push_back(decode_slab(object).paint_corners); continue; }
             if (type != level_json::object_type::structure && type != level_json::object_type::structure_paintable) continue;
-            if (object.HasMember("motion")) continue;
+            if (object.HasMember(level_json::key::motion)) continue;
             obstacles.push_back(paint_rectangle(object));
         }
         std::vector<ScoringFace> result;
@@ -150,16 +151,17 @@ namespace colourwars_editor
             if (level_json::string(object, level_json::key::type) == level_json::object_type::fixed_slab_paintable)
             {
                 const auto slab = decode_slab(object);
-                const auto& faces = level_json::member(object, "paintable_faces");
+                const auto& faces = level_json::member(object, level_json::key::paintable_faces);
                 const float thickness = static_cast<float>(tuning.paint_thickness);
-                if (!(thickness > 0.0f && thickness <= 12.0f))
+                if (!(thickness > 0.0f && thickness <= slab_thickness / 2.0f))
                     throw std::runtime_error("Fixed slab paint thickness must fit its normal thickness.");
                 for (int face = 0; face < 4; ++face)
                 {
-                    const char* names[] = { "top", "bottom", "left", "right" };
+                    namespace side = level_format::face;
+                    const char* names[] = { side::top, side::bottom, side::left, side::right };
                     if (!level_json::member(faces, names[face]).GetBool()) { continue; }
                     const bool along_x = face < 2, leading = face % 2 == 0;
-                    const float edge = along_x ? (leading ? 0.0f : 24.0f) : (leading ? 0.0f : slab.length);
+                    const float edge = along_x ? (leading ? 0.0f : slab_thickness) : (leading ? 0.0f : slab.length);
                     for (const auto& [begin, end] : slab_intervals(slab, along_x, leading, obstacles))
                     {
                         const float x = along_x ? begin : (leading ? edge : edge - thickness);
@@ -175,7 +177,7 @@ namespace colourwars_editor
             }
             if (level_json::string(object, level_json::key::type) != level_json::object_type::structure_paintable) continue;
             const PaintFaceRectangle rect = paint_rectangle(object);
-            const bool moving = object.HasMember("motion");
+            const bool moving = object.HasMember(level_json::key::motion);
             float offset = 0.0f;
             bool vertical = false;
             if (moving)
@@ -185,10 +187,11 @@ namespace colourwars_editor
                 vertical = spec.vertical();
             }
             const float x = rect.left, y = rect.top, right = rect.right, bottom = rect.bottom;
-            const level_json::Json& faces = level_json::member(object, "paintable_faces");
+            const level_json::Json& faces = level_json::member(object, level_json::key::paintable_faces);
             for (int face = 0; face < 4; ++face)
             {
-                const char* names[] = {"top", "bottom", "left", "right"};
+                namespace side = level_format::face;
+                const char* names[] = { side::top, side::bottom, side::left, side::right };
                 if (!level_json::member(faces, names[face]).GetBool()) continue;
                 const bool along_x = face < 2, leading = face % 2 == 0;
                 const float edge = along_x ? (leading ? y : bottom) : (leading ? x : right);

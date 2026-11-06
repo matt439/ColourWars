@@ -13,6 +13,19 @@
         std::vector<unsigned char> pixels;
     };
 
+    // The layout the game gives this many human panes: three players take
+    // three_player, which numbers its quadrants differently from four_player.
+    ScreenLayout players_layout(int count)
+    {
+        switch (count)
+        {
+        case 1: return ScreenLayout::one_player;
+        case 2: return ScreenLayout::two_player;
+        case 3: return ScreenLayout::three_player;
+        default: return ScreenLayout::four_player;
+        }
+    }
+
     struct RestoreFlag
     {
         bool& setting;

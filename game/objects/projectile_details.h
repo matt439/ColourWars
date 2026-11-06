@@ -1,13 +1,11 @@
 #pragma once
 
-#include "game/carried/rotation_origin.h"
 #include "engine/math/vector2f.h"
 
 struct ProjectileDetails
 {
     float gravity = 0.0f;
     float wind_resistance = 0.0f;
-    colourwars::RotationOrigin rotat_origin = colourwars::RotationOrigin::no_rotation;
     float delete_timer = 0.0f;
 
     // Health removed on a hit, expressed as a positive amount.

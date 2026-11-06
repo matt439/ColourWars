@@ -15,8 +15,9 @@ enum class TuneScope
 
 const char* tune_scope_name(TuneScope scope);
 
-// What a successful tune reports after the value: "(live)", "(applies to new
-// shots)", "(applies on rebuild: restart, or tune ... restart)", ...
+// What a successful tune reports after the value, one per scope: "(live)",
+// "(applies to new shots)", "(applies on rebuild: restart, or add 'restart'
+// to the tune)" and "(applies when the screen is next opened)".
 const char* tune_scope_note(TuneScope scope);
 
 // The scope of a prefixed path ("tuning.player.gravity"). The first matching

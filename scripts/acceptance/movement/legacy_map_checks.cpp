@@ -27,10 +27,7 @@ namespace movement_acceptance
 
         bool supported(const Player& player)
         {
-            return player.move_state() == PlayerMoveState::on_ground ||
-                player.move_state() == PlayerMoveState::on_drop_down_ground ||
-                player.move_state() == PlayerMoveState::on_ramp_left ||
-                player.move_state() == PlayerMoveState::on_ramp_right;
+            return player.grounded();
         }
 
         struct LegacyRun
@@ -68,7 +65,7 @@ namespace movement_acceptance
                     (std::string(route.stage) + ".json")).string().c_str());
                 level.validate();
                 this->scene.set_bounds(level.out_of_bounds_rectangle());
-                const LevelObjectBuilder builder(&suite.render, &suite.audio, &suite.preferences,
+                const LevelObjectBuilder builder(&suite.render, &suite.preferences,
                     &suite.tuning.paint());
                 const TeamColour colours;
                 const JsonValue authored = level.collision_objects_json();
