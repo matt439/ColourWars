@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/paintable_object.h"
 #include "game/objects/player.h"
 #include "game/objects/structure.h"
@@ -8,7 +9,6 @@
 #include "game/input/input_slots.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/sprite_font_file.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
@@ -28,8 +28,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     using Awards = std::vector<std::optional<MatchAward>>;
 

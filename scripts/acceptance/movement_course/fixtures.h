@@ -7,6 +7,7 @@
 // main calls. structure_paintable.h is included plainly here; tool_trials.cpp
 // includes it first with private opened, so this include is then a no-op.
 #include "game/config/play_settings.h"
+#include "game/contracts/simulation.h"
 #include "game/config/tuning.h"
 #include "game/objects/paintable_object.h"
 #include "game/objects/structure.h"
@@ -25,7 +26,6 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/input/gamepad.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/probe.h"
@@ -45,8 +45,7 @@ namespace movement_course_acceptance
     using acceptance::require;
     [[noreturn]] void fail(const std::string& message);
 
-    inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    inline const float dt = SECONDS_PER_STEP;
 
     // Contact separation is exact; these allow only float noise.
     inline constexpr float overlap_tolerance = 0.01f;

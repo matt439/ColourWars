@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
 #endif
@@ -56,7 +57,7 @@ namespace paint_surfaces_acceptance
 
     void check_levels(World& world)
     {
-        const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(labrador::StepTimer::TicksPerSecond / 60));
+        const float dt = SECONDS_PER_STEP;
         unsigned int seed = 0;
         for (const char* stage : { "crossfeed", "press_tower" })
         {

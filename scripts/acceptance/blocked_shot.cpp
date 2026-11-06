@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/match/paint_owners.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/level_builder.h"
@@ -10,7 +11,6 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
@@ -45,8 +45,7 @@ namespace
         return close_to(first.x, second.x) && close_to(first.y, second.y);
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     // Metadata only: no graphics/audio device, player save or window is opened.
     struct World

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/projectile_jet.h"
 #include "game/objects/projectile_rolling.h"
@@ -7,7 +8,6 @@
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
@@ -123,7 +123,7 @@ namespace
         for (int read = 0; read < 8; ++read) { require(victim->lethal_projectiles() == snapshot, "Snapshot changed across reads"); }
         require(std::rand() == expected_random && victim->health() == health && victim->weapon_ammo() == ammo,
             "Read-only provenance snapshot changed RNG or gameplay state");
-        const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / 60));
+        const float dt = SECONDS_PER_STEP;
         victim->update(dt);
         require(victim->state() == PlayerState::dead && victim->lethal_projectiles() == snapshot,
             "Entering the dead state changed already-recorded credit");
@@ -273,7 +273,7 @@ namespace
             RectangleF(victims[0]->center(), rolling.details.col_rect_size), Vector2F::zero,
             PlayerTeam::b, owner, Colour::white, &world.render,
             resolve_projectile_strip(rolling, world.render), &rolling));
-        const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / 60));
+        const float dt = SECONDS_PER_STEP;
         fatal->update(dt); // Real first-step lifetime grace keeps the shared volume available.
         require(!fatal->for_deletion() &&
             fatal->shape()->bounding_box().intersects(victims[0]->shape()->bounding_box()) &&

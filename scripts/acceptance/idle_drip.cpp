@@ -1,11 +1,11 @@
 #include "game/pch.h"
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/structure.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
@@ -34,8 +34,7 @@ namespace
         return std::abs(first - second) < 0.0001f;
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     auto observation(const IdleDrip& drip)
     {

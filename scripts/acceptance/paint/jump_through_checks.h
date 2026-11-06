@@ -1,9 +1,9 @@
 // Actual Level integration: painting is a role, while one-way collision keeps
 // its existing jump/drop and projectile-blocking semantics.
 #include "game/input/input_slots.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/level.h"
 #include "game/objects/player_builder.h"
-#include "engine/core/step_timer.h"
 #include "engine/collision/partitioner.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
@@ -79,8 +79,7 @@ namespace
                     .end_sting_volume = info.end_sting_volume() },
                 .stations = info.stations() },
             LevelMatch{ .team_colours = colours, .opening = OpeningMode::off, .duration = 300.0f });
-        const float step = static_cast<float>(StepTimer::TicksToSeconds(
-            StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float step = SECONDS_PER_STEP;
         std::vector<PlayerInputData> inputs(input_slots::count);
         inputs[3].connected = true;
         const auto tick = [&] { level.update(acceptance::slot_seats(level, inputs), step); };

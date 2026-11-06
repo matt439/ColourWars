@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/level_loaded_info.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/level_object_builder.h"
 #include "game/objects/player.h"
 #include "game/objects/projectile.h"
@@ -8,7 +9,6 @@
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/collision/narrow_phase.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -23,7 +23,7 @@
 namespace turbulence_blockout_acceptance
 {
     using namespace labrador;
-    inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+    inline const float dt = SECONDS_PER_STEP;
     inline constexpr float tolerance = 0.05f;
     using acceptance::require;
     bool supported(const Player& player);

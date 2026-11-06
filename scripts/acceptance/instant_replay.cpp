@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
 #include "game/match/round_tape.h"
 #include "scripts/acceptance/support/probe.h"
 #include <iostream>
@@ -146,7 +147,7 @@ namespace
     void check_stage(World& world, const char* stage, unsigned int seed)
     {
         const MatchSetup settings = roster(stage);
-        const float step = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float step = SECONDS_PER_STEP;
 
         // The round, as GameLevel plays it.
         RoundTape tape;

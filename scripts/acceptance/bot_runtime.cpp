@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
 #include "game/ai/match_bot_support.h"
 #include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
@@ -190,7 +191,7 @@ namespace
         auto level = world.build(settings, runtime_seed);
         std::vector<PlayerInputData> physical(input_slots::count);
         for (auto& input : physical) { input.connected = true; }
-        const float step = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float step = SECONDS_PER_STEP;
         for (int tick = 0; tick < 900 && level->state() != LevelState::active; ++tick) { level->update(physical, step); }
         require(level->state() == LevelState::active, "Bot runtime did not finish countdown");
         Observe observer;

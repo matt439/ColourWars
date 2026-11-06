@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/fixed_slab_paintable.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/player.h"
 #include "game/objects/projectile_jet.h"
 #include "game/objects/weapon_builder.h"
@@ -7,7 +8,6 @@
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
@@ -24,7 +24,7 @@ namespace fixed_slab_acceptance
     namespace
     {
         using namespace labrador;
-        const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+        const float dt = SECONDS_PER_STEP;
         const TeamColour colours{ Colour::orange, Colour::cyan };
 
         using acceptance::require;

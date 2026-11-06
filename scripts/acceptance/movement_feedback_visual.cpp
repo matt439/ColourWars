@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/sound_groups.h"
+#include "game/contracts/simulation.h"
 #include "game/game_data.h"
 #include "game/input/input_slots.h"
 
@@ -125,8 +126,7 @@ namespace
         throw std::runtime_error("a debug layer broke");
     }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     struct Frame
     {

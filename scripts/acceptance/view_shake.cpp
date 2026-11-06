@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/player_camera.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/structure.h"
@@ -7,7 +8,6 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
-#include "engine/core/step_timer.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/scene/scene.h"
@@ -32,8 +32,7 @@ namespace
 
     bool close_to(float a, float b) { return std::abs(a - b) < 0.0001f; }
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
 
     float magnitude(const Vector2F& vector) { return std::hypot(vector.x, vector.y); }
 

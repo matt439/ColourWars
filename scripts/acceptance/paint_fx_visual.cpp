@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/sound_groups.h"
+#include "game/contracts/simulation.h"
 #include "engine/app/application.h"
 #include "engine/collision/narrow_phase.h"
 #include "game/input/input_slots.h"
@@ -20,8 +21,7 @@ namespace
 {
     using acceptance::require;
 
-    const float dt = static_cast<float>(StepTimer::TicksToSeconds(
-        StepTimer::SecondsToTicks(1.0 / 60.0)));
+    const float dt = SECONDS_PER_STEP;
     constexpr std::array<ProjectileType, 4> flying = {
         ProjectileType::spray, ProjectileType::jet, ProjectileType::mist, ProjectileType::ball };
     constexpr std::array<WeaponType, 4> flying_tools = {

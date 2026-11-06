@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/skirmish_bot/fixtures.h"
+#include "game/contracts/simulation.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/replay/match_fingerprint.h"
@@ -12,7 +13,6 @@
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
-#include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
 #include <array>
@@ -151,7 +151,7 @@ namespace skirmish_acceptance
 		// Exhaust a real Sniper to a positive remainder below its full-shot cost.
 		// No physical device, debug ammo setter or guessed normalized threshold.
 		auto level = world.build(WeaponType::sniper);
-		const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::TicksPerSecond / 60));
+		const float dt = SECONDS_PER_STEP;
 		const std::vector<PlayerInputData> slots(input_slots::count);
 		for (int tick = 0; tick < 1800 && level->state() != LevelState::active; ++tick) { level->update(slots, dt); }
 		require(level->state() == LevelState::active, "Sniper observation fixture missed active state");

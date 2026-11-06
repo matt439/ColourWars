@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/simulation.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/replay/match_fingerprint.h"
@@ -17,7 +18,7 @@ namespace bot_navigation_acceptance
     // shipping bots' seed itself, so the trials' bots are unchanged.
     constexpr unsigned int trial_seed = 5242;
     constexpr float endpoint_tolerance = 0.05f;
-    inline const float dt = static_cast<float>(StepTimer::TicksToSeconds(StepTimer::SecondsToTicks(1.0 / 60.0)));
+    inline const float dt = SECONDS_PER_STEP;
 
     class World
     {

@@ -1,5 +1,6 @@
 #pragma once
 #include "game/debug/dev_tools.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/player.h"
 #include "game/objects/structure.h"
 #include "game/objects/structure_paintable.h"
@@ -9,7 +10,6 @@
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
@@ -30,8 +30,7 @@ namespace paint_underfoot_acceptance
 {
     using acceptance::require;
     inline std::uint32_t bits(float value) { return std::bit_cast<std::uint32_t>(value); }
-    inline const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-        labrador::StepTimer::SecondsToTicks(1.0 / 60.0)));
+    inline const float dt = SECONDS_PER_STEP;
     inline PlayerInputData input(float movement = 0.0f, bool jump = false, bool fire = false, bool drop = false)
     {
         PlayerInputData value;

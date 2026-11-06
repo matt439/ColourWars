@@ -8,10 +8,10 @@
 // from this and keeps its own construction and observations.
 
 #include "game/objects/collision_object_type.h"
+#include "game/contracts/simulation.h"
 #include "game/objects/player.h"
 #include "game/objects/projectile.h"
 #include "game/objects/structure.h"
-#include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 
 #include <memory>
@@ -22,8 +22,7 @@ namespace acceptance
     class PlayerCourse
     {
     public:
-        static inline const float step_seconds = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-            labrador::StepTimer::SecondsToTicks(1.0 / 60.0)));
+        static inline const float step_seconds = SECONDS_PER_STEP;
 
         labrador::Scene scene{ nullptr, nullptr };
         Player* player = nullptr;

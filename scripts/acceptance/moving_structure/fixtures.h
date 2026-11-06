@@ -14,7 +14,6 @@
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/file_path.h"
-#include "engine/core/step_timer.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/paint_samples.h"
@@ -52,8 +51,7 @@ namespace moving_structure_acceptance
     inline std::uint64_t double_bits(double value) { return std::bit_cast<std::uint64_t>(value); }
     inline void require_near(float actual, float expected, float tolerance = 0.002f)
     { require(std::isfinite(actual) && std::fabs(actual - expected) <= tolerance, "Unexpected actual moving-structure value"); }
-    inline const float dt = static_cast<float>(labrador::StepTimer::TicksToSeconds(
-        labrador::StepTimer::SecondsToTicks(1.0 / static_cast<double>(SIMULATION_HZ))));
+    inline const float dt = SECONDS_PER_STEP;
     inline PlayerInputData input(float movement = 0.0f, bool jump = false,
         bool fire = false, bool drop = false)
     {
