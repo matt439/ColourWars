@@ -77,7 +77,7 @@ bool MatchPlanner::is_stage_word(const std::string& word) const
 
 std::vector<std::string> MatchPlanner::weapon_names()
 {
-	return { WEAPON_NAMES.begin(), WEAPON_NAMES.end() };
+	return { ::weapon_names.begin(), ::weapon_names.end() };
 }
 
 bool MatchPlanner::weapon_from_name(const std::string& name, WeaponType& weapon)

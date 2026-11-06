@@ -33,10 +33,10 @@ static_assert(WeaponType::max_prim_wep == WeaponType::random_primary);
 // presentation.json, the save's last_match and the Debug match plan. Indexed
 // by WeaponType from sprayer to random_primary, which is "random" (menu
 // descriptions, the weapon picker and the match plan; tuning has no entry).
-inline constexpr size_t TUNED_WEAPON_COUNT = static_cast<size_t>(WeaponType::random_primary);
+inline constexpr size_t tuned_weapon_count = static_cast<size_t>(WeaponType::random_primary);
 // The tuned weapons and Random: what Weapon Select offers and describes.
-inline constexpr size_t SELECTABLE_WEAPON_COUNT = TUNED_WEAPON_COUNT + 1;
-inline constexpr std::array<const char*, SELECTABLE_WEAPON_COUNT> WEAPON_NAMES{
+inline constexpr size_t selectable_weapon_count = tuned_weapon_count + 1;
+inline constexpr std::array<const char*, selectable_weapon_count> weapon_names{
     "sprayer", "sniper", "roller", "mister", "bucket", "random"
 };
 
@@ -44,15 +44,15 @@ inline constexpr std::array<const char*, SELECTABLE_WEAPON_COUNT> WEAPON_NAMES{
 constexpr const char* weapon_name(WeaponType weapon)
 {
     const size_t index = static_cast<size_t>(weapon);
-    return index < WEAPON_NAMES.size() ? WEAPON_NAMES[index] : nullptr;
+    return index < weapon_names.size() ? weapon_names[index] : nullptr;
 }
 
 // The weapon a name spells, including "random"; empty for any other name.
 constexpr std::optional<WeaponType> weapon_from_name(std::string_view name)
 {
-    for (size_t index = 0; index < WEAPON_NAMES.size(); ++index)
+    for (size_t index = 0; index < weapon_names.size(); ++index)
     {
-        if (name == WEAPON_NAMES[index]) { return static_cast<WeaponType>(index); }
+        if (name == weapon_names[index]) { return static_cast<WeaponType>(index); }
     }
     return std::nullopt;
 }
@@ -62,8 +62,8 @@ constexpr std::optional<WeaponType> weapon_from_name(std::string_view name)
 template <typename Visit>
 constexpr void for_each_tuned_weapon(Visit&& visit)
 {
-    for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
+    for (size_t index = 0; index < tuned_weapon_count; ++index)
     {
-        visit(static_cast<WeaponType>(index), WEAPON_NAMES[index]);
+        visit(static_cast<WeaponType>(index), weapon_names[index]);
     }
 }

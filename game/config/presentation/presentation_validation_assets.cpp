@@ -135,7 +135,7 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 	for (size_t index = 0; index < artwork.choices.size(); ++index)
 	{
 		const WeaponChoicePresentation& choice = artwork.choices[index];
-		const std::string key = std::string("main_menu.weapon_select.choices.") + WEAPON_NAMES[index];
+		const std::string key = std::string("main_menu.weapon_select.choices.") + weapon_names[index];
 		drawable_text::check_font_can_draw(&render, this->presentation.main_menu_.weapon_description_font,
 			choice.name, this->presentation.source_path_ + ": " + key + ".name");
 		const Vector2F name_size = render.measure_text(name_font, choice.name);

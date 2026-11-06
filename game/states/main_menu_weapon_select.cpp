@@ -134,7 +134,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 	labrador::Direction direction, int player_index)
 {
 	const WeaponType previous = this->select_states_[player_index].type;
-	this->select_states_[player_index].type = step_tool(previous, direction, SELECTABLE_WEAPON_COUNT);
+	this->select_states_[player_index].type = step_tool(previous, direction, selectable_weapon_count);
 	if (this->select_states_[player_index].type != previous)
 	{
 		// The icon is reused for every tool, so its enum is the selection identity.

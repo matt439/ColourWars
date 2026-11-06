@@ -463,7 +463,7 @@ private:
 	std::vector<SelectState> select_states_;
 	// Keep names, frames and descriptions paired with the atlas captured on entry.
 	WeaponSelectArtworkPresentation weapon_select_art_;
-	std::array<std::wstring, SELECTABLE_WEAPON_COUNT> weapon_descriptions_;
+	std::array<std::wstring, selectable_weapon_count> weapon_descriptions_;
 	// Each row's weapon when its icon and text were last written; none until
 	// the first write, so that one always happens.
 	std::vector<WeaponType> displayed_weapons_;

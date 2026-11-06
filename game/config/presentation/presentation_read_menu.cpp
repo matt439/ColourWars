@@ -493,9 +493,9 @@ namespace presentation_read
 			throw std::runtime_error(weapon_select.where() + ": 'sheet' and 'fill_frame' must not be empty.");
 		}
 		const JsonValue choices = weapon_select.object("choices");
-		for (size_t index = 0; index < WEAPON_NAMES.size(); ++index)
+		for (size_t index = 0; index < weapon_names.size(); ++index)
 		{
-			const JsonValue choice = choices.object(WEAPON_NAMES[index]);
+			const JsonValue choice = choices.object(weapon_names[index]);
 			WeaponChoicePresentation& record = artwork.choices[index];
 			record.name = drawable_text::widen_drawable(choice.string("name"), choice.where() + ": name");
 			if (record.name.find_first_not_of(L' ') == std::wstring::npos ||
@@ -544,9 +544,9 @@ namespace presentation_read
 					descriptions.where() + ": " + key);
 		};
 
-		for (size_t index = 0; index < WEAPON_NAMES.size(); ++index)
+		for (size_t index = 0; index < weapon_names.size(); ++index)
 		{
-			describe(static_cast<WeaponType>(index), WEAPON_NAMES[index]);
+			describe(static_cast<WeaponType>(index), weapon_names[index]);
 		}
 
 		if (json.has("stage_scan"))

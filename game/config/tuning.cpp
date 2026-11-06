@@ -1005,7 +1005,7 @@ const WeaponTuning& GameTuning::weapon(WeaponType type) const
 	{
 		throw std::out_of_range("weapon " + std::to_string(index) +
 			" has no tuning: " + this->source_path_ + " describes the " +
-			std::to_string(TUNED_WEAPON_COUNT) + " weapons a player can pick, "
+			std::to_string(tuned_weapon_count) + " weapons a player can pick, "
 			"and this is not one of them.");
 	}
 	return this->weapons_[index];

@@ -404,7 +404,7 @@ namespace presentation_read
 
 	}
 
-	std::array<IdleDripPresentation, TUNED_WEAPON_COUNT> read_idle_drips(const JsonValue& root)
+	std::array<IdleDripPresentation, tuned_weapon_count> read_idle_drips(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");
 		IdleDripPresentation drip;
@@ -417,7 +417,7 @@ namespace presentation_read
 		drip.lifetime = read_positive(json, "lifetime");
 		drip.gravity = read_positive(json, "gravity");
 		drip.keyline_width = read_positive(json, "keyline_width");
-		std::array<IdleDripPresentation, TUNED_WEAPON_COUNT> tools;
+		std::array<IdleDripPresentation, tuned_weapon_count> tools;
 		for (IdleDripPresentation& tool : tools)
 		{
 			tool = drip;
@@ -481,9 +481,9 @@ namespace presentation_read
 				": 'keyline_width' must leave visible fill inside 'status_size'.");
 		}
 		const JsonValue sizes = json.object("muzzle_sizes");
-		for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
+		for (size_t index = 0; index < tuned_weapon_count; ++index)
 		{
-			const char* const name = WEAPON_NAMES[index];
+			const char* const name = weapon_names[index];
 			const Vector2F size = read_positive_vector(sizes, name);
 			if (feedback.keyline_width * 2.0f >= std::min(size.x, size.y))
 			{
@@ -556,9 +556,9 @@ namespace presentation_read
 		motion.bucket_travel_per_swing = read_positive(json, "bucket_travel_per_swing");
 		motion.bucket_settle_time = read_positive(json, "bucket_settle_time");
 		const JsonValue tools = json.object("tools");
-		for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
+		for (size_t index = 0; index < tuned_weapon_count; ++index)
 		{
-			const JsonValue tool = tools.object(WEAPON_NAMES[index]);
+			const JsonValue tool = tools.object(weapon_names[index]);
 			motion.tools[index] = { read_positive(tool, "shot_recovery"),
 				read_positive(tool, "valve_time") };
 		}
@@ -647,9 +647,9 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": 'hand_edge' must leave an interior in 'hand_size'.");
 		}
 		const JsonValue grips = json.object("grips");
-		for (size_t index = 0; index < TUNED_WEAPON_COUNT; ++index)
+		for (size_t index = 0; index < tuned_weapon_count; ++index)
 		{
-			const JsonValue grip = grips.object(WEAPON_NAMES[index]);
+			const JsonValue grip = grips.object(weapon_names[index]);
 			figure.grips[index] = { read_vector(grip, "rear"), read_vector(grip, "front") };
 		}
 		figure.slips = read_figure_slips(json.object("slips"), figure.canvas_size);

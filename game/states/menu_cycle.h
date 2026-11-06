@@ -34,7 +34,7 @@ Index wrap_step(Index index, Index count, labrador::Direction direction)
 }
 
 // The weapon one step from `tool` among the first `choices` WeaponType values:
-// TUNED_WEAPON_COUNT for the real tools, SELECTABLE_WEAPON_COUNT to include
+// tuned_weapon_count for the real tools, selectable_weapon_count to include
 // Weapon Select's Random.
 inline WeaponType step_tool(WeaponType tool, labrador::Direction direction, std::size_t choices)
 {
