@@ -201,35 +201,19 @@
     void identity_ink_tune_checks(Application& app, Level& level, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
         const std::filesystem::path& output)
     {
-        const auto root = output / "identity-ink-tune-scratch", source = root / "source", staged = root / "staged";
-        std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-        constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
-        std::array<std::string, 2> real_bytes;
-        for (size_t index = 0; index < files.size(); ++index)
-        {
-            real_bytes[index] = tune_colour_bytes(content / files[index]);
-            tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
-        }
-        const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-        const GameTuning original_tuning = tuning; const Presentation original = presentation;
-        struct RestoreIdentityTuneContent
-        {
-            GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original;
-            ~RestoreIdentityTuneContent() { this->tuning = this->original_tuning; this->presentation = this->original; }
-        } restore{ tuning, presentation, original_tuning, original };
-        Save preferences; SettingsSession preferences_session(preferences); PlaySettings play; play.music_volume = 17; play.sfx_volume = 83;
-        play.aim_marker = true; play.reduce_effects = true;
-        require(preferences_session.set_play_settings_and_save(play), "Cannot seed private identity ink preferences");
-        const auto save_path = acceptance::save_path_in(root / "profile");
-        const std::string saved_preferences = tune_colour_bytes(save_path);
-        GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-        const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-        DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
-        impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-        impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
-        impl.log().set_mirror_to_debugger(false);
-        require(impl.log().set_transcript((output / "identity-ink-tune-commands.log").string()),
-            "Cannot retain identity ink command transcript");
+        TuneColourSession session(app, tuning, presentation, content, output,
+            { .scratch = "identity-ink-tune-scratch", .transcript = "identity-ink-tune-commands.log",
+            .seed = [](Save&, SettingsSession& settings)
+            { PlaySettings play; play.music_volume = 17; play.sfx_volume = 83; play.aim_marker = true; play.reduce_effects = true;
+              require(settings.set_play_settings_and_save(play), "Cannot seed private identity ink preferences"); } });
+        const std::filesystem::path& source = session.source();
+        const std::filesystem::path& staged = session.staged();
+        const auto& files = tune_colour_files;
+        const auto& real_bytes = session.real_bytes();
+        SettingsSession& preferences_session = session.settings();
+        const auto save_path = session.save_path();
+        DebugDirectorImpl& impl = session.impl();
+        const std::string saved_preferences = session.seeded_save();
         IdentityInkProbe probe(app, level, presentation);
         JsonSpanDocument baseline(real_bytes[1], "private identity ink source");
         const JsonLeaf* leaf = baseline.find("player_identity.ink_colour");

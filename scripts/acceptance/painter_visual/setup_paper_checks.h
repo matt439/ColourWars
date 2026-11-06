@@ -55,8 +55,8 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
     Presentation& presentation, const std::filesystem::path& output)
 {
     menu_setup_text_checks(app, canvas, tuning, presentation, output);
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
@@ -71,12 +71,12 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         { app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto tap = [&](Key key)
         { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto project = [&](RectangleF box)
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(box); return countdown_crop_bounds(box);
+        camera.calculate_view_rectangle(box); return pixel_bounds(box);
     };
     const auto row = [&](bool count, MenuItem item, int index, int column = 0)
     {
@@ -99,7 +99,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); settings = MatchSetup(); settings.set_best_of(1);
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::unique_ptr<MenuPage> page;
         if (count) { page = std::make_unique<MainMenuPlayerCount>(&context); }
         else { page = std::make_unique<MainMenuModeSelect>(&context); }
@@ -156,7 +156,7 @@ void setup_paper_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         {
             for (int x = bounds.x; x < bounds.right(); ++x)
             {
-                const size_t pixel = hud_pixel_offset(moving, x, y);
+                const size_t pixel = pixel_offset(moving, x, y);
                 if (!same_pixel(black, white, pixel)) { continue; }
                 ++solid; require(same_pixel(moving, rest, pixel) && same_pixel(moving, black, pixel),
                     "Pressed setup paper moved its opaque duration label/value lettering");

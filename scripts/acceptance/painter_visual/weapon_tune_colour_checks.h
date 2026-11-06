@@ -5,33 +5,26 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
-    const auto root = output / "weapon-tune-scratch", source = root / "source", staged = root / "staged";
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> real_bytes;
-    for (size_t index = 0; index < files.size(); ++index)
-    {
-        real_bytes[index] = tune_colour_bytes(content / files[index]);
-        tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
-    }
-    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    const GameTuning original_tuning = tuning; const Presentation original = presentation;
-    struct RestoreWeaponTuneContent
-    {
-        GameTuning& tuning; Presentation& look; GameTuning original_tuning; Presentation original;
-        ~RestoreWeaponTuneContent() { this->tuning = this->original_tuning; this->look = this->original; }
-    } restore{ tuning, presentation, original_tuning, original };
-    app.resolution_manager()->set_resolution_exactly({ 1280, 720 }); std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    require(preferences_session.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
-        ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed the private Weapon tint profile/palette");
-    const auto save_path = acceptance::save_path_in(root / "profile"); const std::string saved = tune_colour_bytes(save_path);
+    app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
+    std::ignore = app.renderer()->window_size_changed(1280, 720);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
-    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user"); impl.set_script_directories({ root / "scripts" });
-    director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "weapon-tune-commands.log").string()), "Cannot retain Weapon tint transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "weapon-tune-scratch", .transcript = "weapon-tune-commands.log",
+        .seed = [](Save& save, SettingsSession& settings)
+        { PlaySettings play = settings.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+          require(settings.set_play_settings_and_save(play) && save.set_display_settings_and_save(
+              ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed the private Weapon tint profile/palette"); },
+        .catalog = [&] { return acceptance::catalog_of(levels, stages, { "movement_course" }); } });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const Presentation& original = session.original_presentation();
+    Save& preferences = session.preferences();
+    const auto save_path = session.save_path();
+    GameData& data = session.data();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved = session.seeded_save();
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot claim Weapon tint keyboard seat");
     settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3); settings.set_screen_layout(ScreenLayout::two_player);
@@ -53,7 +46,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         require(++ticks <= 16, "Weapon tint probe exceeded sixteen bounded page updates");
         app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
-    stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuWeaponSelect>(&context)); tick(); tick();
+    stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuWeaponSelect>(&context)); tick(); tick();
     painter_scripted_pads::states[3].buttons = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a)); tick();
     painter_scripted_pads::states[3].buttons = 0; tick(); tick(0.51f);
     const auto unchanged = [&]
@@ -75,7 +68,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         require(preferences.team_palette() == TeamColourPair::blue_orange && tune_colour_bytes(save_path) == saved,
             "Weapon tint commands changed the palette or private save");
     };
-    const auto draw = [&] { unchanged(); return main_menu_frame(app); };
+    const auto draw = [&] { unchanged(); return stack_frame(app); };
     const Frame baseline = tune_colour_frozen(draw); const auto& style = original.menu(); const auto& look = original.main_menu();
     const TeamColour paint = original.team_palette().fixed_pair(TeamColourPair::blue_orange).colours;
     const std::array<WeaponChoicePresentation, 2> choices{{ { L"Sprayer", "sprayer", "sprayer_paint", "sprayer_supply" },
@@ -88,8 +81,8 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         boxes[seat] = RectangleF(style.layout.position + Vector2F(look.weapon_select.spacing.x * 2.0f,
             look.weapon_select.spacing.y * static_cast<float>(seat + 2)), look.weapon_select.size);
         envelopes[seat] = boxes[seat]; envelopes[seat].inflate(style.icon_padding + Vector2F(style.rule_height));
-        RectangleF projected = envelopes[seat]; camera.calculate_view_rectangle(projected); card_pixels[seat] = countdown_crop_bounds(projected);
-        projected = boxes[seat]; camera.calculate_view_rectangle(projected); canvas_pixels[seat] = countdown_crop_bounds(projected);
+        RectangleF projected = envelopes[seat]; camera.calculate_view_rectangle(projected); card_pixels[seat] = pixel_bounds(projected);
+        projected = boxes[seat]; camera.calculate_view_rectangle(projected); canvas_pixels[seat] = pixel_bounds(projected);
     }
     const auto check_cards = [&](const Frame& actual, const Colour& selected, const Colour& unselected)
     {
@@ -153,7 +146,7 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
     tick(); require(tune_colour_frozen(draw).pixels == baseline.pixels, "Weapon tune reset failed exact same-page baseline reversal"); unchanged();
     records << "reset-refresh,restored,baseline,baseline,true,true\n";
     RectangleF evidence = RectangleF::union_of(envelopes[0], envelopes[1]); camera.calculate_view_rectangle(evidence);
-    const RectangleI crop = countdown_crop_bounds(evidence);
+    const RectangleI crop = pixel_bounds(evidence);
     save(foreground_crop(baseline, crop, 0), output / "weapon-tune-colours-original-detail.ppm");
     save(foreground_crop(tuned, crop, 0), output / "weapon-tune-colours-tuned-detail.ppm");
     for (size_t index = 0; index < files.size(); ++index)

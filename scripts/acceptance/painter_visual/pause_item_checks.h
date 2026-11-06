@@ -8,9 +8,8 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
     constexpr std::array<MenuItem, 6> roles{ MenuItem::resume, MenuItem::restart,
         MenuItem::options, MenuItem::quit, MenuItem::yes, MenuItem::no };
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation);
@@ -48,7 +47,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
             require(!app.gamepads()->connected(0), "Pause item fixture requires absent pad slot zero");
             require(settings.claim_input_slot(0), "Cannot assign pause item missing-seat roster");
         }
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<PauseMenuAction>(std::make_unique<PauseMenuInitial>(&context,
             input_slots::keyboard_and_mouse), [&](const PauseMenuAction& result) { choice = result; });
         tick(); tick();
@@ -67,7 +66,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.pause_menu();
         const auto& art = look.art;
-        const Frame actual = pause_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         const int rows = phase == 1 || phase == 2 ? 2 : 4;
@@ -126,7 +125,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
             const Frame reference = read(renderer);
             RectangleF bounds = expected.bounds(); bounds.inflate(Vector2F(2.0f));
             camera.calculate_view_rectangle(bounds);
-            const RectangleI pixels = countdown_crop_bounds(bounds);
+            const RectangleI pixels = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, pixels, 0);
             const Frame wanted = foreground_crop(reference, pixels, 0);
             const std::string stem = "pause-menu-items-" + name + '-' + std::to_string(phase) + '-' +
@@ -147,7 +146,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
                 actual.height << ",true\n";
         }
         std::srand(7523); const int next_random = std::rand(); std::srand(7523);
-        require(actual.pixels == pause_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Pause label drawing changed frozen pixels or consumed random numbers");
         return actual;
     };
@@ -176,20 +175,8 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     Presentation old = with_labels(old_labels);
     old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Pause replacement font lacks a baseline printable glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_pause_items_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "Pause replacement font still contains the old labels' glyph");
+    add_probe_font(*app.render_resources(), original.menu().item_font, font_name);
     Presentation next = with_labels(new_labels);
     const_cast<MenuStyle&>(next.menu()).item_font = font_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
@@ -201,11 +188,11 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         const int focus = phase == 0 ? 0 : 1;
         const Frame retained = compare("custom-old", phase, focus, old, old_labels);
         presentation = next; tick();
-        require(retained.pixels == pause_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Live pause item/font replacement changed an existing page");
         if (phase == 0) { tap(Key::down); tap(Key::up); }
         else { tap(Key::up); compare("old-yes-after-replacement", phase, 0, old, old_labels); tap(Key::down); }
-        require(retained.pixels == pause_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Pause focus movement rebased old labels into a font missing their glyph");
         compare("retained-old", phase, focus, old, old_labels);
         if (phase == 0)
@@ -215,14 +202,14 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
             tap(Key::enter); tick();
             require(stack.depth() == 3 && !choice, "Custom Pause Options did not open a child page");
             for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
-            const Frame controls_parent = pause_menu_frame(app);
+            const Frame controls_parent = stack_frame(app);
             tap(Key::enter); tick();
             require(stack.depth() == 4 && !choice, "Paused Options did not open Controls/audio");
             tap(Key::escape); tick();
-            require(stack.depth() == 3 && !choice && controls_parent.pixels == pause_menu_frame(app).pixels,
+            require(stack.depth() == 3 && !choice && controls_parent.pixels == stack_frame(app).pixels,
                 "Controls return changed retained Options labels, font or focus");
             tap(Key::escape); tick();
-            require(stack.depth() == 2 && !choice && options.pixels == pause_menu_frame(app).pixels,
+            require(stack.depth() == 2 && !choice && options.pixels == stack_frame(app).pixels,
                 "Options return changed cached Pause labels, font or focus");
             compare("old-options-return", 0, 2, old, old_labels);
             tap(Key::down); tap(Key::enter); tick();
@@ -237,10 +224,10 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         const int reopened_phase = phase == 0 ? 2 : phase;
         const Frame adopted = compare("reopened-new-font", reopened_phase, 1, next, new_labels);
         presentation = original; tick();
-        require(adopted.pixels == pause_menu_frame(app).pixels,
+        require(adopted.pixels == stack_frame(app).pixels,
             "Pause item/font reversal changed an already reopened confirmation");
         tap(Key::up); tap(Key::down);
-        require(adopted.pixels == pause_menu_frame(app).pixels,
+        require(adopted.pixels == stack_frame(app).pixels,
             "Confirmation focus after reversal changed cached labels or font");
         compare("retained-new-after-reversal", reopened_phase, 1, next, new_labels);
         tap(Key::escape); tick();
@@ -256,10 +243,10 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         if (phase == 0)
         {
             presentation = original; tick();
-            require(new_initial.pixels == pause_menu_frame(app).pixels,
+            require(new_initial.pixels == stack_frame(app).pixels,
                 "Pause item/font reversal changed an already reopened initial page");
             tap(Key::down); tap(Key::up);
-            require(new_initial.pixels == pause_menu_frame(app).pixels,
+            require(new_initial.pixels == stack_frame(app).pixels,
                 "Initial focus after reversal changed cached custom labels or font");
             compare("new-initial-after-reversal", 0, 0, next, new_labels);
             tap(Key::enter);
@@ -281,7 +268,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
     presentation = next;
     static_cast<WindowNotify&>(app).on_activated(); tick();
     app.keyboard()->on_key_up(Key::enter); tick(); tick();
-    require(!choice && stack.depth() == 2 && before_focus_loss.pixels == pause_menu_frame(app).pixels,
+    require(!choice && stack.depth() == 2 && before_focus_loss.pixels == stack_frame(app).pixels,
         "Focus return or an interrupted Enter release resumed Pause or rebased cached labels");
     compare("focus-return-held-release", 0, 0, old, old_labels);
     tap(Key::enter); require(choice == PauseMenuAction::resume, "Focus-return Pause rejected a fresh Resume");

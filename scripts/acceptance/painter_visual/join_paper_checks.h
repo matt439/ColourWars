@@ -4,8 +4,8 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
@@ -40,7 +40,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const auto tap = [&](int slot, GamepadButton button)
         { hold(slot, button, true); tick(); hold(slot, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto set_connected = [&](int slot, bool value)
     {
         require(slot >= 0 && slot < input_slots::pad_count, "Join paper fixture tried to disconnect keyboard input");
@@ -88,7 +88,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         expected_host_row = 1;
         for (int player = 0; player < count; ++player) { settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); }
         initial_rows.clear(); for (int player = 0; player < count; ++player) { initial_rows.push_back(text_bounds(presentation, player)); }
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         auto page = std::make_unique<MainMenuJoin>(&context); active = page.get(); stack.push(std::move(page)); tick(); tick();
         require(stack.depth() == 2, "Join paper did not remain on its neutral initial page");
     };
@@ -199,13 +199,13 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         require(actual.pixels == expected.pixels, "Actual Join paper differs from its independent full text/paper/gutter fixture");
         for (const auto& widget : text)
         {
-            RectangleF bounds = widget->bounds(); camera.calculate_view_rectangle(bounds); const RectangleI pixels = countdown_crop_bounds(bounds);
+            RectangleF bounds = widget->bounds(); camera.calculate_view_rectangle(bounds); const RectangleI pixels = pixel_bounds(bounds);
             float darkest = 1.0f, lightest = 0.0f; size_t ink = 0, pale = 0;
             for (int y = pixels.y; y < pixels.bottom(); ++y)
             {
                 for (int x = pixels.x; x < pixels.right(); ++x)
                 {
-                    const float luminance = hud_luminance(actual, hud_pixel_offset(actual, x, y));
+                    const float luminance = srgb_luminance(actual, pixel_offset(actual, x, y));
                     darkest = std::min(darkest, luminance); lightest = std::max(lightest, luminance);
                     if (luminance < 0.2f) { ++ink; } if (luminance > 0.5f) { ++pale; }
                 }
@@ -216,7 +216,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         if (capture)
         {
             save(actual, output / (stem + ".ppm"));
-            save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(panel)), 0), output / (stem + "-detail.ppm"));
+            save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(panel)), 0), output / (stem + "-detail.ppm"));
         }
         frozen(actual); records << name << ',' << actual.width << ',' << actual.height << ',' << settings.player_count() << ',' <<
             slots[0] << ',' << fraction << ",true\n"; return actual;
@@ -225,7 +225,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     {
         MatchSetup plan = settings; MenuInput reference_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext reference_context(&data, &reference_input, &plan); StateContext reference_stack;
-        reference_stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        reference_stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (kind == 0) { reference_stack.push(std::make_unique<MainMenuPlayerCount>(&reference_context)); }
         else if (kind == 1) { reference_stack.push(std::make_unique<MainMenuWeaponSelect>(&reference_context)); }
         else { reference_stack.push(std::make_unique<MainMenuTeamSelect>(&reference_context)); }

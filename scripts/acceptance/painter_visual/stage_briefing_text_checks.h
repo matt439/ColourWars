@@ -31,8 +31,8 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         { 2, 3, "versus-best-three", L"BEST OF 3", L"2 PLAYERS / 2 TEAMS", &Words::versus, nullptr },
         { 2, 5, "versus-best-five", L"BEST OF 5", L"2 PLAYERS / 2 TEAMS", &Words::versus, nullptr } } };
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
         acceptance::shipped_stage(levels, "close_quarters") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -113,7 +113,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
             settings.set_player_team(player, player == 0 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_weapon(player, player == 0 ? WeaponType::bucket : WeaponType::sniper);
         }
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick();
         require(stack.depth() == 2 && settings.input_roster_complete() && !context.music_exit_pending(),
             "Briefing fixture did not remain on its connected neutral stage page");
@@ -178,7 +178,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         {
             RectangleF bounds = expected[index]->bounds(); const RectangleF design_bounds = bounds;
             bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-            const RectangleI pixels = countdown_crop_bounds(bounds);
+            const RectangleI pixels = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
             const std::string stem = "menu-text-stage-briefing-" + name + '-' + fixture.name + '-' + rows[index].name + '-' +
                 std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -234,33 +234,10 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         text.solo_mode = words.solo_mode; text.single_match_mode = words.single_match_mode; return result;
     };
     Presentation old = with_words(old_words); old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().brand_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Briefing replacement brand font lacks a baseline printable glyph"); glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_stage_briefing_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "Briefing replacement brand font still contains the old copy glyph");
-    const Font* mode_source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().detail_font));
-    std::vector<Glyph> mode_glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = mode_source->find(character);
-        require(glyph != nullptr, "Briefing replacement detail font lacks a baseline printable glyph");
-        mode_glyphs.push_back(*glyph);
-    }
+    add_probe_font(*app.render_resources(), original.menu().brand_font, font_name);
     const std::string mode_font = "acceptance_stage_briefing_mode_without_tilde";
-    app.render_resources()->add_font(mode_font, std::make_unique<Font>(mode_source->atlas(),
-        std::move(mode_glyphs), mode_source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(mode_font), L"~"),
-        "Briefing replacement detail font still contains the old mode glyph");
+    add_probe_font(*app.render_resources(), original.menu().detail_font, mode_font);
     Presentation next = with_words(new_words); auto& next_style = const_cast<MenuStyle&>(next.menu());
     next_style.brand_font = font_name; next_style.detail_font = mode_font;
     next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);

@@ -5,9 +5,8 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     // The series below finishes rounds, which write stage records.
     const acceptance::IsolatedSave profile(output / "team-setup-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -194,7 +193,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                     const Frame capture = frame(); save(capture, output / (stem + ".ppm"));
                     const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
                         app.viewport_manager()->fullscreen_viewport());
-                    save(foreground_crop(capture, countdown_crop_bounds(camera.calculate_view_rectangle(
+                    save(foreground_crop(capture, pixel_bounds(camera.calculate_view_rectangle(
                         RectangleF(100.0f, 350.0f, 1450.0f, 710.0f)))), output / (stem + "-detail.ppm"));
                 }
                 resize_page({ 1280, 720 });
@@ -403,7 +402,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const auto& end = presentation.end_menu();
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        const RectangleI primary = countdown_crop_bounds(camera.calculate_view_rectangle(
+        const RectangleI primary = pixel_bounds(camera.calculate_view_rectangle(
             RectangleF(end.layout.position, measure(style.item_font, expected_session.continue_string(presentation.menu_text().end)))));
         require(foreground_crop(frame(), primary, 0).pixels == foreground_crop(expected_end, primary, 0).pixels,
             "Series End page lost its expected ongoing-series continuation");

@@ -326,9 +326,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     const size_t damage_begin = motors.count;
     Player& victim = const_cast<Player&>(game->level().player(1));
     victim.force_respawn();
-    const auto& damage_values = tuning.projectile(ProjectileType::spray);
-    const ProjectileSpray damage(RectangleF(0, 0, 10, 10), Vector2F::zero, PlayerTeam::a,
-        3, Colour::white, app.render_resources(), resolve_projectile_strip(damage_values, *app.render_resources()), &damage_values);
+    const ProjectileSpray damage = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10), PlayerTeam::a, 3, Colour::white);
     const float health_before = victim.health();
     victim.on_contact(damage, Vector2F::zero, 0.0f); tick();
     require(victim.health() < health_before, "Inactive motor control did not produce actual damage");
@@ -384,7 +382,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     require(muted(), "Turning background mode off restored inactive audio"); note("off-inactive-freezes");
     // A current in-memory preference change is an independent restoration
     // witness. This fixture deliberately does not call a Save writer here.
-    auto& current = const_cast<PlaySettings&>(preferences_session.play_settings());
+    auto& current = live_play_settings(preferences_session);
     current.music_volume = was_muted ? 3 : 31; current.sfx_volume = was_muted ? 4 : 47;
     painter_scripted_pads::states[3].buttons = static_cast<std::uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
     app.gamepads()->poll();

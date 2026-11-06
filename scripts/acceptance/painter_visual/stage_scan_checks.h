@@ -1,29 +1,49 @@
 // ROAD#32: actual optional-folder scans, Stage Select and the diagnostic child.
 // Controlled raw diagnostics exercise wrapping; no physical input is claimed.
-struct StageScanStderrCapture
+// Sends stderr's descriptor to `path` while it lives. The stderr stream is
+// never reopened, so a failed start leaves it as it was; finish() restores the
+// saved descriptor and fails if it cannot, and the destructor restores it
+// quietly when the probe ends early.
+class StageScanStderrCapture
 {
-    int saved = -1;
+public:
     explicit StageScanStderrCapture(const std::filesystem::path& path)
     {
-        std::fflush(stderr); this->saved = _dup(_fileno(stderr));
-        require(this->saved >= 0, "Cannot retain the probe stderr descriptor");
-        FILE* redirected = nullptr;
-        if (_wfreopen_s(&redirected, path.c_str(), L"w", stderr) != 0)
-        { _close(this->saved); this->saved = -1; throw std::runtime_error("Cannot capture isolated stage-scan diagnostics"); }
+        std::fflush(stderr);
+        int file = -1;
+        require(_wsopen_s(&file, path.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC | _O_TEXT, _SH_DENYNO,
+            _S_IREAD | _S_IWRITE) == 0 && file >= 0, "Cannot open the isolated stage-scan diagnostics file");
+        this->saved_ = _dup(_fileno(stderr));
+        const bool redirected = this->saved_ >= 0 && _dup2(file, _fileno(stderr)) == 0;
+        _close(file);
+        if (!redirected)
+        {
+            if (this->saved_ >= 0) { _close(this->saved_); this->saved_ = -1; }
+            throw std::runtime_error("Cannot capture isolated stage-scan diagnostics");
+        }
     }
-    void finish()
+    StageScanStderrCapture(const StageScanStderrCapture&) = delete;
+    StageScanStderrCapture& operator=(const StageScanStderrCapture&) = delete;
+    ~StageScanStderrCapture() { this->restore(); }
+    void finish() { require(this->restore(), "Cannot restore the probe's stderr after stage-scan diagnostics"); }
+private:
+    bool restore() noexcept
     {
-        if (this->saved >= 0) { std::fflush(stderr); _dup2(this->saved, _fileno(stderr)); _close(this->saved); this->saved = -1; std::clearerr(stderr); }
+        if (this->saved_ < 0) { return true; }
+        std::fflush(stderr);
+        const bool restored = _dup2(this->saved_, _fileno(stderr)) == 0;
+        _close(this->saved_); this->saved_ = -1; std::clearerr(stderr);
+        return restored;
     }
-    ~StageScanStderrCapture() { this->finish(); }
+    int saved_ = -1;
 };
 
 void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const acceptance::IsolatedSave isolated(output / "stage-scan-profile");
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = true; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();
     catalog.add(read_stage_definition(path_to_utf8(content / "levels/movement_course.json"), "movement_course"));
     const auto folder_path = output / "stage-scan-profile/ColourWars/stages";
@@ -59,7 +79,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     { require(++updates <= 500, "Stage scan native input exceeded500 updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
-    const auto frame = [&]() { ++reads; return main_menu_frame(app); };
+    const auto frame = [&]() { ++reads; return stack_frame(app); };
     const auto resize = [&](const Vector2I& size)
     { app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y); };
     const auto prepare = [&]
@@ -67,7 +87,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); input.reset_directions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
     };
     const auto unchanged = [&]
     {
@@ -113,7 +133,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             const MenuPaperArtwork paper(layout.paper, app.render_resources(), &style, &art, &no_focus); paper.draw(list);
             list.set_filter(TextureFilter::linear); text.draw(list); const Frame wanted = read(renderer); ++reads;
             RectangleF projected = bounds; projected.inflate(2.0f); camera.calculate_view_rectangle(projected);
-            const RectangleI roi = countdown_crop_bounds(projected);
+            const RectangleI roi = pixel_bounds(projected);
             const Frame observed = foreground_crop(actual, roi, 0), reference = foreground_crop(wanted, roi, 0);
             if (observed.pixels != reference.pixels)
             {
@@ -139,7 +159,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         const UiTexture dim("prompt-reference-footer", style.sprite_sheet, style.fill_frame, footer, app.render_resources(), style.scrim_colour); dim.draw(list);
         list.set_filter(TextureFilter::linear); prompt.draw(list); const Frame wanted = read(renderer); ++reads;
         RectangleF projected = prompt.bounds(); projected.inflate(2.0f); camera.calculate_view_rectangle(projected);
-        const RectangleI roi = countdown_crop_bounds(projected);
+        const RectangleI roi = pixel_bounds(projected);
         require(foreground_crop(actual, roi, 0).pixels == foreground_crop(wanted, roi, 0).pixels,
             "Actual diagnostic footer differs from its supplied legend/font/position/scale reference");
         records << name << ',' << actual.width << ',' << actual.height << ",prompt," << file << ',' << page << ',' << pages << ',' <<
@@ -179,7 +199,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             app.render_resources(), style.panel_edge_colour); rule.draw(list);
         list.set_filter(TextureFilter::linear); status.draw(list); const Frame wanted = read(renderer); ++reads;
         RectangleF projected = status.bounds(); projected.inflate(2.0f); camera.calculate_view_rectangle(projected);
-        const RectangleI roi = countdown_crop_bounds(projected); const Frame observed = foreground_crop(before_details, roi, 0);
+        const RectangleI roi = pixel_bounds(projected); const Frame observed = foreground_crop(before_details, roi, 0);
         require(observed.pixels == foreground_crop(wanted, roi, 0).pixels,
             "Actual Stage Select scan summary is absent or differs from its independent literal/font/fit/footer reference");
         save(before_details, output / "stage-scan-parent-status-1280x720-context.ppm"); ++frames;

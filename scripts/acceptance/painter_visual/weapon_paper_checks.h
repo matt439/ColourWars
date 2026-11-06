@@ -23,7 +23,8 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         require(actual.name == expected.name && actual.frame == expected.frame && actual.paint_frame == expected.paint_frame && actual.supply_strip == expected.supply_strip &&
             original.main_menu().weapon_descriptions[i] == descriptions[i], "Shipped Weapon paper catalog or description drifted from its independent literals");
     }
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
@@ -43,7 +44,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         else { const auto bit = static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); auto& buttons = painter_scripted_pads::states[static_cast<size_t>(slot)].buttons; buttons = down ? static_cast<uint16_t>(buttons | bit) : static_cast<uint16_t>(buttons & static_cast<uint16_t>(~bit)); }
     };
     const auto tap = [&](int player, GamepadButton button) { hold(player, button, true); tick(); hold(player, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto motion = original.menu().motion; const float settled = std::max(motion.focus_duration, motion.press_duration) + 0.01f;
     const auto open = [&](int count, int first = 0, TeamColourPair palette = TeamColourPair::random)
     {
@@ -57,7 +58,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Weapon paper fixture claim failed"); }
         choices.clear(); ready.assign(static_cast<size_t>(count), false); missing = false;
         for (int player = 0; player < count; ++player) { choices.push_back((first + player) % 6); settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, static_cast<WeaponType>(choices.back())); }
-        initial = settings; stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        initial = settings; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::srand(617); const int next_random = std::rand(); std::srand(617);
         auto page = std::make_unique<MainMenuWeaponSelect>(&context); active = page.get(); stack.push(std::move(page)); tick(); tick();
         require(stack.depth() == 2 && std::rand() == next_random, "Weapon paper neutral entry changed state or consumed palette RNG");
@@ -123,19 +124,19 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         require(actual.pixels == expected.pixels, "Actual Weapon paper differs from independent paper/text/tool/mask/badge fixture");
         const auto contrast = [&](RectangleF bounds)
         {
-            camera.calculate_view_rectangle(bounds); const RectangleI box = countdown_crop_bounds(bounds); float dark = 1.0f, light = 0.0f; size_t ink = 0, pale = 0;
-            for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = hud_luminance(actual, hud_pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
+            camera.calculate_view_rectangle(bounds); const RectangleI box = pixel_bounds(bounds); float dark = 1.0f, light = 0.0f; size_t ink = 0, pale = 0;
+            for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = srgb_luminance(actual, pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
             require(ink > 2 && pale > 2 && (light + 0.05f) / (dark + 0.05f) >= 7.0f, "Weapon paper lost native dark lettering/pale-paper contrast");
         };
         contrast(title.bounds()); for (size_t i = 0; i < choices.size(); ++i) { contrast(labels[i]->bounds()); contrast(names[i]->bounds()); contrast(details[i]->bounds()); }
-        if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
+        if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         std::srand(7919); const int next_random = std::rand(); std::srand(7919); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next_random, "Frozen Weapon paper changed pixels or RNG"); plan();
         records << name << ',' << actual.width << ',' << actual.height << ',' << choices.size() << ',' << TeamColourTools::palette_key(opened_palette) << ',' << missing << ',' << std::count_if(insets.begin(), insets.end(), [](float value) { return value > 0.0f; }) << ",true\n"; return actual;
     };
     const auto destination = [&](int page)
     {
         MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
-        other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        other.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (page == 0) { other.push(std::make_unique<MainMenuModeSelect>(&other_context)); } else if (page == 1) { other.push(std::make_unique<MainMenuTeamSelect>(&other_context)); }
         else if (page == 2) { other.push(std::make_unique<MainMenuStageSelect>(&other_context)); } else { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
@@ -201,7 +202,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         for (int player = 0; player < 4; ++player)
         {
             RectangleF box(original.menu().layout.position + Vector2F(original.main_menu().weapon_select.spacing.x * 2.0f, original.main_menu().weapon_select.spacing.y * static_cast<float>(player + 2)), original.main_menu().weapon_select.size); box.inflate(-1.0f);
-            camera.calculate_view_rectangle(box); const auto pixels = countdown_crop_bounds(box); require(foreground_crop(moving, pixels, 0).pixels == foreground_crop(resting, pixels, 0).pixels, "Weapon paper motion shifted its fixed tool, paint or supply pixels");
+            camera.calculate_view_rectangle(box); const auto pixels = pixel_bounds(box); require(foreground_crop(moving, pixels, 0).pixels == foreground_crop(resting, pixels, 0).pixels, "Weapon paper motion shifted its fixed tool, paint or supply pixels");
         }
         tap(0, GamepadButton::a); ready[0] = true; compare("ready-press", original, L"Weapon Select", { motion.selection_inset_fraction * motion.press_fraction, 0, 0, 0 }, true); tick(settled);
         tap(0, GamepadButton::b); ready[0] = false; compare("unready-press", original, L"Weapon Select", { motion.selection_inset_fraction * motion.press_fraction, 0, 0, 0 }); stack.notify_activation(false); compare("deactivated", original); stack.notify_activation(true); tick();

@@ -9,8 +9,8 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     const std::wstring close_navigation = L"<   ARENA 2 / 2   >", course_navigation = L"<   ARENA 1 / 2   >";
     const std::wstring random_hint = L"Random: 1 available arenas.\nConfirm to lock your choice.";
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
         acceptance::shipped_stage(levels, "close_quarters") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -69,7 +69,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_player_team(0, PlayerTeam::a);
         settings.set_player_weapon(0, WeaponType::bucket); settings.set_stage("close_quarters");
         settings.set_duration(91.0f);
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick();
         require(stack.depth() == 2 && settings.input_roster_complete() && !context.music_exit_pending(),
             "Stage cue fixture consumed neutral entry or opened a missing-seat page");
@@ -128,7 +128,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         for (size_t index = 0; index < texts.size(); ++index)
         {
             RectangleF bounds = texts[index]->bounds(); bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-            const RectangleI pixels = countdown_crop_bounds(bounds);
+            const RectangleI pixels = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
             const std::string stem = "menu-text-stage-cue-" + name + '-' + roles[index] + '-' +
                 std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -182,19 +182,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     };
     Presentation old = with_words(old_words); old.validate_resources(*app.render_resources(), *app.audio_resources());
     const auto font_without_tilde = [&](const std::string& source_name, const std::string& name)
-    {
-        const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(source_name));
-        std::vector<Glyph> glyphs;
-        for (char32_t character = U' '; character < U'~'; ++character)
-        {
-            const Glyph* glyph = source->find(character);
-            require(glyph != nullptr, "Stage cue replacement font lacks a baseline printable glyph"); glyphs.push_back(*glyph);
-        }
-        app.render_resources()->add_font(name,
-            std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-        require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(name), L"~"),
-            "Stage cue replacement font still contains the old cue glyph");
-    };
+    { add_probe_font(*app.render_resources(), source_name, name); };
     const std::string detail_font = "acceptance_stage_navigation_without_tilde";
     const std::string brand_font = "acceptance_stage_hint_without_tilde";
     font_without_tilde(original.menu().detail_font, detail_font);

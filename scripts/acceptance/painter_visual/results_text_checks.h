@@ -100,7 +100,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
         for (const Key key : { Key::up, Key::down, Key::left, Key::right,
             Key::enter, Key::escape, Key::space, Key::backspace }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, victory, session, revealed, record));
         ++openings; tick();
         require(stack.depth() == 2, "Results text consumed entry input or lost its actual page"); unchanged();
@@ -124,7 +124,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     struct ResultsTextMetrics { std::array<RectangleF, 3> bounds; } metrics;
     const auto reference = [&](const Presentation& snapshot, const std::array<const wchar_t*, 3>& words,
@@ -277,22 +277,7 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     const std::array<std::string, 3> next_fonts{ "results_text_heading_letters",
         "results_text_contribution_letters", "results_text_detail_letters" };
     for (size_t role = 0; role < source_fonts.size(); ++role)
-    {
-        const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(source_fonts[role]));
-        std::vector<Glyph> glyphs;
-        for (char32_t character = U' '; character < U'~'; ++character)
-        {
-            const Glyph* source_glyph = source->find(character);
-            require(source_glyph != nullptr, "Results font fixture lacks an original printable glyph");
-            Glyph glyph = *source_glyph;
-            if (character == U'{' || character == U'}') { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-            glyphs.push_back(glyph);
-        }
-        app.render_resources()->add_font(next_fonts[role],
-            std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-        require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_fonts[role]), L"~"),
-            "Results replacement font still renders its retained old role's tilde");
-    }
+    { add_probe_font(*app.render_resources(), source_fonts[role], next_fonts[role], is_brace); }
     const_cast<MenuStyle&>(next.menu()).heading_font = next_fonts[0];
     const_cast<ResultsMenuPresentation&>(next.results_menu()).contribution_font = next_fonts[1];
     const_cast<MenuStyle&>(next.menu()).detail_font = next_fonts[2];

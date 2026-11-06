@@ -1859,7 +1859,74 @@ The trial fingerprints and counts must match before and after.
 
 ### `painter_visual` fixtures (`HYG#86`)
 
-Add the following to `painter_fixtures.h`:
+**Done 2026-11-06; probes only, no game behaviour change.** Pins and evidence
+counts are unchanged; one seeding change is noted below.
+
+- [painter_fixtures.h](../scripts/acceptance/painter_visual/painter_fixtures.h)
+  now holds the shared fixtures. `TuneColourScratch` is the private copies of
+  `tuning.json` and `presentation.json`, the isolated save and TEMP, and the
+  live content restored when a leaf ends. `TuneColourSession` derives from it
+  and adds the Save, session, GameData, stage catalog and attached
+  `DebugDirector`, with its transcript, seeds (`seed_tune_colour_display`,
+  `seed_tune_colour_jump` or the leaf's own) and one `preference_values`. All
+  33 tune-colour leaves use the session, and `stage_preview_background` uses
+  the scratch alone, because its probe builds its own GameData.
+  `TuneColourTemp`, `tune_colour_bytes` and `tune_colour_write` moved in from
+  `tune_colour_checks.h`.
+- `add_probe_font` builds the probe font that drops '~' and can shift chosen
+  glyphs, with `is_digit` and `is_brace`. It replaces the nine shifted copies
+  and the thirteen unshifted copies of the same loop.
+- `CanvasProbeRoot` and `stack_frame` replace the End, Pause and Results
+  probe roots and five copies of the stack read-back (`ResumeProbeRoot`, which
+  draws nothing, stays). `pixel_bounds`, `pixel_offset` and `srgb_luminance`
+  replace `countdown_crop_bounds` and the HUD helpers. `controlled_spray`
+  replaces fourteen hand-built spray contacts.
+- `opening_style`, `hud_style` and `player_identity_style` fingerprint every
+  field, strings and lists included. `field_count` static asserts pin each
+  struct's member count, so a new field fails the build until it is added. The
+  per-leaf `*_fixed_style` functions name what they mask on a copy. The old
+  lists had dropped the opening's strings, the HUD's low-paint, cursor,
+  teammate and label fields, and the identity's bot label. Identity style,
+  palette comparison and resource names are now shared, not copied.
+- `seed_play_settings` seeds memory-only play preferences in the Save before
+  its session is built, replacing the `const_cast` seeding in 34 leaves
+  (`resolution_text` sets the Save's play settings itself).
+  Because the Save now holds them, a later save write by the leaf carries the
+  seeded volumes and comfort switches. Before, the session's next refresh
+  undid them. `live_play_settings` is the one named `const_cast` left. It is for
+  leaves that flip Reduce effects or a volume under an open page, which the
+  session has no setter for.
+- `options_reference.h` holds the independent Options page reference that the
+  defaults and paused Options leaves had each written. `controls_help_copy`
+  and `with_default_keys` hold the Controls help copy that the help,
+  Controls/audio and Pad sticks leaves spelled out.
+- `StageScanStderrCapture` is non-copyable. It points the descriptor at the
+  file with `_dup2` instead of reopening the stream, so a failed start leaves
+  stderr intact. `finish()` fails if the descriptor cannot be restored.
+
+Only failure wording changed (the shared fixtures' messages).
+
+Left as they are:
+
+- Probe fonts of other shapes: `duration_text`'s font without '+',
+  `resolution_text`'s tall '~', the 1-pixel digit shifts in `percentage`,
+  `stage_count` and `stage_summary`, and the copies in `menu_text`,
+  `result_percentage`, `save_status`, `settings_value` and `title_home_text`.
+- `live_play_settings` users, and `stage_preview_background`'s fixture class,
+  which seeds through it in its constructor after its session exists. The same
+  seeding in `display_awake_lifecycle.cpp`, outside the painter, goes to
+  [`HYG#87`](#probe-tidy-ups-hyg87).
+- Each tune leaf's own `unchanged` and `command` lambdas, whose checks and log
+  prefixes differ.
+
+Both presets build under `/W4 /WX`, and `check-painter.ps1 -CompileOnly`
+passed in both, with both pad readers. On MattPC every focused leaf passed in
+Debug (99, the slab and mover leaves with the shipped trial files) and in
+Release (96, all but the three Debug-only tune leaves), with the pins as they
+were. The plain matrix also passed in both presets. Only
+`-TurbulenceShoulderOnly`, which no change touched, was not run.
+
+The row as filed. Add the following to `painter_fixtures.h`:
 
 - `TuneColourSession`, the about-90-line scaffold copied into about twenty
   `*_tune_colour` headers (`blocked_shot_tune_colour_checks.h:275`);
@@ -1935,6 +2002,9 @@ pins.
   `painter_visual` headers. Move the edit-a-copy ones onto `JsonVariants` and
   `rejects_variant` (or `write_document`), and leave the ones that only encode
   to a string.
+- From `HYG#86`: `display_awake_lifecycle.cpp` still seeds its play
+  preferences with a `const_cast` through the session; seed the Save first, as
+  the painter's `seed_play_settings` does.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 

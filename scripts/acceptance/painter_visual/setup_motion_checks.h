@@ -9,7 +9,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial; initial.music_volume = initial.sfx_volume = 0; initial.reduce_effects = false;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed setup-motion preferences");
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
+    PlaySettings& play = live_play_settings(preferences_session);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data;
     data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -74,7 +74,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     const auto setup_bounds = [&](Vector2F spacing, int row, const std::wstring& words)
     {
@@ -137,7 +137,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         {
             for (int x = delta.x; x < delta.right(); ++x)
             {
-                if (same_pixel(moving, resting, hud_pixel_offset(moving, x, y))) { continue; }
+                if (same_pixel(moving, resting, pixel_offset(moving, x, y))) { continue; }
                 bool found = false;
                 for (size_t row = 0; row < allowed.size(); ++row)
                 {
@@ -210,7 +210,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_weapon(player, weapons[static_cast<size_t>(player)]);
         }
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::unique_ptr<MenuPage> opened;
         if (page == 0) { opened = std::make_unique<MainMenuModeSelect>(&context); }
         else if (page == 1) { opened = std::make_unique<MainMenuPlayerCount>(&context); }

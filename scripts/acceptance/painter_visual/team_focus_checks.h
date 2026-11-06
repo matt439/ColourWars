@@ -4,8 +4,8 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation; Presentation captured = original;
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
@@ -46,7 +46,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     };
     const auto tap = [&](int seat, GamepadButton button)
         { hold(seat, button, true); tick(); hold(seat, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto plan = [&](bool committed = false)
     {
         require(!closed && stack.depth() == 2, "Team/Weapon navigation invoked the ordinary page callback or left its sentinel root");
@@ -79,7 +79,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             teams.push_back(one_team || seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_team(seat, teams.back()); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]);
         }
-        initial = settings; captured = presentation; stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        initial = settings; captured = presentation; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<MainMenuTeamSelect>(&context), [&] { closed = true; }); tick(); tick(); plan();
     };
     const auto resize = [&](Vector2I size)
@@ -154,7 +154,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const Frame expected = read(renderer);
         const auto check = [&](RectangleF bounds, const std::string& role)
         {
-            camera.calculate_view_rectangle(bounds); const RectangleI crop = countdown_crop_bounds(bounds);
+            camera.calculate_view_rectangle(bounds); const RectangleI crop = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(expected, crop, 0);
             if (observed.pixels != wanted.pixels)
             {
@@ -179,7 +179,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         RectangleF warning_bounds = message.bounds(); warning_bounds.inflate(Vector2F(2.0f)); check(warning_bounds, stem + "-warning");
         if (capture) { require(captures < 8, "Team focus exceeded eight compact crops");
             camera.calculate_view_rectangle(evidence);
-            save(foreground_crop(actual, countdown_crop_bounds(evidence), 0), output / (stem + "-detail.ppm")); ++captures; }
+            save(foreground_crop(actual, pixel_bounds(evidence), 0), output / (stem + "-detail.ppm")); ++captures; }
         std::srand(1237); const int next = std::rand(); std::srand(1237);
         require(actual.pixels == frame().pixels && std::rand() == next, "Frozen Team focus drawing changed pixels or RNG"); plan(committed);
     };
@@ -230,7 +230,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     {
         MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy); StateContext other;
-        other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuPlayerCount>(&other_context));
+        other.push(std::make_unique<CanvasProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuPlayerCount>(&other_context));
         const Frame actual = frame(); app.renderer()->begin_frame(); other.draw(*app.renderer());
         require(actual.pixels == read(*app.renderer()).pixels, "Fresh Back from wholly unready Team did not enter actual Count Select");
     }
@@ -243,7 +243,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     {
         MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning);
         MenuContext other_context(&data, &other_input, &copy); StateContext other;
-        other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuWeaponSelect>(&other_context));
+        other.push(std::make_unique<CanvasProbeRoot>(app, canvas)); other.push(std::make_unique<MainMenuWeaponSelect>(&other_context));
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };
     tap(3, GamepadButton::a); plan(true); require(frame().pixels == weapon().pixels, "Final Team confirmation did not commit teams and enter actual Weapon Select");
@@ -317,36 +317,24 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
-    const auto root = output / "team-tune-scratch", source = root / "source", staged = root / "staged";
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" };
-    std::array<std::string, 2> real_bytes;
-    for (size_t index = 0; index < files.size(); ++index)
-    {
-        real_bytes[index] = tune_colour_bytes(content / files[index]);
-        tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
-    }
-    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    const GameTuning original_tuning = tuning; const Presentation original = presentation;
-    struct RestoreTeamTuneContent
-    {
-        GameTuning& tuning; Presentation& look; GameTuning original_tuning; Presentation original;
-        ~RestoreTeamTuneContent() { this->tuning = this->original_tuning; this->look = this->original; }
-    } restore{ tuning, presentation, original_tuning, original };
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
-    Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings();
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
-    require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private Team tune profile");
-    const auto save_path = acceptance::save_path_in(root / "profile"); const std::string saved = tune_colour_bytes(save_path);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
-    const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
-    DebugDirector director(&tuning, &presentation); data.set_debug(&director); DebugDirectorImpl& impl = *director.impl();
-    impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data);
-    impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "team-tune-commands.log").string()), "Cannot retain Team tune transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "team-tune-scratch", .transcript = "team-tune-commands.log",
+        .seed = [](Save&, SettingsSession& settings)
+        { PlaySettings play = settings.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+          require(settings.set_play_settings_and_save(play), "Cannot seed the private Team tune profile"); },
+        .catalog = [&] { return acceptance::catalog_of(levels, stages, { "movement_course" }); } });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const Presentation& original = session.original_presentation();
+    const auto save_path = session.save_path();
+    GameData& data = session.data();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved = session.seeded_save();
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
     settings.set_player_count(2); settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot claim Team tune keyboard seat");
     settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3); settings.set_screen_layout(ScreenLayout::two_player);
@@ -368,7 +356,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         require(++ticks <= 12, "Team tune exceeded twelve bounded page updates");
         app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
-    stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuTeamSelect>(&context)); tick(); tick();
+    stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuTeamSelect>(&context)); tick(); tick();
     const auto confirm = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
     painter_scripted_pads::states[3].buttons = confirm; tick(); painter_scripted_pads::states[3].buttons = 0; tick();
     tick(0.51f); const auto input_before = painter_scripted_pads::states;
@@ -391,7 +379,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         }
         require(tune_colour_bytes(save_path) == saved, "Team tune wrote the private save");
     };
-    const auto draw = [&] { unchanged(); return main_menu_frame(app); };
+    const auto draw = [&] { unchanged(); return stack_frame(app); };
     const Frame baseline = tune_colour_frozen(draw);
     const auto& look = original.main_menu(); const auto& style = original.menu();
     auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
@@ -402,7 +390,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     RectangleF evidence(position(2, 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.spacing.y + look.team_select.size.y));
     evidence.inflate(Vector2F(2.0f)); const auto viewport = app.viewport_manager()->fullscreen_viewport();
     const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), viewport);
-    camera.calculate_view_rectangle(evidence); const RectangleI crop = countdown_crop_bounds(evidence);
+    camera.calculate_view_rectangle(evidence); const RectangleI crop = pixel_bounds(evidence);
     // Fixed A/B choices and P1-only readiness are specified independently of
     // FocusGroup. Only the two literal tints vary in this oracle.
     const auto expected_strip = [&](const Colour& selected, const Colour& unselected)

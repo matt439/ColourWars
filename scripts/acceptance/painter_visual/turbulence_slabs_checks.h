@@ -165,9 +165,8 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             RectangleF splash = object->shape()->bounding_box(); splash.inflate(32);
             splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
             const auto team = source_index++ % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-            const auto& shot_tuning = tuning.projectile(ProjectileType::spray);
-            const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 3 : 1,
-                colours.team_colour(team), app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
+            const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
+                colours.team_colour(team));
             object->on_contact(shot, Vector2F::zero, 0); object->update(10); ++heavy_contacts;
         }
     };
@@ -427,8 +426,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 RectangleF splash = slab->bounds(); splash.inflate(32);
                 splash.offset(shot_tuning.details.col_rect_size / 2.0f);
                 const auto team = side == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::zero, team, side == 0 ? 3 : 1, colours.team_colour(team),
-                    app.render_resources(), resolve_projectile_strip(shot_tuning, *app.render_resources()), &shot_tuning);
+                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, side == 0 ? 3 : 1, colours.team_colour(team));
                 slab->on_contact(shot, Vector2F::zero, 0); ++heavy_contacts; ++wet_contacts;
             }
             require(before_paint == turbulence_slab_surface_state(fixture) && before_players == observation(*fixture.level),
@@ -529,9 +527,8 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         while (fixture.level->state() != LevelState::finished) { tick(); }
         const LevelEndInfo actual_result = fixture.level->level_end_info();
         Session session; session.finish_round(actual_result);
-        Save saved; SettingsSession saved_session(saved); const_cast<PlaySettings&>(saved_session.play_settings()) = preferences;
-        auto& menu_preferences = const_cast<PlaySettings&>(saved_session.play_settings());
-        menu_preferences.music_volume = menu_preferences.sfx_volume = 0;
+        Save saved; seed_play_settings(saved, [&](PlaySettings& play) { play = preferences; quiet_play(play); });
+        SettingsSession saved_session(saved);
         GameData data; data.set_application(&app); data.set_save(&saved); data.set_settings_session(&saved_session); const StageCatalog stage_catalog = acceptance::catalog_of(trial_levels, {}, { "turbulence_blockout", "turbulence_slab_trial" }); data.set_stage_catalog(&stage_catalog);
         data.set_tuning(&tuning); data.set_presentation(&presentation);
         MenuInput input(app.gamepads(), app.keyboard(), &tuning);

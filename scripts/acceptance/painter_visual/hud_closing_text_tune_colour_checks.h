@@ -77,31 +77,17 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
 void hud_closing_text_tune_colour_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const auto root = output / "hud-closing-text-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "Closing-text private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    {
-        bytes[i] = tune_colour_bytes(content / files[i]);
-        tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]);
-    }
-    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestoreClosing { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreClosing() { t = old_t; p = old_p; } }
-        restore{ tuning, presentation, tuning, presentation };
-    Save preferences; SettingsSession preferences_session(preferences);
-    const auto preferences_now = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings());
-        values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto original_preferences = preferences_now();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-closing-text-tune-commands.log").string()), "Cannot retain closing-text transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-closing-text-tune-scratch", .transcript = "hud-closing-text-tune-commands.log",
+        .fresh = true });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preferences_now = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     HudTimerColourProbe probe(app, presentation, output, HudTimerSubject::closing_text);
     const std::string path = "hud.closing_clock.text";
     JsonSpanDocument initial(bytes[1], "Closing-text private source"); const auto* token = initial.find(path);

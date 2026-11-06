@@ -10,13 +10,6 @@ public:
     void draw(Renderer&) const override {}
 };
 
-Frame resume_stack_frame(Application& app)
-{
-    app.renderer()->begin_frame();
-    static_cast<StateContext&>(app).draw(*app.renderer());
-    return read(*app.renderer());
-}
-
 std::vector<float> resume_observation(const Level& level)
 {
     auto result = observation(level);
@@ -35,8 +28,8 @@ void resume_capture(Application& app, GameLevel& game, Presentation& presentatio
     const auto before = resume_observation(level);
     const float remaining = game.resume_remaining();
     require(remaining > 0.0f, "Resume capture was taken outside its count-in");
-    const Frame context = resume_stack_frame(app);
-    require(context.pixels == resume_stack_frame(app).pixels,
+    const Frame context = stack_frame(app);
+    require(context.pixels == stack_frame(app).pixels,
         "Frozen GameLevel resume drawing changed pixels");
     save(context, output / (stem + "-context.ppm"));
 

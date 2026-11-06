@@ -82,8 +82,7 @@ void ferry_direction_paint(Application& app, TranslatingStructurePaintable& ferr
     if (half) { splash.x = ferry.bounds().center().x + 0.25f; splash.width = ferry.bounds().right() + 24.0f - splash.x; }
     const ProjectileTuning& paint = tuning.projectile(ProjectileType::spray);
     splash.offset(paint.details.col_rect_size / 2.0f);
-    const ProjectileSpray shot(splash, Vector2F::zero, team, team == PlayerTeam::a ? 0 : 1, Colour::white,
-        app.render_resources(), resolve_projectile_strip(paint, *app.render_resources()), &paint);
+    const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 0 : 1, Colour::white);
     ferry.on_contact(shot, Vector2F::zero, 0.0f); ferry.update(10.0f);
 }
 

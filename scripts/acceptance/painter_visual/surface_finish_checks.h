@@ -39,9 +39,7 @@ void surface_finish_pixels(Application& app, const Canvas& canvas, const GameTun
     require(corner != nullptr, "Surface corner fixture lost its scoring role");
     RectangleF impact(800, 160, 240, 3);
     impact.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
-    const ProjectileSpray shot(impact, Vector2F::zero, PlayerTeam::a, 3, colours.team_a,
-        app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()),
-        &tuning.projectile(ProjectileType::spray));
+    const ProjectileSpray shot = controlled_spray(app, tuning, impact, PlayerTeam::a, 3, colours.team_a);
     corner->on_contact(shot, Vector2F::zero, 0.0f); corner->update(10.0f);
     const PaintTotal before = corner->paint_total();
     require(before.team_a > 0.0f && before.team_a < before.total,

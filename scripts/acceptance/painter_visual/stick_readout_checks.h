@@ -79,7 +79,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         for (auto& state : painter_scripted_pads::states) { state.connected = true; }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); selected = 0;
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<StickSettingsMenu>(&context)); tick(); tick();
         require(stack.depth() == 2, "Actual StickSettingsMenu consumed neutral entry input");
     };
@@ -94,7 +94,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         pad.connected = connected; pad.left_stick = left; pad.right_stick = right; tick();
     };
     using Copy = std::array<std::wstring, 4>;
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     std::ofstream records(output / "stick-readouts.csv");
     records << "case,role,slot,width,height,font,x,y,text_width,text_height,save_unchanged,raster_matches\n";
     const auto compare = [&](const char* name, const Presentation& snapshot, const Copy& expected, unsigned capture_mask = 0u)
@@ -141,7 +141,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             if (role == 3) { require(text_bounds.x >= view.aim.right() && text_bounds.bottom() <= view.association_position.y,
                 "Aim readout overlaps the radial preview or association copy"); }
             RectangleF bounds = text_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-            const RectangleI crop = countdown_crop_bounds(bounds);
+            const RectangleI crop = pixel_bounds(bounds);
             const Frame observed = foreground_crop(actual, crop, 0), reference = foreground_crop(wanted, crop, 0);
             const std::string stem = std::string("stick-readouts-") + name + '-' + roles[role] + '-' + std::to_string(actual.width);
             if (observed.pixels != reference.pixels)
@@ -235,7 +235,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
                 { app.keyboard()->on_key_up(key); }
             app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
             app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); selected = owner >= 0 ? owner : 0;
-            stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+            stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
             stack.push(std::make_unique<StickSettingsMenu>(&recovery_context, owner)); recovery_tick(); recovery_tick();
             require(stack.depth() == 2, "The recovery page consumed neutral entry input");
         };

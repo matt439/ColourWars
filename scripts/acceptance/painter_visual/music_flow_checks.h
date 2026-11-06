@@ -38,7 +38,7 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     require(bank->audible(), "Menu-music hardware flow requires the accepted real sound bank");
     const auto music = bank->resolve_effect(presentation.main_menu().music.name);
     const auto arena = bank->resolve_effect("music.close_quarters");
-    auto& play = const_cast<PlaySettings&>(data.settings_session()->play_settings());
+    auto& play = live_play_settings(*data.settings_session());
     struct RestoreVolume
     {
         PlaySettings& play;
@@ -73,14 +73,14 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     };
     const auto page = [&](const char* phase, Key action, int depth)
     {
-        const Frame before = resume_stack_frame(app);
+        const Frame before = stack_frame(app);
         // A replacement page must borrow the existing paused voice. Calling
         // Play from its constructor/init would wake it even on these dt0 ticks.
         bank->pause_effect(music);
         tap(action);
         require(stack.depth() == depth && bank->effect_state(music) == SoundState::paused,
             "Main-menu page navigation replayed its shared voice or reached the wrong stack depth");
-        require(before.pixels != resume_stack_frame(app).pixels,
+        require(before.pixels != stack_frame(app).pixels,
             "Menu-music navigation failed to replace the expected visible page");
         tick(0.0f);
         require(bank->effect_state(music) == SoundState::paused,
@@ -103,7 +103,7 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     for (int move = 0; move < (data.save()->fullscreen() ? 3 : 4); ++move) { tap(Key::down); }
     page("controls", Key::enter, 3);
     page("sticks", Key::enter, 4);
-    const Frame settings = resume_stack_frame(app);
+    const Frame settings = stack_frame(app);
     stack.notify_activation(false);
     require(bank->effect_state(music) == SoundState::paused,
         "Focus loss under nested main-menu settings left music playing");
@@ -111,7 +111,7 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     stack.notify_activation(true);
     tick(0.0f);
     require(stack.depth() == 4 && bank->effect_state(music) == SoundState::paused &&
-        settings.pixels == resume_stack_frame(app).pixels,
+        settings.pixels == stack_frame(app).pixels,
         "Focus return under nested settings resumed music before a positive page tick or changed the page");
     tick();
     playing();
@@ -156,28 +156,28 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     tap(Key::right);
     tap(Key::enter);
     tap(Key::enter);
-    const Frame pending = resume_stack_frame(app);
+    const Frame pending = stack_frame(app);
     require(stack.depth() == 2 && bank->effect_state(music) == SoundState::playing &&
         bank->effect_state(arena) == SoundState::stopped,
         "Final Stage confirmation skipped the outgoing menu fade or began the arena early");
     tap(Key::enter); tap(Key::enter); tap(Key::escape); tap(Key::down);
     tick(0.0f); tick(-1.0f);
-    require(pending.pixels == resume_stack_frame(app).pixels && stack.depth() == 2,
+    require(pending.pixels == stack_frame(app).pixels && stack.depth() == 2,
         "Input or nonpositive time changed the latched Stage exit");
     stack.notify_activation(false);
     tick(fade + 1.0f);
     require(stack.depth() == 2 && bank->effect_state(music) == SoundState::paused &&
-        bank->effect_state(arena) == SoundState::stopped && pending.pixels == resume_stack_frame(app).pixels,
+        bank->effect_state(arena) == SoundState::stopped && pending.pixels == stack_frame(app).pixels,
         "An unfocused outgoing menu fade dispatched its match or changed the pending page");
     stack.notify_activation(true);
     tick(fade * 0.25f);
     require(stack.depth() == 2 && bank->effect_state(music) == SoundState::playing &&
-        bank->effect_state(arena) == SoundState::stopped && pending.pixels == resume_stack_frame(app).pixels,
+        bank->effect_state(arena) == SoundState::stopped && pending.pixels == stack_frame(app).pixels,
         "The first partial outgoing menu tick completed the exit or lost its pending page");
     record("stage-exit-partial");
     tick(fade + dt);
     require(stack.depth() == 2 && bank->effect_state(music) == SoundState::stopped &&
-        pending.pixels != resume_stack_frame(app).pixels,
+        pending.pixels != stack_frame(app).pixels,
         "The outgoing menu fade failed to stop its voice and dispatch exactly one match");
     record("stage-exit-complete");
     play.music_volume = 0;
@@ -210,7 +210,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
     const SoundBank* bank = app.audio_resources()->sound_bank(presentation.menu().sound_bank);
     require(bank->audible(), "Results-music hardware flow requires the accepted real sound bank");
     const auto music = bank->resolve_effect(presentation.results_menu().music.name);
-    auto& play = const_cast<PlaySettings&>(data.settings_session()->play_settings());
+    auto& play = live_play_settings(*data.settings_session());
     struct RestoreVolume
     {
         PlaySettings& play;
@@ -324,18 +324,18 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             play.music_volume = 1;
             const auto frozen = resume_observation(game->level());
             tap(Key::enter);
-            const Frame pending = resume_stack_frame(app);
+            const Frame pending = stack_frame(app);
             require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::playing,
                 "An audible End action skipped its pending coda fade");
             tap(Key::enter); tap(Key::enter); tap(Key::escape); tap(Key::up);
             tick(0.0f); tick(-1.0f);
-            require(stack.depth() == 3 && !ended && pending.pixels == resume_stack_frame(app).pixels &&
+            require(stack.depth() == 3 && !ended && pending.pixels == stack_frame(app).pixels &&
                 frozen == resume_observation(game->level()),
                 "Repeated input or nonpositive time changed the latched End action");
             stack.notify_activation(false);
             // Focus loss clears the cosmetic paper press immediately. The
             // latched action, its page and the finished world remain frozen.
-            const Frame interrupted = resume_stack_frame(app);
+            const Frame interrupted = stack_frame(app);
             tick(presentation.music_mix().fade_out + 1.0f);
             require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::paused &&
                 frozen == resume_observation(game->level()),
@@ -343,7 +343,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             stack.notify_activation(true);
             tick(presentation.music_mix().fade_out * 0.25f);
             require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::playing &&
-                interrupted.pixels == resume_stack_frame(app).pixels && frozen == resume_observation(game->level()),
+                interrupted.pixels == stack_frame(app).pixels && frozen == resume_observation(game->level()),
                 "A partial End fade dispatched early or changed its pending page/world");
             record(round, "end-exit-partial");
             tick(presentation.music_mix().fade_out + dt);

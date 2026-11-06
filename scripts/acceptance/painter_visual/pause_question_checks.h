@@ -7,9 +7,8 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
     const Questions legacy{ L"Are you sure you want to restart?", L"Are you sure you want to quit?",
         L"Exit ColourWars?", L"Keep these display settings?" };
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings;
@@ -35,7 +34,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         choice.reset(); settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<PauseMenuAction>(std::make_unique<PauseMenuInitial>(&context, input_slots::keyboard_and_mouse),
             [&](const PauseMenuAction& result) { choice = result; });
         tick(); tick(); require(stack.depth() == 2 && !choice, "Question fixture consumed neutral Pause entry");
@@ -65,7 +64,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         require(panel.contains(expected.bounds()) && expected.bounds().bottom() <=
             look.layout.position.y - art.focus_padding.y,
             "Question reference escapes its paper or reaches the first padded action");
-        const Frame actual = pause_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -101,7 +100,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         expected.draw(list);
         const Frame reference = read(renderer);
         RectangleF bounds = expected.bounds(); bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-        const RectangleI pixels = countdown_crop_bounds(bounds);
+        const RectangleI pixels = pixel_bounds(bounds);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "pause-menu-question-" + name + (quit ? "-quit-" : "-restart-") +
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -119,7 +118,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         records << name << ',' << (quit ? "quit" : "restart") << ',' << actual.width << ',' << actual.height << ',' <<
             style.detail_font << ',' << raw.x << ',' << raw.y << ",1,true\n";
         std::srand(6493); const int next_random = std::rand(); std::srand(6493);
-        require(actual.pixels == pause_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Question drawing changed frozen pixels or consumed random numbers");
         return actual;
     };
@@ -145,20 +144,8 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         return result;
     };
     Presentation old = with_words(old_words); old.validate_resources(*app.render_resources(), *app.audio_resources());
-    const Font* source = app.render_resources()->font(
-        app.render_resources()->resolve_sprite_font(original.menu().detail_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* glyph = source->find(character);
-        require(glyph != nullptr, "Question replacement detail font lacks a baseline printable glyph");
-        glyphs.push_back(*glyph);
-    }
     const std::string font_name = "acceptance_pause_questions_without_tilde";
-    app.render_resources()->add_font(font_name,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
-        "Question replacement detail font still has the old copy's glyph");
+    add_probe_font(*app.render_resources(), original.menu().detail_font, font_name);
     Presentation next = with_words(new_words); const_cast<MenuStyle&>(next.menu()).detail_font = font_name;
     next.validate_resources(*app.render_resources(), *app.audio_resources());
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
@@ -168,17 +155,17 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         presentation = old; open(); confirmation(quit);
         const Frame retained = compare("custom-old", quit, old, old_words);
         presentation = next; tick();
-        require(retained.pixels == pause_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Live question/detail font replacement changed an existing confirmation");
         tap(Key::up); compare("old-yes-after-replacement", quit, old, old_words); tap(Key::down);
-        require(retained.pixels == pause_menu_frame(app).pixels,
+        require(retained.pixels == stack_frame(app).pixels,
             "Confirmation focus movement rebased its captured question or detail font");
         compare("retained-old", quit, old, old_words);
         tap(Key::enter); tick(); require(!choice && stack.depth() == 2, "Custom safe No completed a Pause action");
         confirmation(quit); const Frame adopted = compare("reopened-new-font", quit, next, new_words);
         require(adopted.pixels != retained.pixels, "Reopened confirmation retained the old question");
         presentation = original; tick(); tap(Key::up); tap(Key::down);
-        require(adopted.pixels == pause_menu_frame(app).pixels,
+        require(adopted.pixels == stack_frame(app).pixels,
             "Question/detail font reversal changed the reopened confirmation");
         compare("retained-new-after-reversal", quit, next, new_words);
         tap(Key::escape); tick(); require(!choice && stack.depth() == 2, "Custom confirmation Back completed an action");
@@ -195,7 +182,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
         static_cast<WindowNotify&>(app).on_deactivated(); tick(); presentation = next;
         static_cast<WindowNotify&>(app).on_activated(); tick();
         app.keyboard()->on_key_up(Key::enter); tick(); tick();
-        require(!choice && stack.depth() == 2 && before_focus.pixels == pause_menu_frame(app).pixels,
+        require(!choice && stack.depth() == 2 && before_focus.pixels == stack_frame(app).pixels,
             "Interrupted Enter release selected an answer or rebased the captured question");
         compare("focus-return-held-release", quit, old, old_words);
         tap(Key::enter); tick(); require(!choice && stack.depth() == 2, "Fresh safe No after focus loss completed an action");

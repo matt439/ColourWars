@@ -295,8 +295,7 @@ void miniature_paint_matrix(Application& app, const Canvas& canvas, const GameTu
     RectangleF splash(64, 60, 320, 16);
     const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
     splash.offset(half.x, half.y);
-    const ProjectileSpray shot(splash, Vector2F::zero, PlayerTeam::a, 3, colours.team_a,
-        app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+    const ProjectileSpray shot = controlled_spray(app, tuning, splash, PlayerTeam::a, 3, colours.team_a);
     painted->on_contact(shot, Vector2F::zero, 0); overlay_reference->on_contact(shot, Vector2F::zero, 0);
     painted->update(10); overlay_reference->update(10);
     const PaintTotal before = painted->paint_total();

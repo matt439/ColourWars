@@ -402,3 +402,469 @@
         }
         return changed;
     }
+
+    // The pixels a rectangle touches: its edges floored and ceiled outward.
+    RectangleI pixel_bounds(const RectangleF& area)
+    {
+        const int left = static_cast<int>(std::floor(area.x));
+        const int top = static_cast<int>(std::floor(area.y));
+        return RectangleI(left, top, static_cast<int>(std::ceil(area.right())) - left,
+            static_cast<int>(std::ceil(area.bottom())) - top);
+    }
+
+    size_t pixel_offset(const Frame& frame, int x, int y)
+    {
+        return (static_cast<size_t>(y) * static_cast<size_t>(frame.width) +
+            static_cast<size_t>(x)) * 4;
+    }
+
+    // Relative luminance of the sRGB pixel at `offset`, 0 for black to 1 for white.
+    float srgb_luminance(const Frame& frame, size_t offset)
+    {
+        const auto linear = [](unsigned char value)
+        {
+            const float channel = static_cast<float>(value) / 255.0f;
+            return channel <= 0.04045f ? channel / 12.92f :
+                std::pow((channel + 0.055f) / 1.055f, 2.4f);
+        };
+        return 0.2126f * linear(frame.pixels[offset]) +
+            0.7152f * linear(frame.pixels[offset + 1]) +
+            0.0722f * linear(frame.pixels[offset + 2]);
+    }
+
+    // The root a menu probe pushes its real pages above: the probe Canvas
+    // across the whole window, so a page that does not cover it shows it.
+    class CanvasProbeRoot final : public State
+    {
+    public:
+        CanvasProbeRoot(Application& app, const Canvas& canvas) : app_(app), canvas_(canvas) {}
+        void init() override {}
+        void update(float) override {}
+        void draw(Renderer& renderer) const override
+        {
+            renderer.set_view_count(1);
+            DrawList list = renderer.view(0);
+            list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
+            list.set_camera(Camera::default_camera);
+            list.set_filter(TextureFilter::point);
+            this->canvas_.draw(list, RectangleF(Vector2F::zero,
+                this->app_.resolution_manager()->resolution_vec()));
+        }
+    private:
+        Application& app_;
+        const Canvas& canvas_;
+    };
+
+    // The whole state stack as the game draws it, read back.
+    Frame stack_frame(Application& app)
+    {
+        app.renderer()->begin_frame();
+        static_cast<StateContext&>(app).draw(*app.renderer());
+        return read(*app.renderer());
+    }
+
+    // A real spray shot with the given tuning's spray values and strip, for a
+    // probe that lands one contact by hand instead of firing it.
+    ProjectileSpray controlled_spray(Application& app, const GameTuning& tuning, const RectangleF& area,
+        PlayerTeam team, int owner, const Colour& colour)
+    {
+        const ProjectileTuning& values = tuning.projectile(ProjectileType::spray);
+        return ProjectileSpray(area, Vector2F::zero, team, owner, colour, app.render_resources(),
+            resolve_projectile_strip(values, *app.render_resources()), &values);
+    }
+
+    // A copy of a loaded font for a retained-copy probe: every printable glyph
+    // from ' ' to '}', so '~' is absent and an old copy that uses it cannot be
+    // drawn with it, and the glyphs `shifted` picks set 1.25 px further right
+    // with 0.75 px more advance, so a page that kept the old font shows.
+    FontHandle add_probe_font(RenderResources& resources, const std::string& source_name,
+        const std::string& name, const std::function<bool(char32_t)>& shifted = {})
+    {
+        const Font* source = resources.font(resources.resolve_sprite_font(source_name));
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character < U'~'; ++character)
+        {
+            const Glyph* found = source->find(character);
+            require(found != nullptr, "Probe font " + name + " lacks a printable glyph of " + source_name);
+            Glyph glyph = *found;
+            if (shifted && shifted(character)) { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
+            glyphs.push_back(glyph);
+        }
+        resources.add_font(name, std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
+        const FontHandle handle = resources.resolve_sprite_font(name);
+        require(!resources.can_render(handle, L"~"), "Probe font " + name + " still draws '~'");
+        return handle;
+    }
+
+    bool is_digit(char32_t character) { return character >= U'0' && character <= U'9'; }
+    bool is_brace(char32_t character) { return character == U'{' || character == U'}'; }
+
+    // A probe's memory-only play preferences. The Save holds the edit before a
+    // session is built over it, so the session's later refreshes keep it.
+    void seed_play_settings(Save& save, const std::function<void(PlaySettings&)>& edit)
+    {
+        PlaySettings play = save.saved_play_settings();
+        edit(play);
+        save.set_play_settings(play);
+    }
+
+    void quiet_play(PlaySettings& play) { play.music_volume = play.sfx_volume = 0; }
+
+    // The run's effective play settings, changed in memory as no menu does,
+    // for a leaf that flips one (Reduce effects, a volume) under an open page
+    // or match. Seed starting values with seed_play_settings instead.
+    PlaySettings& live_play_settings(SettingsSession& session)
+    {
+        return const_cast<PlaySettings&>(session.play_settings());
+    }
+
+    // Style fingerprints: every field of a look as numbers, so a probe can
+    // show that drawing or a command left the rest of it alone. A probe that
+    // edits some fields masks them on a copy first. field_count pins each
+    // struct's shape, so a new field fails the build here until it is added.
+    struct AnyField
+    {
+        template<class T> operator T() const;
+    };
+
+    template<class T, class... Fields>
+    consteval size_t field_count()
+    {
+        if constexpr (requires { T{ Fields{}..., AnyField{} }; }) { return field_count<T, Fields..., AnyField>(); }
+        else { return sizeof...(Fields); }
+    }
+
+    void add_style(std::vector<float>& values, float value) { values.push_back(value); }
+    void add_style(std::vector<float>& values, int value) { values.push_back(static_cast<float>(value)); }
+    void add_style(std::vector<float>& values, bool value) { values.push_back(value ? 1.0f : 0.0f); }
+    void add_style(std::vector<float>& values, const Vector2F& value) { values.insert(values.end(), { value.x, value.y }); }
+    void add_style(std::vector<float>& values, const RectangleF& value)
+    { values.insert(values.end(), { value.x, value.y, value.width, value.height }); }
+    void add_style(std::vector<float>& values, const Colour& value)
+    { values.insert(values.end(), { value.r, value.g, value.b, value.a }); }
+    template<class Text>
+        requires std::same_as<Text, std::string> || std::same_as<Text, std::wstring>
+    void add_style(std::vector<float>& values, const Text& value)
+    {
+        values.push_back(static_cast<float>(value.size()));
+        for (const auto character : value) { values.push_back(static_cast<float>(character)); }
+    }
+    template<class Item>
+    void add_style(std::vector<float>& values, const std::vector<Item>& items)
+    {
+        values.push_back(static_cast<float>(items.size()));
+        for (const Item& item : items) { add_style(values, item); }
+    }
+    template<class... Fields>
+    void add_styles(std::vector<float>& values, const Fields&... fields) { (add_style(values, fields), ...); }
+
+    std::vector<float> opening_style(const OpeningPresentation& p)
+    {
+        static_assert(field_count<OpeningPresentation>() == 34, "opening_style: add the new OpeningPresentation field");
+        static_assert(field_count<MonitorArtPresentation>() == 10, "opening_style: add the new MonitorArtPresentation field");
+        static_assert(field_count<SilhouetteArtPresentation>() == 5, "opening_style: add the new SilhouetteArtPresentation field");
+        static_assert(field_count<CursorArtPresentation>() == 7, "opening_style: add the new CursorArtPresentation field");
+        static_assert(field_count<RevealArtPresentation>() == 8, "opening_style: add the new RevealArtPresentation field");
+        std::vector<float> v;
+        add_styles(v, p.sprite_sheet, p.fill_frame, p.bezel_shades, p.bezel_shadow, p.glass, p.glass_colour,
+            p.program_colour, p.desktop_colour, p.palette_height, p.palette_sheet, p.palette_frames, p.slot_outline,
+            p.sticky_notes, p.stickers, p.scribble, p.coffee, p.crack, p.silhouette, p.adult_height, p.child_height,
+            p.cursor_size, p.preview_strength, p.figure_grey, p.percent_font, p.percent_height, p.face, p.sweat,
+            p.hop, p.shake, p.slump);
+        const auto& m = p.monitor_art;
+        add_styles(v, m.ink, m.highlight, m.power_light, m.pen_width, m.corner_step, m.shadow_width, m.vent_area,
+            m.vent_count, m.power_button, m.power_indicator);
+        const auto& s = p.silhouette_art;
+        add_styles(v, s.ink, s.rim, s.shade, s.pen_width, s.shade_width);
+        const auto& c = p.cursor_art;
+        add_styles(v, c.ink, c.fill, c.shade, c.shadow, c.shadow_offset, c.click_duration, c.click_reach);
+        const auto& r = p.reveal_art;
+        add_styles(v, r.ink, r.paper, r.shade, r.keyline_width, r.padding, r.shadow_offset, r.tick_length, r.beat_duration);
+        return v;
+    }
+
+    std::vector<float> hud_style(const HudPresentation& p)
+    {
+        static_assert(field_count<HudPresentation>() == 31, "hud_style: add the new HudPresentation field");
+        static_assert(field_count<HudPaperPresentation>() == 5, "hud_style: add the new HudPaperPresentation field");
+        static_assert(field_count<ClosingClockPresentation>() == 9, "hud_style: add the new ClosingClockPresentation field");
+        static_assert(field_count<HudLowPaintPresentation>() == 4, "hud_style: add the new HudLowPaintPresentation field");
+        static_assert(field_count<CursorMarkerPresentation>() == 6, "hud_style: add the new CursorMarkerPresentation field");
+        static_assert(field_count<TeammateMarkerPresentation>() == 9, "hud_style: add the new TeammateMarkerPresentation field");
+        static_assert(field_count<HudLabels>() == 4, "hud_style: add the new HudLabels field");
+        std::vector<float> v;
+        add_styles(v, p.meter_label_font, p.meter_track_colour, p.meter_label_gap, p.reference_height, p.right_margin,
+            p.ammo_top_margin, p.health_top_margin, p.box_size, p.box_fill_border, p.health_colour, p.sprite_sheet,
+            p.fill_frame, p.timer_font, p.timer_offset, p.timer_shadow_offset, p.timer_colour, p.timer_shadow_colour,
+            p.timer_reference_width, p.player_identity_font, p.player_identity_offset, p.player_identity_shadow_offset,
+            p.player_identity_colour, p.player_identity_shadow_colour, p.player_identity_padding,
+            p.player_identity_reference_width);
+        add_styles(v, p.paper.ink, p.paper.paper, p.paper.shade, p.paper.keyline_width, p.paper.shadow_offset);
+        const auto& k = p.closing_clock;
+        add_styles(v, k.ink, k.paper, k.shade, k.text, k.accent, k.keyline_width, k.shadow_offset, k.tick_reach, k.beat_duration);
+        add_styles(v, p.low_paint.tag, p.low_paint.text, p.low_paint.padding, p.low_paint.blink_period);
+        const auto& cursor = p.cursor_marker;
+        add_styles(v, cursor.enabled, cursor.ink, cursor.paper, cursor.size, cursor.ink_width, cursor.paper_width);
+        const auto& t = p.teammate_marker;
+        add_styles(v, t.enabled, t.ink, t.size, t.keyline_width, t.badge_inset, t.pointer_length, t.pointer_width,
+            t.margin, t.fade_in);
+        add_styles(v, p.labels.team_a, p.labels.team_b, p.labels.health, p.labels.paint);
+        return v;
+    }
+
+    std::vector<float> player_identity_style(const PlayerIdentityPresentation& p)
+    {
+        static_assert(field_count<PlayerIdentityPresentation>() == 12,
+            "player_identity_style: add the new PlayerIdentityPresentation field");
+        std::vector<float> v;
+        add_styles(v, p.enabled, p.world_size, p.world_offset, p.bot_label_size, p.bot_label_gap, p.emphasis_duration,
+            p.emphasis_scale, p.ui_size, p.ui_gap, p.background_colour, p.ink_colour, p.border);
+        return v;
+    }
+
+    bool same_team_palette(const TeamPalettePresentation& a, const TeamPalettePresentation& b)
+    {
+        if (a.colours.size() != b.colours.size() || a.pairs.size() != b.pairs.size()) { return false; }
+        for (size_t i = 0; i < a.colours.size(); ++i)
+        {
+            if (a.colours[i].name != b.colours[i].name || a.colours[i].colour != b.colours[i].colour) { return false; }
+        }
+        for (size_t i = 0; i < a.pairs.size(); ++i)
+        {
+            if (a.pairs[i].key != b.pairs[i].key || a.pairs[i].label != b.pairs[i].label ||
+                a.pairs[i].colours.team_a != b.pairs[i].colours.team_a ||
+                a.pairs[i].colours.team_b != b.pairs[i].colours.team_b) { return false; }
+        }
+        return true;
+    }
+
+    std::array<std::string, 5> hud_resource_names(const HudPresentation& p)
+    { return { p.meter_label_font, p.sprite_sheet, p.fill_frame, p.timer_font, p.player_identity_font }; }
+
+#if COLOURWARS_DEV_TOOLS
+    // Points TEMP and TMP at a probe folder while it lives, so the director's
+    // candidate files stay in the probe's scratch.
+    class TuneColourTemp
+    {
+    public:
+        explicit TuneColourTemp(const std::filesystem::path& directory)
+        {
+            std::filesystem::create_directories(directory);
+            for (size_t index = 0; index < 2; ++index)
+            {
+                wchar_t* previous = nullptr; size_t length = 0;
+                require(_wdupenv_s(&previous, &length, this->names_[index]) == 0,
+                    "cannot read the tune probe temporary directory");
+                if (previous != nullptr) { this->previous_[index] = previous; std::free(previous); }
+                require(_wputenv_s(this->names_[index], directory.c_str()) == 0,
+                    "cannot isolate tune candidate temporary files");
+            }
+        }
+        TuneColourTemp(const TuneColourTemp&) = delete;
+        TuneColourTemp& operator=(const TuneColourTemp&) = delete;
+        ~TuneColourTemp()
+        {
+            for (size_t index = 0; index < 2; ++index)
+            { _wputenv_s(this->names_[index], this->previous_[index].c_str()); }
+        }
+    private:
+        const std::array<const wchar_t*, 2> names_{ L"TEMP", L"TMP" };
+        std::array<std::wstring, 2> previous_;
+    };
+
+    std::string tune_colour_bytes(const std::filesystem::path& path)
+    {
+        std::ifstream file(path, std::ios::binary); require(file.good(), "cannot read tune probe content");
+        return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+    }
+
+    void tune_colour_write(const std::filesystem::path& path, const std::string& bytes)
+    {
+        std::ofstream file(path, std::ios::binary | std::ios::trunc);
+        file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+        require(file.good(), "cannot write tune probe scratch content");
+    }
+
+    // The two content files a tune command can edit, in real_bytes() order.
+    constexpr std::array<const char*, 2> tune_colour_files{ "tuning.json", "presentation.json" };
+
+    // How a tune-colour leaf sets itself up. The scratch folder and the command
+    // transcript are named under the leaf's output folder.
+    struct TuneColourSetup
+    {
+        std::string scratch;
+        std::string transcript;
+        // Refuse a scratch folder an earlier run left behind.
+        bool fresh = false;
+        // Put the live tuning and presentation back when the leaf ends.
+        bool restore_content = true;
+        // Memory-only play preferences, held by the Save before the session.
+        std::function<void(PlaySettings&)> memory_play;
+        // Preferences the leaf writes to its private save, after the session.
+        std::function<void(Save&, SettingsSession&)> seed;
+        // The stages the director judges content against; every manifest stage by default.
+        std::function<StageCatalog()> catalog;
+    };
+
+    // A tune-colour leaf's private scratch: copies of tuning.json and
+    // presentation.json as the director's source and staged content, an
+    // isolated save profile and TEMP, and the live tuning and presentation
+    // restored when it ends (after anything a derived fixture holds).
+    class TuneColourScratch
+    {
+    public:
+        TuneColourScratch(GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
+            const std::filesystem::path& output, const TuneColourSetup& setup) :
+            root_(output / setup.scratch), source_(root_ / "source"), staged_(root_ / "staged"),
+            real_bytes_(copy_content(content, root_, source_, staged_, setup.fresh)),
+            profile_(root_ / "profile"), temporary_(root_ / "temp"),
+            tuning_(tuning), presentation_(presentation), original_tuning_(tuning),
+            original_presentation_(presentation), restore_content_(setup.restore_content) {}
+        TuneColourScratch(const TuneColourScratch&) = delete;
+        TuneColourScratch& operator=(const TuneColourScratch&) = delete;
+        ~TuneColourScratch()
+        {
+            if (this->restore_content_)
+            {
+                this->tuning_ = this->original_tuning_;
+                this->presentation_ = this->original_presentation_;
+            }
+        }
+
+        const std::filesystem::path& root() const { return this->root_; }
+        const std::filesystem::path& source() const { return this->source_; }
+        const std::filesystem::path& staged() const { return this->staged_; }
+        // The real content files' bytes, as copied: tuning.json, then presentation.json.
+        const std::array<std::string, 2>& real_bytes() const { return this->real_bytes_; }
+        std::filesystem::path save_path() const { return acceptance::save_path_in(this->root_ / "profile"); }
+        const GameTuning& original_tuning() const { return this->original_tuning_; }
+        const Presentation& original_presentation() const { return this->original_presentation_; }
+
+    private:
+        static std::array<std::string, 2> copy_content(const std::filesystem::path& content,
+            const std::filesystem::path& root, const std::filesystem::path& source,
+            const std::filesystem::path& staged, bool fresh)
+        {
+            require(!fresh || !std::filesystem::exists(root), "Tune scratch " + root.string() + " must be fresh");
+            std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
+            std::array<std::string, 2> bytes;
+            for (size_t index = 0; index < tune_colour_files.size(); ++index)
+            {
+                bytes[index] = tune_colour_bytes(content / tune_colour_files[index]);
+                tune_colour_write(source / tune_colour_files[index], bytes[index]);
+                tune_colour_write(staged / tune_colour_files[index], bytes[index]);
+            }
+            return bytes;
+        }
+
+        std::filesystem::path root_;
+        std::filesystem::path source_;
+        std::filesystem::path staged_;
+        std::array<std::string, 2> real_bytes_;
+        acceptance::IsolatedSave profile_;
+        TuneColourTemp temporary_;
+        GameTuning& tuning_;
+        Presentation& presentation_;
+        GameTuning original_tuning_;
+        Presentation original_presentation_;
+        bool restore_content_;
+    };
+
+    // The scratch with a real DebugDirector attached over it: a private Save
+    // and session, a GameData holding them, the live tuning and presentation
+    // and the stage catalog, the director reading the scratch content, and its
+    // log retained as the leaf's command transcript.
+    class TuneColourSession : public TuneColourScratch
+    {
+    public:
+        TuneColourSession(Application& app, GameTuning& tuning, Presentation& presentation,
+            const std::filesystem::path& content, const std::filesystem::path& output, const TuneColourSetup& setup) :
+            TuneColourScratch(tuning, presentation, content, output, setup),
+            settings_(seeded(this->preferences_, setup)),
+            catalog_(setup.catalog ? setup.catalog() : acceptance::manifest_catalog(content)),
+            director_(&tuning, &presentation)
+        {
+            if (setup.seed)
+            {
+                setup.seed(this->preferences_, this->settings_);
+                this->seeded_save_ = tune_colour_bytes(this->save_path());
+            }
+            this->data_.set_application(&app); this->data_.set_save(&this->preferences_);
+            this->data_.set_settings_session(&this->settings_); this->data_.set_stage_catalog(&this->catalog_);
+            this->data_.set_tuning(&tuning); this->data_.set_presentation(&presentation);
+            this->data_.set_debug(&this->director_);
+            DebugDirectorImpl& impl = this->impl();
+            impl.set_content_directories(this->source(), this->staged());
+            impl.set_user_directory(this->root() / "user");
+            impl.set_script_directories({ this->root() / "scripts" });
+            this->director_.attach(&app, &this->data_);
+            impl.log().set_mirror_to_debugger(false);
+            require(impl.log().set_transcript((output / setup.transcript).string()),
+                "Cannot retain the " + setup.transcript + " command transcript");
+        }
+
+        Save& preferences() { return this->preferences_; }
+        SettingsSession& settings() { return this->settings_; }
+        GameData& data() { return this->data_; }
+        DebugDirector& director() { return this->director_; }
+        DebugDirectorImpl& impl() { return *this->director_.impl(); }
+        // The private save's bytes just after the seed wrote it.
+        const std::string& seeded_save() const
+        {
+            require(this->seeded_save_.has_value(), "Tune leaf read a seeded save it never wrote");
+            return *this->seeded_save_;
+        }
+        // Every preference a tune command must leave alone, display and keys included.
+        std::vector<int> preference_values() const
+        {
+            const PlaySettings& play = this->settings_.play_settings();
+            std::vector<int> values{ static_cast<int>(this->preferences_.resolution()),
+                this->preferences_.fullscreen() ? 1 : 0, static_cast<int>(this->preferences_.team_palette()),
+                play.aim_sensitivity, play.music_volume, play.sfx_volume, play.view_shake ? 1 : 0,
+                play.aim_marker ? 1 : 0, play.reduce_effects ? 1 : 0,
+                static_cast<int>(this->settings_.input_bindings().keyboard_jump) };
+            for (const StickSettings& stick : play.sticks)
+            { values.push_back(stick.movement_deadzone); values.push_back(stick.aim_deadzone); }
+            return values;
+        }
+
+    private:
+        static Save& seeded(Save& save, const TuneColourSetup& setup)
+        {
+            if (setup.memory_play) { seed_play_settings(save, setup.memory_play); }
+            return save;
+        }
+
+        Save preferences_;
+        SettingsSession settings_;
+        StageCatalog catalog_;
+        GameData data_;
+        DebugDirector director_;
+        std::optional<std::string> seeded_save_;
+    };
+
+    // The non-default preferences most tune-colour leaves write first, so a
+    // command that touched them would show.
+    PlaySettings tune_colour_play()
+    {
+        PlaySettings play; play.music_volume = 17; play.sfx_volume = 83; play.aim_sensitivity = 4;
+        play.view_shake = false; play.aim_marker = true; play.reduce_effects = true;
+        play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
+        return play;
+    }
+
+    // tune_colour_play with a 1280x720 windowed Blue/Orange display.
+    void seed_tune_colour_display(Save& save, SettingsSession& settings)
+    {
+        require(settings.set_play_settings_and_save(tune_colour_play()) && save.set_display_settings_and_save(
+            ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed the private tune-colour display preferences");
+    }
+
+    // tune_colour_play with Jump on J.
+    void seed_tune_colour_jump(Save&, SettingsSession& settings)
+    {
+        InputBindings bindings; bindings.keyboard_jump = Key::j;
+        require(settings.set_play_settings_and_save(tune_colour_play()) && settings.set_input_bindings_and_save(bindings),
+            "Cannot seed the private tune-colour Jump preferences");
+    }
+#endif

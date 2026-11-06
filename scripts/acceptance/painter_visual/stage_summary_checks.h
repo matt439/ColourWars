@@ -108,7 +108,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (int seat = 0; seat < fixture.players; ++seat)
         { settings.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]); }
         expected = settings; app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
     };
     std::ofstream records(output / "stage-summary.csv"); records << "case,context,role,random_slot,locked,width,height,font,x,y,text_width,text_height,shadow_x,shadow_y,scale,fixture_matches,refresh_state_verified\n";
     const auto compare = [&](const char* name, const SummaryCase& fixture, const Presentation& snapshot,
@@ -138,8 +138,8 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
                 bounds.bottom() <= (info + geometry.briefing.spacing * static_cast<float>(role + 2)).y,
                 "Independent unscaled summary/shadow bounds escape the paper or reach the following row");
         }
-        std::srand(8131); const int random_value = std::rand(); std::srand(8131); const Frame actual = main_menu_frame(app);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == random_value, "Frozen summary drawing changed pixels or consumed match randomness");
+        std::srand(8131); const int random_value = std::rand(); std::srand(8131); const Frame actual = stack_frame(app);
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == random_value, "Frozen summary drawing changed pixels or consumed match randomness");
         const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0);
         list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
@@ -158,7 +158,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
             for (const auto& text : state_texts)
             {
                 RectangleF bounds = text.bounds(); bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-                const RectangleI crop = countdown_crop_bounds(bounds);
+                const RectangleI crop = pixel_bounds(bounds);
                 require(foreground_crop(actual, crop, 0).pixels == foreground_crop(reference, crop, 0).pixels,
                     "Actual Stage navigation/status did not reach the independently expected Random/browse/locked/unlocked/concrete state");
                 ++state_guards;
@@ -167,7 +167,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         for (size_t role = 0; role < texts.size(); ++role)
         {
             RectangleF box = texts[role].bounds(); const RectangleF design = box; box.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(box);
-            const RectangleI crop = countdown_crop_bounds(box); const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(reference, crop, 0);
+            const RectangleI crop = pixel_bounds(box); const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(reference, crop, 0);
             require(observed.pixels == wanted.pixels, "Actual Stage summary differs from its independently supplied literal/font/shadow raster");
             records << name << ',' << fixture.name << ',' << (role == 0 ? "mode" : "roster") << ',' << random << ',' << locked << ',' << actual.width << ',' << actual.height << ',' <<
                 (role == 0 ? style.detail_font : style.brand_font) << ',' << design.x << ',' << design.y << ',' << design.width << ',' << design.height << ',' <<
@@ -176,7 +176,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         if (capture)
         {
             RectangleF strip = RectangleF::union_of(texts[0].bounds(), texts[1].bounds()); strip.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(strip);
-            save(foreground_crop(actual, countdown_crop_bounds(strip), 0), output / ("stage-summary-" + std::string(name) + '-' + fixture.name + "-detail.ppm")); ++captures;
+            save(foreground_crop(actual, pixel_bounds(strip), 0), output / ("stage-summary-" + std::string(name) + '-' + fixture.name + "-detail.ppm")); ++captures;
         }
         ++comparisons; unchanged();
     };

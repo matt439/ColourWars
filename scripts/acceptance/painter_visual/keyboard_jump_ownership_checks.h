@@ -79,7 +79,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
         for (unsigned int key = 1; key < static_cast<unsigned int>(Key::count); ++key)
             { app.keyboard()->on_key_up(static_cast<Key>(key)); }
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         auto owned = std::make_unique<KeyboardKeysMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
         tick();
         // Jump is the Keyboard Keys page's third row, after Move left and Move right.

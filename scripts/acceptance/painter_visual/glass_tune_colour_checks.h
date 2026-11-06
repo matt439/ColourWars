@@ -5,12 +5,11 @@ enum class GlassMethod { main, picker, close };
 enum class GlassWrite { none, main, palette, picker, close };
 enum class GlassReference { correct, straight, squared_base };
 
-std::vector<float> glass_fixed_style(const OpeningPresentation& p)
+// Every opening field but the glass colour this leaf tunes.
+std::vector<float> glass_fixed_style(OpeningPresentation p)
 {
-    OpeningPresentation unchanged = p; unchanged.glass_colour = Colour(22, 22, 22);
-    auto values = program_fixed_style(unchanged); // Includes every other opening field except program.
-    values.insert(values.end(), { p.program_colour.r, p.program_colour.g, p.program_colour.b, p.program_colour.a });
-    return values;
+    p.glass_colour = Colour();
+    return opening_style(p);
 }
 
 
@@ -269,30 +268,18 @@ void glass_colour_consumer_checks(Application& app,const Presentation& presentat
 void glass_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,
     const std::filesystem::path& content,const std::filesystem::path& output)
 {
-    const auto root=output/"glass-colour-tune-scratch",source=root/"source",staged=root/"staged";
-    std::filesystem::create_directories(source);std::filesystem::create_directories(staged);
-    constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
-    for(size_t i=0;i<files.size();++i){real_bytes[i]=tune_colour_bytes(content/files[i]);
-        tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const acceptance::IsolatedSave profile(root/"profile");const TuneColourTemp temporary(root/"temp");
-    struct RestoreGlass {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreGlass(){t=old_t;p=old_p;}}
-        restore{tuning,presentation,tuning,presentation};
-    Save preferences; SettingsSession preferences_session(preferences);PlaySettings play;play.music_volume=17;play.sfx_volume=83;play.aim_sensitivity=4;
-    play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
-    InputBindings bindings;bindings.keyboard_jump=Key::j;
-    require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed glass private preferences");
-    const auto save_path=acceptance::save_path_in(root / "profile");const std::string saved_preferences=tune_colour_bytes(save_path);
-    const auto pref_values=[&]
-    {const auto& p=preferences_session.play_settings();std::vector<int> v{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,
-        static_cast<int>(preferences.team_palette()),p.aim_sensitivity,p.music_volume,p.sfx_volume,p.view_shake?1:0,p.aim_marker?1:0,
-        p.reduce_effects?1:0,static_cast<int>(preferences_session.input_bindings().keyboard_jump)};
-        for(const auto& stick:p.sticks){v.push_back(stick.movement_deadzone);v.push_back(stick.aim_deadzone);}return v;};
-    const auto saved_values=pref_values();
-    GameData data;data.set_application(&app);data.set_save(&preferences); data.set_settings_session(&preferences_session);const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning);data.set_presentation(&presentation);DebugDirector director(&tuning,&presentation);data.set_debug(&director);
-    auto& impl=*director.impl();impl.set_content_directories(source,staged);impl.set_user_directory(root/"user");
-    impl.set_script_directories({root/"scripts"});director.attach(&app,&data);impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output/"glass-colour-tune-commands.log").string()),"Cannot retain glass transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "glass-colour-tune-scratch", .transcript = "glass-colour-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto pref_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     GlassColourProbe probe(app,presentation);JsonSpanDocument initial(real_bytes[1],"glass private source");
     const JsonLeaf* leaf=initial.find("opening.glass_colour");require(leaf!=nullptr,"Glass source lacks exact existing token");
     const std::string expected_saved=initial.replaced(*leaf,"\"2060C080\"");bool persisted=false;size_t commands=0,rows=0;

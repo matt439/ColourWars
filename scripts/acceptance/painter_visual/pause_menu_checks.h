@@ -1,33 +1,5 @@
 // Real pause and confirmation pages, with public keyboard input through the
 // state stack. Preferences remain in memory; settings close without Apply.
-class PauseMenuProbeRoot final : public State
-{
-public:
-    PauseMenuProbeRoot(Application& app, const Canvas& canvas) : app_(app), canvas_(canvas) {}
-    void init() override {}
-    void update(float) override {}
-    void draw(Renderer& renderer) const override
-    {
-        renderer.set_view_count(1);
-        DrawList list = renderer.view(0);
-        list.set_viewport(this->app_.viewport_manager()->fullscreen_viewport());
-        list.set_camera(Camera::default_camera);
-        list.set_filter(TextureFilter::point);
-        this->canvas_.draw(list, RectangleF(Vector2F::zero,
-            this->app_.resolution_manager()->resolution_vec()));
-    }
-private:
-    Application& app_;
-    const Canvas& canvas_;
-};
-
-Frame pause_menu_frame(Application& app)
-{
-    app.renderer()->begin_frame();
-    static_cast<StateContext&>(app).draw(*app.renderer());
-    return read(*app.renderer());
-}
-
 void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output);
 void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
@@ -36,9 +8,8 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
 void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -158,7 +129,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             require(!app.gamepads()->connected(0),
                 "All-disconnected pause fixture requires pad slot zero to be absent");
         }
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<PauseMenuAction>(std::make_unique<PauseMenuInitial>(&context,
             keyboard_participates ? input_slots::keyboard_and_mouse : 0),
             [&](const PauseMenuAction& result) { choice = result; });
@@ -183,10 +154,10 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     {
         const Colour original = art.focus_fill;
         art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
-        const Frame tinted = pause_menu_frame(app);
+        const Frame tinted = stack_frame(app);
         art.focus_fill = original;
         const RectangleI changed = foreground_delta_bounds(baseline, tinted);
-        const RectangleI row = countdown_crop_bounds(camera().calculate_view_rectangle(expected));
+        const RectangleI row = pixel_bounds(camera().calculate_view_rectangle(expected));
         require(changed.width > 0 && changed.height > 0 && row.contains(changed),
             "Pause paper focus did not follow the actual enabled action row");
         const size_t fill_pixels = foreground_local_delta(baseline, tinted,
@@ -200,9 +171,9 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             pen * 7.0f, pen * 8.0f);
         const Colour original_ink = art.ink;
         art.ink = Colour(1.0f, 0.0f, 1.0f);
-        const Frame tinted_ink = pause_menu_frame(app);
+        const Frame tinted_ink = stack_frame(app);
         art.ink = original_ink;
-        const RectangleI arrow_pixels = countdown_crop_bounds(camera().calculate_view_rectangle(arrow));
+        const RectangleI arrow_pixels = pixel_bounds(camera().calculate_view_rectangle(arrow));
         const Frame arrow_before = foreground_crop(baseline, arrow_pixels, 0);
         const Frame arrow_after = foreground_crop(tinted_ink, arrow_pixels, 0);
         size_t arrow_changed = 0;
@@ -226,30 +197,30 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
                 phase == 2 ? "quit" : "missing-pad";
             open(phase == 3 ? 1 : 0);
             if (phase == 1 || phase == 2) { confirmation(phase == 2); }
-            const Frame normal = pause_menu_frame(app);
+            const Frame normal = stack_frame(app);
             std::srand(2137);
             const int expected_random = std::rand();
             std::srand(2137);
-            require(normal.pixels == pause_menu_frame(app).pixels &&
-                normal.pixels == pause_menu_frame(app).pixels && std::rand() == expected_random,
+            require(normal.pixels == stack_frame(app).pixels &&
+                normal.pixels == stack_frame(app).pixels && std::rand() == expected_random,
                 "Frozen pause drawing changed pixels or consumed random numbers");
             tick(0.75f);
-            require(normal.pixels == pause_menu_frame(app).pixels && !choice.has_value(),
+            require(normal.pixels == stack_frame(app).pixels && !choice.has_value(),
                 "Neutral pause time moved artwork or selected an action");
             play.reduce_effects = true;
             tick(0.75f);
-            require(normal.pixels == pause_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels,
                 "Reduce effects changed the static readable pause artwork");
             play.reduce_effects = false;
             RectangleF frame_bounds = panel;
             frame_bounds.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
             camera().calculate_view_rectangle(frame_bounds);
-            const RectangleI pixels = countdown_crop_bounds(frame_bounds);
+            const RectangleI pixels = pixel_bounds(frame_bounds);
             require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= size.x && pixels.bottom() <= size.y,
                 "Pause paper escaped a supported display/aspect ratio");
             const Colour original_paper = art.paper;
             art.paper = Colour(1.0f, 0.0f, 1.0f);
-            const Frame tinted_paper = pause_menu_frame(app);
+            const Frame tinted_paper = stack_frame(app);
             art.paper = original_paper;
             const RectangleI paper_delta = foreground_delta_bounds(normal, tinted_paper);
             require(paper_delta.width > 0 && paper_delta.height > 0 && pixels.contains(paper_delta),
@@ -267,7 +238,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             {
                 const Colour original_focus = art.focus_fill;
                 art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
-                const Frame disabled = pause_menu_frame(app);
+                const Frame disabled = stack_frame(app);
                 art.focus_fill = original_focus;
                 require(normal.pixels == disabled.pixels,
                     "Missing-controller pause still painted a focus card on disabled Resume");
@@ -278,9 +249,9 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
             save(foreground_crop(normal, pixels), output / (stem + "-detail.ppm"));
             records << name << ',' << size.x << ',' << size.y << ',' << paper_pixels << ',' << focus_pixels << '\n';
             resize_page({ 1920, 1080 });
-            std::ignore = pause_menu_frame(app);
+            std::ignore = stack_frame(app);
             resize_page(size);
-            require(normal.pixels == pause_menu_frame(app).pixels && !choice.has_value(),
+            require(normal.pixels == stack_frame(app).pixels && !choice.has_value(),
                 "Resizing the same pause page changed pixels, focus or action");
             tap(Key::enter);
             if (phase == 0)
@@ -308,7 +279,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     {
         open(); confirmation(quit);
         tap(Key::up);
-        const Frame yes = pause_menu_frame(app);
+        const Frame yes = stack_frame(app);
         require(assert_focus(yes, row_bounds(L"Yes", 0)) > 30,
             "Confirmation Up did not visibly select Yes");
         save(yes, output / (quit ? "pause-menu-quit-yes-720p.ppm" : "pause-menu-restart-yes-720p.ppm"));
@@ -324,23 +295,23 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     }
     open();
     tap(Key::down);
-    const Frame restart = pause_menu_frame(app);
+    const Frame restart = stack_frame(app);
     require(assert_focus(restart, row_bounds(L"Restart", 1)) > 30,
         "Pause Down did not visibly focus Restart");
     tap(Key::down); tap(Key::enter); tick();
     require(stack.depth() == 3 && !choice.has_value(),
         "Pause Options did not push a covering settings page");
     for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
-    const Frame options = pause_menu_frame(app);
+    const Frame options = stack_frame(app);
     tap(Key::enter); tick();
     require(stack.depth() == 4 && !choice.has_value(),
         "Paused Options did not push actual Controls/audio");
     tap(Key::escape); tick();
-    require(stack.depth() == 3 && !choice.has_value() && options.pixels == pause_menu_frame(app).pixels,
+    require(stack.depth() == 3 && !choice.has_value() && options.pixels == stack_frame(app).pixels,
         "Closing Controls/audio did not preserve retained Options focus");
     tap(Key::escape); tick();
     require(stack.depth() == 2 && !choice.has_value() &&
-        assert_focus(pause_menu_frame(app), row_bounds(L"Options", 2)) > 30,
+        assert_focus(stack_frame(app), row_bounds(L"Options", 2)) > 30,
         "Closing Options did not preserve the pause cursor");
     tap(Key::escape);
     require(choice == PauseMenuAction::resume, "Escape from actual initial pause did not Resume");
@@ -351,7 +322,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     for (const bool keyboard_participates : { true, false })
     {
         open(keyboard_participates ? 1 : 4, keyboard_participates);
-        const Frame disconnected = pause_menu_frame(app);
+        const Frame disconnected = stack_frame(app);
         std::wstring missing;
         const int first_missing = keyboard_participates ? 1 : 0;
         const auto players = settings.player_settings();
@@ -375,25 +346,25 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         require(!choice.has_value() && stack.depth() == 2,
             "Escape bypassed the missing-controller pause");
         tap(Key::down);
-        const Frame options_focus = pause_menu_frame(app);
+        const Frame options_focus = stack_frame(app);
         require(assert_focus(options_focus, row_bounds(L"Options", 2)) > 30,
             "Missing-controller navigation did not skip disabled Resume/Restart");
         tap(Key::enter); tick();
         require(stack.depth() == 3 && !choice.has_value(),
             "Missing-controller pause could not reach Options");
         for (int row = preferences.fullscreen() ? 1 : 0; row < 4; ++row) { tap(Key::down); }
-        const Frame missing_options = pause_menu_frame(app);
+        const Frame missing_options = stack_frame(app);
         tap(Key::enter); tick();
         require(stack.depth() == 4 && !choice.has_value(),
             "Missing-controller Options could not reach Controls/audio");
         tap(Key::escape); tick();
-        require(stack.depth() == 3 && !choice.has_value() && missing_options.pixels == pause_menu_frame(app).pixels,
+        require(stack.depth() == 3 && !choice.has_value() && missing_options.pixels == stack_frame(app).pixels,
             "Missing-controller Controls return changed retained Options focus");
         tap(Key::escape); tick();
-        require(stack.depth() == 2 && !choice.has_value() && options_focus.pixels == pause_menu_frame(app).pixels,
+        require(stack.depth() == 2 && !choice.has_value() && options_focus.pixels == stack_frame(app).pixels,
             "Missing-controller Options return changed retained Pause focus");
         tap(Key::down);
-        const Frame quit = pause_menu_frame(app);
+        const Frame quit = stack_frame(app);
         require(assert_focus(quit, row_bounds(L"Quit", 3)) > 30,
             "Missing-controller pause could not visibly focus Quit");
         tap(Key::enter); tick();

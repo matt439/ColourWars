@@ -17,7 +17,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     // below only toggles what the page reads this run.
     PlaySettings silent = preferences_session.play_settings(); silent.music_volume = silent.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(silent), "Could not seed isolated silent play settings");
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
+    PlaySettings& play = live_play_settings(preferences_session);
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Could not seed isolated display settings");
     GameData data;
@@ -188,7 +188,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto open = [&](std::unique_ptr<State> page)
     {
         stack.clear(); stack.notify_activation(true); input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::move(page)); tick();
         require(stack.depth() == 2, "Actual settings page did not remain open after neutral input");
     };
@@ -204,7 +204,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const auto project = [&](const RectangleF& bounds)
     {
-        return countdown_crop_bounds(camera().calculate_view_rectangle(bounds));
+        return pixel_bounds(camera().calculate_view_rectangle(bounds));
     };
     const auto contrast = [&](const Frame& frame, const RectangleF& bounds)
     {
@@ -217,7 +217,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         {
             for (int x = pixels.x; x < pixels.right(); ++x)
             {
-                const float value = hud_luminance(frame, hud_pixel_offset(frame, x, y));
+                const float value = srgb_luminance(frame, pixel_offset(frame, x, y));
                 darkest = std::min(darkest, value); lightest = std::max(lightest, value);
                 if (value < 0.2f) { ++ink; }
                 if (value > 0.5f) { ++paper; }
@@ -274,7 +274,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     {
         const Colour original = art.focus_fill;
         art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
-        const Frame tinted = main_menu_frame(app);
+        const Frame tinted = stack_frame(app);
         art.focus_fill = original;
         const RectangleI delta = foreground_delta_bounds(normal, tinted);
         const RectangleI expected = project(card(bounds, options));
@@ -290,7 +290,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             padded.center().y - pen * 4.0f, pen * 7.0f, pen * 8.0f));
         const Colour ink = art.ink;
         art.ink = Colour(1.0f, 0.0f, 1.0f);
-        const Frame tinted_ink = main_menu_frame(app);
+        const Frame tinted_ink = stack_frame(app);
         art.ink = ink;
         const Frame arrow_before = foreground_crop(normal, arrow, 0);
         const Frame arrow_after = foreground_crop(tinted_ink, arrow, 0);
@@ -306,12 +306,12 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto stable = [&](const Frame& normal)
     {
         std::srand(8191); const int expected = std::rand(); std::srand(8191);
-        require(normal.pixels == main_menu_frame(app).pixels && normal.pixels == main_menu_frame(app).pixels &&
+        require(normal.pixels == stack_frame(app).pixels && normal.pixels == stack_frame(app).pixels &&
             std::rand() == expected, "Frozen Options/Credits draw changed pixels or consumed randomness");
         tick(0.75f);
-        require(normal.pixels == main_menu_frame(app).pixels, "Neutral time moved static settings artwork");
+        require(normal.pixels == stack_frame(app).pixels, "Neutral time moved static settings artwork");
         play.reduce_effects = true; tick(0.75f);
-        require(normal.pixels == main_menu_frame(app).pixels, "Reduce effects changed static settings information");
+        require(normal.pixels == stack_frame(app).pixels, "Reduce effects changed static settings information");
         play.reduce_effects = false;
     };
     std::ofstream records(output / "settings-menu.csv");
@@ -319,7 +319,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto capture = [&](const char* page, const char* focus, const RectangleF& panel,
         const RectangleF& focus_bounds)
     {
-        const Frame normal = main_menu_frame(app);
+        const Frame normal = stack_frame(app);
         stable(normal);
         const bool options = std::string(page) != "credits";
         const auto& page_art = options ? options_art : art;
@@ -328,7 +328,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= normal.width && pixels.bottom() <= normal.height,
             "Options/Credits paper escaped a supported aspect ratio");
         const Colour paper = art.paper; art.paper = Colour(1.0f, 0.0f, 1.0f);
-        const Frame tinted = main_menu_frame(app); art.paper = paper;
+        const Frame tinted = stack_frame(app); art.paper = paper;
         const RectangleI delta = foreground_delta_bounds(normal, tinted);
         require(delta.width > 0 && delta.height > 0 && pixels.contains(delta),
             "Actual settings paper is absent or escaped its panel");
@@ -343,9 +343,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         save(foreground_crop(normal, pixels), output / (stem + "-detail.ppm"));
         records << page << ',' << focus << ',' << normal.width << ',' << normal.height << ',' <<
             paper_pixels << ',' << focus_pixels << '\n';
-        resize_page({ 1920, 1080 }); std::ignore = main_menu_frame(app);
+        resize_page({ 1920, 1080 }); std::ignore = stack_frame(app);
         resize_page({ normal.width, normal.height });
-        require(normal.pixels == main_menu_frame(app).pixels,
+        require(normal.pixels == stack_frame(app).pixels,
             "Options/Credits resize round trip changed pixels or focus");
         return normal;
     };
@@ -373,7 +373,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             if (row + 1 < labels.size()) { tap(Key::down); }
         }
         tap(Key::up);
-        std::ignore = assert_focus(main_menu_frame(app), row_label(apply_row));
+        std::ignore = assert_focus(stack_frame(app), row_label(apply_row));
         open(std::make_unique<MainMenuCredits>(&context));
         const Frame credits = capture("credits", "back", credits_panel, credits_back);
         contrast(credits, credits_heading); contrast(credits, credits_body);
@@ -411,21 +411,21 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const std::string original = saved_bytes();
     open(std::make_unique<MainMenuOptions>(&context));
     tap(Key::left);
-    const Frame pending = main_menu_frame(app);
+    const Frame pending = stack_frame(app);
     require(preferences.resolution() == ScreenResolution::s_1920_1080 && saved_bytes() == original,
         "Adjusting an Options row applied or saved before Apply");
     for (size_t row = 0; row < palette_row; ++row) { tap(Key::down); }
     tap(Key::right); tap(Key::down);
-    const Frame before_controls = main_menu_frame(app);
+    const Frame before_controls = stack_frame(app);
     tap(Key::enter); tick();
-    require(stack.depth() == 3 && main_menu_frame(app).pixels != before_controls.pixels,
+    require(stack.depth() == 3 && stack_frame(app).pixels != before_controls.pixels,
         "Controls/audio did not push above actual Options");
     tap(Key::right); tap(Key::escape); tick();
-    require(stack.depth() == 2 && before_controls.pixels == main_menu_frame(app).pixels &&
+    require(stack.depth() == 2 && before_controls.pixels == stack_frame(app).pixels &&
         saved_bytes() == original && play.aim_sensitivity == PlaySettings{}.aim_sensitivity,
         "Controls/audio Back lost pending Options focus/values or saved its own changes");
     for (size_t row = 0; row <= palette_row; ++row) { tap(Key::up); }
-    require(pending.pixels != main_menu_frame(app).pixels,
+    require(pending.pixels != stack_frame(app).pixels,
         "Palette adjustment had no visible settings effect");
     tap(Key::escape);
     require(saved_bytes() == original && preferences.resolution() == ScreenResolution::s_1920_1080 &&
@@ -478,11 +478,11 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const Frame fullscreen = capture("options", "disabled-resolution", options_panel, row_bounds(1, L"On"));
     contrast(fullscreen, row_label(0)); contrast(fullscreen, value_bounds(0, L"1280x720"));
     tap(Key::up);
-    std::ignore = assert_focus(main_menu_frame(app), row_label(back_row));
+    std::ignore = assert_focus(stack_frame(app), row_label(back_row));
     tap(Key::down);
-    std::ignore = assert_focus(main_menu_frame(app), row_bounds(1, L"On"));
+    std::ignore = assert_focus(stack_frame(app), row_bounds(1, L"On"));
     tap(Key::right);
-    std::ignore = assert_focus(main_menu_frame(app), row_bounds(1, L"Off"));
+    std::ignore = assert_focus(stack_frame(app), row_bounds(1, L"Off"));
     for (size_t row = 1; row < apply_row; ++row) { tap(Key::down); }
     apply(true);
     require(!preferences.fullscreen() && !app.fullscreen() &&
@@ -490,20 +490,20 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         "Leaving fullscreen lost the retained windowed resolution preset");
     resize_page({ 1280, 720 });
     for (size_t row = 0; row < apply_row; ++row) { tap(Key::up); }
-    std::ignore = assert_focus(main_menu_frame(app), row_bounds(0, L"1920x1080"));
+    std::ignore = assert_focus(stack_frame(app), row_bounds(0, L"1920x1080"));
     tap(Key::escape);
-    const Frame options_home = main_menu_frame(app);
+    const Frame options_home = stack_frame(app);
     open(std::make_unique<MainMenuHome>(&context));
     tap(Key::down);
-    require(options_home.pixels == main_menu_frame(app).pixels,
+    require(options_home.pixels == stack_frame(app).pixels,
         "Options Back did not restore the Home Options row");
     tap(Key::down);
-    const Frame credits_home = main_menu_frame(app);
+    const Frame credits_home = stack_frame(app);
     open(std::make_unique<MainMenuCredits>(&context)); tap(Key::enter);
-    require(credits_home.pixels == main_menu_frame(app).pixels,
+    require(credits_home.pixels == stack_frame(app).pixels,
         "Credits Select did not restore the Home Credits row");
     open(std::make_unique<MainMenuCredits>(&context)); tap(Key::escape);
-    require(credits_home.pixels == main_menu_frame(app).pixels,
+    require(credits_home.pixels == stack_frame(app).pixels,
         "Credits Back did not restore the Home Credits row");
     require(records.good(), "Settings menu capture record write failed");
     std::cout << "PASS Options/Credits: measured labels, all palettes, long save status and authored credits; "

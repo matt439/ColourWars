@@ -99,7 +99,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick(); tick();
         require(stack.depth() == 2, "Percentage probe did not open actual Controls/audio");
     };
@@ -119,7 +119,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
     };
-    const auto actual_frame = [&] { ++readbacks; return main_menu_frame(app); };
+    const auto actual_frame = [&] { ++readbacks; return stack_frame(app); };
     const auto camera = [&]
     {
         return Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
@@ -128,7 +128,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto project = [&](RectangleF bounds)
     {
         camera().calculate_view_rectangle(bounds);
-        return countdown_crop_bounds(bounds);
+        return pixel_bounds(bounds);
     };
     enum class PercentageVariant { legacy, old_long, new_long };
     const auto literal_value = [](PercentageVariant variant, int value)

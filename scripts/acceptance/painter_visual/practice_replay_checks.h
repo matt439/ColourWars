@@ -101,9 +101,8 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     using namespace practice_replay_acceptance;
     const acceptance::IsolatedSave profile(output / "practice-replay-profile");
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.aim_marker = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.aim_marker = false; });
+    SettingsSession preferences_session(preferences);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course"),
         acceptance::shipped_stage(levels, "crossfeed") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);

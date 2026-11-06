@@ -118,7 +118,7 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
         for (const Key key : { Key::up, Key::down, Key::left, Key::right,
             Key::enter, Key::escape, Key::space, Key::backspace }) { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, info, session, revealed));
         ++openings; tick();
         require(stack.depth() == 2, "Contribution team consumed entry input or lost its actual page"); unchanged();
@@ -146,7 +146,7 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     const SpriteSheet* badge_sheet = app.render_resources()->sprite_sheet(
         app.render_resources()->resolve_sprite_sheet("sprite_sheet_1"));
@@ -318,21 +318,8 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
     old_text.contribution_team_a = L" | Old~ A {A} | "; old_text.contribution_team_b = L" | Old~ B {B} | ";
     auto& next_text = const_cast<MenuText&>(next.menu_text()).results;
     next_text.contribution_team_a = L" | {A} team | "; next_text.contribution_team_b = L" | {B} team | ";
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.results_menu().contribution_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* source_glyph = source->find(character);
-        require(source_glyph != nullptr, "Contribution team font fixture lacks an original printable glyph");
-        Glyph glyph = *source_glyph;
-        if (character == U'{' || character == U'}') { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-        glyphs.push_back(glyph);
-    }
     const std::string next_font = "contribution_team_braces";
-    app.render_resources()->add_font(next_font,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_font), L"~"),
-        "Contribution team replacement font still renders retained old copy's tilde");
+    add_probe_font(*app.render_resources(), original.results_menu().contribution_font, next_font, is_brace);
     const_cast<ResultsMenuPresentation&>(next.results_menu()).contribution_font = next_font;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     next.validate_resources(*app.render_resources(), *app.audio_resources());

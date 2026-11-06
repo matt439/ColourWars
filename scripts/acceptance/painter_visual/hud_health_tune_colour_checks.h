@@ -7,36 +7,11 @@ float hud_health_amount(size_t context)
 { constexpr std::array<float,3> amounts{0.0f,.5f,1.0f};return amounts.at(context); }
 int hud_health_fill_width(size_t context)
 { constexpr std::array<int,3> widths{0,96,192};return widths.at(context); }
-std::array<std::string,5> hud_health_resource_names(const HudPresentation& p)
-{ return {p.meter_label_font,p.sprite_sheet,p.fill_frame,p.timer_font,p.player_identity_font}; }
-std::vector<float> hud_health_fixed_style(const HudPresentation& p)
+// Every HUD field but the health colour this leaf tunes.
+std::vector<float> hud_health_fixed_style(HudPresentation p)
 {
-    std::vector<float> v{p.paper.keyline_width,p.paper.shadow_offset,p.meter_label_gap,p.reference_height,p.right_margin,
-        p.ammo_top_margin,p.health_top_margin,p.box_fill_border,p.timer_reference_width,p.closing_clock.keyline_width,
-        p.closing_clock.shadow_offset,p.closing_clock.tick_reach,p.closing_clock.beat_duration,p.player_identity_reference_width};
-    for(const auto& point:{p.box_size,p.timer_offset,p.timer_shadow_offset,p.player_identity_offset,p.player_identity_shadow_offset,p.player_identity_padding})
-    {v.insert(v.end(),{point.x,point.y});}
-    for(const auto& c:{p.paper.ink,p.paper.paper,p.paper.shade,p.meter_track_colour,p.timer_colour,p.timer_shadow_colour,
-        p.closing_clock.ink,p.closing_clock.paper,p.closing_clock.shade,p.closing_clock.text,p.closing_clock.accent,
-        p.player_identity_colour,p.player_identity_shadow_colour})
-    {v.insert(v.end(),{c.r,c.g,c.b,c.a});}
-    return v; // The sole omitted field is the selected health_colour; strings above.
-}
-std::vector<float> hud_health_identity_style(const PlayerIdentityPresentation& p)
-{
-    std::vector<float> v{p.enabled?1.0f:0.0f,p.world_size.x,p.world_size.y,p.world_offset.x,p.world_offset.y,
-        p.emphasis_duration,p.emphasis_scale,p.ui_size.x,p.ui_size.y,p.ui_gap,p.border};
-    for(const auto& c:{p.background_colour,p.ink_colour}){v.insert(v.end(),{c.r,c.g,c.b,c.a});}return v;
-}
-bool hud_health_same_palette(const TeamPalettePresentation& a,const TeamPalettePresentation& b)
-{
-    if(a.colours.size()!=b.colours.size()||a.pairs.size()!=b.pairs.size()){return false;}
-    for(size_t i=0;i<a.colours.size();++i)
-    {if(a.colours[i].name!=b.colours[i].name||a.colours[i].colour!=b.colours[i].colour){return false;}}
-    for(size_t i=0;i<a.pairs.size();++i)
-    {if(a.pairs[i].key!=b.pairs[i].key||a.pairs[i].label!=b.pairs[i].label||
-        a.pairs[i].colours.team_a!=b.pairs[i].colours.team_a||a.pairs[i].colours.team_b!=b.pairs[i].colours.team_b){return false;}}
-    return true;
+    p.health_colour = Colour();
+    return hud_style(p);
 }
 class HudHealthColourProbe
 {
@@ -77,7 +52,7 @@ HudHealthColourProbe::HudHealthColourProbe(Application& app,const Presentation& 
     fill_handle_(sheet_->resolve_sprite_frame(look_.fill_frame)),frame_(sheet_->sprite_frame(fill_handle_)),
     fonts_{app.render_resources()->resolve_sprite_font(look_.meter_label_font),app.render_resources()->resolve_sprite_font(look_.timer_font),
         app.render_resources()->resolve_sprite_font(look_.player_identity_font)},output_(output),fixed_(hud_health_fixed_style(look_)),
-    fixed_identity_(hud_health_identity_style(identity_)),names_(hud_health_resource_names(look_))
+    fixed_identity_(player_identity_style(identity_)),names_(hud_resource_names(look_))
 {
     require(look_.sprite_sheet=="sprite_sheet_1"&&look_.fill_frame=="pixel"&&frame_.source_rectangle()==RectangleI(32,0,4,4)&&frame_.origin()==Vector2F::zero&&
         look_.meter_track_colour==Colour(184,184,184)&&look_.reference_height==1080&&look_.player_identity_reference_width==1920&&
@@ -95,9 +70,9 @@ void HudHealthColourProbe::unchanged() const
     require(&look_==&presentation_.hud()&& &look_.paper==&presentation_.hud().paper&& &look_.closing_clock==&presentation_.hud().closing_clock&&
         &identity_==&presentation_.player_identity()&& &palette_==&presentation_.team_palette()&&
         hud_health_fixed_style(look_)==fixed_&&hud_health_fixed_style(expected_)==fixed_&&
-        hud_health_resource_names(look_)==names_&&hud_health_resource_names(expected_)==names_&&
-        hud_health_identity_style(identity_)==fixed_identity_&&hud_health_identity_style(expected_identity_)==fixed_identity_&&
-        hud_health_same_palette(palette_,baseline_palette_)&&colours_.team_a==Colour(6,52,204)&&colours_.team_b==Colour(255,127,0)&&
+        hud_resource_names(look_)==names_&&hud_resource_names(expected_)==names_&&
+        player_identity_style(identity_)==fixed_identity_&&player_identity_style(expected_identity_)==fixed_identity_&&
+        same_team_palette(palette_,baseline_palette_)&&colours_.team_a==Colour(6,52,204)&&colours_.team_b==Colour(255,127,0)&&
         sheet_handle_==resources->resolve_sprite_sheet(look_.sprite_sheet)&&sheet_==resources->sprite_sheet(sheet_handle_)&&
         fill_handle_==sheet_->resolve_sprite_frame(look_.fill_frame)&& &frame_==&sheet_->sprite_frame(fill_handle_)&&
         resolution_==Vector2F(1280,720)&&ammo_==.5f&&device_==input_slots::device_name(input_slots::keyboard_and_mouse)&&
@@ -292,33 +267,18 @@ void hud_health_colour_consumer_checks(Application& app,const Presentation& pres
 void hud_health_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& presentation,
     const std::filesystem::path& content,const std::filesystem::path& output)
 {
-    const auto root=output/"hud-health-colour-tune-scratch",source=root/"source",staged=root/"staged";
-    std::filesystem::create_directories(source);std::filesystem::create_directories(staged);
-    constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
-    for(size_t i=0;i<files.size();++i)
-    {real_bytes[i]=tune_colour_bytes(content/files[i]);tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const acceptance::IsolatedSave profile(root/"profile");const TuneColourTemp temporary(root/"temp");
-    struct RestoreHudHealth
-    {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreHudHealth(){t=old_t;p=old_p;}}
-        restore{tuning,presentation,tuning,presentation};
-    Save preferences; SettingsSession preferences_session(preferences);PlaySettings play;play.music_volume=17;play.sfx_volume=83;play.aim_sensitivity=4;
-    play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
-    InputBindings bindings;bindings.keyboard_jump=Key::j;
-    require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed Health private preferences");
-    const auto save_path=acceptance::save_path_in(root / "profile");const std::string saved_preferences=tune_colour_bytes(save_path);
-    const auto pref_values=[&]
-    {
-        const auto& p=preferences_session.play_settings();std::vector<int> v{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,
-            static_cast<int>(preferences.team_palette()),p.aim_sensitivity,p.music_volume,p.sfx_volume,p.view_shake?1:0,p.aim_marker?1:0,
-            p.reduce_effects?1:0,static_cast<int>(preferences_session.input_bindings().keyboard_jump)};
-        for(const auto& stick:p.sticks){v.push_back(stick.movement_deadzone);v.push_back(stick.aim_deadzone);}return v;
-    };
-    const auto saved_values=pref_values();
-    GameData data;data.set_application(&app);data.set_save(&preferences); data.set_settings_session(&preferences_session);const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning);data.set_presentation(&presentation);DebugDirector director(&tuning,&presentation);data.set_debug(&director);
-    auto& impl=*director.impl();impl.set_content_directories(source,staged);impl.set_user_directory(root/"user");
-    impl.set_script_directories({root/"scripts"});director.attach(&app,&data);impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output/"hud-health-colour-tune-commands.log").string()),"Cannot retain Health private command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-health-colour-tune-scratch", .transcript = "hud-health-colour-tune-commands.log",
+        .seed = seed_tune_colour_jump });
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& real_bytes = session.real_bytes();
+    const auto save_path = session.save_path();
+    DebugDirectorImpl& impl = session.impl();
+    const std::string saved_preferences = session.seeded_save();
+    const auto pref_values = [&] { return session.preference_values(); };
+    const auto saved_values = session.preference_values();
     HudHealthColourProbe probe(app,presentation,output);JsonSpanDocument initial(real_bytes[1],"Health private source");
     const JsonLeaf* leaf=initial.find("hud.health_colour");require(leaf!=nullptr,"Health source lacks exact existing token");
     require(presentation.hud().health_colour==Colour(118,232,181),"Health Debug baseline differs from authored default");

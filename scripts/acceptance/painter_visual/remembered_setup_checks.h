@@ -101,7 +101,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     };
     const auto key_tap = [&](Key key)
         { app.keyboard()->on_key_down(key); tick(dt); app.keyboard()->on_key_up(key); tick(dt); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto neutral = [&](bool pad_present)
     {
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
@@ -288,7 +288,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
             presentation.menu().item_font), session.continue_string(presentation.menu_text().end));
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        const RectangleI card = countdown_crop_bounds(camera.calculate_view_rectangle(RectangleF(end.layout.position, extent)));
+        const RectangleI card = pixel_bounds(camera.calculate_view_rectangle(RectangleF(end.layout.position, extent)));
         require(foreground_crop(frame(), card, 0).pixels == foreground_crop(wanted, card, 0).pixels,
             "The real series lost its expected ongoing Replay Draw card"); preserved();
         if (round == 1)

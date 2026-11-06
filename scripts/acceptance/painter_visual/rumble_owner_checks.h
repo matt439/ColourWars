@@ -111,9 +111,8 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         Player& player = const_cast<Player&>(game->level().player(view));
         player.force_respawn();
         const PlayerTeam enemy = player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-        const auto& values = local.projectile(ProjectileType::spray);
-        const ProjectileSpray projectile(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy,
-            view == 1 ? 3 : 1, Colour::white, app.render_resources(), resolve_projectile_strip(values, *app.render_resources()), &values);
+        const ProjectileSpray projectile = controlled_spray(app, local, RectangleF(0, 0, 10, 10), enemy,
+            view == 1 ? 3 : 1, Colour::white);
         player.on_contact(projectile, Vector2F::zero, 0.0f);
         tick();
     };

@@ -76,8 +76,8 @@ LandmarkWorld landmark_world(Application& app, const LevelLoadedInfo& info, cons
                 RectangleF splash = object->shape()->bounding_box(); splash.inflate(32.0f);
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = surfaces % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot(splash, Vector2F::zero, team, surfaces % 2 == 0 ? 3 : 1,
-                    colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, surfaces % 2 == 0 ? 3 : 1,
+                    colours.team_colour(team));
                 painted->on_contact(shot, Vector2F::zero, 0.0f); painted->update(10.0f);
             }
             const PaintTotal paint = painted->paint_total(); total += paint.total; owned += paint.team_a + paint.team_b; ++surfaces;
@@ -360,7 +360,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
                         for (size_t prop = 0; prop < sources.size(); ++prop)
                         {
                             RectangleF box = stage.props[prop]; world.scene->view(0).camera.calculate_view_rectangle(box); box.offset(world.scene->view(0).viewport.position());
-                            const RectangleI crop = countdown_crop_bounds(box); visible[coverage * 2 + prop] = miniature_changed_pixels(foreground_crop(frames[coverage], crop, 0), foreground_crop(absent, crop, 0));
+                            const RectangleI crop = pixel_bounds(box); visible[coverage * 2 + prop] = miniature_changed_pixels(foreground_crop(frames[coverage], crop, 0), foreground_crop(absent, crop, 0));
                             require(visible[coverage * 2 + prop] > 0, "An authored landmark has no surviving pixels in a clean/heavy overview pane");
                         }
                     }
@@ -379,7 +379,7 @@ void landmark_matrix(Application& app, Registry<LevelLoadedInfo>& levels, LevelB
                 const size_t prop = std::string(stage.name) == "movement_course" ? 1 : 0;
                 const Camera camera(stage.props[prop].center() - pane.size() / (2.0f * scale), scale);
                 clean.scene->clear_views(); clean.scene->add_view(pane, camera); heavy.scene->clear_views(); heavy.scene->add_view(pane, camera);
-                RectangleF area = stage.props[prop]; area.inflate(40.0f); camera.calculate_view_rectangle(area); const RectangleI crop = countdown_crop_bounds(area);
+                RectangleF area = stage.props[prop]; area.inflate(40.0f); camera.calculate_view_rectangle(area); const RectangleI crop = pixel_bounds(area);
                 for (size_t coverage = 0; coverage < 2; ++coverage)
                 {
                     const auto& world = coverage == 0 ? clean : heavy; const Frame frame = landmark_frame(app, world, stage, sources, LandmarkDraw::native, rendered);

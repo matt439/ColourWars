@@ -72,7 +72,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         for (Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::space, Key::escape })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        input.reset_actions(); stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (page == 0) { stack.push(std::make_unique<MainMenuOptions>(&context)); }
         else { stack.push(std::make_unique<ControlsSettingsMenu>(&context)); }
         tick(); tick();
@@ -136,7 +136,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         // Preserve every measured glyph, including descenders within the
         // paper's bevel. The reference reconstructs that complete background.
         const RectangleF region = text.bounds();
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
@@ -149,7 +149,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         artwork.draw(list);
         list.set_filter(TextureFilter::linear); text.draw(list); const Frame reference = read(renderer);
         RectangleF projected = region; camera.calculate_view_rectangle(projected);
-        const RectangleI pixels = countdown_crop_bounds(projected);
+        const RectangleI pixels = pixel_bounds(projected);
         const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
         const std::string stem = "save-status-" + name + '-' + std::to_string(page) + '-' + std::to_string(state) + '-' +
             std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -162,7 +162,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         records << name << ',' << page << ',' << state << ',' << actual.width << ',' << actual.height << ',' <<
             font_for(snapshot, page) << ',' << raw.x << ',' << raw.y << ',' << scale << ',' << text.bounds().width << ",true\n";
         std::srand(7331); const int next_random = std::rand(); std::srand(7331);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Status redraw changed frozen pixels or consumed random numbers");
     };
     const auto failure = [&](int page)
@@ -247,10 +247,10 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
             const Presentation& snapshot = reopened ? next : old; const Status& words = reopened ? next_words : old_words;
             compare(reopened ? "reopened-new-pending" : "custom-old-pending", page, 0, snapshot, words, true);
             presentation = reopened ? old : next; tick();
-            const Frame pending = main_menu_frame(app);
+            const Frame pending = stack_frame(app);
             app.keyboard()->on_key_down(Key::enter); tick(); static_cast<WindowNotify&>(app).on_deactivated(); tick();
             static_cast<WindowNotify&>(app).on_activated(); tick(); app.keyboard()->on_key_up(Key::enter); tick(); tick();
-            require(saved_bytes() == before && pending.pixels == main_menu_frame(app).pixels,
+            require(saved_bytes() == before && pending.pixels == stack_frame(app).pixels,
                 "Interrupted status Apply saved or changed the retained pending page");
             compare("retained-after-interruption", page, 0, snapshot, words, true);
             apply(page); compare("retained-saved", page, 1, snapshot, words);

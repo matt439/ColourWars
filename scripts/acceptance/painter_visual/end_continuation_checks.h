@@ -113,7 +113,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::escape, Key::space })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        choice.reset(); delivered = 0; stack.push(std::make_unique<EndMenuProbeRoot>(app, canvas));
+        choice.reset(); delivered = 0; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push<EndMenuAction>(std::make_unique<EndMenuInitial>(&context, fixture.session), [&](const EndMenuAction& result)
         {
             choice = result; ++delivered; ++actions;
@@ -211,7 +211,7 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     std::ofstream records(output / "end-continuation.csv");
     records << "case,session,width,height,focus,series,complete,round,a_wins,b_wins,music_pending,expected_value,font,raw_width,raw_height,scale,primary_persistent,full_ornament_match,frozen_session_setup_save_rng\n";
@@ -285,22 +285,9 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
     };
     assign(const_cast<MenuText&>(old.menu_text()).end, old_words);
     assign(const_cast<MenuText&>(next.menu_text()).end, next_words);
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* source_glyph = source->find(character);
-        require(source_glyph != nullptr, "End continuation font fixture lacks an original printable glyph");
-        Glyph glyph = *source_glyph;
-        if ((character >= U'0' && character <= U'9') || character == U'R' || character == U'S' || character == U'D' || character == U'N')
-            { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-        glyphs.push_back(glyph);
-    }
     const std::string next_font = "end_continuation_numeric_letters";
-    app.render_resources()->add_font(next_font,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(next_font), L"~"),
-        "End continuation replacement font still draws the retained old copy's tilde");
+    add_probe_font(*app.render_resources(), original.menu().item_font, next_font, [](char32_t character)
+        { return is_digit(character) || character == U'R' || character == U'S' || character == U'D' || character == U'N'; });
     const_cast<MenuStyle&>(next.menu()).item_font = next_font;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     next.validate_resources(*app.render_resources(), *app.audio_resources());

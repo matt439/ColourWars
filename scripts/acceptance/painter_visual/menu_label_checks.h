@@ -53,7 +53,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         painter_scripted_pads::states[0].buttons = a; tick(); painter_scripted_pads::states[0].buttons = 0; tick();
         require(settings.player_index_for_slot(0) == 2, "A fresh device did not explicitly claim the waiting third Join seat"); expected = settings;
     };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto unchanged = [&]
     {
         require(stack.depth() == 2 && settings.player_count() == expected.player_count() && settings.stage() == expected.stage() &&
@@ -85,7 +85,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         settings.set_screen_layout(kind == 0 ? ScreenLayout::three_player : ScreenLayout::four_player);
         for (int seat = 0; seat < settings.player_count(); ++seat)
         { settings.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]); }
-        expected = settings; stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        expected = settings; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (kind == 0) { stack.push(std::make_unique<MainMenuJoin>(&context)); }
         else if (kind == 1) { stack.push(std::make_unique<MainMenuTeamSelect>(&context)); }
         else if (kind == 2) { stack.push(std::make_unique<MainMenuWeaponSelect>(&context)); }
@@ -200,7 +200,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         if (role != 3) { list.set_filter(TextureFilter::linear); }
         text->draw(list); const Frame wanted = read(renderer);
         RectangleF bounds = text_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-        const RectangleI crop = countdown_crop_bounds(bounds);
+        const RectangleI crop = pixel_bounds(bounds);
         const Frame observed = foreground_crop(actual, crop, 0), reference = foreground_crop(wanted, crop, 0);
         const std::string stem = std::string("menu-labels-") + name + '-' + std::to_string(role) + '-' + std::to_string(seat) + '-' + std::to_string(actual.width);
         if (observed.pixels != reference.pixels)

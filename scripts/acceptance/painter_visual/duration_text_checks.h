@@ -211,22 +211,9 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     auto& next_values = const_cast<MenuText&>(next.menu_text()).values;
     next_values.duration_minutes = L"{value} minutes";
     next_values.duration_default = L"Use default [{value}]";
-    const Font* source = app.render_resources()->font(app.render_resources()->resolve_sprite_font(original.menu().item_font));
-    std::vector<Glyph> glyphs;
-    for (char32_t character = U' '; character < U'~'; ++character)
-    {
-        const Glyph* source_glyph = source->find(character);
-        require(source_glyph != nullptr, "Duration font fixture lacks an original printable glyph");
-        Glyph glyph = *source_glyph;
-        if (character >= U'0' && character <= U'9') { glyph.x_offset += 1.25f; glyph.x_advance += 0.75f; }
-        glyphs.push_back(glyph);
-    }
     const std::string next_font = "duration_numeric_shift";
-    app.render_resources()->add_font(next_font,
-        std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
-    const auto next_handle = app.render_resources()->resolve_sprite_font(next_font);
-    require(!app.render_resources()->can_render(next_handle, L"~") &&
-        app.render_resources()->measure_text(next_handle, L"1.01667").x >
+    const auto next_handle = add_probe_font(*app.render_resources(), original.menu().item_font, next_font, is_digit);
+    require(app.render_resources()->measure_text(next_handle, L"1.01667").x >
             app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(original.menu().item_font), L"1.01667").x,
         "Duration replacement font did not exclude the old glyph and change numeric bearings/advances");
     const_cast<MenuStyle&>(next.menu()).item_font = next_font;

@@ -104,12 +104,11 @@ const std::array<std::vector<Glyph>, 3>& hud_paper_literal_glyphs()
         },
     } }; return glyphs;
 }
-std::vector<float> hud_paper_fixed_style(const HudPresentation& look)
+// Every HUD field but the three shared-paper colours this leaf tunes.
+std::vector<float> hud_paper_fixed_style(HudPresentation look)
 {
-    auto copy = look; set_hud_paper_values(copy, hud_paper_palettes()[0]);
-    auto values = hud_track_fixed_style(copy); const auto& track = look.meter_track_colour;
-    values.insert(values.end(), { track.r, track.g, track.b, track.a });
-    return values; // Only selected shared-paper3 is masked; all55 styles remain.
+    set_hud_paper_values(look, hud_paper_palettes()[0]);
+    return hud_style(look);
 }
 using HudPaperFrames = std::array<std::array<Frame, 2>, 6>;
 class HudPaperColourProbe
@@ -120,7 +119,7 @@ public:
         expected_(look_), expected_identity_(identity_), hud_(app.render_resources(), &look_, &identity_), copied_(app.render_resources(), &expected_, &expected_identity_),
         black_(app.render_resources(), Colour::black), nonblack_(app.render_resources(), Colour(32, 64, 96)),
         sheet_(app.render_resources()->sprite_sheet(look_.sprite_sheet)), pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))),
-        fixed_(hud_paper_fixed_style(look_)), identity_fixed_(hud_track_identity_style(identity_)), names_(hud_track_resource_names(look_)),
+        fixed_(hud_paper_fixed_style(look_)), identity_fixed_(player_identity_style(identity_)), names_(hud_resource_names(look_)),
         palette_(presentation.team_palette()), output_(output), budget_(budget)
     {
         require(hud_paper_values(look_) == hud_paper_palettes()[0] && look_.paper.keyline_width == 2 && look_.paper.shadow_offset == 4 &&
@@ -149,9 +148,9 @@ public:
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.hud() && &identity_ == &presentation_.player_identity() &&
             hud_paper_fixed_style(look_) == fixed_ && hud_paper_fixed_style(expected_) == fixed_ &&
-            hud_track_identity_style(identity_) == identity_fixed_ && hud_track_identity_style(expected_identity_) == identity_fixed_ &&
-            hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
-            hud_track_same_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
+            player_identity_style(identity_) == identity_fixed_ && player_identity_style(expected_identity_) == identity_fixed_ &&
+            hud_resource_names(look_) == names_ && hud_resource_names(expected_) == names_ &&
+            same_team_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ && pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) &&
             pixel_.origin() == Vector2F::zero && app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
             "HUD paper edit changed unselected style including closing55, identity, palette, resource, geometry or viewport");
@@ -530,24 +529,18 @@ HudPaperFrames hud_paper_consumer_checks(HudPaperColourProbe& probe, HudPresenta
 void hud_paper_tune_checks(Application& app, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output, HudPaperColourProbe& probe, const HudPaperFrames& references)
 {
-    const auto root = output / "hud-paper-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "HUD paper private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp"); Save preferences; SettingsSession preferences_session(preferences);
-    const auto preferences_now = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings()); values.insert(values.end(), { static_cast<int>(preferences.resolution()),
-            preferences.fullscreen() ? 1 : 0, static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto original_preferences = preferences_now();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-paper-tune-commands.log").string()), "Cannot retain HUD paper actual command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-paper-tune-scratch", .transcript = "hud-paper-tune-commands.log",
+        .fresh = true,
+        .restore_content = false });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preferences_now = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     JsonSpanDocument original(bytes[1], "HUD paper exact original source"); std::string saved_bytes = bytes[1];
     const std::array<const char*, 3> saved_words{ "RED", "35BCE1", "2060C080" };
     for (size_t i = 0; i < 3; ++i)

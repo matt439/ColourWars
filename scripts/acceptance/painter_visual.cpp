@@ -62,14 +62,19 @@
 
 #include <filesystem>
 #include <bit>
+#include <concepts>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <string_view>
 #include <thread>
 #include <cstdio>
 #include <io.h>
+#include <share.h>
+#include <sys/stat.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -263,6 +268,7 @@ namespace
 #include "scripts/acceptance/painter_visual/stage_summary_checks.h"
 #include "scripts/acceptance/painter_visual/home_return_focus_checks.h"
 #include "scripts/acceptance/painter_visual/home_exit_checks.h"
+#include "scripts/acceptance/painter_visual/options_reference.h"
 #include "scripts/acceptance/painter_visual/options_defaults_checks.h"
 #include "scripts/acceptance/painter_visual/display_trial_checks.h"
 #include "scripts/acceptance/painter_visual/paused_options_checks.h"

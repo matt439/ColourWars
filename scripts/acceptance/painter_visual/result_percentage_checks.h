@@ -145,7 +145,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         for (const Key key : { Key::up, Key::down, Key::left, Key::right, Key::enter, Key::escape, Key::space, Key::backspace })
             { app.keyboard()->on_key_up(key); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
-        stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ResultsMenuInitial>(&context, fixture.info, fixture.session, revealed));
         ++openings; tick(); require(stack.depth() == 2, "Result percentage consumed entry input or lost its page"); unchanged();
     };
@@ -164,7 +164,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     {
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
+        camera.calculate_view_rectangle(bounds); return pixel_bounds(bounds);
     };
     const RectangleF winner_region(600.0f, 246.0f, 720.0f, 93.0f);
     const RectangleF plate_region(588.0f, 480.0f, 744.0f, 96.0f);
@@ -485,8 +485,8 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
     const auto monitor_regions = [&]
     {
         const float scale = app.resolution_manager()->resolution_vec().y / 720.0f;
-        return std::array<RectangleI, 2>{ countdown_crop_bounds(RectangleF(194.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)),
-            countdown_crop_bounds(RectangleF(698.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)) };
+        return std::array<RectangleI, 2>{ pixel_bounds(RectangleF(194.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)),
+            pixel_bounds(RectangleF(698.0f * scale, 166.0f * scale, 382.0f * scale, 88.0f * scale)) };
     };
     std::array<TextMetric, 2> monitor_metrics;
     const auto monitor_reference = [&](const Presentation& snapshot, const std::array<const wchar_t*, 2>& words, bool wrong_font = false)

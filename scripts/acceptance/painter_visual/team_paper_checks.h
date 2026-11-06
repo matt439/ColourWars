@@ -29,7 +29,8 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings()); play.music_volume = play.sfx_volume = 0; play.reduce_effects = false;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
@@ -51,7 +52,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         else { auto& buttons = painter_scripted_pads::states[static_cast<size_t>(slot)].buttons; buttons = down ? static_cast<uint16_t>(buttons | bit(button)) : static_cast<uint16_t>(buttons & static_cast<uint16_t>(~bit(button))); }
     };
     const auto tap = [&](int player, GamepadButton button) { hold(player, button, true); tick(); hold(player, button, false); tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const float settled = std::max(original.menu().motion.focus_duration, original.menu().motion.press_duration) + 0.01f;
     const auto open = [&](int count)
     {
@@ -64,7 +65,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Team paper fixture claim failed"); }
         teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = missing = false;
         for (int player = 0; player < count; ++player) { teams.push_back(player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_team(player, teams.back()); settings.set_player_weapon(player, weapons[static_cast<size_t>(player)]); }
-        initial = settings; stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        initial = settings; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         auto page = std::make_unique<MainMenuTeamSelect>(&context); active = page.get(); stack.push(std::move(page)); tick(); tick(); require(stack.depth() == 2, "Team paper did not retain neutral entry");
     };
     const auto plan = [&](bool committed = false)
@@ -131,19 +132,19 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         require(actual.pixels == expected.pixels, "Actual Team paper differs from independent paper/card/text/icon/badge fixture");
         const auto contrast = [&](RectangleF bounds)
         {
-            camera.calculate_view_rectangle(bounds); const RectangleI box = countdown_crop_bounds(bounds); float dark = 1.0f, light = 0.0f; size_t ink = 0, pale = 0;
-            for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = hud_luminance(actual, hud_pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
+            camera.calculate_view_rectangle(bounds); const RectangleI box = pixel_bounds(bounds); float dark = 1.0f, light = 0.0f; size_t ink = 0, pale = 0;
+            for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = srgb_luminance(actual, pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
             require(ink > 2 && pale > 2 && (light + 0.05f) / (dark + 0.05f) >= 7.0f, "Team paper lost native dark lettering/pale-paper contrast");
         };
         contrast(title.bounds()); for (const auto& label : labels) { contrast(label->bounds()); } if (warning) { contrast(message.bounds()); }
-        if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
+        if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         std::srand(7919); const int next = std::rand(); std::srand(7919); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next, "Frozen Team paper changed pixels or RNG"); plan();
         records << name << ',' << actual.width << ',' << actual.height << ',' << teams.size() << ',' << warning << ',' << missing << ',' << std::count_if(insets.begin(), insets.end(), [](float value) { return value > 0.0f; }) << ",true\n"; return actual;
     };
     const auto destination = [&](bool weapon)
     {
         MatchSetup copy = settings; MenuInput other_input(app.gamepads(), app.keyboard(), &tuning); MenuContext other_context(&data, &other_input, &copy); StateContext other;
-        other.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); if (weapon) { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); } else { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); }
+        other.push(std::make_unique<CanvasProbeRoot>(app, canvas)); if (weapon) { other.push(std::make_unique<MainMenuWeaponSelect>(&other_context)); } else { other.push(std::make_unique<MainMenuPlayerCount>(&other_context)); }
         app.renderer()->begin_frame(); other.draw(*app.renderer()); return read(*app.renderer());
     };
     const auto shuffle = [&](unsigned int seed)

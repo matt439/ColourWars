@@ -141,8 +141,8 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
         const auto before = observation(game->level());
-        const Frame image = resume_stack_frame(app);
-        require(image.pixels == resume_stack_frame(app).pixels && observation(game->level()) == before,
+        const Frame image = stack_frame(app);
+        require(image.pixels == stack_frame(app).pixels && observation(game->level()) == before,
             "Frozen mixed-roster drawing advanced bots, identity or pixels");
         save(image, output / (std::string("bot-players-runtime-") + std::to_string(size.y) + "-detail.ppm"));
     }
@@ -155,7 +155,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         {
             app.resolution_manager()->set_resolution_exactly(size);
             std::ignore = app.renderer()->window_size_changed(size.x, size.y);
-            save(resume_stack_frame(app), output / ("bot-players-" + name + "-" + std::to_string(size.y) + "-detail.ppm"));
+            save(stack_frame(app), output / ("bot-players-" + name + "-" + std::to_string(size.y) + "-detail.ppm"));
         }
         app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
         std::ignore = app.renderer()->window_size_changed(1280, 720);

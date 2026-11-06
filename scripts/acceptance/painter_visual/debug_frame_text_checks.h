@@ -125,9 +125,9 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
         for (int view = 0; view < count; ++view)
         {
             const Viewport viewport = level->player(view).viewport();
-            const RectangleI band = countdown_crop_bounds(RectangleF(viewport.position() + position(simulation_row),
+            const RectangleI band = pixel_bounds(RectangleF(viewport.position() + position(simulation_row),
                 Vector2F(width, look.line_spacing + height)));
-            const RectangleI frame = countdown_crop_bounds(RectangleF(viewport.position() + position(frame_row),
+            const RectangleI frame = pixel_bounds(RectangleF(viewport.position() + position(frame_row),
                 Vector2F(width, height)));
             require(viewport.pixel_rect().contains(band), "Debug timing lines escaped their owning pane");
             const Frame thirty_detail = foreground_crop(thirty, band, 0);

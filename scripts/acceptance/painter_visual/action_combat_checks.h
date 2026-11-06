@@ -133,9 +133,8 @@
         for (int view = 0; view < count; ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
-            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::zero,
-                player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a,
-                0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+            const ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10),
+                player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a, 0, Colour::white);
             player.on_contact(hit, Vector2F::zero, 0);
         }
         action_frames(app, *level, canvas, output, prefix + "hurt", records, inputs,
@@ -170,9 +169,8 @@
         for (int view = 0; view < level->player_count(); ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
-            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::zero,
-                player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a,
-                0, Colour::white, app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
+            const ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10),
+                player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a, 0, Colour::white);
             player.on_contact(hit, Vector2F::zero, 0);
         }
         phase("hurt-initial", true);

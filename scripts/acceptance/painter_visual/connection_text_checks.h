@@ -22,8 +22,8 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     replacement_style.item_font = "lato_black_24";
     replacement_style.detail_font = "courier_prime_bold_16";
     replacement.validate_resources(*app.render_resources(), *app.audio_resources());
-    Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
+    Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = true; });
+    SettingsSession preferences_session(preferences);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); data.set_tuning(&tuning);
     data.set_presentation(&presentation); const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog);
@@ -65,7 +65,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         { hold(slot, button, true); tick(); hold(slot, button, false); tick(); };
     const auto connected = [&](int slot, bool value)
         { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = value; tick(); };
-    const auto frame = [&] { return main_menu_frame(app); };
+    const auto frame = [&] { return stack_frame(app); };
     const auto unchanged = [&]
     {
         require(settings.player_count() == expected.player_count() && settings.stage() == expected.stage() &&
@@ -103,7 +103,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             settings.set_player_weapon(seat, WeaponType::sprayer);
         }
         expected = settings;
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (kind == 0) { stack.push(std::make_unique<MainMenuJoin>(&context)); }
         else if (kind == 1)
         {
@@ -158,7 +158,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         if (kind != 1) { list.set_filter(TextureFilter::linear); }
         text_reference->draw(list); const Frame wanted = read(renderer);
         RectangleF bounds = text_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
-        const RectangleI crop = countdown_crop_bounds(bounds);
+        const RectangleI crop = pixel_bounds(bounds);
         const Frame observed = foreground_crop(actual, crop, 0), reference = foreground_crop(wanted, crop, 0);
         const std::string stem = std::string("connection-text-") + name + '-' + role + '-' + std::to_string(actual.width);
         if (observed.pixels != reference.pixels)

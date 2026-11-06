@@ -16,14 +16,6 @@ Frame countdown_fixture(Application& app, const Canvas& canvas, const CountdownA
     return read(renderer);
 }
 
-RectangleI countdown_crop_bounds(const RectangleF& area)
-{
-    const int left = static_cast<int>(std::floor(area.x));
-    const int top = static_cast<int>(std::floor(area.y));
-    return RectangleI(left, top, static_cast<int>(std::ceil(area.right())) - left,
-        static_cast<int>(std::ceil(area.bottom())) - top);
-}
-
 void countdown_glyph_matrix(Application& app, const Canvas& canvas,
     const Presentation& presentation, const std::filesystem::path& output)
 {
@@ -70,8 +62,8 @@ void countdown_glyph_matrix(Application& app, const Canvas& canvas,
                     "Frozen countdown glyph drawing changed pixels");
             }
             require(std::rand() == expected_random, "Countdown glyph drawing consumed random numbers");
-            save(foreground_crop(settled, countdown_crop_bounds(box)), output / (stem + "-settled-detail.ppm"));
-            save(foreground_crop(beat, countdown_crop_bounds(box)), output / (stem + "-beat-detail.ppm"));
+            save(foreground_crop(settled, pixel_bounds(box)), output / (stem + "-settled-detail.ppm"));
+            save(foreground_crop(beat, pixel_bounds(box)), output / (stem + "-beat-detail.ppm"));
         }
     }
 }
@@ -157,24 +149,24 @@ void countdown_capture(Application& app, Level& level, PlaySettings& preferences
     }
     require(std::rand() == expected_random, "Countdown scene drawing consumed random numbers");
     save(first, output / (stem + "-context.ppm"));
-    save(foreground_crop(first, countdown_crop_bounds(card)), output / (stem + "-detail.ppm"));
+    save(foreground_crop(first, pixel_bounds(card)), output / (stem + "-detail.ppm"));
     const RectangleF entry = level.stage_entry_bounds();
     if (entry.width > 0.0f)
     {
-        save(foreground_crop(first, countdown_crop_bounds(entry)), output / (stem + "-stage-entry-detail.ppm"));
+        save(foreground_crop(first, pixel_bounds(entry)), output / (stem + "-stage-entry-detail.ppm"));
     }
     if (reduced_pair)
     {
         const RestoreFlag restore{ preferences.reduce_effects, preferences.reduce_effects };
         preferences.reduce_effects = true;
         const Frame reduced = render(level, *app.renderer());
-        save(foreground_crop(reduced, countdown_crop_bounds(card)), output / (stem + "-reduced-detail.ppm"));
+        save(foreground_crop(reduced, pixel_bounds(card)), output / (stem + "-reduced-detail.ppm"));
         if (entry.width > 0.0f)
         {
-            const RectangleI text = countdown_crop_bounds(level.stage_entry_text_bounds());
+            const RectangleI text = pixel_bounds(level.stage_entry_text_bounds());
             require(foreground_crop(first, text, 0).pixels == foreground_crop(reduced, text, 0).pixels,
                 "Reduce effects changed the static stage entry's information");
-            save(foreground_crop(reduced, countdown_crop_bounds(entry)),
+            save(foreground_crop(reduced, pixel_bounds(entry)),
                 output / (stem + "-stage-entry-reduced-detail.ppm"));
         }
     }
@@ -243,7 +235,7 @@ void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
             resize(app, *level, size);
             stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), stage.name);
             save(foreground_crop(render(*level, *app.renderer()),
-                countdown_crop_bounds(level->stage_entry_bounds())), output /
+                pixel_bounds(level->stage_entry_bounds())), output /
                 (stem + '-' + std::to_string(size.x) + 'x' + std::to_string(size.y) + "-entry-detail.ppm"));
         }
         resize(app, *level, native);

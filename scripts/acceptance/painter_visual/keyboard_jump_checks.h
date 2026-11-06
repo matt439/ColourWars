@@ -77,7 +77,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto open_controls = [&]
     {
         stack.clear(); stack.notify_activation(true); neutral();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick();
         require(stack.depth() == 2, "Jump fixture did not open actual Controls");
     };
@@ -117,7 +117,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.viewport_manager()->fullscreen_viewport());
     };
     const auto project = [&](const RectangleF& bounds)
-        { return countdown_crop_bounds(camera().calculate_view_rectangle(bounds)); };
+        { return pixel_bounds(camera().calculate_view_rectangle(bounds)); };
     std::ofstream records(output / "keyboard-jump.csv");
     records << "case,width,height,current,pending,stack_depth,copy_matches,frozen_rng,updates\n";
     // Independently rebuild the actual help and status in the captured font,
@@ -187,9 +187,9 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
         require(RectangleF(look.controls_position, look.controls_size).contains(help_text.bounds()) &&
             panel.contains(status_text.bounds()), "Keyboard Jump fitted help/status escaped its paper");
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         std::srand(6353); const int next_random = std::rand(); std::srand(6353);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random,
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random,
             "Frozen Keyboard Jump draw changed pixels or consumed randomness");
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0); list.set_viewport(app.viewport_manager()->fullscreen_viewport());
@@ -467,7 +467,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const RectangleF card = game->level().keyboard_controls_card_bounds();
         require(bounds.width > 0.0f && bounds.height > 0.0f && card.contains(bounds),
             "Paused refreshed reminder lost fitted text/shadow inside its card");
-        const RectangleI pixels = countdown_crop_bounds(card);
+        const RectangleI pixels = pixel_bounds(card);
         require(foreground_crop(before, pixels, 0).pixels != foreground_crop(changed, pixels, 0).pixels,
             "Paused reminder key change produced no native ink delta");
         std::srand(6373); const int next_random = std::rand(); std::srand(6373);
@@ -479,7 +479,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         // restores the exact old reminder despite the live geometry edit.
         require(preferences_session.set_input_bindings_and_save(InputBindings{}), "Cannot reverse paused Jump key");
         const Frame reversed = draw_game();
-        const RectangleI restored = countdown_crop_bounds(game->level().keyboard_controls_card_bounds());
+        const RectangleI restored = pixel_bounds(game->level().keyboard_controls_card_bounds());
         require(foreground_crop(before, restored, 0).pixels == foreground_crop(reversed, restored, 0).pixels &&
             frozen == resume_observation(game->level()),
             "Paused key reversal adopted unrelated live geometry or advanced simulation");

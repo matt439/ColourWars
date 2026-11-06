@@ -21,11 +21,11 @@ const std::array<ClosingMaterialPatch, 12>& closing_material_patches()
         { "accent-right-top", { 1053, 77, 12, 1 }, 2, true }, { "accent-right-bottom", { 1053, 106, 12, 1 }, 2, true },
     } }; return patches;
 }
-std::vector<float> closing_material_fixed_style(const HudPresentation& look)
+// Every HUD field but the three closing materials this leaf tunes.
+std::vector<float> closing_material_fixed_style(HudPresentation look)
 {
-    auto copy = look; set_closing_materials(copy, { Colour(20, 20, 20), Colour(255, 245, 223), Colour(255, 211, 77) });
-    auto values = hud_track_fixed_style(copy); const auto& track = look.meter_track_colour;
-    values.insert(values.end(), { track.r, track.g, track.b, track.a }); return values;
+    set_closing_materials(look, { Colour(), Colour(), Colour() });
+    return hud_style(look);
 }
 class HudClosingMaterialProbe
 {
@@ -35,7 +35,7 @@ public:
         expected_(look_), expected_identity_(identity_), hud_(app.render_resources(), &look_, &identity_),
         copied_(app.render_resources(), &expected_, &expected_identity_), canvas_(app.render_resources(), Colour(32, 64, 96)),
         sheet_(app.render_resources()->sprite_sheet(look_.sprite_sheet)), pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))),
-        fixed_(closing_material_fixed_style(look_)), identity_fixed_(hud_track_identity_style(identity_)), names_(hud_track_resource_names(look_)),
+        fixed_(closing_material_fixed_style(look_)), identity_fixed_(player_identity_style(identity_)), names_(hud_resource_names(look_)),
         palette_(presentation.team_palette()), output_(output), budget_(budget)
     {
         require(closing_materials(look_) == ClosingMaterialTuple{ Colour(20, 20, 20), Colour(255, 245, 223), Colour(255, 211, 77) } &&
@@ -56,9 +56,9 @@ public:
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.hud() && &identity_ == &presentation_.player_identity() &&
             closing_material_fixed_style(look_) == fixed_ && closing_material_fixed_style(expected_) == fixed_ &&
-            hud_track_identity_style(identity_) == identity_fixed_ && hud_track_identity_style(expected_identity_) == identity_fixed_ &&
-            hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
-            hud_track_same_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
+            player_identity_style(identity_) == identity_fixed_ && player_identity_style(expected_identity_) == identity_fixed_ &&
+            hud_resource_names(look_) == names_ && hud_resource_names(expected_) == names_ &&
+            same_team_palette(presentation_.team_palette(), palette_) && resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ &&
             pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
             app_.viewport_manager()->player_viewport(0).pixel_rect() == RectangleI(0, 0, 1920, 1080),
@@ -287,28 +287,17 @@ void hud_closing_material_tune_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     app.viewport_manager()->set_layout(ScreenLayout::one_player);
-    const auto root = output / "hud-closing-materials-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "Closing material scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestoreMaterials { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreMaterials() { t = old_t; p = old_p; } }
-        restore{ tuning, presentation, tuning, presentation };
-    Save preferences; SettingsSession preferences_session(preferences);
-    const auto preferences_now = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings());
-        values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto original_preferences = preferences_now();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-closing-materials-tune-commands.log").string()), "Cannot retain closing material command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-closing-materials-tune-scratch", .transcript = "hud-closing-materials-tune-commands.log",
+        .fresh = true });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preferences_now = [&] { return session.preference_values(); };
+    const auto original_preferences = session.preference_values();
     HudClosingMaterialProbe probe(app, presentation, output, 40); bool persisted = false;
     JsonSpanDocument initial(bytes[1], "Closing materials private source"); const auto* ink = initial.find(closing_material_keys()[0]);
     require(ink != nullptr, "Closing ink exact existing token is absent");

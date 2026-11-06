@@ -1,12 +1,5 @@
 // Real title/home pages: keyboard input reaches the production StateContext,
 // and colour deltas observe the actual paper/card raster rather than redrawing it.
-Frame main_menu_frame(Application& app)
-{
-    app.renderer()->begin_frame();
-    static_cast<StateContext&>(app).draw(*app.renderer());
-    return read(*app.renderer());
-}
-
 // Construct the production base with real audio/render resources. A CPU-only
 // fixture cannot reach this constructor through MenuContext's service bag.
 void menu_widget_geometry_checks(MenuContext& context, Presentation& presentation,
@@ -98,9 +91,8 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
 void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences); data.set_settings_session(&preferences_session);
@@ -227,7 +219,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         stack.clear();
         stack.notify_activation(true);
         input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::move(page));
         tick();
         require(stack.depth() == 2, "Actual main-menu page did not remain open on neutral input");
@@ -246,7 +238,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     const auto project = [&](const RectangleF& box) { return camera().calculate_view_rectangle(box); };
     const auto text_contrast = [&](const Frame& frame, const RectangleF& text)
     {
-        const RectangleI pixels = countdown_crop_bounds(project(text));
+        const RectangleI pixels = pixel_bounds(project(text));
         require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= frame.width && pixels.bottom() <= frame.height,
             "Main-menu text escaped the display");
         float darkest = 1.0f, lightest = 0.0f;
@@ -255,7 +247,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         {
             for (int x = pixels.x; x < pixels.right(); ++x)
             {
-                const float value = hud_luminance(frame, hud_pixel_offset(frame, x, y));
+                const float value = srgb_luminance(frame, pixel_offset(frame, x, y));
                 darkest = std::min(darkest, value);
                 lightest = std::max(lightest, value);
                 if (value < 0.1f) { ++ink; }
@@ -287,7 +279,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             expected.draw(list);
             return read(renderer);
         };
-        const RectangleI pixels = countdown_crop_bounds(project(bounds));
+        const RectangleI pixels = pixel_bounds(project(bounds));
         const Frame linear = foreground_crop(fixture(TextureFilter::linear), pixels, 0);
         const Frame observed = foreground_crop(actual, pixels, 0);
         require(observed.pixels == linear.pixels,
@@ -303,10 +295,10 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     {
         const Colour original = art.focus_fill;
         art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
-        const Frame tinted = main_menu_frame(app);
+        const Frame tinted = stack_frame(app);
         art.focus_fill = original;
         const RectangleI changed = foreground_delta_bounds(normal, tinted);
-        const RectangleI expected = countdown_crop_bounds(project(card(text)));
+        const RectangleI expected = pixel_bounds(project(card(text)));
         require(changed.width > 0 && changed.height > 0,
             "Actual title/home focus card disappeared");
         size_t fill_pixels = 0;
@@ -314,7 +306,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         {
             for (int x = changed.x; x < changed.right(); ++x)
             {
-                if (same_pixel(normal, tinted, hud_pixel_offset(normal, x, y))) { continue; }
+                if (same_pixel(normal, tinted, pixel_offset(normal, x, y))) { continue; }
                 // One card only: Home pins no Play card off focus (POL#37).
                 require(x >= expected.x && x < expected.right() &&
                     y >= expected.y && y < expected.bottom(),
@@ -332,9 +324,9 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             pen * 7.0f, pen * 8.0f);
         const Colour ink = art.ink;
         art.ink = Colour(1.0f, 0.0f, 1.0f);
-        const Frame tinted_ink = main_menu_frame(app);
+        const Frame tinted_ink = stack_frame(app);
         art.ink = ink;
-        const RectangleI arrow_pixels = countdown_crop_bounds(project(arrow));
+        const RectangleI arrow_pixels = pixel_bounds(project(arrow));
         const Frame before = foreground_crop(normal, arrow_pixels, 0);
         const Frame after = foreground_crop(tinted_ink, arrow_pixels, 0);
         size_t arrow_changed = 0;
@@ -350,15 +342,15 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         std::srand(4931);
         const int expected_random = std::rand();
         std::srand(4931);
-        require(normal.pixels == main_menu_frame(app).pixels &&
-            normal.pixels == main_menu_frame(app).pixels && std::rand() == expected_random,
+        require(normal.pixels == stack_frame(app).pixels &&
+            normal.pixels == stack_frame(app).pixels && std::rand() == expected_random,
             "Frozen title/home drawing changed pixels or consumed random numbers");
         tick(0.75f);
-        require(normal.pixels == main_menu_frame(app).pixels,
+        require(normal.pixels == stack_frame(app).pixels,
             "Neutral title/home time moved its static artwork");
         play.reduce_effects = true;
         tick(0.75f);
-        require(normal.pixels == main_menu_frame(app).pixels,
+        require(normal.pixels == stack_frame(app).pixels,
             "Reduce effects changed the static title/home artwork");
         play.reduce_effects = false;
     };
@@ -370,13 +362,13 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         if (destination == 0) { open(std::make_unique<MainMenuModeSelect>(&context)); }
         else if (destination == 1) { open(std::make_unique<MainMenuOptions>(&context)); }
         else { open(std::make_unique<MainMenuCredits>(&context)); }
-        const Frame expected = main_menu_frame(app);
+        const Frame expected = stack_frame(app);
         open_title(); tap(Key::enter);
         // The freshly constructed Home waits for neutral direction input so
         // a key held across a transition cannot move its new cursor.
         tick();
         for (int move = 0; move < destination; ++move) { tap(Key::down); }
-        const Frame home = main_menu_frame(app);
+        const Frame home = stack_frame(app);
         try
         {
             require(assert_focus(home, home_rows[static_cast<size_t>(destination)]) > 30,
@@ -389,7 +381,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             throw;
         }
         tap(Key::enter);
-        const Frame actual = main_menu_frame(app);
+        const Frame actual = stack_frame(app);
         if (stack.depth() != 2 || expected.pixels != actual.pixels)
         {
             const std::string stem = std::string("main-menu-route-") +
@@ -409,7 +401,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         require(stack.depth() == 2 && expected.pixels == actual.pixels,
             "Home Play/Options/Credits reached the wrong actual page");
         tap(Key::escape);
-        require(assert_focus(main_menu_frame(app), home_rows[static_cast<size_t>(destination)]) > 30,
+        require(assert_focus(stack_frame(app), home_rows[static_cast<size_t>(destination)]) > 30,
             "Returning from Play/Options/Credits did not restore its corresponding Home action");
     }
 
@@ -420,19 +412,19 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     {
         resize_page(size);
         open_title();
-        const Frame title_frame = main_menu_frame(app);
+        const Frame title_frame = stack_frame(app);
         const auto capture = [&](const char* page, const char* focused, const Frame& normal,
             const RectangleF& panel, const RectangleF& focus_text)
         {
             stable(normal);
             RectangleF frame_bounds = panel;
             frame_bounds.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
-            const RectangleI pixels = countdown_crop_bounds(project(frame_bounds));
+            const RectangleI pixels = pixel_bounds(project(frame_bounds));
             require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= size.x && pixels.bottom() <= size.y,
                 "Title/home paper escaped a supported display/aspect ratio");
             const Colour original_paper = art.paper;
             art.paper = Colour(1.0f, 0.0f, 1.0f);
-            const Frame tinted = main_menu_frame(app);
+            const Frame tinted = stack_frame(app);
             art.paper = original_paper;
             const RectangleI changed = foreground_delta_bounds(normal, tinted);
             require(changed.width > 0 && changed.height > 0 && pixels.contains(changed),
@@ -449,9 +441,9 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
             records << page << ',' << focused << ',' << size.x << ',' << size.y << ',' <<
                 paper_pixels << ',' << focus_pixels << '\n';
             resize_page({ 1920, 1080 });
-            std::ignore = main_menu_frame(app);
+            std::ignore = stack_frame(app);
             resize_page(size);
-            require(normal.pixels == main_menu_frame(app).pixels,
+            require(normal.pixels == stack_frame(app).pixels,
                 "Resizing the same title/home page changed pixels or focus");
         };
         capture("title", "start", title_frame, title_panel, start);
@@ -460,7 +452,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         text_contrast(title_frame, build);
         linear_lettering(title_frame, look.title_font, L"COLOUR\nWARS", title);
         tap(Key::enter);
-        const Frame home = main_menu_frame(app);
+        const Frame home = stack_frame(app);
         require(home.pixels != title_frame.pixels, "Title Enter did not leave its page");
         text_contrast(home, heading);
         text_contrast(home, home_subtitle);
@@ -468,16 +460,16 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         linear_lettering(home, style.heading_font, L"Make your mark.", heading);
         for (size_t row = 0; row < home_rows.size(); ++row)
         {
-            const Frame current = main_menu_frame(app);
+            const Frame current = stack_frame(app);
             capture("home", std::array<const char*, 4>{ "play", "options", "credits", "exit" }[row],
                 current, home_panel, home_rows[row]);
             if (row + 1 < home_rows.size()) { tap(Key::down); }
         }
         tap(Key::up);
-        require(assert_focus(main_menu_frame(app), home_rows[2]) > 30,
+        require(assert_focus(stack_frame(app), home_rows[2]) > 30,
             "Home Up did not return focus to Credits");
         tap(Key::escape);
-        require(title_frame.pixels == main_menu_frame(app).pixels,
+        require(title_frame.pixels == stack_frame(app).pixels,
             "Home Back did not restore the actual title page");
     }
 
@@ -488,28 +480,28 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     for (int move = 0; move < 3; ++move) { tap(Key::down); }
     const HWND window = static_cast<HWND>(app.window());
     require(IsWindow(window) != FALSE, "Main-menu probe lost its hidden window before Exit");
-    const Frame exit_home = main_menu_frame(app);
+    const Frame exit_home = stack_frame(app);
     tap(Key::enter);
     require(stack.depth() == 3 && IsWindow(window) != FALSE,
         "Home Exit did not push its confirmation above the retained Home page");
-    const Frame question = main_menu_frame(app);
+    const Frame question = stack_frame(app);
     require(question.pixels != exit_home.pixels, "Home Exit confirmation was not visible");
     tap(Key::enter);
-    require(stack.depth() == 2 && IsWindow(window) != FALSE && exit_home.pixels == main_menu_frame(app).pixels,
+    require(stack.depth() == 2 && IsWindow(window) != FALSE && exit_home.pixels == stack_frame(app).pixels,
         "Initial No did not retain the window and exact Home Exit focus");
     tap(Key::enter);
-    require(stack.depth() == 3 && question.pixels == main_menu_frame(app).pixels,
+    require(stack.depth() == 3 && question.pixels == stack_frame(app).pixels,
         "Reopened Home Exit confirmation did not restore its initial No focus");
     tap(Key::escape);
-    require(stack.depth() == 2 && IsWindow(window) != FALSE && exit_home.pixels == main_menu_frame(app).pixels,
+    require(stack.depth() == 2 && IsWindow(window) != FALSE && exit_home.pixels == stack_frame(app).pixels,
         "Exit confirmation Back did not retain the window and exact Home Exit focus");
     tap(Key::enter);
-    require(stack.depth() == 3 && question.pixels == main_menu_frame(app).pixels,
+    require(stack.depth() == 3 && question.pixels == stack_frame(app).pixels,
         "Final Home Exit confirmation did not reopen on safe No");
     // A new page requires neutral direction input before its first move.
     tick();
     tap(Key::up);
-    require(stack.depth() == 3 && IsWindow(window) != FALSE && question.pixels != main_menu_frame(app).pixels,
+    require(stack.depth() == 3 && IsWindow(window) != FALSE && question.pixels != stack_frame(app).pixels,
         "Choosing Exit Yes did not move focus while retaining the hidden window");
     tap(Key::enter);
     require(IsWindow(window) == FALSE, "Deliberate Home Exit Yes did not close its isolated window");

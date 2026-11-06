@@ -11,9 +11,8 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         require(stream.good(), "Pad sticks did not create its isolated save");
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };
-    Save preferences; SettingsSession preferences_session(preferences);
-    auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
-    play.music_volume = play.sfx_volume = 0;
+    Save preferences; seed_play_settings(preferences, quiet_play);
+    SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
     require(preferences.set_display_settings_and_save(ScreenResolution::s_1920_1080,
         false, TeamColourPair::blue_yellow), "Cannot seed the isolated Pad sticks save");
     GameData data;
@@ -137,7 +136,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     const auto open_parent = [&]
     {
         stack.clear(); stack.notify_activation(true); input.reset_actions();
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas));
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<ControlsSettingsMenu>(&context)); tick();
         require(stack.depth() == 2, "Pad sticks parent did not remain open after neutral input");
     };
@@ -154,7 +153,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     };
     const auto project = [&](const RectangleF& bounds)
     {
-        return countdown_crop_bounds(camera().calculate_view_rectangle(bounds));
+        return pixel_bounds(camera().calculate_view_rectangle(bounds));
     };
     const auto status_bounds = [&](const std::wstring& status)
     {
@@ -179,7 +178,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         {
             for (int x = pixels.x; x < pixels.right(); ++x)
             {
-                const float value = hud_luminance(frame, hud_pixel_offset(frame, x, y));
+                const float value = srgb_luminance(frame, pixel_offset(frame, x, y));
                 darkest = std::min(darkest, value); lightest = std::max(lightest, value);
                 if (value < 0.2f) { ++ink; }
                 if (value > 0.5f) { ++paper; }
@@ -222,22 +221,21 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         {
             return std::to_wstring(static_cast<int>(std::lround(value * 100.0f))) + L"%";
         };
-        const float label_height = measure(look.help_font, L"Right stick: radial cutoff").y;
+        const float label_height = measure(look.help_font, controls_help_copy().aim_cutoff).y;
         add(values[0] + (state.connected ? L" - connected" : L" - disconnected"), look.help_font,
             look.controls_position, art.ink);
         add(L"Left stick raw X: " + percent(left.x), look.help_font, preview.raw_movement.position() -
             Vector2F(0.0f, label_height + art.focus_padding.y), art.ink);
         add(L"Move response: " + percent(response.movement), look.help_font, preview.movement_response.position() -
             Vector2F(0.0f, label_height + art.focus_padding.y), art.ink);
-        add(L"Right stick: radial cutoff", look.help_font, preview.aim.position() -
+        add(controls_help_copy().aim_cutoff, look.help_font, preview.aim.position() -
             Vector2F(0.0f, label_height + art.focus_padding.y), art.ink);
         const Vector2F aim = response.aim.normalized();
         add(L"Raw X: " + percent(right.x) + L"\nRaw Y: " + percent(right.y) + L"\n" +
             (response.aim == Vector2F::zero ? std::wstring(L"No new aim") :
                 L"Aim X: " + percent(aim.x) + L"\nAim Y: " + percent(aim.y)) + L"\nRaw: hollow\nAim: solid",
             look.help_font, preview.aim_readout_position, art.ink);
-        const std::wstring association = L"Profiles follow Pad 1-4 slots,\nnot the player number or device.\n"
-            L"After reconnecting, check the slot.\nKeyboard/mouse is unchanged.";
+        const std::wstring& association = controls_help_copy().pad_association;
         const Vector2F raw_association = measure(look.help_font, association);
         const Vector2F available = look.controls_position + look.controls_size - preview.association_position;
         const float association_scale = std::min({ 1.0f, available.x / raw_association.x,
@@ -274,27 +272,27 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     const auto capture = [&](const char* name, size_t selected, const Values& values,
         const std::wstring& status, const Colour& status_colour)
     {
-        const Frame normal = main_menu_frame(app);
+        const Frame normal = stack_frame(app);
         std::srand(8191); const int next_random = std::rand(); std::srand(8191);
-        require(normal.pixels == main_menu_frame(app).pixels && normal.pixels == main_menu_frame(app).pixels &&
+        require(normal.pixels == stack_frame(app).pixels && normal.pixels == stack_frame(app).pixels &&
             std::rand() == next_random, "Frozen Pad sticks draw changed pixels or consumed randomness");
         tick(0.75f);
-        require(normal.pixels == main_menu_frame(app).pixels, "Neutral time moved Pad sticks artwork");
+        require(normal.pixels == stack_frame(app).pixels, "Neutral time moved Pad sticks artwork");
         const bool reduce = play.reduce_effects; play.reduce_effects = !reduce; tick(0.75f);
-        require(normal.pixels == main_menu_frame(app).pixels, "Reduce effects changed Pad sticks information");
+        require(normal.pixels == stack_frame(app).pixels, "Reduce effects changed Pad sticks information");
         play.reduce_effects = reduce;
         RectangleF expanded = panel; expanded.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
         const RectangleI pixels = project(expanded);
         require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= normal.width && pixels.bottom() <= normal.height,
             "Pad sticks paper escaped a supported display");
         const Colour paper = art.paper; art.paper = Colour(1.0f, 0.0f, 1.0f);
-        const Frame tinted = main_menu_frame(app); art.paper = paper;
+        const Frame tinted = stack_frame(app); art.paper = paper;
         require(pixels.contains(foreground_delta_bounds(normal, tinted)),
             "Pad sticks paper escaped its authored panel");
         const size_t paper_pixels = foreground_local_delta(normal, tinted,
             RectangleF(Vector2F(pixels.position()), Vector2F(pixels.size())));
         const Colour fill = art.focus_fill; art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
-        const Frame focused = main_menu_frame(app); art.focus_fill = fill;
+        const Frame focused = stack_frame(app); art.focus_fill = fill;
         const RectangleI focused_pixels = project(card(row_bounds(selected, values)));
         // The same authored shade marks the raw deadzone. Exclude that known
         // preview region before checking that focus tint stays inside its row.
@@ -302,7 +300,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         const RectangleI raw_pixels = project(preview.raw_movement);
         for (int y = raw_pixels.y; y < raw_pixels.bottom(); ++y)
         {
-            const size_t offset = hud_pixel_offset(normal, raw_pixels.x, y);
+            const size_t offset = pixel_offset(normal, raw_pixels.x, y);
             std::copy_n(normal.pixels.begin() + offset, static_cast<size_t>(raw_pixels.width) * 4,
                 focus_only.pixels.begin() + offset);
         }
@@ -317,7 +315,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         const RectangleI arrow = project(RectangleF(padded.x - pen * 8.0f,
             padded.center().y - pen * 4.0f, pen * 7.0f, pen * 8.0f));
         const Colour ink = art.ink; art.ink = Colour(1.0f, 0.0f, 1.0f);
-        const Frame ink_tinted = main_menu_frame(app); art.ink = ink;
+        const Frame ink_tinted = stack_frame(app); art.ink = ink;
         require(foreground_crop(normal, arrow, 0).pixels != foreground_crop(ink_tinted, arrow, 0).pixels,
             "Pad sticks focus lost its detached ink arrow");
         lettering(normal, selected, values, status, status_colour);
@@ -326,9 +324,9 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         save(normal, output / (stem + ".ppm"));
         save(foreground_crop(normal, pixels), output / (stem + "-detail.ppm"));
         records << name << ',' << normal.width << ',' << normal.height << ',' << paper_pixels << ',' << focus_pixels << '\n';
-        resize_page({ 1920, 1080 }); std::ignore = main_menu_frame(app);
+        resize_page({ 1920, 1080 }); std::ignore = stack_frame(app);
         resize_page({ normal.width, normal.height });
-        require(normal.pixels == main_menu_frame(app).pixels, "Pad sticks resize changed pixels or focus");
+        require(normal.pixels == stack_frame(app).pixels, "Pad sticks resize changed pixels or focus");
         return normal;
     };
     // A fresh page follows the shared Options switches: on, on, off.

@@ -7,14 +7,12 @@ const char* hud_label_subject(HudLabelSubject subject)
 { return subject == HudLabelSubject::foreground ? "foreground" : subject == HudLabelSubject::shadow ? "shadow" : "pair"; }
 std::array<RectangleI, 3> hud_label_rois()
 { return { RectangleI(133, 63, 380, 111), RectangleI(1561, 59, 125, 28), RectangleI(1561, 145, 97, 28) }; }
-std::vector<float> hud_label_fixed_style(const HudPresentation& look, HudLabelSubject subject)
+// Every HUD field but the identity colours this subject tunes.
+std::vector<float> hud_label_fixed_style(HudPresentation look, HudLabelSubject subject)
 {
-    auto copy = look;
-    if (subject != HudLabelSubject::shadow) { copy.player_identity_colour = Colour(20, 20, 20); }
-    if (subject != HudLabelSubject::foreground) { copy.player_identity_shadow_colour = Colour(0, 0, 0, 34); }
-    auto values = hud_track_fixed_style(copy);
-    const auto& track = look.meter_track_colour; values.insert(values.end(), { track.r, track.g, track.b, track.a });
-    return values;
+    if (subject != HudLabelSubject::shadow) { look.player_identity_colour = Colour(); }
+    if (subject != HudLabelSubject::foreground) { look.player_identity_shadow_colour = Colour(); }
+    return hud_style(look);
 }
 class HudLabelColourProbe
 {
@@ -26,8 +24,8 @@ public:
         canvas_(app.render_resources(), Colour(32, 64, 96)),
         sheet_(app.render_resources()->sprite_sheet(look_.sprite_sheet)),
         pixel_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame))), subject_(subject),
-        fixed_(hud_label_fixed_style(look_, subject)), identity_fixed_(hud_track_identity_style(identity_)),
-        names_(hud_track_resource_names(look_)), palette_(presentation.team_palette()), output_(output)
+        fixed_(hud_label_fixed_style(look_, subject)), identity_fixed_(player_identity_style(identity_)),
+        names_(hud_resource_names(look_)), palette_(presentation.team_palette()), output_(output)
     {
         require(look_.player_identity_colour == Colour(20, 20, 20) &&
             look_.player_identity_shadow_colour == Colour(0, 0, 0, 34) &&
@@ -52,9 +50,9 @@ public:
         auto* resources = app_.render_resources();
         require(&look_ == &presentation_.hud() && &identity_ == &presentation_.player_identity() &&
             hud_label_fixed_style(look_, subject_) == fixed_ && hud_label_fixed_style(expected_, subject_) == fixed_ &&
-            hud_track_identity_style(identity_) == identity_fixed_ && hud_track_identity_style(expected_identity_) == identity_fixed_ &&
-            hud_track_resource_names(look_) == names_ && hud_track_resource_names(expected_) == names_ &&
-            hud_track_same_palette(presentation_.team_palette(), palette_) &&
+            player_identity_style(identity_) == identity_fixed_ && player_identity_style(expected_identity_) == identity_fixed_ &&
+            hud_resource_names(look_) == names_ && hud_resource_names(expected_) == names_ &&
+            same_team_palette(presentation_.team_palette(), palette_) &&
             resources->sprite_sheet(look_.sprite_sheet) == sheet_ &&
             &sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.fill_frame)) == &pixel_ &&
             pixel_.source_rectangle() == RectangleI(32, 0, 4, 4) && pixel_.origin() == Vector2F::zero &&
@@ -346,28 +344,17 @@ void hud_label_colour_consumer_checks(Application& app, const Presentation& pres
 void hud_label_tune_colour_checks(Application& app, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const auto root = output / "hud-label-tune-scratch", source = root / "source", staged = root / "staged";
-    require(!std::filesystem::exists(root), "HUD label private scratch must be fresh");
-    std::filesystem::create_directories(source); std::filesystem::create_directories(staged);
-    constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
-    for (size_t i = 0; i < files.size(); ++i)
-    { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
-    struct RestoreLabels { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreLabels() { t = old_t; p = old_p; } }
-        restore{ tuning, presentation, tuning, presentation };
-    Save preferences; SettingsSession preferences_session(preferences);
-    const auto preference_values = [&]()
-    {
-        auto values = limb_preference_values(preferences_session.play_settings());
-        values.insert(values.end(), { static_cast<int>(preferences.resolution()), preferences.fullscreen() ? 1 : 0,
-            static_cast<int>(preferences.team_palette()), static_cast<int>(preferences_session.input_bindings().keyboard_jump) }); return values;
-    };
-    const auto preferences_before = preference_values();
-    GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session); const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog);
-    data.set_tuning(&tuning); data.set_presentation(&presentation); DebugDirector director(&tuning, &presentation); data.set_debug(&director);
-    auto& impl = *director.impl(); impl.set_content_directories(source, staged); impl.set_user_directory(root / "user");
-    impl.set_script_directories({ root / "scripts" }); director.attach(&app, &data); impl.log().set_mirror_to_debugger(false);
-    require(impl.log().set_transcript((output / "hud-label-tune-commands.log").string()), "Cannot retain HUD label command transcript");
+    TuneColourSession session(app, tuning, presentation, content, output,
+        { .scratch = "hud-label-tune-scratch", .transcript = "hud-label-tune-commands.log",
+        .fresh = true });
+    const std::filesystem::path& root = session.root();
+    const std::filesystem::path& source = session.source();
+    const std::filesystem::path& staged = session.staged();
+    const auto& files = tune_colour_files;
+    const auto& bytes = session.real_bytes();
+    DebugDirectorImpl& impl = session.impl();
+    const auto preference_values = [&] { return session.preference_values(); };
+    const auto preferences_before = session.preference_values();
     HudLabelColourProbe probe(app, presentation, output, HudLabelSubject::pair);
     const std::string foreground_path = "hud.player_identity.colour", shadow_path = "hud.player_identity.shadow_colour";
     JsonSpanDocument initial(bytes[1], "HUD label private source"); const auto* foreground_token = initial.find(foreground_path);

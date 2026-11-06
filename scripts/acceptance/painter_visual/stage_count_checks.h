@@ -121,7 +121,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_stage(stage); settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::bucket); settings.set_duration(83.0f); settings.set_screen_layout(ScreenLayout::one_player); expected = settings;
-        stack.push(std::make_unique<PauseMenuProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
+        stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
     };
     const std::wstring browse = L"Left/Right to browse.\nConfirm to lock your choice.", locked_hint = L"Confirm again to start.\nBack to change your choice.";
     const std::wstring random_three = L"Random: 3 available arenas.\nConfirm to lock your choice.", random_one = L"Random: 1 available arenas.\nConfirm to lock your choice.";
@@ -150,8 +150,8 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         record.set_scale(record_scale); record.set_shadow_scale(record_scale); record.set_shadow_offset(shadow * record_scale); record.set_position(Vector2F(preview_right - raw_record.width * record_scale, live.record_y));
         require(record.bounds().x >= nav.bounds().right() + fitted.menu().focus_padding.x - 0.01f && record.bounds().right() <= preview_right + 0.01f &&
             record.bounds().y >= live.preview_position.y + live.preview_size.y + style.rule_height, "Independent record fit crossed the navigation gutter or preview");
-        std::srand(9143); const int next_random = std::rand(); std::srand(9143); const Frame actual = main_menu_frame(app);
-        require(actual.pixels == main_menu_frame(app).pixels && std::rand() == next_random, "Frozen Stage count drawing changed pixels or match RNG");
+        std::srand(9143); const int next_random = std::rand(); std::srand(9143); const Frame actual = stack_frame(app);
+        require(actual.pixels == stack_frame(app).pixels && std::rand() == next_random, "Frozen Stage count drawing changed pixels or match RNG");
         const Viewport pane = app.viewport_manager()->fullscreen_viewport(); const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::DESIGN_RESOLUTION), pane);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1); DrawList list = renderer.view(0); list.set_viewport(pane); list.set_camera(Camera::default_camera); list.set_filter(TextureFilter::point);
         canvas.draw(list, RectangleF(Vector2F::zero, app.resolution_manager()->resolution_vec())); list.set_camera(camera);
@@ -166,7 +166,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         {
             RectangleF box = texts[role]->bounds();
             if (role == 3 && random) { box = RectangleF(nav.bounds().right() + fitted.menu().focus_padding.x, live.record_y, room, raw_record.height); }
-            box.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(box); const RectangleI crop = countdown_crop_bounds(box);
+            box.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(box); const RectangleI crop = pixel_bounds(box);
             const Frame observed = foreground_crop(actual, crop, 0), wanted = foreground_crop(reference, crop, 0);
             require(observed.pixels == wanted.pixels, "Actual Stage count navigation/hint/status/record state differs from independent literals and fitted raster bounds");
             records << name << ',' << roles[role] << ',' << actual.width << ',' << actual.height << ',' << stages.size() << ',' << random_stage_indices(stages).size() << ',' << random << ',' << locked << ',' <<
