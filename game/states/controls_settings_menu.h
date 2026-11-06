@@ -5,11 +5,11 @@
 
 // Pushed above either Options or Pause. The underlying page and its pending
 // selections survive, and leaving this page never resumes a paused match.
-// A negative player allows the main menu's usual any-device navigation.
+// A negative opening_slot allows the main menu's usual any-device navigation.
 class ControlsSettingsMenu final : public SettingsPanelPage
 {
 public:
-	explicit ControlsSettingsMenu(MenuContext* context, int player = -1);
+	explicit ControlsSettingsMenu(MenuContext* context, int opening_slot = -1);
 	void init() override;
 	void update_page(float dt) override;
 	void on_resume() override;

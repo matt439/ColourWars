@@ -5,8 +5,8 @@
 
 using namespace labrador;
 
-KeyboardKeysMenu::KeyboardKeysMenu(MenuContext* context, int player) :
-	SettingsPanelPage(context, player),
+KeyboardKeysMenu::KeyboardKeysMenu(MenuContext* context, int opening_slot) :
+	SettingsPanelPage(context, opening_slot),
 	capture_input_(context->data()->gamepads(), context->data()->keyboard(), context->data()->tuning())
 {
 }

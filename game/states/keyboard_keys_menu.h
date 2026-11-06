@@ -12,7 +12,7 @@
 class KeyboardKeysMenu final : public SettingsPanelPage
 {
 public:
-	explicit KeyboardKeysMenu(MenuContext* context, int player = -1);
+	explicit KeyboardKeysMenu(MenuContext* context, int opening_slot = -1);
 	~KeyboardKeysMenu() override;
 	void init() override;
 	void update_page(float dt) override;

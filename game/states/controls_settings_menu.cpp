@@ -11,8 +11,8 @@
 
 using namespace labrador;
 
-ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
-	SettingsPanelPage(context, player)
+ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int opening_slot) :
+	SettingsPanelPage(context, opening_slot)
 {
 	this->volume_preview_sound_ = this->resolve_wave(
 		this->presentation().controls_settings().volume_preview_sound.name);
