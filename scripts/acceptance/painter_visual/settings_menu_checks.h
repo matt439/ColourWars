@@ -3,23 +3,8 @@
 void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct SettingsProfile
-    {
-        std::wstring previous;
-        explicit SettingsProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Could not read the runner's isolated profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Could not isolate the interactive settings save");
-        }
-        ~SettingsProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "settings-profile");
-    const std::filesystem::path save_path = output / "settings-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "settings-profile");
+    const std::filesystem::path save_path = acceptance::save_path_in(output / "settings-profile");
     const auto saved_bytes = [&]
     {
         std::ifstream stream(save_path, std::ios::binary);

@@ -275,7 +275,7 @@ void reveal_tune_colour_checks(Application& app, GameTuning& tuning,
     constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> real_bytes;
     for (size_t index = 0; index < files.size(); ++index)
     { real_bytes[index] = tune_colour_bytes(content / files[index]); tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreRevealTuneContent
     {
         GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original;
@@ -287,7 +287,7 @@ void reveal_tune_colour_checks(Application& app, GameTuning& tuning,
     play.view_shake = false; play.aim_marker = true; play.reduce_effects = true; play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
     InputBindings bindings; bindings.keyboard_jump = Key::j;
     require(preferences_session.set_play_settings_and_save(play) && preferences_session.set_input_bindings_and_save(bindings), "Cannot seed private reveal PlaySettings/JumpJ preferences");
-    const auto save_path = root / "profile/ColourWars/save_data.json"; const auto saved_preferences = tune_colour_bytes(save_path);
+    const auto save_path = acceptance::save_path_in(root / "profile"); const auto saved_preferences = tune_colour_bytes(save_path);
     const auto preference_values = [&]
     {
         const auto& p = preferences_session.play_settings();

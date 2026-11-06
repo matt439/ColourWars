@@ -5,6 +5,7 @@
 #include "engine/render/font.h"
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_font_file.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <algorithm>
@@ -130,16 +131,7 @@ namespace
         require(widget.max_width() == 70.0f, "The widget lost its width");
     }
 
-    rapidjson::Document read_document(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        const std::string text{ std::istreambuf_iterator<char>(input), {} };
-        rapidjson::Document result;
-        result.Parse(text.c_str());
-        require(!result.HasParseError(), "Cannot parse " + path.string());
-        return result;
-    }
+    using acceptance::read_document;
 
     std::string presentation_rejection(const std::filesystem::path& content,
         const std::filesystem::path& scratch, const char* name, void (*edit)(rapidjson::Document&))

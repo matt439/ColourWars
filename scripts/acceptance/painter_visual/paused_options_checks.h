@@ -142,20 +142,8 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    struct Profile
-    {
-        std::wstring previous;
-        explicit Profile(const std::filesystem::path& path)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read paused Options profile");
-            if (raw) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(path);
-            require(_wputenv_s(L"LOCALAPPDATA", path.c_str()) == 0, "Cannot isolate paused Options saves");
-        }
-        ~Profile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } profile(output / "paused-options-profile");
-    const auto save_path = output / "paused-options-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave profile(output / "paused-options-profile");
+    const auto save_path = acceptance::save_path_in(output / "paused-options-profile");
     acceptance::ReplacementLock blocked(save_path);
     const HWND window = static_cast<HWND>(app.window());
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected; expected.aim_sensitivity = 5;

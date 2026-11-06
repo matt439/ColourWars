@@ -327,7 +327,7 @@ a failed screenshot no longer leaves a partial PNG, and `exec` and
 The unique temporary changed how probes fail a save on purpose. Sixteen sites
 made a directory at the fixed `save_data.json.tmp`, which no longer blocks
 anything. They now hold the old save open, sharing read and write but not
-delete, through `acceptance::ReplacementLock` ([replacement_lock.h](../scripts/acceptance/support/replacement_lock.h)):
+delete, through `acceptance::ReplacementLock` (then `replacement_lock.h`; since `HYG#84`, [isolated_save.h](../scripts/acceptance/support/isolated_save.h)):
 `display_trial`, `input_bindings` (twice), `remembered_setup` and twelve painter
 leaves. The three probes that ran a write both ways (blocked temporary, then
 locked save) now run only the locked one, because the writer's temporary can no
@@ -1669,7 +1669,79 @@ find new failures; fix them in the same row, or record them as their own rows.
 
 ### Probe save isolation and JSON fixtures (`HYG#84`)
 
-Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
+**Done 2026-11-06; probes only, no game behaviour change.**
+
+- [support/isolated_save.h](../scripts/acceptance/support/isolated_save.h)
+  holds `acceptance::IsolatedSave`, non-copyable, which points the CRT's
+  `LOCALAPPDATA` at a private root and restores the earlier value. Given a
+  label it takes a fresh `ColourWars-<label>-<GUID>` folder under `%TEMP%`,
+  with an empty `ColourWars` folder, and removes it whole. Given a root (the
+  painter's evidence folders, the input-binding relaunch profile, the editor's
+  user-stage profile) it creates it and keeps it. It has `save_path()`,
+  `save_bytes()`, `write_save()` and `temporary_left()`, and
+  `save_path_in(root)` is the one spelling of where the save lives.
+  `ReplacementLock` and `temporary_beside` moved in; `replacement_lock.h` is
+  gone.
+- [support/scratch.h](../scripts/acceptance/support/scratch.h), new and shared
+  by both headers, is the one scratch policy: checked `read_text` and
+  `write_text`, `unique_temporary_directory` and the self-removing
+  `ScratchDirectory`.
+- [support/json_fixture.h](../scripts/acceptance/support/json_fixture.h) holds
+  `read_document`, `write_document`, `JsonVariants` (numbered edited copies of
+  one file, in a private scratch folder or a folder the caller names) and
+  `rejects_variant` (the copy's loader must throw with every expected
+  fragment).
+- Save isolation now comes from that one class in `settings`,
+  `match_records` (its side-copy paths derive from it), `player_profiles`,
+  `display_trial`, `remembered_setup`, `series_stage_rule`, `input_bindings`,
+  `debug_console`'s phase-3 replay root, the editor's `user_stage_checks`, the
+  painter's `NestedSaveProfile` (about seventy matrices) and the painter's
+  twelve one-matrix copies (`controls_menu`, `display_trial`, `menu_motion`,
+  `options_defaults`, `paused_options`, `percentage`, `save_status`,
+  `settings_menu`, `setup_motion`, `settings_value`, `stick_settings`,
+  `weapon_paper`). Every save path the C++ probes spelled out is now
+  `save_path()` or `save_path_in`.
+- The drifted cleanup is gone. `settings`, `match_records` and
+  `player_profiles` removed only the files they named, including the dead
+  `save_data.json.tmp`, and left the root behind if anything else was in it;
+  `debug_console` named its root by process id and left it behind on a failure.
+  All now remove the whole root.
+- `settings`' hand-made lock is a `ReplacementLock`. It shared only reading, so
+  it also refused a writer that truncates in place; it now shares writing, so
+  its check that the earlier save survived can fail against such a writer, as
+  `HYG#63`'s ports can.
+- `combat_feedback`, `view_shake`, `practice_workshop` (which wrote a fixed
+  name in `%TEMP%` that two runs could share) and `series_stage_rule` refuse
+  through `rejects_variant`. `story_audio`'s and `idle_drip`'s `ContentVariant`
+  and `menu_presentation`'s and `weapon_catalog`'s `Variants` derive from
+  `JsonVariants`. `locales`, `menu_text` and `text_wrap` use the shared
+  helpers. Only `practice_workshop`'s failure wording changed.
+
+Left as they are:
+
+- Probes that set `LOCALAPPDATA` for another purpose: `fatal_report` empties
+  it, then names a Unicode profile that must not exist yet; `user_stages` points it at its scratch
+  for the whole process; `debug_console`'s `replay_checks.cpp` and
+  `level_editor_dpi`'s `pending_checks.h` set the CRT and Win32 copies
+  together, which `IsolatedSave` does not.
+- The PowerShell spellings of the save path, handed to
+  [`HYG#88`](#painter-verifier-evidence-helpers-hyg88), and the other private
+  file readers and `Variants`, handed to
+  [`HYG#87`](#probe-tidy-ups-hyg87). `movement`'s `ContentVariant` also
+  rewrites text by hand, so it stays with that probe.
+
+Both presets build under `/W4 /WX`. The eighteen touched cases (`settings`,
+`match_records`, `player_profiles`, `display_trial`, `remembered_setup`,
+`series_stage_rule`, `input_bindings`, `combat_feedback`, `view_shake`,
+`story_audio`, `practice_workshop`, `locales`, `menu_presentation`,
+`weapon_catalog`, `text_wrap`, `idle_drip`, `debug_console` and `menu_text`)
+passed in Debug and Release, and no `ColourWars-*` folder was left in
+`%TEMP%`. `check-level-editor.ps1` and `check-painter.ps1 -CompileOnly` passed
+in both presets. On MattPC the plain painter matrix and every focused leaf but
+the three that need the private trial passed in Debug; in Release the same
+passed, less the three tune-colour leaves that refuse Release by design.
+
+The row as filed. Add `support/isolated_save.h`. It holds a non-copyable GUID-rooted
 `LOCALAPPDATA` override with `remove_all`, `save_path()`, `save_bytes()` and a RAII
 `ReplacementLock`. Replace the about twenty copies (`display_trial.cpp:26`,
 `settings.cpp:20`, `remembered_setup.cpp:40`, `menu_motion_checks.h:7`,
@@ -1761,6 +1833,14 @@ pins.
   `turbulence_blockout.cpp`, `turbulence_slopes.cpp`,
   `balance_runner/self_checks.cpp` and the painter's `cq_blockout_checks.h`
   and `crossfeed_checks.h`.
+- From `HYG#84`: move the remaining private whole-file readers and writers onto
+  `support/scratch.h`'s checked `read_text` and `write_text` (`debug_console`'s
+  fixtures, `moving_structure`, `turbulence_movers`, `turbulence_slab_tools`,
+  `level_editor`'s `contents`, `user_stages`, `low_paint`, `balance_runner`,
+  `fatal_report`, `level_format`, `handicap_metadata`), and the painter's
+  hand-read save lambdas onto `IsolatedSave::save_bytes`. `menu_text`'s and
+  `menu_focus_motion`'s `Variants` can derive from `acceptance::JsonVariants`
+  as `menu_presentation`'s and `weapon_catalog`'s do.
 
 ### Painter verifier evidence helpers (`HYG#88`)
 
@@ -1780,6 +1860,9 @@ Also:
 - Check the git exit codes (`evidence-record.ps1:13`).
 - Treat `check-path.ps1` as required (`check-painter-selection.ps1:265`).
 - Fix the contact sheet's rumble filter (`contact-sheet.ps1:145`).
+- From `HYG#84`: the PowerShell side still spells the private save path out,
+  in `check-painter.ps1`'s expected save-failure lines and about thirty
+  `verify-*.ps1`. One helper beside `Get-PainterSaveCounts` can own it.
 
 Run `check-painter-selection.ps1` and a full painter sweep on MattPC.
 

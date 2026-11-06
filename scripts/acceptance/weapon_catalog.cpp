@@ -6,6 +6,7 @@
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -26,27 +27,8 @@ namespace
     constexpr WeaponType types[]{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
         WeaponType::mister, WeaponType::bucket, WeaponType::random_primary };
 
-    rapidjson::Document read_document(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        const std::string text{ std::istreambuf_iterator<char>(input), {} };
-        rapidjson::Document result;
-        result.Parse(text.c_str());
-        require(!result.HasParseError(), "Cannot parse " + path.string());
-        return result;
-    }
-
-    void write_document(const rapidjson::Document& document, const std::filesystem::path& path)
-    {
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        require(document.Accept(writer), "Cannot encode weapon catalog fixture");
-        std::ofstream output(path, std::ios::binary | std::ios::trunc);
-        output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-        output.close();
-        require(output.good(), "Cannot write weapon catalog fixture");
-    }
+    using acceptance::read_document;
+    using acceptance::write_document;
 
     struct World
     {
@@ -60,28 +42,10 @@ namespace
         }
     };
 
-    struct Variants
+    struct Variants : acceptance::JsonVariants
     {
-        rapidjson::Document source;
-        std::filesystem::path scratch;
-        size_t next = 0;
-
         Variants(const std::filesystem::path& content, const std::filesystem::path& folder) :
-            source(read_document(content / "presentation.json")), scratch(folder)
-        {
-            std::filesystem::create_directories(scratch);
-        }
-
-        template<class Edit>
-        std::filesystem::path write(Edit edit)
-        {
-            rapidjson::Document document;
-            document.CopyFrom(source, document.GetAllocator());
-            edit(document);
-            const auto path = scratch / ("weapon-catalog-" + std::to_string(next++) + ".json");
-            write_document(document, path);
-            return path;
-        }
+            acceptance::JsonVariants(content / "presentation.json", L"weapon-catalog", folder) {}
 
         template<class Edit>
         Presentation load(Edit edit)
@@ -385,7 +349,7 @@ namespace
             }
         }
         require(removed, "Legacy error-frame fixture disappeared from the authored weapon atlas");
-        const auto path = variants.scratch / "weapon-sheet-without-error.json";
+        const auto path = variants.folder() / "weapon-sheet-without-error.json";
         write_document(sheet, path);
         world.render.add_sprite_sheet("weapon_paint", read_sprite_sheet(path.string().c_str(), TextureHandle{}));
         const auto defaults = variants.load([](rapidjson::Document&) {});

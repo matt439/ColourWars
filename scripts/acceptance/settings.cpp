@@ -3,7 +3,7 @@
 #include "game/config/settings_session.h"
 #include "game/states/controls_settings_menu.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -16,62 +16,6 @@
 namespace
 {
 	using acceptance::require;
-
-	// Save reads LOCALAPPDATA through the CRT. This process never opens the
-	// player's real preferences, and removes only the paths it creates here.
-	class IsolatedSaveDirectory
-	{
-	public:
-		IsolatedSaveDirectory()
-		{
-			wchar_t* previous = nullptr;
-			size_t length = 0;
-			require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0,
-				"Could not read LOCALAPPDATA");
-			if (previous != nullptr)
-			{
-				this->previous_ = previous;
-				std::free(previous);
-			}
-
-			const std::filesystem::path temporary = std::filesystem::temp_directory_path();
-			wchar_t unique[MAX_PATH] = {};
-			require(GetTempFileNameW(temporary.c_str(), L"cws", 0, unique) != 0,
-				"Could not reserve the acceptance directory");
-			this->root_ = unique;
-			require(DeleteFileW(unique) != 0 &&
-				std::filesystem::create_directory(this->root_),
-				"Could not create the acceptance directory");
-			require(_wputenv_s(L"LOCALAPPDATA", this->root_.c_str()) == 0,
-				"Could not isolate LOCALAPPDATA");
-		}
-
-		~IsolatedSaveDirectory()
-		{
-			_wputenv_s(L"LOCALAPPDATA", this->previous_.c_str());
-			std::error_code ignored;
-			std::filesystem::remove(this->save_path().wstring() + L".tmp", ignored);
-			std::filesystem::remove(this->save_path(), ignored);
-			std::filesystem::remove(this->root_ / L"ColourWars", ignored);
-			std::filesystem::remove(this->root_, ignored);
-		}
-
-		std::filesystem::path save_path() const
-		{
-			return this->root_ / L"ColourWars" / L"save_data.json";
-		}
-
-	private:
-		std::filesystem::path root_;
-		std::wstring previous_;
-	};
-
-	std::string contents(const std::filesystem::path& path)
-	{
-		std::ifstream stream(path, std::ios::binary);
-		require(stream.good(), "Could not read the acceptance save");
-		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-	}
 
 	void check_round_trip(const Save& expected)
 	{
@@ -102,15 +46,13 @@ namespace
 		}
 	}
 
-	void write_stick_fixture(const IsolatedSaveDirectory& directory,
+	void write_stick_fixture(const acceptance::IsolatedSave& directory,
 		const std::string& stick_member, int sensitivity = 4)
 	{
-		std::ofstream output(directory.save_path(), std::ios::binary | std::ios::trunc);
-		output << "{\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
-			"\"team_palette\":\"blue_yellow\",\"aim_sensitivity\":" << sensitivity <<
+		directory.write_save("{\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
+			"\"team_palette\":\"blue_yellow\",\"aim_sensitivity\":" + std::to_string(sensitivity) +
 			",\"music_volume\":20,\"sfx_volume\":80,\"view_shake\":false,"
-			"\"aim_marker\":false,\"reduce_effects\":true" << stick_member << '}';
-		require(output.good(), "Could not write the stick-preference save fixture");
+			"\"aim_marker\":false,\"reduce_effects\":true" + stick_member + '}');
 	}
 
 	void require_fixture_preferences(const Save& restored)
@@ -123,7 +65,7 @@ namespace
 			"Stick-preference recovery reset an unrelated saved preference");
 	}
 
-	void check_stick_loading(const IsolatedSaveDirectory& directory)
+	void check_stick_loading(const acceptance::IsolatedSave& directory)
 	{
 		struct Fixture
 		{
@@ -222,7 +164,7 @@ namespace
 		}
 	}
 
-	void check_legacy_sticks(const IsolatedSaveDirectory& directory)
+	void check_legacy_sticks(const acceptance::IsolatedSave& directory)
 	{
 		constexpr float legacy_deadzones[] = { 0.70f, 0.60f, 0.50f, 0.35f, 0.20f };
 		for (int sensitivity = 1; sensitivity <= 5; ++sensitivity)
@@ -251,7 +193,7 @@ namespace
 		}
 	}
 
-	void check_stick_api(const IsolatedSaveDirectory& directory)
+	void check_stick_api(const acceptance::IsolatedSave& directory)
 	{
 		Save save; SettingsSession save_session(save);
 		PlaySettings play;
@@ -261,7 +203,7 @@ namespace
 		play.sticks[3] = { 70, 80 };
 		require(save_session.set_play_settings_and_save(play), "Could not save four separate pad profiles");
 		check_round_trip(save);
-		require(contents(directory.save_path()).find("\"pad_sticks\":[") != std::string::npos,
+		require(directory.save_bytes().find("\"pad_sticks\":[") != std::string::npos,
 			"Saving pad profiles did not write their canonical array");
 
 		play.sticks[0] = { -999, 999 };
@@ -291,7 +233,7 @@ namespace
 		}
 	}
 
-	void check_rumble_loading(const IsolatedSaveDirectory& directory)
+	void check_rumble_loading(const acceptance::IsolatedSave& directory)
 	{
 		const auto check = [&](const std::string& member, const std::array<bool, input_slots::pad_count>& expected)
 		{
@@ -316,7 +258,7 @@ namespace
 				canonical += expected[slot] ? "{\"enabled\":true}" : "{\"enabled\":false}";
 			}
 			canonical += ']';
-			require(contents(directory.save_path()).find(canonical) != std::string::npos,
+			require(directory.save_bytes().find(canonical) != std::string::npos,
 				"Rumble save did not write four canonical typed entries");
 			check_round_trip(restored);
 		};
@@ -389,7 +331,7 @@ namespace
 		}
 	}
 
-	void check_comfort_loading(const IsolatedSaveDirectory& directory)
+	void check_comfort_loading(const acceptance::IsolatedSave& directory)
 	{
 		using Comfort = std::array<SeatComfort, input_slots::pad_count>;
 		const auto key = [](SeatSwitch value)
@@ -417,7 +359,7 @@ namespace
 					"\",\"reduce_effects\":\"" + key(expected[slot].reduce_effects) + "\"}";
 			}
 			canonical += ']';
-			require(contents(directory.save_path()).find(canonical) != std::string::npos,
+			require(directory.save_bytes().find(canonical) != std::string::npos,
 				"Comfort save did not write four canonical entries");
 			check_round_trip(restored);
 		};
@@ -459,7 +401,7 @@ namespace
 		}
 	}
 
-	void check_boolean_loading(const IsolatedSaveDirectory& directory,
+	void check_boolean_loading(const acceptance::IsolatedSave& directory,
 		const char* key, bool PlaySettings::* preference,
 		const char* other_key, bool PlaySettings::* other_preference)
 	{
@@ -509,7 +451,7 @@ namespace
 			require(restored.save_to_file(), "Could not canonicalize the boolean-preference save fixture");
 			const std::string canonical = std::string("\"") + key + "\":" +
 				(fixture.expected ? "true" : "false");
-			require(contents(directory.save_path()).find(canonical) != std::string::npos,
+			require(directory.save_bytes().find(canonical) != std::string::npos,
 				"Saving did not write the preference as a boolean");
 			check_round_trip(restored);
 		}
@@ -518,7 +460,7 @@ namespace
 	// Vsync (save version 6) is a flat display key. It defaults to On, which
 	// is how older saves played, recovers on its own and survives the
 	// three-setting display form.
-	void check_vsync_loading(const IsolatedSaveDirectory& directory)
+	void check_vsync_loading(const acceptance::IsolatedSave& directory)
 	{
 		struct Fixture
 		{
@@ -553,7 +495,7 @@ namespace
 				restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow,
 				"Vsync recovery reset an unrelated display preference");
 			require(restored.save_to_file(), "Could not canonicalize the vsync save fixture");
-			require(contents(directory.save_path()).find(std::string("\"vsync\":") +
+			require(directory.save_bytes().find(std::string("\"vsync\":") +
 				(fixture.expected ? "true" : "false")) != std::string::npos,
 				"Saving did not write vsync as a boolean");
 			check_round_trip(restored);
@@ -575,7 +517,7 @@ namespace
 	// child pages commit their own while it stays open underneath. Its Apply
 	// must lay only its own fields over what is in effect then. aim_sensitivity
 	// stands for a field no page edits, which a copied back-fill list misses.
-	void check_controls_apply(const IsolatedSaveDirectory& directory)
+	void check_controls_apply(const acceptance::IsolatedSave& directory)
 	{
 		std::error_code ignored;
 		std::filesystem::remove(directory.save_path(), ignored);
@@ -617,7 +559,7 @@ int main()
 {
 	return acceptance::run_probe("settings", [&]
 	{
-		const IsolatedSaveDirectory directory;
+		const acceptance::IsolatedSave directory(L"settings");
 		Save save; SettingsSession save_session(save);
 		PlaySettings play;
 		require(play.pad_rumble == std::array<bool, input_slots::pad_count>{ true, true, true, true },
@@ -644,7 +586,7 @@ int main()
 			labrador::ScreenResolution::s_2560_1440, true, TeamColourPair::blue_yellow),
 			"Bulk display save failed");
 		check_round_trip(save);
-		const std::string original = contents(directory.save_path());
+		const std::string original = directory.save_bytes();
 
 		bool rejected = false;
 		try
@@ -658,14 +600,13 @@ int main()
 		}
 		require(rejected && save.resolution() == labrador::ScreenResolution::s_2560_1440 &&
 			save.fullscreen() && save.team_palette() == TeamColourPair::blue_yellow &&
-			contents(directory.save_path()) == original,
+			directory.save_bytes() == original,
 			"Invalid bulk settings partially changed active or saved preferences");
 
 		// Prevent replacing the destination while still allowing the temporary
 		// write. This exercises the failure after serialization, not a mock.
-		const HANDLE locked = CreateFileW(directory.save_path().c_str(), GENERIC_READ,
-			FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-		require(locked != INVALID_HANDLE_VALUE, "Could not lock the acceptance save");
+		acceptance::ReplacementLock locked(directory.save_path());
+		require(locked.hold(), "Could not lock the acceptance save");
 		const bool display_saved = save.set_display_settings_and_save(
 			labrador::ScreenResolution::s_1280_720, false, TeamColourPair::pink_green);
 		play.music_volume = 0;
@@ -674,7 +615,7 @@ int main()
 		play.reduce_effects = false;
 		play.pad_rumble = { true, false, true, false };
 		const bool play_saved = save_session.set_play_settings_and_save(play);
-		CloseHandle(locked);
+		locked.release();
 		require(!display_saved && !play_saved,
 			"Persistence failure was reported as success");
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
@@ -683,7 +624,7 @@ int main()
 			save_session.play_settings().aim_marker && !save_session.play_settings().reduce_effects &&
 			save_session.play_settings().pad_rumble == play.pad_rumble,
 			"Failed saves lost the active settings");
-		require(contents(directory.save_path()) == original,
+		require(directory.save_bytes() == original,
 			"Failed replacement damaged the previous save");
 		require(!acceptance::temporary_beside(directory.save_path()),
 			"Failed replacement left a temporary save");

@@ -170,7 +170,7 @@ void cursor_material_tune_checks(Application& app, GameTuning& tuning, Presentat
         real_bytes[index] = tune_colour_bytes(content / files[index]);
         tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreCursorMaterialTuneContent
     {
         GameTuning& tuning; Presentation& presentation; GameTuning original_tuning; Presentation original;
@@ -185,7 +185,7 @@ void cursor_material_tune_checks(Application& app, GameTuning& tuning, Presentat
     InputBindings bindings; bindings.keyboard_jump = Key::j;
     require(preferences_session.set_play_settings_and_save(play) && preferences_session.set_input_bindings_and_save(bindings),
         "Cannot seed private cursor material PlaySettings/JumpJ preferences");
-    const auto save_path = root / "profile/ColourWars/save_data.json";
+    const auto save_path = acceptance::save_path_in(root / "profile");
     const std::string saved_preferences = tune_colour_bytes(save_path);
     const auto preference_values = [&]
     {

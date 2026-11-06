@@ -561,7 +561,7 @@ Frame miniature_story_frozen(Application& app, Level& level)
 void miniature_story_matrix(Application& app, LevelBuilder& builder, const GameTuning& tuning,
     const std::filesystem::path& output, std::ofstream& records)
 {
-    const NestedSaveProfile isolated(output / "miniature-story-profile");
+    const acceptance::IsolatedSave isolated(output / "miniature-story-profile");
     for (const char* stage : miniature_stages)
     {
         for (const int count : { 1, 4 })

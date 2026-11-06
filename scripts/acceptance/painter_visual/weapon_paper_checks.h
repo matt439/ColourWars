@@ -3,19 +3,7 @@
 void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
-    struct WeaponPaperProfile
-    {
-        std::wstring previous;
-        explicit WeaponPaperProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read the isolated Weapon paper profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0, "Cannot isolate Weapon paper palette preferences");
-        }
-        ~WeaponPaperProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "weapon-paper-profile");
+    const acceptance::IsolatedSave isolated(output / "weapon-paper-profile");
     const Presentation original = presentation;
     const std::array<WeaponChoicePresentation, 6> shipped{{
         { L"Sprayer", "sprayer", "sprayer_paint", "sprayer_supply" },

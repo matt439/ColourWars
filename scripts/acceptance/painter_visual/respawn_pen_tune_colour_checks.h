@@ -332,7 +332,7 @@ void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels
     for (size_t i = 0; i < files.size(); ++i)
     { real_bytes[i] = tune_colour_bytes(content / files[i]);
       tune_colour_write(source / files[i], real_bytes[i]); tune_colour_write(staged / files[i], real_bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     const GameTuning original_tuning = tuning; const Presentation original = presentation;
     struct RestorePenContent
     { GameTuning& tuning; Presentation& presentation; GameTuning old_tuning; Presentation old_presentation;
@@ -347,7 +347,7 @@ void respawn_pen_tune_checks(Application& app, Registry<LevelLoadedInfo>& levels
     InputBindings bindings; bindings.keyboard_jump = Key::j;
     require(preferences_session.set_play_settings_and_save(play) && preferences_session.set_input_bindings_and_save(bindings),
         "Cannot seed private pen PlaySettings and JumpJ preferences");
-    const auto save_path = root / "profile/ColourWars/save_data.json";
+    const auto save_path = acceptance::save_path_in(root / "profile");
     const std::string saved_preferences = tune_colour_bytes(save_path);
     const auto preference_values = [&]
     {

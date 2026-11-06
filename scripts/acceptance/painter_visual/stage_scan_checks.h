@@ -21,7 +21,7 @@ struct StageScanStderrCapture
 void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const NestedSaveProfile isolated(output / "stage-scan-profile");
+    const acceptance::IsolatedSave isolated(output / "stage-scan-profile");
     Save preferences; SettingsSession preferences_session(preferences); auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     StageCatalog catalog; const Registry<LevelLoadedInfo>& levels = catalog.level_infos(); const StageList& stages = catalog.stages();

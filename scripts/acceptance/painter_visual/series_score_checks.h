@@ -42,13 +42,13 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
     };
     std::array<std::vector<int>, 5> ledgers;
     for (size_t index = 0; index < cases.size(); ++index) { ledgers[index] = ledger(cases[index].session); }
-    const NestedSaveProfile profile(output / "series-score-profile");
+    const acceptance::IsolatedSave profile(output / "series-score-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Series score's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "series-score-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "series-score-profile"), std::ios::binary);
         require(file.good(), "Series score probe lost its private save");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

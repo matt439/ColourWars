@@ -326,7 +326,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         real_bytes[index] = tune_colour_bytes(content / files[index]);
         tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     const GameTuning original_tuning = tuning; const Presentation original = presentation;
     struct RestoreTeamTuneContent
     {
@@ -338,7 +338,7 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings();
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private Team tune profile");
-    const auto save_path = root / "profile/ColourWars/save_data.json"; const std::string saved = tune_colour_bytes(save_path);
+    const auto save_path = acceptance::save_path_in(root / "profile"); const std::string saved = tune_colour_bytes(save_path);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);

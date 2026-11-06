@@ -10,7 +10,7 @@
 #include "game/config/presentation/presentation.h"
 #include "game/config/tuning.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
 #include "scripts/acceptance/support/stage_catalog.h"
 
 #include <algorithm>

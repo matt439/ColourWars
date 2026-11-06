@@ -35,7 +35,12 @@ objects loads the manifest's sheets, fonts and banks with
 [support/content_world.h](acceptance/support/content_world.h), and one that
 claims every stage walks `manifest_level_paths` in
 [support/stage_catalog.h](acceptance/support/stage_catalog.h), not a list of its
-own. It also holds the sources
+own. A probe that touches the save points `LOCALAPPDATA` at a private root with
+`acceptance::IsolatedSave` in
+[support/isolated_save.h](acceptance/support/isolated_save.h), and one that
+checks a reader refuses bad JSON writes edited copies with
+[support/json_fixture.h](acceptance/support/json_fixture.h); both keep their
+scratch by [support/scratch.h](acceptance/support/scratch.h). It also holds the sources
 of probes that are not cases and that their own entry points build:
 `painter_visual` ([check-painter.ps1](check-painter.ps1)), `paint_fx_visual`
 ([check-paint-fx.ps1](check-paint-fx.ps1)), `movement_feedback_visual`

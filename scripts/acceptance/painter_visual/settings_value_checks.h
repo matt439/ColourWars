@@ -15,20 +15,8 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     };
     const Values legacy = words_of(L"On", L"Off", L"Random");
     const auto profile = output / (controls ? "values-controls-profile" : "values-options-profile");
-    struct ValueProfile
-    {
-        std::wstring previous;
-        explicit ValueProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated value profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0, "Cannot isolate setting-value saves");
-        }
-        ~ValueProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(profile);
-    const auto save_path = profile / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto save_path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]

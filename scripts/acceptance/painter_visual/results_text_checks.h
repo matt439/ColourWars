@@ -22,13 +22,13 @@ void results_text_checks(Application& app, const Canvas& canvas, GameTuning& tun
     const auto single_ledger = ledger(single), series_ledger = ledger(series);
     RecordOutcome record; record.recorded = record.new_best = true; record.value = record.best = 68.4f;
 
-    const NestedSaveProfile profile(output / "results-text-profile");
+    const acceptance::IsolatedSave profile(output / "results-text-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed Results text's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "results-text-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "results-text-profile"), std::ios::binary);
         require(file.good(), "Results text probe lost its private save");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

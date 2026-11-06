@@ -6,7 +6,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const Presentation original = presentation;
     const MatchTuning original_match = tuning.match();
     require(!app.fullscreen(), "Resolution text probe requires its ordinary hidden windowed application");
-    const NestedSaveProfile profile(output / "resolution-profile");
+    const acceptance::IsolatedSave profile(output / "resolution-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play; play.music_volume = play.sfx_volume = 0;
     play.aim_sensitivity = 4; play.view_shake = false; play.reduce_effects = true;
@@ -31,7 +31,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     std::string saved, saved_preset = "1920x1080";
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "resolution-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "resolution-profile"), std::ios::binary);
         require(file.good(), "Resolution text probe lost its private save");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

@@ -4,23 +4,8 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    struct ControlsProfile
-    {
-        std::wstring previous;
-        explicit ControlsProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the runner's isolated controls profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate Controls/audio save writes");
-        }
-        ~ControlsProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "controls-profile");
-    const std::filesystem::path save_path = output / "controls-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "controls-profile");
+    const std::filesystem::path save_path = acceptance::save_path_in(output / "controls-profile");
     const auto saved_bytes = [&]
     {
         std::ifstream stream(save_path, std::ios::binary);

@@ -3,23 +3,8 @@
 void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct StickProfile
-    {
-        std::wstring previous;
-        explicit StickProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the runner's isolated stick profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate Pad sticks save writes");
-        }
-        ~StickProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "stick-profile");
-    const std::filesystem::path save_path = output / "stick-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "stick-profile");
+    const std::filesystem::path save_path = acceptance::save_path_in(output / "stick-profile");
     const auto saved_bytes = [&]
     {
         std::ifstream stream(save_path, std::ios::binary);

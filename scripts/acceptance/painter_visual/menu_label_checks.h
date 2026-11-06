@@ -13,12 +13,12 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     controls.item_font = "lato_black_24"; controls.help_font = "courier_prime_bold_16";
     const_cast<ResultsMenuPresentation&>(alternate.results_menu()).contribution_font = "courier_prime_bold_16";
     alternate.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "menu-label-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    const acceptance::IsolatedSave isolated(output / "menu-label-profile"); Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private menu-label profile");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "menu-label-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "menu-label-profile"), std::ios::binary);
         require(file.good(), "Cannot read the private menu-label save");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

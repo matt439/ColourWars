@@ -6,7 +6,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     static_cast<void>(canvas);
-    const NestedSaveProfile profile(output / "rumble-owner-profile");
+    const acceptance::IsolatedSave profile(output / "rumble-owner-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(quiet), "Cannot seed private rumble owner settings");

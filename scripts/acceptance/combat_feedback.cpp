@@ -7,6 +7,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -341,44 +342,13 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read combat presentation content");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t temporary_name[MAX_PATH]{};
-        const auto temporary_directory = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(temporary_directory.c_str(), L"cwc", 0, temporary_name) != 0,
-            "Cannot reserve combat presentation variant");
-        const std::filesystem::path path(temporary_name);
-        struct RemoveOnExit
-        {
-            std::filesystem::path path;
-            ~RemoveOnExit()
-            {
-                std::error_code ignored;
-                std::filesystem::remove(this->path, ignored);
-            }
-        } cleanup{ path };
-
+        acceptance::JsonVariants variants(content / "presentation.json", L"combat-presentation");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse combat presentation fixture");
-            edit(json["combat_feedback"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write combat presentation fixture");
-            bool rejected = false;
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("combat_feedback") != std::string::npos;
-            }
-            require(rejected, "Malformed combat presentation was accepted or lost its authored section");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["combat_feedback"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "combat_feedback" }, "Malformed combat presentation was accepted or lost its authored section");
         };
         for (const char* field : { "hurt_duration", "hurt_repeat_delay", "hurt_width", "hurt_reach",
             "elimination_duration", "elimination_spread", "elimination_lift", "particle_size", "keyline_width" })

@@ -4,7 +4,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     // The series below finishes rounds, which write stage records.
-    const NestedSaveProfile profile(output / "team-setup-profile");
+    const acceptance::IsolatedSave profile(output / "team-setup-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0;

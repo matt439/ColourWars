@@ -200,18 +200,9 @@ int main(int argc, char** argv)
 		const std::filesystem::path source(labrador::widen(source_paths::content_directory));
 		const std::string source_tuning = read_text(source / L"tuning.json");
 		const std::string source_presentation = read_text(source / L"presentation.json");
-		const std::filesystem::path local = std::filesystem::temp_directory_path() /
-			(L"colourwars_localappdata_" + std::to_wstring(_getpid()));
-		std::filesystem::create_directories(local);
-		size_t saved_length = 0;
-		wchar_t* saved_raw = nullptr;
-		_wdupenv_s(&saved_raw, &saved_length, L"LOCALAPPDATA");
-		const std::wstring saved_local = saved_raw != nullptr ? saved_raw : L"";
-		std::free(saved_raw);
-		_wputenv_s(L"LOCALAPPDATA", local.c_str());
 		std::string replay_case;
-		try
 		{
+			const acceptance::IsolatedSave replays(L"debug-console");
 			if (!background_only)
 			{
 				check_json_spans(game_directory);
@@ -234,14 +225,6 @@ int main(int argc, char** argv)
 				check_station_labels(game_directory);
 			}
 		}
-		catch (...)
-		{
-			_wputenv_s(L"LOCALAPPDATA", saved_local.c_str());
-			throw;
-		}
-		_wputenv_s(L"LOCALAPPDATA", saved_local.c_str());
-		std::error_code ignored;
-		std::filesystem::remove_all(local, ignored);
 		require(read_text(source / L"tuning.json") == source_tuning &&
 			read_text(source / L"presentation.json") == source_presentation,
 			"game/content/tuning.json and presentation.json are byte-for-byte unchanged");

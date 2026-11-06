@@ -5,7 +5,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
     // Finished matches write stage records into this matrix's own profile.
-    const NestedSaveProfile profile(output / "resume-profile");
+    const acceptance::IsolatedSave profile(output / "resume-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     // Keep this fixture's preferences in memory; only stage records are saved.
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());

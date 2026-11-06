@@ -19,20 +19,8 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         return words;
     }();
     const auto profile = output / (controls_pages ? "status-controls-profile" : "status-options-profile");
-    struct StatusProfile
-    {
-        std::wstring previous;
-        explicit StatusProfile(const std::filesystem::path& path)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated status profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(path);
-            require(_wputenv_s(L"LOCALAPPDATA", path.c_str()) == 0, "Cannot isolate save-status writes");
-        }
-        ~StatusProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(profile);
-    const auto save_path = profile / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto save_path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     const auto reset = [&]

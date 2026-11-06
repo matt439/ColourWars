@@ -118,7 +118,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
 {
     using namespace debug_background_acceptance;
     window_checks();
-    const NestedSaveProfile profile(output / "debug-background-profile");
+    const acceptance::IsolatedSave profile(output / "debug-background-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     // A run quieted by COLOURWARS_MUTE would hold both groups at zero through
     // sound_groups::apply, which would make every muted() check below pass
@@ -135,7 +135,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     sound_groups::set_muted(false);
     PlaySettings initial; initial.music_volume = was_muted ? 1 : 17; initial.sfx_volume = was_muted ? 2 : 23;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed private background preferences");
-    const auto save_path = output / "debug-background-profile" / "ColourWars" / "save_data.json";
+    const auto save_path = acceptance::save_path_in(output / "debug-background-profile");
     const auto save_bytes = [&]
     {
         std::ifstream file(save_path, std::ios::binary);

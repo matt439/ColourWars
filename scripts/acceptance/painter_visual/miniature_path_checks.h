@@ -5,7 +5,7 @@ void miniature_path_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences,
     const std::filesystem::path& output, std::ofstream& records)
 {
-    const NestedSaveProfile isolated(output / "miniature-path-profile");
+    const acceptance::IsolatedSave isolated(output / "miniature-path-profile");
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
     size_t heavy_contacts = 0;

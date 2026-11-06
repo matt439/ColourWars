@@ -260,7 +260,7 @@ void quiet_face_tune_colour_checks(Application& app, GameTuning& tuning,
         original_bytes[i] = tune_colour_bytes(content / files[i]);
         tune_colour_write(source / files[i], original_bytes[i]); tune_colour_write(staged / files[i], original_bytes[i]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreQuietFace
     {
         GameTuning& tuning; Presentation& presentation; GameTuning old_tuning; Presentation old_presentation;
@@ -295,7 +295,7 @@ void quiet_face_tune_colour_checks(Application& app, GameTuning& tuning,
     {
         probe.unchanged();
         require(preference_values() == original_preferences &&
-            !std::filesystem::exists(root / "profile/ColourWars/save_data.json") &&
+            !std::filesystem::exists(acceptance::save_path_in(root / "profile")) &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty(),
             "Quiet face command changed private defaults, wrote a game Save or queued gameplay work");
         for (size_t i = 0; i < files.size(); ++i)

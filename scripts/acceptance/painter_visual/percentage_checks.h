@@ -5,23 +5,8 @@
 void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct PercentageProfile
-    {
-        std::wstring previous;
-        explicit PercentageProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the percentage probe's runner profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate the percentage probe's save");
-        }
-        ~PercentageProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } profile(output / "percentage-profile");
-    const std::filesystem::path save_path = output / "percentage-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave profile(output / "percentage-profile");
+    const std::filesystem::path save_path = acceptance::save_path_in(output / "percentage-profile");
     const Presentation original = presentation;
     const float original_cutoff = tuning.input().movement_deadzone;
     StateContext& stack = app;

@@ -541,7 +541,7 @@ void hud_timer_tune_colour_checks(Application& app, GameTuning& tuning,
         bytes[i] = tune_colour_bytes(content / files[i]);
         tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreTimer { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreTimer() { t = old_t; p = old_p; } }
         restore{ tuning, presentation, tuning, presentation };
     Save preferences; SettingsSession preferences_session(preferences); const auto original_preferences = preferences.save_data();
@@ -566,7 +566,7 @@ void hud_timer_tune_colour_checks(Application& app, GameTuning& tuning,
     {
         probe.unchanged(); require(preference_values() == original_values &&
             preferences.save_data().resolution == original_preferences.resolution &&
-            !std::filesystem::exists(root / "profile/ColourWars/save_data.json") && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
+            !std::filesystem::exists(acceptance::save_path_in(root / "profile")) && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
             "Timer command changed private defaults, wrote a game Save or queued gameplay");
         for (size_t i = 0; i < files.size(); ++i)
         {

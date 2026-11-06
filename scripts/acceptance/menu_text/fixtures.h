@@ -32,6 +32,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -49,7 +50,7 @@ using namespace labrador;
 namespace menu_text_acceptance
 {
     using acceptance::require;
-    rapidjson::Document read_document(const std::filesystem::path& path);
+    using acceptance::read_document;
     UiText* row_text(OptionRow& row, const std::string& name);
     MenuPaperArtPresentation options_art(const MainMenuPresentation& main);
 

@@ -35,13 +35,13 @@ void end_continuation_checks(Application& app, const Canvas& canvas, GameTuning&
         ledgers[index] = session_numbers(cases[index].session);
         scores[index] = cases[index].session.score_string(original.menu_text().results); results_text[index] = cases[index].session.result_string(original.menu_text().results);
     }
-    const NestedSaveProfile profile(output / "end-continuation-profile");
+    const acceptance::IsolatedSave profile(output / "end-continuation-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed End continuation's private Play preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "end-continuation-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "end-continuation-profile"), std::ios::binary);
         require(file.good(), "End continuation probe lost its private save");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

@@ -11,6 +11,7 @@
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/scratch.h"
 
 #include <array>
 #include <filesystem>
@@ -32,21 +33,8 @@ using acceptance::require;
 namespace
 {
     using World = acceptance::ContentWorld;
-
-    std::string read_text(const std::filesystem::path& path)
-    {
-        std::ifstream input(path, std::ios::binary);
-        require(input.good(), "Cannot read " + path.string());
-        return { std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-    }
-
-    void write_text(const std::filesystem::path& path, const std::string& text)
-    {
-        std::ofstream output(path, std::ios::binary | std::ios::trunc);
-        output << text;
-        output.close();
-        require(output.good(), "Cannot write " + path.string());
-    }
+    using acceptance::read_text;
+    using acceptance::write_text;
 
     // Startup's text checks of one composed Presentation: its resources, the
     // controls reminder, the Mode rows, and the stage titles - every shipped

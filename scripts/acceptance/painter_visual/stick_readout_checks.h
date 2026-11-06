@@ -12,8 +12,8 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     words.aim_active = L"Stick X = {raw_x}%\nStick Y = {raw_y}%\nDirection X = {aim_x}%\nDirection Y = {aim_y}%\nHollow = raw\nSolid = aim";
     const_cast<ControlsSettingsPresentation&>(replacement.controls_settings()).help_font = "courier_prime_bold_16";
     replacement.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "stick-readout-profile");
-    const auto save_path = output / "stick-readout-profile/ColourWars/save_data.json";
+    const acceptance::IsolatedSave isolated(output / "stick-readout-profile");
+    const auto save_path = acceptance::save_path_in(output / "stick-readout-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings play = preferences_session.play_settings();
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     for (auto& stick : play.sticks) { stick = { 20, 50 }; }

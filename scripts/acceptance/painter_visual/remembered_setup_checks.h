@@ -38,8 +38,8 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const std::filesystem::path& output, bool reader)
 {
     const auto root = output / "remembered-setup-profile";
-    const NestedSaveProfile profile(root);
-    const auto save_path = root / "ColourWars/save_data.json";
+    const acceptance::IsolatedSave profile(root);
+    const auto save_path = acceptance::save_path_in(root);
     const auto completed = output / "remembered-setup-writer.complete";
     require(!reader || std::filesystem::is_regular_file(completed), "The separate reader needs a completed writer process");
     std::unique_ptr<Save> preferences = std::make_unique<Save>(); SettingsSession preferences_session(*preferences);

@@ -8,14 +8,14 @@ void duration_text_checks(Application& app, const Canvas& canvas, GameTuning& tu
     require(original_match.duration == 240.0f && original_match.duration_choices ==
         std::vector<float>{ 60.0f, 120.0f, 240.0f, 360.0f, 480.0f },
         "Duration probe requires the independent shipped 240-second default and five choices");
-    const NestedSaveProfile profile(output / "duration-profile");
+    const acceptance::IsolatedSave profile(output / "duration-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed the duration probe's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream stream(output / "duration-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream stream(acceptance::save_path_in(output / "duration-profile"), std::ios::binary);
         require(stream.good(), "Duration probe lost its private save");
         return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
     };

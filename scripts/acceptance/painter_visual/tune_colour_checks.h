@@ -84,7 +84,7 @@ void tune_colour_matrix(Application& app, GameTuning& tuning, Presentation& pres
         tune_colour_write(source / files[index], real_bytes[index]);
         tune_colour_write(staged / files[index], real_bytes[index]);
     }
-    const NestedSaveProfile profile(root / "profile");
+    const acceptance::IsolatedSave profile(root / "profile");
     const TuneColourTemp temporary(root / "temp");
     const GameTuning original_tuning = tuning; const Presentation original_presentation = presentation;
     struct RestoreContent

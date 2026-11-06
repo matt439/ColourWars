@@ -3,20 +3,8 @@
 void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct DefaultsProfile
-    {
-        std::wstring previous;
-        explicit DefaultsProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated defaults profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0, "Cannot isolate Options defaults save");
-        }
-        ~DefaultsProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "options-defaults-profile");
-    const auto save_path = output / "options-defaults-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "options-defaults-profile");
+    const auto save_path = acceptance::save_path_in(output / "options-defaults-profile");
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings expected;
     expected.aim_sensitivity = 5; expected.music_volume = expected.sfx_volume = 0;

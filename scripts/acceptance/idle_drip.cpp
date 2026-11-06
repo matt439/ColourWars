@@ -9,6 +9,7 @@
 #include "engine/math/triangle.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include "engine/input/mouse.h"
 
@@ -64,46 +65,12 @@ namespace
     constexpr std::array supported_tools{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket };
     constexpr std::array roster{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::roller };
 
-    class ContentVariant
+    // Edited copies of one content file, each in its own scratch file.
+    class ContentVariant : public acceptance::JsonVariants
     {
     public:
-        explicit ContentVariant(const std::filesystem::path& original)
-        {
-            std::ifstream stream(original);
-            require(stream.good(), "Cannot read idle-drip acceptance content");
-            this->source_ = std::string(std::istreambuf_iterator<char>(stream), {});
-            wchar_t name[MAX_PATH]{};
-            const auto temporary = std::filesystem::temp_directory_path();
-            require(GetTempFileNameW(temporary.c_str(), L"cwd", 0, name) != 0,
-                "Cannot reserve idle-drip acceptance content file");
-            this->path_ = name;
-        }
-
-        ~ContentVariant()
-        {
-            std::error_code ignored;
-            std::filesystem::remove(this->path_, ignored);
-        }
-
-        template<typename Edit>
-        const std::filesystem::path& write(Edit edit) const
-        {
-            rapidjson::Document json;
-            json.Parse(this->source_.c_str());
-            require(!json.HasParseError(), "Cannot parse idle-drip acceptance content");
-            edit(json);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream stream(this->path_);
-            stream.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            require(stream.good(), "Cannot write idle-drip acceptance content");
-            return this->path_;
-        }
-
-    private:
-        std::filesystem::path path_;
-        std::string source_;
+        explicit ContentVariant(const std::filesystem::path& original) :
+            acceptance::JsonVariants(original, L"idle-drip-content") {}
     };
 
     // Only metadata is loaded. These objects never create a device or a save.

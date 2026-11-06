@@ -6,8 +6,8 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const auto profile = output / "pad-jump-profile";
-    const NestedSaveProfile isolated(profile);
-    const auto path = profile / "ColourWars/save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(path);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     require(preferences_session.set_play_settings_and_save(quiet), "Cannot quiet private Pad Jump preferences");

@@ -31,13 +31,13 @@ void contribution_team_checks(Application& app, const Canvas& canvas, GameTuning
             value.round(), value.team_a_wins(), value.team_b_wins() };
     };
     const std::vector<int> frozen_ledger = ledger(session);
-    const NestedSaveProfile profile(output / "contribution-team-profile");
+    const acceptance::IsolatedSave profile(output / "contribution-team-profile");
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings initial; initial.music_volume = initial.sfx_volume = 0;
     initial.aim_sensitivity = 4; initial.view_shake = false; initial.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(initial), "Cannot seed contribution team's private preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "contribution-team-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "contribution-team-profile"), std::ios::binary);
         require(file.good(), "Contribution team probe lost its private save");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

@@ -239,7 +239,7 @@ void landmark_integrations(Application& app, Registry<LevelLoadedInfo>& levels, 
     const std::filesystem::path& content, const std::filesystem::path& output, std::ofstream& extra,
     size_t& rendered, size_t& previews, size_t& stories, int& ticks)
 {
-    const NestedSaveProfile profile(output / "landmark-story-profile"); Registry<LevelLoadedInfo> omitted("Landmark omission Level");
+    const acceptance::IsolatedSave profile(output / "landmark-story-profile"); Registry<LevelLoadedInfo> omitted("Landmark omission Level");
     for (const auto& stage : landmark_stages)
     { const auto path = landmark_omission_copy(content, output, stage); auto info = std::make_unique<LevelLoadedInfo>(path.string().c_str()); info->validate(); omitted.add(stage.name, std::move(info)); }
     LevelBuilder without(app.viewport_manager(), app.render_resources(), app.audio_resources(), &preferences, &omitted, &tuning,

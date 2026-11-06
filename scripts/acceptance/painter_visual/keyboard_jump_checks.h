@@ -5,8 +5,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Canvas& canvas, GameTuning& tuning, Presentation& presentation,
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
-    const NestedSaveProfile isolated(output / "keyboard-jump-profile");
-    const auto save_path = output / "keyboard-jump-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "keyboard-jump-profile");
+    const auto save_path = acceptance::save_path_in(output / "keyboard-jump-profile");
     acceptance::ReplacementLock blocked_path(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings quiet;

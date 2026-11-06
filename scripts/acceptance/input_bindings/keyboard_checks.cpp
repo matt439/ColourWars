@@ -242,28 +242,28 @@ namespace input_bindings_acceptance
         Save save = load(directory, "{\"keyboard_jump\":\"j\"}"); SettingsSession save_session(save);
         require(same_keyboard(save_session.input_bindings(), InputBindings{ Key::j }), "A save without the keyboard object lost the defaults");
         require(save.save_to_file(), "Cannot write the keyboard object");
-        require_schema(directory.contents(), "j"); require_independent(save);
+        require_schema(directory.save_bytes(), "j"); require_independent(save);
         // Round trip of every action moved, with pads untouched by the page's merge.
         InputBindings custom = custom_keyboard();
         custom.pads[2][PadAction::jump].primary = PadControl::b;
         require(save_session.set_input_bindings_and_save(custom), "A valid custom keyboard set did not save");
         auto custom_pads = default_pads; custom_pads[2][PadAction::jump].primary = PadControl::b;
-        require_schema(directory.contents(), "a", custom_pads, { "j", "l", "k", "mouse_right", "p" });
+        require_schema(directory.save_bytes(), "a", custom_pads, { "j", "l", "k", "mouse_right", "p" });
         { Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings() == custom, "Custom keyboard set did not round trip");
           require_independent(reread); }
         for (const auto& expected : expected_mouse)
         {
             InputBindings value; value.keyboard_shoot = mouse_control(expected.button);
             require(save_session.set_input_bindings_and_save(value), "A Shoot mouse button did not save");
-            require_schema(directory.contents(), "space", default_pads, { "a", "d", "s", expected.name, "none" });
+            require_schema(directory.save_bytes(), "space", default_pads, { "a", "d", "s", expected.name, "none" });
             Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings().keyboard_shoot == value.keyboard_shoot,
                 "A Shoot mouse button did not round trip");
         }
         // Refused before mutation: the active choice and the disk survive.
-        const InputBindings before = save_session.input_bindings(); const std::string bytes = directory.contents();
+        const InputBindings before = save_session.input_bindings(); const std::string bytes = directory.save_bytes();
         InputBindings conflict; conflict.keyboard_drop = Key::d;
         rejects([&] { std::ignore = save_session.set_input_bindings_and_save(conflict); }, "A conflicting keyboard set was accepted");
-        require(save_session.input_bindings() == before && directory.contents() == bytes,
+        require(save_session.input_bindings() == before && directory.save_bytes() == bytes,
             "A refused keyboard set mutated the active preference or the disk");
 
         const std::string valid_pads = ",\"pads\":[{\"jump\":[\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}]";
@@ -289,10 +289,10 @@ namespace input_bindings_acceptance
         {
             for (const char* jump : { "e", "a" })
             {
-                directory.write(fixture(bindings(jump, broken))); const std::string disk = directory.contents();
+                directory.write_save(fixture(bindings(jump, broken))); const std::string disk = directory.save_bytes();
                 save_session.load_save_file();
                 InputBindings expected; expected.keyboard_jump = std::string_view(jump) == "e" ? Key::e : Key::space;
-                require(same_keyboard(save_session.input_bindings(), expected) && directory.contents() == disk,
+                require(same_keyboard(save_session.input_bindings(), expected) && directory.save_bytes() == disk,
                     "A damaged keyboard object did not recover the five, kept a now-clashing Jump, or rewrote the bytes");
                 require(save_session.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
                     "A damaged keyboard object discarded a valid pad profile");

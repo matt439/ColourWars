@@ -22,7 +22,7 @@ namespace input_bindings_acceptance
         (bindings.empty() ? "" : ",\"input_bindings\":" + bindings) + "}"; }
 
     Save load(const IsolatedSaveDirectory& directory, const std::string& bindings, const std::string& version)
-    { directory.write(fixture(bindings, version)); Save result; SettingsSession result_session(result); result_session.load_save_file(); return result; }
+    { directory.write_save(fixture(bindings, version)); Save result; SettingsSession result_session(result); result_session.load_save_file(); return result; }
 
     void require_independent(const Save& save)
     {
@@ -108,7 +108,7 @@ namespace input_bindings_acceptance
             Save legacy = load(directory, "", version); SettingsSession legacy_session(legacy);
             require(legacy_session.input_bindings().keyboard_jump == Key::space, "Legacy save without bindings did not acquire default Space");
             require_independent(legacy); require(legacy.save_to_file(), "Legacy binding migration could not save");
-            require_schema(directory.contents(), "space"); Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require_independent(reread);
+            require_schema(directory.save_bytes(), "space"); Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require_independent(reread);
             require(reread_session.input_bindings().keyboard_jump == Key::space, "Migrated legacy binding did not round trip");
         }
         for (const char* version : { "0", "1", "2", "3", "999" })
@@ -124,7 +124,7 @@ namespace input_bindings_acceptance
             require(save_session.set_input_bindings_and_save(InputBindings{ expected.key }), "A valid physical Jump preference did not save");
             require(save_session.input_bindings().keyboard_jump == expected.key && save.save_data().input_bindings.keyboard_jump == expected.key,
                 "Successful binding setter did not update both borrowed preference and SaveData copy");
-            require_schema(directory.contents(), expected.name); Save reread; SettingsSession reread_session(reread); reread_session.load_save_file();
+            require_schema(directory.save_bytes(), expected.name); Save reread; SettingsSession reread_session(reread); reread_session.load_save_file();
             require(reread_session.input_bindings().keyboard_jump == expected.key, "Canonical Jump preference did not round trip");
             require_independent(reread);
         }
@@ -135,13 +135,13 @@ namespace input_bindings_acceptance
             "{\"keyboard_jump\":\"a\"}", "{\"keyboard_jump\":\"d\"}", "{\"keyboard_jump\":\"s\"}",
             "{\"keyboard_jump\":\"j\\u0000alias\"}" })
         {
-            directory.write(fixture("{\"keyboard_jump\":\"j\"}")); save_session.load_save_file();
-            directory.write(fixture(broken)); const std::string bytes = directory.contents(); save_session.load_save_file();
-            require(save_session.input_bindings().keyboard_jump == Key::space && directory.contents() == bytes,
+            directory.write_save(fixture("{\"keyboard_jump\":\"j\"}")); save_session.load_save_file();
+            directory.write_save(fixture(broken)); const std::string bytes = directory.save_bytes(); save_session.load_save_file();
+            require(save_session.input_bindings().keyboard_jump == Key::space && directory.save_bytes() == bytes,
                 "Malformed binding section retained old bindings or rewrote the player's bytes on load");
             require_independent(save);
         }
-        directory.write("{\"save_version\":3,\"records\":false,\"resolution\":false,\"aim_sensitivity\":\"bad\","
+        directory.write_save("{\"save_version\":3,\"records\":false,\"resolution\":false,\"aim_sensitivity\":\"bad\","
             "\"last_match\":false,\"input_bindings\":{\"keyboard_jump\":\"j\"}}");
         save_session.load_save_file(); require(save_session.input_bindings().keyboard_jump == Key::j,
             "An unrelated malformed save section reset valid input bindings");
@@ -151,18 +151,18 @@ namespace input_bindings_acceptance
     {
         Save save = load(directory, "{\"keyboard_jump\":\"j\"}"); SettingsSession save_session(save);
         const InputBindings* borrowed = &save_session.input_bindings();
-        const std::string original = directory.contents();
+        const std::string original = directory.save_bytes();
         for (Key key : { Key::a, Key::d, Key::s, Key::none, Key::enter, Key::grave, static_cast<Key>(255) })
         {
             rejects([&] { save_session.set_input_bindings_and_save(InputBindings{ key }); }, "Invalid binding setter did not validate before assignment/write");
-            require(&save_session.input_bindings() == borrowed && borrowed->keyboard_jump == Key::j && directory.contents() == original &&
+            require(&save_session.input_bindings() == borrowed && borrowed->keyboard_jump == Key::j && directory.save_bytes() == original &&
                 !directory.temporary_left(), "Rejected binding setter changed active memory, disk bytes or staging state");
             require_independent(save);
         }
         // The save's temporary is uniquely named (replace_file_atomically), so
         // the failure is the replacing move, refused by a lock on the old save.
         {
-            save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file(); const std::string bytes = directory.contents();
+            save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file(); const std::string bytes = directory.save_bytes();
             ReaderHarness h(content);
             PlayerInput saved_reader(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, borrowed);
             {
@@ -170,7 +170,7 @@ namespace input_bindings_acceptance
                 require(lock.hold(), "Cannot lock private binding save replacement");
                 require(!save_session.set_input_bindings_and_save(InputBindings{ Key::k }), "Locked binding save replacement unexpectedly succeeded");
             }
-            require(&save_session.input_bindings() == borrowed && borrowed->keyboard_jump == Key::k && directory.contents() == bytes &&
+            require(&save_session.input_bindings() == borrowed && borrowed->keyboard_jump == Key::k && directory.save_bytes() == bytes &&
                 !directory.temporary_left(), "Failed binding persistence rolled back active choice, damaged old bytes or left a temporary file");
             // This reader cached J before the failed write. It borrows the
             // Save member that GameLevel borrows, rather than a copied test preference.
@@ -191,7 +191,7 @@ namespace input_bindings_acceptance
                 "Targeted retry of the already active binding did not write after removing its real IO blocker");
             Save retried; SettingsSession retried_session(retried); retried_session.load_save_file(); require(retried_session.input_bindings().keyboard_jump == Key::k,
                 "Retry did not persist the binding kept active after failure");
-            require_schema(directory.contents(), "k"); require_independent(retried);
+            require_schema(directory.save_bytes(), "k"); require_independent(retried);
         }
         save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file();
         auto settings_copy = save_session.play_settings(); auto controls_copy = save_session.play_settings();
@@ -216,7 +216,7 @@ namespace input_bindings_acceptance
             reread.records().find("new_stage")->team_a_wins == 1 && reread.last_match_setup() &&
             reread.last_match_setup()->stage == remembered.stage && reread.last_match_setup()->players[0].weapon == WeaponType::sniper,
             "Settings/Controls/display/records/remembered saves overwrote the independent binding or their expected data");
-        require_schema(directory.contents(), "w");
+        require_schema(directory.save_bytes(), "w");
     }
 
     void check_pad_save(const IsolatedSaveDirectory& directory, const char* content)
@@ -228,7 +228,7 @@ namespace input_bindings_acceptance
             "Legacy per-slot Jump preferences did not migrate in physical slot order");
         require_independent(save);
         require(save.save_to_file(), "Migrated pad profiles did not save");
-        require_schema(directory.contents(), "j", selected);
+        require_schema(directory.save_bytes(), "j", selected);
         Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings() == save_session.input_bindings(),
             "Migrated pad profiles did not round trip");
         SaveData reset = save.save_data(); InputBindingsSection{}.reset(reset);
@@ -275,7 +275,7 @@ namespace input_bindings_acceptance
         save = load(directory, pads_json(slots[1])); save_session.load_save_file();
         require(save_session.input_bindings().keyboard_jump == Key::j && save_session.input_bindings().pads == custom,
             "Full per-slot pad profiles did not load");
-        require(save.save_to_file(), "Full pad profiles did not save"); require_schema(directory.contents(), "j", custom);
+        require(save.save_to_file(), "Full pad profiles did not save"); require_schema(directory.save_bytes(), "j", custom);
         reread_session.load_save_file(); require(reread_session.input_bindings() == save_session.input_bindings(), "Full pad profiles did not round trip");
         for (const char* broken : { "null", "false", "7", "[]", "\"a\"", "{}",
             "{\"jump\":[\"a\"],\"shoot\":[\"rt\"]}", "{\"jump\":[],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
@@ -305,20 +305,20 @@ namespace input_bindings_acceptance
         save = load(directory, "{\"keyboard_jump\":\"j\",\"pads\":[" + slots[0] + "," + slots[1] + "," + slots[2] + "," + slots[3] + ",false]}"); save_session.load_save_file();
         require(save_session.input_bindings().pads == custom, "Unknown extra slot discarded known physical-slot profiles");
 
-        const InputBindings* borrowed = &save_session.input_bindings(); const std::string bytes = directory.contents();
+        const InputBindings* borrowed = &save_session.input_bindings(); const std::string bytes = directory.save_bytes();
         InputBindings invalid = *borrowed; invalid.pads[2][PadAction::jump].primary = PadControl::start;
         rejects([&] { save_session.set_input_bindings_and_save(invalid); }, "Invalid pad setter did not validate before mutation");
-        require(&save_session.input_bindings() == borrowed && borrowed->pads == custom && directory.contents() == bytes &&
+        require(&save_session.input_bindings() == borrowed && borrowed->pads == custom && directory.save_bytes() == bytes &&
             !directory.temporary_left(), "Rejected pad setter mutated active choices, disk or staging state");
         {
-            save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file(); const std::string previous = directory.contents();
+            save = load(directory, "{\"keyboard_jump\":\"j\"}"); save_session.load_save_file(); const std::string previous = directory.save_bytes();
             InputBindings candidate = save_session.input_bindings(); candidate.pads = custom;
             {
                 acceptance::ReplacementLock lock(directory.save_path());
                 require(lock.hold(), "Cannot lock private pad preference replacement");
                 require(!save_session.set_input_bindings_and_save(candidate), "Locked pad preference replacement unexpectedly succeeded");
             }
-            require(save_session.input_bindings() == candidate && directory.contents() == previous &&
+            require(save_session.input_bindings() == candidate && directory.save_bytes() == previous &&
                 !directory.temporary_left(), "Failed pad write rolled back active preferences or damaged disk bytes");
             ReaderHarness h(content);
             PlayerInput actual(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, &save_session.input_bindings());
@@ -330,7 +330,7 @@ namespace input_bindings_acceptance
             require(previous_disk_session.input_bindings().pads == default_pads,
                 "Failed pad persistence damaged reloadable previous choices");
             require(save_session.set_input_bindings_and_save(candidate), "Pad preference retry failed after removing real IO blocker");
-            require_schema(directory.contents(), "j", custom); require_independent(save);
+            require_schema(directory.save_bytes(), "j", custom); require_independent(save);
         }
         auto play = save_session.play_settings(); play.music_volume = 81;
         require(save_session.set_play_settings_and_save(play) && save_session.input_bindings().pads == custom &&
@@ -348,15 +348,15 @@ namespace input_bindings_acceptance
         if (mode == "relaunch-write")
         {
             require(!std::filesystem::exists(directory.save_path()), "Relaunch writer requires a fresh private profile");
-            directory.write(fixture()); Save save; SettingsSession save_session(save); save_session.load_save_file(); require_independent(save);
+            directory.write_save(fixture()); Save save; SettingsSession save_session(save); save_session.load_save_file(); require_independent(save);
             require(save_session.input_bindings() == InputBindings{} && save_session.set_input_bindings_and_save(InputBindings{ Key::j }),
                 "Relaunch writer did not persist J through the targeted Save setter");
-            require_schema(directory.contents(), "j"); require_independent(save);
+            require_schema(directory.save_bytes(), "j"); require_independent(save);
         }
         else
         {
             require(std::filesystem::is_regular_file(directory.save_path()), "Relaunch reader requires the writer's private save");
-            const std::string before = directory.contents(); Save save; SettingsSession save_session(save); save_session.load_save_file(); require_independent(save);
+            const std::string before = directory.save_bytes(); Save save; SettingsSession save_session(save); save_session.load_save_file(); require_independent(save);
             require(save_session.input_bindings() == InputBindings{ Key::j }, "Fresh-process Save lost the persisted J preference");
             ReaderHarness h(content);
             PlayerInput reader(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, &save_session.input_bindings());
@@ -370,7 +370,7 @@ namespace input_bindings_acceptance
             require(!input.jump_pressed && !input.jump_held, "Fresh-process custom reader retained default Space Jump");
             h.keyboard.on_key_up(Key::space); std::ignore = h.sample();
             require(reader.player_inputs()[input_slots::keyboard_and_mouse].skip_intro &&
-                h.menus[input_slots::keyboard_and_mouse].action == MenuInputAction::proceed && directory.contents() == before,
+                h.menus[input_slots::keyboard_and_mouse].action == MenuInputAction::proceed && directory.save_bytes() == before,
                 "Fresh-process Space aliases or unchanged relaunch save bytes were lost");
             require_independent(save);
         }

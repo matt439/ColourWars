@@ -311,7 +311,7 @@ void hud_closing_shade_tune_checks(Application& app, GameTuning& tuning, Present
     constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
     for (size_t i = 0; i < files.size(); ++i)
     { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     Save preferences; SettingsSession preferences_session(preferences);
     const auto preferences_now = [&]()
     {
@@ -333,7 +333,7 @@ void hud_closing_shade_tune_checks(Application& app, GameTuning& tuning, Present
     const size_t initial_reads = probe.readbacks(); Frame baseline{}, saved{};
     const auto unchanged = [&]()
     {
-        probe.unchanged(); require(preferences_now() == original_preferences && !std::filesystem::exists(root / "profile/ColourWars/save_data.json") &&
+        probe.unchanged(); require(preferences_now() == original_preferences && !std::filesystem::exists(acceptance::save_path_in(root / "profile")) &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty() && impl.total_updates() == 0 && impl.level_updates() == 0,
             "Closing shade commands changed preferences, saved a game, requested gameplay or advanced updates");
         for (size_t i = 0; i < files.size(); ++i)

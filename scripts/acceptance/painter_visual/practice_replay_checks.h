@@ -100,7 +100,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
     using namespace practice_replay_acceptance;
-    const NestedSaveProfile profile(output / "practice-replay-profile");
+    const acceptance::IsolatedSave profile(output / "practice-replay-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.aim_marker = false;

@@ -4,22 +4,7 @@
 void menu_motion_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
-    struct MotionProfile
-    {
-        std::wstring previous;
-        explicit MotionProfile(const std::filesystem::path& root)
-        {
-            wchar_t* raw = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read the isolated painter profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(root);
-            require(_wputenv_s(L"LOCALAPPDATA", root.c_str()) == 0,
-                "Cannot isolate the menu-motion preferences");
-        }
-        ~MotionProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "menu-motion-profile");
+    const acceptance::IsolatedSave isolated(output / "menu-motion-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;
     initial.music_volume = initial.sfx_volume = 0;

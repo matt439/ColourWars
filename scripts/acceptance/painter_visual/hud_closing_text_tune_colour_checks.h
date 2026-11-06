@@ -86,7 +86,7 @@ void hud_closing_text_tune_colour_checks(Application& app, GameTuning& tuning,
         bytes[i] = tune_colour_bytes(content / files[i]);
         tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreClosing { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreClosing() { t = old_t; p = old_p; } }
         restore{ tuning, presentation, tuning, presentation };
     Save preferences; SettingsSession preferences_session(preferences);
@@ -112,7 +112,7 @@ void hud_closing_text_tune_colour_checks(Application& app, GameTuning& tuning,
     const auto unchanged = [&]()
     {
         probe.unchanged(); require(preferences_now() == original_preferences &&
-            !std::filesystem::exists(root / "profile/ColourWars/save_data.json") && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
+            !std::filesystem::exists(acceptance::save_path_in(root / "profile")) && !impl.in_match() && !impl.can_apply() && impl.request().empty(),
             "Closing text changed private defaults, wrote a game Save or queued gameplay");
         require(impl.total_updates() == 0 && impl.level_updates() == 0, "Closing native commands advanced director update hooks");
         for (size_t i = 0; i < files.size(); ++i)

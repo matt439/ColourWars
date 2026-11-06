@@ -6,14 +6,14 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const auto profile = output / "keyboard-jump-ownership-profile";
-    const NestedSaveProfile isolated(profile);
+    const acceptance::IsolatedSave isolated(profile);
     Save preferences; SettingsSession preferences_session(preferences); PlaySettings quiet; quiet.music_volume = quiet.sfx_volume = 0;
     InputBindings initial; initial.keyboard_jump = Key::j;
     require(preferences_session.set_play_settings_and_save(quiet) && preferences_session.set_input_bindings_and_save(initial),
         "Cannot seed private Jump ownership preferences");
     const auto bytes = [&]
     {
-        std::ifstream file(profile / "ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(profile), std::ios::binary);
         require(file.good(), "Private Jump ownership save disappeared");
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };

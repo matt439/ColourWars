@@ -11,6 +11,7 @@
 #include "engine/render/resolution_manager.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -538,39 +539,13 @@ namespace
 
     void check_validation(const std::filesystem::path& content)
     {
-        std::ifstream stream(content / "presentation.json");
-        require(stream.good(), "Cannot read view shake presentation content");
-        const std::string source(std::istreambuf_iterator<char>(stream), {});
-        wchar_t temporary_name[MAX_PATH]{};
-        const auto directory = std::filesystem::temp_directory_path();
-        require(GetTempFileNameW(directory.c_str(), L"cws", 0, temporary_name) != 0,
-            "Cannot reserve view shake presentation variant");
-        const std::filesystem::path path(temporary_name);
-        struct RemoveOnExit
-        {
-            std::filesystem::path path;
-            ~RemoveOnExit() { std::error_code ignored; std::filesystem::remove(this->path, ignored); }
-        } cleanup{ path };
+        acceptance::JsonVariants variants(content / "presentation.json", L"view-shake-presentation");
         const auto reject = [&](auto edit)
         {
-            rapidjson::Document json;
-            json.Parse(source.c_str());
-            require(!json.HasParseError(), "Cannot parse view shake fixture");
-            edit(json["camera"]["shake"]);
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            json.Accept(writer);
-            std::ofstream variant(path);
-            variant.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-            variant.close();
-            require(variant.good(), "Cannot write view shake fixture");
-            bool rejected = false;
-            try { const Presentation invalid(path.string().c_str()); }
-            catch (const std::exception& error)
-            {
-                rejected = std::string(error.what()).find("camera.shake") != std::string::npos;
-            }
-            require(rejected, "Malformed view shake presentation was accepted or lost its section");
+            acceptance::rejects_variant(variants,
+                [&](rapidjson::Document& json) { edit(json["camera"]["shake"]); },
+                [](const std::filesystem::path& path) { const Presentation invalid(path.string().c_str()); },
+                { "camera.shake" }, "Malformed view shake presentation was accepted or lost its section");
         };
         for (const char* field : { "hurt_amplitude", "elimination_amplitude", "landing_amplitude",
             "duration", "cycles", "repeat_delay" })

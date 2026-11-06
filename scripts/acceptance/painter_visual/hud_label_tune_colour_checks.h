@@ -352,7 +352,7 @@ void hud_label_tune_colour_checks(Application& app, GameTuning& tuning,
     constexpr std::array<const char*, 2> files{ "tuning.json", "presentation.json" }; std::array<std::string, 2> bytes;
     for (size_t i = 0; i < files.size(); ++i)
     { bytes[i] = tune_colour_bytes(content / files[i]); tune_colour_write(source / files[i], bytes[i]); tune_colour_write(staged / files[i], bytes[i]); }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     struct RestoreLabels { GameTuning& t; Presentation& p; GameTuning old_t; Presentation old_p; ~RestoreLabels() { t = old_t; p = old_p; } }
         restore{ tuning, presentation, tuning, presentation };
     Save preferences; SettingsSession preferences_session(preferences);
@@ -378,7 +378,7 @@ void hud_label_tune_colour_checks(Application& app, GameTuning& tuning,
     size_t commands = 0, rows = 0; Frame baseline, saved;
     const auto unchanged = [&]()
     {
-        probe.unchanged(); require(preference_values() == preferences_before && !std::filesystem::exists(root / "profile/ColourWars/save_data.json") &&
+        probe.unchanged(); require(preference_values() == preferences_before && !std::filesystem::exists(acceptance::save_path_in(root / "profile")) &&
             !impl.in_match() && !impl.can_apply() && impl.request().empty() && impl.total_updates() == 0 && impl.level_updates() == 0,
             "HUD label changed private defaults, wrote a game Save, queued gameplay or advanced updates");
         for (size_t i = 0; i < files.size(); ++i)

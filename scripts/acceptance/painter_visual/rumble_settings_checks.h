@@ -5,8 +5,8 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     Presentation& presentation, const std::filesystem::path& output)
 {
     const auto profile = output / "rumble-settings-profile";
-    const NestedSaveProfile isolated(profile);
-    const auto save_path = profile / "ColourWars/save_data.json";
+    const acceptance::IsolatedSave isolated(profile);
+    const auto save_path = acceptance::save_path_in(profile);
     acceptance::ReplacementLock blocked(save_path);
     Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings initial;

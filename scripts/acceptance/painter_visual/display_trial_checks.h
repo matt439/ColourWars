@@ -4,20 +4,8 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     Presentation& presentation, const std::filesystem::path& output)
 {
     const Presentation original = presentation;
-    struct TrialProfile
-    {
-        std::wstring previous;
-        explicit TrialProfile(const std::filesystem::path& path)
-        {
-            wchar_t* raw = nullptr; size_t length = 0;
-            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read isolated trial profile");
-            if (raw != nullptr) { this->previous = raw; std::free(raw); }
-            std::filesystem::create_directories(path);
-            require(_wputenv_s(L"LOCALAPPDATA", path.c_str()) == 0, "Cannot isolate display trial saves");
-        }
-        ~TrialProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
-    } isolated(output / "display-trial-profile");
-    const auto save_path = output / "display-trial-profile" / "ColourWars" / "save_data.json";
+    const acceptance::IsolatedSave isolated(output / "display-trial-profile");
+    const auto save_path = acceptance::save_path_in(output / "display-trial-profile");
     acceptance::ReplacementLock blocked(save_path);
     const HWND window = static_cast<HWND>(app.window());
     // Trials and rollbacks resize the hidden window; the engine keeps it hidden

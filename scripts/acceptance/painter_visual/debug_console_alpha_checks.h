@@ -18,7 +18,7 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
         tune_colour_write(source / files[file_index], real_bytes[file_index]);
         tune_colour_write(staged / files[file_index], real_bytes[file_index]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     const GameTuning original_tuning = tuning; const Presentation original = presentation;
     struct RestoreConsoleAlphaContent
     {
@@ -31,7 +31,7 @@ void debug_console_alpha_checks(Application& app, Registry<LevelLoadedInfo>& lev
 
     // Seed bytes directly: loading an existing file never invokes Save's writer.
     // Non-default preferences make accidental memory changes observable too.
-    const auto save_path = root / "profile/ColourWars/save_data.json";
+    const auto save_path = acceptance::save_path_in(root / "profile");
     std::filesystem::create_directories(save_path.parent_path());
     const std::string saved_preferences = "{\"save_version\":2,\"resolution\":{\"x\":1280,\"y\":720},"
         "\"fullscreen\":false,\"team_palette\":\"blue_orange\",\"aim_sensitivity\":4,"

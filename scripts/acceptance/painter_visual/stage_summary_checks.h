@@ -44,12 +44,12 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     replacement_font(original.menu().detail_font, next_style.detail_font); replacement_font(original.menu().brand_font, next_style.brand_font);
     next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
-    const NestedSaveProfile isolated(output / "stage-summary-profile"); Save preferences; SettingsSession preferences_session(preferences);
+    const acceptance::IsolatedSave isolated(output / "stage-summary-profile"); Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed private summary preferences");
     const auto saved_bytes = [&]
     {
-        std::ifstream file(output / "stage-summary-profile/ColourWars/save_data.json", std::ios::binary);
+        std::ifstream file(acceptance::save_path_in(output / "stage-summary-profile"), std::ios::binary);
         require(file.good(), "Cannot read the private summary save"); return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     };
     const std::string saved = saved_bytes();

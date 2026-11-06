@@ -5,7 +5,7 @@
 void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
-    const NestedSaveProfile profile(output / "series-repick-profile");
+    const acceptance::IsolatedSave profile(output / "series-repick-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;

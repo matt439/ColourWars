@@ -294,7 +294,7 @@ void feedback_tune_colour_checks(Application& app, GameTuning& tuning, Presentat
         real_bytes[index] = tune_colour_bytes(content / files[index]);
         tune_colour_write(source / files[index], real_bytes[index]); tune_colour_write(staged / files[index], real_bytes[index]);
     }
-    const NestedSaveProfile profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
+    const acceptance::IsolatedSave profile(root / "profile"); const TuneColourTemp temporary(root / "temp");
     const GameTuning original_tuning = tuning; const Presentation original = presentation;
     struct RestoreFeedbackTuneContent
     {
@@ -309,7 +309,7 @@ void feedback_tune_colour_checks(Application& app, GameTuning& tuning, Presentat
     play.sticks[2].movement_deadzone = 25; play.sticks[2].aim_deadzone = 70;
     require(preferences_session.set_play_settings_and_save(play) && preferences.set_display_settings_and_save(
         ScreenResolution::s_1280_720, false, TeamColourPair::blue_orange), "Cannot seed private feedback tune preferences");
-    const auto save_path = root / "profile/ColourWars/save_data.json";
+    const auto save_path = acceptance::save_path_in(root / "profile");
     const std::string saved_preferences = tune_colour_bytes(save_path);
     GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&preferences_session);
     const StageCatalog stage_catalog = acceptance::manifest_catalog(content); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);

@@ -352,7 +352,7 @@ void limb_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& p
     constexpr std::array<const char*,2> files{"tuning.json","presentation.json"};std::array<std::string,2> real_bytes;
     for(size_t i=0;i<files.size();++i)
     {real_bytes[i]=tune_colour_bytes(content/files[i]);tune_colour_write(source/files[i],real_bytes[i]);tune_colour_write(staged/files[i],real_bytes[i]);}
-    const NestedSaveProfile profile(root/"profile");const TuneColourTemp temporary(root/"temp");
+    const acceptance::IsolatedSave profile(root/"profile");const TuneColourTemp temporary(root/"temp");
     struct RestoreLimb
     {GameTuning& t;Presentation& p;GameTuning old_t;Presentation old_p;~RestoreLimb(){t=old_t;p=old_p;}}
         restore{tuning,presentation,tuning,presentation};
@@ -360,7 +360,7 @@ void limb_tune_colour_checks(Application& app,GameTuning& tuning,Presentation& p
     play.view_shake=false;play.aim_marker=true;play.reduce_effects=true;play.sticks[2].movement_deadzone=25;play.sticks[2].aim_deadzone=70;
     InputBindings bindings;bindings.keyboard_jump=Key::j;
     require(preferences_session.set_play_settings_and_save(play)&&preferences_session.set_input_bindings_and_save(bindings),"Cannot seed Limb private preferences");
-    const auto save_path=root/"profile/ColourWars/save_data.json";const std::string saved_preferences=tune_colour_bytes(save_path);
+    const auto save_path=acceptance::save_path_in(root / "profile");const std::string saved_preferences=tune_colour_bytes(save_path);
     const auto pref_values=[&]
     {
         auto v=limb_preference_values(preferences_session.play_settings());v.insert(v.end(),{static_cast<int>(preferences.resolution()),preferences.fullscreen()?1:0,

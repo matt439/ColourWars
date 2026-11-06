@@ -7,7 +7,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     // matrix. The private profile and scripted reader never borrow a player save.
     {
         const auto profile_root = output / "host-profile-boost-profile";
-        const NestedSaveProfile host_profile(profile_root);
+        const acceptance::IsolatedSave host_profile(profile_root);
         Save host_preferences; SettingsSession host_preferences_session(host_preferences);
         PlaySettings quiet;
         quiet.music_volume = quiet.sfx_volume = 0; quiet.reduce_effects = true;
@@ -18,7 +18,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         const int guest_id = host_preferences_session.add_profile_and_save("GUEST", 3, saved);
         require(saved && host_preferences.set_profile_boost_and_save(guest_id, 2),
             "ROAD34 could not create its private guest profile");
-        const auto save_path = profile_root / "ColourWars/save_data.json";
+        const auto save_path = acceptance::save_path_in(profile_root);
         const auto profile_bytes = [&]
         {
             std::ifstream stream(save_path, std::ios::binary);
@@ -219,7 +219,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             "no actual match-start or physical-pad acceptance\n";
     }
 
-    const NestedSaveProfile profile(output / "bot-setup-profile");
+    const acceptance::IsolatedSave profile(output / "bot-setup-profile");
     Save preferences; SettingsSession preferences_session(preferences);
     auto& play = const_cast<PlaySettings&>(preferences_session.play_settings());
     play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;

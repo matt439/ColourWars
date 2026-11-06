@@ -8,7 +8,7 @@
 #include "game/match/match_setup.h"
 #include "engine/assets/json.h"
 #include "scripts/acceptance/support/probe.h"
-#include "scripts/acceptance/support/replacement_lock.h"
+#include "scripts/acceptance/support/isolated_save.h"
 
 #include <objbase.h>
 #include <array>
@@ -36,55 +36,6 @@ namespace
         require(rejected, message);
     }
 
-    // A fresh GUID directory is the only profile this process can access.
-    // Cleanup removes only the files and directories created by this fixture.
-    class IsolatedSaveDirectory
-    {
-    public:
-        IsolatedSaveDirectory()
-        {
-            wchar_t* previous = nullptr;
-            size_t length = 0;
-            require(_wdupenv_s(&previous, &length, L"LOCALAPPDATA") == 0,
-                "Cannot read LOCALAPPDATA");
-            if (previous != nullptr) { previous_ = previous; std::free(previous); }
-            GUID guid{};
-            wchar_t name[40]{};
-            require(SUCCEEDED(CoCreateGuid(&guid)) && StringFromGUID2(guid, name, 40) > 0,
-                "Cannot name remembered-setup acceptance profile");
-            root_ = std::filesystem::temp_directory_path() / (std::wstring(L"ColourWars-setup-") + name);
-            require(std::filesystem::create_directory(root_) &&
-                std::filesystem::create_directory(root_ / L"ColourWars"),
-                "Cannot create remembered-setup acceptance profile");
-            require(_wputenv_s(L"LOCALAPPDATA", root_.c_str()) == 0, "Cannot isolate save profile");
-        }
-
-        ~IsolatedSaveDirectory()
-        {
-            _wputenv_s(L"LOCALAPPDATA", previous_.c_str());
-            std::error_code ignored;
-            std::filesystem::remove_all(root_, ignored);
-        }
-
-        std::filesystem::path save_path() const { return root_ / L"ColourWars" / L"save_data.json"; }
-        bool temporary_left() const { return acceptance::temporary_beside(save_path()); }
-        void write(const std::string& json) const
-        {
-            std::ofstream stream(save_path(), std::ios::binary | std::ios::trunc);
-            stream << json;
-            require(stream.good(), "Cannot write isolated remembered-setup fixture");
-        }
-        std::string contents() const
-        {
-            std::ifstream stream(save_path(), std::ios::binary);
-            require(stream.good(), "Cannot read isolated remembered-setup save");
-            return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-        }
-    private:
-        std::filesystem::path root_;
-        std::wstring previous_;
-    };
-
     const std::string other_sections =
         "\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
         "\"team_palette\":\"pink_green\",\"aim_sensitivity\":4,\"music_volume\":23,\"sfx_volume\":67,"
@@ -106,10 +57,10 @@ namespace
         WeaponType::roller, WeaponType::mister, WeaponType::bucket };
     const std::array<const char*, 5> weapon_keys{ "sprayer", "sniper", "roller", "mister", "bucket" };
 
-    Save load(const IsolatedSaveDirectory& directory, const std::string& section,
+    Save load(const acceptance::IsolatedSave& directory, const std::string& section,
         const std::string& version = "2")
     {
-        directory.write("{" + (version.empty() ? "" : "\"save_version\":" + version + ",") +
+        directory.write_save("{" + (version.empty() ? "" : "\"save_version\":" + version + ",") +
             other_sections + (section.empty() ? "" : ",\"last_match\":" + section) + "}");
         Save save; SettingsSession save_session(save);
         save_session.load_save_file();
@@ -202,7 +153,7 @@ namespace
         }
     }
 
-    void check_round_trips(const IsolatedSaveDirectory& directory)
+    void check_round_trips(const acceptance::IsolatedSave& directory)
     {
         require(Save::version >= 2, "Current saves no longer support the remembered setup schema");
         for (int count = 1; count <= 4; ++count)
@@ -276,7 +227,7 @@ namespace
         "{\"players\":[{\"team\":\"b\",\"weapon\":\"bucket\"},{\"team\":\"a\",\"weapon\":\"mister\"}],"
         "\"stage\":\"movement_course\",\"layout\":\"two_player\",\"best_of\":5,\"duration\":45.25}";
 
-    void check_versions_and_sections(const IsolatedSaveDirectory& directory)
+    void check_versions_and_sections(const acceptance::IsolatedSave& directory)
     {
         for (const std::string version : {std::string(), std::string("1"), std::string("2"), std::string("7")})
         {
@@ -284,8 +235,8 @@ namespace
             require(!legacy.last_match_setup(), "Save without remembered section gained a remembered match");
             require_other_sections(legacy);
             require(legacy.save_to_file(), "Cannot rewrite legacy save");
-            require(directory.contents().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0 &&
-                directory.contents().find("\"last_match\"") == std::string::npos,
+            require(directory.save_bytes().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0 &&
+                directory.save_bytes().find("\"last_match\"") == std::string::npos,
                 "Rewriting absent remembered setup invented choices or wrote an old version");
             Save known = load(directory, valid_section, version);
             require(known.last_match_setup() && known.last_match_setup()->players.size() == 2 &&
@@ -304,7 +255,7 @@ namespace
             require_other_sections(save);
         }
         // A bad independent section must not discard valid remembered choices.
-        directory.write("{\"save_version\":2,\"records\":true,\"resolution\":false,"
+        directory.write_save("{\"save_version\":2,\"records\":true,\"resolution\":false,"
             "\"aim_sensitivity\":\"bad\",\"last_match\":" + valid_section + "}");
         Save independent; SettingsSession independent_session(independent);
         independent_session.load_save_file();
@@ -313,7 +264,7 @@ namespace
             "Broken preferences or records discarded remembered setup");
     }
 
-    void check_defensive_restore(const IsolatedSaveDirectory& directory)
+    void check_defensive_restore(const acceptance::IsolatedSave& directory)
     {
         for (const char* team : {"\"b\"", "\"a\"", "\"missing\"", "null", "4"})
         {
@@ -399,17 +350,17 @@ namespace
         require_fresh(transient.last_match_setup()->restore(stages));
     }
 
-    void check_validation(const IsolatedSaveDirectory& directory)
+    void check_validation(const acceptance::IsolatedSave& directory)
     {
         Save save = load(directory, valid_section); SettingsSession save_session(save);
         const LastMatchSetup before = *save.last_match_setup();
-        const std::string bytes = directory.contents();
+        const std::string bytes = directory.save_bytes();
         const auto invalid = [&](LastMatchSetup candidate)
         {
             rejects([&] { candidate.validate(); }, "Invalid remembered aggregate passed validation");
             rejects([&] { save.remember_match_setup_and_save(candidate); }, "Invalid remembered aggregate was saved");
             require(save.last_match_setup() && same(*save.last_match_setup(), before) &&
-                directory.contents() == bytes && !directory.temporary_left(),
+                directory.save_bytes() == bytes && !directory.temporary_left(),
                 "Rejected remembered setup changed memory, bytes or staging files");
         };
         auto candidate = before; candidate.players.clear(); invalid(candidate);
@@ -442,17 +393,17 @@ namespace
         rejects([&] { LastMatchSetup::capture(menu); }, "An unresolved random tool was captured");
         menu = settings(2, 1); menu.set_screen_layout(labrador::ScreenLayout::one_player);
         rejects([&] { LastMatchSetup::capture(menu); }, "A mismatched layout was captured");
-        require(directory.contents() == bytes, "Capture validation wrote to the save");
+        require(directory.save_bytes() == bytes, "Capture validation wrote to the save");
     }
 
     // The save's temporary is uniquely named (replace_file_atomically), so
     // the failure is the replacing move, refused by a lock on the old save.
-    void check_failures_and_independence(const IsolatedSaveDirectory& directory)
+    void check_failures_and_independence(const acceptance::IsolatedSave& directory)
     {
         {
             Save save = load(directory, valid_section); SettingsSession save_session(save);
             const auto old = *save.last_match_setup();
-            const std::string bytes = directory.contents();
+            const std::string bytes = directory.save_bytes();
             const auto active = settings(4, 4);
             const auto proposed = LastMatchSetup::capture(active);
             {
@@ -460,7 +411,7 @@ namespace
                 require(lock.hold(), "Cannot lock private save replacement");
                 require(!save.remember_match_setup_and_save(proposed), "Locked save replacement unexpectedly succeeded");
             }
-            require(save.last_match_setup() && same(*save.last_match_setup(), old) && directory.contents() == bytes &&
+            require(save.last_match_setup() && same(*save.last_match_setup(), old) && directory.save_bytes() == bytes &&
                 !directory.temporary_left(),
                 "Failed remembered save changed old memory/bytes or left a temporary file");
             require_other_sections(save);
@@ -502,7 +453,7 @@ int main(int argc, char** /*argv*/)
     return acceptance::run_probe("remembered setup", [&]
     {
         require(argc == 2, "Usage: remembered_setup.exe <staged content directory>");
-        const IsolatedSaveDirectory directory;
+        const acceptance::IsolatedSave directory(L"remembered-setup");
         check_round_trips(directory);
         check_versions_and_sections(directory);
         check_defensive_restore(directory);

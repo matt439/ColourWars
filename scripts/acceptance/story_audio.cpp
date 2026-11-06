@@ -22,6 +22,7 @@
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/slot_seats.h"
 
@@ -57,48 +58,18 @@ namespace
 	}
 
 	// Content variants keep real factory weapons and their paid-shot workflow.
-	// Only authored numbers/names change, in a reserved temporary file.
-	class ContentVariant
+	// Only authored numbers/names change, each in its own scratch file.
+	class ContentVariant : public acceptance::JsonVariants
 	{
 	public:
-		explicit ContentVariant(const std::filesystem::path& original)
-		{
-			std::ifstream stream(original);
-			require(stream.good(), "Cannot read audio acceptance tuning");
-			this->source_ = std::string(std::istreambuf_iterator<char>(stream), {});
-			wchar_t name[MAX_PATH]{};
-			const auto temporary = std::filesystem::temp_directory_path();
-			require(GetTempFileNameW(temporary.c_str(), L"cwa", 0, name) != 0,
-				"Cannot reserve audio acceptance tuning file");
-			this->path_ = name;
-		}
-
-		~ContentVariant()
-		{
-			std::error_code ignored;
-			std::filesystem::remove(this->path_, ignored);
-		}
+		explicit ContentVariant(const std::filesystem::path& original) :
+			acceptance::JsonVariants(original, L"audio-tuning") {}
 
 		template<typename Edit>
 		GameTuning tuning(Edit edit) const
 		{
-			rapidjson::Document json;
-			json.Parse(this->source_.c_str());
-			require(!json.HasParseError(), "Cannot parse audio acceptance tuning");
-			edit(json);
-			rapidjson::StringBuffer buffer;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			json.Accept(writer);
-			std::ofstream stream(this->path_, std::ios::binary | std::ios::trunc);
-			stream.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
-			stream.close();
-			require(stream.good(), "Cannot write audio acceptance tuning variant");
-			return GameTuning(this->path_.string().c_str());
+			return GameTuning(this->write(edit).string().c_str());
 		}
-
-	private:
-		std::string source_;
-		std::filesystem::path path_;
 	};
 
 	// The normal game objects, with the engine's recording audio backend.
