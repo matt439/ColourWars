@@ -2196,12 +2196,13 @@ The frame analyzer reads the capture bound from `DebugPerf`'s declaration.
 Study B normalizes the optional identity-cue value before participant tie-breaks,
 the reference builder names the actual pose in an error, and the four study
 entry points use `scripts/studies/_paths.py` for the output privacy guard. The
-guard resolves junctions while avoiding queries to another, possibly locked,
-volume. Synthetic tie-break and path/junction regressions cover the failures.
+guard resolves junctions across drives and refuses inaccessible targets instead
+of treating an unresolved path as safe. Synthetic tie-break and path/junction
+regressions cover the failures.
 
 All 24 audio tests passed, including real FFmpeg/XWB encoding, clipping and loop
 checks, CLI failures, and exact rewrites of all 103 accepted master containers.
-All 14 frame-analysis and three privacy-guard tests passed, as did both complete
+All 14 frame-analysis and five privacy-guard tests passed, as did both complete
 synthetic study selftests. Production validation reported 103 waves, 71 sources
 and no flags. The tracked bank remains byte-identical (SHA-256
 `1d0f6a7bcde1542980df1cb873682c3ba6f781d27f5c9c11ae51abfb06d72ea5`);

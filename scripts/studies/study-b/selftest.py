@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import zlib
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -335,7 +336,9 @@ def analysis_checks(tmp, results_dir, regions_path, failures):
     drive = os.path.splitdrive(analyse.REPO_ROOT)[0]
     other = ("Q:" if drive.upper() != "Q:" else "R:") + "\\study-b\\report.md"
     try:
-        outside = analyse.inside_repo_unignored(other) is False
+        # Do not query an unrelated volume (which may be locked or removable).
+        with mock.patch("_paths.os.path.realpath", side_effect=lambda path: str(path)):
+            outside = analyse.inside_repo_unignored(other) is False
     except ValueError:
         outside = False
     check(outside, "a report on another drive (%s) is accepted without a ValueError" % other, failures)
