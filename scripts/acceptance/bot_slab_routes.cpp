@@ -66,20 +66,6 @@ namespace
         return slabs;
     }
 
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage(trial.stage); settings.set_duration(120.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
-
     // Injection ends at initial placement, as in the other route cases; the
     // spawn start keeps the ordinary spawn.
     void prepare(Level& level, const World& world, const Trial& trial)
@@ -142,7 +128,7 @@ namespace
 
     TrialResult run(World& world, const Slabs& slabs, const Trial& trial)
     {
-        std::unique_ptr<Level> level = world.build(roster(trial));
+        std::unique_ptr<Level> level = world.build(one_bot_roster(trial.stage, 120.0f, trial.team, trial.tool, trial.difficulty));
         prepare(*level, world, trial);
         const std::vector<PlayerInputData> physical = physical_inputs();
         const bool left = trial.team == PlayerTeam::a;

@@ -9,6 +9,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 #include <filesystem>
 #include <fstream>
@@ -97,12 +98,10 @@ namespace fixed_slab_acceptance
             return { x, mirrored ? 800.0f + (x - 2600.0f) * 0.5f : 880.0f - (x - 1240.0f) * 0.5f };
         }
 
-        struct Course
+        struct Course : acceptance::PlayerCourse
         {
             World& world;
             const GameTuning& tuning;
-            Scene scene{ nullptr, nullptr };
-            Player* player;
             FixedSlabPaintable* slab = nullptr;
             bool mirrored;
             int ticks = 0;
@@ -129,11 +128,7 @@ namespace fixed_slab_acceptance
                         PaintableFaces{ true, true, true, true }, flats));
                 };
                 if (slab_first) { add_slab(); }
-                for (const auto& flat : flats)
-                {
-                    scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", flat,
-                        std::make_unique<RectangleF>(flat), &world.render, CollisionObjectType::structure));
-                }
+                for (const auto& flat : flats) { add_structure(flat, world.render); }
                 if (!slab_first) { add_slab(); }
                 scene.end_tick();
             }
@@ -141,11 +136,9 @@ namespace fixed_slab_acceptance
             void tick(const PlayerInputData& action = input())
             {
                 require(ticks < 1600, "Fixed-slab support course exceeded its bounded update budget");
-                ++ticks; player->set_player_input(action); scene.update(dt);
-                require(player->update_weapon_and_get_projectiles(dt, scene.collision_objects()).empty(),
-                    "Neutral fixed-slab support input unexpectedly fired");
-                scene.resolve(); player->end_contacts(scene.contacts());
-                player->update_prev_rectangle(); scene.end_tick();
+                ++ticks;
+                require(begin_step(action).empty(), "Neutral fixed-slab support input unexpectedly fired");
+                scene.resolve(); finish_step();
                 require(player->state() == PlayerState::alive && player->health() == tuning.player().starting_health,
                     "Fixed-slab support trial lost its live neutral player");
                 require(std::isfinite(player->rectangle().x) && std::isfinite(player->rectangle().y),

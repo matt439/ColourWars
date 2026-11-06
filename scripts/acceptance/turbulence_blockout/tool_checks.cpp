@@ -12,19 +12,6 @@ namespace turbulence_blockout_acceptance
             std::array<double, 6> roles{};
         };
 
-        std::size_t object_role(const Surface& surface, const PaintSurfaceSample& tile)
-        {
-            if (surface.name == "ground")
-            {
-                const float x = (tile.corners[0].x + tile.corners[2].x) / 2.0f;
-                return x < 600 ? 0 : x < 1100 ? 2 : x < 2900 ? 4 : x < 3400 ? 3 : 1;
-            }
-            if (surface.name.starts_with("home_")) { return surface.name.ends_with("_a") ? 0 : 1; }
-            if (surface.name.starts_with("lower_bed")) { return 4; }
-            if (surface.name.starts_with("crossover") || surface.name == "centre_baffle") { return 5; }
-            return surface.name.ends_with("_a") ? 2 : 3;
-        }
-
         HeldPaint paint(const Run& run, PlayerTeam team)
         {
             HeldPaint result;
@@ -44,7 +31,7 @@ namespace turbulence_blockout_acceptance
                     if (tile.team != team) { continue; }
                     result.total += tile.scored_area;
                     result.faces[static_cast<std::size_t>(tile.face)] += tile.scored_area;
-                    result.roles[object_role(*surface, tile)] += tile.scored_area;
+                    result.roles[paint_region(*surface, tile)] += tile.scored_area;
                 }
             }
             require(std::fabs(result.total - authoritative) < 0.01,

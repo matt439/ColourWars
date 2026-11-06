@@ -39,17 +39,6 @@ namespace crossfeed_acceptance
             return count;
         }
 
-        float loop_steer(const Player& player, float goal, const PlayerTuning& tuning)
-        {
-            const float error = goal - player.center().x;
-            const float velocity = player.velocity().x;
-            const float stopping = velocity * velocity / (2.0f * tuning.x_deacceleration) +
-                std::fabs(velocity) * dt + 4.0f;
-            if (std::fabs(error) < 5.0f || (velocity != 0.0f &&
-                (velocity > 0.0f) == (error > 0.0f) && std::fabs(error) <= stopping)) { return 0.0f; }
-            return error > 0.0f ? 1.0f : -1.0f;
-        }
-
         struct LoopResult
         {
             std::vector<std::array<float, 6>> trajectory;
@@ -106,7 +95,7 @@ namespace crossfeed_acceptance
                 const float goal = x(canonical_goal);
                 const float direction = goal >= run.player->center().x ? 1.0f : -1.0f;
                 PlayerInputData actions = aimed(direction > 0.0f ? pi / 3.0f : 2.0f * pi / 3.0f,
-                    input(dropping ? 0.0f : loop_steer(*run.player, goal, services.tuning.player()),
+                    input(dropping ? 0.0f : steer(*run.player, goal, services.tuning.player()),
                         false, false, dropping));
                 actions.primary_shoot = fire;
                 run.tick(actions);

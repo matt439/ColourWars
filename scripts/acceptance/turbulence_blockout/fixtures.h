@@ -39,6 +39,23 @@ namespace turbulence_blockout_acceptance
         bool one_way() const { return this->collision == "STRUCTURE_JUMP_THROUGH"; }
     };
 
+    // The six paint regions, by index: home_a, home_b, approach_a, approach_b,
+    // lower_contest and upper_crossing. The walking floor splits at the home, approach
+    // and contest boundaries; every other object keeps one region, all its
+    // scored faces included.
+    inline std::size_t paint_region(const Surface& surface, const PaintSurfaceSample& tile)
+    {
+        if (surface.name == "ground")
+        {
+            const float x = (tile.corners[0].x + tile.corners[2].x) / 2.0f;
+            return x < 600 ? 0 : x < 1100 ? 2 : x < 2900 ? 4 : x < 3400 ? 3 : 1;
+        }
+        if (surface.name.starts_with("home_")) { return surface.name.ends_with("_a") ? 0 : 1; }
+        if (surface.name.starts_with("lower_bed")) { return 4; }
+        if (surface.name.starts_with("crossover") || surface.name == "centre_baffle") { return 5; }
+        return surface.name.ends_with("_a") ? 2 : 3;
+    }
+
     struct Services
     {
         RenderResources render;

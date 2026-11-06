@@ -10,6 +10,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -70,12 +71,10 @@ namespace
         }
     };
 
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
         struct Event { MovementFeedback::Effect effect; int tick; };
         World& world;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
         std::vector<Event> events;
         int ticks = 0;
         size_t emitted_projectiles = 0;
@@ -99,9 +98,7 @@ namespace
 
         void surface(const RectangleF& rectangle)
         {
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                rectangle, std::make_unique<RectangleF>(rectangle), &world.render,
-                CollisionObjectType::structure));
+            this->add_structure(rectangle, world.render);
             this->scene.end_tick();
         }
 
@@ -121,19 +118,14 @@ namespace
         void begin(const PlayerInputData& actions = input())
         {
             ++this->ticks;
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
             // Keep the real paid-shot path; projectiles are accounted for and
             // retired by this fixture rather than introducing unrelated hits.
-            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects()).size();
+            this->emitted_projectiles += this->begin_step(actions).size();
         }
 
         void finish()
         {
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            this->finish_step();
             for (const auto& effect : this->player->movement_feedback().effects())
             {
                 if (effect.age == 0.0f) { this->events.push_back({ effect, this->ticks }); }

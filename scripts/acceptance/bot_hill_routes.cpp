@@ -1,10 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
-#include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <iostream>
 #include <sstream>
 
@@ -103,20 +99,6 @@ namespace
         throw std::runtime_error("Unknown bot hill endpoints");
     }
 
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage("king_of_the_hill"); settings.set_duration(60.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
-
     // Only the initial position is injected. The shipping driver receives no
     // route, goal, movement, paint, resource or enemy-information override.
     void prepare(Level& level, const World& world, const Trial& trial)
@@ -135,7 +117,7 @@ namespace
 
     bool run(World& world, const Trial& trial, const Ramp& ramp, bool replay_check)
     {
-        const MatchSetup settings = roster(trial);
+        const MatchSetup settings = one_bot_roster("king_of_the_hill", 60.0f, trial.team, trial.tool, trial.difficulty);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const Endpoints route = endpoints(world, trial);
@@ -185,20 +167,11 @@ namespace
         if (!passed) { std::cout << trace.str(); }
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, trial_steps);
-#endif
-            level.reset();
-            level = world.build(settings); prepare(*level, world, trial);
-            tape.playback = true;
-            for (int tick = 0; tick < trial_steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == trial_steps && snapshot(*level) == expected,
-                "Hill-route final-input replay changed public players, projectile count or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, trial_steps)).empty(),
-                "Hill-route final-input replay changed the complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, trial_steps, physical, [&]
+            {
+                auto replayed = world.build(settings); prepare(*replayed, world, trial);
+                return replayed;
+            }, "Hill-route");
         }
         return passed;
     }

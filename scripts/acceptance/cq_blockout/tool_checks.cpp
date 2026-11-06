@@ -37,7 +37,7 @@ namespace cq_blockout_acceptance
                     "CQ tool station credited the wrong team");
                 std::cout << "MEASURE CQ tool=" << name << " team=" << (right ? 'a' : 'b') <<
                     " main_face_area=" << fixed(area) << " maximum_net_ammo_drop=" << fixed(initial_ammo - run.minimum_ammo) <<
-                    " emitted_objects=" << run.shots << " swept_area=" << fixed(run.swept_paint) <<
+                    " emitted_objects=" << run.emitted_objects << " swept_area=" << fixed(run.swept_paint) <<
                     " support=" << run.support() << '\n';
             }
         }
@@ -75,7 +75,7 @@ namespace cq_blockout_acceptance
                     run.tick(actions);
                 }
                 const float cover_area = run.team_area(team, cover.name);
-                require(run.minimum_ammo < initial_ammo && run.shots > 0 && run.swept_paint > 0.0f &&
+                require(run.minimum_ammo < initial_ammo && run.emitted_objects > 0 && run.swept_paint > 0.0f &&
                     cover_area > 0.0f, std::string("CQ ") + name +
                     " paid flying paint did not reach the contested baffle from outside contact range");
                 require(run.team_area(right ? PlayerTeam::b : PlayerTeam::a) == 0.0f,
@@ -83,7 +83,7 @@ namespace cq_blockout_acceptance
                 std::cout << "MEASURE CQ flight tool=" << name << " team=" << (right ? 'a' : 'b') <<
                     " initial_gap=" << fixed(gap) << " aim=" << fixed(angle, 3) <<
                     " cover_area=" << fixed(cover_area) << " maximum_net_ammo_drop=" << fixed(initial_ammo - run.minimum_ammo) <<
-                    " emitted_objects=" << run.shots << " swept_cover_area=" << fixed(run.swept_paint) << '\n';
+                    " emitted_objects=" << run.emitted_objects << " swept_cover_area=" << fixed(run.swept_paint) << '\n';
             }
         }
         std::cout << "PASS CQ all five current tools pay ammo and paint the main connected scoring surface from both sides; "

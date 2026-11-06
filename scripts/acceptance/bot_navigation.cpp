@@ -1,10 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
-#include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <iostream>
 
 namespace
@@ -20,20 +16,6 @@ namespace
         WeaponType tool;
         BotDifficulty difficulty;
     };
-
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage("close_quarters"); settings.set_duration(20.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
 
     // This separate capability trial places the bot once at its home-floor
     // endpoint. All subsequent movement, drops and firing come from the real
@@ -54,30 +36,9 @@ namespace
             "Navigation trial initial body does not stand at the named home-floor height");
     }
 
-    float owned_floor_paint(const Level& level, const World& world)
-    {
-        const RectangleF& floor = world.named("boundary_floor");
-        const float thickness = world.assets.tuning.paint().thickness;
-        const int owner = paint_owners::index(-1, 1);
-        float area = 0.0f;
-        for (const PaintSurfaceSample& surface : level.paint_surfaces())
-        {
-            if (surface.face != PaintSurfaceFace::top || surface.paint_owner != owner) { continue; }
-            bool belongs = true;
-            for (const Vector2F& corner : surface.corners)
-            {
-                belongs = belongs && corner.x >= floor.left() - endpoint_tolerance &&
-                    corner.x <= floor.right() + endpoint_tolerance &&
-                    std::fabs(corner.y - floor.top()) <= thickness + endpoint_tolerance;
-            }
-            if (belongs) { area += surface.scored_area; }
-        }
-        return area;
-    }
-
     void run(World& world, const Trial& trial, bool replay_check)
     {
-        const MatchSetup settings = roster(trial);
+        const MatchSetup settings = one_bot_roster("close_quarters", 20.0f, trial.team, trial.tool, trial.difficulty);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const std::vector<PlayerInputData> physical = physical_inputs();
@@ -118,7 +79,7 @@ namespace
             maximum_progress = std::max(maximum_progress,
                 (bot.center().x - initial_x) * (trial.team == PlayerTeam::a ? 1.0f : -1.0f));
         }
-        const float paint = owned_floor_paint(*level, world);
+        const float paint = owned_top_paint(*level, world.named("boundary_floor"), world.assets.tuning.paint().thickness);
         std::cout << "MEASURE CQ bot home drop team=" << (trial.team == PlayerTeam::a ? 'a' : 'b') <<
             " tool=" << static_cast<int>(trial.tool) << " difficulty=" << static_cast<int>(trial.difficulty) <<
             " drop=" << first_drop << " lower_landing=" << first_landing << " scoring_landing=" << first_scoring <<
@@ -129,21 +90,11 @@ namespace
             "CQ bot did not reach the named scored bypass and own paid floor paint within 600 steps");
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, trial_steps);
-#endif
-            // Both levels borrow the same partitioner, so destroy before rebuilding.
-            level.reset();
-            level = world.build(settings); prepare(*level, world, trial);
-            tape.playback = true;
-            for (int tick = 0; tick < trial_steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == trial_steps && snapshot(*level) == expected,
-                "Navigation final-input replay changed actors, projectiles or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, trial_steps)).empty(),
-                "Navigation final-input replay changed the complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, trial_steps, physical, [&]
+            {
+                auto replayed = world.build(settings); prepare(*replayed, world, trial);
+                return replayed;
+            }, "Navigation");
         }
     }
 }

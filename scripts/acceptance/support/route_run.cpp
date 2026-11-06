@@ -1,9 +1,10 @@
 #include "game/pch.h"
-#include "scripts/acceptance/crossfeed/fixtures.h"
+#include "scripts/acceptance/support/route_run.h"
+#include "scripts/acceptance/support/content_world.h"
 #include "game/carried/removed_members.h"
 #include "engine/math/triangle.h"
 
-namespace crossfeed_acceptance
+namespace acceptance::route_run
 {
     std::string fixed(float value, int precision)
     {
@@ -47,7 +48,19 @@ namespace crossfeed_acceptance
             rectangle.width, rectangle.height };
     }
 
-    Map::Map(const std::filesystem::path& path) : info(path.string().c_str())
+    float steer(const Player& player, float goal, const PlayerTuning& tuning)
+    {
+        const float error = goal - player.center().x;
+        const float velocity = player.velocity().x;
+        const float stopping = velocity * velocity / (2.0f * tuning.x_deacceleration) +
+            std::fabs(velocity) * dt + 4.0f;
+        if (std::fabs(error) < 5.0f || (velocity != 0.0f &&
+            (velocity > 0.0f) == (error > 0.0f) && std::fabs(error) <= stopping)) { return 0.0f; }
+        return error > 0.0f ? 1.0f : -1.0f;
+    }
+
+    Map::Map(const std::filesystem::path& path, std::string stage_label) :
+        label(std::move(stage_label)), info(path.string().c_str())
     {
         this->info.validate();
         const JsonValue entries = this->info.collision_objects_json();
@@ -86,7 +99,8 @@ namespace crossfeed_acceptance
             }
             for (const Surface& previous : this->surfaces)
             {
-                require(previous.name != surface.name, "duplicate Crossfeed object name '" + surface.name + "'");
+                require(previous.name != surface.name,
+                    "duplicate " + this->label + " object name '" + surface.name + "'");
             }
             this->surfaces.push_back(std::move(surface));
         }
@@ -98,34 +112,30 @@ namespace crossfeed_acceptance
         {
             if (surface.name == name) { return surface; }
         }
-        throw std::runtime_error("Crossfeed route needs authored object '" + name + "'");
+        throw std::runtime_error(this->label + " route needs authored object '" + name + "'");
     }
 
-    Services::Services(const std::filesystem::path& content) :
+    Services::Services(const std::filesystem::path& content, const std::string& stage, std::string label) :
         tuning((content / "tuning.json").string().c_str()),
         presentation((content / "presentation.json").string().c_str()),
-        map(content / "levels/crossfeed.json"),
+        map(content / "levels" / (stage + ".json"), std::move(label)),
         builder(&this->render, &this->preferences, &this->tuning.paint())
     {
-        for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
-        {
-            this->render.add_sprite_sheet(name, read_sprite_sheet(
-                (content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));
-        }
-        this->audio.add_sound_bank("paint_exe", SoundBank::silent());
+        acceptance::load_cpu_assets(content, this->render, this->audio);
     }
 
     Run::Run(Services& with, const Vector2F& top_left, PlayerTeam team, WeaponType weapon) : services(with)
     {
         this->scene.set_bounds(with.map.info.out_of_bounds_rectangle());
         auto built = with.builder.build_collision_objects(with.map.info.collision_objects_json(), with.colours);
-        require(built.size() == with.map.surfaces.size(), "Crossfeed builder changed the authored object count");
+        require(built.size() == with.map.surfaces.size(),
+            with.map.label + " builder changed the authored object count");
         for (size_t index = 0; index < built.size(); ++index)
         {
             CollisionObject* object = this->scene.add(std::move(built[index]));
             const Surface& authored = with.map.surfaces[index];
             require(object->bounds() == authored.rectangle,
-                "Crossfeed built bounds differ from '" + authored.name + "'");
+                with.map.label + " built bounds differ from '" + authored.name + "'");
             this->structures.emplace_back(&authored, object);
             this->targets.push_back(object);
         }
@@ -155,7 +165,7 @@ namespace crossfeed_acceptance
         const RectangleF bounds = this->services.map.info.out_of_bounds_rectangle();
         require(body.left() >= bounds.left() - tolerance && body.right() <= bounds.right() + tolerance &&
             body.top() >= bounds.top() - tolerance && body.bottom() <= bounds.bottom() + tolerance,
-            context + ": Crossfeed player body left authored bounds");
+            context + ": " + this->services.map.label + " player body left authored bounds");
         for (const auto& [surface, object] : this->structures)
         {
             if (surface->jump_through()) { continue; }
@@ -173,7 +183,7 @@ namespace crossfeed_acceptance
         require(this->passive_players.size() == this->passive_input_streams.size() &&
             this->passive_players.size() == this->passive_weapon_aims.size() &&
             this->passive_players.size() == this->passive_weapon_stats.size(),
-            "Crossfeed opponent input streams lost their player association");
+            this->services.map.label + " opponent input streams lost their player association");
         for (size_t index = 0; index < this->passive_players.size(); ++index)
         {
             const auto& stream = this->passive_input_streams[index];
@@ -181,7 +191,8 @@ namespace crossfeed_acceptance
         }
         this->scene.update(dt);
         if (this->after_scene_update) { this->after_scene_update(); }
-        const float before_sweep = this->team_area(this->player->team(), this->swept_surface);
+        const bool accounting = this->services.paint_accounting;
+        const float before_sweep = accounting ? this->team_area(this->player->team(), this->swept_surface) : 0.0f;
         for (CollisionObject* object : this->scene.collision_objects())
         {
             if (is_projectile(to_collision_type(object->tag())))
@@ -211,13 +222,13 @@ namespace crossfeed_acceptance
                 }
             }
         }
-        this->swept_paint += this->team_area(this->player->team(), this->swept_surface) - before_sweep;
+        if (accounting) { this->swept_paint += this->team_area(this->player->team(), this->swept_surface) - before_sweep; }
         if (this->weapon_aim_after_movement)
         {
             this->player->set_player_input(aimed(this->weapon_aim_after_movement(), actions));
         }
         const float ammo_before = this->player->weapon_ammo();
-        const float paint_before_launch = this->team_area(this->player->team(), this->swept_surface);
+        const float paint_before_launch = accounting ? this->team_area(this->player->team(), this->swept_surface) : 0.0f;
         auto emitted = this->player->update_weapon_and_get_projectiles(dt, this->targets);
         const bool paid = this->player->weapon_ammo() < ammo_before;
         if (paid && this->first_paid_tick < 0)
@@ -236,10 +247,10 @@ namespace crossfeed_acceptance
             // survivors; these retirements include enemies as well as cover.
             const int created = this->player->primary_weapon().type() == WeaponType::mister ? 5 : 1;
             require(emitted.size() <= static_cast<size_t>(created),
-                "Crossfeed paid-event object count exceeds the projectile builder contract");
+                this->services.map.label + " paid-event object count exceeds the projectile builder contract");
             this->launch_retired_objects += created - static_cast<int>(emitted.size());
         }
-        this->launch_paint += this->team_area(this->player->team(), this->swept_surface) - paint_before_launch;
+        if (accounting) { this->launch_paint += this->team_area(this->player->team(), this->swept_surface) - paint_before_launch; }
         if (this->on_weapon_launch) { this->on_weapon_launch(emitted); }
         for (auto& projectile : emitted)
         {
@@ -265,8 +276,8 @@ namespace crossfeed_acceptance
                 stats.paid_ticks.push_back(this->ticks);
                 if (stats.first_paid_tick < 0) { stats.first_paid_tick = this->ticks; }
                 const int created = opponent->primary_weapon().type() == WeaponType::mister ? 5 : 1;
-                require(opponent_emitted.size() <= static_cast<size_t>(created),
-                    "Crossfeed opponent paid-event object count exceeds the projectile builder contract");
+                require(opponent_emitted.size() <= static_cast<size_t>(created), this->services.map.label +
+                    " opponent paid-event object count exceeds the projectile builder contract");
                 stats.launch_retired_objects += created - static_cast<int>(opponent_emitted.size());
             }
             stats.minimum_ammo = std::min(stats.minimum_ammo, opponent->weapon_ammo());
@@ -289,7 +300,7 @@ namespace crossfeed_acceptance
         if (this->after_scene_contacts) { this->after_scene_contacts(); }
         this->scene.end_tick();
         require(this->death_expected || this->player->state() == PlayerState::alive,
-            "Crossfeed route player died without the damage fixture");
+            this->services.map.label + " route player died without the damage fixture");
         this->require_clear("after resolve");
         this->minimum_ammo = std::min(this->minimum_ammo, this->player->weapon_ammo());
         for (const auto& effect : this->player->movement_feedback().effects())
@@ -301,7 +312,7 @@ namespace crossfeed_acceptance
     void Run::settle(int count)
     {
         for (int tick = 0; tick < count; ++tick) { this->tick(); }
-        require(supported(*this->player), "Crossfeed player did not find support after settling");
+        require(supported(*this->player), this->services.map.label + " player did not find support after settling");
     }
 
     std::string Run::support() const
@@ -360,7 +371,8 @@ namespace crossfeed_acceptance
         {
             this->player->on_contact(shot, Vector2F::zero, 0.0f);
         }
-        require(this->player->health() <= 0.0f, "Crossfeed damage fixture did not eliminate the player");
+        require(this->player->health() <= 0.0f,
+            this->services.map.label + " damage fixture did not eliminate the player");
     }
 
     Player* Run::add_opponent(const Vector2F& top_left, WeaponType weapon_type)
@@ -397,7 +409,7 @@ namespace crossfeed_acceptance
                 return;
             }
         }
-        throw std::runtime_error("Crossfeed input stream needs an opponent owned by this Run");
+        throw std::runtime_error(this->services.map.label + " input stream needs an opponent owned by this Run");
     }
 
     void Run::set_opponent_weapon_aim(Player* opponent, std::function<float()> aim)
@@ -410,7 +422,7 @@ namespace crossfeed_acceptance
                 return;
             }
         }
-        throw std::runtime_error("Crossfeed aim stream needs an opponent owned by this Run");
+        throw std::runtime_error(this->services.map.label + " aim stream needs an opponent owned by this Run");
     }
 
     const Run::OpponentWeaponStats& Run::opponent_weapon_stats(const Player* opponent) const
@@ -419,7 +431,7 @@ namespace crossfeed_acceptance
         {
             if (this->passive_players[index] == opponent) { return this->passive_weapon_stats[index]; }
         }
-        throw std::runtime_error("Crossfeed weapon stats need an opponent owned by this Run");
+        throw std::runtime_error(this->services.map.label + " weapon stats need an opponent owned by this Run");
     }
 
     Vector2F standing_on(const Services& s, const Surface& surface, float centre_x)
@@ -428,18 +440,9 @@ namespace crossfeed_acceptance
             surface.rectangle.top() - s.tuning.player().size.y };
     }
 
-    namespace
+    float steering(const Run& run, float target)
     {
-        float steering(const Run& run, float target)
-        {
-            const float error = target - run.player->center().x;
-            const float velocity = run.player->velocity().x;
-            const float stopping = velocity * velocity /
-                (2.0f * run.services.tuning.player().x_deacceleration) + std::fabs(velocity) * dt + 4.0f;
-            if (std::fabs(error) < 5.0f || (velocity != 0.0f &&
-                (velocity > 0.0f) == (error > 0.0f) && std::fabs(error) <= stopping)) { return 0.0f; }
-            return error > 0.0f ? 1.0f : -1.0f;
-        }
+        return steer(*run.player, target, run.services.tuning.player());
     }
 
     void drive_to(Run& run, float centre_x, int limit)
@@ -463,29 +466,37 @@ namespace crossfeed_acceptance
             nearby += surface->name + "=(" + fixed(box.x) + ',' + fixed(box.y) + ',' +
                 fixed(box.width) + ',' + fixed(box.height) + ";" + surface->collision_type + ") ";
         }
-        throw std::runtime_error("Crossfeed walk from tick " + std::to_string(start) + " did not reach x=" +
-            fixed(centre_x) + "; centre=" + fixed(run.player->center().x) + " support=" + run.support() +
-            " body_x=" + fixed(body.x) + " body_y=" + fixed(body.y) + " body_bottom=" + fixed(body.bottom()) +
-            " vx=" + fixed(velocity.x) + " vy=" + fixed(velocity.y) +
+        throw std::runtime_error(run.services.map.label + " walk from tick " + std::to_string(start) +
+            " did not reach x=" + fixed(centre_x) + "; centre=" + fixed(run.player->center().x) +
+            " support=" + run.support() + " body_x=" + fixed(body.x) + " body_y=" + fixed(body.y) +
+            " body_bottom=" + fixed(body.bottom()) + " vx=" + fixed(velocity.x) + " vy=" + fixed(velocity.y) +
             " move_state=" + std::to_string(static_cast<int>(run.player->move_state())) + " nearby=" + nearby);
     }
 
-    void jump_to(Run& run, const Surface& target, float centre_x, int delay, int hold_ticks)
+    void jump_to(Run& run, const Surface& target, float centre_x, int delay, int hold_ticks, bool single_takeoff)
     {
-        require(supported(*run.player), "Crossfeed jump trial did not start supported");
+        require(supported(*run.player), run.services.map.label + " jump trial did not start supported");
         // Negative and positive variants shift the press by four simulation
         // ticks around the same approach; they never alter player placement.
         for (int tick = 0; tick < delay + 2; ++tick) { run.tick(input(steering(run, centre_x))); }
         const int previous_takeoffs = run.takeoffs;
         run.tick(input(steering(run, centre_x), true, true));
-        for (int tick = 0; tick < 240; ++tick)
+        for (int tick = 0; tick < jump_held_throughout; ++tick)
         {
             if (run.takeoffs > previous_takeoffs && supported(*run.player) &&
                 run.support() == target.name && std::fabs(run.player->center().x - centre_x) <= 8.0f &&
-                run.player->velocity().x == 0.0f) { run.tick(); return; }
+                run.player->velocity().x == 0.0f)
+            {
+                require(!single_takeoff || run.takeoffs == previous_takeoffs + 1, run.services.map.label +
+                    " jump onto '" + target.name + "' took off " + std::to_string(run.takeoffs - previous_takeoffs) +
+                    " times, not once");
+                run.tick();
+                return;
+            }
             run.tick(input(steering(run, centre_x), false, tick + 1 < hold_ticks));
         }
-        throw std::runtime_error("Crossfeed jump (hold " + std::to_string(hold_ticks) + ", delay " + std::to_string(delay) + ") failed to land on '" +
-            target.name + "'; at " + fixed(run.player->center().x) + " on " + run.support());
+        throw std::runtime_error(run.services.map.label + " jump (hold " + std::to_string(hold_ticks) +
+            ", delay " + std::to_string(delay) + ") failed to land on '" + target.name + "' at x=" +
+            fixed(centre_x) + "; at " + fixed(run.player->center().x) + " on " + run.support());
     }
 }

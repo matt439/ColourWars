@@ -10,7 +10,7 @@ int main(int argc, char** argv)
     return acceptance::run_probe("CQ blockout", [&]
     {
         require(argc == 2, "Usage: cq_blockout.exe <content directory>");
-        Services services(argv[1]);
+        Services services(argv[1], "close_quarters", "CQ");
         const std::filesystem::path output = std::filesystem::absolute(argv[0]).parent_path();
         std::cout << "NOTE CQ authored Player/Scene trials dt=" << dt <<
             "; current tuning; no devices or player save; both directions are scripted CPU evidence\n";

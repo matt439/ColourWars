@@ -6,6 +6,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <rapidjson/document.h>
@@ -125,15 +126,18 @@ namespace
         }
     };
 
-    struct Course
+    // The Course's own preferences, a base so they outlive its Scene and Player.
+    struct CoursePreferences
     {
         PlaySettings preferences;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
+    };
 
+    struct Course : CoursePreferences, acceptance::PlayerCourse
+    {
         Course(World& world, const FigurePresentation* figure, WeaponType type) :
-            preferences(world.preferences)
+            CoursePreferences{ world.preferences }
         {
+            seconds = dt;
             const RectangleF body(0.0f, -world.tuning.player().size.y,
                 world.tuning.player().size.x, world.tuning.player().size.y);
             auto weapon = WeaponBuilder::build_weapon(&world.tuning, PlayerTeam::a, 0, 0,
@@ -144,23 +148,13 @@ namespace
                 0, PlayerTeam::a, type, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, body.position(), Vector2F::zero, 0.0f, Vector2F::zero,
                 SpriteFlip::none, 0.0f, 0, figure));
-            const RectangleF floor(-10000.0f, 0.0f, 20000.0f, 100.0f);
-            scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", floor,
-                std::make_unique<RectangleF>(floor), &world.render, CollisionObjectType::structure));
+            add_structure(RectangleF(-10000.0f, 0.0f, 20000.0f, 100.0f), world.render);
             scene.end_tick();
         }
 
         std::vector<std::unique_ptr<Projectile>> tick(const PlayerInputData& input)
         {
-            player->set_player_input(input);
-            scene.update(dt);
-            auto projectiles = player->update_weapon_and_get_projectiles(dt, scene.collision_objects());
-            scene.resolve();
-            player->end_contacts(scene.contacts());
-            player->update_weapon_position();
-            player->update_prev_rectangle();
-            scene.end_tick();
-            return projectiles;
+            return step(input, true);
         }
     };
 

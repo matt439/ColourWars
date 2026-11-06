@@ -10,6 +10,7 @@
 #include "engine/render/sprite_font_file.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -119,11 +120,9 @@ namespace
         }
     };
 
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
         World& world;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
 
         Course(World& resources, bool floor) : world(resources)
         {
@@ -138,13 +137,7 @@ namespace
                 &world.render, &world.audio, &world.preferences, 0, PlayerTeam::a,
                 WeaponType::sprayer, std::move(weapon), WeaponType::none,
                 Colour::white, Viewport{}, rectangle.top_left()));
-            if (floor)
-            {
-                const RectangleF ground(-10000.0f, 0.0f, 20000.0f, 100.0f);
-                this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                    ground, std::make_unique<RectangleF>(ground), &world.render,
-                    CollisionObjectType::structure));
-            }
+            if (floor) { this->add_structure(RectangleF(-10000.0f, 0.0f, 20000.0f, 100.0f), world.render); }
             this->scene.end_tick();
         }
 
@@ -154,13 +147,7 @@ namespace
             input.connected = true;
             input.jump_pressed = jump;
             input.jump_held = jump;
-            this->player->set_player_input(input);
-            this->scene.update(dt);
-            std::ignore = this->player->update_weapon_and_get_projectiles(dt, this->scene.collision_objects());
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            std::ignore = this->step(input);
         }
 
         bool airborne() const

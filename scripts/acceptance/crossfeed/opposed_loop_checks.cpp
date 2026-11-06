@@ -43,17 +43,6 @@ namespace crossfeed_acceptance
             return count;
         }
 
-        float steer(const Player& player, float goal, const PlayerTuning& tuning)
-        {
-            const float error = goal - player.center().x;
-            const float velocity = player.velocity().x;
-            const float stopping = velocity * velocity / (2.0f * tuning.x_deacceleration) +
-                std::fabs(velocity) * dt + 4.0f;
-            if (std::fabs(error) < 5.0f || (velocity != 0.0f &&
-                (velocity > 0.0f) == (error > 0.0f) && std::fabs(error) <= stopping)) { return 0.0f; }
-            return error > 0.0f ? 1.0f : -1.0f;
-        }
-
         struct HealthObservation
         {
             float net_tick_loss = 0.0f;

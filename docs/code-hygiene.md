@@ -1773,7 +1773,71 @@ exist in `support/replacement_lock.h`; fold them into `isolated_save.h`. Port
 
 ### Level-driving and route fixtures (`HYG#85`)
 
-After `HYG#83`, which is done: its `support/content_world.h` and
+**Done 2026-11-06; probes only, no game behaviour change.** Trial counts,
+measurements and receipts are unchanged.
+
+- [bot_navigation/fixtures.h](../scripts/acceptance/bot_navigation/fixtures.h)
+  has `opposing`, `one_bot_roster` (an idle keyboard human against the bot in
+  seat 1), `two_a_side_roster`, `owned_top_paint` and
+  `check_final_input_replay`. The nine one-bot roster copies are gone
+  (`bot_trials`, `bot_arena_routes`, `bot_ascents`, `bot_blockout_routes`,
+  `bot_hill_routes`, `bot_mover_routes`, `bot_navigation`, `bot_slab_routes`,
+  `bot_turbulence_routes`). So are six `owned_top_paint` copies (arena,
+  ascents, mover, navigation, territory and turbulence) and nine replay blocks
+  (the route and trial cases, `bot_combat_trials` and `bot_team_trials`).
+  `team_gate` and `bot_team_trials` share `two_a_side_roster`.
+  `bot_team_trials`' `Trial::team(seat)` replaces eight copies of the
+  seat-to-team expression. `bot_trials` dropped its `Tape`, `snapshot` and
+  `physical_inputs` copies; it keeps its own four-stage `World`.
+- [support/player_course.h](../scripts/acceptance/support/player_course.h)
+  holds `acceptance::PlayerCourse`: one Player in a bare Scene, stepped in
+  `Level`'s order (`begin_step`, `finish_step`, `step`). The `Course`
+  fixtures in `tool_motion`, `combat_feedback`, `movement_contact`,
+  `quiet_character`, `results_awards`, `view_shake`, `weapon_feedback`,
+  `movement`, `paint_underfoot` and `fixed_slab` derive from it. Those that
+  own their preferences hold them in a base declared first, so the
+  preferences outlive the Player.
+- [support/route_run.h](../scripts/acceptance/support/route_run.h) and its
+  `.cpp`, a source of the three cases in `cases.psd1`, hold the Map, Services
+  and Run that `crossfeed`, `cq_blockout` and `press_tower` each copied. The
+  shared copy is Crossfeed's, the superset. `cq_blockout/fixtures.cpp` and
+  `crossfeed/fixtures.cpp` are gone. Press Tower keeps only its own helpers,
+  and its jumps go through `jump_once`, which keeps its single-takeoff check.
+  CQ's jumps hold through the landing window, as before. `Services` loads the
+  manifest's assets with `load_cpu_assets`, as `turbulence_blockout`'s does
+  (handed over by `HYG#83`). One `steer` replaces crossfeed's five steering
+  copies and the ones in CQ and Press Tower. Press Tower turns off the
+  shared tick's swept and launch paint totals, which it never reads and which
+  made its run half again as long.
+- `turbulence_blockout`'s geometry and tool checks share `paint_region`.
+  `movement_feedback_visual`'s main calls `build_course` instead of a copy of
+  it.
+
+Only failure wording changed. The route-run messages name the stage from one
+template, and the replay and second-human messages name the trial.
+
+Left as they are:
+
+- `turbulence_blockout`'s own Services and Run. That fixture is shaped
+  differently (no Map, its own target player). Its steering, and
+  `turbulence_movers`', `movement_course`'s, `turbulence_slab_routes`' and
+  the painter's braking copies, keep their own copies.
+- `bot_combat_trials`' and `bot_scan_cost`'s rosters (three seats; a bot count
+  and per-seat tools). `bot_territory`'s roster, which leaves the human's tool
+  at its default. `bot_slab_routes`' slab-frame `owned_slab_paint`.
+  `bot_gate_routes`' per-step replay. `bot_scan_cost`'s `physical_inputs`.
+
+Both presets build under `/W4 /WX`. The 28 touched cases passed in Release
+and Debug: the thirteen bot cases (`bot_team_trials` and the other opt-in
+trials included), `team_gate`, `crossfeed`, `cq_blockout`, `press_tower`,
+`turbulence_blockout`, the ten `Course` cases and `fixed_slab`.
+Release run logs and CSVs were compared with a run of the parent commit: all 44
+match, trial fingerprints, counts and the crossfeed, CQ and Turbulence blockout
+receipts included, apart from `fixed_slab`'s process-id folder name.
+`check-movement-feedback.ps1` passed in both presets, and
+`check-acceptance-selection.ps1` passed.
+
+The row as filed. After `HYG#83`, which is done: its `support/content_world.h` and
 `manifest_level_paths` are there to build on. Move `one_bot_roster`, `owned_top_paint`,
 `check_final_input_replay` and the trial rosters into
 `bot_navigation/fixtures.h`. Delete the copies in `bot_trials.cpp:137`,

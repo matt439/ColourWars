@@ -40,7 +40,15 @@ own. A probe that touches the save points `LOCALAPPDATA` at a private root with
 [support/isolated_save.h](acceptance/support/isolated_save.h), and one that
 checks a reader refuses bad JSON writes edited copies with
 [support/json_fixture.h](acceptance/support/json_fixture.h); both keep their
-scratch by [support/scratch.h](acceptance/support/scratch.h). It also holds the sources
+scratch by [support/scratch.h](acceptance/support/scratch.h). A probe that
+steps one real Player in a bare Scene derives its course from
+`acceptance::PlayerCourse` in
+[support/player_course.h](acceptance/support/player_course.h), which keeps
+`Level`'s tick order; the Crossfeed, Close Quarters and Press Tower cases share
+one stage's route-run fixture in
+[support/route_run.h](acceptance/support/route_run.h), whose `.cpp` they list
+as a source; and the bot cases share their rosters, tape and replay check in
+[bot_navigation/fixtures.h](acceptance/bot_navigation/fixtures.h). It also holds the sources
 of probes that are not cases and that their own entry points build:
 `painter_visual` ([check-painter.ps1](check-painter.ps1)), `paint_fx_visual`
 ([check-paint-fx.ps1](check-paint-fx.ps1)), `movement_feedback_visual`

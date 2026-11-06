@@ -6,6 +6,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <array>
@@ -253,11 +254,8 @@ namespace
     // The same movement -> weapon -> resolve -> end_contacts ordering as Level.
     // Real geometry distinguishes actual supported travel from a velocity request
     // into a wall and from airborne displacement. No renderer/device/save is used.
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
-        Scene scene{ nullptr, nullptr };
-        Player* player;
-
         explicit Course(World& world)
         {
             const RectangleF body(0, -world.tuning.player().size.y,
@@ -271,23 +269,14 @@ namespace
             for (const auto rectangle : { RectangleF(-1000, 0, 3000, 100),
                 RectangleF(400, -4000, 100, 4000) })
             {
-                this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                    rectangle, std::make_unique<RectangleF>(rectangle), &world.render,
-                    CollisionObjectType::structure));
+                this->add_structure(rectangle, world.render);
             }
             this->scene.end_tick();
         }
 
         void tick(const PlayerInputData& actions = input())
         {
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
-            std::ignore = this->player->update_weapon_and_get_projectiles(dt,
-                this->scene.collision_objects());
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            std::ignore = this->step(actions);
         }
     };
 

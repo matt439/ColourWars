@@ -11,6 +11,7 @@
 #include "engine/core/file_path.h"
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 #include <bit>
 #include <cmath>
@@ -109,7 +110,7 @@ namespace paint_underfoot_acceptance
 
     // The actual Scene/Player/Weapon contact workflow, without Application/devices.
     // New shots are counted then retired by this fixture, so they cannot add unrelated damage.
-    class Course final
+    class Course final : public acceptance::PlayerCourse
     {
     public:
         Course(World& resources, PlayerTeam team = PlayerTeam::a, WeaponType tool = WeaponType::sprayer,
@@ -139,24 +140,17 @@ namespace paint_underfoot_acceptance
         }
         void plain(const labrador::RectangleF& bounds)
         {
-            scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", bounds,
-                std::make_unique<labrador::RectangleF>(bounds), &world.render, CollisionObjectType::structure));
+            add_structure(bounds, world.render);
             scene.end_tick();
         }
         void begin(const PlayerInputData& actions = input())
         {
-            player->set_player_input(actions); scene.update(dt);
-            emitted += player->update_weapon_and_get_projectiles(dt, scene.collision_objects()).size();
+            emitted += begin_step(actions).size();
         }
-        void finish()
-        {
-            player->end_contacts(scene.contacts()); player->update_prev_rectangle(); scene.end_tick();
-        }
+        void finish() { finish_step(); }
         void tick(const PlayerInputData& actions = input()) { begin(actions); scene.resolve(); finish(); }
         void settle() { tick(); tick(); }
         World& world;
-        labrador::Scene scene{ nullptr, nullptr };
-        Player* player = nullptr;
         std::size_t emitted = 0;
     };
     void check_movement(World& world);

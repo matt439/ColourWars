@@ -8,6 +8,7 @@
 #include "engine/core/step_timer.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -77,10 +78,8 @@ namespace
     };
 
     // The real update/contact ordering, with no graphics/audio device or save.
-    struct Course
+    struct Course : acceptance::PlayerCourse
     {
-        Scene scene{ nullptr, nullptr };
-        Player* player;
         size_t emitted_projectiles = 0;
 
         Course(World& world, const CombatFeedbackPresentation& feedback)
@@ -96,23 +95,13 @@ namespace
                 &world.preferences, 0, PlayerTeam::a, WeaponType::sprayer,
                 std::move(weapon), WeaponType::none, Colour::white, Viewport{},
                 Vector2F(180, -world.tuning.player().size.y)));
-            const RectangleF floor(-10000, 0, 20000, 100);
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                floor, std::make_unique<RectangleF>(floor), &world.render,
-                CollisionObjectType::structure));
+            this->add_structure(RectangleF(-10000, 0, 20000, 100), world.render);
             this->scene.end_tick();
         }
 
         void tick(const PlayerInputData& actions = input())
         {
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
-            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects()).size();
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            this->emitted_projectiles += this->step(actions).size();
         }
 
         void hit(const ProjectileSpray& shot)

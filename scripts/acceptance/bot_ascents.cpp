@@ -1,10 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
-#include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <iostream>
 
 namespace
@@ -70,20 +66,6 @@ namespace
         throw std::runtime_error("Unknown bot ascent endpoints");
     }
 
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage("close_quarters"); settings.set_duration(30.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
-
     // Only the initial position is injected. No goal, movement, paint,
     // resources or enemy information is supplied to the shipping policy.
     void prepare(Level& level, const World& world, const Trial& trial)
@@ -100,29 +82,9 @@ namespace
             "Ascent initial body does not stand at the named support height");
     }
 
-    float owned_top_paint(const Level& level, const World& world, const RectangleF& support)
-    {
-        const float thickness = world.assets.tuning.paint().thickness;
-        const int owner = paint_owners::index(-1, 1);
-        float area = 0.0f;
-        for (const PaintSurfaceSample& surface : level.paint_surfaces())
-        {
-            if (surface.face != PaintSurfaceFace::top || surface.paint_owner != owner) { continue; }
-            bool belongs = true;
-            for (const Vector2F& corner : surface.corners)
-            {
-                belongs = belongs && corner.x >= support.left() - endpoint_tolerance &&
-                    corner.x <= support.right() + endpoint_tolerance &&
-                    std::fabs(corner.y - support.top()) <= thickness + endpoint_tolerance;
-            }
-            if (belongs) { area += surface.scored_area; }
-        }
-        return area;
-    }
-
     TrialResult run(World& world, const Trial& trial, bool replay_check)
     {
-        const MatchSetup settings = roster(trial);
+        const MatchSetup settings = one_bot_roster("close_quarters", 30.0f, trial.team, trial.tool, trial.difficulty);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const Endpoints route = endpoints(world, trial);
@@ -152,7 +114,7 @@ namespace
             { first_finish = tick; }
             jumps += input.jump_pressed ? 1 : 0;
         }
-        const float paint = owned_top_paint(*level, world, route.finish);
+        const float paint = owned_top_paint(*level, route.finish, world.assets.tuning.paint().thickness);
         // This case qualifies the ordered route. Retained deck paint is a
         // separate measurement for the subsequent territory-usefulness work.
         const bool passed = first_start >= 0 && first_intermediate > first_start && first_finish > first_intermediate &&
@@ -165,20 +127,11 @@ namespace
             " final_y=" << level->player(1).center().y << " route_passed=" << passed << '\n';
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, trial_steps);
-#endif
-            level.reset();
-            level = world.build(settings); prepare(*level, world, trial);
-            tape.playback = true;
-            for (int tick = 0; tick < trial_steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == trial_steps && snapshot(*level) == expected,
-                "Ascent final-input replay changed actors, projectiles or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, trial_steps)).empty(),
-                "Ascent final-input replay changed the complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, trial_steps, physical, [&]
+            {
+                auto replayed = world.build(settings); prepare(*replayed, world, trial);
+                return replayed;
+            }, "Ascent");
         }
         return { passed, trial.route != Route::home_return && paint > 0.0f };
     }

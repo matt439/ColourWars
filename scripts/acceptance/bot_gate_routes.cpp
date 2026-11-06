@@ -16,9 +16,6 @@ namespace
     using namespace labrador;
     using namespace bot_navigation_acceptance;
 
-    PlayerTeam other_team(PlayerTeam team)
-    { return team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a; }
-
     bool contains(const std::vector<RectangleF>& obstacles, const RectangleF& bounds)
     { return std::find(obstacles.begin(), obstacles.end(), bounds) != obstacles.end(); }
 
@@ -278,7 +275,7 @@ namespace
         MatchSetup settings;
         settings.set_player_count(2); settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_player_bot(1, BotDifficulty::hard); settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_player_team(0, other_team(team)); settings.set_player_team(1, team);
+        settings.set_player_team(0, opposing(team)); settings.set_player_team(1, team);
         settings.set_player_weapon(1, WeaponType::sprayer);
         settings.set_stage(team == PlayerTeam::a ? "gate_east" : "gate_west"); settings.set_duration(120.0f);
         return settings;
@@ -362,7 +359,7 @@ namespace
                         "Cannot place the integrated driver's permitted occupant");
                 }
                 auto& gate = const_cast<TeamGateStructurePaintable&>(*changed->team_gates()[0]);
-                paint_gate(world, gate, other_team(team));
+                paint_gate(world, gate, opposing(team));
                 tick_pair();
                 require(same_decision(changed_driver.last, control_driver.last),
                     "The driver invalidated for paint leadership before actual settled permission changed");
@@ -376,8 +373,8 @@ namespace
                     require(same_decision(changed_driver.last, control_driver.last),
                         "Clearing an occupant invalidated navigation before the gate settled");
                 }
-                require(gate.open_for() == other_team(team), "The integrated takeover never settled after clearance");
-                changed_driver.expected = other_team(team);
+                require(gate.open_for() == opposing(team), "The integrated takeover never settled after clearance");
+                changed_driver.expected = opposing(team);
                 tick_pair();
                 require(!same_decision(changed_driver.last, control_driver.last),
                     "The actual driver retained its held decision on the first observation after settled takeover");

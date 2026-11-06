@@ -1,10 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/bot_navigation/fixtures.h"
-#include "game/debug/dev_tools.h"
 #include "scripts/acceptance/support/probe.h"
-#if COLOURWARS_DEV_TOOLS
-#include "game/debug/replay/match_fingerprint.h"
-#endif
 #include <iostream>
 #include <sstream>
 
@@ -86,20 +82,6 @@ namespace
             world.named(left ? route.finish_a : route.finish_b), left ? route.start_x_a : route.start_x_b };
     }
 
-    MatchSetup roster(const Trial& trial)
-    {
-        MatchSetup settings;
-        settings.set_player_count(2);
-        settings.set_player_bot(1, trial.difficulty);
-        settings.begin_input_claims(input_slots::keyboard_and_mouse);
-        settings.set_screen_layout(ScreenLayout::one_player);
-        settings.set_stage(trial.route.stage); settings.set_duration(30.0f);
-        settings.set_player_team(0, trial.team == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a);
-        settings.set_player_team(1, trial.team);
-        settings.set_player_weapon(0, trial.tool); settings.set_player_weapon(1, trial.tool);
-        return settings;
-    }
-
     // Injection ends at initial placement. Goals, observations, resources,
     // subsequent movement and paint come from the ordinary shipping path.
     void prepare(Level& level, const World& world, const Trial& trial)
@@ -116,26 +98,6 @@ namespace
             "Arena-route initial feet are not at the named support height");
     }
 
-    float owned_top_paint(const Level& level, const World& world, const RectangleF& support)
-    {
-        const float thickness = world.assets.tuning.paint().thickness;
-        const int owner = paint_owners::index(-1, 1);
-        float area = 0.0f;
-        for (const PaintSurfaceSample& surface : level.paint_surfaces())
-        {
-            if (surface.face != PaintSurfaceFace::top || surface.paint_owner != owner) { continue; }
-            bool belongs = true;
-            for (const Vector2F& corner : surface.corners)
-            {
-                belongs = belongs && corner.x >= support.left() - endpoint_tolerance &&
-                    corner.x <= support.right() + endpoint_tolerance &&
-                    std::fabs(corner.y - support.top()) <= thickness + endpoint_tolerance;
-            }
-            if (belongs) { area += surface.scored_area; }
-        }
-        return area;
-    }
-
     struct TrialResult
     {
         bool route_passed;
@@ -144,7 +106,7 @@ namespace
 
     TrialResult run(World& world, const Trial& trial, bool replay_check)
     {
-        const MatchSetup settings = roster(trial);
+        const MatchSetup settings = one_bot_roster(trial.route.stage, 30.0f, trial.team, trial.tool, trial.difficulty);
         std::unique_ptr<Level> level = world.build(settings);
         prepare(*level, world, trial);
         const Endpoints route = endpoints(world, trial);
@@ -212,7 +174,7 @@ namespace
                     << " move=" << input.x_movement << " jump=" << input.jump_pressed << " drop=" << input.drop_through << '\n';
             }
         }
-        const float paint = owned_top_paint(*level, world, route.finish);
+        const float paint = owned_top_paint(*level, route.finish, world.assets.tuning.paint().thickness);
         if (std::string_view(trial.route.stage) == "crossfeed" && std::string_view(trial.route.name) == "mixer" &&
             trial.tool == WeaponType::sniper && (trial.difficulty == BotDifficulty::normal ? trial.team == PlayerTeam::b :
                 (trial.team == PlayerTeam::a) == (trial.difficulty == BotDifficulty::easy)))
@@ -238,20 +200,11 @@ namespace
         if (!passed || paint <= 0.0f) { std::cout << paint_trace.str(); }
         if (replay_check)
         {
-            const std::vector<std::uint64_t> expected = snapshot(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint expected_full = MatchFingerprint::of(*level, trial_steps);
-#endif
-            level.reset();
-            level = world.build(settings); prepare(*level, world, trial);
-            tape.playback = true;
-            for (int tick = 0; tick < trial_steps; ++tick) { level->update(physical, dt, &tape); }
-            require(tape.next == trial_steps && snapshot(*level) == expected,
-                "Arena-route final-input replay changed public actors, projectiles or exact paint state");
-#if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(expected_full, MatchFingerprint::of(*level, trial_steps)).empty(),
-                "Arena-route final-input replay changed the complete Debug fingerprint");
-#endif
+            check_final_input_replay(level, tape, trial_steps, physical, [&]
+            {
+                auto replayed = world.build(settings); prepare(*replayed, world, trial);
+                return replayed;
+            }, "Arena-route");
         }
         return { passed, paint > 0.0f };
     }

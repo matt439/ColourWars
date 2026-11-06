@@ -12,6 +12,7 @@
 #include "engine/render/viewport_manager.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -278,11 +279,14 @@ namespace
 
     // Separate preferences model two independently owned player views. These
     // fixtures use real contacts and paid shots, without devices or a save.
-    struct Course
+    // The Course's own preferences, a base so they outlive its Scene and Player.
+    struct CoursePreferences
     {
         PlaySettings preferences;
-        Scene scene{ nullptr, nullptr };
-        Player* player;
+    };
+
+    struct Course : CoursePreferences, acceptance::PlayerCourse
+    {
         size_t emitted_projectiles = 0;
 
         Course(World& world, bool enabled, int slot = 0)
@@ -300,10 +304,7 @@ namespace
                 WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, rectangle.top_left(), Vector2F::zero, 0.0f, Vector2F::zero,
                 SpriteFlip::none, 0.0f, -1, nullptr, &world.presentation.camera().shake));
-            const RectangleF floor(-10000, 0, 20000, 100);
-            this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
-                floor, std::make_unique<RectangleF>(floor), &world.render,
-                CollisionObjectType::structure));
+            this->add_structure(RectangleF(-10000, 0, 20000, 100), world.render);
             this->scene.end_tick();
         }
 
@@ -317,14 +318,7 @@ namespace
             actions.primary_shoot = fire;
             actions.shoot_direction_requested = true;
             actions.shoot_direction = { 1.0f, 0.0f };
-            this->player->set_player_input(actions);
-            this->scene.update(dt);
-            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
-                dt, this->scene.collision_objects()).size();
-            this->scene.resolve();
-            this->player->end_contacts(this->scene.contacts());
-            this->player->update_prev_rectangle();
-            this->scene.end_tick();
+            this->emitted_projectiles += this->step(actions).size();
         }
 
         void hit(const ProjectileSpray& shot)

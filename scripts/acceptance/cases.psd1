@@ -65,16 +65,19 @@ Cases = @(
     }
     @{
         Name = 'cq_blockout'
+        Sources = @('scripts/acceptance/support/route_run.cpp')
         StartRank = 10
     }
     @{
         Name = 'crossfeed'
+        Sources = @('scripts/acceptance/support/route_run.cpp')
         OwnLeg = $true
         StartRank = 1
         SlowInDebug = $true
     }
     @{
         Name = 'press_tower'
+        Sources = @('scripts/acceptance/support/route_run.cpp')
         StartRank = 2
         SlowInDebug = $true
     }
