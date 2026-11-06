@@ -157,7 +157,7 @@ void cursor_material_consumer_checks(Application& app, const Presentation& prese
 }
 
 #if COLOURWARS_DEV_TOOLS
-// Debug adds15 real statements,144 readbacks and72 rows; no additional crops.
+// Debug adds 15 real statements, 144 readbacks and 72 rows; no additional crops.
 void cursor_material_tune_checks(Application& app, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {

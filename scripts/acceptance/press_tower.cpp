@@ -25,7 +25,7 @@ int main(int argc, char** argv)
         std::cout << "PASS Press Tower baseline: mirrored authored geometry, independent paint budget, "
             "summit sightline claims, live-fire spawn safety, spawn respawn safety, jump-free required "
             "crossing, optional climbs and five-tool paint contact. Attended play, camera framing, balance "
-            "and physical-pad acceptance remain open\n";
+            "and physical pads are outside this probe\n";
         return 0;
     });
 }

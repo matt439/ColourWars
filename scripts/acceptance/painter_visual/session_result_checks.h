@@ -317,9 +317,9 @@ void session_result_checks(Application& app, const Canvas& canvas, GameTuning& t
         "\"csv_rows\":30,\"compact_crops\":8,\"page_openings\":13,\"proceed_pops\":13,\"font_negative_controls\":4,"
         "\"resize_updates\":0,\"save_calls\":1,\"crop_pixels\":710640}\n";
     require(summary.good(), "Cannot retain Session result summary");
-    std::cout << "PASS Session outcome leaf: four real best-of3/5 branches and independent plain literals including braces; "
+    std::cout << "PASS Session outcome leaf: four real best-of 3/5 branches and independent plain literals including braces; "
         "actual centered unscaled zero-offset outcome, unchanged score and generated Round heading; captured copy/detailfont "
-        "through assignment/reopen/reversal, real unrevealed/revealed delays, premature Enter/Escape refusal and13fresh pops; "
+        "through assignment/reopen/reversal, real unrevealed/revealed delays, premature Enter/Escape refusal and 13 fresh pops; "
         "frozen ledger/setup/private Save/RNG, zero-update720/1080/720resize,76updates94readbacks30CSVrows4fontcontrols "
         "and8compactcrops710640pixels/2132036PPMbytes,oneprivate seedSave. Both presets normalreader; "
         "no match/global-input/physical-pad/listening/human/performance acceptance.\n";

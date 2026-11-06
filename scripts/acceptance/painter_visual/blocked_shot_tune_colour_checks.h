@@ -264,7 +264,7 @@ void blocked_colour_consumer_checks(Application& app, const Presentation& presen
         "\"owner_budgets_per_instance\":" << BlockedColourProbe::owner_budgets_per_instance << ','
         << "\"readbacks\":32,\"csv_rows\":8,\"crops\":8,\"controls\":8}\n";
     require(summary.good(), "Cannot retain blocked colour consumer summary");
-    std::cout << "PASS blocked colour consumers:32 readbacks,eight compact crops; four normals, full/half ages with0.75 fade, "
+    std::cout << "PASS blocked colour consumers:32 readbacks,eight compact crops; four normals, full/half ages with 0.75 fade, "
         "independent RGBA geometry/channels, opaque parity, alpha/fade controls, stored team beads and complete owner/cue/bounds/RNG snapshots. "
         "One local age preparation, zero Level/StateContext updates; no gameplay or input claims.\n";
 }

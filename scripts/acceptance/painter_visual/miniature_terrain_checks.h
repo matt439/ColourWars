@@ -685,6 +685,6 @@ void miniature_terrain_matrix(Application& app, Registry<LevelLoadedInfo>& level
     require(records.good(), "miniature terrain comparison record write failed");
     std::cout << "PASS miniature terrain: independent exposed edge/masked seam/lit body/major ruler tick and ramp silhouette "
         "pixel oracles, legacy comparisons, actual owned paint overlay, exact native material and Scene parity; "
-        "all six selected stage 1P/4P overview/story contexts at720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
+        "all six selected stage 1P/4P overview/story contexts at 720p/1080p/QHD, resize return, frozen state/RNG and Debug fingerprints. "
         "Muted renderer evidence; human readability, physical pads and performance acceptance remain separate.\n";
 }

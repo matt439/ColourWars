@@ -426,7 +426,7 @@ namespace balance_runner
             "2/4-player device-less owner mapping, 0/uint32-max seeds, bounded Crossfeed sweep, CLI refusals, "
             "exact Unicode paired-file publication, no-overwrite and actual partial-failure preservation. "
             "Metrics are held paint, pre-step full-shot empty readiness, sampled death edges and validated enemy credit; "
-            "final region/face ownership is measured; physical device, listening, statistical reports and balance acceptance remain open.\n"
+            "final region/face ownership is measured; physical devices, listening, statistical reports and balance judgement are outside this probe.\n"
             << "Private CSV evidence: " << labrador::path_to_utf8(evidence) << '\n';
     }
 }

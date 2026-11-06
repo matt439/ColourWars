@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         }
         opening_checks(services);
         std::cout << "PASS Crossfeed baseline feasibility and measured score/tool access. "
-            "Human pressure, camera warning, weapon balance and physical-pad acceptance remain open\n";
+            "Human pressure, camera warning, weapon balance and physical pads are outside this probe\n";
         return 0;
     });
 }

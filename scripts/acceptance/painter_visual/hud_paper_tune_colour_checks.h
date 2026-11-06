@@ -1,5 +1,5 @@
 // Fields56-58: one isolated shared HUD paper family. Existing fixtures stay
-// byte-identical; the independent oracle is bounded to35 material sites.
+// byte-identical; the independent oracle is bounded to 35 material sites.
 enum class HudPaperReference { correct, wrong_ink, omitted_ink, wrong_paper, omitted_paper,
     straight, squared, black_band, no_scale, missing_bottom, missing_right };
 using HudPaperTuple = std::array<Colour, 3>;

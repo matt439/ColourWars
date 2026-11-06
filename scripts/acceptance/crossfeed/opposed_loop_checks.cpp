@@ -809,7 +809,7 @@ namespace crossfeed_acceptance
             "optimal aim or human balance. The tail releases both inputs, so a late respawn may stand at its authored home\n";
         std::cout << "NOTE Crossfeed arrival-gated authored-spawn loops add only eighty actual-opponent-fire trials, reusing "
             "the retained no-opponent-fire controls. The same 600-tick clock, seed, spawn route, aims and launch order apply. "
-            "Each life's fire gate opens only after its first actual supported stopped950 observation after Scene resolution; "
+            "Each life's fire gate opens only after its first actual supported stopped 950 observation after Scene resolution; "
             "the next tick is the first eligible input. Death/nonalive and production respawn close the gate until that life's "
             "new arrival. Closed input must pay nothing; a later life may still receive contacts from old flight. First-ever "
             "global arrival snapshots remain separate from active-window life gate records. Natural recovery remains active; "
@@ -818,7 +818,7 @@ namespace crossfeed_acceptance
         matrix(OpponentMotion::spawn_walking);
         require(arrival_fire_trials == 80, "Crossfeed arrival-gated matrix changed its eighty added firing trials");
         std::cout << "PASS Crossfeed arrival-gated authored-spawn loops: eighty mirrored five-tool home/advancing firing trials, "
-            "both subject aims and subject fire controls, first-supported950 next-tick fire, production-life reset and actual "
+            "both subject aims and subject fire controls, first-supported 950 next-tick fire, production-life reset and actual "
             "payment boundaries, matched retained undamaged attacker routes and bounded released tails; prior 480 trials retained\n";
     }
 }

@@ -431,6 +431,6 @@ namespace colourwars_editor
         for (std::size_t index = 0; index < dpis.size(); ++index)
             sheets[index]->save(scratch / ("mechanism-canvas-" + std::to_string(dpis[index]) + ".bmp"));
         std::cout << "PASS native editor mechanisms: " << contexts << " eraser/gate/cycle/both-heading contexts, actual GDI "
-            "labels/strokes at96/144/192, selection/drag translation, unchanged history/hit/envelopes; 3 BMPs + CSV\n";
+            "labels/strokes at 96/144/192, selection/drag translation, unchanged history/hit/envelopes; 3 BMPs + CSV\n";
     }
 }

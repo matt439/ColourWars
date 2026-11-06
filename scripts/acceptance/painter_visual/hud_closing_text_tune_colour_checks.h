@@ -14,7 +14,7 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
     for (size_t state = 0; state < colours.size(); ++state)
     {
         selected = colours[state]; require(selected.a == 1.0f, "Closing shared palette must stay opaque");
-        main[state] = probe.observe(2, selected, true); // Actual running10, not normal123.
+        main[state] = probe.observe(2, selected, true); // Actual running 10, not normal 123.
         try { HudTimerColourProbe::locality(main[state], main[0], state != 0); }
         catch (...) { probe.preserve_failure(2, "opaque-locality", main[state], main[0]); throw; }
         size_t case_controls = 0, case_pixels = 0;
@@ -57,7 +57,7 @@ void hud_closing_text_colour_consumer_checks(Application& app, const Presentatio
         require(branch[state][0].pixels == branch[state][6].pixels, "Normal clock Reduce Effects relation changed");
         require(branch[state][3].pixels == branch[state][7].pixels, "Settled/reduced closing text frames differ");
         require(main[state == 0 ? 0 : 3].pixels != branch[state][7].pixels,
-            "Closing text beat accents must still distinguish exact10 from reduced10");
+            "Closing text beat accents must still distinguish exact 10 from reduced 10");
     }
     require(csv.good() && branches.good() && probe.readbacks() == 50 && rows == 18 && crops == 4 && controls == 2 &&
         control_pixels > 0 && control_pixels <= 13624, "Closing shared finite read/row/crop/control budget differs");

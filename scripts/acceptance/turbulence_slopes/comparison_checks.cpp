@@ -124,7 +124,7 @@ namespace turbulence_slopes_acceptance
                 candidate["collision_objects"].Size() == 24 && mover.HasMember("collision_objects") && mover["collision_objects"].IsArray() &&
                 mover["collision_objects"].Size() == 22 && candidate.HasMember("include_in_random") &&
                 candidate["include_in_random"].IsBool() && !candidate["include_in_random"].GetBool(),
-                "Four-geometry comparison requires the qualified private24-object slab candidate");
+                "Four-geometry comparison requires the qualified private 24-object slab candidate");
             for (rapidjson::SizeType index = 0; index < 22; ++index)
             { require(candidate["collision_objects"][index] == mover["collision_objects"][index], "Slab comparison changed an original mover-trial object"); }
             for (const auto& member : mover.GetObject())

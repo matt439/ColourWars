@@ -640,7 +640,7 @@ void result_percentage_checks(Application& app, Registry<LevelLoadedInfo>& level
         "Three actual public-builder two-player roller Levels intentionally advance80 updates each to clicked overview; "
         "only opaque monitor inner-card interiors compare independent literal font/outline/width-height fitting over unchanged paper. "
         "Frozen drawing preserves public state, draw RNG and Debug replay fingerprint when available; private preferences/bytes remain unchanged. "
-        "60 StateContext updates plus240 separate Level updates,120 readbacks,105 CSV rows,8 page openings/pops,6 font controls, "
+        "60 StateContext updates plus 240 separate Level updates, 120 readbacks,105 CSV rows,8 page openings/pops,6 font controls, "
         "8 compact crops (681072 pixels /2043334 PPM bytes),one private seed Save. Both presets use the normal reader. "
         "No whole-picture/foreground, global-input, physical-pad, listening, human readability or performance acceptance.\n";
 }

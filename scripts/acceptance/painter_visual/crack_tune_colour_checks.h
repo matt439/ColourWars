@@ -96,7 +96,7 @@ Frame CrackColourProbe::render(size_t context,const std::function<void(DrawList&
     // stay in all full-frame guards; they are not mask exemptions or extra reads.
     list.set_filter(TextureFilter::point);write_raw(list,20,20,24,24,Colour(255,255,255));write_raw(list,25,20,29,24,Colour(0,0,0));
     Frame result=read(renderer);++readbacks_;
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Crack requires1280x720 native frame");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Crack requires 1280x720 native frame");}
     bool calibrated=true;for(int y=20;y<24;++y){for(int x=20;x<29;++x)
     {if(x==24){continue;}const size_t at=offset(result,x,y);const unsigned char value=x<24?255:0;
         calibrated=calibrated&&result.pixels[at]==value&&result.pixels[at+1]==value&&result.pixels[at+2]==value&&result.pixels[at+3]==255;}}

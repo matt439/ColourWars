@@ -20,7 +20,7 @@ int main(int argc, char** argv)
         tool_checks(services);
         std::cout << "PASS CQ first blockout: mirrored gameplay geometry, spawn clearance/respawn, "
             "exposed regional budget, driven routes and five-tool paint contact. "
-            "Attended multiplayer, readability, balance and physical-pad acceptance remain open.\n";
+            "Attended multiplayer, readability, balance and physical pads are outside this probe.\n";
         return 0;
     });
 }

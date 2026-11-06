@@ -360,7 +360,7 @@ namespace turbulence_slab_routes_acceptance
             Trial trial(world, path, groups, side_b);
             int count_in = 0;
             while (!trial.level->match_started() && count_in < 240) { trial.tick(); ++count_in; }
-            require(trial.level->match_started() && count_in == 181, "Public Roller route changed source-tuned181-update count-in");
+            require(trial.level->match_started() && count_in == 181, "Public Roller route changed source-tuned 181-update count-in");
             for (int tick = 0; tick < 60; ++tick) { trial.tick(); }
             flat_stop(trial, uphill ? groups.upper_body : groups.crossover_body, "Public Roller station did not settle at its original flat source");
             require(trial.player().primary_weapon().ready_to_shoot() && trial.player().weapon_ammo() == 1.0f &&
@@ -700,7 +700,7 @@ namespace turbulence_slab_routes_acceptance
     {
         SourceGuard originals(content, slab, shoulder);
         const auto source = parse(read(content / "levels/turbulence_mover_trial.json"));
-        require(source["collision_objects"].Size() == 22, "Public Roller comparison lost its qualified22-object baseline");
+        require(source["collision_objects"].Size() == 22, "Public Roller comparison lost its qualified 22-object baseline");
         int original_ramps = 0;
         for (const auto& object : source["collision_objects"].GetArray())
         { original_ramps += std::string(object["type"].GetString()) == "StructureRamp" ? 1 : 0; }

@@ -162,7 +162,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         std::srand(9353); const int next = std::rand(); std::srand(9353);
         require(actual.pixels == frame().pixels && std::rand() == next, "Frozen stick readout drawing changed pixels or RNG"); unchanged();
     };
-    // ROAD35: paused previews sample a recovered device using the retained logical profile.
+    // ROAD#35: paused previews sample a recovered device using the retained logical profile.
     {
         const SaveData saved_data = preferences.save_data();
         const InputBindings effective_bindings = preferences_session.input_bindings();
@@ -276,7 +276,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             old_device.connected = false; recovery_open(input_slots::keyboard_and_mouse);
             compare("road35-keyboard-owner-recovered", original, recovered_positive); recovery_unchanged();
         }
-        std::cout << "PASS ROAD35 recovered stick preview: 14 cases, 56 literal readouts, " << recovery_ticks <<
+        std::cout << "PASS ROAD#35 recovered stick preview: 14 cases, 56 literal readouts, " << recovery_ticks <<
             " updates; paused logical profiles, keyboard-owner start, replacement disconnect, old-device reconnect and unpaused stale-map controls; private save and roster unchanged\n";
     }
 

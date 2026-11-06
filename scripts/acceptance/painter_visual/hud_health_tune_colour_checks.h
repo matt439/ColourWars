@@ -89,7 +89,7 @@ Frame HudHealthColourProbe::render(size_t context,const std::function<Frame()>& 
 {
     unchanged();const Colour selected=look_.health_colour,expected_selected=expected_.health_colour;
     std::srand(73401);const int next=std::rand();std::srand(73401);Frame result=draw();++readbacks_;
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Health proof requires1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Health proof requires 1280x720 backbuffer");}
     const bool fixed_draw=std::rand()==next&&look_.health_colour==selected&&expected_.health_colour==expected_selected;
     if(!fixed_draw){failure(context,"unknown","draw-state-or-rng",result);}require(fixed_draw,"Health draw consumed RNG or changed selected records");
     unchanged();return result;
@@ -164,7 +164,7 @@ void HudHealthColourProbe::check_roi(size_t context,const Frame& actual,const Fr
     {
         require(colour==Colour(32,96,192,128),"Health source-channel hypothesis covers only the declared partial palette");
         // Four frozen representative RGB/alpha precision models coincide for
-        // this single selected write over184. This is not a universal GPU claim.
+        // this single selected write over 184. This is not a universal GPU claim.
         selected=0x6C8CBCu; //108,140,188, source-only prediction before native qualification.
     }
     const int right=1036+hud_health_fill_width(context);

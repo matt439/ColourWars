@@ -308,7 +308,7 @@ Frame ScribbleColourProbe::render(size_t context,const std::function<void(DrawLi
     renderer.begin_frame();renderer.set_view_count(1);DrawList list=renderer.view(0);
     list.set_viewport(app_.viewport_manager()->fullscreen_viewport());list.set_camera(camera_);list.set_filter(TextureFilter::point);
     canvas.draw(list,screen_);draw(list);++readbacks_;Frame result=read(renderer);
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Scribble requires1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Scribble requires 1280x720 backbuffer");}
     const bool fixed_draw=std::rand()==next&&look_.scribble==selected&&expected_.scribble==expected_selected;
     if(!fixed_draw){failure(context,"unknown","draw-state-or-rng",result);}
     require(fixed_draw,"Scribble draw consumed RNG or changed selected records");

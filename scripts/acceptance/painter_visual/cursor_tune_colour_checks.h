@@ -304,13 +304,13 @@ void cursor_colour_consumer_checks(Application& app, const Presentation& present
         "\"csv_rows\":112,\"case_rows\":14,\"sample_rows\":98,\"crops\":12,\"negative_reference_frames\":10,\"blank_readbacks\":2,"
         "\"full_shape_reference_scope\":\"production-consumer-adoption-only\",\"alpha_reference_scope\":\"independent-raw-sample-patches\",\"event_fade\":false}\n";
     require(summary.good(), "Cannot retain cursor consumer summary");
-    std::cout << "PASS cursor colour consumers:124 readbacks,112 rows,twelve72x80 crops; preconstructed resting/clicking consumers, "
+    std::cout << "PASS cursor colour consumers:124 readbacks,112 rows,twelve 72x80 crops; preconstructed resting/clicking consumers, "
         "copied-baseline full-shape adoption parity,independent raw contour/interior/click alpha samples and negative controls, "
         "shade/shadow residuals and Reduce Effects arrow preservation. Synthetic draw screen_height720,zero local/Level/State updates.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
-// Debug adds15 real statements,168 readbacks and192 rows; no additional crops.
+// Debug adds 15 real statements, 168 readbacks and 192 rows; no additional crops.
 void cursor_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {

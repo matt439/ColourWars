@@ -87,7 +87,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         require(saved_bytes() == saved, "Summary formatting/navigation persisted private preferences");
     };
     const auto tick = [&]
-    { require(++ticks <= 120, "Stage summary exceeded120 bounded page updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    { require(++ticks <= 120, "Stage summary exceeded 120 bounded page updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     {
         std::srand(3581); const int random = std::rand(); std::srand(3581);
@@ -206,6 +206,6 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
     }
     require(ticks == 112 && comparisons == 60 && rows == 120 && captures == 8 && state_guards == 64, "Stage summary checked counts differ from the bounded source loops");
     require(records.good(), "Stage summary CSV write failed");
-    std::cout << "PASS stage summaries: all1-4 sparse rosters, literal BEST OF3/5, solo-bestof5 precedence and Single Match at720/1080; custom3template copy and separate visible detail/brand font IDs, captured unscaled positions/clear shadows/paper bounds through actual browse/Random-lock/unlock refresh, reopen and reversal; unchanged plan/claims/save/input/frozen RNG, no final Random draw. " <<
-        ticks << " updates(hard120), " << comparisons << " summary comparisons, " << state_guards << " independent navigation/status raster guards after32 taps, " << rows << " CSV data rows, " << captures << " compact crops; no broad matrix, match launch or physical/human/performance acceptance\n";
+    std::cout << "PASS stage summaries: all1-4 sparse rosters, literal BEST OF3/5, solo-bestof5 precedence and Single Match at 720/1080; custom3template copy and separate visible detail/brand font IDs, captured unscaled positions/clear shadows/paper bounds through actual browse/Random-lock/unlock refresh, reopen and reversal; unchanged plan/claims/save/input/frozen RNG, no final Random draw. " <<
+        ticks << " updates(hard120), " << comparisons << " summary comparisons, " << state_guards << " independent navigation/status raster guards after 32 taps, " << rows << " CSV data rows, " << captures << " compact crops; no broad matrix, match launch or physical/human/performance acceptance\n";
 }

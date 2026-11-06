@@ -44,7 +44,7 @@ int main(int argc, char** argv)
         {
             std::cout << "PASS isolated shoulder geometry comparison: matched controlled five-tool health and paint samples across "
                 << (slab_stage.empty() ? "static, mover and shoulder" : "static, mover, shoulder and fixed-slab")
-                << " scenes. Geometry selection and attended balance remain open\n";
+                << " scenes. Geometry selection and attended balance are outside this probe\n";
         }
         else if (tools_requested)
         {

@@ -14,7 +14,7 @@ public:
         frame_(sheet_->sprite_frame(sheet_->resolve_sprite_frame(look_.pen_frame)))
     {
         require(look_.canvas_size == Vector2F(68, 120) && look_.pen_width == 4.0f,
-            "Pen fixture requires the reviewed68x120/nib4 recipe");
+            "Pen fixture requires the reviewed 68x120/nib4 recipe");
         preferences_.music_volume = 0; preferences_.sfx_volume = 0;
         preferences_.view_shake = false; preferences_.reduce_effects = false;
         MatchSetup settings; settings.set_player_count(1); settings.set_stage("movement_course");

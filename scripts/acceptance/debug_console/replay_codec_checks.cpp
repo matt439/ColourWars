@@ -85,10 +85,10 @@ namespace debug_console_acceptance
 			"Runs compress");
 		const std::vector<PlayerInputData> expanded = replay_codec::expand(entries);
 		require(same_inputs({ expanded }, { stream }), "Runs expand back");
-		// DBG15: pure replay-name values only; no new file/record/play IO.
+		// DBG#15: pure replay-name values only; no new file/record/play IO.
 		{
 			const std::string first = replay_name("CON");
-			require(first == "_CON", "DBG15 reserved replay stem was not protected: " + first);
+			require(first == "_CON", "DBG#15 reserved replay stem was not protected: " + first);
 			const std::vector<std::string> reserved = reserved_windows_stems();
 			std::size_t protected_names = 1;
 			for (const std::string& stem : reserved)
@@ -102,23 +102,23 @@ namespace debug_console_acceptance
 					{
 						const std::string requested = name + suffix;
 						const std::string actual = replay_name(requested);
-						require(actual == "_" + name, "DBG15 reserved replay stem changed: " + requested + " -> " + actual);
+						require(actual == "_" + name, "DBG#15 reserved replay stem changed: " + requested + " -> " + actual);
 						++protected_names;
 					}
 				}
-			require(protected_names == 199, "DBG15 reserved matrix did not visit every spelling and suffix");
+			require(protected_names == 199, "DBG#15 reserved matrix did not visit every spelling and suffix");
 			for (const char* neighbor : { "COM0", "COM10", "LPT0", "LPT10", "CON_", "_CON", "-CON", "CONSOLE" })
 				for (const char* suffix : { "", ".json", "_json" })
 				{
 					const std::string name(neighbor);
-					require(replay_name(name + suffix) == name, "DBG15 valid neighboring replay stem changed: " + name + suffix);
+					require(replay_name(name + suffix) == name, "DBG#15 valid neighboring replay stem changed: " + name + suffix);
 				}
 			require(replay_name("CON.JSON") == "CON_JSON" && replay_name("CON.JsOn") == "CON_JsOn" &&
 				replay_name("CON.") == "CON_" && replay_name("dir/CON") == "dir_CON" &&
 				replay_name("CON\xC3\xA9") == "CON__" && replay_name("_CON") == "_CON" &&
 				replay_name(".json") == "_json" && replay_name("CON_json_json") == "CON_json",
-				"DBG15 replay protection changed existing suffix case, sanitization or a protected stem");
-			std::printf("PASS DBG15 replay stems: 199 reserved stem/case/suffix values, 24 valid neighbors, "
+				"DBG#15 replay protection changed existing suffix case, sanitization or a protected stem");
+			std::printf("PASS DBG#15 replay stems: 199 reserved stem/case/suffix values, 24 valid neighbors, "
 				"existing case-sensitive suffix and sanitizer controls; pure strings, no record/play or device-path access\n");
 		}
 

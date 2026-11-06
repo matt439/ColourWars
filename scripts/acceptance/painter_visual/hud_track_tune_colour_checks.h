@@ -89,7 +89,7 @@ Frame HudTrackColourProbe::render(size_t context,const std::function<Frame()>& d
 {
     unchanged();const Colour selected=look_.meter_track_colour,expected_selected=expected_.meter_track_colour;
     std::srand(73401);const int next=std::rand();std::srand(73401);Frame result=draw();++readbacks_;
-    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Track proof requires1280x720 backbuffer");}
+    if(result.width!=1280||result.height!=720){failure(context,"unknown","backbuffer-size",result);throw std::runtime_error("Track proof requires 1280x720 backbuffer");}
     const bool fixed_draw=std::rand()==next&&look_.meter_track_colour==selected&&expected_.meter_track_colour==expected_selected;
     if(!fixed_draw){failure(context,"unknown","draw-state-or-rng",result);}require(fixed_draw,"Track draw consumed RNG or changed selected records");
     unchanged();return result;

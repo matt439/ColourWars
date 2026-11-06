@@ -246,5 +246,5 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         game->level().bot_identity(2) == L"P3 - Bot (Hard)", "One-pane bot match lost its pane or bot labels");
     capture("one-pane");
     stack.clear();
-    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at720/1080, Pause/Restart, focus count-in, human disconnect/reconnect, a best-of-5 played to Play Series Again with its ledger kept by Pause Restart and Next Round and reset by Play Series Again; one-pane bot match and Results captured\n";
+    std::cout << "PASS actual mixed GameLevel: sparse human panes, bot world labels at 720/1080, Pause/Restart, focus count-in, human disconnect/reconnect, a best-of-5 played to Play Series Again with its ledger kept by Pause Restart and Next Round and reset by Play Series Again; one-pane bot match and Results captured\n";
 }

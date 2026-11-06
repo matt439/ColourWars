@@ -461,6 +461,6 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     std::cout << "PASS Pad Buttons native:32 physical-slot/face Apply reloads, a skipped-conflict Shoot Apply, "
         "66 independently fitted help/status pairs; pending multi-slot merge, reset/discard, failed-write retry, Controls entry/parent audio, captured text and owner isolation; "
         "two actual owned paused countdown refresh/reversal routes and two mixed4-pad reminder captures; "
-        "private snapshots/save at720/1080, no physical-device or human acceptance\n";
+        "private snapshots/save at 720/1080, no physical-device or human acceptance\n";
 }
 #endif

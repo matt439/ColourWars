@@ -332,7 +332,7 @@ namespace debug_console_acceptance
 				const auto bytes_before = snapshot();
 				const auto first = catalog_impl.registry().complete("play round_json.");
 				require(first.line == "play round_json.json " && first.candidates.empty(),
-					"DBG16: play completion returns the full stored filename before any catalog play probe");
+					"DBG#16: play completion returns the full stored filename before any catalog play probe");
 				const std::vector<std::string> choices{ "_json.json", "plain.json", "round.json",
 					"round_json.json", "round_json_json.json", "stop", "stop.json" };
 				const auto all = catalog_impl.registry().complete("play ");
@@ -379,7 +379,7 @@ namespace debug_console_acceptance
 			const auto print_after = impl.fingerprint();
 			require(original_state() == state_before && print_after && print_after->hash == print_before->hash &&
 				MatchFingerprint::difference(*print_before, *print_after).empty(), "Catalog checks preserve the original CPU match and director state");
-			std::printf("DBG16: 6 private catalog tapes, 7 legacy lookup refusals; no playback armed\n");
+			std::printf("DBG#16: 6 private catalog tapes, 7 legacy lookup refusals; no playback armed\n");
 		}
 
 		// The same seeded bot match again, unrecorded, ends identically.

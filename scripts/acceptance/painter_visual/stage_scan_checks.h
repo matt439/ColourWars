@@ -38,7 +38,7 @@ void stage_scan_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     struct ClearStageScanStates { StateContext& stack; ~ClearStageScanStates() { this->stack.clear(); } } clear{ stack };
     int updates = 0, level_updates = 0, reads = 0, frames = 0, crops = 0, rows = 0, comparisons = 0;
     const auto tick = [&]
-    { require(++updates <= 500, "Stage scan native input exceeded500 updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    { require(++updates <= 500, "Stage scan native input exceeded 500 updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
     const auto frame = [&]() { ++reads; return stack_frame(app); };

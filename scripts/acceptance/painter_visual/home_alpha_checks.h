@@ -1,4 +1,4 @@
-// Draft for inclusion after save_status_checks.h and the ordinary menu probes.
+// Included after save_status_checks.h and the ordinary menu probes.
 // Both presets use real production pages and the normal input backend. A local
 // state stack initializes 13 pages directly: no StateContext update or input
 // event is needed to observe the captured background tint.

@@ -405,5 +405,5 @@ void crossfeed_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         "H1-H5/H7-H8 route, pressure, weapon, recovery and balance measurements belong to separate CPU trials and attended play. No human readability, warning-time, physical-pad, listening or competitive-balance acceptance is established.\n";
     require(summary.good() && scope.good(), "Crossfeed native summary/scope write failed");
     std::cout << "PASS Crossfeed-only hidden native inspection: clean/controlled-heavy 1/2/3/4P moving approaches, actual overview/StagePreview; "
-        "21 full frames/51 native crops/43 readbacks, frozen state/RNG/fingerprint; human readability and balance remain open\n";
+        "21 full frames/51 native crops/43 readbacks, frozen state/RNG/fingerprint; human readability and balance are outside this probe\n";
 }

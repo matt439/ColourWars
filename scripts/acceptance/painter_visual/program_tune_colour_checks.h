@@ -83,7 +83,7 @@ public:
         for (int y = 0; y < actual.height; ++y) { for (int x = 0; x < actual.width; ++x)
             { if (x < 136 || x >= 1143 || y < 59 || y >= 539)
                 { const size_t at = (static_cast<size_t>(y) * static_cast<size_t>(actual.width) + static_cast<size_t>(x)) * 4;
-                  require(same_pixel(actual, baseline, at), "Program palette delta escaped visible1007x480 mask"); } } }
+                  require(same_pixel(actual, baseline, at), "Program palette delta escaped visible 1007x480 mask"); } } }
     }
     static void alpha0_glass(const Frame& actual)
     { for (int y = 58; y < 540; ++y) { for (int x = 135; x < 1144; ++x)

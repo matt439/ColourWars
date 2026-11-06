@@ -172,12 +172,12 @@ namespace debug_console_acceptance
 		require(registry.complete("zzz").line == "zzz" && registry.complete("zzz").candidates.empty(),
 			"No match leaves the line alone");
 
-		// DBG11: Tab must use the same quoted boundaries as execution. Keep
+		// DBG#11: Tab must use the same quoted boundaries as execution. Keep
 		// this literal corruption check first so the old boundary scan fails here.
 		const std::string quoted_data = R"(echo "text; stag)";
 		completion = registry.complete(quoted_data);
 		require(completion.line == quoted_data && completion.candidates.empty(),
-			"DBG11 completion rewrote unfinished quoted argument text");
+			"DBG#11 completion rewrote unfinished quoted argument text");
 
 		struct CompletionCall
 		{
@@ -231,7 +231,7 @@ namespace debug_console_acceptance
 			const std::size_t calls = observed.calls.size();
 			completion = registry.complete(line);
 			require(completion.line == line && completion.candidates.empty() && observed.calls.size() == calls,
-				"DBG11 unfinished quoted text changed or invoked argument completion: " + std::string(line));
+				"DBG#11 unfinished quoted text changed or invoked argument completion: " + std::string(line));
 		}
 
 		struct CompletionCase
@@ -269,7 +269,7 @@ namespace debug_console_acceptance
 			require(completion.line == test.expected && completion.candidates.empty() &&
 				observed.calls.size() == calls + 1 && observed.calls.back().previous == test.previous &&
 				observed.calls.back().partial == "co",
-				"DBG11 completion changed a literal prior argument, index or prefix: " + std::string(test.line));
+				"DBG#11 completion changed a literal prior argument, index or prefix: " + std::string(test.line));
 		}
 
 		// Quoted current words still receive no new completion behavior.
@@ -278,28 +278,28 @@ namespace debug_console_acceptance
 		{
 			completion = registry.complete(line);
 			require(completion.line == line && completion.candidates.empty(),
-				"DBG11 introduced completion inside a quoted current word");
+				"DBG#11 introduced completion inside a quoted current word");
 		}
 		require(registry.complete(R"("stage" mo)").line == R"("stage" movement_course )" &&
 			registry.complete(R"(echo "text; value"; stag)").line == R"(echo "text; value"; stage )" &&
 			registry.complete(" ; \tstag").line == " ; \tstage " &&
 			registry.complete(";stag").line == ";stage ",
-			"DBG11 changed quoted command, real separator, empty statement or whitespace controls");
+			"DBG#11 changed quoted command, real separator, empty statement or whitespace controls");
 
 		observed.choices = { "tuning.player." };
 		require(registry.complete("complete_probe first tun").line == "complete_probe first tuning.player.",
-			"DBG11 changed a continuing dotted path suffix");
+			"DBG#11 changed a continuing dotted path suffix");
 		observed.choices = { "items[" };
 		require(registry.complete("complete_probe first it").line == "complete_probe first items[",
-			"DBG11 changed a continuing indexed path suffix");
+			"DBG#11 changed a continuing indexed path suffix");
 		observed.choices = { "complete_z", "complete_a", "complete_z" };
 		completion = registry.complete("complete_probe first co");
 		require(completion.line == "complete_probe first complete_" && completion.candidates ==
 			std::vector<std::string>{ "complete_a", "complete_z" },
-			"DBG11 changed sorted unique candidates or their common prefix");
+			"DBG#11 changed sorted unique candidates or their common prefix");
 		require(observed.runs == 0 && game.feedback == before_feedback && game.difficulty == before_difficulty &&
 			game.status_runs == before_status_runs && log.lines().size() == before_log_lines,
-			"DBG11 completion executed a command or changed game/log state");
+			"DBG#11 completion executed a command or changed game/log state");
 	}
 
 	void check_clock()

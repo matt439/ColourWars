@@ -170,6 +170,6 @@ namespace turbulence_slopes_acceptance
         }
         csv.close(); require(csv.good(), "Cannot finish shoulder budget receipt");
         std::cout << "PASS shoulder composite public1/4 loads+181countin: independent unit-edge/editor/runtime source-face budgets "
-            "agree at172800 (+7680); ramps remain unscored/paint-pass, flat shoes retain exposed top+underside/end credit\n";
+            "agree at 172800 (+7680); ramps remain unscored/paint-pass, flat shoes retain exposed top+underside/end credit\n";
     }
 }

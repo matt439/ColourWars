@@ -138,7 +138,7 @@ public:
     void check_team(const Frame& actual, bool reduced) const
     {
         // Sprite destinations truncate before applying their source origin.
-        // Rounding 212.8 up to213 samples the three-pixel bead's excluded edge.
+        // Rounding 212.8 up to 213 samples the three-pixel bead's excluded edge.
         const int bead_x = static_cast<int>(cell(6).x - this->geometry_.aim_marker_size * 0.45f);
         require(monitor_rgb(actual, 360, 240) == 0x2CA8CE,
             "Feedback tint changed the opaque recovered team centre");

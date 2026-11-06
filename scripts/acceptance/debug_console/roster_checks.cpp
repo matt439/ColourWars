@@ -334,7 +334,7 @@ namespace debug_console_acceptance
 		director.detach_match(match);
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);
-		std::printf("DBG17: seat statements planned a 2-bot Boost roster; %d updates recorded and replayed\n",
+		std::printf("DBG#17: seat statements planned a 2-bot Boost roster; %d updates recorded and replayed\n",
 			roster_length);
 	}
 }

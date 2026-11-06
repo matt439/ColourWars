@@ -48,7 +48,7 @@ namespace turbulence_slab_stage_acceptance
             const auto stage = parse(read(content / "levels/turbulence_slab_trial.json"));
             const auto original = parse(read(content / "levels/turbulence_mover_trial.json"));
             require(stage["collision_objects"].Size() == 24 && original["collision_objects"].Size() == 22,
-                "Registered slab stage lost its qualified24/22 object inventory");
+                "Registered slab stage lost its qualified 24/22 object inventory");
             for (rapidjson::SizeType index = 0; index < 22; ++index)
             { require(stage["collision_objects"][index] == original["collision_objects"][index], "Registered slab stage changed an original object"); }
             for (auto field = original.MemberBegin(); field != original.MemberEnd(); ++field)

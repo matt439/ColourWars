@@ -272,6 +272,6 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(frame().pixels == new_warning.pixels, "An open Team warning adopted restored copy or fonts");
     open(2); invalid_team(); warning("warning-reversed", original, original_words, true);
     require(captures == 8 && rows > 0 && records.good(), "Connection text evidence is incomplete or exceeded its bounded crop budget");
-    std::cout << "PASS connection text: literal full-bounds Join/Pause/Team rasters at720/1080, sparse claims and all four player/device mappings, reconnect fresh-press Resume/Restart gates, custom copy/font captured refresh/reopen/reversal; " <<
+    std::cout << "PASS connection text: literal full-bounds Join/Pause/Team rasters at 720/1080, sparse claims and all four player/device mappings, reconnect fresh-press Resume/Restart gates, custom copy/font captured refresh/reopen/reversal; " <<
         rows << " CSV checks, " << ticks << " page updates, eight compact crops; no physical-pad, foreground, listening or human readability acceptance\n";
 }

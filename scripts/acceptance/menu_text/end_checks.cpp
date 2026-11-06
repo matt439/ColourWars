@@ -266,7 +266,7 @@ namespace menu_text_acceptance
             d["end_menu"]["heading_y"].SetFloat(89.75f);
         }, &world);
 
-        // The heading's unscaled bottom at940 is below a footer-centered
+        // The heading's unscaled bottom at 940 is below a footer-centered
         // paper's bottom930, but fits the actual full-height paper bottom990.
         std::vector<Glyph> small_glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)

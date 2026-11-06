@@ -253,6 +253,6 @@ namespace crossfeed_acceptance
         require(idle_trials == 200 && departure_trials == 100, "Crossfeed pressure matrix changed its bounded sample count");
         std::cout << "PASS Crossfeed sampled pressure observations: 200 authored-spawn controls and 100 representative "
             "actual-input departures; target bounds and solid clearance checked each step. Unobserved aim, attacker "
-            "movement, all-spawn departure combinations and attended pressure/balance remain open\n";
+            "movement, all-spawn departure combinations and attended pressure/balance are outside this probe\n";
     }
 }

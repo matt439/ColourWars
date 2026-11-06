@@ -188,7 +188,7 @@ function Check-SelectionPaths([string] $Name, [bool] $AbsoluteOutput) {
             "Path preflight did not reach missing CMake: $($observed.diagnostic)"
         Require ($observed.actual_evidence_directory -ceq $expectedEvidence -and
             $observed.output_created -and -not $pathRecord.process_relative_output_created) `
-            'HYG17 acceptance OutputDirectory resolved against process cwd instead of caller PowerShell location.'
+            'HYG#17 acceptance OutputDirectory resolved against process cwd instead of caller PowerShell location.'
         Require ($observed.artifact_files -eq 0 -and -not $observed.helper_loaded) `
             'Acceptance path preflight created build artifacts or loaded the native-process helper.'
         Require-Names $observed.selected @('ammo')

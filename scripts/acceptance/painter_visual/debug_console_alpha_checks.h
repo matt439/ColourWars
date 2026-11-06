@@ -1,4 +1,4 @@
-// Debug-only source draft. Included inside painter_visual's anonymous namespace,
+// Debug-only checks. Included inside painter_visual's anonymous namespace,
 // after its ordinary renderer helpers and tune_colour_checks.h. No input events,
 // state updates, active match, wall clock, Save writes or production tint helper.
 #if COLOURWARS_DEV_TOOLS

@@ -478,13 +478,13 @@ namespace debug_console_acceptance
 
 	void check_screenshot_file(GameTuning& tuning, Presentation& presentation)
 	{
-		// DBG13: setter-only validation on an application-free director. Never
+		// DBG#13: setter-only validation on an application-free director. Never
 		// queue a screenshot or open a proposed folder, including device names.
 		{
 			TestDirector directory_test(tuning, presentation);
 			DebugDirectorImpl& directories = directory_test.impl;
 			require(!directories.user_directory().has_value() && !directories.pending_screenshot().has_value(),
-				"DBG13 setter-only director unexpectedly has a profile or queued capture");
+				"DBG#13 setter-only director unexpectedly has a profile or queued capture");
 			const auto query = [&](const std::string& expected, bool prefix = false)
 			{
 				directories.log().clear();
@@ -492,13 +492,13 @@ namespace debug_console_acceptance
 				const auto& lines = directories.log().lines();
 				require(result.ok && !result.close_console && lines.size() == 1 && lines.front().severity == DebugSeverity::info &&
 					(prefix ? lines.front().text.starts_with(expected) : lines.front().text == expected),
-					"DBG13 current-directory query did not emit its expected fresh info line");
+					"DBG#13 current-directory query did not emit its expected fresh info line");
 			};
 			const auto accept = [&](const std::string& folder, const std::string& expected)
 			{
 				const DebugStatus result = directories.execute("screenshot.dir \"" + folder + "\"");
 				require(result.ok && !result.close_console && directories.screenshot_dir() == expected &&
-					!directories.pending_screenshot().has_value(), "DBG13 valid folder changed: " + folder);
+					!directories.pending_screenshot().has_value(), "DBG#13 valid folder changed: " + folder);
 				query("screenshot.dir = " + expected);
 			};
 			const auto refuse = [&](const std::string& folder, const std::string& message)
@@ -507,7 +507,7 @@ namespace debug_console_acceptance
 				const DebugStatus result = directories.execute("screenshot.dir \"" + folder + "\"");
 				require(!result.ok && !result.close_console && result.message == message &&
 					directories.screenshot_dir() == previous && !directories.pending_screenshot().has_value(),
-					"DBG13 screenshot.dir did not refuse '" + folder + "' immediately while retaining its prior folder: " + result.message);
+					"DBG#13 screenshot.dir did not refuse '" + folder + "' immediately while retaining its prior folder: " + result.message);
 				query("screenshot.dir = " + previous);
 			};
 			accept("retained/session", "retained/session");
@@ -533,7 +533,7 @@ namespace debug_console_acceptance
 							++refusals;
 						}
 				}
-			require(refusals == 397, "DBG13 reserved-name matrix did not visit every spelling, separator and position");
+			require(refusals == 397, "DBG#13 reserved-name matrix did not visit every spelling, separator and position");
 			for (const char* name : { "COM0", "COM10", "LPT0", "LPT10", "CON_", "NULx", "PRNx", "_AUX", "-review" })
 				accept(name, name);
 			const std::string long_name(96, 'q');
@@ -547,7 +547,7 @@ namespace debug_console_acceptance
 			const DebugStatus timed = directories.execute("screenshot.dir review-{time}/frame");
 			require(timed.ok && !timed.close_console && !directories.pending_screenshot().has_value() &&
 				std::regex_match(directories.screenshot_dir(), std::regex("review-[0-9]{8}-[0-9]{6}/frame")),
-				"DBG13 screenshot directory lost its existing local-time expansion");
+				"DBG#13 screenshot directory lost its existing local-time expansion");
 			accept("retained/session", "retained/session");
 			refuse("a/../b", "screenshot.dir: '..' is not allowed");
 			refuse("a/b/c/d", "screenshot.dir: at most three folders");
@@ -565,17 +565,17 @@ namespace debug_console_acceptance
 				require(disabled.ok && !disabled.close_console && directories.screenshot_dir().empty() &&
 					lines.size() == 1 && lines.front().severity == DebugSeverity::info &&
 					lines.front().text.starts_with("screenshot.dir off: ") && !directories.pending_screenshot().has_value(),
-					"DBG13 screenshot directory lost off/empty/query behavior");
+					"DBG#13 screenshot directory lost off/empty/query behavior");
 				query("screenshot.dir = off (", true);
 			}
-			require(!directories.user_directory().has_value(), "DBG13 setter-only validation selected a player profile");
+			require(!directories.user_directory().has_value(), "DBG#13 setter-only validation selected a player profile");
 		}
 
 		const auto now = std::chrono::system_clock::now();
-		// DBG14: pure filename values only; never open a reserved device path.
+		// DBG#14: pure filename values only; never open a reserved device path.
 		{
 			const std::string first = screenshot_file_name("CON", now);
-			require(first == "_CON.png", "DBG14 reserved screenshot basename was not protected: " + first);
+			require(first == "_CON.png", "DBG#14 reserved screenshot basename was not protected: " + first);
 			const std::vector<std::string> reserved = reserved_windows_stems();
 			std::size_t protected_names = 1;
 			for (const std::string& stem : reserved)
@@ -589,24 +589,24 @@ namespace debug_console_acceptance
 					{
 						const std::string requested = name + suffix;
 						const std::string actual = screenshot_file_name(requested, now);
-						require(actual == "_" + name + ".png", "DBG14 reserved basename changed: " + requested + " -> " + actual);
+						require(actual == "_" + name + ".png", "DBG#14 reserved basename changed: " + requested + " -> " + actual);
 						++protected_names;
 					}
 				}
-			require(protected_names == 199, "DBG14 reserved matrix did not visit every spelling and suffix");
+			require(protected_names == 199, "DBG#14 reserved matrix did not visit every spelling and suffix");
 			for (const char* neighbor : { "COM0", "COM10", "LPT0", "LPT10", "CON_", "_CON", "-CON", "CONSOLE" })
 				for (const char* suffix : { "", ".png", ".PnG" })
 				{
 					const std::string name(neighbor);
 					require(screenshot_file_name(name + suffix, now) == name + ".png",
-						"DBG14 valid neighboring basename changed: " + name + suffix);
+						"DBG#14 valid neighboring basename changed: " + name + suffix);
 				}
 			require(screenshot_file_name("CON.", now) == "CON_.png" &&
 				screenshot_file_name("CON.txt", now) == "CON_txt.png" &&
 				screenshot_file_name("dir/CON", now) == "dir_CON.png" &&
 				screenshot_file_name(".png", now) == "_png.png",
-				"DBG14 filename protection changed existing suffix or punctuation sanitization");
-			std::printf("PASS DBG14 screenshot basenames: 199 reserved stem/case/suffix values, 24 valid neighbors, "
+				"DBG#14 filename protection changed existing suffix or punctuation sanitization");
+			std::printf("PASS DBG#14 screenshot basenames: 199 reserved stem/case/suffix values, 24 valid neighbors, "
 				"sanitized punctuation/path controls; pure strings, no capture or reserved-path access\n");
 		}
 

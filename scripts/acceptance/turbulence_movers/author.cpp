@@ -167,7 +167,7 @@ namespace turbulence_movers_acceptance
         }
         author_require(author_read(tuning) == tuning_bytes, "source tuning bytes changed");
         std::cout << "PASS actual LevelDocument mover trial save/reopen: twenty static objects preserved, two public-palette "
-            "one-way paintables, paired320-unit/4-second motion, seven original arena files and tuning byte-identical; "
+            "one-way paintables, paired 320-unit/4-second motion, seven original arena files and tuning byte-identical; "
             "trial remains explicit-only and unregistered pending qualification\n";
     }
 }
