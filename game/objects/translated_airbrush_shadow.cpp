@@ -14,7 +14,7 @@ float TranslatedAirbrushShadow::checked_left(const TranslatingStructurePaintable
 {
     if (resources == nullptr) { throw std::invalid_argument("A translated shadow needs render resources."); }
     const RectangleF rectangle = source.motion_state().spec.anchor;
-    const SpriteSheet* sheet = resources->sprite_sheet(resources->resolve_sprite_sheet(TerrainMaterial::SHEET_NAME));
+    const SpriteSheet* sheet = resources->sprite_sheet(resources->resolve_sprite_sheet(TerrainMaterial::sheet_name));
     const RectangleI tile = sheet->sprite_frame(sheet->resolve_sprite_frame(AirbrushShadow::first_tile)).source_rectangle();
     const float pitch = static_cast<float>(tile.width);
     if (!(pitch > 0.0f)) { throw std::invalid_argument("A translated shadow needs a positive anchor grid pitch."); }

@@ -48,7 +48,7 @@ FixedSlabPaintable::FixedSlabPaintable(const FixedSlabSpec& spec,
         render_resources, CollisionObjectType::structure_fixed_slab),
     geometry_(spec), paint_(checked_paint(paint)), team_colours_(team_colours),
     splash_clips_(PaintSplashClips::resolve(*this->paint_, *render_resources)),
-    terrain_sheet_(render_resources->resolve_sprite_sheet(TerrainMaterial::SHEET_NAME))
+    terrain_sheet_(render_resources->resolve_sprite_sheet(TerrainMaterial::sheet_name))
 {
     // Sound batching remains Level-owned, exactly as for the flat structures.
     // This fixed slice has no separate gravity runoff policy for sloped faces.

@@ -17,7 +17,7 @@ using namespace labrador;
 
 namespace
 {
-	constexpr float cell = TerrainMaterial::CELL;
+	constexpr float cell = TerrainMaterial::cell;
 
 	// Whole cells, never less than one.
 	float cells(float units)

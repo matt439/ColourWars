@@ -18,7 +18,7 @@ namespace
 	{
 		const MenuPresentationVariant variants(content);
 		const OpeningPresentation& shipped = world.presentation.opening();
-		require(shipped.palette_sheet == TerrainMaterial::SHEET_NAME &&
+		require(shipped.palette_sheet == TerrainMaterial::sheet_name &&
 			shipped.palette_frames.size() == static_cast<size_t>(TerrainRole::count),
 			"The monitor palette does not use all roles from the level's terrain kit");
 		for (size_t index = 0; index < shipped.palette_frames.size(); ++index)

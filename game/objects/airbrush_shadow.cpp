@@ -8,7 +8,7 @@ using namespace labrador;
 
 AirbrushShadow::AirbrushShadow(float left, float right, float top,
 	RenderResources* render_resources) :
-	TextureObject(TerrainMaterial::SHEET_NAME, first_tile, render_resources),
+	TextureObject(TerrainMaterial::sheet_name, first_tile, render_resources),
 	tiles_(tiles(*this->sprite_sheet()))
 {
 	this->span_ = RectangleF(left, top, right - left,
