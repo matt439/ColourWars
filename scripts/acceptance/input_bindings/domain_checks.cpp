@@ -85,14 +85,23 @@ namespace input_bindings_acceptance
 
     void require_mapping(const ActionBindings& actual, Key jump, const PadProfile& pad)
     {
-        require(game_action_count == 8 && menu_action_count == 4 && menu_direction_count == 4,
+        require(game_action_count == 9 && menu_action_count == 4 && menu_direction_count == 4,
             "Input binding test surface changed without its explicit physical-control oracle");
+        const auto profile_uses = [&pad](PadControl control)
+        {
+            for (const PadAction pad_action : { PadAction::jump, PadAction::shoot, PadAction::pause })
+            {
+                if (pad[pad_action].primary == control || pad[pad_action].alternate == control) { return true; }
+            }
+            return false;
+        };
         for (size_t index = 0; index < game_action_count; ++index)
         {
             const GameAction action = static_cast<GameAction>(index);
             require(actual.game_desktop[index].keys == expected_game_keys(action, jump) &&
                 actual.game_desktop[index].mouse_buttons == (action == GameAction::shoot ?
-                    std::vector<MouseButton>{ MouseButton::left } : std::vector<MouseButton>{}),
+                    std::vector<MouseButton>{ MouseButton::left } : action == GameAction::sub ?
+                    std::vector<MouseButton>{ MouseButton::right } : std::vector<MouseButton>{}),
                 "Effective bindings changed another gameplay keyboard/mouse action");
             std::vector<GamepadButton> buttons;
             std::vector<TriggerActionBinding> triggers;
@@ -114,6 +123,12 @@ namespace input_bindings_acceptance
             if (action == GameAction::pause) { rebindable(PadAction::pause); }
             if (action == GameAction::debug) { buttons = { GamepadButton::back }; }
             if (action == GameAction::skip_intro) { buttons = { GamepadButton::a, GamepadButton::b, GamepadButton::start }; }
+            // ROAD#11: RB, else LB, else nothing, never a control the profile chose.
+            if (action == GameAction::sub)
+            {
+                if (!profile_uses(PadControl::right_shoulder)) { buttons = { GamepadButton::right_shoulder }; }
+                else if (!profile_uses(PadControl::left_shoulder)) { buttons = { GamepadButton::left_shoulder }; }
+            }
             require(actual.game_pad[index].buttons == buttons, "Effective pad buttons differ from the profile or a fixed alias changed");
             const auto& actual_triggers = actual.game_pad[index].triggers;
             require(actual_triggers.size() == triggers.size(), "Effective pad triggers differ from the profile");

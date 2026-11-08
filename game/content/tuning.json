@@ -462,5 +462,39 @@
             "sheet": "paint_fx",
             "animation": "shot_ball"
         }
+    },
+
+    "subs": {
+        "_comment": "ROAD#11 sub weapons, provisional values until the balance slice. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; both records are paint balls and borrow the bucket's art and sound until the art slice.",
+        "grenade": {
+            "cost": 0.5,
+            "cooldown": 2.5,
+            "throw_speed": 1000.0,
+            "burst_count": 12,
+            "burst_speed": 650.0,
+            "body": {
+                "gravity": 2500.0,
+                "wind_resistance": 20.0,
+                "delete_timer": 1.0,
+                "player_damage": 0.1,
+                "size": { "x": 40.0, "y": 40.0 },
+                "collision_size": { "x": 40.0, "y": 40.0 },
+                "sheet": "paint_fx",
+                "animation": "shot_ball"
+            },
+            "burst": {
+                "gravity": 2500.0,
+                "wind_resistance": 20.0,
+                "delete_timer": 0.35,
+                "player_damage": 0.15,
+                "size": { "x": 36.0, "y": 36.0 },
+                "collision_size": { "x": 36.0, "y": 36.0 },
+                "sheet": "paint_fx",
+                "animation": "shot_ball"
+            },
+            "sound_bank": "paint_exe",
+            "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
+        }
     }
 }

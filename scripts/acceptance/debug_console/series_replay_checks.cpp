@@ -116,8 +116,8 @@ namespace debug_console_acceptance
 			MatchFingerprint::difference(one.final_print, both.round(0).final_print).empty(),
 			"The file holds both rounds, each with its own seed, stage and checks");
 		const std::string bytes = read_text(path);
-		require(bytes.find("\"version\": 9") != std::string::npos &&
-			bytes.find("\"rounds\": [") != std::string::npos, "Format 9 writes the later round");
+		require(bytes.find("\"version\": " + std::to_string(ReplayFile::format_version)) != std::string::npos &&
+			bytes.find("\"rounds\": [") != std::string::npos, "The current format writes the later round");
 		// A written file reads back to the same bytes.
 		both.write(path);
 		require(read_text(path) == bytes, "A two-round file round-trips byte for byte");

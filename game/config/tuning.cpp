@@ -858,6 +858,40 @@ namespace
 
 		return projectile;
 	}
+
+	SubTuning read_sub(const JsonValue& subs, const char* key,
+		const Vector2F& max_velocity, float wind_stop_factor)
+	{
+		const JsonValue json = known_object(subs, key, { "cost", "cooldown",
+			"throw_speed", "burst_count", "burst_speed", "body", "burst",
+			"sound_bank", "throw_sound", "empty_sound" });
+		SubTuning sub;
+		// A sub that costs nothing is a second free tool. Like a shot's
+		// ammo_usage, not compared with weapons.starting_ammo: a tank too small
+		// for the cost is a sub that reads as empty, which is a state, not a
+		// crash (fixtures shrink the tank and keep the shipped subs).
+		sub.cost = read_positive(json, "cost");
+		sub.cooldown = read_non_negative(json, "cooldown");
+		sub.throw_speed = read_positive(json, "throw_speed");
+		sub.burst_count = json.integer("burst_count");
+		// Enough drops to make a ring, and few enough that one burst stays a
+		// handful of projectiles beside four players' tools.
+		if (sub.burst_count < 1 || sub.burst_count > 32)
+		{
+			throw std::runtime_error(json.where() + ": 'burst_count' is " +
+				std::to_string(sub.burst_count) + "; it must be from 1 to 32.");
+		}
+		sub.burst_speed = read_positive(json, "burst_speed");
+		// Both are paint balls: the bucket's kind, swept like it.
+		sub.body = read_projectile(json, "body", ProjectileType::ball, wind_stop_factor);
+		sub.body.max_velocity = max_velocity;
+		sub.burst = read_projectile(json, "burst", ProjectileType::ball, wind_stop_factor);
+		sub.burst.max_velocity = max_velocity;
+		sub.sound_bank = json.string("sound_bank");
+		sub.throw_sound = read_sound(json, "throw_sound");
+		sub.empty_sound = read_sound(json, "empty_sound");
+		return sub;
+	}
 }
 
 GameTuning::GameTuning(const char* path) :
@@ -870,7 +904,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 	this->source_path_ = document.source_path();
 	const JsonValue root = document.root();
 	require_known_keys(root, { "input", "match", "paint", "player", "rumble", "bots",
-		"handicaps", "weapons", "projectiles" });
+		"handicaps", "weapons", "projectiles", "subs" });
 
 	this->input_ = read_input(root);
 	this->match_ = read_match(root);
@@ -930,6 +964,14 @@ GameTuning::GameTuning(const JsonDocument& document)
 	};
 
 	for_each_projectile(add_projectile);
+
+	std::vector<std::string_view> sub_members{ sub_names.begin(), sub_names.end() };
+	const JsonValue subs = known_object(root, "subs", sub_members);
+	for_each_sub([&](SubType type, const char* key)
+	{
+		this->subs_[static_cast<size_t>(type)] = read_sub(subs, key,
+			max_velocity, wind_stop_factor);
+	});
 }
 
 const MatchTuning& GameTuning::match() const
@@ -1020,4 +1062,15 @@ const ProjectileTuning& GameTuning::projectile(ProjectileType type) const
 			" has no tuning in " + this->source_path_ + ".");
 	}
 	return this->projectiles_[index];
+}
+
+const SubTuning& GameTuning::sub(SubType type) const
+{
+	const size_t index = static_cast<size_t>(type);
+	if (index >= sub_count)
+	{
+		throw std::out_of_range("sub " + std::to_string(index) +
+			" has no tuning in " + this->source_path_ + ".");
+	}
+	return this->subs_[index];
 }

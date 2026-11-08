@@ -167,6 +167,7 @@ add_library(colourwars_game STATIC
     objects/projectile_contacts.cpp
     objects/projectile_ball.cpp
     objects/projectile_builder.cpp
+    objects/projectile_grenade.cpp
     objects/projectile_jet.cpp
     objects/projectile_mist.cpp
     objects/projectile_rolling.cpp
@@ -193,6 +194,7 @@ add_library(colourwars_game STATIC
     objects/weapon_builder.cpp
     objects/weapon_details.cpp
     objects/weapon_roller.cpp
+    objects/sub_weapon.cpp
     objects/weapon_sniper.cpp
 
     states/connection_audio.cpp

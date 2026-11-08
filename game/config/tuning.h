@@ -3,6 +3,7 @@
 #include "game/objects/player_team.h"
 #include "game/objects/projectile_details.h"
 #include "game/objects/projectile_type.h"
+#include "game/objects/sub_type.h"
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_type.h"
 #include "game/config/sound_reference.h"
@@ -371,6 +372,30 @@ struct ProjectileTuning
 	float spread_step = 0.0f;
 };
 
+// One sub weapon (ROAD#11). It spends `cost` of the same tank the player's
+// tool uses, and only with the whole cost in the tank; Endless paint ignores
+// the cost, so `cooldown`, which applies in every variant, is what paces it
+// there. The grenade is thrown along the aim at `throw_speed` and bursts on
+// its first contact, or when its body's delete_timer runs out in the air,
+// into `burst_count` drops fanned evenly around it at `burst_speed`. Both
+// records are paint-ball projectiles, so they paint, splash and sound as the
+// bucket's ball does; the drops carry the burst's damage.
+struct SubTuning
+{
+	float cost = 0.0f;
+	float cooldown = 0.0f;
+	float throw_speed = 0.0f;
+	int burst_count = 0;
+	float burst_speed = 0.0f;
+	ProjectileTuning body;
+	ProjectileTuning burst;
+
+	std::string sound_bank;
+	SoundTuning throw_sound;
+	// Played when the button is pressed without the cost in the tank.
+	SoundTuning empty_sound;
+};
+
 // Parsed once at startup and borrowed by gameplay objects, including during
 // updates. Named records are indexed by enum after loading.
 class GameTuning
@@ -414,6 +439,7 @@ public:
 	// Throws std::out_of_range if the requested record was not supplied.
 	const WeaponTuning& weapon(WeaponType type) const;
 	const ProjectileTuning& projectile(ProjectileType type) const;
+	const SubTuning& sub(SubType type) const;
 
 private:
 	std::string source_path_;
@@ -439,6 +465,7 @@ private:
 
 	std::array<WeaponTuning, weapon_count_> weapons_{};
 	std::array<ProjectileTuning, projectile_count_> projectiles_{};
+	std::array<SubTuning, sub_count> subs_{};
 
 	// Distinguish absent records from valid records containing zero values.
 	std::array<bool, weapon_count_> weapon_tuned_{};

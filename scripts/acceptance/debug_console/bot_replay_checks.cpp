@@ -157,14 +157,15 @@ namespace debug_console_acceptance
 		require_same_recording(humans, ReplayFile::read(path));
 		const std::string current = read_text(path);
 		const std::string metadata = ", \"controller\": \"human\", \"difficulty\": \"normal\"";
-		for (const int legacy_version : { 3, 4, 5, 6, 7, 8 })
+		for (const int legacy_version : { 3, 4, 5, 6, 7, 8, 9 })
 		{
 			std::string legacy = replace_once(current, current_version, "\"version\": " + std::to_string(legacy_version));
 			while (legacy.find(metadata) != std::string::npos) { legacy = replace_once(legacy, metadata, ""); }
 			write_text(path, legacy);
 			std::string error;
 			try { ReplayFile::read(path); } catch (const std::exception& failure) { error = failure.what(); }
-			require(error.find("format version " + std::to_string(legacy_version) + "; this build reads only 9") !=
+			require(error.find("format version " + std::to_string(legacy_version) + "; this build reads only " +
+				std::to_string(ReplayFile::format_version)) !=
 				std::string::npos, "A human-only legacy recording was not refused by version: " + error);
 		}
 
@@ -195,6 +196,7 @@ namespace debug_console_acceptance
 		rejects(replace_once(valid, current_version, "\"version\": 5"), "an earlier schema, whose seed was optional");
 		rejects(replace_once(valid, current_version, "\"version\": 6"), "an earlier schema, before vertical lifts");
 		rejects(replace_once(valid, current_version, "\"version\": 7"), "the previous schema, before rounds");
+		rejects(replace_once(valid, current_version, "\"version\": 9"), "the previous schema, before the Sub action");
 
 		write_text(path, "existing recording");
 		MatchSetup invalid_roster = mixed.tape.settings();

@@ -111,7 +111,7 @@ widgets owned by pages or compound widgets such as `OptionRow`.
 Sound has one idiom. Anything that makes a noise reaches its bank by
 inheriting the carried
 [SoundBankObject](../game/carried/sound_bank_object.h) - Level, MatchOpening,
-Player, Weapon, MovementAudio, PaintAudio and the menu pages alike - and
+Player, Weapon, SubWeapon, MovementAudio, PaintAudio and the menu pages alike - and
 resolves its handles once, at construction. Level plays nothing through its
 base any more; it keeps it because resolving the stage's bank there is the
 first check a Level makes, before its roster checks. A sound that keeps playing and has to stop is a
@@ -196,7 +196,10 @@ colour and one frame, so it is not used here.
 3. [Player::update_weapon_and_get_projectiles](../game/objects/player.cpp)
    suppresses firing while dead and calls the owned Weapon. The weapon's shared
    firing workflow updates aim, timers, ammunition and sound, then creates
-   projectiles through its firing hooks.
+   projectiles through its firing hooks. The player's
+   [SubWeapon](../game/objects/sub_weapon.h) then takes the Sub request,
+   spends from the same Weapon's tank and adds its own projectile (the
+   grenade, a `ProjectileGrenade`).
 4. [ProjectileBuilder](../game/objects/projectile_builder.cpp) selects the
    concrete projectile class and returns owned `Projectile` objects. Player
    checks their launch paths for obstructions. Level transfers the surviving
@@ -208,6 +211,9 @@ colour and one frame, so it is not used here.
    engine calls each party's `on_contact`, and
    [Collider](../game/objects/collider.h) dispatches it a second time on the
    other party's class; the engine does not know what painting means.
+   After the tick's contacts, `Level::burst_projectiles` asks each projectile
+   for the drops it leaves (`Projectile::take_burst`; only a grenade has any)
+   and admits them like a fresh launch.
 6. [StructurePaintable::on_projectile_contact](../game/objects/structure_paintable.cpp)
    identifies the reached tiles and calls
    [PaintTile::paint](../game/objects/paint_tile.cpp). A capture changes team and
@@ -295,8 +301,9 @@ For a new selectable primary weapon, keep these registrations together:
    hand. `max_prim_wep` aliases `random_primary`. Compile-time checks beside the
    enum enforce this contiguous order and the boundary after `bucket`; update
    them with the registrations.
-   `grenade_std` is still passed as an ignored secondary placeholder, and `none`
-   marks an unset weapon. Neither belongs in the primary range. Give it a name
+   `none` marks an unset weapon (and is the ignored secondary `Player` still
+   takes); it does not belong in the primary range. Sub weapons are a separate
+   list, `SubType`. Give it a name
    in `weapon_names` beside the enum, at the same position: that one spelling
    is its key in tuning.json and presentation.json, in the save's `last_match`
    and in the Debug match plan.

@@ -11,6 +11,7 @@
 #include "game/objects/player_team.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
+#include "game/objects/sub_weapon.h"
 #include "game/objects/movement_feedback.h"
 #include "game/objects/combat_feedback.h"
 #include "game/objects/movement_audio.h"
@@ -121,7 +122,8 @@ class Player final : public colourwars::MovingObject,
 public:
     // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn
     // rectangle; tuning supplies movement and health parameters.
-    // secondary is currently accepted but ignored; players carry one weapon.
+    // secondary is accepted but ignored: the sub weapon (ROAD#11) arrives
+    // through set_sub_weapon, from SubType rather than WeaponType.
     // The builder supplies sound_index as the roster participant, independently
     // of sparse input slots and device-less bots or Debug dummy players.
     // The match variant captures the weapon's supply policy for this player.
@@ -201,6 +203,10 @@ public:
 
     // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
+    // The sub weapon, which spends this tool's tank; null for a player built
+    // without one, who ignores the Sub action. Set before the match starts.
+    void set_sub_weapon(std::unique_ptr<SubWeapon> sub);
+    const SubWeapon* sub_weapon() const;
     bool aim_marker_allowed() const;
     // Movement facing, which mirrors the figure.
     bool facing_right() const;
@@ -407,6 +413,7 @@ private:
     const PlayerTuning& player_tuning() const;
 
     std::unique_ptr<Weapon> primary_ = nullptr;
+    std::unique_ptr<SubWeapon> sub_ = nullptr;
     RumbleEvents pending_rumble_;
 
     // Health and respawn delay are initialized from tuning in the constructor.

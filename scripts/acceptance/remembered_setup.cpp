@@ -400,7 +400,7 @@ namespace
         candidate = before; candidate.players[0].team = PlayerTeam::none; invalid(candidate);
         candidate = before; candidate.players[0].team = static_cast<PlayerTeam>(999); invalid(candidate);
         candidate = before; candidate.players[1].team = PlayerTeam::b; invalid(candidate);
-        for (WeaponType weapon : {WeaponType::random_primary, WeaponType::grenade_std,
+        for (WeaponType weapon : {WeaponType::random_primary,
             WeaponType::none, static_cast<WeaponType>(999)})
         {
             candidate = before; candidate.players[0].weapon = weapon; invalid(candidate);

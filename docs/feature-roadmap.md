@@ -2105,10 +2105,10 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
 
 - **Sub weapons (`ROAD#11`).** Splatoon pairs each main weapon with a sub
   (bombs, Splash Wall, Sprinkler) that costs a large slice of ink. `Player`
-  already takes a secondary weapon (always `grenade_std`) and ignores it.
-  A sub changes the reserve and balance game, so it waited for `POL#27`;
-  with the five-tool balance accepted on 2026-11-05 it is no longer blocked.
-  Bots (`ROAD#10`) would need to use it.
+  ignored a placeholder secondary until the first slice gave every player a
+  paint grenade (2026-11-08). A sub changes the reserve and balance game, so
+  it waited for `POL#27`; the five-tool balance was accepted on 2026-11-05.
+  Bots (`ROAD#10`) need to use it. [Plan](#sub-weapons-road11).
 - **Results awards (`ROAD#12`, done 2026-10-27).** Splatoon 3 medals and
   TowerFall awards give each player a few call-outs after a match. See
   [Results awards](#results-awards-road12) below.
@@ -2243,10 +2243,10 @@ checks pass. Evidence: `out/validation/road22/`.
 ### Sub weapons (`ROAD#11`)
 
 **Scoped 2026-11-08.** Every player carries a sub weapon beside their tool,
-fired with its own button. `Player` is already built with a secondary
-(`WeaponType::grenade_std`) and ignores it; this replaces that placeholder
-with a separate `SubType` vocabulary, so the five tools and the subs stay two
-lists.
+fired with its own button. `Player` was built with a secondary
+(`WeaponType::grenade_std`) that it ignored; the first slice removed that
+placeholder for a separate `SubType` vocabulary, so the five tools and the
+subs stay two lists.
 
 **Decided (the author, 2026-11-08).** Subs are a **loadout**: each player picks
 one on Weapon Select beside their tool, Random included, and carries it all
@@ -2254,7 +2254,8 @@ match. Fixed kits per tool and map pickups (which would overlap `ROAD#14`)
 were declined. A sub charged by painting is out because `POL#30` was answered
 no.
 
-**Proposed, awaiting the author.**
+**Confirmed (the author, 2026-11-08).** The three subs, the cost and the
+controls below were proposed and accepted as written.
 - **The three subs.** *Paint grenade*: lobbed along the aim, bounces, bursts
   after about a second into a circle of paint that damages enemies in range.
   *Sprinkler*: sticks to the first surface it hits and sprays short bursts
@@ -2280,8 +2281,7 @@ a sub request, so bots, round tapes and Debug replays record it like any other
 command. Debug replay and save formats move a version each where they change.
 
 **Slices**, each a pull request with its own acceptance case:
-1. **Grenade end to end.** Sub action through bindings, Controls page and
-   save; `SubType`, `SubWeapon` and `ProjectileGrenade`; tank cost, Endless
+1. **Grenade end to end.** Sub action through bindings; `SubType`, `SubWeapon` and `ProjectileGrenade`; tank cost, Endless
    paint cooldown; every player carries the grenade. Placeholder art and
    existing waves.
 2. **Bots throw grenades**, using the existing ballistics for the arc, under
@@ -2289,13 +2289,40 @@ command. Debug replay and save formats move a version each where they change.
 3. **Sprinkler.**
 4. **Paint wall**, including which shots it stops.
 5. **Loadout.** Sub row on Weapon Select with Random, `last_match` sub, the
-   Debug match plan, a HUD readiness mark on the tank, and localisation.
+   Debug match plan, the Sub action on the Controls pages and in the save, a
+   HUD readiness mark on the tank, and localisation.
 6. **Bots use the sprinkler and wall**, then a balance pass of sub costs
    against the five tools with the bot trials.
 7. **Art and audio.** Final sprites and new cues in the `paint_exe` bank with
    provenance.
 
 Then the author's attended play review, which implementation does not close.
+
+**Slice 1, done 2026-11-08.** `GameAction::sub` is a new action: pad RB (LB
+when a pad profile already uses RB) and, on the keyboard seat, whichever mouse
+button Shoot does not use. `PlayerInputData::sub_pressed` carries it, the
+resume countdown clears it, and Debug replays move to format 10 for its flag.
+`SubType` ([sub_type.h](../game/objects/sub_type.h)) names the subs, and
+`tuning.json` `subs.grenade` holds the cost (half the tank), the Endless
+cooldown, the throw and burst speeds, the burst's drop count and the body and
+burst projectile records. `Weapon::spend_paint` takes a sub's cost from the
+tool's tank only when the whole cost is there, and leaves it alone under
+Endless paint, where the cooldown alone limits throws. `SubWeapon`
+([sub_weapon.h](../game/objects/sub_weapon.h)) is owned by `Player`, and
+`SubGrenade` throws a `ProjectileGrenade` along the tool's aim (the roller's
+by its tilt) with the player's run added. The grenade bursts into a ring of
+paint drops where it hits, or in the air when its fuse runs out;
+`Level::burst_projectiles` admits the drops after the tick's contacts. Each
+projectile now carries its own player damage, so the drops hurt like the
+burst record says. Placeholder art is the ball shot, and its sounds are the
+bucket's throw and the empty click. The `sub_weapons` acceptance case checks
+the tuning, the tank, the throw, every player's grenade, the controls and a
+real round.
+
+Left for later slices, by plan: the grenade does not bounce (a bounce needs
+the swept contacts to report a surface normal, so it waits for the art pass or
+a play note asking for it); Sub is not yet listed on the Controls pages, so it
+is not rebindable; there is no HUD readiness mark; bots do not throw.
 
 ### Input
 

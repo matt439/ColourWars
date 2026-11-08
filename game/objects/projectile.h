@@ -11,6 +11,7 @@
 #include "game/objects/collider.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
+#include <memory>
 #include <span>
 #include <optional>
 #include <vector>
@@ -72,6 +73,9 @@ public:
 	// The painting team; layer() follows it.
 	PlayerTeam team() const;
 	ProjectileType projectile_type() const { return this->type_; }
+	// Health a hit removes, from this projectile's own record: its kind's,
+	// or a sub's for the grenade and its drops, which share the ball's kind.
+	float player_damage() const { return this->tuning_->details.player_damage; }
 
 	// A muzzle can extend through cover even when its owner cannot. Check
 	// the launch volume before Scene defers its first collision sweep.
@@ -99,6 +103,12 @@ public:
 	// Consume after both callbacks classify the hit, before the projectile is
 	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
 	std::optional<BlockedShotContact> take_blocked_contact();
+	// What this projectile leaves behind as it retires: a sub's grenade
+	// bursts into drops (ProjectileGrenade). Empty for every tool's shot.
+	// Called once its deletion is settled for the tick, by Level for a shot
+	// in flight and by Player for one its launch stopped; each child still
+	// needs its launch resolved from where it starts.
+	virtual std::vector<std::unique_ptr<Projectile>> take_burst() { return {}; }
 protected:
 	virtual void set_rectangle(const labrador::RectangleF& rectangle) = 0;
 	void touch(Collider& receiver,

@@ -427,6 +427,9 @@ private:
 
 	// Update player cameras and submit projectiles produced by their weapons.
 	void update_players(float dt);
+	// Admits the drops of every grenade (Projectile::take_burst) that retired
+	// this tick, after contacts settle and before the shot list follows the scene.
+	void burst_projectiles();
 	void resolve_projectile_movement();
 	// Every scene end_tick() in Level goes through end_scene_tick(), which keeps
 	// projectiles_ in step: retire_projectiles() first prunes it to the shots

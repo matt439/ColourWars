@@ -28,6 +28,9 @@ public:
 		float dt) override;
 	// The roller lays paint where it rolls; it has no aim to mark.
 	bool has_aim_marker() const override { return false; }
+	// Its aim is a fixed downward tilt; a sub leaves at that tilt mirrored
+	// upward, forward of the facing.
+	labrador::Vector2F throw_direction(bool facing_right) const override;
 
 protected:
 	// Ground contact, rather than input, turns the sleeve, lifts it in the

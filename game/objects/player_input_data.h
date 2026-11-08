@@ -16,6 +16,8 @@ struct PlayerInputData
 	labrador::Vector2F shoot_direction = { 0.0f, 0.0f };
 	bool shoot_direction_requested = false;
 	bool primary_shoot = false;
+	// The Sub action's press edge: one throw per press (ROAD#11).
+	bool sub_pressed = false;
 
 	// Held request to drop through a platform, independent of input device.
 	bool drop_through = false;

@@ -382,6 +382,19 @@ namespace
 			add_source(binding, profile.actions[index].alternate, static_cast<PadAction>(index));
 			result.game_pad[static_cast<std::size_t>(actions[index])] = std::move(binding);
 		}
+		// The Sub action (ROAD#11) is not a profile choice yet: it takes RB,
+		// or LB when the profile gave RB to Jump, Shoot or Pause, or nothing
+		// when it gave both away, so it never shares a control with them.
+		const auto used = [&profile](PadControl control)
+		{
+			return std::any_of(profile.actions.begin(), profile.actions.end(),
+				[control](const PadActionChoice& choice)
+				{ return choice.primary == control || choice.alternate == control; });
+		};
+		PadActionBinding sub;
+		if (!used(PadControl::right_shoulder)) { sub.buttons = { GamepadButton::right_shoulder }; }
+		else if (!used(PadControl::left_shoulder)) { sub.buttons = { GamepadButton::left_shoulder }; }
+		result.game_pad[static_cast<std::size_t>(GameAction::sub)] = std::move(sub);
 	}
 }
 
@@ -403,6 +416,11 @@ ActionBindings effective_action_bindings(const InputBindings& preferences)
 	else { shoot.keys = { preferences.keyboard_shoot.key }; }
 	desktop(GameAction::pause).keys = { player_input_consts::pause_key };
 	if (preferences.keyboard_pause != Key::none) { desktop(GameAction::pause).keys.push_back(preferences.keyboard_pause); }
+	// The Sub action (ROAD#11) takes the right mouse button, or the left when
+	// Shoot chose the right. Only Shoot may take a mouse button, so one of
+	// the two is always free.
+	desktop(GameAction::sub).mouse_buttons = {
+		preferences.keyboard_shoot.button == MouseButton::right ? MouseButton::left : MouseButton::right };
 	// A slot that has not chosen reads the default profile's controls.
 	apply_pad_profile(result, PadProfile());
 	return result;

@@ -635,6 +635,36 @@ float Weapon::ammo() const
 	return this->ammo_;
 }
 
+bool Weapon::spend_paint(float cost)
+{
+    if (!std::isfinite(cost) || cost <= 0.0f)
+    {
+        throw std::invalid_argument("Weapon::spend_paint: a sub's cost must be finite and positive");
+    }
+    if (this->endless_paint_) { return true; }
+    if (!this->can_pay(cost)) { return false; }
+    this->alter_ammo(-cost);
+    if (this->ammo() < 0.0f) { this->set_ammo(0.0f); }
+    this->set_ammo_timer(0.0f);
+    // A tank the sub left too low for a shot sounds recovered when it refills.
+    this->awaiting_recovery_ = this->awaiting_recovery_ || !this->can_afford_shot();
+    return true;
+}
+
+bool Weapon::can_pay(float cost) const
+{
+    if (this->endless_paint_) { return true; }
+    // The same allowance a shot has at its boundary, relative to this cost.
+    const float rounding = cost * (8.0f * std::numeric_limits<float>::epsilon());
+    return this->ammo() >= cost ||
+        (this->ammo() > 0.0f && cost - this->ammo() <= rounding);
+}
+
+Vector2F Weapon::throw_direction(bool /*facing_right*/) const
+{
+    return Vector2F::unit_vec_from_angle(this->rotation());
+}
+
 void Weapon::set_endless_paint(bool enabled)
 {
 	this->endless_paint_ = enabled;

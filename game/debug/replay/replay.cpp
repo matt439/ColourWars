@@ -779,7 +779,7 @@ namespace replay_codec
 		const unsigned flags = (input.jump_pressed ? 1u : 0u) | (input.jump_held ? 2u : 0u) |
 			(input.shoot_direction_requested ? 4u : 0u) | (input.primary_shoot ? 8u : 0u) |
 			(input.drop_through ? 16u : 0u) | (input.toggle_debug ? 32u : 0u) |
-			(input.connected ? 128u : 0u);
+			(input.connected ? 128u : 0u) | (input.sub_pressed ? 512u : 0u);
 		char buffer[8] = {};
 		std::snprintf(buffer, sizeof(buffer), "%02x", flags);
 		std::string text = buffer;
@@ -812,7 +812,7 @@ namespace replay_codec
 			return false;
 		}
 		unsigned flags = 0;
-		if (!parse_hex(fields[0], flags) || flags > 0x1ff)
+		if (!parse_hex(fields[0], flags) || flags > 0x3ff)
 		{
 			return false;
 		}
@@ -834,6 +834,7 @@ namespace replay_codec
 		input.drop_through = (flags & 16u) != 0;
 		input.toggle_debug = (flags & 32u) != 0;
 		input.connected = (flags & 128u) != 0;
+		input.sub_pressed = (flags & 512u) != 0;
 		input.x_movement = values[0];
 		input.shoot_direction = { values[1], values[2] };
 		input.shoot_angle = values[3];

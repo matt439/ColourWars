@@ -76,6 +76,16 @@ namespace debug_console_acceptance
 		require(replay_codec::decode("1c0|0|0|0|0|0|0|0|0", decoded) && decoded.connected &&
 			replay_codec::encode(decoded).rfind("80|", 0) == 0,
 			"A recorded seat's old pause and skip flags read and are dropped");
+		// ROAD#11: the Sub action's press is flag 512, the one bit past them.
+		{
+			PlayerInputData thrown;
+			thrown.connected = thrown.sub_pressed = true;
+			PlayerInputData read;
+			require(replay_codec::encode(thrown).rfind("280|", 0) == 0 &&
+				replay_codec::decode(replay_codec::encode(thrown), read) && read.sub_pressed &&
+				replay_codec::same(read, thrown) && !replay_codec::decode("400|0|0|0|0|0|0|0|0", read),
+				"The Sub press round-trips as flag 512, and no flag past it reads");
+		}
 
 		std::vector<PlayerInputData> stream(5, input);
 		stream.push_back(PlayerInputData());
@@ -232,17 +242,17 @@ namespace debug_console_acceptance
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 8, 10 })
+		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 8, 9, 11 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 9"), 12,
+			text.replace(text.find("\"version\": 10"), 13,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads only 9") != std::string::npos,
+				"; this build reads only 10") != std::string::npos,
 				"A previous workshop recording, an older replay or another format is refused: " + message);
 		}
 		// A missing, malformed or unknown option may not silently replay as
