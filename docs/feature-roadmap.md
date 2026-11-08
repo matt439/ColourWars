@@ -2240,6 +2240,63 @@ Debug and Release, for both base English and the bracketed test locale, includin
 per-monitor v2 DPI awareness and graceful shutdown. Markdown links and whitespace
 checks pass. Evidence: `out/validation/road22/`.
 
+### Sub weapons (`ROAD#11`)
+
+**Scoped 2026-11-08.** Every player carries a sub weapon beside their tool,
+fired with its own button. `Player` is already built with a secondary
+(`WeaponType::grenade_std`) and ignores it; this replaces that placeholder
+with a separate `SubType` vocabulary, so the five tools and the subs stay two
+lists.
+
+**Decided (the author, 2026-11-08).** Subs are a **loadout**: each player picks
+one on Weapon Select beside their tool, Random included, and carries it all
+match. Fixed kits per tool and map pickups (which would overlap `ROAD#14`)
+were declined. A sub charged by painting is out because `POL#30` was answered
+no.
+
+**Proposed, awaiting the author.**
+- **The three subs.** *Paint grenade*: lobbed along the aim, bounces, bursts
+  after about a second into a circle of paint that damages enemies in range.
+  *Sprinkler*: sticks to the first surface it hits and sprays short bursts
+  around itself for about 8 seconds; enemy shots destroy it. *Paint wall*: an
+  upright barrier in front of the player for about 4 seconds that stops enemy
+  shots and paints the floor beneath it. Considered instead: a paint mine and
+  a splat jump pad.
+- **Cost.** A sub spends a large share of the same paint tank as the tool
+  (about half), and fires only with the whole cost in the tank. It reuses the
+  tank, the `POL#38` low-paint warning and the paint-underfoot refill. Under
+  Endless paint (`ROAD#22`) the cost is ignored but a per-sub cooldown stays,
+  so subs cannot be spammed. The alternatives were timed charges separate
+  from the tank, or a smaller tank cost plus a cooldown.
+- **Controls.** A new rebindable Sub action: pad RB and the keyboard seat's
+  right mouse button, both unbound today.
+
+**Shape.** C++ says how each sub behaves; `tuning.json` says how much (cost,
+cooldown, fuse, radius, lifetime), and its copy lives in `presentation.json`.
+A `SubWeapon` base, owned by `Player` beside its `Weapon`, launches a sub
+object through new subclasses (`ProjectileGrenade`, a sprinkler and a wall that
+are also `Collider`s), in the game's usual OOP grammar. `PlayerInputData` gains
+a sub request, so bots, round tapes and Debug replays record it like any other
+command. Debug replay and save formats move a version each where they change.
+
+**Slices**, each a pull request with its own acceptance case:
+1. **Grenade end to end.** Sub action through bindings, Controls page and
+   save; `SubType`, `SubWeapon` and `ProjectileGrenade`; tank cost, Endless
+   paint cooldown; every player carries the grenade. Placeholder art and
+   existing waves.
+2. **Bots throw grenades**, using the existing ballistics for the arc, under
+   each difficulty and the refill switch.
+3. **Sprinkler.**
+4. **Paint wall**, including which shots it stops.
+5. **Loadout.** Sub row on Weapon Select with Random, `last_match` sub, the
+   Debug match plan, a HUD readiness mark on the tank, and localisation.
+6. **Bots use the sprinkler and wall**, then a balance pass of sub costs
+   against the five tools with the bot trials.
+7. **Art and audio.** Final sprites and new cues in the `paint_exe` bank with
+   provenance.
+
+Then the author's attended play review, which implementation does not close.
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases

@@ -31,7 +31,8 @@ The remaining queued hygiene rows (`HYG#81`, `HYG#88`-`HYG#92` and `CI#8`) are
 complete (2026-11-07), recorded in [their owner](docs/code-hygiene.md#hygiene-review-2026-11-05).
 The review's engine draft, `ENG#35`, still waits on the author's filing decision.
 `ROAD#22`'s endless-paint slice is complete (2026-11-07), recorded in the
-[roadmap](docs/feature-roadmap.md#endless-paint-road22). No implementation-ready row remains.
+[roadmap](docs/feature-roadmap.md#endless-paint-road22). No implementation-ready row remains. `ROAD#11` (sub weapons) is planned and waits on the
+author confirming its three subs and their cost.
 Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
 rows remain unscoped.
 
@@ -55,7 +56,7 @@ excluded modes.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#11` | UNSCOPED | MED | L | Sub weapons: a second, paint-hungry tool per player (Splatoon subs); `Player` already takes and ignores a secondary. No longer blocked: `POL#27` was accepted 2026-11-05. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
+| `ROAD#11` | DECISION | MED | XL | Sub weapons: a loadout pick beside the tool (decided 2026-11-08), planned in seven slices. Waits on the author confirming the three subs and their paint-tank cost. [Plan](docs/feature-roadmap.md#sub-weapons-road11). |
 | `ROAD#13` | UNSCOPED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials; trial values accepted 2026-11-05). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |
