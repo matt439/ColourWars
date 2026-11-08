@@ -24,7 +24,7 @@ namespace
     using acceptance::require;
     constexpr float dt = simulation::seconds_per_step;
 
-    bool near(float actual, float expected, float tolerance = 0.0001f)
+    bool close_to(float actual, float expected, float tolerance = 0.0001f)
     {
         return std::fabs(actual - expected) <= tolerance;
     }
@@ -133,9 +133,11 @@ namespace
             return !refused([&] { const GameTuning edited(path_to_utf8(path).c_str()); });
         };
         require(loads([](rapidjson::Document&) {}), "An unedited copy of the tuning did not load");
-        require(!loads([&](rapidjson::Document& document)
+        // A cost past a full tank loads, as a shot's does: the sub reads as
+        // empty rather than refusing a fixture that shrinks the tank.
+        require(loads([&](rapidjson::Document& document)
             { document["subs"]["grenade"]["cost"].SetFloat(tuning.starting_ammo() * 1.5f); }),
-            "A sub costing more than a full tank loaded");
+            "A sub costing more than a full tank was refused");
         require(!loads([](rapidjson::Document& document)
             { document["subs"]["grenade"]["cost"].SetFloat(0.0f); }), "A free sub loaded");
         for (const int count : { 0, 33 })
@@ -165,7 +167,7 @@ namespace
             ++paid;
         }
         require(paid == static_cast<int>(std::floor(full / cost + 0.0001f)) &&
-            !tank->spend_paint(cost) && near(tank->ammo(), full - static_cast<float>(paid) * cost),
+            !tank->spend_paint(cost) && close_to(tank->ammo(), full - static_cast<float>(paid) * cost),
             "The tank paid for more or fewer subs than it holds");
 
         // The refill waits out the ordinary delay after a sub, as after a shot.
@@ -217,15 +219,15 @@ namespace
         require(grenade != nullptr && grenade->projectile_type() == ProjectileType::ball &&
             grenade->team() == PlayerTeam::a && grenade->player_num() == 0,
             "The throw was not this player's paint grenade");
-        require(near(grenade->bounds().center().x, origin.x) && near(grenade->bounds().center().y, origin.y),
+        require(close_to(grenade->bounds().center().x, origin.x) && close_to(grenade->bounds().center().y, origin.y),
             "The grenade did not leave the thrower's centre");
         const Vector2F expected = up_right * tuning.throw_speed + Vector2F(running.x, 0.0f);
         const Vector2F measured = flown(*grenade);
-        require(near(measured.x, expected.x, slack) && near(measured.y, expected.y, slack),
+        require(close_to(measured.x, expected.x, slack) && close_to(measured.y, expected.y, slack),
             "The grenade did not leave along the aim with the thrower's run");
-        require(near(tank->ammo(), world.assets.tuning.starting_ammo() - tuning.cost),
+        require(close_to(tank->ammo(), world.assets.tuning.starting_ammo() - tuning.cost),
             "The throw did not take its cost from the tank");
-        require(near(sub->cooldown_remaining(), tuning.cooldown) && !sub->ready(*tank),
+        require(close_to(sub->cooldown_remaining(), tuning.cooldown) && !sub->ready(*tank),
             "The throw did not start the cooldown");
 
         // Inside the cooldown a press throws nothing and costs nothing.
@@ -259,10 +261,10 @@ namespace
             require(dynamic_cast<const ProjectileBall*>(&drop) != nullptr &&
                 drop.team() == PlayerTeam::a && drop.player_num() == 0 &&
                 drop.player_damage() == tuning.burst.details.player_damage &&
-                near(drop.bounds().center().x, centre.x) && near(drop.bounds().center().y, centre.y),
+                close_to(drop.bounds().center().x, centre.x) && close_to(drop.bounds().center().y, centre.y),
                 "A drop did not leave the grenade's centre with the burst's damage");
             const Vector2F measured_drop = flown(*drops[index]);
-            require(near(measured_drop.x, velocity.x, slack) && near(measured_drop.y, velocity.y, slack),
+            require(close_to(measured_drop.x, velocity.x, slack) && close_to(measured_drop.y, velocity.y, slack),
                 "A drop did not fly out along its own spoke at the burst's speed");
         }
         require(grenade->player_damage() == tuning.body.details.player_damage,
@@ -297,7 +299,7 @@ namespace
         thrower.set_player_input(throwing(Vector2F::direction_up));
         auto first = thrower.update_weapon_and_get_projectiles(dt, {});
         require(first.size() == 1 && dynamic_cast<ProjectileGrenade*>(first.front().get()) != nullptr &&
-            flown(*first.front()).y < 0.0f && near(thrower.weapon_ammo(), full - tuning.cost),
+            flown(*first.front()).y < 0.0f && close_to(thrower.weapon_ammo(), full - tuning.cost),
             "A player's Sub press did not throw one grenade along the aim for its cost");
         require(thrower.update_weapon_and_get_projectiles(dt, {}).empty(),
             "A held press threw again inside the cooldown");
@@ -314,7 +316,7 @@ namespace
         auto drops = grenade->take_burst();
         const float health = enemy.health();
         enemy.on_projectile_contact(*drops.front(), Vector2F::zero, 0.0f);
-        require(near(health - enemy.health(), tuning.burst.details.player_damage),
+        require(close_to(health - enemy.health(), tuning.burst.details.player_damage),
             "A drop's hit did not take the burst's damage");
 
         // An eliminated player throws nothing; a respawn clears the cooldown.

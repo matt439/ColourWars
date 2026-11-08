@@ -860,21 +860,17 @@ namespace
 	}
 
 	SubTuning read_sub(const JsonValue& subs, const char* key,
-		float starting_ammo, const Vector2F& max_velocity, float wind_stop_factor)
+		const Vector2F& max_velocity, float wind_stop_factor)
 	{
 		const JsonValue json = known_object(subs, key, { "cost", "cooldown",
 			"throw_speed", "burst_count", "burst_speed", "body", "burst",
 			"sound_bank", "throw_sound", "empty_sound" });
 		SubTuning sub;
-		// A sub that costs nothing is a second free tool, and one that costs
-		// more than a full tank can never be thrown.
+		// A sub that costs nothing is a second free tool. Like a shot's
+		// ammo_usage, not compared with weapons.starting_ammo: a tank too small
+		// for the cost is a sub that reads as empty, which is a state, not a
+		// crash (fixtures shrink the tank and keep the shipped subs).
 		sub.cost = read_positive(json, "cost");
-		if (sub.cost > starting_ammo)
-		{
-			throw std::runtime_error(json.where() + ": 'cost' is " +
-				number_text(sub.cost) + ", more than a full tank (weapons.starting_ammo, " +
-				number_text(starting_ammo) + "), so it could never be thrown.");
-		}
 		sub.cooldown = read_non_negative(json, "cooldown");
 		sub.throw_speed = read_positive(json, "throw_speed");
 		sub.burst_count = json.integer("burst_count");
@@ -974,7 +970,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 	for_each_sub([&](SubType type, const char* key)
 	{
 		this->subs_[static_cast<size_t>(type)] = read_sub(subs, key,
-			this->starting_ammo_, max_velocity, wind_stop_factor);
+			max_velocity, wind_stop_factor);
 	});
 }
 
