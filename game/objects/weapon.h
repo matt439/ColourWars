@@ -86,6 +86,16 @@ public:
 		float dt, float ammo_regen_multiplier = 1.0f);
 
 	float ammo() const;
+	// A sub weapon's draw on this tank (ROAD#11): takes `cost` and restarts
+	// the refill delay, as a paid shot does, only when the tank holds all of
+	// it. Endless paint pays without spending. False leaves the tank alone.
+	bool spend_paint(float cost);
+	// Whether spend_paint(cost) would pay now, without spending.
+	bool can_pay(float cost) const;
+	// Where a thrown sub leaves along this tool's aim: the aim itself, which
+	// keeps the last direction asked for. The roller, whose aim is its fixed
+	// downward tilt, throws forward and up instead.
+	virtual labrador::Vector2F throw_direction(bool facing_right) const;
 	// Match policy, captured when Player is built. Full supply ignores shot
 	// cost, including a cost larger than a tank; cooldown and feedback stay real.
 	void set_endless_paint(bool enabled);

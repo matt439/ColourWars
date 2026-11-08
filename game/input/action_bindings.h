@@ -37,6 +37,10 @@ enum class GameAction
 	pause,
 	debug,
 	skip_intro,
+	// The sub weapon (ROAD#11): pad RB and the right mouse button, or the
+	// nearest free control when a chosen action already holds one
+	// (effective_action_bindings). Not yet a choice on the Controls pages.
+	sub,
 	count
 };
 

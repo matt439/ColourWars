@@ -19,8 +19,8 @@
 // each later round the same way, in `later_rounds`. Written as JSON to
 // %LOCALAPPDATA%\ColourWars\replays\<name>.json. Debug-only.
 //
-// Format version 9 (versions 3 to 8 are refused: a replay holds only on the
-// build that recorded it, DBG#2):
+// Format version 10 (versions 3 to 9 are refused: a replay holds only on the
+// build that recorded it, DBG#2; 10 added the Sub action's flag, 512):
 //   rounds:  written only when the recording crossed a round boundary: one
 //            object per later round, in order, each with its own seed,
 //            stage_hash, settings, updates, gaps, inputs, checkpoints and
@@ -53,7 +53,7 @@
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 9;
+	static constexpr int format_version = 10;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint

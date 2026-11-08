@@ -1,0 +1,418 @@
+#include "game/pch.h"
+#include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/contracts/match_variant.h"
+#include "game/contracts/simulation.h"
+#include "game/input/input_bindings.h"
+#include "game/objects/projectile_ball.h"
+#include "game/objects/projectile_grenade.h"
+#include "game/objects/sub_weapon.h"
+#include "game/objects/weapon_builder.h"
+#include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/probe.h"
+#include <cmath>
+#include <iostream>
+
+// ROAD#11, slice 1: the paint grenade end to end. Its tuning and what the
+// loader refuses; the shared tank's sub cost and Endless paint; the grenade's
+// throw, cooldown and burst; every built player carrying one; the Sub
+// action's default controls and their fallbacks; and a real round in which a
+// thrown grenade alone paints the stage.
+
+namespace
+{
+    using namespace labrador;
+    using acceptance::require;
+    constexpr float dt = simulation::seconds_per_step;
+
+    bool near(float actual, float expected, float tolerance = 0.0001f)
+    {
+        return std::fabs(actual - expected) <= tolerance;
+    }
+
+    // A projectile's velocity is its own business; one step of flight shows
+    // it, give or take that step's gravity and drag: 2500 * dt is under 42
+    // at 60 steps a second, so `slack` covers a ball's first step.
+    Vector2F flown(Projectile& projectile)
+    {
+        const Vector2F before = projectile.bounds().center();
+        projectile.update(dt);
+        return (projectile.bounds().center() - before) / dt;
+    }
+    constexpr float slack = 50.0f;
+
+    MatchSetup setup(MatchVariant variant, bool bot = true)
+    {
+        MatchSetup settings;
+        settings.set_variant(variant);
+        settings.set_player_count(2);
+        if (bot) { settings.set_player_bot(1, BotDifficulty::normal); }
+        settings.begin_input_claims(0);
+        if (!bot) { require(settings.claim_input_slot(1), "Cannot claim the second seat"); }
+        settings.set_screen_layout(layout_for_humans(settings.human_count()));
+        settings.set_stage("crossfeed");
+        settings.set_duration(2.0f);
+        settings.set_player_team(0, PlayerTeam::a);
+        settings.set_player_team(1, PlayerTeam::b);
+        settings.set_player_weapon(0, WeaponType::sprayer);
+        settings.set_player_weapon(1, WeaponType::roller);
+        return settings;
+    }
+
+    class World final
+    {
+    public:
+        explicit World(const std::filesystem::path& content) : assets(content)
+        {
+            auto info = std::make_unique<LevelLoadedInfo>(
+                path_to_utf8(content / "levels/crossfeed.json").c_str());
+            info->validate();
+            levels.add("crossfeed", std::move(info));
+        }
+
+        std::vector<std::unique_ptr<Player>> players(const MatchSetup& settings)
+        {
+            viewports.set_layout(settings.screen_layout());
+            PlayerBuilder builder(&assets.tuning, &assets.presentation);
+            return builder.build_players(settings, levels.get(settings.stage()),
+                TeamColourTools::team_colours(TeamColourPair::blue_orange, assets.presentation.team_palette()),
+                &assets.render, &assets.audio, &assets.preferences, &viewports);
+        }
+
+        std::unique_ptr<Level> level(const MatchSetup& settings)
+        {
+            viewports.set_layout(settings.screen_layout());
+            LevelBuilder builder(&viewports, &assets.render, &assets.audio, &assets.preferences,
+                &levels, &assets.tuning, &assets.presentation, &resolution, nullptr, &partitioner);
+            return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off,
+                MatchRandom(1108));
+        }
+
+        std::unique_ptr<Weapon> tank()
+        {
+            return WeaponBuilder::build_weapon(&assets.tuning, PlayerTeam::a, 0, 0, Colour::white,
+                WeaponType::sprayer, Vector2F::zero, &assets.render, &assets.audio, &assets.preferences);
+        }
+
+        std::unique_ptr<SubWeapon> grenade()
+        {
+            return build_sub_weapon(&assets.tuning, SubType::grenade, PlayerTeam::a, 0,
+                Colour::white, &assets.render, &assets.audio);
+        }
+
+        paint_surfaces_acceptance::World assets;
+        Registry<LevelLoadedInfo> levels{ "sub-weapons" };
+        ResolutionManager resolution;
+        ViewportManager viewports{ &resolution };
+        Partitioner partitioner;
+    };
+
+    template<class Action> bool refused(Action action)
+    {
+        try { action(); }
+        catch (const std::runtime_error&) { return true; }
+        return false;
+    }
+
+    void check_tuning(const World& world, const std::filesystem::path& content)
+    {
+        const GameTuning& tuning = world.assets.tuning;
+        require(sub_name(SubType::grenade) == std::string("grenade") &&
+            sub_from_name("grenade") == SubType::grenade && !sub_from_name("grenade_std"),
+            "The grenade is spelt once, as 'grenade'");
+        const SubTuning& grenade = tuning.sub(SubType::grenade);
+        require(grenade.cost > 0.0f && grenade.cost <= tuning.starting_ammo() &&
+            grenade.cooldown > 0.0f && grenade.burst_count >= 1 && grenade.burst_count <= 32 &&
+            grenade.body.max_velocity == tuning.projectile(ProjectileType::ball).max_velocity &&
+            grenade.burst.details.player_damage > 0.0f,
+            "The shipped grenade has a payable cost, a cooldown, a burst and the shared speed cap");
+
+        acceptance::JsonVariants variants(content / "tuning.json", L"sub-weapons");
+        const auto loads = [&](auto edit)
+        {
+            const auto path = variants.write(edit);
+            return !refused([&] { const GameTuning edited(path_to_utf8(path).c_str()); });
+        };
+        require(loads([](rapidjson::Document&) {}), "An unedited copy of the tuning did not load");
+        require(!loads([&](rapidjson::Document& document)
+            { document["subs"]["grenade"]["cost"].SetFloat(tuning.starting_ammo() * 1.5f); }),
+            "A sub costing more than a full tank loaded");
+        require(!loads([](rapidjson::Document& document)
+            { document["subs"]["grenade"]["cost"].SetFloat(0.0f); }), "A free sub loaded");
+        for (const int count : { 0, 33 })
+        {
+            require(!loads([count](rapidjson::Document& document)
+                { document["subs"]["grenade"]["burst_count"].SetInt(count); }),
+                "A burst outside 1 to 32 drops loaded");
+        }
+        require(!loads([](rapidjson::Document& document)
+            {
+                document["subs"]["grenade"].AddMember("fuse", 1.0f, document.GetAllocator());
+            }), "A misspelt sub key loaded");
+        require(!loads([](rapidjson::Document& document) { document.RemoveMember("subs"); }),
+            "Tuning without its subs loaded");
+        std::cout << "PASS tuning: shipped grenade, cost bounds, burst bounds and unknown keys\n";
+    }
+
+    void check_tank(World& world)
+    {
+        const float full = world.assets.tuning.starting_ammo();
+        const float cost = world.assets.tuning.sub(SubType::grenade).cost;
+        auto tank = world.tank();
+        int paid = 0;
+        while (tank->can_pay(cost) && paid < 100)
+        {
+            require(tank->spend_paint(cost), "A tank that could pay refused");
+            ++paid;
+        }
+        require(paid == static_cast<int>(std::floor(full / cost + 0.0001f)) &&
+            !tank->spend_paint(cost) && near(tank->ammo(), full - static_cast<float>(paid) * cost),
+            "The tank paid for more or fewer subs than it holds");
+
+        // The refill waits out the ordinary delay after a sub, as after a shot.
+        auto refill = world.tank();
+        require(refill->spend_paint(cost), "A full tank refused a sub");
+        const float after = refill->ammo();
+        PlayerInputData idle;
+        idle.connected = true;
+        const int delay_steps = static_cast<int>(world.assets.tuning.ammo_regen_delay() / dt) - 1;
+        for (int step = 0; step < delay_steps; ++step)
+        {
+            refill->update_and_get_projectiles(idle, Vector2F::zero, Vector2F::zero, true, dt);
+        }
+        require(refill->ammo() == after, "The tank refilled inside the delay after a sub");
+        for (int step = 0; step < 120; ++step)
+        {
+            refill->update_and_get_projectiles(idle, Vector2F::zero, Vector2F::zero, true, dt);
+        }
+        require(refill->ammo() > after, "The tank never refilled after a sub");
+
+        auto endless = world.tank();
+        endless->set_endless_paint(true);
+        for (int use = 0; use < 10; ++use)
+        {
+            require(endless->can_pay(cost) && endless->spend_paint(cost), "Endless paint refused a sub");
+        }
+        require(endless->ammo() == full, "Endless paint spent the tank on subs");
+        std::cout << "PASS tank: whole cost only, the refill delay restarts, Endless paint spends nothing\n";
+    }
+
+    void check_throw(World& world)
+    {
+        const SubTuning& tuning = world.assets.tuning.sub(SubType::grenade);
+        auto tank = world.tank();
+        auto sub = world.grenade();
+        const Vector2F origin(100.0f, 200.0f);
+        const Vector2F up_right = Vector2F(1.0f, -1.0f).normalized();
+        const Vector2F running(300.0f, -500.0f);
+
+        require(sub->type() == SubType::grenade && sub->ready(*tank), "A new grenade was not ready");
+        require(sub->update(true, *tank, origin, up_right, running, 0.0f).empty() &&
+            tank->ammo() == world.assets.tuning.starting_ammo(), "A zero step threw");
+        require(sub->update(false, *tank, origin, up_right, running, dt).empty(),
+            "The grenade left without a press");
+
+        auto thrown = sub->update(true, *tank, origin, up_right, running, dt);
+        require(thrown.size() == 1, "A press threw other than one grenade");
+        auto* grenade = dynamic_cast<ProjectileGrenade*>(thrown.front().get());
+        require(grenade != nullptr && grenade->projectile_type() == ProjectileType::ball &&
+            grenade->team() == PlayerTeam::a && grenade->player_num() == 0,
+            "The throw was not this player's paint grenade");
+        require(near(grenade->bounds().center().x, origin.x) && near(grenade->bounds().center().y, origin.y),
+            "The grenade did not leave the thrower's centre");
+        const Vector2F expected = up_right * tuning.throw_speed + Vector2F(running.x, 0.0f);
+        const Vector2F measured = flown(*grenade);
+        require(near(measured.x, expected.x, slack) && near(measured.y, expected.y, slack),
+            "The grenade did not leave along the aim with the thrower's run");
+        require(near(tank->ammo(), world.assets.tuning.starting_ammo() - tuning.cost),
+            "The throw did not take its cost from the tank");
+        require(near(sub->cooldown_remaining(), tuning.cooldown) && !sub->ready(*tank),
+            "The throw did not start the cooldown");
+
+        // Inside the cooldown a press throws nothing and costs nothing.
+        const float before = tank->ammo();
+        require(sub->update(true, *tank, origin, up_right, running, dt).empty() && tank->ammo() == before,
+            "A press inside the cooldown threw");
+        sub->reset();
+        require(sub->cooldown_remaining() == 0.0f, "Reset kept the cooldown");
+
+        // A press the tank cannot pay for throws nothing and leaves it alone.
+        while (tank->can_pay(tuning.cost)) { tank->spend_paint(tuning.cost); }
+        const float short_of = tank->ammo();
+        require(sub->update(true, *tank, origin, up_right, running, dt).empty() &&
+            tank->ammo() == short_of && sub->cooldown_remaining() == 0.0f,
+            "A tank short of the cost threw or was charged");
+
+        // The grenade bursts once, and only once it has retired.
+        require(grenade->take_burst().empty() && !grenade->burst(), "The grenade burst in flight");
+        grenade->set_for_deletion(true);
+        const Vector2F centre = grenade->bounds().center();
+        // Spoke 0 is straight up; the rest follow evenly round the circle.
+        auto drops = grenade->take_burst();
+        require(static_cast<int>(drops.size()) == tuning.burst_count && grenade->burst() &&
+            grenade->take_burst().empty(), "The grenade did not burst into its drops exactly once");
+        for (size_t index = 0; index < drops.size(); ++index)
+        {
+            const Projectile& drop = *drops[index];
+            const float angle = -pi / 2.0f + 2.0f * pi * static_cast<float>(index) /
+                static_cast<float>(drops.size());
+            const Vector2F velocity = Vector2F::unit_vec_from_angle(angle) * tuning.burst_speed;
+            require(dynamic_cast<const ProjectileBall*>(&drop) != nullptr &&
+                drop.team() == PlayerTeam::a && drop.player_num() == 0 &&
+                drop.player_damage() == tuning.burst.details.player_damage &&
+                near(drop.bounds().center().x, centre.x) && near(drop.bounds().center().y, centre.y),
+                "A drop did not leave the grenade's centre with the burst's damage");
+            const Vector2F measured_drop = flown(*drops[index]);
+            require(near(measured_drop.x, velocity.x, slack) && near(measured_drop.y, velocity.y, slack),
+                "A drop did not fly out along its own spoke at the burst's speed");
+        }
+        require(grenade->player_damage() == tuning.body.details.player_damage,
+            "The grenade's body does not carry its own damage");
+        std::cout << "PASS throw: aim and run, cost, cooldown, short tank, one even burst\n";
+    }
+
+    PlayerInputData throwing(const Vector2F& aim)
+    {
+        PlayerInputData input;
+        input.connected = true;
+        input.sub_pressed = true;
+        input.shoot_direction_requested = true;
+        input.shoot_direction = aim;
+        input.shoot_angle = aim.angle();
+        return input;
+    }
+
+    void check_players(World& world)
+    {
+        const float full = world.assets.tuning.starting_ammo();
+        const SubTuning& tuning = world.assets.tuning.sub(SubType::grenade);
+        auto players = world.players(setup(MatchVariant::standard));
+        for (const auto& player : players)
+        {
+            require(player->sub_weapon() != nullptr && player->sub_weapon()->type() == SubType::grenade,
+                "A human or bot was built without the grenade");
+        }
+        Player& thrower = *players[0];
+        Player& enemy = *players[1];
+
+        thrower.set_player_input(throwing(Vector2F::direction_up));
+        auto first = thrower.update_weapon_and_get_projectiles(dt, {});
+        require(first.size() == 1 && dynamic_cast<ProjectileGrenade*>(first.front().get()) != nullptr &&
+            flown(*first.front()).y < 0.0f && near(thrower.weapon_ammo(), full - tuning.cost),
+            "A player's Sub press did not throw one grenade along the aim for its cost");
+        require(thrower.update_weapon_and_get_projectiles(dt, {}).empty(),
+            "A held press threw again inside the cooldown");
+
+        // The roller, whose aim is a fixed downward tilt, throws forward and up.
+        enemy.set_player_input(throwing(Vector2F::direction_down));
+        auto lobbed = enemy.update_weapon_and_get_projectiles(dt, {});
+        require(lobbed.size() == 1 && flown(*lobbed.front()).y < 0.0f,
+            "The roller threw its grenade at the floor");
+
+        // A drop's hit takes the burst's damage, not the bucket's.
+        auto grenade = std::move(first.front());
+        grenade->set_for_deletion(true);
+        auto drops = grenade->take_burst();
+        const float health = enemy.health();
+        enemy.on_projectile_contact(*drops.front(), Vector2F::zero, 0.0f);
+        require(near(health - enemy.health(), tuning.burst.details.player_damage),
+            "A drop's hit did not take the burst's damage");
+
+        // An eliminated player throws nothing; a respawn clears the cooldown.
+        thrower.kill();
+        thrower.set_player_input(throwing(Vector2F::direction_up));
+        require(thrower.update_weapon_and_get_projectiles(dt, {}).empty(), "An eliminated player threw");
+        thrower.force_respawn();
+        require(thrower.update_weapon_and_get_projectiles(dt, {}).size() == 1,
+            "A respawned player kept the cooldown or lost the tank");
+
+        // Endless paint: the tank stays full and the cooldown paces the throws.
+        auto endless = world.players(setup(MatchVariant::endless_paint));
+        endless[0]->set_player_input(throwing(Vector2F::direction_up));
+        const float seconds = 10.0f;
+        int throws = 0;
+        for (int step = 0; step < static_cast<int>(seconds / dt); ++step)
+        {
+            for (const auto& released : endless[0]->update_weapon_and_get_projectiles(dt, {}))
+            {
+                throws += dynamic_cast<const ProjectileGrenade*>(released.get()) != nullptr ? 1 : 0;
+            }
+            require(endless[0]->weapon_ammo() == full, "Endless paint spent the tank on a grenade");
+        }
+        const int paced = static_cast<int>(std::floor(seconds / tuning.cooldown)) + 1;
+        require(throws >= paced - 1 && throws <= paced, "Endless paint did not pace grenades by the cooldown");
+        std::cout << "PASS players: every seat carries one, aim, roller lob, burst damage, elimination, Endless paint\n";
+    }
+
+    void check_controls()
+    {
+        const auto pad_sub = [](const ActionBindings& bindings)
+        { return bindings.game_pad[static_cast<size_t>(GameAction::sub)].buttons; };
+        const auto mouse_sub = [](const ActionBindings& bindings)
+        { return bindings.game_desktop[static_cast<size_t>(GameAction::sub)].mouse_buttons; };
+
+        const ActionBindings& defaults = default_action_bindings();
+        require(pad_sub(defaults) == std::vector<GamepadButton>{ GamepadButton::right_shoulder } &&
+            mouse_sub(defaults) == std::vector<MouseButton>{ MouseButton::right } &&
+            defaults.game_desktop[static_cast<size_t>(GameAction::sub)].keys.empty(),
+            "The Sub action's defaults are not RB and the right mouse button");
+
+        InputBindings rb_jump;
+        rb_jump.pads[1][PadAction::jump] = { PadControl::right_shoulder, PadControl::none };
+        require(pad_sub(effective_action_bindings(rb_jump, 1)) == std::vector<GamepadButton>{ GamepadButton::left_shoulder } &&
+            pad_sub(effective_action_bindings(rb_jump, 0)) == std::vector<GamepadButton>{ GamepadButton::right_shoulder },
+            "A profile that gave RB away did not move only its own Sub to LB");
+
+        InputBindings both;
+        both.pads[2][PadAction::jump] = { PadControl::right_shoulder, PadControl::left_shoulder };
+        require(pad_sub(effective_action_bindings(both, 2)).empty(),
+            "Sub shared a shoulder a profile chose for another action");
+
+        InputBindings right_shoot;
+        right_shoot.keyboard_shoot = { Key::none, MouseButton::right };
+        require(mouse_sub(effective_action_bindings(right_shoot)) == std::vector<MouseButton>{ MouseButton::left },
+            "Sub shared the right mouse button with Shoot");
+        std::cout << "PASS controls: RB and right mouse, the free shoulder or button when taken\n";
+    }
+
+    void check_round(World& world)
+    {
+        const MatchSetup settings = setup(MatchVariant::standard, false);
+        auto level = world.level(settings);
+        level->start_without_countdown();
+        std::vector<PlayerInputData> devices(input_slots::count);
+        devices[0].connected = true;
+        devices[1].connected = true;
+        const int burst = world.assets.tuning.sub(SubType::grenade).burst_count;
+        int most = 0;
+        for (int step = 0; step < 90; ++step)
+        {
+            // One press, aimed down at the floor; never the tool.
+            devices[0] = step == 0 ? throwing(Vector2F::direction_down) : PlayerInputData{};
+            devices[0].connected = true;
+            level->update(devices, dt);
+            most = std::max(most, level->projectile_count());
+        }
+        require(most >= burst, "The thrown grenade never burst into its drops in the round");
+        const LevelEndInfo result = level->level_end_info();
+        require(result.team_a_area > 0.0f && result.team_b_area == 0.0f,
+            "A grenade alone did not paint the stage for its team");
+        std::cout << "PASS round: one thrown grenade bursts and paints without the tool\n";
+    }
+}
+
+int wmain(int argc, wchar_t* argv[])
+{
+    return acceptance::run_probe("sub weapons", [&]
+    {
+        require(argc == 2, "sub_weapons <content>");
+        const std::filesystem::path content = std::filesystem::absolute(argv[1]);
+        World world(content);
+        check_tuning(world, content);
+        check_tank(world);
+        check_throw(world);
+        check_players(world);
+        check_controls();
+        check_round(world);
+        return 0;
+    });
+}

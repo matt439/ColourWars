@@ -261,7 +261,7 @@ namespace moving_structure_acceptance
             auto* result = scene->add(std::make_unique<Player>(body, &tuning,
                 &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
                 &world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
-                slot, team, tool, std::move(primary), WeaponType::grenade_std, world.palette.team_colour(team),
+                slot, team, tool, std::move(primary), WeaponType::none, world.palette.team_colour(team),
                 viewports.player_viewport(view), body.top_left(), initial_velocity,
                 0.0f, labrador::Vector2F::zero, labrador::SpriteFlip::none, 0.0f, view,
                 &world.presentation.figure(), &world.presentation.camera().shake));

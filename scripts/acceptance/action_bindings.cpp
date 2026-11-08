@@ -165,7 +165,10 @@ namespace
 	}
 	void check_pure(const InputTuning& tuning)
 	{
-		require(game_action_count == 8 && menu_action_count == 4 && menu_direction_count == 4,
+		// The eight actions with a legacy reader; the Sub action (ROAD#11) came
+		// after them, and sub_weapons checks its controls.
+		require(game_action_count == 9 && GameAction::sub == static_cast<GameAction>(8) &&
+			menu_action_count == 4 && menu_direction_count == 4,
 			"The bounded default action surface changed without its legacy comparison");
 		const ActionBindings& bindings = default_action_bindings();
 		const auto desktop = [&](const KeyboardState& now, const KeyboardState& before,

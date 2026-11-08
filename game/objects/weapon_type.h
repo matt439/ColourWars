@@ -13,7 +13,6 @@ enum class WeaponType
     mister,
     bucket,
     random_primary,
-    grenade_std,
     none,
     max_prim_wep = random_primary
 };

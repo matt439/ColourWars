@@ -153,7 +153,11 @@ namespace input_bindings_acceptance
             "Custom keyboard mapping wrote the wrong sources or changed a fixed alias");
         for (size_t index = 0; index < game_action_count; ++index)
         {
-            if (static_cast<GameAction>(index) != GameAction::shoot)
+            // Sub (ROAD#11) takes whichever mouse button Shoot left: the left one here.
+            if (static_cast<GameAction>(index) == GameAction::sub)
+            { require(effective.game_desktop[index].mouse_buttons == std::vector<MouseButton>{ MouseButton::left },
+                "Sub did not take the mouse button Shoot left free"); }
+            else if (static_cast<GameAction>(index) != GameAction::shoot)
             { require(effective.game_desktop[index].mouse_buttons.empty(), "A mouse button reached a non-Shoot action"); }
             require(effective.game_pad[index].buttons == default_action_bindings().game_pad[index].buttons,
                 "Keyboard choices changed a pad source");

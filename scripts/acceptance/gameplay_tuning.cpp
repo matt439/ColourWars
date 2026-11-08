@@ -323,6 +323,12 @@ namespace
         {
             d["projectiles"]["wind_stop_factor"].SetFloat(std::numeric_limits<float>::max());
             for (const char* name : projectile_names) { d["projectiles"][name]["wind_resistance"].SetInt(1); }
+            // A sub's two records share the factor (ROAD#11).
+            for (const char* name : sub_names)
+            {
+                d["subs"][name]["body"]["wind_resistance"].SetInt(1);
+                d["subs"][name]["burst"]["wind_resistance"].SetInt(1);
+            }
         });
         require(max_factor.projectile(ProjectileType::spray).wind_stop_factor == std::numeric_limits<float>::max(),
             "Finite wind product at the float boundary was rejected");

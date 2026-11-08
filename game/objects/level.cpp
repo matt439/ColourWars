@@ -395,6 +395,8 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 			this->blocked_shot_feedback_->emit(*contact);
 		}
 	}
+	// A sub's grenade that retired this tick bursts where it stopped.
+	this->burst_projectiles();
 
 	// Loss of ground support is known only after all contacts have been dispatched.
 	for (Player* player : this->players_)
@@ -492,6 +494,35 @@ void Level::update_players(float dt)
 			// Scene owns the shot; the typed pointer add() returns is what the
 			// tick's projectile walks use. Pending until end_tick() admits it.
 			this->pending_projectiles_.push_back(this->scene_->add(std::move(projectile)));
+		}
+	}
+}
+
+void Level::burst_projectiles()
+{
+	std::vector<std::unique_ptr<Projectile>> drops;
+	for (Projectile* projectile : this->projectiles_)
+	{
+		for (auto& drop : projectile->take_burst())
+		{
+			drops.push_back(std::move(drop));
+		}
+	}
+	for (auto& drop : drops)
+	{
+		// A drop starts inside whatever stopped the grenade only by overlap:
+		// it has not travelled, so its launch is its own position.
+		drop->resolve_launch_obstruction(drop->bounds().center(),
+			this->structures_.projectile_targets());
+		drop->flush_paint_audio(*this->paint_audio_);
+		if (const auto contact = drop->take_blocked_contact())
+		{
+			this->blocked_shot_feedback_->emit(*contact);
+		}
+		if (!drop->for_deletion())
+		{
+			// Pending, like a tool's shot, until end_tick() admits it.
+			this->pending_projectiles_.push_back(this->scene_->add(std::move(drop)));
 		}
 	}
 }

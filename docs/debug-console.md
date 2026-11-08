@@ -1088,8 +1088,10 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 8** (`DBG#2` added later rounds, so format 7 is refused;
-`ROAD#28` had moved the motion block to schema 2 for vertical lifts), with
+Files use **format 10** (`DBG#2` added later rounds, so format 7 is refused;
+`ROAD#28` had moved the motion block to schema 2 for vertical lifts, `ROAD#22`
+made each round's variant required in format 9, and `ROAD#11` added the Sub
+action's input flag, 512, in format 10), with
 explicit human/bot controller kind and
 Easy/Normal/Hard difficulty for each participant. `seed` is required and is the
 round seed, which `play` builds from, so a recording made without `seed`
@@ -1105,7 +1107,7 @@ round boundary adds `rounds`: one object per later round, each with its own
 content hashes, `tune_diff` and cheats are shared. A one-round file has no
 `rounds` and is otherwise format 7's bytes.
 Formats 3 and 4 (which noted suspends only), 5 (whose `seed` was the
-optional developer seed), 6 and 7 are refused: a replay holds only on the
+optional developer seed), 6 to 9 are refused: a replay holds only on the
 build that recorded it. The metadata is strict; bot seats cannot own devices and P1 must
 be human. Human difficulty is unused and written as
 Normal. Normal setup now supports playable bots

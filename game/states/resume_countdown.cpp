@@ -58,6 +58,8 @@ void ResumeCountdown::filter_inputs(std::vector<SlotInput>& inputs)
 		// Keep jump_held: an airborne held jump resumes its existing arc.
 		// Level::suspend has already cleared buffers and stale press arming.
 		if (counting || held.fire) { input.primary_shoot = false; }
+		// A press edge cannot be held over: one during the count is dropped.
+		if (counting) { input.sub_pressed = false; }
 		if (counting || held.drop) { input.drop_through = false; }
 
 		if (held.pause && input.toggle_pause_menu)

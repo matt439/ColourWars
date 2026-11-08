@@ -109,6 +109,16 @@ void GameTuning::validate_resources(const RenderResources& render,
 			details.sheet_name, details.animation_strip_name);
 	};
 	for_each_projectile(projectile);
+
+	for_each_sub([&](SubType type, const char* key)
+	{
+		const SubTuning& entry = this->sub(type);
+		const std::string prefix = std::string("subs.") + key;
+		check.animation(prefix + ".body.animation",
+			entry.body.details.sheet_name, entry.body.details.animation_strip_name);
+		check.animation(prefix + ".burst.animation",
+			entry.burst.details.sheet_name, entry.burst.details.animation_strip_name);
+	});
 }
 
 void GameTuning::validate_match_sounds(const RenderResources& render,
@@ -215,6 +225,14 @@ std::vector<SoundReference> GameTuning::sound_references() const
 		}
 	};
 	for_each_tuned_weapon(weapon);
+
+	for_each_sub([&](SubType type, const char* key)
+	{
+		const SubTuning& entry = this->sub(type);
+		const std::string prefix = std::string("subs.") + key;
+		wave(prefix + ".throw_sound.name", entry.sound_bank, entry.throw_sound.name);
+		wave(prefix + ".empty_sound.name", entry.sound_bank, entry.empty_sound.name);
+	});
 	return sounds;
 }
 

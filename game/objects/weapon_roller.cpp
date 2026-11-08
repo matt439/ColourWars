@@ -73,6 +73,12 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     this->set_invert_y(aim_faces_left(this->rotation()));
 }
 
+Vector2F WeaponRoller::throw_direction(bool facing_right) const
+{
+    const float tilt = this->weapon_tuning_->aim_tilt;
+    return Vector2F::unit_vec_from_angle(facing_right ? -tilt : pi + tilt);
+}
+
 void WeaponRoller::advance_travel_motion(bool supported, bool established_support,
     float signed_distance, float dt)
 {

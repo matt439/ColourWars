@@ -984,9 +984,9 @@ void Player::on_projectile_contact(const Projectile& source,
         return;
     }
 
-    // Damage belongs to the projectile's tuning record.
-    const float damage = this->tuning_->projectile(
-        source.projectile_type()).details.player_damage *
+    // Damage belongs to the projectile's own tuning record: its kind's for a
+    // tool's shot, the sub's for a grenade and its drops (ROAD#11).
+    const float damage = source.player_damage() *
         this->tuning_->handicap(this->handicap_).damage_taken;
     const bool vulnerable = this->can_act();
     this->health_ -= damage;
@@ -1175,6 +1175,17 @@ std::vector<std::unique_ptr<Projectile>>
         colourwars::MovingObject::velocity(),
         this->facing_right(),
         dt, this->ammo_regen_multiplier());
+    // The sub spends the tank the tool has just drawn on, so a held shot and
+    // a throw in one step both pay. Its release is a shot like any other.
+    if (this->sub_ != nullptr)
+    {
+        for (auto& released : this->sub_->update(this->input().sub_pressed, *this->primary_,
+            this->center(), this->primary_->throw_direction(this->facing_right()),
+            colourwars::MovingObject::velocity(), dt))
+        {
+            projectiles.push_back(std::move(released));
+        }
+    }
     // A paid shot is still a shot when its muzzle immediately contacts cover.
     // Check before launch obstruction retires it, never from held input or the
     // weapon's looping presentation flag (which also spans the cooldown).
@@ -1186,17 +1197,27 @@ std::vector<std::unique_ptr<Projectile>>
     {
         this->primary_->reset_ammo(false);
     }
-    for (const auto& projectile : projectiles)
+    // A launch can stop a grenade at once, against cover beside the thrower;
+    // it bursts there, and its drops launch from where it stopped.
+    const size_t launched = projectiles.size();
+    for (size_t index = 0; index < projectiles.size(); ++index)
     {
-        projectile->resolve_launch_obstruction(this->center(), objects);
+        // The vector may grow below; the projectile itself does not move.
+        Projectile& projectile = *projectiles[index];
+        projectile.resolve_launch_obstruction(index < launched ?
+            this->center() : projectile.bounds().center(), objects);
         if (this->paint_audio_ != nullptr)
         {
-            projectile->flush_paint_audio(*this->paint_audio_);
+            projectile.flush_paint_audio(*this->paint_audio_);
         }
-        if (const auto contact = projectile->take_blocked_contact();
+        if (const auto contact = projectile.take_blocked_contact();
             contact && this->blocked_shot_feedback_ != nullptr)
         {
             this->blocked_shot_feedback_->emit(*contact);
+        }
+        for (auto& drop : projectile.take_burst())
+        {
+            projectiles.push_back(std::move(drop));
         }
     }
     std::erase_if(projectiles, [](const auto& projectile)
@@ -1462,6 +1483,16 @@ const QuietCharacter& Player::quiet_character() const
     return this->quiet_character_;
 }
 
+void Player::set_sub_weapon(std::unique_ptr<SubWeapon> sub)
+{
+    this->sub_ = std::move(sub);
+}
+
+const SubWeapon* Player::sub_weapon() const
+{
+    return this->sub_.get();
+}
+
 const Weapon& Player::primary_weapon() const
 {
     if (this->primary_ == nullptr)
@@ -1639,6 +1670,7 @@ void Player::respawn()
     this->place_at(this->respawn_position_);
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
+	if (this->sub_ != nullptr) { this->sub_->reset(); }
 	this->state_ = PlayerState::alive;
     this->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
 }

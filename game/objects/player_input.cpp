@@ -61,6 +61,8 @@ SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot)
 	result.jump_held = jump.held;
 	result.jump_pressed = !gamepads.just_connected(device) && jump.pressed;
 	result.primary_shoot = action(GameAction::shoot).held;
+	// Like jump, a button already held across a reconnect throws nothing.
+	result.sub_pressed = !gamepads.just_connected(device) && action(GameAction::sub).pressed;
 
 	// Open menus on release so the opening button is no longer held.
 	// MenuInput arming also handles other buttons held during the transition.
@@ -114,6 +116,7 @@ SlotInput PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 	result.jump_held = jump.held;
 	result.jump_pressed = jump.pressed;
 	result.primary_shoot = action(GameAction::shoot).held;
+	result.sub_pressed = action(GameAction::sub).pressed;
 
 	// Dropping is a held request, checked when the player is on a pass-through platform.
 	result.drop_through = action(GameAction::drop).held;
