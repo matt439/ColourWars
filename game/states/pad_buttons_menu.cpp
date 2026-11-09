@@ -42,7 +42,7 @@ void PadButtonsMenu::init()
 		this->refresh_values();
 	});
 	const std::array<const char*, entry_count> names{ "jump", "jump_alternate", "shoot",
-		"shoot_alternate", "pause", "pause_alternate" };
+		"shoot_alternate", "pause", "pause_alternate", "sub" };
 	for (size_t entry = 0; entry < entry_count; ++entry)
 	{
 		this->entries_[entry] = row(names[entry], copy.row(entry), static_cast<int>(entry + 1),
@@ -64,9 +64,10 @@ void PadButtonsMenu::init()
 			look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 		this->focus_.add(widget, std::move(activate));
 	};
-	action("reset", copy.reset, 7, [this] { this->reset_pending(); });
-	action("apply", this->text().item(MenuItem::apply), 8, [this] { this->apply_settings(); });
-	action("back", this->text().item(MenuItem::back), 9, [this] { this->pop_page(); });
+	const int last = static_cast<int>(entry_count) + 1;
+	action("reset", copy.reset, last, [this] { this->reset_pending(); });
+	action("apply", this->text().item(MenuItem::apply), last + 1, [this] { this->apply_settings(); });
+	action("back", this->text().item(MenuItem::back), last + 2, [this] { this->pop_page(); });
 	this->status_limit_ = this->status_limit(style);
 	this->help_ = this->add_text("help", copy.help, look.help_font, look.controls_position);
 	fit_text(*this->help_, RectangleF(look.controls_position, look.controls_size));
@@ -96,16 +97,17 @@ void PadButtonsMenu::refresh_values()
 	const PadProfile& profile = this->pending_profile();
 	for (size_t entry = 0; entry < entry_count; ++entry)
 	{
-		const PadActionChoice& choice = profile.actions[entry / 2];
+		const PadEntry at = pad_entry(entry);
+		const PadActionChoice& choice = profile[at.action];
 		this->entries_[entry]->set_value(controls_text::pad_label(this->text().controls.labels,
-			entry % 2 == 0 ? choice.primary : choice.alternate));
+			at.alternate ? choice.alternate : choice.primary));
 	}
 }
 
 void PadButtonsMenu::choose(size_t entry, Direction direction)
 {
-	const PadAction action = static_cast<PadAction>(entry / 2);
-	const bool alternate = entry % 2 == 1;
+	const PadAction action = pad_entry(entry).action;
+	const bool alternate = pad_entry(entry).alternate;
 	PadProfile& profile = this->selection_.pads[this->slot_];
 	PadControl& current = alternate ? profile[action].alternate : profile[action].primary;
 	// Primaries cycle the eleven controls; alternates also offer None first.

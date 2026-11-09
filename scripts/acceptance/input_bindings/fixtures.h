@@ -64,14 +64,16 @@ namespace input_bindings_acceptance
         { PadControl::left_stick, "ls", L"LS" }, { PadControl::right_stick, "rs", L"RS" },
         { PadControl::start, "start", L"" }
     }};
-    inline constexpr std::array<PadAction, 3> pad_actions{ PadAction::jump, PadAction::shoot, PadAction::pause };
+    inline constexpr std::array<PadAction, 4> pad_actions{ PadAction::jump, PadAction::shoot, PadAction::pause, PadAction::sub };
 
     inline const std::array<PadProfile, input_slots::pad_count> default_pads{};
 
     uint16_t button_bit(GamepadButton button);
     GamepadState pressing(PadControl control, GamepadState state = {});
+    // Sub (ROAD#11) takes `sub`, or by default RB, else LB, else the first
+    // face button the other six leave free, as a save written before Sub reads.
     PadProfile profile(PadControl jump, PadControl jump_also, PadControl shoot, PadControl shoot_also,
-        PadControl pause, PadControl pause_also);
+        PadControl pause, PadControl pause_also, PadControl sub = PadControl::none);
     PadProfile jump_on(PadControl primary);
     std::array<PadProfile, input_slots::pad_count> jump_faces(
         const std::array<PadControl, input_slots::pad_count>& primaries);
@@ -114,7 +116,7 @@ namespace input_bindings_acceptance
     struct ExpectedKeyboard
     {
         const char* move_left = "a"; const char* move_right = "d"; const char* drop = "s";
-        const char* shoot = "mouse_left"; const char* pause = "none";
+        const char* shoot = "mouse_left"; const char* pause = "none"; const char* sub = "mouse_right";
     };
 
     std::string fixture(const std::string& bindings = "", const std::string& version = "3");

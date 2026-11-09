@@ -166,15 +166,15 @@ void validate_controls_reminders(const Presentation& presentation, const RenderR
 	{
 		check("keyboard_reminder", controls_text::keyboard_controls_reminder(copy, key));
 	}
-	// Every control each keyboard action can show (Shoot's mouse buttons,
-	// Pause's extra key), the others at their defaults where that is valid.
+	// Every control each keyboard action can show (Shoot's and Sub's mouse
+	// buttons, Pause's extra key), the others at their defaults where that is valid.
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
 		const KeyboardAction action = static_cast<KeyboardAction>(index);
 		std::vector<DesktopControl> choices;
 		if (action == KeyboardAction::pause) { choices.push_back({}); }
 		for (const Key key : controls_text::keyboard_keys()) { choices.push_back({ key, MouseButton::none }); }
-		if (action == KeyboardAction::shoot)
+		if (keyboard_action_takes_mouse(action))
 		{
 			for (const MouseButton button : shoot_mouse_buttons()) { choices.push_back({ Key::none, button }); }
 		}

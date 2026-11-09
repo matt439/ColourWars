@@ -90,7 +90,7 @@ namespace
         return text;
     }
 
-    // {jump} is always required; the other five are required by the reminder
+    // {jump} is always required; the other six are required by the reminder
     // and optional in the Controls help.
     std::vector<Token> keyboard_tokens(const ControlLabels& labels, const InputBindings& bindings,
         bool all_required)
@@ -101,7 +101,8 @@ namespace
             { L"{right}", label(labels, bindings, KeyboardAction::move_right), all_required },
             { L"{drop}", label(labels, bindings, KeyboardAction::drop), all_required },
             { L"{shoot}", label(labels, bindings, KeyboardAction::shoot), all_required },
-            { L"{pause}", pause_label(labels, bindings), all_required } };
+            { L"{pause}", pause_label(labels, bindings), all_required },
+            { L"{sub}", label(labels, bindings, KeyboardAction::sub), all_required } };
     }
 
     std::vector<Token> choice_tokens(const ControlLabels& labels, const PadProfile& pad)
@@ -109,7 +110,8 @@ namespace
         return {
             { L"{pad_jump}", controls_text::pad_choice_label(labels, pad[PadAction::jump]) },
             { L"{pad_shoot}", controls_text::pad_choice_label(labels, pad[PadAction::shoot]) },
-            { L"{pad_pause}", controls_text::pad_choice_label(labels, pad[PadAction::pause]) } };
+            { L"{pad_pause}", controls_text::pad_choice_label(labels, pad[PadAction::pause]) },
+            { L"{pad_sub}", controls_text::pad_choice_label(labels, pad[PadAction::sub]) } };
     }
 
     // The help's pad lines name the shared profile's choices. Profiles that
@@ -265,7 +267,7 @@ std::vector<std::wstring> controls_text::keyboard_control_labels(const ControlLa
     std::vector<std::wstring> result;
     if (action == KeyboardAction::pause) { result.push_back(labels.none); }
     for (const labrador::Key key : keyboard_keys()) { result.push_back(key_label(labels, key)); }
-    if (action == KeyboardAction::shoot)
+    if (keyboard_action_takes_mouse(action))
     {
         for (const labrador::MouseButton button : shoot_mouse_buttons())
         { result.push_back(mouse_label(labels, button)); }

@@ -117,10 +117,10 @@ namespace
 		edited.pad_rumble[3] = true;
 		require(session.set_play_settings_and_save(edited), "Could not edit the worn slot");
 		InputBindings edited_buttons = session.input_bindings();
-		edited_buttons.pads[3][PadAction::shoot] = { PadControl::right_shoulder, PadControl::none };
+		edited_buttons.pads[3][PadAction::shoot] = { PadControl::left_shoulder, PadControl::none };
 		require(session.set_input_bindings_and_save(edited_buttons), "Could not edit the worn slot's buttons");
 		require(save.profiles().list[0].sticks.aim_deadzone == 60 && save.profiles().list[0].rumble &&
-			save.profiles().list[0].buttons[PadAction::shoot].primary == PadControl::right_shoulder,
+			save.profiles().list[0].buttons[PadAction::shoot].primary == PadControl::left_shoulder,
 			"An edit on the worn slot did not reach its profile");
 		const SaveData own = save.save_data();
 		require(own.play.sticks[3].aim_deadzone == -1 && own.play.pad_rumble[3] &&

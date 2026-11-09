@@ -58,10 +58,11 @@ namespace input_bindings_acceptance
         require(section.MemberCount() == 3 && section.HasMember("keyboard_jump") && section["keyboard_jump"].IsString() &&
             std::string_view(section["keyboard_jump"].GetString(), section["keyboard_jump"].GetStringLength()) == name,
             "Save binding section did not contain exactly its canonical physical Jump token, keyboard keys and pad profiles");
-        require(section.HasMember("keyboard") && section["keyboard"].IsObject() && section["keyboard"].MemberCount() == 5,
-            "Save did not write exactly the five other keyboard actions");
+        require(section.HasMember("keyboard") && section["keyboard"].IsObject() && section["keyboard"].MemberCount() == 6,
+            "Save did not write exactly the six other keyboard actions");
         for (const auto& [key, token] : { std::pair{ "move_left", keyboard.move_left }, std::pair{ "move_right", keyboard.move_right },
-            std::pair{ "drop", keyboard.drop }, std::pair{ "shoot", keyboard.shoot }, std::pair{ "pause", keyboard.pause } })
+            std::pair{ "drop", keyboard.drop }, std::pair{ "shoot", keyboard.shoot }, std::pair{ "pause", keyboard.pause },
+            std::pair{ "sub", keyboard.sub } })
         {
             const auto& value = section["keyboard"];
             require(value.HasMember(key) && value[key].IsString() &&
@@ -81,10 +82,11 @@ namespace input_bindings_acceptance
         for (size_t slot = 0; slot < expected_pads.size(); ++slot)
         {
             const auto& actual = section["pads"][static_cast<rapidjson::SizeType>(slot)];
-            require(actual.IsObject() && actual.MemberCount() == 3, "A saved pad profile is not exactly jump/shoot/pause");
+            require(actual.IsObject() && actual.MemberCount() == 4, "A saved pad profile is not exactly jump/shoot/pause/sub");
             for (size_t index = 0; index < pad_actions.size(); ++index)
             {
-                const char* key = index == 0 ? "jump" : (index == 1 ? "shoot" : "pause");
+                const std::array<const char*, 4> keys{ "jump", "shoot", "pause", "sub" };
+                const char* key = keys[index];
                 const PadActionChoice& choice = expected_pads[slot].actions[index];
                 require(actual.HasMember(key) && actual[key].IsArray(), "A saved pad profile lost an action");
                 const auto& controls = actual[key];
@@ -275,6 +277,11 @@ namespace input_bindings_acceptance
         save = load(directory, pads_json(slots[1])); save_session.load_save_file();
         require(save_session.input_bindings().keyboard_jump == Key::j && save_session.input_bindings().pads == custom,
             "Full per-slot pad profiles did not load");
+        // Slots 1 and 4 were written before Sub (save version 8): RB was
+        // Shoot's in slot 1, so its Sub reads as LB; slot 4 left RB free.
+        require(custom[0][PadAction::sub].primary == PadControl::left_shoulder &&
+            custom[3][PadAction::sub].primary == PadControl::right_shoulder,
+            "An older pad profile did not read its Sub as RB, or LB when RB was taken");
         require(save.save_to_file(), "Full pad profiles did not save"); require_schema(directory.save_bytes(), "j", custom);
         reread_session.load_save_file(); require(reread_session.input_bindings() == save_session.input_bindings(), "Full pad profiles did not round trip");
         for (const char* broken : { "null", "false", "7", "[]", "\"a\"", "{}",
@@ -286,7 +293,11 @@ namespace input_bindings_acceptance
             "{\"jump\":[\"back\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
             "{\"jump\":[\"A\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
             "{\"jump\":\"a\",\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
-            "{\"jump\":[7],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}" })
+            "{\"jump\":[7],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}",
+            "{\"jump\":[\"a\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"],\"sub\":[\"rb\",\"lb\"]}",
+            "{\"jump\":[\"a\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"],\"sub\":[\"rt\"]}",
+            "{\"jump\":[\"a\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"],\"sub\":[]}",
+            "{\"jump\":[\"a\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"],\"sub\":\"rb\"}" })
         {
             save = load(directory, pads_json(broken)); save_session.load_save_file();
             require(save_session.input_bindings().keyboard_jump == Key::j && save_session.input_bindings().pads == custom,

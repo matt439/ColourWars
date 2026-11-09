@@ -2410,9 +2410,20 @@ paint (`hud.sub_mark`). The `sub_weapons` case checks the row's steps and
 Random, the copy and the HUD's cue; `remembered_setup` the save; the Debug
 console's roster checks the plan.
 
-Left for the rest of slice 5: the Sub action is not on the Controls pages, so
-it is still not rebindable, and the controls help and in-match reminder do not
-name it.
+**Slice 5, second part, done 2026-11-09.** Sub is a rebindable action like
+the others. Keyboard Keys gains a Sub row, which takes a key or any of the five
+mouse buttons, as Shoot does (`KeyboardAction::sub`, default right click). Pad
+Buttons gains one Sub row, default RB, with no second control: the page has
+room for one more row, not two (`PadAction::sub`, `pad_entry`). One control
+still does one action, so Shoot and Sub cannot share a mouse button or a pad
+control. The save moves to version 9 (`input_bindings.keyboard.sub` and each
+pad profile's `sub`, also in `profiles`); an older save reads Sub where older
+builds put it: the right mouse button, or the left when Shoot had the right,
+and RB, else LB, else the first free control. The Controls help gains a Sub
+line for each device, and the countdown reminder names Sub
+(`{sub}`, `{pad_sub}`). The `input_bindings`, `keyboard_jump_capture`,
+`player_profiles`, `sub_weapons`, `menu_text` and `locales` cases check the
+domains, defaults, conflicts, save migration, capture and copy.
 
 ### Input
 

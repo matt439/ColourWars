@@ -119,7 +119,7 @@
     "home_subtitle": "Paint the arena. Claim the win.",
     "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
-      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\nJump: {pad_jump} (hold for height)\nPause: {pad_pause}    Debug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\nJump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nDebug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },
@@ -131,8 +131,9 @@
       "drop": "Drop",
       "shoot": "Shoot",
       "pause": "Pause (also)",
+      "sub": "Sub",
       "reset": "Reset all keys",
-      "help": "Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot may also take a mouse button.\nOne key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\nApply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
+      "help": "Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot and Sub may take a mouse button.\nOne key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\nApply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
       "pending_status": "Apply to activate these keys.",
       "saved_status": "Keyboard keys applied and saved.",
       "capture_wait_neutral": "Release all keys before choosing.",
@@ -152,8 +153,9 @@
       "shoot_alternate": "Shoot (also)",
       "pause": "Pause",
       "pause_alternate": "Pause (also)",
+      "sub": "Sub",
       "reset": "Reset this pad",
-      "help": "Choose Jump, Shoot and Pause for this\npad, each with an optional second control.\nOne control does one action per pad;\ncontrols in use are skipped.\nLS / RS mean pressing a stick in.\nApply saves edited pads.\nBack discards unapplied changes.\nMenus and intro skip keep A / B / Start.\nProfiles follow Pad 1-4 slots.",
+      "help": "Choose Jump, Shoot, Pause and Sub for\nthis pad. All but Sub may take a second control.\nOne control does one action per pad;\ncontrols in use are skipped.\nLS / RS mean pressing a stick in.\nApply saves edited pads.\nBack discards unapplied changes.\nMenus and intro skip keep A / B / Start.\nProfiles follow Pad 1-4 slots.",
       "pending_status": "Apply to activate edited pads' buttons.",
       "saved_status": "Edited pads' buttons applied and saved.",
       "conflict_status": "Controls in use on this pad were skipped."
@@ -355,10 +357,10 @@
     "controls": {
       "keyboard_heading": "KEYBOARD + MOUSE",
       "gamepad_heading": "GAMEPAD",
-      "keyboard_reminder": "{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot\nMouse  Aim    |    {pause}  Pause",
-      "gamepad_reminder": "Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot\nRight stick  Aim    |    {pad_pause}  Pause",
+      "keyboard_reminder": "{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot    |    {sub}  Sub\nMouse  Aim    |    {pause}  Pause",
+      "gamepad_reminder": "Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot    |    {pad_sub}  Sub\nRight stick  Aim    |    {pad_pause}  Pause",
       "gamepad_per_pad_reminder": "Left stick  Move    |    Stick down  Drop through\n{pads}\nRight stick  Aim",
-      "gamepad_pad_line": "Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_pause} Pause",
+      "gamepad_pad_line": "Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_sub} Sub, {pad_pause} Pause",
       "per_pad": "per pad",
       "labels": {
         "space": "Space",

@@ -5,15 +5,16 @@
 
 namespace input_bindings_acceptance
 {
-    // ---- Keyboard actions slice (GAP#4.2): move, drop, shoot and pause keys.
+    // ---- Keyboard actions slice (GAP#4.2): move, drop, shoot and pause keys,
+    // and the Sub action (ROAD#11), which takes a mouse button like Shoot.
     struct ExpectedMouse { MouseButton button; const char* name; };
     constexpr std::array<ExpectedMouse, 5> expected_mouse{{
         { MouseButton::left, "mouse_left" }, { MouseButton::right, "mouse_right" },
         { MouseButton::middle, "mouse_middle" }, { MouseButton::x1, "mouse_x1" }, { MouseButton::x2, "mouse_x2" }
     }};
-    constexpr std::array<KeyboardAction, 6> keyboard_actions{ KeyboardAction::move_left, KeyboardAction::move_right,
-        KeyboardAction::jump, KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause };
-    constexpr std::array<const char*, 6> keyboard_action_tokens{ "move_left", "move_right", "jump", "drop", "shoot", "pause" };
+    constexpr std::array<KeyboardAction, 7> keyboard_actions{ KeyboardAction::move_left, KeyboardAction::move_right,
+        KeyboardAction::jump, KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause, KeyboardAction::sub };
+    constexpr std::array<const char*, 7> keyboard_action_tokens{ "move_left", "move_right", "jump", "drop", "shoot", "pause", "sub" };
 
     namespace
     {
@@ -32,16 +33,17 @@ namespace input_bindings_acceptance
             InputBindings result;
             result.keyboard_move_left = Key::j; result.keyboard_move_right = Key::l; result.keyboard_jump = Key::a;
             result.keyboard_drop = Key::k; result.keyboard_shoot = mouse_control(MouseButton::right); result.keyboard_pause = Key::p;
+            result.keyboard_sub = mouse_control(MouseButton::left);
             return result;
         }
     }
 
     void check_keyboard_domain_and_mapping(const InputTuning& tuning)
     {
-        require(keyboard_action_count == 6, "Keyboard action surface changed without its oracle");
+        require(keyboard_action_count == 7, "Keyboard action surface changed without its oracle");
         const InputBindings defaults;
-        const std::array<DesktopControl, 6> default_controls{ key_control(Key::a), key_control(Key::d), key_control(Key::space),
-            key_control(Key::s), mouse_control(MouseButton::left), DesktopControl{} };
+        const std::array<DesktopControl, 7> default_controls{ key_control(Key::a), key_control(Key::d), key_control(Key::space),
+            key_control(Key::s), mouse_control(MouseButton::left), DesktopControl{}, mouse_control(MouseButton::right) };
         for (size_t index = 0; index < keyboard_actions.size(); ++index)
         {
             require(keyboard_action_name(keyboard_actions[index]) == keyboard_action_tokens[index] &&
@@ -58,7 +60,7 @@ namespace input_bindings_acceptance
         }
         require_mapping(effective_defaults, Key::space);
 
-        // Domains: the 27 keys everywhere, mouse buttons only for Shoot, None only for Pause.
+        // Domains: the 27 keys everywhere, mouse buttons only for Shoot and Sub, None only for Pause.
         const auto mouse = shoot_mouse_buttons();
         for (size_t index = 0; index < expected_mouse.size(); ++index)
         {
@@ -68,8 +70,9 @@ namespace input_bindings_acceptance
                 "A Shoot mouse button's token or order differs from its explicit contract");
             for (KeyboardAction action : keyboard_actions)
             {
-                require(keyboard_control_supported(action, control) == (action == KeyboardAction::shoot),
-                    "A mouse button became bindable outside Shoot");
+                require(keyboard_control_supported(action, control) ==
+                    (action == KeyboardAction::shoot || action == KeyboardAction::sub),
+                    "A mouse button became bindable outside Shoot and Sub");
             }
         }
         require(desktop_control_name({}) == "none" &&
@@ -136,7 +139,7 @@ namespace input_bindings_acceptance
         menu_aliases.keyboard_shoot = key_control(Key::space); menu_aliases.keyboard_jump = Key::e;
         menu_aliases.validate(); // Menu-only R/W and the intro's Space are free for gameplay.
 
-        // The custom mapping writes exactly the six sources beside the fixed aliases.
+        // The custom mapping writes exactly the seven sources beside the fixed aliases.
         const InputBindings custom = custom_keyboard(); custom.validate();
         const ActionBindings effective = effective_action_bindings(custom);
         const auto desktop = [&](GameAction action) -> const DesktopActionBinding&
@@ -148,17 +151,15 @@ namespace input_bindings_acceptance
             desktop(GameAction::shoot).keys.empty() &&
             desktop(GameAction::shoot).mouse_buttons == std::vector<MouseButton>{ MouseButton::right } &&
             desktop(GameAction::pause).keys == std::vector<Key>{ Key::escape, Key::p } &&
+            desktop(GameAction::sub).keys.empty() &&
+            desktop(GameAction::sub).mouse_buttons == std::vector<MouseButton>{ MouseButton::left } &&
             desktop(GameAction::debug).keys == std::vector<Key>{ Key::f1 } &&
             desktop(GameAction::skip_intro).keys == std::vector<Key>{ Key::space, Key::escape, Key::enter },
             "Custom keyboard mapping wrote the wrong sources or changed a fixed alias");
         for (size_t index = 0; index < game_action_count; ++index)
         {
-            // Sub (ROAD#11) takes whichever mouse button Shoot left: the left one here.
-            if (static_cast<GameAction>(index) == GameAction::sub)
-            { require(effective.game_desktop[index].mouse_buttons == std::vector<MouseButton>{ MouseButton::left },
-                "Sub did not take the mouse button Shoot left free"); }
-            else if (static_cast<GameAction>(index) != GameAction::shoot)
-            { require(effective.game_desktop[index].mouse_buttons.empty(), "A mouse button reached a non-Shoot action"); }
+            if (static_cast<GameAction>(index) != GameAction::shoot && static_cast<GameAction>(index) != GameAction::sub)
+            { require(effective.game_desktop[index].mouse_buttons.empty(), "A mouse button reached an action other than Shoot and Sub"); }
             require(effective.game_pad[index].buttons == default_action_bindings().game_pad[index].buttons,
                 "Keyboard choices changed a pad source");
         }
@@ -176,8 +177,17 @@ namespace input_bindings_acceptance
             held(GameAction::jump, { Key::a }) && !held(GameAction::jump, { Key::space }) &&
             held(GameAction::drop, { Key::k }) && held(GameAction::drop, { Key::down }) && !held(GameAction::drop, { Key::s }) &&
             held(GameAction::shoot, {}, { MouseButton::right }) && !held(GameAction::shoot, {}, { MouseButton::left }) &&
-            held(GameAction::pause, { Key::p }) && held(GameAction::pause, { Key::escape }),
+            held(GameAction::pause, { Key::p }) && held(GameAction::pause, { Key::escape }) &&
+            held(GameAction::sub, {}, { MouseButton::left }) && !held(GameAction::sub, {}, { MouseButton::right }),
             "Effective custom keyboard samples did not follow the moved keys");
+        InputBindings on_right; on_right.keyboard_shoot = mouse_control(MouseButton::right);
+        rejects([&] { on_right.validate(); }, "Shoot and Sub both validated on the right mouse button");
+        InputBindings key_sub; key_sub.keyboard_sub = key_control(Key::q);
+        const ActionBindings sub_keyed = effective_action_bindings(key_sub);
+        require(sub_keyed.game_desktop[static_cast<size_t>(GameAction::sub)].keys == std::vector<Key>{ Key::q } &&
+            sub_keyed.game_desktop[static_cast<size_t>(GameAction::sub)].mouse_buttons.empty() &&
+            game_action(sub_keyed, GameAction::sub, keys({ Key::q }), keys({}), {}, {}).pressed,
+            "Sub on a key kept the right click or did not press");
         InputBindings key_shoot; key_shoot.keyboard_shoot = key_control(Key::f);
         const ActionBindings keyed = effective_action_bindings(key_shoot);
         const auto& shoot = keyed.game_desktop[static_cast<size_t>(GameAction::shoot)];
@@ -188,7 +198,7 @@ namespace input_bindings_acceptance
         GamepadState neutral; neutral.connected = true; GamepadState pad = neutral; pad.right_trigger = 1.0f;
         require(game_action(effective, GameAction::shoot, pad, neutral, tuning).held == (tuning.trigger_shoot_threshold < 1.0f),
             "Keyboard Shoot choices changed the pad's RT");
-        std::cout << "PASS keyboard actions domain: six actions, 27 keys, five Shoot mouse buttons, optional extra Pause, "
+        std::cout << "PASS keyboard actions domain: seven actions, 27 keys, five Shoot and Sub mouse buttons, optional extra Pause, "
             "20 reserved keys refused, per-profile conflicts and the custom/key-Shoot mappings\n";
     }
 
@@ -215,7 +225,8 @@ namespace input_bindings_acceptance
         h.keyboard.on_key_up(Key::k); h.keyboard.on_key_down(Key::down); input = h.desktop();
         require(input.drop_through, "The fixed Down drop alias stopped working");
         h.keyboard.on_key_up(Key::down); std::ignore = h.desktop();
-        h.mouse.on_button_down(MouseButton::left); input = h.desktop(); require(!input.primary_shoot, "Left click still shot");
+        h.mouse.on_button_down(MouseButton::left); input = h.desktop();
+        require(!input.primary_shoot && input.sub_pressed, "Left click still shot, or did not throw once Sub moved onto it");
         h.mouse.on_button_up(MouseButton::left); h.mouse.on_button_down(MouseButton::right); input = h.desktop();
         require(input.primary_shoot, "Right click did not shoot once Shoot moved onto it");
         h.mouse.on_button_up(MouseButton::right); std::ignore = h.desktop();
@@ -254,16 +265,27 @@ namespace input_bindings_acceptance
         custom.pads[2][PadAction::jump].primary = PadControl::b;
         require(save_session.set_input_bindings_and_save(custom), "A valid custom keyboard set did not save");
         auto custom_pads = default_pads; custom_pads[2][PadAction::jump].primary = PadControl::b;
-        require_schema(directory.save_bytes(), "a", custom_pads, { "j", "l", "k", "mouse_right", "p" });
+        require_schema(directory.save_bytes(), "a", custom_pads, { "j", "l", "k", "mouse_right", "p", "mouse_left" });
         { Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings() == custom, "Custom keyboard set did not round trip");
           require_independent(reread); }
         for (const auto& expected : expected_mouse)
         {
+            // Shoot on the right button moves Sub to the left, and the other way round.
+            const bool right = expected.button == MouseButton::right;
             InputBindings value; value.keyboard_shoot = mouse_control(expected.button);
+            if (right) { value.keyboard_sub = mouse_control(MouseButton::left); }
             require(save_session.set_input_bindings_and_save(value), "A Shoot mouse button did not save");
-            require_schema(directory.save_bytes(), "space", default_pads, { "a", "d", "s", expected.name, "none" });
+            require_schema(directory.save_bytes(), "space", default_pads,
+                { "a", "d", "s", expected.name, "none", right ? "mouse_left" : "mouse_right" });
             Save reread; SettingsSession reread_session(reread); reread_session.load_save_file(); require(reread_session.input_bindings().keyboard_shoot == value.keyboard_shoot,
                 "A Shoot mouse button did not round trip");
+            InputBindings sub_value; sub_value.keyboard_sub = mouse_control(expected.button);
+            if (expected.button == MouseButton::left) { sub_value.keyboard_shoot = mouse_control(MouseButton::right); }
+            require(save_session.set_input_bindings_and_save(sub_value), "A Sub mouse button did not save");
+            require_schema(directory.save_bytes(), "space", default_pads,
+                { "a", "d", "s", expected.button == MouseButton::left ? "mouse_right" : "mouse_left", "none", expected.name });
+            Save sub_reread; SettingsSession sub_session(sub_reread); sub_session.load_save_file();
+            require(sub_session.input_bindings().keyboard_sub == sub_value.keyboard_sub, "A Sub mouse button did not round trip");
         }
         // Refused before mutation: the active choice and the disk survive.
         const InputBindings before = save_session.input_bindings(); const std::string bytes = directory.save_bytes();
@@ -275,13 +297,25 @@ namespace input_bindings_acceptance
         const std::string valid_pads = ",\"pads\":[{\"jump\":[\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]}]";
         const auto bindings = [&](const std::string& jump, const std::string& keyboard)
         { return "{\"keyboard_jump\":\"" + jump + "\"" + (keyboard.empty() ? "" : ",\"keyboard\":" + keyboard) + valid_pads + "}"; };
+        // `good` is a save written before Sub (version 8): no "sub", which
+        // reads as the right mouse button, or the left when Shoot has the right.
         const std::string good = "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}";
         save = load(directory, bindings("a", good)); save_session.load_save_file();
         require(save_session.input_bindings().keyboard_move_left == Key::j && save_session.input_bindings().keyboard_jump == Key::a &&
             save_session.input_bindings().keyboard_shoot == key_control(Key::f) && save_session.input_bindings().keyboard_pause == Key::p &&
+            save_session.input_bindings().keyboard_sub == mouse_control(MouseButton::right) &&
             save_session.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
             "A valid keyboard object with Jump on the freed A did not load");
-        // Damage to the object recovers the five together; Jump survives unless it then clashes.
+        save = load(directory, bindings("a", "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"mouse_right\",\"pause\":\"p\"}"));
+        save_session.load_save_file();
+        require(save_session.input_bindings().keyboard_shoot == mouse_control(MouseButton::right) &&
+            save_session.input_bindings().keyboard_sub == mouse_control(MouseButton::left),
+            "An older save with Shoot on the right button did not give Sub the left");
+        save = load(directory, bindings("a", "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\",\"sub\":\"q\"}"));
+        save_session.load_save_file();
+        require(save_session.input_bindings().keyboard_sub == key_control(Key::q) &&
+            save_session.input_bindings().keyboard_move_left == Key::j, "A saved Sub key did not load");
+        // Damage to the object recovers the six together; Jump survives unless it then clashes.
         for (const char* broken : { "null", "7", "\"j\"", "[]", "{}",
             "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\"}",
             "{\"move_left\":\"J\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}",
@@ -291,7 +325,10 @@ namespace input_bindings_acceptance
             "{\"move_left\":\"none\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}",
             "{\"move_left\":\"mouse_left\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}",
             "{\"move_left\":\"j\",\"move_right\":\"j\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}",
-            "{\"move_left\":7,\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}" })
+            "{\"move_left\":7,\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\"}",
+            "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\",\"sub\":\"none\"}",
+            "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\",\"sub\":\"f\"}",
+            "{\"move_left\":\"j\",\"move_right\":\"l\",\"drop\":\"k\",\"shoot\":\"f\",\"pause\":\"p\",\"sub\":7}" })
         {
             for (const char* jump : { "e", "a" })
             {
@@ -299,7 +336,7 @@ namespace input_bindings_acceptance
                 save_session.load_save_file();
                 InputBindings expected; expected.keyboard_jump = std::string_view(jump) == "e" ? Key::e : Key::space;
                 require(same_keyboard(save_session.input_bindings(), expected) && directory.save_bytes() == disk,
-                    "A damaged keyboard object did not recover the five, kept a now-clashing Jump, or rewrote the bytes");
+                    "A damaged keyboard object did not recover the six, kept a now-clashing Jump, or rewrote the bytes");
                 require(save_session.input_bindings().pads[0][PadAction::jump].primary == PadControl::x,
                     "A damaged keyboard object discarded a valid pad profile");
                 require_independent(save);
@@ -312,9 +349,11 @@ namespace input_bindings_acceptance
         // A damaged Jump keeps a valid object that does not need it.
         save = load(directory, bindings("enter", good)); save_session.load_save_file();
         InputBindings recovered = custom_keyboard(); recovered.keyboard_jump = Key::space; recovered.keyboard_shoot = key_control(Key::f);
+        recovered.keyboard_sub = mouse_control(MouseButton::right);
         require(same_keyboard(save_session.input_bindings(), recovered), "A damaged Jump discarded a valid keyboard object");
-        std::cout << "PASS keyboard actions save: missing-object defaults, schema/round trip of all six and every Shoot "
-            "mouse button, refusal before mutation, 13 damaged objects x 2 Jump cases, Jump-clash and damaged-Jump recovery, "
+        std::cout << "PASS keyboard actions save: missing-object defaults, schema/round trip of all seven and every Shoot "
+            "and Sub mouse button, Sub read from older saves, refusal before mutation, 16 damaged objects x 2 Jump cases, "
+            "Jump-clash and damaged-Jump recovery, "
             "pads and independent sections intact\n";
     }
 }

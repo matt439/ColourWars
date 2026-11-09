@@ -446,7 +446,7 @@ namespace
 namespace
 {
     // GAP#4.2 keyboard actions: the gesture targets one action against the
-    // pending choices, and only Shoot's gesture reads the mouse.
+    // pending choices, and only Shoot's and Sub's gestures read the mouse.
     struct DesktopHarness
     {
         Keyboard keyboard;
@@ -480,7 +480,7 @@ namespace
         pending.keyboard_move_left = Key::j; // A is free, J is taken.
         size_t accepted = 0, refused = 0;
         for (const KeyboardAction action : { KeyboardAction::move_left, KeyboardAction::move_right, KeyboardAction::jump,
-            KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause })
+            KeyboardAction::drop, KeyboardAction::shoot, KeyboardAction::pause, KeyboardAction::sub })
         {
             for (const Key key : binding_keys)
             {
@@ -501,14 +501,17 @@ namespace
             }
         }
         // J, D, Space and S are in use: an action owning one of them is refused
-        // the other three, Shoot (a click) and Pause (none) all four.
-        require(accepted == 6 * 27 - 20 && refused == 20,
+        // the other three, Shoot and Sub (clicks) and Pause (none) all four.
+        require(accepted == 7 * 27 - 24 && refused == 24,
             "Targeted capture accepted or refused the wrong number of pending keys");
 
-        // Shoot reads every mouse button; the others ignore the mouse entirely.
+        // Shoot and Sub read every mouse button; the others ignore the mouse
+        // entirely. Each is tested with the other on a key, so every button is free.
         for (const MouseButton button : shoot_mouse_buttons())
         {
-            DesktopHarness shoot(pending, KeyboardAction::shoot);
+            InputBindings free_mouse = pending;
+            free_mouse.keyboard_sub = { Key::q, MouseButton::none };
+            DesktopHarness shoot(free_mouse, KeyboardAction::shoot);
             require(shoot.capture.accepts_mouse(), "Shoot capture does not accept the mouse");
             shoot.mouse.on_button_down(button); shoot.frame();
             require(shoot.capture.phase() == Phase::holding &&
@@ -518,11 +521,28 @@ namespace
             require(shoot.capture.phase() == Phase::complete && !shoot.capture.result() &&
                 shoot.capture.control_result() == DesktopControl{ Key::none, button },
                 "A mouse release did not complete Shoot with that button");
+            free_mouse = pending;
+            free_mouse.keyboard_shoot = { Key::e, MouseButton::none };
+            DesktopHarness sub(free_mouse, KeyboardAction::sub);
+            require(sub.capture.accepts_mouse(), "Sub capture does not accept the mouse");
+            sub.click(button);
+            require(sub.capture.phase() == Phase::complete && sub.capture.control_result() == DesktopControl{ Key::none, button },
+                "A click did not complete Sub with that button");
             DesktopHarness jump(pending, KeyboardAction::jump);
             require(!jump.capture.accepts_mouse(), "Jump capture accepts the mouse");
             jump.click(button);
             require(jump.capture.phase() == Phase::ready && jump.capture.rejection() == Rejection::none,
                 "A click changed a non-Shoot gesture");
+        }
+        // Shoot may not take Sub's pending right click, nor Sub Shoot's left.
+        {
+            DesktopHarness shoot(pending, KeyboardAction::shoot);
+            shoot.click(MouseButton::right);
+            DesktopHarness sub(pending, KeyboardAction::sub);
+            sub.click(MouseButton::left);
+            require(shoot.capture.rejection() == Rejection::conflict && !shoot.capture.control_result() &&
+                sub.capture.rejection() == Rejection::conflict && !sub.capture.control_result(),
+                "Shoot and Sub took each other's pending mouse button");
         }
         // A key plus a click is a chord; another action ignores Shoot's click.
         {
@@ -534,6 +554,7 @@ namespace
             h.keyboard.on_key_up(Key::f); h.mouse.on_button_up(MouseButton::left); h.frame();
             require(h.capture.phase() == Phase::ready, "All-up did not rearm Shoot after a chord");
             pending.keyboard_shoot = { Key::none, MouseButton::right };
+            pending.keyboard_sub = { Key::none, MouseButton::left };
             DesktopHarness held(pending, KeyboardAction::move_right);
             held.click(MouseButton::right);
             require(held.capture.phase() == Phase::ready, "A click used by Shoot affected Move right's gesture");
@@ -552,8 +573,8 @@ namespace
             h.key(Key::escape);
             require(h.capture.phase() == Phase::cancelled && !h.capture.control_result(), "Escape did not cancel Shoot's gesture");
         }
-        std::cout << "PASS keyboard capture targets: six actions x 27 keys against pending choices (" << accepted <<
-            " accepted, " << refused << " refused), five Shoot clicks, clicks ignored elsewhere, key+click chords, "
+        std::cout << "PASS keyboard capture targets: seven actions x 27 keys against pending choices (" << accepted <<
+            " accepted, " << refused << " refused), five Shoot and five Sub clicks, each refused the other's, clicks ignored elsewhere, key+click chords, "
             "conflict with a pending key Shoot, focus and Escape cancellation\n";
     }
 }

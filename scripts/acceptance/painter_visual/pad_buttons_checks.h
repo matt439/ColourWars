@@ -153,7 +153,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 require(jump_of(page->pending_profile()) == choices[choice] && preferences_session.input_bindings() == initial && bytes() == saved,
                     "Pad Buttons selector applied before Apply or used the roster index");
                 copy_check(choice == 0 ? "entry" : "pending", slot, PadControl::a, choices[choice], copy.pending_status);
-                move(Key::down, 7); tap(Key::enter);
+                move(Key::down, 8); tap(Key::enter);
                 InputBindings expected = initial; expected.pads[slot][PadAction::jump].primary = choices[choice];
                 Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
                 require(preferences_session.input_bindings() == expected && reloaded_session.input_bindings() == expected &&
@@ -171,7 +171,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     InputBindings external = preferences_session.input_bindings(); external.keyboard_jump = Key::k;
     external.pads[3][PadAction::jump].primary = PadControl::y;
     require(preferences_session.set_input_bindings_and_save(external), "Cannot seed independent newer binding preferences");
-    move(Key::down, 7); tap(Key::enter);
+    move(Key::down, 8); tap(Key::enter);
     require(preferences_session.input_bindings().keyboard_jump == Key::k && preferences_session.input_bindings() ==
         with_jumps(external, { PadControl::x, PadControl::b, PadControl::a, PadControl::y }),
         "Pad Buttons Apply replaced a newer keyboard/unedited slot or lost an edited slot");
@@ -181,23 +181,25 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const std::string before_back = bytes(); tap(Key::escape);
     require(bytes() == before_back && jump_of(preferences_session.input_bindings().pads[1]) == PadControl::b,
         "Back persisted a reset proposal");
-    // Shoot left from RT skips LT, which Jump already uses, and lands on RB.
+    // Shoot left from RT skips LT, which Jump already uses, and RB, which
+    // Sub uses, and lands on LB.
     require(preferences_session.set_input_bindings_and_save(initial), "Cannot prepare Pad Buttons conflict fixture"); open(0);
     move(Key::down, 3); tap(Key::left);
-    require(page->pending_profile()[PadAction::shoot].primary == PadControl::right_shoulder &&
-        page->pending_profile()[PadAction::jump] == PadProfile{}[PadAction::jump] && preferences_session.input_bindings() == initial,
+    require(page->pending_profile()[PadAction::shoot].primary == PadControl::left_shoulder &&
+        page->pending_profile()[PadAction::jump] == PadProfile{}[PadAction::jump] &&
+        page->pending_profile()[PadAction::sub] == PadProfile{}[PadAction::sub] && preferences_session.input_bindings() == initial,
         "Choosing a control in use did not skip it, or changed Jump or the save before Apply");
     copy_check("conflict", 0, PadControl::a, PadControl::a, copy.conflict_status, true);
-    move(Key::down, 5); tap(Key::enter);
+    move(Key::down, 6); tap(Key::enter);
     {
         Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
-        require(reloaded_session.input_bindings().pads[0][PadAction::shoot].primary == PadControl::right_shoulder &&
+        require(reloaded_session.input_bindings().pads[0][PadAction::shoot].primary == PadControl::left_shoulder &&
             reloaded_session.input_bindings().pads[1] == PadProfile{}, "Rebound Shoot did not apply and reload for only its pad");
     }
     tap(Key::escape);
     // One controlled file refusal, followed by the same actual Apply widget.
     require(preferences_session.set_input_bindings_and_save(initial), "Cannot prepare Pad Jump failed write"); open(-1);
-    tap(Key::down); tap(Key::right); move(Key::down, 7); const std::string old = bytes();
+    tap(Key::down); tap(Key::right); move(Key::down, 8); const std::string old = bytes();
     require(blocked.hold(), "Cannot lock the private Pad Jump save");
     tap(Key::enter); require(jump_of(preferences_session.input_bindings().pads[0]) == PadControl::b && bytes() == old,
         "Failed Pad Buttons write rolled back active choice or changed old JSON");
@@ -263,7 +265,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const auto fingerprint = MatchFingerprint::of(game->level(), 0);
 #endif
         tap_pad(3, GamepadButton::dpad_down); move_pad(3, GamepadButton::dpad_right, 2);
-        move_pad(3, GamepadButton::dpad_down, 7); tap_pad(3, GamepadButton::a); tick();
+        move_pad(3, GamepadButton::dpad_down, 8); tap_pad(3, GamepadButton::a); tick();
         require(jump_of(preferences_session.input_bindings().pads[3]) == PadControl::x &&
             jump_of(preferences_session.input_bindings().pads[0]) == PadControl::a,
             "Paused Pad Jump defaulted to a player/view index instead of physical owner slot3");
@@ -305,8 +307,9 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), &preferences_session.input_bindings());
         auto level = build(app, builder, 4, TeamColourPair::blue_yellow);
         const Frame four = render(*level, *app.renderer());
-        for (const std::wstring_view line : { L"Pad 4: Y / LT Jump, RT Shoot, Start Pause", L"Pad 2: B / LT Jump, RT Shoot, Start Pause",
-            L"Pad 3: X / LT Jump, RT Shoot, Start Pause", L"Pad 1: A / LT Jump, RT Shoot, Start Pause" })
+        for (const std::wstring_view line : { L"Pad 4: Y / LT Jump, RT Shoot, RB Sub, Start Pause",
+            L"Pad 2: B / LT Jump, RT Shoot, RB Sub, Start Pause", L"Pad 3: X / LT Jump, RT Shoot, RB Sub, Start Pause",
+            L"Pad 1: A / LT Jump, RT Shoot, RB Sub, Start Pause" })
         { require(level->gamepad_controls_text().find(line) != std::wstring_view::npos,
             "Mixed four-pad opening reminder lost a physical slot's selected face or LT"); }
         const RectangleF four_card = level->gamepad_controls_card_bounds(), four_text = level->gamepad_controls_text_bounds();

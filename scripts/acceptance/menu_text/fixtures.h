@@ -97,9 +97,9 @@ namespace menu_text_acceptance
     struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
     constexpr HelpText help_text[]{
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\n"
-            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Debug: Back / View\nKEYBOARD + MOUSE\n"
+            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nDebug: Back / View\nKEYBOARD + MOUSE\n"
             L"Move: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\n"
-            L"Jump: {jump} (hold for height)\nPause: {pause}    Debug: F1\nMENUS\n"
+            L"Jump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
             L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
             L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -120,8 +120,9 @@ namespace menu_text_acceptance
         { "drop", L"Drop", &KeyboardKeysMenuText::drop },
         { "shoot", L"Shoot", &KeyboardKeysMenuText::shoot },
         { "pause", L"Pause (also)", &KeyboardKeysMenuText::pause },
+        { "sub", L"Sub", &KeyboardKeysMenuText::sub },
         { "reset", L"Reset all keys", &KeyboardKeysMenuText::reset },
-        { "help", L"Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot may also take a mouse button.\n"
+        { "help", L"Select a row, then press its new key.\nUse one A-Z key or Space;\nShoot and Sub may take a mouse button.\n"
             L"One key does one action;\nkeys in use are refused.\nEsc always pauses and Down always drops.\n"
             L"Apply activates and saves your keys.\nBack discards unapplied changes.\nMenus and intro skip keep their fixed keys.",
             &KeyboardKeysMenuText::help, true },
@@ -148,8 +149,9 @@ namespace menu_text_acceptance
         { "shoot_alternate", L"Shoot (also)", &PadButtonsMenuText::shoot_alternate, false, true },
         { "pause", L"Pause", &PadButtonsMenuText::pause, false, true },
         { "pause_alternate", L"Pause (also)", &PadButtonsMenuText::pause_alternate, false, true },
+        { "sub", L"Sub", &PadButtonsMenuText::sub, false, true },
         { "reset", L"Reset this pad", &PadButtonsMenuText::reset },
-        { "help", L"Choose Jump, Shoot and Pause for this\npad, each with an optional second control.\n"
+        { "help", L"Choose Jump, Shoot, Pause and Sub for\nthis pad. All but Sub may take a second control.\n"
             L"One control does one action per pad;\ncontrols in use are skipped.\nLS / RS mean pressing a stick in.\n"
             L"Apply saves edited pads.\nBack discards unapplied changes.\nMenus and intro skip keep A / B / Start.\n"
             L"Profiles follow Pad 1-4 slots.", &PadButtonsMenuText::help, true },
@@ -302,13 +304,13 @@ namespace menu_text_acceptance
     constexpr ControlsText controls_text_defaults[]{
         { "keyboard_heading", L"KEYBOARD + MOUSE", &ControlsCopy::keyboard_heading, false },
         { "gamepad_heading", L"GAMEPAD", &ControlsCopy::gamepad_heading, false },
-        { "keyboard_reminder", L"{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot\n"
+        { "keyboard_reminder", L"{left} / {right}  Move    |    {drop}  Drop through\n{jump}  Jump    |    {shoot}  Shoot    |    {sub}  Sub\n"
             L"Mouse  Aim    |    {pause}  Pause", &ControlsCopy::keyboard_reminder, true },
-        { "gamepad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot\n"
+        { "gamepad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pad_jump}  Jump    |    {pad_shoot}  Shoot    |    {pad_sub}  Sub\n"
             L"Right stick  Aim    |    {pad_pause}  Pause", &ControlsCopy::gamepad_reminder, true },
         { "gamepad_per_pad_reminder", L"Left stick  Move    |    Stick down  Drop through\n{pads}\nRight stick  Aim",
             &ControlsCopy::gamepad_per_pad_reminder, true },
-        { "gamepad_pad_line", L"Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_pause} Pause",
+        { "gamepad_pad_line", L"Pad {pad}: {pad_jump} Jump, {pad_shoot} Shoot, {pad_sub} Sub, {pad_pause} Pause",
             &ControlsCopy::gamepad_pad_line, false },
         { "per_pad", L"per pad", &ControlsCopy::per_pad, false }
     };

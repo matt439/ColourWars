@@ -6,8 +6,8 @@
 #include "game/input/input_slots.h"
 #include <optional>
 
-// Per-XInput-slot gameplay Jump, Shoot and Pause controls, each with an
-// optional alternate. Choosing skips controls another entry of the same pad
+// Per-XInput-slot gameplay Jump, Shoot, Pause and Sub controls, the first
+// three each with an optional alternate. Choosing skips controls another entry of the same pad
 // already uses, so a pending profile is always valid. Only edited pad slots are
 // merged on Apply; keyboard bindings and other pages' preferences stay independent.
 class PadButtonsMenu final : public SettingsPanelPage
@@ -21,8 +21,8 @@ public:
 protected:
 	bool accepts_stick_navigation() const override { return false; }
 private:
-	// One row per action entry, in PadAction order with the alternate after its primary.
-	static constexpr size_t entry_count = pad_action_count * 2;
+	// One row per action entry (pad_entry): PadAction order, each alternate after its primary.
+	static constexpr size_t entry_count = pad_entry_count;
 	void refresh_values();
 	void set_status(const std::wstring& value, bool warning = false);
 	void choose(size_t entry, labrador::Direction direction);

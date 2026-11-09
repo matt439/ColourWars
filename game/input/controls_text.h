@@ -19,13 +19,13 @@ namespace controls_text
     std::array<labrador::Key, 27> keyboard_keys();
     // "A" ... "Z" as legends, then the copy's Space.
     std::wstring key_label(const ControlLabels& labels, labrador::Key key);
-    // A key, a Shoot mouse button, or the copy's None for the unbound extra Pause key.
+    // A key, a Shoot or Sub mouse button, or the copy's None for the unbound extra Pause key.
     std::wstring desktop_label(const ControlLabels& labels, const DesktopControl& control);
     // The pad legends, then the copy's Start and None.
     std::wstring pad_label(const ControlLabels& labels, PadControl control);
-    // {jump} is required exactly once; {left}, {right}, {drop}, {shoot} and
-    // {pause} (Esc, then any extra key) are optional, each at most once, and
-    // so are {pad_jump}, {pad_shoot} and {pad_pause}: the pads' shared choice
+    // {jump} is required exactly once; {left}, {right}, {drop}, {shoot},
+    // {pause} (Esc, then any extra key) and {sub} are optional, each at most
+    // once, and so are {pad_jump}, {pad_shoot}, {pad_pause} and {pad_sub}: the pads' shared choice
     // ("A / LT"), or the copy's per_pad when the slots' profiles differ. The
     // Key overload formats the defaults with that Jump label.
     std::wstring controls_help(const ControlsCopy& copy, std::wstring_view authored, labrador::Key jump);
@@ -33,7 +33,7 @@ namespace controls_text
     std::wstring keyboard_controls_reminder(const ControlsCopy& copy, labrador::Key jump);
     std::wstring keyboard_controls_reminder(const ControlsCopy& copy, const InputBindings& bindings);
     // Every label an action's row can show, for fit validation: None for
-    // Pause, the 27 keys, and the mouse buttons for Shoot.
+    // Pause, the 27 keys, and the mouse buttons for Shoot and Sub.
     std::vector<std::wstring> keyboard_control_labels(const ControlLabels& labels, KeyboardAction action);
     // "A / LT": an action's primary control, then its alternate if any.
     std::wstring pad_choice_label(const ControlLabels& labels, const PadActionChoice& choice);
@@ -42,6 +42,6 @@ namespace controls_text
     std::wstring pad_controls_reminder(const ControlsCopy& copy, const InputBindings& bindings,
         std::span<const int> slots);
     // {key} exactly once, single-line; `label` must be one of key_label's or
-    // a Shoot mouse button's in `labels`.
+    // a mouse button's in `labels`.
     std::wstring key_line(const ControlLabels& labels, std::wstring_view authored, std::wstring_view label);
 }

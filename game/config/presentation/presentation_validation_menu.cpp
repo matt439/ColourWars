@@ -7,6 +7,7 @@
 #include "game/config/presentation/presentation_validation.h"
 #include "game/build_info.h"
 #include "game/config/presentation/menu_geometry.h"
+#include "game/input/input_bindings.h"
 
 #include <algorithm>
 #include <cmath>
@@ -187,7 +188,9 @@ Presentation::Validation::StatusBacks Presentation::Validation::status_back_card
 		main.options_font, options_art);
 	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 10.0f),
 		controls.item_font, controls.art);
-	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 9.0f),
+	// Pad Buttons: the Pad row, its entries, Reset and Apply, then Back.
+	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f,
+		controls.layout.spacing.y * static_cast<float>(pad_entry_count + 3)),
 		controls.item_font, controls.art);
 	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 8.0f),
 		controls.item_font, controls.art);

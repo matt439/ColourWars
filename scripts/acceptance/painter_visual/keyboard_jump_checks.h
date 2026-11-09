@@ -105,6 +105,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         if (control.button == MouseButton::left) { return L"Left click"; }
         if (control.button == MouseButton::right) { return L"Right click"; }
+        if (control.button == MouseButton::middle) { return L"Middle click"; }
         require(control.button == MouseButton::none, "Keyboard Keys fixture met an undeclared mouse button");
         if (control.key == Key::none) { return L"None"; }
         if (control.key == Key::space) { return L"Space"; }
@@ -153,8 +154,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             MenuStyle row_style = style; row_style.item_font = look.item_font;
             const Vector2F value_limit(look.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset -
                 (look.layout.position.x + look.layout.spacing.x), look.layout.spacing.y - art.focus_padding.y * 2.0f);
-            // Six capture rows (label and pending value), then Reset, Apply, Back.
-            for (size_t row = 0; row < 6; ++row)
+            // Seven capture rows (label and pending value), then Reset, Apply, Back.
+            for (size_t row = 0; row < keyboard_action_count; ++row)
             {
                 const Vector2F position = look.layout.position + Vector2F(0.0f, static_cast<float>(row) * look.layout.spacing.y);
                 auto option = std::make_unique<OptionRow>("independent-keyboard-row", text.keyboard_jump.row(row), position,
@@ -168,7 +169,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             for (size_t row = 0; row < labels.size(); ++row)
             {
                 const Vector2F position = look.layout.position + Vector2F(0.0f,
-                    static_cast<float>(row + 6) * look.layout.spacing.y);
+                    static_cast<float>(row + keyboard_action_count) * look.layout.spacing.y);
                 auto label = std::make_unique<UiText>("independent-jump-action", labels[row], look.item_font,
                     position, app.render_resources(), art.ink);
                 const RectangleF raw = label->bounds();
@@ -233,7 +234,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         if (action_copy)
         {
             RectangleF crop(look.layout.position, Vector2F(look.controls_position.x - look.layout.position.x,
-                look.layout.spacing.y * 9.0f)); crop.inflate(art.focus_padding + Vector2F(art.shadow_offset));
+                look.layout.spacing.y * 10.0f)); crop.inflate(art.focus_padding + Vector2F(art.shadow_offset));
             save(foreground_crop(actual, project(crop)), output / (stem + "-actions.ppm"));
         }
         if (write && (std::string_view(name) == "entry" ||
@@ -280,7 +281,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.keyboard()->on_key_up(Key::j); tick(); tick();
         copy_check("pending-j", original, help_copy(copy, Key::space, Key::j), copy.pending_status,
             false, Key::space, Key::j);
-        move(Key::down, 6); tap(Key::enter); tick();
+        move(Key::down, 7); tap(Key::enter); tick();
         require(stack.depth() == 2 && bytes() == unapplied &&
             preferences_session.input_bindings().keyboard_jump == Key::space,
             "Keyboard Jump Back saved its pending key or closed its parent");
@@ -317,11 +318,11 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(bytes() == unapplied && preferences_session.input_bindings().keyboard_jump == Key::space,
             "A new focus-safe capture gesture activated before Apply");
         // Reset is pending; it does not change the active key or disk.
-        move(Key::down, 4); tap(Key::enter);
+        move(Key::down, 5); tap(Key::enter);
         copy_check("reset-pending", original, help_copy(copy, Key::space, Key::space), copy.pending_status,
             false, Key::space, Key::space);
-        move(Key::up, 4); tap(Key::enter); tick(); tap(Key::j); tick();
-        move(Key::down, 5); tap(Key::enter); tick();
+        move(Key::up, 5); tap(Key::enter); tick(); tap(Key::j); tick();
+        move(Key::down, 6); tap(Key::enter); tick();
         require(preferences_session.input_bindings().keyboard_jump == Key::j &&
             preferences_session.play_settings().music_volume == 0, "Child Apply changed pending parent audio");
         reload(Key::j, 0);
@@ -347,7 +348,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         std::wstring parent_help = substitute(original.menu_text().help.controls, L"{jump}", L"J");
         for (const auto& [token, words] : { std::pair{ L"{left}", L"A" }, std::pair{ L"{right}", L"D" },
             std::pair{ L"{drop}", L"S" }, std::pair{ L"{shoot}", L"Left click" }, std::pair{ L"{pause}", L"Esc" },
-            std::pair{ L"{pad_shoot}", L"RT" }, std::pair{ L"{pad_jump}", L"A / LT" }, std::pair{ L"{pad_pause}", L"Start" } })
+            std::pair{ L"{pad_shoot}", L"RT" }, std::pair{ L"{pad_jump}", L"A / LT" }, std::pair{ L"{pad_pause}", L"Start" },
+            std::pair{ L"{sub}", L"Right click" }, std::pair{ L"{pad_sub}", L"RB" } })
         { parent_help = substitute(parent_help, token, words); }
         copy_check("parent-refreshed-j", original, parent_help, original.menu_text().status.controls_pending,
             false, Key::j, Key::j);
@@ -358,7 +360,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         move(Key::up, 8); child();
         // A refused write leaves the effective choice active and the old JSON
         // intact. The same real Apply widget retries after the refusal clears.
-        move(Key::down, 2); tap(Key::enter); tick(); tap(Key::k); tick(); move(Key::down, 5);
+        move(Key::down, 2); tap(Key::enter); tick(); tap(Key::k); tick(); move(Key::down, 6);
         const std::string before_failure = bytes();
         require(blocked_path.hold(), "Cannot lock the private Jump save");
         tap(Key::enter); tick();
@@ -380,7 +382,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         // separate fresh Space gesture still has the fixed menu Proceed role.
         move(Key::down, 2); tap(Key::enter); tick(); tap(Key::space); tick();
         const std::string before_space_apply = bytes();
-        move(Key::down, 5); tick(); tick();
+        move(Key::down, 6); tick(); tick();
         require(preferences_session.input_bindings().keyboard_jump == Key::k && bytes() == before_space_apply,
             "Space capture leaked its release into Apply");
         copy_check("space-awaits-confirm", original, help_copy(copy, Key::k, Key::space), copy.pending_status,
@@ -388,20 +390,21 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(Key::space); tick(); reload(Key::space, 10);
         copy_check("space-fresh-confirm", original, help_copy(copy, Key::space, Key::space), copy.saved_status,
             false, Key::space, Key::space);
-        // The other actions: Move left to J, Shoot to a right click, extra
-        // Pause to P, then Jump onto the A that Move left freed.
-        move(Key::up, 7); tap(Key::enter); tick(); tap(Key::j); tick();
+        // The other actions: Move left to J, Shoot to a middle click (Sub
+        // holds the right), extra Pause to P, then Jump onto the A that Move
+        // left freed.
+        move(Key::up, 8); tap(Key::enter); tick(); tap(Key::j); tick();
         move(Key::down, 4); tap(Key::enter); tick();
-        app.mouse()->on_button_down(MouseButton::right); tick(); app.mouse()->on_button_up(MouseButton::right); tick(); tick();
+        app.mouse()->on_button_down(MouseButton::middle); tick(); app.mouse()->on_button_up(MouseButton::middle); tick(); tick();
         move(Key::down, 1); tap(Key::enter); tick(); tap(Key::p); tick();
         move(Key::up, 3); tap(Key::enter); tick(); tap(Key::a); tick();
         InputBindings moved; moved.keyboard_move_left = Key::j; moved.keyboard_jump = Key::a;
-        moved.keyboard_shoot = { Key::none, MouseButton::right }; moved.keyboard_pause = Key::p;
+        moved.keyboard_shoot = { Key::none, MouseButton::middle }; moved.keyboard_pause = Key::p;
         require(preferences_session.input_bindings().keyboard_jump == Key::space && preferences_session.input_bindings().keyboard_move_left == Key::a,
             "Pending Keyboard Keys captures activated before Apply");
         copy_check("moved-values", original, help_copy(copy, Key::space, Key::a), copy.pending_status,
             false, Key::space, Key::a, true, moved, 2);
-        move(Key::down, 5); tap(Key::enter); tick();
+        move(Key::down, 6); tap(Key::enter); tick();
         {
             Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); ++reloads;
             require(same_keyboard(reloaded_session.input_bindings(), moved) && same_keyboard(preferences_session.input_bindings(), moved) &&
@@ -439,8 +442,8 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.renderer()->begin_frame(); game->draw(*app.renderer()); return read(*app.renderer());
         };
         const Frame before = draw_game();
-        const std::wstring space_reminder = L"A / D  Move    |    S  Drop through\nSpace  Jump    |    Left click  Shoot\nMouse  Aim    |    Esc  Pause";
-        const std::wstring j_reminder = L"A / D  Move    |    S  Drop through\nJ  Jump    |    Left click  Shoot\nMouse  Aim    |    Esc  Pause";
+        const std::wstring space_reminder = L"A / D  Move    |    S  Drop through\nSpace  Jump    |    Left click  Shoot    |    Right click  Sub\nMouse  Aim    |    Esc  Pause";
+        const std::wstring j_reminder = L"A / D  Move    |    S  Drop through\nJ  Jump    |    Left click  Shoot    |    Right click  Sub\nMouse  Aim    |    Esc  Pause";
         require(game->level().keyboard_controls_text() == space_reminder,
             "Built opening reminder did not show the effective default Jump key");
         tap(Key::escape); tick(); require(stack.depth() == 3, "Countdown Escape did not open actual Pause");
@@ -454,7 +457,7 @@ void keyboard_jump_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 #if COLOURWARS_DEV_TOOLS
         const auto fingerprint = MatchFingerprint::of(game->level(), 0);
 #endif
-        move(Key::down, 2); tap(Key::enter); tick(); tap(Key::j); tick(); move(Key::down, 5); tap(Key::enter); tick();
+        move(Key::down, 2); tap(Key::enter); tick(); tap(Key::j); tick(); move(Key::down, 6); tap(Key::enter); tick();
         // New live reminder geometry must not replace the built text snapshot.
         auto& live = const_cast<MatchPresentation&>(presentation.match());
         live.controls_padding *= 2.0f; live.controls_gap *= 2.0f;

@@ -1394,7 +1394,7 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
 There is no free F-key for the perf overlay: F12 is the Windows debugger hotkey
 (it breaks into an attached debugger). `bind shift+f2 "overlay perf"` gives it one.
 
-While the Keyboard Keys page captures a physical key (or Shoot's click), it owns input before
+While the Keyboard Keys page captures a physical key (or Shoot's or Sub's click), it owns input before
 developer page hooks run. Grave/F10/F11 presses and the pad Back+Start chord
 cannot open developer UI or leak into it afterward. Capture discards queued
 scripts, match/leave requests, goto, screenshots, reload content and armed

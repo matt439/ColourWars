@@ -4,8 +4,8 @@ const MenuHelpText& controls_help_copy()
 {
     static const MenuHelpText copy{
         L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\n"
-        L"Pause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\n"
-        L"Aim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Debug: F1\n"
+        L"Pause: Start    Sub: RB\nDebug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\n"
+        L"Aim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\n"
         L"MENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
         L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
         L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -22,7 +22,7 @@ std::wstring with_default_keys(std::wstring text)
     for (const auto& [token, key] : { std::pair{ std::wstring_view(L"{left}"), L"A" },
         std::pair{ std::wstring_view(L"{right}"), L"D" }, std::pair{ std::wstring_view(L"{drop}"), L"S" },
         std::pair{ std::wstring_view(L"{shoot}"), L"Left click" }, std::pair{ std::wstring_view(L"{jump}"), L"Space" },
-        std::pair{ std::wstring_view(L"{pause}"), L"Esc" } })
+        std::pair{ std::wstring_view(L"{pause}"), L"Esc" }, std::pair{ std::wstring_view(L"{sub}"), L"Right click" } })
     {
         const size_t at = text.find(token);
         if (at != std::wstring::npos) { text.replace(at, token.size(), key); }

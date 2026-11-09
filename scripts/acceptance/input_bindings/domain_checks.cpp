@@ -44,12 +44,23 @@ namespace input_bindings_acceptance
     }
 
     PadProfile profile(PadControl jump, PadControl jump_also, PadControl shoot, PadControl shoot_also,
-        PadControl pause, PadControl pause_also)
+        PadControl pause, PadControl pause_also, PadControl sub)
     {
         PadProfile result;
         result[PadAction::jump] = { jump, jump_also };
         result[PadAction::shoot] = { shoot, shoot_also };
         result[PadAction::pause] = { pause, pause_also };
+        if (sub == PadControl::none)
+        {
+            const std::array<PadControl, 6> order{ PadControl::right_shoulder, PadControl::left_shoulder,
+                PadControl::a, PadControl::b, PadControl::x, PadControl::y };
+            for (const PadControl control : order)
+            {
+                if (control != jump && control != jump_also && control != shoot && control != shoot_also &&
+                    control != pause && control != pause_also) { sub = control; break; }
+            }
+        }
+        result[PadAction::sub] = { sub, PadControl::none };
         return result;
     }
 
@@ -87,14 +98,6 @@ namespace input_bindings_acceptance
     {
         require(game_action_count == 9 && menu_action_count == 4 && menu_direction_count == 4,
             "Input binding test surface changed without its explicit physical-control oracle");
-        const auto profile_uses = [&pad](PadControl control)
-        {
-            for (const PadAction pad_action : { PadAction::jump, PadAction::shoot, PadAction::pause })
-            {
-                if (pad[pad_action].primary == control || pad[pad_action].alternate == control) { return true; }
-            }
-            return false;
-        };
         for (size_t index = 0; index < game_action_count; ++index)
         {
             const GameAction action = static_cast<GameAction>(index);
@@ -121,14 +124,9 @@ namespace input_bindings_acceptance
             if (action == GameAction::jump) { rebindable(PadAction::jump); }
             if (action == GameAction::shoot) { rebindable(PadAction::shoot); }
             if (action == GameAction::pause) { rebindable(PadAction::pause); }
+            if (action == GameAction::sub) { rebindable(PadAction::sub); }
             if (action == GameAction::debug) { buttons = { GamepadButton::back }; }
             if (action == GameAction::skip_intro) { buttons = { GamepadButton::a, GamepadButton::b, GamepadButton::start }; }
-            // ROAD#11: RB, else LB, else nothing, never a control the profile chose.
-            if (action == GameAction::sub)
-            {
-                if (!profile_uses(PadControl::right_shoulder)) { buttons = { GamepadButton::right_shoulder }; }
-                else if (!profile_uses(PadControl::left_shoulder)) { buttons = { GamepadButton::left_shoulder }; }
-            }
             require(actual.game_pad[index].buttons == buttons, "Effective pad buttons differ from the profile or a fixed alias changed");
             const auto& actual_triggers = actual.game_pad[index].triggers;
             require(actual_triggers.size() == triggers.size(), "Effective pad triggers differ from the profile");
@@ -248,7 +246,9 @@ namespace input_bindings_acceptance
         const PadProfile defaults = profile(PadControl::a, PadControl::left_trigger, PadControl::right_trigger,
             PadControl::none, PadControl::start, PadControl::none);
         for (const PadProfile& pad : preferences.pads)
-        { require(pad == defaults, "Missing pad profiles must default to A / LT Jump, RT Shoot and Start Pause"); }
+        { require(pad == defaults, "Missing pad profiles must default to A / LT Jump, RT Shoot, Start Pause and RB Sub"); }
+        require(defaults[PadAction::sub] == PadActionChoice{ PadControl::right_shoulder, PadControl::none },
+            "The default Sub control is not RB");
         const auto listed = pad_controls();
         require(listed.size() + 1 == expected_controls.size(), "Pad control domain changed size");
         for (size_t index = 0; index < listed.size(); ++index)
@@ -261,13 +261,20 @@ namespace input_bindings_acceptance
                 "Pad control domain, canonical token or legend differs from its explicit contract");
         }
         require(pad_action_name(PadAction::jump) == "jump" && pad_action_name(PadAction::shoot) == "shoot" &&
-            pad_action_name(PadAction::pause) == "pause", "Pad action save keys changed");
+            pad_action_name(PadAction::pause) == "pause" && pad_action_name(PadAction::sub) == "sub",
+            "Pad action save keys changed");
+        require(pad_entry_count == 7 && pad_entry(5).action == PadAction::pause && pad_entry(5).alternate &&
+            pad_entry(6).action == PadAction::sub && !pad_entry(6).alternate &&
+            !pad_action_has_alternate(PadAction::sub) && pad_action_has_alternate(PadAction::pause),
+            "Pad Buttons rows are not each primary then its alternate, with Sub's alone last");
         require(pad_control_conflict(defaults, PadAction::jump, false, PadControl::right_trigger) == PadAction::shoot &&
             pad_control_conflict(defaults, PadAction::jump, true, PadControl::a) == PadAction::jump &&
             pad_control_conflict(defaults, PadAction::pause, true, PadControl::left_trigger) == PadAction::jump &&
             !pad_control_conflict(defaults, PadAction::jump, false, PadControl::a) &&
             !pad_control_conflict(defaults, PadAction::shoot, true, PadControl::none) &&
-            !pad_control_conflict(defaults, PadAction::shoot, false, PadControl::right_shoulder),
+            pad_control_conflict(defaults, PadAction::shoot, false, PadControl::right_shoulder) == PadAction::sub &&
+            !pad_control_conflict(defaults, PadAction::sub, false, PadControl::right_shoulder) &&
+            !pad_control_conflict(defaults, PadAction::shoot, false, PadControl::left_shoulder),
             "Pad conflict query named the wrong owner or flagged an entry's own control");
         rejects([] { pad_control_name(static_cast<PadControl>(200)); }, "Unknown pad control acquired a token");
         rejects([] { pad_control_legend(static_cast<PadControl>(200)); }, "Unknown pad control acquired a legend");
@@ -279,6 +286,7 @@ namespace input_bindings_acceptance
             {
                 for (bool alternate : { false, true })
                 {
+                    if (alternate && !pad_action_has_alternate(action)) { continue; }
                     for (PadControl control : listed)
                     {
                         PadProfile pad = defaults;
@@ -300,7 +308,8 @@ namespace input_bindings_acceptance
                         const ActionBindings effective = effective_action_bindings(preferences, slot);
                         require_mapping(effective, Key::j, pad);
                         const GameAction game = action == PadAction::jump ? GameAction::jump :
-                            (action == PadAction::shoot ? GameAction::shoot : GameAction::pause);
+                            (action == PadAction::shoot ? GameAction::shoot :
+                            (action == PadAction::pause ? GameAction::pause : GameAction::sub));
                         const float threshold = action == PadAction::shoot ? tuning.trigger_shoot_threshold : tuning.trigger_jump_threshold;
                         const bool reaches = !is_trigger(control) || threshold < 1.0f;
                         GamepadState before; before.connected = true;
@@ -344,7 +353,10 @@ namespace input_bindings_acceptance
             profile(PadControl::a, PadControl::none, PadControl::right_trigger, PadControl::start, PadControl::start, PadControl::none),
             profile(PadControl::a, PadControl::left_trigger, PadControl::right_trigger, PadControl::none, PadControl::y, PadControl::left_trigger),
             profile(static_cast<PadControl>(200), PadControl::none, PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none),
-            profile(PadControl::a, static_cast<PadControl>(200), PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none) })
+            profile(PadControl::a, static_cast<PadControl>(200), PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none),
+            profile(PadControl::a, PadControl::none, PadControl::right_trigger, PadControl::none, PadControl::start, PadControl::none, PadControl::a),
+            [] { PadProfile sub_alternate; sub_alternate[PadAction::sub].alternate = PadControl::left_shoulder; return sub_alternate; }(),
+            [] { PadProfile no_sub; no_sub[PadAction::sub].primary = PadControl::none; return no_sub; }() })
         {
             rejects([&] { invalid.validate(); }, "An unbound, duplicate or unknown pad control validated");
             InputBindings bindings = preferences; bindings.pads[2] = invalid;

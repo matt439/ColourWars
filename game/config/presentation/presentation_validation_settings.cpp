@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -152,7 +153,7 @@ RectangleF Presentation::Validation::validate_controls_help(const RectangleF& he
 		std::vector<DesktopControl> choices;
 		if (action == KeyboardAction::pause) { choices.push_back({}); }
 		for (const Key key : controls_text::keyboard_keys()) { choices.push_back({ key, MouseButton::none }); }
-		if (action == KeyboardAction::shoot) { for (const MouseButton button : buttons) { choices.push_back({ Key::none, button }); } }
+		if (keyboard_action_takes_mouse(action)) { for (const MouseButton button : buttons) { choices.push_back({ Key::none, button }); } }
 		for (const DesktopControl& choice : choices)
 		{
 			InputBindings bindings;
@@ -225,9 +226,10 @@ void Presentation::Validation::validate_keyboard_jump_text(const RectangleF& hel
 	const RectangleF jump_heading = jump_text("heading", jump.heading, this->presentation.menu_.heading_font, controls.heading_position, false);
 	if (jump_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
 	{ throw std::runtime_error(this->presentation.source_path_ + ": menu_text.keyboard_jump.heading must end before its first focus card."); }
-	// Rows: six capture rows (an OptionRow label and its control value), then
+	// Rows: seven capture rows (an OptionRow label and its control value), then
 	// Reset, Apply and Back.
-	const char* keyboard_rows[]{ "move_left", "move_right", "jump", "drop", "shoot", "pause" };
+	const char* keyboard_rows[]{ "move_left", "move_right", "jump", "drop", "shoot", "pause", "sub" };
+	static_assert(std::extent_v<decltype(keyboard_rows)> == keyboard_action_count);
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
 		const Vector2F position = controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(index));
@@ -267,8 +269,9 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 		controls.heading_position, false);
 	if (pad_buttons_heading.bottom() > controls.layout.position.y - controls.art.focus_padding.y)
 	{ throw std::runtime_error(this->presentation.source_path_ + ": menu_text.pad_buttons.heading must end before its first focus card."); }
-	// Rows: Pad, six action entries, Reset, Apply, Back.
-	const char* pad_button_rows[]{ "jump", "jump_alternate", "shoot", "shoot_alternate", "pause", "pause_alternate" };
+	// Rows: Pad, seven action entries, Reset, Apply, Back.
+	const char* pad_button_rows[]{ "jump", "jump_alternate", "shoot", "shoot_alternate", "pause", "pause_alternate", "sub" };
+	static_assert(std::extent_v<decltype(pad_button_rows)> == pad_entry_count);
 	for (size_t index = 0; index < std::size(pad_button_rows); ++index)
 	{
 		const Vector2F position = controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(index + 1));
@@ -282,7 +285,7 @@ RectangleF Presentation::Validation::validate_pad_buttons_text(const RectangleF&
 			position + Vector2F(controls.layout.spacing.x, 0.0f), true);
 	}
 	pad_buttons_text("reset", pad_buttons.reset, controls.item_font,
-		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 7.0f), true);
+		controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(pad_entry_count + 1)), true);
 	const RectangleF pad_buttons_help = check_help_fit("menu_text.pad_buttons.help", pad_buttons.help,
 		controls.controls_position, controls.controls_size, help_area);
 	return pad_buttons_help;
