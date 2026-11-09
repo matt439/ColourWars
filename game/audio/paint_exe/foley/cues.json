@@ -857,6 +857,50 @@
       ],
       "recommended_gain": 0,
       "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sub.grenade.throw",
+      "cue_id": "sub.grenade.throw",
+      "tier": 1,
+      "description": "A lobbed paint bomb: a light cap tick over a short wet slosh and a breath of air as it leaves the hand.",
+      "path": "game/audio/paint_exe/foley/masters/sub_grenade_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_metal_clank",
+        "owlish_paper_flips1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sub.sprinkler.throw",
+      "cue_id": "sub.sprinkler.throw",
+      "tier": 1,
+      "description": "A sprinkler head tossed: a dry plastic click, then a short pressurised spritz.",
+      "path": "game/audio/paint_exe/foley/masters/sub_sprinkler_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug",
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sub.wall.set",
+      "cue_id": "sub.wall.set",
+      "tier": 1,
+      "description": "A paint wall set down: a heavy, slowed wet slap with a low body thump and a paper crush.",
+      "path": "game/audio/paint_exe/foley/masters/sub_wall_set.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_6",
+        "owlish_fruit2",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
     }
   ]
 }

@@ -119,6 +119,42 @@
                                  "frame_count":  5,
                                  "frame_time":  0.06,
                                  "looping":  false
+                             },
+                             {
+                                 "name":  "sub_grenade",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1364,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.09,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "sub_sprinkler",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1500,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.12,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "sub_wall",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1636,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.14,
+                                 "looping":  true
                              }
                          ],
     "sprite_frames":  [

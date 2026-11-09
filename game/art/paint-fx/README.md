@@ -1,7 +1,7 @@
 # Paint.exe liquid FX source
 
 [`paint-fx.json`](paint-fx.json) is the editable production recipe for the
-five projectile kinds and their surface impacts. It follows the painter and
+five projectile kinds, their surface impacts and the three sub bodies (ROAD#11). It follows the painter and
 tool drawing: a black keyline, simple grayscale liquid body, white wet glint,
 uneven joined lobes and detached droplets. Runtime draw colour supplies every
 team hue. No hue or neutral grey background is baked into the art.
@@ -9,7 +9,7 @@ team hue. No hue or neutral grey background is baked into the art.
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-paint-fx-art.ps1`
 from the repository root. Windows System.Drawing draws the integer-cell recipe
 without antialiasing. Each of the 32x32 cells expands to exactly 4x4 source
-texels, producing a 1024x1536 working atlas at
+texels, producing a 1024x2048 working atlas at
 `../sources/textures/paint_fx.png`, runtime
 `../../content/textures/paint_fx.json` and `.dds`, and the review
 [`lineup.png`](lineup.png). Ordinary builds need neither System.Drawing nor
@@ -32,8 +32,17 @@ droplets, so contiguous strip frames cannot bleed into one another.
 | Mist | Three broad small beads with orbiting fine drops | Disconnected fine droplets scatter without a solid central patch |
 | Ball | Three heavy wobbling blobs with a broad wet glint | A wide joined crown separates into three large drops |
 
-Strip names are `shot_<kind>` and `impact_<kind>`. Shots have three looping
-frames. Impacts have five nonlooping frames: contact, opening lobes, detached
+| Sub | Looping body |
+|---|---|
+| Grenade | A round paint bomb whose dark cap wobbles, with one bead flicking off it |
+| Sprinkler | A squat dome on a dark base, three nozzles, and beads thrown above them |
+| Wall | An upright slab with a glint down its middle and drips changing at its foot |
+
+Strip names are `shot_<kind>`, `impact_<kind>` and `sub_<sub>`. Shots and
+sub bodies have three looping frames. A sub body is drawn in the same square
+cell and stretched to its body record's size; the wall's cell stands for its
+32 by 180 body, so its slab is drawn as a column whose horizontal keylines
+stretch with it. Impacts have five nonlooping frames: contact, opening lobes, detached
 droplets, settling residue, then a fully transparent terminal frame. Durations
 remain authored per strip. The fixed runtime splash owns its playback; these
 drawings allocate no particles or gameplay objects.

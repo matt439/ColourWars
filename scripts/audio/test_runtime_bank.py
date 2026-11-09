@@ -112,7 +112,7 @@ class RuntimeBankChecks(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<3I", bank), (0x444E4257, 46, 44))
         metadata, _ = struct.unpack_from("<II", bank, 12)
         flags, count, _, entry_size, name_size, _, _, _ = struct.unpack_from("<II64sIIIIQ", bank, metadata)
-        self.assertEqual((flags, count, entry_size, name_size), (65536, 103, 24, 64))
+        self.assertEqual((flags, count, entry_size, name_size), (65536, 106, 24, 64))
         names_at, names_size = struct.unpack_from("<II", bank, 36)
         self.assertEqual(names_size, count * name_size)
         names = [bank[names_at + i * name_size:names_at + (i + 1) * name_size].rstrip(b"\0").decode("ascii")

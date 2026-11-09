@@ -2,16 +2,21 @@
 
 Produced on 2026-10-14 for **POL#22**. Open [index.html](index.html) in a browser
 to hear individual cues and the same scripted scene at one, two and four players.
-Start with Tier 1. There are **103 WAV masters covering all 85 cue groups** in
-[audio-inventory §4](../../../docs/audio-inventory.md#4-the-new-cue-list):
-49 Tier 1 waves, 37 Tier 2 waves and 17 Tier 3 waves.
+Start with Tier 1. There are **106 WAV masters covering all 88 cue groups**:
+the 85 in
+[audio-inventory §4](../../../docs/audio-inventory.md#4-the-new-cue-list) and
+the three sub cues (`ROAD#11`); 52 Tier 1 waves, 37 Tier 2 waves and 17 Tier 3
+waves.
 
 **The author accepted the complete set on 2026-10-14**, replying "sounds good"
 to the explicit request to accept it for POL#23 integration or name revisions.
-POL#22 is closed; [acceptance.json](acceptance.json) records the exact 103 accepted
-master hashes. No revisions were requested.
+POL#22 is closed; [acceptance.json](acceptance.json) records the exact accepted
+master hashes. No revisions were requested. On 2026-11-09 the author accepted
+three more foley masters for the sub weapons (`ROAD#11`): `sub.grenade.throw`,
+`sub.sprinkler.throw` and `sub.wall.set`, recorded in the same file's
+`amendments`.
 The 2026-10-15 runtime migration uses this set for the existing game bindings and
-includes all 103 masters in the live bank. On 2026-11-05 the author accepted
+included all 103 masters in the live bank, which now holds all 106. On 2026-11-05 the author accepted
 the cue hooks and gameplay mix as they stand (POL#23) and waived ROAD#3's
 multiplayer, pause/resume, volume and release checks, which were not performed.
 
@@ -23,7 +28,7 @@ multiplayer, pause/resume, volume and release checks, which were not performed.
   recorded CC0 samples. The 76–87 second loops have contrasting sections and
   editable note/event records. No existing song, legacy track or synthesizer
   preset was used.
-- [foley/README.md](foley/README.md): 64 physical cues from marker, paper, water,
+- [foley/README.md](foley/README.md): 67 physical cues from marker, paper, water,
   mechanisms and room recordings. Includes six footsteps, six splashes, four
   landings and four painted-step variants. The pop, sigh and chair creak are
   accepted sourced cues for STORY#1/STORY#2, not recordings by the repository author.
@@ -94,9 +99,9 @@ before staging it. Missing audio retains the optional silent fallback; a normal
 Release package requires the validated bank. The bank compiler is retained at
 `scripts/audio/tools/XWBTool.exe`.
 
-The corrected runtime bank is **22,765,884 bytes**. The receipt retains its hash,
+The corrected runtime bank is **22,918,348 bytes**. The receipt retains its hash,
 the encoded music export hashes, bounded loop padding, decoded measurements and
-tool identities. All 103 accepted PCM masters are unchanged. The current 18
+tool identities. All accepted PCM masters are unchanged. The current 18
 audio tests cover pipeline/publication integrity; extracted Release startup
 with the real bank and the separate missing-bank fallback also pass. These
 checks do not replace listening or multiplayer mix acceptance.

@@ -91,7 +91,7 @@
       "sha256": "f0749089361726800db03f7b422777330da74dfd6d304e7780bef2a1b3d81bd0",
       "frames": 5880,
       "duration_seconds": 0.13333333333333333,
-      "peak_dbfs": -10.688037520930902,
+      "peak_dbfs": -10.6880375209309,
       "rms_dbfs": -24.00026260811661,
       "loop_start": null,
       "loop_end_inclusive": null,
@@ -623,7 +623,7 @@
       "frames": 17566,
       "duration_seconds": 0.3983219954648526,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -24.67568326475273,
+      "rms_dbfs": -24.675683264752735,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -1420,7 +1420,7 @@
       "sha256": "058236157f763660eea059ce087d970eaa5c111c4710e104a534dc6ee07a72fd",
       "frames": 20090,
       "duration_seconds": 0.45555555555555555,
-      "peak_dbfs": -6.405401850556293,
+      "peak_dbfs": -6.405401850556292,
       "rms_dbfs": -24.00026304753655,
       "loop_start": 0,
       "loop_end_inclusive": 20089,
@@ -1478,7 +1478,7 @@
       "frames": 24500,
       "duration_seconds": 0.5555555555555556,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -24.009544019033285,
+      "rms_dbfs": -24.00954401903329,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -1525,7 +1525,7 @@
       "frames": 23664,
       "duration_seconds": 0.5365986394557823,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -27.68470689370831,
+      "rms_dbfs": -27.684706893708313,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -2049,7 +2049,7 @@
       "frames": 43090,
       "duration_seconds": 0.9770975056689343,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -23.550902196609066,
+      "rms_dbfs": -23.55090219660907,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -3081,7 +3081,7 @@
       "frames": 28679,
       "duration_seconds": 0.6503174603174603,
       "peak_dbfs": -7.511416971169629,
-      "rms_dbfs": -29.000279307149647,
+      "rms_dbfs": -29.000279307149643,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -3281,7 +3281,7 @@
       "sha256": "45051e4b21fa048d96e6834f26f442ff14ca10818b0874a5d4bf392a28248fe5",
       "frames": 418950,
       "duration_seconds": 9.5,
-      "peak_dbfs": -27.07565045043964,
+      "peak_dbfs": -27.075650450439642,
       "rms_dbfs": -40.000274697274065,
       "loop_start": 0,
       "loop_end_inclusive": 418949,
@@ -3332,6 +3332,213 @@
       "duration_seconds": 0.3384126984126984,
       "peak_dbfs": -11.368170594089953,
       "rms_dbfs": -32.469337185571526,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
+    },
+    {
+      "id": "sub.grenade.throw",
+      "cue_id": "sub.grenade.throw",
+      "tier": 1,
+      "description": "A lobbed paint bomb: a light cap tick over a short wet slosh and a breath of air as it leaves the hand.",
+      "path": "game/audio/paint_exe/foley/masters/sub_grenade_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_metal_clank",
+        "owlish_paper_flips1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sub.grenade.throw",
+        "cue_id": "sub.grenade.throw",
+        "tier": 1,
+        "description": "A lobbed paint bomb: a light cap tick over a short wet slosh and a breath of air as it leaves the hand.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              6.76,
+              7.3
+            ],
+            "speed": 1.15,
+            "lowpass": 4500,
+            "level_db": -18
+          },
+          {
+            "source": "owlish_metal_clank",
+            "seconds": [
+              0,
+              0.35
+            ],
+            "speed": 1.25,
+            "lowpass": 5000,
+            "level_db": -25
+          },
+          {
+            "source": "owlish_paper_flips1",
+            "seconds": [
+              0,
+              0.4
+            ],
+            "speed": 1.5,
+            "highpass": 900,
+            "lowpass": 7000,
+            "level_db": -27,
+            "offset": 0.03
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -4
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "2064b846be298438f4cfbda70d7de877c0d403483848578e784190efd2bf1f54",
+      "frames": 20708,
+      "duration_seconds": 0.46956916099773244,
+      "peak_dbfs": -4.0000883347026726,
+      "rms_dbfs": -24.609541161674315,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
+    },
+    {
+      "id": "sub.sprinkler.throw",
+      "cue_id": "sub.sprinkler.throw",
+      "tier": 1,
+      "description": "A sprinkler head tossed: a dry plastic click, then a short pressurised spritz.",
+      "path": "game/audio/paint_exe/foley/masters/sub_sprinkler_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug",
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sub.sprinkler.throw",
+        "cue_id": "sub.sprinkler.throw",
+        "tier": 1,
+        "description": "A sprinkler head tossed: a dry plastic click, then a short pressurised spritz.",
+        "layers": [
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0,
+              0.18
+            ],
+            "speed": 1.1,
+            "lowpass": 7000,
+            "level_db": -20
+          },
+          {
+            "source": "owlish_pump",
+            "seconds": [
+              0,
+              0.4
+            ],
+            "speed": 1.15,
+            "highpass": 400,
+            "lowpass": 9000,
+            "level_db": -23,
+            "offset": 0.08
+          }
+        ],
+        "rms_db": -22,
+        "peak_db": -4
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "8968e519c313cad0b9b43ef3b94c1d65b4d0ec2815e916e21a54623860dca97c",
+      "frames": 18233,
+      "duration_seconds": 0.4134467120181406,
+      "peak_dbfs": -4.0000883347026726,
+      "rms_dbfs": -23.07302285980853,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
+    },
+    {
+      "id": "sub.wall.set",
+      "cue_id": "sub.wall.set",
+      "tier": 1,
+      "description": "A paint wall set down: a heavy, slowed wet slap with a low body thump and a paper crush.",
+      "path": "game/audio/paint_exe/foley/masters/sub_wall_set.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_6",
+        "owlish_fruit2",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sub.wall.set",
+        "cue_id": "sub.wall.set",
+        "tier": 1,
+        "description": "A paint wall set down: a heavy, slowed wet slap with a low body thump and a paper crush.",
+        "layers": [
+          {
+            "source": "bsb_small_splash_6",
+            "seconds": [
+              0,
+              0.55
+            ],
+            "speed": 0.62,
+            "lowpass": 3500,
+            "level_db": -18
+          },
+          {
+            "source": "owlish_fruit2",
+            "seconds": [
+              0,
+              0.4
+            ],
+            "speed": 0.7,
+            "lowpass": 1400,
+            "level_db": -18
+          },
+          {
+            "source": "owlish_paper_crumple2",
+            "seconds": [
+              0,
+              0.3
+            ],
+            "speed": 0.85,
+            "lowpass": 2500,
+            "level_db": -28
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -4,
+        "trim_final_tail_dbfs": -48
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "64d7b12112138a42e4a57333d936c9bbe26f05019d9a4334c8f69912f5eeeeeb",
+      "frames": 37157,
+      "duration_seconds": 0.8425623582766439,
+      "peak_dbfs": -4.0000883347026726,
+      "rms_dbfs": -26.96382143967405,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"

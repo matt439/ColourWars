@@ -64,7 +64,8 @@ if ($source.canvas_size -ne 32 -or $source.source_texels_per_cell -ne 4) {
     throw 'Paint FX keeps 32x32 vector cells expanded to 128x128 source frames.'
 }
 $expected = @('shot_spray','shot_jet','shot_rolling','shot_mist','shot_ball',
-    'impact_spray','impact_jet','impact_rolling','impact_mist','impact_ball')
+    'impact_spray','impact_jet','impact_rolling','impact_mist','impact_ball',
+    'sub_grenade','sub_sprinkler','sub_wall')
 if (($source.strips.name -join ',') -ne ($expected -join ',')) { throw 'Paint FX strip contract changed.' }
 $size = [int]$source.canvas_size
 $scale = [int]$source.source_texels_per_cell
@@ -159,7 +160,7 @@ try {
     $tuning=Get-Content -Raw (Join-Path $repo 'game/content/tuning.json')|ConvertFrom-Json
     $presentation=Get-Content -Raw (Join-Path $repo 'game/content/presentation.json')|ConvertFrom-Json
     $reviewScale=720.0/$presentation.camera.reference_height
-    $preview=[Drawing.Bitmap]::new(1440,1472,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $preview=[Drawing.Bitmap]::new(1440,1880,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g=[Drawing.Graphics]::FromImage($preview)
     $font=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,10)
     $small=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,8)
@@ -186,7 +187,10 @@ try {
                 ++$frame
             }
             $kind=$strip.name.Substring($strip.name.IndexOf('_')+1)
+            # A sub's body (ROAD#11) draws at its own record's width; the wall's
+            # cell stretches to its taller body at runtime.
             $worldSize=if($strip.name.StartsWith('shot_')){[double]$tuning.projectiles.$kind.size.x}
+                elseif($strip.name.StartsWith('sub_')){[double]$tuning.subs.$kind.body.size.x}
                 else{[double]$tuning.paint.thickness*[double]$tuning.paint.visual.splash_scale}
             $pixelSize=[Math]::Max(1,[int][Math]::Round($worldSize*$reviewScale))
             $col=0
@@ -220,4 +224,4 @@ try {
 & (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'paint_fx.png') `
     -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
 if($LASTEXITCODE -ne 0){throw "texconv failed with exit code $LASTEXITCODE"}
-Write-Output 'Built five looping shots, five liquid impact strips, DDS and 720p team-colour lineup.'
+Write-Output 'Built five looping shots, five liquid impact strips, three sub bodies, DDS and 720p team-colour lineup.'

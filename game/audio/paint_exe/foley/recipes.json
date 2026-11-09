@@ -1454,6 +1454,121 @@
       "rms_db": -33,
       "gain": 0,
       "trim_final_tail_dbfs": -60
+    },
+    {
+      "id": "sub.grenade.throw",
+      "cue_id": "sub.grenade.throw",
+      "tier": 1,
+      "description": "A lobbed paint bomb: a light cap tick over a short wet slosh and a breath of air as it leaves the hand.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            6.76,
+            7.3
+          ],
+          "speed": 1.15,
+          "lowpass": 4500,
+          "level_db": -18
+        },
+        {
+          "source": "owlish_metal_clank",
+          "seconds": [
+            0,
+            0.35
+          ],
+          "speed": 1.25,
+          "lowpass": 5000,
+          "level_db": -25
+        },
+        {
+          "source": "owlish_paper_flips1",
+          "seconds": [
+            0,
+            0.4
+          ],
+          "speed": 1.5,
+          "highpass": 900,
+          "lowpass": 7000,
+          "level_db": -27,
+          "offset": 0.03
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -4
+    },
+    {
+      "id": "sub.sprinkler.throw",
+      "cue_id": "sub.sprinkler.throw",
+      "tier": 1,
+      "description": "A sprinkler head tossed: a dry plastic click, then a short pressurised spritz.",
+      "layers": [
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0,
+            0.18
+          ],
+          "speed": 1.1,
+          "lowpass": 7000,
+          "level_db": -20
+        },
+        {
+          "source": "owlish_pump",
+          "seconds": [
+            0,
+            0.4
+          ],
+          "speed": 1.15,
+          "highpass": 400,
+          "lowpass": 9000,
+          "level_db": -23,
+          "offset": 0.08
+        }
+      ],
+      "rms_db": -22,
+      "peak_db": -4
+    },
+    {
+      "id": "sub.wall.set",
+      "cue_id": "sub.wall.set",
+      "tier": 1,
+      "description": "A paint wall set down: a heavy, slowed wet slap with a low body thump and a paper crush.",
+      "layers": [
+        {
+          "source": "bsb_small_splash_6",
+          "seconds": [
+            0,
+            0.55
+          ],
+          "speed": 0.62,
+          "lowpass": 3500,
+          "level_db": -18
+        },
+        {
+          "source": "owlish_fruit2",
+          "seconds": [
+            0,
+            0.4
+          ],
+          "speed": 0.7,
+          "lowpass": 1400,
+          "level_db": -18
+        },
+        {
+          "source": "owlish_paper_crumple2",
+          "seconds": [
+            0,
+            0.3
+          ],
+          "speed": 0.85,
+          "lowpass": 2500,
+          "level_db": -28
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -4,
+      "trim_final_tail_dbfs": -48
     }
   ]
 }

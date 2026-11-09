@@ -1225,6 +1225,42 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
 - Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
 
+### sub.grenade.throw
+
+- Bank name: `sub.grenade.throw`; cue: `sub.grenade.throw`; Tier 1.
+- Export: [foley/masters/sub_grenade_throw.wav](foley/masters/sub_grenade_throw.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `bsb_sponge`, `owlish_metal_clank`, `owlish_paper_flips1`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: A lobbed paint bomb: a light cap tick over a short wet slosh and a breath of air as it leaves the hand. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+
+### sub.sprinkler.throw
+
+- Bank name: `sub.sprinkler.throw`; cue: `sub.sprinkler.throw`; Tier 1.
+- Export: [foley/masters/sub_sprinkler_throw.wav](foley/masters/sub_sprinkler_throw.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `owlish_plug`, `owlish_pump`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: A sprinkler head tossed: a dry plastic click, then a short pressurised spritz. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+
+### sub.wall.set
+
+- Bank name: `sub.wall.set`; cue: `sub.wall.set`; Tier 1.
+- Export: [foley/masters/sub_wall_set.wav](foley/masters/sub_wall_set.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `bsb_small_splash_6`, `owlish_fruit2`, `owlish_paper_crumple2`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: A paint wall set down: a heavy, slowed wet slap with a low body thump and a paper crush. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+
 ### ui.cancel
 
 - Bank name: `ui.cancel`; cue: `ui.cancel`; Tier 1.
