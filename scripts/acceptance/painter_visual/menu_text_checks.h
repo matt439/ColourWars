@@ -26,13 +26,13 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
         L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
-        L"Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel",
+        L"Left/Right Tool, then sub    X/R Boost    A/Enter Confirm    B/Esc Cancel",
         L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back",
         L"A/Enter Start match    B/Esc Unlock arena", L" Reconnect controller    B/Esc Change players",
         L"A/Enter Select    B/Start/Esc Resume", L" Reconnect, then Start    A/Enter Select",
         L"A/Enter Select", L"A/Enter Back    B/Esc Back",
         L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",
-        L"P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel",
+        L"P1 Up/Down Row    Left/Right Tool, then sub    X/R Boost    A/Enter Ready    B/Esc Cancel",
         L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back",
         L"Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel"
     };
