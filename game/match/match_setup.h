@@ -59,6 +59,9 @@ public:
 	bool shuffle_teams();
 	void set_player_weapon(int player_index, WeaponType weapon);
 	WeaponType player_weapon(int player_index) const;
+	// Throws std::invalid_argument for SubType::count.
+	void set_player_sub(int player_index, SubType sub);
+	SubType player_sub(int player_index) const;
 	// Rejects levels outside handicaps::valid without changing the seat.
 	void set_player_handicap(int player_index, int handicap);
 	int player_handicap(int player_index) const;

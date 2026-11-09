@@ -211,9 +211,12 @@ colour and one frame, so it is not used here.
    engine calls each party's `on_contact`, and
    [Collider](../game/objects/collider.h) dispatches it a second time on the
    other party's class; the engine does not know what painting means.
-   After the tick's contacts, `Level::burst_projectiles` asks each projectile
-   for the drops it leaves (`Projectile::take_burst`; only a grenade has any)
-   and admits them like a fresh launch.
+   After the tick's contacts, `Level::strike_breakables` spends each enemy
+   shot that reached a planted sprinkler on it, and `Level::burst_projectiles`
+   asks each projectile for the drops it releases this tick
+   (`Projectile::take_burst`: a retiring grenade's ring, a planted
+   [ProjectileSprinkler](../game/objects/projectile_sprinkler.h)'s spray) and
+   admits them like a fresh launch.
 6. [StructurePaintable::on_projectile_contact](../game/objects/structure_paintable.cpp)
    identifies the reached tiles and calls
    [PaintTile::paint](../game/objects/paint_tile.cpp). A capture changes team and

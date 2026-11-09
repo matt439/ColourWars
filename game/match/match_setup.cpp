@@ -3,6 +3,7 @@
 #include "game/input/input_slots.h"
 #include "game/match/match_rules.h"
 #include <array>
+#include <stdexcept>
 #include <cstdlib>
 #include <numeric>
 using namespace labrador;
@@ -153,6 +154,16 @@ void MatchSetup::set_player_weapon(int player_index, WeaponType weapon)
 WeaponType MatchSetup::player_weapon(int player_index) const
 {
 	return this->player_settings_.at(static_cast<size_t>(player_index)).weapon;
+}
+
+void MatchSetup::set_player_sub(int player_index, SubType sub)
+{
+	if (sub_name(sub) == nullptr) { throw std::invalid_argument("Not a sub weapon"); }
+	this->player_settings_.at(static_cast<size_t>(player_index)).sub = sub;
+}
+SubType MatchSetup::player_sub(int player_index) const
+{
+	return this->player_settings_.at(static_cast<size_t>(player_index)).sub;
 }
 
 void MatchSetup::set_player_handicap(int player_index, int handicap)

@@ -8,18 +8,19 @@
 // The sub weapons (ROAD#11): a second, paint-hungry tool every player carries
 // beside the one they chose, fired with its own button. A separate list from
 // WeaponType, so the five tools and the subs never stand in for each other.
-// docs/feature-roadmap.md#sub-weapons-road11 plans the sprinkler and the
-// paint wall; each joins this enum before count.
+// docs/feature-roadmap.md#sub-weapons-road11 plans the paint wall too; it
+// joins this enum before count.
 enum class SubType
 {
 	grenade,
+	sprinkler,
 	count
 };
 
 inline constexpr size_t sub_count = static_cast<size_t>(SubType::count);
 
 // The one spelling of each sub: its key under "subs" in tuning.json.
-inline constexpr std::array<const char*, sub_count> sub_names{ "grenade" };
+inline constexpr std::array<const char*, sub_count> sub_names{ "grenade", "sprinkler" };
 
 constexpr const char* sub_name(SubType sub)
 {

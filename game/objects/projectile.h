@@ -75,7 +75,16 @@ public:
 	ProjectileType projectile_type() const { return this->type_; }
 	// Health a hit removes, from this projectile's own record: its kind's,
 	// or a sub's for the grenade and its drops, which share the ball's kind.
-	float player_damage() const { return this->tuning_->details.player_damage; }
+	// A planted sprinkler touches no one, so it overrides this to zero.
+	virtual float player_damage() const { return this->tuning_->details.player_damage; }
+	// What this tick's travel covered: last tick's shape to this one's. What
+	// Level tests against the objects shots can break (takes_hits).
+	labrador::RectangleF travel_bounds() const;
+	// Whether enemy shots break this one now: a planted sprinkler. Level
+	// tests every enemy shot's travel against its bounds after the tick's
+	// contacts, consumes each that reaches it and calls take_hit.
+	virtual bool takes_hits() const { return false; }
+	virtual void take_hit() {}
 
 	// A muzzle can extend through cover even when its owner cannot. Check
 	// the launch volume before Scene defers its first collision sweep.
@@ -103,11 +112,12 @@ public:
 	// Consume after both callbacks classify the hit, before the projectile is
 	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
 	std::optional<BlockedShotContact> take_blocked_contact();
-	// What this projectile leaves behind as it retires: a sub's grenade
-	// bursts into drops (ProjectileGrenade). Empty for every tool's shot.
-	// Called once its deletion is settled for the tick, by Level for a shot
-	// in flight and by Player for one its launch stopped; each child still
-	// needs its launch resolved from where it starts.
+	// What this projectile releases this tick: a sub's grenade bursts into
+	// drops as it retires (ProjectileGrenade), a planted sprinkler sprays on
+	// its schedule (ProjectileSprinkler). Empty for every tool's shot.
+	// Called once a tick, after its deletion is settled for the tick, by
+	// Level for a shot in flight and by Player for one its launch stopped;
+	// each child still needs its launch resolved from where it starts.
 	virtual std::vector<std::unique_ptr<Projectile>> take_burst() { return {}; }
 protected:
 	virtual void set_rectangle(const labrador::RectangleF& rectangle) = 0;

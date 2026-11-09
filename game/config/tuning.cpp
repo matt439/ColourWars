@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/tuning.h"
 #include "game/config/content_value.h"
+#include "game/contracts/simulation.h"
 
 #include "engine/assets/json.h"
 
@@ -860,12 +861,15 @@ namespace
 		return projectile;
 	}
 
-	SubTuning read_sub(const JsonValue& subs, const char* key,
+	SubTuning read_sub(const JsonValue& subs, SubType type, const char* key,
 		const Vector2F& max_velocity, float wind_stop_factor)
 	{
-		const JsonValue json = known_object(subs, key, { "cost", "cooldown",
+		std::vector<std::string_view> members{ "cost", "cooldown",
 			"throw_speed", "burst_count", "burst_speed", "body", "burst",
-			"sound_bank", "throw_sound", "empty_sound" });
+			"sound_bank", "throw_sound", "empty_sound" };
+		const bool planted = type == SubType::sprinkler;
+		if (planted) { members.insert(members.end(), { "interval", "lifetime", "hits" }); }
+		const JsonValue json = known_object(subs, key, members);
 		SubTuning sub;
 		// A sub that costs nothing is a second free tool. Like a shot's
 		// ammo_usage, not compared with weapons.starting_ammo: a tank too small
@@ -891,6 +895,29 @@ namespace
 		sub.sound_bank = json.string("sound_bank");
 		sub.throw_sound = read_sound(json, "throw_sound");
 		sub.empty_sound = read_sound(json, "empty_sound");
+		if (planted)
+		{
+			// A spray every step at most, and a sprinkler that outlasts one.
+			sub.interval = read_positive(json, "interval");
+			if (sub.interval < simulation::seconds_per_step)
+			{
+				throw std::runtime_error(json.where() + ": 'interval' is " + number_text(sub.interval) +
+					", shorter than one step; it must be at least " +
+					number_text(simulation::seconds_per_step) + ".");
+			}
+			sub.lifetime = read_positive(json, "lifetime");
+			if (sub.lifetime < sub.interval)
+			{
+				throw std::runtime_error(json.where() + ": 'lifetime' is " + number_text(sub.lifetime) +
+					", shorter than one 'interval', so it would never spray.");
+			}
+			sub.hits = json.integer("hits");
+			if (sub.hits < 1 || sub.hits > 100)
+			{
+				throw std::runtime_error(json.where() + ": 'hits' is " + std::to_string(sub.hits) +
+					"; it must be from 1 to 100.");
+			}
+		}
 		return sub;
 	}
 }
@@ -970,7 +997,7 @@ GameTuning::GameTuning(const JsonDocument& document)
 	const JsonValue subs = known_object(root, "subs", sub_members);
 	for_each_sub([&](SubType type, const char* key)
 	{
-		this->subs_[static_cast<size_t>(type)] = read_sub(subs, key,
+		this->subs_[static_cast<size_t>(type)] = read_sub(subs, type, key,
 			max_velocity, wind_stop_factor);
 	});
 }

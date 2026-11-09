@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/sub_weapon.h"
 #include "game/objects/projectile_grenade.h"
+#include "game/objects/projectile_sprinkler.h"
 #include "game/objects/weapon.h"
 
 #include <cmath>
@@ -90,6 +91,31 @@ std::vector<std::unique_ptr<Projectile>> SubGrenade::release(
 	return released;
 }
 
+SubSprinkler::SubSprinkler(const GameTuning* tuning,
+	PlayerTeam team,
+	int player_num,
+	const Colour& team_colour,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources) :
+	SubWeapon(tuning, SubType::sprinkler, team, player_num, team_colour,
+		render_resources, audio_resources)
+{
+	this->body_strip_ = resolve_projectile_strip(this->tuning().body, *render_resources);
+	this->spray_strip_ = resolve_projectile_strip(this->tuning().burst, *render_resources);
+}
+
+std::vector<std::unique_ptr<Projectile>> SubSprinkler::release(
+	const Vector2F& origin, const Vector2F& velocity) const
+{
+	const SubTuning& tuning = this->tuning();
+	std::vector<std::unique_ptr<Projectile>> released;
+	released.push_back(std::make_unique<ProjectileSprinkler>(
+		RectangleF(origin, tuning.body.details.col_rect_size), velocity,
+		this->team(), this->player_num(), this->team_colour(),
+		this->render_resources(), this->body_strip_, this->spray_strip_, &tuning));
+	return released;
+}
+
 std::unique_ptr<SubWeapon> build_sub_weapon(const GameTuning* tuning,
 	SubType type,
 	PlayerTeam team,
@@ -102,6 +128,9 @@ std::unique_ptr<SubWeapon> build_sub_weapon(const GameTuning* tuning,
 	{
 	case SubType::grenade:
 		return std::make_unique<SubGrenade>(tuning, team, player_num, team_colour,
+			render_resources, audio_resources);
+	case SubType::sprinkler:
+		return std::make_unique<SubSprinkler>(tuning, team, player_num, team_colour,
 			render_resources, audio_resources);
 	case SubType::count:
 		break;

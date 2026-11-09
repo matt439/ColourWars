@@ -388,10 +388,17 @@ struct SubTuning
 	float cost = 0.0f;
 	float cooldown = 0.0f;
 	float throw_speed = 0.0f;
+	// What the thrown body leaves: the grenade's one ring of drops, or each
+	// of the sprinkler's sprays, a fan of drops over its top half.
 	int burst_count = 0;
 	float burst_speed = 0.0f;
 	ProjectileTuning body;
 	ProjectileTuning burst;
+	// The sprinkler only (zero for the grenade): seconds between sprays once
+	// it has stuck, the seconds it stays, and the enemy shots that break it.
+	float interval = 0.0f;
+	float lifetime = 0.0f;
+	int hits = 0;
 
 	std::string sound_bank;
 	SoundTuning throw_sound;

@@ -2340,6 +2340,33 @@ it. The `sub_weapons` case checks every difficulty and tool against the
 ballistics, the holds (not ready, no sub, out of reach, short tank) and two
 real bot rounds, one per refill rule.
 
+**Slice 3, done 2026-11-09.** The sprinkler is `SubType::sprinkler`, thrown
+by `SubSprinkler` as a `ProjectileSprinkler`. It flies like the grenade;
+the first cover its body meets plants it there, where it stops, empties its
+collision mask (so neither cover nor players touch it, and it deals no
+damage) and, every `interval` (0.6 s) for `lifetime` (8 s), sprays
+`burst_count` (5) drops in a fan over its top half, every other spray turned
+to fill the last one's gaps. An enemy player met first, or the body's
+`delete_timer` (2 s) running out in the air, retires it unplanted, like a
+shot. Enemy shots break it: `Level::strike_breakables` runs after the tick's
+contacts, spends each enemy shot whose travel this tick
+(`Projectile::travel_bounds`) reaches a projectile that `takes_hits`, and
+the `hits`th (3) retires it; its own team's shots leave it be.
+`Projectile::take_burst` is now asked every tick, which is how the planted
+sprinkler sprays. It costs half the tank, with a 4 s cooldown. Each seat's
+`SeatSetup::sub` chooses its sub, defaulting to the grenade, which
+`PlayerBuilder` reads; nothing but code sets it until slice 5, so the save,
+the Debug match plan and replays do not carry it yet, and every menu match
+is still the grenade. The `sub_weapons` case checks the sprinkler's tuning
+and what the loader refuses, a seat carrying it, and in a real round that
+it sticks, sprays on schedule, paints, retires after its lifetime, and
+breaks on its third enemy shot but not on its own team's.
+
+Left for later, by plan: a sprinkler planted on a moving platform stays
+where it stuck rather than riding it, and on a wall or ceiling it still
+sprays upward; a bot given one throws it as it would a grenade (slice 6
+teaches bots where to plant it).
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases
